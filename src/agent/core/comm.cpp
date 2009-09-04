@@ -73,7 +73,7 @@ static BOOL RegisterSession(CommSession *pSession)
       if (g_pSessionList[i] == NULL)
       {
          g_pSessionList[i] = pSession;
-         pSession->SetIndex(i);
+         pSession->setIndex(i);
          MutexUnlock(g_hSessionListAccess);
          return TRUE;
       }
@@ -207,7 +207,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             }
             else
             {
-               pSession->Run();
+               pSession->run();
             }
          }
          else     // Unauthorized connection
@@ -270,8 +270,8 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
       for(i = 0; i < g_dwMaxSessions; i++)
          if (g_pSessionList[i] != NULL)
          {
-            if (g_pSessionList[i]->GetTimeStamp() < (now - (time_t)g_dwIdleTimeout))
-               g_pSessionList[i]->Disconnect();
+            if (g_pSessionList[i]->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
+               g_pSessionList[i]->disconnect();
          }
       MutexUnlock(g_hSessionListAccess);
    }
@@ -280,7 +280,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    MutexLock(g_hSessionListAccess, INFINITE);
    for(i = 0; i < g_dwMaxSessions; i++)
       if (g_pSessionList[i] != NULL)
-         g_pSessionList[i]->Disconnect();
+         g_pSessionList[i]->disconnect();
    MutexUnlock(g_hSessionListAccess);
 
    ThreadSleep(1);

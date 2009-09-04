@@ -264,46 +264,46 @@ private:
    int m_hCurrFile;
    DWORD m_dwFileRqId;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
-   time_t m_ts;               // Last command timestamp
+   time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
 
-   BOOL SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx);
-   void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void GetConfig(CSCPMessage *pMsg);
-   void UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void GetList(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   DWORD Upgrade(CSCPMessage *pRequest);
-   DWORD SetupProxyConnection(CSCPMessage *pRequest);
+   BOOL sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx);
+   void authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void getConfig(CSCPMessage *pMsg);
+   void updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void getList(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void action(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   DWORD upgrade(CSCPMessage *pRequest);
+   DWORD setupProxyConnection(CSCPMessage *pRequest);
 
-   void ReadThread(void);
-   void WriteThread(void);
-   void ProcessingThread(void);
-   void ProxyReadThread(void);
+   void readThread(void);
+   void writeThread(void);
+   void processingThread(void);
+   void proxyReadThread(void);
 
-   static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL ProxyReadThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
 
 public:
    CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bMasterServer, BOOL bControlServer);
    ~CommSession();
 
-   void Run(void);
-   void Disconnect(void);
+   void run(void);
+   void disconnect(void);
 
-   void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
-   void SendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
+   void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
 
-   DWORD GetIndex(void) { return m_dwIndex; }
-   void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+   DWORD getIndex(void) { return m_dwIndex; }
+   void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
 
-   time_t GetTimeStamp(void) { return m_ts; }
+   time_t getTimeStamp(void) { return m_ts; }
 
-   BOOL AcceptTraps(void) { return m_bAcceptTraps; }
+   BOOL acceptTraps(void) { return m_bAcceptTraps; }
 };
 
 

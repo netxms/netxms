@@ -49,14 +49,14 @@ DWORD UninstallPolicy(DWORD session, CSCPMessage *request);
 // Client communication read thread
 //
 
-THREAD_RESULT THREAD_CALL CommSession::ReadThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *pArg)
 {
-   ((CommSession *)pArg)->ReadThread();
+   ((CommSession *)pArg)->readThread();
 
    // When CommSession::ReadThread exits, all other session
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterSession(((CommSession *)pArg)->GetIndex());
+   UnregisterSession(((CommSession *)pArg)->getIndex());
    delete (CommSession *)pArg;
    return THREAD_OK;
 }
@@ -66,9 +66,9 @@ THREAD_RESULT THREAD_CALL CommSession::ReadThreadStarter(void *pArg)
 // Client communication write thread
 //
 
-THREAD_RESULT THREAD_CALL CommSession::WriteThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL CommSession::writeThreadStarter(void *pArg)
 {
-   ((CommSession *)pArg)->WriteThread();
+   ((CommSession *)pArg)->writeThread();
    return THREAD_OK;
 }
 
@@ -77,9 +77,9 @@ THREAD_RESULT THREAD_CALL CommSession::WriteThreadStarter(void *pArg)
 // Received message processing thread
 //
 
-THREAD_RESULT THREAD_CALL CommSession::ProcessingThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL CommSession::processingThreadStarter(void *pArg)
 {
-   ((CommSession *)pArg)->ProcessingThread();
+   ((CommSession *)pArg)->processingThread();
    return THREAD_OK;
 }
 
@@ -88,9 +88,9 @@ THREAD_RESULT THREAD_CALL CommSession::ProcessingThreadStarter(void *pArg)
 // Client communication write thread
 //
 
-THREAD_RESULT THREAD_CALL CommSession::ProxyReadThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
 {
-   ((CommSession *)pArg)->ProxyReadThread();
+   ((CommSession *)pArg)->proxyReadThread();
    return THREAD_OK;
 }
 
@@ -145,11 +145,11 @@ CommSession::~CommSession()
 // Start all threads
 //
 
-void CommSession::Run(void)
+void CommSession::run(void)
 {
-   m_hWriteThread = ThreadCreateEx(WriteThreadStarter, 0, this);
-   m_hProcessingThread = ThreadCreateEx(ProcessingThreadStarter, 0, this);
-   ThreadCreate(ReadThreadStarter, 0, this);
+   m_hWriteThread = ThreadCreateEx(writeThreadStarter, 0, this);
+   m_hProcessingThread = ThreadCreateEx(processingThreadStarter, 0, this);
+   ThreadCreate(readThreadStarter, 0, this);
 }
 
 
@@ -157,7 +157,7 @@ void CommSession::Run(void)
 // Disconnect session
 //
 
-void CommSession::Disconnect(void)
+void CommSession::disconnect(void)
 {
    shutdown(m_hSocket, SHUT_RDWR);
    if (m_hProxySocket != -1)
@@ -169,7 +169,7 @@ void CommSession::Disconnect(void)
 // Reading thread
 //
 
-void CommSession::ReadThread(void)
+void CommSession::readThread(void)
 {
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
@@ -246,7 +246,7 @@ void CommSession::ReadThread(void)
                         msg.SetCode(CMD_REQUEST_COMPLETED);
                         msg.SetId(pRawMsg->dwId);
                         msg.SetVariable(VID_RCC, ERR_SUCCESS);
-                        SendMessage(&msg);
+                        sendMessage(&msg);
                      }
                   }
                   else
@@ -260,7 +260,7 @@ void CommSession::ReadThread(void)
                      msg.SetCode(CMD_REQUEST_COMPLETED);
                      msg.SetId(pRawMsg->dwId);
                      msg.SetVariable(VID_RCC, ERR_IO_FAILURE);
-                     SendMessage(&msg);
+                     sendMessage(&msg);
                   }
                }
             }
@@ -283,7 +283,7 @@ void CommSession::ReadThread(void)
                pMsg->wFlags = htons(MF_CONTROL);
                pMsg->dwNumVars = htonl(NXCP_VERSION << 24);
                pMsg->dwSize = htonl(CSCP_HEADER_SIZE);
-               SendRawMessage(pMsg, m_pCtx);
+               sendRawMessage(pMsg, m_pCtx);
             }
          }
          else
@@ -298,7 +298,7 @@ void CommSession::ReadThread(void)
                   CSCPMessage *pResponse;
 
                   SetupEncryptionContext(pMsg, &m_pCtx, &pResponse, NULL, NXCP_VERSION);
-                  SendMessage(pResponse);
+                  sendMessage(pResponse);
                   delete pResponse;
                }
                delete pMsg;
@@ -337,7 +337,7 @@ void CommSession::ReadThread(void)
 // Send prepared raw message over the network and destroy it
 //
 
-BOOL CommSession::SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx)
+BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx)
 {
    BOOL bResult = TRUE;
    char szBuffer[128];
@@ -376,7 +376,7 @@ BOOL CommSession::SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
 // Writing thread
 //
 
-void CommSession::WriteThread(void)
+void CommSession::writeThread(void)
 {
    CSCP_MESSAGE *pMsg;
 
@@ -386,7 +386,7 @@ void CommSession::WriteThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      if (!SendRawMessage(pMsg, m_pCtx))
+      if (!sendRawMessage(pMsg, m_pCtx))
          break;
    }
    m_pSendQueue->Clear();
@@ -397,7 +397,7 @@ void CommSession::WriteThread(void)
 // Message processing thread
 //
 
-void CommSession::ProcessingThread(void)
+void CommSession::processingThread(void)
 {
    CSCPMessage *pMsg;
    char szBuffer[128];
@@ -430,38 +430,38 @@ void CommSession::ProcessingThread(void)
          switch(dwCommand)
          {
             case CMD_AUTHENTICATE:
-               Authenticate(pMsg, &msg);
+               authenticate(pMsg, &msg);
                break;
             case CMD_GET_PARAMETER:
-               GetParameter(pMsg, &msg);
+               getParameter(pMsg, &msg);
                break;
             case CMD_GET_LIST:
-               GetList(pMsg, &msg);
+               getList(pMsg, &msg);
                break;
             case CMD_KEEPALIVE:
                msg.SetVariable(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_ACTION:
-               Action(pMsg, &msg);
+               action(pMsg, &msg);
                break;
             case CMD_TRANSFER_FILE:
-               RecvFile(pMsg, &msg);
+               recvFile(pMsg, &msg);
                break;
             case CMD_UPGRADE_AGENT:
-               msg.SetVariable(VID_RCC, Upgrade(pMsg));
+               msg.SetVariable(VID_RCC, upgrade(pMsg));
                break;
             case CMD_GET_PARAMETER_LIST:
                msg.SetVariable(VID_RCC, ERR_SUCCESS);
                GetParameterList(&msg);
                break;
             case CMD_GET_AGENT_CONFIG:
-               GetConfig(&msg);
+               getConfig(&msg);
                break;
             case CMD_UPDATE_AGENT_CONFIG:
-               UpdateConfig(pMsg, &msg);
+               updateConfig(pMsg, &msg);
                break;
             case CMD_SETUP_PROXY_CONNECTION:
-               dwRet = SetupProxyConnection(pMsg);
+               dwRet = setupProxyConnection(pMsg);
                // Proxy session established, incoming messages will
                // not be processed locally. Acknowledgement message sent
                // by SetupProxyConnection() in case of success.
@@ -520,7 +520,7 @@ void CommSession::ProcessingThread(void)
       delete pMsg;
 
       // Send response
-      SendMessage(&msg);
+      sendMessage(&msg);
       msg.DeleteAllVariables();
    }
 
@@ -533,7 +533,7 @@ stop_processing:
 // Authenticate peer
 //
 
-void CommSession::Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
+void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    if (m_bIsAuthenticated)
    {
@@ -602,7 +602,7 @@ void CommSession::Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 // Get parameter's value
 //
 
-void CommSession::GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
+void CommSession::getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    char szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
    DWORD dwErrorCode;
@@ -619,7 +619,7 @@ void CommSession::GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 // Get list of values
 //
 
-void CommSession::GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
+void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    char szParameter[MAX_PARAM_NAME];
    DWORD i, dwErrorCode;
@@ -648,7 +648,7 @@ void CommSession::GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 // Perform action on request
 //
 
-void CommSession::Action(CSCPMessage *pRequest, CSCPMessage *pMsg)
+void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    char szAction[MAX_PARAM_NAME];
    NETXMS_VALUES_LIST args;
@@ -683,7 +683,7 @@ void CommSession::Action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 // Prepare for receiving file
 //
 
-void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
+void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
 
@@ -726,7 +726,7 @@ void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 // Upgrade agent from package in the file store
 //
 
-DWORD CommSession::Upgrade(CSCPMessage *pRequest)
+DWORD CommSession::upgrade(CSCPMessage *pRequest)
 {
    if (m_bMasterServer)
    {
@@ -748,7 +748,7 @@ DWORD CommSession::Upgrade(CSCPMessage *pRequest)
 // Get agent's configuration file
 //
 
-void CommSession::GetConfig(CSCPMessage *pMsg)
+void CommSession::getConfig(CSCPMessage *pMsg)
 {
    if (m_bMasterServer)
    {
@@ -766,7 +766,7 @@ void CommSession::GetConfig(CSCPMessage *pMsg)
 // Update agent's configuration file
 //
 
-void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
+void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    if (m_bMasterServer)
    {
@@ -821,7 +821,7 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 // Setup proxy connection
 //
 
-DWORD CommSession::SetupProxyConnection(CSCPMessage *pRequest)
+DWORD CommSession::setupProxyConnection(CSCPMessage *pRequest)
 {
    DWORD dwResult, dwAddr;
    WORD wPort;
@@ -858,17 +858,17 @@ DWORD CommSession::SetupProxyConnection(CSCPMessage *pRequest)
             m_pCtx = PROXY_ENCRYPTION_CTX;
             m_bProxyConnection = TRUE;
             dwResult = ERR_SUCCESS;
-            m_hProxyReadThread = ThreadCreateEx(ProxyReadThreadStarter, 0, this);
+            m_hProxyReadThread = ThreadCreateEx(proxyReadThreadStarter, 0, this);
 
             // Send confirmation message
-            // We cannot use SendMessage() and writing thread, because
+            // We cannot use sendMessage() and writing thread, because
             // encryption context already overriden, and writing thread
             // already stopped
             msg.SetCode(CMD_REQUEST_COMPLETED);
             msg.SetId(pRequest->GetId());
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             pRawMsg = msg.CreateMessage();
-            SendRawMessage(pRawMsg, pSavedCtx);
+            sendRawMessage(pRawMsg, pSavedCtx);
             DestroyEncryptionContext(pSavedCtx);
 
             DebugPrintf(m_dwIndex, "Established proxy connection to %s:%d", IpToStr(dwAddr, szBuffer), wPort);
@@ -895,7 +895,7 @@ DWORD CommSession::SetupProxyConnection(CSCPMessage *pRequest)
 // Proxy reading thread
 //
 
-void CommSession::ProxyReadThread(void)
+void CommSession::proxyReadThread(void)
 {
    fd_set rdfs;
    struct timeval tv;
@@ -919,5 +919,5 @@ void CommSession::ProxyReadThread(void)
          SendEx(m_hSocket, pBuffer, nRet, 0);
       }
    }
-   Disconnect();
+   disconnect();
 }

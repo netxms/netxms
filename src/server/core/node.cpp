@@ -1018,6 +1018,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    {
       m_dwFlags &= ~(NF_IS_NATIVE_AGENT | NF_IS_SNMP | NF_IS_CPSNMP |
                      NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF);
+		m_dwDynamicFlags &= ~NDF_CONFIGURATION_POLL_PASSED;
       m_szObjectId[0] = 0;
       m_szPlatformName[0] = 0;
       m_szAgentVersion[0] = 0;
@@ -1617,6 +1618,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n")
 		                      _T("Node configuration was%schanged after poll\r\n"),
 		              m_szName, bHasChanges ? _T(" ") : _T(" not "));
+
+		m_dwDynamicFlags |= NDF_CONFIGURATION_POLL_PASSED;
    }
 
    // Finish configuration poll

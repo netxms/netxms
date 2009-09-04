@@ -307,13 +307,16 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
 
 static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 {
+	TCHAR buffer[16];
+
+	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), IpToStr(ipAddr, buffer), ifIndex);
 	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) &&
        (FindNodeByIP(ipAddr) == NULL))
    {
       Interface *pInterface = node->FindInterface(ifIndex, ipAddr);
       if (pInterface != NULL)
 		{
-         if (!IsBroadcastAddress(ipAddr, pInterface->IpNetMask()))
+         if ((ipAddr < 0xE0000000) && !IsBroadcastAddress(ipAddr, pInterface->IpNetMask()))
          {
             NEW_NODE *pInfo;
 				TCHAR buf1[16], buf2[16];
@@ -327,8 +330,43 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 				          IpToStr(pInfo->dwIpAddr, buf1), 
 				          IpToStr(pInfo->dwNetMask, buf2));
          }
+			else
+			{
+				DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), IpToStr(ipAddr, buffer));
+			}
+		}
+		else
+		{
+			DbgPrintf(6, _T("DiscoveryPoller(): interface object not found"));
 		}
    }
+	else
+	{
+		DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected"), IpToStr(ipAddr, buffer));
+	}
+}
+
+
+//
+// Check host route
+// Host will be added if it is directly connected
+//
+
+static void CheckHostRoute(Node *node, ROUTE *route)
+{
+	TCHAR buffer[16];
+	Interface *iface;
+
+	DbgPrintf(6, _T("DiscoveryPoller(): checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
+	iface = node->FindInterface(route->dwIfIndex, route->dwDestAddr);
+	if (iface != NULL)
+	{
+		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex);
+	}
+	else
+	{
+		DbgPrintf(6, _T("DiscoveryPoller(): interface object not found for host route"));
+	}
 }
 
 
@@ -371,7 +409,8 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       if (pArpCache != NULL)
       {
          for(i = 0; i < pArpCache->dwNumEntries; i++)
-				CheckPotentialNode(pNode, pArpCache->pEntries[i].dwIpAddr, pArpCache->pEntries[i].dwIndex);
+				if (memcmp(pArpCache->pEntries[i].bMacAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))	// Ignore broadcast addresses
+					CheckPotentialNode(pNode, pArpCache->pEntries[i].dwIpAddr, pArpCache->pEntries[i].dwIndex);
          DestroyArpCache(pArpCache);
       }
 
@@ -382,7 +421,11 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 		if (rt != NULL)
 		{
 			for(i = 0; i < (DWORD)rt->iNumEntries; i++)
+			{
 				CheckPotentialNode(pNode, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex);
+				if ((rt->pRoutes[i].dwDestMask == 0xFFFFFFFF) && (rt->pRoutes[i].dwDestAddr != 0))
+					CheckHostRoute(pNode, &rt->pRoutes[i]);
+			}
 			DestroyRoutingTable(rt);
 		}
 

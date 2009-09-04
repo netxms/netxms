@@ -95,6 +95,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define NDF_CPSNMP_UNREACHABLE         0x0200
 #define NDF_RECHECK_CAPABILITIES       0x0400
 #define NDF_POLLING_DISABLED           0x0800
+#define NDF_CONFIGURATION_POLL_PASSED  0x1000
 
 
 //
@@ -841,6 +842,7 @@ inline BOOL Node::ReadyForDiscoveryPoll(void)
            (m_iStatus != STATUS_UNMANAGED) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
            (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval))
                ? TRUE : FALSE; 
 }
