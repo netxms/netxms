@@ -46,7 +46,7 @@ public class UserComparator extends ViewerComparator
 	{
 		int result;
 
-		switch((Integer) ((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
+		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
 		{
 			case UserManager.COLUMN_NAME:
 				result = ((NXCUserDBObject) e1).getName().compareToIgnoreCase(((NXCUserDBObject) e2).getName());
@@ -69,6 +69,6 @@ public class UserComparator extends ViewerComparator
 				result = 0;
 				break;
 		}
-		return (((SortableTableViewer) viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
 }

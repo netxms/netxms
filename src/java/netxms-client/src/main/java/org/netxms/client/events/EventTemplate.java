@@ -66,6 +66,31 @@ public class EventTemplate
 		message = msg.getVariableAsString(NXCPCodes.VID_MESSAGE);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 	}
+	
+	/**
+	 * Copy constructor.
+	 * 
+	 * @param src Original event template object
+	 */
+	public EventTemplate(final EventTemplate src)
+	{
+		setAll(src);
+	}
+	
+	/**
+	 * Set all attributes from another event template object.
+	 * 
+	 * @param src Original event template object
+	 */
+	public void setAll(final EventTemplate src)
+	{
+		code = src.code;
+		severity = src.severity;
+		flags = src.flags;
+		name = src.name;
+		message = src.message;
+		description = src.description;
+	}
 
 	/**
 	 * @return the name

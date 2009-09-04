@@ -25,7 +25,9 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -40,7 +42,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.eventmanager.Activator;
+import org.netxms.ui.eclipse.eventmanager.EventTemplateComparator;
 import org.netxms.ui.eclipse.eventmanager.EventTemplateLabelProvider;
+import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventTemplateDialog;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
@@ -77,11 +81,11 @@ public class EventConfigurator extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		final String[] names = { "Code", "Name", "Severity", "Flags", "Message", "Description" };
-		final int[] widths = { 80, 100, 100, 70, 250, 250 };
+		final int[] widths = { 70, 200, 90, 50, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new EventTemplateLabelProvider());
-//		viewer.setComparator(new UserComparator());
+		viewer.setComparator(new EventTemplateComparator());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
 		{
 			@Override
@@ -90,6 +94,8 @@ public class EventConfigurator extends ViewPart
 				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
 				if (selection != null)
 				{
+					actionEdit.setEnabled(selection.size() == 1);
+					actionDelete.setEnabled(selection.size() > 0);
 				}
 			}
 		});
@@ -97,6 +103,7 @@ public class EventConfigurator extends ViewPart
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{
+				actionEdit.run();
 			}
 		});
 
@@ -148,6 +155,7 @@ public class EventConfigurator extends ViewPart
 				return status;
 			}
 		};
+		job.setUser(true);
 		runJob(job);
 	}
 	
@@ -194,6 +202,9 @@ public class EventConfigurator extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionNew);
+		manager.add(actionDelete);
+		manager.add(actionEdit);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -206,6 +217,9 @@ public class EventConfigurator extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionNew);
+		manager.add(actionEdit);
+		manager.add(actionDelete);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -252,6 +266,7 @@ public class EventConfigurator extends ViewPart
 						return status;
 					}
 				};
+				job.setUser(true);
 				runJob(job);
 			}
 		};
@@ -267,6 +282,7 @@ public class EventConfigurator extends ViewPart
 			}
 		};
 		actionNew.setText("&New...");
+		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 
 		actionEdit = new Action() {
 			/* (non-Javadoc)
@@ -279,6 +295,8 @@ public class EventConfigurator extends ViewPart
 			}
 		};
 		actionEdit.setText("&Edit...");
+		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
+		actionEdit.setEnabled(false);
 
 		actionDelete = new Action() {
 			/* (non-Javadoc)
@@ -292,6 +310,7 @@ public class EventConfigurator extends ViewPart
 		};
 		actionDelete.setText("&Delete");
 		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
+		actionDelete.setEnabled(false);
 	}
 
 	/**
@@ -340,16 +359,147 @@ public class EventConfigurator extends ViewPart
 		viewer.getControl().setFocus();
 	}
 
+	/**
+	 * Create new event template
+	 */
 	protected void createNewEventTemplate()
 	{
-		// TODO Auto-generated method stub
+		final NXCSession session = NXMCSharedData.getInstance().getSession();
 		
+		Job job = new Job("Create new event template") {
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				IStatus status;
+				
+				try
+				{
+					final long code = session.generateEventCode();
+					new UIJob("Edit created event template") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							final EventTemplate object = new EventTemplate(code);
+							EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), object, false);
+							if (dlg.open() == Window.OK)
+							{
+								finishCreation(object);
+							}
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+					status = Status.OK_STATUS;
+				}
+				catch(Exception e)
+				{
+					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
+								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+								"Cannot get code for new event template: " + e.getMessage(), null);
+				}
+				return status;
+			}
+		};
+		job.setUser(true);
+		runJob(job);
+	}
+	
+	/**
+	 * Finish creation of new event template object (called after user press OK in properties dialog).
+	 * Called in UI thread.
+	 * 
+	 * @param object New event template object
+	 */
+	private void finishCreation(final EventTemplate object)
+	{
+		Job job = new Job("Finish event template creation") {
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				IStatus status;
+				
+				try
+				{
+					final NXCSession session = NXMCSharedData.getInstance().getSession();
+					session.modifyEventTemplate(object);
+					new UIJob("Update event template list") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							eventTemplates.put(object.getCode(), object);
+							viewer.setInput(eventTemplates.values().toArray());
+							viewer.setSelection(new StructuredSelection(object), true);
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+					status = Status.OK_STATUS;
+				}
+				catch(Exception e)
+				{
+					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
+								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+								"Cannot create event template: " + e.getMessage(), null);
+				}
+				return status;
+			}
+		};
+		job.setUser(true);
+		runJob(job);
 	}
 
+	/**
+	 * Edit currently selected event template
+	 */
 	protected void editEventTemplate()
 	{
-		// TODO Auto-generated method stub
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
 		
+		final EventTemplate object = (EventTemplate)selection.getFirstElement();
+		final EventTemplate originalObject = new EventTemplate(object);
+		EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), object, false);
+		if (dlg.open() == Window.OK)
+		{
+			Job job = new Job("Update event template") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor)
+				{
+					IStatus status;
+					
+					try
+					{
+						final NXCSession session = NXMCSharedData.getInstance().getSession();
+						session.modifyEventTemplate(object);
+						new UIJob("Update event template list") {
+							@Override
+							public IStatus runInUIThread(IProgressMonitor monitor)
+							{
+								viewer.update(object, null);
+								return Status.OK_STATUS;
+							}
+						}.schedule();
+						status = Status.OK_STATUS;
+					}
+					catch(Exception e)
+					{
+						new UIJob("Restore event template object") {
+							@Override
+							public IStatus runInUIThread(IProgressMonitor monitor)
+							{
+								object.setAll(originalObject);
+								return Status.OK_STATUS;
+							}
+						}.schedule();
+						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
+									(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+									"Cannot update event template: " + e.getMessage(), null);
+					}
+					return status;
+				}
+			};
+			job.setUser(true);
+			runJob(job);
+		}
 	}
 
 	/**

@@ -27,7 +27,28 @@ public class LabeledText extends Composite
 	public LabeledText(Composite parent, int style)
 	{
 		super(parent, style);
+		createContent(SWT.SINGLE | SWT.BORDER);
+	}
 
+	/**
+	 * 
+	 * @param parent
+	 * @param style
+	 * @param textStyle
+	 */
+	public LabeledText(Composite parent, int style, int textStyle)
+	{
+		super(parent, style);
+		createContent(textStyle);
+	}
+	
+	/**
+	 * Do widget creation.
+	 * 
+	 * @param textStyle
+	 */
+	private void createContent(int textStyle)
+	{
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		layout.marginTop = 0;
@@ -41,11 +62,19 @@ public class LabeledText extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
 		
-		text = new Text(this, SWT.SINGLE | SWT.BORDER);
+		text = new Text(this, textStyle);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
+		if ((textStyle & SWT.MULTI) != 0)
+		{
+			gd.verticalAlignment = SWT.FILL;
+			gd.grabExcessVerticalSpace = true;
+		}
+		else
+		{
+			gd.verticalAlignment = SWT.TOP;
+		}
 		text.setLayoutData(gd);
 	}
 	
