@@ -359,7 +359,7 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 // Restart agent
 //
 
-static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, const TCHAR *pData)
+static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data)
 {
 #ifdef _NETWARE
    return ERR_NOT_IMPLEMENTED;
@@ -448,7 +448,7 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
 // This function writes message from subagent to agent's log
 //
 
-static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
+static void WriteSubAgentMsg(int iLevel, const TCHAR *pszMsg)
 {
 	if (iLevel == EVENTLOG_DEBUG_TYPE)
 	{
@@ -572,6 +572,16 @@ void LoadPlatformSubagent(void)
 
 
 //
+// Send file to server (subagent API)
+//
+
+static BOOL SendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset)
+{
+	return FALSE;
+}
+
+
+//
 // Initialization routine
 //
 
@@ -652,8 +662,7 @@ BOOL Initialize(void)
 #endif
 
    // Initialize API for subagents
-   InitSubAgentsLogger(WriteSubAgentMsg);
-   InitSubAgentsTrapSender(SendTrap, SendTrap);
+   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer);
    DebugPrintf(INVALID_INDEX, "Subagent API initialized");
 
    // Initialize cryptografy

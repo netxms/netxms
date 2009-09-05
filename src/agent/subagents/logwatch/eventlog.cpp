@@ -115,12 +115,12 @@ BOOL EventSource::load()
 					m_numModules++;
 					m_modules = (HMODULE *)realloc(m_modules, sizeof(HMODULE) * m_numModules);
 					m_modules[m_numModules - 1] = hModule;
-               NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Message file \"%s\" loaded"), curr);
+               AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Message file \"%s\" loaded"), curr);
 					isLoaded = TRUE;
             }
             else
             {
-               NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("LogWatch: Unable to load message file \"%s\": %s"), 
+               AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("LogWatch: Unable to load message file \"%s\": %s"), 
 					                curr, GetSystemErrorText(GetLastError(), buffer, MAX_PATH));
             }
          }
@@ -163,7 +163,7 @@ BOOL EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
    }
    if (!success)
    {
-      NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: event log %s source %s FormatMessage(%d) error: %s"),
+      AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: event log %s source %s FormatMessage(%d) error: %s"),
 		                m_logName, m_name, rec->EventID, 
 							 GetSystemErrorText(GetLastError(), msg, msgSize));
       nx_strncpy(msg, _T("**** LogWatch: cannot format message ****"), msgSize);
@@ -272,7 +272,7 @@ static void ParseEvent(LogParser *parser, EVENTLOGRECORD *rec)
 	}
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: unable to load event source \"%s\" for log \"%s\""), eventSourceName, &(parser->getFileName()[1]));
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: unable to load event source \"%s\" for log \"%s\""), eventSourceName, &(parser->getFileName()[1]));
 	}
 }
 
@@ -323,7 +323,7 @@ reopen_log:
          NotifyChangeEventLog(hLog, nd.hLogEvent);
 			handles[0] = nd.hWakeupEvent;
 			handles[1] = g_hCondShutdown;
-			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Start watching event log \"%s\""),
+			AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Start watching event log \"%s\""),
 			                &(parser->getFileName()[1]));
 
          while(1)
@@ -352,24 +352,24 @@ retry_read:
 
 				if (error == ERROR_EVENTLOG_FILE_CHANGED)
 				{
-					NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""),
+					AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""),
 										 &(parser->getFileName()[1]));
 					break;
 				}
 
             if (error != ERROR_HANDLE_EOF)
-					NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
+					AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
 										 &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
          }
 
 			SetEvent(nd.hStopEvent);
 			ThreadJoin(nt);
-			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Stop watching event log \"%s\""),
+			AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Stop watching event log \"%s\""),
 			                &(parser->getFileName()[1]));
       }
       else
       {
-			NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log (initial read) \"%s\": %s"),
+			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log (initial read) \"%s\": %s"),
 			                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
       }
 
@@ -387,7 +387,7 @@ retry_read:
    }
    else
    {
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\": %s"),
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\": %s"),
 		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
    }
 

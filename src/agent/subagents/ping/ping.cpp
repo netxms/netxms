@@ -99,13 +99,13 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
 	DWORD dwAddr, dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
 
-	if (!NxGetParameterArg(pszParam, 1, szHostName, 256))
+	if (!AgentGetParameterArg(pszParam, 1, szHostName, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 	StrStrip(szHostName);
-	if (!NxGetParameterArg(pszParam, 2, szTimeOut, 256))
+	if (!AgentGetParameterArg(pszParam, 2, szTimeOut, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 	StrStrip(szTimeOut);
-	if (!NxGetParameterArg(pszParam, 3, szPacketSize, 256))
+	if (!AgentGetParameterArg(pszParam, 3, szPacketSize, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 	StrStrip(szPacketSize);
 
@@ -140,7 +140,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 	DWORD i, dwIpAddr;
 	BOOL bUseName = FALSE;
 
-	if (!NxGetParameterArg(pszParam, 1, szTarget, MAX_DB_STRING))
+	if (!AgentGetParameterArg(pszParam, 1, szTarget, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 	StrStrip(szTarget);
 
@@ -188,7 +188,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 // Handler for configured target list
 //
 
-static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	DWORD i;
 	TCHAR szBuffer[MAX_DB_STRING + 64], szIpAddr[16];
@@ -198,7 +198,7 @@ static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES
 		_stprintf(szBuffer, _T("%s %u %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
 				m_pTargetList[i].dwLastRTT, m_pTargetList[i].dwAvgRTT, m_pTargetList[i].dwPacketLoss, 
 				m_pTargetList[i].dwPacketSize, m_pTargetList[i].szName);
-		NxAddResultString(pValue, szBuffer);
+		value->add(szBuffer);
 	}
 
 	return SYSINFO_RC_SUCCESS;
@@ -327,7 +327,7 @@ static BOOL SubagentInit(Config *config)
 					*pEnd = 0;
 				StrStrip(pItem);
 				if (!AddTargetFromConfig(pItem))
-					NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
+					AgentWriteLog(EVENTLOG_WARNING_TYPE,
 							_T("Unable to add ICMP ping target from configuration file. ")
 							_T("Original configuration record: %s"), pItem);
 			}

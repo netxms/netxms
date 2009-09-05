@@ -73,7 +73,7 @@ void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
 {
    TCHAR szBuffer[1024];
 
-   NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("%s: PDH Error %08X in call to %s (%s)"), 
+   AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("%s: PDH Error %08X in call to %s (%s)"), 
                    pszFunction, dwError, pszPdhCall, GetPdhErrorText(dwError, szBuffer, 1024));
 }
 

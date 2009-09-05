@@ -22,11 +22,11 @@ LONG H_CheckHTTP(const char *pszParam, const char *pArg, char *pValue)
 	char szMatch[1024];
 	unsigned short nPort;
 
-	NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
-	NxGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
-	NxGetParameterArg(pszParam, 3, szURI, sizeof(szURI));
-	NxGetParameterArg(pszParam, 4, szHeader, sizeof(szHeader));
-	NxGetParameterArg(pszParam, 5, szMatch, sizeof(szMatch));
+	AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+	AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
+	AgentGetParameterArg(pszParam, 3, szURI, sizeof(szURI));
+	AgentGetParameterArg(pszParam, 4, szHeader, sizeof(szHeader));
+	AgentGetParameterArg(pszParam, 5, szMatch, sizeof(szMatch));
 
 	if (szHost[0] == 0 || szPort[0] == 0 || szURI[0] == 0)
 	{

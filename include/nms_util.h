@@ -311,6 +311,34 @@ public:
 	TCHAR *GetValueByIndex(DWORD idx) { return (idx < m_dwSize) ? CHECK_NULL_EX(m_ppszValues[idx]) : NULL; }
 };
 
+
+//
+// String list class
+//
+
+class LIBNETXMS_EXPORTABLE StringList
+{
+private:
+	int m_count;
+	int m_allocated;
+	TCHAR **m_values;
+
+public:
+	StringList();
+	~StringList();
+
+	void add(const TCHAR *value);
+	void addPreallocated(TCHAR *value);
+	void add(LONG value);
+	void add(DWORD value);
+	void add(INT64 value);
+	void add(QWORD value);
+	void add(double value);
+	void clear();
+	int getSize() { return m_count; }
+	const TCHAR *getValue(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
+};
+
 #endif   /* __cplusplus */
 
 
@@ -523,10 +551,11 @@ extern "C"
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
    void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const TCHAR *pszSymbol, TCHAR *pszErrorText);
 
-   void LIBNETXMS_EXPORTABLE InitSubAgentsLogger(void (* pFunc)(int, TCHAR *));
-   void LIBNETXMS_EXPORTABLE InitSubAgentsTrapSender(void (* pFunc1)(DWORD, int, TCHAR **),
+	void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, const TCHAR *),
+															void (* sendTrap2)(DWORD, const char *, va_list),
+															void (* sendTrap1)(DWORD, int, TCHAR **),
+															BOOL (* sendFile)(void *, DWORD, const char *, long));
 
-                                                     void (* pFunc2)(DWORD, const char *, va_list));
 	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const TCHAR *option, TCHAR *buffer, int bufSize);
 	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBool(const TCHAR *optString, const TCHAR *option, BOOL defVal);
 	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, const TCHAR *option, long defVal);

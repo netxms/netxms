@@ -529,10 +529,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\inline.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\log.cpp"
 				>
 			</File>

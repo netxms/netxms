@@ -36,7 +36,7 @@ static DWORD m_dwNumActions = 0;
 //
 
 BOOL AddAction(const char *pszName, int iType, const char *pArg, 
-               LONG (*fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *),
+               LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const char *pszSubAgent, const char *pszDescription)
 {
    DWORD i;
@@ -94,7 +94,7 @@ BOOL AddActionFromConfig(char *pszLine, BOOL bShellExec)
 // Execute action
 //
 
-DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs)
+DWORD ExecAction(char *pszAction, StringList *pArgs)
 {
    DWORD i, dwErrorCode = ERR_UNKNOWN_PARAMETER;
 
@@ -127,7 +127,7 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs)
 // Enumerate available actions
 //
 
-LONG H_ActionList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
+LONG H_ActionList(const char *cmd, const char *arg, StringList *value)
 {
    DWORD i;
    char szBuffer[1024];
@@ -138,7 +138,7 @@ LONG H_ActionList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
                  m_pActionList[i].iType == AGENT_ACTION_EXEC ? 
                      m_pActionList[i].handler.pszCmdLine :
                      m_pActionList[i].handler.sa.szSubagentName);
-      NxAddResultString(value, szBuffer);
+		value->add(szBuffer);
    }
    return SYSINFO_RC_SUCCESS;
 }

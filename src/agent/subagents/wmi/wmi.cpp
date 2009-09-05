@@ -27,7 +27,7 @@
 // Externals
 //
 
-LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value);
 LONG H_ACPITZCurrTemp(const char *cmd, const char *arg, char *value);
 
 
@@ -194,8 +194,8 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 	ULONG uRet;
 	LONG rc = SYSINFO_RC_ERROR;
 
-	if (!NxGetParameterArg(cmd, 1, ns, 256) ||
-	    !NxGetParameterArg(cmd, 2, query, 256))
+	if (!AgentGetParameterArg(cmd, 1, ns, 256) ||
+	    !AgentGetParameterArg(cmd, 2, query, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	pwszNamespace = WideStringFromMBString(ns);
@@ -205,7 +205,7 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 	{
 		if (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
 		{
-			if (NxGetParameterArg(cmd, 3, prop, 256))
+			if (AgentGetParameterArg(cmd, 3, prop, 256))
 			{
 				VARIANT v;
 				WCHAR *pwstrProperty;
@@ -231,7 +231,7 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 				}
 				else
 				{
-					NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("WMI: cannot get property \"%s\" from query \"%s\" in namespace \"%s\""), prop, query, ns);
+					AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("WMI: cannot get property \"%s\" from query \"%s\" in namespace \"%s\""), prop, query, ns);
 				}
 				free(pwstrProperty);
 			}
@@ -243,14 +243,14 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 		}
 		else
 		{
-			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("WMI: no objects returned from query \"%s\" in namespace \"%s\""), query, ns);
+			AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("WMI: no objects returned from query \"%s\" in namespace \"%s\""), query, ns);
 		}
 		pEnumObject->Release();
 		CloseWMIQuery(&ctx);
 	}
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
 	}
 	free(pwszNamespace);
 	free(pwszQuery);
@@ -262,7 +262,7 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 // Handler for WMI.NameSpaces enum
 //
 
-static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
@@ -283,8 +283,7 @@ static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VAL
 
 				str = VariantToString(&v);
 				VariantClear(&v);
-				NxAddResultString(pValue, str);
-				free(str);
+				value->addPreallocated(str);
 			}
 			pClassObject->Release();
 		}
@@ -300,7 +299,7 @@ static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VAL
 // Handler for WMI.Classes enum
 //
 
-static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
@@ -310,7 +309,7 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES
 	ULONG uRet;
 	LONG rc = SYSINFO_RC_ERROR;
 
-	if (!NxGetParameterArg(pszParam, 1, ns, 256))
+	if (!AgentGetParameterArg(pszParam, 1, ns, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 	pwszNamespace = WideStringFromMBString(ns);
 
@@ -327,8 +326,7 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES
 
 				str = VariantToString(&v);
 				VariantClear(&v);
-				NxAddResultString(pValue, str);
-				free(str);
+				value->addPreallocated(str);
 			}
 			pClassObject->Release();
 		}

@@ -65,7 +65,7 @@
 struct WINDOW_LIST
 {
 	DWORD dwPID;
-	NETXMS_VALUES_LIST *pWndList;
+	StringList *pWndList;
 };
 
 

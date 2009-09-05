@@ -39,7 +39,7 @@ static LONG H_UPSData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	LONG nDev;
 	TCHAR *pErr, szArg[256];
 
-	if (!NxGetParameterArg(pszParam, 1, szArg, 256))
+	if (!AgentGetParameterArg(pszParam, 1, szArg, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	nDev = _tcstol(szArg, &pErr, 0);
@@ -65,7 +65,7 @@ static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
 	LONG nDev;
 	TCHAR *pErr, szArg[256];
 
-	if (!NxGetParameterArg(pszParam, 1, szArg, 256))
+	if (!AgentGetParameterArg(pszParam, 1, szArg, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	nDev = _tcstol(szArg, &pErr, 0);
@@ -84,7 +84,7 @@ static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
 // List configured devices
 //
 
-static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	TCHAR szBuffer[256];
 	int i;
@@ -95,7 +95,7 @@ static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES
 			_sntprintf(szBuffer, 256, _T("%d %s %s %s"), i,
 					m_deviceInfo[i]->Device(), m_deviceInfo[i]->Type(),
 					m_deviceInfo[i]->Name());
-			NxAddResultString(pValue, szBuffer);
+			value->add(szBuffer);
 		}
 	return SYSINFO_RC_SUCCESS;
 }
@@ -282,7 +282,7 @@ static BOOL SubAgentInit(Config *config)
 			StrStrip(entry);
 			if (!AddDeviceFromConfig(entry))
 			{
-				NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
+				AgentWriteLog(EVENTLOG_WARNING_TYPE,
 						_T("Unable to add UPS device from configuration file. ")
 						_T("Original configuration record: %s"), devices->getValue(i));
 			}

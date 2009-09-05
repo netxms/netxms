@@ -451,7 +451,8 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, 
 //
 
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCHAR *pszFile,
-                                           CSCP_ENCRYPTION_CONTEXT *pCtx, long offset)
+                                           CSCP_ENCRYPTION_CONTEXT *pCtx, long offset,
+														 void (* progressCallback)(INT64, void *), void *cbArg)
 {
 #ifndef UNDER_CE
    int hFile, iBytes;
@@ -459,6 +460,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
    FILE *hFile;
    int iBytes;
 #endif
+	INT64 bytesTransferred = 0;
    DWORD dwPadding;
    BOOL bResult = FALSE;
    CSCP_MESSAGE *pMsg;
@@ -515,6 +517,12 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
 				{
 					if (SendEx(hSocket, (char *)pMsg, (DWORD)iBytes + CSCP_HEADER_SIZE + dwPadding, 0) <= 0)
 						break;	// Send error
+				}
+
+				if (progressCallback != NULL)
+				{
+					bytesTransferred += iBytes;
+					progressCallback(bytesTransferred, cbArg);
 				}
 
 				if (iBytes < FILE_BUFFER_SIZE)

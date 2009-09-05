@@ -44,10 +44,10 @@ LONG H_RemoteShareStatus(const char *cmd, const char *arg, char *value)
 	memset(login, 0, 64 * sizeof(TCHAR));
 	memset(password, 0, 256 * sizeof(TCHAR));
 
-	NxGetParameterArg(cmd, 1, share, MAX_PATH);
-	NxGetParameterArg(cmd, 2, domain, 64);
-	NxGetParameterArg(cmd, 3, login, 64);
-	NxGetParameterArg(cmd, 4, password, 256);
+	AgentGetParameterArg(cmd, 1, share, MAX_PATH);
+	AgentGetParameterArg(cmd, 2, domain, 64);
+	AgentGetParameterArg(cmd, 3, login, 64);
+	AgentGetParameterArg(cmd, 4, password, 256);
 
 	if ((*share == 0) || (*domain == 0) || (*login == 0) || (*password == 0))
 		return SYSINFO_RC_UNSUPPORTED;

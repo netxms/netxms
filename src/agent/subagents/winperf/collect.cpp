@@ -65,7 +65,7 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
 			*ppszNewName = (TCHAR *)malloc(_tcslen(pszName) * sizeof(TCHAR) * 4);
 			if (TranslateCounterName(pszName, *ppszNewName))
 			{
-				NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("WINPERF: Counter translated: %s ==> %s"), pszName, *ppszNewName);
+				AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("WINPERF: Counter translated: %s ==> %s"), pszName, *ppszNewName);
 				rc = PdhAddCounter(hQuery, *ppszNewName, 0, &hCounter);
 				if (rc != ERROR_SUCCESS)
 				{
@@ -291,7 +291,7 @@ static THREAD_RESULT THREAD_CALL CollectorThread(WINPERF_COUNTER_SET *pSet)
    szFName[16] = pSet->cClass;
    if (pSet->dwNumCounters == 0)
    {
-      NxWriteAgentLog(EVENTLOG_INFORMATION_TYPE, "Counter set %c is empty, "
+      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, "Counter set %c is empty, "
                                                  "collector thread for that set will not start",
                       pSet->cClass);
       return 0;
@@ -310,7 +310,7 @@ static THREAD_RESULT THREAD_CALL CollectorThread(WINPERF_COUNTER_SET *pSet)
       {
          TCHAR szBuffer[1024];
 
-         NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("%s: Unable to add counter \"%s\" to query (%s)"), 
+         AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("%s: Unable to add counter \"%s\" to query (%s)"), 
                          szFName, pSet->ppCounterList[i]->pszName, GetPdhErrorText(rc, szBuffer, 1024));
          pSet->ppCounterList[i]->handle = NULL;
       }
@@ -323,7 +323,7 @@ static THREAD_RESULT THREAD_CALL CollectorThread(WINPERF_COUNTER_SET *pSet)
    if (dwOKCounters == 0)
    {
       PdhCloseQuery(hQuery);
-      NxWriteAgentLog(EVENTLOG_WARNING_TYPE, "Failed to add any counter to query for counter set %c, "
+      AgentWriteLog(EVENTLOG_WARNING_TYPE, "Failed to add any counter to query for counter set %c, "
                                              "collector thread for that set will not start",
                       pSet->cClass);
       return 0;
@@ -381,7 +381,7 @@ static THREAD_RESULT THREAD_CALL CollectorThread(WINPERF_COUNTER_SET *pSet)
 
    // Cleanup
    PdhCloseQuery(hQuery);
-   NxWriteAgentLog(EVENTLOG_INFORMATION_TYPE, "Collector thread for counter set %c terminated", pSet->cClass);
+   AgentWriteLog(EVENTLOG_INFORMATION_TYPE, "Collector thread for counter set %c terminated", pSet->cClass);
 
    return 0;
 }

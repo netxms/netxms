@@ -852,7 +852,7 @@ DWORD NXCL_Session::LoadUserDB(void)
 
 DWORD NXCL_Session::SendFile(DWORD dwRqId, TCHAR *pszFileName)
 {
-   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, 0) ? RCC_SUCCESS : RCC_IO_ERROR;
+   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, 0, NULL, NULL) ? RCC_SUCCESS : RCC_IO_ERROR;
 }
 
 

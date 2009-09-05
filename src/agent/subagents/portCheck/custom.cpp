@@ -14,8 +14,8 @@ LONG H_CheckCustom(const char *pszParam, const char *pArg, char *pValue)
 	char szPort[1024];
 	unsigned short nPort;
 
-   NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
-   NxGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
+   AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+   AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
 
 	if (szHost[0] == 0 || szPort[0] == 0)
 	{

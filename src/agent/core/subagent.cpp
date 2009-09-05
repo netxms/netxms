@@ -232,7 +232,7 @@ void UnloadAllSubAgents(void)
 // Enumerate loaded subagents
 //
 
-LONG H_SubAgentList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
+LONG H_SubAgentList(const char *cmd, const char *arg, StringList *value)
 {
    DWORD i;
    char szBuffer[MAX_PATH + 32];
@@ -248,7 +248,7 @@ LONG H_SubAgentList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
                  m_pSubAgentList[i].pInfo->szName, m_pSubAgentList[i].pInfo->szVersion,
                  m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
 #endif
-      NxAddResultString(value, szBuffer);
+      value->add(szBuffer);
    }
    return SYSINFO_RC_SUCCESS;
 }
@@ -258,8 +258,7 @@ LONG H_SubAgentList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 // Process unknown command by subagents
 //
 
-BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse,
-                          SOCKET sock, CSCP_ENCRYPTION_CONTEXT *ctx)
+BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
 {
    BOOL bResult = FALSE;
    DWORD i;
@@ -267,7 +266,7 @@ BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *p
    for(i = 0; (i < m_dwNumSubAgents) && (!bResult); i++)
    {
       if (m_pSubAgentList[i].pInfo->pCommandHandler != NULL)
-         bResult = m_pSubAgentList[i].pInfo->pCommandHandler(dwCommand, pRequest, pResponse, sock, ctx);
+         bResult = m_pSubAgentList[i].pInfo->pCommandHandler(dwCommand, pRequest, pResponse, session);
    }
    return bResult;
 }

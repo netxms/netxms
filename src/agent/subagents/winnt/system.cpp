@@ -35,7 +35,7 @@ LONG H_ServiceState(const char *cmd, const char *arg, char *value)
    TCHAR szServiceName[MAX_PATH];
    LONG iResult = SYSINFO_RC_SUCCESS;
 
-   if (!NxGetParameterArg(cmd, 1, szServiceName, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 1, szServiceName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
@@ -137,7 +137,7 @@ LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue)
 // Handler for System.ActiveUserSessions enum
 //
 
-LONG H_ActiveUserSessions(const char *pszCmd, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ActiveUserSessions(const char *pszCmd, const char *pArg, StringList *value)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
@@ -171,7 +171,7 @@ LONG H_ActiveUserSessions(const char *pszCmd, const char *pArg, NETXMS_VALUES_LI
                        pszUserName == NULL ? _T("UNKNOWN") : pszUserName,
                        pSessionList[i].pWinStationName,
                        pszClientName == NULL ? _T("UNKNOWN") : pszClientName);
-            NxAddResultString(pValue, szBuffer);
+            value->add(szBuffer);
 
             if (pszUserName != NULL)
                imp_WTSFreeMemory(pszUserName);

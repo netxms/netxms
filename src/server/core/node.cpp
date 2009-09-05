@@ -1966,7 +1966,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       DWORD i, dwId;
       NetObj *pObject = NULL;
 
-      NxGetParameterArg((char *)szParam, 1, szArg, 256);
+      AgentGetParameterArg((char *)szParam, 1, szArg, 256);
       dwId = strtoul(szArg, &pEnd, 0);
       if (*pEnd != 0)
       {
@@ -2002,7 +2002,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       DWORD dwId;
       NetObj *pObject = NULL;
 
-      NxGetParameterArg((char *)szParam, 1, szArg, 256);
+      AgentGetParameterArg((char *)szParam, 1, szArg, 256);
       dwId = strtoul(szArg, &pEnd, 0);
       if (*pEnd == 0)
 		{

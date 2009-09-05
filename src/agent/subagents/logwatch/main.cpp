@@ -60,9 +60,9 @@ static LogParser **m_parserList = NULL;
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
 #ifdef _WIN32
-	((LogParser *)arg)->monitorFile(g_hCondShutdown, NxWriteAgentLog);
+	((LogParser *)arg)->monitorFile(g_hCondShutdown, AgentWriteLog);
 #else
-	((LogParser *)arg)->monitorFile(g_hCondShutdown, &g_shutdownFlag, NxWriteAgentLog);
+	((LogParser *)arg)->monitorFile(g_hCondShutdown, &g_shutdownFlag, AgentWriteLog);
 #endif
 	return THREAD_OK;
 }
@@ -82,7 +82,7 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 // Get list of configured parsers
 //
 
-static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, NETXMS_VALUES_LIST *value)
+static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
 	return SYSINFO_RC_UNSUPPORTED;
 }
@@ -125,7 +125,7 @@ static void SubagentShutdown(void)
 static void LogParserMatch(DWORD event, const TCHAR *text, int paramCount,
                            TCHAR **paramList, DWORD objectId, void *userArg)
 {
-	NxSendTrap2(event, paramCount, paramList);
+	AgentSendTrap2(event, paramCount, paramList);
 }
 
 
@@ -135,7 +135,7 @@ static void LogParserMatch(DWORD event, const TCHAR *text, int paramCount,
 
 static void LogParserTrace(const TCHAR *format, va_list args)
 {
-	NxWriteAgentLog2(EVENTLOG_DEBUG_TYPE, format, args);
+	AgentWriteLog2(EVENTLOG_DEBUG_TYPE, format, args);
 }
 
 
@@ -163,25 +163,25 @@ static void AddParserFromConfig(const TCHAR *file)
 				m_numParsers++;
 				m_parserList = (LogParser **)realloc(m_parserList, sizeof(LogParser *) * m_numParsers);
 				m_parserList[m_numParsers - 1] = parser;
-				NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: registered parser for file %s, trace level set to %d"),
+				AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: registered parser for file %s, trace level set to %d"),
 				                parser->getFileName(), parser->getTraceLevel());
 			}
 			else
 			{
 				delete parser;
-				NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Parser configuration %s missing file name to parse"), file);
+				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Parser configuration %s missing file name to parse"), file);
 			}
 		}
 		else
 		{
 			delete parser;
-			NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Cannot create parser from configuration file %s (%s)"), file, error);
+			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Cannot create parser from configuration file %s (%s)"), file, error);
 		}
 		free(xml);
 	}
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Cannot load parser configuration file %s"), file);
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Cannot load parser configuration file %s"), file);
 	}
 }
 

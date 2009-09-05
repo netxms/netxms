@@ -32,9 +32,9 @@
 // Functions
 //
 
-BOOL InitSender(TCHAR *pszInitArgs);
+BOOL InitSender(const TCHAR *pszInitArgs);
 void ShutdownSender(void);
-BOOL SendSMS(TCHAR *pszPhoneNumber, TCHAR *pszText);
+BOOL SendSMS(const TCHAR *pszPhoneNumber, const TCHAR *pszText);
 
 
 //

@@ -248,7 +248,7 @@ void UPSInterface::CommThread(void)
    // Try to open device immediatelly after start
    if (Open())
    {
-      NxWriteAgentLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
+      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
 
       // Open successfully, query all parameters
       MutexLock(m_mutex, INFINITE);
@@ -270,7 +270,7 @@ void UPSInterface::CommThread(void)
    }
    else
    {
-      NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("UPS: Cannot establish communication with device #%d \"%s\""), m_nIndex, m_pszName);
+      AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("UPS: Cannot establish communication with device #%d \"%s\""), m_nIndex, m_pszName);
    }
 
    for(nIteration = 0; ; nIteration++)
@@ -283,7 +283,7 @@ void UPSInterface::CommThread(void)
       {
          if (Open())
          {
-            NxWriteAgentLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
+            AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
             nIteration = 100;    // Force all parameters to be polled
          }
       }
@@ -299,7 +299,7 @@ void UPSInterface::CommThread(void)
             }
             else
             {
-               NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("UPS: Lost communication with device #%d \"%s\""), m_nIndex, m_pszName);
+               AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("UPS: Lost communication with device #%d \"%s\""), m_nIndex, m_pszName);
             }
          }
       }

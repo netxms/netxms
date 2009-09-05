@@ -78,7 +78,7 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
    DWORD dwBytes;
    BOOL bSwapWords = FALSE;
 
-   if (!NxGetParameterArg(pszParam, 1, szBuffer, 128))
+   if (!AgentGetParameterArg(pszParam, 1, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Get physical disk number (zero-based)
@@ -145,7 +145,7 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
          switch(pszArg[0])
          {
             case 'A':   // Generic attribute
-               if (NxGetParameterArg(pszParam, 2, szBuffer, 128))
+               if (AgentGetParameterArg(pszParam, 2, szBuffer, 128))
                {
                   LONG nAttr;
 

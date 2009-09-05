@@ -970,7 +970,7 @@ DWORD AgentConnection::ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv
 // Upload file to agent
 //
 
-DWORD AgentConnection::UploadFile(const TCHAR *pszFile)
+DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback)(INT64, void *), void *cbArg)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
@@ -998,7 +998,7 @@ DWORD AgentConnection::UploadFile(const TCHAR *pszFile)
 
    if (dwResult == ERR_SUCCESS)
    {
-      if (SendFileOverNXCP(m_hSocket, dwRqId, pszFile, m_pCtx, 0))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, pszFile, m_pCtx, 0, progressCallback, cbArg))
          dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;

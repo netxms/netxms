@@ -512,7 +512,7 @@ void CommSession::processingThread(void)
 					break;
             default:
                // Attempt to process unknown command by subagents
-               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, m_hSocket, m_pCtx))
+               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))
                   msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
          }
@@ -622,25 +622,18 @@ void CommSession::getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    char szParameter[MAX_PARAM_NAME];
-   DWORD i, dwErrorCode;
-   NETXMS_VALUES_LIST value;
 
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
-   value.dwNumStrings = 0;
-   value.ppStringList = NULL;
 
-   dwErrorCode = GetEnumValue(m_dwIndex, szParameter, &value);
+   StringList value;
+   DWORD dwErrorCode = GetEnumValue(m_dwIndex, szParameter, &value);
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
-      pMsg->SetVariable(VID_NUM_STRINGS, value.dwNumStrings);
-      for(i = 0; i < value.dwNumStrings; i++)
-         pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.ppStringList[i]);
+		pMsg->SetVariable(VID_NUM_STRINGS, (DWORD)value.getSize());
+		for(int i = 0; i < value.getSize(); i++)
+			pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.getValue(i));
    }
-
-   for(i = 0; i < value.dwNumStrings; i++)
-      safe_free(value.ppStringList[i]);
-   safe_free(value.ppStringList);
 }
 
 
@@ -651,26 +644,20 @@ void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    char szAction[MAX_PARAM_NAME];
-   NETXMS_VALUES_LIST args;
+   StringList args;
    DWORD i, dwRetCode;
 
    if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_bControlServer)
    {
       // Get action name and arguments
       pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
-      args.dwNumStrings = pRequest->GetVariableLong(VID_NUM_ARGS);
-      args.ppStringList = (char **)malloc(sizeof(char *) * args.dwNumStrings);
-      for(i = 0; i < args.dwNumStrings; i++)
-         args.ppStringList[i] = pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i);
+      DWORD numArgs = pRequest->GetVariableLong(VID_NUM_ARGS);
+      for(i = 0; i < numArgs; i++)
+			args.addPreallocated(pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i));
 
       // Execute action
       dwRetCode = ExecAction(szAction, &args);
       pMsg->SetVariable(VID_RCC, dwRetCode);
-
-      // Cleanup
-      for(i = 0; i < args.dwNumStrings; i++)
-         safe_free(args.ppStringList[i]);
-      safe_free(args.ppStringList);
    }
    else
    {

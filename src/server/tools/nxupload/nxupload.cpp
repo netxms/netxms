@@ -105,6 +105,20 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
 
 
 //
+// Upload progress callback
+//
+
+static void ProgressCallback(INT64 bytesTransferred, void *cbArg)
+{
+#ifdef _WIN32
+	printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-16I64d", bytesTransferred);
+#else
+	printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-16lld", bytesTransferred);
+#endif
+}
+
+
+//
 // Startup
 //
 
@@ -318,7 +332,11 @@ int main(int argc, char *argv[])
                DWORD dwError;
 
                nElapsedTime = GetCurrentTimeMs();
-               dwError = conn.UploadFile(argv[optind + 1]);
+					if (bVerbose)
+						printf("Upload:                 ");
+					dwError = conn.UploadFile(argv[optind + 1], bVerbose ? ProgressCallback : NULL);
+					if (bVerbose)
+						printf("\r                        \r");
                nElapsedTime = GetCurrentTimeMs() - nElapsedTime;
                if (bVerbose)
                {

@@ -145,7 +145,7 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 #endif
 
 
-DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs, pid_t *pid)
+DWORD ExecuteCommand(char *pszCommand, StringList *args, pid_t *pid)
 {
    char *pszCmdLine, *sptr;
    DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
@@ -153,7 +153,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs, pid_t *pid)
    DebugPrintf(INVALID_INDEX, "EXEC: Expanding command \"%s\"", pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
-   if (pArgs != NULL)
+   if (args != NULL)
    {
       dwSize = (DWORD)strlen(pszCommand) + 1;
       pszCmdLine = (char *)malloc(dwSize);
@@ -165,17 +165,17 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs, pid_t *pid)
 					break;   // Single $ character at the end of line
 				if ((*sptr >= '1') && (*sptr <= '9'))
 				{
-					DWORD dwArg = *sptr - '1';
+					int argNum = *sptr - '1';
 
-					if (dwArg < pArgs->dwNumStrings)
+					if (argNum < args->getSize())
 					{
 						int iArgLength;
 
 						// Extend resulting line
-						iArgLength = (int)strlen(pArgs->ppStringList[dwArg]);
+						iArgLength = (int)strlen(args->getValue(argNum));
 						dwSize += iArgLength;
 						pszCmdLine = (char *)realloc(pszCmdLine, dwSize);
-						strcpy(&pszCmdLine[i], pArgs->ppStringList[dwArg]);
+						strcpy(&pszCmdLine[i], args->getValue(argNum));
 						i += iArgLength;
 					}
 				}
@@ -291,7 +291,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs, pid_t *pid)
 #endif
 
    // Cleanup
-   if (pArgs != NULL)
+   if (args != NULL)
       free(pszCmdLine);
 
    return dwRetCode;
@@ -386,7 +386,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
             break;   // Single $ character at the end of line
          if ((*sptr >= '1') && (*sptr <= '9'))
          {
-            if (NxGetParameterArg(pszCmd, *sptr - '0', szBuffer, 1024))
+            if (AgentGetParameterArg(pszCmd, *sptr - '0', szBuffer, 1024))
             {
                int iArgLength;
 
@@ -532,7 +532,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 // Execute external command via shell
 //
 
-DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
+DWORD ExecuteShellCommand(char *pszCommand, StringList *args)
 {
    char *pszCmdLine, *sptr;
    DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
@@ -540,7 +540,7 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    DebugPrintf(INVALID_INDEX, "SH_EXEC: Expanding command \"%s\"", pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
-   if (pArgs != NULL)
+   if (args != NULL)
    {
       dwSize = (DWORD)strlen(pszCommand) + 1;
       pszCmdLine = (char *)malloc(dwSize);
@@ -552,17 +552,17 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
                break;   // Single $ character at the end of line
             if ((*sptr >= '1') && (*sptr <= '9'))
             {
-               DWORD dwArg = *sptr - '1';
+               int argNum = *sptr - '1';
 
-               if (dwArg < pArgs->dwNumStrings)
+               if (argNum < args->getSize())
                {
                   int iArgLength;
 
                   // Extend resulting line
-                  iArgLength = (int)strlen(pArgs->ppStringList[dwArg]);
+						iArgLength = (int)strlen(args->getValue(argNum));
                   dwSize += iArgLength;
                   pszCmdLine = (char *)realloc(pszCmdLine, dwSize);
-                  strcpy(&pszCmdLine[i], pArgs->ppStringList[dwArg]);
+                  strcpy(&pszCmdLine[i], args->getValue(argNum));
                   i += iArgLength;
                }
             }
@@ -590,36 +590,8 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
       dwRetCode = ERR_EXEC_FAILED;
 
    // Cleanup
-   if (pArgs != NULL)
+   if (args != NULL)
       free(pszCmdLine);
 
    return dwRetCode;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.21  2007/11/06 07:32:57  victor
-- Added possibility to specify multiple recipients in e-mail or SMS action
-- Fixed NetWare 6.0 compatibility issues
-- Manual updated
-- Added default "Admins" group
-
-Revision 1.20  2007/04/19 08:39:21  alk
-popen()-ed hanlde was closed with fclose()...
-
-Revision 1.19  2007/04/19 05:46:53  victor
-Minor changes
-
-Revision 1.18  2007/04/19 05:38:21  victor
-Added error handling for failed external parameters
-
-Revision 1.17  2007/04/19 05:24:25  victor
-Minor changes
-
-Revision 1.16  2007/04/18 21:13:40  alk
-exec scheme changed
-
-
-*/

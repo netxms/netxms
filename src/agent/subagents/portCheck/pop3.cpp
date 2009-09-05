@@ -14,9 +14,9 @@ LONG H_CheckPOP3(const char *pszParam, const char *pArg, char *pValue)
 	char szPassword[256];
 	bool bIsOk = false;
 
-	NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
-	NxGetParameterArg(pszParam, 2, szUser, sizeof(szUser));
-	NxGetParameterArg(pszParam, 3, szPassword, sizeof(szPassword));
+	AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+	AgentGetParameterArg(pszParam, 2, szUser, sizeof(szUser));
+	AgentGetParameterArg(pszParam, 3, szPassword, sizeof(szPassword));
 
 	if (szHost[0] == 0 || szUser[0] == 0 || szPassword[0] == 0)
 	{

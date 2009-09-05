@@ -54,7 +54,7 @@ struct SNMP_ENUM_ARGS
    TCHAR **ppszOidList;
    LONG *pnFormatList;
    DWORD dwFlags;
-   NETXMS_VALUES_LIST values;
+   StringList *values;
    Node *pNode;
 };
 
@@ -265,7 +265,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 // Add SNMP variable value to results list
 //
 
-static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar,
+static void AddSNMPResult(StringList *values, SNMP_Variable *pVar,
                           LONG nFmt, Node *pNode)
 {
    TCHAR szBuffer[4096];
@@ -306,7 +306,7 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar,
    {
       szBuffer[0] = 0;
    }
-   NxAddResultString(pValues, szBuffer);
+	values->add(szBuffer);
 }
 
 
@@ -359,12 +359,12 @@ static DWORD TableHandler(DWORD dwVersion, SNMP_Variable *pVar,
          ((SNMP_ENUM_ARGS *)pArg)->dwNumRows++;
 
          // Add first column to results
-         AddSNMPResult(&((SNMP_ENUM_ARGS *)pArg)->values, pVar,
+         AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->values, pVar,
                        ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0],
                        ((SNMP_ENUM_ARGS *)pArg)->pNode);
 
          for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
-            AddSNMPResult(&((SNMP_ENUM_ARGS *)pArg)->values, 
+            AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->values, 
                           pRespPDU->getVariable(i - 1), 
                           ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i],
                           ((SNMP_ENUM_ARGS *)pArg)->pNode);
@@ -404,8 +404,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          args.ppszOidList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumCols);
          args.pnFormatList = (LONG *)malloc(sizeof(LONG) * dwNumCols);
          args.dwFlags = ((TOOL_STARTUP_INFO *)pArg)->dwFlags;
-         args.values.dwNumStrings = 0;
-         args.values.ppStringList = NULL;
+         args.values = new StringList;
          args.pNode = ((TOOL_STARTUP_INFO *)pArg)->pNode;
          for(i = 0; i < dwNumCols; i++)
          {
@@ -424,8 +423,8 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
             msg.SetVariable(VID_TABLE_TITLE, ((TOOL_STARTUP_INFO *)pArg)->pszToolData);
             msg.SetVariable(VID_NUM_COLUMNS, dwNumCols);
             msg.SetVariable(VID_NUM_ROWS, args.dwNumRows);
-            for(i = 0, dwId = VID_ROW_DATA_BASE; i < args.values.dwNumStrings; i++)
-               msg.SetVariable(dwId++, args.values.ppStringList[i]);
+				for(i = 0, dwId = VID_ROW_DATA_BASE; (int)i < args.values->getSize(); i++)
+					msg.SetVariable(dwId++, args.values->getValue((int)i));
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -434,9 +433,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          }
 
          // Cleanup
-         for(i = 0; i < args.values.dwNumStrings; i++)
-            safe_free(args.values.ppStringList[i]);
-         safe_free(args.values.ppStringList);
+			delete args.values;
          for(i = 0; i < dwNumCols; i++)
             safe_free(args.ppszOidList[i]);
          free(args.ppszOidList);

@@ -290,24 +290,6 @@
 
 
 //
-// Connection handle
-//
-
-typedef void *HCONN;
-
-
-//
-// Structure for holding enumeration results
-//
-
-typedef struct
-{
-   DWORD dwNumStrings;
-   TCHAR **ppStringList;
-} NETXMS_VALUES_LIST;
-
-
-//
 // Subagent's parameter information
 //
 
@@ -328,7 +310,7 @@ typedef struct
 typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(const TCHAR *, const TCHAR *, NETXMS_VALUES_LIST *);
+   LONG (* fpHandler)(const TCHAR *, const TCHAR *, StringList *);
    const TCHAR *pArg;
 } NETXMS_SUBAGENT_ENUM;
 
@@ -340,7 +322,7 @@ typedef struct
 typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *);
+   LONG (* fpHandler)(const TCHAR *, StringList *, const TCHAR *);
    const TCHAR *pArg;
    TCHAR szDescription[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
@@ -350,7 +332,7 @@ typedef struct
 // Subagent initialization structure
 //
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20090502)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20090905)
 
 class CSCPMessage;
 
@@ -362,8 +344,7 @@ typedef struct
 	BOOL (* pInit)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* pShutdown)(void);  // Called at subagent unload. Can be NULL.
    BOOL (* pCommandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
-                            CSCPMessage *pResponse, SOCKET sock,
-									 CSCP_ENCRYPTION_CONTEXT *ctx);
+                            CSCPMessage *pResponse, void *session);
    DWORD dwNumParameters;
    NETXMS_SUBAGENT_PARAM *pParamList;
    DWORD dwNumEnums;
@@ -376,11 +357,6 @@ typedef struct
 //
 // Inline functions for returning parameters
 //
-
-#ifdef __cplusplus
-#ifndef LIBNETXMS_INLINE
-
-#include <nms_agent.h>
 
 inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 {
@@ -432,37 +408,16 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 #endif   /* _WIN32 */
 }
 
-#endif   /* LIBNETXMS_INLINE */
-#else    /* __cplusplus */
-
-void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, const TCHAR *value);
-void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, long value);
-void LIBNETXMS_EXPORTABLE ret_uint(TCHAR *rbuf, unsigned long value);
-void LIBNETXMS_EXPORTABLE ret_double(TCHAR *rbuf, double value);
-void LIBNETXMS_EXPORTABLE ret_int64(TCHAR *rbuf, INT64 value);
-void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value);
-
-#endif   /* __cplusplus */
-
 
 //
-// Functions from libnetxms
+// API for subagents
 //
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(const TCHAR *param, int index, TCHAR *arg, int maxSize);
-void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, const TCHAR *pszString);
-void LIBNETXMS_EXPORTABLE NxDestroyValuesList(NETXMS_VALUES_LIST *pList);
-void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, const TCHAR *pszFormat, ...);
-void LIBNETXMS_EXPORTABLE NxWriteAgentLog2(int iLevel, const TCHAR *pszFormat, va_list args);
-void LIBNETXMS_EXPORTABLE NxSendTrap(DWORD dwEvent, const char *pszFormat, ...);
-void LIBNETXMS_EXPORTABLE NxSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList);
-
-#ifdef __cplusplus
-}
-#endif
+BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArg(const TCHAR *param, int index, TCHAR *arg, int maxSize);
+void LIBNETXMS_EXPORTABLE AgentWriteLog(int iLevel, const TCHAR *pszFormat, ...);
+void LIBNETXMS_EXPORTABLE AgentWriteLog2(int iLevel, const TCHAR *pszFormat, va_list args);
+void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const char *pszFormat, ...);
+void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList);
+BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, const TCHAR *file, DWORD requestId, long offset);
 
 #endif   /* _nms_agent_h_ */

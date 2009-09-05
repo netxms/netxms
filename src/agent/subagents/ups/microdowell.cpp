@@ -98,7 +98,7 @@ BOOL MicrodowellInterface::Open(void)
 		buff[11] = 0;
 		if (buff[3] != 'E' || buff[4] != 'N' || buff[5] != 'T')
 		{
-			NxWriteAgentLog(EVENTLOG_WARNING_TYPE, "Unknown Microdowell UPS model on port %s (%s)\n", m_pszDevice, buff);
+			AgentWriteLog(EVENTLOG_WARNING_TYPE, "Unknown Microdowell UPS model on port %s (%s)\n", m_pszDevice, buff);
 		}
 		else
 		{

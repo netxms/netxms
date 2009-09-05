@@ -55,7 +55,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	EVT_HANDLE renderContext = _EvtCreateRenderContext(3, eventProperties, EvtRenderContextValues);
 	if (renderContext == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtCreateRenderContext failed: %s"),
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtCreateRenderContext failed: %s"),
 							 GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		return 0;
 	}
@@ -63,7 +63,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	// Get event values
 	if (!_EvtRender(renderContext, event, EvtRenderEventValues, 4096, buffer, &reqSize, &propCount))
 	{
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtRender failed: %s"),
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtRender failed: %s"),
 							 GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
@@ -77,11 +77,11 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 #else
 		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, values[0].StringVal, -1, publisherName, MAX_PATH, NULL, NULL);
 #endif
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: publisher name is %s"), publisherName);
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: publisher name is %s"), publisherName);
 	}
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: unable to get publisher name from event"));
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: unable to get publisher name from event"));
 	}
 
 	// Event id
@@ -98,7 +98,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, LOCALE_USER_DEFAULT, 0);
 	if (pubMetadata == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtOpenPublisherMetadata failed: %s"),
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtOpenPublisherMetadata failed: %s"),
 							 GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
@@ -109,7 +109,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	{
 		if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
 		{
-			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
+			AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
 								 GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 			goto cleanup;
 		}
@@ -117,7 +117,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		success = _EvtFormatMessage(NULL, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
 		if (!success)
 		{
-			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
+			AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
 								 GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 			goto cleanup;
 		}
@@ -157,17 +157,17 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *arg)
 	                       SubscribeCallback, EvtSubscribeToFutureEvents);
 	if (handle != NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Start watching event log \"%s\" (using EvtSubscribe)"),
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Start watching event log \"%s\" (using EvtSubscribe)"),
 		                &(parser->getFileName()[1]));
 		WaitForSingleObject(g_hCondShutdown, INFINITE);
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Stop watching event log \"%s\" (using EvtSubscribe)"),
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Stop watching event log \"%s\" (using EvtSubscribe)"),
 		                &(parser->getFileName()[1]));
 		_EvtClose(handle);
 	}
 	else
 	{
 		TCHAR buffer[1024];
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\" with EvtSubscribe(): %s"),
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\" with EvtSubscribe(): %s"),
 		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), buffer, 1024));
 	}
 
@@ -185,7 +185,7 @@ bool InitEventLogParsersV6()
 	if (module == NULL)
 	{
 		TCHAR buffer[1024];
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: cannot load wevtapi.dll: %s"),
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: cannot load wevtapi.dll: %s"),
 		                GetSystemErrorText(GetLastError(), buffer, 1024));
 		return false;
 	}

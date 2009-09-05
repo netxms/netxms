@@ -11,8 +11,8 @@ LONG H_CheckSMTP(const char *pszParam, const char *pArg, char *pValue)
 	char szTo[256];
 	bool bIsOk = false;
 
-	NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
-	NxGetParameterArg(pszParam, 2, szTo, sizeof(szTo));
+	AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+	AgentGetParameterArg(pszParam, 2, szTo, sizeof(szTo));
 
 	if (szHost[0] == 0 || szTo[0] == 0)
 	{

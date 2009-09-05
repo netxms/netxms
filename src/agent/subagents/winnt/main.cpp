@@ -27,10 +27,10 @@
 // Externlals
 //
 
-LONG H_ActiveUserSessions(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ActiveUserSessions(const char *cmd, const char *arg, StringList *value);
 LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue);
 LONG H_RemoteShareStatus(const char *pszCmd, const char *pArg, char *pValue);
-LONG H_ProcessList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ProcessList(const char *cmd, const char *arg, StringList *value);
 LONG H_ProcCount(const char *cmd, const char *arg, char *value);
 LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value);
 LONG H_ProcInfo(const char *cmd, const char *arg, char *value);
@@ -97,7 +97,7 @@ static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 // Shutdown system
 //
 
-static LONG H_ActionShutdown(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgList, const TCHAR *pData)
+static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
 {
 	LONG nRet = ERR_INTERNAL_ERROR;
 

@@ -146,11 +146,11 @@ LONG H_DirInfo(const char *cmd, const char *arg, char *value)
    QWORD llFileSize = 0;
    LONG nRet;
 
-   if (!NxGetParameterArg(cmd, 1, szPath, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 1, szPath, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
-   if (!NxGetParameterArg(cmd, 2, szPattern, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 2, szPattern, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
-   if (!NxGetParameterArg(cmd, 3, szRecursive, 10))
+   if (!AgentGetParameterArg(cmd, 3, szRecursive, 10))
       return SYSINFO_RC_UNSUPPORTED;
 
 	// Recursion flag
@@ -189,7 +189,7 @@ LONG H_MD5Hash(const char *cmd, const char *arg, char *value)
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD i;
 
-   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileMD5Hash(szFileName, hash))
@@ -214,7 +214,7 @@ LONG H_SHA1Hash(const char *cmd, const char *arg, char *value)
    BYTE hash[SHA1_DIGEST_SIZE];
    DWORD i;
 
-   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileSHA1Hash(szFileName, hash))
@@ -238,7 +238,7 @@ LONG H_CRC32(const char *cmd, const char *arg, char *value)
    char szFileName[MAX_PATH];
    DWORD dwCRC32;
 
-   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileCRC32(szFileName, &dwCRC32))
@@ -344,7 +344,7 @@ LONG H_FileTime(const char *cmd, const char *arg, char *value)
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	struct stat fileInfo;
 
-	if (!NxGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
+	if (!AgentGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (stat(szFilePath, &fileInfo) == -1) 

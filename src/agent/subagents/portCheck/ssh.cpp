@@ -14,8 +14,8 @@ LONG H_CheckSSH(const char *pszParam, const char *pArg, char *pValue)
 	char szPort[256];
 	unsigned short nPort;
 
-   NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
-   NxGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
+   AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+   AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
 
 	if (szHost[0] == 0)
 	{

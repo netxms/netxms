@@ -204,7 +204,7 @@ typedef struct
       char *pszCmdLine;
       struct __subagentAction
       {
-         LONG (*fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *);
+         LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *);
          const TCHAR *pArg;
          TCHAR szSubagentName[MAX_PATH];
       } sa;
@@ -325,10 +325,10 @@ BOOL DownloadConfig(TCHAR *pszServer);
 BOOL InitParameterList(void);
 void AddParameter(const char *szName, LONG (* fpHandler)(const char *, const char *, char *), const char *pArg,
                   int iDataType, const char *pszDescription);
-void AddEnum(const char *szName, LONG (* fpHandler)(const char *, const char *, NETXMS_VALUES_LIST *), const char *pArg);
+void AddEnum(const char *szName, LONG (* fpHandler)(const char *, const char *, StringList *), const char *pArg);
 BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec);
 DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue);
-DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue);
+DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, StringList *pValue);
 void GetParameterList(CSCPMessage *pMsg);
 
 BOOL LoadSubAgent(char *szModuleName);
@@ -336,17 +336,16 @@ void UnloadAllSubAgents(void);
 BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *),
                   TCHAR *pszEntryPoint);
-BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse,
-                          SOCKET sock, CSCP_ENCRYPTION_CONTEXT *ctx);
+BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
 
 BOOL AddAction(const char *pszName, int iType, const char *pArg, 
-               LONG (*fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *),
+               LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const char *pszSubAgent, const char *pszDescription);
 BOOL AddActionFromConfig(char *pszLine, BOOL bShellExec);
-DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
+DWORD ExecAction(char *pszAction, StringList *pArgs);
 
-DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs, pid_t *pid);
-DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
+DWORD ExecuteCommand(char *pszCommand, StringList *pArgs, pid_t *pid);
+DWORD ExecuteShellCommand(char *pszCommand, StringList *pArgs);
 
 BOOL WaitForProcess(const TCHAR *name);
 

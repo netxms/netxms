@@ -52,12 +52,12 @@ static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
 // Handler for SMS.Send action
 //
 
-static LONG H_SendSMS(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, const TCHAR *pData)
+static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pData)
 {
-	if (pArgs->dwNumStrings < 2)
+	if (pArgs->getSize() < 2)
 		return ERR_BAD_ARGUMENTS;
 
-	return SendSMS(pArgs->ppStringList[0], pArgs->ppStringList[1]) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+	return SendSMS(pArgs->getValue(0), pArgs->getValue(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
 
 
@@ -77,7 +77,7 @@ static BOOL SubAgentInit(Config *config)
 	}
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("SMS: device not specified"));
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("SMS: device not specified"));
 	}
 
 	return value != NULL;

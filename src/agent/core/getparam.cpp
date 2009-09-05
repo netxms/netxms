@@ -35,15 +35,15 @@ LONG H_DirInfo(const char *cmd, const char *arg, char *value);
 LONG H_FileTime(const char *cmd, const char *arg, char *value);
 LONG H_MD5Hash(const char *cmd, const char *arg, char *value);
 LONG H_SHA1Hash(const char *cmd, const char *arg, char *value);
-LONG H_SubAgentList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
-LONG H_ActionList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
+LONG H_SubAgentList(const char *cmd, const char *arg, StringList *value);
+LONG H_ActionList(const char *cmd, const char *arg, StringList *value);
 LONG H_ExternalParameter(const char *cmd, const char *arg, char *value);
 LONG H_PlatformName(const char *cmd, const char *arg, char *value);
 
 #ifdef _WIN32
-LONG H_ArpCache(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
-LONG H_InterfaceList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
-LONG H_IPRoutingTable(const char *cmd, const char *arg, NETXMS_VALUES_LIST *pValue);
+LONG H_ArpCache(const char *cmd, const char *arg, StringList *value);
+LONG H_InterfaceList(const char *cmd, const char *arg, StringList *value);
+LONG H_IPRoutingTable(const char *cmd, const char *arg, StringList *pValue);
 LONG H_DiskInfo(const char *cmd, const char *arg, char *value);
 LONG H_MemoryInfo(const char *cmd, const char *arg, char *value);
 LONG H_HostName(const char *cmd, const char *arg, char *value);
@@ -137,12 +137,12 @@ static LONG H_SupportedCiphers(const char *pszCmd, const char *pArg, char *pValu
 // Handler for parameters list
 //
 
-static LONG H_ParamList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
+static LONG H_ParamList(const char *cmd, const char *arg, StringList *value)
 {
    int i;
 
    for(i = 0; i < m_iNumParams; i++)
-      NxAddResultString(value, m_pParamList[i].szName);
+		value->add(m_pParamList[i].szName);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -151,12 +151,12 @@ static LONG H_ParamList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *va
 // Handler for enums list
 //
 
-static LONG H_EnumList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
+static LONG H_EnumList(const char *cmd, const char *arg, StringList *value)
 {
    int i;
 
    for(i = 0; i < m_iNumEnums; i++)
-      NxAddResultString(value, m_pEnumList[i].szName);
+		value->add(m_pEnumList[i].szName);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -323,7 +323,7 @@ void AddParameter(const char *pszName, LONG (* fpHandler)(const char *, const ch
 // Add enum to list
 //
 
-void AddEnum(const char *pszName, LONG (* fpHandler)(const char *, const char *, NETXMS_VALUES_LIST *), const char *pArg)
+void AddEnum(const char *pszName, LONG (* fpHandler)(const char *, const char *, StringList *), const char *pArg)
 {
    int i;
 
@@ -425,7 +425,7 @@ DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue)
 // Get parameter's value
 //
 
-DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue)
+DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, StringList *pValue)
 {
    int i, rc;
    DWORD dwErrorCode;

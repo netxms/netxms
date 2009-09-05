@@ -37,7 +37,7 @@ LONG H_ACPITZCurrTemp(const char *cmd, const char *arg, char *value)
 	LONG rc = SYSINFO_RC_ERROR;
 
 	if (*arg != '*')
-		if (!NxGetParameterArg(cmd, 1, instance, 256))
+		if (!AgentGetParameterArg(cmd, 1, instance, 256))
 			return SYSINFO_RC_UNSUPPORTED;
 
 	pEnumObject = DoWMIQuery(L"root\\WMI", L"SELECT InstanceName,CurrentTemperature FROM MSAcpi_ThermalZoneTemperature", &ctx);
@@ -84,7 +84,7 @@ LONG H_ACPITZCurrTemp(const char *cmd, const char *arg, char *value)
 // Handler for ACPI.ThermalZones enum
 //
 
-LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
@@ -105,8 +105,7 @@ LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_
 
 				str = VariantToString(&v);
 				VariantClear(&v);
-				NxAddResultString(pValue, str);
-				free(str);
+				value->addPreallocated(str);
 			}
 			pClassObject->Release();
 		}

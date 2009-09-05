@@ -55,13 +55,13 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 
 	if ((pQuery = (ODBC_QUERY *)pArg) == NULL)
 	{
-		NxWriteAgentLog(EL_ERROR, _T("ODBC Internal error: NULL passed to thread"));
+		AgentWriteLog(EL_ERROR, _T("ODBC Internal error: NULL passed to thread"));
 		goto thread_finish;
 	}
 
 	if ((pQuery->pSqlCtx = OdbcCtxAlloc()) == NULL)
 	{
-		NxWriteAgentLog(EL_ERROR, _T("Failed to allocate ODBC context"));
+		AgentWriteLog(EL_ERROR, _T("Failed to allocate ODBC context"));
 		goto thread_finish;
 	}
 
@@ -74,7 +74,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 			if (OdbcConnect(pQuery->pSqlCtx, pQuery->szOdbcSrc) < 0)
 			{
 				pQuery->dwCompletionCode = OdbcGetSqlErrorNumber(pQuery->pSqlCtx);
-				NxWriteAgentLog(EL_DEBUG, _T("ODBC connect error: %s (%s)"), 
+				AgentWriteLog(EL_DEBUG, _T("ODBC connect error: %s (%s)"), 
 									 OdbcGetInfo(pQuery->pSqlCtx),
 									 OdbcGetSqlError(pQuery->pSqlCtx));
 			}
@@ -84,7 +84,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 											pQuery->szQueryResult, (size_t)MAX_DB_STRING) < 0)
 				{
 					pQuery->dwCompletionCode = OdbcGetSqlErrorNumber(pQuery->pSqlCtx);
-					NxWriteAgentLog(EL_DEBUG, _T("ODBC query error: %s (%s)"), 
+					AgentWriteLog(EL_DEBUG, _T("ODBC query error: %s (%s)"), 
 										 OdbcGetInfo(pQuery->pSqlCtx),
 										 OdbcGetSqlError(pQuery->pSqlCtx));
 				}
@@ -119,7 +119,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    TCHAR szName[MAX_DB_STRING];
    DWORD i;
 
-   if (!NxGetParameterArg(pszParam, 1, szName, MAX_DB_STRING))
+   if (!AgentGetParameterArg(pszParam, 1, szName, MAX_DB_STRING))
       return SYSINFO_RC_UNSUPPORTED;
    StrStrip(szName);
 
@@ -167,14 +167,14 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 
 	if (pszCfg == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Null config entry, ignored"));
+		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Null config entry, ignored"));
 		bResult = TRUE;
 		goto finish_add_query;
 	}
 
    if ((pszLine = _tcsdup(pszCfg)) == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("ODBC: String allocation failed"));
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("ODBC: String allocation failed"));
 		goto finish_add_query;
 	}
 	StrStrip(pszLine);
@@ -193,7 +193,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, ODBC source missing"));
+		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, ODBC source missing"));
 		goto finish_add_query;
 	}
 
@@ -208,7 +208,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, SQL query missing"));
+		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, SQL query missing"));
 		goto finish_add_query;
 	}
 
@@ -223,7 +223,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, poll interval missing"));
+		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, poll interval missing"));
 		goto finish_add_query;
 	}
 
@@ -232,7 +232,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 		 dwPollInterval == (DWORD)LONG_MAX ||
 		 dwPollInterval == 0)
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, invalid poll interval"));
+		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, invalid poll interval"));
 		goto finish_add_query;
 	}
 
@@ -240,7 +240,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 						sizeof(ODBC_QUERY) * (m_dwNumQueries + 1));
 	if (m_pQueryList == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("ODBC: QueryList allocation failed"));
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("ODBC: QueryList allocation failed"));
 		goto finish_add_query;
 	}
 
@@ -251,7 +251,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 	m_pQueryList[m_dwNumQueries].pSqlCtx = NULL;
 	m_dwNumQueries++;
 	bResult = TRUE;
-	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("ODBC: query \"%s\" successfully registered"), pszQuery);
+	AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("ODBC: query \"%s\" successfully registered"), pszQuery);
 
 finish_add_query:
    free(pszLine);
@@ -276,7 +276,7 @@ static BOOL SubAgentInit(Config *config)
 		{
 			if (!AddQueryFromConfig(ql->getValue(i)))
 			{
-            NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
+            AgentWriteLog(EVENTLOG_WARNING_TYPE,
                             _T("Unable to add ODBC query from configuration file. ")
 									 _T("Original configuration record: %s"), ql->getValue(i));
 			}

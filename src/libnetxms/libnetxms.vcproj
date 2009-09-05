@@ -338,6 +338,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\agent.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\base64.cpp"
 				>
 			</File>
@@ -371,10 +375,6 @@
 			</File>
 			<File
 				RelativePath=".\icmp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\inline.cpp"
 				>
 			</File>
 			<File
@@ -439,6 +439,10 @@
 			</File>
 			<File
 				RelativePath=".\string.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stringlist.cpp"
 				>
 			</File>
 			<File

@@ -108,7 +108,7 @@ static LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
    LONG nProcessor, nRet = SYSINFO_RC_SUCCESS;
    TCHAR *pEnd, szBuffer[16];
    
-   if (!NxGetParameterArg(pszParam, 1, szBuffer, 16))
+   if (!AgentGetParameterArg(pszParam, 1, szBuffer, 16))
       return SYSINFO_RC_UNSUPPORTED;
 
    nProcessor = _tcstol(szBuffer, &pEnd, 0);
@@ -184,8 +184,8 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 
 	if (pArg == NULL)		// Normal call
 	{
-		if ((!NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH)) ||
-			 (!NxGetParameterArg(pszParam, 2, szBuffer, 16)))
+		if ((!AgentGetParameterArg(pszParam, 1, szCounter, MAX_PATH)) ||
+			 (!AgentGetParameterArg(pszParam, 2, szBuffer, 16)))
 			return SYSINFO_RC_UNSUPPORTED;
 
 		bUseTwoSamples = _tcstol(szBuffer, NULL, 0) ? TRUE : FALSE;
@@ -259,7 +259,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 // List of available performance objects
 //
 
-static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
    TCHAR *pszObject, *pszObjList, szHostName[256];
    LONG iResult = SYSINFO_RC_ERROR;
@@ -275,7 +275,7 @@ static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES
                                PERF_DETAIL_WIZARD, TRUE)) == ERROR_SUCCESS)
       {
          for(pszObject = pszObjList; *pszObject != 0; pszObject += _tcslen(pszObject) + 1)
-            NxAddResultString(pValue, pszObject);
+				value->add(pszObject);
          iResult = SYSINFO_RC_SUCCESS;
       }
       else
@@ -292,14 +292,14 @@ static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES
 // List of available performance items for given object
 //
 
-static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
 {
    TCHAR *pszElement, *pszCounterList, *pszInstanceList, szHostName[256], szObject[256];
    LONG iResult = SYSINFO_RC_ERROR;
    DWORD dwSize1, dwSize2;
    PDH_STATUS rc;
 
-   NxGetParameterArg(pszParam, 1, szObject, 256);
+   AgentGetParameterArg(pszParam, 1, szObject, 256);
    if (szObject[0] != 0)
    {
       dwSize1 = 256;
@@ -315,7 +315,7 @@ static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VA
          {
             for(pszElement = (pArg[0] == _T('C')) ? pszCounterList : pszInstanceList;
                 *pszElement != 0; pszElement += _tcslen(pszElement) + 1)
-               NxAddResultString(pValue, pszElement);
+               value->add(pszElement);
             iResult = SYSINFO_RC_SUCCESS;
          }
          else
@@ -542,7 +542,7 @@ extern "C" BOOL __declspec(dllexport) __cdecl
                *pEnd = 0;
             StrStrip(pItem);
             if (!AddCounterFromConfig(pItem))
-               NxWriteAgentLog(EVENTLOG_WARNING_TYPE, 
+               AgentWriteLog(EVENTLOG_WARNING_TYPE, 
                                _T("Unable to add counter from configuration file. ")
                                _T("Original configuration record: %s"), pItem);
          }

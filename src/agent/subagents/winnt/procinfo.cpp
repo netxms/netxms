@@ -133,7 +133,7 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
          value = ioCounters.OtherOperationCount;
          break;
       default:       // Unknown attribute
-         NxWriteAgentLog(EVENTLOG_ERROR_TYPE, "GetProcessAttribute(): Unexpected attribute: 0x%02X", attr);
+         AgentWriteLog(EVENTLOG_ERROR_TYPE, "GetProcessAttribute(): Unexpected attribute: 0x%02X", attr);
          value = 0;
          break;
    }
@@ -155,7 +155,7 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
       case INFOTYPE_SUM:
          return lastValue + value;
       default:
-         NxWriteAgentLog(EVENTLOG_ERROR_TYPE, "GetProcessAttribute(): Unexpected type: 0x%02X", type);
+         AgentWriteLog(EVENTLOG_ERROR_TYPE, "GetProcessAttribute(): Unexpected type: 0x%02X", type);
          return 0;
    }
 }
@@ -215,7 +215,7 @@ static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 		{
 			GetWindowText(hWnd, szBuffer, MAX_PATH - 1);
 			szBuffer[MAX_PATH - 1] = 0;
-			NxAddResultString(pList->pWndList, szBuffer);
+			pList->pWndList->add(szBuffer);
 		}
 	}
 
@@ -227,14 +227,12 @@ static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 // Get list of windows belonging to given process
 //
 
-static NETXMS_VALUES_LIST *GetProcessWindows(DWORD dwPID)
+static StringList *GetProcessWindows(DWORD dwPID)
 {
 	WINDOW_LIST list;
 	
 	list.dwPID = dwPID;
-	list.pWndList = (NETXMS_VALUES_LIST *)malloc(sizeof(NETXMS_VALUES_LIST));
-	list.pWndList->dwNumStrings = 0;
-	list.pWndList->ppStringList = NULL;
+	list.pWndList = new StringList;
 
 	EnumWindows(EnumWindowsProc, (LPARAM)&list);
 	return list.pWndList;
@@ -249,7 +247,7 @@ static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bEx
 								 char *pszModName, char *pszCmdLine, char *pszWindowName)
 {
    char szBaseName[MAX_PATH];
-	DWORD i;
+	int i;
 	BOOL bRet;
 
    GetModuleBaseName(hProcess, hModule, szBaseName, sizeof(szBaseName));
@@ -274,18 +272,18 @@ static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bEx
 
 		if (pszWindowName[0] != 0)
 		{
-			NETXMS_VALUES_LIST *pWndList;
+			StringList *pWndList;
 
 			pWndList = GetProcessWindows(dwPID);
-			for(i = 0, bWindowMatch = FALSE; i < pWndList->dwNumStrings; i++)
+			for(i = 0, bWindowMatch = FALSE; i < pWndList->getSize(); i++)
 			{
-				if (RegexpMatch(pWndList->ppStringList[i], pszWindowName, FALSE))
+				if (RegexpMatch(pWndList->getValue(i), pszWindowName, FALSE))
 				{
 					bWindowMatch = TRUE;
 					break;
 				}
 			}
-			NxDestroyValuesList(pWndList);
+			delete pWndList;
 		}
 
 	   bRet = bProcMatch && bCmdMatch && bWindowMatch;
@@ -330,7 +328,7 @@ LONG H_ProcInfo(const char *cmd, const char *arg, char *value)
       return SYSINFO_RC_UNSUPPORTED;     // Unsupported attribute
 
    // Get parameter type arguments
-   NxGetParameterArg(cmd, 2, buffer, 255);
+   AgentGetParameterArg(cmd, 2, buffer, 255);
    if (buffer[0] == 0)     // Omited type
    {
       type = INFOTYPE_SUM;
@@ -345,9 +343,9 @@ LONG H_ProcInfo(const char *cmd, const char *arg, char *value)
    }
 
    // Get process name
-   NxGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
-	NxGetParameterArg(cmd, 3, cmdLine, MAX_PATH - 1);
-	NxGetParameterArg(cmd, 4, windowTitle, MAX_PATH - 1);
+   AgentGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
+	AgentGetParameterArg(cmd, 3, cmdLine, MAX_PATH - 1);
+	AgentGetParameterArg(cmd, 4, windowTitle, MAX_PATH - 1);
 
    // Gather information
    attrVal = 0;
@@ -431,11 +429,11 @@ LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value)
    HANDLE hProcess;
    HMODULE modList[MAX_MODULES];
 
-   NxGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
+   AgentGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
 	if (*arg == 'E')
 	{
-		NxGetParameterArg(cmd, 2, cmdLine, MAX_PATH - 1);
-		NxGetParameterArg(cmd, 3, windowTitle, MAX_PATH - 1);
+		AgentGetParameterArg(cmd, 2, cmdLine, MAX_PATH - 1);
+		AgentGetParameterArg(cmd, 3, windowTitle, MAX_PATH - 1);
 
 		// Check if all 3 parameters are empty
 		if ((procName[0] == 0) && (cmdLine[0] == 0) && (windowTitle[0] == 0))
@@ -472,7 +470,7 @@ LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
+LONG H_ProcessList(const char *cmd, const char *arg, StringList *value)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
    LONG iResult = SYSINFO_RC_SUCCESS;
@@ -497,24 +495,24 @@ LONG H_ProcessList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 
                   GetModuleBaseName(hProcess, phModList[0], szBaseName, MAX_PATH);
                   _sntprintf(szBuffer, MAX_PATH + 64, _T("%u %s"), pdwProcList[i], szBaseName);
-                  NxAddResultString(value, szBuffer);
+						value->add(szBuffer);
                }
                else
                {
                   _sntprintf(szBuffer, MAX_PATH + 64, _T("%u <unknown>"), pdwProcList[i]);
-                  NxAddResultString(value, szBuffer);
+                  value->add(szBuffer);
                }
             }
             else
             {
                if (pdwProcList[i] == 4)
                {
-                  NxAddResultString(value, _T("4 System"));
+                  value->add(_T("4 System"));
                }
                else
                {
                   _sntprintf(szBuffer, MAX_PATH + 64, _T("%u <unknown>"), pdwProcList[i]);
-                  NxAddResultString(value, szBuffer);
+                  value->add(szBuffer);
                }
             }
             CloseHandle(hProcess);
@@ -523,12 +521,12 @@ LONG H_ProcessList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
          {
             if (pdwProcList[i] == 0)
             {
-               NxAddResultString(value, _T("0 System Idle Process"));
+               value->add(_T("0 System Idle Process"));
             }
             else
             {
                _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unaccessible>"), pdwProcList[i]);
-               NxAddResultString(value, szBuffer);
+               value->add(szBuffer);
             }
          }
       }

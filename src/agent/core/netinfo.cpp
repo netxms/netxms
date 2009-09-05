@@ -30,7 +30,7 @@
 // Get local ARP cache
 //
 
-LONG H_ArpCache(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
+LONG H_ArpCache(const char *cmd, const char *arg, StringList *value)
 {
    MIB_IPNETTABLE *arpCache;
    DWORD i, j, dwError, dwSize;
@@ -58,7 +58,7 @@ LONG H_ArpCache(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
                  (arpCache->table[i].dwAddr >> 8) & 255, 
                  (arpCache->table[i].dwAddr >> 16) & 255, arpCache->table[i].dwAddr >> 24,
                  arpCache->table[i].dwIndex);
-         NxAddResultString(value, szBuffer);
+			value->add(szBuffer);
       }
 
    free(arpCache);
@@ -70,7 +70,7 @@ LONG H_ArpCache(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 // Send IP interface list to server (Win2K+ version)
 //
 
-static LONG H_InterfaceListW2K(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
+static LONG H_InterfaceListW2K(const char *cmd, const char *arg, StringList *value)
 {
    DWORD dwSize;
    IP_ADAPTER_INFO *pBuffer, *pInfo;
@@ -120,7 +120,7 @@ static LONG H_InterfaceListW2K(const char *cmd, const char *arg, NETXMS_VALUES_L
                     pAddr->IpAddress.String, 
                     BitsInMask(ntohl(inet_addr(pAddr->IpMask.String))),
                     pInfo->Type, szMacAddr, szAdapterName);
-            NxAddResultString(value, szBuffer);
+            value->add(szBuffer);
          }
       }
    }
@@ -138,7 +138,7 @@ static LONG H_InterfaceListW2K(const char *cmd, const char *arg, NETXMS_VALUES_L
 // Send IP interface list to server (NT4 version)
 //
 
-static LONG H_InterfaceListNT4(const char *cmd, const char *arg, NETXMS_VALUES_LIST *pValue)
+static LONG H_InterfaceListNT4(const char *cmd, const char *arg, StringList *value)
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
    MIB_IPADDRTABLE *ifTable;
@@ -164,7 +164,7 @@ static LONG H_InterfaceListNT4(const char *cmd, const char *arg, NETXMS_VALUES_L
                     IpToStr(ntohl(ifTable->table[i].dwAddr), szIpAddr),
                     BitsInMask(ntohl(ifTable->table[i].dwMask)), ifRow.dwType,
                     szMACAddr, ifRow.bDescr);
-            NxAddResultString(pValue, szBuffer);
+            value->add(szBuffer);
          }
       }
    }
@@ -182,12 +182,12 @@ static LONG H_InterfaceListNT4(const char *cmd, const char *arg, NETXMS_VALUES_L
 // (selects appropriate method for different Windows versions)
 //
 
-LONG H_InterfaceList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *pValue)
+LONG H_InterfaceList(const char *cmd, const char *arg, StringList *value)
 {
    if (g_dwFlags & AF_RUNNING_ON_NT4)
-      return H_InterfaceListNT4(cmd, arg, pValue);
+      return H_InterfaceListNT4(cmd, arg, value);
    else
-      return H_InterfaceListW2K(cmd, arg, pValue);
+      return H_InterfaceListW2K(cmd, arg, value);
 }
 
 
@@ -286,7 +286,7 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
    char *eptr, szBuffer[256];
    DWORD dwIndex;
 
-   NxGetParameterArg(cmd, 1, szBuffer, 256);
+   AgentGetParameterArg(cmd, 1, szBuffer, 256);
    if (szBuffer[0] == 0)
    {
       iResult = SYSINFO_RC_UNSUPPORTED;
@@ -364,7 +364,7 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
 // Get IP routing table
 //
 
-LONG H_IPRoutingTable(const char *pszCmd, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_IPRoutingTable(const char *pszCmd, const char *pArg, StringList *value)
 {
    MIB_IPFORWARDTABLE *pRoutingTable;
    DWORD i, dwError, dwSize;
@@ -395,7 +395,7 @@ LONG H_IPRoutingTable(const char *pszCmd, const char *pArg, NETXMS_VALUES_LIST *
                IpToStr(ntohl(pRoutingTable->table[i].dwForwardNextHop), szNextHop),
                pRoutingTable->table[i].dwForwardIfIndex,
                pRoutingTable->table[i].dwForwardType);
-      NxAddResultString(pValue, szBuffer);
+		value->add(szBuffer);
    }
 
    free(pRoutingTable);

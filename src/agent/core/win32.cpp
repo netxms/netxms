@@ -146,7 +146,7 @@ LONG H_DiskInfo(const char *pszCmd, const char *pArg, char *pValue)
    ULARGE_INTEGER availBytes, freeBytes, totalBytes;
    LONG nRet = SYSINFO_RC_SUCCESS;
 
-   if (!NxGetParameterArg(pszCmd, 1, szPath, MAX_PATH))
+   if (!AgentGetParameterArg(pszCmd, 1, szPath, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
    if (GetDiskFreeSpaceEx(szPath, &availBytes, &totalBytes, &freeBytes))
    {

@@ -178,7 +178,7 @@ static LONG H_DoHttp(const char *pszParam, const char *pArg, char *pValue)
 		hashFunction = (void (*)(unsigned char *, size_t, unsigned char *))&CalculateMD5Hash;
 	}
 
-	NxGetParameterArg(pszParam, 1, szArg, 255);
+	AgentGetParameterArg(pszParam, 1, szArg, 255);
 
 	if (!strnicmp(szArg, "http://", 7))
 	{
