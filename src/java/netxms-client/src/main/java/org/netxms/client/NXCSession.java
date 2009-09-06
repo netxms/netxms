@@ -6,6 +6,7 @@ package org.netxms.client;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -569,7 +570,13 @@ public class NXCSession
 	 */
 	public synchronized void sendMessage(final NXCPMessage msg) throws IOException
 	{
-		connSocket.getOutputStream().write(msg.createNXCPMessage());
+		if (connSocket == null)
+		{
+			throw new IllegalStateException("Not connected to the server. Did you forgot to call connect() first?");
+		}
+		final OutputStream outputStream = connSocket.getOutputStream();
+		final byte[] message = msg.createNXCPMessage();
+		outputStream.write(message);
 	}
 
 	/**
