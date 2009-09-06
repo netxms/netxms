@@ -1,8 +1,24 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -13,8 +29,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -24,12 +43,17 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class Thresholds extends PropertyPage
 {
+	public static final int COLUMN_OPERATION = 0;
+	public static final int COLUMN_EVENT = 1;
+	
 	private DataCollectionItem dci;
 	private LabeledText instance;
 	private TableViewer thresholds;
 	private Button addButton;
 	private Button modifyButton;
 	private Button deleteButton;
+	private Button upButton;
+	private Button downButton;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -60,28 +84,53 @@ public class Thresholds extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
+      gd.horizontalSpan = 2;
       thresholdArea.setLayoutData(gd);
       layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+		layout.numColumns = 2;
       thresholdArea.setLayout(layout);
 	
       new Label(thresholdArea, SWT.NONE).setText("Thresholds");
       
-      thresholds = new TableViewer(thresholdArea, SWT.BORDER);
+      thresholds = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
+      gd.horizontalSpan = 2;
       thresholds.getControl().setLayoutData(gd);
+      setupThresholdList();
+      thresholds.setInput(dci.getThresholds().toArray());
+      
+      Composite leftButtons = new Composite(thresholdArea, SWT.NONE);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      leftButtons.setLayoutData(gd);
+      RowLayout buttonsLayout = new RowLayout(SWT.HORIZONTAL);
+      buttonsLayout.marginBottom = 0;
+      buttonsLayout.marginLeft = 0;
+      buttonsLayout.marginRight = 0;
+      buttonsLayout.marginTop = 0;
+      buttonsLayout.spacing = WidgetHelper.OUTER_SPACING;
+      buttonsLayout.fill = true;
+      buttonsLayout.pack = false;
+      leftButtons.setLayout(buttonsLayout);
+
+      upButton = new Button(leftButtons, SWT.PUSH);
+      upButton.setText("&Up");
+      
+      downButton = new Button(leftButtons, SWT.PUSH);
+      downButton.setText("&Down");
       
       Composite buttons = new Composite(thresholdArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       buttons.setLayoutData(gd);
-      RowLayout buttonsLayout = new RowLayout(SWT.HORIZONTAL);
+      buttonsLayout = new RowLayout(SWT.HORIZONTAL);
       buttonsLayout.marginBottom = 0;
       buttonsLayout.marginLeft = 0;
       buttonsLayout.marginRight = 0;
@@ -110,5 +159,26 @@ public class Thresholds extends PropertyPage
       deleteButton.setLayoutData(rd);
       
 		return dialogArea;
+	}
+
+	/**
+	 * Setup threshold list control
+	 */
+	private void setupThresholdList()
+	{
+		Table table = thresholds.getTable();
+		table.setLinesVisible(true);
+		table.setHeaderVisible(true);
+		
+		TableColumn column = new TableColumn(table, SWT.LEFT);
+		column.setText("Expression");
+		column.setWidth(200);
+		
+		column = new TableColumn(table, SWT.LEFT);
+		column.setText("Event");
+		column.setWidth(150);
+		
+      thresholds.setContentProvider(new ArrayContentProvider());
+      thresholds.setLabelProvider(new ThresholdLabelProvider());
 	}
 }

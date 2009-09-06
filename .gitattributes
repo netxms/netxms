@@ -309,8 +309,10 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DataCollectionAdapterFactory.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DciComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DciLabelProvider.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/ThresholdLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/OpenEditor.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/EditScheduleDialog.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/EditThresholdDialog.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/General.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/Thresholds.java -text
