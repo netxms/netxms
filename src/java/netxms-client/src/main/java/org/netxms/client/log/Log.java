@@ -136,4 +136,18 @@ public class Log
 			close();
 		super.finalize();
 	}
+
+	@Override
+	public String toString()
+	{
+		final StringBuilder sb = new StringBuilder();
+		sb.append("Log");
+		sb.append("{session=").append(session);
+		sb.append(", handle=").append(handle);
+		sb.append(", name='").append(name).append('\'');
+		sb.append(", columns=").append(columns);
+		sb.append(", numRecords=").append(numRecords);
+		sb.append('}');
+		return sb.toString();
+	}
 }
