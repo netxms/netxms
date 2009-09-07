@@ -84,7 +84,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 					char buff[10240];
 					int err;
 					// ok, request sent, read content;
-					while ((err = RecvEx(sd, buff, 10240, 0, 1000)) > 0)
+					while ((err = RecvEx(sd, buff, 10240, 0, 30000)) > 0)
 					{
 						if (*size + err > MAX_REMOTE_SIZE)
 						{
