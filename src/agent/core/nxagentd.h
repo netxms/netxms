@@ -278,10 +278,10 @@ private:
    DWORD upgrade(CSCPMessage *pRequest);
    DWORD setupProxyConnection(CSCPMessage *pRequest);
 
-   void readThread(void);
-   void writeThread(void);
-   void processingThread(void);
-   void proxyReadThread(void);
+   void readThread();
+   void writeThread();
+   void processingThread();
+   void proxyReadThread();
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -292,18 +292,20 @@ public:
    CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bMasterServer, BOOL bControlServer);
    ~CommSession();
 
-   void run(void);
-   void disconnect(void);
+   void run();
+   void disconnect();
 
    void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
    void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
+	bool sendFile(DWORD requestId, const TCHAR *file, long offset);
 
-   DWORD getIndex(void) { return m_dwIndex; }
+   DWORD getIndex() { return m_dwIndex; }
    void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
 
-   time_t getTimeStamp(void) { return m_ts; }
+   time_t getTimeStamp() { return m_ts; }
+	void updateTimeStamp() { m_ts = time(NULL); }
 
-   BOOL acceptTraps(void) { return m_bAcceptTraps; }
+   BOOL canAcceptTraps() { return m_bAcceptTraps; }
 };
 
 

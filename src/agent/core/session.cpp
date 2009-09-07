@@ -145,7 +145,7 @@ CommSession::~CommSession()
 // Start all threads
 //
 
-void CommSession::run(void)
+void CommSession::run()
 {
    m_hWriteThread = ThreadCreateEx(writeThreadStarter, 0, this);
    m_hProcessingThread = ThreadCreateEx(processingThreadStarter, 0, this);
@@ -157,8 +157,9 @@ void CommSession::run(void)
 // Disconnect session
 //
 
-void CommSession::disconnect(void)
+void CommSession::disconnect()
 {
+	DebugPrintf(m_dwIndex, "CommSession::disconnect()");
    shutdown(m_hSocket, SHUT_RDWR);
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
@@ -169,7 +170,7 @@ void CommSession::disconnect(void)
 // Reading thread
 //
 
-void CommSession::readThread(void)
+void CommSession::readThread()
 {
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
@@ -706,6 +707,21 @@ void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
    {
       pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
    }
+}
+
+
+//
+// Send file to server
+//
+
+static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
+{
+	((CommSession *)cbArg)->updateTimeStamp();
+}
+
+bool CommSession::sendFile(DWORD requestId, const TCHAR *file, long offset)
+{
+	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this) ? true : false;
 }
 
 

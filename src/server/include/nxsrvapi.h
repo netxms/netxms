@@ -308,6 +308,7 @@ private:
 	void (*m_downloadProgressCallback)(size_t, void *);
 	void *m_downloadProgressCallbackArg;
 	bool m_deleteFileOnDownloadFailure;
+	bool m_fileUploadInProgress;
 
    void ReceiverThread(void);
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
@@ -333,7 +334,6 @@ protected:
    void Unlock(void) { MutexUnlock(m_mutexDataLock); }
 
 public:
-   AgentConnection();
    AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                    int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    virtual ~AgentConnection();

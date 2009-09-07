@@ -577,7 +577,10 @@ void LoadPlatformSubagent(void)
 
 static BOOL SendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset)
 {
-	return FALSE;
+	if (session == NULL)
+		return FALSE;
+
+	return ((CommSession *)session)->sendFile(requestId, file, offset);
 }
 
 

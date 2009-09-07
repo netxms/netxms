@@ -75,38 +75,7 @@ THREAD_RESULT THREAD_CALL AgentConnection::ReceiverThreadStarter(void *pArg)
 
 
 //
-// Default constructor for AgentConnection - normally shouldn't be used
-//
-
-AgentConnection::AgentConnection()
-{
-   m_dwAddr = inet_addr("127.0.0.1");
-   m_wPort = AGENT_LISTEN_PORT;
-   m_iAuthMethod = AUTH_NONE;
-   m_szSecret[0] = 0;
-   m_hSocket = -1;
-   m_tLastCommandTime = 0;
-   m_dwNumDataLines = 0;
-   m_ppDataLines = NULL;
-   m_pMsgWaitQueue = new MsgWaitQueue;
-   m_dwRequestId = 1;
-   m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
-   m_bIsConnected = FALSE;
-   m_mutexDataLock = MutexCreate();
-   m_hReceiverThread = INVALID_THREAD_HANDLE;
-   m_pCtx = NULL;
-   m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
-   m_bUseProxy = FALSE;
-   m_dwRecvTimeout = 420000;  // 7 minutes
-   m_nProtocolVersion = NXCP_VERSION;
-	m_hCurrFile = -1;
-	m_deleteFileOnDownloadFailure = true;
-	m_condFileDownload = ConditionCreate(TRUE);
-}
-
-
-//
-// Normal constructor for AgentConnection
+// Constructor for AgentConnection
 //
 
 AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
@@ -146,6 +115,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
 	m_hCurrFile = -1;
 	m_deleteFileOnDownloadFailure = true;
 	m_condFileDownload = ConditionCreate(TRUE);
+	m_fileUploadInProgress = false;
 }
 
 
@@ -214,7 +184,7 @@ void AgentConnection::ReceiverThread(void)
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
-   int iErr;
+   int error;
    TCHAR szBuffer[128], szIpAddr[16];
 	SOCKET nSocket;
 
@@ -235,15 +205,15 @@ void AgentConnection::ReceiverThread(void)
       Lock();
 		nSocket = m_hSocket;
 		Unlock();
-      if ((iErr = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
+      if ((error = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                   &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
 		{
-			DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), iErr, WSAGetLastError());
+			DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), error, WSAGetLastError());
          break;
 		}
 
       // Check if we get too large message
-      if (iErr == 1)
+      if (error == 1)
       {
          PrintMsg(_T("Received too large message %s (%d bytes)"), 
                   NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
@@ -252,23 +222,25 @@ void AgentConnection::ReceiverThread(void)
       }
 
       // Check if we are unable to decrypt message
-      if (iErr == 2)
+      if (error == 2)
       {
          PrintMsg(_T("Unable to decrypt received message"));
          continue;
       }
 
       // Check for timeout
-      if (iErr == 3)
+      if (error == 3)
       {
+			if (m_fileUploadInProgress)
+				continue;	// Receive timeout may occur when uploading large files via slow links
          PrintMsg(_T("Timed out waiting for message"));
          break;
       }
 
       // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->dwSize) != iErr)
+      if ((int)ntohl(pRawMsg->dwSize) != error)
       {
-         PrintMsg(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), iErr);
+         PrintMsg(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), error);
          continue;   // Bad packet, wait for next
       }
 
@@ -336,7 +308,7 @@ void AgentConnection::ReceiverThread(void)
 		OnFileDownload(FALSE);
 	}
 	
-	if (iErr == 0)
+	if (error == 0)
       shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
    m_hSocket = -1;
@@ -998,10 +970,12 @@ DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback
 
    if (dwResult == ERR_SUCCESS)
    {
+		m_fileUploadInProgress = true;
       if (SendFileOverNXCP(m_hSocket, dwRqId, pszFile, m_pCtx, 0, progressCallback, cbArg))
          dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
+		m_fileUploadInProgress = false;
    }
 
    return dwResult;

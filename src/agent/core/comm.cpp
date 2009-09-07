@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -271,7 +271,10 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
          if (g_pSessionList[i] != NULL)
          {
             if (g_pSessionList[i]->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
+				{
+					DebugPrintf(i, "Session disconnected by watchdog (last activity timestamp is " TIME_T_FMT ")", g_pSessionList[i]->getTimeStamp());
                g_pSessionList[i]->disconnect();
+				}
          }
       MutexUnlock(g_hSessionListAccess);
    }

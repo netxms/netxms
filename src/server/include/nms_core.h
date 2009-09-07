@@ -296,7 +296,6 @@ protected:
    virtual void OnTrap(CSCPMessage *pMsg);
 
 public:
-   AgentConnectionEx() : AgentConnection() { }
    AgentConnectionEx(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                      int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL) :
             AgentConnection(dwAddr, wPort, iAuthMethod, pszSecret) { }
