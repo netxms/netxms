@@ -34,12 +34,12 @@ LogHandle::LogHandle(NXCORE_LOG *info)
 
    switch(g_nDBSyntax)
 	{
-	case DB_SYNTAX_MSSQL:
-		_sntprintf(m_tempTable, 64, _T("#log_%p"), this);
-		break;
-	default:
-		_sntprintf(m_tempTable, 64, _T("log_%p"), this);
-		break;
+		case DB_SYNTAX_MSSQL:
+			_sntprintf(m_tempTable, 64, _T("#log_%p"), this);
+			break;
+		default:
+			_sntprintf(m_tempTable, 64, _T("log_%p"), this);
+			break;
 	}
 
 	m_rowCount = 0;
@@ -122,15 +122,15 @@ bool LogHandle::query(LogFilter *filter)
    TCHAR query[MAX_DB_STRING];
    switch(g_nDBSyntax)
 	{
-	case DB_SYNTAX_MSSQL:
-		_sntprintf(query, MAX_DB_STRING, _T("SELECT %s INTO %s from %s "), m_queryColumns, m_tempTable, m_log->table);
-		break;
-   case DB_SYNTAX_ORACLE:
-   case DB_SYNTAX_SQLITE:
-   case DB_SYNTAX_PGSQL:
-   case DB_SYNTAX_MYSQL:
-		_sntprintf(query, MAX_DB_STRING, _T("CREATE TEMPORARY TABLE %s AS SELECT %s FROM %s"), m_tempTable, m_queryColumns, m_log->table);
-		break;
+		case DB_SYNTAX_MSSQL:
+			_sntprintf(query, MAX_DB_STRING, _T("SELECT %s INTO %s from %s "), m_queryColumns, m_tempTable, m_log->table);
+			break;
+		case DB_SYNTAX_ORACLE:
+		case DB_SYNTAX_SQLITE:
+		case DB_SYNTAX_PGSQL:
+		case DB_SYNTAX_MYSQL:
+			_sntprintf(query, MAX_DB_STRING, _T("CREATE TEMPORARY TABLE %s AS SELECT %s FROM %s"), m_tempTable, m_queryColumns, m_log->table);
+			break;
 	}
 
 	int filterSize = filter->getNumColumnFilter();
@@ -190,25 +190,25 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 
    switch(g_nDBSyntax)
 	{
-	case DB_SYNTAX_MSSQL:
-		_sntprintf(query, MAX_DB_STRING, _T("SELECT TOP %d %s FROM %s"),
-			startRow + numRows, m_queryColumns, m_tempTable);
-		break;
-   case DB_SYNTAX_ORACLE:
-		_sntprintf(query, MAX_DB_STRING, _T("SELECT %s FROM %s WHERE ROWNUM BETWEEN %d AND %d"),
-			m_queryColumns, m_tempTable, startRow, startRow + numRows);
-		break;
-   case DB_SYNTAX_PGSQL:
-   case DB_SYNTAX_SQLITE:
-   case DB_SYNTAX_MYSQL:
-		_sntprintf(query, MAX_DB_STRING, _T("SELECT %s FROM %s LIMIT %d OFFSET %d"),
-			m_queryColumns, m_tempTable, startRow, numRows);
-		break;
+		case DB_SYNTAX_MSSQL:
+			_sntprintf(query, MAX_DB_STRING, _T("SELECT TOP %d %s FROM %s"),
+				startRow + numRows, m_queryColumns, m_tempTable);
+			break;
+		case DB_SYNTAX_ORACLE:
+			_sntprintf(query, MAX_DB_STRING, _T("SELECT %s FROM %s WHERE ROWNUM BETWEEN %d AND %d"),
+				m_queryColumns, m_tempTable, startRow, startRow + numRows);
+			break;
+		case DB_SYNTAX_PGSQL:
+		case DB_SYNTAX_SQLITE:
+		case DB_SYNTAX_MYSQL:
+			_sntprintf(query, MAX_DB_STRING, _T("SELECT %s FROM %s LIMIT %d OFFSET %d"),
+				m_queryColumns, m_tempTable, startRow, numRows);
+			break;
 	}
 
 	DB_RESULT result = DBSelect(m_dbHandle, query);
 	int resultSize = DBGetNumRows(result);
-	int i = max(0, resultSize - numRows); // MSSQL workaround
+	int i = (int)max(0, resultSize - numRows); // MSSQL workaround
 	for (; i < resultSize; i++)
 	{
 		table->addRow();
