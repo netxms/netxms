@@ -22,140 +22,157 @@
 **/
 
 #include "libnxsrv.h"
-#include "dbcp.h"
 
-ConnectionPool::ConnectionPool(int basePoolSize, int maxPoolSize)
+static int m_basePoolSize;
+static int m_maxPoolSize;
+static int m_currentPoolSize;
+static int m_cooldownTime;
+
+static MUTEX m_poolAccessMutex;
+
+static DB_HANDLE *m_dbHandles;
+static bool *m_dbHandlesInUseMarker;
+static time_t *m_dbHandleLastAccessTime;
+
+static void DBConnectionPoolPopulate()
 {
-	this->basePoolSize = basePoolSize;
-	this->maxPoolSize = maxPoolSize;
-	this->currentPoolSize = basePoolSize;
-	this->cooldownTime = 300; // 5 min
-	
-	poolAccessMutex = MutexCreate();
+	MutexLock(m_poolAccessMutex, INFINITE);
 
-	dbHandles = new DB_HANDLE[maxPoolSize];
-	dbHandlesInUseMarker = new bool[maxPoolSize];
-	dbHandleLastAccessTime = new time_t[maxPoolSize];
-
-	for (int i = 0; i < maxPoolSize; i++)
+	for (int i = 0; i < m_basePoolSize; i++)
 	{
-		dbHandles[i] = NULL;
-		dbHandlesInUseMarker[i] = false;
-		dbHandleLastAccessTime[i] = 0;
+		m_dbHandles[i] = DBConnect();
 	}
 
-	populate();
+	MutexUnlock(m_poolAccessMutex);
 }
 
-ConnectionPool::~ConnectionPool()
+static void DBConnectionPoolShrink()
 {
-	MutexDestroy(poolAccessMutex);
+	MutexLock(m_poolAccessMutex, INFINITE);
 
-	for (int i = 0; i < maxPoolSize; i++)
+	for (int i = 0; i < m_maxPoolSize; i++)
 	{
-		if (dbHandles[i] != NULL)
-		{
-			DBDisconnect(dbHandles[i]);
-		}
-	}
-
-	delete dbHandles;
-	delete dbHandlesInUseMarker;
-	delete dbHandleLastAccessTime;
-}
-
-void ConnectionPool::populate()
-{
-	MutexLock(poolAccessMutex, INFINITE);
-
-	for (int i = 0; i < basePoolSize; i++)
-	{
-		dbHandles[i] = DBConnect();
-	}
-
-	MutexUnlock(poolAccessMutex);
-}
-
-void ConnectionPool::shrink()
-{
-	MutexLock(poolAccessMutex, INFINITE);
-
-	for (int i = 0; i < maxPoolSize; i++)
-	{
-		if (currentPoolSize <= basePoolSize)
+		if (m_currentPoolSize <= m_basePoolSize)
 		{
 			break;
 		}
 
-		if (!dbHandlesInUseMarker[i] && dbHandles[i] != NULL)
+		if (!m_dbHandlesInUseMarker[i] && m_dbHandles[i] != NULL)
 		{
-			if ((time(NULL) - dbHandleLastAccessTime[i]) > cooldownTime)
+			if ((time(NULL) - m_dbHandleLastAccessTime[i]) > m_cooldownTime)
 			{
-				DBDisconnect(dbHandles[i]);
-				dbHandles[i] = NULL;
-				currentPoolSize--;
+				DBDisconnect(m_dbHandles[i]);
+				m_dbHandles[i] = NULL;
+				m_currentPoolSize--;
 			}
 		}
 	}
 
-	MutexUnlock(poolAccessMutex);
+	MutexUnlock(m_poolAccessMutex);
 }
 
-DB_HANDLE ConnectionPool::acquireConnection()
+bool LIBNXSRV_EXPORTABLE DBConnectionPoolStartup(int basePoolSize, int maxPoolSize, int cooldownTime)
 {
-	MutexLock(poolAccessMutex, INFINITE);
+	m_basePoolSize = basePoolSize;
+	m_currentPoolSize = basePoolSize;
+	m_maxPoolSize = maxPoolSize;
+	m_cooldownTime = cooldownTime;
+
+	m_poolAccessMutex = MutexCreate();
+
+	m_dbHandles = new DB_HANDLE[maxPoolSize];
+	m_dbHandlesInUseMarker = new bool[maxPoolSize];
+	m_dbHandleLastAccessTime = new time_t[maxPoolSize];
+
+	for (int i = 0; i < m_maxPoolSize; i++)
+	{
+		m_dbHandles[i] = NULL;
+		m_dbHandlesInUseMarker[i] = false;
+		m_dbHandleLastAccessTime[i] = 0;
+	}
+
+	DBConnectionPoolPopulate();
+
+	DbgPrintf(1, "Database Connection Pool initialized");
+
+	return true;
+}
+
+void LIBNXSRV_EXPORTABLE DBConnectionPoolShutdown()
+{
+	MutexDestroy(m_poolAccessMutex);
+
+	for (int i = 0; i < m_maxPoolSize; i++)
+	{
+		if (m_dbHandles[i] != NULL)
+		{
+			DBDisconnect(m_dbHandles[i]);
+		}
+	}
+
+	delete m_dbHandles;
+	delete m_dbHandlesInUseMarker;
+	delete m_dbHandleLastAccessTime;
+	
+	DbgPrintf(1, "Database Connection Pool terminated");
+
+}
+
+DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectionPoolAcquireConnection()
+{
+	MutexLock(m_poolAccessMutex, INFINITE);
 
 	DB_HANDLE handle = NULL;
-	for (int i = 0; i < maxPoolSize; i++)
+	for (int i = 0; i < m_maxPoolSize; i++)
 	{
-		if (dbHandles[i] != NULL && !dbHandlesInUseMarker[i])
+		if (m_dbHandles[i] != NULL && !m_dbHandlesInUseMarker[i])
 		{
-			handle = dbHandles[i];
-			dbHandlesInUseMarker[i] = true;
+			handle = m_dbHandles[i];
+			m_dbHandlesInUseMarker[i] = true;
 			break;
 		}
 	}
 
-	if (handle == NULL && currentPoolSize < maxPoolSize)
+	if (handle == NULL && m_currentPoolSize < m_maxPoolSize)
 	{
-		for (int i = 0; i < maxPoolSize; i++)
+		for (int i = 0; i < m_maxPoolSize; i++)
 		{
-			if (dbHandles[i] == NULL)
+			if (m_dbHandles[i] == NULL)
 			{
-				dbHandles[i] = DBConnect();
-				currentPoolSize++;
+				m_dbHandles[i] = DBConnect();
+				m_currentPoolSize++;
 
-				handle = dbHandles[i];
-				dbHandlesInUseMarker[i] = true;
+				handle = m_dbHandles[i];
+				m_dbHandlesInUseMarker[i] = true;
 				break;
 			}
 		}
 	}
 
-	MutexUnlock(poolAccessMutex);
+	MutexUnlock(m_poolAccessMutex);
 
-	shrink();
+	DBConnectionPoolShrink();
 
 	return handle;
 }
 
-void ConnectionPool::releaseConnection(DB_HANDLE connection)
+void LIBNXSRV_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection)
 {
-	MutexLock(poolAccessMutex, INFINITE);
+	MutexLock(m_poolAccessMutex, INFINITE);
 
 	DB_HANDLE handle = NULL;
-	for (int i = 0; i < maxPoolSize; i++)
+	for (int i = 0; i < m_maxPoolSize; i++)
 	{
-		if (dbHandles[i] == connection)
+		if (m_dbHandles[i] == connection)
 		{
-			dbHandlesInUseMarker[i] = false;
-			dbHandleLastAccessTime[i] = time(NULL);
+			m_dbHandlesInUseMarker[i] = false;
+			m_dbHandleLastAccessTime[i] = time(NULL);
 			break;
 		}
 	}
 
-	MutexUnlock(poolAccessMutex);
+	MutexUnlock(m_poolAccessMutex);
 
-	shrink();
+	DBConnectionPoolShrink();
 
 }

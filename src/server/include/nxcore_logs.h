@@ -99,7 +99,7 @@ public:
 
 	int getVariableCount() { return m_varCount; }
 
-	TCHAR *generateSql();
+	String generateSql();
 };
 
 class LogFilter
@@ -137,7 +137,6 @@ private:
 	INT64 m_rowCount;
 	LogFilter *m_filter;
 	MUTEX m_lock;
-	DB_HANDLE m_dbHandle;
    TCHAR m_queryColumns[MAX_DB_STRING];
 
 	void deleteQueryResults();

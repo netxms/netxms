@@ -31,22 +31,10 @@ LogHandle::LogHandle(NXCORE_LOG *info)
 {
 	m_log = info;
 	m_isDataReady = false;
-
-   switch(g_nDBSyntax)
-	{
-		case DB_SYNTAX_MSSQL:
-			_sntprintf(m_tempTable, 64, _T("#log_%p"), this);
-			break;
-		default:
-			_sntprintf(m_tempTable, 64, _T("log_%p"), this);
-			break;
-	}
-
+	_sntprintf(m_tempTable, 64, _T("log_%p"), this);
 	m_rowCount = 0;
 	m_filter = NULL;
 	m_lock = MutexCreate();
-
-	m_dbHandle = DBConnect();
 
 	m_queryColumns[0] = 0;
 }
@@ -60,8 +48,6 @@ LogHandle::~LogHandle()
 {
 	deleteQueryResults();
 	MutexDestroy(m_lock);
-
-	DBDisconnect(m_dbHandle);
 }
 
 
@@ -74,10 +60,15 @@ void LogHandle::deleteQueryResults()
 	if (!m_isDataReady)
 		return;
 
-	TCHAR query[MAX_DB_STRING];
+	String query;
 
-	_sntprintf(query, MAX_DB_STRING, _T("DROP TABLE %s"), m_tempTable);
-	DBQuery(m_dbHandle, query);
+	query.AddFormattedString(_T("DROP TABLE %s"), m_tempTable);
+
+	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
+
+	DBQuery(dbHandle, query);
+
+	DBConnectionPoolReleaseConnection(dbHandle);
 
 	delete_and_null(m_filter);
 	m_isDataReady = false;
@@ -100,8 +91,6 @@ bool LogHandle::query(LogFilter *filter)
 		return false;
 	}
 
-	printf("LogHandle::query()\n");
-
 	m_queryColumns[0] = 0;
 	LOG_COLUMN *column = m_log->columns;
 	bool first = true;
@@ -119,24 +108,24 @@ bool LogHandle::query(LogFilter *filter)
 		column++;
 	}
 
-   TCHAR query[MAX_DB_STRING];
+   String query;
    switch(g_nDBSyntax)
 	{
-		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, MAX_DB_STRING, _T("SELECT %s INTO %s from %s "), m_queryColumns, m_tempTable, m_log->table);
-			break;
-		case DB_SYNTAX_ORACLE:
-		case DB_SYNTAX_SQLITE:
-		case DB_SYNTAX_PGSQL:
-		case DB_SYNTAX_MYSQL:
-			_sntprintf(query, MAX_DB_STRING, _T("CREATE TEMPORARY TABLE %s AS SELECT %s FROM %s"), m_tempTable, m_queryColumns, m_log->table);
-			break;
+	case DB_SYNTAX_MSSQL:
+		query.AddFormattedString(_T("SELECT %s INTO %s from %s "), m_queryColumns, m_tempTable, m_log->table);
+		break;
+   case DB_SYNTAX_ORACLE:
+   case DB_SYNTAX_SQLITE:
+   case DB_SYNTAX_PGSQL:
+   case DB_SYNTAX_MYSQL:
+		query.AddFormattedString(_T("CREATE TABLE %s AS SELECT %s FROM %s"), m_tempTable, m_queryColumns, m_log->table);
+		break;
 	}
 
 	int filterSize = filter->getNumColumnFilter();
 	if (filterSize > 0)
 	{
-		_tcscat(query, " WHERE ");
+		query += _T(" WHERE ");
 	}
 
 	for (int i = 0; i < filterSize; i++)
@@ -145,15 +134,17 @@ bool LogHandle::query(LogFilter *filter)
 
 		if (i > 0)
 		{
-			_tcscat(query, " AND ");
+			query += _T(" AND ");
 		}
 
-		TCHAR *sql = cf->generateSql();
-		_tcscat(query, sql);
-		delete sql;
+		query += cf->generateSql();
 	}
 
-	bool ret = DBQuery(m_dbHandle, query) != FALSE;
+	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
+
+	bool ret = DBQuery(dbHandle, query) != FALSE;
+
+	DBConnectionPoolReleaseConnection(dbHandle);
 
 	if (ret)
 	{
@@ -186,38 +177,40 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 		columnCount++;
 	}
 
-	TCHAR query[MAX_DB_STRING];
+	String query;
 
    switch(g_nDBSyntax)
 	{
-		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, MAX_DB_STRING, _T("SELECT TOP %d %s FROM %s"),
-				startRow + numRows, m_queryColumns, m_tempTable);
-			break;
-		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, MAX_DB_STRING, _T("SELECT %s FROM %s WHERE ROWNUM BETWEEN %d AND %d"),
-				m_queryColumns, m_tempTable, startRow, startRow + numRows);
-			break;
-		case DB_SYNTAX_PGSQL:
-		case DB_SYNTAX_SQLITE:
-		case DB_SYNTAX_MYSQL:
-			_sntprintf(query, MAX_DB_STRING, _T("SELECT %s FROM %s LIMIT %d OFFSET %d"),
-				m_queryColumns, m_tempTable, startRow, numRows);
-			break;
+	case DB_SYNTAX_MSSQL:
+		query.AddFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, m_queryColumns, m_tempTable);
+		break;
+   case DB_SYNTAX_ORACLE:
+		query.AddFormattedString(_T("SELECT %s FROM %s WHERE ROWNUM BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_queryColumns, m_tempTable, startRow, startRow + numRows);
+		break;
+   case DB_SYNTAX_PGSQL:
+   case DB_SYNTAX_SQLITE:
+   case DB_SYNTAX_MYSQL:
+		query.AddFormattedString(_T("SELECT %s FROM %s LIMIT ") INT64_FMT _T(" OFFSET ") INT64_FMT, m_queryColumns, m_tempTable, numRows, startRow);
+		break;
 	}
 
-	DB_RESULT result = DBSelect(m_dbHandle, query);
+	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
+	DB_RESULT result = DBSelect(dbHandle, query);
+
 	int resultSize = DBGetNumRows(result);
-	int i = (int)max(0, resultSize - numRows); // MSSQL workaround
-	for (; i < resultSize; i++)
+	int offset = (int)max(0, resultSize - (int)numRows); // MSSQL workaround
+	for (int i = 0; i < resultSize; i++)
 	{
 		table->addRow();
 		for (int j = 0; j < columnCount; j++)
 		{
-			table->set(i, DBGetField(m_dbHandle, i, j, NULL, 0));
+			table->set(j, DBGetField(result, offset + i, j, NULL, 0));
 		}
 	}
+
 	DBFreeResult(result);
+
+	DBConnectionPoolReleaseConnection(dbHandle);
 
 	return table;
 }

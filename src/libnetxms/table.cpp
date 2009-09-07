@@ -99,8 +99,11 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 	int stopRow = (rowLimit == -1) ? m_nNumRows : min(m_nNumRows, offset + rowLimit);
 	for(i = offset * m_nNumCols, row = offset, id = VID_TABLE_DATA_BASE; row < stopRow; row++)
 	{
-		for(col = 0; col < m_nNumCols; col++)
-			msg.SetVariable(id++, CHECK_NULL_EX(m_ppData[i++]));
+		for(col = 0; col < m_nNumCols; col++) 
+		{
+			TCHAR *tmp = m_ppData[i++];
+			msg.SetVariable(id++, CHECK_NULL_EX(tmp));
+		}
 	}
 	msg.SetVariable(VID_NUM_ROWS, (DWORD)(row - offset));
 

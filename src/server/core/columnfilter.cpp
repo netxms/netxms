@@ -89,24 +89,24 @@ ColumnFilter::~ColumnFilter()
 	}
 }
 
-TCHAR *ColumnFilter::generateSql()
+String ColumnFilter::generateSql()
 {
-	TCHAR *buffer = new TCHAR[1024];
+	String sql;
 
 	switch(m_type)
 	{
 		case FILTER_EQUALS:
-			_stprintf(buffer, _T("%s = ") INT64_FMT, m_column, m_value.equalsTo);
+			sql.AddFormattedString(_T("%s = ") INT64_FMT, m_column, m_value.equalsTo);
 			break;
 		case FILTER_RANGE:
-			_stprintf(buffer, _T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
+			sql.AddFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
 			break;
 		case FILTER_LIKE:
-			_stprintf(buffer, _T("%s LIKE %s"), m_column, DBPrepareString(m_value.like));
+			sql.AddFormattedString(_T("%s LIKE %s"), m_column, DBPrepareString(m_value.like));
 		case FILTER_SET:
 			// TODO: add support
 			break;
 	}
 
-	return buffer;
+	return sql;
 }

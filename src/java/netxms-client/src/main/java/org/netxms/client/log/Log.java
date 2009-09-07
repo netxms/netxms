@@ -99,7 +99,7 @@ public class Log
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_LOG_DATA);
 		msg.setVariableInt32(NXCPCodes.VID_LOG_HANDLE, handle);
 		msg.setVariableInt64(NXCPCodes.VID_START_ROW, startRow);
-		msg.setVariableInt64(NXCPCodes.VID_NUM_ROWS, startRow);
+		msg.setVariableInt64(NXCPCodes.VID_NUM_ROWS, rowCount);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 		return session.receiveTable(msg.getMessageId(), NXCPCodes.CMD_LOG_DATA);

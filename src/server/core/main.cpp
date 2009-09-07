@@ -466,6 +466,11 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	}
 	DbgPrintf(1, "Successfully connected to database %s@%s", g_szDbName, g_szDbServer);
 
+	int baseSize = ConfigReadInt("ConnectionPoolBaseSize", 5);
+	int maxSize = ConfigReadInt("ConnectionPoolMaxSize", 10);
+	int cooldownTime = ConfigReadInt("ConnectionPoolCooldownTime", 300);
+	DBConnectionPoolStartup(baseSize, maxSize, cooldownTime);
+
 	// Check database version
 	iDBVersion = DBGetSchemaVersion(g_hCoreDB);
 	if (iDBVersion != DB_FORMAT_VERSION)
@@ -711,6 +716,9 @@ void NXCORE_EXPORTABLE Shutdown(void)
 	// Disconnect from database and unload driver
 	if (g_hCoreDB != NULL)
 		DBDisconnect(g_hCoreDB);
+
+	DBConnectionPoolShutdown();
+
 	DBUnloadDriver();
 	DbgPrintf(1, "Database driver unloaded");
 

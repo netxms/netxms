@@ -521,6 +521,11 @@ String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str);
 TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 
+bool LIBNXSRV_EXPORTABLE DBConnectionPoolStartup(int basePoolSize, int maxPoolSize, int cooldownTime);
+void LIBNXSRV_EXPORTABLE DBConnectionPoolShutdown();
+DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectionPoolAcquireConnection();
+void LIBNXSRV_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection);
+
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 
 const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code);
