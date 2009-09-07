@@ -76,7 +76,7 @@ private:
 	int m_varCount;	// Number of variables read from NXCP message during construction
 	int m_type;
 	TCHAR *m_column;
-	union
+	union t_ColumnFilterValue
 	{
 		INT64 equalsTo;
 		struct
@@ -98,6 +98,8 @@ public:
 	~ColumnFilter();
 
 	int getVariableCount() { return m_varCount; }
+
+	TCHAR *generateSql();
 };
 
 class LogFilter
@@ -109,6 +111,16 @@ private:
 public:
 	LogFilter(CSCPMessage *msg);
 	~LogFilter();
+
+	int getNumColumnFilter()
+	{
+		return m_numColumnFilters;
+	}
+
+	ColumnFilter *getColumnFilter(int offset)
+	{
+		return m_columnFilters[offset];
+	}
 };
 
 
@@ -125,6 +137,8 @@ private:
 	INT64 m_rowCount;
 	LogFilter *m_filter;
 	MUTEX m_lock;
+	DB_HANDLE m_dbHandle;
+   TCHAR m_queryColumns[MAX_DB_STRING];
 
 	void deleteQueryResults();
 

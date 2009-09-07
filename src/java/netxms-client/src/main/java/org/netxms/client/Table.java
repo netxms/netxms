@@ -113,4 +113,14 @@ public class Table
 		ArrayList<String> rowData = data.get(row);
 		return rowData.get(column);
 	}
+
+	public String toString()
+	{
+		final StringBuilder sb = new StringBuilder();
+		sb.append("Table");
+		sb.append("{columns=").append(columns);
+		sb.append(", data=").append(data);
+		sb.append('}');
+		return sb.toString();
+	}
 }

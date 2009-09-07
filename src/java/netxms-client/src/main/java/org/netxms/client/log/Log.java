@@ -76,9 +76,13 @@ public class Log
 	 * 
 	 * @param filter Log filter
 	 */
-	public void query(LogFilter filter)
+	public void query(LogFilter filter) throws IOException, NXCException
 	{
-		
+		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_QUERY_LOG);
+		msg.setVariableInt32(NXCPCodes.VID_LOG_HANDLE, handle);
+		filter.fillMessage(msg);
+		session.sendMessage(msg);
+		session.waitForRCC(msg.getMessageId());
 	}
 	
 	/**
