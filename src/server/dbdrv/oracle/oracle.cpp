@@ -45,7 +45,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 
 	const TCHAR *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		if (*src == _T('\''))
 		{
@@ -370,10 +370,10 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 
 						// Data size
 						OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
-						pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 1) * sizeof(UCS2CHAR));
+						pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
 						handleDefine = NULL;
 						if ((nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
-						                              pBuffers[i].pData, (nWidth + 1) * sizeof(UCS2CHAR),
+						                              pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
 						                              SQLT_CHR, &pBuffers[i].isNull, &pBuffers[i].nLength,
 						                              &pBuffers[i].nCode, OCI_DEFAULT)) != OCI_SUCCESS)
 						{
@@ -613,10 +613,10 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 
 						// Data size
 						OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
-						pConn->pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 1) * sizeof(UCS2CHAR));
+						pConn->pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
 						handleDefine = NULL;
 						if (OCIDefineByPos(pConn->handleStmt, &handleDefine, pConn->handleError, i + 1,
-						                   pConn->pBuffers[i].pData, (nWidth + 1) * sizeof(UCS2CHAR),
+						                   pConn->pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
 						                   SQLT_CHR, &pConn->pBuffers[i].isNull, &pConn->pBuffers[i].nLength,
 						                   &pConn->pBuffers[i].nCode, OCI_DEFAULT) == OCI_SUCCESS)
 						{
@@ -674,9 +674,22 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 
 extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
 {
+	BOOL success;
+
 	if (pConn == NULL)
 		return FALSE;
-	return OCIStmtFetch(pConn->handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, OCI_DEFAULT) == OCI_SUCCESS;
+
+	sword rc = OCIStmtFetch(pConn->handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+	if ((rc == OCI_SUCCESS) || (rc == OCI_SUCCESS_WITH_INFO))
+	{
+		success = TRUE;
+	}
+	else
+	{
+		SetLastErrorText(pConn);
+		success = FALSE;
+	}
+	return success;
 }
 
 
