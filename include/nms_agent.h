@@ -418,6 +418,6 @@ void LIBNETXMS_EXPORTABLE AgentWriteLog(int iLevel, const TCHAR *pszFormat, ...)
 void LIBNETXMS_EXPORTABLE AgentWriteLog2(int iLevel, const TCHAR *pszFormat, va_list args);
 void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const char *pszFormat, ...);
 void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList);
-BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, const TCHAR *file, DWORD requestId, long offset);
+BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset);
 
 #endif   /* _nms_agent_h_ */
