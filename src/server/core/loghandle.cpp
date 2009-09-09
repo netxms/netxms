@@ -58,17 +58,21 @@ LogHandle::~LogHandle()
 void LogHandle::deleteQueryResults()
 {
 	if (!m_isDataReady)
+	{
 		return;
+	}
 
 	String query;
 
 	query.AddFormattedString(_T("DROP TABLE %s"), m_tempTable);
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
+	if (dbHandle != NULL)
+	{
+		DBQuery(dbHandle, query);
 
-	DBQuery(dbHandle, query);
-
-	DBConnectionPoolReleaseConnection(dbHandle);
+		DBConnectionPoolReleaseConnection(dbHandle);
+	}
 
 	delete_and_null(m_filter);
 	m_isDataReady = false;
@@ -142,9 +146,12 @@ bool LogHandle::query(LogFilter *filter)
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
 
-	bool ret = DBQuery(dbHandle, query) != FALSE;
-
-	DBConnectionPoolReleaseConnection(dbHandle);
+	bool ret = false;
+	if (dbHadle != NULL)
+	{
+		ret = DBQuery(dbHandle, query) != FALSE;
+		DBConnectionPoolReleaseConnection(dbHandle);
+	}
 
 	if (ret)
 	{
@@ -162,7 +169,9 @@ bool LogHandle::query(LogFilter *filter)
 Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 {
 	if (!m_isDataReady)
+	{
 		return NULL;
+	}
 
 	Table *table = new Table();
 
@@ -195,22 +204,36 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 	}
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
-	DB_RESULT result = DBSelect(dbHandle, query);
-
-	int resultSize = DBGetNumRows(result);
-	int offset = (int)max(0, resultSize - (int)numRows); // MSSQL workaround
-	for (int i = 0; i < resultSize; i++)
+	if (dbHandle != NULL)
 	{
-		table->addRow();
-		for (int j = 0; j < columnCount; j++)
+		DB_RESULT result = DBSelect(dbHandle, query);
+
+		if (result != NULL)
 		{
-			table->set(j, DBGetField(result, offset + i, j, NULL, 0));
+			int resultSize = DBGetNumRows(result);
+			int offset = (int)max(0, resultSize - (int)numRows); // MSSQL workaround
+			for (int i = 0; i < resultSize; i++)
+			{
+				table->addRow();
+				for (int j = 0; j < columnCount; j++)
+				{
+					table->set(j, DBGetField(result, offset + i, j, NULL, 0));
+				}
+			}
+
+			DBFreeResult(result);
 		}
+		else
+		{
+			delete_and_null(table);
+		}
+
+		DBConnectionPoolReleaseConnection(dbHandle);
 	}
-
-	DBFreeResult(result);
-
-	DBConnectionPoolReleaseConnection(dbHandle);
+	else
+	{
+		delete_and_null(table);
+	}
 
 	return table;
 }
