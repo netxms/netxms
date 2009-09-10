@@ -115,15 +115,15 @@ bool LogHandle::query(LogFilter *filter)
 	String query;
 	switch(g_nDBSyntax)
 	{
-	case DB_SYNTAX_MSSQL:
-		query.AddFormattedString(_T("SELECT %s INTO %s from %s "), m_queryColumns, m_tempTable, m_log->table);
-		break;
-	case DB_SYNTAX_ORACLE:
-	case DB_SYNTAX_SQLITE:
-	case DB_SYNTAX_PGSQL:
-	case DB_SYNTAX_MYSQL:
-		query.AddFormattedString(_T("CREATE TABLE %s AS SELECT %s FROM %s"), m_tempTable, m_queryColumns, m_log->table);
-		break;
+		case DB_SYNTAX_MSSQL:
+			query.AddFormattedString(_T("SELECT %s INTO %s from %s "), m_queryColumns, m_tempTable, m_log->table);
+			break;
+		case DB_SYNTAX_ORACLE:
+		case DB_SYNTAX_SQLITE:
+		case DB_SYNTAX_PGSQL:
+		case DB_SYNTAX_MYSQL:
+			query.AddFormattedString(_T("CREATE TABLE %s AS SELECT %s FROM %s"), m_tempTable, m_queryColumns, m_log->table);
+			break;
 	}
 
 	int filterSize = filter->getNumColumnFilter();
@@ -147,7 +147,7 @@ bool LogHandle::query(LogFilter *filter)
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
 
 	bool ret = false;
-	if (dbHadle != NULL)
+	if (dbHandle != NULL)
 	{
 		ret = DBQuery(dbHandle, query) != FALSE;
 		DBConnectionPoolReleaseConnection(dbHandle);
@@ -190,17 +190,17 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 
 	switch(g_nDBSyntax)
 	{
-	case DB_SYNTAX_MSSQL:
-		query.AddFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, m_queryColumns, m_tempTable);
-		break;
-	case DB_SYNTAX_ORACLE:
-		query.AddFormattedString(_T("SELECT %s FROM %s WHERE ROWNUM BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_queryColumns, m_tempTable, startRow, startRow + numRows);
-		break;
-	case DB_SYNTAX_PGSQL:
-	case DB_SYNTAX_SQLITE:
-	case DB_SYNTAX_MYSQL:
-		query.AddFormattedString(_T("SELECT %s FROM %s LIMIT ") INT64_FMT _T(" OFFSET ") INT64_FMT, m_queryColumns, m_tempTable, numRows, startRow);
-		break;
+		case DB_SYNTAX_MSSQL:
+			query.AddFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, m_queryColumns, m_tempTable);
+			break;
+		case DB_SYNTAX_ORACLE:
+			query.AddFormattedString(_T("SELECT %s FROM %s WHERE ROWNUM BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_queryColumns, m_tempTable, startRow, startRow + numRows);
+			break;
+		case DB_SYNTAX_PGSQL:
+		case DB_SYNTAX_SQLITE:
+		case DB_SYNTAX_MYSQL:
+			query.AddFormattedString(_T("SELECT %s FROM %s LIMIT ") INT64_FMT _T(" OFFSET ") INT64_FMT, m_queryColumns, m_tempTable, numRows, startRow);
+			break;
 	}
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
