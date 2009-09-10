@@ -51,11 +51,16 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 	int outPos;
 	for(outPos = 1; *src != NULL; src++)
 	{
-		if (*src < 32)
+#ifdef UNICODE
+		long chval = *src;
+#else
+		long chval = (long)(*((unsigned char *)src));
+#endif
+		if (chval < 32)
 		{
 			TCHAR buffer[8];
 
-			_sntprintf(buffer, 8, _T("\\%03o"), *src);
+			_sntprintf(buffer, 8, _T("\\%03o"), chval);
 			len += 4;
 			if (len >= bufferSize)
 			{
