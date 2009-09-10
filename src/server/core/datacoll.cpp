@@ -68,6 +68,8 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    {
       pItem = (DCItem *)g_pItemQueue->GetOrBlock();
 		pNode = (Node *)pItem->getRelatedNode();
+      DbgPrintf(8, "DataCollector(): processing DCI %d \"%s\" node=%d proxy=%d",
+		          pItem->getId(), pItem->getName(), (pNode != NULL) ? pNode->Id() : -1, pItem->getProxyNode());
 		if (pItem->getProxyNode() != 0)
 		{
 			NetObj *object;
@@ -141,10 +143,6 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                break;
          }
 
-         // Update item's last poll time and clear busy flag so item can be polled again
-         pItem->setLastPollTime(currTime);
-         pItem->setBusyFlag(FALSE);
-
          // Decrement node's usage counter
          pNode->DecRefCount();
 			if ((pItem->getProxyNode() != 0) && (pItem->getRelatedNode() != NULL))
@@ -154,8 +152,14 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       }
       else     /* pNode == NULL */
       {
-         DbgPrintf(3, "*** DataCollector: Attempt to collect information for non-existing node.");
+			Template *n = pItem->getRelatedNode();
+         DbgPrintf(3, "*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" node=%d proxy=%d)",
+			          pItem->getId(), pItem->getName(), (n != NULL) ? n->Id() : -1, pItem->getProxyNode());
       }
+
+		// Update item's last poll time and clear busy flag so item can be polled again
+      pItem->setLastPollTime(currTime);
+      pItem->setBusyFlag(FALSE);
    }
 
    free(pBuffer);

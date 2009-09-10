@@ -159,11 +159,14 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 
    DbgPrintf(1, _T("Started caching of DCI values"));
    RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-   for(i = 0; i < g_dwNodeAddrIndexSize; i++)
-   {
-      ((Node *)g_pNodeIndexByAddr[i].pObject)->UpdateDCICache();
-      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
-   }
+      for(i = 0; i < g_dwIdIndexSize; i++)
+		{
+			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+			{
+				((Node *)g_pIndexById[i].pObject)->UpdateDCICache();
+		      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
+			}
+		}
    RWLockUnlock(g_rwlockNodeIndex);
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;

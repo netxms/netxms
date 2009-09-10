@@ -3,7 +3,8 @@
 *
 
 - Automatic network discovery improved
-- Fixed issues: #259, #260, #261, #262, #263
+- LOGSCAN subagent removed (superseded by LOGWATCH subagent)
+- Fixed issues: #259, #260, #261, #262, #263, #264
 
 
 *

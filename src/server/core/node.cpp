@@ -1847,6 +1847,7 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
                          szParam, NULL, 0, szBuffer, dwBufSize, FALSE, TRUE);
 		delete pTransport;
    }
+   DbgPrintf(7, "Node(%s)->GetItemFromSNMP(%s): dwResult=%d", m_szName, szParam, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -1876,6 +1877,7 @@ DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char
                          dwBufSize, FALSE, TRUE);
 		delete pTransport;
    }
+   DbgPrintf(7, "Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d", m_szName, szParam, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -2154,6 +2156,7 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
          m_ppItems[i]->setBusyFlag(TRUE);
          IncRefCount();   // Increment reference count for each queued DCI
          pPollerQueue->Put(m_ppItems[i]);
+			DbgPrintf(8, _T("Node(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_szName, m_ppItems[i]->getId(), m_ppItems[i]->getName());
       }
    }
    UnlockData();
