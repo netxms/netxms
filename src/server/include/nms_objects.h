@@ -26,6 +26,7 @@
 #include <nms_agent.h>
 #include <nxnt.h>
 #include <netxms_maps.h>
+#include <geolocation.h>
 #include "nxcore_jobs.h"
 
 
@@ -189,7 +190,7 @@ protected:
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
    DWORD m_dwIpAddr;          // Every object should have an IP address
-   DWORD m_dwImageId;         // Custom image id or 0 if object has default image
+	GeoLocation m_geoLocation;
    ClientSession *m_pPollRequestor;
 
    DWORD m_dwChildCount;      // Number of child objects

@@ -145,7 +145,10 @@ CREATE TABLE object_properties
 	status_translation varchar(8) not null,
 	status_single_threshold integer not null,
 	status_thresholds varchar(8) not null,
-	comments SQL_TEXT not null,
+	comments SQL_TEXT,
+	location_type integer not null,		// 0 = unset, 1 = manual, 2 = GPS
+	latitude varchar(20),
+	longitude varchar(20),
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

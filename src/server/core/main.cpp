@@ -467,7 +467,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	DbgPrintf(1, "Successfully connected to database %s@%s", g_szDbName, g_szDbServer);
 
 	int baseSize = ConfigReadInt("ConnectionPoolBaseSize", 5);
-	int maxSize = ConfigReadInt("ConnectionPoolMaxSize", 10);
+	int maxSize = ConfigReadInt("ConnectionPoolMaxSize", 20);
 	int cooldownTime = ConfigReadInt("ConnectionPoolCooldownTime", 300);
 	DBConnectionPoolStartup(baseSize, maxSize, cooldownTime);
 

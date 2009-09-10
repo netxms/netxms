@@ -148,6 +148,48 @@ cleanup:
 
 
 //
+// Upgrade from V203 to V204
+//
+
+static BOOL H_UpgradeFromV203(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE object_properties ADD location_type integer\n")
+		_T("ALTER TABLE object_properties ADD latitude varchar(20)\n")
+		_T("ALTER TABLE object_properties ADD longitude varchar(20)\n")
+		_T("UPDATE object_properties SET location_type=0\n")
+		_T("ALTER TABLE object_properties DROP COLUMN image_id\n")
+		_T("<END>");
+
+	if (!SQLBatch(batch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ConnectionPoolBaseSize"), _T("5"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ConnectionPoolMaxSize"), _T("20"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ConnectionPoolCooldownTime"), _T("300"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!ConvertStrings("object_properties", "object_id", "comments"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='204' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V202 to V203
 //
 
@@ -235,9 +277,12 @@ static BOOL H_UpgradeFromV200(int currVersion, int newVersion)
 //
 // Upgrade from V92 to V200
 //      or from V93 to V201
+//      or from V94 to V202
+//      or from V95 to V203
+//      or from V95 to V204
 //
 
-static BOOL H_UpgradeFromV92orV93(int currVersion, int newVersion)
+static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE ap_common (")
 		              _T("id integer not null,")
@@ -4177,11 +4222,15 @@ static struct
 	{ 89, 90, H_UpgradeFromV89 },
 	{ 90, 91, H_UpgradeFromV90 },
 	{ 91, 92, H_UpgradeFromV91 },
-	{ 92, 200, H_UpgradeFromV92orV93 },
-	{ 93, 201, H_UpgradeFromV92orV93 },
+	{ 92, 200, H_UpgradeFromV9x },
+	{ 93, 201, H_UpgradeFromV9x },
+	{ 94, 202, H_UpgradeFromV9x },
+	{ 95, 203, H_UpgradeFromV9x },
+	{ 96, 204, H_UpgradeFromV9x },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
+	{ 203, 204, H_UpgradeFromV203 },
    { 0, NULL }
 };
 

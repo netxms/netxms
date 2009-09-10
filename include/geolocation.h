@@ -1,0 +1,80 @@
+/* 
+** NetXMS - Network Management System
+** Copyright (C) 2003-2009 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: geolocation.h
+**
+**/
+
+#ifndef _geolocation_h_
+#define _geolocation_h_
+
+#include <nms_util.h>
+
+
+//
+// Location types
+//
+
+#define GL_UNSET     0
+#define GL_MANUAL    1
+#define GL_GPS       2
+
+
+//
+// Geo location class
+//
+
+class LIBNETXMS_EXPORTABLE GeoLocation
+{
+private:
+	int m_type;
+	double m_lat;
+	double m_lon;
+	TCHAR m_latStr[20];
+	TCHAR m_lonStr[20];
+	bool m_isValid;
+
+	void posToString(bool isLat, double pos);
+
+	static int getIntegerDegree(double pos);
+	static int getIntegerMinutes(double pos);
+	static double getDecimalSeconds(double pos);
+
+	static double parse(const TCHAR *str, bool isLat, bool *isValid);
+	bool parseLatitude(const TCHAR *lat);
+	bool parseLongitude(const TCHAR *lon);
+
+public:
+	GeoLocation();
+	GeoLocation(int type, double lat, double lon);
+	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon);
+	GeoLocation(GeoLocation &src);
+	~GeoLocation();
+
+	GeoLocation& operator =(const GeoLocation &src);
+
+	int getType() { return m_type; }
+	double getLatitude() { return m_lat; }
+	double getLongitude() { return m_lon; }
+	const TCHAR *getLatitudeAsString() { return m_latStr; }
+	const TCHAR *getLongitudeAsString() { return m_lonStr; }
+	bool isValid() { return m_isValid; }
+};
+
+
+#endif

@@ -53,7 +53,6 @@ NetObj::NetObj()
    m_bInheritAccessRights = TRUE;
 	m_dwNumTrustedNodes = 0;
 	m_pdwTrustedNodes = NULL;
-   m_dwImageId = 0;    // Default image
    m_pPollRequestor = NULL;
    m_iStatusCalcAlg = SA_CALCULATE_DEFAULT;
    m_iStatusPropAlg = SA_PROPAGATE_DEFAULT;
@@ -138,11 +137,12 @@ BOOL NetObj::LoadCommonProperties(void)
    BOOL bResult = FALSE;
 
    // Load access options
-   _sntprintf(szQuery, 1024, _T("SELECT name,status,is_deleted,image_id,")
+   _sntprintf(szQuery, 1024, _T("SELECT name,status,is_deleted,")
                              _T("inherit_access_rights,last_modified,status_calc_alg,")
                              _T("status_prop_alg,status_fixed_val,status_shift,")
                              _T("status_translation,status_single_threshold,")
-                             _T("status_thresholds,comments,is_system FROM object_properties ")
+                             _T("status_thresholds,comments,is_system,")
+									  _T("location_type,latitude,longitude FROM object_properties ")
                              _T("WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -152,20 +152,33 @@ BOOL NetObj::LoadCommonProperties(void)
          DBGetField(hResult, 0, 0, m_szName, MAX_OBJECT_NAME);
          m_iStatus = DBGetFieldLong(hResult, 0, 1);
          m_bIsDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
-         m_dwImageId = DBGetFieldULong(hResult, 0, 3);
-         m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 4) ? TRUE : FALSE;
-         m_dwTimeStamp = DBGetFieldULong(hResult, 0, 5);
-         m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 6);
-         m_iStatusPropAlg = DBGetFieldLong(hResult, 0, 7);
-         m_iFixedStatus = DBGetFieldLong(hResult, 0, 8);
-         m_iStatusShift = DBGetFieldLong(hResult, 0, 9);
-         DBGetFieldByteArray(hResult, 0, 10, m_iStatusTranslation, 4, STATUS_WARNING);
-         m_iStatusSingleThreshold = DBGetFieldLong(hResult, 0, 11);
-         DBGetFieldByteArray(hResult, 0, 12, m_iStatusThresholds, 4, 50);
+         m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? TRUE : FALSE;
+         m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
+         m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 5);
+         m_iStatusPropAlg = DBGetFieldLong(hResult, 0, 6);
+         m_iFixedStatus = DBGetFieldLong(hResult, 0, 7);
+         m_iStatusShift = DBGetFieldLong(hResult, 0, 8);
+         DBGetFieldByteArray(hResult, 0, 9, m_iStatusTranslation, 4, STATUS_WARNING);
+         m_iStatusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
+         DBGetFieldByteArray(hResult, 0, 11, m_iStatusThresholds, 4, 50);
          safe_free(m_pszComments);
-         m_pszComments = DBGetField(hResult, 0, 13, NULL, 0);
-         DecodeSQLString(m_pszComments);
-         m_bIsSystem = DBGetFieldLong(hResult, 0, 14) ? TRUE : FALSE;
+         m_pszComments = DBGetField(hResult, 0, 12, NULL, 0);
+         m_bIsSystem = DBGetFieldLong(hResult, 0, 13) ? TRUE : FALSE;
+
+			int locType = DBGetFieldLong(hResult, 0, 14);
+			if (locType != GL_UNSET)
+			{
+				TCHAR lat[32], lon[32];
+
+				DBGetField(hResult, 0, 15, lat, 32);
+				DBGetField(hResult, 0, 16, lon, 32);
+				m_geoLocation = GeoLocation(locType, lat, lon);
+			}
+			else
+			{
+				m_geoLocation = GeoLocation();
+			}
+
          bResult = TRUE;
       }
       DBFreeResult(hResult);
@@ -217,7 +230,7 @@ BOOL NetObj::LoadCommonProperties(void)
 
 BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
 {
-   TCHAR szQuery[16384], szTranslation[16], szThresholds[16], *pszEscComments;
+   TCHAR szQuery[32768], szTranslation[16], szThresholds[16];
    DB_RESULT hResult;
    BOOL bResult = FALSE;
    int i, j;
@@ -232,39 +245,43 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
          _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_iStatusTranslation[i]);
          _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_iStatusThresholds[i]);
       }
-      pszEscComments = EncodeSQLString(CHECK_NULL_EX(m_pszComments));
-      if (_tcslen(pszEscComments) > 15500)
-         pszEscComments[15500] = 0;
       if (DBGetNumRows(hResult) > 0)
       {
-         _sntprintf(szQuery, 16384, 
-                    _T("UPDATE object_properties SET name='%s',status=%d,")
-                    _T("is_deleted=%d,image_id=%d,inherit_access_rights=%d,")
+         _sntprintf(szQuery, 32768, 
+                    _T("UPDATE object_properties SET name=%s,status=%d,")
+                    _T("is_deleted=%d,inherit_access_rights=%d,")
                     _T("last_modified=%d,status_calc_alg=%d,status_prop_alg=%d,")
                     _T("status_fixed_val=%d,status_shift=%d,status_translation='%s',")
                     _T("status_single_threshold=%d,status_thresholds='%s',")
-                    _T("comments='%s',is_system=%d WHERE object_id=%d"),
-                    m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
+                    _T("comments=%s,is_system=%d,location_type=%d,latitude=%s,")
+						  _T("longitude=%s WHERE object_id=%d"),
+                    (const TCHAR *)DBPrepareString(m_szName), m_iStatus, m_bIsDeleted,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
                     szTranslation, m_iStatusSingleThreshold, szThresholds,
-                    pszEscComments, m_bIsSystem, m_dwId);
+						  (const TCHAR *)DBPrepareString(CHECK_NULL_EX(m_pszComments)),
+						  m_bIsSystem, m_geoLocation.getType(),
+						  (const TCHAR *)DBPrepareString(m_geoLocation.getLatitudeAsString()),
+						  (const TCHAR *)DBPrepareString(m_geoLocation.getLongitudeAsString()), m_dwId);
       }
       else
       {
-         _sntprintf(szQuery, 16384, 
+         _sntprintf(szQuery, 32768, 
                     _T("INSERT INTO object_properties (object_id,name,status,is_deleted,")
-                    _T("image_id,inherit_access_rights,last_modified,status_calc_alg,")
+                    _T("inherit_access_rights,last_modified,status_calc_alg,")
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
-                    _T("status_single_threshold,status_thresholds,comments,is_system) ")
-                    _T("VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s','%s',%d)"),
-                    m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
+                    _T("status_single_threshold,status_thresholds,comments,is_system,")
+						  _T("location_type,latitude,longitude) ")
+                    _T("VALUES (%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s',%s,%d,%d,%s,%s)"),
+                    m_dwId, (const TCHAR *)DBPrepareString(m_szName), m_iStatus, m_bIsDeleted,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
                     szTranslation, m_iStatusSingleThreshold, szThresholds,
-                    pszEscComments, m_bIsSystem);
+                    (const TCHAR *)DBPrepareString(CHECK_NULL_EX(m_pszComments)),
+						  m_bIsSystem, m_geoLocation.getType(),
+						  (const TCHAR *)DBPrepareString(m_geoLocation.getLatitudeAsString()),
+						  (const TCHAR *)DBPrepareString(m_geoLocation.getLongitudeAsString()));
       }
-      free(pszEscComments);
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);
    }
@@ -282,7 +299,7 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
 			{
 				escName = EncodeSQLString(m_customAttributes.GetKeyByIndex(i));
 				escValue = EncodeSQLString(m_customAttributes.GetValueByIndex(i));
-				_sntprintf(szQuery, 16384, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (%d,'%s','%s')"),
+				_sntprintf(szQuery, 32768, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (%d,'%s','%s')"),
 				           m_dwId, escName, escValue);
 				free(escName);
 				free(escValue);

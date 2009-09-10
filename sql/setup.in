@@ -182,6 +182,12 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('UseIfXTable','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SMTPRetryCount','1',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ConnectionPoolBaseSize','5',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ConnectionPoolMaxSize','20',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ConnectionPoolCooldownTime','300',1,1);
 
 
 /*

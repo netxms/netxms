@@ -192,7 +192,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 									_T("usm_priv_password,usm_methods")
 	                        _T(" FROM nodes WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, query);
-   if (hResult == 0)
+   if (hResult == NULL)
       return FALSE;     // Query failed
 
    if (DBGetNumRows(hResult) == 0)
@@ -271,6 +271,11 @@ BOOL Node::CreateFromDB(DWORD dwId)
             bResult = TRUE;
          }
       }
+
+		if ((iNumRows == 0) && (m_dwIpAddr == 0))
+		{
+			bResult = TRUE;	// It's OK to don't have parent subnets for node without IP
+		}
 
       DBFreeResult(hResult);
       LoadItemsFromDB();

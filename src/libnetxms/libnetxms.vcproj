@@ -366,6 +366,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\geolocation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\getopt.c"
 				>
 			</File>
@@ -497,6 +501,10 @@
 			>
 			<File
 				RelativePath="..\..\include\base64.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\geolocation.h"
 				>
 			</File>
 			<File

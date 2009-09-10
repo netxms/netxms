@@ -1,4 +1,16 @@
 ***************
+* 203 ==> 204 *
+***************
+
+- New columns added to table "object_properties":
+	location_type integer
+	latitude varchar(20)
+	longitude varchar(20)
+- Column "image_id" deleted from table "object_properties"
+- Escaped characters with # replaced in table "object_properties"
+
+
+***************
 * 202 ==> 203 *
 ***************
 
@@ -27,6 +39,7 @@
 * 93 ==> 201 *
 * 94 ==> 202 *
 * 95 ==> 203 *
+* 96 ==> 204 *
 **************
 
 - New tables added:
