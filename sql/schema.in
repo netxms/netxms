@@ -135,7 +135,6 @@ CREATE TABLE object_properties
 	status integer not null,
 	is_deleted integer not null,
 	is_system integer not null,
-	image_id integer not null,
 	last_modified integer not null,
 	inherit_access_rights integer not null,
 	status_calc_alg integer not null,
