@@ -276,13 +276,19 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 		m_dwNumGraphs = 0;
 
 		// CPU utilization
-		if (CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.cpu_usage"), _T("CPU Utilization"), rect, FALSE))
-		{
-		}
-		else
-		{
-			CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.cpu_usage.passport"), _T("CPU Utilization"), rect, FALSE);
-		}
+		static TCHAR *cpuUsageDciNames[] = 
+		{ 
+			_T("@system.cpu_usage"),
+			_T("@system.cpu_usage.cisco.0"),
+			_T("@system.cpu_usage.cisco.1"),
+			_T("@system.cpu_usage.passport"),
+			_T("@system.cpu_usage.netscreen"),
+			_T("@system.cpu_usage.ipso"),
+			NULL
+		};
+		for(int i = 0; cpuUsageDciNames[i] != NULL; i++)
+			if (CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, cpuUsageDciNames[i], _T("CPU Utilization"), rect, FALSE))
+				break;
 
 		// CPU load average
 		if (CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.load_avg"), _T("CPU Load Average"), rect, FALSE))
