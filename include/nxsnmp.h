@@ -429,7 +429,7 @@ private:
 
 public:
 	SNMP_Engine();
-	SNMP_Engine(BYTE *id, int idLen, int engineBoots, int engineTime);
+	SNMP_Engine(BYTE *id, int idLen, int engineBoots = 0, int engineTime = 0);
 	SNMP_Engine(SNMP_Engine *src);
 	~SNMP_Engine();
 
@@ -590,6 +590,7 @@ class LIBNXSNMP_EXPORTABLE SNMP_Transport
 protected:
 	SNMP_SecurityContext *m_securityContext;
 	SNMP_Engine *m_authoritativeEngine;
+	SNMP_Engine *m_contextEngine;
 
 public:
    SNMP_Transport();

@@ -52,6 +52,7 @@ static struct
 SNMP_Transport::SNMP_Transport()
 {
 	m_authoritativeEngine = NULL;
+	m_contextEngine = NULL;
 	m_securityContext = NULL;
 }
 
@@ -63,6 +64,7 @@ SNMP_Transport::SNMP_Transport()
 SNMP_Transport::~SNMP_Transport()
 {
 	delete m_authoritativeEngine;
+	delete m_contextEngine;
 	delete m_securityContext;
 }
 
@@ -98,6 +100,16 @@ DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response,
 	if (m_securityContext == NULL)
 		m_securityContext = new SNMP_SecurityContext();
 
+
+	// Update SNMP V3 request with cached context engine id
+	if (request->getVersion() == SNMP_VERSION_3)
+	{
+		if ((request->getContextEngineIdLength() == 0) && (m_contextEngine != NULL))
+		{
+			request->setContextEngineId(m_contextEngine->getId(), m_contextEngine->getIdLen());
+		}
+	}
+
    while(numRetries-- >= 0)
    {
 retry:
@@ -122,6 +134,12 @@ retry:
 						{
 							m_authoritativeEngine = new SNMP_Engine((*response)->getAuthoritativeEngine());
 							m_securityContext->setAuthoritativeEngine(*m_authoritativeEngine);
+						}
+
+						// Cache context engine ID
+						if ((m_contextEngine == NULL) && ((*response)->getContextEngineIdLength() != 0))
+						{
+							m_contextEngine = new SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
 						}
 
 						if ((*response)->getCommand() == SNMP_REPORT)
