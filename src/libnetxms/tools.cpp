@@ -589,8 +589,17 @@ retry:
 		{
 			if (WSAGetLastError() == WSAEWOULDBLOCK)
 			{
-				// retry operation
-				goto retry;
+				// Wait until socket becomes available for writing
+				struct timeval tv;
+				fd_set wfds;
+
+				tv.tv_sec = 60;
+				tv.tv_usec = 0;
+				FD_ZERO(&wfds);
+				FD_SET(nSocket, &wfds);
+				nRet = select(SELECT_NFDS(nSocket + 1), NULL, &wfds, NULL, &tv);
+				if ((nRet > 0) || ((nRet == -1) && (errno == EINTR)))
+					goto retry;
 			}
 			break;
 		}
