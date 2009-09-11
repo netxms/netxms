@@ -474,8 +474,8 @@ public:
 	const char *getAuthPassword() { return CHECK_NULL_EX_A(m_authPassword); }
 	const char *getPrivPassword() { return CHECK_NULL_EX_A(m_privPassword); }
 
-	bool needAuthentication() { return m_authMethod != SNMP_AUTH_NONE; }
-	bool needEncryption() { return m_privMethod != SNMP_ENCRYPT_NONE; }
+	bool needAuthentication() { return (m_authMethod != SNMP_AUTH_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
+	bool needEncryption() { return (m_privMethod != SNMP_ENCRYPT_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
 	int getAuthMethod() { return m_authMethod; }
 	int getPrivMethod() { return m_privMethod; }
 	BYTE *getAuthKeyMD5() { return m_authKeyMD5; }

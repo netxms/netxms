@@ -891,8 +891,16 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       }
 
       // Encode varbinds into PDU
-      dwBytes = BER_Encode(ASN_SEQUENCE, pVarBinds, dwVarBindsSize, 
-                           pbCurrPos, dwBufferSize - dwPDUSize);
+		if ((m_dwVersion != SNMP_VERSION_3) || ((securityContext != NULL) && (securityContext->getAuthoritativeEngine().getIdLen() != 0)))
+		{
+			dwBytes = BER_Encode(ASN_SEQUENCE, pVarBinds, dwVarBindsSize, 
+										pbCurrPos, dwBufferSize - dwPDUSize);
+		}
+		else
+		{
+			// Do not encode varbinds into engine id discovery message
+			dwBytes = BER_Encode(ASN_SEQUENCE, NULL, 0, pbCurrPos, dwBufferSize - dwPDUSize);
+		}
       dwPDUSize += dwBytes;
 
       // Encode packet header
@@ -963,13 +971,21 @@ DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityCont
 	DWORD bytes, securityModel = securityContext->getSecurityModel();
 
 	BYTE flags = 0;
-	if (securityContext->needAuthentication())
+	if (securityContext->getAuthoritativeEngine().getIdLen() != 0)
 	{
-		flags |= SNMP_AUTH_FLAG;
-		if (securityContext->needEncryption())
+		if (securityContext->needAuthentication())
 		{
-			flags |= SNMP_PRIV_FLAG;
+			flags |= SNMP_AUTH_FLAG;
+			if (securityContext->needEncryption())
+			{
+				flags |= SNMP_PRIV_FLAG;
+			}
 		}
+	}
+	else
+	{
+		// For engine discovery messages, set only reportable flag
+		flags |= SNMP_REPORTABLE_FLAG;
 	}
 
 	bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwRqId, sizeof(DWORD), header, 256);
@@ -997,26 +1013,38 @@ DWORD SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_
 		                   securityContext->getAuthoritativeEngine().getIdLen(), securityParameters, 1024);
 		bytes += BER_Encode(ASN_INTEGER, (BYTE *)&engineBoots, sizeof(DWORD), &securityParameters[bytes], 1024 - bytes);
 		bytes += BER_Encode(ASN_INTEGER, (BYTE *)&engineTime, sizeof(DWORD), &securityParameters[bytes], 1024 - bytes);
-		bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getUser(), strlen(securityContext->getUser()), &securityParameters[bytes], 1024 - bytes);
 
-		// Authentication parameters
-		if (securityContext->needAuthentication())
+		// Don't send user and auth/priv parameters in engine id discovery message
+		if (securityContext->getAuthoritativeEngine().getIdLen() != 0)
 		{
-			// Add placeholder for message hash
-			bytes += BER_Encode(ASN_OCTET_STRING, m_hashPlaceholder, 12, &securityParameters[bytes], 1024 - bytes);
+			bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getUser(), strlen(securityContext->getUser()), &securityParameters[bytes], 1024 - bytes);
+
+			// Authentication parameters
+			if (securityContext->needAuthentication())
+			{
+				// Add placeholder for message hash
+				bytes += BER_Encode(ASN_OCTET_STRING, m_hashPlaceholder, 12, &securityParameters[bytes], 1024 - bytes);
+			}
+			else
+			{
+				bytes += BER_Encode(ASN_OCTET_STRING, NULL, 0, &securityParameters[bytes], 1024 - bytes);
+			}
+
+			// Privacy parameters
+			if (securityContext->needEncryption())
+			{
+				/* TODO: implement encryption */
+			}
+			else
+			{
+				bytes += BER_Encode(ASN_OCTET_STRING, NULL, 0, &securityParameters[bytes], 1024 - bytes);
+			}
 		}
 		else
 		{
+			// Empty strings in place of user name, auth parameters and privacy parameters
 			bytes += BER_Encode(ASN_OCTET_STRING, NULL, 0, &securityParameters[bytes], 1024 - bytes);
-		}
-
-		// Privacy parameters
-		if (securityContext->needEncryption())
-		{
-			/* TODO: implement encryption */
-		}
-		else
-		{
+			bytes += BER_Encode(ASN_OCTET_STRING, NULL, 0, &securityParameters[bytes], 1024 - bytes);
 			bytes += BER_Encode(ASN_OCTET_STRING, NULL, 0, &securityParameters[bytes], 1024 - bytes);
 		}
 
