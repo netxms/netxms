@@ -183,8 +183,8 @@ public:
 	HttpResponse();
 	~HttpResponse();
 
-	void SetHeader(const TCHAR *pszHdr, const TCHAR *pszValue) { m_headers.Set(pszHdr, pszValue); }
-	void SetType(const TCHAR *pszType) { m_headers.Set(_T("Content-type"), pszType); }
+	void SetHeader(const TCHAR *pszHdr, const TCHAR *pszValue) { m_headers.set(pszHdr, pszValue); }
+	void SetType(const TCHAR *pszType) { m_headers.set(_T("Content-type"), pszType); }
 	void SetBody(const TCHAR *data, int size = -1, BOOL bAppend = FALSE);
 	void AppendBody(const TCHAR *data, int size = -1) { SetBody(data, size, TRUE); }
 	void SetJSONBody(JSONObjectBuilder &json);

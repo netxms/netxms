@@ -205,7 +205,7 @@ BOOL NetObj::LoadCommonProperties(void)
 					if (value != NULL)
 					{
 						DecodeSQLString(value);
-						m_customAttributes.SetPreallocated(name, value);
+						m_customAttributes.setPreallocated(name, value);
 					}
 				}
 			}
@@ -295,10 +295,10 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
 		{
 			TCHAR *escName, *escValue;
 		
-			for(i = 0; i < (int)m_customAttributes.Size(); i++)
+			for(i = 0; i < (int)m_customAttributes.getSize(); i++)
 			{
-				escName = EncodeSQLString(m_customAttributes.GetKeyByIndex(i));
-				escValue = EncodeSQLString(m_customAttributes.GetValueByIndex(i));
+				escName = EncodeSQLString(m_customAttributes.getKeyByIndex(i));
+				escValue = EncodeSQLString(m_customAttributes.getValueByIndex(i));
 				_sntprintf(szQuery, 32768, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (%d,'%s','%s')"),
 				           m_dwId, escName, escValue);
 				free(escName);
@@ -782,11 +782,11 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 	if (m_dwNumTrustedNodes > 0)
 		pMsg->SetVariableToInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
 
-	pMsg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_customAttributes.Size());
-	for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_customAttributes.Size(); i++)
+	pMsg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_customAttributes.getSize());
+	for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_customAttributes.getSize(); i++)
 	{
-		pMsg->SetVariable(dwId++, m_customAttributes.GetKeyByIndex(i));
-		pMsg->SetVariable(dwId++, m_customAttributes.GetValueByIndex(i));
+		pMsg->SetVariable(dwId++, m_customAttributes.getKeyByIndex(i));
+		pMsg->SetVariable(dwId++, m_customAttributes.getValueByIndex(i));
 	}
 
    m_pAccessList->CreateMessage(pMsg);
@@ -887,13 +887,13 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       TCHAR *name, *value;
 
       dwNumElements = pRequest->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
-      m_customAttributes.Clear();
+      m_customAttributes.clear();
       for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < dwNumElements; i++)
       {
       	name = pRequest->GetVariableStr(dwId++);
       	value = pRequest->GetVariableStr(dwId++);
       	if ((name != NULL) && (value != NULL))
-	      	m_customAttributes.SetPreallocated(name, value);
+	      	m_customAttributes.setPreallocated(name, value);
       }
    }
 

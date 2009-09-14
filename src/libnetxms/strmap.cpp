@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,22 +30,27 @@
 
 StringMap::StringMap()
 {
-	m_dwSize = 0;
-	m_ppszKeys = NULL;
-	m_ppszValues = NULL;
+	m_size = 0;
+	m_keys = NULL;
+	m_values = NULL;
 }
 
-StringMap::StringMap(StringMap *src)
+
+//
+// Copy constructor
+//
+
+StringMap::StringMap(const StringMap &src)
 {
 	DWORD i;
 
-	m_dwSize = src->m_dwSize;
-	m_ppszKeys = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwSize);
-	m_ppszValues = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwSize);
-	for(i = 0; i < m_dwSize; i++)
+	m_size = src.m_size;
+	m_keys = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
+	m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
+	for(i = 0; i < m_size; i++)
 	{
-		m_ppszKeys[i] = _tcsdup(src->m_ppszKeys[i]);
-		m_ppszValues[i] = _tcsdup(src->m_ppszValues[i]);
+		m_keys[i] = _tcsdup(src.m_keys[i]);
+		m_values[i] = _tcsdup(src.m_values[i]);
 	}
 }
 
@@ -56,7 +61,7 @@ StringMap::StringMap(StringMap *src)
 
 StringMap::~StringMap()
 {
-	Clear();
+	clear();
 }
 
 
@@ -64,18 +69,18 @@ StringMap::~StringMap()
 // Assignment
 //
 
-StringMap& StringMap::operator =(StringMap &src)
+StringMap& StringMap::operator =(const StringMap &src)
 {
 	DWORD i;
 
-	Clear();
-	m_dwSize = src.m_dwSize;
-	m_ppszKeys = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwSize);
-	m_ppszValues = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwSize);
-	for(i = 0; i < m_dwSize; i++)
+	clear();
+	m_size = src.m_size;
+	m_keys = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
+	m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
+	for(i = 0; i < m_size; i++)
 	{
-		m_ppszKeys[i] = _tcsdup(src.m_ppszKeys[i]);
-		m_ppszValues[i] = _tcsdup(src.m_ppszValues[i]);
+		m_keys[i] = _tcsdup(src.m_keys[i]);
+		m_values[i] = _tcsdup(src.m_values[i]);
 	}
 	return *this;
 }
@@ -85,18 +90,18 @@ StringMap& StringMap::operator =(StringMap &src)
 // Clear map
 //
 
-void StringMap::Clear(void)
+void StringMap::clear()
 {
 	DWORD i;
 
-	for(i = 0; i < m_dwSize; i++)
+	for(i = 0; i < m_size; i++)
 	{
-		safe_free(m_ppszKeys[i]);
-		safe_free(m_ppszValues[i]);
+		safe_free(m_keys[i]);
+		safe_free(m_values[i]);
 	}
-	m_dwSize = 0;
-	safe_free_and_null(m_ppszKeys);
-	safe_free_and_null(m_ppszValues);
+	m_size = 0;
+	safe_free_and_null(m_keys);
+	safe_free_and_null(m_values);
 }
 
 
@@ -104,13 +109,13 @@ void StringMap::Clear(void)
 // Find value by key
 //
 
-DWORD StringMap::Find(const TCHAR *pszKey)
+DWORD StringMap::find(const TCHAR *key)
 {
 	DWORD i;
 
-	for(i = 0; i < m_dwSize; i++)
+	for(i = 0; i < m_size; i++)
 	{
-		if (!_tcsicmp(pszKey, m_ppszKeys[i]))
+		if (!_tcsicmp(key, m_keys[i]))
 			return i;
 	}
 	return INVALID_INDEX;
@@ -121,24 +126,24 @@ DWORD StringMap::Find(const TCHAR *pszKey)
 // Set value - arguments are preallocated dynamic strings
 //
 
-void StringMap::SetPreallocated(TCHAR *pszKey, TCHAR *pszValue)
+void StringMap::setPreallocated(TCHAR *key, TCHAR *value)
 {
-	DWORD dwIndex;
+	DWORD index;
 
-	dwIndex = Find(pszKey);
-	if (dwIndex != INVALID_INDEX)
+	index = find(key);
+	if (index != INVALID_INDEX)
 	{
-		free(pszKey);	// Not needed
-		safe_free(m_ppszValues[dwIndex]);
-		m_ppszValues[dwIndex] = pszValue;
+		free(key);	// Not needed
+		safe_free(m_values[index]);
+		m_values[index] = value;
 	}
 	else
 	{
-		m_ppszKeys = (TCHAR **)realloc(m_ppszKeys, (m_dwSize + 1) * sizeof(TCHAR *));
-		m_ppszValues = (TCHAR **)realloc(m_ppszValues, (m_dwSize + 1) * sizeof(TCHAR *));
-		m_ppszKeys[m_dwSize] = pszKey;
-		m_ppszValues[m_dwSize] = pszValue;
-		m_dwSize++;
+		m_keys = (TCHAR **)realloc(m_keys, (m_size + 1) * sizeof(TCHAR *));
+		m_values = (TCHAR **)realloc(m_values, (m_size + 1) * sizeof(TCHAR *));
+		m_keys[m_size] = key;
+		m_values[m_size] = value;
+		m_size++;
 	}
 }
 
@@ -147,23 +152,23 @@ void StringMap::SetPreallocated(TCHAR *pszKey, TCHAR *pszValue)
 // Set value
 //
 
-void StringMap::Set(const TCHAR *pszKey, const TCHAR *pszValue)
+void StringMap::set(const TCHAR *key, const TCHAR *value)
 {
-	DWORD dwIndex;
+	DWORD index;
 
-	dwIndex = Find(pszKey);
-	if (dwIndex != INVALID_INDEX)
+	index = find(key);
+	if (index != INVALID_INDEX)
 	{
-		safe_free(m_ppszValues[dwIndex]);
-		m_ppszValues[dwIndex] = _tcsdup(pszValue);
+		safe_free(m_values[index]);
+		m_values[index] = _tcsdup(value);
 	}
 	else
 	{
-		m_ppszKeys = (TCHAR **)realloc(m_ppszKeys, (m_dwSize + 1) * sizeof(TCHAR *));
-		m_ppszValues = (TCHAR **)realloc(m_ppszValues, (m_dwSize + 1) * sizeof(TCHAR *));
-		m_ppszKeys[m_dwSize] = _tcsdup(pszKey);
-		m_ppszValues[m_dwSize] = _tcsdup(pszValue);
-		m_dwSize++;
+		m_keys = (TCHAR **)realloc(m_keys, (m_size + 1) * sizeof(TCHAR *));
+		m_values = (TCHAR **)realloc(m_values, (m_size + 1) * sizeof(TCHAR *));
+		m_keys[m_size] = _tcsdup(key);
+		m_values[m_size] = _tcsdup(value);
+		m_size++;
 	}
 }
 
@@ -172,12 +177,12 @@ void StringMap::Set(const TCHAR *pszKey, const TCHAR *pszValue)
 // Get value by key
 //
 
-TCHAR *StringMap::Get(const TCHAR *pszKey)
+const TCHAR *StringMap::get(const TCHAR *key)
 {
-	DWORD dwIndex;
+	DWORD index;
 
-	dwIndex = Find(pszKey);
-	return (dwIndex != INVALID_INDEX) ? m_ppszValues[dwIndex] : NULL;
+	index = find(key);
+	return (index != INVALID_INDEX) ? m_values[index] : NULL;
 }
 
 
@@ -185,18 +190,17 @@ TCHAR *StringMap::Get(const TCHAR *pszKey)
 // Delete value
 //
 
-void StringMap::Delete(const TCHAR *pszKey)
+void StringMap::remove(const TCHAR *key)
 {
-	DWORD dwIndex;
+	DWORD index;
 
-	dwIndex = Find(pszKey);
-	if (dwIndex != INVALID_INDEX)
+	index = find(key);
+	if (index != INVALID_INDEX)
 	{
-		safe_free(m_ppszKeys[dwIndex]);
-		safe_free(m_ppszValues[dwIndex]);
-		m_dwSize--;
-		memmove(&m_ppszKeys[dwIndex], &m_ppszKeys[dwIndex + 1], sizeof(TCHAR *) * (m_dwSize - dwIndex));
-		memmove(&m_ppszValues[dwIndex], &m_ppszValues[dwIndex + 1], sizeof(TCHAR *) * (m_dwSize - dwIndex));
+		safe_free(m_keys[index]);
+		safe_free(m_values[index]);
+		m_size--;
+		memmove(&m_keys[index], &m_keys[index + 1], sizeof(TCHAR *) * (m_size - index));
+		memmove(&m_values[index], &m_values[index + 1], sizeof(TCHAR *) * (m_size - index));
 	}
 }
-

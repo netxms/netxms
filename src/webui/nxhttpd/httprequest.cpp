@@ -316,7 +316,7 @@ BOOL HttpRequest::ParseParameter(TCHAR *pszParam)
 			*pSep = 0;
 			pSep++;
 			DecodeQueryParam(pSep);
-			m_query.Set(pszParam, pSep);
+			m_query.set(pszParam, pSep);
 			bRet = TRUE;
 		}
 		free(pszParam);
@@ -331,7 +331,7 @@ BOOL HttpRequest::ParseParameter(TCHAR *pszParam)
 
 void HttpRequest::SetQueryParam(const TCHAR *pszName, const TCHAR *pszValue)
 {
-	m_query.Set(pszName, pszValue);
+	m_query.set(pszName, pszValue);
 }
 
 
@@ -342,9 +342,9 @@ void HttpRequest::SetQueryParam(const TCHAR *pszName, const TCHAR *pszValue)
 BOOL HttpRequest::GetQueryParam(const TCHAR *pszName, String &value)
 {
 	BOOL ret = FALSE;
-	TCHAR *pszValue;
+	const TCHAR *pszValue;
 
-	pszValue = m_query.Get(pszName);
+	pszValue = m_query.get(pszName);
 	if (pszValue != NULL)
 	{
 		value = pszValue;

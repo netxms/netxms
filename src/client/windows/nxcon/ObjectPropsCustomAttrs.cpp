@@ -73,11 +73,11 @@ BOOL CObjectPropsCustomAttrs::OnInitDialog()
 	m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	// Fill list control with data
-	for(i = 0; i < m_pObject->pCustomAttrs->Size(); i++)
+	for(i = 0; i < m_pObject->pCustomAttrs->getSize(); i++)
 	{
-		item = m_wndListCtrl.InsertItem(i, m_pObject->pCustomAttrs->GetKeyByIndex(i));
+		item = m_wndListCtrl.InsertItem(i, m_pObject->pCustomAttrs->getKeyByIndex(i));
 		if (item != -1)
-			m_wndListCtrl.SetItemText(item, 1, m_pObject->pCustomAttrs->GetValueByIndex(i));
+			m_wndListCtrl.SetItemText(item, 1, m_pObject->pCustomAttrs->getValueByIndex(i));
 	}
 	
 	EnableDlgItem(this, IDC_BUTTON_EDIT, m_wndListCtrl.GetSelectedCount() == 1);
@@ -100,7 +100,7 @@ void CObjectPropsCustomAttrs::OnOK()
 		m_pUpdate->pCustomAttrs = &m_strMap;
 		for(i = 0; i < m_wndListCtrl.GetItemCount(); i++)
 		{
-			m_strMap.Set(m_wndListCtrl.GetItemText(i, 0), m_wndListCtrl.GetItemText(i, 1));
+			m_strMap.set(m_wndListCtrl.GetItemText(i, 0), m_wndListCtrl.GetItemText(i, 1));
 		}
 	}
 	CPropertyPage::OnOK();

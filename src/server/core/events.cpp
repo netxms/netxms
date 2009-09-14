@@ -157,7 +157,7 @@ Event::~Event()
 // Create message text from template
 //
 
-void Event::expandMessageText(void)
+void Event::expandMessageText()
 {
    if (m_pszMessageTemplate != NULL)
    {
@@ -177,13 +177,13 @@ void Event::expandMessageText(void)
 // Substitute % macros in given text with actual values
 //
 
-TCHAR *Event::expandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
+TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 {
-   char *pCurr;
+   const TCHAR *pCurr;
    DWORD dwPos, dwSize, dwParam;
    NetObj *pObject;
    struct tm *lt;
-   char *pText, szBuffer[4], scriptName[256];
+   TCHAR *pText, szBuffer[4], scriptName[256];
 	int i;
 
    pObject = FindObjectById(m_dwSource);
@@ -192,7 +192,7 @@ TCHAR *Event::expandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
       pObject = g_pEntireNet;
    }
    dwSize = (DWORD)_tcslen(pszTemplate) + 1;
-   pText = (char *)malloc(dwSize);
+   pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
    for(pCurr = pszTemplate, dwPos = 0; *pCurr != 0; pCurr++)
    {
       switch(*pCurr)

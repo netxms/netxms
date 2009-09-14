@@ -113,11 +113,11 @@ void UserDatabaseObject::fillMessage(CSCPMessage *msg)
    msg->SetVariable(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->SetVariable(VID_USER_DESCRIPTION, m_description);
    msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
-	msg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_attributes.Size());
-	for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_attributes.Size(); i++)
+	msg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_attributes.getSize());
+	for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_attributes.getSize(); i++)
 	{
-		msg->SetVariable(varId++, m_attributes.GetKeyByIndex(i));
-		msg->SetVariable(varId++, m_attributes.GetValueByIndex(i));
+		msg->SetVariable(varId++, m_attributes.getKeyByIndex(i));
+		msg->SetVariable(varId++, m_attributes.getValueByIndex(i));
 	}
 }
 
@@ -146,12 +146,12 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 		TCHAR *name, *value;
 
 		count = msg->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
-		m_attributes.Clear();
+		m_attributes.clear();
 		for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++)
 		{
 			name = msg->GetVariableStr(varId++);
 			value = msg->GetVariableStr(varId++);
-			m_attributes.SetPreallocated((name != NULL) ? name : _tcsdup(_T("")), (value != NULL) ? value : _tcsdup(_T("")));
+			m_attributes.setPreallocated((name != NULL) ? name : _tcsdup(_T("")), (value != NULL) ? value : _tcsdup(_T("")));
 		}
 	}
 
@@ -203,7 +203,7 @@ bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 			else
 				attrValue = _tcsdup(_T(""));
 
-			m_attributes.SetPreallocated(attrName, attrValue);
+			m_attributes.setPreallocated(attrName, attrValue);
 		}
 		DBFreeResult(hResult);
 		success = true;
@@ -225,10 +225,10 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 	_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
 	if (DBQuery(hdb, query))
 	{
-		for(i = 0; i < m_attributes.Size(); i++)
+		for(i = 0; i < m_attributes.getSize(); i++)
 		{
-			escName = EncodeSQLString(m_attributes.GetKeyByIndex(i));
-			escValue = EncodeSQLString(m_attributes.GetValueByIndex(i));
+			escName = EncodeSQLString(m_attributes.getKeyByIndex(i));
+			escValue = EncodeSQLString(m_attributes.getValueByIndex(i));
 			_sntprintf(query, 8192, _T("INSERT INTO userdb_custom_attributes (object_id,attr_name,attr_value) VALUES (%d,'%s','%s')"),
 			           m_id, escName, escValue);
 			free(escName);
@@ -236,7 +236,7 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 			if (!DBQuery(hdb, query))
 				break;
 		}
-		success = (i == m_attributes.Size());
+		success = (i == m_attributes.getSize());
 	}
 	return success;
 }

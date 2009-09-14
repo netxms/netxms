@@ -83,9 +83,9 @@ public:
 
 	void setDeleted() { m_flags |= UF_DELETED; }
 
-	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.Get(name); }
+	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
 	DWORD getAttributeAsULong(const TCHAR *name);
-	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.Set(name, value); m_flags |= UF_MODIFIED; }
+	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); m_flags |= UF_MODIFIED; }
 };
 
 

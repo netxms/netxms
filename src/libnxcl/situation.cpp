@@ -48,7 +48,7 @@ static void SituationFromMessage(CSCPMessage *msg, NXC_SITUATION *situation)
 		{
 			attr = msg->GetVariableStr(id++);
 			value = msg->GetVariableStr(id++);
-			situation->m_instanceList[i].m_attrList->SetPreallocated(attr, value);
+			situation->m_instanceList[i].m_attrList->setPreallocated(attr, value);
 		}
 	}
 }
@@ -243,7 +243,7 @@ static void CopySituation(NXC_SITUATION *dst, NXC_SITUATION *src)
 	for(i = 0; i < src->m_instanceCount; i++)
 	{
 		dst->m_instanceList[i].m_name = _tcsdup(CHECK_NULL_EX(src->m_instanceList[i].m_name));
-		dst->m_instanceList[i].m_attrList = new StringMap(src->m_instanceList[i].m_attrList);
+		dst->m_instanceList[i].m_attrList = new StringMap(*(src->m_instanceList[i].m_attrList));
 	}
 }
 

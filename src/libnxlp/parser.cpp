@@ -175,7 +175,7 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
 		return s_states[CONTEXT_SET_MANUAL];
 	}
 		
-	state = m_contexts.Get(rule->getContext());
+	state = m_contexts.get(rule->getContext());
 	if (state == NULL)
 	{
 		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
@@ -229,14 +229,14 @@ bool LogParser::matchLogRecord(bool hasAttributes, const char *source, DWORD eve
 				// Update context
 				if (m_rules[i]->getContextToChange() != NULL)
 				{
-					m_contexts.Set(m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
+					m_contexts.set(m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
 					trace(2, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->getDescription(), m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
 				}
 				
 				// Set context of this rule to inactive if rule context mode is "automatic reset"
 				if (!_tcscmp(state, s_states[CONTEXT_SET_AUTOMATIC]))
 				{
-					m_contexts.Set(m_rules[i]->getContext(), s_states[CONTEXT_CLEAR]);
+					m_contexts.set(m_rules[i]->getContext(), s_states[CONTEXT_CLEAR]);
 					trace(2, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
 							i + 1, m_rules[i]->getDescription(), m_rules[i]->getContext());
 				}
@@ -292,7 +292,7 @@ void LogParser::setFileName(const TCHAR *name)
 
 void LogParser::addMacro(const TCHAR *name, const TCHAR *value)
 {
-	m_macros.Set(name, value);
+	m_macros.set(name, value);
 }
 
 
@@ -304,7 +304,7 @@ const TCHAR *LogParser::getMacro(const TCHAR *name)
 {
 	const TCHAR *value;
 
-	value = m_macros.Get(name);
+	value = m_macros.get(name);
 	return CHECK_NULL_EX(value);
 }
 

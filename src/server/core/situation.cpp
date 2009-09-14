@@ -84,7 +84,7 @@ SituationInstance::~SituationInstance()
 
 void SituationInstance::UpdateAttribute(const TCHAR *attribute, const TCHAR *value)
 {
-	m_attributes.Set(attribute, value);
+	m_attributes.set(attribute, value);
 }
 
 
@@ -94,7 +94,7 @@ void SituationInstance::UpdateAttribute(const TCHAR *attribute, const TCHAR *val
 
 const TCHAR *SituationInstance::GetAttribute(const TCHAR *attribute)
 {
-	return m_attributes.Get(attribute);
+	return m_attributes.get(attribute);
 }
 
 
@@ -107,11 +107,11 @@ DWORD SituationInstance::CreateMessage(CSCPMessage *msg, DWORD baseId)
 	DWORD i, id = baseId;
 	
 	msg->SetVariable(id++, m_name);
-	msg->SetVariable(id++, m_attributes.Size());
-	for(i = 0; i < m_attributes.Size(); i++)
+	msg->SetVariable(id++, m_attributes.getSize());
+	for(i = 0; i < m_attributes.getSize(); i++)
 	{
-		msg->SetVariable(id++, m_attributes.GetKeyByIndex(i));
-		msg->SetVariable(id++, m_attributes.GetValueByIndex(i));
+		msg->SetVariable(id++, m_attributes.getKeyByIndex(i));
+		msg->SetVariable(id++, m_attributes.getValueByIndex(i));
 	}
 	return id;
 }

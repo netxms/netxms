@@ -173,11 +173,11 @@ char *HttpResponse::BuildStream(int &size)
 	tmp += (TCHAR *)m_codeString;
 	tmp += _T("\r\n");
 
-	for(i = 0; i < m_headers.Size(); i++)
+	for(i = 0; i < m_headers.getSize(); i++)
 	{
-		tmp += m_headers.GetKeyByIndex(i);
+		tmp += m_headers.getKeyByIndex(i);
 		tmp += _T(": ");
-		tmp += m_headers.GetValueByIndex(i);
+		tmp += m_headers.getValueByIndex(i);
 		tmp += _T("\r\n");
 	}
 	tmp += _T("\r\n");

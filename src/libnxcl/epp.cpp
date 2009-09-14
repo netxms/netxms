@@ -182,7 +182,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
 					{
 						attr = pResponse->GetVariableStr(id++);
 						value = pResponse->GetVariableStr(id++);
-						(*ppEventPolicy)->pRuleList[i].pSituationAttrList->SetPreallocated(attr, value);
+						(*ppEventPolicy)->pRuleList[i].pSituationAttrList->setPreallocated(attr, value);
 					}
                delete pResponse;
             }
@@ -284,12 +284,12 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEven
 			msg.SetVariable(VID_ALARM_TIMEOUT_EVENT, pEventPolicy->pRuleList[i].dwAlarmTimeoutEvent);
 			msg.SetVariable(VID_SITUATION_ID, pEventPolicy->pRuleList[i].dwSituationId);
 			msg.SetVariable(VID_SITUATION_INSTANCE, pEventPolicy->pRuleList[i].szSituationInstance);
-			count = (pEventPolicy->pRuleList[i].pSituationAttrList != NULL) ? pEventPolicy->pRuleList[i].pSituationAttrList->Size() : 0;
+			count = (pEventPolicy->pRuleList[i].pSituationAttrList != NULL) ? pEventPolicy->pRuleList[i].pSituationAttrList->getSize() : 0;
 			msg.SetVariable(VID_SITUATION_NUM_ATTRS, count);
 			for(j = 0, id = VID_SITUATION_ATTR_LIST_BASE; j < count; j++)
 			{
-				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->GetKeyByIndex(j));
-				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->GetValueByIndex(j));
+				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->getKeyByIndex(j));
+				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->getValueByIndex(j));
 			}
 
          ((NXCL_Session *)hSession)->SendMsg(&msg);

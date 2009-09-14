@@ -72,10 +72,10 @@ BOOL CRuleSituationDlg::OnInitDialog()
 	SetDlgItemText(IDC_EDIT_INSTANCE, m_strInstance);
 
 	// Attributes
-	for(i = 0; i < m_attrList.Size(); i++)
+	for(i = 0; i < m_attrList.getSize(); i++)
 	{
-		item = m_wndListCtrl.InsertItem(i, m_attrList.GetKeyByIndex(i));
-		m_wndListCtrl.SetItemText(item, 1, m_attrList.GetValueByIndex(i));
+		item = m_wndListCtrl.InsertItem(i, m_attrList.getKeyByIndex(i));
+		m_wndListCtrl.SetItemText(item, 1, m_attrList.getValueByIndex(i));
 	}
 
 	SendDlgItemMessage(IDC_CHECK_ENABLE, BM_SETCHECK, (m_dwSituation != 0) ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -112,20 +112,20 @@ void CRuleSituationDlg::OnOK()
 	if (SendDlgItemMessage(IDC_CHECK_ENABLE, BM_GETCHECK, 0, 0) == BST_CHECKED)
 	{
 		GetDlgItemText(IDC_EDIT_INSTANCE, m_strInstance);
-		m_attrList.Clear();
+		m_attrList.clear();
 		count = m_wndListCtrl.GetItemCount();
 		for(i = 0; i < count; i++)
 		{
 			m_wndListCtrl.GetItemText(i, 0, attr, MAX_DB_STRING);
 			m_wndListCtrl.GetItemText(i, 1, value, MAX_DB_STRING);
-			m_attrList.Set(attr, value);
+			m_attrList.set(attr, value);
 		}
 	}
 	else
 	{
 		m_dwSituation = 0;
 		m_strInstance = _T("");
-		m_attrList.Clear();
+		m_attrList.clear();
 	}
 	CDialog::OnOK();
 }

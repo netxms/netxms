@@ -133,7 +133,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
    {
    	name = pMsg->GetVariableStr(id++);
    	value = pMsg->GetVariableStr(id++);
-   	m_situationAttrList.SetPreallocated(name, value);
+   	m_situationAttrList.setPreallocated(name, value);
    }
 
    m_pszScript = pMsg->GetVariableStr(VID_SCRIPT);
@@ -377,10 +377,10 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 				if (pSituation != NULL)
 				{
 					pszText = pEvent->expandText(m_szSituationInstance);
-					for(i = 0; i < m_situationAttrList.Size(); i++)
+					for(i = 0; i < m_situationAttrList.getSize(); i++)
 					{
-						pszAttr = pEvent->expandText(m_situationAttrList.GetKeyByIndex(i));
-						pszValue = pEvent->expandText(m_situationAttrList.GetValueByIndex(i));
+						pszAttr = pEvent->expandText(m_situationAttrList.getKeyByIndex(i));
+						pszValue = pEvent->expandText(m_situationAttrList.getValueByIndex(i));
 						pSituation->UpdateSituation(pszText, pszAttr, pszValue);
 						free(pszAttr);
 						free(pszValue);
@@ -497,7 +497,7 @@ BOOL EPRule::LoadFromDB(void)
          DecodeSQLString(name);
          DBGetField(hResult, i, 1, value, MAX_DB_STRING);
          DecodeSQLString(value);
-         m_situationAttrList.Set(name, value);
+         m_situationAttrList.set(name, value);
       }
       DBFreeResult(hResult);
    }
@@ -569,10 +569,10 @@ void EPRule::SaveToDB(void)
    }
 
 	// Situation attributes
-	for(i = 0; i < m_situationAttrList.Size(); i++)
+	for(i = 0; i < m_situationAttrList.getSize(); i++)
 	{
-		pszEscName = EncodeSQLString(m_situationAttrList.GetKeyByIndex(i));
-		pszEscValue = EncodeSQLString(m_situationAttrList.GetValueByIndex(i));
+		pszEscName = EncodeSQLString(m_situationAttrList.getKeyByIndex(i));
+		pszEscValue = EncodeSQLString(m_situationAttrList.getValueByIndex(i));
       _stprintf(pszQuery, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,'%s','%s')"),
                 m_dwId, m_dwSituationId, pszEscName, pszEscValue);
 		free(pszEscName);
@@ -609,11 +609,11 @@ void EPRule::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
 	pMsg->SetVariable(VID_SITUATION_ID, m_dwSituationId);
 	pMsg->SetVariable(VID_SITUATION_INSTANCE, m_szSituationInstance);
-	pMsg->SetVariable(VID_SITUATION_NUM_ATTRS, m_situationAttrList.Size());
-	for(i = 0, id = VID_SITUATION_ATTR_LIST_BASE; i < m_situationAttrList.Size(); i++)
+	pMsg->SetVariable(VID_SITUATION_NUM_ATTRS, m_situationAttrList.getSize());
+	for(i = 0, id = VID_SITUATION_ATTR_LIST_BASE; i < m_situationAttrList.getSize(); i++)
 	{
-		pMsg->SetVariable(id++, m_situationAttrList.GetKeyByIndex(i));
-		pMsg->SetVariable(id++, m_situationAttrList.GetValueByIndex(i));
+		pMsg->SetVariable(id++, m_situationAttrList.getKeyByIndex(i));
+		pMsg->SetVariable(id++, m_situationAttrList.getValueByIndex(i));
 	}
 }
 

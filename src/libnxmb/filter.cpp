@@ -62,15 +62,15 @@ NXMBTypeFilter::~NXMBTypeFilter()
 
 bool NXMBTypeFilter::isAllowed(NXMBMessage &msg)
 { 
-	return m_types.Get(msg.getType()) != NULL;
+	return m_types.get(msg.getType()) != NULL;
 }
 
 void NXMBTypeFilter::addMessageType(const TCHAR *type)
 { 
-	m_types.Set(type, _T("*"));
+	m_types.set(type, _T("*"));
 }
 
 void NXMBTypeFilter::removeMessageType(const TCHAR *type)
 { 
-	m_types.Delete(type);
+	m_types.remove(type);
 }

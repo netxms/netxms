@@ -240,7 +240,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 	dwCount = pMsg->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
 	for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < dwCount; i++, dwId1 += 2)
 	{
-		pObject->pCustomAttrs->SetPreallocated(pMsg->GetVariableStr(dwId1), pMsg->GetVariableStr(dwId1 + 1));
+		pObject->pCustomAttrs->setPreallocated(pMsg->GetVariableStr(dwId1), pMsg->GetVariableStr(dwId1 + 1));
 	}
 
    // Parents
@@ -909,11 +909,11 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_CUSTOM_ATTRS)
    {
-      msg.SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, pUpdate->pCustomAttrs->Size());
-      for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < pUpdate->pCustomAttrs->Size(); i++)
+      msg.SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, pUpdate->pCustomAttrs->getSize());
+      for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < pUpdate->pCustomAttrs->getSize(); i++)
       {
-         msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->GetKeyByIndex(i));
-         msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->GetValueByIndex(i));
+         msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->getKeyByIndex(i));
+         msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->getValueByIndex(i));
       }
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_AUTO_APPLY)
@@ -1413,17 +1413,17 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
 				fwrite(pList[i].pObject->pdwTrustedNodes, pList[i].pObject->dwNumTrustedNodes, sizeof(DWORD), hFile);
 
 			// Custom attributes
-			dwSize = pList[i].pObject->pCustomAttrs->Size();
+			dwSize = pList[i].pObject->pCustomAttrs->getSize();
          fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-			for(j = 0; j < pList[i].pObject->pCustomAttrs->Size(); j++)
+			for(j = 0; j < pList[i].pObject->pCustomAttrs->getSize(); j++)
 			{
-            dwSize = (DWORD)_tcslen(pList[i].pObject->pCustomAttrs->GetKeyByIndex(j)) * sizeof(TCHAR);
+            dwSize = (DWORD)_tcslen(pList[i].pObject->pCustomAttrs->getKeyByIndex(j)) * sizeof(TCHAR);
             fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-            fwrite(pList[i].pObject->pCustomAttrs->GetKeyByIndex(j), 1, dwSize, hFile);
+            fwrite(pList[i].pObject->pCustomAttrs->getKeyByIndex(j), 1, dwSize, hFile);
 
-            dwSize = (DWORD)_tcslen(pList[i].pObject->pCustomAttrs->GetValueByIndex(j)) * sizeof(TCHAR);
+            dwSize = (DWORD)_tcslen(pList[i].pObject->pCustomAttrs->getValueByIndex(j)) * sizeof(TCHAR);
             fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-            fwrite(pList[i].pObject->pCustomAttrs->GetValueByIndex(j), 1, dwSize, hFile);
+            fwrite(pList[i].pObject->pCustomAttrs->getValueByIndex(j), 1, dwSize, hFile);
 			}
 
          switch(pList[i].pObject->iClass)
@@ -1565,7 +1565,7 @@ void NXCL_Session::LoadObjectsFromCache(const TCHAR *pszFile)
                      fread(value, 1, dwSize, hFile);
                      value[dwSize / sizeof(TCHAR)] = 0;
 
-							object.pCustomAttrs->SetPreallocated(key, value);
+							object.pCustomAttrs->setPreallocated(key, value);
 						}
 
                   switch(object.iClass)

@@ -287,28 +287,28 @@ public:
 class LIBNETXMS_EXPORTABLE StringMap
 {
 protected:
-	DWORD m_dwSize;
-	TCHAR **m_ppszKeys;
-	TCHAR **m_ppszValues;
+	DWORD m_size;
+	TCHAR **m_keys;
+	TCHAR **m_values;
 
-	DWORD Find(const TCHAR *pszKey);
+	DWORD find(const TCHAR *key);
 
 public:
 	StringMap();
-	StringMap(StringMap *src);
+	StringMap(const StringMap &src);
 	~StringMap();
 
-	StringMap& operator =(StringMap &src);
+	StringMap& operator =(const StringMap &src);
 
-	void Set(const TCHAR *pszKey, const TCHAR *pszValue);
-	void SetPreallocated(TCHAR *pszKey, TCHAR *pszValue);
-	TCHAR *Get(const TCHAR *pszKey);
-	void Delete(const TCHAR *pszKey);
-	void Clear(void);
+	void set(const TCHAR *key, const TCHAR *value);
+	void setPreallocated(TCHAR *key, TCHAR *value);
+	const TCHAR *get(const TCHAR *key);
+	void remove(const TCHAR *key);
+	void clear();
 
-	DWORD Size(void) { return m_dwSize; }
-	TCHAR *GetKeyByIndex(DWORD idx) { return (idx < m_dwSize) ? CHECK_NULL_EX(m_ppszKeys[idx]) : NULL; }
-	TCHAR *GetValueByIndex(DWORD idx) { return (idx < m_dwSize) ? CHECK_NULL_EX(m_ppszValues[idx]) : NULL; }
+	DWORD getSize() { return m_size; }
+	const TCHAR *getKeyByIndex(DWORD idx) { return (idx < m_size) ? CHECK_NULL_EX(m_keys[idx]) : NULL; }
+	const TCHAR *getValueByIndex(DWORD idx) { return (idx < m_size) ? CHECK_NULL_EX(m_values[idx]) : NULL; }
 };
 
 

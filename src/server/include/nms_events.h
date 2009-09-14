@@ -91,7 +91,7 @@ public:
    void prepareMessage(CSCPMessage *pMsg);
 
    void expandMessageText();
-   TCHAR *expandText(TCHAR *szTemplate, TCHAR *pszAlarmMsg = NULL);
+   TCHAR *expandText(const TCHAR *szTemplate, const TCHAR *pszAlarmMsg = NULL);
 
    DWORD getParametersCount() { return m_dwNumParameters; }
    char *getParameter(DWORD index) { return (index < m_dwNumParameters) ? m_ppszParameters[index] : NULL; }
