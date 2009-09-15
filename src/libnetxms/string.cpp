@@ -106,11 +106,15 @@ void String::AddFormattedString(const TCHAR *pszFormat, ...)
    va_list args;
    TCHAR *pszBuffer;
 
-   nLen = (int)_tcslen(pszFormat) + NumChars(pszFormat, _T('%')) * 1024;
+   va_start(args, pszFormat);
+	nLen = (int)_vsctprintf(pszFormat, args) + 1;
+   va_end(args);
    pszBuffer = (TCHAR *)malloc(nLen * sizeof(TCHAR));
+
    va_start(args, pszFormat);
    _vsntprintf(pszBuffer, nLen, pszFormat, args);
    va_end(args);
+
    *this += pszBuffer;
    free(pszBuffer);
 }

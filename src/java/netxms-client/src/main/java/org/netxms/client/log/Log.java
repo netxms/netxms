@@ -37,6 +37,15 @@ public class Log
 	{
 		this.session = session;
 		handle = msg.getVariableAsInteger(NXCPCodes.VID_LOG_HANDLE);
+		
+		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
+		columns = new HashMap<String, LogColumn>(count);
+		long baseId = NXCPCodes.VID_COLUMN_INFO_BASE;
+		for(int i = 0; i < count; i++, baseId += 10)
+		{
+			final LogColumn c = new LogColumn(msg, baseId); 
+			columns.put(c.getName(), c);
+		}
 	}
 
 	/**
@@ -82,7 +91,8 @@ public class Log
 		msg.setVariableInt32(NXCPCodes.VID_LOG_HANDLE, handle);
 		filter.fillMessage(msg);
 		session.sendMessage(msg);
-		session.waitForRCC(msg.getMessageId());
+		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
+		numRecords = response.getVariableAsInt64(NXCPCodes.VID_NUM_RECORDS);
 	}
 	
 	/**

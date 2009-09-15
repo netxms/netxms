@@ -35,8 +35,6 @@ LogHandle::LogHandle(NXCORE_LOG *info)
 	m_rowCount = 0;
 	m_filter = NULL;
 	m_lock = MutexCreate();
-
-	m_queryColumns[0] = 0;
 }
 
 
@@ -48,6 +46,24 @@ LogHandle::~LogHandle()
 {
 	deleteQueryResults();
 	MutexDestroy(m_lock);
+}
+
+
+//
+// Get column information
+//
+
+void LogHandle::getColumnInfo(CSCPMessage &msg)
+{
+	DWORD count = 0;
+	DWORD varId = VID_COLUMN_INFO_BASE;
+	for(int i = 0; m_log->columns[i].name != NULL; i++, count++, varId += 7)
+	{
+		msg.SetVariable(varId++, m_log->columns[i].name);
+		msg.SetVariable(varId++, (WORD)m_log->columns[i].type);
+		msg.SetVariable(varId++, m_log->columns[i].description);
+	}
+	msg.SetVariable(VID_NUM_COLUMNS, count);
 }
 
 
@@ -85,7 +101,7 @@ void LogHandle::deleteQueryResults()
 // TODO: refactor and split into smaller methods
 //
 
-bool LogHandle::query(LogFilter *filter)
+bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 {
 	deleteQueryResults();
 	m_filter = filter;
@@ -95,20 +111,20 @@ bool LogHandle::query(LogFilter *filter)
 		return false;
 	}
 
-	m_queryColumns[0] = 0;
+	m_queryColumns = _T("");
 	LOG_COLUMN *column = m_log->columns;
 	bool first = true;
 	while ((*column).name != NULL)
 	{
 		if (!first)
 		{
-			_tcscat(m_queryColumns, _T(","));
+			m_queryColumns += _T(",");
 		}
 		else
 		{
 			first = false;
 		}
-		_tcscat(m_queryColumns, (*column).name);
+		m_queryColumns += (*column).name;
 		column++;
 	}
 
@@ -116,13 +132,13 @@ bool LogHandle::query(LogFilter *filter)
 	switch(g_nDBSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			query.AddFormattedString(_T("SELECT %s INTO %s from %s "), m_queryColumns, m_tempTable, m_log->table);
+			query.AddFormattedString(_T("SELECT %s INTO %s from %s "), (const TCHAR *)m_queryColumns, m_tempTable, m_log->table);
 			break;
 		case DB_SYNTAX_ORACLE:
 		case DB_SYNTAX_SQLITE:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_MYSQL:
-			query.AddFormattedString(_T("CREATE TABLE %s AS SELECT %s FROM %s"), m_tempTable, m_queryColumns, m_log->table);
+			query.AddFormattedString(_T("CREATE TABLE %s AS SELECT %s FROM %s"), m_tempTable, (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 	}
 
@@ -130,18 +146,18 @@ bool LogHandle::query(LogFilter *filter)
 	if (filterSize > 0)
 	{
 		query += _T(" WHERE ");
-	}
 
-	for (int i = 0; i < filterSize; i++)
-	{
-		ColumnFilter *cf = filter->getColumnFilter(i);
-
-		if (i > 0)
+		for(int i = 0; i < filterSize; i++)
 		{
-			query += _T(" AND ");
-		}
+			ColumnFilter *cf = filter->getColumnFilter(i);
 
-		query += cf->generateSql();
+			if (i > 0)
+			{
+				query += _T(" AND ");
+			}
+
+			query += cf->generateSql();
+		}
 	}
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
@@ -149,8 +165,29 @@ bool LogHandle::query(LogFilter *filter)
 	bool ret = false;
 	if (dbHandle != NULL)
 	{
+		DbgPrintf(7, _T("LogHandle::query(): DB connection acquired"));
 		ret = DBQuery(dbHandle, query) != FALSE;
+		if (ret)
+		{
+			TCHAR query2[256];
+
+			_sntprintf(query2, 256, _T("SELECT count(*) FROM %s"), m_tempTable);
+			DB_RESULT hResult = DBSelect(dbHandle, query2);
+			if (hResult != NULL)
+			{
+				*rowCount = DBGetFieldInt64(hResult, 0, 0);
+				DBFreeResult(hResult);
+			}
+			else
+			{
+				ret = false;
+			}
+		}
 		DBConnectionPoolReleaseConnection(dbHandle);
+	}
+	else
+	{
+		DbgPrintf(3, _T("LogHandle::query(): unable to acquire DB connection"));
 	}
 
 	if (ret)
@@ -191,15 +228,15 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 	switch(g_nDBSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			query.AddFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, m_queryColumns, m_tempTable);
+			query.AddFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, (const TCHAR *)m_queryColumns, m_tempTable);
 			break;
 		case DB_SYNTAX_ORACLE:
-			query.AddFormattedString(_T("SELECT %s FROM %s WHERE ROWNUM BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_queryColumns, m_tempTable, startRow, startRow + numRows);
+			query.AddFormattedString(_T("SELECT %s FROM %s WHERE ROWNUM BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, (const TCHAR *)m_queryColumns, m_tempTable, startRow, startRow + numRows);
 			break;
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
 		case DB_SYNTAX_MYSQL:
-			query.AddFormattedString(_T("SELECT %s FROM %s LIMIT ") INT64_FMT _T(" OFFSET ") INT64_FMT, m_queryColumns, m_tempTable, numRows, startRow);
+			query.AddFormattedString(_T("SELECT %s FROM %s LIMIT ") INT64_FMT _T(" OFFSET ") INT64_FMT, (const TCHAR *)m_queryColumns, m_tempTable, numRows, startRow);
 			break;
 	}
 
@@ -217,7 +254,7 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 				table->addRow();
 				for (int j = 0; j < columnCount; j++)
 				{
-					table->set(j, DBGetField(result, offset + i, j, NULL, 0));
+					table->setPreallocated(j, DBGetField(result, offset + i, j, NULL, 0));
 				}
 			}
 

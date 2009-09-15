@@ -1,8 +1,7 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,7 +86,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_SET_PASSWORD"),
       _T("CMD_GET_NODE_DCI_LIST"),
       _T("CMD_NODE_DCI"),
-      _T("CMD_NODE_DCI_LIST_END"),
+      _T("CMD_GET_LOG_DATA"),
       _T("CMD_DELETE_NODE_DCI"),
       _T("CMD_MODIFY_NODE_DCI"),
       _T("CMD_UNLOCK_NODE_DCI_LIST"),
@@ -105,9 +104,9 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_BIND_OBJECT"),
       _T("CMD_UNBIND_OBJECT"),
       _T("CMD_UNINSTALL_AGENT_POLICY"),
-      _T("-- CMD_LOAD_IMAGE_FILE"),
-      _T("-- CMD_IMAGE_LIST"),
-      _T("-- CMD_IMAGE_FILE"),
+      _T("CMD_OPEN_SERVER_LOG"),
+      _T("CMD_CLOSE_SERVER_LOG"),
+      _T("CMD_QUERY_LOG"),
       _T("CMD_AUTHENTICATE"),
       _T("CMD_GET_PARAMETER"),
       _T("CMD_GET_LIST"),
@@ -187,7 +186,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_SYSLOG_RECORDS"),
       _T("CMD_JOB_CHANGE_NOTIFICATION"),
       _T("CMD_DEPLOY_AGENT_POLICY"),
-      _T("--- CMD_CLOSE_LOG_POLICY"),
+      _T("CMD_LOG_DATA"),
       _T("CMD_GET_OBJECT_TOOL_DETAILS"),
       _T("CMD_LOCK_OBJECT_TOOLS"),
       _T("CMD_UNLOCK_OBJECT_TOOLS"),

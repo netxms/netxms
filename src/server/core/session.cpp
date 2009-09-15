@@ -10323,6 +10323,10 @@ void ClientSession::openServerLog(CSCPMessage *request)
 	{
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
 		msg.SetVariable(VID_LOG_HANDLE, (DWORD)handle);
+
+		LogHandle *log = AcquireLogHandleObject(this, handle);
+		log->getColumnInfo(msg);
+		log->unlock();
 	}
 	else
 	{
@@ -10366,7 +10370,9 @@ void ClientSession::queryServerLog(CSCPMessage *request)
 	LogHandle *log = AcquireLogHandleObject(this, handle);
 	if (log != NULL)
 	{
-		msg.SetVariable(VID_RCC, log->query(new LogFilter(request)) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		INT64 rowCount;
+		msg.SetVariable(VID_RCC, log->query(new LogFilter(request), &rowCount) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		msg.SetVariable(VID_NUM_ROWS, (QWORD)rowCount);
 		log->unlock();
 	}
 	else

@@ -137,7 +137,7 @@ private:
 	INT64 m_rowCount;
 	LogFilter *m_filter;
 	MUTEX m_lock;
-   TCHAR m_queryColumns[MAX_DB_STRING];
+   String m_queryColumns;
 
 	void deleteQueryResults();
 
@@ -148,8 +148,9 @@ public:
 	void lock() { MutexLock(m_lock, INFINITE); }
 	void unlock() { MutexUnlock(m_lock); }
 
-	bool query(LogFilter *filter);
+	bool query(LogFilter *filter, INT64 *rowCount);
 	Table *getData(INT64 startRow, INT64 numRows);
+	void getColumnInfo(CSCPMessage &msg);
 };
 
 

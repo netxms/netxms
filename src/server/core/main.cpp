@@ -466,11 +466,6 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	}
 	DbgPrintf(1, "Successfully connected to database %s@%s", g_szDbName, g_szDbServer);
 
-	int baseSize = ConfigReadInt("ConnectionPoolBaseSize", 5);
-	int maxSize = ConfigReadInt("ConnectionPoolMaxSize", 20);
-	int cooldownTime = ConfigReadInt("ConnectionPoolCooldownTime", 300);
-	DBConnectionPoolStartup(baseSize, maxSize, cooldownTime);
-
 	// Check database version
 	iDBVersion = DBGetSchemaVersion(g_hCoreDB);
 	if (iDBVersion != DB_FORMAT_VERSION)
@@ -478,6 +473,11 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 		nxlog_write(MSG_WRONG_DB_VERSION, EVENTLOG_ERROR_TYPE, "dd", iDBVersion, DB_FORMAT_VERSION);
 		return FALSE;
 	}
+
+	int baseSize = ConfigReadInt("ConnectionPoolBaseSize", 5);
+	int maxSize = ConfigReadInt("ConnectionPoolMaxSize", 20);
+	int cooldownTime = ConfigReadInt("ConnectionPoolCooldownTime", 300);
+	DBConnectionPoolStartup(baseSize, maxSize, cooldownTime);
 
 	// Read database syntax
 	g_nDBSyntax = DBGetSyntax(g_hCoreDB);
