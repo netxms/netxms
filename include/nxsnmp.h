@@ -453,6 +453,7 @@ private:
 	char *m_privPassword;
 	BYTE m_authKeyMD5[16];
 	BYTE m_authKeySHA1[20];
+	BYTE m_privKey[20];
 	SNMP_Engine m_authoritativeEngine;
 	int m_authMethod;
 	int m_privMethod;
@@ -480,6 +481,7 @@ public:
 	int getPrivMethod() { return m_privMethod; }
 	BYTE *getAuthKeyMD5() { return m_authKeyMD5; }
 	BYTE *getAuthKeySHA1() { return m_authKeySHA1; }
+	BYTE *getPrivKey() { return m_privKey; }
 
 	void setAuthName(const char *name);
 	void setCommunity(const char *community) { setAuthName(community); }
@@ -519,6 +521,7 @@ private:
 	BYTE m_contextEngineId[SNMP_MAX_ENGINEID_LEN];
 	int m_contextEngineIdLen;
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
+	BYTE m_salt[8];
 	
 	// The following attributes only used by parser and
 	// valid only for received PDUs
@@ -542,6 +545,7 @@ private:
 	DWORD encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext);
 	DWORD encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE *buffer, DWORD bufferSize);
 	void signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securityContext);
+	BOOL decryptData(BYTE *data, DWORD length, BYTE *decryptedData, SNMP_SecurityContext *securityContext);
 
 public:
    SNMP_PDU();

@@ -72,7 +72,7 @@ int GetData(char *pszHost, char *pszRootOid)
    else
    {
 		if (m_snmpVersion == SNMP_VERSION_3)
-			pTransport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_authMethod));
+			pTransport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
 		else
 			pTransport->setSecurityContext(new SNMP_SecurityContext(m_community));
 
@@ -222,6 +222,11 @@ int main(int argc, char *argv[])
 				break;
          case 'A':   // authentication password
             nx_strncpy(m_authPassword, optarg, 256);
+				if (_tcslen(m_authPassword) < 8)
+				{
+               printf("Authentication password should be at least 8 characters long\n");
+					bStart = FALSE;
+				}
             break;
 			case 'e':   // encryption method
 				if (!stricmp(optarg, "des"))
@@ -244,6 +249,11 @@ int main(int argc, char *argv[])
 				break;
          case 'E':   // encription password
             nx_strncpy(m_encryptionPassword, optarg, 256);
+				if (_tcslen(m_encryptionPassword) < 8)
+				{
+               printf("Encryption password should be at least 8 characters long\n");
+					bStart = FALSE;
+				}
             break;
          case 'p':   // Port number
             dwValue = strtoul(optarg, &eptr, 0);

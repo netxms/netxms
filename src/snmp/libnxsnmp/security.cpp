@@ -38,6 +38,7 @@ SNMP_SecurityContext::SNMP_SecurityContext()
 	m_privMethod = SNMP_ENCRYPT_NONE;
 	memset(m_authKeyMD5, 0, 16);
 	memset(m_authKeySHA1, 0, 20);
+	memset(m_privKey, 0, 20);
 }
 
 SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
@@ -50,6 +51,7 @@ SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
 	m_privMethod = src->m_privMethod;
 	memcpy(m_authKeyMD5, src->m_authKeyMD5, 16);
 	memcpy(m_authKeySHA1, src->m_authKeySHA1, 20);
+	memcpy(m_privKey, src->m_privKey, 20);
 	m_authoritativeEngine = src->m_authoritativeEngine;
 }
 
@@ -63,6 +65,7 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 	m_privMethod = SNMP_ENCRYPT_NONE;
 	memset(m_authKeyMD5, 0, 16);
 	memset(m_authKeySHA1, 0, 20);
+	memset(m_privKey, 0, 20);
 }
 
 SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod)
@@ -155,7 +158,7 @@ void SNMP_SecurityContext::recalculateKeys()
 {
 	BYTE buffer[256];
 	const char *authPassword = (m_authPassword != NULL) ? m_authPassword : "";
-	const char *encPassword = (m_privPassword != NULL) ? m_privPassword : "";
+	const char *privPassword = (m_privPassword != NULL) ? m_privPassword : "";
 
 	// MD5 auth key
 	MD5HashForPattern((const BYTE *)authPassword, strlen(authPassword), 1048576, buffer);
@@ -168,4 +171,20 @@ void SNMP_SecurityContext::recalculateKeys()
 	memcpy(&buffer[20], m_authoritativeEngine.getId(), m_authoritativeEngine.getIdLen());
 	memcpy(&buffer[20 + m_authoritativeEngine.getIdLen()], buffer, 20);
 	CalculateSHA1Hash(buffer, m_authoritativeEngine.getIdLen() + 40, m_authKeySHA1);
+
+	// Priv key
+	if (m_authMethod == SNMP_AUTH_MD5)
+	{
+		MD5HashForPattern((const BYTE *)privPassword, strlen(privPassword), 1048576, buffer);
+		memcpy(&buffer[16], m_authoritativeEngine.getId(), m_authoritativeEngine.getIdLen());
+		memcpy(&buffer[16 + m_authoritativeEngine.getIdLen()], buffer, 16);
+		CalculateMD5Hash(buffer, m_authoritativeEngine.getIdLen() + 32, m_privKey);
+	}
+	else
+	{
+		SHA1HashForPattern((BYTE *)privPassword, strlen(privPassword), 1048576, buffer);
+		memcpy(&buffer[20], m_authoritativeEngine.getId(), m_authoritativeEngine.getIdLen());
+		memcpy(&buffer[20 + m_authoritativeEngine.getIdLen()], buffer, 20);
+		CalculateSHA1Hash(buffer, m_authoritativeEngine.getIdLen() + 40, m_privKey);
+	}
 }

@@ -23,6 +23,15 @@
 
 #include "libnxsnmp.h"
 
+#ifdef _WITH_ENCRYPTION
+#ifndef OPENSSL_NO_DES
+#include <openssl/des.h>
+#endif
+#ifndef OPENSSL_NO_AES
+#include <openssl/aes.h>
+#endif
+#endif
+
 
 //
 // Static data
@@ -547,6 +556,15 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, DWORD dataLength)
    currPos += length;
    remLength -= length + idLength;
 
+	// Encryption salt
+   if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
+      return FALSE;
+   if (type != ASN_OCTET_STRING)
+      return FALSE;
+	memcpy(m_salt, currPos, min(length, 8));
+   currPos += length;
+   remLength -= length + idLength;
+
 	return TRUE;
 }
 
@@ -708,6 +726,64 @@ BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityConte
 
 
 //
+// Decrypt data in packet
+//
+
+BOOL SNMP_PDU::decryptData(BYTE *data, DWORD length, BYTE *decryptedData, SNMP_SecurityContext *securityContext)
+{
+#ifdef _WITH_ENCRYPTION
+	if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
+	{
+#ifndef OPENSSL_NO_DES
+		if (length % 8 != 0)
+			return FALSE;	// Encrypted data length must be an integral multiple of 8
+
+		DES_cblock key;
+		DES_key_schedule schedule;
+		memcpy(&key, securityContext->getPrivKey(), 8);
+		DES_set_key_unchecked(&key, &schedule);
+
+		DES_cblock iv;
+		memcpy(&iv, securityContext->getPrivKey() + 8, 8);
+		for(int i = 0; i < 8; i++)
+			iv[i] ^= m_salt[i];
+
+		DES_ncbc_encrypt(data, decryptedData, length, &schedule, &iv, DES_DECRYPT);
+#else
+		return FALSE;  // Compiled without DES support
+#endif
+	}
+	else if (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES)
+	{
+#ifndef OPENSSL_NO_AES
+		AES_KEY key;
+		AES_set_encrypt_key(securityContext->getPrivKey(), 128, &key);
+
+		BYTE iv[16];
+		DWORD boots = htonl((DWORD)securityContext->getAuthoritativeEngine().getBoots());
+		DWORD engTime = htonl((DWORD)securityContext->getAuthoritativeEngine().getTime());
+		memcpy(iv, &boots, 4);
+		memcpy(&iv[4], &engTime, 4);
+		memcpy(&iv[8], m_salt, 8);
+
+		int num = 0;
+		AES_cfb128_encrypt(data, decryptedData, length, &key, iv, &num, AES_DECRYPT);
+#else
+		return FALSE;  // Compiled without AES support
+#endif
+	}
+	else
+	{
+		return FALSE;
+	}
+	return TRUE;
+#else
+	return FALSE;	// No encryption support
+#endif
+}
+
+
+//
 // Create PDU from packet
 //
 
@@ -769,6 +845,28 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *se
 
 		pbCurrPos += dwLength;
 		dwPacketLength -= dwLength + dwIdLength;
+
+		// Decrypt scoped PDU if needed
+		if ((m_securityModel == SNMP_SECURITY_MODEL_USM) && (m_flags & SNMP_PRIV_FLAG))
+		{
+			BYTE *scopedPduStart = pbCurrPos;
+
+			if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+				return FALSE;
+			if (dwType != ASN_OCTET_STRING)
+				return FALSE;   // Should be encoded as octet string
+
+			BYTE *decryptedPdu = (BYTE *)malloc(dwLength);
+			if (!decryptData(pbCurrPos, dwLength, decryptedPdu, securityContext))
+			{
+				free(decryptedPdu);
+				return FALSE;
+			}
+
+			pbCurrPos = scopedPduStart;
+			memcpy(pbCurrPos, decryptedPdu, dwLength);
+			free(decryptedPdu);
+		}
 
 		// Scoped PDU
 		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
@@ -914,6 +1012,13 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 
 		if (m_dwVersion == SNMP_VERSION_3)
 		{
+			// Generate encryption salt if packet has to be encrypted
+			if (securityContext->needEncryption())
+			{
+				QWORD temp = htonq(GetCurrentTimeMs());
+				memcpy(m_salt, &temp, 8);
+			}
+
 			dwBytes = encodeV3Header(pbCurrPos, dwBufferSize - dwPacketSize, securityContext);
 			dwPacketSize += dwBytes;
 			pbCurrPos += dwBytes;
@@ -923,6 +1028,66 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 			pbCurrPos += dwBytes;
 
 			dwBytes = encodeV3ScopedPDU(dwPDUType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
+			if (securityContext->needEncryption())
+			{
+#ifdef _WITH_ENCRYPTION
+				if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
+				{
+#ifndef OPENSSL_NO_DES
+					DWORD encSize = (dwBytes % 8 == 0) ? dwBytes : (dwBytes + (8 - (dwBytes % 8)));
+					BYTE *encryptedPdu = (BYTE *)malloc(encSize);
+
+					DES_cblock key;
+					DES_key_schedule schedule;
+					memcpy(&key, securityContext->getPrivKey(), 8);
+					DES_set_key_unchecked(&key, &schedule);
+
+					DES_cblock iv;
+					memcpy(&iv, securityContext->getPrivKey() + 8, 8);
+					for(int i = 0; i < 8; i++)
+						iv[i] ^= m_salt[i];
+
+					DES_ncbc_encrypt(pbCurrPos, encryptedPdu, dwBytes, &schedule, &iv, DES_ENCRYPT);
+					dwBytes = BER_Encode(ASN_OCTET_STRING, encryptedPdu, encSize, pbCurrPos, dwBufferSize - dwPacketSize);
+					free(encryptedPdu);
+#else
+					dwBytes = 0;	// Error - no DES support
+					goto cleanup;
+#endif
+				}
+				else if (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES)
+				{
+#ifndef OPENSSL_NO_AES
+					AES_KEY key;
+					AES_set_encrypt_key(securityContext->getPrivKey(), 128, &key);
+
+					BYTE iv[16];
+					DWORD boots = htonl((DWORD)securityContext->getAuthoritativeEngine().getBoots());
+					DWORD engTime = htonl((DWORD)securityContext->getAuthoritativeEngine().getTime());
+					memcpy(iv, &boots, 4);
+					memcpy(&iv[4], &engTime, 4);
+					memcpy(&iv[8], m_salt, 8);
+
+					BYTE *encryptedPdu = (BYTE *)malloc(dwBytes);
+					int num = 0;
+					AES_cfb128_encrypt(pbCurrPos, encryptedPdu, dwBytes, &key, iv, &num, AES_ENCRYPT);
+					dwBytes = BER_Encode(ASN_OCTET_STRING, encryptedPdu, dwBytes, pbCurrPos, dwBufferSize - dwPacketSize);
+					free(encryptedPdu);
+#else
+					dwBytes = 0;	// Error - no AES support
+					goto cleanup;
+#endif
+				}
+				else
+				{
+					dwBytes = 0;	// Error - unsupported method
+					goto cleanup;
+				}
+#else
+				dwBytes = 0;	// Error
+				goto cleanup;
+#endif
+			}
 			dwPacketSize += dwBytes;
 		}
 		else
@@ -954,6 +1119,7 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       dwBytes = 0;   // Error
    }
 
+cleanup:
    free(pPacket);
    free(pBlock);
    free(pVarBinds);
@@ -1033,7 +1199,7 @@ DWORD SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_
 			// Privacy parameters
 			if (securityContext->needEncryption())
 			{
-				/* TODO: implement encryption */
+				bytes += BER_Encode(ASN_OCTET_STRING, m_salt, 8, &securityParameters[bytes], 1024 - bytes);
 			}
 			else
 			{
