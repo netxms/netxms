@@ -31,7 +31,7 @@
 static void (* s_fpWriteLog)(int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(DWORD, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(DWORD, int, TCHAR **) = NULL;
-static BOOL (* s_fpSendFile)(void *, DWORD, const char *, long) = NULL;
+static BOOL (* s_fpSendFile)(void *, DWORD, const TCHAR *, long) = NULL;
 
 
 //
@@ -41,7 +41,7 @@ static BOOL (* s_fpSendFile)(void *, DWORD, const char *, long) = NULL;
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, const TCHAR *),
 														void (* sendTrap1)(DWORD, const char *, va_list),
 														void (* sendTrap2)(DWORD, int, TCHAR **),
-														BOOL (* sendFile)(void *, DWORD, const char *, long))
+														BOOL (* sendFile)(void *, DWORD, const TCHAR *, long))
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;

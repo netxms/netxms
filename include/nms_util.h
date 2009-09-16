@@ -554,7 +554,7 @@ extern "C"
 	void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, const TCHAR *),
 															void (* sendTrap2)(DWORD, const char *, va_list),
 															void (* sendTrap1)(DWORD, int, TCHAR **),
-															BOOL (* sendFile)(void *, DWORD, const char *, long));
+															BOOL (* sendFile)(void *, DWORD, const TCHAR *, long));
 
 	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const TCHAR *option, TCHAR *buffer, int bufSize);
 	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBool(const TCHAR *optString, const TCHAR *option, BOOL defVal);
