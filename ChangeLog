@@ -2,6 +2,9 @@
 * 0.2.28
 *
 
+- Added encryption support for SNMP version 3
+- Fixed compatibility issues with NetXMS SNMP version 3 implementation and 
+  Cisco devices
 - Automatic network discovery improved
 - LOGSCAN subagent removed (superseded by LOGWATCH subagent)
 - Fixed issues: #259, #260, #261, #262, #263, #264
