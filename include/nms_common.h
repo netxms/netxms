@@ -166,6 +166,8 @@ typedef int bool;
 
 #define snprintf     _snprintf
 #define vsnprintf    _vsnprintf
+#define snwprintf    _snwprintf
+#define vsnwprintf   _vsnwprintf
 #define scprintf     _scprintf
 #define vscprintf    _vscprintf
 #define scwprintf    _scwprintf

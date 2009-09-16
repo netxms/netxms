@@ -119,7 +119,7 @@ void String::AddFormattedString(const TCHAR *format, ...)
    buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
 
    va_start(args, format);
-   vsnprintf(buffer, len, format, args);
+   vsnwprintf(buffer, len, format, args);
    va_end(args);
 #else
 	// No way to determine required buffer size, guess
@@ -127,7 +127,7 @@ void String::AddFormattedString(const TCHAR *format, ...)
    buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
 
    va_start(args, format);
-   vsnprintf(buffer, len, format, args);
+   vsnwprintf(buffer, len, format, args);
    va_end(args);
 #endif
 
