@@ -70,7 +70,7 @@ LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -132,7 +132,7 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 							nIP1, nIP2, nIP3, nIP4,
 							nIndex);
 
-					NxAddResultString(pValue, szBuff);
+					pValue->add(szBuff);
 				}
 			}
 
@@ -145,7 +145,7 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 	return nRet;
 }
 
-LONG H_NetRoutingTable(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -209,7 +209,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, NETXMS_VALUES_LIS
 							IpToStr(ntohl(nGateway), szBuf2),
 							nIndex,
 							nType);
-					NxAddResultString(pValue, szLine);
+					pValue->add(szLine);
 				}
 			}
 		}
@@ -221,7 +221,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, NETXMS_VALUES_LIS
 	return nRet;
 }
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct if_nameindex *pIndex;
@@ -290,7 +290,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pVa
 									IFTYPE_OTHER,
 									szMacAddr,
 									ifc.ifc_req[i].ifr_name);
-							NxAddResultString(pValue, szOut);
+							pValue->add(szOut);
 						}
 					}
 				}
@@ -329,7 +329,7 @@ LONG H_NetIfInfoFromIOCTL(const char *pszParam, const char *pArg, char *pValue)
 	struct ifreq ifr;
 	int fd;
 
-	if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
+	if (!AgentGetParameterArg(pszParam, 1, szBuffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -420,7 +420,7 @@ LONG H_NetIfInfoFromProc(const char *pszParam, const char *pArg, char *pValue)
 	LONG nIndex, nRet = SYSINFO_RC_SUCCESS;
 	FILE *fp;
 
-	if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
+	if (!AgentGetParameterArg(pszParam, 1, szBuffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	// Check if we have interface name or index

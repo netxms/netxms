@@ -52,7 +52,7 @@ static void SubAgentShutdown(void)
 // Externals
 //
 
-LONG H_DRBDDeviceList(const char *pszParam, const char *pszArg, NETXMS_VALUES_LIST *pValue);
+LONG H_DRBDDeviceList(const char *pszParam, const char *pszArg, StringList *pValue);
 LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue);
 
@@ -395,12 +395,12 @@ DECLARE_SUBAGENT_ENTRY_POINT(LINUX)
 // Entry points for server
 //
 
-extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
 	return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
 
-extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
 	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }

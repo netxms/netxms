@@ -193,11 +193,11 @@ LONG H_DiskQueueTotal(const char *, const char *, char *);
 LONG H_NetIfInfoFromIOCTL(const char *, const char *, char *);
 LONG H_NetIfInfoFromProc(const char *, const char *, char *);
 LONG H_NetIpForwarding(const char *, const char *, char *);
-LONG H_NetArpCache(const char *, const char *, NETXMS_VALUES_LIST *);
-LONG H_NetRoutingTable(const char *, const char *, NETXMS_VALUES_LIST *);
-LONG H_NetIfList(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_NetArpCache(const char *, const char *, StringList *);
+LONG H_NetRoutingTable(const char *, const char *, StringList *);
+LONG H_NetIfList(const char *, const char *, StringList *);
 
-LONG H_ProcessList(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_ProcessList(const char *, const char *, StringList *);
 LONG H_Uptime(const char *, const char *, char *);
 LONG H_Uname(const char *, const char *, char *);
 LONG H_Hostname(const char *, const char *, char *);
@@ -212,7 +212,7 @@ LONG H_ThreadCount(const char *, const char *, char *);
 LONG H_MemoryInfo(const char *, const char *, char *);
 LONG H_SourcePkgSupport(const char *, const char *, char *);
 LONG H_ConnectedUsers(const char *, const char *, char *);
-LONG H_ActiveUserSessions(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_ActiveUserSessions(const char *, const char *, StringList *);
 
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();

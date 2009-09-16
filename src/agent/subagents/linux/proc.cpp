@@ -72,7 +72,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 	BOOL bProcFound, bCmdFound;
 
 	nFound = -1;
-	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "ProcRead(%p,\"%s\",\"%s\")", pEnt, CHECK_NULL(szProcName), CHECK_NULL(szCmdLine));
+	AgentWriteLog(EVENTLOG_DEBUG_TYPE, "ProcRead(%p,\"%s\",\"%s\")", pEnt, CHECK_NULL(szProcName), CHECK_NULL(szCmdLine));
 
 	nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
 	// if everything is null we can simply return nCount!!!
@@ -222,7 +222,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 						           &(*pEnt)[nFound].utime, &(*pEnt)[nFound].ktime, &(*pEnt)[nFound].threads,
 						           &(*pEnt)[nFound].vmsize, &(*pEnt)[nFound].rss) != 10)
 						{
-							NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "Error parsing /proc/%d/stat", nPid);
+							AgentWriteLog(EVENTLOG_DEBUG_TYPE, "Error parsing /proc/%d/stat", nPid);
 						}
 					}
 				}
@@ -250,10 +250,10 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 
 	if (*pArg != 'T')
 	{
-		NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+		AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 		if (*pArg == 'E')
 		{
-			NxGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
+			AgentGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
 		}
 	}
 
@@ -317,7 +317,7 @@ LONG H_ProcessDetails(const char *param, const char *arg, char *value)
    static const char *typeList[]={ "min", "max", "avg", "sum", NULL };
 
    // Get parameter type arguments
-   NxGetParameterArg(param, 2, buffer, 256);
+   AgentGetParameterArg(param, 2, buffer, 256);
    if (buffer[0] == 0)     // Omited type
    {
       type = INFOTYPE_SUM;
@@ -331,13 +331,13 @@ LONG H_ProcessDetails(const char *param, const char *arg, char *value)
          return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
    }
 
-   // Get process name
-   NxGetParameterArg(param, 1, procName, MAX_PATH);
-	NxGetParameterArg(param, 3, cmdLine, MAX_PATH);
+	// Get process name
+	AgentGetParameterArg(param, 1, procName, MAX_PATH);
+	AgentGetParameterArg(param, 3, cmdLine, MAX_PATH);
 	StrStrip(cmdLine);
 
 	count = ProcRead(&procList, procName, (cmdLine[0] != 0) ? cmdLine : NULL);
-	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "H_ProcessDetails(\"%s\"): ProcRead() returns %d", param, count);
+	AgentWriteLog(EVENTLOG_DEBUG_TYPE, "H_ProcessDetails(\"%s\"): ProcRead() returns %d", param, count);
 	if (count == -1)
 		return SYSINFO_RC_ERROR;
 

@@ -45,7 +45,7 @@ static LONG H_Echo(const char *pszParam, const char *pArg, char *pValue)
 {
 	char szArg[256];
 
-	NxGetParameterArg(pszParam, 1, szArg, 255);
+	AgentGetParameterArg(pszParam, 1, szArg, 255);
 	ret_string(pValue, szArg);
 	return SYSINFO_RC_SUCCESS;
 }
@@ -57,7 +57,7 @@ static LONG H_Random(const char *pszParam, const char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-static LONG H_Enum(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_Enum(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int i;
 	char szValue[256];
@@ -65,7 +65,7 @@ static LONG H_Enum(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 	for(i = 0; i < 10; i++)
 	{
 		sprintf(szValue, "Value %d", i);
-		NxAddResultString(pValue, szValue);
+		pValue->add(szValue);
 	}
 	return SYSINFO_RC_SUCCESS;
 }

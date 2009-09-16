@@ -100,23 +100,75 @@ const String& String::operator +=(const TCHAR *pszStr)
 // Add formatted string to the end of buffer
 //
 
-void String::AddFormattedString(const TCHAR *pszFormat, ...)
+void String::AddFormattedString(const TCHAR *format, ...)
 {
-   int nLen;
+   int len;
    va_list args;
-   TCHAR *pszBuffer;
+   TCHAR *buffer;
 
-   va_start(args, pszFormat);
-	nLen = (int)_vsctprintf(pszFormat, args) + 1;
+#ifdef UNICODE
+
+#if HAVE_VASWPRINTF
+   va_start(args, format);
+	vaswprintf(&buffer, format, args);
+	va_end(args);
+#elif HAVE_VSCWPRINTF
+   va_start(args, format);
+	len = (int)vscwprintf(format, args) + 1;
    va_end(args);
-   pszBuffer = (TCHAR *)malloc(nLen * sizeof(TCHAR));
+   buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
 
-   va_start(args, pszFormat);
-   _vsntprintf(pszBuffer, nLen, pszFormat, args);
+   va_start(args, format);
+   vsnprintf(buffer, len, format, args);
    va_end(args);
+#else
+	// No way to determine required buffer size, guess
+	len = wcslen(format) + CharCount(format, L'%') * 1000 + 1;
+   buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
 
-   *this += pszBuffer;
-   free(pszBuffer);
+   va_start(args, format);
+   vsnprintf(buffer, len, format, args);
+   va_end(args);
+#endif
+
+#else		/* UNICODE */
+
+#if HAVE_VASPRINTF
+   va_start(args, format);
+	vasprintf(&buffer, format, args);
+	va_end(args);
+#elif HAVE_VSCPRINTF
+   va_start(args, format);
+	len = (int)vscprintf(format, args) + 1;
+   va_end(args);
+   buffer = (char *)malloc(len);
+
+   va_start(args, format);
+   vsnprintf(buffer, len, format, args);
+   va_end(args);
+#elif SNPRINTF_RETURNS_REQUIRED_SIZE
+   va_start(args, format);
+	len = (int)snprintf(NULL, 0, format, args) + 1;
+   va_end(args);
+   buffer = (char *)malloc(len);
+
+   va_start(args, format);
+   vsnprintf(buffer, len, format, args);
+   va_end(args);
+#else
+	// No way to determine required buffer size, guess
+	len = strlen(format) + CharCount(format, '%') * 1000 + 1;
+   buffer = (char *)malloc(len);
+
+   va_start(args, format);
+   vsnprintf(buffer, len, format, args);
+   va_end(args);
+#endif
+
+#endif	/* UNICODE */
+
+   *this += buffer;
+   free(buffer);
 }
 
 

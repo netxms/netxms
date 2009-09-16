@@ -110,7 +110,7 @@ static void ParseIoStat(char *line)
 		strcpy(m_devices[dev].name, devName);
 		m_devices[dev].isRealDevice = IsRealDevice(devName);
 		memset(m_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "ParseIoStat(): new device added (name=%s isRealDevice=%d)", devName, m_devices[dev].isRealDevice);
+		AgentWriteLog(EVENTLOG_DEBUG_TYPE, "ParseIoStat(): new device added (name=%s isRealDevice=%d)", devName, m_devices[dev].isRealDevice);
 	}
 
 	// Parse counters
@@ -191,7 +191,7 @@ void StartIoStatCollector()
 		if (S_ISDIR(st.st_mode))
 		{
 			m_isSysFsAvailable = true;
-			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "Linux: using /sys/block to distinguish devices from partitions");
+			AgentWriteLog(EVENTLOG_DEBUG_TYPE, "Linux: using /sys/block to distinguish devices from partitions");
 		}
 	}	
 
@@ -222,7 +222,7 @@ static IOSTAT_SAMPLE *GetSamples(const char *param)
 {
 	char *devName, buffer[64];
 
-	if (!NxGetParameterArg(param, 1, buffer, 64))
+	if (!AgentGetParameterArg(param, 1, buffer, 64))
 		return NULL;
 
 	devName = !strncmp(buffer, "/dev/", 5) ? &buffer[5] : buffer;

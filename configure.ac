@@ -878,6 +878,27 @@ if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
 	fi
 fi
 
+# asprintf, scprintf, etc.
+AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
+AC_CHECK_FUNCS([scprintf scwprintf vscprintf vscwprintf])
+
+AC_MSG_CHECKING(whether snprintf returns required buffer size)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([ 
+#include <stdio.h>
+#include <string.h>
+     ], [
+     return !(snprintf(NULL, 0, "test: %d", 1000) >= 10);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(SNPRINTF_RETURNS_REQUIRED_SIZE, 1, Define to 1 if snprintf returns required buffer size in case of truncation)
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+
 
 #--------------------------------------------------------------------
 # Checks for macros and definitions

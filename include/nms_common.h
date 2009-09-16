@@ -137,8 +137,13 @@ typedef int bool;
 #endif
 #endif
 
-#define FS_PATH_SEPARATOR			_T("\\")
-#define FS_PATH_SEPARATOR_CHAR	_T('\\')
+#define FS_PATH_SEPARATOR       _T("\\")
+#define FS_PATH_SEPARATOR_CHAR  _T('\\')
+
+#define HAVE_SCPRINTF           1
+#define HAVE_VSCPRINTF          1
+#define HAVE_SCWPRINTF          1
+#define HAVE_VSCWPRINTF         1
 
 #include <winsock2.h>
 #include <windows.h>
@@ -161,6 +166,10 @@ typedef int bool;
 
 #define snprintf     _snprintf
 #define vsnprintf    _vsnprintf
+#define scprintf     _scprintf
+#define vscprintf    _vscprintf
+#define scwprintf    _scwprintf
+#define vscwprintf   _vscwprintf
 #define popen        _popen
 #define pclose       _pclose
 #define strdup       _strdup

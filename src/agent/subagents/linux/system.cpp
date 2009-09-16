@@ -57,7 +57,7 @@ LONG H_ConnectedUsers(const char *pszParam, const char *pArg, char *pValue)
 // Handler for System.ActiveUserSessions enum
 //
 
-LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -74,7 +74,7 @@ LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, NETXMS_VALUES_
 			{
 				snprintf(szBuffer, 1024, "\"%s\" \"%s\" \"%s\"", rec.ut_user,
 						rec.ut_line, rec.ut_host);
-				NxAddResultString(pValue, szBuffer);
+				pValue->add(szBuffer);
 			}
 		}
 		fclose(f);
@@ -285,7 +285,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	PROC_ENT *pEnt;
@@ -303,7 +303,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 
 			snprintf(szBuff, sizeof(szBuff), "%d %s",
 					pEnt[i].nPid, pEnt[i].szProcName);
-			NxAddResultString(pValue, szBuff);
+			pValue->add(szBuff);
 		}
 	}
 
@@ -629,7 +629,7 @@ LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue)
 	char buffer[256], *eptr;
 	struct CpuUsageParam *p = (struct CpuUsageParam *)pValue;
 
-	if (!NxGetParameterArg(pszParam, 1, buffer, 256))
+	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 		
 	cpu = strtol(buffer, &eptr, 0);

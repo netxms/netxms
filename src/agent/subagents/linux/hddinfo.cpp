@@ -82,7 +82,7 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
 	int hDevice;
 	BYTE ioBuff[1024];
 
-	if (!NxGetParameterArg(pszParam, 1, szBuffer, MAX_PATH))
+	if (!AgentGetParameterArg(pszParam, 1, szBuffer, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	// Open device
@@ -120,7 +120,7 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
 			switch(pszArg[0])
 			{
 				case 'A':   // Generic attribute
-					if (NxGetParameterArg(pszParam, 2, szBuffer, 128))
+					if (AgentGetParameterArg(pszParam, 2, szBuffer, 128))
 					{
 						LONG nAttr;
 						char *eptr;

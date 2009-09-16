@@ -106,7 +106,7 @@ static const char *StateText(int nCode)
 // Get list of configured DRBD devices
 //
 
-LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue)
 {
 	int nDev, nFd;
 	struct ioctl_get_config drbdConfig;
@@ -124,7 +124,7 @@ LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, NETXMS_VALUES_LIST
 						drbdConfig.peer_state, CStateText(drbdConfig.cstate),
 						StateText(drbdConfig.state), StateText(drbdConfig.peer_state),
 						drbdConfig.lower_device_name);
-				NxAddResultString(pValue, szBuffer);
+				pValue->add(szBuffer);
 			}
 			close(nFd);
 		}
@@ -144,7 +144,7 @@ LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 	TCHAR szDev[256], *eptr;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	if (!NxGetParameterArg(pszCmd, 1, szDev, 256))
+	if (!AgentGetParameterArg(pszCmd, 1, szDev, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	nDev = _tcstol(szDev, &eptr, 0);

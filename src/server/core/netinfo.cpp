@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netinfo.cpp
+** File: netinfo.cpp
 **
 **/
 
@@ -46,8 +46,8 @@
 static DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = NULL;
 #else
 static HMODULE m_hSubAgent = NULL;
-static BOOL (* imp_NxSubAgentGetIfList)(NETXMS_VALUES_LIST *) = NULL;
-static BOOL (* imp_NxSubAgentGetArpCache)(NETXMS_VALUES_LIST *) = NULL;
+static BOOL (* imp_NxSubAgentGetIfList)(StringList *) = NULL;
+static BOOL (* imp_NxSubAgentGetArpCache)(StringList *) = NULL;
 #endif
 
 
@@ -83,8 +83,8 @@ void InitLocalNetInfo(void)
       m_hSubAgent = DLOpen(szName, szErrorText);
       if (m_hSubAgent != NULL)
       {
-         imp_NxSubAgentGetIfList = (BOOL (*)(NETXMS_VALUES_LIST *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetIfList", NULL);
-         imp_NxSubAgentGetArpCache = (BOOL (*)(NETXMS_VALUES_LIST *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetArpCache", NULL);
+         imp_NxSubAgentGetIfList = (BOOL (*)(StringList *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetIfList", NULL);
+         imp_NxSubAgentGetArpCache = (BOOL (*)(StringList *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetArpCache", NULL);
          if ((imp_NxSubAgentGetIfList == NULL) &&
              (imp_NxSubAgentGetArpCache == NULL))
          {
@@ -172,20 +172,20 @@ static ARP_CACHE *SysGetLocalArpCache(void)
 
    free(sysArpCache);
 #else
-   NETXMS_VALUES_LIST list;
-   TCHAR szByte[4], *pBuf, *pChar;
-   DWORD i, j;
+	TCHAR szByte[4], *pChar;
+	DWORD i, j;
 
-   if (imp_NxSubAgentGetArpCache != NULL)
-   {
-		memset(&list, 0, sizeof(NETXMS_VALUES_LIST));
+	if (imp_NxSubAgentGetArpCache != NULL)
+	{
+		StringList list;
+
       if (imp_NxSubAgentGetArpCache(&list))
       {
          // Create empty structure
          pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-         pArpCache->dwNumEntries = list.dwNumStrings;
-         pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * list.dwNumStrings);
-         memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * list.dwNumStrings);
+         pArpCache->dwNumEntries = list.getSize();
+         pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * list.getSize());
+         memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * list.getSize());
 
          szByte[2] = 0;
 
@@ -194,9 +194,9 @@ static ARP_CACHE *SysGetLocalArpCache(void)
          // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
          // a.b.c.d is an IP address in decimal dotted notation
          // n is an interface index
-         for(i = 0; i < list.dwNumStrings; i++)
+         for(i = 0; i < list.getSize(); i++)
          {
-            pBuf = list.ppStringList[i];
+            const TCHAR *pBuf = list.getValue(i);
             if (_tcslen(pBuf) < 20)     // Invalid line
                continue;
 
@@ -220,10 +220,6 @@ static ARP_CACHE *SysGetLocalArpCache(void)
             if (pChar != NULL)
                pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
          }
-
-         for(i = 0; i < list.dwNumStrings; i++)
-            safe_free(list.ppStringList[i]);
-         safe_free(list.ppStringList);
       }
    }
 #endif
@@ -310,22 +306,21 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
    free(pBuffer);
 
 #else
-   NETXMS_VALUES_LIST list;
    DWORD i, dwBits;
-   TCHAR *pChar, *pBuf;
+   TCHAR *pChar;
 
    if (imp_NxSubAgentGetIfList != NULL)
    {
-		memset(&list, 0, sizeof(NETXMS_VALUES_LIST));
+		StringList list;
       if (imp_NxSubAgentGetIfList(&list))
       {
          pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
-         pIfList->iNumEntries = list.dwNumStrings;
-         pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * list.dwNumStrings);
-         memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * list.dwNumStrings);
-         for(i = 0; i < list.dwNumStrings; i++)
+         pIfList->iNumEntries = list.getSize();
+         pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * list.getSize());
+         memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * list.getSize());
+         for(i = 0; i < list.getSize(); i++)
          {
-            pBuf = list.ppStringList[i];
+            const TCHAR *pBuf = list.getValue(i);
 
             // Index
             pChar = _tcschr(pBuf, ' ');
@@ -381,10 +376,6 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
             // Name
             nx_strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
          }
-
-         for(i = 0; i < list.dwNumStrings; i++)
-            safe_free(list.ppStringList[i]);
-         safe_free(list.ppStringList);
       }
    }
 #endif

@@ -1080,8 +1080,8 @@ SnmpAccessPart:
 SnmpStatusPart:
     STATUS_SYM LCidentifier
 {
-   static char *pStatusText[] = { "mandatory", "optional", "obsolete",
-                                  "deprecated", "current", NULL };
+   static const char *pStatusText[] = { "mandatory", "optional", "obsolete",
+                                        "deprecated", "current", NULL };
    int i;
 
    for(i = 0; pStatusText[i] != NULL; i++)
