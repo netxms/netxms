@@ -19,6 +19,9 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -122,9 +125,11 @@ public class Thresholds extends PropertyPage
 
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText("&Up");
+      upButton.setEnabled(false);
       
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText("&Down");
+      downButton.setEnabled(false);
       
       Composite buttons = new Composite(thresholdArea, SWT.NONE);
       gd = new GridData();
@@ -151,12 +156,27 @@ public class Thresholds extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       modifyButton.setLayoutData(rd);
+      modifyButton.setEnabled(false);
       
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("&Delete");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
+      deleteButton.setEnabled(false);
+      
+      /*** Selection change listener for thresholds list ***/
+      thresholds.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				upButton.setEnabled(selection.size() == 1);
+				downButton.setEnabled(selection.size() == 1);
+				modifyButton.setEnabled(selection.size() == 1);
+				deleteButton.setEnabled(selection.size() > 0);
+			}
+      });
       
 		return dialogArea;
 	}
