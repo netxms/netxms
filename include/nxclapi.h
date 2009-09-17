@@ -1714,6 +1714,19 @@ typedef struct
 } NXC_CERT_LIST;
 
 
+//
+// SNMP USM credential
+//
+
+typedef struct
+{
+	TCHAR name[MAX_DB_STRING];
+	int authMethod;
+	int privMethod;
+	TCHAR authPassword[MAX_DB_STRING];
+	TCHAR privPassword[MAX_DB_STRING];
+} NXC_SNMP_USM_CRED;
+
 
 // All situation stuff will be available only in C++
 #ifdef __cplusplus
@@ -2048,6 +2061,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, DWORD *pd
 																 TCHAR ***pppszStringList);
 DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, DWORD dwNumStrings,
 											    					 TCHAR **ppszStringList);
+DWORD LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, DWORD *listSize, NXC_SNMP_USM_CRED **list);
+DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpUsmCredentials(NXC_SESSION hSession, DWORD count, NXC_SNMP_USM_CRED *list);
 
 /** Maps **/
 DWORD LIBNXCL_EXPORTABLE NXCGetMapList(NXC_SESSION hSession, DWORD *pdwNumMaps,

@@ -719,26 +719,100 @@ ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport)
 
 
 //
-// Determine SNMP parameters for node
+// Check SNMP v3 connectivity
 //
 
-BOOL SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, char *community)
+static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext)
+{
+	char buffer[1024];
+
+	// Check original SNMP V3 settings, if set
+	if ((originalContext != NULL) && (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM))
+	{
+		DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %s/%d:%d"), originalContext->getUser(),
+		          originalContext->getAuthMethod(), originalContext->getPrivMethod());
+		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
+		if (SnmpGet(SNMP_VERSION_3, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
+						0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+		{
+			DbgPrintf(5, _T("SnmpCheckV3CommSettings: success"));
+			return new SNMP_SecurityContext(originalContext);
+		}
+	}
+
+	// Try preconfigured SNMP v3 USM credentials
+	DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
+	if (hResult != NULL)
+	{
+		TCHAR name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
+		SNMP_SecurityContext *ctx;
+		int i, count = DBGetNumRows(hResult);
+
+		for(i = 0; i < count; i++)
+		{
+			DBGetField(hResult, i, 0, name, MAX_DB_STRING);
+			DBGetField(hResult, i, 3, authPasswd, MAX_DB_STRING);
+			DBGetField(hResult, i, 4, privPasswd, MAX_DB_STRING);
+			ctx = new SNMP_SecurityContext(name, authPasswd, privPasswd,
+			                               DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
+			pTransport->setSecurityContext(ctx);
+			DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %s/%d:%d"), ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
+			if (SnmpGet(SNMP_VERSION_3, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
+							0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+			{
+				DbgPrintf(5, _T("SnmpCheckV3CommSettings: success"));
+				break;
+			}
+		}
+		DBFreeResult(hResult);
+
+		if (i < count)
+			return new SNMP_SecurityContext(ctx);
+	}
+	else
+	{
+		DbgPrintf(3, _T("SnmpCheckV3CommSettings: DBSelect() failed"));
+	}
+	
+	DbgPrintf(5, _T("SnmpCheckV3CommSettings: failed"));
+	return NULL;
+}
+
+
+//
+// Determine SNMP parameters for node
+// On success, returns new security context object (dynamically created).
+// On failure, returns NULL
+//
+
+SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext)
 {
 	int i, count, snmpVer = SNMP_VERSION_2C;
 	char defCommunity[MAX_COMMUNITY_LENGTH], buffer[1024], temp[256];
 	DB_RESULT hResult;
 
+	// Check for V3 USM
+	SNMP_SecurityContext *securityContext = SnmpCheckV3CommSettings(pTransport, originalContext);
+	if (securityContext != NULL)
+	{
+		*version = SNMP_VERSION_3;
+		return securityContext;
+	}
+
 	ConfigReadStr(_T("DefaultCommunityString"), defCommunity, MAX_COMMUNITY_LENGTH, _T("public"));
 
 restart_check:
 	// Check current community first
-	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, pTransport->getCommunityString());
-	if (SnmpGet(snmpVer, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
-	            0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+	if ((originalContext != NULL) && (originalContext->getSecurityModel() != SNMP_SECURITY_MODEL_USM))
 	{
-		strcpy(community, pTransport->getCommunityString());
-		*version = snmpVer;
-		return TRUE;
+		DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, originalContext->getCommunity());
+		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
+		if (SnmpGet(snmpVer, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
+						0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+		{
+			*version = snmpVer;
+			return new SNMP_SecurityContext(originalContext);
+		}
 	}
 
 	// Check default community
@@ -747,9 +821,8 @@ restart_check:
 	if (SnmpGet(snmpVer, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
 		         0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 	{
-		strcpy(community, defCommunity);
 		*version = snmpVer;
-		return TRUE;
+		return new SNMP_SecurityContext(defCommunity);
 	}
 
 	// Check community from list
@@ -766,18 +839,17 @@ restart_check:
 			if (SnmpGet(snmpVer, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
 							0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 			{
-				nx_strncpy(community, temp, MAX_COMMUNITY_LENGTH);
 				*version = snmpVer;
 				break;
 			}
 		}
 		DBFreeResult(hResult);
 		if (i < count)
-			return TRUE;
+			return new SNMP_SecurityContext(temp);
 	}
 	else
 	{
-		DbgPrintf(3, _T("SnmpCheckCommSettings: DBSelect() failed!!!"));
+		DbgPrintf(3, _T("SnmpCheckCommSettings: DBSelect() failed"));
 	}
 
 	if (snmpVer == SNMP_VERSION_2C)
@@ -787,5 +859,5 @@ restart_check:
 	}
 
 	DbgPrintf(5, _T("SnmpCheckCommSettings: failed"));
-	return FALSE;
+	return NULL;
 }

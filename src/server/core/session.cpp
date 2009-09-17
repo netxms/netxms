@@ -1130,6 +1130,12 @@ void ClientSession::ProcessingThread(void)
 			case CMD_UPDATE_COMMUNITY_LIST:
 				UpdateCommunityList(pMsg);
 				break;
+			case CMD_GET_USM_CREDENTIALS:
+				sendUsmCredentials(pMsg->GetId());
+				break;
+			case CMD_UPDATE_USM_CREDENTIALS:
+				updateUsmCredentials(pMsg);
+				break;
 			case CMD_GET_SITUATION_LIST:
 				SendSituationList(pMsg->GetId());
 				break;
@@ -10432,4 +10438,130 @@ void ClientSession::getServerLogQueryData(CSCPMessage *request)
 		} while(offset < data->getNumRows());
 		delete data;
 	}
+}
+
+
+//
+// Send SNMP v3 USM credentials
+//
+
+void ClientSession::sendUsmCredentials(DWORD dwRqId)
+{
+   CSCPMessage msg;
+	int i, count;
+	DWORD id;
+	TCHAR buffer[MAX_DB_STRING];
+	DB_RESULT hResult;
+
+	msg.SetId(dwRqId);
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	{
+		hResult = DBSelect(g_hCoreDB, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
+		if (hResult != NULL)
+		{
+			count = DBGetNumRows(hResult);
+			msg.SetVariable(VID_NUM_RECORDS, (DWORD)count);
+			for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
+			{
+				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// security name
+				msg.SetVariable(id++, buffer);
+
+				msg.SetVariable(id++, (WORD)DBGetFieldLong(hResult, i, 1));	// auth method
+				msg.SetVariable(id++, (WORD)DBGetFieldLong(hResult, i, 2));	// priv method
+
+				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// auth password
+				msg.SetVariable(id++, buffer);
+
+				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// priv password
+				msg.SetVariable(id++, buffer);
+			}
+			DBFreeResult(hResult);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	sendMessage(&msg);
+}
+
+
+//
+// Update SNMP v3 USM credentials
+//
+
+void ClientSession::updateUsmCredentials(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	{
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		if (hdb != NULL)
+		{
+			if (DBBegin(hdb))
+			{
+				TCHAR query[4096];
+				DWORD id;
+				int i = -1;
+				int count = (int)request->GetVariableLong(VID_NUM_RECORDS);
+
+				if (DBQuery(hdb, _T("DELETE FROM usm_credentials")))
+				{
+					for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
+					{
+						TCHAR name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
+
+						request->GetVariableStr(id++, name, MAX_DB_STRING);
+						int authMethod = (int)request->GetVariableShort(id++);
+						int privMethod = (int)request->GetVariableShort(id++);
+						request->GetVariableStr(id++, authPasswd, MAX_DB_STRING);
+						request->GetVariableStr(id++, privPasswd, MAX_DB_STRING);
+						_sntprintf(query, 4096, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password) VALUES(%d,%d,%d,%s,%s)"),
+									  i + 1, (const TCHAR *)DBPrepareString(name), authMethod, privMethod,
+									  (const TCHAR *)DBPrepareString(authPasswd), (const TCHAR *)DBPrepareString(privPasswd));
+						if (!DBQuery(hdb, query))
+							break;
+					}
+				}
+
+				if (i == count)
+				{
+					DBCommit(hdb);
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+					DBRollback(hdb);
+					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+				}
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+			}
+			DBConnectionPoolReleaseConnection(hdb);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	sendMessage(&msg);
 }

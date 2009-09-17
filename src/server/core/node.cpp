@@ -25,15 +25,6 @@
 
 
 //
-// Prefixes for poller messages
-//
-
-#define POLLER_ERROR    "\x7F" "e"
-#define POLLER_WARNING  "\x7Fw"
-#define POLLER_INFO     "\x7Fi"
-
-
-//
 // Node class default constructor
 //
 
@@ -984,8 +975,8 @@ restart_agent_check:
 
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
-   SendPollerMsg(dwRqId, "Finished status poll for node %s\r\n"
-                         "Node status after poll is %s\r\n", m_szName, g_szStatusTextSmall[m_iStatus]);
+   SendPollerMsg(dwRqId, "Finished status poll for node %s\r\n", m_szName);
+   SendPollerMsg(dwRqId, "Node status after poll is %s\r\n", g_szStatusText[m_iStatus]);
    m_pPollRequestor = NULL;
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
@@ -1141,24 +1132,27 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
           (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_dwIpAddr != 0))
       {
 	      SendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
-         DbgPrintf(5, "ConfPoll(%s): trying SNMP GET", m_szName);
+         DbgPrintf(5, "ConfPoll(%s): calling SnmpCheckCommSettings()", m_szName);
 			pTransport = CreateSNMPTransport();
 
-			if (SnmpCheckCommSettings(pTransport, &m_snmpVersion, szBuffer))
+			SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity);
+			if (newCtx != NULL)
          {
             DWORD dwNodeFlags, dwNodeType;
 
             LockData();
-				m_snmpSecurity->setCommunity(szBuffer);
+				delete m_snmpSecurity;
+				m_snmpSecurity = newCtx;
             m_dwFlags |= NF_IS_SNMP;
             if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
             {
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
                PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
-               SendPollerMsg(dwRqId, POLLER_WARNING "   Connectivity with SNMP agent restored\r\n");
+               SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
             }
 				UnlockData();
-            SendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"), (m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1"));
+            SendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"), 
+					(m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
 
 				if (SnmpGet(m_snmpVersion, pTransport,
 								".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
@@ -1334,8 +1328,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 
       // Retrieve interface list
       SetPollerInfo(nPoller, "interface check");
-      SendPollerMsg(dwRqId, _T("Capability check finished\r\n"
-                               "Checking interface configuration...\r\n"));
+      SendPollerMsg(dwRqId, _T("Capability check finished\r\n"));
+      SendPollerMsg(dwRqId, _T("Checking interface configuration...\r\n"));
       pIfList = GetInterfaceList();
       if (pIfList != NULL)
       {
@@ -1620,9 +1614,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 		UpdateContainerMembership();
 
-		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n")
-		                      _T("Node configuration was%schanged after poll\r\n"),
-		              m_szName, bHasChanges ? _T(" ") : _T(" not "));
+		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_szName);
+		SendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), bHasChanges ? _T(" ") : _T(" not "));
 
 		m_dwDynamicFlags |= NDF_CONFIGURATION_POLL_PASSED;
    }
@@ -3080,7 +3073,9 @@ SNMP_Transport *Node::CreateSNMPTransport(void)
 	// Set security
 	if (pTransport != NULL)
 	{
+		LockData();
 		pTransport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
+		UnlockData();
 	}
 	return pTransport;
 }

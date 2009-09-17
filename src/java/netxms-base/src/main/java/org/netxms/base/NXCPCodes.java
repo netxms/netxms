@@ -248,6 +248,8 @@ public final class NXCPCodes
 	public static final int CMD_REGISTER_AGENT          = 0x00E9;
 	public static final int CMD_GET_SERVER_FILE         = 0x00EA;
 	public static final int CMD_FORWARD_EVENT           = 0x00EB;
+	public static final int CMD_GET_USM_CREDENTIALS     = 0x00EC;
+	public static final int CMD_UPDATE_USM_CREDENTIALS  = 0x00ED;
 	
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -658,4 +660,5 @@ public final class NXCPCodes
 	public static final long VID_TABLE_COLUMN_INFO_BASE   = 0x10000000L;
 	public static final long VID_TABLE_DATA_BASE          = 0x20000000L;
 	public static final long VID_COLUMN_FILTERS_BASE      = 0x10000000L;
+	public static final long VID_USM_CRED_LIST_BASE       = 0x10000000L;
 }

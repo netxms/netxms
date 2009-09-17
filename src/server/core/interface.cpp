@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -268,9 +268,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       return;     // Cannot find parent node, which is VERY strange
    }
 
-   SendPollerMsg(dwRqId, "   Starting status poll on interface %s\r\n"
-                         "      Current interface status is %s\r\n",
-                 m_szName, g_szStatusTextSmall[m_iStatus]);
+   SendPollerMsg(dwRqId, _T("   Starting status poll on interface %s\r\n"), m_szName);
+   SendPollerMsg(dwRqId, _T("      Current interface status is %s\r\n"), g_szStatusText[m_iStatus]);
 
    // Poll interface using different methods
    if (m_dwIfType != IFTYPE_NETXMS_NAT_ADAPTER)
@@ -278,21 +277,27 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       if ((pNode->Flags() & NF_IS_NATIVE_AGENT) &&
           (!(pNode->Flags() & NF_DISABLE_NXCP)) && (!(pNode->RuntimeFlags() & NDF_AGENT_UNREACHABLE)))
       {
-         SendPollerMsg(dwRqId, "      Retrieving interface status from NetXMS agent\r\n");
+         SendPollerMsg(dwRqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
          newStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
 			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from NetXMS agent %d"), m_dwId, m_szName, newStatus);
          if (newStatus != STATUS_UNKNOWN)
+			{
+				SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
             bNeedPoll = FALSE;
+			}
       }
    
       if (bNeedPoll && (pNode->Flags() & NF_IS_SNMP) &&
           (!(pNode->Flags() & NF_DISABLE_SNMP)) && (!(pNode->RuntimeFlags() & NDF_SNMP_UNREACHABLE)))
       {
-         SendPollerMsg(dwRqId, "      Retrieving interface status from SNMP agent\r\n");
+         SendPollerMsg(dwRqId, _T("      Retrieving interface status from SNMP agent\r\n"));
          newStatus = pNode->GetInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
 			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from SNMP %d"), m_dwId, m_szName, newStatus);
          if (newStatus != STATUS_UNKNOWN)
+			{
+				SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
             bNeedPoll = FALSE;
+			}
       }
    }
    
@@ -310,7 +315,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
               ((!(pNode->Flags() & NF_BEHIND_NAT)) || 
                (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER)))
          {
-            SendPollerMsg(dwRqId, "      Starting ICMP ping\r\n");
+            SendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
 				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,1500,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_dwPingSize);
             dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
             if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
@@ -321,6 +326,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
          else
          {
             // Interface doesn't have an IP address, so we can't ping it
+				SendPollerMsg(dwRqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
 				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): no IP address, will not ping"), m_dwId, m_szName);
             newStatus = STATUS_UNKNOWN;
          }
@@ -357,7 +363,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_dwId, m_szName, m_iStatus, newStatus);
 		m_iStatus = newStatus;
 		m_iPendingStatus = -1;	// Invalidate pending status
-		SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
+		SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusText[m_iStatus]);
 		PostEventEx(pEventQueue, 
 						statusToEvent[m_iStatus],
 						pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
@@ -366,7 +372,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		Modify();
 		UnlockData();
    }
-   SendPollerMsg(dwRqId, "   Finished status poll on interface %s\r\n", m_szName);
+   SendPollerMsg(dwRqId, _T("      Interface status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
+   SendPollerMsg(dwRqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
 }
 
 

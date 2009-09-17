@@ -1209,3 +1209,19 @@ CREATE TABLE ap_config_files
 	file_content SQL_TEXT not null,
 	PRIMARY KEY(policy_id)
 ) TABLE_TYPE;
+
+
+/*
+** Default SNMP v3 USM credentials
+*/
+
+CREATE TABLE usm_credentials
+(
+	id integer not null,
+	user_name varchar(255) not null,
+	auth_method integer not null,
+	priv_method integer not null,
+	auth_password varchar(255),
+	priv_password varchar(255),
+	PRIMARY KEY(id)
+) TABLE_TYPE;

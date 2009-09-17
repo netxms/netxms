@@ -148,6 +148,31 @@ cleanup:
 
 
 //
+// Upgrade from V204 to V205
+//
+
+static BOOL H_UpgradeFromV204(int currVersion, int newVersion)
+{
+	if (!CreateTable(_T("CREATE TABLE usm_credentials (")
+		              _T("id integer not null,")
+	                 _T("user_name varchar(255) not null,")
+						  _T("auth_method integer not null,")
+						  _T("priv_method integer not null,")
+						  _T("auth_password varchar(255),")
+						  _T("priv_password varchar(255),")
+						  _T("PRIMARY KEY(id))")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='205' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V203 to V204
 //
 
@@ -280,6 +305,7 @@ static BOOL H_UpgradeFromV200(int currVersion, int newVersion)
 //      or from V94 to V202
 //      or from V95 to V203
 //      or from V95 to V204
+//      or from V96 to V205
 //
 
 static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
@@ -4227,10 +4253,12 @@ static struct
 	{ 94, 202, H_UpgradeFromV9x },
 	{ 95, 203, H_UpgradeFromV9x },
 	{ 96, 204, H_UpgradeFromV9x },
+	{ 97, 205, H_UpgradeFromV9x },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
 	{ 203, 204, H_UpgradeFromV203 },
+	{ 204, 205, H_UpgradeFromV204 },
    { 0, NULL }
 };
 

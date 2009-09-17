@@ -196,7 +196,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
 static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 {
    DISCOVERY_FILTER_DATA data;
-   char szCommunityString[MAX_DB_STRING], szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[16];
+   TCHAR szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[16];
    DWORD dwTemp;
    AgentConnection *pAgentConn;
    NXSL_Program *pScript;
@@ -233,9 +233,11 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 	DbgPrintf(4, "AcceptNewNode(%s): checking SNMP support", szIpAddr);
 	pTransport = new SNMP_UDPTransport;
 	pTransport->createUDPTransport(NULL, htonl(dwIpAddr), 161);
-	if (SnmpCheckCommSettings(pTransport, &data.nSNMPVersion, szCommunityString))
+	SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &data.nSNMPVersion, NULL);
+	if (ctx != NULL)
 	{
       data.dwFlags |= NNF_IS_SNMP;
+		delete ctx;
 	}
 
    // Check NetXMS agent support

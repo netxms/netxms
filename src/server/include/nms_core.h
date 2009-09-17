@@ -119,6 +119,15 @@ typedef void * HSNMPSESSION;
 
 
 //
+// Prefixes for poller messages
+//
+
+#define POLLER_ERROR    _T("\x7F") _T("e")
+#define POLLER_WARNING  _T("\x7Fw")
+#define POLLER_INFO     _T("\x7Fi")
+
+
+//
 // Unique identifier group codes
 //
 
@@ -544,6 +553,8 @@ private:
 	void closeServerLog(CSCPMessage *request);
 	void queryServerLog(CSCPMessage *request);
 	void getServerLogQueryData(CSCPMessage *request);
+	void sendUsmCredentials(DWORD dwRqId);
+	void updateUsmCredentials(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -645,7 +656,7 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
 DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szRootOid,
 						  DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose);
-BOOL SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, char *community);
+SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext);
 void StrToMac(char *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 

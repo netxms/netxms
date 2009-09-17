@@ -158,3 +158,84 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, DWORD 
 
 	return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Get list of USM credentials
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, DWORD *listSize, NXC_SNMP_USM_CRED **list)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD i, count, dwRetCode, dwRqId, id;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_USM_CREDENTIALS);
+   msg.SetId(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+		dwRetCode = pResponse->GetVariableLong(VID_RCC);
+		if (dwRetCode == RCC_SUCCESS)
+		{
+			count = pResponse->GetVariableLong(VID_NUM_RECORDS);
+			*listSize = count;
+			if (count > 0)
+			{
+				*list = (NXC_SNMP_USM_CRED *)malloc(sizeof(NXC_SNMP_USM_CRED) * count);
+				NXC_SNMP_USM_CRED *curr = *list;
+				for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5, curr++)
+				{
+					pResponse->GetVariableStr(id++, curr->name, MAX_DB_STRING);
+					curr->authMethod = (int)pResponse->GetVariableShort(id++);
+					curr->privMethod = (int)pResponse->GetVariableShort(id++);
+					pResponse->GetVariableStr(id++, curr->authPassword, MAX_DB_STRING);
+					pResponse->GetVariableStr(id++, curr->privPassword, MAX_DB_STRING);
+				}
+			}
+			else
+			{
+				*list = NULL;
+			}
+		}
+		delete pResponse;
+   }
+	else
+	{
+		dwRetCode = RCC_TIMEOUT;
+	}
+   return dwRetCode;
+}
+
+
+//
+// Update list of USM credentials
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpUsmCredentials(NXC_SESSION hSession, DWORD count, NXC_SNMP_USM_CRED *list)
+{
+   CSCPMessage msg;
+   DWORD i, id, dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_UPDATE_USM_CREDENTIALS);
+   msg.SetId(dwRqId);
+
+	msg.SetVariable(VID_NUM_RECORDS, count);
+	for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
+	{
+		msg.SetVariable(id++, list[i].name);
+		msg.SetVariable(id++, (WORD)list[i].authMethod);
+		msg.SetVariable(id++, (WORD)list[i].privMethod);
+		msg.SetVariable(id++, list[i].authPassword);
+		msg.SetVariable(id++, list[i].privPassword);
+	}
+
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+	return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

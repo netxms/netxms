@@ -453,6 +453,8 @@ typedef struct
 #define CMD_REGISTER_AGENT          0x00E9
 #define CMD_GET_SERVER_FILE         0x00EA
 #define CMD_FORWARD_EVENT           0x00EB
+#define CMD_GET_USM_CREDENTIALS     0x00EC
+#define CMD_UPDATE_USM_CREDENTIALS  0x00ED
 
 
 //
@@ -939,6 +941,8 @@ typedef struct
 #define VID_JOB_LIST_BASE           ((DWORD)0x10000000)
 
 #define VID_COLUMN_FILTERS_BASE     ((DWORD)0x10000000)
+
+#define VID_USM_CRED_LIST_BASE      ((DWORD)0x10000000)
 
 
 //
