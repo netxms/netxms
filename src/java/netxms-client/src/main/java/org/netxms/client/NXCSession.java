@@ -1,5 +1,20 @@
 /**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
  *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client;
 
@@ -2395,6 +2410,96 @@ public class NXCSession
 		msg.setVariable(NXCPCodes.VID_NAME, evt.getName());
 		msg.setVariable(NXCPCodes.VID_MESSAGE, evt.getMessage());
 		msg.setVariable(NXCPCodes.VID_DESCRIPTION, evt.getDescription());
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get list of well-known SNMP communities configured on server.
+	 * 
+	 * @return List of SNMP community strings
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<String> getSnmpCommunities() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_COMMUNITY_LIST);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_STRINGS);
+		ArrayList<String> list = new ArrayList<String>(count);
+		long varId = NXCPCodes.VID_STRING_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(response.getVariableAsString(varId++));
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * Update list of well-known SNMP community strings on server. Existing list will be replaced by given one.
+	 * 
+	 * @param list New list of SNMP community strings
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void updateSnmpCommunities(final List<String> list) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_COMMUNITY_LIST);
+
+		msg.setVariableInt32(NXCPCodes.VID_NUM_STRINGS, list.size());
+		long varId = NXCPCodes.VID_STRING_LIST_BASE;
+		for(int i = 0; i < list.size(); i++)
+			msg.setVariable(varId++, list.get(i));
+		
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get list of well-known SNMP USM (user security model) credentials configured on server.
+	 * 
+	 * @return List of SNMP USM credentials
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<SnmpUsmCredential> getSnmpUsmCredentials() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_USM_CREDENTIALS);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_RECORDS);
+		ArrayList<SnmpUsmCredential> list = new ArrayList<SnmpUsmCredential>(count);
+		long varId = NXCPCodes.VID_USM_CRED_LIST_BASE;
+		for(int i = 0; i < count; i++, varId += 10)
+		{
+			list.add(new SnmpUsmCredential(response, varId));
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * Update list of well-known SNMP USM credentials on server. Existing list will be replaced by given one.
+	 * 
+	 * @param list New list of SNMP USM credentials
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void updateSnmpUsmCredentials(final List<SnmpUsmCredential> list) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_USM_CREDENTIALS);
+
+		msg.setVariableInt32(NXCPCodes.VID_NUM_RECORDS, list.size());
+		long varId = NXCPCodes.VID_USM_CRED_LIST_BASE;
+		for(int i = 0; i < list.size(); i++, varId += 10)
+		{
+			list.get(i).fillMessage(msg, varId);
+		}
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
