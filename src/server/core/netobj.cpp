@@ -790,6 +790,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 	}
 
    m_pAccessList->CreateMessage(pMsg);
+	m_geoLocation.fillMessage(*pMsg);
 }
 
 
@@ -896,6 +897,12 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	      	m_customAttributes.setPreallocated(name, value);
       }
    }
+
+	// Change geolocation
+	if (pRequest->IsVariableExist(VID_GEOLOCATION_TYPE))
+	{
+		m_geoLocation = GeoLocation(*pRequest);
+	}
 
    Modify();
    UnlockData();

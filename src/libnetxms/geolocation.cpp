@@ -86,6 +86,21 @@ GeoLocation::GeoLocation(GeoLocation &src)
 
 
 //
+// Create geolocation object from data in NXCP message
+//
+
+GeoLocation::GeoLocation(CSCPMessage &msg)
+{
+	m_type = (int)msg.GetVariableShort(VID_GEOLOCATION_TYPE);
+	m_lat = msg.GetVariableDouble(VID_LATITUDE);
+	m_lon = msg.GetVariableDouble(VID_LONGITUDE);
+	posToString(true, m_lat);
+	posToString(false, m_lon);
+	m_isValid = true;
+}
+
+
+//
 // Destructor
 //
 
@@ -107,6 +122,18 @@ GeoLocation& GeoLocation::operator =(const GeoLocation &src)
 	nx_strncpy(m_lonStr, src.m_lonStr, 20);
 	m_isValid = src.m_isValid;
 	return *this;
+}
+
+
+//
+// Fill NXCP message
+//
+
+void GeoLocation::fillMessage(CSCPMessage &msg)
+{
+	msg.SetVariable(VID_GEOLOCATION_TYPE, (WORD)m_type);
+	msg.SetVariable(VID_LATITUDE, m_lat);
+	msg.SetVariable(VID_LONGITUDE, m_lon);
 }
 
 

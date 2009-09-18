@@ -802,6 +802,9 @@ typedef struct
 #define VID_START_ROW               ((DWORD)339)
 #define VID_TABLE_OFFSET            ((DWORD)340)
 #define VID_NUM_FILTERS             ((DWORD)341)
+#define VID_GEOLOCATION_TYPE        ((DWORD)342)
+#define VID_LATITUDE                ((DWORD)343)
+#define VID_LONGITUDE               ((DWORD)344)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

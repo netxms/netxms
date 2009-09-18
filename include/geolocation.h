@@ -24,6 +24,7 @@
 #define _geolocation_h_
 
 #include <nms_util.h>
+#include <nxcpapi.h>
 
 
 //
@@ -64,6 +65,7 @@ public:
 	GeoLocation(int type, double lat, double lon);
 	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon);
 	GeoLocation(GeoLocation &src);
+	GeoLocation(CSCPMessage &msg);
 	~GeoLocation();
 
 	GeoLocation& operator =(const GeoLocation &src);
@@ -74,6 +76,8 @@ public:
 	const TCHAR *getLatitudeAsString() { return m_latStr; }
 	const TCHAR *getLongitudeAsString() { return m_lonStr; }
 	bool isValid() { return m_isValid; }
+
+	void fillMessage(CSCPMessage &msg);
 };
 
 
