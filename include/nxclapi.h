@@ -445,7 +445,7 @@ enum
 #define OBJ_UPDATE_SNMP_VERSION     ((QWORD)_ULL(0x0000000010))
 #define OBJ_UPDATE_SNMP_AUTH        ((QWORD)_ULL(0x0000000020))
 #define OBJ_UPDATE_ACL              ((QWORD)_ULL(0x0000000040))
-//#define OBJ_UPDATE_IMAGE            ((QWORD)_ULL(0x0000000080))
+#define OBJ_UPDATE_GEOLOCATION      ((QWORD)_ULL(0x0000000080))
 #define OBJ_UPDATE_SYNC_NETS        ((QWORD)_ULL(0x0000000100))
 #define OBJ_UPDATE_SERVICE_TYPE     ((QWORD)_ULL(0x0000000200))
 #define OBJ_UPDATE_IP_PROTO         ((QWORD)_ULL(0x0000000400))
@@ -1074,6 +1074,13 @@ struct __nxc_object_cluster
 	CLUSTER_RESOURCE *pResourceList;
 };
 
+struct __nxc_geolocation
+{
+	int type;
+	double latitude;
+	double longitude;
+};
+
 typedef struct
 {
    DWORD dwId;          // Unique object's identifier
@@ -1099,6 +1106,7 @@ typedef struct
    TCHAR *pszComments;
 	DWORD dwNumTrustedNodes;
 	DWORD *pdwTrustedNodes;
+	struct __nxc_geolocation geolocation;
 #ifdef __cplusplus
 	StringMap *pCustomAttrs;
 #else
@@ -1184,6 +1192,7 @@ typedef struct
 	const TCHAR *pszAutoApplyFilter;
 	BOOL isAutoBindEnabled;
 	const TCHAR *pszAutoBindFilter;
+	struct __nxc_geolocation geolocation;
 #ifdef __cplusplus
 	StringMap *pCustomAttrs;
 #else

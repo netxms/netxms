@@ -608,6 +608,9 @@ public final class NXCPCodes
 	public static final long VID_START_ROW               = 339;
 	public static final long VID_TABLE_OFFSET            = 340;
 	public static final long VID_NUM_FILTERS             = 341;
+	public static final long VID_GEOLOCATION_TYPE        = 342;
+	public static final long VID_LATITUDE                = 343;
+	public static final long VID_LONGITUDE               = 344;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

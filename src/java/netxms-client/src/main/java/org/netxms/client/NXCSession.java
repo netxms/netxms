@@ -1935,6 +1935,14 @@ public class NXCSession
 			msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxy());
 		}
 
+		if ((flags & NXCObjectModificationData.MODIFY_GEOLOCATION) != 0)
+		{
+			final GeoLocation gl = data.getGeolocation();
+			msg.setVariableInt16(NXCPCodes.VID_GEOLOCATION_TYPE, gl.getType());
+			msg.setVariable(NXCPCodes.VID_LATITUDE, gl.getLatitude());
+			msg.setVariable(NXCPCodes.VID_LONGITUDE, gl.getLongitude());
+		}
+
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

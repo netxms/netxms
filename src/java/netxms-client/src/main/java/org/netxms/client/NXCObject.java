@@ -57,6 +57,7 @@ public class NXCObject
 	private boolean isDeleted = false;
 	private InetAddress primaryIP;
 	private String comments;
+	private GeoLocation geolocation;
 	private HashSet<Long> parents = new HashSet<Long>(0);
 	private HashSet<Long> childs = new HashSet<Long>(0);
 	private HashSet<Long> trustedNodes = new HashSet<Long>(0);
@@ -86,6 +87,7 @@ public class NXCObject
 		isDeleted = msg.getVariableAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_STATUS);
 		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
+		geolocation = new GeoLocation(msg);
 		
 		// Parents
 		count = msg.getVariableAsInteger(NXCPCodes.VID_PARENT_CNT);
@@ -386,5 +388,13 @@ public class NXCObject
 	public Map<String, String> getCustomAttributes()
 	{
 		return customAttributes;
+	}
+
+	/**
+	 * @return the geolocation
+	 */
+	public GeoLocation getGeolocation()
+	{
+		return geolocation;
 	}
 }

@@ -228,6 +228,11 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iStatusThresholds[2] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_3);
    pObject->iStatusThresholds[3] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_4);
    pObject->pszComments = pMsg->GetVariableStr(VID_COMMENTS);
+
+	pObject->geolocation.type = (int)pMsg->GetVariableShort(VID_GEOLOCATION_TYPE);
+	pObject->geolocation.latitude = pMsg->GetVariableDouble(VID_LATITUDE);
+	pObject->geolocation.longitude = pMsg->GetVariableDouble(VID_LONGITUDE);
+
 	pObject->dwNumTrustedNodes = pMsg->GetVariableLong(VID_NUM_TRUSTED_NODES);
 	if (pObject->dwNumTrustedNodes > 0)
 	{
@@ -926,6 +931,12 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_ENABLE_AUTO_BIND, (WORD)pUpdate->isAutoBindEnabled);
 		msg.SetVariable(VID_AUTO_BIND_FILTER, CHECK_NULL_EX(pUpdate->pszAutoBindFilter));
    }
+   if (pUpdate->qwFlags & OBJ_UPDATE_GEOLOCATION)
+   {
+		msg.SetVariable(VID_GEOLOCATION_TYPE, (WORD)pUpdate->geolocation.type);
+		msg.SetVariable(VID_LATITUDE, pUpdate->geolocation.latitude);
+		msg.SetVariable(VID_LONGITUDE, pUpdate->geolocation.longitude);
+	}
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);

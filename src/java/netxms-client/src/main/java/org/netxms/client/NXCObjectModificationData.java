@@ -29,6 +29,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_AGENT_PROXY       = 0x00001000L;
 	public static final long MODIFY_SNMP_PROXY        = 0x00002000L;
 	public static final long MODIFY_TRUSTED_NODES     = 0x00004000L;
+	public static final long MODIFY_GEOLOCATION       = 0x00008000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -56,6 +57,7 @@ public class NXCObjectModificationData
 	private String snmpPrivPassword;
 	private long snmpProxy;
 	private long[] trustedNodes;
+	private GeoLocation geolocation;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -490,5 +492,22 @@ public class NXCObjectModificationData
 	{
 		this.trustedNodes = trustedNodes;
 		flags |= MODIFY_TRUSTED_NODES;
+	}
+
+	/**
+	 * @return the geolocation
+	 */
+	public GeoLocation getGeolocation()
+	{
+		return geolocation;
+	}
+
+	/**
+	 * @param geolocation the geolocation to set
+	 */
+	public void setGeolocation(GeoLocation geolocation)
+	{
+		this.geolocation = geolocation;
+		flags |= MODIFY_GEOLOCATION;
 	}
 }
