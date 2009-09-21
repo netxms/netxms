@@ -8,5 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = install @CLIENT_COMPONENTS@
-EXTRA_DIST = readme.txt
+EXTRA_DIST = netxms-client.iss

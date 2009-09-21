@@ -1483,6 +1483,7 @@ AC_CONFIG_FILES([
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/client/Makefile
+	src/client/install/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile
 	src/client/nxpush/Makefile
