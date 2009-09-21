@@ -224,6 +224,7 @@ src/java/netxms-base/src/test/java/org/netxms/base/NXCPMessageTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPMsgWaitQueueTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPVariableTest.java -text
 src/java/netxms-client/pom.xml -text
+src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAgentPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAgentPolicyConfig.java -text
