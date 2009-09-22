@@ -88,7 +88,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 	kc = kstat_open();
 	if (kc == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE,
+		AgentWriteLog(EVENTLOG_ERROR_TYPE,
 				"Unable to open kstat() context: %s", 
 				strerror(errno));
 		return THREAD_OK;
@@ -252,7 +252,7 @@ LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue)
 		char *eptr, szBuffer[32] = "error";
 
 		// Get CPU number
-		NxGetParameterArg(pszParam, 1, szBuffer, 32);
+		AgentGetParameterArg(pszParam, 1, szBuffer, 32);
 		nInstance = strtol(szBuffer, &eptr, 0);
 		if (nInstance != -1)
 		{

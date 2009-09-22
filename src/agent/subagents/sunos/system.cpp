@@ -160,10 +160,10 @@ LONG H_KStat(const char *pszParam, const char *pArg, char *pValue)
 	LONG nInstance;
 
 	// Read parameters
-	if ((!NxGetParameterArg(pszParam, 1, szModule, 128)) ||
-			(!NxGetParameterArg(pszParam, 2, szInstance, 16)) ||
-			(!NxGetParameterArg(pszParam, 3, szName, 128)) ||
-			(!NxGetParameterArg(pszParam, 4, szStat, 128)))
+	if ((!AgentGetParameterArg(pszParam, 1, szModule, 128)) ||
+			(!AgentGetParameterArg(pszParam, 2, szInstance, 16)) ||
+			(!AgentGetParameterArg(pszParam, 3, szName, 128)) ||
+			(!AgentGetParameterArg(pszParam, 4, szStat, 128)))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (szInstance[0] != 0)

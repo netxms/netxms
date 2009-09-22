@@ -105,7 +105,7 @@ static BOOL GetInterfaceHWAddr(char *pszIfName, char *pszMacAddr)
 // Interface list
 //
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct lifnum ln;
@@ -168,7 +168,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pVa
 								rq.lifr_index, szIpAddr, nMask,
 								InterfaceTypeFromName(lc.lifc_req[i].lifr_name),
 								szMacAddr, lc.lifc_req[i].lifr_name);
-						NxAddResultString(pValue, szOut);
+						pValue->add(szOut);
 					}
 					else
 					{
@@ -198,7 +198,7 @@ LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue)
 	struct lifreq rq;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	AgentGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
 	if (szIfName[0] != 0)
 	{
 		// Determine if parameter is index or name
@@ -234,7 +234,7 @@ LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue)
 	struct lifreq rq;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	AgentGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
 	if (szIfName[0] != 0)
 	{
 		// Determine if parameter is index or name
@@ -280,7 +280,7 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 	int nInstance, nIndex;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	AgentGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
 	if (szIfName[0] != 0)
 	{
 		// Determine if parameter is index or name
@@ -372,7 +372,7 @@ LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
 		return SYSINFO_RC_SUCCESS;
 	}
 
-	NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	AgentGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
 	if (szIfName[0] != 0)
 	{
 		// Determine if parameter is index or name

@@ -1421,6 +1421,7 @@ fi
 CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 AM_CONDITIONAL([BUILD_UNICODE_LIBS], [test "x$BUILD_UNICODE" = "xyes"])
+AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 
 
 #--------------------------------------------------------------------
@@ -1656,8 +1657,8 @@ if test "x${BUILD_UNICODE}" = "xyes"; then
 else
 	echo "Build UNICODE libraries : NO"
 fi
-if test "x${HAVE_LIBEXPAT}" = "xyes"; then
-	echo "XML support in NXCP     : YES"
+if test "x${HAVE_LIBEXPAT}" = "xno"; then
+	echo "Use internal libexpat   : YES"
 else
-	echo "XML support in NXCP     : NO"
+	echo "Use internal libexpat   : NO"
 fi

@@ -36,14 +36,14 @@ LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue);
 LONG H_KStat(const char *pszParam, const char *pArg, char *pValue);
 LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue);
-LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue);
 LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue);
 LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue);
 LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue);
 LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue);
 LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue);
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue);
 LONG H_SysProcCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Uname(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue);
@@ -192,33 +192,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(SUNOS)
 // Entry points for server
 //
 
-extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
 	return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.22  2007/06/08 01:18:59  alk
-invalid startup/shudown hooks
-
-Revision 1.21  2007/06/08 00:02:36  alk
-DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
-
-NETXMS_SUBAGENT_INFO initialization fixed (actions)
-
-Revision 1.20  2007/06/07 22:07:11  alk
-descriptions changed to defines
-
-Revision 1.19  2007/01/15 00:27:46  alk
-__NxSubAgentGetIfList() added
-
-Revision 1.18  2006/05/15 22:11:22  alk
-+ Net.Interface.Link() workaround; trying kstat() first, then
-IFF_RUNNING it kstat's link_up failed.
-- code reformated
-
-
-*/

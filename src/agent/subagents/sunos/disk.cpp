@@ -36,7 +36,7 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 	struct statvfs sv;
 	char szPath[512] = "";
 
-	NxGetParameterArg(pszParam, 1, szPath, sizeof(szPath));
+	AgentGetParameterArg(pszParam, 1, szPath, sizeof(szPath));
 
 	if ((szPath[0] != 0) && (statvfs(szPath, &sv) == 0))
 	{

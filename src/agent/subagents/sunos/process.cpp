@@ -164,7 +164,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
 // Process list
 //
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	PROC_ENT *pList;
@@ -178,7 +178,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 		{
 			snprintf(szBuffer, sizeof(szBuffer), "%d %s", pList[i].nPid,
 					pList[i].szProcName);
-			NxAddResultString(pValue, szBuffer);
+			pValue->add(szBuffer);
 		}
 	}
 	else
@@ -201,9 +201,9 @@ LONG H_ProcessCount(const char *param, const char *arg, char *value)
 	char procName[256] = "", cmdLine[256] = "";
 	int nCount;
 
-	NxGetParameterArg(param, 1, procName, sizeof(procName));
+	AgentGetParameterArg(param, 1, procName, sizeof(procName));
 	if (*arg == 'E')	// Process.CountEx
-		NxGetParameterArg(param, 2, cmdLine, sizeof(cmdLine));
+		AgentGetParameterArg(param, 2, cmdLine, sizeof(cmdLine));
 
 	nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, (*arg == 'E') ? cmdLine : NULL);
 	if (nCount >= 0)
@@ -410,7 +410,7 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 	static char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
 	// Get parameter type arguments
-	NxGetParameterArg(param, 2, szBuffer, sizeof(szBuffer));
+	AgentGetParameterArg(param, 2, szBuffer, sizeof(szBuffer));
 	if (szBuffer[0] == 0)     // Omited type
 	{
 		nType = INFOTYPE_SUM;
@@ -425,8 +425,8 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 	}
 
 	// Get process name
-	NxGetParameterArg(param, 1, procName, MAX_PATH);
-	NxGetParameterArg(param, 3, cmdLine, MAX_PATH);
+	AgentGetParameterArg(param, 1, procName, MAX_PATH);
+	AgentGetParameterArg(param, 3, cmdLine, MAX_PATH);
 	StrStrip(cmdLine);
 
 	nCount = ProcRead(&pList, (procName[0] != 0) ? procName : NULL, (cmdLine[0] != 0) ? cmdLine : NULL);

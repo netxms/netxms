@@ -15,12 +15,16 @@ endif
 
 libnetxms_la_SOURCES = $(SOURCES)
 libnetxms_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
+if USE_INTERNAL_EXPAT
 libnetxms_la_LIBADD = ../libexpat/libexpat/libnxexpat.la
+endif
 
 libnetxmsw_la_SOURCES = $(SOURCES)
 libnetxmsw_la_CPPFLAGS = -DUNICODE
 libnetxmsw_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
+if USE_INTERNAL_EXPAT
 libnetxmsw_la_LIBADD = ../libexpat/libexpat/libnxexpat.la
+endif
 
 EXTRA_DIST = \
 	libnetxms.vcproj libnetxmsw.vcproj \
