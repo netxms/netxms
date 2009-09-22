@@ -74,7 +74,7 @@ GeoLocation::GeoLocation(int type, const TCHAR *lat, const TCHAR *lon)
 // Copy constructor
 //
 
-GeoLocation::GeoLocation(GeoLocation &src)
+GeoLocation::GeoLocation(const GeoLocation &src)
 {
 	m_type = src.m_type;
 	m_lat = src.m_lat;

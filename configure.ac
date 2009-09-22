@@ -521,16 +521,6 @@ if test "x$CC" = "xgcc" ; then
 			AC_MSG_RESULT(no)
 		])
 
-	AC_MSG_CHECKING(whether C++ compiler accepts -fno-const-strings)
-	OLD_CXXFLGAS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -fno-const-strings"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-		])
-
 	AC_MSG_CHECKING(whether C++ compiler accepts -Wno-deprecated)
 	OLD_CXXFLGAS="$CXXFLAGS"
 	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
@@ -695,34 +685,6 @@ fi
 
 
 #--------------------------------------------------------------------
-# Checks for other libs.
-#--------------------------------------------------------------------
-
-AC_CHECK_LIB(xnet, accept)
-AC_CHECK_LIB(socket, if_nameindex)
-AC_CHECK_LIB(dl, dlopen)
-AC_CHECK_LIB(kstat, kstat_open)
-AC_CHECK_LIB(gnugetopt, getopt_long)
-
-if test "x$BUILD_SERVER" = "xyes" ; then
-   AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
-   AC_CHECK_LIB(readline, readline)
-fi
-
-if test "x$NEED_ZLIB" = "xyes"; then
-	AC_CHECK_HEADER(zlib.h,,AC_MSG_ERROR([*** ZLib development package not installed - please install first ***]))
-	AC_CHECK_LIB(z, deflate)
-fi
-
-HAVE_LIBEXPAT=yes
-AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
-AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
-if test "x$HAVE_LIBEXPAT" = "xno"; then
-	MODULES="libexpat $MODULES"
-	CPPFLAGS="$CPPFLAGS "
-fi
-
-#--------------------------------------------------------------------
 # Checks for header files
 #--------------------------------------------------------------------
 
@@ -744,6 +706,70 @@ AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
 # include <sys/socket.h>
 #endif
 ]])
+
+
+#--------------------------------------------------------------------
+# Checks for other libs.
+#--------------------------------------------------------------------
+
+AC_CHECK_LIB(xnet, accept)
+AC_CHECK_LIB(socket, if_nameindex)
+AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(kstat, kstat_open)
+AC_CHECK_LIB(gnugetopt, getopt_long)
+
+if test "x$BUILD_SERVER" = "xyes" ; then
+   AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
+   AC_CHECK_LIB(readline, readline, [], [AC_CHECK_LIB(edit, readline)])
+   AC_CHECK_FUNCS([readline])
+
+   # Check if passing rl_insert to rl_bind_key needs cast
+   if test "$ac_cv_func_readline" = "yes"; then
+      AC_LANG_PUSH([C++])
+
+      AC_MSG_CHECKING(for rl_insert cast)
+
+      AC_TRY_COMPILE(
+         [
+#include <stdio.h>
+#include <readline/readline.h>
+         ],[ rl_bind_key('\t', (Function *)rl_insert); ],
+         [ 
+            AC_MSG_RESULT((Function *)) 
+            AC_DEFINE(RL_INSERT_CAST,(Function *),Required cast for rl_insert)
+         ],[
+         AC_TRY_COMPILE(
+            [
+#include <stdio.h>
+#include <readline/readline.h>
+            ],[ rl_bind_key('\t', (rl_command_func_t *)rl_insert); ],
+            [ 
+               AC_MSG_RESULT((rl_command_func_t *)) 
+               AC_DEFINE(RL_INSERT_CAST,(rl_command_func_t *),Required cast for rl_insert)
+            ],[ 
+               AC_MSG_RESULT(not needed) 
+               AC_DEFINE(RL_INSERT_CAST,,Required cast for rl_insert)
+            ]
+         )
+         ]
+      )
+
+      AC_LANG_POP([C++])
+   fi
+fi
+
+if test "x$NEED_ZLIB" = "xyes"; then
+	AC_CHECK_HEADER(zlib.h,,AC_MSG_ERROR([*** ZLib development package not installed - please install first ***]))
+	AC_CHECK_LIB(z, deflate)
+fi
+
+HAVE_LIBEXPAT=yes
+AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
+AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
+if test "x$HAVE_LIBEXPAT" = "xno"; then
+	MODULES="libexpat $MODULES"
+	CPPFLAGS="$CPPFLAGS "
+fi
 
 
 #--------------------------------------------------------------------

@@ -36,9 +36,9 @@
 LONG H_NetIpForwarding(const char *, const char *, char *);
 LONG H_NetIfAdmStatus(const char *, const char *, char *);
 LONG H_NetIfLink(const char *, const char *, char *);
-LONG H_NetArpCache(const char *, const char *, NETXMS_VALUES_LIST *);
-LONG H_NetIfList(const char *, const char *, NETXMS_VALUES_LIST *);
-LONG H_NetRoutingTable(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_NetArpCache(const char *, const char *, StringList *);
+LONG H_NetIfList(const char *, const char *, StringList *);
+LONG H_NetRoutingTable(const char *, const char *, StringList *);
 LONG H_NetIfInfoFromKVM(const char *, const char *, char *);
 
 #endif // __NET_H__

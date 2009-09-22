@@ -51,7 +51,7 @@ enum
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
 
-LONG H_ProcessList(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_ProcessList(const char *, const char *, StringList *);
 LONG H_Uptime(const char *, const char *, char *);
 LONG H_Uname(const char *, const char *, char *);
 LONG H_Hostname(const char *, const char *, char *);

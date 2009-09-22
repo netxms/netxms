@@ -64,7 +64,7 @@ public:
 	GeoLocation();
 	GeoLocation(int type, double lat, double lon);
 	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon);
-	GeoLocation(GeoLocation &src);
+	GeoLocation(const GeoLocation &src);
 	GeoLocation(CSCPMessage &msg);
 	~GeoLocation();
 

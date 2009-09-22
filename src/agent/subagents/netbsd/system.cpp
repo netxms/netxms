@@ -109,7 +109,7 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 	double dLoad[3];
 
 	// get processor
-   	//NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	//AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (getloadavg(dLoad, 3) == 3)
 	{
@@ -174,7 +174,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	nUsedVirtCount = 0;
 	nSwapTotal = nSwapUsed = 0;
 
-   	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	// Physical memory
 

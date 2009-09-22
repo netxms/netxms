@@ -102,7 +102,8 @@ String ColumnFilter::generateSql()
 			sql.AddFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
 			break;
 		case FILTER_LIKE:
-			sql.AddFormattedString(_T("%s LIKE %s"), m_column, DBPrepareString(m_value.like));
+			sql.AddFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(m_value.like));
+			break;
 		case FILTER_SET:
 			// TODO: add support
 			break;

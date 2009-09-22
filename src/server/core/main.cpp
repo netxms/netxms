@@ -23,10 +23,10 @@
 #include "nxcore.h"
 #include <netxmsdb.h>
 
-#if !defined(_WIN32) && HAVE_READLINE_READLINE_H
-# include <readline/readline.h>
-# include <readline/history.h>
-# define USE_READLINE 1
+#if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+#define USE_READLINE 1
 #endif
 
 #ifdef _WIN32
@@ -1294,11 +1294,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 
 #if USE_READLINE
 		// Initialize readline library if we use it
-# if (RL_READLINE_VERSION && ((RL_VERSION_MAJOR == 4 && RL_VERSION_MINOR >= 2) || (RL_VERSION_MAJOR >= 5))) || __FreeBSD__ >= 5 || __APPLE__
-		rl_bind_key('\t', (rl_command_func_t *)rl_insert);
-# else 
-		rl_bind_key('\t', (Function *)rl_insert);
-# endif
+		rl_bind_key('\t', RL_INSERT_CAST rl_insert);
 #endif
 
 		while(1)

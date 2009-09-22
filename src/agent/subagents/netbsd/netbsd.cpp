@@ -173,55 +173,17 @@ DECLARE_SUBAGENT_ENTRY_POINT(NETBSD)
 	return TRUE;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/*
 
-$Log: not supported by cvs2svn $
-Revision 1.5  2007/06/08 13:49:49  alk
-fixed NETXMS_SUBAGENT_INFO init
+//
+// Entry points for server
+//
 
-Revision 1.4  2007/06/08 00:02:36  alk
-DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
+extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
+{
+        return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}
 
-NETXMS_SUBAGENT_INFO initialization fixed (actions)
-
-Revision 1.3  2007/06/07 22:06:53  alk
-1) descriptions changed to defines
-2) params structure was filled incorrectly
-
-Revision 1.2  2007/05/23 10:46:59  victor
-Minor changes
-
-Revision 1.1  2006/03/07 09:42:48  alk
-OpenBSD subagent incorporated
-flex params changed in libnxsl's makefile
-
-Revision 1.7  2005/09/15 21:47:02  victor
-Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
-
-Revision 1.6  2005/08/22 23:00:05  alk
-Net.IP.RoutingTable added
-
-Revision 1.5  2005/03/10 19:04:07  alk
-implemented:
-	Net.Interface.AdminStatus(*)
-	Net.Interface.Link(*)
-
-Revision 1.4  2005/01/24 19:51:16  alk
-reurn types/comments added
-Process.Count(*)/System.ProcessCount fixed
-
-Revision 1.3  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.2  2005/01/17 23:25:47  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-
-*/
+extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
+{
+        return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}

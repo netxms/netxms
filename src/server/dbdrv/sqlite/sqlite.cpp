@@ -193,7 +193,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 
 	const TCHAR *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		if (*src == _T('\''))
 		{
