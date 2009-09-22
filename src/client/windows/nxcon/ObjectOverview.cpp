@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "ObjectOverview.h"
+#include <geolocation.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -233,6 +234,15 @@ void CObjectOverview::Refresh()
 				break;
 			default:
 				break;
+		}
+
+		if (((m_pObject->iClass == OBJECT_NODE) || (m_pObject->iClass == OBJECT_CONTAINER)) &&
+			 (m_pObject->geolocation.type != GL_UNSET))
+		{
+			GeoLocation loc(m_pObject->geolocation.type, m_pObject->geolocation.latitude, m_pObject->geolocation.longitude);
+			_sntprintf(szTemp, 256, _T("%s %s (%s)"), loc.getLatitudeAsString(), loc.getLongitudeAsString(),
+			           (m_pObject->geolocation.type == GL_MANUAL) ? _T("manual") : _T("GPS"));
+			InsertItem(_T("Location"), szTemp);
 		}
 	}
 

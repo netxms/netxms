@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include <dbghelp.h>
+#include <geolocation.h>
 #include "nxcon.h"
 #include "MainFrm.h"
 #include "ActionEditor.h"
@@ -84,6 +85,7 @@
 #include "TemplatePropsAutoApply.h"
 #include "ContainerPropsAutoBind.h"
 #include "NodePropsConn.h"
+#include "ObjectPropsGeolocation.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1391,6 +1393,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 	CObjectPropsCustomAttrs wndCustomAttrs;
 	CTemplatePropsAutoApply wndTemplateAutoApply;
 	CContainerPropsAutoBind wndContainerAutoBind;
+	CObjectPropsGeolocation wndGeoLocation;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
@@ -1539,6 +1542,19 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
          wndPropSheet.AddPage(&wndStatus);
       }
 
+		// Create "Location" tab
+		if ((pObject->iClass == OBJECT_NODE) || (pObject->iClass == OBJECT_CONTAINER))
+		{
+			GeoLocation loc(pObject->geolocation.type, pObject->geolocation.latitude, pObject->geolocation.longitude);
+			wndGeoLocation.m_locationType = pObject->geolocation.type;
+			if (pObject->geolocation.type != GL_UNSET)
+			{
+				wndGeoLocation.m_strLatitude = loc.getLatitudeAsString();
+				wndGeoLocation.m_strLongitude = loc.getLongitudeAsString();
+			}
+         wndPropSheet.AddPage(&wndGeoLocation);
+		}
+
       // Create "Security" tab
       wndObjectSecurity.m_pObject = pObject;
       wndObjectSecurity.m_bInheritRights = pObject->bInheritRights;
@@ -1552,11 +1568,6 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
       // Create "Custom Attributes" tab
       wndCustomAttrs.m_pObject = pObject;
       wndPropSheet.AddPage(&wndCustomAttrs);
-
-      // Create "Presentation" tab
-/*      wndObjectPresentation.m_dwImageId = pObject->dwImage;
-      wndObjectPresentation.m_bUseDefaultImage = (pObject->dwImage == IMG_DEFAULT);
-      wndPropSheet.AddPage(&wndObjectPresentation);*/
 
       wndPropSheet.SetObject(pObject);
       if (wndPropSheet.DoModal() == IDOK)

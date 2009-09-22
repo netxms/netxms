@@ -637,6 +637,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ObjectPropsGeolocation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ObjectPropSheet.cpp"
 				>
 			</File>
@@ -1372,6 +1376,10 @@
 			</File>
 			<File
 				RelativePath=".\ObjectPropsGeneral.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ObjectPropsGeolocation.h"
 				>
 			</File>
 			<File

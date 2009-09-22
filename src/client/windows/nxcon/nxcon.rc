@@ -3148,6 +3148,25 @@ BEGIN
     LTEXT           "SNMP Object Identifier (OID)",IDC_STATIC_OID,7,63,143,8
 END
 
+IDD_OBJECT_GEOLOCATION DIALOG DISCARDABLE  0, 0, 292, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Location"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Undefined",IDC_RADIO_UNDEFINED,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,13,19,49,10
+    CONTROL         "&Manual",IDC_RADIO_MANUAL,"Button",BS_AUTORADIOBUTTON,
+                    13,32,39,10
+    CONTROL         "Automatic from &GPS receiver",IDC_RADIO_GPS,"Button",
+                    BS_AUTORADIOBUTTON,13,45,107,10
+    EDITTEXT        IDC_EDIT_LATITUDE,134,17,151,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LONGITUDE,134,47,151,14,ES_AUTOHSCROLL
+    GROUPBOX        "Location Type",IDC_STATIC,7,7,116,54
+    LTEXT           "Latitude",IDC_STATIC,134,7,26,8
+    LTEXT           "Longitude",IDC_STATIC,133,36,32,8
+END
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
@@ -4024,6 +4043,14 @@ BEGIN
         RIGHTMARGIN, 211
         TOPMARGIN, 7
         BOTTOMMARGIN, 87
+    END
+
+    IDD_OBJECT_GEOLOCATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
     END
 END
 #endif    // APSTUDIO_INVOKED

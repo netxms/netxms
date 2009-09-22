@@ -126,6 +126,7 @@ EXTRA_DIST = \
 	ObjectPropCaps.cpp ObjectPropCaps.h \
 	ObjectPropsCustomAttrs.cpp ObjectPropsCustomAttrs.h \
 	ObjectPropsGeneral.cpp ObjectPropsGeneral.h \
+	ObjectPropsGeolocation.cpp ObjectPropsGeolocation.h \
 	ObjectPropSheet.cpp ObjectPropSheet.h \
 	ObjectPropsPresentation.cpp ObjectPropsPresentation.h \
 	ObjectPropsRelations.cpp ObjectPropsRelations.h \
