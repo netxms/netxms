@@ -127,12 +127,12 @@ DECLARE_SUBAGENT_ENTRY_POINT(FREEBSD)
 // Entry points for server
 //
 
-extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
 	return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
 
-extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
 	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }

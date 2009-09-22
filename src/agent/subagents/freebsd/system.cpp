@@ -119,7 +119,7 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 	double dLoad[3];
 
 	// get processor
-	//NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	//AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (getloadavg(dLoad, 3) == 3)
 	{
@@ -189,7 +189,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	nPageCount = nFreeCount = 0;
 	nSwapTotal = nSwapUsed = 0;
 
-	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 #define DOIT(x, y) { \
 	nSize = sizeof(mib); \

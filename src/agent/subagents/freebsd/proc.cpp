@@ -132,10 +132,10 @@ LONG H_ProcessCount(const char *param, const char *arg, char *value)
 
 	if ((*arg != 'S') && (*arg != 'T'))  // Not System.ProcessCount nor System.ThreadCount
 	{
-		NxGetParameterArg(param, 1, name, sizeof(name));
+		AgentGetParameterArg(param, 1, name, sizeof(name));
 		if (*arg == 'E')	// Process.CountEx
 		{
-			NxGetParameterArg(param, 2, cmdLine, sizeof(cmdLine));
+			AgentGetParameterArg(param, 2, cmdLine, sizeof(cmdLine));
 		}
 	}
 
@@ -202,7 +202,7 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 	static const char *typeList[]={ "min", "max", "avg", "sum", NULL };
 
 	 // Get parameter type arguments
-	NxGetParameterArg(param, 2, buffer, sizeof(buffer));
+	AgentGetParameterArg(param, 2, buffer, sizeof(buffer));
 	if (buffer[0] == 0)     // Omited type
 	{
 		type = INFOTYPE_SUM;
@@ -216,8 +216,8 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
 	}
 
-	NxGetParameterArg(param, 1, name, sizeof(name));
-	NxGetParameterArg(param, 3, cmdLine, sizeof(cmdLine));
+	AgentGetParameterArg(param, 1, name, sizeof(name));
+	AgentGetParameterArg(param, 3, cmdLine, sizeof(cmdLine));
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != NULL)
@@ -281,7 +281,7 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int nCount = -1;
@@ -307,7 +307,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
 #endif
 						);
-				NxAddResultString(pValue, szBuff);
+				pValue->add(szBuff);
 			}
 		}
 
