@@ -47,6 +47,14 @@
 
 
 //
+// Set operations
+//
+
+#define SET_OPERATION_AND  0
+#define SET_OPERATION_OR   1
+
+
+//
 // Log definition structure
 //
 
@@ -94,7 +102,7 @@ private:
 	} m_value;
 
 public:
-	ColumnFilter(CSCPMessage *msg, DWORD baseId);
+	ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId);
 	~ColumnFilter();
 
 	int getVariableCount() { return m_varCount; }

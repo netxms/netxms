@@ -34,7 +34,9 @@ LogFilter::LogFilter(CSCPMessage *msg)
 	DWORD varId = VID_COLUMN_FILTERS_BASE;
 	for(int i = 0; i < m_numColumnFilters; i++)
 	{
-		m_columnFilters[i] = new ColumnFilter(msg, varId);
+		TCHAR column[256];
+		msg->GetVariableStr(varId++, column, 256);
+		m_columnFilters[i] = new ColumnFilter(msg, column, varId);
 		varId += m_columnFilters[i]->getVariableCount();
 	}
 }

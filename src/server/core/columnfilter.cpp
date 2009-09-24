@@ -27,37 +27,37 @@
 // Constructor
 //
 
-ColumnFilter::ColumnFilter(CSCPMessage *msg, DWORD baseId)
+ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, DWORD baseId)
 {
 	DWORD varId;
 
-	m_column = msg->GetVariableStr(baseId);
-	m_type = (int)msg->GetVariableShort(baseId + 1);
+	m_column = _tcsdup(column);
+	m_type = (int)msg->GetVariableShort(baseId);
 	switch(m_type)
 	{
 		case FILTER_EQUALS:
-			m_value.equalsTo = msg->GetVariableInt64(baseId + 2);
-			m_varCount = 3;
+			m_value.equalsTo = msg->GetVariableInt64(baseId + 1);
+			m_varCount = 2;
 			break;
 		case FILTER_RANGE:
-			m_value.range.start = msg->GetVariableInt64(baseId + 2);
-			m_value.range.end = msg->GetVariableInt64(baseId + 3);
-			m_varCount = 4;
-			break;
-		case FILTER_LIKE:
-			m_value.like = msg->GetVariableStr(baseId + 2);
+			m_value.range.start = msg->GetVariableInt64(baseId + 1);
+			m_value.range.end = msg->GetVariableInt64(baseId + 2);
 			m_varCount = 3;
 			break;
+		case FILTER_LIKE:
+			m_value.like = msg->GetVariableStr(baseId + 1);
+			m_varCount = 2;
+			break;
 		case FILTER_SET:
-			m_value.set.operation = msg->GetVariableShort(baseId + 2);
-			m_value.set.count = msg->GetVariableShort(baseId + 3);
-			m_varCount = 4;
+			m_value.set.operation = msg->GetVariableShort(baseId + 1);
+			m_value.set.count = msg->GetVariableShort(baseId + 2);
+			m_varCount = 3;
 
 			m_value.set.filters = (ColumnFilter **)malloc(sizeof(ColumnFilter *) * m_value.set.count);
-			varId = baseId + 4;
+			varId = baseId + 3;
 			for(int i = 0; i < m_value.set.count; i++)
 			{
-				ColumnFilter *filter = new ColumnFilter(msg, varId);
+				ColumnFilter *filter = new ColumnFilter(msg, column, varId);
 				m_value.set.filters[i] = filter;
 				varId += filter->getVariableCount();
 				m_varCount += filter->getVariableCount();
@@ -89,6 +89,11 @@ ColumnFilter::~ColumnFilter()
 	}
 }
 
+
+//
+// Generate SQL for column filter
+//
+
 String ColumnFilter::generateSql()
 {
 	String sql;
@@ -105,7 +110,25 @@ String ColumnFilter::generateSql()
 			sql.AddFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(m_value.like));
 			break;
 		case FILTER_SET:
-			// TODO: add support
+			bool first = true;
+			for(int i = 0; i < m_value.set.count; i++)
+			{
+				String subExpr = m_value.set.filters[i]->generateSql();
+				if (!subExpr.IsEmpty())
+				{
+					if (first)
+					{
+						first = false;
+					}
+					else
+					{
+						sql += (m_value.set.operation == SET_OPERATION_AND) ? _T(" AND ") : _T(" OR ");
+					}
+					sql += _T("(");
+					sql += subExpr;
+					sql += _T(")");
+				}
+			}
 			break;
 	}
 
