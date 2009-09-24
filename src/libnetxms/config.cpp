@@ -154,7 +154,7 @@ int ConfigEntry::getConcatenatedValuesLength()
 
 	for(i = 0, len = 0; i < m_valueCount; i++)
 		len += (int)_tcslen(m_values[i]);
-	return len + (m_valueCount - 1);
+	return len + m_valueCount;
 }
 
 
@@ -282,8 +282,6 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 						*curr = cfgTemplate[i].cSeparator;
 						curr++;
 					}
-					if (j > 0)
-						curr--;
 					*curr = 0;
                break;
             case CT_IGNORE:

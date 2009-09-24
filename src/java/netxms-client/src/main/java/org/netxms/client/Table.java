@@ -24,6 +24,10 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
+/**
+ * Generic class for holding data in tabular format. Table has named columns. All data stored as strings.
+ *
+ */
 public class Table
 {
 	private List<String> columns;
@@ -78,11 +82,11 @@ public class Table
 		for(int i = 0; i < rowCount; i++)
 		{
 			final List<String> row = new ArrayList<String>(columns.size());
-            //noinspection ForLoopReplaceableByForEach
-            for(int j = 0; j < columns.size(); j++)
-            {
-                row.add(msg.getVariableAsString(varId++));
-            }
+         //noinspection ForLoopReplaceableByForEach
+         for(int j = 0; j < columns.size(); j++)
+         {
+             row.add(msg.getVariableAsString(varId++));
+         }
 			data.add(row);
 		}
 	}
@@ -157,6 +161,9 @@ public class Table
 		return data.get(row);
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString()
 	{
