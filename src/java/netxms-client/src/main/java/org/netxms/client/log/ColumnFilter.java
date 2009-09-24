@@ -129,7 +129,7 @@ public class ColumnFilter
 				break;
 			case SET:
 				msg.setVariableInt16(baseId + 1, operation);
-				msg.setVariableInt64(baseId + 2, set.size());
+				msg.setVariableInt16(baseId + 2, set.size());
 				varCount += 2;
 				long varId = baseId + 3;
 				for(final ColumnFilter f : set)

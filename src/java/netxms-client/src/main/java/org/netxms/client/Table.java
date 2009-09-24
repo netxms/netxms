@@ -1,9 +1,10 @@
 /**
  * 
  */
-package org.netxms.client;
+package com.radensolutions.stronghold.client.objects;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -14,8 +15,8 @@ import org.netxms.base.NXCPMessage;
  */
 public class Table
 {
-	private ArrayList<String> columns;
-	private ArrayList<ArrayList<String>> data;
+	private List<String> columns;
+	private List<List<String>> data;
 	
 	/**
 	 * Create empty table
@@ -23,7 +24,7 @@ public class Table
 	public Table()
 	{
 		columns = new ArrayList<String>(0);
-		data = new ArrayList<ArrayList<String>>(0);
+		data = new ArrayList<List<String>>(0);
 	}
 	
 	/**
@@ -40,7 +41,7 @@ public class Table
 			columns.add(msg.getVariableAsString(varId++));
 		
 		int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
-		data = new ArrayList<ArrayList<String>>(rowCount);
+		data = new ArrayList<List<String>>(rowCount);
 		varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{
@@ -100,6 +101,20 @@ public class Table
 	}
 	
 	/**
+	 * Get column index by name
+	 * 
+	 * @param name Column name
+	 * @return 0-based column index or -1 if column with given name does not exist
+	 */
+	public int getColumnIndex(final String name)
+	{
+		for(int i = 0; i < columns.size(); i++)
+			if (name.equals(columns.get(i)))
+				return i;
+		return -1;
+	}
+	
+	/**
 	 * Get cell value at given row and column
 	 * 
 	 * @param row Row index (zero-based)
@@ -110,8 +125,20 @@ public class Table
 	 */
 	public String getCell(int row, int column) throws IndexOutOfBoundsException
 	{
-		ArrayList<String> rowData = data.get(row);
+		List<String> rowData = data.get(row);
 		return rowData.get(column);
+	}
+	
+	/**
+	 * Get row.
+	 * 
+	 * @param row Row index (zero-based)
+	 * @return List of all values for given row
+	 * @throws IndexOutOfBoundsException if row index is out of range (row < 0 || row >= getRowCount())
+	 */
+	public List<String> getRow(int row) throws IndexOutOfBoundsException
+	{
+		return data.get(row);
 	}
 
 	/* (non-Javadoc)
