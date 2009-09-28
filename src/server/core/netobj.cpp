@@ -440,9 +440,14 @@ void NetObj::Delete(BOOL bIndexLocked)
 
    DbgPrintf(4, "Deleting object %d [%s]", m_dwId, m_szName);
 
-   PrepareForDeletion();
+	// Prevent object change propagation util it marked as deleted
+	// (to prevent object re-appearance in GUI if client hides object
+	// after successful call to Session::deleteObject())
+	LockData();
+   m_bIsHidden = FALSE;
+	UnlockData();
 
-   LockData();
+   PrepareForDeletion();
 
    // Remove references to this object from parent objects
    DbgPrintf(5, "NetObj::Delete(): clearing parent list for object %d", m_dwId);
@@ -471,6 +476,8 @@ void NetObj::Delete(BOOL bIndexLocked)
    m_dwChildCount = 0;
    UnlockChildList();
 
+   LockData();
+   m_bIsHidden = FALSE;
    m_bIsDeleted = TRUE;
    Modify();
    UnlockData();
@@ -1127,14 +1134,13 @@ void NetObj::Hide(void)
 {
    DWORD i;
 
-   LockData();
    LockChildList(FALSE);
-
    for(i = 0; i < m_dwChildCount; i++)
       m_pChildList[i]->Hide();
-   m_bIsHidden = TRUE;
-
    UnlockChildList();
+
+	LockData();
+   m_bIsHidden = TRUE;
    UnlockData();
 }
 
@@ -1148,16 +1154,14 @@ void NetObj::Unhide(void)
    DWORD i;
 
    LockData();
-
    m_bIsHidden = FALSE;
    EnumerateClientSessions(BroadcastObjectChange, this);
+   UnlockData();
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
       m_pChildList[i]->Unhide();
-
    UnlockChildList();
-   UnlockData();
 }
 
 

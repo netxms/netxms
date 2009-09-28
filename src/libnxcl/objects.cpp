@@ -1111,7 +1111,7 @@ DWORD LIBNXCL_EXPORTABLE NXCRemoveTemplate(NXC_SESSION hSession, DWORD dwTemplat
 DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, DWORD dwObject)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   DWORD dwRqId, rcc;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -1124,9 +1124,17 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, DWORD dwObject)
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for reply
-   // For node objects, deletion may take long time if object
-   // is currently polled
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId, 300000);
+   rcc = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+	if (rcc == RCC_SUCCESS)
+	{
+		NXC_OBJECT *object = ((NXCL_Session *)hSession)->FindObjectById(dwObject, TRUE);
+		if (object != NULL)
+		{
+			object->bIsDeleted = TRUE;
+			((NXCL_Session *)hSession)->CallEventHandler(NXC_EVENT_OBJECT_CHANGED, object->dwId, object);
+		}
+	}
+	return rcc;
 }
 
 

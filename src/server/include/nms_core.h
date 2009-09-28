@@ -436,7 +436,7 @@ private:
    void SendMIB(DWORD dwRqId);
    void CreateObject(CSCPMessage *pRequest);
    void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
-   void DeleteObject(CSCPMessage *pRequest);
+   void deleteObject(CSCPMessage *pRequest);
    void AcknowledgeAlarm(CSCPMessage *pRequest);
    void TerminateAlarm(CSCPMessage *pRequest);
    void DeleteAlarm(CSCPMessage *pRequest);

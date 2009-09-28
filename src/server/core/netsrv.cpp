@@ -450,6 +450,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 
 void NetworkService::OnObjectDelete(DWORD dwObjectId)
 {
+	LockData();
    if (dwObjectId == m_dwPollerNode)
    {
       // If deleted object is our poller node, change it to default
@@ -457,4 +458,5 @@ void NetworkService::OnObjectDelete(DWORD dwObjectId)
       Modify();
       DbgPrintf(3, _T("Service \"%s\": poller node %d deleted"), m_szName, dwObjectId);
    }
+	UnlockData();
 }

@@ -2469,14 +2469,15 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
 
 void Node::OnObjectDelete(DWORD dwObjectId)
 {
+	LockData();
    if (dwObjectId == m_dwPollerNode)
    {
       // If deleted object is our poller node, change it to default
-      /* LOCK? */
       m_dwPollerNode = 0;
       Modify();
       DbgPrintf(3, _T("Node \"%s\": poller node %d deleted"), m_szName, dwObjectId);
    }
+	UnlockData();
 }
 
 

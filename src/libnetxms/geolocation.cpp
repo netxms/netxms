@@ -236,7 +236,7 @@ double GeoLocation::parse(const TCHAR *str, bool isLat, bool *isValid)
 			deg = _tcstod(curr, &eptr);
 			if (*eptr == 0)	// End of string
 				goto finish_parsing;
-			if (*eptr != _T('°'))
+			if ((*eptr != _T('°')) && (*eptr != _T(' ')))
 				goto cleanup;	// Unexpected character
 			curr = eptr + 1;
 			while(*curr == _T(' '))

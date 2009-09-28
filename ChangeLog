@@ -7,7 +7,7 @@
   Cisco devices
 - Automatic network discovery improved
 - LOGSCAN subagent removed (superseded by LOGWATCH subagent)
-- Fixed issues: #259, #260, #261, #262, #263, #264
+- Fixed issues: #234, #259, #260, #261, #262, #263, #264
 
 
 *

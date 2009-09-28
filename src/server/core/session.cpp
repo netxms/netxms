@@ -867,7 +867,7 @@ void ClientSession::ProcessingThread(void)
             SendContainerCategories(pMsg->GetId());
             break;
          case CMD_DELETE_OBJECT:
-            DeleteObject(pMsg);
+            deleteObject(pMsg);
             break;
          case CMD_POLL_NODE:
             ForcedNodePoll(pMsg);
@@ -3831,10 +3831,21 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
 
 
 //
+// Worker thread for object deletion
+//
+
+static THREAD_RESULT THREAD_CALL DeleteObjectWorker(void *arg)
+{
+	((NetObj *)arg)->Delete(FALSE);
+	return THREAD_OK;
+}
+
+
+//
 // Delete object
 //
 
-void ClientSession::DeleteObject(CSCPMessage *pRequest)
+void ClientSession::deleteObject(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -3853,7 +3864,7 @@ void ClientSession::DeleteObject(CSCPMessage *pRequest)
          // Check access rights
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
-            pObject->Delete(FALSE);
+				ThreadCreate(DeleteObjectWorker, 0, pObject);
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
          else
