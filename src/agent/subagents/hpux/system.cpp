@@ -144,7 +144,7 @@ LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ActiveUserSessions enum
 //
 
-LONG H_ActiveUserSessions(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ActiveUserSessions(char *pszParam, char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -161,7 +161,7 @@ LONG H_ActiveUserSessions(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue
 			{
 				snprintf(szBuffer, 1024, "\"%s\" \"%s\" \"%s\"", rec.ut_user,
 				         rec.ut_line, rec.ut_host);
-				NxAddResultString(pValue, szBuffer);
+				pValue->add(szBuffer);
 			}
 		}
 		fclose(f);
@@ -352,7 +352,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 	char szArg[256];
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	if (!NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg)))
+	if (!AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg)))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	pst = GetProcessList(&nCount);
@@ -376,7 +376,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(char *pszParam, char *pArg, StringList *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int i, nCount;
@@ -389,7 +389,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 		for (i = 0; i < nCount; i++)
 		{
 			snprintf(szBuff, sizeof(szBuff), "%d %s", (DWORD)pst[i].pst_pid, pst[i].pst_ucomm);
-			NxAddResultString(pValue, szBuff);
+			pValue->add(szBuff);
 		}
 		free(pst);
 		nRet = SYSINFO_RC_SUCCESS;

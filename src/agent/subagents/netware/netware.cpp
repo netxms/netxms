@@ -88,7 +88,7 @@ static LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 	char szVolumeName[MAX_VOLUME_NAME_LEN + 1];
 	DWORD dwClusterSize;    // Cluster size in bytes
 
-	NxGetParameterArg(pszParam, 1, szVolumeName, MAX_VOLUME_NAME_LEN);
+	AgentGetParameterArg(pszParam, 1, szVolumeName, MAX_VOLUME_NAME_LEN);
 	memset(&vi, 0, sizeof(struct volume_info));
 	if (netware_vol_info_from_name(&vi, szVolumeName) != 0)
 		return SYSINFO_RC_UNSUPPORTED;
@@ -146,7 +146,7 @@ static LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 	int i, j, iSteps, iValue, iCpu, iCpuCount;
 	char szBuffer[256];
 
-	NxGetParameterArg(pszParam, 1, szBuffer, 256);
+	AgentGetParameterArg(pszParam, 1, szBuffer, 256);
 	if (szBuffer[0] == 0)   // All CPUs?
 		iCpu = -1;
 	else
@@ -242,7 +242,7 @@ static LONG H_DiskQueue(const char *pszParam, const char *pArg, char *pValue)
 // ARP cache
 //
 
-static LONG H_ArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_ArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	return SYSINFO_RC_UNSUPPORTED;
 }
@@ -252,7 +252,7 @@ static LONG H_ArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIS
 // Shutdown system
 //
 
-static LONG H_ActionShutdown(const char *pszAction, NETXMS_VALUES_LIST *pArgList, const char *pData)
+static LONG H_ActionShutdown(const char *pszAction, StringList *pArgList, const char *pData)
 {
 	LONG nRet;
 
@@ -431,16 +431,3 @@ int main(int argc, char *argv[])
 	sleep(1);
 	return 0;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.19  2007/06/08 21:23:18  victor
-Typo fixed
-
-Revision 1.18  2007/06/07 22:07:11  alk
-descriptions changed to defines
-
-
-*/

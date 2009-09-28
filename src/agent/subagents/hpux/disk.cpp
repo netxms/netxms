@@ -33,7 +33,7 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 	struct statvfs s;
 	char szArg[512] = {0};
 
-	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
 	{

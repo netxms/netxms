@@ -73,7 +73,7 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetArpCache(char *pszParam, char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -82,7 +82,7 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
-LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetRoutingTable(char *pszParam, char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -91,7 +91,7 @@ LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
-LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(char *pszParam, char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -203,7 +203,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 				IFTYPE_OTHER,
 				"000000000000",
 				ifr->ifr_name);
-		NxAddResultString(pValue, szOut);
+		pValue->add(szOut);
 	}
 
 	nRet = SYSINFO_RC_SUCCESS;
@@ -221,7 +221,7 @@ LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
 	struct ifreq ifr;
 	int fd;
 
-	if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
+	if (!AgentGetParameterArg(pszParam, 1, szBuffer, 256))
 	{
 		return nRet;
 	}

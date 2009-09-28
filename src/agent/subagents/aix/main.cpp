@@ -33,13 +33,13 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue);
 LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue);
-LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue);
 LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue);
 LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue);
 LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue);
 LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue);
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue);
 LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Uname(const char *pszParam, const char *pArg, char *pValue);
@@ -189,13 +189,13 @@ DECLARE_SUBAGENT_ENTRY_POINT(AIX)
 // Entry points for server
 //
 
-extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
    return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }  
 
 /*
-extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
    return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }

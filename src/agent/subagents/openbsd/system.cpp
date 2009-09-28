@@ -110,7 +110,7 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 	double dLoad[3];
 
 	// get processor
-   	//NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	//AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (getloadavg(dLoad, 3) == 3)
 	{
@@ -164,7 +164,7 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 	kvm_t *kd;
 	struct kinfo_proc *kp;
 
-   	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != 0)
@@ -222,7 +222,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	nUsedVirtCount = 0;
 	nSwapTotal = nSwapUsed = 0;
 
-   	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	// Physical memory
 
@@ -300,15 +300,13 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int nCount = -1;
 	int i;
 	struct kinfo_proc *kp;
 	kvm_t *kd;
-
-
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != 0)
@@ -324,7 +322,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 				snprintf(szBuff, sizeof(szBuff), "%d %s",
 						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
 						);
-				NxAddResultString(pValue, szBuff);
+				pValue->add(szBuff);
 			}
 		}
 

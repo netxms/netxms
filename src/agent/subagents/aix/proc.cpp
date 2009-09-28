@@ -91,7 +91,7 @@ retry_getprocs:
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	LONG nRet;
 	PROCENTRY *pList;
@@ -104,7 +104,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 		for(i = 0; i < nProcCount; i++)
 		{
 			snprintf(szBuffer, 256, "%d %s", pList[i].pi_pid, pList[i].pi_comm);
-			NxAddResultString(pValue, szBuffer);
+			pValue->add(szBuffer);
 		}
 		free(pList);
 		nRet = SYSINFO_RC_SUCCESS;
@@ -177,7 +177,7 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 	int i, nSysProcCount, nProcCount;
 	char szProcessName[256];
 
-	if (!NxGetParameterArg(pszParam, 1, szProcessName, 256))
+	if (!AgentGetParameterArg(pszParam, 1, szProcessName, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	pList = GetProcessList(&nSysProcCount);
@@ -215,7 +215,7 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 	static char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
 	// Get parameter type arguments
-	NxGetParameterArg(pszParam, 2, szBuffer, sizeof(szBuffer));
+	AgentGetParameterArg(pszParam, 2, szBuffer, sizeof(szBuffer));
 	if (szBuffer[0] == 0)     // Omited type
 	{
 		nType = INFOTYPE_SUM;
@@ -229,7 +229,7 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
 	}
 
-	NxGetParameterArg(pszParam, 1, szBuffer, sizeof(szBuffer));
+	AgentGetParameterArg(pszParam, 1, szBuffer, sizeof(szBuffer));
 	pList = GetProcessList(&nProcCount);
 	if (pList != NULL)
 	{

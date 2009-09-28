@@ -164,7 +164,7 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 	FILE *hFile;
 
 	// get processor
-	//NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	//AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	hFile = fopen("/proc/loadavg", "r");
 	if (hFile != NULL)

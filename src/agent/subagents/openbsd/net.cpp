@@ -104,7 +104,7 @@ LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue)
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
 
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -160,7 +160,7 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue)
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
 
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -209,7 +209,7 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -272,13 +272,13 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 				inet_ntoa(pSin->sin_addr),
 				pSdl->sdl_index);
 
-		NxAddResultString(pValue, szBuff);
+		pValue->add(szBuff);
 	}
 
 	return nRet;
 }
 
-LONG H_NetRoutingTable(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue)
 {
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
@@ -381,7 +381,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, NETXMS_VALUES_LIS
 						(rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4);
 				strcat(szOut, szTmp);
 
-				NxAddResultString(pValue, szOut);
+				pValue->add(szOut);
 			}
 		}
 
@@ -394,7 +394,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, NETXMS_VALUES_LIS
 	return nRet;
 }
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct ifaddrs *pIfAddr, *pNext;
@@ -484,7 +484,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pVa
 							IFTYPE_OTHER,
 							ether_ntoa(pList[i].mac),
 							pList[i].name);
-					NxAddResultString(pValue, szOut);
+					pValue->add(szOut);
 				}
 				else
 				{
@@ -511,7 +511,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pVa
 									ether_ntoa(pList[i].mac),
 									pList[i].name);
 						}
-						NxAddResultString(pValue, szOut);
+						pValue->add(szOut);
 					}
 				}
 			}
@@ -550,7 +550,7 @@ LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue)
 	struct ifnet_head ifnethead;
 	char szName[IFNAMSIZ];
 
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{

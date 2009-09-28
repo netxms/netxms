@@ -89,7 +89,7 @@ static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
 // Handler for Net.InterfaceList enum
 //
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	LONG nRet;
 	struct ifconf ifc;
@@ -156,7 +156,7 @@ retry_ifconf:
 			        IpToStr(ntohl(ifl[i].ip), szIpAddr),
 			        BitsInMask(ifl[i].netmask), ifl[i].iftype,
 				BinToStr(ifl[i].mac, 6, szMacAddr), ifl[i].name);
-			NxAddResultString(pValue, szBuffer);
+			pValue->add(szBuffer);
 		}
 		free(ifl);
 		nRet = SYSINFO_RC_SUCCESS;

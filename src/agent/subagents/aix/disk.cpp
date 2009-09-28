@@ -34,7 +34,7 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 	struct statvfs s;
 	char szArg[512] = "";
 
-	if (!NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg)))
+	if (!AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg)))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
