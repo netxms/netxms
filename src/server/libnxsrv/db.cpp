@@ -1061,7 +1061,7 @@ BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn)
 String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str)
 {
 	String out;
-	out.setBuffer(m_fpDrvPrepareString(str));
+	out.setBuffer(m_fpDrvPrepareString(CHECK_NULL_EX(str)));
 	return out;
 }
 
