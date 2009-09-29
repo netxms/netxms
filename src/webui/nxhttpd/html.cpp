@@ -101,13 +101,13 @@ void ShowFormLogin(HttpResponse &response, const TCHAR *pszErrorText)
 // Escape text for HTML
 //
 
-TCHAR *EscapeHTMLText(String &text)
+const TCHAR *EscapeHTMLText(String &text)
 {
-	text.Translate(_T("&"), _T("&amp;"));
-	text.Translate(_T("<"), _T("&lt;"));
-	text.Translate(_T(">"), _T("&gt;"));
-	text.Translate(_T("\""), _T("&quot;"));
-	return (TCHAR *)text;
+	text.translate(_T("&"), _T("&amp;"));
+	text.translate(_T("<"), _T("&lt;"));
+	text.translate(_T(">"), _T("&gt;"));
+	text.translate(_T("\""), _T("&quot;"));
+	return text;
 }
 
 

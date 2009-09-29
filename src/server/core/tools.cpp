@@ -296,10 +296,10 @@ void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszS
 
 void EscapeString(String &str)
 {
-   str.EscapeCharacter(_T('\\'), _T('\\'));
-   str.EscapeCharacter(_T('"'), _T('\\'));
-   str.Translate(_T("\b"), _T("\\b"));
-   str.Translate(_T("\r"), _T("\\r"));
-   str.Translate(_T("\n"), _T("\\n"));
-   str.Translate(_T("\t"), _T("\\t"));
+   str.escapeCharacter(_T('\\'), _T('\\'));
+   str.escapeCharacter(_T('"'), _T('\\'));
+   str.translate(_T("\b"), _T("\\b"));
+   str.translate(_T("\r"), _T("\\r"));
+   str.translate(_T("\n"), _T("\\n"));
+   str.translate(_T("\t"), _T("\\t"));
 }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,69 +100,69 @@ const String& String::operator +=(const TCHAR *pszStr)
 // Add formatted string to the end of buffer
 //
 
-void String::AddFormattedString(const TCHAR *format, ...)
+void String::addFormattedString(const TCHAR *format, ...)
+{
+   va_list args;
+
+	va_start(args, format);
+	addFormattedString(format, args);
+	va_end(args);
+}
+
+void String::addFormattedString(const TCHAR *format, va_list args)
 {
    int len;
-   va_list args;
    TCHAR *buffer;
 
 #ifdef UNICODE
 
 #if HAVE_VASWPRINTF
-   va_start(args, format);
 	vaswprintf(&buffer, format, args);
-	va_end(args);
-#elif HAVE_VSCWPRINTF
-   va_start(args, format);
+#elif HAVE_VSCWPRINTF && HAVE_DECL_VA_COPY
+	va_list argsCopy;
+	va_copy(argsCopy, args);
+
 	len = (int)vscwprintf(format, args) + 1;
-   va_end(args);
    buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
 
-   va_start(args, format);
-   vsnwprintf(buffer, len, format, args);
-   va_end(args);
+   vsnwprintf(buffer, len, format, argsCopy);
+   va_end(argsCopy);
 #else
 	// No way to determine required buffer size, guess
 	len = wcslen(format) + CharCount(format, L'%') * 1000 + 1;
    buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
 
-   va_start(args, format);
    vsnwprintf(buffer, len, format, args);
-   va_end(args);
 #endif
 
 #else		/* UNICODE */
 
 #if HAVE_VASPRINTF
-   va_start(args, format);
 	vasprintf(&buffer, format, args);
-	va_end(args);
-#elif HAVE_VSCPRINTF
-   va_start(args, format);
+#elif HAVE_VSCPRINTF && HAVE_DECL_VA_COPY
+	va_list argsCopy;
+	va_copy(argsCopy, args);
+
 	len = (int)vscprintf(format, args) + 1;
-   va_end(args);
    buffer = (char *)malloc(len);
 
-   va_start(args, format);
-   vsnprintf(buffer, len, format, args);
-   va_end(args);
-#elif SNPRINTF_RETURNS_REQUIRED_SIZE
-   va_start(args, format);
+   vsnprintf(buffer, len, format, argsCopy);
+   va_end(argsCopy);
+#elif SNPRINTF_RETURNS_REQUIRED_SIZE && HAVE_DECL_VA_COPY
+	va_list argsCopy;
+	va_copy(argsCopy, args);
+
 	len = (int)snprintf(NULL, 0, format, args) + 1;
-   va_end(args);
    buffer = (char *)malloc(len);
 
-   va_start(args, format);
-   vsnprintf(buffer, len, format, args);
-   va_end(args);
+   vsnprintf(buffer, len, format, argsCopy);
+   va_end(argsCopy);
 #else
 	// No way to determine required buffer size, guess
 	len = strlen(format) + CharCount(format, '%') * 1000 + 1;
    buffer = (char *)malloc(len);
 
-   va_start(args, format);
    vsnprintf(buffer, len, format, args);
-   va_end(args);
 #endif
 
 #endif	/* UNICODE */
@@ -176,7 +176,7 @@ void String::AddFormattedString(const TCHAR *format, ...)
 // Add string to the end of buffer
 //
 
-void String::AddString(const TCHAR *pStr, DWORD dwSize)
+void String::addString(const TCHAR *pStr, DWORD dwSize)
 {
    m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
    memcpy(&m_pszBuffer[m_dwBufSize - 1], pStr, dwSize * sizeof(TCHAR));
@@ -189,7 +189,7 @@ void String::AddString(const TCHAR *pStr, DWORD dwSize)
 // Add multibyte string to the end of buffer
 //
 
-void String::AddMultiByteString(const char *pStr, DWORD dwSize, int nCodePage)
+void String::addMultiByteString(const char *pStr, DWORD dwSize, int nCodePage)
 {
 #ifdef UNICODE
    m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
@@ -197,7 +197,7 @@ void String::AddMultiByteString(const char *pStr, DWORD dwSize, int nCodePage)
    m_dwBufSize += dwSize;
 	m_pszBuffer[m_dwBufSize - 1] = 0;
 #else
-	AddString(pStr, dwSize);
+	addString(pStr, dwSize);
 #endif
 }
 
@@ -206,10 +206,10 @@ void String::AddMultiByteString(const char *pStr, DWORD dwSize, int nCodePage)
 // Add widechar string to the end of buffer
 //
 
-void String::AddWideCharString(const WCHAR *pStr, DWORD dwSize)
+void String::addWideCharString(const WCHAR *pStr, DWORD dwSize)
 {
 #ifdef UNICODE
-	AddString(pStr, dwSize);
+	addString(pStr, dwSize);
 #else
    m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pStr, dwSize, &m_pszBuffer[m_dwBufSize - 1], dwSize, NULL, NULL);
@@ -223,7 +223,7 @@ void String::AddWideCharString(const WCHAR *pStr, DWORD dwSize)
 // Escape given character
 //
 
-void String::EscapeCharacter(int ch, int esc)
+void String::escapeCharacter(int ch, int esc)
 {
    int nCount;
    DWORD i;
@@ -253,7 +253,7 @@ void String::EscapeCharacter(int ch, int esc)
 // Set dynamically allocated string as a new buffer
 //
 
-void String::SetBuffer(TCHAR *pszBuffer)
+void String::setBuffer(TCHAR *pszBuffer)
 {
    safe_free(m_pszBuffer);
    m_pszBuffer = pszBuffer;
@@ -265,7 +265,7 @@ void String::SetBuffer(TCHAR *pszBuffer)
 // Translate given substring
 //
 
-void String::Translate(const TCHAR *pszSrc, const TCHAR *pszDst)
+void String::translate(const TCHAR *pszSrc, const TCHAR *pszDst)
 {
    DWORD i, dwLenSrc, dwLenDst, dwDelta;
 
@@ -314,7 +314,7 @@ void String::Translate(const TCHAR *pszSrc, const TCHAR *pszDst)
 // Extract substring into buffer
 //
 
-TCHAR *String::SubStr(int nStart, int nLen, TCHAR *pszBuffer)
+TCHAR *String::subStr(int nStart, int nLen, TCHAR *pszBuffer)
 {
 	int nCount;
 	TCHAR *pszOut;
@@ -346,7 +346,7 @@ TCHAR *String::SubStr(int nStart, int nLen, TCHAR *pszBuffer)
 // Find substring in a string
 //
 
-int String::Find(const TCHAR *pszStr, int nStart)
+int String::find(const TCHAR *pszStr, int nStart)
 {
 	TCHAR *p;
 

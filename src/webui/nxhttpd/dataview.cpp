@@ -128,7 +128,7 @@ void ClientSession::ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject, 
 				row = _T("");
 				descr = m_pValueList[i].szDescription;
 				value = m_pValueList[i].szValue;
-				row.AddFormattedString(_T("<td>%d</td><td>%s</td><td>%s</td><td>%s</td>")
+				row.addFormattedString(_T("<td>%d</td><td>%s</td><td>%s</td><td>%s</td>")
 				                       _T("<td><img src=\"/images/graph.png\" alt=\"Show graph\"/>&nbsp;")
 				                       _T("<img src=\"/images/document.png\" alt=\"Show history\"/></td></tr>"),
 											  m_pValueList[i].dwId, EscapeHTMLText(descr),

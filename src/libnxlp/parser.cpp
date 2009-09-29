@@ -471,27 +471,27 @@ static void EndElement(void *userData, const char *name)
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 			event = ps->parser->resolveEventName(ps->event);
-		if (ps->regexp.IsEmpty())
+		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
 		rule = new LogParserRule(ps->parser, (const char *)ps->regexp, event, ps->numEventParams);
-		if (!ps->ruleContext.IsEmpty())
+		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
-		if (!ps->context.IsEmpty())
+		if (!ps->context.isEmpty())
 		{
 			rule->setContextToChange(ps->context);
 			rule->setContextAction(ps->contextAction);
 		}
 
-		if (!ps->description.IsEmpty())
+		if (!ps->description.isEmpty())
 			rule->setDescription(ps->description);
 		
-		if (!ps->source.IsEmpty())
+		if (!ps->source.isEmpty())
 			rule->setSource(ps->source);
 
-		if (!ps->level.IsEmpty())
+		if (!ps->level.isEmpty())
 			rule->setLevel(_tcstoul(ps->level, NULL, 0));
 
-		if (!ps->id.IsEmpty())
+		if (!ps->id.isEmpty())
 		{
 			DWORD start, end;
 			TCHAR *eptr;
@@ -553,31 +553,31 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	switch(ps->state)
 	{
 		case XML_STATE_MATCH:
-			ps->regexp.AddString(s, len);
+			ps->regexp.addString(s, len);
 			break;
 		case XML_STATE_ID:
-			ps->id.AddString(s, len);
+			ps->id.addString(s, len);
 			break;
 		case XML_STATE_LEVEL:
-			ps->level.AddString(s, len);
+			ps->level.addString(s, len);
 			break;
 		case XML_STATE_SOURCE:
-			ps->source.AddString(s, len);
+			ps->source.addString(s, len);
 			break;
 		case XML_STATE_EVENT:
-			ps->event.AddString(s, len);
+			ps->event.addString(s, len);
 			break;
 		case XML_STATE_FILE:
-			ps->file.AddString(s, len);
+			ps->file.addString(s, len);
 			break;
 		case XML_STATE_CONTEXT:
-			ps->context.AddString(s, len);
+			ps->context.addString(s, len);
 			break;
 		case XML_STATE_DESCRIPTION:
-			ps->description.AddString(s, len);
+			ps->description.addString(s, len);
 			break;
 		case XML_STATE_MACRO:
-			ps->macro.AddString(s, len);
+			ps->macro.addString(s, len);
 			break;
 		default:
 			break;

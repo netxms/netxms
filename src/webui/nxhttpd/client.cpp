@@ -31,7 +31,7 @@
 static void DefaultRequestHandler(HttpRequest &request, HttpResponse &response)
 {
 	int i, size;
-	TCHAR *uri, *ext;
+	const TCHAR *uri, *ext;
 
 	uri = request.GetURI();
 
@@ -84,11 +84,11 @@ static void DefaultRequestHandler(HttpRequest &request, HttpResponse &response)
 						fname = g_szDocumentRoot;
 						fname += _T("/");
 						fname += uri;
-						fname.Translate(_T("//"), _T("/"));
+						fname.translate(_T("//"), _T("/"));
 #ifdef _WIN32
-						fname.Translate(_T("/"), _T("\\"));
+						fname.translate(_T("/"), _T("\\"));
 #endif
-						f = _tfopen((TCHAR *)fname, _T("rb"));
+						f = _tfopen(fname, _T("rb"));
 						if (f != NULL)
 						{
 							char buffer[10240];
@@ -133,7 +133,7 @@ static THREAD_RESULT THREAD_CALL ClientHandler(void *pArg)
 	int size;
 	HttpRequest req;
 	HttpResponse resp;
-	TCHAR *pq;
+	const TCHAR *pq;
 	char *ptr;
 
 	if (req.Read(CAST_FROM_POINTER(pArg, SOCKET)))

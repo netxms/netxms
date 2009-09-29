@@ -657,7 +657,7 @@ void Threshold::createNXMPRecord(String &str)
    strValue = (TCHAR *)m_value.String();
    ResolveEventName(m_eventCode, szEvent1);
    ResolveEventName(m_rearmEventCode, szEvent2);
-   str.AddFormattedString(_T("\t\t\t\t\t@THRESHOLD\n\t\t\t\t\t{\n")
+   str.addFormattedString(_T("\t\t\t\t\t@THRESHOLD\n\t\t\t\t\t{\n")
                           _T("\t\t\t\t\t\tFUNCTION=%d;\n")
                           _T("\t\t\t\t\t\tCONDITION=%d;\n")
                           _T("\t\t\t\t\t\tVALUE=\"%s\";\n")
@@ -667,7 +667,7 @@ void Threshold::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t\tPARAM2=%d;\n")
                           _T("\t\t\t\t\t\tREPEAT_INTERVAL=%d;\n")
                           _T("\t\t\t\t\t}\n"),
-                          m_function, m_operation, (TCHAR *)strValue,
+                          m_function, m_operation, (const TCHAR *)strValue,
                           szEvent1, szEvent2, m_param1, m_param2,
 								  m_repeatInterval);
 }

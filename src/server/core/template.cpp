@@ -870,7 +870,7 @@ void Template::CreateNXMPRecord(String &str)
 
 	name = m_szName;
 	EscapeString(name);
-   str.AddFormattedString(_T("\t@TEMPLATE \"%s\"\n\t{\n\t\t@DCI_LIST\n\t\t{\n"), (const TCHAR *)name);
+   str.addFormattedString(_T("\t@TEMPLATE \"%s\"\n\t{\n\t\t@DCI_LIST\n\t\t{\n"), (const TCHAR *)name);
 
    LockData();
    for(i = 0; i < m_dwNumItems; i++)

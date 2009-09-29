@@ -642,9 +642,9 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
 
-void NXCORE_EXPORTABLE QueueSQLRequest(char *szQuery);
-void StartDBWriter(void);
-void StopDBWriter(void);
+void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
+void StartDBWriter();
+void StopDBWriter();
 
 void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr);
 
@@ -727,9 +727,10 @@ void ReinitializeSyslogParser();
 
 void EscapeString(String &str);
 
-void InitAuditLog(void);
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
-                                     const TCHAR *pszWorkstation, DWORD dwObjectId, const TCHAR *pszFormat, ...);
+void InitAuditLog();
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD userId,
+                                     const TCHAR *workstation, DWORD objectId,
+                                     const TCHAR *format, ...);
                                      
 void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, void *pObject);
 void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey);

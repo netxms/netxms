@@ -147,8 +147,8 @@ public:
 
 	BOOL GetQueryParam(const TCHAR *pszName, String &value);
 	void SetQueryParam(const TCHAR *pszName, const TCHAR *pszValue);
-	TCHAR *GetURI(void) { return m_uri; }
-	TCHAR *GetRawQuery(void) { return m_rawQuery; }
+	const TCHAR *GetURI(void) { return m_uri; }
+	const TCHAR *GetRawQuery(void) { return m_rawQuery; }
 	const TCHAR *GetMethodName(void);
 };
 
@@ -191,7 +191,7 @@ public:
 	void SetCode(int);
 
 	int GetCode(void) { return m_code; }
-	TCHAR *GetCodeString(void) { return m_codeString; }
+	const TCHAR *GetCodeString(void) { return m_codeString; }
 
 	char *BuildStream(int &);
 
@@ -298,13 +298,13 @@ public:
 	void GenerateSID();
 	void SetIndex(DWORD idx) { m_dwIndex = idx; }
 
-	BOOL IsMySID(TCHAR *sid) { return !_tcsicmp(sid, m_sid); }
+	BOOL IsMySID(const TCHAR *sid) { return !_tcsicmp(sid, m_sid); }
 	const TCHAR *GetSID() { return m_sid; }
 	DWORD GetIndex(void) { return m_dwIndex; }
 	time_t GetLastAccessTime(void) { return m_tmLastAccess; }
 	void SetLastAccessTime(void) { m_tmLastAccess = time(NULL); }
 
-	DWORD DoLogin(TCHAR *pszLogin, TCHAR *pszPasswd);
+	DWORD DoLogin(const TCHAR *pszLogin, const TCHAR *pszPasswd);
 	BOOL ProcessRequest(HttpRequest &request, HttpResponse &response);
 
 	void ShowForm(HttpResponse &response, int nForm);
@@ -373,7 +373,7 @@ void Main(void);
 void InitSessions(void);
 BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response);
 
-TCHAR *EscapeHTMLText(String &text);
+const TCHAR *EscapeHTMLText(String &text);
 void ShowFormLogin(HttpResponse &response, const TCHAR *pszErrorText);
 void AddTableHeader(HttpResponse &response, const TCHAR *pszClass, ...);
 void ShowErrorMessage(HttpResponse &response, DWORD dwError);

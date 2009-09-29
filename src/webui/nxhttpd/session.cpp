@@ -114,7 +114,7 @@ void ClientSession::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 // Do login
 //
 
-DWORD ClientSession::DoLogin(TCHAR *pszLogin, TCHAR *pszPassword)
+DWORD ClientSession::DoLogin(const TCHAR *pszLogin, const TCHAR *pszPassword)
 {
 	DWORD dwResult;
 
@@ -193,55 +193,55 @@ BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
 	response.SetCode(HTTP_OK);
 	if (request.GetQueryParam(_T("cmd"), cmd))
 	{
-		if (!_tcscmp((TCHAR *)cmd, _T("logout")))
+		if (!_tcscmp((const TCHAR *)cmd, _T("logout")))
 		{
 			bRet = FALSE;
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("overview")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("overview")))
 		{
 			ShowForm(response, FORM_OVERVIEW);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("objects")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("objects")))
 		{
 			ShowForm(response, FORM_OBJECTS);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("getObjectTree")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("getObjectTree")))
 		{
 			SendObjectTree(request, response);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("objectView")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("objectView")))
 		{
 			ShowObjectView(request, response);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("getLastValues")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("getLastValues")))
 		{
 			SendLastValues(request, response);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("alarms")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("alarms")))
 		{
 			ShowForm(response, FORM_ALARMS);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("getAlarmList")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("getAlarmList")))
 		{
 			SendAlarmList(request, response);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("alarmCtrl")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("alarmCtrl")))
 		{
 			AlarmCtrlHandler(request, response);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("tools")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("tools")))
 		{
 			ShowForm(response, FORM_TOOLS);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("ctrlPanel")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("ctrlPanel")))
 		{
 			ShowForm(response, FORM_CONTROL_PANEL);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("ctrlPanelView")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("ctrlPanelView")))
 		{
 			ShowCtrlPanelView(request, response);
 		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("pieChart")))
+		else if (!_tcscmp((const TCHAR *)cmd, _T("pieChart")))
 		{
 			ShowPieChart(request, response);
 		}
@@ -279,7 +279,7 @@ void ClientSession::ShowMainMenu(HttpResponse &response)
 		_T("		<li style=\"float: right\"><a href=\"/main.app?cmd=logout&sid={$sid}\">Logout</a></li>\r\n")
 		_T("	</ul>\r\n")
 		_T("</div>\r\n");
-	data.Translate(_T("{$sid}"), m_sid);
+	data.translate(_T("{$sid}"), m_sid);
 	response.AppendBody(data);
 }
 
@@ -419,7 +419,7 @@ void ClientSession::ShowFormOverview(HttpResponse &response)
 
 	response.StartBox(_T("Alarm Distribution"));
 	str = _T("<img src=\"/main.app?sid={$sid}&cmd=pieChart&type=0\">\r\n");
-	str.Translate(_T("{$sid}"), m_sid);
+	str.translate(_T("{$sid}"), m_sid);
 	response.AppendBody(str);
 	response.EndBox();
 
@@ -427,7 +427,7 @@ void ClientSession::ShowFormOverview(HttpResponse &response)
 
 	response.StartBox(_T("Node Status Distribution"));
 	str = _T("<img src=\"/main.app?sid={$sid}&cmd=pieChart&type=1\">\r\n");
-	str.Translate(_T("{$sid}"), m_sid);
+	str.translate(_T("{$sid}"), m_sid);
 	response.AppendBody(str);
 	response.EndBox();
 	

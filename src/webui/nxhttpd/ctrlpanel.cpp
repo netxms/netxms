@@ -91,7 +91,7 @@ void ClientSession::ShowFormControlPanel(HttpResponse &response)
 		_T("    resizeElements();\r\n")
 		_T("	}\r\n")
 		_T("</script>\r\n");
-	data.Translate(_T("{$sid}"), m_sid);
+	data.translate(_T("{$sid}"), m_sid);
 	response.AppendBody(data);
 }
 
@@ -147,8 +147,8 @@ void ClientSession::ShowCtrlPanelView(HttpRequest &request, HttpResponse &respon
 		_T("<div id=\"objview_header\">\r\n")
 		_T("<table width=\"100%\" style=\"border-bottom: 3px solid rgb(204,204,204);\"><tr><td valign=\"middle\" width=\"1%\"><img src=\"/images/ctrlpanel/{$img}.png\"></td><td>{$name}</td>\r\n")
 		_T("</tr></table></div>\r\n");
-	data.Translate(_T("{$img}"), viewImage[nView]);
-	data.Translate(_T("{$name}"), viewName[nView]);
+	data.translate(_T("{$img}"), viewImage[nView]);
+	data.translate(_T("{$name}"), viewName[nView]);
 	response.AppendBody(data);
 
 	switch(nView)
@@ -241,7 +241,8 @@ void ClientSession::CtrlPanelServerVariables(HttpRequest &request, HttpResponse 
 		}
 		else if (request.GetQueryParam(_T("delete"), varName))
 		{
-			TCHAR *pErr, *pCurr = varName;
+			TCHAR *pErr;
+			const TCHAR *pCurr = varName;
 			size_t nLen;
 
 			// Expect variable names encoded as *<len>.<name>
@@ -293,7 +294,7 @@ void ClientSession::CtrlPanelServerVariables(HttpRequest &request, HttpResponse 
 				response.AppendBody(_T("<td>"));
 				AddCheckbox(response, i, pVarList[i].szName, _T("Select variable"), _T("null"), FALSE);
 				row = _T("");
-				row.AddFormattedString(_T("</td><td>%s</td><td>%s</td><td>%s</td><td>"),
+				row.addFormattedString(_T("</td><td>%s</td><td>%s</td><td>%s</td><td>"),
 											  pVarList[i].szName, pVarList[i].szValue,
 											  pVarList[i].bNeedRestart ? _T("Yes") : _T("No"));
 				response.AppendBody(row);
@@ -393,14 +394,14 @@ void ClientSession::CtrlPanelUsers(HttpRequest &request, HttpResponse &response,
 					row = _T("");
 					if (bUsers)
 					{
-						row.AddFormattedString(_T("</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>"),
+						row.addFormattedString(_T("</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>"),
 													  pUserList[i].szName, pUserList[i].szFullName,
 													  pUserList[i].szDescription,
 													  pUserList[i].wFlags & UF_DISABLED ? _T("Disabled") : _T("Active"));
 					}
 					else
 					{
-						row.AddFormattedString(_T("</td><td>%s</td><td>%s</td><td>%s</td><td>"),
+						row.addFormattedString(_T("</td><td>%s</td><td>%s</td><td>%s</td><td>"),
 													  pUserList[i].szName, pUserList[i].szDescription,
 													  pUserList[i].wFlags & UF_DISABLED ? _T("Disabled") : _T("Active"));
 					}

@@ -192,7 +192,7 @@ void LogParserRule::expandMacros(const char *regexp, String &out)
 			// Check for escape
 			if ((curr != regexp) && (*(curr - 1) == '\\'))
 			{
-				out.AddString(prev, (DWORD)(curr - prev - 1));
+				out.addString(prev, (DWORD)(curr - prev - 1));
 				out += _T("@");
 			}
 			else
@@ -202,7 +202,7 @@ void LogParserRule::expandMacros(const char *regexp, String &out)
 				{
 					int i;
 
-					out.AddString(prev, (DWORD)(curr - prev));
+					out.addString(prev, (DWORD)(curr - prev));
 					curr += 2;
 					for(i = 0; (*curr != 0) && (*curr != '}'); i++)
 						name[i] = *curr++;
@@ -211,11 +211,11 @@ void LogParserRule::expandMacros(const char *regexp, String &out)
 				}
 				else
 				{
-					out.AddString(prev, (DWORD)(curr - prev + 1));
+					out.addString(prev, (DWORD)(curr - prev + 1));
 				}
 			}
 			prev = curr + 1;
 		}
 	}
-	out.AddString(prev, (DWORD)(curr - prev));
+	out.addString(prev, (DWORD)(curr - prev));
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,9 +49,9 @@ static THREAD m_hWriteThreadList[MAX_DB_WRITERS];
 // Put SQL request into queue for later execution
 //
 
-void NXCORE_EXPORTABLE QueueSQLRequest(char *szQuery)
+void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 {
-   g_pLazyRequestQueue->Put(strdup(szQuery));
+   g_pLazyRequestQueue->Put(_tcsdup(query));
 }
 
 
@@ -59,9 +59,9 @@ void NXCORE_EXPORTABLE QueueSQLRequest(char *szQuery)
 // Database "lazy" write thread
 //
 
-static THREAD_RESULT THREAD_CALL DBWriteThread(void *pArg)
+static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 {
-   char *pQuery;
+   TCHAR *query;
    DB_HANDLE hdb;
 
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
@@ -80,12 +80,12 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *pArg)
 
    while(1)
    {
-      pQuery = (char *)g_pLazyRequestQueue->GetOrBlock();
-      if (pQuery == INVALID_POINTER_VALUE)   // End-of-job indicator
+      query = (TCHAR *)g_pLazyRequestQueue->GetOrBlock();
+      if (query == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
-      DBQuery(hdb, pQuery);
-      free(pQuery);
+      DBQuery(hdb, query);
+      free(query);
    }
 
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
@@ -100,7 +100,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *pArg)
 // Start writer thread
 //
 
-void StartDBWriter(void)
+void StartDBWriter()
 {
    int i;
 
@@ -122,7 +122,7 @@ void StartDBWriter(void)
 // Stop writer thread and wait while all queries will be executed
 //
 
-void StopDBWriter(void)
+void StopDBWriter()
 {
    int i;
 

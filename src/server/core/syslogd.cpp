@@ -285,21 +285,19 @@ static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
 static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 {
    NX_LOG_RECORD record;
-   TCHAR *pszEscMsg, szQuery[4096];
+   TCHAR szQuery[4096];
 
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
    {
       record.qwMsgId = m_qwMsgId++;
       BindMsgToNode(&record, dwSourceIP);
-      pszEscMsg = EncodeSQLString(record.szMessage);
       _sntprintf(szQuery, 4096, 
                  _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,")
                  _T("source_object_id,hostname,msg_tag,msg_text) VALUES ")
-                 _T("(" UINT64_FMT "," TIME_T_FMT ",%d,%d,%d,'%s','%s','%s')"),
+                 _T("(" UINT64_FMT "," TIME_T_FMT ",%d,%d,%d,'%s','%s',%s)"),
                  record.qwMsgId, record.tmTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
-                 record.szHostName, record.szTag, pszEscMsg);
-      free(pszEscMsg);
+					  record.szHostName, record.szTag, (const TCHAR *)DBPrepareString(record.szMessage));
       DBQuery(g_hCoreDB, szQuery);
 
       // Send message to all connected clients

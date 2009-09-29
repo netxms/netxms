@@ -64,7 +64,7 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 		_T("     resizeElements();\r\n")
 		_T("	}\r\n")
 		_T("</script>\r\n");
-	data.Translate(_T("{$sid}"), m_sid);
+	data.translate(_T("{$sid}"), m_sid);
 	response.AppendBody(data);
 }
 
@@ -112,7 +112,7 @@ void ClientSession::SendObjectTree(HttpRequest &request, HttpResponse &response)
 
 	if (request.GetQueryParam(_T("parent"), parent))
 	{
-		parentId = atoi((TCHAR *)parent);
+		parentId = atoi((const TCHAR *)parent);
 	}
 
 	if (parentId == 0)
@@ -201,15 +201,15 @@ void ClientSession::SendObjectTree(HttpRequest &request, HttpResponse &response)
 		data += _T("\" ");
 		if (*ico != 0)
 		{
-			data.AddFormattedString(_T("openIcon=\"%s\" icon=\"%s\" "), ico, ico);
+			data.addFormattedString(_T("openIcon=\"%s\" icon=\"%s\" "), ico, ico);
 		}
 
 		if (ppRootObjects[i]->dwNumChilds > 0)
 		{
-			data.AddFormattedString(_T("src=\"/main.app?cmd=getObjectTree&amp;sid=%s&amp;parent=%d\" "),
+			data.addFormattedString(_T("src=\"/main.app?cmd=getObjectTree&amp;sid=%s&amp;parent=%d\" "),
 			                        m_sid, ppRootObjects[i]->dwId);
 		}
-		data.AddFormattedString(_T("action=\"javascript:showObjectInfo(%d, 0);\" />"), ppRootObjects[i]->dwId);
+		data.addFormattedString(_T("action=\"javascript:showObjectInfo(%d, 0);\" />"), ppRootObjects[i]->dwId);
 	}
 
 	data += _T("</tree>");
@@ -251,7 +251,7 @@ static BOOL IsValidObjectView(int nClass, int nView)
 static void AddObjectSubmenu(String &data, int nClass, int nViewId, const TCHAR *pszViewName)
 {
 	if (IsValidObjectView(nClass, nViewId))
-		data.AddFormattedString(_T("		<li><a href=\"\" onclick=\"javascript:showObjectInfo({$id},%d); return false;\">%s</a></li>\r\n"),
+		data.addFormattedString(_T("		<li><a href=\"\" onclick=\"javascript:showObjectInfo({$id},%d); return false;\">%s</a></li>\r\n"),
 										nViewId, pszViewName);
 }
 
@@ -268,14 +268,14 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 
 	if (!request.GetQueryParam(_T("id"), id))
 		return;
-	pObject = NXCFindObjectById(m_hSession, _tcstoul((TCHAR *)id, NULL, 10));
+	pObject = NXCFindObjectById(m_hSession, _tcstoul((const TCHAR *)id, NULL, 10));
 	if (pObject == NULL)
 		return;
 
 	// Calculate view to display
 	if (request.GetQueryParam(_T("view"), data))
 	{
-		nNewView = atoi((TCHAR *)data);
+		nNewView = atoi((const TCHAR *)data);
 		if ((nNewView <= OBJVIEW_CURRENT) || (nNewView >= OBJVIEW_LAST_VIEW_CODE))
 			nNewView = m_nCurrObjectView;
 	}
@@ -297,8 +297,8 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 		_T("<div id=\"objview_header\">\r\n")
 		_T("<table><tr><td valign=\"middle\"><img src=\"/images/status/{$status}.png\"></td><td>{$name}</td>\r\n")
 		_T("</tr></table></div>\r\n");
-	data.Translate(_T("{$status}"), g_szStatusImageName[pObject->iStatus]);
-	data.Translate(_T("{$name}"), pObject->szName);
+	data.translate(_T("{$status}"), g_szStatusImageName[pObject->iStatus]);
+	data.translate(_T("{$name}"), pObject->szName);
 	response.AppendBody(data);
 
 	// Object menu and start of object_data div
@@ -310,8 +310,8 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_TOOLS, _T("Tools"));
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_MANAGE, _T("Manage"));
 	data += _T("	</ul>\r\n</div><div id=\"object_data\">\r\n");
-	//data.Translate(_T("{$sid}"), m_sid);
-	data.Translate(_T("{$id}"), (TCHAR *)id);
+	//data.translate(_T("{$sid}"), m_sid);
+	data.translate(_T("{$id}"), (const TCHAR *)id);
 	response.AppendBody(data);
 
 	// View itself
@@ -448,7 +448,7 @@ static void AddTool(HttpResponse &response, TCHAR *pszName, TCHAR *pszImage, DWO
 {
 	String tmp;
 
-	tmp.AddFormattedString(_T("<table class=\"inner_table\"><tr><td style=\"padding-right: 0.4em;\">")
+	tmp.addFormattedString(_T("<table class=\"inner_table\"><tr><td style=\"padding-right: 0.4em;\">")
 	                       _T("<img src=\"%s\"></td><td>")
 								  _T("<a href=\"#\" onclick=\"javascript:execObjectTool(%d,%d); return false;\">%s</a></td></tr></table>\r\n"),
 								  pszImage, dwObjectId, nTool, pszName);

@@ -119,7 +119,7 @@ static void DeleteSession(ClientSession *pSession)
 // Find session by SID
 //
 
-static ClientSession *FindSessionBySID(TCHAR *pszSID)
+static ClientSession *FindSessionBySID(const TCHAR *pszSID)
 {
    DWORD i;
 	ClientSession *pSession = NULL;
@@ -146,14 +146,15 @@ static ClientSession *FindSessionBySID(TCHAR *pszSID)
 BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
 {
 	BOOL bProcessed = FALSE;
-	TCHAR *pszURI, *pszExt, szModule[MAX_MODULE_NAME];
+	const TCHAR *pszURI, *pszUriExt;
+	TCHAR *pszExt, szModule[MAX_MODULE_NAME];
 
 	pszURI = request.GetURI();
-	pszExt = _tcsrchr(pszURI, _T('.'));
-	if (pszExt != NULL)
+	pszUriExt = _tcsrchr(pszURI, _T('.'));
+	if (pszUriExt != NULL)
 	{
-		pszExt++;
-		if (!_tcscmp(pszExt, _T("app")))
+		pszUriExt++;
+		if (!_tcscmp(pszUriExt, _T("app")))
 		{
 			nx_strncpy(szModule, (*pszURI == _T('/')) ? &pszURI[1] : pszURI, MAX_MODULE_NAME);
 			pszExt = _tcsrchr(szModule, _T('.'));

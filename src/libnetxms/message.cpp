@@ -860,30 +860,30 @@ char *CSCPMessage::CreateXML(void)
 #endif
 	static const TCHAR *dtString[] = { _T("int32"), _T("string"), _T("int64"), _T("int16"), _T("binary"), _T("float") };
 
-	xml.AddFormattedString(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<nxcp version=\"%d\">\r\n   <message code=\"%d\" id=\"%d\">\r\n"), m_nVersion, m_wCode, m_dwId);
+	xml.addFormattedString(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<nxcp version=\"%d\">\r\n   <message code=\"%d\" id=\"%d\">\r\n"), m_nVersion, m_wCode, m_dwId);
 	for(i = 0; i < m_dwNumVar; i++)
 	{
-		xml.AddFormattedString(_T("      <variable id=\"%d\" type=\"%s\">\r\n         <value>"),
+		xml.addFormattedString(_T("      <variable id=\"%d\" type=\"%s\">\r\n         <value>"),
 		                       m_ppVarList[i]->dwVarId, dtString[m_ppVarList[i]->bType]);
 		switch(m_ppVarList[i]->bType)
 		{
 			case CSCP_DT_INTEGER:
-				xml.AddFormattedString(_T("%d"), m_ppVarList[i]->data.dwInteger);
+				xml.addFormattedString(_T("%d"), m_ppVarList[i]->data.dwInteger);
 				break;
 			case CSCP_DT_INT16:
-				xml.AddFormattedString(_T("%d"), m_ppVarList[i]->wInt16);
+				xml.addFormattedString(_T("%d"), m_ppVarList[i]->wInt16);
 				break;
 			case CSCP_DT_INT64:
-				xml.AddFormattedString(INT64_FMT, m_ppVarList[i]->data.qwInt64);
+				xml.addFormattedString(INT64_FMT, m_ppVarList[i]->data.qwInt64);
 				break;
 			case CSCP_DT_STRING:
 #ifdef UNICODE
 #ifdef UNICODE_UCS2
-				xml.AddDynamicString(EscapeStringForXML((TCHAR *)m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2));
+				xml.addDynamicString(EscapeStringForXML((TCHAR *)m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2));
 #else
 				tempStr = (WCHAR *)malloc(m_ppVarList[i]->data.string.dwLen * 2);
 				bytes = ucs2_to_ucs4(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2, tempStr, m_ppVarList[i]->data.string.dwLen / 2);
-				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
+				xml.addDynamicString(EscapeStringForXML(tempStr, bytes));
 				free(tempStr);
 #endif
 #else		/* not UNICODE */
@@ -893,12 +893,12 @@ char *CSCPMessage::CreateXML(void)
 				tempStr = (char *)malloc(bytes + 1);
 				bytes = WideCharToMultiByte(CP_UTF8, 0, (UCS2CHAR *)m_ppVarList[i]->data.string.szValue,
 				                            m_ppVarList[i]->data.string.dwLen / 2, tempStr, bytes + 1, NULL, NULL);
-				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
+				xml.addDynamicString(EscapeStringForXML(tempStr, bytes));
 				free(tempStr);
 #else
 				tempStr = (char *)malloc(m_ppVarList[i]->data.string.dwLen);
 				bytes = ucs2_to_utf8(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2, tempStr, m_ppVarList[i]->data.string.dwLen);
-				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
+				xml.addDynamicString(EscapeStringForXML(tempStr, bytes));
 				free(tempStr);
 #endif
 #endif	/* UNICODE */
@@ -912,9 +912,9 @@ char *CSCPMessage::CreateXML(void)
 					tempStr = (WCHAR *)malloc((blen + 1) * sizeof(WCHAR));
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, bdata, (int)blen, tempStr, (int)blen);
 					tempStr[blen] = 0;
-					xml.AddDynamicString(tempStr);
+					xml.addDynamicString(tempStr);
 #else
-					xml.AddString(bdata, (DWORD)blen);
+					xml.addString(bdata, (DWORD)blen);
 #endif
 				}
 				safe_free(bdata);

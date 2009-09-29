@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ static DWORD m_dwRecordId = 1;
 // Initalize audit log
 //
 
-void InitAuditLog(void)
+void InitAuditLog()
 {
 	DB_RESULT hResult;
 
@@ -70,38 +70,29 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 // Write audit record
 //
 
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
-                                     const TCHAR *pszWorkstation, DWORD dwObjectId,
-                                     const TCHAR *pszFormat, ...)
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD userId,
+                                     const TCHAR *workstation, DWORD objectId,
+                                     const TCHAR *format, ...)
 {
-	TCHAR *pszQuery, *pszText, *pszEscText;
+	String text, query;
 	va_list args;
-	size_t nBufSize;
 	CSCPMessage msg;
 
-	nBufSize = _tcslen(pszFormat) + NumChars(pszFormat, _T('%')) * 256 + 1;
-	pszText = (TCHAR *)malloc(nBufSize * sizeof(TCHAR));
-	va_start(args, pszFormat);
-	_vsntprintf(pszText, nBufSize, pszFormat, args);
+	va_start(args, format);
+	text.addFormattedString(format, args);
 	va_end(args);
 
-	pszEscText = EncodeSQLString(pszText);
-	pszQuery = (TCHAR *)malloc((_tcslen(pszText) + 256) * sizeof(TCHAR));
-	_stprintf(pszQuery, _T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,object_id,message) VALUES(%d,") TIME_T_FMT _T(",'%s',%d,%d,'%s',%d,'%s')"),
-		       m_dwRecordId++, time(NULL), pszSubsys, bSuccess ? 1 : 0, 
-		       dwUserId, pszWorkstation, dwObjectId, pszEscText);
-	free(pszEscText);
-	QueueSQLRequest(pszQuery);
-	free(pszQuery);
+	query.addFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%s)"),
+		       m_dwRecordId++, time(NULL), (const TCHAR *)DBPrepareString(subsys), isSuccess ? 1 : 0, 
+		       userId, (const TCHAR *)DBPrepareString(workstation), objectId, (const TCHAR *)DBPrepareString(text));
+	QueueSQLRequest(query);
 
 	msg.SetCode(CMD_AUDIT_RECORD);
-	msg.SetVariable(VID_SUBSYSTEM, pszSubsys);
-	msg.SetVariable(VID_SUCCESS_AUDIT, (WORD)bSuccess);
-	msg.SetVariable(VID_USER_ID, dwUserId);
-	msg.SetVariable(VID_WORKSTATION, pszWorkstation);
-	msg.SetVariable(VID_OBJECT_ID, dwObjectId);
-	msg.SetVariable(VID_MESSAGE, pszText);
+	msg.SetVariable(VID_SUBSYSTEM, subsys);
+	msg.SetVariable(VID_SUCCESS_AUDIT, (WORD)isSuccess);
+	msg.SetVariable(VID_USER_ID, userId);
+	msg.SetVariable(VID_WORKSTATION, workstation);
+	msg.SetVariable(VID_OBJECT_ID, objectId);
+	msg.SetVariable(VID_MESSAGE, (const TCHAR *)text);
 	EnumerateClientSessions(SendNewRecord, &msg);
-
-	free(pszText);
 }

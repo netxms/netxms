@@ -136,7 +136,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 
 				// Column names
 				columnCount = DBGetColumnCountAsync(hResult);
-				query.AddFormattedString("INSERT INTO %s (", name);
+				query.addFormattedString("INSERT INTO %s (", name);
 				for(i = 0; i < columnCount; i++)
 				{
 					DBGetColumnNameAsync(hResult, i, buffer, 256);
@@ -151,7 +151,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				{
 					query += "'";
 					data = (char *)malloc(8192);
-					query.AddDynamicString(DBGetFieldAsync(hResult, i, data, 8192));
+					query.addDynamicString(DBGetFieldAsync(hResult, i, data, 8192));
 					query += "',";
 				}
 				query.shrink();

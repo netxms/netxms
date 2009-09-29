@@ -778,7 +778,7 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
          strDescr = p->pszDescription;
          EscapeString(strDescr);
 
-         str.AddFormattedString(_T("\t@EVENT %s\n\t{\n")
+         str.addFormattedString(_T("\t@EVENT %s\n\t{\n")
                                 _T("\t\tCODE=%d;\n")
                                 _T("\t\tSEVERITY=%d;\n")
                                 _T("\t\tFLAGS=%d;\n")
@@ -786,7 +786,7 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
                                 _T("\t\tDESCRIPTION=\"%s\";\n")
                                 _T("\t}\n"),
                                 p->szName, p->dwCode, p->dwSeverity,
-                                p->dwFlags, (TCHAR *)strText, (TCHAR *)strDescr);
+                                p->dwFlags, (const TCHAR *)strText, (const TCHAR *)strDescr);
       }
    }
 

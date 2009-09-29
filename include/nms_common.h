@@ -147,6 +147,11 @@ typedef int bool;
 #define HAVE_VSCWPRINTF         1
 #endif
 
+#ifndef va_copy
+#define va_copy(x,y)            (x = y)
+#endif
+#define HAVE_DECL_VA_COPY       1
+
 #include <winsock2.h>
 #include <windows.h>
 #include <stdlib.h>
@@ -487,6 +492,11 @@ typedef unsigned int socklen_t;
 #endif
 
 typedef struct hostent HOSTENT;
+
+#if HAVE_DECL___VA_COPY && !HAVE_DECL_VA_COPY
+#define HAVE_DECL_VA_COPY 1
+#define va_copy(d,s) __va_copy(d,s)
+#endif
 
 #endif   /* _WIN32 */
 

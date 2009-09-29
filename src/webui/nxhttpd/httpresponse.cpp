@@ -170,7 +170,7 @@ char *HttpResponse::BuildStream(int &size)
 	SetHeader(_T("Content-Lenght"), szBuffer);
 
 	tmp = _T("HTTP/1.0 ");
-	tmp += (TCHAR *)m_codeString;
+	tmp += (const TCHAR *)m_codeString;
 	tmp += _T("\r\n");
 
 	for(i = 0; i < m_headers.getSize(); i++)
@@ -183,16 +183,16 @@ char *HttpResponse::BuildStream(int &size)
 	tmp += _T("\r\n");
 
 	// TODO: add validation!
-	size = tmp.Size() + m_bodyLen;
+	size = tmp.getSize() + m_bodyLen;
 	out = (char *)malloc(size);
 
 #ifdef UNICODE
 #error NOT IMPLEMENTED YET
 #else
 	// TODO: convert to UTF-8 ????
-	memcpy(out, (TCHAR *)tmp, tmp.Size());
+	memcpy(out, (const TCHAR *)tmp, tmp.getSize());
 	if ((m_bodyLen > 0) && (m_body != NULL))
-		memcpy(out + tmp.Size(), m_body, m_bodyLen);
+		memcpy(out + tmp.getSize(), m_body, m_bodyLen);
 #endif
 
 	return out;
@@ -233,10 +233,10 @@ void HttpResponse::StartBox(const TCHAR *pszTitle, const TCHAR *pszClass, const 
 	{
 		if (pszId != NULL)
 		{
-			temp.AddFormattedString(_T("<div id=\"%s\""), pszId);
+			temp.addFormattedString(_T("<div id=\"%s\""), pszId);
 			if (pszClass != NULL)
 			{
-				temp.AddFormattedString(_T(" class=\"%s\">\r\n"), pszClass);
+				temp.addFormattedString(_T(" class=\"%s\">\r\n"), pszClass);
 			}
 			else
 			{
@@ -245,7 +245,7 @@ void HttpResponse::StartBox(const TCHAR *pszTitle, const TCHAR *pszClass, const 
 		}
 		else
 		{
-			temp.AddFormattedString(_T("<div class=\"%s\">\r\n"), (pszClass != NULL) ? pszClass : _T("box"));
+			temp.addFormattedString(_T("<div class=\"%s\">\r\n"), (pszClass != NULL) ? pszClass : _T("box"));
 		}
 		AppendBody(temp);
 	}
@@ -257,7 +257,7 @@ void HttpResponse::StartBox(const TCHAR *pszTitle, const TCHAR *pszClass, const 
 		if (pszTableClass != NULL)
 		{
 			temp = _T("");
-			temp.AddFormattedString(_T("</td></tr></table></div><table class=\"%s\">\r\n"), pszTableClass);
+			temp.addFormattedString(_T("</td></tr></table></div><table class=\"%s\">\r\n"), pszTableClass);
 			AppendBody(temp);
 		}
 		else
@@ -270,7 +270,7 @@ void HttpResponse::StartBox(const TCHAR *pszTitle, const TCHAR *pszClass, const 
 		if (pszTableClass != NULL)
 		{
 			temp = _T("");
-			temp.AddFormattedString(_T("</td></tr></table></div><table class=\"%s\">\r\n"), pszTableClass);
+			temp.addFormattedString(_T("</td></tr></table></div><table class=\"%s\">\r\n"), pszTableClass);
 			AppendBody(temp);
 		}
 		else

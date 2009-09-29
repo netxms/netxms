@@ -252,28 +252,29 @@ public:
 	String(const String &src);
    ~String();
 
-   void SetBuffer(TCHAR *pszBuffer);
+   void setBuffer(TCHAR *pszBuffer);
 
    const String& operator =(const TCHAR *pszStr);
    const String&  operator +=(const TCHAR *pszStr);
-   operator TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
+   operator const TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
 
-	void AddString(const TCHAR *pStr, DWORD dwLen);
-	void AddDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
+	void addString(const TCHAR *pStr, DWORD dwLen);
+	void addDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
 
-	void AddMultiByteString(const char *pStr, DWORD dwSize, int nCodePage);
-	void AddWideCharString(const WCHAR *pStr, DWORD dwSize);
+	void addMultiByteString(const char *pStr, DWORD dwSize, int nCodePage);
+	void addWideCharString(const WCHAR *pStr, DWORD dwSize);
 
-   void AddFormattedString(const TCHAR *pszFormat, ...);
-   void EscapeCharacter(int ch, int esc);
-   void Translate(const TCHAR *pszSrc, const TCHAR *pszDst);
+   void addFormattedString(const TCHAR *format, ...);
+   void addFormattedString(const TCHAR *format, va_list args);
+   void escapeCharacter(int ch, int esc);
+   void translate(const TCHAR *pszSrc, const TCHAR *pszDst);
 
-	DWORD Size() { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
-	BOOL IsEmpty() { return m_dwBufSize <= 1; }
+	DWORD getSize() { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
+	BOOL isEmpty() { return m_dwBufSize <= 1; }
 
-	TCHAR *SubStr(int nStart, int nLen, TCHAR *pszBuffer);
-	TCHAR *SubStr(int nStart, int nLen) { return SubStr(nStart, nLen, NULL); }
-	int Find(const TCHAR *pszStr, int nStart = 0);
+	TCHAR *subStr(int nStart, int nLen, TCHAR *pszBuffer);
+	TCHAR *subStr(int nStart, int nLen) { return subStr(nStart, nLen, NULL); }
+	int find(const TCHAR *pszStr, int nStart = 0);
 
 	void trim();
 	void shrink(int chars = 1);

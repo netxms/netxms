@@ -79,8 +79,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession,
 // Set value of server's variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, TCHAR *pszVarName,
-                                              TCHAR *pszValue)
+DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, const TCHAR *pszVarName,
+                                              const TCHAR *pszValue)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -101,7 +101,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, TCHAR *pszVa
 // Delete server's variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, TCHAR *pszVarName)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, const TCHAR *pszVarName)
 {
    CSCPMessage msg;
    DWORD dwRqId;

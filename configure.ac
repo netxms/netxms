@@ -952,6 +952,17 @@ AC_CHECK_DECLS([RTLD_NOW, RTLD_GLOBAL],,,[
 #include <dlfcn.h>
 #endif
 ])
+AC_CHECK_DECLS([va_copy, __va_copy],,,[
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_STDARG_H
+#include <stdarg.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+])
 
 
 #--------------------------------------------------------------------

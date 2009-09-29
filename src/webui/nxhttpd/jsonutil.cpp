@@ -33,19 +33,19 @@ static void EscapeStringForJSON(String &str)
 	int i;
 	TCHAR chr[2], buffer[16];
    
-	str.EscapeCharacter(_T('\\'), _T('\\'));
-   str.EscapeCharacter(_T('"'), _T('\\'));
+	str.escapeCharacter(_T('\\'), _T('\\'));
+   str.escapeCharacter(_T('"'), _T('\\'));
 	
-   str.Translate(_T("\r"), _T("\\r"));
-   str.Translate(_T("\n"), _T("\\n"));
-   str.Translate(_T("\t"), _T("\\t"));
+   str.translate(_T("\r"), _T("\\r"));
+   str.translate(_T("\n"), _T("\\n"));
+   str.translate(_T("\t"), _T("\\t"));
 
 	chr[1] = 0;
 	for(i = 1; i < ' '; i++)
 	{
 		_sntprintf(buffer, 16, _T("\\u%04X"), i);
 		chr[0] = i;
-		str.Translate(chr, buffer);
+		str.translate(chr, buffer);
 	}
 }
 
@@ -98,9 +98,9 @@ void JSONObjectBuilder::StartArray(const TCHAR *name)
 {
 	StartElement();
 	if (name != NULL)
-		m_data.AddFormattedString(_T("%*s\"%s\": ["), m_level * m_tabSize, _T(""), name);
+		m_data.addFormattedString(_T("%*s\"%s\": ["), m_level * m_tabSize, _T(""), name);
 	else
-		m_data.AddFormattedString(_T("%*s["), m_level * m_tabSize, _T(""));
+		m_data.addFormattedString(_T("%*s["), m_level * m_tabSize, _T(""));
 	NextLevel();
 }
 
@@ -112,7 +112,7 @@ void JSONObjectBuilder::StartArray(const TCHAR *name)
 void JSONObjectBuilder::EndArray()
 {
 	PrevLevel();
-	m_data.AddFormattedString(_T("\r\n%*s]"), m_level * m_tabSize, _T(""));
+	m_data.addFormattedString(_T("\r\n%*s]"), m_level * m_tabSize, _T(""));
 }
 
 
@@ -124,9 +124,9 @@ void JSONObjectBuilder::StartObject(const TCHAR *name)
 {
 	StartElement();
 	if (name != NULL)
-		m_data.AddFormattedString(_T("%*s\"%s\": {"), m_level * m_tabSize, _T(""), name);
+		m_data.addFormattedString(_T("%*s\"%s\": {"), m_level * m_tabSize, _T(""), name);
 	else
-		m_data.AddFormattedString(_T("%*s{"), m_level * m_tabSize, _T(""));
+		m_data.addFormattedString(_T("%*s{"), m_level * m_tabSize, _T(""));
 	NextLevel();
 }
 
@@ -138,7 +138,7 @@ void JSONObjectBuilder::StartObject(const TCHAR *name)
 void JSONObjectBuilder::EndObject()
 {
 	PrevLevel();
-	m_data.AddFormattedString(_T("\r\n%*s}"), m_level * m_tabSize, _T(""));
+	m_data.addFormattedString(_T("\r\n%*s}"), m_level * m_tabSize, _T(""));
 }
 
 
@@ -152,9 +152,9 @@ void JSONObjectBuilder::AddString(const TCHAR *name, const TCHAR *value)
 
 	StartElement();
 	if (name != NULL)
-		m_data.AddFormattedString(_T("%*s\"%s\": \""), m_level * m_tabSize, _T(""), name);
+		m_data.addFormattedString(_T("%*s\"%s\": \""), m_level * m_tabSize, _T(""), name);
 	else
-		m_data.AddFormattedString(_T("%*s\""), m_level * m_tabSize, _T(""));
+		m_data.addFormattedString(_T("%*s\""), m_level * m_tabSize, _T(""));
 	temp = value;
 	EscapeStringForJSON(temp);
 	m_data += (const TCHAR *)temp;
@@ -170,9 +170,9 @@ void JSONObjectBuilder::AddInt32(const TCHAR *name, int value)
 {
 	StartElement();
 	if (name != NULL)
-		m_data.AddFormattedString(_T("%*s\"%s\": %d"), m_level * m_tabSize, _T(""), name, value);
+		m_data.addFormattedString(_T("%*s\"%s\": %d"), m_level * m_tabSize, _T(""), name, value);
 	else
-		m_data.AddFormattedString(_T("%*s%d"), m_level * m_tabSize, _T(""), value);
+		m_data.addFormattedString(_T("%*s%d"), m_level * m_tabSize, _T(""), value);
 }
 
 
@@ -184,9 +184,9 @@ void JSONObjectBuilder::AddUInt32(const TCHAR *name, DWORD value)
 {
 	StartElement();
 	if (name != NULL)
-		m_data.AddFormattedString(_T("%*s\"%s\": %u"), m_level * m_tabSize, _T(""), name, value);
+		m_data.addFormattedString(_T("%*s\"%s\": %u"), m_level * m_tabSize, _T(""), name, value);
 	else
-		m_data.AddFormattedString(_T("%*s%u"), m_level * m_tabSize, _T(""), value);
+		m_data.addFormattedString(_T("%*s%u"), m_level * m_tabSize, _T(""), value);
 }
 
 
@@ -198,9 +198,9 @@ void JSONObjectBuilder::AddUInt64(const TCHAR *name, QWORD value)
 {
 	StartElement();
 	if (name != NULL)
-		m_data.AddFormattedString(_T("%*s\"%s\": ") UINT64_FMT, m_level * m_tabSize, _T(""), name, value);
+		m_data.addFormattedString(_T("%*s\"%s\": ") UINT64_FMT, m_level * m_tabSize, _T(""), name, value);
 	else
-		m_data.AddFormattedString(_T("%*s") UINT64_FMT, m_level * m_tabSize, _T(""), value);
+		m_data.addFormattedString(_T("%*s") UINT64_FMT, m_level * m_tabSize, _T(""), value);
 }
 
 

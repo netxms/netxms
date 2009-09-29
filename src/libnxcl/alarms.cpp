@@ -247,7 +247,7 @@ TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *ala
 			out += prev;
 			break;
 		}
-		out.AddString(prev, (DWORD)(curr - prev));
+		out.addString(prev, (DWORD)(curr - prev));
 		curr++;
 		switch(*curr)
 		{
@@ -255,25 +255,25 @@ TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *ala
 				out += _T("%");
 				break;
 			case 'e':
-				out.AddFormattedString(_T("%u"), alarm->dwSourceEventCode);
+				out.addFormattedString(_T("%u"), alarm->dwSourceEventCode);
 				break;
 			case 'E':
 				out += NXCGetEventName(session, alarm->dwSourceEventCode);
 				break;
 			case 'h':
-				out.AddFormattedString(_T("%d"), alarm->nHelpDeskState);
+				out.addFormattedString(_T("%d"), alarm->nHelpDeskState);
 				break;
 			case 'H':
 				out += helpdeskState[alarm->nHelpDeskState];
 				break;
 			case 'I':
-				out.AddFormattedString(_T("%u"), alarm->dwAlarmId);
+				out.addFormattedString(_T("%u"), alarm->dwAlarmId);
 				break;
 			case 'm':
 				out += alarm->szMessage;
 				break;
 			case 's':
-				out.AddFormattedString(_T("%d"), alarm->nCurrentSeverity);
+				out.addFormattedString(_T("%d"), alarm->nCurrentSeverity);
 				break;
 			case 'S':
 				out += severityText[alarm->nCurrentSeverity];

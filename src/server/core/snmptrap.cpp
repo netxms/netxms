@@ -256,7 +256,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    if (m_bLogAllTraps)
    {
       CSCPMessage msg;
-      TCHAR *pszEscTrapArgs, szQuery[8192];
+      TCHAR szQuery[8192];
       DWORD dwTimeStamp = (DWORD)time(NULL);
 
       dwBufSize = pdu->getNumVariables() * 4096 + 16;
@@ -272,14 +272,12 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       }
 
       // Write new trap to database
-      pszEscTrapArgs = EncodeSQLString(pszTrapArgs);
       _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
-                                _T("(") INT64_FMT _T(",%d,'%s',%d,'%s','%s')"),
+                                _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
                  m_qnTrapId, dwTimeStamp, IpToStr(dwOriginAddr, szBuffer),
                  (pNode != NULL) ? pNode->Id() : (DWORD)0, pdu->getTrapId()->GetValueAsText(),
-                 pszEscTrapArgs);
-      free(pszEscTrapArgs);
+                 (const TCHAR *)DBPrepareString(pszTrapArgs));
       QueueSQLRequest(szQuery);
 
       // Notify connected clients
@@ -763,49 +761,49 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
    {
       if (m_pTrapCfg[i].dwId == dwId)
       {
-			str.AddFormattedString(_T("\t@TRAP %s\n\t{\n"),
+			str.addFormattedString(_T("\t@TRAP %s\n\t{\n"),
 			                       SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen,
 			                                            m_pTrapCfg[i].pdwObjectId,
 																	  szBuffer, 1024));
 			strTemp = m_pTrapCfg[i].szDescription;
-			strTemp.EscapeCharacter(_T('\\'), _T('\\'));
-			strTemp.EscapeCharacter(_T('"'), _T('\\'));
-			strTemp.Translate(_T("\r"), _T("\\r"));
-			strTemp.Translate(_T("\n"), _T("\\n"));
-			str.AddFormattedString(_T("\t\tDESCRIPTION=\"%s\";\n"), (TCHAR *)strTemp);
+			strTemp.escapeCharacter(_T('\\'), _T('\\'));
+			strTemp.escapeCharacter(_T('"'), _T('\\'));
+			strTemp.translate(_T("\r"), _T("\\r"));
+			strTemp.translate(_T("\n"), _T("\\n"));
+			str.addFormattedString(_T("\t\tDESCRIPTION=\"%s\";\n"), (const TCHAR *)strTemp);
 
 			strTemp = m_pTrapCfg[i].szUserTag;
-			strTemp.EscapeCharacter(_T('\\'), _T('\\'));
-			strTemp.EscapeCharacter(_T('"'), _T('\\'));
-			strTemp.Translate(_T("\r"), _T("\\r"));
-			strTemp.Translate(_T("\n"), _T("\\n"));
-			str.AddFormattedString(_T("\t\tUSERTAG=\"%s\";\n"), (TCHAR *)strTemp);
+			strTemp.escapeCharacter(_T('\\'), _T('\\'));
+			strTemp.escapeCharacter(_T('"'), _T('\\'));
+			strTemp.translate(_T("\r"), _T("\\r"));
+			strTemp.translate(_T("\n"), _T("\\n"));
+			str.addFormattedString(_T("\t\tUSERTAG=\"%s\";\n"), (const TCHAR *)strTemp);
 
 		   ResolveEventName(m_pTrapCfg[i].dwEventCode, szBuffer);
-			str.AddFormattedString(_T("\t\tEVENT=%s;\n"), szBuffer);
+			str.addFormattedString(_T("\t\tEVENT=%s;\n"), szBuffer);
 			if (m_pTrapCfg[i].dwNumMaps > 0)
 			{
 				str += _T("\t\t@PARAMETERS\n\t\t{\n");
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
 					strTemp = m_pTrapCfg[i].pMaps[j].szDescription;
-					strTemp.EscapeCharacter(_T('\\'), _T('\\'));
-					strTemp.EscapeCharacter(_T('"'), _T('\\'));
-					strTemp.Translate(_T("\r"), _T("\\r"));
-					strTemp.Translate(_T("\n"), _T("\\n"));
+					strTemp.escapeCharacter(_T('\\'), _T('\\'));
+					strTemp.escapeCharacter(_T('"'), _T('\\'));
+					strTemp.translate(_T("\r"), _T("\\r"));
+					strTemp.translate(_T("\n"), _T("\\n"));
                if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
 					{
-						str.AddFormattedString(_T("\t\t\t%s=\"%s\";\n"),
+						str.addFormattedString(_T("\t\t\t%s=\"%s\";\n"),
 						                       SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
 													                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
 																				  szBuffer, 1024),
-						                       (TCHAR *)strTemp);
+						                       (const TCHAR *)strTemp);
 					}
 					else
 					{
-						str.AddFormattedString(_T("\t\t\tPOS:%d=\"%s\";\n"),
+						str.addFormattedString(_T("\t\t\tPOS:%d=\"%s\";\n"),
 						                       m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF,
-						                       (TCHAR *)strTemp);
+						                       (const TCHAR *)strTemp);
 					}
 				}
 				str += _T("\t\t}\n");

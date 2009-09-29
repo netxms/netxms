@@ -68,7 +68,7 @@ BOOL HttpRequest::Read(SOCKET s)
 	
 	time(&started);
 
-	while(!ret && m_raw.Size() < 10240)
+	while(!ret && m_raw.getSize() < 10240)
 	{
 		if (started + REQUEST_READ_TIMESLICE < time(NULL))
 		{
@@ -108,7 +108,7 @@ BOOL HttpRequest::Read(SOCKET s)
 			break;
 		}
 
-		m_raw.AddString(buffer, size);
+		m_raw.addString(buffer, size);
 
 		if (IsComplete())
 		{
@@ -134,15 +134,15 @@ BOOL HttpRequest::IsComplete(void)
 	TCHAR szBuffer[256];
 	int start, end, endOfHeaders;
 
-	if (m_raw.Size() < 15) // minimal: 'GET / HTTP/1.0\n' = 15
+	if (m_raw.getSize() < 15) // minimal: 'GET / HTTP/1.0\n' = 15
 	{
 		return FALSE;
 	}
 
 	// we assume that eos is CRLF, not LF or any mix of them
-	if (!_tcscmp(m_raw.SubStr(0, 3, szBuffer), _T("GET")))
+	if (!_tcscmp(m_raw.subStr(0, 3, szBuffer), _T("GET")))
 	{
-		if (!_tcscmp(m_raw.SubStr(m_raw.Size() - 4, 4, szBuffer), _T("\r\n\r\n")))
+		if (!_tcscmp(m_raw.subStr(m_raw.getSize() - 4, 4, szBuffer), _T("\r\n\r\n")))
 		{
 			m_method = METHOD_GET;
 			ret = TRUE;
@@ -150,22 +150,22 @@ BOOL HttpRequest::IsComplete(void)
 	}
 	else
 	{
-		if (!_tcscmp(m_raw.SubStr(0, 4, szBuffer), _T("POST")))
+		if (!_tcscmp(m_raw.subStr(0, 4, szBuffer), _T("POST")))
 		{
-			endOfHeaders = m_raw.Find(_T("\r\n\r\n"), 0);
+			endOfHeaders = m_raw.find(_T("\r\n\r\n"), 0);
 			if (endOfHeaders != String::npos)
 			{
-				start = m_raw.Find(_T("\r\nContent-Length: "), 0);
+				start = m_raw.find(_T("\r\nContent-Length: "), 0);
 				if (start != String::npos)
 				{
 					start += 18; // strlen("\r\nContent-Length: ")
-					end = m_raw.Find(_T("\r\n"), start + 1);
+					end = m_raw.find(_T("\r\n"), start + 1);
 					if (end > start)
 					{
 						if (end - start <= 8)
 						{
-							if ((int)m_raw.Size() >=
-								endOfHeaders + 4 + atoi(m_raw.SubStr(start, end - start, szBuffer)))
+							if ((int)m_raw.getSize() >=
+								endOfHeaders + 4 + atoi(m_raw.subStr(start, end - start, szBuffer)))
 							{
 								m_method = METHOD_POST;
 								ret = TRUE;
@@ -205,39 +205,39 @@ BOOL HttpRequest::Parse(void)
 		return FALSE;
 	}
 
-	start = m_raw.Find(_T(" "), 0);
-	end = m_raw.Find(_T(" "), start + 1);
+	start = m_raw.find(_T(" "), 0);
+	end = m_raw.find(_T(" "), start + 1);
 
 	if ((start != String::npos) && (end != String::npos))
 	{
 		// get uri
-		m_uri.SetBuffer(m_raw.SubStr(start + 1, end - start - 1));
+		m_uri.setBuffer(m_raw.subStr(start + 1, end - start - 1));
 
-		start = m_uri.Find(_T("?"));
+		start = m_uri.find(_T("?"));
 		if (start != String::npos)
 		{
 			// found query data
-			m_rawQuery.SetBuffer(m_uri.SubStr(start + 1, -1));
-			m_uri.SetBuffer(m_uri.SubStr(0, start));
+			m_rawQuery.setBuffer(m_uri.subStr(start + 1, -1));
+			m_uri.setBuffer(m_uri.subStr(0, start));
 		}
 
 		if (m_method == METHOD_POST)
 		{
-			start = m_raw.Find(_T("\r\n\r\n"));
+			start = m_raw.find(_T("\r\n\r\n"));
 
 			m_rawQuery += _T("&");
-			m_rawQuery.AddDynamicString(m_raw.SubStr(start + 4, -1));
+			m_rawQuery.addDynamicString(m_raw.subStr(start + 4, -1));
 
 			// ie sends \r\n at the end of req.
-			start = m_rawQuery.Find(_T("\r"));
+			start = m_rawQuery.find(_T("\r"));
 			if (start != String::npos)
 			{
-				m_rawQuery.SetBuffer(m_rawQuery.SubStr(0, start));
+				m_rawQuery.setBuffer(m_rawQuery.subStr(0, start));
 			}
-			start = m_rawQuery.Find(_T("\n"));
+			start = m_rawQuery.find(_T("\n"));
 			if (start != String::npos)
 			{
-				m_rawQuery.SetBuffer(m_rawQuery.SubStr(0, start));
+				m_rawQuery.setBuffer(m_rawQuery.subStr(0, start));
 			}
 		}
 
@@ -259,14 +259,14 @@ BOOL HttpRequest::ParseQueryString(void)
 	TCHAR *pszParam;
 
 	firstPos = 0;
-	secondPos = m_rawQuery.Find(_T("&"));
-	pszParam = m_rawQuery.SubStr(firstPos, secondPos);
+	secondPos = m_rawQuery.find(_T("&"));
+	pszParam = m_rawQuery.subStr(firstPos, secondPos);
 	ParseParameter(pszParam);
 	while(secondPos != String::npos)
 	{
 		firstPos = secondPos + 1;
-		secondPos = m_rawQuery.Find(_T("&"), firstPos);
-		pszParam = m_rawQuery.SubStr(firstPos, (secondPos != String::npos) ? (secondPos - firstPos) : -1);
+		secondPos = m_rawQuery.find(_T("&"), firstPos);
+		pszParam = m_rawQuery.subStr(firstPos, (secondPos != String::npos) ? (secondPos - firstPos) : -1);
 		ParseParameter(pszParam);
 	}
 	return TRUE;

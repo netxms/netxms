@@ -1386,8 +1386,8 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 	ConfigReadStr(_T("WindowsConsoleUpgradeURL"), szBuffer, 1024,
 	              _T("http://www.netxms.org/download/netxms-%version%.exe"));
 	strURL = szBuffer;
-	strURL.Translate(_T("%version%"), NETXMS_VERSION_STRING);
-	msg.SetVariable(VID_CONSOLE_UPGRADE_URL, (TCHAR *)strURL);
+	strURL.translate(_T("%version%"), NETXMS_VERSION_STRING);
+	msg.SetVariable(VID_CONSOLE_UPGRADE_URL, (const TCHAR *)strURL);
 
    // Send response
    sendMessage(&msg);
@@ -1953,10 +1953,8 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
          msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 3));
          msg.SetVariable(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 4));
          DBGetFieldAsync(hResult, 5, szBuffer, 1024);
-         DecodeSQLString(szBuffer);
          msg.SetVariable(dwId++, szBuffer);
          DBGetFieldAsync(hResult, 6, szBuffer, 1024);
-         DecodeSQLString(szBuffer);
          msg.SetVariable(dwId++, szBuffer);
       }
       DBFreeAsyncResult(g_hCoreDB, hResult);
@@ -6886,9 +6884,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
          msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 4));
          msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
          msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 6, szBuffer, 1024));
-         DBGetFieldAsync(hResult, 7, szBuffer, 1024);
-         DecodeSQLString(szBuffer);
-         msg.SetVariable(dwId++, szBuffer);
+         msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 7, szBuffer, 1024));
       }
       DBFreeAsyncResult(g_hCoreDB, hResult);
 
@@ -7016,9 +7012,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             msg.SetVariable(dwId++, DBGetFieldAsyncIPAddr(hResult, 2));
             msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 3));
             msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 4, szBuffer, 256));
-            DBGetFieldAsync(hResult, 5, szBuffer, 4096);
-            DecodeSQLString(szBuffer);
-            msg.SetVariable(dwId++, szBuffer);
+            msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 5, szBuffer, 4096));
          }
          DBFreeAsyncResult(g_hCoreDB, hResult);
 
@@ -8536,9 +8530,9 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
          String str, temp;
 
          str = _T("@NXMP\n{\n\tVERSION=2;\n\tDESCRIPTION=\"");
-         temp.SetBuffer(pRequest->GetVariableStr(VID_DESCRIPTION));
+         temp.setBuffer(pRequest->GetVariableStr(VID_DESCRIPTION));
          EscapeString(temp);
-         str += (TCHAR *)temp;
+         str += (const TCHAR *)temp;
          str += _T("\";\n}\n\n");
 
          // Write events
@@ -8575,7 +8569,7 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
 
          // Put result into message
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         msg.SetVariable(VID_NXMP_CONTENT, (TCHAR *)str);
+         msg.SetVariable(VID_NXMP_CONTENT, (const TCHAR *)str);
       }
 
       safe_free(pdwTemplateList);

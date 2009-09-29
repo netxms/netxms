@@ -129,9 +129,9 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 		TCHAR *value = DBGetField(hResult, i, 1, NULL, 0);
 		DecodeSQLString(value);
 		String newValue = DBPrepareString(value);
-		if ((int)newValue.Size() + 256 > queryLen)
+		if ((int)newValue.getSize() + 256 > queryLen)
 		{
-			queryLen = newValue.Size() + 256;
+			queryLen = newValue.getSize() + 256;
 			query = (TCHAR *)realloc(query, queryLen);
 		}
 		_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
@@ -144,6 +144,43 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 cleanup:
 	DBFreeResult(hResult);
 	return success;
+}
+
+
+//
+// Upgrade from V205 to V206
+//
+
+static BOOL H_UpgradeFromV205(int currVersion, int newVersion)
+{
+	// Convert event log
+	if (!ConvertStrings("event_log", "event_id", "event_message"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+	if (!ConvertStrings("event_log", "event_id", "user_tag"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	// Convert audit log
+	if (!ConvertStrings("audit_log", "record_id", "message"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	// Convert syslog
+	if (!ConvertStrings("syslog", "msg_id", "msg_text"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	// Convert SNMP trap log
+	if (!ConvertStrings("snmp_trap_log", "trap_id", "trap_varlist"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='206' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
 }
 
 
@@ -304,8 +341,9 @@ static BOOL H_UpgradeFromV200(int currVersion, int newVersion)
 //      or from V93 to V201
 //      or from V94 to V202
 //      or from V95 to V203
-//      or from V95 to V204
-//      or from V96 to V205
+//      or from V96 to V204
+//      or from V97 to V205
+//      or from V98 to V206
 //
 
 static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
@@ -4254,11 +4292,13 @@ static struct
 	{ 95, 203, H_UpgradeFromV9x },
 	{ 96, 204, H_UpgradeFromV9x },
 	{ 97, 205, H_UpgradeFromV9x },
+	{ 98, 206, H_UpgradeFromV9x },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
 	{ 203, 204, H_UpgradeFromV203 },
 	{ 204, 205, H_UpgradeFromV204 },
+	{ 205, 206, H_UpgradeFromV205 },
    { 0, NULL }
 };
 

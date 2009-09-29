@@ -80,7 +80,7 @@ void LogHandle::deleteQueryResults()
 
 	String query;
 
-	query.AddFormattedString(_T("DROP TABLE %s"), m_tempTable);
+	query.addFormattedString(_T("DROP TABLE %s"), m_tempTable);
 
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
 	if (dbHandle != NULL)
@@ -132,13 +132,13 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 	switch(g_nDBSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			query.AddFormattedString(_T("SELECT %s INTO %s from %s "), (const TCHAR *)m_queryColumns, m_tempTable, m_log->table);
+			query.addFormattedString(_T("SELECT %s INTO %s from %s "), (const TCHAR *)m_queryColumns, m_tempTable, m_log->table);
 			break;
 		case DB_SYNTAX_ORACLE:
 		case DB_SYNTAX_SQLITE:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_MYSQL:
-			query.AddFormattedString(_T("CREATE TABLE %s AS SELECT %s FROM %s"), m_tempTable, (const TCHAR *)m_queryColumns, m_log->table);
+			query.addFormattedString(_T("CREATE TABLE %s AS SELECT %s FROM %s"), m_tempTable, (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 	}
 
@@ -228,15 +228,15 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 	switch(g_nDBSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			query.AddFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, (const TCHAR *)m_queryColumns, m_tempTable);
+			query.addFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, (const TCHAR *)m_queryColumns, m_tempTable);
 			break;
 		case DB_SYNTAX_ORACLE:
-			query.AddFormattedString(_T("SELECT %s FROM %s WHERE ROWNUM BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, (const TCHAR *)m_queryColumns, m_tempTable, startRow, startRow + numRows);
+			query.addFormattedString(_T("SELECT %s FROM %s WHERE ROWNUM BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, (const TCHAR *)m_queryColumns, m_tempTable, startRow, startRow + numRows);
 			break;
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
 		case DB_SYNTAX_MYSQL:
-			query.AddFormattedString(_T("SELECT %s FROM %s LIMIT ") INT64_FMT _T(" OFFSET ") INT64_FMT, (const TCHAR *)m_queryColumns, m_tempTable, numRows, startRow);
+			query.addFormattedString(_T("SELECT %s FROM %s LIMIT ") INT64_FMT _T(" OFFSET ") INT64_FMT, (const TCHAR *)m_queryColumns, m_tempTable, numRows, startRow);
 			break;
 	}
 

@@ -40,7 +40,7 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	String query;
 	int i;
 
-	query.AddFormattedString("INSERT INTO %s (", arg);
+	query.addFormattedString("INSERT INTO %s (", arg);
 	for(i = 0; i < cols; i++)
 	{
 		query += names[i];
@@ -49,7 +49,7 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	query.shrink();
 	query += ") VALUES (";
 	for(i = 0; i < cols; i++)
-		query.AddFormattedString("'%s',", data[i]);
+		query.addFormattedString("'%s',", data[i]);
 	query.shrink();
 	query += ")";
 

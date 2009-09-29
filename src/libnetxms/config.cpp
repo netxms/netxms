@@ -607,7 +607,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
 
 	if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
-		ps->charData[ps->level - 1].AddMultiByteString(s, len, CP_UTF8);
+		ps->charData[ps->level - 1].addMultiByteString(s, len, CP_UTF8);
 }
 
 bool Config::loadXmlConfig(const TCHAR *file)

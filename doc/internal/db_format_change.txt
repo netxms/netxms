@@ -1,4 +1,12 @@
 ***************
+* 205 ==> 206 *
+***************
+
+- Escaped characters with # replaced in tables "audit_log", "event_log",
+  "snmp_trap_log", and "syslog"
+
+
+***************
 * 204 ==> 205 *
 ***************
 
@@ -58,6 +66,7 @@
 * 95 ==> 203 *
 * 96 ==> 204 *
 * 97 ==> 205 *
+* 98 ==> 206 *
 **************
 
 - New tables added:

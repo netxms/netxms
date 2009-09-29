@@ -130,22 +130,15 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       // Write event to log if required
       if (pEvent->getFlags() & EF_LOG)
       {
-         char *pszMsg, *pszTag, szQuery[2048];
+         char szQuery[2048];
 
-         pszMsg = EncodeSQLString(pEvent->getMessage());
-			if (_tcslen(pszMsg) > (MAX_EVENT_MSG_LENGTH - 1))
-				pszMsg[MAX_EVENT_MSG_LENGTH - 1] = 0;
-         pszTag = EncodeSQLString(pEvent->getUserTag());
-			if (_tcslen(pszTag) > (MAX_USERTAG_LENGTH - 1))
-				pszTag[MAX_USERTAG_LENGTH - 1] = 0;
          snprintf(szQuery, 2048, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
                                  "event_source,event_severity,event_message,root_event_id,user_tag) "
-                                 "VALUES (" INT64_FMT ",%d," TIME_T_FMT ",%d,%d,'%s'," INT64_FMT ",'%s')", 
+                                 "VALUES (" INT64_FMT ",%d," TIME_T_FMT ",%d,%d,%s," INT64_FMT ",%s)", 
                   pEvent->getId(), pEvent->getCode(), pEvent->getTimeStamp(),
-                  pEvent->getSourceId(), pEvent->getSeverity(), pszMsg,
-                  pEvent->getRootId(), pszTag);
-         free(pszMsg);
-			free(pszTag);
+                  pEvent->getSourceId(), pEvent->getSeverity(),
+						(const TCHAR *)DBPrepareString(pEvent->getMessage()),
+						pEvent->getRootId(), (const TCHAR *)DBPrepareString(pEvent->getUserTag()));
          QueueSQLRequest(szQuery);
       }
 

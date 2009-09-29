@@ -66,3 +66,7 @@
 
 /* Define to 1 if you have the `pthread_rwlock_timedwrlock' function. */
 #define HAVE_PTHREAD_RWLOCK_TIMEDWRLOCK 1
+
+/* Define to 1 if you have the declaration of `va_copy', and
+   to 0 if you don't. */
+#define HAVE_DECL_VA_COPY 1

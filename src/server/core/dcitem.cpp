@@ -1739,7 +1739,7 @@ void DCItem::createNXMPRecord(String &str)
    strInstance = m_szInstance;
    EscapeString(strInstance);
 
-   str.AddFormattedString(_T("\t\t\t@DCI\n\t\t\t{\n")
+   str.addFormattedString(_T("\t\t\t@DCI\n\t\t\t{\n")
                           _T("\t\t\t\tNAME=\"%s\";\n")
                           _T("\t\t\t\tDESCRIPTION=\"%s\";\n")
                           _T("\t\t\t\tDATATYPE=%d;\n")
@@ -1750,10 +1750,10 @@ void DCItem::createNXMPRecord(String &str)
                           _T("\t\t\t\tDELTA=%d;\n")
                           _T("\t\t\t\tADVANCED_SCHEDULE=%d;\n")
                           _T("\t\t\t\tALL_THRESHOLDS=%d;\n"),
-                          (TCHAR *)strName, (TCHAR *)strDescr,
+                          (const TCHAR *)strName, (const TCHAR *)strDescr,
                           m_iDataType, m_iSource,
                           m_iAdvSchedule ? 0 : m_iPollingInterval,
-                          m_iRetentionTime, (TCHAR *)strInstance,
+                          m_iRetentionTime, (const TCHAR *)strInstance,
 								  m_iDeltaCalculation, m_iAdvSchedule, 
                           m_iProcessAllThresholds);
 
@@ -1773,7 +1773,7 @@ void DCItem::createNXMPRecord(String &str)
       {
          strTemp = m_ppScheduleList[i];
          EscapeString(strTemp);
-         str.AddFormattedString(_T("\t\t\t\t\t\"%s\";\n"));
+         str.addFormattedString(_T("\t\t\t\t\t\"%s\";\n"));
       }
       str += _T("\t\t\t\t}\n");
    }
@@ -1881,17 +1881,17 @@ void DCItem::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 	int index = 0, index2;
 
 	temp = src;
-	while((index = temp.Find(_T("%{"), index)) != String::npos)
+	while((index = temp.find(_T("%{"), index)) != String::npos)
 	{
-		head = temp.SubStr(0, index);
-		index2 = temp.Find(_T("}"), index);
+		head = temp.subStr(0, index);
+		index2 = temp.find(_T("}"), index);
 		if (index2 == String::npos)
 		{
 			free(head);
 			break;	// Missing closing }
 		}
-		rest = temp.SubStr(index2 + 1, -1);
-		macro = temp.SubStr(index + 2, index2 - index - 2);
+		rest = temp.subStr(index2 + 1, -1);
+		macro = temp.subStr(index + 2, index2 - index - 2);
 		StrStrip(macro);
 
 		temp = head;
@@ -1899,7 +1899,7 @@ void DCItem::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		{
 			if (m_pNode != NULL)
 			{
-				temp.AddFormattedString(_T("%d"), m_pNode->Id());
+				temp.addFormattedString(_T("%d"), m_pNode->Id());
 			}
 			else
 			{
@@ -1970,7 +1970,7 @@ void DCItem::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		free(rest);
 		free(macro);
 	}
-	nx_strncpy(dst, (TCHAR *)temp, dstLen);
+	nx_strncpy(dst, temp, dstLen);
 }
 
 
