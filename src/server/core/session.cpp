@@ -10533,7 +10533,7 @@ void ClientSession::updateUsmCredentials(CSCPMessage *request)
 						int privMethod = (int)request->GetVariableShort(id++);
 						request->GetVariableStr(id++, authPasswd, MAX_DB_STRING);
 						request->GetVariableStr(id++, privPasswd, MAX_DB_STRING);
-						_sntprintf(query, 4096, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password) VALUES(%d,%d,%d,%s,%s)"),
+						_sntprintf(query, 4096, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password) VALUES(%d,%s,%d,%d,%s,%s)"),
 									  i + 1, (const TCHAR *)DBPrepareString(name), authMethod, privMethod,
 									  (const TCHAR *)DBPrepareString(authPasswd), (const TCHAR *)DBPrepareString(privPasswd));
 						if (!DBQuery(hdb, query))
