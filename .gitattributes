@@ -621,6 +621,7 @@ src/server/dbdrv/odbc/odbc.vcproj -text
 src/server/dbdrv/oracle/oracle.vcproj -text
 src/server/dbdrv/pgsql/pgsql.vcproj -text
 src/server/dbdrv/sqlite/sqlite.vcproj -text
+src/server/include/Makefile.am -text
 src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/netxmsd/netxmsd.vcproj -text
 src/server/smsdrv/generic/generic.vcproj -text

@@ -1547,7 +1547,6 @@ AC_CONFIG_FILES([
 	src/nxscript/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
-	src/server/netxmsd/Makefile
 	src/server/dbdrv/Makefile
 	src/server/dbdrv/odbc/Makefile
 	src/server/dbdrv/mssql/Makefile
@@ -1555,6 +1554,9 @@ AC_CONFIG_FILES([
 	src/server/dbdrv/pgsql/Makefile
 	src/server/dbdrv/sqlite/Makefile
 	src/server/dbdrv/oracle/Makefile
+	src/server/include/Makefile
+	src/server/libnxsrv/Makefile
+	src/server/netxmsd/Makefile
 	src/server/smsdrv/Makefile
 	src/server/smsdrv/generic/Makefile
 	src/server/smsdrv/nxagent/Makefile
@@ -1566,7 +1568,6 @@ AC_CONFIG_FILES([
 	src/server/tools/nxconfig/res/Makefile
 	src/server/tools/nxdbmgr/Makefile
 	src/server/tools/nxupload/Makefile
-	src/server/libnxsrv/Makefile
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile
 	src/snmp/nxmibc/Makefile

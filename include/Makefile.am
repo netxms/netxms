@@ -1,0 +1,47 @@
+# Copyright (C) 2004 NetXMS Team <bugs@netxms.org>
+#  
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without 
+# modifications, as long as this notice is preserved.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+EXTRA_DIST = \
+	ata.h \
+	base64.h \
+	config-netware.h \
+	FlexLexer.h \
+	geolocation.h \
+	netxmsdb.h \
+	netxms_getopt.h \
+	netxms_isc.h \
+	netxms_maps.h \
+	netxms-regex.h \
+	netxms-version.h \
+	nms_agent.h \
+	nms_common.h \
+	nms_cscp.h \
+	nms_threads.h \
+	nms_util.h \
+	nxclapi.h \
+	nxconfig.h \
+	nxcpapi.h \
+	nxevent.h \
+	nxlexer_styles.h \
+	nxlog.h \
+	nxlpapi.h \
+	nxmbapi.h \
+	nxnt.h \
+	nxqueue.h \
+	nxsl_classes.h \
+	nxsl.h \
+	nxsm_ext.h \
+	nxsnmp.h \
+	nxtools.h \
+	nxwinui.h \
+	rwlock.h \
+	unicode.h \
+	uuid.h

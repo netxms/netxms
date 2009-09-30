@@ -8,4 +8,23 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = include libnxsrv core netxmsd dbdrv tools smsdrv
+EXTRA_DIST = \
+	dbdrv.h \
+	local_admin.h \
+	nms_actions.h \
+	nms_alarm.h \
+	nms_core.h \
+	nms_dcoll.h \
+	nms_events.h \
+	nms_locks.h \
+	nms_objects.h \
+	nms_pkg.h \
+	nms_script.h \
+	nms_topo.h \
+	nms_users.h \
+	nxcore_jobs.h \
+	nxcore_logs.h \
+	nxcore_maps.h \
+	nxcore_situations.h \
+	nxmodule.h \
+	nxsrvapi.h
