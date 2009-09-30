@@ -597,9 +597,9 @@ else
 				PTHREAD_LIBS="-lpthread")
 		fi
 		# On HP-UX (at least 11.00) pthread library contains
-		# pthread_attr_init_system instead of pthread_attr_init
+		# __pthread_attr_init_system instead of pthread_attr_init
 		if test "x$PTHREAD_LIBS" = "xerror"; then
-			AC_CHECK_LIB(pthread, pthread_attr_init_system,
+			AC_CHECK_LIB(pthread, __pthread_attr_init_system,
 				PTHREAD_LIBS="-lpthread")
 		fi
 		if test "x$PTHREAD_LIBS" = "xerror"; then
