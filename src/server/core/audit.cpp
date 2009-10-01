@@ -79,7 +79,7 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD 
 	CSCPMessage msg;
 
 	va_start(args, format);
-	text.addFormattedString(format, args);
+	text.addFormattedStringV(format, args);
 	va_end(args);
 
 	query.addFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%s)"),

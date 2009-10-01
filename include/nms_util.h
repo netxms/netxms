@@ -265,7 +265,7 @@ public:
 	void addWideCharString(const WCHAR *pStr, DWORD dwSize);
 
    void addFormattedString(const TCHAR *format, ...);
-   void addFormattedString(const TCHAR *format, va_list args);
+   void addFormattedStringV(const TCHAR *format, va_list args);
    void escapeCharacter(int ch, int esc);
    void translate(const TCHAR *pszSrc, const TCHAR *pszDst);
 

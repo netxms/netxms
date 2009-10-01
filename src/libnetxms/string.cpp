@@ -105,11 +105,11 @@ void String::addFormattedString(const TCHAR *format, ...)
    va_list args;
 
 	va_start(args, format);
-	addFormattedString(format, args);
+	addFormattedStringV(format, args);
 	va_end(args);
 }
 
-void String::addFormattedString(const TCHAR *format, va_list args)
+void String::addFormattedStringV(const TCHAR *format, va_list args)
 {
    int len;
    TCHAR *buffer;
