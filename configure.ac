@@ -185,7 +185,7 @@ AC_ARG_WITH(openssl,
 		else
 			LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:/usr/local/ssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 			LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
-			CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
+			CPPFLAGS="$CPPFLAGS -I/opt/openssl/include"
 		fi
 	fi
 	REQUIRE_ENCRYPTION="yes"
@@ -559,7 +559,23 @@ fi
 #--------------------------------------------------------------------
 
 if test -d /usr/local/include; then
-	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+	if test "x$CC" = "xgcc"; then
+		AC_MSG_CHECKING(whether -I/usr/local/include needed)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -Werror -I/usr/local/include"
+		AC_TRY_COMPILE([],[],
+			[
+				CPPFLAGS="$OLD_CPPFLAGS -I/usr/local/include"
+				AC_MSG_RESULT(yes)
+			],
+			[
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			]
+		)
+	else
+		CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+	fi
 fi
 
 if test -d /usr/kerberos/include; then
