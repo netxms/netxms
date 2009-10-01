@@ -535,7 +535,7 @@ if test "x$CC" = "xgcc" ; then
 
 	if test "x$PLATFORM" = "xHP-UX"; then
 		AC_MSG_CHECKING(whether C compiler accepts -mlp64)
-		OLD_CPPFLGAS="$CPPFLAGS"
+		OLD_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$CPPFLAGS -mlp64"
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 			[ 
