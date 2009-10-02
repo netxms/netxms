@@ -255,41 +255,43 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 		nRet = SYSINFO_RC_ERROR;
 	}
 
-#define ctoqb(x)	ctob(int64_t(x))
-#define dbtoqb(x)	dbtob(int64_t(x))
+	long pageSize = sysconf(_SC_PAGESIZE);
+
+#define PAGES_TO_BYTES(x) ((QWORD)(x) * (QWORD)pageSize)
+#define BLOCKS_TO_BYTES(x) ((QWORD)(x) * (QWORD)(DEV_BSIZE))
 
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
 		switch((int)pArg)
 		{
 		case PHYSICAL_FREE: // ph-free
-			ret_uint64(pValue, ctoqb(nFreePhysCount));
+			ret_uint64(pValue, PAGES_TO_BYTES(nFreePhysCount));
 			break;
 		case PHYSICAL_TOTAL: // ph-total
-			ret_uint64(pValue, ctoqb(nFreePhysCount + nUsedPhysCount));
+			ret_uint64(pValue, PAGES_TO_BYTES(nFreePhysCount + nUsedPhysCount));
 			break;
 		case PHYSICAL_USED: // ph-used
-			ret_uint64(pValue, ctoqb(nUsedPhysCount));
+			ret_uint64(pValue, PAGES_TO_BYTES(nUsedPhysCount));
 			break;
 		case SWAP_FREE: // sw-free
-			ret_uint64(pValue, dbtoqb(nSwapTotal - nSwapUsed) );
+			ret_uint64(pValue, BLOCKS_TO_BYTES(nSwapTotal - nSwapUsed));
 			break;
 		case SWAP_TOTAL: // sw-total
-			ret_uint64(pValue, dbtoqb(nSwapTotal) );
+			ret_uint64(pValue, BLOCKS_TO_BYTES(nSwapTotal));
 			break;
 		case SWAP_USED: // sw-used
-			ret_uint64(pValue, dbtoqb(nSwapUsed) );
+			ret_uint64(pValue, BLOCKS_TO_BYTES(nSwapUsed));
 			break;
 		case VIRTUAL_FREE: // vi-free : phys free + swap free
-			ret_uint64(pValue, dbtoqb(nSwapTotal - nSwapUsed) +
-					   ctoqb(nFreePhysCount) );
+			ret_uint64(pValue, BLOCKS_TO_BYTES(nSwapTotal - nSwapUsed) +
+					   PAGES_TO_BYTES(nFreePhysCount));
 			break;
 		case VIRTUAL_TOTAL: // vi-total : phys total + swap total
-			ret_uint64(pValue, dbtoqb(nSwapTotal) +
-					   ctoqb(nFreePhysCount + nUsedPhysCount) );
+			ret_uint64(pValue, BLOCKS_TO_BYTES(nSwapTotal) +
+					   PAGES_TO_BYTES(nFreePhysCount + nUsedPhysCount));
 			break;
 		case VIRTUAL_USED: // vi-used
-			ret_uint64(pValue, ctoqb(nUsedVirtCount) );
+			ret_uint64(pValue, PAGES_TO_BYTES(nUsedVirtCount));
 			break;
 		default: // error
 			nRet = SYSINFO_RC_ERROR;

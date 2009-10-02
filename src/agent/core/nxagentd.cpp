@@ -562,7 +562,7 @@ void LoadPlatformSubagent(void)
          un.sysname[i] = tolower(un.sysname[i]);
       if (!strcmp(un.sysname, "hp-ux"))
          strcpy(un.sysname, "hpux");
-      sprintf(szName, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
+      snprintf(szName, MAX_PATH, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
       LoadSubAgent(szName);
    }
 #endif

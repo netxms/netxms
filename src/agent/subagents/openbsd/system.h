@@ -36,7 +36,7 @@ enum
 	VIRTUAL_TOTAL,
 };
 
-LONG H_ProcessList(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_ProcessList(const char *, const char *, StringList *);
 LONG H_Uptime(const char *, const char *, char *);
 LONG H_Uname(const char *, const char *, char *);
 LONG H_Hostname(const char *, const char *, char *);
