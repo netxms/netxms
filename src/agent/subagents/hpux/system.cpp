@@ -38,7 +38,7 @@
 // Handler for System.Uptime parameter
 //
 
-LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
+LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 {
 	FILE *hFile;
 	unsigned int uptime = 0;
@@ -66,7 +66,7 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Uname parameter
 //
 
-LONG H_Uname(char *pszParam, char *pArg, char *pValue)
+LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct utsname utsName;
 	int nRet = SYSINFO_RC_ERROR;
@@ -93,7 +93,7 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Hostname parameter
 //
 
-LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
+LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuff[128];
@@ -112,7 +112,7 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ConnectedUsers parameter
 //
 
-LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
+LONG H_ConnectedUsers(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -144,7 +144,7 @@ LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ActiveUserSessions enum
 //
 
-LONG H_ActiveUserSessions(char *pszParam, char *pArg, StringList *pValue)
+LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -175,7 +175,7 @@ LONG H_ActiveUserSessions(char *pszParam, char *pArg, StringList *pValue)
 // Handler for System.CPU.LoadAvg parameter
 //
 
-LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
+LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct pst_dynamic info;
@@ -206,7 +206,7 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Memory.* parameters
 //
 
-LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int mode = CAST_FROM_POINTER(pArg, int);
@@ -324,7 +324,7 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 // Handler for System.ProcessCount parameter
 //
 
-LONG H_SysProcessCount(char *pszParam, char *pArg, char *pValue)
+LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct pst_status *pst;
 	int nCount;
@@ -345,7 +345,7 @@ LONG H_SysProcessCount(char *pszParam, char *pArg, char *pValue)
 // Handler for Process.Count(*) parameter
 //
 
-LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
+LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct pst_status *pst;
 	int i, nCount, nTotal;
@@ -376,7 +376,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(char *pszParam, char *pArg, StringList *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int i, nCount;
@@ -501,7 +501,7 @@ void ShutdownCpuUsageCollector(void)
 	MutexDestroy(m_cpuUsageMutex);
 }
 
-LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
+LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 {
 	double usage = 0;
 	int i, count;

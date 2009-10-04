@@ -26,7 +26,7 @@
 // Detect support for source packages
 //
 
-static LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
+static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_int(pValue, 1); // assume that we have sane build env
 	return SYSINFO_RC_SUCCESS;

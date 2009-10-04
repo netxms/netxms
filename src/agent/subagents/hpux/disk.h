@@ -34,7 +34,7 @@ enum
 	DISK_USED_PERC
 };
 
-LONG H_DiskInfo(char *, char *, char *);
+LONG H_DiskInfo(const char *, const char *, char *);
 
 #endif // __DISK_H__
 

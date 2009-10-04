@@ -63,7 +63,7 @@ static int if_name2index(int fd, char *name)
 	return ret;
 }
 
-LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
@@ -73,7 +73,7 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetArpCache(char *pszParam, char *pArg, StringList *pValue)
+LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -82,7 +82,7 @@ LONG H_NetArpCache(char *pszParam, char *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetRoutingTable(char *pszParam, char *pArg, StringList *pValue)
+LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -91,7 +91,7 @@ LONG H_NetRoutingTable(char *pszParam, char *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetIfList(char *pszParam, char *pArg, StringList *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -214,7 +214,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIfInfoFromIOCTL(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szBuffer[256];
 	LONG nRet = SYSINFO_RC_SUCCESS;
@@ -295,7 +295,7 @@ LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIfInfoFromProc(const char *pszParam, const char *pArg, char *pValue)
 {
 	return SYSINFO_RC_ERROR;
 }
