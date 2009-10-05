@@ -49,7 +49,7 @@
 
 QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base)
 {
-	const char *s;
+	const unsigned char *s;
 	QWORD acc, cutoff;
    int c;
 	int neg, any, cutlim;
@@ -57,7 +57,7 @@ QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base)
 	/*
 	 * See strtoq for comments as to the logic used.
 	 */
-	s = nptr;
+	s = (const unsigned char *)nptr;
 	do {
 		c = *s++;
 	} while (isspace(c));

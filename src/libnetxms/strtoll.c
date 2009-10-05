@@ -48,7 +48,7 @@
 
 INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 {
-	const char *s;
+	const unsigned char *s;
 	INT64 acc, cutoff;
    int c;
 	int neg, any, cutlim;
@@ -58,7 +58,7 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 	 * If base is 0, allow 0x for hex and 0 for octal, else
 	 * assume decimal; if base is already 16, allow 0x.
 	 */
-	s = nptr;
+	s = (const unsigned char *)nptr;
 	do {
 		c = *s++;
 	} while (isspace(c));
