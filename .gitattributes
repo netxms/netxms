@@ -584,6 +584,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/TableSortingList
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetHelper.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/AbstractSelector.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/LabeledText.java -text
+src/java/package.sh -text
 src/java/pom.xml -text
 src/libexpat/Changes -text
 src/libexpat/MANIFEST -text
