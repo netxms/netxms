@@ -103,7 +103,7 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
-// Convert strings
+// Convert strings from # encoded form to normal form
 //
 
 static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column)
