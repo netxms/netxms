@@ -77,7 +77,7 @@ extern int g_nCurrLine;
 static MP_MODULE *m_pModule;
 static char *m_pszCurrentFilename;
 
-int mperror(char *pszMsg);
+int mperror(const char *pszMsg);
 int mplex(void);
 
 MP_SYNTAX *create_std_syntax(int nSyntax)
@@ -1325,7 +1325,7 @@ extern "C" int mpwrap()
 	return 1;
 }
 
-int mperror(char *pszMsg)
+int mperror(const char *pszMsg)
 {
    Error(ERR_PARSER_ERROR, m_pszCurrentFilename, pszMsg, g_nCurrLine);
    return 0;

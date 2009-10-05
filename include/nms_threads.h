@@ -525,8 +525,9 @@ inline THREAD GetCurrentThreadId(void)
 #include <pthread_np.h>
 #endif
 
-#if (HAVE_PTHREAD_MUTEXATTR_SETTYPE || HAVE_PTHREAD_MUTEXATTR_SETKIND_NP) && \
-	 (HAVE_DECL_PTHREAD_MUTEX_RECURSIVE || \
+#if (HAVE_PTHREAD_MUTEXATTR_SETTYPE || HAVE___PTHREAD_MUTEXATTR_SETTYPE || HAVE_PTHREAD_MUTEXATTR_SETKIND_NP) && \
+    HAVE_DECL_PTHREAD_MUTEXATTR_SETTYPE && \
+    (HAVE_DECL_PTHREAD_MUTEX_RECURSIVE || \
 	  HAVE_DECL_PTHREAD_MUTEX_RECURSIVE_NP || \
           HAVE_DECL_MUTEX_TYPE_COUNTING_FAST)
 
@@ -542,8 +543,10 @@ inline THREAD GetCurrentThreadId(void)
 #error Constant used to declare recursive mutex is not known 
 #endif
 
-#if HAVE_PTHREAD_MUTEXATTR_SETTYPE
+#if HAVE_PTHREAD_MUTEXATTR_SETTYPE || HAVE_DECL_PTHREAD_MUTEXATTR_SETTYPE
 #define MUTEXATTR_SETTYPE pthread_mutexattr_settype
+#elif HAVE___PTHREAD_MUTEXATTR_SETTYPE
+#define MUTEXATTR_SETTYPE __pthread_mutexattr_settype
 #else
 #define MUTEXATTR_SETTYPE pthread_mutexattr_setkind_np
 #endif

@@ -640,8 +640,8 @@ else
 	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
 
 	# Check for recursive mutexes
-	AC_CHECK_FUNCS([pthread_mutexattr_settype pthread_mutexattr_setkind_np])
-	AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
+	AC_CHECK_FUNCS([pthread_mutexattr_settype __pthread_mutexattr_settype pthread_mutexattr_setkind_np])
+	AC_CHECK_DECLS([pthread_mutexattr_settype, PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
 #include <pthread.h>
 #if HAVE_PTHREAD_NP_H
 #include <pthread_np.h>

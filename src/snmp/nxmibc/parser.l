@@ -64,7 +64,7 @@ WHITESPC  [[:blank:]\t\n\r]
 #define read	_read
 #endif
 
-int mperror(char *pszMsg);
+int mperror(const char *pszMsg);
 
 int g_nCurrLine;
 
