@@ -114,7 +114,15 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 	BOOL success = FALSE;
 
 	query = (TCHAR *)malloc(queryLen);
-	_sntprintf(query, queryLen, _T("SELECT %s,%s FROM %s"), idColumn, column, table);
+
+	_sntprintf(query, queryLen, _T("UPDATE %s SET %s='' WHERE %s='#00'"), table, column, column);
+	if (!SQLQuery(query))
+	{
+		free(query);
+		return FALSE;
+	}
+
+	_sntprintf(query, queryLen, _T("SELECT %s,%s FROM %s WHERE %s LIKE '%%#%%'"), idColumn, column, table, column);
 	hResult = SQLSelect(query);
 	if (hResult == NULL)
 	{
