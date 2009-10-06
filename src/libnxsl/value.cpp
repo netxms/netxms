@@ -289,7 +289,7 @@ void NXSL_Value::UpdateNumber(void)
 // Update string value
 //
 
-void NXSL_Value::UpdateString(void)
+void NXSL_Value::UpdateString()
 {
    char szBuffer[64];
 
@@ -337,6 +337,9 @@ BOOL NXSL_Value::Convert(int nDataType)
    if (m_nDataType == nDataType)
       return TRUE;
 
+	if ((nDataType == NXSL_DT_STRING) && IsString())
+		return TRUE;
+
    switch(nDataType)
    {
       case NXSL_DT_INT32:
@@ -371,6 +374,15 @@ BOOL NXSL_Value::Convert(int nDataType)
             m_value.dReal = dReal;
          }
          break;
+		case NXSL_DT_STRING:
+			if (m_nDataType == NXSL_DT_NULL)
+			{
+				m_nDataType = NXSL_DT_STRING;
+				bRet = TRUE;
+				// String value will be invalidated on exit, and next
+				// call to UpdateString() will create empty string value
+			}
+			break;
       default:
          bRet = FALSE;
          break;
