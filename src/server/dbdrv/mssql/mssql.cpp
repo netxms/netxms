@@ -123,11 +123,16 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 	int outPos;
 	for(outPos = 2; *src != NULL; src++)
 	{
-		if (*src < 32)
+#ifdef UNICODE
+		long chval = *src;
+#else
+		long chval = (long)(*((unsigned char *)src));
+#endif
+		if (chval < 32)
 		{
 			TCHAR buffer[32];
 
-			_sntprintf(buffer, 32, _T("'+nchar(%d)+N'"), *src);
+			_sntprintf(buffer, 32, _T("'+nchar(%ld)+N'"), chval);
 			int l = (int)_tcslen(buffer);
 
 			len += l;
