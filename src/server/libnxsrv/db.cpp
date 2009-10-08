@@ -993,16 +993,19 @@ BOOL LIBNXSRV_EXPORTABLE DBBegin(DB_HANDLE hConn)
       {
          hConn->nTransactionLevel++;
          bRet = TRUE;
+			DbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->nTransactionLevel);
       }
       else
       {
          MutexUnlock(hConn->mutexTransLock);
+			DbgPrintf(9, _T("BEGIN TRANSACTION failed"), hConn->nTransactionLevel);
       }
    }
    else
    {
       hConn->nTransactionLevel++;
       bRet = TRUE;
+		DbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->nTransactionLevel);
    }
    return bRet;
 }
@@ -1024,6 +1027,7 @@ BOOL LIBNXSRV_EXPORTABLE DBCommit(DB_HANDLE hConn)
          bRet = (m_fpDrvCommit(hConn->hConn) == DBERR_SUCCESS);
       else
          bRet = TRUE;
+		DbgPrintf(9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->nTransactionLevel);
       MutexUnlock(hConn->mutexTransLock);
    }
    MutexUnlock(hConn->mutexTransLock);
@@ -1047,6 +1051,7 @@ BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn)
          bRet = (m_fpDrvRollback(hConn->hConn) == DBERR_SUCCESS);
       else
          bRet = TRUE;
+		DbgPrintf(9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->nTransactionLevel);
       MutexUnlock(hConn->mutexTransLock);
    }
    MutexUnlock(hConn->mutexTransLock);
