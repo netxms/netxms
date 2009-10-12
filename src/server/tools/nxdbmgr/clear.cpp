@@ -92,8 +92,7 @@ BOOL ClearDatabase()
 	if (!ValidateDatabase())
 		return FALSE;
 
-	printf("\n\nWARNING!!!\nThis operation will clear all configuration and collected data from database.\nAre you sure (y/N)?");
-	if (!GetYesNo())
+	if (!GetYesNo(_T("\n\nWARNING!!!\nThis operation will clear all configuration and collected data from database.\nAre you sure?")))
 		return FALSE;
 
 	BOOL success = FALSE;

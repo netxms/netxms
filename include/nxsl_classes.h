@@ -444,17 +444,17 @@ protected:
 	DWORD FinalJumpDestination(DWORD dwAddr);
 
 public:
-   NXSL_Program(void);
+   NXSL_Program();
    ~NXSL_Program();
 
    BOOL AddFunction(const char *pszName, DWORD dwAddr, char *pszError);
-   void ResolveFunctions(void);
+   void ResolveFunctions();
    void AddInstruction(NXSL_Instruction *pInstruction);
    void ResolveLastJump(int nOpCode);
 	void CreateJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr);
    void AddPreload(char *pszName);
    void UseModule(NXSL_Program *pModule, const char *pszName);
-	void Optimize(void);
+	void Optimize();
 
 	void SetGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *FindGlobalVariable(const TCHAR *pszName) { return m_pGlobals->Find(pszName); }
@@ -463,11 +463,11 @@ public:
            NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
            NXSL_VariableSystem **ppGlobals = NULL);
 
-   DWORD CodeSize(void) { return m_dwCodeSize; }
+   DWORD CodeSize() { return m_dwCodeSize; }
 
    void Dump(FILE *pFile);
-   TCHAR *GetErrorText(void) { return m_pszErrorText; }
-   NXSL_Value *GetResult(void) { return m_pRetValue; }
+   const TCHAR *GetErrorText() { return CHECK_NULL_EX(m_pszErrorText); }
+   NXSL_Value *GetResult() { return m_pRetValue; }
 };
 
 

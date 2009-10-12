@@ -62,10 +62,7 @@ void UnlockDatabase(void)
 
    if (bLocked)
    {
-      _tprintf(_T("Database is locked by server %s [%s]\n"
-                  "Do you wish to force database unlock? (Y/N) "),
-               szLockStatus, szLockInfo);
-      if (GetYesNo())
+      if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), szLockStatus, szLockInfo))
       {
          if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
          {

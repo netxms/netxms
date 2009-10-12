@@ -361,7 +361,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
    DWORD dwResult;
    static const char *m_szErrorText[] =
    {
-      "Sended successfully",
+      "Sent successfully",
       "Unable to resolve SMTP server name",
       "Communication failure",
       "SMTP conversation failure"

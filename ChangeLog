@@ -1,4 +1,12 @@
 *
+* 0.2.30
+*
+
+- Fixed various database upgrade issues in 0.2.29
+- Fixed issues: #266
+
+
+*
 * 0.2.29
 *
 

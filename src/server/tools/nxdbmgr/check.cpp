@@ -177,9 +177,7 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 				{
 					subnet = DBGetFieldULong(hResult2, 0, 0);
 					m_iNumErrors++;
-					_tprintf(_T("\rUnlinked node object %d (\"%s\") can be linked to subnet %d (%s). Link? (Y/N) "),
-								id, name, subnet, buffer);
-					if (GetYesNo())
+					if (GetYesNo(_T("\rUnlinked node object %d (\"%s\") can be linked to subnet %d (%s). Link?"), id, name, subnet, buffer))
 					{
 						_sntprintf(query, 256, _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), subnet, id);
 						if (SQLQuery(query))
@@ -239,8 +237,7 @@ static void CheckNodes(void)
             if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("\rMissing node object %d properties. Create? (Y/N) "), dwId);
-               if (GetYesNo())
+               if (GetYesNo(_T("\rMissing node object %d properties. Create?"), dwId))
                {
                   _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,name,"
@@ -273,9 +270,7 @@ static void CheckNodes(void)
 						if ((DBGetFieldIPAddr(hResult, i, 1) == 0) || (!FindSubnetForNode(dwId, szName)))
 						{
 							m_iNumErrors++;
-							_tprintf(_T("\rUnlinked node object %d (\"%s\"). Delete? (Y/N) "),
-										dwId, szName);
-							if (GetYesNo())
+							if (GetYesNo(_T("\rUnlinked node object %d (\"%s\"). Delete?"), dwId, szName))
 							{
 								_sntprintf(szQuery, 1024, _T("DELETE FROM nodes WHERE id=%d"), dwId);
 								bResult = SQLQuery(szQuery);
@@ -349,9 +344,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
             if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("\rMissing %s object %d properties. Create? (Y/N) "),
-                        pszDisplayName, dwId);
-               if (GetYesNo())
+               if (GetYesNo(_T("\rMissing %s object %d properties. Create?"), pszDisplayName, dwId))
                {
                   _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,name,"
@@ -388,9 +381,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
             {
                m_iNumErrors++;
                dwId = DBGetFieldULong(hResult, i, 0);
-               _tprintf(_T("\rUnlinked %s object %d (\"%s\"). Delete? (Y/N) "),
-                        pszDisplayName, dwId, szName);
-               if (GetYesNo())
+               if (GetYesNo(_T("\rUnlinked %s object %d (\"%s\"). Delete?"), pszDisplayName, dwId, szName))
                {
                   _sntprintf(szQuery, 256, _T("DELETE FROM %s WHERE id=%d"), pszTable, dwId);
                   if (SQLQuery(szQuery))
@@ -433,9 +424,8 @@ static void CheckObjectProperties(void)
          if (DBGetFieldULong(hResult, i, 2) == 0)
          {
             m_iNumErrors++;
-            _tprintf(_T("\rObject %d [%s] has invalid timestamp. Correct? (Y/N) "),
-                     dwObjectId, DBGetField(hResult, i, 1, szQuery, 1024));
-            if (GetYesNo())
+            if (GetYesNo(_T("\rObject %d [%s] has invalid timestamp. Correct?"),
+				             dwObjectId, DBGetField(hResult, i, 1, szQuery, 1024)))
             {
                _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=%ld WHERE object_id=%d"),
                           time(NULL), dwObjectId);
@@ -472,9 +462,8 @@ static void CheckClusters(void)
 			{
             m_iNumErrors++;
             dwId = DBGetFieldULong(hResult, i, 0);
-            _tprintf(_T("\rCluster object %s [%d] refers to non-existing node %d. Dereference? (Y/N) "),
-                     GetObjectName(dwId, szName), dwId, dwObjectId);
-            if (GetYesNo())
+            if (GetYesNo(_T("\rCluster object %s [%d] refers to non-existing node %d. Dereference?"),
+				             GetObjectName(dwId, szName), dwId, dwObjectId))
             {
                _sntprintf(szQuery, 256, _T("DELETE FROM cluster_members WHERE cluster_id=%d AND node_id=%d"),dwId, dwObjectId);
                if (SQLQuery(szQuery))
@@ -534,8 +523,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            _tprintf(_T("\rInvalid object ID %d used. Correct? (Y/N) "), dwId);
-            if (GetYesNo())
+            if (GetYesNo(_T("\rInvalid object ID %d used. Correct?"), dwId))
             {
                _stprintf(szQuery, _T("DELETE FROM policy_source_list WHERE object_id=%d"), dwId);
                if (SQLQuery(szQuery))
@@ -561,9 +549,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            _tprintf(_T("\rInvalid event%s ID 0x%08X used. Correct? (Y/N) "),
-                     (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId);
-            if (GetYesNo())
+            if (GetYesNo(_T("\rInvalid event%s ID 0x%08X used. Correct?"), (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId))
             {
                _stprintf(szQuery, _T("DELETE FROM policy_event_list WHERE event_code=%d"), dwId);
                if (SQLQuery(szQuery))
@@ -586,8 +572,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            _tprintf(_T("\rInvalid action ID %d used. Correct? (Y/N) "), dwId);
-            if (GetYesNo())
+            if (GetYesNo(_T("\rInvalid action ID %d used. Correct?"), dwId))
             {
                _stprintf(szQuery, _T("DELETE FROM policy_action_list WHERE action_id=%d"), dwId);
                if (SQLQuery(szQuery))
@@ -662,8 +647,7 @@ static void CheckIData(void)
 				if (DBGetFieldLong(hResult, 0, 0) > 0)
 				{
 					m_iNumErrors++;
-					_tprintf(_T("\rFound collected data for node [%d] with timestamp in the future. Correct? (Y/N) "), nodeId);
-					if (GetYesNo())
+					if (GetYesNo(_T("\rFound collected data for node [%d] with timestamp in the future. Correct?"), nodeId))
 					{
 						_sntprintf(query, 1024, _T("DELETE FROM idata_%d WHERE idata_timestamp>") TIME_T_FMT, nodeId, TIME_T_FCAST(now));
 						if (SQLQuery(query))
@@ -693,8 +677,7 @@ static void CheckIData(void)
 		if (DBGetFieldLong(hResult, 0, 0) > 0)
 		{
 			m_iNumErrors++;
-			_tprintf(_T("\rFound DCIs with last poll timestamp in the future. Correct? (Y/N) "));
-			if (GetYesNo())
+			if (GetYesNo(_T("\rFound DCIs with last poll timestamp in the future. Correct?")))
 			{
 				_sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=") TIME_T_FMT _T(" WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now), TIME_T_FCAST(now));
 				if (SQLQuery(query))
@@ -733,9 +716,7 @@ static void CheckTemplateNodeMapping(void)
          {
             m_iNumErrors++;
 				GetObjectName(dwTemplateId, name);
-            _tprintf(_T("\rTemplate %d [%s] mapped to non-existent node %d. Correct? (Y/N) "),
-                     dwTemplateId, name, dwNodeId);
-            if (GetYesNo())
+            if (GetYesNo(_T("\rTemplate %d [%s] mapped to non-existent node %d. Correct?"), dwTemplateId, name, dwNodeId))
             {
                _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d AND node_id=%d"),
                           dwTemplateId, dwNodeId);
@@ -810,10 +791,7 @@ void CheckDatabase(void)
 
       if (bLocked)
       {
-         _tprintf(_T("Database is locked by server %s [%s]\n"
-                     "Do you wish to force database unlock? (Y/N) "),
-                  szLockStatus, szLockInfo);
-         if (GetYesNo())
+         if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), szLockStatus, szLockInfo))
          {
             if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
             {
@@ -850,8 +828,7 @@ void CheckDatabase(void)
                _tprintf(_T("Database still contain errors\n"));
             if (m_iNumFixes > 0)
             {
-               _tprintf(_T("Commit changes (Y/N) "));
-               if (GetYesNo())
+               if (GetYesNo(_T("Commit changes?")))
                {
                   _tprintf(_T("Committing changes...\n"));
                   if (DBCommit(g_hCoreDB))

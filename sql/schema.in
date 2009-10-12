@@ -144,7 +144,7 @@ CREATE TABLE object_properties
 	status_translation varchar(8) not null,
 	status_single_threshold integer not null,
 	status_thresholds varchar(8) not null,
-	comments SQL_TEXT,
+	comments SQL_TEXT null,
 	location_type integer not null,		// 0 = unset, 1 = manual, 2 = GPS
 	latitude varchar(20),
 	longitude varchar(20),
@@ -592,10 +592,10 @@ CREATE TABLE event_log
 	event_timestamp integer not null,
 	event_source integer not null,			// Source object ID
 	event_severity integer not null,
-	event_message varchar(255) not null,
+	event_message varchar(255) null,
 	root_event_id SQL_INT64 not null,	
 		/* Non-zero if current event correlates to some other event */
-	user_tag varchar(63) not null,
+	user_tag varchar(63) null,
 	PRIMARY KEY(event_id)
 ) TABLE_TYPE;
 
@@ -775,17 +775,17 @@ CREATE TABLE alarms
 	alarm_id integer not null,	// Unique alarm identifier
 	alarm_state integer not null,
 	hd_state integer not null,	// Help desk system state
-	hd_ref varchar(63) not null,	// Help desk reference
+	hd_ref varchar(63) null,	// Help desk reference
 	creation_time integer not null,
 	last_change_time integer not null,
 	source_object_id integer not null,
 	source_event_code integer not null,
 	source_event_id SQL_INT64 not null,
-	message varchar(255) not null,
+	message varchar(255) null,
 	original_severity integer not null,
 	current_severity integer not null,
 	repeat_count integer not null,
-	alarm_key varchar(255) not null, // Alarm key (used for auto acknowlegment)
+	alarm_key varchar(255) null,     // Alarm key (used for auto acknowlegment)
 	ack_by integer not null,         // ID of user who was acknowleged alarm
 	term_by integer not null,        // ID of user who was terminated alarm
 	timeout integer not null,
@@ -927,9 +927,9 @@ CREATE TABLE syslog
 	facility integer not null,
 	severity integer not null,
 	source_object_id integer not null,
-	hostname varchar(127) not null,
-	msg_tag varchar(32) not null,
-	msg_text SQL_TEXT not null,
+	hostname varchar(127) null,
+	msg_tag varchar(32) null,
+	msg_text SQL_TEXT null,
 	PRIMARY KEY(msg_id)
 ) TABLE_TYPE;
 
@@ -960,7 +960,7 @@ CREATE TABLE snmp_trap_log
 	ip_addr varchar(15) not null,
 	object_id integer not null,
 	trap_oid varchar(255) not null,
-	trap_varlist SQL_TEXT not null,
+	trap_varlist SQL_TEXT null,
 	PRIMARY KEY(trap_id)
 ) TABLE_TYPE;
 
@@ -1127,7 +1127,7 @@ CREATE TABLE audit_log
 	user_id integer not null,	// 0x7FFFFFFF for system
 	workstation varchar(63) not null,
 	object_id integer not null,
-	message SQL_TEXT not null,
+	message SQL_TEXT null,
 	PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 

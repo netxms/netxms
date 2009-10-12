@@ -115,7 +115,18 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 
 	query = (TCHAR *)malloc(queryLen);
 
-	_sntprintf(query, queryLen, _T("UPDATE %s SET %s='' WHERE %s='#00'"), table, column, column);
+	switch(g_iSyntax)
+	{
+		case DB_SYNTAX_MSSQL:
+			_sntprintf(query, queryLen, _T("UPDATE %s SET %s='' WHERE CAST(%s AS nvarchar(max))=N'#00'"), table, column, column);
+			break;
+		case DB_SYNTAX_ORACLE:
+			_sntprintf(query, queryLen, _T("UPDATE %s SET %s='' WHERE to_char(%s)='#00'"), table, column, column);
+			break;
+		default:
+			_sntprintf(query, queryLen, _T("UPDATE %s SET %s='' WHERE %s='#00'"), table, column, column);
+			break;
+	}
 	if (!SQLQuery(query))
 	{
 		free(query);
@@ -151,6 +162,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 
 cleanup:
 	DBFreeResult(hResult);
+	free(query);
 	return success;
 }
 
@@ -161,28 +173,70 @@ cleanup:
 
 static BOOL H_UpgradeFromV205(int currVersion, int newVersion)
 {
-	// Convert event log
-	if (!ConvertStrings("event_log", "event_id", "event_message"))
-      if (!g_bIgnoreErrors)
-         return FALSE;
-	if (!ConvertStrings("event_log", "event_id", "user_tag"))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+	if (g_iSyntax == DB_SYNTAX_ORACLE)
+	{
+		static TCHAR oraBatch[] =
+			_T("ALTER TABLE audit_log MODIFY message null\n")
+			_T("ALTER TABLE event_log MODIFY event_message null\n")
+			_T("ALTER TABLE event_log MODIFY user_tag null\n")
+			_T("ALTER TABLE syslog MODIFY hostname null\n")
+			_T("ALTER TABLE syslog MODIFY msg_tag null\n")
+			_T("ALTER TABLE syslog MODIFY msg_text null\n")
+			_T("ALTER TABLE snmp_trap_log MODIFY trap_varlist null\n")
+			_T("<END>");
 
-	// Convert audit log
-	if (!ConvertStrings("audit_log", "record_id", "message"))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+		if (!SQLBatch(oraBatch))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+	}
 
-	// Convert syslog
-	if (!ConvertStrings("syslog", "msg_id", "msg_text"))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+	bool clearLogs = GetYesNo(_T("This database upgrade requires log conversion. This can take significant amount of time ")
+	                          _T("(up to few hours for large databases). If preserving all log records is not very important, it is ")
+	                          _T("recommended to clear logs befor conversion. Clear logs?"));
 
-	// Convert SNMP trap log
-	if (!ConvertStrings("snmp_trap_log", "trap_id", "trap_varlist"))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+	if (clearLogs)
+	{
+		if (!SQLQuery(_T("DELETE FROM audit_log")))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+
+		if (!SQLQuery(_T("DELETE FROM event_log")))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+
+		if (!SQLQuery(_T("DELETE FROM syslog")))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+
+		if (!SQLQuery(_T("DELETE FROM snmp_trap_log")))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+	}
+	else
+	{
+		// Convert event log
+		if (!ConvertStrings("event_log", "event_id", "event_message"))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+		if (!ConvertStrings("event_log", "event_id", "user_tag"))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+
+		// Convert audit log
+		if (!ConvertStrings("audit_log", "record_id", "message"))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+
+		// Convert syslog
+		if (!ConvertStrings("syslog", "msg_id", "msg_text"))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+
+		// Convert SNMP trap log
+		if (!ConvertStrings("snmp_trap_log", "trap_id", "trap_varlist"))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+	}
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='206' WHERE var_name='SchemaVersion'")))
       if (!g_bIgnoreErrors)
@@ -247,6 +301,13 @@ static BOOL H_UpgradeFromV203(int currVersion, int newVersion)
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
+	if (g_iSyntax == DB_SYNTAX_ORACLE)
+	{
+		if (!SQLQuery(_T("ALTER TABLE object_properties MODIFY comments null\n")))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+	}
+
 	if (!ConvertStrings("object_properties", "object_id", "comments"))
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -301,6 +362,19 @@ static BOOL H_UpgradeFromV202(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV201(int currVersion, int newVersion)
 {
+	if (g_iSyntax == DB_SYNTAX_ORACLE)
+	{
+		static TCHAR oraBatch[] =
+			_T("ALTER TABLE alarms MODIFY message null\n")
+			_T("ALTER TABLE alarms MODIFY alarm_key null\n")
+			_T("ALTER TABLE alarms MODIFY hd_ref null\n")
+			_T("<END>");
+
+		if (!SQLBatch(oraBatch))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+	}
+
 	if (!ConvertStrings("alarms", "alarm_id", "message"))
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -3510,8 +3584,7 @@ static BOOL H_UpgradeFromV24(int currVersion, int newVersion)
    DWORD dwNodeId;
    TCHAR szQuery[256];
 
-   _tprintf("Create indexes on existing IDATA tables? (Y/N) ");
-   if (GetYesNo())
+   if (GetYesNo(_T("Create indexes on existing IDATA tables?")))
    {
       hResult = SQLSelect(_T("SELECT id FROM nodes WHERE is_deleted=0"));
       if (hResult != NULL)
@@ -3746,8 +3819,7 @@ static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   _tprintf("Create indexes on existing IDATA tables? (Y/N) ");
-   if (GetYesNo())
+   if (GetYesNo(_T("Create indexes on existing IDATA tables?")))
    {
       hResult = SQLSelect(_T("SELECT id FROM nodes WHERE is_deleted=0"));
       if (hResult != NULL)

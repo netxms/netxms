@@ -35,6 +35,7 @@
 DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
 BOOL g_bTrace = FALSE;
+bool g_isGuiMode = false;
 int g_iSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
 const TCHAR *g_pszSqlType[5][2] = 
@@ -93,41 +94,67 @@ void ShowQuery(const TCHAR *pszQuery)
 // Get Yes or No answer from keyboard
 //
 
-BOOL GetYesNo(void)
+bool GetYesNo(const TCHAR *format, ...)
 {
-   if (m_bForce)
-   {
-      printf("Y\n");
-      return TRUE;
-   }
-   else
-   {
+	va_list args;
+
+	if (g_isGuiMode)
+	{
+		if (m_bForce)
+			return true;
+
+		TCHAR message[4096];
+		va_start(args, format);
+		_vsntprintf(message, 4096, format, args);
+		va_end(args);
+
 #ifdef _WIN32
-      int ch;
-
-      while(1)
-      {
-         ch = _getch();
-         if ((ch == 'y') || (ch == 'Y'))
-         {
-            printf("Y\n");
-            return TRUE;
-         }
-         if ((ch == 'n') || (ch == 'N'))
-         {
-            printf("N\n");
-            return FALSE;
-         }
-      }
+		return MessageBox(NULL, message, _T("NetXMS Database Manager"), MB_YESNO | MB_ICONQUESTION) == IDYES;
 #else
-      TCHAR szBuffer[16];
-
-      fflush(stdout);
-      _fgetts(szBuffer, 16, stdin);
-      StrStrip(szBuffer);
-      return ((szBuffer[0] == 'y') || (szBuffer[0] == 'Y'));
+		return false;
 #endif
-   }
+	}
+	else
+	{
+		va_start(args, format);
+		_vtprintf(format, args);
+		va_end(args);
+		printf(" (Y/N) ");
+
+		if (m_bForce)
+		{
+			printf("Y\n");
+			return true;
+		}
+		else
+		{
+#ifdef _WIN32
+			int ch;
+
+			while(1)
+			{
+				ch = _getch();
+				if ((ch == 'y') || (ch == 'Y'))
+				{
+					printf("Y\n");
+					return true;
+				}
+				if ((ch == 'n') || (ch == 'N'))
+				{
+					printf("N\n");
+					return false;
+				}
+			}
+#else
+			TCHAR szBuffer[16];
+
+			fflush(stdout);
+			_fgetts(szBuffer, 16, stdin);
+			StrStrip(szBuffer);
+			return ((szBuffer[0] == 'y') || (szBuffer[0] == 'Y'));
+#endif
+	   }
+	}
 }
 
 
@@ -460,31 +487,34 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:fhIMtvX")) != -1)
+   while((ch = getopt(argc, argv, "c:fGhIMtvX")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
-            _tprintf(_T("Usage: nxdbmgr [<options>] <command>\n"
-                        "Valid commands are:\n"
-								"   batch <file>  : Run SQL batch file\n"
-                        "   check         : Check database for errors\n"
-                        "   export <file> : Export database to file\n"
-                        "   import <file> : Import database from file\n"
-                        "   init <file>   : Initialize database\n"
-								"   reindex       : Reindex database\n"
-                        "   unlock        : Forced database unlock\n"
-                        "   upgrade       : Upgrade database to new version\n"
-                        "Valid options are:\n"
-                        "   -c <config> : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
-                        "   -f          : Force repair - do not ask for confirmation.\n"
-                        "   -h          : Display help and exit.\n"
-                        "   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n"
-                        "   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n"
-                        "   -t          : Enable trace mode (show executed SQL queries).\n"
-                        "   -v          : Display version and exit.\n"
-                        "   -X          : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
-                        "\n"));
+            printf("Usage: nxdbmgr [<options>] <command>\n"
+                   "Valid commands are:\n"
+						 "   batch <file>  : Run SQL batch file\n"
+                   "   check         : Check database for errors\n"
+                   "   export <file> : Export database to file\n"
+                   "   import <file> : Import database from file\n"
+                   "   init <file>   : Initialize database\n"
+				       "   reindex       : Reindex database\n"
+                   "   unlock        : Forced database unlock\n"
+                   "   upgrade       : Upgrade database to new version\n"
+                   "Valid options are:\n"
+                   "   -c <config> : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
+                   "   -f          : Force repair - do not ask for confirmation.\n"
+#ifdef _WIN32
+				       "   -G          : GUI mode.\n"
+#endif
+                   "   -h          : Display help and exit.\n"
+                   "   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n"
+                   "   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n"
+                   "   -t          : Enable trace mode (show executed SQL queries).\n"
+                   "   -v          : Display version and exit.\n"
+                   "   -X          : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
+                   "\n");
             bStart = FALSE;
             break;
          case 'v':   // Print version and exit
@@ -496,6 +526,9 @@ int main(int argc, char *argv[])
          case 'f':
             m_bForce = TRUE;
             break;
+			case 'G':
+				g_isGuiMode = true;
+				break;
          case 't':
             g_bTrace = TRUE;
             break;
