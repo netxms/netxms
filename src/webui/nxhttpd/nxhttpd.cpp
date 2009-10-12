@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 		switch(ch)
 		{
 			case 'h':   // Display help and exit
-				printf(m_szHelpText);
+				puts(m_szHelpText);
 				return 0;
 			case 'd':   // Run as daemon
 				g_dwFlags |= AF_DAEMON;

@@ -234,9 +234,7 @@ void AddActionLink(HttpResponse &response, const TCHAR *pszSID, const TCHAR *psz
 {
 	TCHAR szTemp[8192];
 
-//	_sntprintf(szTemp, 8192, _T("<table class=\"inner_table\"><tr><td width=\"1%\"><a href=\"#\" onClick=\"%s('%s' %s); return false;\"><img src=\"/images/%s\"></a></td><td width=\"1%\">&nbsp</td><td><a href=\"#\" onClick=\"%s('%s' %s); return false;\">%s</a></td></tr></table>"),
-//	           pszFunction, pszSID, pszArgs, pszImage, pszFunction, pszSID, pszArgs, pszName);
-	_sntprintf(szTemp, 8192, _T("<a href=\"#\" onClick=\"%s('%s' %s); return false;\"><table class=\"inner_table\"><tr><td width=\"1%\"><img src=\"/images/%s\"></td><td width=\"1%\">&nbsp</td><td>%s</td></tr></table></a>"),
+	_sntprintf(szTemp, 8192, _T("<a href=\"#\" onClick=\"%s('%s' %s); return false;\"><table class=\"inner_table\"><tr><td width=\"1%%\"><img src=\"/images/%s\"></td><td width=\"1%%\">&nbsp</td><td>%s</td></tr></table></a>"),
 	           pszFunction, pszSID, pszArgs, pszImage, pszName);
 	response.AppendBody(szTemp);
 }
