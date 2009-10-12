@@ -572,6 +572,11 @@ src/java/netxms-eclipse/library/icons/status/testing.png -text
 src/java/netxms-eclipse/library/icons/status/unknown.png -text
 src/java/netxms-eclipse/library/icons/status/unmanaged.png -text
 src/java/netxms-eclipse/library/icons/status/warning.png -text
+src/java/netxms-eclipse/library/jar/jcommon-1.0.16.jar -text
+src/java/netxms-eclipse/library/jar/jfreechart-1.0.13-experimental.jar -text
+src/java/netxms-eclipse/library/jar/jfreechart-1.0.13-swt.jar -text
+src/java/netxms-eclipse/library/jar/jfreechart-1.0.13.jar -text
+src/java/netxms-eclipse/library/jar/swtgraphics2d.jar -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IUIConstants.java -text
