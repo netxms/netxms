@@ -2461,7 +2461,7 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
       // Get Id of user to be deleted
       dwUserId = pRequest->GetVariableLong(VID_USER_ID);
 
-      if (dwUserId != 0)
+      if ((dwUserId != 0) && (dwUserId != GROUP_EVERYONE))
       {
          DWORD dwResult;
 
@@ -2470,7 +2470,7 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
       }
       else
       {
-         // Nobody can delete system administrator account
+         // System administrator account and "everyone" group cannot be deleted
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
    }

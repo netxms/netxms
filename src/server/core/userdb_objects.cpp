@@ -667,7 +667,7 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 	rc = DBBegin(hdb);
 	if (rc)
 	{
-		_sntprintf(query, 256, _T("DELETE FROM groups WHERE id=%d"), m_id);
+		_sntprintf(query, 256, _T("DELETE FROM user_groups WHERE id=%d"), m_id);
 		rc = DBQuery(hdb, query);
 		if (rc)
 		{
