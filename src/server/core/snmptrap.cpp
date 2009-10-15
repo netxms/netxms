@@ -376,7 +376,7 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
 	DWORD ipAddr = ntohl(((struct sockaddr_in *)addr)->sin_addr.s_addr);
 	Node *node = FindNodeByIP(ipAddr);
 	TCHAR buffer[32];
-	DbgPrintf(1, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
+	DbgPrintf(6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
 	          IpToStr(ipAddr, buffer), (node != NULL) ? node->Name() : _T("<unknown>"));
 	return (node != NULL) ? node->getSnmpSecurityContext() : NULL;
 }
@@ -430,7 +430,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       iBytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen, ContextFinder);
       if ((iBytes > 0) && (pdu != NULL))
       {
-			DbgPrintf(1, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
+			DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
          if (pdu->getCommand() == SNMP_TRAP)
             ProcessTrap(pdu, &addr);
          delete pdu;
