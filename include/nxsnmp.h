@@ -552,7 +552,7 @@ public:
    SNMP_PDU(DWORD dwCommand, DWORD dwRqId, DWORD dwVersion = SNMP_VERSION_2C);
    ~SNMP_PDU();
 
-   BOOL parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *securityContext);
+   BOOL parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
    DWORD encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
 
    DWORD getCommand(void) { return m_dwCommand; }
@@ -595,13 +595,15 @@ protected:
 	SNMP_SecurityContext *m_securityContext;
 	SNMP_Engine *m_authoritativeEngine;
 	SNMP_Engine *m_contextEngine;
+	bool m_enableEngineIdAutoupdate;
 
 public:
    SNMP_Transport();
    virtual ~SNMP_Transport();
 
    virtual int readMessage(SNMP_PDU **data, DWORD timeout = INFINITE,
-                           struct sockaddr *sender = NULL, socklen_t *addrSize = NULL)
+                           struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
+	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL)
 	{
 		return -1;
 	}
@@ -615,6 +617,9 @@ public:
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
 	const char *getCommunityString() { return (m_securityContext != NULL) ? m_securityContext->getCommunity() : ""; }
+
+	void enableEngineIdAutoupdate(bool enabled) { m_enableEngineIdAutoupdate = enabled; }
+	bool isEngineIdAutoupdateEnabled() { return m_enableEngineIdAutoupdate; }
 };
 
 
@@ -640,8 +645,9 @@ public:
    SNMP_UDPTransport(SOCKET hSocket);
    virtual ~SNMP_UDPTransport();
 
-   virtual int readMessage(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
-                           struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
+   virtual int readMessage(SNMP_PDU **data, DWORD timeout = INFINITE,
+                           struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
+	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pPDU);
 
    DWORD createUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);

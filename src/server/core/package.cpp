@@ -179,7 +179,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
          pStartup->pSession->sendMessage(&msg);
 
          // Create agent connection
-         pAgentConn = pNode->CreateAgentConnection();
+         pAgentConn = pNode->createAgentConnection();
          if (pAgentConn != NULL)
          {
             BOOL bCheckOK = FALSE;

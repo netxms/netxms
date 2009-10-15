@@ -764,8 +764,9 @@ public:
    void OpenParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    void CloseParamList(void) { UnlockData(); }
 
-   AgentConnectionEx *CreateAgentConnection(void);
-	SNMP_Transport *CreateSNMPTransport(void);
+   AgentConnectionEx *createAgentConnection();
+	SNMP_Transport *createSnmpTransport();
+	SNMP_SecurityContext *getSnmpSecurityContext();
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);

@@ -54,6 +54,7 @@ SNMP_Transport::SNMP_Transport()
 	m_authoritativeEngine = NULL;
 	m_contextEngine = NULL;
 	m_securityContext = NULL;
+	m_enableEngineIdAutoupdate = false;
 }
 
 
@@ -418,7 +419,8 @@ DWORD SNMP_UDPTransport::preParsePDU(void)
 //
 
 int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout, 
-                                   struct sockaddr *pSender, socklen_t *piAddrSize)
+                                   struct sockaddr *pSender, socklen_t *piAddrSize,
+                                   SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
    int iBytes;
    DWORD dwPDULength;
@@ -461,9 +463,15 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
       m_dwBytesInBuffer += iBytes;
    }
 
+	// Change security context if needed
+	if (contextFinder != NULL)
+	{
+		setSecurityContext(contextFinder(pSender, *piAddrSize));
+	}
+
    // Create new PDU object and remove parsed data from buffer
    *ppData = new SNMP_PDU;
-   if (!(*ppData)->parse(&m_pBuffer[m_dwBufferPos], dwPDULength, m_securityContext))
+   if (!(*ppData)->parse(&m_pBuffer[m_dwBufferPos], dwPDULength, m_securityContext, m_enableEngineIdAutoupdate))
    {
       delete *ppData;
       *ppData = NULL;

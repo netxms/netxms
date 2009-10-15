@@ -185,7 +185,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
             }
 	         if (regcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
 	         {
-               pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->CreateAgentConnection();
+               pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
                if (pConn != NULL)
                {
                   dwResult = pConn->GetList(pszEnum);

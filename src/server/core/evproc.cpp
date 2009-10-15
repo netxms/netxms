@@ -128,7 +128,9 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		}
 
       // Write event to log if required
-      if (pEvent->getFlags() & EF_LOG)
+		// Don't write SYS_DB_QUERY_FAILED to log to prevent
+		// possible event recursion in case of severe DB failure
+		if ((pEvent->getFlags() & EF_LOG) && (pEvent->getCode() != EVENT_DB_QUERY_FAILED))
       {
          char szQuery[2048];
 

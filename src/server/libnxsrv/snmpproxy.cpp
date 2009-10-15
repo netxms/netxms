@@ -86,7 +86,8 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 //
 
 int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout, 
-                                     struct sockaddr *pSender, socklen_t *piAddrSize)
+                                     struct sockaddr *pSender, socklen_t *piAddrSize,
+                                     SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
 	int nRet;
 	BYTE *pBuffer;
@@ -100,8 +101,12 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
 		dwSize = m_pResponse->GetVariableLong(VID_PDU_SIZE);
 		pBuffer = (BYTE *)malloc(dwSize);
 		m_pResponse->GetVariableBinary(VID_PDU, pBuffer, dwSize);
+
+		if (contextFinder != NULL)
+			setSecurityContext(contextFinder(pSender, *piAddrSize));
+
 		*ppData = new SNMP_PDU;
-		if (!(*ppData)->parse(pBuffer, dwSize, m_securityContext))
+		if (!(*ppData)->parse(pBuffer, dwSize, m_securityContext, m_enableEngineIdAutoupdate))
 		{
 			delete *ppData;
 			*ppData = NULL;

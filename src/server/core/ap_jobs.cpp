@@ -60,7 +60,7 @@ bool PolicyDeploymentJob::run()
 {
 	bool success = false;
 
-	AgentConnectionEx *conn = m_node->CreateAgentConnection();
+	AgentConnectionEx *conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
 		DWORD rcc = conn->deployPolicy(m_policy);
@@ -119,7 +119,7 @@ bool PolicyUninstallJob::run()
 {
 	bool success = false;
 
-	AgentConnectionEx *conn = m_node->CreateAgentConnection();
+	AgentConnectionEx *conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
 		DWORD rcc = conn->uninstallPolicy(m_policy);

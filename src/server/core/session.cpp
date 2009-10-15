@@ -5730,7 +5730,7 @@ void ClientSession::GetAgentConfig(CSCPMessage *pRequest)
          {
             AgentConnection *pConn;
 
-            pConn = ((Node *)pObject)->CreateAgentConnection();
+            pConn = ((Node *)pObject)->createAgentConnection();
             if (pConn != NULL)
             {
                dwResult = pConn->GetConfigFile(&pszConfig, &dwSize);
@@ -5800,7 +5800,7 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
          {
             AgentConnection *pConn;
 
-            pConn = ((Node *)pObject)->CreateAgentConnection();
+            pConn = ((Node *)pObject)->createAgentConnection();
             if (pConn != NULL)
             {
                pszConfig = pRequest->GetVariableStr(VID_CONFIG_FILE);
@@ -5883,7 +5883,7 @@ void ClientSession::ExecuteAction(CSCPMessage *pRequest)
          {
             AgentConnection *pConn;
 
-            pConn = ((Node *)pObject)->CreateAgentConnection();
+            pConn = ((Node *)pObject)->createAgentConnection();
             if (pConn != NULL)
             {
                pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);

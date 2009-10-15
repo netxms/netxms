@@ -668,6 +668,9 @@ BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityConte
 	BYTE k1[64], k2[64], hash[20], *buffer;
 	int i;
 
+	if (securityContext == NULL)
+		return FALSE;	// Unable to validate message without security context
+
 	switch(securityContext->getAuthMethod())
 	{
 		case SNMP_AUTH_MD5:
@@ -732,6 +735,9 @@ BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityConte
 BOOL SNMP_PDU::decryptData(BYTE *data, DWORD length, BYTE *decryptedData, SNMP_SecurityContext *securityContext)
 {
 #ifdef _WITH_ENCRYPTION
+	if (securityContext == NULL)
+		return FALSE;	// Cannot decrypt message without valid security context
+
 	if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
 	{
 #ifndef OPENSSL_NO_DES
@@ -787,7 +793,7 @@ BOOL SNMP_PDU::decryptData(BYTE *data, DWORD length, BYTE *decryptedData, SNMP_S
 // Create PDU from packet
 //
 
-BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *securityContext)
+BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate)
 {
    BYTE *pbCurrPos;
    DWORD dwType, dwLength, dwPacketLength, dwIdLength;
@@ -835,6 +841,11 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *se
 		{
 			if (!parseV3SecurityUsm(pbCurrPos, dwLength))
 				return FALSE;
+
+			if (engineIdAutoupdate && (m_authoritativeEngine.getIdLen() > 0) && (securityContext != NULL))
+			{
+				securityContext->setAuthoritativeEngine(m_authoritativeEngine);
+			}
 
 			if (m_flags & SNMP_AUTH_FLAG)
 			{

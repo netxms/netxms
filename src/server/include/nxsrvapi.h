@@ -395,7 +395,8 @@ public:
 	virtual ~SNMP_ProxyTransport();
 
    virtual int readMessage(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
-                           struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
+                           struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL,
+	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
 };
 

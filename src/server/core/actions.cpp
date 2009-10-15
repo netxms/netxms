@@ -220,7 +220,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    pNode = FindNodeByIP(ntohl(dwAddr));
    if (pNode != NULL)
    {
-      pConn = pNode->CreateAgentConnection();
+      pConn = pNode->createAgentConnection();
       if (pConn == NULL)
          return FALSE;
    }

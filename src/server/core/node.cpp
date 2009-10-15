@@ -437,7 +437,7 @@ ARP_CACHE *Node::GetArpCache(void)
    {
 		SNMP_Transport *pTransport;
 
-		pTransport = CreateSNMPTransport();
+		pTransport = createSnmpTransport();
       pArpCache = SnmpGetArpCache(m_snmpVersion, pTransport);
 		delete pTransport;
    }
@@ -475,7 +475,7 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
 		SNMP_Transport *pTransport;
 		BOOL useIfXTable;
 
-		pTransport = CreateSNMPTransport();
+		pTransport = createSnmpTransport();
 		if (m_nUseIfXTable == IFXTABLE_DEFAULT)
 		{
 			useIfXTable = (ConfigReadInt(_T("UseIfXTable"), 1) != 0);
@@ -740,7 +740,7 @@ restart_agent_check:
       DWORD dwResult;
 
       DbgPrintf(6, "StatusPoll(%s): check SNMP", m_szName);
-		pTransport = CreateSNMPTransport();
+		pTransport = createSnmpTransport();
       SetPollerInfo(nPoller, "check SNMP");
       SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
       dwResult = SnmpGet(m_snmpVersion, pTransport, ".1.3.6.1.2.1.1.2.0",
@@ -872,7 +872,7 @@ restart_agent_check:
    SetPollerInfo(nPoller, "child poll");
    DbgPrintf(7, "StatusPoll(%s): starting child object poll", m_szName);
 	pCluster = GetMyCluster();
-	pTransport = CreateSNMPTransport();
+	pTransport = createSnmpTransport();
    for(i = 0; i < dwPollListSize; i++)
    {
       switch(ppPollList[i]->Type())
@@ -1133,7 +1133,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       {
 	      SendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
          DbgPrintf(5, "ConfPoll(%s): calling SnmpCheckCommSettings()", m_szName);
-			pTransport = CreateSNMPTransport();
+			pTransport = createSnmpTransport();
 
 			SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity);
 			if (newCtx != NULL)
@@ -1835,7 +1835,7 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
    {
 		SNMP_Transport *pTransport;
 
-		pTransport = CreateSNMPTransport();
+		pTransport = createSnmpTransport();
       dwResult = SnmpGet(m_snmpVersion, pTransport,
                          szParam, NULL, 0, szBuffer, dwBufSize, FALSE, TRUE);
 		delete pTransport;
@@ -2450,7 +2450,7 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
    {
       AgentConnection *pConn;
 
-      pConn = CreateAgentConnection();
+      pConn = createAgentConnection();
       if (pConn != NULL)
       {
          dwError = pConn->CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
@@ -2511,7 +2511,7 @@ void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
 // Create ready to use agent connection
 //
 
-AgentConnectionEx *Node::CreateAgentConnection(void)
+AgentConnectionEx *Node::createAgentConnection()
 {
    AgentConnectionEx *conn;
 
@@ -2789,7 +2789,7 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
    {
 		SNMP_Transport *pTransport;
 
-		pTransport = CreateSNMPTransport();
+		pTransport = createSnmpTransport();
       pRT = SnmpGetRoutingTable(m_snmpVersion, pTransport);
 		delete pTransport;
    }
@@ -2888,7 +2888,7 @@ DWORD Node::CallSnmpEnumerate(const char *pszRootOid,
 		SNMP_Transport *pTransport;
 		DWORD dwResult;
 
-		pTransport = CreateSNMPTransport();
+		pTransport = createSnmpTransport();
       dwResult = SnmpEnumerate(m_snmpVersion, pTransport,
                                pszRootOid, pHandler, pArg, FALSE);
 		delete pTransport;
@@ -3042,7 +3042,7 @@ Cluster *Node::GetMyCluster(void)
 // Create SNMP transport
 //
 
-SNMP_Transport *Node::CreateSNMPTransport(void)
+SNMP_Transport *Node::createSnmpTransport()
 {
 	SNMP_Transport *pTransport = NULL;
 
@@ -3062,7 +3062,7 @@ SNMP_Transport *Node::CreateSNMPTransport(void)
 			{
 				AgentConnection *pConn;
 
-				pConn = ((Node *)pObject)->CreateAgentConnection();
+				pConn = ((Node *)pObject)->createAgentConnection();
 				if (pConn != NULL)
 				{
 					pTransport = new SNMP_ProxyTransport(pConn, m_dwIpAddr, m_wSNMPPort);
@@ -3079,6 +3079,21 @@ SNMP_Transport *Node::CreateSNMPTransport(void)
 		UnlockData();
 	}
 	return pTransport;
+}
+
+
+//
+// Get SNMP security context
+// ATTENTION: This method returns new copy of security context
+// which must be destroyed by the caller
+//
+
+SNMP_SecurityContext *Node::getSnmpSecurityContext()
+{
+	LockData();
+	SNMP_SecurityContext *ctx = new SNMP_SecurityContext(m_snmpSecurity);
+	UnlockData();
+	return ctx;
 }
 
 

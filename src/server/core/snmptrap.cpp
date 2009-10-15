@@ -368,6 +368,21 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 
 
 //
+// Context finder - tries to find SNMPv3 security context by IP address
+//
+
+static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addrLen)
+{
+	DWORD ipAddr = ntohl(((struct sockaddr_in *)addr)->sin_addr.s_addr);
+	Node *node = FindNodeByIP(ipAddr);
+	TCHAR buffer[32];
+	DbgPrintf(1, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
+	          IpToStr(ipAddr, buffer), (node != NULL) ? node->Name() : _T("<unknown>"));
+	return (node != NULL) ? node->getSnmpSecurityContext() : NULL;
+}
+
+
+//
 // SNMP trap receiver thread
 //
 
@@ -405,15 +420,17 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), 162);
 
    pTransport = new SNMP_UDPTransport(hSocket);
+	pTransport->enableEngineIdAutoupdate(true);
    DbgPrintf(1, _T("SNMP Trap Receiver started"));
 
    // Wait for packets
    while(!ShutdownInProgress())
    {
       nAddrLen = sizeof(struct sockaddr_in);
-      iBytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen);
+      iBytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen, ContextFinder);
       if ((iBytes > 0) && (pdu != NULL))
       {
+			DbgPrintf(1, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
          if (pdu->getCommand() == SNMP_TRAP)
             ProcessTrap(pdu, &addr);
          delete pdu;
