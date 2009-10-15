@@ -37,13 +37,16 @@ int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
@@ -66,13 +69,16 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { "length", F_length, 1 },
    { "localtime", F_localtime, -1 },
    { "lower", F_lower, 1 },
+	{ "ltrim", F_ltrim, 1 },
    { "max", F_max, -1 },
    { "min", F_min, -1 },
    { "pow", F_pow, 2 },
    { "right", F_right, -1 },
+	{ "rtrim", F_rtrim, 1 },
 	{ "strftime", F_strftime, -1 },
 	{ "substr", F_substr, -1 },
 	{ "time", F_time, 0 },
+	{ "trim", F_trim, 1 },
    { "typeof", F_typeof, 1 },
    { "upper", F_upper, 1 },
    { "AddrInRange", F_AddrInRange, 3 },

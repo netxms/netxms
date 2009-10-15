@@ -749,3 +749,66 @@ int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	*ppResult = (argc == 0) ? new NXSL_Value((LONG)0) : new NXSL_Value(argv[0]);
    return NXSL_STOP_SCRIPT_EXECUTION;
 }
+
+
+//
+// Trim whitespace characters from the string
+//
+
+int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	if (!argv[0]->IsString())
+		return NXSL_ERR_NOT_STRING;
+
+	DWORD len;
+	const TCHAR *string = argv[0]->GetValueAsString(&len);
+	
+	int i;
+	for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
+	int startPos = i;
+	if (len > 0)
+		for(i = (int)len - 1; (i >= startPos) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
+
+	*ppResult = new NXSL_Value(&string[startPos], i - startPos + 1);
+	return 0;
+}
+
+
+//
+// Trim trailing whitespace characters from the string
+//
+
+int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	if (!argv[0]->IsString())
+		return NXSL_ERR_NOT_STRING;
+
+	DWORD len;
+	const TCHAR *string = argv[0]->GetValueAsString(&len);
+	
+	int i;
+	for(i = (int)len - 1; (i >= 0) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
+
+	*ppResult = new NXSL_Value(string, i + 1);
+	return 0;
+}
+
+
+//
+// Trim leading whitespace characters from the string
+//
+
+int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	if (!argv[0]->IsString())
+		return NXSL_ERR_NOT_STRING;
+
+	DWORD len;
+	const TCHAR *string = argv[0]->GetValueAsString(&len);
+	
+	int i;
+	for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
+
+	*ppResult = new NXSL_Value(&string[i], (int)len - i);
+	return 0;
+}
