@@ -1,11 +1,26 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client.log;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -24,7 +39,7 @@ public class Log
 	private NXCSession session;
 	private int handle;
 	private String name;
-	private HashMap<String, LogColumn> columns;
+	private LinkedHashMap<String, LogColumn> columns;
 	private long numRecords;	// Number of records ready after successful query() 
 	
 	/**
@@ -39,7 +54,7 @@ public class Log
 		handle = msg.getVariableAsInteger(NXCPCodes.VID_LOG_HANDLE);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
-		columns = new HashMap<String, LogColumn>(count);
+		columns = new LinkedHashMap<String, LogColumn>(count);
 		long baseId = NXCPCodes.VID_COLUMN_INFO_BASE;
 		for(int i = 0; i < count; i++, baseId += 10)
 		{
@@ -72,12 +87,23 @@ public class Log
 	 * Get description for given column name.
 	 * 
 	 * @param columnName Column name
-	 * @return Column description
+	 * @return Column description or null if column with given name does not exist
 	 */
-	public String getColumnDescription(String columnName)
+	public String getColumnDescription(final String columnName)
 	{
 		LogColumn col = columns.get(columnName);
 		return (col != null) ? col.getDescription() : null;
+	}
+	
+	/**
+	 * Get column object by column name.
+	 * 
+	 * @param columnName Column name
+	 * @return Column object or null if column with given name does not exist
+	 */
+	public LogColumn getColumn(final String columnName)
+	{
+		return columns.get(columnName);
 	}
 	
 	/**

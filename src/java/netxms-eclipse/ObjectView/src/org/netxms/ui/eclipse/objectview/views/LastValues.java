@@ -29,14 +29,6 @@ public class LastValues extends ViewPart
 	private NXCNode node;
 	private LastValuesView dataView;
 	
-	/**
-	 * 
-	 */
-	public LastValues()
-	{
-		// TODO Auto-generated constructor stub
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */

@@ -29,6 +29,17 @@
 
 static NXCORE_LOG s_logs[] =
 {
+	{ _T("AuditLog"), _T("audit_log"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
+		{
+			{ "record_id", "Record ID", LC_INTEGER },
+			{ "timestamp", "Timestamp", LC_TIMESTAMP },
+			{ "subsystem", "Subsystem", LC_TEXT },
+			{ "user_id", "User", LC_USER_ID },
+			{ "workstation", "Workstation", LC_TEXT },
+			{ "message", "Message", LC_TEXT },
+			{ NULL, NULL, 0 }
+		}
+	},
 	{ _T("EventLog"), _T("event_log"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
 			{ "event_timestamp", "Time", LC_TIMESTAMP },

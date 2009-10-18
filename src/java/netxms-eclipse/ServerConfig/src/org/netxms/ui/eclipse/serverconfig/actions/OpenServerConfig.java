@@ -18,8 +18,6 @@ public class OpenServerConfig implements IWorkbenchWindowActionDelegate
 	@Override
 	public void dispose()
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -56,7 +54,5 @@ public class OpenServerConfig implements IWorkbenchWindowActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 }

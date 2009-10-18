@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Log Viewer"
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.logviewer.views.LogViewer"
+            id="org.netxms.ui.eclipse.logviewer.view.log_viewer">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            name="Audit Log"
+            description="Open Audit Log"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.logviewer.commands.openAuditLog">
+      </command>
+   </extension>
+   
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.logviewer.action_set"
+		   label="Log Viewer"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.logviewer.actions.openAuditLog"
+			   menubarPath="view/logs"
+			   toolbarPath="logs/additions"
+			   label="Audit Log"
+			   tooltip="Open Audit Log"
+			   icon="icons/AuditLog.png"
+			   class="org.netxms.ui.eclipse.logviewer.actions.OpenAuditLog"
+			   definitionId="org.netxms.ui.eclipse.logviewer.commands.openAuditLog">
+		   </action>
+	   </actionSet>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.logviewer.commands.openAuditLog"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+Alt+F11">
+      </key>
+   </extension>
+
+</plugin>

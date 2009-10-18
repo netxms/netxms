@@ -11,6 +11,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCObject;
 import org.netxms.client.constants.Severity;
+import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 
@@ -54,9 +55,9 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	{
 		switch(columnIndex)
 		{
-			case AlarmView.COLUMN_SEVERITY:
+			case AlarmList.COLUMN_SEVERITY:
 				return severityImages[((NXCAlarm)element).getCurrentSeverity()];
-			case AlarmView.COLUMN_STATE:
+			case AlarmList.COLUMN_STATE:
 				return stateImages[((NXCAlarm)element).getState()];
 		}
 		return null;
@@ -70,20 +71,20 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	{
 		switch(columnIndex)
 		{
-			case AlarmView.COLUMN_SEVERITY:
+			case AlarmList.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(((NXCAlarm)element).getCurrentSeverity());
-			case AlarmView.COLUMN_STATE:
+			case AlarmList.COLUMN_STATE:
 				return stateText[((NXCAlarm)element).getState()];
-			case AlarmView.COLUMN_SOURCE:
+			case AlarmList.COLUMN_SOURCE:
 				NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)element).getSourceObjectId());
 				return (object != null) ? object.getObjectName() : null;
-			case AlarmView.COLUMN_MESSAGE:
+			case AlarmList.COLUMN_MESSAGE:
 				return ((NXCAlarm)element).getMessage();
-			case AlarmView.COLUMN_COUNT:
+			case AlarmList.COLUMN_COUNT:
 				return Integer.toString(((NXCAlarm)element).getRepeatCount());
-			case AlarmView.COLUMN_CREATED:
+			case AlarmList.COLUMN_CREATED:
 				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((NXCAlarm)element).getCreationTime());
-			case AlarmView.COLUMN_LASTCHANGE:
+			case AlarmList.COLUMN_LASTCHANGE:
 				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((NXCAlarm)element).getLastChangeTime());
 		}
 		return null;

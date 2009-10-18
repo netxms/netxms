@@ -34,6 +34,7 @@
 #define LC_USER_ID         3
 #define LC_EVENT_CODE      4
 #define LC_TIMESTAMP       5
+#define LC_INTEGER         6
 
 
 //

@@ -7,7 +7,7 @@
             name="Alarm Browser"
             allowMultiple="false"
             icon="icons/alarm_browser.png"
-            class="org.netxms.ui.eclipse.alarmviewer.AlarmBrowser"
+            class="org.netxms.ui.eclipse.alarmviewer.views.AlarmBrowser"
             id="org.netxms.ui.eclipse.alarmviewer.view.alarm_browser">
       </view>
    </extension>

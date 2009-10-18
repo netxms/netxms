@@ -19,6 +19,7 @@
 package org.netxms.client.log;
 
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import org.netxms.base.NXCPCodes;
@@ -70,6 +71,16 @@ public class LogFilter
 	public void clearColumnFilter(String column)
 	{
 		columnFilters.remove(column);
+	}
+	
+	/**
+	 * Get all column filters.
+	 * 
+	 * @return all configured column filters
+	 */
+	public Set<Entry<String, ColumnFilter>> getColumnFilters()
+	{
+		return columnFilters.entrySet();
 	}
 	
 	/**

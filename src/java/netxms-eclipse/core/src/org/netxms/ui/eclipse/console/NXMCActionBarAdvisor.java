@@ -149,6 +149,8 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		viewMenu.add(new Separator());
 		viewMenu.add(new GroupMarker(IActionConstants.M_PRIMARY_VIEW));
 		viewMenu.add(new Separator());
+		viewMenu.add(new GroupMarker(IActionConstants.M_LOGS_VIEW));
+		viewMenu.add(new Separator());
 		viewMenu.add(openConsoleAction);
 		viewMenu.add(openProgressViewAction);
 		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
@@ -175,6 +177,10 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
 		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		coolBar.add(new ToolBarContributionItem(toolbar, "view")); //$NON-NLS-1$
+
+		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "logs")); //$NON-NLS-1$
 
 		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
 		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

@@ -16,7 +16,7 @@ import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCException;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
-import org.netxms.ui.eclipse.alarmviewer.AlarmView;
+import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 
@@ -68,7 +68,7 @@ public class AcknowledgeAlarm implements IObjectActionDelegate
 		@Override
 		public boolean belongsTo(Object family)
 		{
-			return family == AlarmView.JOB_FAMILY;
+			return family == AlarmList.JOB_FAMILY;
 		}
 	}
 	

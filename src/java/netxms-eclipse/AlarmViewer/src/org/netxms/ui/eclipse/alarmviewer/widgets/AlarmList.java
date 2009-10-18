@@ -1,14 +1,28 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.alarmviewer;
+package org.netxms.ui.eclipse.alarmviewer.widgets;
 
 import java.util.HashMap;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -22,13 +36,16 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCAlarm;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.alarmviewer.Activator;
+import org.netxms.ui.eclipse.alarmviewer.AlarmComparator;
+import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
+import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 
@@ -36,7 +53,7 @@ import org.netxms.ui.eclipse.tools.SortableTableViewer;
  * @author victor
  *
  */
-public class AlarmView extends Composite
+public class AlarmList extends Composite
 {
 	public static final String JOB_FAMILY = "AlarmViewJob";
 	
@@ -56,7 +73,7 @@ public class AlarmView extends Composite
 	private AlarmListFilter alarmFilter;
 	private HashMap<Long, NXCAlarm> alarmList;
 	
-	public AlarmView(ViewPart viewPart, Composite parent, int style)
+	public AlarmList(ViewPart viewPart, Composite parent, int style)
 	{
 		super(parent, style);
 		session = NXMCSharedData.getInstance().getSession();
@@ -78,56 +95,37 @@ public class AlarmView extends Composite
 		addListener(SWT.Resize, new Listener() {
 			public void handleEvent(Event e)
 			{
-				alarmViewer.getControl().setBounds(AlarmView.this.getClientArea());
+				alarmViewer.getControl().setBounds(AlarmList.this.getClientArea());
 			}
 		});
 
 		// Request alarm list from server
-		Job job = new Job("Synchronize alarm list")
+		new ConsoleJob("Synchronize alarm list", viewPart, Activator.PLUGIN_ID, JOB_FAMILY)
 		{
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					alarmList = session.getAlarms(false);
-					status = Status.OK_STATUS;
+				alarmList = session.getAlarms(false);
 
-					new UIJob("Initialize alarm viewer") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+				new UIJob("Initialize alarm viewer") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						synchronized(alarmList)
 						{
-							synchronized(alarmList)
-							{
-								alarmViewer.setInput(alarmList.values());
-							}
-							return Status.OK_STATUS;
+							alarmViewer.setInput(alarmList.values());
 						}
-					}.schedule();
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-	                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-	                    "Cannot synchronize alarm list: " + e.getMessage(), e);
-				}
-				return status;
+						return Status.OK_STATUS;
+					}
+				}.schedule();
 			}
 
-			/* (non-Javadoc)
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
 			@Override
-			public boolean belongsTo(Object family)
+			protected String getErrorMessage()
 			{
-				return family == AlarmView.JOB_FAMILY;
+				return "Cannot synchronize alarm list";
 			}
-		};
-		IWorkbenchSiteProgressService siteService =
-	      (IWorkbenchSiteProgressService)viewPart.getSite().getAdapter(IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
+		}.start();
 		
 		// Add client library listener
 		clientListener = new NXCListener() {

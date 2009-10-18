@@ -10,6 +10,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCObject;
+import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -48,29 +49,29 @@ public class AlarmComparator extends ViewerComparator
 		int rc;
 		switch((Integer)sortColumn.getData("ID"))
 		{
-			case AlarmView.COLUMN_SEVERITY:
+			case AlarmList.COLUMN_SEVERITY:
 				rc = compareNumbers(((NXCAlarm)e1).getCurrentSeverity(), ((NXCAlarm)e2).getCurrentSeverity());
 				break;
-			case AlarmView.COLUMN_STATE:
+			case AlarmList.COLUMN_STATE:
 				rc = compareNumbers(((NXCAlarm)e1).getState(), ((NXCAlarm)e2).getState());
 				break;
-			case AlarmView.COLUMN_SOURCE:
+			case AlarmList.COLUMN_SOURCE:
 				NXCObject obj1 = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)e1).getSourceObjectId());
 				NXCObject obj2 = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)e2).getSourceObjectId());
 				String name1 = (obj1 != null) ? obj1.getObjectName() : "<unknown>";
 				String name2 = (obj2 != null) ? obj2.getObjectName() : "<unknown>";
 				rc = name1.compareToIgnoreCase(name2);
 				break;
-			case AlarmView.COLUMN_MESSAGE:
+			case AlarmList.COLUMN_MESSAGE:
 				rc = ((NXCAlarm)e1).getMessage().compareToIgnoreCase(((NXCAlarm)e2).getMessage());
 				break;
-			case AlarmView.COLUMN_COUNT:
+			case AlarmList.COLUMN_COUNT:
 				rc = compareNumbers(((NXCAlarm)e1).getRepeatCount(), ((NXCAlarm)e2).getRepeatCount());
 				break;
-			case AlarmView.COLUMN_CREATED:
+			case AlarmList.COLUMN_CREATED:
 				rc = ((NXCAlarm)e1).getCreationTime().compareTo(((NXCAlarm)e2).getCreationTime());
 				break;
-			case AlarmView.COLUMN_LASTCHANGE:
+			case AlarmList.COLUMN_LASTCHANGE:
 				rc = ((NXCAlarm)e1).getLastChangeTime().compareTo(((NXCAlarm)e2).getLastChangeTime());
 				break;
 			default:

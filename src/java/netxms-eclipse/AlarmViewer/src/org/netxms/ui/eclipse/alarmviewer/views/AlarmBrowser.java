@@ -1,7 +1,22 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.alarmviewer;
+package org.netxms.ui.eclipse.alarmviewer.views;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
@@ -9,6 +24,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 
 /**
  * @author Victor
@@ -18,7 +34,7 @@ public class AlarmBrowser extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.view.alarm_browser";
 	
-	private AlarmView alarmView;
+	private AlarmList alarmView;
 
 	/**
 	 * 
@@ -37,7 +53,7 @@ public class AlarmBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		alarmView = new AlarmView(this, parent, SWT.NONE);
+		alarmView = new AlarmList(this, parent, SWT.NONE);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
