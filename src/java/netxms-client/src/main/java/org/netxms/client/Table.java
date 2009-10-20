@@ -160,6 +160,20 @@ public class Table
 	{
 		return data.get(row);
 	}
+	
+	/**
+	 * Get all rows as an array of List<String>. Method returns Object[] because
+	 * Java forbids craetion of generic arrays.
+	 * 
+	 * @return Array of all rows in a table
+	 */
+	public Object[] getAllRows()
+	{
+		Object[] rows = new Object[data.size()];
+		for(int i = 0; i < rows.length; i++)
+			rows[i] = data.get(i);
+		return rows;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

@@ -375,6 +375,8 @@ src/java/netxms-eclipse/LogViewer/plugin.xml -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/Activator.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/Messages.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenAuditLog.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/actions/OpenEventLog.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/AddConditionDialog.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/ColumnSelectionDialog.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/QueryBuilder.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/FilterTreeContentProvider.java -text
@@ -382,6 +384,7 @@ src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/he
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/FilterTreeLabelProvider.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages.properties -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/LogViewer.java -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/helpers/LogLabelProvider.java -text
 src/java/netxms-eclipse/NetworkMaps/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/NetworkMaps/build.properties -text
 src/java/netxms-eclipse/NetworkMaps/icons/node.png -text

@@ -9,6 +9,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
@@ -314,5 +315,18 @@ public class ObjectTree extends Composite
 		
 		NXCObject[] objects = session.findMultipleObjects(expandedElements);
 		objectTree.setExpandedElements(objects);
+	}
+	
+	/**
+	 * Get selected object
+	 * 
+	 * @return ID of selected object or 0 if no objects selected
+	 */
+	public long getSelectedObject()
+	{
+		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+		if (selection.isEmpty())
+			return 0;
+		return ((NXCObject)selection.getFirstElement()).getObjectId();
 	}
 }

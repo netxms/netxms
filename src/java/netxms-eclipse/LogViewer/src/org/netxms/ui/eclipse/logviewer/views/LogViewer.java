@@ -28,6 +28,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -41,6 +42,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
+import org.netxms.client.Table;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
@@ -48,6 +50,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.dialogs.QueryBuilder;
+import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 
@@ -68,6 +71,7 @@ public class LogViewer extends ViewPart
 	private Image titleImage = null;
 	private RefreshAction actionRefresh;
 	private Action actionDoQuery;
+	private Table resultSet;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -101,6 +105,7 @@ public class LogViewer extends ViewPart
 		org.eclipse.swt.widgets.Table table = viewer.getTable();
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
+		viewer.setContentProvider(new ArrayContentProvider());
 
 		makeActions();
 		contributeToActionBars();
@@ -162,8 +167,10 @@ public class LogViewer extends ViewPart
 		{
 			TableColumn column = new TableColumn(table, SWT.LEFT);
 			column.setText(lc.getDescription());
+			column.setData(lc);
 			column.setWidth(estimateColumnWidth(lc));
 		}
+		viewer.setLabelProvider(new LogLabelProvider(logHandle));
 	}
 
 	/**
@@ -238,10 +245,32 @@ public class LogViewer extends ViewPart
 	 */
 	private void doQuery()
 	{
-		QueryBuilder dlg = new QueryBuilder(getSite().getShell(), logHandle, filter);
+		final QueryBuilder dlg = new QueryBuilder(getSite().getShell(), logHandle, filter);
 		if (dlg.open() == Window.OK)
 		{
-			
+			filter = dlg.getFilter();
+			new ConsoleJob("Query server log", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot query server log " + logName;
+				}
+
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					logHandle.query(filter);
+					resultSet = logHandle.retrieveData(0, 100);
+					new UIJob("Update log viewer") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							viewer.setInput(resultSet.getAllRows());
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				}
+			}.start();
 		}
 	}
 

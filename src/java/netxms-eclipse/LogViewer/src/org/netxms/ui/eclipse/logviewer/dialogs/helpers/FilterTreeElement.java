@@ -88,6 +88,16 @@ public class FilterTreeElement
 	}
 	
 	/**
+	 * Get number of child elements
+	 * 
+	 * @return Number of child elements
+	 */
+	public int getNumChilds()
+	{
+		return childs.size();
+	}
+	
+	/**
 	 * Add child element
 	 * 
 	 * @param element Element to add
@@ -95,5 +105,29 @@ public class FilterTreeElement
 	public void addChild(final FilterTreeElement element)
 	{
 		childs.add(element);
+	}
+	
+	/**
+	 * Remove child element
+	 * 
+	 * @param element Element to remove
+	 */
+	public void removeChild(final FilterTreeElement element)
+	{
+		childs.remove(element);
+	}
+	
+	/**
+	 * Change elemnt's parent
+	 * 
+	 * @param newParent New parent element
+	 */
+	public void changeParent(final FilterTreeElement newParent)
+	{
+		if (parent != null)
+			parent.removeChild(this);
+		parent = newParent;
+		if (parent != null)
+			parent.addChild(this);
 	}
 }

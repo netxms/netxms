@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
@@ -35,6 +36,7 @@ public class ObjectSelectionDialog extends Dialog
 	private long[] rootObjects;
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
+	private boolean multiSelection;
 	
 	/**
 	 * Create filter for node selection - it allows node objects and possible
@@ -62,6 +64,7 @@ public class ObjectSelectionDialog extends Dialog
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 		this.rootObjects = rootObjects;
 		this.classFilter = classFilter;
+		multiSelection = true;
 	}
 
 	/*
@@ -102,7 +105,7 @@ public class ObjectSelectionDialog extends Dialog
 
 		dialogArea.setLayout(new FormLayout());
 
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects, classFilter);
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.CHECKBOXES : 0, rootObjects, classFilter);
 		
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
@@ -138,11 +141,28 @@ public class ObjectSelectionDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		Long[] objects = objectTree.getCheckedObjects();
-		selectedObjects = new long[objects.length];
-		for(int i = 0; i < objects.length; i++)
-			selectedObjects[i] = objects[i].longValue();
-
+		if (multiSelection)
+		{
+			Long[] objects = objectTree.getCheckedObjects();
+			selectedObjects = new long[objects.length];
+			for(int i = 0; i < objects.length; i++)
+				selectedObjects[i] = objects[i].longValue();
+		}
+		else
+		{
+			long objectId = objectTree.getSelectedObject();
+			if (objectId != 0)
+			{
+				selectedObjects = new long[1];
+				selectedObjects[0] = objectId;
+			}
+			else
+			{
+				MessageDialog.openWarning(getShell(), "Warning", "Please select object and than press OK");
+				return;
+			}
+		}
+		
 		saveSettings();
 		super.okPressed();
 	}
@@ -234,5 +254,24 @@ public class ObjectSelectionDialog extends Dialog
 		}
 
 		return ret;
+	}
+
+	/**
+	 * @return true if multiple object selection is enabled
+	 */
+	public boolean isMultiSelectionEnabled()
+	{
+		return multiSelection;
+	}
+
+	/**
+	 * Enable or disable selection of multiple objects. If multiselection is enabled,
+	 * object tree will appear with check boxes, and objects can be selected by checking them.
+	 * 
+	 * @param enable true to enable multiselection, false to disable
+	 */
+	public void enableMultiSelection(boolean enable)
+	{
+		this.multiSelection = enable;
 	}
 }

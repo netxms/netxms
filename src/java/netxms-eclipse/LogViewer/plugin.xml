@@ -20,6 +20,12 @@
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.logviewer.commands.openAuditLog">
       </command>
+      <command
+            name="Event Log"
+            description="Open Event Log"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.logviewer.commands.openEventLog">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -35,6 +41,15 @@
 			   class="org.netxms.ui.eclipse.logviewer.actions.OpenAuditLog"
 			   definitionId="org.netxms.ui.eclipse.logviewer.commands.openAuditLog">
 		   </action>
+		   <action id="org.netxms.ui.eclipse.logviewer.actions.openEventLog"
+			   menubarPath="view/logs"
+			   toolbarPath="logs/additions"
+			   label="Event Log"
+			   tooltip="Open Event Log"
+			   icon="icons/EventLog.png"
+			   class="org.netxms.ui.eclipse.logviewer.actions.OpenEventLog"
+			   definitionId="org.netxms.ui.eclipse.logviewer.commands.openEventLog">
+		   </action>
 	   </actionSet>
    </extension>
 
@@ -44,6 +59,11 @@
             commandId="org.netxms.ui.eclipse.logviewer.commands.openAuditLog"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="Ctrl+Alt+F11">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.logviewer.commands.openEventLog"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F8">
       </key>
    </extension>
 

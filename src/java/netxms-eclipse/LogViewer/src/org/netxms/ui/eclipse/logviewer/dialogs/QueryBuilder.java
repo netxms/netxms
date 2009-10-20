@@ -59,7 +59,8 @@ public class QueryBuilder extends Dialog
 	private ArrayList<FilterTreeElement> elements;
 	private FilterTreeElement rootElement;
 	private Button buttonAddColumn;
-	private Button buttonAddSet;
+	private Button buttonAddAndSet;
+	private Button buttonAddOrSet;
 	private Button buttonAddOperation;
 	private Button buttonRemove;
 	
@@ -162,7 +163,7 @@ public class QueryBuilder extends Dialog
 		buttons.setLayoutData(gd);
 		
 		buttonAddColumn = new Button(buttons, SWT.PUSH);
-		buttonAddColumn.setText("Add &column filter");
+		buttonAddColumn.setText("Add &column");
 		buttonAddColumn.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -177,9 +178,9 @@ public class QueryBuilder extends Dialog
 			}
 		});
 
-		buttonAddSet = new Button(buttons, SWT.PUSH);
-		buttonAddSet.setText("Add filter &set");
-		buttonAddSet.addSelectionListener(new SelectionListener() {
+		buttonAddAndSet = new Button(buttons, SWT.PUSH);
+		buttonAddAndSet.setText("Add &AND group");
+		buttonAddAndSet.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
@@ -189,7 +190,23 @@ public class QueryBuilder extends Dialog
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				addFilterSet();
+				addFilterSet(ColumnFilter.AND);
+			}
+		});
+		
+		buttonAddOrSet = new Button(buttons, SWT.PUSH);
+		buttonAddOrSet.setText("Add &OR group");
+		buttonAddOrSet.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				addFilterSet(ColumnFilter.OR);
 			}
 		});
 		
@@ -205,6 +222,7 @@ public class QueryBuilder extends Dialog
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
+				addCondition();
 			}
 		});
 		
@@ -244,23 +262,89 @@ public class QueryBuilder extends Dialog
 	/**
 	 * Add filter set
 	 */
-	private void addFilterSet()
+	private void addFilterSet(int operation)
 	{
 		IStructuredSelection selection = (IStructuredSelection)filterTree.getSelection();
-		if (selection.isEmpty())
-		{
-			MessageDialog.openWarning(getShell(), "Warning", "Please select column or filter set");
-			return;
-		}
-		
 		FilterTreeElement element = (FilterTreeElement)selection.getFirstElement();
-		if (element.getType() == FilterTreeElement.ROOT)
+		if (selection.isEmpty() || (element.getType() == FilterTreeElement.ROOT))
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Please select column or filter set");
+			return;
+		}
+	
+		ColumnFilter cf = new ColumnFilter();
+		cf.setOperation(operation);
+		FilterTreeElement newElement;
+		if (element.getType() == FilterTreeElement.COLUMN)
+		{
+			FilterTreeElement[] childs = element.getChilds();
+			newElement = new FilterTreeElement(FilterTreeElement.FILTER, cf, element);
+			for(int i = 0; i < childs.length; i++)
+				childs[i].changeParent(newElement);
+		}
+		else
+		{
+			final ColumnFilter currFilter = (ColumnFilter)element.getObject();
+			if (currFilter.getType() == ColumnFilter.SET)
+			{
+				newElement = new FilterTreeElement(FilterTreeElement.FILTER, cf, element);
+			}
+			else
+			{
+				newElement = new FilterTreeElement(FilterTreeElement.FILTER, cf, element.getParent());
+				element.changeParent(newElement);
+			}
+		}
+		elements.add(newElement);
+		filterTree.refresh();
+		filterTree.setSelection(new StructuredSelection(newElement), true);
+	}
+	
+	/**
+	 * Add condition to filter tree
+	 */
+	private void addCondition()
+	{
+		IStructuredSelection selection = (IStructuredSelection)filterTree.getSelection();
+		FilterTreeElement element = (FilterTreeElement)selection.getFirstElement();
+		if (selection.isEmpty() || (element.getType() == FilterTreeElement.ROOT))
 		{
 			MessageDialog.openWarning(getShell(), "Warning", "Please select column or filter set");
 			return;
 		}
 		
+		// Check if we can add condition under current element
+		if (element.getType() == FilterTreeElement.COLUMN)
+		{
+			if (element.hasChilds())
+			{
+				MessageDialog.openWarning(getShell(), "Warning", "Please select column without conditions or condition set to add new condition");
+				return;
+			}
+		}
+		else
+		{
+			if (((ColumnFilter)element.getObject()).getType() != ColumnFilter.SET)
+			{
+				MessageDialog.openWarning(getShell(), "Warning", "Please select column without conditions or condition set to add new condition");
+				return;
+			}
+		}
+
+		// Find column information
+		FilterTreeElement p = element;
+		while(p.getType() != FilterTreeElement.COLUMN)
+			p = p.getParent();
+		final LogColumn logColumn = (LogColumn)p.getObject();
 		
+		AddConditionDialog dlg = new AddConditionDialog(getShell(), logColumn);
+		if (dlg.open() == Window.OK)
+		{
+			FilterTreeElement condition = new FilterTreeElement(FilterTreeElement.FILTER, dlg.getFilter(), element);
+			elements.add(condition);
+			filterTree.refresh();
+			filterTree.setSelection(new StructuredSelection(condition), true);
+		}
 	}
 
 	/**
@@ -281,5 +365,91 @@ public class QueryBuilder extends Dialog
 	{
 		super.configureShell(newShell);
 		newShell.setText("Log Query Builder");
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 */
+	@Override
+	protected void okPressed()
+	{
+		generateFilter();
+		super.okPressed();
+	}
+	
+	/**
+	 * Generate LogFilter object from built tree
+	 */
+	private void generateFilter()
+	{
+		optimizeTree(rootElement);
+		
+		filter = new LogFilter();
+		FilterTreeElement[] columns = rootElement.getChilds();
+		for(int i = 0; i < columns.length; i++)
+		{
+			ColumnFilter cf = buildColumnFilter(columns[i].getChilds()[0]);
+			filter.setColumnFilter(((LogColumn)columns[i].getObject()).getName(), cf);
+		}
+	}
+	
+	/**
+	 * Build column filter object for given filter tree element
+	 * 
+	 * @param element Filter tree element
+	 * @return Column filter object
+	 */
+	private ColumnFilter buildColumnFilter(FilterTreeElement element)
+	{
+		ColumnFilter cf = (ColumnFilter)element.getObject();
+		if (cf.getType() != ColumnFilter.SET)
+			return cf;	// Conditions already prepared
+		
+		ColumnFilter filterSet = new ColumnFilter();
+		filterSet.setOperation(cf.getOperation());
+		FilterTreeElement[] childs = element.getChilds();
+		for(int i = 0; i < childs.length; i++)
+		{
+			filterSet.addSubFilter(buildColumnFilter(childs[i]));
+		}
+		return filterSet;
+	}
+	
+	/**
+	 * Remove unused element from subtree
+	 * 
+	 * @param root Root element
+	 */
+	private void optimizeTree(FilterTreeElement root)
+	{
+		FilterTreeElement[] childs = root.getChilds();
+		for(int i = 0; i < childs.length; i++)
+		{
+			optimizeTree(childs[i]);
+			if (!childs[i].hasChilds())
+			{
+				if (childs[i].getType() == FilterTreeElement.FILTER)
+				{
+					if (((ColumnFilter)childs[i].getObject()).getType() == ColumnFilter.SET)
+						root.removeChild(childs[i]);  // Filter set without subfilters
+				}
+				else
+				{
+					// Column without filters, remove
+					root.removeChild(childs[i]);
+				}
+			}
+			else if (childs[i].getNumChilds() == 1)
+			{
+				if ((childs[i].getType() == FilterTreeElement.FILTER) &&
+				    (((ColumnFilter)childs[i].getObject()).getType() == ColumnFilter.SET))
+				{
+					// Filter set with only one subfilter is meaningless
+					FilterTreeElement subFilter = childs[i].getChilds()[0];
+					root.removeChild(childs[i]);
+					subFilter.changeParent(root);
+				}
+			}
+		}
 	}
 }

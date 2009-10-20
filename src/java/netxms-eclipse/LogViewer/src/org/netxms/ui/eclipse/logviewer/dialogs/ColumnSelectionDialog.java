@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.shared.IUIConstants;
 
 /**
  * @author Victor
@@ -47,7 +47,9 @@ public class ColumnSelectionDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
+		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
+		layout.verticalSpacing = IUIConstants.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
