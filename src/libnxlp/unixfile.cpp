@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2008 Victor Kirhenshtein
+** Copyright (C) 2008, 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ static void ParseNewRecords(LogParser *parser, int fh)
 bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logger)(int, const TCHAR *, ...))
 {
 	char fname[MAX_PATH], temp[MAX_PATH];
-	struct stat st;
+	struct stat st, stn;
 	size_t size;
 	int err, fh;
 
@@ -138,8 +138,15 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 						break;
 					}
 					
-					if (fstat(fh, &st) < 0)
+					if ((fstat(fh, &st) < 0) || (stat(fname, &stn) < 0))
 						break;
+
+					if (st.st_size != stn.st_size)
+					{
+						if (logger != NULL)
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file size differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+						break;
+					}
 						
 					if (st.st_size != size)
 					{
