@@ -132,9 +132,9 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		// possible event recursion in case of severe DB failure
 		if ((pEvent->getFlags() & EF_LOG) && (pEvent->getCode() != EVENT_DB_QUERY_FAILED))
       {
-         char szQuery[2048];
+         char szQuery[8192];
 
-         snprintf(szQuery, 2048, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
+         snprintf(szQuery, 8192, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
                                  "event_source,event_severity,event_message,root_event_id,user_tag) "
                                  "VALUES (" INT64_FMT ",%d," TIME_T_FMT ",%d,%d,%s," INT64_FMT ",%s)", 
                   pEvent->getId(), pEvent->getCode(), pEvent->getTimeStamp(),

@@ -1,9 +1,9 @@
 *
-* 1.0.0
+* 0.2.31
 *
 
 - NXSL: added functions trim(), ltrim(), and rtrim()
-- Fixed issues: #267, #268
+- Fixed issues: #267, #268, #269
 
 
 *

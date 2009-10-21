@@ -69,7 +69,6 @@ static void LoggerCallback(int level, const TCHAR *format, ...)
 	va_list args;
 
 	va_start(args, format);
-	//vprintf(format, args);
 	TraceCallback(format, args);
 	va_end(args);
 }

@@ -286,7 +286,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
    if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UPDATE_USM_CREDENTIALS))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
-      _sntprintf(pszBuffer, 64, _T("CMD_UNKNOWN(%d)"), wCode);
+      _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);
    return pszBuffer;
 }
 
