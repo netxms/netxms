@@ -102,6 +102,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 	struct stat st, stn;
 	size_t size;
 	int err, fh;
+	bool readFromStart = false;
 
 	if ((m_fileName == NULL) || (stopFlag == NULL))
 		return false;
@@ -119,7 +120,15 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 			if (fh != -1)
 			{
 				size = st.st_size;
-				lseek(fh, 0, SEEK_END);
+				if (readFromStart)
+				{
+					ParseNewRecords(this, fh);
+					readFromStart = false;
+				}
+				else
+				{
+					lseek(fh, 0, SEEK_END);
+				}
 
 				if (logger != NULL)
 					logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file \"%s\" successfully opened"), m_fileName);
@@ -135,16 +144,23 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 						if (logger != NULL)
 							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file name change for \"%s\" (\"%s\" -> \"%s\")"),
 						          m_fileName, fname, temp);
+						readFromStart = true;
 						break;
 					}
 					
 					if ((fstat(fh, &st) < 0) || (stat(fname, &stn) < 0))
+					{
+						if (logger != NULL)
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: stat(%d) or fstat(%s) failed, errno=%d"), fh, fname, errno);
+						readFromStart = true;
 						break;
+					}
 
 					if (st.st_size != stn.st_size)
 					{
 						if (logger != NULL)
 							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file size differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+						readFromStart = true;
 						break;
 					}
 						
