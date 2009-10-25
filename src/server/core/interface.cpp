@@ -285,6 +285,10 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 				SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
             bNeedPoll = FALSE;
 			}
+			else
+			{
+				SendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from NetXMS agent\r\n"));
+			}
       }
    
       if (bNeedPoll && (pNode->Flags() & NF_IS_SNMP) &&
@@ -297,6 +301,10 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			{
 				SendPollerMsg(dwRqId, POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
             bNeedPoll = FALSE;
+			}
+			else
+			{
+				SendPollerMsg(dwRqId, POLLER_WARNING _T("      Unable to retrieve interface status from SNMP agent\r\n"));
 			}
       }
    }
@@ -342,10 +350,15 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		m_iPendingStatus = newStatus;
 		m_iPollCount = 1;
 	}
-	DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d"),
-	          m_dwId, m_szName, newStatus, oldStatus, m_iPollCount);
 
-   if ((newStatus != oldStatus) && (m_iPollCount >= ((m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls)))
+	int requiredPolls = (m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls;
+	SendPollerMsg(dwRqId, "      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n",
+	              g_szStatusText[newStatus], m_iPollCount, (m_iPollCount == 1) ? "" : "s",
+	              requiredPolls, (requiredPolls == 1) ? "" : "s");
+	DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d requiredPolls=%d"),
+	          m_dwId, m_szName, newStatus, oldStatus, m_iPollCount, requiredPolls);
+
+   if ((newStatus != oldStatus) && (m_iPollCount >= requiredPolls))
    {
 		static DWORD statusToEvent[] =
 		{

@@ -49,7 +49,7 @@ String::String(const String &src)
 
 String::String(const TCHAR *init)
 {
-   m_dwBufSize = _tcslen(init) + 1;
+   m_dwBufSize = (DWORD)_tcslen(init) + 1;
    m_pszBuffer = _tcsdup(init);
 }
 

@@ -62,6 +62,12 @@ public class LogViewer extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.logviewer.view.log_viewer";
 	public static final String JOB_FAMILY = "LogViewerJob";
+	
+	private static final int PAGE_SIZE = 400;
+	private static final int FIRST_PAGE = 0;
+	private static final int LAST_PAGE = 255;
+	private static final int PREV_PAGE = -1;
+	private static final int NEXT_PAGE = 1;
 		
 	private NXCSession session;
 	private TableViewer viewer;
@@ -71,7 +77,12 @@ public class LogViewer extends ViewPart
 	private Image titleImage = null;
 	private RefreshAction actionRefresh;
 	private Action actionDoQuery;
+	private Action actionGoFirstPage;
+	private Action actionGoLastPage;
+	private Action actionGoNextPage;
+	private Action actionGoPrevPage;
 	private Table resultSet;
+	private long currentPosition;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -193,6 +204,11 @@ public class LogViewer extends ViewPart
 	{
 		manager.add(actionDoQuery);
 		manager.add(new Separator());
+		manager.add(actionGoFirstPage);
+		manager.add(actionGoPrevPage);
+		manager.add(actionGoNextPage);
+		manager.add(actionGoLastPage);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -204,6 +220,11 @@ public class LogViewer extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionGoFirstPage);
+		manager.add(actionGoPrevPage);
+		manager.add(actionGoNextPage);
+		manager.add(actionGoLastPage);
+		manager.add(new Separator());
 		manager.add(actionDoQuery);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -238,6 +259,62 @@ public class LogViewer extends ViewPart
 		};
 		actionDoQuery.setText("New &query");
 		actionDoQuery.setImageDescriptor(Activator.getImageDescriptor("icons/do_query.png"));
+
+		actionGoFirstPage = new Action()
+		{
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				goToPage(FIRST_PAGE);
+			}
+		};
+		actionGoFirstPage.setText("&First page");
+		actionGoFirstPage.setImageDescriptor(Activator.getImageDescriptor("icons/first_page.png"));
+
+		actionGoLastPage = new Action()
+		{
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				goToPage(LAST_PAGE);
+			}
+		};
+		actionGoLastPage.setText("&Last page");
+		actionGoLastPage.setImageDescriptor(Activator.getImageDescriptor("icons/first_page.png"));
+
+		actionGoNextPage = new Action()
+		{
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				goToPage(NEXT_PAGE);
+			}
+		};
+		actionGoNextPage.setText("&Next page");
+		actionGoNextPage.setImageDescriptor(Activator.getImageDescriptor("icons/next_page.png"));
+
+		actionGoPrevPage = new Action()
+		{
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				goToPage(PREV_PAGE);
+			}
+		};
+		actionGoPrevPage.setText("&Previous page");
+		actionGoPrevPage.setImageDescriptor(Activator.getImageDescriptor("icons/prev_page.png"));
 	}
 	
 	/**
@@ -260,7 +337,8 @@ public class LogViewer extends ViewPart
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					logHandle.query(filter);
-					resultSet = logHandle.retrieveData(0, 100);
+					currentPosition = 0;
+					resultSet = logHandle.retrieveData(currentPosition, PAGE_SIZE);
 					new UIJob("Update log viewer") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
@@ -272,6 +350,57 @@ public class LogViewer extends ViewPart
 				}
 			}.start();
 		}
+	}
+	
+	/**
+	 * Go to specified page
+	 * 
+	 * @param page Page to go to (one of the FIRST_PAGE, LAST_PAGE, NEXT_PAGE, PREV_PAGE)
+	 */
+	private void goToPage(int page)
+	{
+		switch(page)
+		{
+			case FIRST_PAGE:
+				currentPosition = 0;
+				break;
+			case LAST_PAGE:
+				currentPosition = logHandle.getNumRecords() - PAGE_SIZE;
+				if (currentPosition < 0)
+					currentPosition = 0;
+				break;
+			case NEXT_PAGE:
+				if (logHandle.getNumRecords() - currentPosition > PAGE_SIZE)
+					currentPosition += PAGE_SIZE;
+				break;
+			case PREV_PAGE:
+				currentPosition -= PAGE_SIZE;
+				if (currentPosition < 0)
+					currentPosition = 0;
+				break;
+		}
+		
+		new ConsoleJob("Get log page from server", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot query server log " + logName;
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				resultSet = logHandle.retrieveData(currentPosition, PAGE_SIZE);
+				new UIJob("Update log viewer") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						viewer.setInput(resultSet.getAllRows());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)

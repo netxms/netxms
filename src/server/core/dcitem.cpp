@@ -1283,6 +1283,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
 
 void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
 {
+	lock();
    pMsg->SetVariable(dwId++, m_dwId);
    pMsg->SetVariable(dwId++, m_szName);
    pMsg->SetVariable(dwId++, m_szDescription);
@@ -1300,6 +1301,7 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
       pMsg->SetVariable(dwId++, (DWORD)0);
    }
    pMsg->SetVariable(dwId++, (WORD)m_iStatus);
+	unlock();
 }
 
 
@@ -1311,6 +1313,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
 {
    NXSL_Value *pValue;
 
+	lock();
    switch(nFunction)
    {
       case F_LAST:
@@ -1364,6 +1367,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          pValue = new NXSL_Value;
          break;
    }
+	unlock();
    return pValue;
 }
 
