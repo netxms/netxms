@@ -27,7 +27,7 @@
 // Externals
 //
 
-int RadiusAuth(char *pszLogin, char *pszPasswd);
+bool RadiusAuth(const TCHAR *pszLogin, const TCHAR *pszPasswd);
 
 
 //
@@ -188,7 +188,7 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
             case AUTH_RADIUS:
 					if (dwSigLen == 0)
 					{
-	               bPasswordValid = (RadiusAuth(pszName, pszPassword) == 0);
+	               bPasswordValid = RadiusAuth(pszName, pszPassword);
 					}
 					else
 					{

@@ -103,6 +103,52 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Drop primary key from table
+//
+
+static BOOL DropPrimaryKey(const TCHAR *table)
+{
+	TCHAR query[1024];
+	DB_RESULT hResult;
+	BOOL success;
+
+	switch(g_iSyntax)
+	{
+		case DB_SYNTAX_ORACLE:
+		case DB_SYNTAX_MYSQL:
+			_sntprintf(query, 1024, _T("ALTER TABLE %s DROP PRIMARY KEY"), table);
+			success = SQLQuery(query);
+			break;
+		case DB_SYNTAX_PGSQL:
+			_sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s_pkey"), table, table);
+			success = SQLQuery(query);
+			break;
+		case DB_SYNTAX_MSSQL:
+			success = FALSE;
+			_sntprintf(query, 1024, _T("SELECT name FROM sysobjects WHERE xtype='PK' AND parent_obj=OBJECT_ID('%s')"), table);
+			hResult = SQLSelect(query);
+			if (hResult != NULL)
+			{
+				if (DBGetNumRows(hResult) > 0)
+				{
+					TCHAR objName[512];
+
+					DBGetField(hResult, 0, 0, objName, 512);
+					_sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s"), table, objName);
+					success = SQLQuery(query);
+				}
+				DBFreeResult(hResult);
+			}
+			break;
+		default:		// Unsupported DB engine
+			success = FALSE;
+			break;
+	}
+	return success;
+}
+
+
+//
 // Convert strings from # encoded form to normal form
 //
 

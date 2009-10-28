@@ -196,7 +196,7 @@ static void random_vector(unsigned char *vector)
 // Returns new length.
 //
 
-static int rad_pwencode(char *pwd_in, char *pwd_out, char *secret, char *vector)
+static int rad_pwencode(const char *pwd_in, char *pwd_out, const char *secret, const char *vector)
 {
 	char passbuf[AUTH_PASS_LEN];
 	char md5buf[256];
@@ -604,10 +604,10 @@ static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE
 
 
 //
-// Authenticate user via RADIUS
+// Authenticate user via RADIUS using primary or secondary server
 //
 
-int RadiusAuth(char *cLogin, char *cPasswd)
+static int DoRadiusAuth(const TCHAR *cLogin, const TCHAR *cPasswd, bool useSecondaryServer, TCHAR *serverName)
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
@@ -617,19 +617,25 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	struct timeval		tv;
 	fd_set readfds;
 	socklen_t salen;
-	int port, result, length, i;
+	int port, result = 0, length, i;
 	int nRetries, nTimeout;
 	SOCKET sockfd;
 	int send_buffer[512];
 	int recv_buffer[512];
 	BYTE vector[AUTH_VECTOR_LEN];
-	char szServer[256], szSecret[256];
+	char szSecret[256];
 
-	ConfigReadStr("RADIUSServer", szServer, 256, "localhost");
-	ConfigReadStr("RADIUSSecret", szSecret, 256, "netxms");
-	port = ConfigReadInt("RADIUSPort", PW_AUTH_UDP_PORT);
+	ConfigReadStr(useSecondaryServer ? "RADIUSSecondaryServer" : "RADIUSServer", serverName, 256, "none");
+	ConfigReadStr(useSecondaryServer ? "RADIUSSecondarySecret": "RADIUSSecret", szSecret, 256, "netxms");
+	port = ConfigReadInt(useSecondaryServer ? "RADIUSSecondaryPort" : "RADIUSPort", PW_AUTH_UDP_PORT);
 	nRetries = ConfigReadInt("RADIUSNumRetries", 5);
 	nTimeout = ConfigReadInt("RADIUSTimeout", 3);
+
+	if (!_tcscmp(serverName, _T("none")))
+	{
+		DbgPrintf(4, _T("RADIUS: %s server set to none, skipping"), useSecondaryServer ? _T("secondary") : _T("primary"));
+		return 10;
+	}
 
 	// Set up AUTH structure.
 	memset(send_buffer, 0, sizeof(send_buffer));
@@ -653,10 +659,10 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	pairadd(&req, vp);
 
 	// Resolve hostname.
-	server_ip = ResolveHostName(szServer);
+	server_ip = ResolveHostName(serverName);
 	if ((server_ip == INADDR_NONE) || (server_ip == INADDR_ANY))
 	{
-		DbgPrintf(3, "RADIUS: cannot resolve server name \"%s\"", szServer);
+		DbgPrintf(3, "RADIUS: cannot resolve server name \"%s\"", serverName);
 		pairfree(req);
 		return 3;
 	}
@@ -722,25 +728,27 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	}
 
 	closesocket(sockfd);
-	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED,
-			EVENTLOG_INFORMATION_TYPE, "ss", cLogin, szServer);
-
 	return result;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/*
 
-$Log: not supported by cvs2svn $
-Revision 1.5  2007/09/20 13:04:00  victor
-- Most of GCC 4.2 warnings cleaned up
-- Other minor fixes
+//
+// Authenticate user via RADIUS
+//
 
-Revision 1.4  2006/12/14 23:27:33  victor
-fprintf(stderr, ...) changed to DbgPrintf(...)
+bool RadiusAuth(const TCHAR *login, const TCHAR *passwd)
+{
+	static bool useSecondary = false;
 
-Revision 1.3  2006/07/21 18:18:43  alk
-code reformatted
-
-
-*/
+	TCHAR server[256];
+	int result = DoRadiusAuth(login, passwd, useSecondary, server);
+	if ((result == 3) || (result == 7) || (result == 10))	// Bad server name, timeout, comm. error, or server not configured
+	{
+		useSecondary = !useSecondary;
+		DbgPrintf(3, _T("RADIUS: unable to use %s server, switching to %s"), useSecondary ? _T("primary") : _T("secondary"), useSecondary ? _T("secondary") : _T("primary"));
+		result = DoRadiusAuth(login, passwd, useSecondary, server);
+	}
+	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED,
+			EVENTLOG_INFORMATION_TYPE, "ss", login, server);
+	return result == 0;
+}
