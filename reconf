@@ -13,14 +13,12 @@ ACLOCAL=aclocal
 AUTOCONF=autoconf
 AUTOHEADER=autoheader
 AUTOMAKE=automake
-if test -x `which libtoolize`; then
+if test -x "`which libtoolize`"; then
 	LIBTOOLIZE=libtoolize
 fi
-if test -x `which glibtoolize`; then
+if test -x "`which glibtoolize`"; then
 	LIBTOOLIZE=glibtoolize
 fi
-#which libtoolize > /dev/null && LIBTOOLIZE=libtoolize
-#which glibtoolize > /dev/null && LIBTOOLIZE=glibtoolize
 
 mkdir -p config
 touch README
