@@ -10,8 +10,8 @@
 INPUT main.o
 
 # Import/Export
-IMPORT @../../../libnetxms/netxms.imp
-IMPORT @../../../libnxlp/libnxlp.imp
+IMPORT (NETXMS) @../../../libnetxms/netxms.imp
+IMPORT (LIBNXLP) @../../../libnxlp/libnxlp.imp
 EXPORT NxSubAgentRegister_LOGWATCH
 
 # Entry points

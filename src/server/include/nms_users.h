@@ -217,7 +217,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase();
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(DWORD id, const TCHAR *name);
 DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value);
-bool GetUserName(DWORD id, TCHAR *buffer, int bufSize);
+bool NXCORE_EXPORTABLE ResolveUserId(DWORD id, TCHAR *buffer, int bufSize);
 void DumpUsers(CONSOLE_CTX pCtx);
 
 #endif

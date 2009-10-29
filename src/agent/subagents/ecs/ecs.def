@@ -10,7 +10,7 @@
 INPUT ecs.o
 
 # Import/Export
-IMPORT @../../../libnetxms/netxms.imp
+IMPORT (NETXMS) @../../../libnetxms/netxms.imp
 EXPORT NxSubAgentRegister_ECS
 
 # Entry points

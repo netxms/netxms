@@ -10,7 +10,7 @@
 INPUT nxagentd_r.o
 
 # Import/Export
-IMPORT @../../libnetxms/netxms.imp
+IMPORT (NETXMS) @../../libnetxms/netxms.imp
 
 # Entry points
 START _LibCPrelude

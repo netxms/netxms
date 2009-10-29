@@ -159,7 +159,7 @@ void String::addFormattedStringV(const TCHAR *format, va_list args)
    va_end(argsCopy);
 #else
 	// No way to determine required buffer size, guess
-	len = strlen(format) + CharCount(format, '%') * 1000 + 1;
+	len = strlen(format) + NumChars(format, '%') * 1000 + 1;
    buffer = (char *)malloc(len);
 
    vsnprintf(buffer, len, format, args);

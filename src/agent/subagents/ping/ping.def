@@ -10,7 +10,7 @@
 INPUT ping.o
 
 # Import/Export
-IMPORT @../../../libnetxms/netxms.imp
+IMPORT (NETXMS) @../../../libnetxms/netxms.imp
 EXPORT NxSubAgentRegister_PING
 
 # Entry points

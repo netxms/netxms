@@ -3,7 +3,7 @@
 # Copyright (c) 2006 Victor Kirhenshtein
 #
 
-SUBDIRS = src/libnetxms src/libnxlp src/agent/core \
+SUBDIRS = src/libexpat/libexpat src/libnetxms src/libnxlp src/agent/core \
           src/agent/subagents/netware src/agent/subagents/ping \
           src/agent/subagents/ecs src/agent/subagents/logwatch
 COMMAND = for dir in $(SUBDIRS); do \

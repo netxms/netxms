@@ -1,6 +1,6 @@
 #
 # netxms.def - NLM Header definition file for nlmconv
-# Copyright (c) 2004 Victor Kirhenshtein
+# Copyright (c) 2004-2009 Victor Kirhenshtein
 #
 
 # common definitions
@@ -10,7 +10,8 @@
 INPUT netxms_r.o
 
 # Imports/Exports
-EXPORT @netxms.imp
+IMPORT (NXEXPAT) @../libexpat/libexpat/nxexpat.imp
+EXPORT (NETXMS) @netxms.imp
 
 # Entry points
 START _LibCPrelude
@@ -23,4 +24,4 @@ DESCRIPTION "NetXMS Foundation Library"
 SCREENNAME "System Console"
 FLAG_ON 64
 
-MODULE LIBC
+MODULE LIBC, NXEXPAT

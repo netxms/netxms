@@ -292,10 +292,10 @@ bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 
 
 //
-// Get user's login name
+// Resolve user's ID to login name
 //
 
-bool GetUserName(DWORD id, TCHAR *buffer, int bufSize)
+bool NXCORE_EXPORTABLE ResolveUserId(DWORD id, TCHAR *buffer, int bufSize)
 {
 	bool found = false;
 

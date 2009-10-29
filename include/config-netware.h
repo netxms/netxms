@@ -58,6 +58,10 @@
 /* Define to 1 if you have the `pthread_mutexattr_settype' function. */
 #define HAVE_PTHREAD_MUTEXATTR_SETTYPE 1
 
+/* Define to 1 if you have the declaration of `pthread_mutexattr_settype', and
+   to 0 if you don't. */
+#define HAVE_DECL_PTHREAD_MUTEXATTR_SETTYPE 1
+
 /* Define to 1 if you have working pthread read/write locks */
 #define HAVE_PTHREAD_RWLOCK 1
 
@@ -70,3 +74,6 @@
 /* Define to 1 if you have the declaration of `va_copy', and
    to 0 if you don't. */
 #define HAVE_DECL_VA_COPY 1
+
+/* Define to 1 if you have Expat XML parser. */
+#define HAVE_LIBEXPAT 1

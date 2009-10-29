@@ -171,8 +171,8 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD 
 		String extText;
 		TCHAR buffer[256];
 
-		extText = _T("USER=");
-		if (GetUserName(userId, buffer, 256))
+		extText = _T("[");
+		if (ResolveUserId(userId, buffer, 256))
 		{
 			extText += buffer;
 		}
@@ -181,7 +181,7 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD 
 			extText.addFormattedString(_T("{%d}"), userId);
 		}
 
-		extText.addFormattedString(_T(" WORKSTATION=%s "), workstation);
+		extText.addFormattedString(_T("@%s] "), workstation);
 
 		extText += (const TCHAR *)text;
 		SendSyslogRecord((const TCHAR *)extText);

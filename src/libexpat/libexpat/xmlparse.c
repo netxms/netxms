@@ -10,6 +10,8 @@
 
 #ifdef COMPILED_FROM_DSP
 #include "winconfig.h"
+#elif defined(_NETWARE)
+#include "nwconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
 #elif defined(__amigaos4__)

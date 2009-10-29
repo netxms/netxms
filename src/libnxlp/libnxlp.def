@@ -10,8 +10,9 @@
 INPUT libnxlp_r.o
 
 # Imports/Exports
-IMPORT @../libnetxms/netxms.imp
-EXPORT @libnxlp.imp
+IMPORT (NETXMS) @../libnetxms/netxms.imp
+IMPORT (NXEXPAT) @../libexpat/libexpat/nxexpat.imp
+EXPORT (LIBNXLP) @libnxlp.imp
 
 # Entry points
 START _LibCPrelude
@@ -24,4 +25,4 @@ DESCRIPTION "NetXMS Log Parsing Library"
 SCREENNAME "System Console"
 FLAG_ON 64
 
-MODULE LIBC, NETXMS
+MODULE LIBC, NXEXPAT, NETXMS

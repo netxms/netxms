@@ -8,19 +8,20 @@ libnxexpat_la_CPPFLAGS = -DHAVE_EXPAT_CONFIG_H -I..
 libnxexpat_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 
 EXTRA_DIST = \
-	libexpat.vcproj libexpat.cpp
-	amigaconfig.h
-	ascii.h
-	asciitab.h
-	expat_external.h
-	expat.h
-	iasciitab.h
-	internal.h
-	latin1tab.h
-	macconfig.h
-	nametab.h
-	utf8tab.h
-	winconfig.h
-	xmlrole.h
-	xmltok.h
+	libexpat.vcproj libexpat.cpp \
+	Makefile.nw nwconfig.h nxexpat.def \
+	amigaconfig.h \
+	ascii.h \
+	asciitab.h \
+	expat_external.h \
+	expat.h \
+	iasciitab.h \
+	internal.h \
+	latin1tab.h \
+	macconfig.h \
+	nametab.h \
+	utf8tab.h \
+	winconfig.h \
+	xmlrole.h \
+	xmltok.h \
 	xmltok_impl.h
