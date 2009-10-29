@@ -214,6 +214,52 @@ cleanup:
 
 
 //
+// Upgrade from V206 to V207
+//
+
+static BOOL H_UpgradeFromV206(int currVersion, int newVersion)
+{
+	if (!CreateConfigParam(_T("RADIUSSecondaryServer"), _T("none"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("RADIUSSecondarySecret"), _T("netxms"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("RADIUSSecondaryPort"), _T("1645"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ExternalAuditServer"), _T("none"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ExternalAuditPort"), _T("514"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ExternalAuditFacility"), _T("13"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ExternalAuditSeverity"), _T("5"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ExternalAuditTag"), _T("netxmsd-audit"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='207' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V205 to V206
 //
 
@@ -4419,12 +4465,14 @@ static struct
 	{ 96, 204, H_UpgradeFromV9x },
 	{ 97, 205, H_UpgradeFromV9x },
 	{ 98, 206, H_UpgradeFromV9x },
+	{ 99, 207, H_UpgradeFromV9x },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
 	{ 203, 204, H_UpgradeFromV203 },
 	{ 204, 205, H_UpgradeFromV204 },
 	{ 205, 206, H_UpgradeFromV205 },
+	{ 206, 207, H_UpgradeFromV206 },
    { 0, NULL }
 };
 

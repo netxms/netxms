@@ -1,4 +1,14 @@
 ***************
+* 206 ==> 207 *
+***************
+
+- New configuration parameters added: RADIUSSecondaryServer,
+  RADIUSSecondarySecret, RADIUSSecondaryPort, ExternalAuditServer,
+  ExternalAuditPort, ExternalAuditFacility, ExternalAuditSeverity,
+  ExternalAuditTag
+
+
+***************
 * 205 ==> 206 *
 ***************
 
@@ -67,6 +77,7 @@
 * 96 ==> 204 *
 * 97 ==> 205 *
 * 98 ==> 206 *
+* 99 ==> 207 *
 **************
 
 - New tables added:

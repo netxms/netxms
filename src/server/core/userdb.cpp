@@ -269,31 +269,47 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 // Check if user is a member of specific group
 //
 
-BOOL NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
+bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 {
-   BOOL bResult = FALSE;
+   bool result = false;
 
 	if (!(dwGroupId & GROUP_FLAG))
-		return FALSE;
+		return false;
+
+   if (dwGroupId == GROUP_EVERYONE)
+		return true;
 
    MutexLock(m_mutexUserDatabaseAccess, INFINITE);
-   if (dwGroupId == GROUP_EVERYONE)
-   {
-      bResult = TRUE;
-   }
-   else
-   {
-      int i;
-
-      for(i = 0; i < m_userCount; i++)
-			if (m_users[i]->getId() == dwGroupId)
-			{
-				bResult = ((Group *)m_users[i])->isMember(dwUserId);
-				break;
-			}
-   }
+   for(int i = 0; i < m_userCount; i++)
+		if (m_users[i]->getId() == dwGroupId)
+		{
+			result = ((Group *)m_users[i])->isMember(dwUserId);
+			break;
+		}
    MutexUnlock(m_mutexUserDatabaseAccess);
-   return bResult;
+   return result;
+}
+
+
+//
+// Get user's login name
+//
+
+bool GetUserName(DWORD id, TCHAR *buffer, int bufSize)
+{
+	bool found = false;
+
+   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   for(int i = 0; i < m_userCount; i++)
+		if (m_users[i]->getId() == id)
+		{
+			nx_strncpy(buffer, m_users[i]->getName(), bufSize);
+			found = true;
+			break;
+		}
+   MutexUnlock(m_mutexUserDatabaseAccess);
+
+	return found;
 }
 
 

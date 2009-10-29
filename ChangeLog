@@ -2,6 +2,8 @@
 * 0.2.31
 *
 
+- Added external audit logging via syslog
+- Added support for secondary RADIUS server
 - NXSL: added functions trim(), ltrim(), and rtrim()
 - Fixed issues: #267, #268, #269, #270
 

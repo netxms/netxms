@@ -28,6 +28,50 @@
 //
 
 static DWORD m_dwRecordId = 1;
+static DWORD m_auditServerAddr = 0;
+static WORD m_auditServerPort;
+static int m_auditFacility;
+static int m_auditSeverity;
+static char m_auditTag[MAX_SYSLOG_TAG_LEN];
+static char m_localHostName[256];
+
+
+//
+// Send syslog record to audit server
+//
+
+static void SendSyslogRecord(const TCHAR *text)
+{
+   static char month[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
+                                "May ", "Jun ", "Jul ", "Aug ",
+                                "Sep ", "Oct ", "Nov ", "Dec " };
+	char message[1025];
+
+	if (m_auditServerAddr == 0)
+		return;
+
+	time_t ts = time(NULL);
+	struct tm *now = localtime(&ts);
+
+	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (m_auditFacility << 3) + m_auditSeverity, month[now->tm_mon],
+	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, m_localHostName, m_auditTag, text);
+	message[1024] = 0;
+
+   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+	if (hSocket != 0)
+	{
+		struct sockaddr_in addr;
+
+		memset(&addr, 0, sizeof(struct sockaddr_in));
+		addr.sin_family = AF_INET;
+		addr.sin_addr.s_addr = m_auditServerAddr;
+		addr.sin_port = m_auditServerPort;
+
+		sendto(hSocket, message, strlen(message), 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
+		shutdown(hSocket, SHUT_RDWR);
+		closesocket(hSocket);
+	}
+}
 
 
 //
@@ -45,6 +89,32 @@ void InitAuditLog()
          m_dwRecordId = DBGetFieldULong(hResult, 0, 0) + 1;
       DBFreeResult(hResult);
    }
+
+	// External audit server
+	TCHAR temp[256];
+	ConfigReadStr(_T("ExternalAuditServer"), temp, 256, _T("none"));
+	if (_tcscmp(temp, _T("none")))
+	{
+		m_auditServerAddr = ResolveHostName(temp);
+		m_auditServerPort = htons((WORD)ConfigReadInt(_T("ExternalAuditPort"), 514));
+		m_auditFacility = ConfigReadInt(_T("ExternalAuditFacility"), 13);  // default is log audit facility
+		m_auditSeverity = ConfigReadInt(_T("ExternalAuditSeverity"), SYSLOG_SEVERITY_NOTICE);
+		ConfigReadStr(_T("ExternalAuditTag"), m_auditTag, MAX_SYSLOG_TAG_LEN, _T("netxmsd-audit"));
+
+		// Get local host name
+#ifdef _WIN32
+		DWORD size = 256;
+		GetComputerNameA(m_localHostName, &size);
+#else
+		gethostname(m_localHostName, 256);
+		m_localHostName[255] = 0;
+		char *ptr = strchr(m_localHostName, '.');
+		if (ptr != NULL)
+			*ptr = 0;
+#endif
+
+		SendSyslogRecord(_T("NetXMS server audit subsystem started"));
+	}
 }
 
 
@@ -95,4 +165,25 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD 
 	msg.SetVariable(VID_OBJECT_ID, objectId);
 	msg.SetVariable(VID_MESSAGE, (const TCHAR *)text);
 	EnumerateClientSessions(SendNewRecord, &msg);
+
+	if (m_auditServerAddr != 0)
+	{
+		String extText;
+		TCHAR buffer[256];
+
+		extText = _T("USER=");
+		if (GetUserName(userId, buffer, 256))
+		{
+			extText += buffer;
+		}
+		else
+		{
+			extText.addFormattedString(_T("{%d}"), userId);
+		}
+
+		extText.addFormattedString(_T(" WORKSTATION=%s "), workstation);
+
+		extText += (const TCHAR *)text;
+		SendSyslogRecord((const TCHAR *)extText);
+	}
 }

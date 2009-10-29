@@ -208,7 +208,7 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 							  BOOL *pbChangePasswd);
 
 DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD dwId, BYTE *pszPassword, BOOL bResetChPasswd);
-BOOL NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
+bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id);
 DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId);
 DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg);
@@ -217,7 +217,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase();
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(DWORD id, const TCHAR *name);
 DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value);
-
+bool GetUserName(DWORD id, TCHAR *buffer, int bufSize);
 void DumpUsers(CONSOLE_CTX pCtx);
 
 #endif
