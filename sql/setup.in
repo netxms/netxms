@@ -194,6 +194,16 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ConnectionPoolMaxSize','20',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ConnectionPoolCooldownTime','300',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ExternalAuditServer','none',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ExternalAuditPort','514',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ExternalAuditFacility','13',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ExternalAuditSeverity','5',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ExternalAuditTag','netxmsd-audit',1,1);
 
 
 /*
