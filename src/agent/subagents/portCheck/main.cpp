@@ -125,6 +125,25 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 }
 
 //
+// Init callback
+//
+
+DWORD m_dwTimeout = 30000;
+
+static NX_CFG_TEMPLATE m_cfgTemplate[] =
+{
+	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_dwTimeout },
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
+static BOOL SubagentInit(Config *config)
+{
+	if (config->parseTemplate(_T("portCheck"), m_cfgTemplate))
+	{
+	}
+}
+
+//
 // Subagent information
 //
 
@@ -156,7 +175,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	"portCheck",
 	NETXMS_VERSION_STRING,
-	NULL, NULL, // init and shutdown routines
+	SubagentInit, NULL, // init and shutdown routines
 	CommandHandler,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
@@ -174,75 +193,3 @@ DECLARE_SUBAGENT_ENTRY_POINT(PORTCHECK)
 	*ppInfo = &m_info;
 	return TRUE;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.15  2007/04/24 18:22:11  victor
-Subagent API changed
-
-Revision 1.14  2006/10/20 09:54:51  victor
-libnxcscp merged into libnetxms
-
-Revision 1.13  2006/03/15 12:00:10  alk
-simple telnet service checker added: it connects, response WON'T/DON'T to
-all offers and disconnects (this prevents from "peer died" in logs)
-
-Revision 1.12  2005/10/18 09:01:16  alk
-Added commands (ServiceCheck.*) for
-	http
-	smtp
-	custom
-
-Revision 1.11  2005/09/15 21:47:03  victor
-Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
-
-Revision 1.10  2005/08/17 12:09:23  victor
-responce changed to response (issue #37)
-
-Revision 1.9  2005/08/13 16:03:01  victor
-Init structure changed to the new format
-
-Revision 1.8  2005/02/08 18:32:56  alk
-+ simple "custom" checker added
-
-Revision 1.7  2005/01/29 00:21:29  alk
-+ http checker
-
-request string: "HOST:URI"
-response string: posix regex, e.g. '^HTTP/1.[01] 200 .*'
-
-requst sent to server:
----
-GET URI HTTP/1.1\r\n
-Connection: close\r\n
-Host: HOST\r\n\r\n
----
-
-Revision 1.6  2005/01/28 23:45:01  alk
-SMTP check added, requst string == rcpt to
-
-Revision 1.5  2005/01/28 23:19:35  alk
-VID_SERVICE_STATUS set
-
-Revision 1.4  2005/01/28 12:56:46  victor
-Make it compile on WIndows
-
-Revision 1.3  2005/01/28 02:50:32  alk
-added support for CMD_CHECK_NETWORK_SERVICE
-suported:
-	ssh: host/port req.
-	pop3: host/port/request string req. request string format: "login:password"
-
-Revision 1.2  2005/01/19 13:42:47  alk
-+ ServiceCheck.SSH(host[, port]) Added
-
-Revision 1.1.1.1  2005/01/18 18:38:54  alk
-Initial import
-
-implemented:
-	ServiceCheck.POP3(host, user, password) - connect to host:110 and try to login
-
-
-*/

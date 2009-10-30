@@ -77,8 +77,8 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 
 		if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 		{
-#define CHUNK_SIZE 10240
 #define READ_TIMEOUT 5000
+#define CHUNK_SIZE 10240
 			char *buff = (char *)malloc(CHUNK_SIZE);
 			int offset = 0;
 			int buffSize = CHUNK_SIZE;
@@ -127,75 +127,3 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.10  2006/09/06 09:06:53  alk
-Check.HTTP, 4th and 5th params are optional now
-if "match" ($5) does not exist, default "^HTTP/1.[01] 200 .*" is used
-if "host-header" ($4) does not exist, "Host: ..." will be ommited
-
-Revision 1.9  2006/08/13 22:58:59  victor
-- Default session timeout changed to 120 seconds on non-Windows systems
-- Changed socket() error checking - on Windows, SOCKET is an unsigned integer, so conditions like (sock < 0) will not become true event if socket() fails - fixed
-
-Revision 1.8  2006/08/06 10:32:02  victor
-- Both 32 and 6 bit installers works correctly
-- All subagents ported to 64bit
-- Agent now reports platform windows-x64 instead of windows-amd64
-
-Revision 1.7  2006/07/30 08:22:13  victor
-- Added checking for CDP and Nortel topology autodiscovery support
-- Other minor changes
-
-Revision 1.6  2005/10/18 21:33:26  victor
-- Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
-- All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1
-
-Revision 1.5  2005/10/18 09:01:16  alk
-Added commands (ServiceCheck.*) for
-	http
-	smtp
-	custom
-
-Revision 1.4  2005/08/17 12:09:23  victor
-responce changed to response (issue #37)
-
-Revision 1.3  2005/01/31 15:29:31  victor
-Regular expressions implemented under Windows
-
-Revision 1.2  2005/01/29 21:24:03  victor
-Fixed some Windows compatibility issues
-
-Revision 1.1  2005/01/29 00:21:29  alk
-+ http checker
-
-request string: "HOST:URI"
-response string: posix regex, e.g. '^HTTP/1.[01] 200 .*'
-
-requst sent to server:
----
-GET URI HTTP/1.1\r\n
-Connection: close\r\n
-Host: HOST\r\n\r\n
----
-
-Revision 1.4  2005/01/28 23:45:01  alk
-SMTP check added, requst string == rcpt to
-
-Revision 1.3  2005/01/28 23:19:36  alk
-VID_SERVICE_STATUS set
-
-Revision 1.2  2005/01/28 02:50:32  alk
-added support for CMD_CHECK_NETWORK_SERVICE
-suported:
-	ssh: host/port req.
-	pop3: host/port/request string req. request string format: "login:password"
-
-Revision 1.1  2005/01/19 13:42:47  alk
-+ ServiceCheck.SSH(host[, port]) Added
-
-
-*/

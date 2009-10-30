@@ -93,17 +93,3 @@ int CheckTelnet(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szP
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2006/03/15 13:28:18  victor
-- int changed to SOCKET
-- Telnet checker added to VC++ project
-
-Revision 1.2  2006/03/15 12:00:39  alk
-*** empty log message ***
-
-
-*/

@@ -24,6 +24,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 
+#include <sys/ioctl.h>
 #include "net.h"
 
 SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort)
@@ -33,8 +34,10 @@ SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort)
 	nSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (nSocket != INVALID_SOCKET)
 	{
-		struct sockaddr_in sa;
+		int flags = fcntl(nSocket, F_GETFL, NULL);
+		fcntl(nSocket, F_SETFL, flags | O_NONBLOCK);
 
+		struct sockaddr_in sa;
 		sa.sin_family = AF_INET;
 		sa.sin_port = htons(nPort);
 		if (szHost != NULL)
@@ -45,11 +48,22 @@ SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort)
 		{
 			sa.sin_addr.s_addr = htonl(dwAddr);
 		}
-		
+
 		if (connect(nSocket, (struct sockaddr*)&sa, sizeof(sa)) < 0)
 		{
-			closesocket(nSocket);
-			nSocket = INVALID_SOCKET;
+			if (errno == EINPROGRESS)
+			{
+				if (!NetCanWrite(nSocket, m_dwTimeout))
+				{
+					closesocket(nSocket);
+					nSocket = INVALID_SOCKET;
+				}
+			}
+			else
+			{
+				closesocket(nSocket);
+				nSocket = INVALID_SOCKET;
+			}
 		}
 	}
 
@@ -60,14 +74,33 @@ bool NetCanRead(SOCKET nSocket, int nTimeout /* ms */)
 {
 	bool ret = false;
 	struct timeval timeout;
-	fd_set rdfs;
+	fd_set readFdSet;
 
-	FD_ZERO(&rdfs);
-	FD_SET(nSocket, &rdfs);
+	FD_ZERO(&readFdSet);
+	FD_SET(nSocket, &readFdSet);
 	timeout.tv_sec = nTimeout / 1000;
 	timeout.tv_usec = (nTimeout % 1000) * 1000;
 
-	if (select(SELECT_NFDS(nSocket + 1), &rdfs, NULL, NULL, &timeout) > 0)
+	if (select(SELECT_NFDS(nSocket + 1), &readFdSet, NULL, NULL, &timeout) > 0)
+	{
+		ret = true;
+	}
+
+	return ret;
+}
+
+bool NetCanWrite(SOCKET nSocket, int nTimeout /* ms */)
+{
+	bool ret = false;
+	struct timeval timeout;
+	fd_set writeFdSet;
+
+	FD_ZERO(&writeFdSet);
+	FD_SET(nSocket, &writeFdSet);
+	timeout.tv_sec = nTimeout / 1000;
+	timeout.tv_usec = (nTimeout % 1000) * 1000;
+
+	if (select(SELECT_NFDS(nSocket + 1), NULL, &writeFdSet, NULL, &timeout) > 0)
 	{
 		ret = true;
 	}
@@ -87,6 +120,8 @@ int NetWrite(SOCKET nSocket, const char *pBuff, int nSize)
 
 void NetClose(SOCKET nSocket)
 {
-   shutdown(nSocket, SHUT_RDWR);
-	closesocket(nSocket);
+	shutdown(nSocket, SHUT_RDWR);
+	{
+		closesocket(nSocket);
+	}
 }

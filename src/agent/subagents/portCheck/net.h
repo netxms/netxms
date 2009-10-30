@@ -24,6 +24,8 @@
 #ifndef __NET__H__
 #define __NET__H__
 
+extern DWORD m_dwTimeout;
+
 enum
 {
 	PROTOCOL_UDP,
@@ -32,6 +34,7 @@ enum
 
 SOCKET NetConnectTCP(const char *, DWORD, unsigned short);
 bool NetCanRead(SOCKET, int);
+bool NetCanWrite(SOCKET, int);
 int NetRead(SOCKET, char *, int);
 int NetWrite(SOCKET, const char *, int);
 void NetClose(SOCKET);

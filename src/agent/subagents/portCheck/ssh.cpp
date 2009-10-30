@@ -69,34 +69,3 @@ int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.6  2006/08/06 10:32:03  victor
-- Both 32 and 6 bit installers works correctly
-- All subagents ported to 64bit
-- Agent now reports platform windows-x64 instead of windows-amd64
-
-Revision 1.5  2005/10/18 21:33:26  victor
-- Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
-- All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1
-
-Revision 1.4  2005/01/28 23:45:01  alk
-SMTP check added, requst string == rcpt to
-
-Revision 1.3  2005/01/28 23:19:36  alk
-VID_SERVICE_STATUS set
-
-Revision 1.2  2005/01/28 02:50:32  alk
-added support for CMD_CHECK_NETWORK_SERVICE
-suported:
-	ssh: host/port req.
-	pop3: host/port/request string req. request string format: "login:password"
-
-Revision 1.1  2005/01/19 13:42:47  alk
-+ ServiceCheck.SSH(host[, port]) Added
-
-
-*/
