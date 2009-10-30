@@ -24,7 +24,7 @@
 #ifndef __NET__H__
 #define __NET__H__
 
-extern DWORD m_dwTimeout;
+extern DWORD m_dwDefaultTimeout;
 
 enum
 {
@@ -32,7 +32,7 @@ enum
 	PROTOCOL_TCP
 };
 
-SOCKET NetConnectTCP(const char *, DWORD, unsigned short);
+SOCKET NetConnectTCP(const char *, DWORD, unsigned short, DWORD);
 bool NetCanRead(SOCKET, int);
 bool NetCanWrite(SOCKET, int);
 int NetRead(SOCKET, char *, int);

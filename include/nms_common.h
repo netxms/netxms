@@ -302,6 +302,7 @@ typedef int SOCKET;
 
 #define WSAEINTR        EINTR
 #define WSAEWOULDBLOCK  EWOULDBLOCK
+#define WSAEINPROGRESS  EINPROGRESS
 #define INVALID_SOCKET  (-1)
 
 #define SetSocketReuseFlag(sd) { \
@@ -463,6 +464,7 @@ typedef int SOCKET;
 
 #define WSAEINTR        EINTR
 #define WSAEWOULDBLOCK  EWOULDBLOCK
+#define WSAEINPROGRESS  EINPROGRESS
 #define INVALID_SOCKET  (-1)
 
 #define SetSocketReuseFlag(sd) { \

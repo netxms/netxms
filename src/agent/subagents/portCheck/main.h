@@ -10,16 +10,16 @@ enum
 };
 
 LONG H_CheckPOP3(const char *, const char *, char *);
-int CheckPOP3(char *, DWORD, short, char *, char *);
+int CheckPOP3(char *, DWORD, short, char *, char *, DWORD);
 LONG H_CheckSSH(const char *, const char *, char *);
-int CheckSSH(char *, DWORD, short, char *, char *);
+int CheckSSH(char *, DWORD, short, char *, char *, DWORD);
 LONG H_CheckSMTP(const char *, const char *, char *);
-int CheckSMTP(char *, DWORD, short, char *);
+int CheckSMTP(char *, DWORD, short, char *, DWORD);
 LONG H_CheckHTTP(const char *, const char *, char *);
-int CheckHTTP(char *, DWORD, short, char *, char *, char *);
+int CheckHTTP(char *, DWORD, short, char *, char *, char *, DWORD);
 LONG H_CheckCustom(const char *, const char *, char *);
-int CheckCustom(char *, DWORD, short, char *, char *);
+int CheckCustom(char *, DWORD, short, char *, char *, DWORD);
 LONG H_CheckTelnet(const char *, const char *, char *);
-int CheckTelnet(char *, DWORD, short, char *, char *);
+int CheckTelnet(char *, DWORD, short, char *, char *, DWORD);
 
 #endif // __MAIN__H__

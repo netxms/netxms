@@ -30,6 +30,17 @@
 #define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
 #endif
 
+#if defined(_WIN32)
+#define STAT _stati64
+#define STAT_STRUCT struct _stati64
+#elif HAVE_LSTAT64 && HAVE_STRUCT_STAT64
+#define STAT lstat64
+#define STAT_STRUCT struct stat64
+#else
+#define STAT lstat
+#define STAT_STRUCT struct stat
+#endif
+
 
 //
 // Handler for Agent.Uptime parameter
@@ -43,24 +54,58 @@ LONG H_AgentUptime(const char *cmd, const char *arg, char *value)
 
 
 //
-// Helper function to GetDirInfo
+// File filter for GetDirInfo
+//
+
+static bool MatchFileFilter(const char *fileName, STAT_STRUCT &fileInfo, const char *pattern, int ageFilter, INT64 sizeFilter)
+{
+	if (!MatchString(pattern, fileName, FALSE))
+		return false;
+
+	if (ageFilter != 0)
+	{
+		time_t now = time(NULL);
+		if (ageFilter < 0)
+		{
+			if (fileInfo.st_mtime < now + ageFilter)
+				return false;
+		}
+		else
+		{
+			if (fileInfo.st_mtime > now - ageFilter)
+				return false;
+		}
+	}
+
+	if (sizeFilter != 0)
+	{
+		if (sizeFilter < 0)
+		{
+			if (fileInfo.st_size > -sizeFilter)
+				return false;
+		}
+		else
+		{
+			if (fileInfo.st_size < sizeFilter)
+				return false;
+		}
+	}
+
+	return true;
+}
+
+
+//
+// Helper function for H_DirInfo
 // 
 
-LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
-                unsigned int &uFileCount, QWORD &llFileSize)
+static LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
+                       unsigned int &uFileCount, QWORD &llFileSize,
+                       int ageFilter, INT64 sizeFilter)
 {
    DIR *pDir = NULL;
    struct dirent *pFile;
-#if defined(_WIN32)
-#define STAT _stati64
-   struct _stati64 fileInfo;
-#elif HAVE_LSTAT64 && HAVE_STRUCT_STAT64
-#define STAT lstat64
-   struct stat64 fileInfo;
-#else
-#define STAT lstat
-   struct stat fileInfo;
-#endif
+	STAT_STRUCT fileInfo;
    char szFileName[MAX_PATH];
    LONG nRet = SYSINFO_RC_SUCCESS;
 
@@ -68,15 +113,12 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
        return SYSINFO_RC_ERROR;
 
    // if this is just a file than simply return statistics
+	// Filters ignored in this case
    if (!S_ISDIR(fileInfo.st_mode))
    {
-       if (MatchString(szPattern, szPath, FALSE))
-       {
-           llFileSize += (QWORD)fileInfo.st_size;
-           uFileCount++;
-       }
-
-       return nRet;
+		llFileSize += (QWORD)fileInfo.st_size;
+		uFileCount++;
+		return nRet;
    }
 
    // this is a dir
@@ -112,13 +154,13 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
 
          if (S_ISDIR(fileInfo.st_mode) && bRecursive)
          {
-            nRet = GetDirInfo(szFileName, szPattern, bRecursive, uFileCount, llFileSize);
+            nRet = GetDirInfo(szFileName, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
             
             if (nRet != SYSINFO_RC_SUCCESS)
                 break;
          }
 
-         if (!S_ISDIR(fileInfo.st_mode) && MatchString(szPattern, pFile->d_name, FALSE))
+         if (!S_ISDIR(fileInfo.st_mode) && MatchFileFilter(pFile->d_name, fileInfo, szPattern, ageFilter, sizeFilter))
          {
              llFileSize += (QWORD)fileInfo.st_size;
              uFileCount++;
@@ -131,15 +173,26 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
 }
 
 #undef STAT
+#undef STAT_STRUCT
 
 
 //
 // Handler for File.Size(*) and File.Count(*)
+// Accepts the following arguments:
+//    path, pattern, recursive, size, age
+// where
+//    path    : path to directory or file to check
+//    pattern : pattern for file name matching
+//    recursive : recursion flag; if set to 1 or true, agent will scan subdirectories
+//    size      : size filter; if < 0, only files with size less than abs(value) will match;
+//                if > 0, only files with size greater than value will match
+//    age       : age filter; if < 0, only files created after now - abs(value) will match;
+//                if > 0, only files created before now - value will match
 //
 
 LONG H_DirInfo(const char *cmd, const char *arg, char *value)
 {
-   char szPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10];
+   char szPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10], szBuffer[128];
    bool bRecursive = false;
 
    unsigned int uFileCount = 0;
@@ -153,6 +206,14 @@ LONG H_DirInfo(const char *cmd, const char *arg, char *value)
    if (!AgentGetParameterArg(cmd, 3, szRecursive, 10))
       return SYSINFO_RC_UNSUPPORTED;
 
+	if (!AgentGetParameterArg(cmd, 4, szBuffer, 128))
+      return SYSINFO_RC_UNSUPPORTED;
+	INT64 sizeFilter = _tcstoll(szBuffer, NULL, 0);
+
+	if (!AgentGetParameterArg(cmd, 5, szBuffer, 128))
+      return SYSINFO_RC_UNSUPPORTED;
+	int ageFilter = _tcstoul(szBuffer, NULL, 0);
+
 	// Recursion flag
 	bRecursive = ((atoi(szRecursive) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
 
@@ -160,7 +221,7 @@ LONG H_DirInfo(const char *cmd, const char *arg, char *value)
    if (szPattern[0] == 0)
       strcpy(szPattern, "*");
 
-   nRet = GetDirInfo(szPath, szPattern, bRecursive, uFileCount, llFileSize);
+   nRet = GetDirInfo(szPath, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
 
    switch(CAST_FROM_POINTER(arg, int))
    {

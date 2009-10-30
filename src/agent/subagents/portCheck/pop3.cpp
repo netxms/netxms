@@ -12,27 +12,30 @@ LONG H_CheckPOP3(const char *pszParam, const char *pArg, char *pValue)
 	char szHost[256];
 	char szUser[256];
 	char szPassword[256];
+	char szTimeout[64];
 	bool bIsOk = false;
 
 	AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
 	AgentGetParameterArg(pszParam, 2, szUser, sizeof(szUser));
 	AgentGetParameterArg(pszParam, 3, szPassword, sizeof(szPassword));
+   AgentGetParameterArg(pszParam, 4, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szUser[0] == 0 || szPassword[0] == 0)
 	{
 		return SYSINFO_RC_ERROR;
 	}
 
-	ret_int(pValue, CheckPOP3(szHost, 0, 110, szUser, szPassword));
+	DWORD dwTimeout = strtoul(szTimeout, NULL, 0);
+	ret_int(pValue, CheckPOP3(szHost, 0, 110, szUser, szPassword, dwTimeout));
 	return nRet;
 }
 
-int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass)
+int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass, DWORD dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;
 
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
+	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[512];

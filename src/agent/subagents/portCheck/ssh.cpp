@@ -12,10 +12,12 @@ LONG H_CheckSSH(const char *pszParam, const char *pArg, char *pValue)
 
 	char szHost[256];
 	char szPort[256];
+	char szTimeout[64];
 	unsigned short nPort;
 
    AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
    AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
+   AgentGetParameterArg(pszParam, 3, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0)
 	{
@@ -28,16 +30,17 @@ LONG H_CheckSSH(const char *pszParam, const char *pArg, char *pValue)
 		nPort = 22;
 	}
 
-	ret_int(pValue, CheckSSH(szHost, 0, nPort, NULL, NULL));
+	DWORD dwTimeout = strtoul(szTimeout, NULL, 0);
+	ret_int(pValue, CheckSSH(szHost, 0, nPort, NULL, NULL, dwTimeout));
 	return nRet;
 }
 
-int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass)
+int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass, DWORD dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;
 
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
+	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[512];

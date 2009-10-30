@@ -9,27 +9,30 @@ LONG H_CheckSMTP(const char *pszParam, const char *pArg, char *pValue)
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	char szHost[256];
 	char szTo[256];
+	char szTimeout[64];
 	bool bIsOk = false;
 
 	AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
 	AgentGetParameterArg(pszParam, 2, szTo, sizeof(szTo));
+   AgentGetParameterArg(pszParam, 3, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szTo[0] == 0)
 	{
 		return SYSINFO_RC_ERROR;
 	}
 
-	ret_int(pValue, CheckSMTP(szHost, 0, 25, szTo));
+	DWORD dwTimeout = strtoul(szTimeout, NULL, 0);
+	ret_int(pValue, CheckSMTP(szHost, 0, 25, szTo, dwTimeout));
 	return nRet;
 }
 
-int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
+int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo, DWORD dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;
 	int nErr = 0; 
 
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
+	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[2048];

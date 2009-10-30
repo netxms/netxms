@@ -24,18 +24,16 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 
-#include <sys/ioctl.h>
 #include "net.h"
 
-SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort)
+SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort, DWORD dwTimeout)
 {
 	SOCKET nSocket;
 
 	nSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (nSocket != INVALID_SOCKET)
 	{
-		int flags = fcntl(nSocket, F_GETFL, NULL);
-		fcntl(nSocket, F_SETFL, flags | O_NONBLOCK);
+		SetSocketNonBlocking(nSocket);
 
 		struct sockaddr_in sa;
 		sa.sin_family = AF_INET;
@@ -51,9 +49,9 @@ SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort)
 
 		if (connect(nSocket, (struct sockaddr*)&sa, sizeof(sa)) < 0)
 		{
-			if (errno == EINPROGRESS)
+			if ((WSAGetLastError() == WSAEINPROGRESS) || (WSAGetLastError() == WSAEWOULDBLOCK))
 			{
-				if (!NetCanWrite(nSocket, m_dwTimeout))
+				if (!NetCanWrite(nSocket, (dwTimeout != 0) ? dwTimeout : m_dwDefaultTimeout))
 				{
 					closesocket(nSocket);
 					nSocket = INVALID_SOCKET;

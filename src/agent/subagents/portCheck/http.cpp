@@ -20,6 +20,7 @@ LONG H_CheckHTTP(const char *pszParam, const char *pArg, char *pValue)
 	char szURI[1024];
 	char szHeader[1024];
 	char szMatch[1024];
+	char szTimeout[64];
 	unsigned short nPort;
 
 	AgentGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
@@ -27,6 +28,7 @@ LONG H_CheckHTTP(const char *pszParam, const char *pArg, char *pValue)
 	AgentGetParameterArg(pszParam, 3, szURI, sizeof(szURI));
 	AgentGetParameterArg(pszParam, 4, szHeader, sizeof(szHeader));
 	AgentGetParameterArg(pszParam, 5, szMatch, sizeof(szMatch));
+   AgentGetParameterArg(pszParam, 6, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szPort[0] == 0 || szURI[0] == 0)
 	{
@@ -39,12 +41,13 @@ LONG H_CheckHTTP(const char *pszParam, const char *pArg, char *pValue)
 		nPort = 80;
 	}
 
-	ret_int(pValue, CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch));
+	DWORD dwTimeout = strtoul(szTimeout, NULL, 0);
+	ret_int(pValue, CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout));
 	return nRet;
 }
 
 int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
-		char *szHost, char *szMatch)
+		char *szHost, char *szMatch, DWORD dwTimeout)
 {
 	int nBytes, nRet = 0;
 	SOCKET nSd;
@@ -60,7 +63,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 		strcpy(szMatch, "^HTTP/1.[01] 200 .*");
 	}
 	
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
+	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szTmp[4096];
