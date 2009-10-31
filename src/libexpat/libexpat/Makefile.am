@@ -8,7 +8,7 @@ libnxexpat_la_CPPFLAGS = -DHAVE_EXPAT_CONFIG_H -I..
 libnxexpat_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 
 EXTRA_DIST = \
-	libexpat.vcproj libexpat.cpp \
+	libexpat.cpp \
 	Makefile.nw nwconfig.h nxexpat.def \
 	amigaconfig.h \
 	ascii.h \

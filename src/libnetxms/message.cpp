@@ -23,10 +23,7 @@
 **/
 
 #include "libnetxms.h"
-
-#if HAVE_LIBEXPAT
 #include <expat.h>
-#endif
 
 
 //
@@ -207,8 +204,6 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion)
 // Create CSCPMessage object from XML document
 //
 
-#if HAVE_LIBEXPAT
-
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
 	if (!strcmp(name, "nxcp"))
@@ -272,11 +267,8 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	ps->value[ps->valueLen - 1] = 0;
 }
 
-#endif
-
 CSCPMessage::CSCPMessage(const char *xml)
 {
-#if HAVE_LIBEXPAT
 	XML_Parser parser = XML_ParserCreate(NULL);
 	XML_PARSER_STATE state;
 
@@ -302,20 +294,7 @@ CSCPMessage::CSCPMessage(const char *xml)
         XML_GetCurrentLineNumber(parser));*/
 	}
 	XML_ParserFree(parser);
-
-#else
-
-	// Default values
-   m_wCode = 0;
-   m_dwId = 0;
-   m_dwNumVar = 0;
-   m_ppVarList = NULL;
-   m_wFlags = 0;
-   m_nVersion = NXCP_VERSION;
-#endif
 }
-
-#if HAVE_LIBEXPAT
 
 void CSCPMessage::ProcessXMLToken(void *state, const char **attrs)
 {
@@ -399,8 +378,6 @@ void CSCPMessage::ProcessXMLData(void *state)
 			break;
 	}
 }
-
-#endif
 
 
 //

@@ -73,10 +73,8 @@ public:
 
    CSCP_MESSAGE *CreateMessage(void);
 	char *CreateXML(void);
-#if HAVE_LIBEXPAT
 	void ProcessXMLToken(void *state, const char **attrs);
 	void ProcessXMLData(void *state);
-#endif
 
    WORD GetCode(void) { return m_wCode; }
    void SetCode(WORD wCode) { m_wCode = wCode; }
