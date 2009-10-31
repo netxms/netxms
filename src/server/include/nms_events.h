@@ -30,7 +30,10 @@
 // Constants
 //
 
-#define FIRST_USER_EVENT_ID      100000
+#define FIRST_USER_EVENT_ID         100000
+
+#define EVENTLOG_MAX_MESSAGE_SIZE   255
+#define EVENTLOG_MAX_USERTAG_SIZE   63
 
 
 //

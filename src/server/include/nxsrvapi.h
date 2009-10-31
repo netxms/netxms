@@ -518,7 +518,7 @@ void LIBNXSRV_EXPORTABLE DBUnloadDriver(void);
 int LIBNXSRV_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn);
 int LIBNXSRV_EXPORTABLE DBGetSyntax(DB_HANDLE conn);
 
-String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str);
+String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str, int maxSize = -1);
 TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 

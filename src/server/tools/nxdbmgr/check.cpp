@@ -241,11 +241,11 @@ static void CheckNodes(void)
                {
                   _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,name,"
-                                "status,is_deleted,image_id,inherit_access_rights,"
+                                "status,is_deleted,inherit_access_rights,"
                                 "last_modified,status_calc_alg,status_prop_alg,"
                                 "status_fixed_val,status_shift,status_translation,"
                                 "status_single_threshold,status_thresholds) VALUES "
-                                "(%d,'lost_node_%d',5,0,0,1,0,0,0,0,0,0,0,'00000000')"),
+                                "(%d,'lost_node_%d',5,0,1,0,0,0,0,0,0,0,'00000000')"),
                                 dwId, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
@@ -348,11 +348,11 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
                {
                   _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,name,"
-                                "status,is_deleted,image_id,inherit_access_rights,"
+                                "status,is_deleted,inherit_access_rights,"
                                 "last_modified,status_calc_alg,status_prop_alg,"
                                 "status_fixed_val,status_shift,status_translation,"
                                 "status_single_threshold,status_thresholds) VALUES "
-                                "(%d,'lost_%s_%d',5,0,0,1,0,0,0,0,0,0,0,'00000000')"),
+                                "(%d,'lost_%s_%d',5,0,1,0,0,0,0,0,0,0,'00000000')"),
                              dwId, pszDisplayName, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;

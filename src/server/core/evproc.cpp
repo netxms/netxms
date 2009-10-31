@@ -139,8 +139,8 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
                                  "VALUES (" INT64_FMT ",%d," TIME_T_FMT ",%d,%d,%s," INT64_FMT ",%s)", 
                   pEvent->getId(), pEvent->getCode(), pEvent->getTimeStamp(),
                   pEvent->getSourceId(), pEvent->getSeverity(),
-						(const TCHAR *)DBPrepareString(pEvent->getMessage()),
-						pEvent->getRootId(), (const TCHAR *)DBPrepareString(pEvent->getUserTag()));
+						(const TCHAR *)DBPrepareString(pEvent->getMessage(), EVENTLOG_MAX_MESSAGE_SIZE),
+						pEvent->getRootId(), (const TCHAR *)DBPrepareString(pEvent->getUserTag(), EVENTLOG_MAX_USERTAG_SIZE));
          QueueSQLRequest(szQuery);
       }
 

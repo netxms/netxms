@@ -7,7 +7,7 @@
 - Added size and age filters to agent parameters File.Size and File.Count 
 - PortCheck subagent: connection timeout made configurable
 - NXSL: added functions trim(), ltrim(), and rtrim()
-- Fixed issues: #267, #268, #269, #270
+- Fixed issues: #267, #268, #269, #270, #272, #273, #274
 
 
 *

@@ -1060,13 +1060,23 @@ BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn)
 
 
 //
-// Prepare string for using int SQL statement
+// Prepare string for using in SQL statement
 //
 
-String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str)
+String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str, int maxSize)
 {
 	String out;
-	out.setBuffer(m_fpDrvPrepareString(CHECK_NULL_EX(str)));
+	if ((maxSize > 0) && (str != NULL) && (maxSize < _tcslen(str)))
+	{
+		TCHAR *temp = (TCHAR *)malloc((maxSize + 1) * sizeof(TCHAR));
+		nx_strncpy(temp, str, maxSize + 1);
+		out.setBuffer(m_fpDrvPrepareString(temp));
+		free(temp);
+	}
+	else	
+	{
+		out.setBuffer(m_fpDrvPrepareString(CHECK_NULL_EX(str)));
+	}
 	return out;
 }
 
