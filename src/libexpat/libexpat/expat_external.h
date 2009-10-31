@@ -11,11 +11,11 @@
 #define XML_USE_MSC_EXTENSIONS 1
 #endif
 
-/* NetXMS node: we use this file only internally in case when Expat
+/* NetXMS note: we use this file only internally in case when Expat
    is not available on target platform; thus we can use compiler's
-	default calling conventions whatever they are.
+   default calling conventions whatever they are.
    Leaving XMLCALL defined to __attribute__((cdecl)) with old gcc
-	causes lot of compilation errors; this broke IPSO build.
+   causes lot of compilation errors; this broke IPSO build.
 */
 
 #define XMLCALL
