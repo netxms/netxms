@@ -131,7 +131,7 @@ enum
 //
 
 LONG H_DiskInfo(char *, char *, char *);
-LONG H_ProcessList(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_ProcessList(char *, char *, StringList *);
 LONG H_Uptime(char *, char *, char *);
 LONG H_Uname(char *, char *, char *);
 LONG H_Hostname(char *, char *, char *);
@@ -142,8 +142,8 @@ LONG H_ProcessCount(char *, char *, char *);
 LONG H_MemoryInfo(char *, char *, char *);
 LONG H_NetIpForwarding(char *, char *, char *);
 LONG H_NetIfStats(char *, char *, char *);
-LONG H_NetArpCache(char *, char *, NETXMS_VALUES_LIST *);
-LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
-LONG H_NetRoutingTable(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_NetArpCache(char *, char *, StringList *);
+LONG H_NetIfList(char *, char *, StringList *);
+LONG H_NetRoutingTable(char *, char *, StringList *);
 
 #endif /* __IPSO_H__ */

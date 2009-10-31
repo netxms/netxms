@@ -65,7 +65,7 @@ typedef struct t_IfList
 typedef struct t_cbp
 {
 	int nHandle;
-	NETXMS_VALUES_LIST *pList;
+	StringList *pList;
 } CBP;
 
 
@@ -190,7 +190,7 @@ LONG H_NetIfStats(char *pszParam, char *pArg, char *pValue)
 		"ifphys:%s:stats:opackets"
 	};
 
-	if (!NxGetParameterArg(pszParam, 1, szName, sizeof(szName)))
+	if (!AgentGetParameterArg(pszParam, 1, szName, sizeof(szName)))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (szName[0] != 0)
@@ -253,7 +253,7 @@ static void ArpCallback(char *pszPath, CBP *pArg)
 	TranslateStr(szMacAddr, ":", "");
 	snprintf(szBuffer, 1024, "%s %s %d", szMacAddr, ptr,
 	         if_nametoindex(szIfName) + 0x01000000);
-	NxAddResultString(pArg->pList, szBuffer);
+	pArg->pList->add(szBuffer);
 }
 
 
@@ -261,7 +261,7 @@ static void ArpCallback(char *pszPath, CBP *pArg)
 // Handler for Net.ArpCache enum
 //
 
-LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetArpCache(char *pszParam, char *pArg, StringList *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	CBP data;
@@ -278,7 +278,7 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
-LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetRoutingTable(char *pszParam, char *pArg, StringList *pValue)
 {
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
@@ -381,7 +381,7 @@ LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 						(rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4);
 				strcat(szOut, szTmp);
 
-				NxAddResultString(pValue, szOut);
+				pValue->add(szOut);
 			}
 		}
 
@@ -552,7 +552,7 @@ static void IpAddrCallback(char *pszPath, IFLIST *pList)
 // Handler for Net.InterfaceList enum
 //
 
-LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(char *pszParam, char *pArg, StringList *pValue)
 {
 	int i, nSize, nHandle;
 	IFLIST ifList;
@@ -593,7 +593,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 				        ifList.pData[i].szIpAddr, ifList.pData[i].nMask,
 				        ifList.pData[i].nType, ifList.pData[i].szMacAddr,
 				        ifList.pData[i].szName);
-				NxAddResultString(pValue, szBuffer);
+				pValue->add(szBuffer);
 			}
 		}
 		ipsctl_close(nHandle);

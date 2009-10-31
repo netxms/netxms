@@ -32,7 +32,7 @@ static LONG H_IPSCTL(char *pszParam, char *pArg, char *pValue)
 {
 	char szName[256];
 
-	if (!NxGetParameterArg(pszParam, 1, szName, 256))
+	if (!AgentGetParameterArg(pszParam, 1, szName, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	return IPSCTLGetString(0, szName, pValue, MAX_RESULT_LENGTH);

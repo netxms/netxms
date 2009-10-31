@@ -118,7 +118,7 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 	double dLoad[3];
 
 	// get processor
-   //NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   //AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (getloadavg(dLoad, 3) == 3)
 	{
@@ -169,7 +169,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 	kvm_t *kd;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != NULL)
@@ -276,7 +276,7 @@ printf("PageSize = %d\n",dwPageSize);
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(char *pszParam, char *pArg, StringList *pValue)
 {
 	int i, nCount = -1;
 	char *kp;
@@ -295,7 +295,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 				snprintf(szBuff, sizeof(szBuff), "%d %s",
 					KP_PID(kp), KP_PNAME(kp));
-				NxAddResultString(pValue, szBuff);
+				pValue->add(szBuff);
 			}
 		}
 		kvm_close(kd);
