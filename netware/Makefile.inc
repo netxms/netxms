@@ -4,7 +4,7 @@
 #
 
 CFLAGS   = -nostdinc -fno-exceptions -fno-builtin -fpack-struct -fno-rtti \
-           -c -D_NETWARE -IC:/nwsdk/libc/include \
+           -c -D_NETWARE -D_POSIX_SOURCE -IC:/nwsdk/libc/include \
            -IC:/nwsdk/fs64/include \
 	   -I../../include -I../../../include \
            -I../../../../include -I../libexpat/libexpat

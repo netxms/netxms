@@ -414,25 +414,13 @@ LONG H_FileTime(const char *cmd, const char *arg, char *value)
 	switch(CAST_FROM_POINTER(arg, int))
 	{
 		case FILETIME_ATIME:
-#ifdef _NETWARE
-			ret_uint64(value, fileInfo.st_atime.tv_sec);
-#else
 			ret_uint64(value, fileInfo.st_atime);
-#endif
 			break;
 		case FILETIME_MTIME:
-#ifdef _NETWARE
-			ret_uint64(value, fileInfo.st_mtime.tv_sec);
-#else
 			ret_uint64(value, fileInfo.st_mtime);
-#endif
 			break;
 		case FILETIME_CTIME:
-#ifdef _NETWARE
-			ret_uint64(value, fileInfo.st_ctime.tv_sec);
-#else
 			ret_uint64(value, fileInfo.st_ctime);
-#endif
 			break;
 		default:
 			nRet = SYSINFO_RC_UNSUPPORTED;

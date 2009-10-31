@@ -42,7 +42,6 @@ images/zone.ico -text
 images/zone.png -text
 include/netxms_isc.h -text
 include/nxlpapi.h -text
-netware/bin/.keep -text
 src/agent/core/nxagentd.vcproj -text
 src/agent/subagents/ecs/ecs.vcproj -text
 src/agent/subagents/logwatch/logwatch.vcproj -text
