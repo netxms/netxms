@@ -22,10 +22,7 @@
 **/
 
 #include "libnxlp.h"
-
-#if HAVE_LIBEXPAT
 #include <expat.h>
-#endif
 
 
 //
@@ -313,8 +310,6 @@ const TCHAR *LogParser::getMacro(const TCHAR *name)
 // Create parser configuration from XML
 //
 
-#if HAVE_LIBEXPAT
-
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
@@ -584,11 +579,8 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	}
 }
 
-#endif
-
 bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int errBufSize)
 {
-#if HAVE_LIBEXPAT
 	XML_Parser parser = XML_ParserCreate(NULL);
 	XML_PARSER_STATE state;
 	bool success;
@@ -617,12 +609,6 @@ bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int 
 	}
 	
 	return success;
-#else
-
-	if (errorText != NULL)
-		strncpy(errorText, "Compiled without XML support", errBufSize);
-	return false;
-#endif
 }
 
 
