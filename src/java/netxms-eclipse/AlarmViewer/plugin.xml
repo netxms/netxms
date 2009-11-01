@@ -51,7 +51,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.alarmviewer.actions.popup.terminate_alarm"
-            objectClass="org.netxms.client.NXCAlarm">
+            objectClass="org.netxms.client.events.Alarm">
          <action
                class="org.netxms.ui.eclipse.alarmviewer.actions.TerminateAlarm"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.TerminateAlarm"
@@ -66,7 +66,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.alarmviewer.actions.popup.acknowledge_alarm"
-            objectClass="org.netxms.client.NXCAlarm">
+            objectClass="org.netxms.client.events.Alarm">
          <action
                class="org.netxms.ui.eclipse.alarmviewer.actions.AcknowledgeAlarm"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.AcknowledgeAlarm"
