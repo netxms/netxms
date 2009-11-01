@@ -270,7 +270,15 @@ src/java/netxms-client/src/main/java/org/netxms/client/log/LogFilter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectLink.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapPage.java -text
-src/java/netxms-client/src/test/java/org/netxms/client/NXCSessionTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/AlarmTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/ConnectionTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/DataCollectionTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/JobTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/LogTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/ObjectTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/ServerConfigTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/SessionTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/UserTest.java -text
 src/java/netxms-eclipse/AlarmViewer/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/AlarmViewer/build.properties -text
 src/java/netxms-eclipse/AlarmViewer/icons/acknowledged.png -text
