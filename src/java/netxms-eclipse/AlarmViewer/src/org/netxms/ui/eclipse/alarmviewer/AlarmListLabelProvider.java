@@ -8,9 +8,9 @@ import java.text.DateFormat;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCObject;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
@@ -56,9 +56,9 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 		switch(columnIndex)
 		{
 			case AlarmList.COLUMN_SEVERITY:
-				return severityImages[((NXCAlarm)element).getCurrentSeverity()];
+				return severityImages[((Alarm)element).getCurrentSeverity()];
 			case AlarmList.COLUMN_STATE:
-				return stateImages[((NXCAlarm)element).getState()];
+				return stateImages[((Alarm)element).getState()];
 		}
 		return null;
 	}
@@ -72,20 +72,20 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 		switch(columnIndex)
 		{
 			case AlarmList.COLUMN_SEVERITY:
-				return StatusDisplayInfo.getStatusText(((NXCAlarm)element).getCurrentSeverity());
+				return StatusDisplayInfo.getStatusText(((Alarm)element).getCurrentSeverity());
 			case AlarmList.COLUMN_STATE:
-				return stateText[((NXCAlarm)element).getState()];
+				return stateText[((Alarm)element).getState()];
 			case AlarmList.COLUMN_SOURCE:
-				NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)element).getSourceObjectId());
+				NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((Alarm)element).getSourceObjectId());
 				return (object != null) ? object.getObjectName() : null;
 			case AlarmList.COLUMN_MESSAGE:
-				return ((NXCAlarm)element).getMessage();
+				return ((Alarm)element).getMessage();
 			case AlarmList.COLUMN_COUNT:
-				return Integer.toString(((NXCAlarm)element).getRepeatCount());
+				return Integer.toString(((Alarm)element).getRepeatCount());
 			case AlarmList.COLUMN_CREATED:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((NXCAlarm)element).getCreationTime());
+				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((Alarm)element).getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((NXCAlarm)element).getLastChangeTime());
+				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((Alarm)element).getLastChangeTime());
 		}
 		return null;
 	}

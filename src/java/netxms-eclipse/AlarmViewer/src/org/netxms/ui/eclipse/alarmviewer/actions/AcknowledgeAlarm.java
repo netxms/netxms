@@ -13,8 +13,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
-import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCException;
+import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -49,8 +49,8 @@ public class AcknowledgeAlarm implements IObjectActionDelegate
 			try
 			{
 				for(int i = 0; i < selection.length; i++)
-					if (selection[i] instanceof NXCAlarm)
-						NXMCSharedData.getInstance().getSession().acknowledgeAlarm(((NXCAlarm)selection[i]).getId());
+					if (selection[i] instanceof Alarm)
+						NXMCSharedData.getInstance().getSession().acknowledgeAlarm(((Alarm)selection[i]).getId());
 				status = Status.OK_STATUS;
 			}
 			catch(Exception e)

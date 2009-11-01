@@ -37,10 +37,10 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
@@ -71,7 +71,7 @@ public class AlarmList extends Composite
 	private NXCListener clientListener = null;
 	private TableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
-	private HashMap<Long, NXCAlarm> alarmList;
+	private HashMap<Long, Alarm> alarmList;
 	
 	public AlarmList(ViewPart viewPart, Composite parent, int style)
 	{
@@ -138,7 +138,7 @@ public class AlarmList extends Composite
 					case NXCNotification.ALARM_CHANGED:
 						synchronized(alarmList)
 						{
-							alarmList.put(((NXCAlarm)n.getObject()).getId(), (NXCAlarm)n.getObject());
+							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
 						}
 						scheduleAlarmViewerUpdate();
 						break;
@@ -146,7 +146,7 @@ public class AlarmList extends Composite
 					case NXCNotification.ALARM_DELETED:
 						synchronized(alarmList)
 						{
-							alarmList.remove(((NXCAlarm)n.getObject()).getId());
+							alarmList.remove(((Alarm)n.getObject()).getId());
 						}
 						scheduleAlarmViewerUpdate();
 						break;

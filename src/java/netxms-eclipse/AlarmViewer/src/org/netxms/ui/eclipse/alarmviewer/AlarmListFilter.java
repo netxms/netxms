@@ -5,8 +5,8 @@ package org.netxms.ui.eclipse.alarmviewer;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCObject;
+import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -32,10 +32,10 @@ public class AlarmListFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		if ((rootObject == 0) || (rootObject == ((NXCAlarm)element).getSourceObjectId()))
+		if ((rootObject == 0) || (rootObject == ((Alarm)element).getSourceObjectId()))
 			return true;	// No filtering by object ID or root object is a source
 		
-		NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)element).getSourceObjectId());
+		NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((Alarm)element).getSourceObjectId());
 		if (object != null)
 			return object.isChildOf(rootObject);
 		return false;
