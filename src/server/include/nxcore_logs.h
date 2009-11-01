@@ -23,6 +23,8 @@
 #ifndef _nxcore_logs_h_
 #define _nxcore_logs_h_
 
+#define MAX_COLUMN_NAME_LEN    64
+
 
 //
 // Column types
@@ -79,6 +81,12 @@ struct NXCORE_LOG
 // Log filter
 //
 
+struct OrderingColumn
+{
+	TCHAR name[MAX_COLUMN_NAME_LEN];
+	bool descending;
+};
+
 class ColumnFilter
 {
 private:
@@ -116,10 +124,14 @@ class LogFilter
 private:
 	int m_numColumnFilters;
 	ColumnFilter **m_columnFilters;
+	int m_numOrderingColumns;
+	OrderingColumn *m_orderingColumns;
 
 public:
 	LogFilter(CSCPMessage *msg);
 	~LogFilter();
+
+	String buildOrderClause();
 
 	int getNumColumnFilter()
 	{
@@ -129,6 +141,11 @@ public:
 	ColumnFilter *getColumnFilter(int offset)
 	{
 		return m_columnFilters[offset];
+	}
+
+	int getNumOrderingColumns()
+	{
+		return m_numOrderingColumns;
 	}
 };
 

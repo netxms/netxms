@@ -611,6 +611,7 @@ public final class NXCPCodes
 	public static final long VID_GEOLOCATION_TYPE        = 342;
 	public static final long VID_LATITUDE                = 343;
 	public static final long VID_LONGITUDE               = 344;
+	public static final long VID_NUM_ORDERING_COLUMNS    = 345;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -678,5 +679,6 @@ public final class NXCPCodes
 	public static final long VID_TABLE_COLUMN_INFO_BASE   = 0x10000000L;
 	public static final long VID_TABLE_DATA_BASE          = 0x20000000L;
 	public static final long VID_COLUMN_FILTERS_BASE      = 0x10000000L;
+	public static final long VID_ORDERING_COLUMNS_BASE    = 0x40000000L;
 	public static final long VID_USM_CRED_LIST_BASE       = 0x10000000L;
 }

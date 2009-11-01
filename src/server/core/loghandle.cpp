@@ -160,6 +160,9 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 		}
 	}
 
+	query += filter->buildOrderClause();
+	DbgPrintf(4, _T("LOG QUERY: %s"), (const TCHAR *)query);
+
 	DB_HANDLE dbHandle = DBConnectionPoolAcquireConnection();
 
 	bool ret = false;
@@ -177,6 +180,7 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 			{
 				*rowCount = DBGetFieldInt64(hResult, 0, 0);
 				DBFreeResult(hResult);
+				DbgPrintf(7, _T("LogHandle::query(): ") INT64_FMT _T(" records in result set"), *rowCount);
 			}
 			else
 			{

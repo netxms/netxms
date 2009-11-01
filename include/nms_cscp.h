@@ -805,6 +805,7 @@ typedef struct
 #define VID_GEOLOCATION_TYPE        ((DWORD)342)
 #define VID_LATITUDE                ((DWORD)343)
 #define VID_LONGITUDE               ((DWORD)344)
+#define VID_NUM_ORDERING_COLUMNS    ((DWORD)345)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -944,6 +945,7 @@ typedef struct
 #define VID_JOB_LIST_BASE           ((DWORD)0x10000000)
 
 #define VID_COLUMN_FILTERS_BASE     ((DWORD)0x10000000)
+#define VID_ORDERING_COLUMNS_BASE   ((DWORD)0x40000000)
 
 #define VID_USM_CRED_LIST_BASE      ((DWORD)0x10000000)
 

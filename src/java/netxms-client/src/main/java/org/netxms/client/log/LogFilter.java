@@ -19,6 +19,7 @@
 package org.netxms.client.log;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -32,6 +33,7 @@ import org.netxms.base.NXCPMessage;
 public class LogFilter
 {
 	private HashMap<String, ColumnFilter> columnFilters;
+	private List<OrderingColumn> orderingColumns;
 	
 	/**
 	 * Create empty log filter
@@ -39,6 +41,7 @@ public class LogFilter
 	public LogFilter()
 	{
 		columnFilters = new HashMap<String, ColumnFilter>();
+		orderingColumns = null;
 	}
 	
 	/**
@@ -82,7 +85,23 @@ public class LogFilter
 	{
 		return columnFilters.entrySet();
 	}
-	
+
+	/**
+	 * @return the orderingColumns
+	 */
+	public List<OrderingColumn> getOrderingColumns()
+	{
+		return orderingColumns;
+	}
+
+	/**
+	 * @param orderingColumns the orderingColumns to set
+	 */
+	public void setOrderingColumns(List<OrderingColumn> orderingColumns)
+	{
+		this.orderingColumns = orderingColumns;
+	}
+
 	/**
 	 * Fill NXCP message with filter's data.
 	 * 
@@ -96,6 +115,21 @@ public class LogFilter
 		{
 			msg.setVariable(varId++, e.getKey());
 			varId += e.getValue().fillMessage(msg, varId);
+		}
+		
+		if (orderingColumns != null)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_NUM_ORDERING_COLUMNS, orderingColumns.size());
+			varId = NXCPCodes.VID_ORDERING_COLUMNS_BASE;
+			for(final OrderingColumn c : orderingColumns)
+			{
+				msg.setVariable(varId++, c.getName());
+				msg.setVariableInt16(varId++, c.isDescending() ? 1 : 0);
+			}
+		}
+		else
+		{
+			msg.setVariableInt32(NXCPCodes.VID_NUM_ORDERING_COLUMNS, 0);
 		}
 	}
 }

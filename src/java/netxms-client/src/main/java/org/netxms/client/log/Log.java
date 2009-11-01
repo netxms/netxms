@@ -118,7 +118,7 @@ public class Log
 		filter.fillMessage(msg);
 		session.sendMessage(msg);
 		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
-		numRecords = response.getVariableAsInt64(NXCPCodes.VID_NUM_RECORDS);
+		numRecords = response.getVariableAsInt64(NXCPCodes.VID_NUM_ROWS);
 	}
 	
 	/**

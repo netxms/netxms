@@ -54,6 +54,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.Alarm;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.NetworkMapObjectData;
 import org.netxms.client.maps.NetworkMapObjectLink;
@@ -278,7 +279,7 @@ public class NXCSession
 							break;
 						case NXCPCodes.CMD_ALARM_UPDATE:
 							sendNotification(new NXCNotification(msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE)
-									+ NXCNotification.NOTIFY_BASE, new NXCAlarm(msg)));
+									+ NXCNotification.NOTIFY_BASE, new Alarm(msg)));
 							break;
 						case NXCPCodes.CMD_JOB_CHANGE_NOTIFICATION:
 							sendNotification(new NXCNotification(NXCNotification.JOB_CHANGE, new NXCServerJob(msg)));
@@ -1108,7 +1109,7 @@ public class NXCSession
 	 * @throws NXCException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-	public HashMap<Long, NXCAlarm> getAlarms(final boolean getTerminated) throws IOException, NXCException
+	public HashMap<Long, Alarm> getAlarms(final boolean getTerminated) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALL_ALARMS);
 		final long rqId = msg.getMessageId();
@@ -1116,14 +1117,14 @@ public class NXCSession
 		msg.setVariableInt16(NXCPCodes.VID_IS_ACK, getTerminated ? 1 : 0);
 		sendMessage(msg);
 
-		final HashMap<Long, NXCAlarm> alarmList = new HashMap<Long, NXCAlarm>(0);
+		final HashMap<Long, Alarm> alarmList = new HashMap<Long, Alarm>(0);
 		while(true)
 		{
 			msg = waitForMessage(NXCPCodes.CMD_ALARM_DATA, rqId);
 			long alarmId = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_ID);
 			if (alarmId == 0)
 				break; // ALARM_ID == 0 indicates end of list
-			alarmList.put(alarmId, new NXCAlarm(msg));
+			alarmList.put(alarmId, new Alarm(msg));
 		}
 
 		return alarmList;
@@ -1199,7 +1200,7 @@ public class NXCSession
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
 		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-		msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, NXCAlarm.HELPDESK_STATE_OPEN);
+		msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, Alarm.HELPDESK_STATE_OPEN);
 		msg.setVariable(NXCPCodes.VID_HELPDESK_REF, reference);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
@@ -1219,7 +1220,7 @@ public class NXCSession
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
 		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-		msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, NXCAlarm.HELPDESK_STATE_CLOSED);
+		msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, Alarm.HELPDESK_STATE_CLOSED);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

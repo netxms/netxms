@@ -227,7 +227,6 @@ src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAgentPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAgentPolicyConfig.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/NXCAlarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCContainer.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCEntireNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
@@ -267,6 +266,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/log/ColumnFilter.java -te
 src/java/netxms-client/src/main/java/org/netxms/client/log/Log.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogColumn.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogFilter.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/log/OrderingColumn.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectLink.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapPage.java -text
