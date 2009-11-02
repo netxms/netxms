@@ -54,7 +54,7 @@ public final class StatusDisplayInfo
 		statusImage[Severity.UNKNOWN] = Activator.getImageDescriptor("icons/status/unknown.png");
 		statusImage[Severity.UNMANAGED] = Activator.getImageDescriptor("icons/status/unmanaged.png");
 		statusImage[Severity.DISABLED] = Activator.getImageDescriptor("icons/status/disabled.png");
-		statusImage[Severity.TESTING] = Activator.getImageDescriptor("icons/status/desting.png");
+		statusImage[Severity.TESTING] = Activator.getImageDescriptor("icons/status/testing.png");
 	}
 	
 	/**

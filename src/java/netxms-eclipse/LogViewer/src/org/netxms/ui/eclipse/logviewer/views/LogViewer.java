@@ -286,7 +286,7 @@ public class LogViewer extends ViewPart
 			}
 		};
 		actionGoLastPage.setText("&Last page");
-		actionGoLastPage.setImageDescriptor(Activator.getImageDescriptor("icons/first_page.png"));
+		actionGoLastPage.setImageDescriptor(Activator.getImageDescriptor("icons/last_page.png"));
 
 		actionGoNextPage = new Action()
 		{

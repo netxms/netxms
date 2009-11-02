@@ -57,8 +57,10 @@ public class Table
 			columns.add(msg.getVariableAsString(varId++));
 		}
 
-		final int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
-		data = new ArrayList<List<String>>(rowCount);
+		final int totalRowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
+		data = new ArrayList<List<String>>(totalRowCount);
+
+		final int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ROWS);
 		varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{
@@ -77,7 +79,7 @@ public class Table
 	 */
 	public void addDataFromMessage(final NXCPMessage msg)
 	{
-		final int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
+		final int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ROWS);
 		long varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{

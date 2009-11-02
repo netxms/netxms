@@ -37,6 +37,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.Log;
@@ -126,11 +127,30 @@ public class QueryBuilder extends Dialog
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
+		createFilterTree(dialogArea);
+		createOrderingList(dialogArea);
+		
+		return dialogArea;
+	}
+
+	/**
+	 * Create filter tree control
+	 * 
+	 * @param parent Parent widget
+	 */
+	private void createFilterTree(Composite parent)
+	{
+		Group group = new Group(parent, SWT.NONE);
+		group.setText("Filter");
+		
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		group.setLayout(layout);
+		
 		/* filter tree */
-		filterTree = new TreeViewer(dialogArea, SWT.SINGLE | SWT.BORDER);
+		filterTree = new TreeViewer(group, SWT.SINGLE | SWT.BORDER);
 		filterTree.setContentProvider(new FilterTreeContentProvider());
 		filterTree.setLabelProvider(new FilterTreeLabelProvider());
 		// We cannot simply pass rootElement to setInput(). Note from IStructuredContentProvider.getElements(): 
@@ -149,7 +169,7 @@ public class QueryBuilder extends Dialog
 		filterTree.getControl().setLayoutData(gd);
 		
 		/* buttons */
-		Composite buttons = new Composite(dialogArea, SWT.NONE);
+		Composite buttons = new Composite(group, SWT.NONE);
 		RowLayout buttonLayout = new RowLayout();
 		buttonLayout.type = SWT.VERTICAL;
 		buttonLayout.fill = true;
@@ -228,8 +248,18 @@ public class QueryBuilder extends Dialog
 		
 		buttonRemove = new Button(buttons, SWT.PUSH);
 		buttonRemove.setText("&Remove");
+	}
+	
+	/**
+	 * Create list control containing ordering columns
+	 * 
+	 * @param parent Parent widget
+	 */
+	private void createOrderingList(Composite parent)
+	{
+		Group group = new Group(parent, SWT.NONE);
+		group.setText("Sorting");
 		
-		return dialogArea;
 	}
 	
 	/**
