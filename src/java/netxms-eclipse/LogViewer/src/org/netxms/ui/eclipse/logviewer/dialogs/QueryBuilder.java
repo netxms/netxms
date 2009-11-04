@@ -24,8 +24,10 @@ import java.util.Map.Entry;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -64,6 +66,11 @@ public class QueryBuilder extends Dialog
 	private Button buttonAddOrSet;
 	private Button buttonAddOperation;
 	private Button buttonRemove;
+	private TableViewer orderingList;
+	private Button buttonAddOrderingColumn;
+	private Button buttonMoveUp;
+	private Button buttonMoveDown;
+	private Button buttonRemoveOrderingColumn;
 	
 	/**
 	 * @param parentShell
@@ -129,8 +136,17 @@ public class QueryBuilder extends Dialog
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
-		createFilterTree(dialogArea);
-		createOrderingList(dialogArea);
+		final Composite filterTreeArea = createFilterTree(dialogArea);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		filterTreeArea.setLayoutData(gd);
+		
+		final Composite orderingListArea = createOrderingList(dialogArea);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		orderingListArea.setLayoutData(gd);
 		
 		return dialogArea;
 	}
@@ -140,7 +156,7 @@ public class QueryBuilder extends Dialog
 	 * 
 	 * @param parent Parent widget
 	 */
-	private void createFilterTree(Composite parent)
+	private Composite createFilterTree(Composite parent)
 	{
 		Group group = new Group(parent, SWT.NONE);
 		group.setText("Filter");
@@ -248,6 +264,8 @@ public class QueryBuilder extends Dialog
 		
 		buttonRemove = new Button(buttons, SWT.PUSH);
 		buttonRemove.setText("&Remove");
+		
+		return group;
 	}
 	
 	/**
@@ -255,11 +273,56 @@ public class QueryBuilder extends Dialog
 	 * 
 	 * @param parent Parent widget
 	 */
-	private void createOrderingList(Composite parent)
+	private Composite createOrderingList(Composite parent)
 	{
 		Group group = new Group(parent, SWT.NONE);
 		group.setText("Sorting");
+
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		group.setLayout(layout);
+
+		/* column list */
+		orderingList = new TableViewer(group, SWT.BORDER);
+		orderingList.setContentProvider(new ArrayContentProvider());
 		
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		orderingList.getControl().setLayoutData(gd);
+		
+		/* buttons */
+		Composite buttons = new Composite(group, SWT.NONE);
+		RowLayout buttonLayout = new RowLayout();
+		buttonLayout.type = SWT.VERTICAL;
+		buttonLayout.fill = true;
+		buttonLayout.pack = false;
+		buttonLayout.marginTop = 0;
+		buttonLayout.spacing = WidgetHelper.OUTER_SPACING;
+		buttons.setLayout(buttonLayout);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.TOP;
+		buttons.setLayoutData(gd);
+		
+		buttonAddOrderingColumn = new Button(buttons, SWT.PUSH);
+		buttonAddOrderingColumn.setText("Add c&olumn");
+		buttonAddOrderingColumn.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				addOrderingColumn();
+			}
+		});
+
+		
+		return group;
 	}
 	
 	/**
@@ -481,5 +544,13 @@ public class QueryBuilder extends Dialog
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Add new ordering column to the list
+	 */
+	private void addOrderingColumn()
+	{
+		
 	}
 }
