@@ -189,8 +189,11 @@ int main(int argc, char *argv[])
    if (isDebug)
       NXCSetDebugCallback(DebugCallback);
 
+char d[64] = "!!!!!";
+NXCDecryptPassword(login, password,d);
+printf("PASSWORD: %s\n",d);
 	rcc = NXCConnect(isEncrypt ? NXCF_ENCRYPT : 0, argv[optind], login,
-		              password, 0, NULL, NULL, &session,
+		              d/*password*/, 0, NULL, NULL, &session,
                     _T("nxalarm/") NETXMS_VERSION_STRING, NULL);
 	if (rcc != RCC_SUCCESS)
 	{

@@ -7,10 +7,11 @@
 #include "ice.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <nms_common.h>
 
 
 	/* Structure of a single round subkey */
-typedef unsigned long	ICE_SUBKEY[3];
+typedef DWORD	ICE_SUBKEY[3];
 
 
 	/* Internal structure of the ICE_KEY structure */
@@ -21,7 +22,7 @@ struct ice_key_struct {
 };
 
 	/* The S-boxes */
-static unsigned long	ice_sbox[4][1024];
+static DWORD	ice_sbox[4][1024];
 static int		ice_sboxes_initialised = 0;
 
 
@@ -40,7 +41,7 @@ static const int	ice_sxor[4][4] = {
 				{0xea, 0xcb, 0x2e, 0x04}};
 
 	/* Expanded permutation values for the P-box */
-static const unsigned long	ice_pbox[32] = {
+static const DWORD	ice_pbox[32] = {
 		0x00000001, 0x00000080, 0x00000400, 0x00002000,
 		0x00080000, 0x00200000, 0x01000000, 0x40000000,
 		0x00000008, 0x00000020, 0x00000100, 0x00004000,
@@ -90,7 +91,7 @@ gf_mult (
  * Raise the base to the power of 7, modulo m.
  */
 
-static unsigned long
+static DWORD
 gf_exp7 (
 	register unsigned int	b,
 	unsigned int		m
@@ -111,12 +112,12 @@ gf_exp7 (
  * Carry out the ICE 32-bit P-box permutation.
  */
 
-static unsigned long
+static DWORD
 ice_perm32 (
-	register unsigned long	x
+	register DWORD	x
 ) {
-	register unsigned long		res = 0;
-	register const unsigned long	*pbox = ice_pbox;
+	register DWORD		res = 0;
+	register const DWORD	*pbox = ice_pbox;
 
 	while (x) {
 	    if (x & 1)
@@ -142,7 +143,7 @@ ice_sboxes_init (void)
 	for (i=0; i<1024; i++) {
 	    int			col = (i >> 1) & 0xff;
 	    int			row = (i & 0x1) | ((i & 0x200) >> 8);
-	    unsigned long	x;
+	    DWORD	x;
 
 	    x = gf_exp7 (col ^ ice_sxor[0][row], ice_smod[0][row]) << 24;
 	    ice_sbox[0][i] = ice_perm32 (x);
@@ -226,13 +227,13 @@ ice_key_destroy (
  * The single round ICE f function.
  */
 
-static unsigned long
+static DWORD
 ice_f (
-	register unsigned long	p,
+	register DWORD	p,
 	const ICE_SUBKEY	sk
 ) {
-	unsigned long	tl, tr;		/* Expanded 40-bit values */
-	unsigned long	al, ar;		/* Salted expanded 40-bit values */
+	DWORD	tl, tr;		/* Expanded 40-bit values */
+	DWORD	al, ar;		/* Salted expanded 40-bit values */
 
 					/* Left half expansion */
 	tl = ((p >> 16) & 0x3ff) | (((p >> 14) | (p << 18)) & 0xffc00);
@@ -267,14 +268,14 @@ ice_key_encrypt (
 	unsigned char		*ctext
 ) {
 	register int		i;
-	register unsigned long	l, r;
+	register DWORD	l, r;
 
-	l = (((unsigned long) ptext[0]) << 24)
-				| (((unsigned long) ptext[1]) << 16)
-				| (((unsigned long) ptext[2]) << 8) | ptext[3];
-	r = (((unsigned long) ptext[4]) << 24)
-				| (((unsigned long) ptext[5]) << 16)
-				| (((unsigned long) ptext[6]) << 8) | ptext[7];
+	l = (((DWORD) ptext[0]) << 24)
+				| (((DWORD) ptext[1]) << 16)
+				| (((DWORD) ptext[2]) << 8) | ptext[3];
+	r = (((DWORD) ptext[4]) << 24)
+				| (((DWORD) ptext[5]) << 16)
+				| (((DWORD) ptext[6]) << 8) | ptext[7];
 
 	for (i = 0; i < ik->ik_rounds; i += 2) {
 	    l ^= ice_f (r, ik->ik_keysched[i]);
@@ -302,14 +303,14 @@ ice_key_decrypt (
 	unsigned char		*ptext
 ) {
 	register int		i;
-	register unsigned long	l, r;
+	register DWORD	l, r;
 
-	l = (((unsigned long) ctext[0]) << 24)
-				| (((unsigned long) ctext[1]) << 16)
-				| (((unsigned long) ctext[2]) << 8) | ctext[3];
-	r = (((unsigned long) ctext[4]) << 24)
-				| (((unsigned long) ctext[5]) << 16)
-				| (((unsigned long) ctext[6]) << 8) | ctext[7];
+	l = (((DWORD) ctext[0]) << 24)
+				| (((DWORD) ctext[1]) << 16)
+				| (((DWORD) ctext[2]) << 8) | ctext[3];
+	r = (((DWORD) ctext[4]) << 24)
+				| (((DWORD) ctext[5]) << 16)
+				| (((DWORD) ctext[6]) << 8) | ctext[7];
 
 	for (i = ik->ik_rounds - 1; i > 0; i -= 2) {
 	    l ^= ice_f (r, ik->ik_keysched[i]);
@@ -349,7 +350,7 @@ ice_key_sched_build (
 
 	    for (j=0; j<15; j++) {
 		register int	k;
-		unsigned long	*curr_sk = &(*isk)[j % 3];
+		DWORD	*curr_sk = &(*isk)[j % 3];
 
 		for (k=0; k<4; k++) {
 		    unsigned short	*curr_kb = &kb[(kr + k) & 3];
