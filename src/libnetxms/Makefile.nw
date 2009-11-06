@@ -6,7 +6,7 @@
 include ../../netware/Makefile.inc
 
 OBJECTS  = agent.o base64.o c_lgcc3.o config.o crypto.o gen_uuid.o dload.o \
-	   hash.o icmp.o log.o main.o md5.o message.o msgwq.o nxcp.o \
+	   hash.o ice.o icmp.o log.o main.o md5.o message.o msgwq.o nxcp.o \
 	   qsort.o queue.o sha1.o string.o stringlist.o strmap.o table.o \
 	   tools.o unicode.o uuid.o xml.o
 EXEC     = netxms.nlm

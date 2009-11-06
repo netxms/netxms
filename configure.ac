@@ -1583,6 +1583,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxconfig/Makefile
 	src/server/tools/nxconfig/res/Makefile
 	src/server/tools/nxdbmgr/Makefile
+	src/server/tools/nxencpasswd/Makefile
 	src/server/tools/nxupload/Makefile
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile

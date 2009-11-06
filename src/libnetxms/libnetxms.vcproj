@@ -378,6 +378,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ice.c"
+				>
+			</File>
+			<File
 				RelativePath=".\icmp.cpp"
 				>
 			</File>
@@ -505,6 +509,10 @@
 			</File>
 			<File
 				RelativePath="..\..\include\geolocation.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ice.h"
 				>
 			</File>
 			<File

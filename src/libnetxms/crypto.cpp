@@ -22,6 +22,7 @@
 **/
 
 #include "libnetxms.h"
+#include "ice.h"
 
 
 //
@@ -546,3 +547,57 @@ BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const 
 }
 
 #endif
+
+
+//
+// Encrypt data block with ICE
+//
+
+void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key)
+{
+	ICE_KEY *ice = ice_key_create(1);
+	ice_key_set(ice, key);
+
+	int stopPos = inLen - (inLen % 8);
+	const BYTE *curr = in;
+	for(int pos = 0; pos < stopPos; pos += 8)
+		ice_key_encrypt(ice, &in[pos], &out[pos]);
+
+	if (stopPos < inLen)
+	{
+		BYTE plainText[8], encrypted[8];
+
+		memcpy(plainText, &in[stopPos], inLen - stopPos);
+		ice_key_encrypt(ice, plainText, encrypted);
+		memcpy(&out[stopPos], encrypted, inLen - stopPos);
+	}
+
+	ice_key_destroy(ice);
+}
+
+
+//
+// Decrypt data block with ICE
+//
+
+void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key)
+{
+	ICE_KEY *ice = ice_key_create(1);
+	ice_key_set(ice, key);
+
+	int stopPos = inLen - (inLen % 8);
+	const BYTE *curr = in;
+	for(int pos = 0; pos < stopPos; pos += 8)
+		ice_key_decrypt(ice, &in[pos], &out[pos]);
+
+	if (stopPos < inLen)
+	{
+		BYTE plainText[8], encrypted[8];
+
+		memcpy(encrypted, &in[stopPos], inLen - stopPos);
+		ice_key_decrypt(ice, encrypted, plainText);
+		memcpy(&out[stopPos], plainText, inLen - stopPos);
+	}
+
+	ice_key_destroy(ice);
+}

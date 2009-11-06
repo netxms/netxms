@@ -676,6 +676,7 @@ src/server/tools/nxconfig/res/running.ico -text
 src/server/tools/nxconfig/res/warning.ico -text
 src/server/tools/nxconfig/res/wizard.bmp -text
 src/server/tools/nxdbmgr/nxdbmgr.vcproj -text
+src/server/tools/nxencpasswd/nxencpasswd.vcproj -text
 src/server/tools/nxget/nxget.vcproj -text
 src/server/tools/nxupload/nxupload.vcproj -text
 src/snmp/Makefile.am -text
