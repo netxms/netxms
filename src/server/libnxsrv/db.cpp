@@ -1066,7 +1066,7 @@ BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn)
 String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str, int maxSize)
 {
 	String out;
-	if ((maxSize > 0) && (str != NULL) && (maxSize < _tcslen(str)))
+	if ((maxSize > 0) && (str != NULL) && (maxSize < (int)_tcslen(str)))
 	{
 		TCHAR *temp = (TCHAR *)malloc((maxSize + 1) * sizeof(TCHAR));
 		nx_strncpy(temp, str, maxSize + 1);

@@ -19,15 +19,21 @@
 package org.netxms.ui.eclipse.logviewer.dialogs;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -45,9 +51,12 @@ import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
+import org.netxms.client.log.OrderingColumn;
 import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeContentProvider;
 import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeElement;
 import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeLabelProvider;
+import org.netxms.ui.eclipse.logviewer.dialogs.helpers.OrderingColumnEditingSupport;
+import org.netxms.ui.eclipse.logviewer.dialogs.helpers.OrderingListLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -66,6 +75,7 @@ public class QueryBuilder extends Dialog
 	private Button buttonAddOrSet;
 	private Button buttonAddOperation;
 	private Button buttonRemove;
+	private HashSet<OrderingColumn> orderingColumns;
 	private TableViewer orderingList;
 	private Button buttonAddOrderingColumn;
 	private Button buttonMoveUp;
@@ -81,6 +91,13 @@ public class QueryBuilder extends Dialog
 		this.logHandle = logHandle;
 		this.filter = filter;
 		createInternalTree(filter);
+		
+		List<OrderingColumn> originalColumns = filter.getOrderingColumns();
+		orderingColumns = new HashSet<OrderingColumn>(originalColumns.size());
+		for(OrderingColumn c : originalColumns)
+		{
+			orderingColumns.add(new OrderingColumn(c));
+		}
 	}
 	
 	/**
@@ -283,13 +300,36 @@ public class QueryBuilder extends Dialog
 		group.setLayout(layout);
 
 		/* column list */
-		orderingList = new TableViewer(group, SWT.BORDER);
-		orderingList.setContentProvider(new ArrayContentProvider());
+		orderingList = new TableViewer(group, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
 		
+		TableViewerColumn column = new TableViewerColumn(orderingList, SWT.LEFT);
+		column.getColumn().setText("Column");
+		column.getColumn().setWidth(200);
+
+		column = new TableViewerColumn(orderingList, SWT.LEFT);
+		column.getColumn().setText("Descending");
+		column.getColumn().setWidth(60);
+		column.setEditingSupport(new OrderingColumnEditingSupport(orderingList));
+		
+		orderingList.getTable().setLinesVisible(true);
+		orderingList.getTable().setHeaderVisible(true);
+		orderingList.setContentProvider(new ArrayContentProvider());
+		orderingList.setLabelProvider(new OrderingListLabelProvider());
+		orderingList.setInput(orderingColumns.toArray());
+
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.heightHint = 100;
 		orderingList.getControl().setLayoutData(gd);
+		
+		orderingList.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				buttonRemoveOrderingColumn.setEnabled(!event.getSelection().isEmpty());
+			}
+		});
 		
 		/* buttons */
 		Composite buttons = new Composite(group, SWT.NONE);
@@ -321,7 +361,23 @@ public class QueryBuilder extends Dialog
 			}
 		});
 
-		
+		buttonRemoveOrderingColumn = new Button(buttons, SWT.PUSH);
+		buttonRemoveOrderingColumn.setText("R&emove");
+		buttonRemoveOrderingColumn.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				removeOrderingColumn();
+			}
+		});
+		buttonRemoveOrderingColumn.setEnabled(false);
+
 		return group;
 	}
 	
@@ -551,6 +607,36 @@ public class QueryBuilder extends Dialog
 	 */
 	private void addOrderingColumn()
 	{
-		
+		ColumnSelectionDialog dlg = new ColumnSelectionDialog(getShell(), logHandle);
+		if (dlg.open() == Window.OK)
+		{
+			final OrderingColumn column = new OrderingColumn(dlg.getSelectedColumn());
+			if (!orderingColumns.contains(column))
+			{
+				orderingColumns.add(column);
+				orderingList.setInput(orderingColumns.toArray());
+			}
+			else
+			{
+				orderingList.setSelection(new StructuredSelection(column));
+			}
+		}
+	}
+	
+	/**
+	 * Remove ordering column
+	 */
+	private void removeOrderingColumn()
+	{
+		IStructuredSelection selection = (IStructuredSelection)orderingList.getSelection();
+		if (!selection.isEmpty())
+		{
+			Iterator<OrderingColumn> it = selection.iterator();
+			while(it.hasNext())
+			{
+				orderingColumns.remove(it.next());
+			}
+			orderingList.setInput(orderingColumns.toArray());
+		}
 	}
 }

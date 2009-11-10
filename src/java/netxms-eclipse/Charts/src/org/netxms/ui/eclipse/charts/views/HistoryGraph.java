@@ -139,6 +139,7 @@ public class HistoryGraph extends ViewPart
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
 							frame.setChart(createChart(data));
+							frame.forceRedraw();
 							return Status.OK_STATUS;
 						}
 					}.schedule();

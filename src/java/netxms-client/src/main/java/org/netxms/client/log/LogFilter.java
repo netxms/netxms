@@ -18,6 +18,7 @@
  */
 package org.netxms.client.log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +42,7 @@ public class LogFilter
 	public LogFilter()
 	{
 		columnFilters = new HashMap<String, ColumnFilter>();
-		orderingColumns = null;
+		orderingColumns = new ArrayList<OrderingColumn>();
 	}
 	
 	/**

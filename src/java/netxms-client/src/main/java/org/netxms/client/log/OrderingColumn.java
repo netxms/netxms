@@ -25,33 +25,50 @@ package org.netxms.client.log;
 public class OrderingColumn
 {
 	private String name;
+	private String description;
 	private boolean descending;
 
 	/**
 	 * Create ordering column object.
 	 * 
-	 * @param name Column name
+	 * @param column Log column
 	 * @param descending Set to true if sorting must be in descending order
 	 */
-	public OrderingColumn(String name, boolean descending)
+	public OrderingColumn(LogColumn column, boolean descending)
 	{
-		this.name = name;
+		this.name = column.getName();
+		this.description = column.getDescription();
 		this.descending = descending;
 	}
 
 	/**
 	 * Create ordering column object. Will use ascending sorting order.
 	 * 
-	 * @param name Column name
+	 * @param column Log column
 	 */
-	public OrderingColumn(String name)
+	public OrderingColumn(LogColumn column)
 	{
-		this.name = name;
+		this.name = column.getName();
+		this.description = column.getDescription();
 		this.descending = false;
+	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param src Source object
+	 */
+	public OrderingColumn(OrderingColumn src)
+	{
+		this.name = src.name;
+		this.description = src.description;
+		this.descending = src.descending;
 	}
 
 	/**
-	 * @return the name
+	 * Get column name.
+	 * 
+	 * @return Column name
 	 */
 	public String getName()
 	{
@@ -59,7 +76,9 @@ public class OrderingColumn
 	}
 
 	/**
-	 * @return the descending
+	 * Check if descending order is requested.
+	 * 
+	 * @return true if descending order is requested
 	 */
 	public boolean isDescending()
 	{
@@ -74,5 +93,35 @@ public class OrderingColumn
 	public void setDescending(boolean descending)
 	{
 		this.descending = descending;
+	}
+
+	/**
+	 * Get column description.
+	 * 
+	 * @return Column description
+	 */
+	public String getDescription()
+	{
+		return description;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (obj instanceof OrderingColumn)
+			return name.equals(((OrderingColumn)obj).getName());
+		return super.equals(obj);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode()
+	{
+		return name.hashCode();
 	}
 }

@@ -65,7 +65,7 @@ public class LogTest extends SessionTest
 		
 		final LogFilter filter = new LogFilter();
 		ArrayList<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>(1);
-		orderingColumns.add(new OrderingColumn("record_id", true));
+		orderingColumns.add(new OrderingColumn(log.getColumn("record_id"), true));
 		filter.setOrderingColumns(orderingColumns);
 		
 		log.query(filter);
