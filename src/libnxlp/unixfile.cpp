@@ -23,6 +23,10 @@
 
 #include "libnxlp.h"
 
+#ifdef _NETWARE
+#include <fsio.h>
+#endif
+
 
 //
 // Constants
@@ -99,7 +103,10 @@ static void ParseNewRecords(LogParser *parser, int fh)
 bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logger)(int, const TCHAR *, ...))
 {
 	char fname[MAX_PATH], temp[MAX_PATH];
-	struct stat st, stn;
+	struct stat st;
+#ifndef _NETWARE
+	struct stat stn;
+#endif
 	size_t size;
 	int err, fh;
 	bool readFromStart = false;
@@ -148,10 +155,28 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 						break;
 					}
 					
+#ifdef _NETWARE
+					if (fgetstat(fh, &st, ST_SIZE_BIT | ST_NAME_BIT) < 0)
+					{
+						if (logger != NULL)
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: fgetstat(%d) failed, errno=%d"), fh, errno);
+						readFromStart = true;
+						break;
+					}
+					
+					if (stricmp(st.st_name, fname))
+					{
+						if (logger != NULL)
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file name change: fgetstat reports \"%s\" should be \"%s\""),
+						           st.st_name, fname);
+						readFromStart = true;
+						break;
+					}
+#else					
 					if ((fstat(fh, &st) < 0) || (stat(fname, &stn) < 0))
 					{
 						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: stat(%d) or fstat(%s) failed, errno=%d"), fh, fname, errno);
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: fstat(%d) or stat(%s) failed, errno=%d"), fh, fname, errno);
 						readFromStart = true;
 						break;
 					}
@@ -163,6 +188,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 						readFromStart = true;
 						break;
 					}
+#endif
 						
 					if (st.st_size != size)
 					{
