@@ -520,17 +520,18 @@ CREATE TABLE items
 	polling_interval integer not null,
 	retention_time integer not null,
 	adv_schedule integer not null,	// 1 if item has advanced schedule
-	status integer not null,	// ACTIVE, DISABLED or NOT_SUPPORTED
+	status integer not null,			// ACTIVE, DISABLED or NOT_SUPPORTED
 	delta_calculation integer not null,
-	transformation SQL_TEXT not null, // Transformation script
-	instance varchar(255) not null,	  // Free form text which can be used in events
+	transformation SQL_TEXT,         // Transformation script
+	instance varchar(255),	  			// Free form text which can be used in events
+	system_tag varchar(255),     		// System tag
 	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
-	resource_id integer not null,  // associated cluster resource ID
-	proxy_node integer not null,   // ID of proxy node (for SNMP and agent items)
+	resource_id integer not null,  	// associated cluster resource ID
+	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
 	base_units integer not null,		// bytes, seconds, etc.
 	unit_multiplier integer not null,	// kilo, mega, milli, etc.
-	custom_units_name varchar(63) not null, // units name of base_units = CUSTOM
-	perftab_settings SQL_TEXT not null,	// Settings for dispklaying graph on performance tab
+	custom_units_name varchar(63),	// units name of base_units = CUSTOM
+	perftab_settings SQL_TEXT,			// Settings for dispklaying graph on performance tab
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

@@ -519,29 +519,30 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                         "datatype,polling_interval,retention_time,status,delta_calculation,"
                         "transformation,instance,template_item_id,adv_schedule,"
                         "all_thresholds,resource_id,proxy_node,base_units,unit_multiplier,"
-								"custom_units_name,perftab_settings) VALUES "
-						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,%d,'%s','%s')",
+								"custom_units_name,perftab_settings,system_tag) VALUES "
+						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,%d,'%s','%s',%s)",
                         m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
                         pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                         m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
                         pszEscScript, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
 							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, pszEscCustomUnitName,
-								pszEscPerfTabSettings);
+								pszEscPerfTabSettings, (const TCHAR *)DBPrepareString(m_systemTag));
    else
       sprintf(pszQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
                         "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
                         "delta_calculation=%d,transformation='%s',description='%s',"
                         "instance='%s',template_item_id=%d,adv_schedule=%d,"
                         "all_thresholds=%d,resource_id=%d,proxy_node=%d,base_units=%d,"
-								"unit_multiplier=%d,custom_units_name='%s',perftab_settings='%s' WHERE item_id=%d",
+								"unit_multiplier=%d,custom_units_name='%s',perftab_settings='%s',"
+	                     "system_tag=%s WHERE item_id=%d",
                         (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                         pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                         m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscScript,
                         pszEscDescr, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
 							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, pszEscCustomUnitName,
-								pszEscPerfTabSettings, m_dwId);
+								pszEscPerfTabSettings, (const TCHAR *)DBPrepareString(m_systemTag), m_dwId);
    bResult = DBQuery(hdb, pszQuery);
    free(pszEscName);
    free(pszEscScript);
@@ -694,6 +695,7 @@ void DCItem::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_NAME, m_szName);
    pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
    pMsg->SetVariable(VID_INSTANCE, m_szInstance);
+   pMsg->SetVariable(VID_SYSTEM_TAG, m_systemTag);
    pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
    pMsg->SetVariable(VID_RETENTION_TIME, (DWORD)m_iRetentionTime);
    pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_iSource);
@@ -759,6 +761,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
    pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_INSTANCE, m_szInstance, MAX_DB_STRING);
+   pMsg->GetVariableStr(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
    m_iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
    m_iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
@@ -1661,6 +1664,7 @@ void DCItem::updateFromTemplate(DCItem *pItem)
    expandMacros(pItem->m_szName, m_szName, MAX_ITEM_NAME);
    expandMacros(pItem->m_szDescription, m_szDescription, MAX_DB_STRING);
    expandMacros(pItem->m_szInstance, m_szInstance, MAX_DB_STRING);
+	expandMacros(pItem->m_systemTag, m_systemTag, MAX_DB_STRING);
 
    updateCacheSize();
    

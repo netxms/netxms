@@ -169,9 +169,10 @@ class NXCORE_EXPORTABLE DCItem
 {
 private:
    DWORD m_dwId;
-   char m_szName[MAX_ITEM_NAME];
-   char m_szDescription[MAX_DB_STRING];
-   char m_szInstance[MAX_DB_STRING];
+   TCHAR m_szName[MAX_ITEM_NAME];
+   TCHAR m_szDescription[MAX_DB_STRING];
+   TCHAR m_szInstance[MAX_DB_STRING];
+	TCHAR m_systemTag[MAX_DB_STRING];
    time_t m_tLastPoll;        // Last poll time
    int m_iPollingInterval;    // Polling interval in seconds
    int m_iRetentionTime;      // Retention time in seconds
@@ -241,6 +242,7 @@ public:
    int getStatus() { return m_iStatus; }
    const TCHAR *getName() { return m_szName; }
    const TCHAR *getDescription() { return m_szDescription; }
+	const TCHAR *getSystemTag() { return m_systemTag; }
    Template *getRelatedNode() { return m_pNode; }
    DWORD getTemplateId() { return m_dwTemplateId; }
    DWORD getTemplateItemId() { return m_dwTemplateItemId; }

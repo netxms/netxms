@@ -806,6 +806,7 @@ typedef struct
 #define VID_LATITUDE                ((DWORD)343)
 #define VID_LONGITUDE               ((DWORD)344)
 #define VID_NUM_ORDERING_COLUMNS    ((DWORD)345)
+#define VID_SYSTEM_TAG              ((DWORD)346)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
