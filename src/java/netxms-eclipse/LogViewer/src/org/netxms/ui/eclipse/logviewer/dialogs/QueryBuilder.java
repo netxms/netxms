@@ -626,6 +626,7 @@ public class QueryBuilder extends Dialog
 	/**
 	 * Remove ordering column
 	 */
+	@SuppressWarnings("unchecked")
 	private void removeOrderingColumn()
 	{
 		IStructuredSelection selection = (IStructuredSelection)orderingList.getSelection();

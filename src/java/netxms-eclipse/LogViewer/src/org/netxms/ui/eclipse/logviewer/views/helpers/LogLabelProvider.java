@@ -40,14 +40,12 @@ import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
  */
 public class LogLabelProvider implements ITableLabelProvider
 {
-	private Log logHandle;
 	private LogColumn[] columns;
 	private NXCSession session;
 	private Image[] statusImages;
 	
 	public LogLabelProvider(Log logHandle)
 	{
-		this.logHandle = logHandle;
 		Collection<LogColumn> c = logHandle.getColumns();
 		columns = c.toArray(new LogColumn[c.size()]);
 		session = NXMCSharedData.getInstance().getSession();

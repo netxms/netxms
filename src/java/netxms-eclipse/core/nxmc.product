@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?pde version="3.4"?>
+<?pde version="3.5"?>
 
-<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.1.0" useFeatures="false">
+<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.1.0" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <text>
@@ -19,7 +19,6 @@
    <windowImages/>
 
    <splash
-      location="org.netxms.ui.eclipse.console"
       startupProgressRect="0,285,400,15"
       startupMessageRect="7,265,386,20"
       startupForegroundColor="FFFF00" />
@@ -36,16 +35,21 @@
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.servlet"/>
+      <plugin id="org.eclipse.compare.core"/>
       <plugin id="org.eclipse.core.commands"/>
       <plugin id="org.eclipse.core.contenttype"/>
       <plugin id="org.eclipse.core.databinding"/>
+      <plugin id="org.eclipse.core.databinding.observable"/>
+      <plugin id="org.eclipse.core.databinding.property"/>
       <plugin id="org.eclipse.core.expressions"/>
       <plugin id="org.eclipse.core.filesystem"/>
+      <plugin id="org.eclipse.core.filesystem.linux.x86_64" fragment="true"/>
+      <plugin id="org.eclipse.core.filesystem.solaris.sparc" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.core.filesystem.win32.x86_64" fragment="true"/>
       <plugin id="org.eclipse.core.jobs"/>
       <plugin id="org.eclipse.core.resources"/>
       <plugin id="org.eclipse.core.resources.compatibility" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.core.runtime"/>
       <plugin id="org.eclipse.core.runtime.compatibility.auth"/>
       <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
@@ -62,7 +66,10 @@
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.services"/>
       <plugin id="org.eclipse.swt"/>
-      <plugin id="org.eclipse.swt.win32.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.swt.gtk.linux.x86_64" fragment="true"/>
+      <plugin id="org.eclipse.swt.gtk.solaris.sparc" fragment="true"/>
+      <plugin id="org.eclipse.swt.gtk.solaris.x86" fragment="true"/>
+      <plugin id="org.eclipse.swt.win32.win32.x86_64" fragment="true"/>
       <plugin id="org.eclipse.text"/>
       <plugin id="org.eclipse.ui"/>
       <plugin id="org.eclipse.ui.console"/>
@@ -76,16 +83,20 @@
       <plugin id="org.netxms.ui.eclipse.alarmviewer"/>
       <plugin id="org.netxms.ui.eclipse.charts"/>
       <plugin id="org.netxms.ui.eclipse.console"/>
-      <plugin id="org.netxms.ui.eclipse.jobmonitor"/>
+      <plugin id="org.netxms.ui.eclipse.datacollection"/>
+      <plugin id="org.netxms.ui.eclipse.eventmanager"/>
+      <plugin id="org.netxms.ui.eclipse.googlemaps"/>
       <plugin id="org.netxms.ui.eclipse.library"/>
+      <plugin id="org.netxms.ui.eclipse.logviewer"/>
+      <plugin id="org.netxms.ui.eclipse.networkmaps"/>
       <plugin id="org.netxms.ui.eclipse.objectbrowser"/>
       <plugin id="org.netxms.ui.eclipse.objectmanager"/>
       <plugin id="org.netxms.ui.eclipse.objectview"/>
       <plugin id="org.netxms.ui.eclipse.policymanager"/>
-      <plugin id="org.netxms.ui.eclipse.quickmaps"/>
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
       <plugin id="org.netxms.ui.eclipse.usermanager"/>
    </plugins>
+
 
 </product>
