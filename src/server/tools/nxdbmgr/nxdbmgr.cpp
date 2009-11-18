@@ -53,16 +53,19 @@ const TCHAR *g_pszSqlType[5][2] =
 //
 
 static TCHAR m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
+static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "CodePage", CT_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
    { "CreateCrashDumps", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
    { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
+   { "DBEncryptedPassword", CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
    { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
    { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName },
    { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
    { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
+   { "DataDirectory", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "DumpDirectory", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "LogFailedSQLQueries", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "LogFile", CT_IGNORE, 0, 0, 0, 0, NULL },
@@ -602,6 +605,12 @@ int main(int argc, char *argv[])
       return 2;
    }
 	delete config;
+
+	// Decrypt password
+	if (s_encryptedDbPassword[0] != 0)
+	{
+		DecryptPassword(g_szDbLogin, s_encryptedDbPassword, g_szDbPassword);
+	}
 
 #ifndef _WIN32
 	SetDefaultCodepage(m_szCodePage);

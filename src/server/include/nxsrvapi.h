@@ -467,6 +467,7 @@ void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList);
 void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
+BOOL LIBNXSRV_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd);
 
 void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...);
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...);

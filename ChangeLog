@@ -1,4 +1,11 @@
 *
+* 1.0.0
+*
+
+- Added support for encrypted DB passwords in netxmsd.conf
+
+
+*
 * 0.2.31
 *
 

@@ -605,6 +605,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\stringlist.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\strmap.cpp"
 				>
 			</File>

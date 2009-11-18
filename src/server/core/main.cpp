@@ -114,7 +114,7 @@ DWORD g_dwRoutingTableUpdateInterval;
 DWORD g_dwConditionPollingInterval;
 DWORD g_dwPingSize;
 DWORD g_dwAuditFlags;
-char g_szDataDir[MAX_PATH];
+TCHAR g_szDataDir[MAX_PATH] = _T("");
 int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
 QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
@@ -264,8 +264,17 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_INTERNAL_CA;
 	if (ConfigReadInt("CheckTrustedNodes", 1))
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
-	ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
-	DbgPrintf(1, _T("Data directory set to %s"), g_szDataDir);
+	
+	if (g_szDataDir[0] == 0)
+	{
+		ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
+		DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_szDataDir);
+	}
+	else
+	{
+		DbgPrintf(1, _T("Using data directory %s"), g_szDataDir);
+	}
+
 	g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
 	g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
 	g_dwSNMPTimeout = ConfigReadInt("SNMPRequestTimeout", 2000);

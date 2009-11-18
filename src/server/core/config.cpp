@@ -38,12 +38,15 @@ extern TCHAR *g_pszModLoadList;
 // Returns TRUE on success and FALSE on failure
 //
 
+static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "CodePage", CT_STRING, 0, 0, 256, 0, g_szCodePage },
    { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
+   { "DataDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir },
    { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
    { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
+   { "DBEncryptedPassword", CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
    { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
    { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName },
    { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
@@ -97,6 +100,13 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
       bSuccess = TRUE;
    }
 	delete config;
+
+	// Decrypt password
+	if (s_encryptedDbPassword[0] != 0)
+	{
+		DecryptPassword(g_szDbLogin, s_encryptedDbPassword, g_szDbPassword);
+	}
+
    return bSuccess;
 }
 

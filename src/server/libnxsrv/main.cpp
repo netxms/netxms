@@ -192,6 +192,46 @@ void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
 
 
 //
+// Decrypt password
+//
+
+BOOL LIBNXSRV_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd)
+{
+	if (_tcslen(encryptedPasswd) != 44)
+		return FALSE;
+
+#ifdef UNICODE
+	char *mbencrypted = MBStringFromWideString(encryptedPasswd);
+	char *mblogin = MBStringFromWideString(login);
+#else
+	const char *mbencrypted = encryptedPasswd;
+	const char *mblogin = login;
+#endif
+
+	BYTE encrypted[32], decrypted[32], key[16];
+	size_t encSize;
+	base64_decode(mbencrypted, strlen(mbencrypted), (char *)encrypted, &encSize);
+	if (encSize != 32)
+		return FALSE;
+
+	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
+	ICEDecryptData(encrypted, 32, decrypted, key);
+	decrypted[31] = 0;
+	
+#ifdef UNICODE
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, 32);
+	decryptedPasswd[31] = 0;
+	free(mbencrypted);
+	free(mblogin);
+#else
+	nx_strncpy(decryptedPasswd, (char *)decrypted, 32);
+#endif
+
+	return TRUE;
+}
+
+
+//
 // DLL entry point
 //
 
