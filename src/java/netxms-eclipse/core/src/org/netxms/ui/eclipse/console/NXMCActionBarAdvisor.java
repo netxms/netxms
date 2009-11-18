@@ -31,11 +31,15 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	// Actions - important to allocate these only in makeActions, and then use them
 	// in the fill methods. This ensures that the actions aren't recreated
 	// when fillActionBars is called with FILL_PROXY.
-	private IWorkbenchAction exitAction;
-	private IWorkbenchAction aboutAction;
-	private Action openConsoleAction;
-	private Action openProgressViewAction;
+	private IWorkbenchAction actionExit;
+	private IWorkbenchAction actionAbout;
+	private IWorkbenchAction actionShowPreferences;
+	private Action actionOpenConsole;
+	private Action actionOpenProgressView;
 
+	/**
+	 * @param configurer
+	 */
 	public NXMCActionBarAdvisor(IActionBarConfigurer configurer)
 	{
 		super(configurer);
@@ -44,13 +48,16 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	@Override
 	protected void makeActions(IWorkbenchWindow window)
 	{
-		exitAction = ActionFactory.QUIT.create(window);
-		register(exitAction);
+		actionExit = ActionFactory.QUIT.create(window);
+		register(actionExit);
 
-		aboutAction = ActionFactory.ABOUT.create(window);
-		register(aboutAction);
+		actionAbout = ActionFactory.ABOUT.create(window);
+		register(actionAbout);
+		
+		actionShowPreferences = ActionFactory.PREFERENCES.create(window);
+		register(actionShowPreferences);
 
-		openConsoleAction = new Action()
+		actionOpenConsole = new Action()
 		{
 			/*
 			 * (non-Javadoc)
@@ -82,10 +89,10 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				}
 			}
 		};
-		openConsoleAction.setText(Messages.getString("NXMCActionBarAdvisor.menu_console")); //$NON-NLS-1$
-		openConsoleAction.setImageDescriptor(ConsolePlugin.getImageDescriptor(IConsoleConstants.IMG_VIEW_CONSOLE));
+		actionOpenConsole.setText(Messages.getString("NXMCActionBarAdvisor.menu_console")); //$NON-NLS-1$
+		actionOpenConsole.setImageDescriptor(ConsolePlugin.getImageDescriptor(IConsoleConstants.IMG_VIEW_CONSOLE));
 
-		openProgressViewAction = new Action()
+		actionOpenProgressView = new Action()
 		{
 			/*
 			 * (non-Javadoc)
@@ -117,8 +124,8 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				}
 			}
 		};
-		openProgressViewAction.setText("&Progress");
-		openProgressViewAction.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif"));
+		actionOpenProgressView.setText("&Progress");
+		actionOpenProgressView.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif"));
 	}
 
 	@Override
@@ -140,9 +147,10 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		menuBar.add(helpMenu);
 
 		// File
+		fileMenu.add(actionShowPreferences);
 		fileMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		fileMenu.add(new Separator());
-		fileMenu.add(exitAction);
+		fileMenu.add(actionExit);
 
 		// View
 		viewMenu.add(new GroupMarker(IActionConstants.M_PRODUCT_VIEW));
@@ -151,8 +159,8 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		viewMenu.add(new Separator());
 		viewMenu.add(new GroupMarker(IActionConstants.M_LOGS_VIEW));
 		viewMenu.add(new Separator());
-		viewMenu.add(openConsoleAction);
-		viewMenu.add(openProgressViewAction);
+		viewMenu.add(actionOpenConsole);
+		viewMenu.add(actionOpenProgressView);
 		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
 		viewMenu.add(new Separator());
 		MenuManager configMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_configuration"), //$NON-NLS-1$
@@ -164,7 +172,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 
 		// Help
-		helpMenu.add(aboutAction);
+		helpMenu.add(actionAbout);
 	}
 
 	@Override
@@ -206,8 +214,5 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		statusItem.setText(""); //$NON-NLS-1$
 		statusLine.add(statusItem);
 		Activator.getDefault().setStatusItemConnection(statusItem);
-
-		MemoryMonitor mm = new MemoryMonitor("memoryMonitor"); //$NON-NLS-1$
-		statusLine.add(mm);
 	}
 }

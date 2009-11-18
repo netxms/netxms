@@ -68,5 +68,33 @@
          </property>
       </product>
    </extension>
+   
+   <extension point="org.eclipse.ui.preferencePages">
+     <page name="Workbench"
+           class="org.netxms.ui.eclipse.console.preferencepages.WorkbenchGeneralPrefs"
+           id="org.eclipse.ui.preferencePages.Workbench">
+     </page>
+     <page name="Appearance"
+           category="org.eclipse.ui.preferencePages.Workbench"
+           class="org.eclipse.ui.ExtensionFactory:appearancePreferencePage"
+           id="org.eclipse.ui.preferencePages.Views">
+         <keywordReference id="org.eclipse.ui.ide.appearance"/>
+         <keywordReference id="org.eclipse.ui.ide.themes"/>
+         <keywordReference id="org.eclipse.ui.ide.tabs"/>
+      </page>
+      <page category="org.eclipse.ui.preferencePages.Workbench"
+            class="org.eclipse.ui.ExtensionFactory:keysPreferencePage"
+            id="org.eclipse.ui.preferencePages.Keys"
+            name="Keys">
+         <keywordReference id="org.eclipse.ui.ide.keys"/>
+     </page>
+     <page
+            name="Label Decorators"
+            category="org.eclipse.ui.preferencePages.Views"
+            class="org.eclipse.ui.ExtensionFactory:decoratorsPreferencePage"
+            id="org.eclipse.ui.preferencePages.Decorators">
+         <keywordReference id="org.eclipse.ui.ide.appearance"/>
+     </page>
+   </extension>
 
 </plugin>
