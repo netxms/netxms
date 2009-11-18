@@ -1,10 +1,11 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.NXCSession;
 
 /**
  * This class represents NetXMS TEMPLATE objects.
@@ -12,7 +13,7 @@ import org.netxms.base.NXCPMessage;
  * @author Victor
  *
  */
-public class NXCTemplate extends NXCObject
+public class Template extends GenericObject
 {
 	private int version;
 	private boolean autoApplyEnabled;
@@ -22,7 +23,7 @@ public class NXCTemplate extends NXCObject
 	 * @param msg
 	 * @param session
 	 */
-	public NXCTemplate(NXCPMessage msg, NXCSession session)
+	public Template(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 		

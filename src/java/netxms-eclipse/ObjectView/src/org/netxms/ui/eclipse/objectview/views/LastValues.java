@@ -11,9 +11,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNode;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectview.LastValuesView;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
@@ -26,7 +26,7 @@ public class LastValues extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.objectview.view.last_values";
 	
 	private NXCSession session;
-	private NXCNode node;
+	private Node node;
 	private LastValuesView dataView;
 	
 	/* (non-Javadoc)
@@ -38,8 +38,8 @@ public class LastValues extends ViewPart
 		super.init(site);
 		
 		session = NXMCSharedData.getInstance().getSession();
-		NXCObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		node = ((obj != null) && (obj instanceof NXCNode)) ? (NXCNode)obj : null;
+		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
+		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
 		setPartName("Last Values - " + ((node != null) ? node.getObjectName() : "<error>"));
 	}
 

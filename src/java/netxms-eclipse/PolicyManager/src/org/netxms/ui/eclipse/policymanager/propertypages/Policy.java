@@ -14,9 +14,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCAgentPolicy;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -29,7 +29,7 @@ public class Policy extends PropertyPage
 {
 	private Text textDescription;
 	private String initialDescription;
-	private NXCAgentPolicy object;
+	private AgentPolicy object;
 	
 	
 	/* (non-Javadoc)
@@ -40,7 +40,7 @@ public class Policy extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (NXCAgentPolicy)getElement().getAdapter(NXCAgentPolicy.class);
+		object = (AgentPolicy)getElement().getAdapter(AgentPolicy.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		

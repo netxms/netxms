@@ -6,6 +6,8 @@ package org.netxms.client;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.netxms.client.objects.GenericObject;
+
 /**
  * @author Victor
  *
@@ -32,7 +34,7 @@ public class NXCObjectCreationData
 	 * Constructor.
 	 * 
 	 * @param objectClass Class of new object (one of NXCObject.OBJECT_xxx constants)
-	 * @see NXCObject
+	 * @see GenericObject
 	 * @param name Name of new object
 	 * @param parentId Parent object ID
 	 */

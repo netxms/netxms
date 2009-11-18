@@ -5,7 +5,7 @@ package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -17,7 +17,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 public class ObjectSelector extends AbstractSelector
 {
 	private long objectId = 0;
-	private int objectClass = NXCObject.OBJECT_NODE;
+	private int objectClass = GenericObject.OBJECT_NODE;
 	
 	/**
 	 * @param parent
@@ -39,7 +39,7 @@ public class ObjectSelector extends AbstractSelector
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			NXCObject[] objects = dlg.getAllCheckedObjects(objectClass);
+			GenericObject[] objects = dlg.getAllCheckedObjects(objectClass);
 			if (objects.length > 0)
 			{
 				objectId = objects[0].getObjectId();
@@ -73,7 +73,7 @@ public class ObjectSelector extends AbstractSelector
 		}
 		else
 		{
-			final NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(objectId);
+			final GenericObject object = NXMCSharedData.getInstance().getSession().findObjectById(objectId);
 			setText((object != null) ? object.getObjectName() : "<unknown>");
 		}
 	}

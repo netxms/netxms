@@ -10,7 +10,7 @@
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.General">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCObject">
+                  value="org.netxms.client.objects.GenericObject">
              </instanceof>
           </enabledWhen>
         </page>
@@ -21,7 +21,7 @@
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCObject">
+                  value="org.netxms.client.objects.GenericObject">
              </instanceof>
           </enabledWhen>
         </page>
@@ -32,7 +32,7 @@
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Comments">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCObject">
+                  value="org.netxms.client.objects.GenericObject">
              </instanceof>
           </enabledWhen>
         </page>
@@ -43,7 +43,7 @@
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AccessControl">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCObject">
+                  value="org.netxms.client.objects.GenericObject">
              </instanceof>
           </enabledWhen>
         </page>
@@ -54,7 +54,7 @@
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoApply">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCTemplate">
+                  value="org.netxms.client.objects.Template">
              </instanceof>
           </enabledWhen>
         </page>
@@ -65,7 +65,7 @@
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoBind">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCContainer">
+                  value="org.netxms.client.objects.Container">
              </instanceof>
           </enabledWhen>
         </page>
@@ -76,7 +76,7 @@
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Communication">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCNode">
+                  value="org.netxms.client.objects.Node">
              </instanceof>
           </enabledWhen>
         </page>
@@ -87,7 +87,7 @@
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCNode">
+                  value="org.netxms.client.objects.Node">
              </instanceof>
           </enabledWhen>
         </page>
@@ -97,7 +97,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.delete"
-            objectClass="org.netxms.client.NXCObject">
+            objectClass="org.netxms.client.objects.GenericObject">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.DeleteObject"
                enablesFor="+"
@@ -110,7 +110,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind_NXCContainer"
-            objectClass="org.netxms.client.NXCContainer">
+            objectClass="org.netxms.client.objects.Container">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
                enablesFor="1"
@@ -122,7 +122,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind_NXCServiceRoot"
-            objectClass="org.netxms.client.NXCServiceRoot">
+            objectClass="org.netxms.client.objects.ServiceRoot">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
                enablesFor="1"
@@ -134,7 +134,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.changeIpAddress"
-            objectClass="org.netxms.client.NXCNode">
+            objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeIpAddress"
                enablesFor="1"
@@ -146,7 +146,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.unmanage"
-            objectClass="org.netxms.client.NXCObject">
+            objectClass="org.netxms.client.objects.GenericObject">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.Unmanage"
                enablesFor="+"
@@ -158,7 +158,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.manage"
-            objectClass="org.netxms.client.NXCObject">
+            objectClass="org.netxms.client.objects.GenericObject">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.Manage"
                enablesFor="+"

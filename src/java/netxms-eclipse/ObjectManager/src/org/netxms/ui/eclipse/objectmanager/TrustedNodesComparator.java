@@ -8,7 +8,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes;
 
 /**
@@ -30,7 +30,7 @@ public class TrustedNodesComparator extends ViewerComparator
 		int rc;
 		if ((Integer)sortColumn.getData("ID") == TrustedNodes.COLUMN_NAME)
 		{
-			rc =  ((NXCObject)e1).getObjectName().compareToIgnoreCase(((NXCObject)e2).getObjectName());
+			rc =  ((GenericObject)e1).getObjectName().compareToIgnoreCase(((GenericObject)e2).getObjectName());
 		}
 		else
 		{

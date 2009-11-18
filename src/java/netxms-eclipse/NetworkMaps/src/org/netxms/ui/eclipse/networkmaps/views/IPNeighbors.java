@@ -7,9 +7,9 @@ import java.util.Iterator;
 
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.NXCNode;
-import org.netxms.client.NXCObject;
-import org.netxms.client.NXCSubnet;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Subnet;
 import org.netxms.client.maps.NetworkMapObjectData;
 import org.netxms.client.maps.NetworkMapObjectLink;
 import org.netxms.client.maps.NetworkMapPage;
@@ -53,12 +53,12 @@ public class IPNeighbors extends NetworkMap
 		while(it.hasNext())
 		{
 			long id = it.next();
-			NXCObject object = session.findObjectById(id);
-			if ((object != null) && (object instanceof NXCSubnet))
+			GenericObject object = session.findObjectById(id);
+			if ((object != null) && (object instanceof Subnet))
 			{
 				mapPage.addObject(new NetworkMapObjectData(id));
 				mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, node.getObjectId(), id));
-				addNodesFromSubnet((NXCSubnet)object, node.getObjectId());
+				addNodesFromSubnet((Subnet)object, node.getObjectId());
 			}
 		}
 	}
@@ -68,7 +68,7 @@ public class IPNeighbors extends NetworkMap
 	 * @param subnet Subnet object
 	 * @param rootNodeId ID of map's root node (used to prevent recursion)
 	 */
-	private void addNodesFromSubnet(NXCSubnet subnet, long rootNodeId)
+	private void addNodesFromSubnet(Subnet subnet, long rootNodeId)
 	{
 		Iterator<Long> it = subnet.getChilds();
 		while(it.hasNext())
@@ -76,8 +76,8 @@ public class IPNeighbors extends NetworkMap
 			long id = it.next();
 			if (id != rootNodeId)
 			{
-				NXCObject object = session.findObjectById(id);
-				if ((object != null) && (object instanceof NXCNode))
+				GenericObject object = session.findObjectById(id);
+				if ((object != null) && (object instanceof Node))
 				{
 					mapPage.addObject(new NetworkMapObjectData(id));
 					mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, subnet.getObjectId(), id));

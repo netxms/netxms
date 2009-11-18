@@ -5,7 +5,7 @@ package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 
 /**
  * @author Victor
@@ -24,7 +24,7 @@ public class ObjectListFilter extends ViewerFilter
 		if (filterString == null)
 			return true;
 		
-		return ((NXCObject)element).getObjectName().toLowerCase().startsWith(filterString);
+		return ((GenericObject)element).getObjectName().toLowerCase().startsWith(filterString);
 	}
 	
 	

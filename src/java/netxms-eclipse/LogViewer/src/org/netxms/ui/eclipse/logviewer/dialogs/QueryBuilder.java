@@ -25,6 +25,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -41,17 +46,20 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
+import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeContentProvider;
 import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeElement;
 import org.netxms.ui.eclipse.logviewer.dialogs.helpers.FilterTreeLabelProvider;
@@ -67,6 +75,7 @@ public class QueryBuilder extends Dialog
 {
 	private Log logHandle;
 	private LogFilter filter;
+	
 	private TreeViewer filterTree;
 	private ArrayList<FilterTreeElement> elements;
 	private FilterTreeElement rootElement;
@@ -75,12 +84,20 @@ public class QueryBuilder extends Dialog
 	private Button buttonAddOrSet;
 	private Button buttonAddOperation;
 	private Button buttonRemove;
+	
 	private HashSet<OrderingColumn> orderingColumns;
 	private TableViewer orderingList;
 	private Button buttonAddOrderingColumn;
 	private Button buttonMoveUp;
 	private Button buttonMoveDown;
 	private Button buttonRemoveOrderingColumn;
+	
+	private Action actionAddColumn;
+	private Action actionAddCondition;
+	private Action actionAddAndGroup;
+	private Action actionAddOrGroup;
+	private Action actionRemoveColumn;
+	private Action actionRemoveOrderingColumn;
 	
 	/**
 	 * @param parentShell
@@ -165,7 +182,89 @@ public class QueryBuilder extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		orderingListArea.setLayoutData(gd);
 		
+		createActions();
+		
 		return dialogArea;
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionAddColumn = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				addColumn();
+			}
+		};
+		actionAddColumn.setText("Add &column");
+		
+		actionAddAndGroup = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				addFilterSet(ColumnFilter.AND);
+			}
+		};
+		actionAddAndGroup.setText("Add &AND filter set");
+		
+		actionAddOrGroup = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				addFilterSet(ColumnFilter.OR);
+			}
+		};
+		actionAddOrGroup.setText("Add &OR filter set");
+		
+		actionAddCondition = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				addCondition();
+			}
+		};
+		actionAddCondition.setText("Add co&ndition");
+		
+		actionRemoveColumn = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				removeFilterTreeElement();
+			}
+		};
+		actionRemoveColumn.setText("&Remove");
+		actionRemoveColumn.setImageDescriptor(Activator.getImageDescriptor("icons/remove.png"));
+
+		actionRemoveOrderingColumn = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				removeOrderingColumn();
+			}
+		};
+		actionRemoveOrderingColumn.setText("&Remove");
+		actionRemoveOrderingColumn.setImageDescriptor(Activator.getImageDescriptor("icons/remove.png"));
 	}
 
 	/**
@@ -230,6 +329,9 @@ public class QueryBuilder extends Dialog
 				addColumn();
 			}
 		});
+		RowData rd = new RowData();
+		rd.width = WidgetHelper.WIDE_BUTTON_WIDTH_HINT;
+		buttonAddColumn.setLayoutData(rd);
 
 		buttonAddAndSet = new Button(buttons, SWT.PUSH);
 		buttonAddAndSet.setText("Add &AND group");
@@ -264,7 +366,7 @@ public class QueryBuilder extends Dialog
 		});
 		
 		buttonAddOperation = new Button(buttons, SWT.PUSH);
-		buttonAddOperation.setText("Add &condition");
+		buttonAddOperation.setText("Add co&ndition");
 		buttonAddOperation.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -281,8 +383,82 @@ public class QueryBuilder extends Dialog
 		
 		buttonRemove = new Button(buttons, SWT.PUSH);
 		buttonRemove.setText("&Remove");
+		buttonRemove.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				removeFilterTreeElement();
+			}
+		});
+		
+		createFilterPopupMenu();
 		
 		return group;
+	}
+	
+	/**
+	 * Create pop-up menu for ordering list
+	 */
+	private void createFilterPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillFilterContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(filterTree.getControl());
+		filterTree.getControl().setMenu(menu);
+	}
+	
+	/**
+	 * Fill context menu for ordering column list
+	 * 
+	 * @param mgr Menu manager
+	 */
+	private void fillFilterContextMenu(final IMenuManager mgr)
+	{
+		final IStructuredSelection selection = (IStructuredSelection)filterTree.getSelection();
+		if (selection.isEmpty())
+			return;
+		
+		FilterTreeElement element = (FilterTreeElement)selection.getFirstElement();
+		switch(element.getType())
+		{
+			case FilterTreeElement.ROOT:
+				mgr.add(actionAddColumn);
+				break;
+			case FilterTreeElement.COLUMN:
+				mgr.add(actionAddAndGroup);
+				mgr.add(actionAddOrGroup);
+				mgr.add(actionAddCondition);
+				mgr.add(new Separator());
+				mgr.add(actionRemoveColumn);
+				break;
+			case FilterTreeElement.FILTER:
+				final ColumnFilter cf = (ColumnFilter)element.getObject();
+				if (cf.getType() == ColumnFilter.SET)
+				{
+					mgr.add(actionAddAndGroup);
+					mgr.add(actionAddOrGroup);
+					mgr.add(actionAddCondition);
+					mgr.add(new Separator());
+				}
+				mgr.add(actionRemoveColumn);
+				break;
+		}
 	}
 	
 	/**
@@ -346,7 +522,7 @@ public class QueryBuilder extends Dialog
 		buttons.setLayoutData(gd);
 		
 		buttonAddOrderingColumn = new Button(buttons, SWT.PUSH);
-		buttonAddOrderingColumn.setText("Add c&olumn");
+		buttonAddOrderingColumn.setText("&Add column");
 		buttonAddOrderingColumn.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -360,6 +536,9 @@ public class QueryBuilder extends Dialog
 				addOrderingColumn();
 			}
 		});
+		RowData rd = new RowData();
+		rd.width = WidgetHelper.WIDE_BUTTON_WIDTH_HINT;
+		buttonAddOrderingColumn.setLayoutData(rd);
 
 		buttonRemoveOrderingColumn = new Button(buttons, SWT.PUSH);
 		buttonRemoveOrderingColumn.setText("R&emove");
@@ -377,8 +556,43 @@ public class QueryBuilder extends Dialog
 			}
 		});
 		buttonRemoveOrderingColumn.setEnabled(false);
+		
+		createOrderingPopupMenu();
 
 		return group;
+	}
+	
+	/**
+	 * Create pop-up menu for ordering list
+	 */
+	private void createOrderingPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillOrderingContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(orderingList.getControl());
+		orderingList.getControl().setMenu(menu);
+	}
+	
+	/**
+	 * Fill context menu for ordering column list
+	 * 
+	 * @param mgr Menu manager
+	 */
+	private void fillOrderingContextMenu(final IMenuManager mgr)
+	{
+		final IStructuredSelection selection = (IStructuredSelection)orderingList.getSelection();
+		if (!selection.isEmpty())
+			mgr.add(actionRemoveOrderingColumn);
 	}
 	
 	/**
@@ -495,6 +709,24 @@ public class QueryBuilder extends Dialog
 			filterTree.setSelection(new StructuredSelection(condition), true);
 		}
 	}
+	
+	/**
+	 * Remove selected element from filter tree
+	 */
+	private void removeFilterTreeElement()
+	{
+		IStructuredSelection selection = (IStructuredSelection)filterTree.getSelection();
+		FilterTreeElement element = (FilterTreeElement)selection.getFirstElement();
+		if (selection.isEmpty() || (element.getType() == FilterTreeElement.ROOT))
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Only columns and filters can be deleted");
+			return;
+		}
+		
+		FilterTreeElement parent = element.getParent();
+		parent.removeChild(element);
+		filterTree.refresh();
+	}
 
 	/**
 	 * Get filter created by builder
@@ -540,6 +772,7 @@ public class QueryBuilder extends Dialog
 			ColumnFilter cf = buildColumnFilter(columns[i].getChilds()[0]);
 			filter.setColumnFilter(((LogColumn)columns[i].getObject()).getName(), cf);
 		}
+		filter.setOrderingColumns(new ArrayList<OrderingColumn>(orderingColumns));
 	}
 	
 	/**

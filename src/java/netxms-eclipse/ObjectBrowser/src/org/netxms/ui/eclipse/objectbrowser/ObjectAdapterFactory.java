@@ -8,8 +8,8 @@ import java.util.Iterator;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -43,46 +43,46 @@ public class ObjectAdapterFactory implements IAdapterFactory
 	{
 		if (adapterType == IWorkbenchAdapter.class)
 		{
-			if (adaptableObject instanceof NXCObject)
+			if (adaptableObject instanceof GenericObject)
 			{
 				return new IWorkbenchAdapter() {
 					@Override
 					public Object[] getChildren(Object o)
 					{
-						return ((NXCObject)o).getChildsAsArray();
+						return ((GenericObject)o).getChildsAsArray();
 					}
 
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
-						switch(((NXCObject)object).getObjectClass())
+						switch(((GenericObject)object).getObjectClass())
 						{
-							case NXCObject.OBJECT_NETWORK:
+							case GenericObject.OBJECT_NETWORK:
 								return Activator.getImageDescriptor("icons/network.png");
-							case NXCObject.OBJECT_SERVICEROOT:
+							case GenericObject.OBJECT_SERVICEROOT:
 								return Activator.getImageDescriptor("icons/service_root.png");
-							case NXCObject.OBJECT_CONTAINER:
+							case GenericObject.OBJECT_CONTAINER:
 								return Activator.getImageDescriptor("icons/container.png");
-							case NXCObject.OBJECT_SUBNET:
+							case GenericObject.OBJECT_SUBNET:
 								return Activator.getImageDescriptor("icons/subnet.png");
-							case NXCObject.OBJECT_NODE:
+							case GenericObject.OBJECT_NODE:
 								return Activator.getImageDescriptor("icons/node.png");
-							case NXCObject.OBJECT_INTERFACE:
+							case GenericObject.OBJECT_INTERFACE:
 								return Activator.getImageDescriptor("icons/interface.png");
-							case NXCObject.OBJECT_CONDITION:
+							case GenericObject.OBJECT_CONDITION:
 								return Activator.getImageDescriptor("icons/condition.png");
-							case NXCObject.OBJECT_TEMPLATEROOT:
+							case GenericObject.OBJECT_TEMPLATEROOT:
 								return Activator.getImageDescriptor("icons/template_root.png");
-							case NXCObject.OBJECT_TEMPLATEGROUP:
+							case GenericObject.OBJECT_TEMPLATEGROUP:
 								return Activator.getImageDescriptor("icons/template_group.png");
-							case NXCObject.OBJECT_TEMPLATE:
+							case GenericObject.OBJECT_TEMPLATE:
 								return Activator.getImageDescriptor("icons/template.png");
-							case NXCObject.OBJECT_POLICYROOT:
+							case GenericObject.OBJECT_POLICYROOT:
 								return Activator.getImageDescriptor("icons/policy_root.png");
-							case NXCObject.OBJECT_POLICYGROUP:
+							case GenericObject.OBJECT_POLICYGROUP:
 								return Activator.getImageDescriptor("icons/policy_group.png");
-							case NXCObject.OBJECT_AGENTPOLICY:
-							case NXCObject.OBJECT_AGENTPOLICY_CONFIG:
+							case GenericObject.OBJECT_AGENTPOLICY:
+							case GenericObject.OBJECT_AGENTPOLICY_CONFIG:
 								return Activator.getImageDescriptor("icons/policy.png");
 							default:
 								return null;
@@ -92,7 +92,7 @@ public class ObjectAdapterFactory implements IAdapterFactory
 					@Override
 					public String getLabel(Object o)
 					{
-						return ((NXCObject)o).getObjectName();
+						return ((GenericObject)o).getObjectName();
 					}
 
 					@Override
@@ -101,7 +101,7 @@ public class ObjectAdapterFactory implements IAdapterFactory
 						NXCSession session = NXMCSharedData.getInstance().getSession();
 						if (session != null)
 						{
-							Iterator<Long> it = ((NXCObject)o).getParents();
+							Iterator<Long> it = ((GenericObject)o).getParents();
 							return it.hasNext() ? session.findObjectById(it.next()) : null;
 						}
 						return null;

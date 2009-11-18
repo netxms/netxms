@@ -1,16 +1,17 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.NXCSession;
 
 /**
  * @author Victor
  *
  */
-public class NXCAgentPolicy extends NXCObject
+public class AgentPolicy extends GenericObject
 {
 	private int version;
 	private int policyType;
@@ -20,7 +21,7 @@ public class NXCAgentPolicy extends NXCObject
 	 * @param msg
 	 * @param session
 	 */
-	public NXCAgentPolicy(NXCPMessage msg, NXCSession session)
+	public AgentPolicy(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 		

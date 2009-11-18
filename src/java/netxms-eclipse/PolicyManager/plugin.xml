@@ -10,7 +10,7 @@
 	       class="org.netxms.ui.eclipse.policymanager.propertypages.Policy">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCAgentPolicy">
+                  value="org.netxms.client.objects.AgentPolicy">
              </instanceof>
           </enabledWhen>
         </page>
@@ -21,7 +21,7 @@
 	       class="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCAgentPolicyConfig">
+                  value="org.netxms.client.objects.AgentPolicyConfig">
              </instanceof>
           </enabledWhen>
         </page>
@@ -31,7 +31,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createPolicyGroup_NXCPolicyRoot"
-            objectClass="org.netxms.client.NXCPolicyRoot">
+            objectClass="org.netxms.client.objects.PolicyRoot">
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.CreatePolicyGroup"
                enablesFor="1"
@@ -43,7 +43,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createPolicyGroup_NXCPolicyGroup"
-            objectClass="org.netxms.client.NXCPolicyGroup">
+            objectClass="org.netxms.client.objects.PolicyGroup">
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.CreatePolicyGroup"
                enablesFor="1"
@@ -55,7 +55,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createAgentPolicyConfig_NXCPolicyRoot"
-            objectClass="org.netxms.client.NXCPolicyRoot">
+            objectClass="org.netxms.client.objects.PolicyRoot">
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.CreateAgentPolicyConfig"
                enablesFor="1"
@@ -67,7 +67,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createAgentPolicyConfig_NXCPolicyGroup"
-            objectClass="org.netxms.client.NXCPolicyGroup">
+            objectClass="org.netxms.client.objects.PolicyGroup">
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.CreateAgentPolicyConfig"
                enablesFor="1"
@@ -79,7 +79,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.uninstallPolicy"
-            objectClass="org.netxms.client.NXCAgentPolicy">
+            objectClass="org.netxms.client.objects.AgentPolicy">
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.UninstallPolicy"
                enablesFor="1"
@@ -91,7 +91,7 @@
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.deployPolicy"
-            objectClass="org.netxms.client.NXCAgentPolicy">
+            objectClass="org.netxms.client.objects.AgentPolicy">
          <action
                class="org.netxms.ui.eclipse.policymanager.actions.DeployPolicy"
                enablesFor="1"

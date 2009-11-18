@@ -17,7 +17,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.quickmaps.actions.popup.object.ip_neighbors"
-            objectClass="org.netxms.client.NXCNode">
+            objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPNeighbors"
                enablesFor="1"

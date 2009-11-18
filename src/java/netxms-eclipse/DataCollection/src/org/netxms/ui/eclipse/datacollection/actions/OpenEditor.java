@@ -12,9 +12,9 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.NXCNode;
-import org.netxms.client.NXCObject;
-import org.netxms.client.NXCTemplate;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 
 /**
@@ -24,7 +24,7 @@ import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 public class OpenEditor implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private NXCObject object;
+	private GenericObject object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -63,9 +63,9 @@ public class OpenEditor implements IObjectActionDelegate
 		if (selection instanceof IStructuredSelection)
 		{
 			Object element = ((IStructuredSelection)selection).getFirstElement();
-			if ((element instanceof NXCNode) || (element instanceof NXCTemplate))
+			if ((element instanceof Node) || (element instanceof Template))
 			{
-				object = (NXCObject)element;
+				object = (GenericObject)element;
 			}
 			else
 			{

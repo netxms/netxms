@@ -17,7 +17,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.datacollection.actions.popup.object.dceditor_NXCNode"
-            objectClass="org.netxms.client.NXCNode">
+            objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
                enablesFor="1"
@@ -29,7 +29,7 @@
       </objectContribution>
       <objectContribution
             id="org.netxms.ui.eclipse.datacollection.actions.popup.object.dceditor_NXCTemplate"
-            objectClass="org.netxms.client.NXCTemplate">
+            objectClass="org.netxms.client.objects.Template">
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
                enablesFor="1"

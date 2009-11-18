@@ -20,8 +20,8 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -47,11 +47,11 @@ public class ObjectSelectionDialog extends Dialog
 	public static Set<Integer> createNodeSelectionFilter()
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(5);
-		classFilter.add(NXCObject.OBJECT_NETWORK);
-		classFilter.add(NXCObject.OBJECT_SUBNET);
-		classFilter.add(NXCObject.OBJECT_SERVICEROOT);
-		classFilter.add(NXCObject.OBJECT_CONTAINER);
-		classFilter.add(NXCObject.OBJECT_NODE);
+		classFilter.add(GenericObject.OBJECT_NETWORK);
+		classFilter.add(GenericObject.OBJECT_SUBNET);
+		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
+		classFilter.add(GenericObject.OBJECT_CONTAINER);
+		classFilter.add(GenericObject.OBJECT_NODE);
 		return classFilter;
 	}
 
@@ -185,10 +185,10 @@ public class ObjectSelectionDialog extends Dialog
 	 * 
 	 * @return
 	 */
-	public NXCObject[] getCheckedObjects()
+	public GenericObject[] getCheckedObjects()
 	{
 		if (selectedObjects == null)
-			return new NXCObject[0];
+			return new GenericObject[0];
 
 		return NXMCSharedData.getInstance().getSession().findMultipleObjects(selectedObjects);
 	}
@@ -198,7 +198,7 @@ public class ObjectSelectionDialog extends Dialog
 	 * 
 	 * @return
 	 */
-	public NXCObject[] getAllCheckedObjects()
+	public GenericObject[] getAllCheckedObjects()
 	{
 		return getAllCheckedObjects(-1);
 	}
@@ -208,15 +208,15 @@ public class ObjectSelectionDialog extends Dialog
 	 * 
 	 * @return
 	 */
-	public NXCObject[] getAllCheckedObjects(int objectType)
+	public GenericObject[] getAllCheckedObjects(int objectType)
 	{
 		if (selectedObjects == null)
-			return new NXCObject[0];
+			return new GenericObject[0];
 
 		final NXCSession session = NXMCSharedData.getInstance().getSession();
 
-		final List<NXCObject> resuls = new ArrayList<NXCObject>();
-		final NXCObject[] objects = session.findMultipleObjects(selectedObjects);
+		final List<GenericObject> resuls = new ArrayList<GenericObject>();
+		final GenericObject[] objects = session.findMultipleObjects(selectedObjects);
 		for(int i = 0; i < objects.length; i++)
 		{
 			resuls.addAll(extractAllObjects(session, objects[i]));
@@ -224,21 +224,21 @@ public class ObjectSelectionDialog extends Dialog
 
 		if (objectType != -1)
 		{
-			final Iterator<NXCObject> it = resuls.iterator();
+			final Iterator<GenericObject> it = resuls.iterator();
 			while (it.hasNext()) {
-				final NXCObject next = it.next();
+				final GenericObject next = it.next();
 				if (next.getObjectClass() != objectType) {
 					it.remove();
 				}
 			}
 		}
 
-		return resuls.toArray(new NXCObject[] {});
+		return resuls.toArray(new GenericObject[] {});
 	}
 
-	private List<NXCObject> extractAllObjects(NXCSession session, NXCObject object)
+	private List<GenericObject> extractAllObjects(NXCSession session, GenericObject object)
 	{
-		final List<NXCObject> ret = new ArrayList<NXCObject>(0);
+		final List<GenericObject> ret = new ArrayList<GenericObject>(0);
 
 		ret.add(object);
 
@@ -246,7 +246,7 @@ public class ObjectSelectionDialog extends Dialog
 		while(it.hasNext())
 		{
 			final Long childId = it.next();
-			final NXCObject child = session.findObjectById(childId);
+			final GenericObject child = session.findObjectById(childId);
 			if (child != null)
 			{
 				ret.addAll(extractAllObjects(session, child));

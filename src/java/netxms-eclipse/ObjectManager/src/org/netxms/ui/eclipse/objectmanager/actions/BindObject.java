@@ -8,7 +8,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.netxms.client.*;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 
 public class BindObject implements IObjectActionDelegate
@@ -51,7 +52,7 @@ public class BindObject implements IObjectActionDelegate
 		if (selection instanceof IStructuredSelection)
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			action.setEnabled((obj instanceof NXCServiceRoot) || (obj instanceof NXCContainer));
+			action.setEnabled((obj instanceof ServiceRoot) || (obj instanceof Container));
 		}
 	}
 }

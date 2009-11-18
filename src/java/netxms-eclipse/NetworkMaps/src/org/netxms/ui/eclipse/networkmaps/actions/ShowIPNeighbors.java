@@ -12,7 +12,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.NXCNode;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.views.IPNeighbors;
 
 /**
@@ -22,7 +22,7 @@ import org.netxms.ui.eclipse.networkmaps.views.IPNeighbors;
 public class ShowIPNeighbors implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private NXCNode node;
+	private Node node;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -60,9 +60,9 @@ public class ShowIPNeighbors implements IObjectActionDelegate
 	{
 		Object obj;
 		if ((selection instanceof TreeSelection) &&
-			 ((obj = ((TreeSelection)selection).getFirstElement()) instanceof NXCNode))
+			 ((obj = ((TreeSelection)selection).getFirstElement()) instanceof Node))
 		{
-			node = (NXCNode)obj;
+			node = (Node)obj;
 		}
 		else
 		{

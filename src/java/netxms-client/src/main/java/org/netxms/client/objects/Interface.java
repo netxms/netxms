@@ -1,16 +1,17 @@
 /**
  *  NetXMS network interface object representation
  */
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import java.net.InetAddress;
 import org.netxms.base.*;
+import org.netxms.client.NXCSession;
 
 /**
  * @author Victor
  *
  */
-public class NXCInterface extends NXCObject
+public class Interface extends GenericObject
 {
 	private InetAddress subnetMask;
 	private int ifIndex;
@@ -21,7 +22,7 @@ public class NXCInterface extends NXCObject
 	/**
 	 * @param msg
 	 */
-	public NXCInterface(NXCPMessage msg, NXCSession session)
+	public Interface(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 		

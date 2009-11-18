@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -20,8 +20,8 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 public class ObjectTreeFilter extends ViewerFilter
 {
 	private String filterString = null;
-	private Map<Long, NXCObject> objectList = null;
-	private NXCObject lastMatch = null;
+	private Map<Long, GenericObject> objectList = null;
+	private GenericObject lastMatch = null;
 	private long[] rootObjects = null;
 	private Set<Integer> classFilter = null;
 	
@@ -46,21 +46,21 @@ public class ObjectTreeFilter extends ViewerFilter
 	{
 		if (classFilter != null)
 		{
-			if (!classFilter.contains(((NXCObject)element).getObjectClass()))
+			if (!classFilter.contains(((GenericObject)element).getObjectClass()))
 				return false;
 		}
 		
 		if (objectList == null)
 			return true;
 
-		boolean pass = objectList.containsKey(((NXCObject)element).getObjectId());
-		if (!pass && (((NXCObject)element).getNumberOfChilds() > 0))
+		boolean pass = objectList.containsKey(((GenericObject)element).getObjectId());
+		if (!pass && (((GenericObject)element).getNumberOfChilds() > 0))
 		{
-			Iterator<NXCObject> it = objectList.values().iterator();
+			Iterator<GenericObject> it = objectList.values().iterator();
 			while(it.hasNext())
 			{
-				NXCObject obj = it.next();
-				if (obj.isChildOf(((NXCObject)element).getObjectId()))
+				GenericObject obj = it.next();
+				if (obj.isChildOf(((GenericObject)element).getObjectId()))
 				{
 					pass = true;
 					break;
@@ -94,8 +94,8 @@ public class ObjectTreeFilter extends ViewerFilter
 		{
 			if (doFullSearch)
 			{
-				NXCObject[] fullList = NXMCSharedData.getInstance().getSession().getAllObjects();
-				objectList = new HashMap<Long, NXCObject>();
+				GenericObject[] fullList = NXMCSharedData.getInstance().getSession().getAllObjects();
+				objectList = new HashMap<Long, GenericObject>();
 				for(int i = 0; i < fullList.length; i++)
 					if ((fullList[i].getObjectName().toLowerCase().startsWith(filterString)) &&
 					    ((rootObjects == null) || fullList[i].isChildOf(rootObjects)))
@@ -107,10 +107,10 @@ public class ObjectTreeFilter extends ViewerFilter
 			else
 			{
 				lastMatch = null;
-				Iterator<NXCObject> it = objectList.values().iterator();
+				Iterator<GenericObject> it = objectList.values().iterator();
 				while(it.hasNext())
 				{
-					NXCObject obj = it.next();
+					GenericObject obj = it.next();
 					if (!obj.getObjectName().toLowerCase().startsWith(filterString))
 						it.remove();
 					else
@@ -129,7 +129,7 @@ public class ObjectTreeFilter extends ViewerFilter
 	 * Get last matched object
 	 * @return Last matched object
 	 */
-	public final NXCObject getLastMatch()
+	public final GenericObject getLastMatch()
 	{
 		return lastMatch;
 	}
@@ -137,10 +137,10 @@ public class ObjectTreeFilter extends ViewerFilter
 	/**
 	 * Get parent for given object
 	 */
-	public NXCObject getParent(final NXCObject childObject)
+	public GenericObject getParent(final GenericObject childObject)
 	{
-		NXCObject[] parents = childObject.getParentsAsArray();
-		for(NXCObject object : parents)
+		GenericObject[] parents = childObject.getParentsAsArray();
+		for(GenericObject object : parents)
 		{
 			if (object != null)
 			{

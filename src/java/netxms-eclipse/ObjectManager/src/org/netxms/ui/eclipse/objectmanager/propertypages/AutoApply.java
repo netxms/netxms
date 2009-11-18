@@ -22,7 +22,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
-import org.netxms.client.NXCTemplate;
+import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class AutoApply extends PropertyPage
 {
-	private NXCTemplate object;
+	private Template object;
 	private Button checkboxEnable;
 	private Text filterSource;
 	private boolean initialApplyFlag;
@@ -48,7 +48,7 @@ public class AutoApply extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (NXCTemplate)getElement().getAdapter(NXCTemplate.class);
+		object = (Template)getElement().getAdapter(Template.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		

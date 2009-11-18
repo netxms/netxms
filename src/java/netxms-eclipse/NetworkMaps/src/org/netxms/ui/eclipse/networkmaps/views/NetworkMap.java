@@ -23,10 +23,10 @@ import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
-import org.netxms.client.NXCNode;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -54,10 +54,10 @@ public abstract class NetworkMap extends ViewPart
 		@Override
 		public Object[] getConnectedTo(Object entity)
 		{
-			if (!(entity instanceof NXCObject) || (page == null))
+			if (!(entity instanceof GenericObject) || (page == null))
 				return null;
 			
-			return page.getConnectedObjects(((NXCObject)entity).getObjectId(), session);
+			return page.getConnectedObjects(((GenericObject)entity).getObjectId(), session);
 		}
 
 		@Override
@@ -86,8 +86,8 @@ public abstract class NetworkMap extends ViewPart
 		@Override
 		public String getText(Object element)
 		{
-			if (element instanceof NXCObject)
-				return ((NXCObject)element).getObjectName();
+			if (element instanceof GenericObject)
+				return ((GenericObject)element).getObjectName();
 			return null;
 		}
 
@@ -97,8 +97,8 @@ public abstract class NetworkMap extends ViewPart
 		@Override
 		public Image getImage(Object element)
 		{
-			if (element instanceof NXCObject)
-				return ((NXCObject)element).getObjectClass() == NXCObject.OBJECT_NODE ? imgNode : imgSubnet;
+			if (element instanceof GenericObject)
+				return ((GenericObject)element).getObjectClass() == GenericObject.OBJECT_NODE ? imgNode : imgSubnet;
 			return null;
 		}
 
@@ -109,12 +109,12 @@ public abstract class NetworkMap extends ViewPart
 		public IFigure getFigure(Object element)
 		{
 			return null;
-			//return new ObjectFigure((NXCObject)element);
+			//return new ObjectFigure((GenericObject)element);
 		}
 	}
 	
 	protected NXCSession session;
-	protected NXCNode node;
+	protected Node node;
 	protected NetworkMapPage mapPage;
 	protected GraphViewer viewer;
 	protected Image imgNode;
@@ -136,8 +136,8 @@ public abstract class NetworkMap extends ViewPart
 		super.init(site);
 
 		session = NXMCSharedData.getInstance().getSession();
-		NXCObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		node = ((obj != null) && (obj instanceof NXCNode)) ? (NXCNode)obj : null;
+		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
+		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
 	
 		buildMapPage();
 	}

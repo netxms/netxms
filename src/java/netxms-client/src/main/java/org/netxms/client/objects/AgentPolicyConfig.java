@@ -1,16 +1,17 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.NXCSession;
 
 /**
  * @author Victor
  *
  */
-public class NXCAgentPolicyConfig extends NXCAgentPolicy
+public class AgentPolicyConfig extends AgentPolicy
 {
 	private String fileName;
 	private String fileContent;
@@ -19,7 +20,7 @@ public class NXCAgentPolicyConfig extends NXCAgentPolicy
 	 * @param msg
 	 * @param session
 	 */
-	public NXCAgentPolicyConfig(NXCPMessage msg, NXCSession session)
+	public AgentPolicyConfig(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 		fileName = msg.getVariableAsString(NXCPCodes.VID_CONFIG_FILE_NAME);

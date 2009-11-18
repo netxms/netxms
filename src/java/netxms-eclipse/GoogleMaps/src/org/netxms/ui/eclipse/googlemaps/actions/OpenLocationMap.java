@@ -9,13 +9,13 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.googlemaps.views.LocationMap;
 
 public class OpenLocationMap implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private NXCObject object;
+	private GenericObject object;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -53,9 +53,9 @@ public class OpenLocationMap implements IObjectActionDelegate
 	{
 		Object obj;
 		if ((selection instanceof IStructuredSelection) &&
-			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof NXCObject))
+			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof GenericObject))
 		{
-			object = (NXCObject)obj;
+			object = (GenericObject)obj;
 		}
 		else
 		{

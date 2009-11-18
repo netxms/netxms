@@ -51,7 +51,7 @@
      point="org.eclipse.core.runtime.adapters">
         <factory 
            class="org.netxms.ui.eclipse.objectbrowser.ObjectAdapterFactory" 
-           adaptableType="org.netxms.client.NXCObject">
+           adaptableType="org.netxms.client.objects.GenericObject">
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
         </factory>
   </extension>
@@ -65,7 +65,7 @@
           lightweight= "false"
           class="org.netxms.ui.eclipse.objectbrowser.ObjectDecorator">
          <enablement>
-           <objectClass name="org.netxms.client.NXCObject"/>
+           <objectClass name="org.netxms.client.objects.GenericObject"/>
          </enablement>
     </decorator>
   </extension>

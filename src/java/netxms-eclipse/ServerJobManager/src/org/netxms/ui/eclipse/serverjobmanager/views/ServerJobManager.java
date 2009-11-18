@@ -39,10 +39,10 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCServerJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
@@ -119,7 +119,7 @@ public class ServerJobManager extends ViewPart
 					case COLUMN_STATUS:
 						return statusTexts.get(((NXCServerJob)obj).getStatus());
 					case COLUMN_NODE:
-						NXCObject object = session.findObjectById(((NXCServerJob)obj).getNodeId());
+						GenericObject object = session.findObjectById(((NXCServerJob)obj).getNodeId());
 						return (object != null) ? object.getObjectName() : "<unknown>";
 					case COLUMN_DESCRIPTION:
 						return ((NXCServerJob)obj).getDescription();
@@ -182,8 +182,8 @@ public class ServerJobManager extends ViewPart
 					result = ((NXCServerJob)e1).getStatus() - ((NXCServerJob)e2).getStatus();
 					break;
 				case COLUMN_NODE:
-					NXCObject object1 = session.findObjectById(((NXCServerJob)e1).getNodeId());
-					NXCObject object2 = session.findObjectById(((NXCServerJob)e2).getNodeId());
+					GenericObject object1 = session.findObjectById(((NXCServerJob)e1).getNodeId());
+					GenericObject object2 = session.findObjectById(((NXCServerJob)e2).getNodeId());
 					String name1 = (object1 != null) ? object1.getObjectName() : "<unknown>";
 					String name2 = (object2 != null) ? object2.getObjectName() : "<unknown>";
 					result = name1.compareToIgnoreCase(name2);

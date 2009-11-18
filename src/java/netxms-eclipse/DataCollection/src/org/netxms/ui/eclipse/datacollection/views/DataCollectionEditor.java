@@ -37,12 +37,12 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCNode;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCTemplate;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.DciComparator;
 import org.netxms.ui.eclipse.datacollection.DciLabelProvider;
@@ -72,7 +72,7 @@ public class DataCollectionEditor extends ViewPart
 
 	private TableViewer viewer;
 	private NXCSession session;
-	private NXCObject object;
+	private GenericObject object;
 	private DataCollectionConfiguration dciConfig = null;
 	private Action actionCreate;
 	private Action actionEdit;
@@ -94,8 +94,8 @@ public class DataCollectionEditor extends ViewPart
 		super.init(site);
 		
 		session = NXMCSharedData.getInstance().getSession();
-		NXCObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		object = ((obj != null) && ((obj instanceof NXCNode) || (obj instanceof NXCTemplate))) ? obj : null;
+		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
+		object = ((obj != null) && ((obj instanceof Node) || (obj instanceof Template))) ? obj : null;
 		setPartName("Data Collection Configuration - " + ((object != null) ? object.getObjectName() : "<error>"));
 	}
 

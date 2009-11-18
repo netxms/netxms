@@ -11,7 +11,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 
 /**
  * @author Victor
@@ -21,7 +21,7 @@ public class ObjectFigure extends Figure
 {
 	private static final Dimension corner = new Dimension(8, 8);
 
-	private NXCObject object;
+	private GenericObject object;
 	private boolean selected = false;
 	private Color bkColorNormal = new Color(null, 255, 255, 255);
 	private Color bkColorSelected = new Color(null, 0, 0, 255);
@@ -32,7 +32,7 @@ public class ObjectFigure extends Figure
 	 * Create new object figure
 	 * @param element
 	 */
-	public ObjectFigure(NXCObject object)
+	public ObjectFigure(GenericObject object)
 	{
 		super();
 		this.object = object;

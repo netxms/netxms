@@ -1,21 +1,22 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.NXCSession;
 
 /**
  * @author Victor
  *
  */
-public class NXCPolicyGroup extends NXCObject
+public class PolicyRoot extends GenericObject
 {
 	/**
 	 * @param msg Message to create object from
 	 * @param session Associated client session
 	 */
-	public NXCPolicyGroup(NXCPMessage msg, NXCSession session)
+	public PolicyRoot(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 	}
@@ -26,6 +27,6 @@ public class NXCPolicyGroup extends NXCObject
 	@Override
 	public String getObjectClassName()
 	{
-		return "PolicyGroup";
+		return "PolicyRoot";
 	}
 }

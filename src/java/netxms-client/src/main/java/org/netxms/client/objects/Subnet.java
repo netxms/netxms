@@ -1,24 +1,25 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import java.net.InetAddress;
 import org.netxms.base.*;
+import org.netxms.client.NXCSession;
 
 
 /**
  * @author victor
  *
  */
-public class NXCSubnet extends NXCObject
+public class Subnet extends GenericObject
 {
 	private InetAddress subnetMask;
 
 	/**
 	 * @param msg
 	 */
-	public NXCSubnet(NXCPMessage msg, NXCSession session)
+	public Subnet(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 		

@@ -1,9 +1,10 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import org.netxms.base.*;
+import org.netxms.client.NXCSession;
 
 /**
  * This class represents NetXMS NODE objects.
@@ -11,7 +12,7 @@ import org.netxms.base.*;
  * @author Victor
  *
  */
-public class NXCNode extends NXCObject
+public class Node extends GenericObject
 {
 	public static final int SNMP_VERSION_1 = 0;
 	public static final int SNMP_VERSION_2C = 1;
@@ -45,7 +46,7 @@ public class NXCNode extends NXCObject
 	/**
 	 * @param msg
 	 */
-	public NXCNode(NXCPMessage msg, NXCSession session)
+	public Node(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 

@@ -14,8 +14,8 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCNode;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.dialogs.EnterIpAddressDialog;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -23,7 +23,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 public class ChangeIpAddress implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private NXCNode node;
+	private Node node;
 
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
@@ -72,9 +72,9 @@ public class ChangeIpAddress implements IObjectActionDelegate
 		if (selection instanceof IStructuredSelection)
 		{
 			final Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof NXCNode)
+			if (obj instanceof Node)
 			{
-				node = (NXCNode)obj;
+				node = (Node)obj;
 			}
 			else
 			{

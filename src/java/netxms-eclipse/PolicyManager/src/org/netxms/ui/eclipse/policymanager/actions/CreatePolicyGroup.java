@@ -15,10 +15,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCObjectCreationData;
-import org.netxms.client.NXCPolicyGroup;
-import org.netxms.client.NXCPolicyRoot;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.PolicyGroup;
+import org.netxms.client.objects.PolicyRoot;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 public class CreatePolicyGroup implements IObjectActionDelegate
 {
 	private Shell shell;
-	private NXCObject currentObject;
+	private GenericObject currentObject;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -57,7 +57,7 @@ public class CreatePolicyGroup implements IObjectActionDelegate
 					IStatus status;
 					try
 					{
-						NXCObjectCreationData cd = new NXCObjectCreationData(NXCObject.OBJECT_POLICYGROUP, dlg.getObjectName(), currentObject.getObjectId());
+						NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_POLICYGROUP, dlg.getObjectName(), currentObject.getObjectId());
 						NXMCSharedData.getInstance().getSession().createObject(cd);
 						status = Status.OK_STATUS;
 					}
@@ -81,8 +81,8 @@ public class CreatePolicyGroup implements IObjectActionDelegate
 	{
 		if (selection instanceof TreeSelection)
 		{
-			currentObject = (NXCObject)((TreeSelection)selection).getFirstElement();
-			action.setEnabled((currentObject instanceof NXCPolicyRoot) || (currentObject instanceof NXCPolicyGroup));
+			currentObject = (GenericObject)((TreeSelection)selection).getFirstElement();
+			action.setEnabled((currentObject instanceof PolicyRoot) || (currentObject instanceof PolicyGroup));
 		}
 	}
 }

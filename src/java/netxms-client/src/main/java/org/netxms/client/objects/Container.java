@@ -1,15 +1,16 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import org.netxms.base.*;
+import org.netxms.client.NXCSession;
 
 /**
  * @author Victor
  *
  */
-public class NXCContainer extends NXCObject
+public class Container extends GenericObject
 {
 	private int category;
 	private boolean autoBindEnabled;
@@ -18,7 +19,7 @@ public class NXCContainer extends NXCObject
 	/**
 	 * @param msg
 	 */
-	public NXCContainer(NXCPMessage msg, NXCSession session)
+	public Container(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 		category = msg.getVariableAsInteger(NXCPCodes.VID_CATEGORY);

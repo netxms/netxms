@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -41,6 +42,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.client.NXCAccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.log.Log;
@@ -102,6 +104,9 @@ public class LogViewer extends ViewPart
 			this.setTitleImage(titleImage);
 		}
 		filter = new LogFilter();
+
+		// Initiate loading of user manager plugin if it was not loaded before
+		Platform.getAdapterManager().loadAdapter(new NXCAccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
 	}
 	
 	/* (non-Javadoc)

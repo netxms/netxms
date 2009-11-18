@@ -8,9 +8,9 @@ import java.text.DateFormat;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NXCObject;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
@@ -76,7 +76,7 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			case AlarmList.COLUMN_STATE:
 				return stateText[((Alarm)element).getState()];
 			case AlarmList.COLUMN_SOURCE:
-				NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((Alarm)element).getSourceObjectId());
+				GenericObject object = NXMCSharedData.getInstance().getSession().findObjectById(((Alarm)element).getSourceObjectId());
 				return (object != null) ? object.getObjectName() : null;
 			case AlarmList.COLUMN_MESSAGE:
 				return ((Alarm)element).getMessage();

@@ -31,9 +31,9 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCAccessListElement;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCUserDBObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectmanager.AccessListComparator;
 import org.netxms.ui.eclipse.objectmanager.AccessListLabelProvider;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -48,7 +48,7 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
  */
 public class AccessControl extends PropertyPage
 {
-	private NXCObject object;
+	private GenericObject object;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
 	private HashMap<Long, NXCAccessListElement> acl;
@@ -59,7 +59,7 @@ public class AccessControl extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		object = (NXCObject)getElement().getAdapter(NXCObject.class);
+		object = (GenericObject)getElement().getAdapter(GenericObject.class);
 		
 		NXCAccessListElement[] origAcl = object.getAccessList();
 		acl = new HashMap<Long, NXCAccessListElement>(origAcl.length);

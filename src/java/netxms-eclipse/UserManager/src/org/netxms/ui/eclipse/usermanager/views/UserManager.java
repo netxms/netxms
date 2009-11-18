@@ -333,7 +333,7 @@ public class UserManager extends ViewPart
 	}
 
 	/**
-	 * Create pop-up menu for variable list
+	 * Create pop-up menu for user list
 	 */
 	private void createPopupMenu()
 	{

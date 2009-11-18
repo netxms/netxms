@@ -23,9 +23,9 @@ import java.util.HashMap;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
@@ -116,7 +116,7 @@ public class DciLabelProvider implements ITableLabelProvider
 			case DataCollectionEditor.COLUMN_TEMPLATE:
 				if (dci.getTemplateId() == 0)
 					return null;
-				NXCObject object = session.findObjectById(dci.getTemplateId());
+				GenericObject object = session.findObjectById(dci.getTemplateId());
 				return (object != null) ? object.getObjectName() : "<unknown>";
 		}
 		return null;

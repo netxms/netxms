@@ -22,8 +22,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
 
 /**
  * Represents single map page (submap)
@@ -132,9 +132,9 @@ public class NetworkMapPage
 	 * @param session Client session which should be used for object lookup
 	 * @return NetXMS objects
 	 */
-	public NXCObject[] getResolvedObjects(NXCSession session)
+	public GenericObject[] getResolvedObjects(NXCSession session)
 	{
-		NXCObject[] list = new NXCObject[objects.size()];
+		GenericObject[] list = new GenericObject[objects.size()];
 		
 		Iterator<NetworkMapObjectData> it = objects.iterator();
 		for(int i = 0; it.hasNext(); i++)
@@ -153,9 +153,9 @@ public class NetworkMapPage
 	 * @param session Client session which should be used for object lookup
 	 * @return All objects connected to given object
 	 */
-	public NXCObject[] getConnectedObjects(long root, NXCSession session)
+	public GenericObject[] getConnectedObjects(long root, NXCSession session)
 	{
-		Set<NXCObject> result = new HashSet<NXCObject>(0);
+		Set<GenericObject> result = new HashSet<GenericObject>(0);
 		
 		Iterator<NetworkMapObjectLink> it = links.iterator();
 		while(it.hasNext())
@@ -164,18 +164,18 @@ public class NetworkMapPage
 			if (link.getObject1() == root)
 			{
 				long id = link.getObject2();
-				NXCObject object = session.findObjectById(id);
+				GenericObject object = session.findObjectById(id);
 				if (object != null)
 					result.add(object);
 			}
 			else if (link.getObject1() == root)
 			{
 				long id = link.getObject1();
-				NXCObject object = session.findObjectById(id);
+				GenericObject object = session.findObjectById(id);
 				if (object != null)
 					result.add(object);
 			}
 		}
-		return result.toArray(new NXCObject[result.size()]);
+		return result.toArray(new GenericObject[result.size()]);
 	}
 }

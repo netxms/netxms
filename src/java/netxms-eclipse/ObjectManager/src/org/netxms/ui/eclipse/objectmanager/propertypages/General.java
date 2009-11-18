@@ -15,7 +15,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -28,7 +28,7 @@ public class General extends PropertyPage
 {
 	private Text textName;
 	private String initialName;
-	private NXCObject object;
+	private GenericObject object;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -38,7 +38,7 @@ public class General extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (NXCObject)getElement().getAdapter(NXCObject.class);
+		object = (GenericObject)getElement().getAdapter(GenericObject.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		

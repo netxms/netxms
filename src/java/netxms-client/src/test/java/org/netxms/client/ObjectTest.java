@@ -20,6 +20,8 @@ package org.netxms.client;
 
 import java.net.InetAddress;
 
+import org.netxms.client.objects.GenericObject;
+
 /**
  * @author Victor
  *
@@ -31,7 +33,7 @@ public class ObjectTest extends SessionTest
 		final NXCSession session = connect();
 		
 		session.syncObjects();
-		final NXCObject obj = session.findObjectById(1);
+		final GenericObject obj = session.findObjectById(1);
 		assertEquals(true, obj != null);
 		assertEquals(1, obj.getObjectId());
 		assertEquals("Entire Network", obj.getObjectName());
@@ -45,7 +47,7 @@ public class ObjectTest extends SessionTest
 		
 		session.syncObjects();
 		
-		NXCObject object = session.findObjectById(2);
+		GenericObject object = session.findObjectById(2);
 		assertEquals(false, object.isChildOf(1));
 		
 		object = session.findObjectById(12);
@@ -60,7 +62,7 @@ public class ObjectTest extends SessionTest
 		
 		session.syncObjects();
 		
-		NXCObject object = session.findObjectById(1);
+		GenericObject object = session.findObjectById(1);
 		assertNotNull(object);
 		
 		session.setObjectName(1, "test name");
@@ -84,10 +86,10 @@ public class ObjectTest extends SessionTest
 		
 		session.syncObjects();
 		
-		NXCObject object = session.findObjectById(2);
+		GenericObject object = session.findObjectById(2);
 		assertNotNull(object);
 		
-		NXCObjectCreationData cd = new NXCObjectCreationData(NXCObject.OBJECT_NODE, "TestNode", 2);
+		NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODE, "TestNode", 2);
 		cd.setCreationFlags(NXCObjectCreationData.CF_CREATE_UNMANAGED);
 		cd.setIpAddress(InetAddress.getByName("192.168.10.1"));
 		long id = session.createObject(cd);

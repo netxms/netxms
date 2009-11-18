@@ -30,8 +30,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCObject;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -168,7 +168,7 @@ public class General extends PropertyPage
       fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       proxyNode.setLayoutData(fd);
-      proxyNode.setObjectClass(NXCObject.OBJECT_NODE);
+      proxyNode.setObjectClass(GenericObject.OBJECT_NODE);
       proxyNode.setObjectId(dci.getProxyNode());
       proxyNode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
       

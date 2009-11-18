@@ -17,7 +17,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.objectview.actions.popup.object.lastvalues"
-            objectClass="org.netxms.client.NXCNode">
+            objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.objectview.actions.ShowLastValues"
                enablesFor="1"

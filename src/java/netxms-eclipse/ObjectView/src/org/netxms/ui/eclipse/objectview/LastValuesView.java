@@ -38,9 +38,9 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCNode;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 
@@ -59,11 +59,11 @@ public class LastValuesView extends Composite
 	public static final int COLUMN_TIMESTAMP = 3;
 	
 	private final ViewPart viewPart;
-	private final NXCNode node;
+	private final Node node;
 	private NXCSession session;
 	private TableViewer dataViewer;
 	
-	public LastValuesView(ViewPart viewPart, Composite parent, int style, NXCNode _node)
+	public LastValuesView(ViewPart viewPart, Composite parent, int style, Node _node)
 	{
 		super(parent, style);
 		session = NXMCSharedData.getInstance().getSession();

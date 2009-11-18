@@ -2,7 +2,7 @@
  * Generic NetXMS object class 
  */
 
-package org.netxms.client;
+package org.netxms.client.objects;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -11,8 +11,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.net.InetAddress;
 import org.netxms.base.*;
+import org.netxms.client.GeoLocation;
+import org.netxms.client.NXCAccessListElement;
+import org.netxms.client.NXCSession;
 
-public class NXCObject
+public class GenericObject
 {
 	// Object classes
 	public static final int OBJECT_GENERIC            = 0;
@@ -73,7 +76,7 @@ public class NXCObject
 	 * @param session Associated client session
 	 */
 	
-	NXCObject(final NXCPMessage msg, final NXCSession session)
+	public GenericObject(final NXCPMessage msg, final NXCSession session)
 	{
 		int i, count;
 		long id, id2;
@@ -241,7 +244,7 @@ public class NXCObject
 					rc = true;
 					break;
 				}
-				NXCObject object = session.findObjectById(id);
+				GenericObject object = session.findObjectById(id);
 				if (object != null)
 				{
 					if (object.isChildOf(objectId))
@@ -296,12 +299,12 @@ public class NXCObject
 	/**
 	 * @return List of parent objects
 	 */
-	public NXCObject[] getParentsAsArray()
+	public GenericObject[] getParentsAsArray()
 	{
-		final NXCObject[] list;
+		final GenericObject[] list;
 		synchronized(parents)
 		{
-			list = new NXCObject[parents.size()];
+			list = new GenericObject[parents.size()];
 			final Iterator<Long> it = parents.iterator();
 			for(int i = 0; it.hasNext(); i++)
 			{
@@ -314,12 +317,12 @@ public class NXCObject
 	/**
 	 * @return List of child objects
 	 */
-	public NXCObject[] getChildsAsArray()
+	public GenericObject[] getChildsAsArray()
 	{
-		final NXCObject[] list;
+		final GenericObject[] list;
 		synchronized(childs)
 		{
-			list = new NXCObject[childs.size()];
+			list = new GenericObject[childs.size()];
 			final Iterator<Long> it = childs.iterator();
 			for(int i = 0; it.hasNext(); i++)
 			{
@@ -332,12 +335,12 @@ public class NXCObject
 	/**
 	 * @return List of trusted nodes
 	 */
-	public NXCObject[] getTrustedNodes()
+	public GenericObject[] getTrustedNodes()
 	{
-		final NXCObject[] list;
+		final GenericObject[] list;
 		synchronized(trustedNodes)
 		{
-			list = new NXCObject[trustedNodes.size()];
+			list = new GenericObject[trustedNodes.size()];
 			final Iterator<Long> it = trustedNodes.iterator();
 			for(int i = 0; it.hasNext(); i++)
 			{

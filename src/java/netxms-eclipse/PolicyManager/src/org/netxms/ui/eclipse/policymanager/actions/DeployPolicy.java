@@ -14,10 +14,10 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.netxms.client.NXCAgentPolicy;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -29,7 +29,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 public class DeployPolicy implements IObjectActionDelegate
 {
 	private Shell shell;
-	private NXCObject currentObject;
+	private GenericObject currentObject;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -65,7 +65,7 @@ public class DeployPolicy implements IObjectActionDelegate
 					try
 					{
 						NXCSession session = NXMCSharedData.getInstance().getSession();
-						NXCObject[] nodeList = dlg.getAllCheckedObjects(NXCObject.OBJECT_NODE);
+						GenericObject[] nodeList = dlg.getAllCheckedObjects(GenericObject.OBJECT_NODE);
 						for(int i = 0; i < nodeList.length; i++)
 							session.deployAgentPolicy(currentObject.getObjectId(), nodeList[i].getObjectId());
 						status = Status.OK_STATUS;
@@ -90,8 +90,8 @@ public class DeployPolicy implements IObjectActionDelegate
 	{
 		if (selection instanceof TreeSelection)
 		{
-			currentObject = (NXCObject)((TreeSelection)selection).getFirstElement();
-			action.setEnabled(currentObject instanceof NXCAgentPolicy);
+			currentObject = (GenericObject)((TreeSelection)selection).getFirstElement();
+			action.setEnabled(currentObject instanceof AgentPolicy);
 		}
 	}
 }

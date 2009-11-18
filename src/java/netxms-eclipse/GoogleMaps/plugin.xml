@@ -17,7 +17,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.googlemaps.actions.popup.object.showmap_NXCNode"
-            objectClass="org.netxms.client.NXCNode">
+            objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.googlemaps.actions.OpenLocationMap"
                enablesFor="1"

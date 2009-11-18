@@ -27,10 +27,13 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NXCObject;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
+import org.netxms.client.NXCUserDBObject;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 
@@ -43,6 +46,7 @@ public class LogLabelProvider implements ITableLabelProvider
 	private LogColumn[] columns;
 	private NXCSession session;
 	private Image[] statusImages;
+	private WorkbenchLabelProvider wbLabelProvider;
 	
 	public LogLabelProvider(Log logHandle)
 	{
@@ -56,6 +60,8 @@ public class LogLabelProvider implements ITableLabelProvider
 			ImageDescriptor d = StatusDisplayInfo.getStatusImageDescriptor(i);
 			statusImages[i] = (d != null) ? d.createImage() : null;
 		}
+		
+		wbLabelProvider = new WorkbenchLabelProvider();
 	}
 	
 	/* (non-Javadoc)
@@ -73,6 +79,28 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					int severity = Integer.parseInt(value);
 					return statusImages[severity];
+				}
+				catch(NumberFormatException e)
+				{
+					return null;
+				}
+			case LogColumn.LC_OBJECT_ID:
+				try
+				{
+					long id = Long.parseLong(value);
+					GenericObject object = session.findObjectById(id);
+					return (object != null) ? wbLabelProvider.getImage(object) : null;
+				}
+				catch(NumberFormatException e)
+				{
+					return null;
+				}
+			case LogColumn.LC_USER_ID:
+				try
+				{
+					long id = Long.parseLong(value);
+					NXCUserDBObject user = session.findUserDBObjectById(id);
+					return (user != null) ? wbLabelProvider.getImage(user) : null;
 				}
 				catch(NumberFormatException e)
 				{
@@ -110,7 +138,7 @@ public class LogLabelProvider implements ITableLabelProvider
 					long id = Long.parseLong(value);
 					if (id == 0)
 						return "";
-					NXCObject object = session.findObjectById(id);
+					GenericObject object = session.findObjectById(id);
 					return (object != null) ? object.getObjectName() : "<unknown>";
 				}
 				catch(NumberFormatException e)
@@ -127,6 +155,28 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					return "<error>";
 				}
+			case LogColumn.LC_USER_ID:
+				try
+				{
+					long id = Long.parseLong(value);
+					NXCUserDBObject user = session.findUserDBObjectById(id);
+					return (user != null) ? wbLabelProvider.getText(user) : null;
+				}
+				catch(NumberFormatException e)
+				{
+					return null;
+				}
+			case LogColumn.LC_EVENT_CODE:
+				try
+				{
+					long code = Long.parseLong(value);
+					EventTemplate evt = session.findEventTemplateByCode(code);
+					return (evt != null) ? evt.getName() : null;
+				}
+				catch(NumberFormatException e)
+				{
+					return null;
+				}
 			default:
 				return value;
 		}
@@ -138,8 +188,6 @@ public class LogLabelProvider implements ITableLabelProvider
 	@Override
 	public void addListener(ILabelProviderListener listener)
 	{
-		// TODO Auto-generated method stub
-
 	}
 
 	/* (non-Javadoc)
@@ -159,7 +207,6 @@ public class LogLabelProvider implements ITableLabelProvider
 	@Override
 	public boolean isLabelProperty(Object element, String property)
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -169,8 +216,5 @@ public class LogLabelProvider implements ITableLabelProvider
 	@Override
 	public void removeListener(ILabelProviderListener listener)
 	{
-		// TODO Auto-generated method stub
-
 	}
-
 }

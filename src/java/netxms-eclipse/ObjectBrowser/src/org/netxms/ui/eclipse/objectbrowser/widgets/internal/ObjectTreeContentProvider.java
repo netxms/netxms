@@ -7,7 +7,8 @@ import java.util.Iterator;
 
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.netxms.client.*;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
 
 /**
  * @author Victor
@@ -30,7 +31,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object[] getChildren(Object parentElement)
 	{
-		return ((NXCObject)parentElement).getChildsAsArray();
+		return ((GenericObject)parentElement).getChildsAsArray();
 	}
 
 	/* (non-Javadoc)
@@ -43,7 +44,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		{
 			return (rootObjects != null) ? session.findMultipleObjects(rootObjects) : session.getTopLevelObjects();
 		}
-		return new NXCObject[0];
+		return new GenericObject[0];
 	}
 
 	/* (non-Javadoc)
@@ -55,7 +56,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		if (session == null)
 			return null;
 		
-		Iterator<Long> it = ((NXCObject)element).getParents();
+		Iterator<Long> it = ((GenericObject)element).getParents();
 		return it.hasNext() ? session.findObjectById(it.next()) : null;
 	}
 
@@ -65,7 +66,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public boolean hasChildren(Object element)
 	{
-		return ((NXCObject)element).getNumberOfChilds() > 0;
+		return ((GenericObject)element).getNumberOfChilds() > 0;
 	}
 
 	/* (non-Javadoc)

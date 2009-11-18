@@ -9,7 +9,7 @@ import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 
 /**
  * @author Victor
@@ -43,7 +43,7 @@ public class ObjectDecorator implements ILabelDecorator
 	@Override
 	public Image decorateImage(Image image, Object element)
 	{
-		int status = ((NXCObject)element).getStatus();
+		int status = ((GenericObject)element).getStatus();
 		if (statusImages[status] == null)
 			return null;
 		DecorationOverlayIcon overlay = new DecorationOverlayIcon(image, statusImages[status], IDecoration.BOTTOM_RIGHT);

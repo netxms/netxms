@@ -39,7 +39,7 @@ public class GeoLocation
 	 * Create geolocation object from NXCP message
 	 * @param msg NXCP message
 	 */
-	protected GeoLocation(final NXCPMessage msg)
+	public GeoLocation(final NXCPMessage msg)
 	{
 		type = msg.getVariableAsInteger(NXCPCodes.VID_GEOLOCATION_TYPE);
 		latitude = msg.getVariableAsReal(NXCPCodes.VID_LATITUDE);

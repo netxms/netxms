@@ -5,7 +5,7 @@ package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.netxms.client.NXCObject;
+import org.netxms.client.objects.GenericObject;
 
 /**
  * @author Victor
@@ -23,11 +23,11 @@ public class ObjectTreeComparator extends ViewerComparator
 	@Override
 	public int category(Object element)
 	{
-		if (((NXCObject)element).getObjectId() < 10)
-			return (int)((NXCObject)element).getObjectId();
-		if ((((NXCObject)element).getObjectClass() == NXCObject.OBJECT_CONTAINER) ||
-		    (((NXCObject)element).getObjectClass() == NXCObject.OBJECT_TEMPLATEGROUP) ||
-		    (((NXCObject)element).getObjectClass() == NXCObject.OBJECT_POLICYGROUP))
+		if (((GenericObject)element).getObjectId() < 10)
+			return (int)((GenericObject)element).getObjectId();
+		if ((((GenericObject)element).getObjectClass() == GenericObject.OBJECT_CONTAINER) ||
+		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_TEMPLATEGROUP) ||
+		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_POLICYGROUP))
 			return CATEGORY_CONTAINER;
 		return CATEGORY_OTHER;
 	}

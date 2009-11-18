@@ -55,10 +55,23 @@ import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.internal.jobs.ResyncEventTemplatesThread;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.NetworkMapObjectData;
 import org.netxms.client.maps.NetworkMapObjectLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.objects.AgentPolicy;
+import org.netxms.client.objects.AgentPolicyConfig;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.PolicyGroup;
+import org.netxms.client.objects.PolicyRoot;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
 
 /**
  * @author victor
@@ -140,10 +153,14 @@ public class NXCSession
 	private byte[] serverChallenge = new byte[CLIENT_CHALLENGE_SIZE];
 
 	// Objects
-	private Map<Long, NXCObject> objectList = new HashMap<Long, NXCObject>();
+	private Map<Long, GenericObject> objectList = new HashMap<Long, GenericObject>();
 
 	// Users
 	private Map<Long, NXCUserDBObject> userDB = new HashMap<Long, NXCUserDBObject>();
+	
+	// Event templates
+	private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
+	private boolean eventTemplatesNeedSync = false;
 
 	/**
 	 * Create object from message
@@ -152,48 +169,48 @@ public class NXCSession
 	 *           Source NXCP message
 	 * @return NetXMS object
 	 */
-	private NXCObject createObjectFromMessage(NXCPMessage msg)
+	private GenericObject createObjectFromMessage(NXCPMessage msg)
 	{
 		final int objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
-		NXCObject object;
+		GenericObject object;
 
 		switch(objectClass)
 		{
-			case NXCObject.OBJECT_INTERFACE:
-				object = new NXCInterface(msg, this);
+			case GenericObject.OBJECT_INTERFACE:
+				object = new Interface(msg, this);
 				break;
-			case NXCObject.OBJECT_SUBNET:
-				object = new NXCSubnet(msg, this);
+			case GenericObject.OBJECT_SUBNET:
+				object = new Subnet(msg, this);
 				break;
-			case NXCObject.OBJECT_CONTAINER:
-				object = new NXCContainer(msg, this);
+			case GenericObject.OBJECT_CONTAINER:
+				object = new Container(msg, this);
 				break;
-			case NXCObject.OBJECT_NODE:
-				object = new NXCNode(msg, this);
+			case GenericObject.OBJECT_NODE:
+				object = new Node(msg, this);
 				break;
-			case NXCObject.OBJECT_TEMPLATE:
-				object = new NXCTemplate(msg, this);
+			case GenericObject.OBJECT_TEMPLATE:
+				object = new Template(msg, this);
 				break;
-			case NXCObject.OBJECT_NETWORK:
-				object = new NXCEntireNetwork(msg, this);
+			case GenericObject.OBJECT_NETWORK:
+				object = new EntireNetwork(msg, this);
 				break;
-			case NXCObject.OBJECT_SERVICEROOT:
-				object = new NXCServiceRoot(msg, this);
+			case GenericObject.OBJECT_SERVICEROOT:
+				object = new ServiceRoot(msg, this);
 				break;
-			case NXCObject.OBJECT_POLICYROOT:
-				object = new NXCPolicyRoot(msg, this);
+			case GenericObject.OBJECT_POLICYROOT:
+				object = new PolicyRoot(msg, this);
 				break;
-			case NXCObject.OBJECT_POLICYGROUP:
-				object = new NXCPolicyGroup(msg, this);
+			case GenericObject.OBJECT_POLICYGROUP:
+				object = new PolicyGroup(msg, this);
 				break;
-			case NXCObject.OBJECT_AGENTPOLICY:
-				object = new NXCAgentPolicy(msg, this);
+			case GenericObject.OBJECT_AGENTPOLICY:
+				object = new AgentPolicy(msg, this);
 				break;
-			case NXCObject.OBJECT_AGENTPOLICY_CONFIG:
-				object = new NXCAgentPolicyConfig(msg, this);
+			case GenericObject.OBJECT_AGENTPOLICY_CONFIG:
+				object = new AgentPolicyConfig(msg, this);
 				break;
 			default:
-				object = new NXCObject(msg, this);
+				object = new GenericObject(msg, this);
 				break;
 		}
 
@@ -237,7 +254,7 @@ public class NXCSession
 					{
 						case NXCPCodes.CMD_OBJECT:
 						case NXCPCodes.CMD_OBJECT_UPDATE:
-							final NXCObject obj = createObjectFromMessage(msg);
+							final GenericObject obj = createObjectFromMessage(msg);
 							synchronized(objectList)
 							{
 								if (obj.isDeleted())
@@ -287,6 +304,9 @@ public class NXCSession
 						case NXCPCodes.CMD_FILE_DATA:
 							processFileData(msg);
 							break;
+						case NXCPCodes.CMD_NOTIFY:
+							processNotificationMessage(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -306,13 +326,39 @@ public class NXCSession
 				}
 			}
 		}
+		
+		/**
+		 * Process CMD_NOTIFY message
+		 * 
+		 * @param msg NXCP message
+		 */
+		private void processNotificationMessage(final NXCPMessage msg)
+		{
+			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
+			int data = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_DATA);
+			
+			NXCNotification n;
+			switch(code)
+			{
+				case NXCNotification.EVENT_DB_CHANGED:
+					if (eventTemplatesNeedSync)
+						new ResyncEventTemplatesThread(NXCSession.this);
+					n = new NXCNotification(code);
+					break;
+				default:
+					n = new NXCNotification(code, data);
+					break;
+			}
+			
+			sendNotification(n);
+		}
 
 		/**
 		 * Process file data
 		 * 
 		 * @param msg
 		 */
-		private void processFileData(NXCPMessage msg)
+		private void processFileData(final NXCPMessage msg)
 		{
 			long id = msg.getMessageId();
 			NXCReceivedFile file;
@@ -1010,9 +1056,9 @@ public class NXCSession
 	 *           Object identifier
 	 * @return Object with given ID or null if object cannot be found
 	 */
-	public NXCObject findObjectById(final long id)
+	public GenericObject findObjectById(final long id)
 	{
-		NXCObject obj;
+		GenericObject obj;
 
 		synchronized(objectList)
 		{
@@ -1028,21 +1074,21 @@ public class NXCSession
 	 *           array of object identifiers
 	 * @return array of found objects
 	 */
-	public NXCObject[] findMultipleObjects(final long[] idList)
+	public GenericObject[] findMultipleObjects(final long[] idList)
 	{
-		ArrayList<NXCObject> result = new ArrayList<NXCObject>(idList.length);
+		ArrayList<GenericObject> result = new ArrayList<GenericObject>(idList.length);
 
 		synchronized(objectList)
 		{
 			for(int i = 0; i < idList.length; i++)
 			{
-				final NXCObject object = objectList.get(idList[i]);
+				final GenericObject object = objectList.get(idList[i]);
 				if (object != null)
 					result.add(object);
 			}
 		}
 
-		return result.toArray(new NXCObject[result.size()]);
+		return result.toArray(new GenericObject[result.size()]);
 	}
 
 	/**
@@ -1050,12 +1096,12 @@ public class NXCSession
 	 * 
 	 * @return List of all top level objects (either without parents or with inaccessible parents)
 	 */
-	public NXCObject[] getTopLevelObjects()
+	public GenericObject[] getTopLevelObjects()
 	{
-		HashSet<NXCObject> list = new HashSet<NXCObject>();
+		HashSet<GenericObject> list = new HashSet<GenericObject>();
 		synchronized(objectList)
 		{
-			for(NXCObject object : objectList.values())
+			for(GenericObject object : objectList.values())
 			{
 				if (object.getNumberOfParents() == 0)
 				{
@@ -1079,7 +1125,7 @@ public class NXCSession
 				}
 			}
 		}
-		return list.toArray(new NXCObject[list.size()]);
+		return list.toArray(new GenericObject[list.size()]);
 	}
 
 	/**
@@ -1087,13 +1133,13 @@ public class NXCSession
 	 * 
 	 * @return List of all objects
 	 */
-	public NXCObject[] getAllObjects()
+	public GenericObject[] getAllObjects()
 	{
-		NXCObject[] list;
+		GenericObject[] list;
 
 		synchronized(objectList)
 		{
-			list = objectList.values().toArray(new NXCObject[objectList.size()]);
+			list = objectList.values().toArray(new GenericObject[objectList.size()]);
 		}
 		return list;
 	}
@@ -1332,7 +1378,7 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
-
+	
 	/**
 	 * Synchronize user database
 	 * 
@@ -1777,7 +1823,7 @@ public class NXCSession
 		// Class-specific attributes
 		switch(data.getObjectClass())
 		{
-			case NXCObject.OBJECT_NODE:
+			case GenericObject.OBJECT_NODE:
 				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
 				msg.setVariable(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
 				msg.setVariableInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
@@ -2327,7 +2373,45 @@ public class NXCSession
 		Log log = new Log(this, response);
 		return log;
 	}
+
+	/**
+	 * Synchronize event templates configuration. After call to this method session object
+	 * will maintain internal list of configured event templates.
+	 * 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void syncEventTemplates() throws IOException, NXCException
+	{
+		List<EventTemplate> templates = getEventTemplates();
+		synchronized(eventTemplates)
+		{
+			eventTemplates.clear();
+			for(EventTemplate t : templates)
+			{
+				eventTemplates.put(t.getCode(), t);
+			}
+			eventTemplatesNeedSync = true;
+		}
+	}
 	
+	/**
+	 * Find event template by code in event template database internally maintained by session object.
+	 * You must call NXCSession.syncEventTemplates() first to make local copy of event template database.
+	 * 
+	 * @param code Event code
+	 * @return Event template object or null if not found
+	 */
+	public EventTemplate findEventTemplateByCode(long code)
+	{
+		EventTemplate e = null;
+		synchronized(eventTemplates)
+		{
+			e = eventTemplates.get(code);
+		}
+		return e;
+	}
+
 	/**
 	 * Get event templates from server
 	 * 

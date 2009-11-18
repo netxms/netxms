@@ -1,7 +1,7 @@
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
 
 public class Manage extends MultipleObjectAction
 {
@@ -18,7 +18,7 @@ public class Manage extends MultipleObjectAction
 	}
 
 	@Override
-	protected void runObjectAction(NXCSession session, NXCObject object) throws Exception
+	protected void runObjectAction(final NXCSession session, final GenericObject object) throws Exception
 	{
 		session.setObjectManaged(object.getObjectId(), true);
 	}

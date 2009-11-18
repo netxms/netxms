@@ -33,8 +33,8 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
@@ -90,11 +90,11 @@ public class ObjectTree extends Composite
 			{
 				filter.setFilterString(filterText.getText());
 				objectTree.refresh(false);
-				NXCObject obj = filter.getLastMatch();
+				GenericObject obj = filter.getLastMatch();
 				if (obj != null)
 				{
 					objectTree.setSelection(new StructuredSelection(obj), true);
-					NXCObject parent = filter.getParent(obj);
+					GenericObject parent = filter.getParent(obj);
 					if (parent != null)
 						objectTree.expandToLevel(parent, 1);
 					objectTree.reveal(obj);
@@ -161,7 +161,7 @@ public class ObjectTree extends Composite
 				boolean isChecked = item.getChecked();
 				checkItems(item, isChecked);
 				checkPath(item.getParentItem(), isChecked, false);
-				Long id = ((NXCObject)item.getData()).getObjectId();
+				Long id = ((GenericObject)item.getData()).getObjectId();
 				if (isChecked)
 					checkedObjects.add(id);
 				else
@@ -302,7 +302,7 @@ public class ObjectTree extends Composite
 		Object[] elements = objectTree.getExpandedElements();
 		expandedElements = new long[elements.length];
 		for(int i = 0; i < elements.length; i++)
-			expandedElements[i] = ((NXCObject)elements[i]).getObjectId();
+			expandedElements[i] = ((GenericObject)elements[i]).getObjectId();
 	}
 	
 	/**
@@ -313,7 +313,7 @@ public class ObjectTree extends Composite
 		if (expandedElements == null)
 			return;
 		
-		NXCObject[] objects = session.findMultipleObjects(expandedElements);
+		GenericObject[] objects = session.findMultipleObjects(expandedElements);
 		objectTree.setExpandedElements(objects);
 	}
 	
@@ -327,6 +327,6 @@ public class ObjectTree extends Composite
 		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
 		if (selection.isEmpty())
 			return 0;
-		return ((NXCObject)selection.getFirstElement()).getObjectId();
+		return ((GenericObject)selection.getFirstElement()).getObjectId();
 	}
 }
