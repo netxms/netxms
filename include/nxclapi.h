@@ -1252,6 +1252,7 @@ typedef struct
    TCHAR szName[MAX_ITEM_NAME];
    TCHAR szDescription[MAX_DB_STRING];
    TCHAR szInstance[MAX_DB_STRING];
+	TCHAR szSystemTag[MAX_DB_STRING];
    int iPollingInterval;
    int iRetentionTime;
    BYTE iSource;

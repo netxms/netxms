@@ -153,6 +153,7 @@ DCItem::DCItem()
    m_szName[0] = 0;
    m_szDescription[0] = 0;
    m_szInstance[0] = 0;
+	m_systemTag[0] = 0;
    m_tLastPoll = 0;
    m_pszScript = NULL;
    m_pScript = NULL;
@@ -199,6 +200,7 @@ DCItem::DCItem(const DCItem *pSrc)
 	_tcscpy(m_szName, pSrc->m_szName);
 	_tcscpy(m_szDescription, pSrc->m_szDescription);
 	_tcscpy(m_szInstance, pSrc->m_szInstance);
+	_tcscpy(m_systemTag, pSrc->m_systemTag);
    m_pszScript = NULL;
    m_pScript = NULL;
    setTransformationScript(pSrc->m_pszScript);
@@ -243,7 +245,7 @@ DCItem::DCItem(const DCItem *pSrc)
 // item_id,name,source,datatype,polling_interval,retention_time,status,
 // delta_calculation,transformation,template_id,description,instance,
 // template_item_id,adv_schedule,all_thresholds,resource_id,proxy_node,
-// base_units,unit_multiplier,custom_units_name,perftab_settings
+// base_units,unit_multiplier,custom_units_name,perftab_settings,system_tag
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
@@ -297,6 +299,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 20, NULL, 0);
 	if (m_pszPerfTabSettings != NULL)
 		DecodeSQLString(m_pszPerfTabSettings);
+	DBGetField(hResult, iRow, 21, m_systemTag, MAX_DB_STRING);
 
    if (m_iAdvSchedule)
    {
@@ -347,7 +350,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 
 DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
                int iPollingInterval, int iRetentionTime, Template *pNode,
-               const TCHAR *pszDescription)
+               const TCHAR *pszDescription, const TCHAR *systemTag)
 {
    m_dwId = dwId;
    m_dwTemplateId = 0;
@@ -358,6 +361,7 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
    else
       strcpy(m_szDescription, m_szName);
    m_szInstance[0] = 0;
+	nx_strncpy(m_systemTag, CHECK_NULL_EX(systemTag), MAX_DB_STRING);
    m_iSource = iSource;
    m_iDataType = iDataType;
    m_iPollingInterval = iPollingInterval;

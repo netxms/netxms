@@ -224,7 +224,7 @@ public:
    DCItem(DB_RESULT hResult, int iRow, Template *pNode);
    DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
           int iPollingInterval, int iRetentionTime, Template *pNode,
-          const TCHAR *pszDescription = NULL);
+          const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
    ~DCItem();
 
    void prepareForDeletion();

@@ -326,7 +326,7 @@ void Template::LoadItemsFromDB(void)
               _T("status,delta_calculation,transformation,template_id,description,")
               _T("instance,template_item_id,adv_schedule,all_thresholds,resource_id,")
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
-	           _T("perftab_settings FROM items WHERE node_id=%d"), m_dwId);
+	           _T("perftab_settings,system_tag FROM items WHERE node_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != 0)

@@ -582,7 +582,6 @@ src/java/netxms-eclipse/core/icons/pview.gif -text
 src/java/netxms-eclipse/core/nxmc.product -text
 src/java/netxms-eclipse/core/plugin.xml -text
 src/java/netxms-eclipse/core/plugin_customization.ini -text
-src/java/netxms-eclipse/core/splash.bmp -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Activator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginJob.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/MemoryMonitor.java -text

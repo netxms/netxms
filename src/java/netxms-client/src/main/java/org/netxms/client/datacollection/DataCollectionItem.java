@@ -42,7 +42,7 @@ public class DataCollectionItem
 	public static final int DELTA_AVERAGE_PER_SECOND = 2;
 	public static final int DELTA_AVERAGE_PER_MINUTE = 3;
 	
-	// DCI data
+	// DCI attributes
 	private DataCollectionConfiguration owner;
 	private long id;
 	private long templateId;
@@ -60,6 +60,7 @@ public class DataCollectionItem
 	private String description;
 	private String transformationScript;
 	private String instance;
+	private String systemTag;
 	private int baseUnits;
 	private int multiplier;
 	private String customUnitName;
@@ -91,6 +92,7 @@ public class DataCollectionItem
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 		instance = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
+		systemTag = msg.getVariableAsString(NXCPCodes.VID_SYSTEM_TAG);
 		baseUnits = msg.getVariableAsInteger(NXCPCodes.VID_BASE_UNITS);
 		multiplier = msg.getVariableAsInteger(NXCPCodes.VID_MULTIPLIER);
 		customUnitName = msg.getVariableAsString(NXCPCodes.VID_CUSTOM_UNITS_NAME);
@@ -137,6 +139,7 @@ public class DataCollectionItem
 		name = "";
 		description = "";
 		instance = "";
+		systemTag = "";
 		baseUnits = 0;
 		multiplier = 0;
 		customUnitName = null;
@@ -161,6 +164,7 @@ public class DataCollectionItem
 		msg.setVariable(NXCPCodes.VID_NAME, name);
 		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setVariable(NXCPCodes.VID_INSTANCE, instance);
+		msg.setVariable(NXCPCodes.VID_SYSTEM_TAG, systemTag);
 		msg.setVariable(NXCPCodes.VID_DCI_FORMULA, transformationScript);
 		msg.setVariableInt16(NXCPCodes.VID_ALL_THRESHOLDS, processAllThresholds ? 1 : 0);
 		msg.setVariableInt16(NXCPCodes.VID_ADV_SCHEDULE, useAdvancedSchedule ? 1 : 0);
@@ -537,5 +541,25 @@ public class DataCollectionItem
 	public long getNodeId()
 	{
 		return owner.getNodeId();
+	}
+
+	/**
+	 * Get system tag. In most situations, system tag should not be shown to user.
+	 * 
+	 * @return System tag associated with this DCI
+	 */
+	public String getSystemTag()
+	{
+		return systemTag;
+	}
+
+	/**
+	 * Set system tag. In most situations, user should not have possibility to set system tag manually.
+	 * 
+	 * @param systemTag New system tag for DCI
+	 */
+	public void setSystemTag(String systemTag)
+	{
+		this.systemTag = systemTag;
 	}
 }

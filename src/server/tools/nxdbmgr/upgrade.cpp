@@ -214,6 +214,24 @@ cleanup:
 
 
 //
+// Upgrade from V207 to V208
+//
+
+static BOOL H_UpgradeFromV207(int currVersion, int newVersion)
+{
+	if (!SQLQuery(_T("ALTER TABLE items ADD system_tag varchar(255)")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='208' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V206 to V207
 //
 
@@ -4473,6 +4491,7 @@ static struct
 	{ 204, 205, H_UpgradeFromV204 },
 	{ 205, 206, H_UpgradeFromV205 },
 	{ 206, 207, H_UpgradeFromV206 },
+	{ 207, 208, H_UpgradeFromV207 },
    { 0, NULL }
 };
 

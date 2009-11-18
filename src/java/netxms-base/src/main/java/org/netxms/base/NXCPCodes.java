@@ -612,6 +612,7 @@ public final class NXCPCodes
 	public static final long VID_LATITUDE                = 343;
 	public static final long VID_LONGITUDE               = 344;
 	public static final long VID_NUM_ORDERING_COLUMNS    = 345;
+	public static final long VID_SYSTEM_TAG              = 346;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

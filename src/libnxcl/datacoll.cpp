@@ -150,6 +150,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_NAME, pItem->szName);
    msg.SetVariable(VID_DESCRIPTION, pItem->szDescription);
    msg.SetVariable(VID_INSTANCE, pItem->szInstance);
+   msg.SetVariable(VID_SYSTEM_TAG, pItem->szSystemTag);
    msg.SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(pItem->pszFormula));
    msg.SetVariable(VID_ALL_THRESHOLDS, (WORD)pItem->iProcessAllThresholds);
    msg.SetVariable(VID_ADV_SCHEDULE, (WORD)pItem->iAdvSchedule);

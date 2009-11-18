@@ -523,7 +523,7 @@ CREATE TABLE items
 	status integer not null,			// ACTIVE, DISABLED or NOT_SUPPORTED
 	delta_calculation integer not null,
 	transformation SQL_TEXT,         // Transformation script
-	instance varchar(255),	  			// Free form text which can be used in events
+	instance varchar(255),		// Free form text which can be used in events
 	system_tag varchar(255),     		// System tag
 	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
 	resource_id integer not null,  	// associated cluster resource ID
