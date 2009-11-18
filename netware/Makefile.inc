@@ -4,11 +4,11 @@
 #
 
 CFLAGS   = -nostdinc -fno-exceptions -fno-builtin -fpack-struct -fno-rtti \
-           -c -D_NETWARE -D_POSIX_SOURCE -IC:/nwsdk/libc/include \
-           -IC:/nwsdk/fs64/include \
+           -c -D_NETWARE -D_POSIX_SOURCE -ID:/nwsdk/libc/include \
+           -ID:/nwsdk/fs64/include \
 	   -I../../include -I../../../include \
            -I../../../../include -I../libexpat/libexpat
-LDFLAGS  = --linker=c:/gcc-nlm/usr/bin/i586-netware-ld.exe --output-target=nlm32-i386 --input-target=elf32-i386
+LDFLAGS  = --linker=i586-netware-ld.exe --output-target=nlm32-i386 --input-target=elf32-i386
 PLDFLAGS = -r
 
 CC       = i586-netware-g++
