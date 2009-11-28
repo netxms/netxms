@@ -39,4 +39,16 @@
       </objectContribution>
    </extension>
 
+   <extension point="org.eclipse.ui.preferencePages">
+      <page name="Charts"
+            class="org.netxms.ui.eclipse.charts.preferencepages.GeneralChartPrefs"
+            id="org.eclipse.ui.preferencePages.Charts">
+      </page>
+      <page name="Colors"
+            class="org.netxms.ui.eclipse.charts.preferencepages.ChartColors"
+            id="org.eclipse.ui.preferencePages.Charts"
+            category="org.eclipse.ui.preferencePages.Charts">
+      </page>
+   </extension>
+
 </plugin>

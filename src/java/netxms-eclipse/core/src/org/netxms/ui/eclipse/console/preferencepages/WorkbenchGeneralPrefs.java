@@ -18,8 +18,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  * @author victor
  *
  */
-public class WorkbenchGeneralPrefs extends PreferencePage implements
-		IWorkbenchPreferencePage
+public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchPreferencePage
 {
 	private Button cbShowHeapMonitor;
 	

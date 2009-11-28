@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.charts.views;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -39,15 +37,8 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.views.helpers.DCIInfo;
+import org.netxms.ui.eclipse.charts.widgets.HistoricDataChart;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.swtchart.Chart;
-import org.swtchart.IAxisSet;
-import org.swtchart.IAxisTick;
-import org.swtchart.ILegend;
-import org.swtchart.ILineSeries;
-import org.swtchart.ISeriesSet;
-import org.swtchart.ILineSeries.PlotSymbolType;
-import org.swtchart.ISeries.SeriesType;
 
 /**
  * @author Victor
@@ -60,7 +51,7 @@ public class HistoryGraph extends ViewPart
 	
 	private NXCSession session;
 	private ArrayList<DCIInfo> items = new ArrayList<DCIInfo>(1);
-	private Chart chart;
+	private HistoricDataChart chart;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -95,8 +86,7 @@ public class HistoryGraph extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		chart = new Chart(parent, SWT.NONE);
-		setupChart();
+		chart = new HistoricDataChart(parent, SWT.NONE);
 		
 		// Request data from server
 		Job job = new Job("Get DCI values history graph")
@@ -157,20 +147,9 @@ public class HistoryGraph extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		// TODO Auto-generated method stub
+		chart.setFocus();
 	}
 	
-	/**
-	 * Setup chart
-	 */
-	private void setupChart()
-	{
-		chart.getTitle().setVisible(false);
-		
-		ILegend legend = chart.getLegend();
-		legend.setPosition(SWT.BOTTOM);
-	}
-
 	/**
 	 * Set chart data
 	 * 
@@ -178,16 +157,10 @@ public class HistoryGraph extends ViewPart
 	 */
 	private void setChartData(final DciData[] data)
 	{
-		IAxisSet axisSet = chart.getAxisSet();
-		IAxisTick xTick = axisSet.getXAxis(0).getTick();
-
-		DateFormat format = new SimpleDateFormat("HH:mm");
-		xTick.setFormat(format);
-	
 		for(int i = 0; i < data.length; i++)
-			addItemToChart(items.get(i), data[i]);
+			addItemToChart(i, items.get(i), data[i]);
 		
-		axisSet.adjustRange();
+		chart.getAxisSet().getYAxis(0).adjustRange();
 		chart.redraw();
 	}
 	
@@ -196,7 +169,7 @@ public class HistoryGraph extends ViewPart
 	 * 
 	 * @param data DCI data
 	 */
-	private void addItemToChart(final DCIInfo info, final DciData data)
+	private void addItemToChart(int index, final DCIInfo info, final DciData data)
 	{
 		final DciDataRow[] values = data.getValues();
 		
@@ -209,15 +182,6 @@ public class HistoryGraph extends ViewPart
 			ySeries[i] = values[i].getValueAsDouble();
 		}
 		
-		// Add series to chart
-		ISeriesSet seriesSet = chart.getSeriesSet();
-		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, info.getDescription());
-		
-		series.setAntialias(SWT.ON);
-		series.setSymbolType(PlotSymbolType.NONE);
-		series.setLineWidth(2);
-		
-		series.setXDateSeries(xSeries);
-		series.setYSeries(ySeries);
+		chart.addLineSeries(index, info.getDescription(), xSeries, ySeries);
 	}
 }
