@@ -209,8 +209,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	@Override
 	protected void fillStatusLine(IStatusLineManager statusLine)
 	{
-		StatusLineContributionItem statusItem = new StatusLineContributionItem(
-				"ConnectionStatus"); //$NON-NLS-1$
+		StatusLineContributionItem statusItem = new StatusLineContributionItem("ConnectionStatus"); //$NON-NLS-1$
 		statusItem.setText(""); //$NON-NLS-1$
 		statusLine.add(statusItem);
 		Activator.getDefault().setStatusItemConnection(statusItem);

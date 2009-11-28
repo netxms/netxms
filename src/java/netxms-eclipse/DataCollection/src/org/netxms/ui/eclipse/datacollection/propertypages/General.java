@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
@@ -7,7 +22,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -33,6 +50,9 @@ import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -110,6 +130,19 @@ public class General extends PropertyPage
       
       selectButton = new Button(groupData, SWT.PUSH);
       selectButton.setText("&Select...");
+      selectButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				selectParameter();
+			}
+      });
 
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -315,6 +348,34 @@ public class General extends PropertyPage
 		proxyNode.setEnabled(index != DataCollectionItem.PUSH);
 		schedulingMode.setEnabled(index != DataCollectionItem.PUSH);
 		pollingInterval.getTextControl().setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 0));
+	}
+	
+	/**
+	 * Select parameter
+	 */
+	private void selectParameter()
+	{
+		Dialog dlg;
+		switch(origin.getSelectionIndex())
+		{
+			case DataCollectionItem.INTERNAL:
+				dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId());
+				break;
+			case DataCollectionItem.AGENT:
+				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId());
+				break;
+			default:
+				dlg = null;
+				break;
+		}
+		
+		if ((dlg != null) && (dlg.open() == Window.OK))
+		{
+			IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
+			description.setText(pd.getParameterDescription());
+			parameter.setText(pd.getParameterName());
+			dataType.select(pd.getParameterDataType());
+		}
 	}
 	
 	/**

@@ -223,6 +223,7 @@ src/java/netxms-base/src/test/java/org/netxms/base/NXCPMessageTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPMsgWaitQueueTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPVariableTest.java -text
 src/java/netxms-client/pom.xml -text
+src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
@@ -306,6 +307,7 @@ src/java/netxms-eclipse/Charts/plugin.xml -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowHistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoryGraph.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/DCIInfo.java -text
 src/java/netxms-eclipse/DataCollection/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/DataCollection/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/DataCollection/build.properties -text
@@ -323,8 +325,14 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DciLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/ThresholdLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/OpenEditor.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/AbstractSelectParamDlg.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/EditScheduleDialog.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/EditThresholdDialog.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/IParameterSelectionDialog.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/SelectAgentParamDlg.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/SelectInternalParamDlg.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/AgentParameterComparator.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/helpers/AgentParameterLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/CustomSchedule.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/General.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/propertypages/Thresholds.java -text
@@ -612,13 +620,9 @@ src/java/netxms-eclipse/library/icons/status/testing.png -text
 src/java/netxms-eclipse/library/icons/status/unknown.png -text
 src/java/netxms-eclipse/library/icons/status/unmanaged.png -text
 src/java/netxms-eclipse/library/icons/status/warning.png -text
-src/java/netxms-eclipse/library/jar/jcommon-1.0.16.jar -text
-src/java/netxms-eclipse/library/jar/jfreechart-1.0.13-experimental.jar -text
-src/java/netxms-eclipse/library/jar/jfreechart-1.0.13-swt.jar -text
-src/java/netxms-eclipse/library/jar/jfreechart-1.0.13.jar -text
-src/java/netxms-eclipse/library/jar/swtgraphics2d.jar -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/DataCollectionDisplayInfo.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IUIConstants.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/NXMCSharedData.java -text

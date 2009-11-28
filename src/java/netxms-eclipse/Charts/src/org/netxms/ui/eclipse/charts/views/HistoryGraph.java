@@ -1,9 +1,25 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.charts.views;
 
-import java.awt.BasicStroke;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -17,21 +33,21 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.jfree.chart.ChartColor;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.data.time.Second;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.experimental.chart.swt.ChartComposite;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.charts.views.helpers.DCIInfo;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.swtchart.Chart;
+import org.swtchart.IAxisSet;
+import org.swtchart.IAxisTick;
+import org.swtchart.ILegend;
+import org.swtchart.ILineSeries;
+import org.swtchart.ISeriesSet;
+import org.swtchart.ILineSeries.PlotSymbolType;
+import org.swtchart.ISeries.SeriesType;
 
 /**
  * @author Victor
@@ -42,42 +58,9 @@ public class HistoryGraph extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.charts.view.history_graph";
 	public static final String JOB_FAMILY = "HistoryGraphJob";
 	
-	
-	/**
-	 * Inner class to hold source DCI information
-	 */
-	class DCIInfo
-	{
-		private long nodeId;
-		private long dciId;
-		
-		public DCIInfo(long nodeId, long dciId)
-		{
-			super();
-			this.nodeId = nodeId;
-			this.dciId = dciId;
-		}
-
-		/**
-		 * @return the nodeId
-		 */
-		public long getNodeId()
-		{
-			return nodeId;
-		}
-
-		/**
-		 * @return the dciId
-		 */
-		public long getDciId()
-		{
-			return dciId;
-		}
-	}
-	
 	private NXCSession session;
 	private ArrayList<DCIInfo> items = new ArrayList<DCIInfo>(1);
-	private ChartComposite frame;
+	private Chart chart;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -96,11 +79,12 @@ public class HistoryGraph extends ViewPart
 		for(int i = 1; i < fields.length; i++)
 		{
 			String[] subfields = fields[i].split("\\@");
-			if (subfields.length == 2)
+			if (subfields.length == 3)
 			{
 				items.add(new DCIInfo(
 						Long.parseLong(subfields[1], 10), 
-						Long.parseLong(subfields[0], 10)));
+						Long.parseLong(subfields[0], 10),
+						subfields[2]));
 			}
 		}
 	}
@@ -111,8 +95,9 @@ public class HistoryGraph extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		frame = new ChartComposite(parent, SWT.NONE, null, true);
-
+		chart = new Chart(parent, SWT.NONE);
+		setupChart();
+		
 		// Request data from server
 		Job job = new Job("Get DCI values history graph")
 		{
@@ -138,8 +123,7 @@ public class HistoryGraph extends ViewPart
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							frame.setChart(createChart(data));
-							frame.forceRedraw();
+							setChartData(data);
 							return Status.OK_STATUS;
 						}
 					}.schedule();
@@ -175,46 +159,65 @@ public class HistoryGraph extends ViewPart
 	{
 		// TODO Auto-generated method stub
 	}
-
 	
 	/**
-	 * Create chart based on a dataset
+	 * Setup chart
 	 */
-	private JFreeChart createChart(final DciData data[])
+	private void setupChart()
 	{
-		TimeSeriesCollection  dataset =  new TimeSeriesCollection();
+		chart.getTitle().setVisible(false);
+		
+		ILegend legend = chart.getLegend();
+		legend.setPosition(SWT.BOTTOM);
+	}
 
+	/**
+	 * Set chart data
+	 * 
+	 * @param data Retrieved DCI data
+	 */
+	private void setChartData(final DciData[] data)
+	{
+		IAxisSet axisSet = chart.getAxisSet();
+		IAxisTick xTick = axisSet.getXAxis(0).getTick();
+
+		DateFormat format = new SimpleDateFormat("HH:mm");
+		xTick.setFormat(format);
+	
 		for(int i = 0; i < data.length; i++)
+			addItemToChart(items.get(i), data[i]);
+		
+		axisSet.adjustRange();
+		chart.redraw();
+	}
+	
+	/**
+	 * Add single DCI to chart
+	 * 
+	 * @param data DCI data
+	 */
+	private void addItemToChart(final DCIInfo info, final DciData data)
+	{
+		final DciDataRow[] values = data.getValues();
+		
+		// Create series
+		Date[] xSeries = new Date[values.length];
+		double[] ySeries = new double[values.length];
+		for(int i = 0; i < values.length; i++)
 		{
-			final TimeSeries  series = new TimeSeries("First");
-			DciDataRow rows[] = data[i].getValues();
-			for(int j = 0; j < rows.length; j++)
-			{
-				series.addOrUpdate(new Second(rows[j].getTimestamp()), rows[j].getValueAsDouble());
-			}
-			dataset.addSeries(series);
+			xSeries[i] = values[i].getTimestamp();
+			ySeries[i] = values[i].getValueAsDouble();
 		}
 		
-		JFreeChart chart = ChartFactory.createTimeSeriesChart(null, null, null, dataset, false, true, false);
+		// Add series to chart
+		ISeriesSet seriesSet = chart.getSeriesSet();
+		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, info.getDescription());
 		
-		chart.setBackgroundPaint(new ChartColor(240, 240, 240));
-		chart.setBorderVisible(false);
+		series.setAntialias(SWT.ON);
+		series.setSymbolType(PlotSymbolType.NONE);
+		series.setLineWidth(2);
 		
-		XYPlot plot = (XYPlot)chart.getPlot();
-		plot.setBackgroundPaint(new ChartColor(255, 255, 255));
-		plot.setRangeGridlinePaint(new ChartColor(245, 202, 202));
-		plot.setRangeGridlineStroke(new BasicStroke());
-		plot.setDomainGridlinePaint(new ChartColor(245, 202, 202));
-		plot.setDomainGridlineStroke(new BasicStroke());
-		plot.setOutlineVisible(false);
-		
-		final BasicStroke seriesStroke = new BasicStroke(2);
-		XYItemRenderer renderer = plot.getRenderer();
-		renderer.setSeriesPaint(0, new ChartColor(0, 206, 0));
-		renderer.setSeriesStroke(0, seriesStroke);
-		renderer.setSeriesPaint(1, new ChartColor(192, 0, 0));
-		renderer.setSeriesStroke(1, seriesStroke);
-		
-		return chart;
+		series.setXDateSeries(xSeries);
+		series.setYSeries(ySeries);
 	}
 }

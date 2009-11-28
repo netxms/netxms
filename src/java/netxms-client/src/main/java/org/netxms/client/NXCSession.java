@@ -2596,4 +2596,66 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Get agent's master configuration file.
+	 * 
+	 * @param nodeId Node ID
+	 * @return Master configuration file of agent running on given node
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public String getAgentConfig(long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CONFIG);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsString(NXCPCodes.VID_CONFIG_FILE);
+	}
+	
+	/**
+	 * Update agent's master configuration file.
+	 * 
+	 * @param nodeId Node ID
+	 * @param config New configuration file content
+	 * @param apply Apply flag - if set to true, agent will restart automatically to apply changes
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void updateAgentConfig(long nodeId, String config, boolean apply) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CONFIG);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariable(NXCPCodes.VID_CONFIG_FILE, config);
+		msg.setVariableInt16(NXCPCodes.VID_APPLY_FLAG, apply ? 1 : 0);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get list of parameters supported by agent running on given node.
+	 * 
+	 * @param nodeId Node ID
+	 * @return List of parameters supported by agent
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<AgentParameter> getSupportedParameters(long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_PARAMETERS);
+		List<AgentParameter> list = new ArrayList<AgentParameter>(count);
+		long baseId = NXCPCodes.VID_PARAM_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(new AgentParameter(response, baseId));
+			baseId += 3;
+		}
+		return list;
+	}
 }

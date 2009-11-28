@@ -23,7 +23,7 @@ import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.library.Activator;
 
 /**
- * @author Victor
+ * Status display information
  *
  */
 public final class StatusDisplayInfo
@@ -65,7 +65,14 @@ public final class StatusDisplayInfo
 	 */
 	public static String getStatusText(int severity)
 	{
-		return statusText[severity];
+		try
+		{
+			return statusText[severity];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return "<unknown>";
+		}
 	}
 	
 	/**
@@ -76,6 +83,13 @@ public final class StatusDisplayInfo
 	 */
 	public static ImageDescriptor getStatusImageDescriptor(int severity)
 	{
-		return statusImage[severity];
+		try
+		{
+			return statusImage[severity];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return null;
+		}
 	}
 }

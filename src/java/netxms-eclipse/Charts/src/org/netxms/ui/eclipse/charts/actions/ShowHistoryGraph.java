@@ -3,6 +3,9 @@
  */
 package org.netxms.ui.eclipse.charts.actions;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -46,10 +49,30 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 			String id = Long.toString(uniqueId++);
 			for(int i = 0; i < currentSelection.length; i++)
 			{
-				if (currentSelection[i] instanceof DciValue)
-					id += "&" + ((DciValue)currentSelection[i]).getId() + "@" + ((DciValue)currentSelection[i]).getNodeId();
-				else if (currentSelection[i] instanceof DataCollectionItem)
-					id += "&" + ((DataCollectionItem)currentSelection[i]).getId() + "@" + ((DataCollectionItem)currentSelection[i]).getNodeId();
+				long dciId = 0, nodeId = 0;
+				String description = null;
+				
+				try
+				{
+					if (currentSelection[i] instanceof DciValue)
+					{
+						dciId = ((DciValue)currentSelection[i]).getId(); 
+						nodeId = ((DciValue)currentSelection[i]).getNodeId();
+						description = URLEncoder.encode(((DciValue)currentSelection[i]).getDescription(), "UTF-8");
+					}
+					else if (currentSelection[i] instanceof DataCollectionItem)
+					{
+						dciId = ((DataCollectionItem)currentSelection[i]).getId(); 
+						nodeId = ((DataCollectionItem)currentSelection[i]).getNodeId();
+						description = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getDescription(), "UTF-8");
+					}
+				}
+				catch(UnsupportedEncodingException e)
+				{
+					description = "<description unavailable>";
+				}
+				
+				id += "&" + Long.toString(dciId) + "@" + Long.toString(nodeId) + "@" + description;
 			}
 			
 			try
