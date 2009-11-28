@@ -197,6 +197,16 @@ typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
 typedef DWORD pid_t;
+typedef LONG ssize_t;
+
+typedef signed __int8 int8_t;
+typedef signed __int16 int16_t;
+typedef signed __int32 int32_t;
+typedef signed __int64 int64_t;
+typedef unsigned __int8 uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t; 
 
 #define INT64_FMT			_T("%I64d")
 #define UINT64_FMT		_T("%I64u")
@@ -219,6 +229,10 @@ typedef DWORD pid_t;
 #define SetSocketNonBlocking(s) { \
 	u_long one = 1; \
 	ioctlsocket(s, FIONBIO, &one); \
+}
+#define SetSocketBlocking(s) { \
+	u_long zero = 0; \
+	ioctlsocket(s, FIONBIO, &zero); \
 }
 
 #ifdef UNDER_CE
