@@ -198,9 +198,17 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj,
 	DWORD i, dwSelCount, *pdwSelList;
 	String row, name, msg;
 	NXC_OBJECT *pObject;
-	TCHAR szTemp1[64], szTemp2[64];
+	TCHAR szTemp1[64], szTemp2[64], szScript[8192];
 
 	m_dwCurrAlarmRoot = (pRootObj != NULL) ? pRootObj->dwId : 0;
+
+	// Add script for automatic refresh
+	_sntprintf(szScript, 8192, _T("\r\n<script type=\"text/javascript\">")
+		                        _T("function reloadAlarms() {")
+										_T("loadDivContent('alarm_list','%s','&cmd=getAlarmList&obj=%d&sel='+selectedAlarms);")
+										_T(" setTimeout('reloadAlarms();',15000); } setTimeout('reloadAlarms();',15000);</script>\r\n"),
+	           m_sid, (pRootObj != NULL) ? pRootObj->dwId : 0);
+	response.AppendBody(szScript);
 
 	response.StartBox(NULL, _T("objectTable"), _T("alarm_list"), NULL, bReload);
 	response.StartTableHeader(NULL);

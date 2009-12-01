@@ -12,11 +12,14 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ExpandBar;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
+import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.ui.eclipse.epp.Activator;
-import org.netxms.ui.eclipse.epp.controls.RuleList;
+import org.netxms.ui.eclipse.epp.widgets.RuleList;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -31,7 +34,7 @@ public class PolicyEditor extends ViewPart
 	private NXCSession session;
 	private boolean policyLocked = false;
 	private EventProcessingPolicy policy; 
-	private ExpandBar ruleList;
+	private RuleList ruleList;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -43,50 +46,44 @@ public class PolicyEditor extends ViewPart
 
 		parent.setLayout(new FillLayout());
 		
-		new RuleList(parent, SWT.BORDER);
-		/*ruleList = new ExpandBar(parent, SWT.V_SCROLL);
-		
-		Job job = new Job("Open event processing policy") {
+		ruleList = new RuleList(parent, SWT.NONE);
+		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected String getErrorMessage()
 			{
-				IStatus status;
+				return "Cannot open event processing policy";
+			}
 
-				try
-				{
-					policy = session.openEventProcessingPolicy();
-					policyLocked = true;
-					new UIJob("Fill rules list") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							fillRulesList();
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								           (e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-											  "Cannot open event processing policy: " + e.getMessage(), null);
-					new UIJob("Close event processing policy editor")
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				policy = session.openEventProcessingPolicy();
+				policyLocked = true;
+				new UIJob("Fill rules list") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							PolicyEditor.this.getViewSite().getPage().hideView(PolicyEditor.this);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-				return status;
+						ruleList.setContent(policy.getRules());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+
+			@Override
+			protected void jobFailureHandler()
+			{
+				new UIJob("Close event processing policy editor")
+				{
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						PolicyEditor.this.getViewSite().getPage().hideView(PolicyEditor.this);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
 			}
 		};
-		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-					IWorkbenchSiteProgressService.class);
-			siteService.schedule(job, 0, true);*/
+		job.start();
 	}
 
 	/* (non-Javadoc)

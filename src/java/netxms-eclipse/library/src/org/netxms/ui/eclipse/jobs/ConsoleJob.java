@@ -72,6 +72,7 @@ public abstract class ConsoleJob extends Job
 			status = new Status(Status.ERROR, pluginId, 
                   (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
                   getErrorMessage() + ": " + e.getMessage(), null);
+			jobFailureHandler();
 		}
 		return status;
 	}
@@ -111,4 +112,11 @@ public abstract class ConsoleJob extends Job
 	 * @return Error message
 	 */
 	protected abstract String getErrorMessage();
+	
+	/**
+	 * Called from within Job.run() if job has failed. Default implementation does nothing.
+	 */
+	protected void jobFailureHandler()
+	{		
+	}
 }

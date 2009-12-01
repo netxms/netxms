@@ -344,6 +344,7 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/EPP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/EPP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/EPP/build.properties -text
+src/java/netxms-eclipse/EPP/icons/any.gif -text
 src/java/netxms-eclipse/EPP/icons/epp.png -text
 src/java/netxms-eclipse/EPP/plugin.xml -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/Activator.java -text

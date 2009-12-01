@@ -84,4 +84,180 @@ public class EventProcessingPolicyRule
 	{
 		this.comments = comments;
 	}
+
+	/**
+	 * @return the script
+	 */
+	public String getScript()
+	{
+		return script;
+	}
+
+	/**
+	 * @param script the script to set
+	 */
+	public void setScript(String script)
+	{
+		this.script = script;
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
+	}
+
+	/**
+	 * @param flags the flags to set
+	 */
+	public void setFlags(int flags)
+	{
+		this.flags = flags;
+	}
+
+	/**
+	 * @return the alarmKey
+	 */
+	public String getAlarmKey()
+	{
+		return alarmKey;
+	}
+
+	/**
+	 * @param alarmKey the alarmKey to set
+	 */
+	public void setAlarmKey(String alarmKey)
+	{
+		this.alarmKey = alarmKey;
+	}
+
+	/**
+	 * @return the alarmMessage
+	 */
+	public String getAlarmMessage()
+	{
+		return alarmMessage;
+	}
+
+	/**
+	 * @param alarmMessage the alarmMessage to set
+	 */
+	public void setAlarmMessage(String alarmMessage)
+	{
+		this.alarmMessage = alarmMessage;
+	}
+
+	/**
+	 * @return the alarmSeverity
+	 */
+	public int getAlarmSeverity()
+	{
+		return alarmSeverity;
+	}
+
+	/**
+	 * @param alarmSeverity the alarmSeverity to set
+	 */
+	public void setAlarmSeverity(int alarmSeverity)
+	{
+		this.alarmSeverity = alarmSeverity;
+	}
+
+	/**
+	 * @return the alarmTimeout
+	 */
+	public int getAlarmTimeout()
+	{
+		return alarmTimeout;
+	}
+
+	/**
+	 * @param alarmTimeout the alarmTimeout to set
+	 */
+	public void setAlarmTimeout(int alarmTimeout)
+	{
+		this.alarmTimeout = alarmTimeout;
+	}
+
+	/**
+	 * @return the alarmTimeoutEvent
+	 */
+	public long getAlarmTimeoutEvent()
+	{
+		return alarmTimeoutEvent;
+	}
+
+	/**
+	 * @param alarmTimeoutEvent the alarmTimeoutEvent to set
+	 */
+	public void setAlarmTimeoutEvent(long alarmTimeoutEvent)
+	{
+		this.alarmTimeoutEvent = alarmTimeoutEvent;
+	}
+
+	/**
+	 * @return the situationId
+	 */
+	public long getSituationId()
+	{
+		return situationId;
+	}
+
+	/**
+	 * @param situationId the situationId to set
+	 */
+	public void setSituationId(long situationId)
+	{
+		this.situationId = situationId;
+	}
+
+	/**
+	 * @return the situationInstance
+	 */
+	public String getSituationInstance()
+	{
+		return situationInstance;
+	}
+
+	/**
+	 * @param situationInstance the situationInstance to set
+	 */
+	public void setSituationInstance(String situationInstance)
+	{
+		this.situationInstance = situationInstance;
+	}
+
+	/**
+	 * @return the sources
+	 */
+	public List<Long> getSources()
+	{
+		return sources;
+	}
+
+	/**
+	 * @return the events
+	 */
+	public List<Long> getEvents()
+	{
+		return events;
+	}
+
+	/**
+	 * @return the actions
+	 */
+	public List<Long> getActions()
+	{
+		return actions;
+	}
+
+	/**
+	 * @return the situationAttributes
+	 */
+	public Map<String, String> getSituationAttributes()
+	{
+		return situationAttributes;
+	}
 }
