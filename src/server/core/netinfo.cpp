@@ -196,7 +196,8 @@ static ARP_CACHE *SysGetLocalArpCache(void)
          // n is an interface index
          for(i = 0; i < list.getSize(); i++)
          {
-            const TCHAR *pBuf = list.getValue(i);
+            TCHAR *pTemp = _tcsdup(list.getValue(i));
+            TCHAR *pBuf = pTemp;
             if (_tcslen(pBuf) < 20)     // Invalid line
                continue;
 
@@ -205,7 +206,7 @@ static ARP_CACHE *SysGetLocalArpCache(void)
             {
                memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
                pArpCache->pEntries[i].bMacAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
-               pBuf+=2;
+               pBuf += 2;
             }
 
             // IP address
@@ -219,6 +220,8 @@ static ARP_CACHE *SysGetLocalArpCache(void)
             // Interface index
             if (pChar != NULL)
                pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
+
+            free(pTemp);
          }
       }
    }
@@ -320,7 +323,8 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
          memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * list.getSize());
          for(i = 0; i < list.getSize(); i++)
          {
-            const TCHAR *pBuf = list.getValue(i);
+            TCHAR *pTemp = _tcsdup(list.getValue(i));
+            TCHAR *pBuf = pTemp;
 
             // Index
             pChar = _tcschr(pBuf, ' ');
@@ -375,6 +379,8 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
 
             // Name
             nx_strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
+
+            free(pTemp);
          }
       }
    }
