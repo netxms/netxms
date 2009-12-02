@@ -219,6 +219,7 @@ src/db/dbdrv/odbc/odbc.vcproj -text
 src/db/dbdrv/oracle/oracle.vcproj -text
 src/db/dbdrv/pgsql/pgsql.vcproj -text
 src/db/dbdrv/sqlite/sqlite.vcproj -text
+src/db/libnxdb/Makefile.am -text
 src/db/libnxdb/db.cpp -text
 src/db/libnxdb/dbcp.cpp -text
 src/db/libnxdb/libnxdb.h -text

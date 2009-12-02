@@ -9,7 +9,6 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-	dbdrv.h \
 	local_admin.h \
 	nms_actions.h \
 	nms_alarm.h \

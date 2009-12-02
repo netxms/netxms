@@ -228,7 +228,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp server agent libnxmap libnxcl client nxhttpd nxscript nxcptest"
+	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxhttpd nxscript nxcptest"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -330,7 +330,7 @@ if test $? = 0; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl libnxlp server nxscript"
+	MODULES="$MODULES libnxmap libnxsl libnxlp db server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
 fi
@@ -1561,15 +1561,17 @@ AC_CONFIG_FILES([
 	src/client/windows/nxnotify/res/Makefile
 	src/nxcptest/Makefile
 	src/nxscript/Makefile
+	src/db/Makefile
+	src/db/dbdrv/Makefile
+	src/db/dbdrv/odbc/Makefile
+	src/db/dbdrv/mssql/Makefile
+	src/db/dbdrv/mysql/Makefile
+	src/db/dbdrv/pgsql/Makefile
+	src/db/dbdrv/sqlite/Makefile
+	src/db/dbdrv/oracle/Makefile
+	src/db/libnxdb/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
-	src/server/dbdrv/Makefile
-	src/server/dbdrv/odbc/Makefile
-	src/server/dbdrv/mssql/Makefile
-	src/server/dbdrv/mysql/Makefile
-	src/server/dbdrv/pgsql/Makefile
-	src/server/dbdrv/sqlite/Makefile
-	src/server/dbdrv/oracle/Makefile
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
