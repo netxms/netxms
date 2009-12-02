@@ -97,6 +97,7 @@
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
       <plugin id="org.netxms.ui.eclipse.usermanager"/>
+      <plugin id="org.swtchart"/>
    </plugins>
 
 

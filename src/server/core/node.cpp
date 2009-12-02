@@ -454,12 +454,7 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
 {
    INTERFACE_LIST *pIfList = NULL;
 
-   if (m_dwFlags & NF_IS_LOCAL_MGMT)
-   {
-      pIfList = GetLocalInterfaceList();
-   }
-   if ((pIfList == NULL) && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
-       (!(m_dwFlags & NF_DISABLE_NXCP)))
+   if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)))
    {
       AgentLock();
       if (ConnectToAgent())
@@ -468,6 +463,10 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
          CleanInterfaceList(pIfList);
       }
       AgentUnlock();
+   }
+   if ((pIfList == NULL) && (m_dwFlags & NF_IS_LOCAL_MGMT))
+   {
+      pIfList = GetLocalInterfaceList();
    }
    if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP) &&
        (!(m_dwFlags & NF_DISABLE_SNMP)))
