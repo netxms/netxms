@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="pgsql"
-	ProjectGUID="{4D92E883-1776-4012-A5C0-439104DE3441}"
-	RootNamespace="pgsql"
+	Name="libnxdb"
+	ProjectGUID="{F3E29541-3A0E-45EC-8BEC-E193F2401622}"
+	RootNamespace="libnxdb"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -40,13 +40,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\include"
+				AdditionalIncludeDirectories="..\..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXDB_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -60,8 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpq.lib"
-				OutputFile="$(OutDir)\$(ProjectName).ddr"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -117,11 +117,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\include"
+				AdditionalIncludeDirectories="..\..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXDB_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -135,8 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpq.lib"
-				OutputFile="$(OutDir)\$(ProjectName).ddr"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -179,7 +179,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\pgsql.cpp"
+				RelativePath=".\db.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\dbcp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\main.cpp"
 				>
 			</File>
 		</Filter>
@@ -189,19 +197,31 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\include\dbdrv.h"
+				RelativePath="..\..\..\include\dbdrv.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\netxms-version.h"
+				RelativePath=".\libnxdb.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nms_common.h"
+				RelativePath="..\..\..\include\netxms-version.h"
 				>
 			</File>
 			<File
-				RelativePath=".\pgsqldrv.h"
+				RelativePath="..\..\..\include\nms_common.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\nms_util.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\nxdbapi.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\unicode.h"
 				>
 			</File>
 		</Filter>

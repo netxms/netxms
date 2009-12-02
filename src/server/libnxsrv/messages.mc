@@ -395,7 +395,7 @@ Unable to initialize actions
 MessageId=
 SymbolicName=MSG_DEBUG
 Language=English
-DEBUG: %1
+%1
 .
 
 MessageId=

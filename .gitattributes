@@ -1,6 +1,7 @@
 * text=auto !eol
 contrib/backgrounds/.keep -text
 contrib/logo.jpg -text
+contrib/mibs/NETWORK-APPLIANCE-MIB.mib.txt -text
 doc/comparison_netxms_nnm.doc -text
 doc/internal/build.w64 -text
 doc/internal/netxms_architecture.vsd -text
@@ -41,6 +42,7 @@ images/vpnc.png -text
 images/zone.ico -text
 images/zone.png -text
 include/netxms_isc.h -text
+include/nxdbapi.h -text
 include/nxlpapi.h -text
 src/agent/core/nxagentd.vcproj -text
 src/agent/subagents/ecs/ecs.vcproj -text
@@ -210,6 +212,18 @@ src/client/windows/nxuilib/sounds/ring1.wav -text svneol=unset#unset
 src/client/windows/nxuilib/sounds/ring2.wav -text svneol=unset#unset
 src/client/windows/nxuilib/sounds/siren1.wav -text svneol=unset#unset
 src/client/windows/nxuilib/sounds/siren2.wav -text svneol=unset#unset
+src/db/Makefile.am -text
+src/db/dbdrv/mssql/mssql.vcproj -text
+src/db/dbdrv/mysql/mysql.vcproj -text
+src/db/dbdrv/odbc/odbc.vcproj -text
+src/db/dbdrv/oracle/oracle.vcproj -text
+src/db/dbdrv/pgsql/pgsql.vcproj -text
+src/db/dbdrv/sqlite/sqlite.vcproj -text
+src/db/libnxdb/db.cpp -text
+src/db/libnxdb/dbcp.cpp -text
+src/db/libnxdb/libnxdb.h -text
+src/db/libnxdb/libnxdb.vcproj -text
+src/db/libnxdb/main.cpp -text
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPCodes.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPDataInputStream.java -text
@@ -671,12 +685,6 @@ src/nxlptest/nxlptest.vcproj -text
 src/nxscript/nxscript.vcproj -text
 src/server/core/isc.cpp -text
 src/server/core/nxcore.vcproj -text
-src/server/dbdrv/mssql/mssql.vcproj -text
-src/server/dbdrv/mysql/mysql.vcproj -text
-src/server/dbdrv/odbc/odbc.vcproj -text
-src/server/dbdrv/oracle/oracle.vcproj -text
-src/server/dbdrv/pgsql/pgsql.vcproj -text
-src/server/dbdrv/sqlite/sqlite.vcproj -text
 src/server/include/Makefile.am -text
 src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/netxmsd/netxmsd.vcproj -text

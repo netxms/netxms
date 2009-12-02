@@ -25,20 +25,10 @@
 #define _libnxsrv_h_
 
 #include <nms_common.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#else    /* _WIN32 */
-#include <unistd.h>
-#include <string.h>
-#include <ctype.h>
-#endif   /* _WIN32 */
-
 #include <nms_util.h>
 #include <uuid.h>
 #include <nms_agent.h>
 #include <nms_threads.h>
-#include <dbdrv.h>
 #include <nms_cscp.h>
 #include <nxcpapi.h>
 #include <nxsrvapi.h>

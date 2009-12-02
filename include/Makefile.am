@@ -13,7 +13,7 @@ EXTRA_DIST = \
 	ata.h \
 	base64.h \
 	config-netware.h \
-	FlexLexer.h \
+	dbdrv.h \
 	geolocation.h \
 	netxmsdb.h \
 	netxms_getopt.h \

@@ -29,7 +29,9 @@ libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 		      ../../snmp/libnxsnmp/libnxsnmp.la \
 		      ../../libnxmap/libnxmap.la \
 		      ../../libnxlp/libnxlp.la \
-		      ../libnxsrv/libnxsrv.la ../../libnxsl/libnxsl.la
+		      ../../db/libnxdb/libnxdb.la \
+		      ../libnxsrv/libnxsrv.la \
+                      ../../libnxsl/libnxsl.la
 
 EXTRA_DIST = \
 	nxcore.vcproj \

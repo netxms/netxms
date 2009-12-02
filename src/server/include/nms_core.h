@@ -73,6 +73,7 @@
 #include <nxsnmp.h>
 #include <nxmodule.h>
 #include <nxsl.h>
+#include <nxdbapi.h>
 
 
 //

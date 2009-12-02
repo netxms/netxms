@@ -41,7 +41,6 @@
 #include <nxcpapi.h>
 #include <nms_agent.h>
 #include "../libnxsrv/messages.h"
-#include <dbdrv.h>
 #include <nxsnmp.h>
 #include <netxms_isc.h>
 
@@ -127,53 +126,6 @@
 #define ENCRYPTION_ALLOWED    1
 #define ENCRYPTION_PREFERRED  2
 #define ENCRYPTION_REQUIRED   3
-
-
-//
-// DB-related constants
-//
-
-#define MAX_DB_LOGIN          64
-#define MAX_DB_PASSWORD       64
-#define MAX_DB_NAME           256
-
-
-//
-// DB events
-//
-
-#define DBEVENT_CONNECTION_LOST        0
-#define DBEVENT_CONNECTION_RESTORED    1
-#define DBEVENT_QUERY_FAILED           2
-
-
-//
-// Database syntax codes
-//
-
-#define DB_SYNTAX_MYSQL    0
-#define DB_SYNTAX_PGSQL    1
-#define DB_SYNTAX_MSSQL    2
-#define DB_SYNTAX_ORACLE   3
-#define DB_SYNTAX_SQLITE   4
-#define DB_SYNTAX_UNKNOWN	-1
-
-
-//
-// Database connection structure
-//
-
-struct db_handle_t
-{
-   DB_CONNECTION hConn;
-   MUTEX mutexTransLock;      // Transaction lock
-   int nTransactionLevel;
-   TCHAR *pszServer;
-   TCHAR *pszLogin;
-   TCHAR *pszPassword;
-   TCHAR *pszDBName;
-};
-typedef db_handle_t * DB_HANDLE;
 
 
 //
@@ -471,62 +423,7 @@ BOOL LIBNXSRV_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryp
 
 void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...);
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...);
-
-BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
-                                void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *));
-DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void);
-DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(const TCHAR *pszServer, const TCHAR *pszDBName,
-                                          const TCHAR *pszLogin, const TCHAR *pszPassword);
-void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
-BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery);
-BOOL LIBNXSRV_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
-DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery);
-DB_RESULT LIBNXSRV_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
-DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *szQuery);
-DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
-BOOL LIBNXSRV_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult);
-int LIBNXSRV_EXPORTABLE DBGetColumnCount(DB_RESULT hResult);
-BOOL LIBNXSRV_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize);
-int LIBNXSRV_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult);
-BOOL LIBNXSRV_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize);
-TCHAR LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
-                                      TCHAR *pszBuffer, int nBufLen);
-LONG LIBNXSRV_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
-DWORD LIBNXSRV_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
-INT64 LIBNXSRV_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int iRow, int iColumn);
-QWORD LIBNXSRV_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iColumn);
-double LIBNXSRV_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn);
-DWORD LIBNXSRV_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn);
-BOOL LIBNXSRV_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
-                                             int *pnArray, int nSize, int nDefault);
-BOOL LIBNXSRV_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow,
-                                        int iColumn, uuid_t guid);
-TCHAR LIBNXSRV_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize);
-LONG LIBNXSRV_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn);
-DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn);
-INT64 LIBNXSRV_EXPORTABLE DBGetFieldAsyncInt64(DB_RESULT hResult, int iColumn);
-QWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iColumn);
-double LIBNXSRV_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn);
-DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn);
-int LIBNXSRV_EXPORTABLE DBGetNumRows(DB_RESULT hResult);
-void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult);
-void LIBNXSRV_EXPORTABLE DBFreeAsyncResult(DB_HANDLE hConn, DB_ASYNC_RESULT hResult);
-BOOL LIBNXSRV_EXPORTABLE DBBegin(DB_HANDLE hConn);
-BOOL LIBNXSRV_EXPORTABLE DBCommit(DB_HANDLE hConn);
-BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn);
-void LIBNXSRV_EXPORTABLE DBUnloadDriver(void);
-
-int LIBNXSRV_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn);
-int LIBNXSRV_EXPORTABLE DBGetSyntax(DB_HANDLE conn);
-
-String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str, int maxSize = -1);
-TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
-void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
-
-bool LIBNXSRV_EXPORTABLE DBConnectionPoolStartup(int basePoolSize, int maxPoolSize, int cooldownTime);
-void LIBNXSRV_EXPORTABLE DBConnectionPoolShutdown();
-DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectionPoolAcquireConnection();
-void LIBNXSRV_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection);
+void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args);
 
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 
@@ -539,11 +436,5 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code);
 
 extern DWORD LIBNXSRV_EXPORTABLE g_dwFlags;
 extern int LIBNXSRV_EXPORTABLE g_nDebugLevel;
-extern TCHAR LIBNXSRV_EXPORTABLE g_szDbDriver[];
-extern TCHAR LIBNXSRV_EXPORTABLE g_szDbDrvParams[];
-extern TCHAR LIBNXSRV_EXPORTABLE g_szDbServer[];
-extern TCHAR LIBNXSRV_EXPORTABLE g_szDbLogin[];
-extern TCHAR LIBNXSRV_EXPORTABLE g_szDbPassword[];
-extern TCHAR LIBNXSRV_EXPORTABLE g_szDbName[];
 
 #endif   /* _nxsrvapi_h_ */

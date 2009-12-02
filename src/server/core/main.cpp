@@ -457,7 +457,8 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	g_pLazyRequestQueue = new Queue(64, 16);
 
 	// Initialize database driver and connect to database
-	if (!DBInit(TRUE, g_dwFlags & AF_LOG_SQL_ERRORS, (g_nDebugLevel >= 9), DBEventHandler))
+	DBSetDebugPrintCallback(DbgPrintf2);
+	if (!DBInit(MSG_OTHER, (g_dwFlags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0, (g_nDebugLevel >= 9), DBEventHandler))
 		return FALSE;
 
 	// Connect to database

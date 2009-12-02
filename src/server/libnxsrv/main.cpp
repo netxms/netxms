@@ -160,6 +160,17 @@ void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT)
 // Debug printf - write debug record to log if level is less or equal current debug level
 //
 
+void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args)
+{
+   TCHAR buffer[4096];
+
+	if (level > g_nDebugLevel)
+      return;     // Required application flag(s) not set
+
+	_vsntprintf(buffer, 4096, format, args);
+   nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
+}
+
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
