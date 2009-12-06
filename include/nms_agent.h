@@ -304,6 +304,18 @@ typedef struct
 
 
 //
+// Subagent's push parameter information
+//
+
+typedef struct
+{
+   TCHAR name[MAX_PARAM_NAME];
+   int dataType;
+   TCHAR description[MAX_DB_STRING];
+} NETXMS_SUBAGENT_PUSHPARAM;
+
+
+//
 // Subagent's enum information
 //
 
@@ -332,7 +344,7 @@ typedef struct
 // Subagent initialization structure
 //
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20090905)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20091206)
 
 class CSCPMessage;
 
@@ -351,6 +363,8 @@ typedef struct
    NETXMS_SUBAGENT_ENUM *pEnumList;
    DWORD dwNumActions;
    NETXMS_SUBAGENT_ACTION *pActionList;
+	DWORD dwNumPushParameters;
+	NETXMS_SUBAGENT_PUSHPARAM *pPushParamList;
 } NETXMS_SUBAGENT_INFO;
 
 
@@ -419,5 +433,6 @@ void LIBNETXMS_EXPORTABLE AgentWriteLog2(int iLevel, const TCHAR *pszFormat, va_
 void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const char *pszFormat, ...);
 void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList);
 BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset);
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
 
 #endif   /* _nms_agent_h_ */

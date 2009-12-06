@@ -32,6 +32,7 @@ static void (* s_fpWriteLog)(int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(DWORD, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(DWORD, int, TCHAR **) = NULL;
 static BOOL (* s_fpSendFile)(void *, DWORD, const TCHAR *, long) = NULL;
+static BOOL (* s_fpPushData)(const TCHAR *, const TCHAR *) = NULL;
 
 
 //
@@ -41,12 +42,14 @@ static BOOL (* s_fpSendFile)(void *, DWORD, const TCHAR *, long) = NULL;
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, const TCHAR *),
 														void (* sendTrap1)(DWORD, const char *, va_list),
 														void (* sendTrap2)(DWORD, int, TCHAR **),
-														BOOL (* sendFile)(void *, DWORD, const TCHAR *, long))
+														BOOL (* sendFile)(void *, DWORD, const TCHAR *, long),
+														BOOL (* pushData)(const TCHAR *, const TCHAR *))
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;
 	s_fpSendTrap2 = sendTrap2;
 	s_fpSendFile = sendFile;
+	s_fpPushData = pushData;
 }
 
 
@@ -204,4 +207,16 @@ BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, DWORD requestId, 
 	if ((s_fpSendFile == NULL) || (session == NULL) || (file == NULL))
 		return FALSE;
 	return s_fpSendFile(session, requestId, file, offset);
+}
+
+
+//
+// Push parameter's value
+//
+
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value)
+{
+	if (s_fpPushData == NULL)
+		return FALSE;
+	return s_fpPushData(parameter, value);
 }

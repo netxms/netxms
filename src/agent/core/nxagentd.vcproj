@@ -389,6 +389,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\push.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\register.cpp"
 				>
 			</File>

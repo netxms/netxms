@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,6 +83,12 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
 										 pInfo->pParamList[i].pArg,
 										 pInfo->pParamList[i].iDataType,
 										 pInfo->pParamList[i].szDescription);
+
+					// Add push parameters provided by this subagent to common list
+					for(i = 0; i < pInfo->dwNumPushParameters; i++)
+						AddPushParameter(pInfo->pPushParamList[i].name, 
+						                 pInfo->pPushParamList[i].dataType,
+					                    pInfo->pPushParamList[i].description);
 
 					// Add enums provided by this subagent to common list
 					for(i = 0; i < pInfo->dwNumEnums; i++)

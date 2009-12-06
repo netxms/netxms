@@ -36,7 +36,7 @@ AgentConnectionEx::~AgentConnectionEx()
 // Trap processor
 //
 
-void AgentConnectionEx::OnTrap(CSCPMessage *pMsg)
+void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 {
    DWORD dwEventCode;
    int i, iNumArgs;
@@ -77,6 +77,29 @@ void AgentConnectionEx::OnTrap(CSCPMessage *pMsg)
    {
       DbgPrintf(3, _T("Cannot find node for IP address %s"), IpToStr(GetIpAddr(), szBuffer));
    }
+}
+
+
+//
+// Handler for data push
+//
+
+void AgentConnectionEx::onDataPush(CSCPMessage *msg)
+{
+	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
+
+	msg->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
+	msg->GetVariableStr(VID_VALUE, value, MAX_RESULT_LENGTH);
+
+	Node *node = FindNodeByIP(GetIpAddr());
+	if (node != NULL)
+	{
+		DCItem *dci = node->GetItemByName(name);
+		if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT))
+		{
+			dci->processNewValue(time(NULL), value);
+		}
+	}
 }
 
 

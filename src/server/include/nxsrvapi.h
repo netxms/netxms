@@ -279,8 +279,9 @@ protected:
 	DWORD generateRequestId() { return m_dwRequestId++; }
 
    virtual void PrintMsg(const TCHAR *pszFormat, ...);
-   virtual void OnTrap(CSCPMessage *pMsg);
-	virtual void OnFileDownload(BOOL success);
+   virtual void onTrap(CSCPMessage *pMsg);
+	virtual void onDataPush(CSCPMessage *msg);
+	virtual void onFileDownload(BOOL success);
 
    void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
    void Unlock(void) { MutexUnlock(m_mutexDataLock); }

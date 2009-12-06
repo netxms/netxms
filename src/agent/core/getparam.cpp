@@ -61,6 +61,8 @@ LONG H_PhysicalDiskInfo(const char *cmd, const char *arg, char *pValue);
 
 static NETXMS_SUBAGENT_PARAM *m_pParamList = NULL;
 static int m_iNumParams = 0;
+static NETXMS_SUBAGENT_PUSHPARAM *m_pPushParamList = NULL;
+static int m_iNumPushParams = 0;
 static NETXMS_SUBAGENT_ENUM *m_pEnumList = NULL;
 static int m_iNumEnums = 0;
 static DWORD m_dwTimedOutRequests = 0;
@@ -143,6 +145,20 @@ static LONG H_ParamList(const char *cmd, const char *arg, StringList *value)
 
    for(i = 0; i < m_iNumParams; i++)
 		value->add(m_pParamList[i].szName);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Handler for push parameters list
+//
+
+static LONG H_PushParamList(const char *cmd, const char *arg, StringList *value)
+{
+   int i;
+
+   for(i = 0; i < m_iNumPushParams; i++)
+		value->add(m_pPushParamList[i].name);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -245,7 +261,8 @@ static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
    { "Agent.ActionList", H_ActionList, NULL },
    { "Agent.SubAgentList", H_SubAgentList, NULL },
    { "Agent.SupportedEnums", H_EnumList, NULL },
-   { "Agent.SupportedParameters", H_ParamList, NULL }
+   { "Agent.SupportedParameters", H_ParamList, NULL },
+   { "Agent.SupportedPushParameters", H_PushParamList, NULL }
 };
 
 
@@ -271,6 +288,36 @@ BOOL InitParameterList(void)
    memcpy(m_pEnumList, m_stdEnums, sizeof(NETXMS_SUBAGENT_ENUM) * m_iNumEnums);
 
    return TRUE;
+}
+
+
+//
+// Add push parameter to list
+//
+
+void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
+{
+   int i;
+
+   // Search for existing parameter
+   for(i = 0; i < m_iNumPushParams; i++)
+      if (!stricmp(m_pPushParamList[i].name, name))
+         break;
+   if (i < m_iNumPushParams)
+   {
+      // Replace existing attributes
+      m_pPushParamList[i].dataType = dataType;
+      nx_strncpy(m_pPushParamList[i].description, description, MAX_DB_STRING);
+   }
+   else
+   {
+      // Add new parameter
+      m_pPushParamList = (NETXMS_SUBAGENT_PUSHPARAM *)realloc(m_pPushParamList, sizeof(NETXMS_SUBAGENT_PUSHPARAM) * (m_iNumPushParams + 1));
+      nx_strncpy(m_pPushParamList[m_iNumPushParams].name, name, MAX_PARAM_NAME - 1);
+      m_pPushParamList[m_iNumPushParams].dataType = dataType;
+      nx_strncpy(m_pPushParamList[m_iNumPushParams].description, description, MAX_DB_STRING);
+      m_iNumPushParams++;
+   }
 }
 
 
@@ -475,11 +522,28 @@ void GetParameterList(CSCPMessage *pMsg)
    int i;
    DWORD dwId;
 
+	// Parameters
    pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)m_iNumParams);
    for(i = 0, dwId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
    {
       pMsg->SetVariable(dwId++, m_pParamList[i].szName);
       pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
       pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
+   }
+
+	// Push parameters
+   pMsg->SetVariable(VID_NUM_PUSH_PARAMETERS, (DWORD)m_iNumPushParams);
+   for(i = 0, dwId = VID_PUSHPARAM_LIST_BASE; i < m_iNumPushParams; i++)
+   {
+      pMsg->SetVariable(dwId++, m_pPushParamList[i].name);
+      pMsg->SetVariable(dwId++, m_pPushParamList[i].description);
+      pMsg->SetVariable(dwId++, (WORD)m_pPushParamList[i].dataType);
+   }
+
+	// Enums
+   pMsg->SetVariable(VID_NUM_ENUMS, (DWORD)m_iNumEnums);
+   for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
+   {
+      pMsg->SetVariable(dwId++, m_pEnumList[i].szName);
    }
 }

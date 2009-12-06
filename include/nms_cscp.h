@@ -807,6 +807,8 @@ typedef struct
 #define VID_LONGITUDE               ((DWORD)344)
 #define VID_NUM_ORDERING_COLUMNS    ((DWORD)345)
 #define VID_SYSTEM_TAG              ((DWORD)346)
+#define VID_NUM_ENUMS               ((DWORD)347)
+#define VID_NUM_PUSH_PARAMETERS     ((DWORD)348) 
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -858,6 +860,8 @@ typedef struct
 
 // Base value for agent's parameter list
 #define VID_PARAM_LIST_BASE         ((DWORD)0x10000000)
+#define VID_ENUM_LIST_BASE          ((DWORD)0x20000000)
+#define VID_PUSHPARAM_LIST_BASE     ((DWORD)0x30000000)
 
 // Base value for DCI last values
 #define VID_DCI_VALUES_BASE         ((DWORD)0x10000000)

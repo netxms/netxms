@@ -303,7 +303,8 @@ typedef struct
 class AgentConnectionEx : public AgentConnection
 {
 protected:
-   virtual void OnTrap(CSCPMessage *pMsg);
+   virtual void onTrap(CSCPMessage *msg);
+   virtual void onDataPush(CSCPMessage *msg);
 
 public:
    AgentConnectionEx(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,

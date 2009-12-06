@@ -56,6 +56,8 @@ void StartWatchdog();
 void StopWatchdog();
 int WatchdogMain(DWORD pid);
 
+BOOL PushData(const TCHAR *parameter, const TCHAR *value);
+
 #if !defined(_WIN32) && !defined(_NETWARE)
 void InitStaticSubagents(void);
 #endif
@@ -665,7 +667,7 @@ BOOL Initialize(void)
 #endif
 
    // Initialize API for subagents
-   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer);
+   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer, PushData);
    DebugPrintf(INVALID_INDEX, "Subagent API initialized");
 
    // Initialize cryptografy

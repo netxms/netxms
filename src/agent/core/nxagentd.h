@@ -327,6 +327,7 @@ BOOL DownloadConfig(TCHAR *pszServer);
 BOOL InitParameterList(void);
 void AddParameter(const char *szName, LONG (* fpHandler)(const char *, const char *, char *), const char *pArg,
                   int iDataType, const char *pszDescription);
+void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
 void AddEnum(const char *szName, LONG (* fpHandler)(const char *, const char *, StringList *), const char *pArg);
 BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec);
 DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue);

@@ -150,7 +150,7 @@ AgentConnection::~AgentConnection()
 	if (m_hCurrFile != -1)
 	{
 		close(m_hCurrFile);
-		OnFileDownload(FALSE);
+		onFileDownload(FALSE);
 	}
 
    MutexDestroy(m_mutexDataLock);
@@ -263,7 +263,7 @@ void AgentConnection::ReceiverThread(void)
                   close(m_hCurrFile);
                   m_hCurrFile = -1;
             
-                  OnFileDownload(TRUE);
+                  onFileDownload(TRUE);
                }
 					else
 					{
@@ -279,7 +279,7 @@ void AgentConnection::ReceiverThread(void)
                close(m_hCurrFile);
                m_hCurrFile = -1;
          
-               OnFileDownload(FALSE);
+               onFileDownload(FALSE);
             }
 			}
 		}
@@ -287,14 +287,19 @@ void AgentConnection::ReceiverThread(void)
 		{
 			// Create message object from raw message
 			pMsg = new CSCPMessage(pRawMsg, m_nProtocolVersion);
-			if (pMsg->GetCode() == CMD_TRAP)
+			switch(pMsg->GetCode())
 			{
-				OnTrap(pMsg);
-				delete pMsg;
-			}
-			else
-			{
-				m_pMsgWaitQueue->Put(pMsg);
+				case CMD_TRAP:
+					onTrap(pMsg);
+					delete pMsg;
+					break;
+				case CMD_PUSH_DCI_DATA:
+					onDataPush(pMsg);
+					delete pMsg;
+					break;
+				default:
+					m_pMsgWaitQueue->Put(pMsg);
+					break;
 			}
 		}
    }
@@ -305,7 +310,7 @@ void AgentConnection::ReceiverThread(void)
 	{
 		close(m_hCurrFile);
 		m_hCurrFile = -1;
-		OnFileDownload(FALSE);
+		onFileDownload(FALSE);
 	}
 	
 	if (error == 0)
@@ -501,7 +506,7 @@ void AgentConnection::Disconnect(void)
 	{
 		close(m_hCurrFile);
 		m_hCurrFile = -1;
-		OnFileDownload(FALSE);
+		onFileDownload(FALSE);
 	}
 	
    if (m_hSocket != -1)
@@ -805,7 +810,17 @@ BOOL AgentConnection::SendMessage(CSCPMessage *pMsg)
 // actual trap processing. Default implementation do nothing.
 //
 
-void AgentConnection::OnTrap(CSCPMessage *pMsg)
+void AgentConnection::onTrap(CSCPMessage *pMsg)
+{
+}
+
+
+//
+// Data push handler. Should be overriden in derived classes to implement
+// actual data push processing. Default implementation do nothing.
+//
+
+void AgentConnection::onDataPush(CSCPMessage *pMsg)
 {
 }
 
@@ -1532,7 +1547,7 @@ DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bo
 // File upload completion handler
 //
 
-void AgentConnection::OnFileDownload(BOOL success)
+void AgentConnection::onFileDownload(BOOL success)
 {
 	if (!success && m_deleteFileOnDownloadFailure)
 		_tremove(m_currentFileName);
