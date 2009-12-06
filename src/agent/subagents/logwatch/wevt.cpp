@@ -23,6 +23,7 @@
 #define _WIN32_WINNT 0x0600
 #include "logwatch.h"
 #include <winevt.h>
+#include <winmeta.h>
 
 
 //
@@ -64,7 +65,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	if (!_EvtRender(renderContext, event, EvtRenderEventValues, 4096, buffer, &reqSize, &propCount))
 	{
 		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Call to EvtRender failed: %s"),
-							 GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+		              GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
 
@@ -92,7 +93,22 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	// Severity level
 	DWORD level = 0;
 	if (values[2].Type == EvtVarTypeByte)
-		level = values[2].ByteVal;
+	{
+		switch(values[2].ByteVal)
+		{
+			case WINEVENT_LEVEL_CRITICAL:
+			case WINEVENT_LEVEL_ERROR:
+				level = EVENTLOG_ERROR_TYPE;
+				break;
+			case WINEVENT_LEVEL_WARNING :
+				level = EVENTLOG_WARNING_TYPE;
+				break;
+			case WINEVENT_LEVEL_INFO:
+			case WINEVENT_LEVEL_VERBOSE:
+				level = EVENTLOG_INFORMATION_TYPE;
+				break;
+		}
+	}
 
 	// Open publisher metadata
 	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, LOCALE_USER_DEFAULT, 0);
