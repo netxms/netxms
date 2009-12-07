@@ -235,7 +235,8 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 			query.addFormattedString(_T("SELECT TOP ") INT64_FMT _T(" %s FROM %s"), startRow + numRows, (const TCHAR *)m_queryColumns, m_tempTable);
 			break;
 		case DB_SYNTAX_ORACLE:
-			query.addFormattedString(_T("SELECT %s FROM %s WHERE ROWNUM BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, (const TCHAR *)m_queryColumns, m_tempTable, startRow, startRow + numRows);
+			query.addFormattedString(_T("SELECT %s FROM (SELECT %s,ROWNUM AS R FROM %s) WHERE R BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT,
+			                         (const TCHAR *)m_queryColumns, (const TCHAR *)m_queryColumns, m_tempTable, startRow + 1, startRow + numRows);
 			break;
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
@@ -253,12 +254,12 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows)
 		{
 			int resultSize = DBGetNumRows(result);
 			int offset = (int)max(0, resultSize - (int)numRows); // MSSQL workaround
-			for (int i = 0; i < resultSize; i++)
+			for (int i = offset; i < resultSize; i++)
 			{
 				table->addRow();
 				for (int j = 0; j < columnCount; j++)
 				{
-					table->setPreallocated(j, DBGetField(result, offset + i, j, NULL, 0));
+					table->setPreallocated(j, DBGetField(result, i, j, NULL, 0));
 				}
 			}
 
