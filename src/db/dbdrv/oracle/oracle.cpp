@@ -164,11 +164,6 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 	ORACLE_CONN *pConn;
 	UCS2CHAR *pwszStr;
 
-	if ((pszDatabase == NULL) || (*pszDatabase == 0))
-	{
-		return NULL;
-	}
-
 	pConn = (ORACLE_CONN *)malloc(sizeof(ORACLE_CONN));
 	if (pConn != NULL)
 	{

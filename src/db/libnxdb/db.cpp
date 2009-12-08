@@ -111,7 +111,7 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, const TCHAR *pszSymbol)
 //
 
 BOOL LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode, BOOL bDumpSQL,
-                                void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *))
+                               void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *))
 {
    BOOL (* fpDrvInit)(char *);
    DWORD *pdwAPIVersion;
@@ -241,6 +241,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectEx(const TCHAR *pszServer, const TCHAR *ps
    DB_CONNECTION hDrvConn;
    DB_HANDLE hConn = NULL;
 
+	__DbgPrintf(8, _T("DBConnectEx: server=%s db=%s login=%s"), pszServer, pszDBName, pszLogin);
    hDrvConn = m_fpDrvConnect(pszServer, pszLogin, pszPassword, pszDBName);
    if (hDrvConn != NULL)
    {

@@ -31,4 +31,44 @@
 
 void __DbgPrintf(int level, const TCHAR *format, ...);
 
+
+//
+// Database driver structure
+//
+
+struct _DB_DRIVER
+{
+	BOOL m_bWriteLog;
+	BOOL m_bLogSQLErrors;
+	DWORD m_logMsgCode;
+	DWORD m_sqlErrorMsgCode;
+	BOOL m_bDumpSQL;
+	int m_nReconnect;
+	MUTEX m_mutexReconnect;
+	HMODULE m_hDriver;
+	DB_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *);
+	void (* m_fpDrvDisconnect)(DB_CONNECTION);
+	DWORD (* m_fpDrvQuery)(DB_CONNECTION, WCHAR *, TCHAR *);
+	DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *);
+	DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *);
+	BOOL (* m_fpDrvFetch)(DB_ASYNC_RESULT);
+	LONG (* m_fpDrvGetFieldLength)(DB_RESULT, int, int);
+	LONG (* m_fpDrvGetFieldLengthAsync)(DB_RESULT, int);
+	WCHAR* (* m_fpDrvGetField)(DB_RESULT, int, int, WCHAR *, int);
+	WCHAR* (* m_fpDrvGetFieldAsync)(DB_ASYNC_RESULT, int, WCHAR *, int);
+	int (* m_fpDrvGetNumRows)(DB_RESULT);
+	void (* m_fpDrvFreeResult)(DB_RESULT);
+	void (* m_fpDrvFreeAsyncResult)(DB_ASYNC_RESULT);
+	DWORD (* m_fpDrvBegin)(DB_CONNECTION);
+	DWORD (* m_fpDrvCommit)(DB_CONNECTION);
+	DWORD (* m_fpDrvRollback)(DB_CONNECTION);
+	void (* m_fpDrvUnload)(void);
+	void (* m_fpEventHandler)(DWORD, const TCHAR *, const TCHAR *);
+	int (* m_fpDrvGetColumnCount)(DB_RESULT);
+	const char* (* m_fpDrvGetColumnName)(DB_RESULT, int);
+	int (* m_fpDrvGetColumnCountAsync)(DB_ASYNC_RESULT);
+	const char* (* m_fpDrvGetColumnNameAsync)(DB_ASYNC_RESULT, int);
+	TCHAR* (* m_fpDrvPrepareString)(const TCHAR *);
+};
+
 #endif   /* _libnxsrv_h_ */
