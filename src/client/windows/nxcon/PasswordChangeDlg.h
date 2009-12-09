@@ -17,6 +17,7 @@ class CPasswordChangeDlg : public CDialog
 // Construction
 public:
 	TCHAR m_szPassword[MAX_PASSWORD_LENGTH];
+	TCHAR m_szOldPassword[MAX_PASSWORD_LENGTH];
 	CPasswordChangeDlg(int nTemplate, CWnd* pParent = NULL);
 
 // Dialog Data
@@ -25,6 +26,7 @@ public:
 	CEdit	m_wndEditBox2;
 	CEdit	m_wndEditBox1;
 	//}}AFX_DATA
+	CEdit m_wndEditBoxOldPasswd;
 
 
 // Overrides
@@ -36,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	int m_nTemplate;
 
 	// Generated message map functions
 	//{{AFX_MSG(CPasswordChangeDlg)

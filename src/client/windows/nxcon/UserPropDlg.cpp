@@ -114,6 +114,8 @@ BOOL CUserPropDlg::OnInitDialog()
       EnableDlgItem(this, IDC_CHECK_MANAGE_AGENT_CFG, FALSE);
       EnableDlgItem(this, IDC_CHECK_MANAGE_SCRIPTS, FALSE);
       EnableDlgItem(this, IDC_CHECK_VIEW_TRAP_LOG, FALSE);
+      EnableDlgItem(this, IDC_CHECK_REGISTER_AGENTS, FALSE);
+      EnableDlgItem(this, IDC_CHECK_ACCESS_FILES, FALSE);
    }
 
    for(i = 0; g_szAuthMethod[i] != NULL; i++)

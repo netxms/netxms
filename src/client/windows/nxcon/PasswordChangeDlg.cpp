@@ -18,6 +18,8 @@ static char THIS_FILE[] = __FILE__;
 CPasswordChangeDlg::CPasswordChangeDlg(int nTemplate, CWnd* pParent /*=NULL*/)
 	: CDialog(nTemplate, pParent)
 {
+	m_nTemplate = nTemplate;
+
 	//{{AFX_DATA_INIT(CPasswordChangeDlg)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
@@ -31,6 +33,9 @@ void CPasswordChangeDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_PASSWD2, m_wndEditBox2);
 	DDX_Control(pDX, IDC_EDIT_PASSWD1, m_wndEditBox1);
 	//}}AFX_DATA_MAP
+
+	if (m_nTemplate == IDD_CHANGE_PASSWORD_CONFIRM)
+		DDX_Control(pDX, IDC_EDIT_PASSWD_OLD, m_wndEditBoxOldPasswd);
 }
 
 
@@ -58,6 +63,10 @@ void CPasswordChangeDlg::OnOK()
    else
    {
       _tcscpy(m_szPassword, szPasswd1);
+		if (m_nTemplate == IDD_CHANGE_PASSWORD_CONFIRM)
+		{
+		   m_wndEditBoxOldPasswd.GetWindowText(m_szOldPassword, MAX_PASSWORD_LENGTH);
+		}
 	   CDialog::OnOK();
    }
 }

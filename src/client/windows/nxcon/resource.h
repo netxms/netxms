@@ -281,6 +281,7 @@
 #define IDD_OBJECT_NODE_CONN            407
 #define IDD_EDIT_COLUMN                 408
 #define IDD_OBJECT_GEOLOCATION          411
+#define IDD_CHANGE_PASSWORD_CONFIRM     412
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -362,6 +363,7 @@
 #define IDC_BUTTON_DELETE               1054
 #define IDC_EDIT_PASSWD1                1055
 #define IDC_EDIT_PASSWD2                1056
+#define IDC_EDIT_PASSWD_OLD             1057
 #define IDC_BUTTON_SELECT               1062
 #define IDC_BUTTON_SELECT_REARM_EVENT   1063
 #define IDC_BUTTON_SELECT_PROXY         1063
@@ -1043,7 +1045,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        412
+#define _APS_NEXT_RESOURCE_VALUE        413
 #define _APS_NEXT_COMMAND_VALUE         33112
 #define _APS_NEXT_CONTROL_VALUE         1562
 #define _APS_NEXT_SYMED_VALUE           135

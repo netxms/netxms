@@ -621,13 +621,15 @@ void CUserEditor::OnUserSetpassword()
       pUser = NXCFindUserById(g_hSession, dwId);
       if (pUser != NULL)
       {
-         CPasswordChangeDlg dlg(IDD_SET_PASSWORD);
+			bool changeOwnPassword = (dwId == NXCGetCurrentUserId(g_hSession));
+         CPasswordChangeDlg dlg(changeOwnPassword ? IDD_CHANGE_PASSWORD_CONFIRM : IDD_SET_PASSWORD);
 
          if (dlg.DoModal() == IDOK)
          {
             DWORD dwResult;
 
-            dwResult = DoRequestArg4(NXCSetPassword, g_hSession, (void *)dwId, dlg.m_szPassword, NULL, _T("Changing password..."));
+            dwResult = DoRequestArg4(NXCSetPassword, g_hSession, (void *)dwId, dlg.m_szPassword,
+				                         changeOwnPassword ? dlg.m_szOldPassword : NULL, _T("Changing password..."));
             if (dwResult != RCC_SUCCESS)
                theApp.ErrorBox(dwResult, _T("Cannot change password: %s"));
             else

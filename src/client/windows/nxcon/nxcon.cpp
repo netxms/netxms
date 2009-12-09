@@ -3352,7 +3352,7 @@ void CConsoleApp::OnDesktopManage()
 
 void CConsoleApp::OnToolsChangepassword() 
 {
-   CPasswordChangeDlg dlg(IDD_SET_PASSWORD);
+   CPasswordChangeDlg dlg(IDD_CHANGE_PASSWORD_CONFIRM);
 
    if (dlg.DoModal() == IDOK)
    {
@@ -3360,7 +3360,7 @@ void CConsoleApp::OnToolsChangepassword()
 
       dwResult = DoRequestArg4(NXCSetPassword, g_hSession, 
                                (void *)NXCGetCurrentUserId(g_hSession),
-                               dlg.m_szPassword, oldPasswordHere, _T("Changing password..."));
+                               dlg.m_szPassword, dlg.m_szOldPassword, _T("Changing password..."));
       if (dwResult == RCC_SUCCESS)
       {
          m_pMainWnd->MessageBox(_T("Password was successfully changed"),
