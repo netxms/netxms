@@ -466,7 +466,7 @@ DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
 // Set user's password
 //
 
-DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, BYTE *password, BOOL resetChPasswd)
+DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, BYTE *newPassword, BYTE *oldPassword, bool changeOwnPassword)
 {
 	int i;
    DWORD dwResult = RCC_INVALID_USER_ID;
@@ -480,7 +480,15 @@ DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, BYTE *password, BOOL resetChPa
    for(i = 0; i < m_userCount; i++)
 		if (m_users[i]->getId() == id)
       {
-			((User *)m_users[i])->setPassword(password, resetChPasswd ? true : false);
+			if (changeOwnPassword)
+			{
+				if (!((User *)m_users[i])->validateHashedPassword(oldPassword))
+				{
+					dwResult = RCC_ACCESS_DENIED;
+					break;
+				}
+			}
+			((User *)m_users[i])->setPassword(newPassword, changeOwnPassword);
          dwResult = RCC_SUCCESS;
          break;
       }

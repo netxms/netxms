@@ -2630,10 +2630,14 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
        (dwUserId == m_dwUserId))     // User can change password for itself
    {
       DWORD dwResult;
-      BYTE szPassword[SHA1_DIGEST_SIZE];
+      BYTE newPassword[SHA1_DIGEST_SIZE], oldPassword[SHA1_DIGEST_SIZE];
 
-      pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA1_DIGEST_SIZE);
-      dwResult = SetUserPassword(dwUserId, szPassword, dwUserId == m_dwUserId);
+      pRequest->GetVariableBinary(VID_PASSWORD, newPassword, SHA1_DIGEST_SIZE);
+		if (pRequest->IsVariableExist(VID_OLD_PASSWORD))
+			pRequest->GetVariableBinary(VID_OLD_PASSWORD, oldPassword, SHA1_DIGEST_SIZE);
+		else
+			memset(oldPassword, 0, SHA1_DIGEST_SIZE);
+      dwResult = SetUserPassword(dwUserId, newPassword, oldPassword, dwUserId == m_dwUserId);
       msg.SetVariable(VID_RCC, dwResult);
    }
    else

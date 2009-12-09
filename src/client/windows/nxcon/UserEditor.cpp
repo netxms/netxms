@@ -627,7 +627,7 @@ void CUserEditor::OnUserSetpassword()
          {
             DWORD dwResult;
 
-            dwResult = DoRequestArg3(NXCSetPassword, g_hSession, (void *)dwId, dlg.m_szPassword, _T("Changing password..."));
+            dwResult = DoRequestArg4(NXCSetPassword, g_hSession, (void *)dwId, dlg.m_szPassword, NULL, _T("Changing password..."));
             if (dwResult != RCC_SUCCESS)
                theApp.ErrorBox(dwResult, _T("Cannot change password: %s"));
             else

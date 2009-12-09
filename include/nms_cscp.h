@@ -809,6 +809,7 @@ typedef struct
 #define VID_SYSTEM_TAG              ((DWORD)346)
 #define VID_NUM_ENUMS               ((DWORD)347)
 #define VID_NUM_PUSH_PARAMETERS     ((DWORD)348) 
+#define VID_OLD_PASSWORD            ((DWORD)349)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

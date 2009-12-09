@@ -613,6 +613,9 @@ public final class NXCPCodes
 	public static final long VID_LONGITUDE               = 344;
 	public static final long VID_NUM_ORDERING_COLUMNS    = 345;
 	public static final long VID_SYSTEM_TAG              = 346;
+	public static final long VID_NUM_ENUMS               = 347;
+	public static final long VID_NUM_PUSH_PARAMETERS     = 348;
+	public static final long VID_OLD_PASSWORD            = 349;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

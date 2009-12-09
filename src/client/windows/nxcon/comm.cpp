@@ -196,7 +196,7 @@ static DWORD WINAPI LoginThread(void *pArg)
          if (SendMessage(hWnd, NXCM_CHANGE_PASSWORD, 0, (LPARAM)szPassword))
          {
             SetInfoText(hWnd, _T("Changing password..."));
-            dwResult = NXCSetPassword(g_hSession, NXCGetCurrentUserId(g_hSession), szPassword);
+            dwResult = NXCSetPassword(g_hSession, NXCGetCurrentUserId(g_hSession), szPassword, g_szPassword);
          }
       }
    }

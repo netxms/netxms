@@ -450,6 +450,11 @@ bool User::validatePassword(const TCHAR *password)
 	return !memcmp(hash, m_passwordHash, SHA1_DIGEST_SIZE);
 }
 
+bool User::validateHashedPassword(const BYTE *password)
+{
+	return !memcmp(password, m_passwordHash, SHA1_DIGEST_SIZE);
+}
+
 
 //
 // Set user's password

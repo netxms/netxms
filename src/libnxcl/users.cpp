@@ -219,8 +219,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserIn
 // Set password for user
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId, 
-                                        TCHAR *pszNewPassword)
+DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD userId, 
+                                        const TCHAR *newPassword, const TCHAR *oldPassword)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -228,22 +228,34 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId,
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-#ifdef UNICODE
-   char szTemp[256];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       pszNewPassword, -1, szTemp, 256, NULL, NULL);
-   CalculateSHA1Hash((BYTE *)szTemp, strlen(szTemp), hash);
-#else
-   CalculateSHA1Hash((BYTE *)pszNewPassword, strlen(pszNewPassword), hash);
-#endif
-
    msg.SetCode(CMD_SET_PASSWORD);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_USER_ID, dwUserId);
-   msg.SetVariable(VID_PASSWORD, hash, SHA1_DIGEST_SIZE);
-   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   msg.SetVariable(VID_USER_ID, userId);
 
+#ifdef UNICODE
+   char temp[256];
+
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       newPassword, -1, temp, 256, NULL, NULL);
+   CalculateSHA1Hash((BYTE *)temp, strlen(temp), hash);
+#else
+   CalculateSHA1Hash((BYTE *)newPassword, strlen(newPassword), hash);
+#endif
+   msg.SetVariable(VID_PASSWORD, hash, SHA1_DIGEST_SIZE);
+
+	if (oldPassword != NULL)
+	{
+#ifdef UNICODE
+		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+								  oldPassword, -1, temp, 256, NULL, NULL);
+		CalculateSHA1Hash((BYTE *)temp, strlen(temp), hash);
+#else
+		CalculateSHA1Hash((BYTE *)oldPassword, strlen(oldPassword), hash);
+#endif
+	   msg.SetVariable(VID_OLD_PASSWORD, hash, SHA1_DIGEST_SIZE);
+	}
+
+	((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 

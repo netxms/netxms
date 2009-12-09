@@ -122,6 +122,7 @@ public:
 	const TCHAR *getCertMappingData() { return m_certMappingData; }
 
 	bool validatePassword(const TCHAR *password);
+	bool validateHashedPassword(const BYTE *password);
 	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; }
 	void setPassword(BYTE *passwordHash, bool clearChangePasswdFlag);
 };
@@ -207,7 +208,7 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 							  DWORD *pdwId, DWORD *pdwSystemRights,
 							  BOOL *pbChangePasswd);
 
-DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD dwId, BYTE *pszPassword, BOOL bResetChPasswd);
+DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, BYTE *newPassword, BYTE *oldPassword, bool changeOwnPassword);
 bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id);
 DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId);

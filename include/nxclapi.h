@@ -1914,7 +1914,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName, BOO
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo);
 DWORD LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserInfo, DWORD dwFields);
-DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId, TCHAR *pszNewPassword);
+DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD userId, const TCHAR *newPassword, const TCHAR *oldPassword);
 BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
                                             TCHAR *pszVarName, TCHAR *pszValue, DWORD dwSize);

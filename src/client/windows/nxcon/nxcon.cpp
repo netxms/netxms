@@ -3358,9 +3358,9 @@ void CConsoleApp::OnToolsChangepassword()
    {
       DWORD dwResult;
 
-      dwResult = DoRequestArg3(NXCSetPassword, g_hSession, 
+      dwResult = DoRequestArg4(NXCSetPassword, g_hSession, 
                                (void *)NXCGetCurrentUserId(g_hSession),
-                               dlg.m_szPassword, _T("Changing password..."));
+                               dlg.m_szPassword, oldPasswordHere, _T("Changing password..."));
       if (dwResult == RCC_SUCCESS)
       {
          m_pMainWnd->MessageBox(_T("Password was successfully changed"),
