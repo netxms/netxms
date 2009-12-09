@@ -277,7 +277,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
                  m_qnTrapId, dwTimeStamp, IpToStr(dwOriginAddr, szBuffer),
                  (pNode != NULL) ? pNode->Id() : (DWORD)0, pdu->getTrapId()->GetValueAsText(),
-                 (const TCHAR *)DBPrepareString(pszTrapArgs));
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, pszTrapArgs));
       QueueSQLRequest(szQuery);
 
       // Notify connected clients

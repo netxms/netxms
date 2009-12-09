@@ -69,31 +69,34 @@
 
 
 //
-// Database connection structure
+// Database connection structures
 //
 
-struct db_handle_t
-{
-   DB_CONNECTION hConn;
-   MUTEX mutexTransLock;      // Transaction lock
-   int nTransactionLevel;
-   TCHAR *pszServer;
-   TCHAR *pszLogin;
-   TCHAR *pszPassword;
-   TCHAR *pszDBName;
-};
+struct db_driver_t;
+typedef db_driver_t * DB_DRIVER;
+
+struct db_handle_t;
 typedef db_handle_t * DB_HANDLE;
+
+struct db_result_t;
+typedef db_result_t * DB_RESULT;
+
+struct db_async_result_t;
+typedef db_async_result_t * DB_ASYNC_RESULT;
 
 
 //
 // Functions
 //
 
-BOOL LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode, BOOL bDumpSQL,
-                                void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *));
-DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(void);
-DB_HANDLE LIBNXDB_EXPORTABLE DBConnectEx(const TCHAR *pszServer, const TCHAR *pszDBName,
-                                          const TCHAR *pszLogin, const TCHAR *pszPassword);
+bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode);
+DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
+														bool dumpSQL, void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *, void *),
+														void *userArg);
+void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver);
+
+DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
+                                       const TCHAR *login, const TCHAR *password);
 void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
 BOOL LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery);
 BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
@@ -119,44 +122,33 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
 BOOL LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow,
                                         int iColumn, uuid_t guid);
 TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize);
-LONG LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn);
+LONG LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_ASYNC_RESULT hResult, int iColumn);
 DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn);
-INT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncInt64(DB_RESULT hResult, int iColumn);
+INT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncInt64(DB_ASYNC_RESULT hResult, int iColumn);
 QWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iColumn);
-double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn);
-DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn);
+double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_ASYNC_RESULT hResult, int iColumn);
+DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iColumn);
 int LIBNXDB_EXPORTABLE DBGetNumRows(DB_RESULT hResult);
 void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult);
 void LIBNXDB_EXPORTABLE DBFreeAsyncResult(DB_HANDLE hConn, DB_ASYNC_RESULT hResult);
 BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn);
 BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn);
 BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn);
-void LIBNXDB_EXPORTABLE DBUnloadDriver(void);
 
 int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn);
 int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn);
 
-String LIBNXDB_EXPORTABLE DBPrepareString(const TCHAR *str, int maxSize = -1);
+String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize = -1);
 TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 
-bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(int basePoolSize, int maxPoolSize, int cooldownTime);
+bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
+																const TCHAR *login, const TCHAR *password,
+																int basePoolSize, int maxPoolSize, int cooldownTime);
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown();
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection();
 void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection);
 
 void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list));
-
-
-//
-// Variables
-//
-
-extern TCHAR LIBNXDB_EXPORTABLE g_szDbDriver[];
-extern TCHAR LIBNXDB_EXPORTABLE g_szDbDrvParams[];
-extern TCHAR LIBNXDB_EXPORTABLE g_szDbServer[];
-extern TCHAR LIBNXDB_EXPORTABLE g_szDbLogin[];
-extern TCHAR LIBNXDB_EXPORTABLE g_szDbPassword[];
-extern TCHAR LIBNXDB_EXPORTABLE g_szDbName[];
 
 #endif   /* _nxsrvapi_h_ */

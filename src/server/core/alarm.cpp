@@ -234,11 +234,11 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
                        "(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%s,%d,%d,%d,%d," UINT64_FMT ")",
               alarm.dwAlarmId, alarm.dwCreationTime, alarm.dwLastChangeTime,
 				  alarm.dwSourceObject, alarm.dwSourceEventCode,
-				  (const TCHAR *)DBPrepareString(alarm.szMessage),
+				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szMessage),
               alarm.nOriginalSeverity, alarm.nCurrentSeverity,
-				  (const TCHAR *)DBPrepareString(alarm.szKey),
+				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szKey),
               alarm.nState, alarm.dwAckByUser, alarm.nHelpDeskState,
-				  (const TCHAR *)DBPrepareString(alarm.szHelpDeskRef),
+				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szHelpDeskRef),
               alarm.dwRepeatCount, alarm.dwTermByUser, alarm.dwTimeout,
 				  alarm.dwTimeoutEvent, alarm.qwSourceEventId);
       QueueSQLRequest(szQuery);
@@ -423,7 +423,7 @@ void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
            pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
            pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
            pAlarm->dwRepeatCount, pAlarm->nHelpDeskState, 
-			  (const TCHAR *)DBPrepareString(pAlarm->szHelpDeskRef),
+			  (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szHelpDeskRef),
            pAlarm->dwTimeout, pAlarm->dwTimeoutEvent, pAlarm->dwAlarmId);
    QueueSQLRequest(szQuery);
 }

@@ -107,7 +107,7 @@ String ColumnFilter::generateSql()
 			sql.addFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
 			break;
 		case FILTER_LIKE:
-			sql.addFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(m_value.like));
+			sql.addFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_hCoreDB, m_value.like));
 			break;
 		case FILTER_SET:
 			bool first = true;

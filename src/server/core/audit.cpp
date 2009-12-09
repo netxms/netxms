@@ -153,8 +153,8 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD 
 	va_end(args);
 
 	query.addFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%s)"),
-		       m_dwRecordId++, time(NULL), (const TCHAR *)DBPrepareString(subsys), isSuccess ? 1 : 0, 
-		       userId, (const TCHAR *)DBPrepareString(workstation), objectId, (const TCHAR *)DBPrepareString(text));
+		       m_dwRecordId++, time(NULL), (const TCHAR *)DBPrepareString(g_hCoreDB, subsys), isSuccess ? 1 : 0, 
+		       userId, (const TCHAR *)DBPrepareString(g_hCoreDB, workstation), objectId, (const TCHAR *)DBPrepareString(g_hCoreDB, text));
 	QueueSQLRequest(query);
 
 	msg.SetCode(CMD_AUDIT_RECORD);

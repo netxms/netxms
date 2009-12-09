@@ -32,10 +32,26 @@ static void (*s_dbgPrintCb)(int, const TCHAR *, va_list) = NULL;
 
 
 //
+// Write log
+//
+
+void __DBWriteLog(WORD level, const TCHAR *format, ...)
+{
+	TCHAR buffer[4096];
+	va_list args;
+	
+	va_start(args, format);
+	_vsntprintf(buffer, 4096, format, args);
+	va_end(args);
+	nxlog_write(g_logMsgCode, level, "s", buffer);
+}
+
+
+//
 // Debug output
 //
 
-void __DbgPrintf(int level, const TCHAR *format, ...)
+void __DBDbgPrintf(int level, const TCHAR *format, ...)
 {
 	if (s_dbgPrintCb != NULL)
 	{

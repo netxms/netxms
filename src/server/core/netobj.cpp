@@ -255,14 +255,14 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
                     _T("status_single_threshold=%d,status_thresholds='%s',")
                     _T("comments=%s,is_system=%d,location_type=%d,latitude=%s,")
 						  _T("longitude=%s WHERE object_id=%d"),
-                    (const TCHAR *)DBPrepareString(m_szName), m_iStatus, m_bIsDeleted,
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, m_szName), m_iStatus, m_bIsDeleted,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
                     szTranslation, m_iStatusSingleThreshold, szThresholds,
-						  (const TCHAR *)DBPrepareString(CHECK_NULL_EX(m_pszComments)),
+						  (const TCHAR *)DBPrepareString(g_hCoreDB, CHECK_NULL_EX(m_pszComments)),
 						  m_bIsSystem, m_geoLocation.getType(),
-						  (const TCHAR *)DBPrepareString(m_geoLocation.getLatitudeAsString()),
-						  (const TCHAR *)DBPrepareString(m_geoLocation.getLongitudeAsString()), m_dwId);
+						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_geoLocation.getLatitudeAsString()),
+						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_geoLocation.getLongitudeAsString()), m_dwId);
       }
       else
       {
@@ -273,14 +273,14 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
 						  _T("location_type,latitude,longitude) ")
                     _T("VALUES (%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s',%s,%d,%d,%s,%s)"),
-                    m_dwId, (const TCHAR *)DBPrepareString(m_szName), m_iStatus, m_bIsDeleted,
+                    m_dwId, (const TCHAR *)DBPrepareString(g_hCoreDB, m_szName), m_iStatus, m_bIsDeleted,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
                     szTranslation, m_iStatusSingleThreshold, szThresholds,
-                    (const TCHAR *)DBPrepareString(CHECK_NULL_EX(m_pszComments)),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, CHECK_NULL_EX(m_pszComments)),
 						  m_bIsSystem, m_geoLocation.getType(),
-						  (const TCHAR *)DBPrepareString(m_geoLocation.getLatitudeAsString()),
-						  (const TCHAR *)DBPrepareString(m_geoLocation.getLongitudeAsString()));
+						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_geoLocation.getLatitudeAsString()),
+						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_geoLocation.getLongitudeAsString()));
       }
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);

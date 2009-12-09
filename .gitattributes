@@ -221,11 +221,12 @@ src/db/dbdrv/oracle/oracle.vcproj -text
 src/db/dbdrv/pgsql/pgsql.vcproj -text
 src/db/dbdrv/sqlite/sqlite.vcproj -text
 src/db/libnxdb/Makefile.am -text
-src/db/libnxdb/db.cpp -text
 src/db/libnxdb/dbcp.cpp -text
+src/db/libnxdb/drivers.cpp -text
 src/db/libnxdb/libnxdb.h -text
 src/db/libnxdb/libnxdb.vcproj -text
 src/db/libnxdb/main.cpp -text
+src/db/libnxdb/session.cpp -text
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPCodes.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPDataInputStream.java -text

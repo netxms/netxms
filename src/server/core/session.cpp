@@ -3166,7 +3166,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
       {
          if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
          {
-            DB_ASYNC_RESULT hResult;
+            DB_RESULT hResult;
             DWORD i, dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo;
             DWORD dwNumRows = 0;
             TCHAR szQuery[512], szCond[256];
@@ -10538,8 +10538,8 @@ void ClientSession::updateUsmCredentials(CSCPMessage *request)
 						request->GetVariableStr(id++, authPasswd, MAX_DB_STRING);
 						request->GetVariableStr(id++, privPasswd, MAX_DB_STRING);
 						_sntprintf(query, 4096, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password) VALUES(%d,%s,%d,%d,%s,%s)"),
-									  i + 1, (const TCHAR *)DBPrepareString(name), authMethod, privMethod,
-									  (const TCHAR *)DBPrepareString(authPasswd), (const TCHAR *)DBPrepareString(privPasswd));
+									  i + 1, (const TCHAR *)DBPrepareString(g_hCoreDB, name), authMethod, privMethod,
+									  (const TCHAR *)DBPrepareString(g_hCoreDB, authPasswd), (const TCHAR *)DBPrepareString(g_hCoreDB, privPasswd));
 						if (!DBQuery(hdb, query))
 							break;
 					}

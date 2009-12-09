@@ -24,242 +24,36 @@
 
 
 //
-// Global variables
-//
-
-TCHAR LIBNXDB_EXPORTABLE g_szDbDriver[MAX_PATH] = _T("");
-TCHAR LIBNXDB_EXPORTABLE g_szDbDrvParams[MAX_PATH] = _T("");
-TCHAR LIBNXDB_EXPORTABLE g_szDbServer[MAX_PATH] = _T("127.0.0.1");
-TCHAR LIBNXDB_EXPORTABLE g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
-TCHAR LIBNXDB_EXPORTABLE g_szDbPassword[MAX_DB_PASSWORD] = _T("");
-TCHAR LIBNXDB_EXPORTABLE g_szDbName[MAX_DB_NAME] = _T("netxms_db");
-
-
-//
-// Static data
-//
-
-static BOOL m_bWriteLog = FALSE;
-static BOOL m_bLogSQLErrors = FALSE;
-static DWORD m_logMsgCode = 0;
-static DWORD m_sqlErrorMsgCode = 0;
-static BOOL m_bDumpSQL = FALSE;
-static int m_nReconnect = 0;
-static MUTEX m_mutexReconnect = INVALID_MUTEX_HANDLE;
-static HMODULE m_hDriver = NULL;
-static DB_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *) = NULL;
-static void (* m_fpDrvDisconnect)(DB_CONNECTION) = NULL;
-static DWORD (* m_fpDrvQuery)(DB_CONNECTION, WCHAR *, TCHAR *) = NULL;
-static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *) = NULL;
-static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *) = NULL;
-static BOOL (* m_fpDrvFetch)(DB_ASYNC_RESULT) = NULL;
-static LONG (* m_fpDrvGetFieldLength)(DB_RESULT, int, int) = NULL;
-static LONG (* m_fpDrvGetFieldLengthAsync)(DB_RESULT, int) = NULL;
-static WCHAR* (* m_fpDrvGetField)(DB_RESULT, int, int, WCHAR *, int) = NULL;
-static WCHAR* (* m_fpDrvGetFieldAsync)(DB_ASYNC_RESULT, int, WCHAR *, int) = NULL;
-static int (* m_fpDrvGetNumRows)(DB_RESULT) = NULL;
-static void (* m_fpDrvFreeResult)(DB_RESULT) = NULL;
-static void (* m_fpDrvFreeAsyncResult)(DB_ASYNC_RESULT) = NULL;
-static DWORD (* m_fpDrvBegin)(DB_CONNECTION) = NULL;
-static DWORD (* m_fpDrvCommit)(DB_CONNECTION) = NULL;
-static DWORD (* m_fpDrvRollback)(DB_CONNECTION) = NULL;
-static void (* m_fpDrvUnload)(void) = NULL;
-static void (* m_fpEventHandler)(DWORD, const TCHAR *, const TCHAR *);
-static int (* m_fpDrvGetColumnCount)(DB_RESULT);
-static const char* (* m_fpDrvGetColumnName)(DB_RESULT, int);
-static int (* m_fpDrvGetColumnCountAsync)(DB_ASYNC_RESULT);
-static const char* (* m_fpDrvGetColumnNameAsync)(DB_ASYNC_RESULT, int);
-static TCHAR* (* m_fpDrvPrepareString)(const TCHAR *) = NULL;
-
-
-//
-// Write log
-//
-
-static void WriteLog(WORD level, const TCHAR *format, ...)
-{
-	TCHAR buffer[4096];
-	va_list args;
-	
-	va_start(args, format);
-	_vsntprintf(buffer, 4096, format, args);
-	va_end(args);
-	nxlog_write(m_logMsgCode, level, "s", buffer);
-}
-
-
-//
-// Get symbol address and log errors
-//
-
-static void *DLGetSymbolAddrEx(HMODULE hModule, const TCHAR *pszSymbol)
-{
-   void *pFunc;
-   char szErrorText[256];
-
-   pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
-   if ((pFunc == NULL) && m_bWriteLog)
-      WriteLog(EVENTLOG_WARNING_TYPE, _T("Unable to resolve symbol \"%s\": %s"), pszSymbol, szErrorText);
-   return pFunc;
-}
-
-
-//
-// Load and initialize database driver
-// If logMsgCode == 0, logging will be disabled
-// If sqlErrorMsgCode == 0, failed SQL queries will not be logged
-//
-
-BOOL LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode, BOOL bDumpSQL,
-                               void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *))
-{
-   BOOL (* fpDrvInit)(char *);
-   DWORD *pdwAPIVersion;
-   char szErrorText[256];
-   static DWORD dwVersionZero = 0;
-
-	m_logMsgCode = logMsgCode;
-   m_bWriteLog = (logMsgCode > 0);
-	m_sqlErrorMsgCode = sqlErrorMsgCode;
-   m_bLogSQLErrors = (sqlErrorMsgCode > 0) && m_bWriteLog;
-   m_bDumpSQL = bDumpSQL;
-   m_fpEventHandler = fpEventHandler;
-   m_nReconnect = 0;
-   m_mutexReconnect = MutexCreate();
-
-   // Load driver's module
-   m_hDriver = DLOpen(g_szDbDriver, szErrorText);
-   if (m_hDriver == NULL)
-   {
-      if (m_bWriteLog)
-         WriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to load module \"%s\": %s"), g_szDbDriver, szErrorText);
-      return FALSE;
-   }
-
-   // Check API version supported by driver
-   pdwAPIVersion = (DWORD *)DLGetSymbolAddr(m_hDriver, "drvAPIVersion", NULL);
-   if (pdwAPIVersion == NULL)
-      pdwAPIVersion = &dwVersionZero;
-   if (*pdwAPIVersion != DBDRV_API_VERSION)
-   {
-      if (m_bWriteLog)
-         WriteLog(EVENTLOG_ERROR_TYPE, _T("Database driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
-                  g_szDbDriver, (int)(DBDRV_API_VERSION), (int)(*pdwAPIVersion));
-      DLClose(m_hDriver);
-      m_hDriver = NULL;
-      return FALSE;
-   }
-
-   // Import symbols
-   fpDrvInit = (BOOL (*)(char *))DLGetSymbolAddrEx(m_hDriver, "DrvInit");
-   m_fpDrvConnect = (DB_CONNECTION (*)(const char *, const char *, const char *, const char *))DLGetSymbolAddrEx(m_hDriver, "DrvConnect");
-   m_fpDrvDisconnect = (void (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvDisconnect");
-   m_fpDrvQuery = (DWORD (*)(DB_CONNECTION, WCHAR *, TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
-   m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
-   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
-   m_fpDrvFetch = (BOOL (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFetch");
-   m_fpDrvGetFieldLength = (LONG (*)(DB_RESULT, int, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldLength");
-   m_fpDrvGetFieldLengthAsync = (LONG (*)(DB_RESULT, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldLengthAsync");
-   m_fpDrvGetField = (WCHAR* (*)(DB_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetField");
-   m_fpDrvGetFieldAsync = (WCHAR* (*)(DB_ASYNC_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldAsync");
-   m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetNumRows");
-   m_fpDrvGetColumnCount = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnCount");
-   m_fpDrvGetColumnName = (const char* (*)(DB_RESULT, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnName");
-   m_fpDrvGetColumnCountAsync = (int (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnCountAsync");
-   m_fpDrvGetColumnNameAsync = (const char* (*)(DB_ASYNC_RESULT, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnNameAsync");
-   m_fpDrvFreeResult = (void (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeResult");
-   m_fpDrvFreeAsyncResult = (void (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeAsyncResult");
-   m_fpDrvBegin = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvBegin");
-   m_fpDrvCommit = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvCommit");
-   m_fpDrvRollback = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvRollback");
-   m_fpDrvUnload = (void (*)(void))DLGetSymbolAddrEx(m_hDriver, "DrvUnload");
-   m_fpDrvPrepareString = (TCHAR* (*)(const TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvPrepareString");
-   if ((fpDrvInit == NULL) || (m_fpDrvConnect == NULL) || (m_fpDrvDisconnect == NULL) ||
-       (m_fpDrvQuery == NULL) || (m_fpDrvSelect == NULL) || (m_fpDrvGetField == NULL) ||
-       (m_fpDrvGetNumRows == NULL) || (m_fpDrvFreeResult == NULL) || 
-       (m_fpDrvUnload == NULL) || (m_fpDrvAsyncSelect == NULL) || (m_fpDrvFetch == NULL) ||
-       (m_fpDrvFreeAsyncResult == NULL) || (m_fpDrvGetFieldAsync == NULL) ||
-       (m_fpDrvBegin == NULL) || (m_fpDrvCommit == NULL) || (m_fpDrvRollback == NULL) ||
-		 (m_fpDrvGetColumnCount == NULL) || (m_fpDrvGetColumnName == NULL) ||
-		 (m_fpDrvGetColumnCountAsync == NULL) || (m_fpDrvGetColumnNameAsync == NULL) ||
-       (m_fpDrvGetFieldLength == NULL) || (m_fpDrvGetFieldLengthAsync == NULL) ||
-		 (m_fpDrvPrepareString == NULL))
-   {
-      if (m_bWriteLog)
-         WriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to find all required exportable functions in database driver \"%s\""), g_szDbDriver);
-      DLClose(m_hDriver);
-      m_hDriver = NULL;
-      return FALSE;
-   }
-
-   // Initialize driver
-   if (!fpDrvInit(g_szDbDrvParams))
-   {
-      if (m_bWriteLog)
-         WriteLog(EVENTLOG_ERROR_TYPE, _T("Database driver \"%s\" initialization failed"), g_szDbDriver);
-      DLClose(m_hDriver);
-      m_hDriver = NULL;
-      return FALSE;
-   }
-
-   // Success
-   if (m_bWriteLog)
-      WriteLog(EVENTLOG_INFORMATION_TYPE, _T("Database driver \"%s\" loaded and initialized successfully"), g_szDbDriver);
-   return TRUE;
-}
-
-
-//
-// Notify driver of unload
-//
-
-void LIBNXDB_EXPORTABLE DBUnloadDriver(void)
-{
-   m_fpDrvUnload();
-   DLClose(m_hDriver);
-   MutexDestroy(m_mutexReconnect);
-}
-
-
-//
 // Connect to database
 //
 
-DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(void)
+DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *pszServer, const TCHAR *pszDBName,
+                                       const TCHAR *pszLogin, const TCHAR *pszPassword)
 {
-   return DBConnectEx(g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword);
-}
-
-
-//
-// Connect to database using provided parameters
-//
-
-DB_HANDLE LIBNXDB_EXPORTABLE DBConnectEx(const TCHAR *pszServer, const TCHAR *pszDBName,
-                                          const TCHAR *pszLogin, const TCHAR *pszPassword)
-{
-   DB_CONNECTION hDrvConn;
+   DBDRV_CONNECTION hDrvConn;
    DB_HANDLE hConn = NULL;
 
-	__DbgPrintf(8, _T("DBConnectEx: server=%s db=%s login=%s"), pszServer, pszDBName, pszLogin);
-   hDrvConn = m_fpDrvConnect(pszServer, pszLogin, pszPassword, pszDBName);
+	__DBDbgPrintf(8, _T("DBConnect: server=%s db=%s login=%s"), pszServer, pszDBName, pszLogin);
+   hDrvConn = driver->m_fpDrvConnect(pszServer, pszLogin, pszPassword, pszDBName);
    if (hDrvConn != NULL)
    {
       hConn = (DB_HANDLE)malloc(sizeof(struct db_handle_t));
       if (hConn != NULL)
       {
-         hConn->hConn = hDrvConn;
-         hConn->mutexTransLock = MutexCreateRecursive();
-         hConn->nTransactionLevel = 0;
-         hConn->pszDBName = (pszDBName == NULL) ? NULL : _tcsdup(pszDBName);
-         hConn->pszLogin = (pszLogin == NULL) ? NULL : _tcsdup(pszLogin);
-         hConn->pszPassword = (pszPassword == NULL) ? NULL : _tcsdup(pszPassword);
-         hConn->pszServer = (pszServer == NULL) ? NULL : _tcsdup(pszServer);
-		   __DbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
+			hConn->m_driver = driver;
+			hConn->m_dumpSql = driver->m_dumpSql;
+			hConn->m_connection = hDrvConn;
+         hConn->m_mutexTransLock = MutexCreateRecursive();
+         hConn->m_transactionLevel = 0;
+         hConn->m_dbName = (pszDBName == NULL) ? NULL : _tcsdup(pszDBName);
+         hConn->m_login = (pszLogin == NULL) ? NULL : _tcsdup(pszLogin);
+         hConn->m_password = (pszPassword == NULL) ? NULL : _tcsdup(pszPassword);
+         hConn->m_server = (pszServer == NULL) ? NULL : _tcsdup(pszServer);
+		   __DBDbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
       }
       else
       {
-         m_fpDrvDisconnect(hDrvConn);
+         driver->m_fpDrvDisconnect(hDrvConn);
       }
    }
    return hConn;
@@ -275,14 +69,14 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
    if (hConn == NULL)
       return;
 
-   __DbgPrintf(4, _T("DB connection %p closed"), hConn);
+   __DBDbgPrintf(4, _T("DB connection %p closed"), hConn);
    
-   m_fpDrvDisconnect(hConn->hConn);
-   MutexDestroy(hConn->mutexTransLock);
-   safe_free(hConn->pszDBName);
-   safe_free(hConn->pszLogin);
-   safe_free(hConn->pszPassword);
-   safe_free(hConn->pszServer);
+	hConn->m_driver->m_fpDrvDisconnect(hConn->m_connection);
+   MutexDestroy(hConn->m_mutexTransLock);
+   safe_free(hConn->m_dbName);
+   safe_free(hConn->m_login);
+   safe_free(hConn->m_password);
+   safe_free(hConn->m_server);
    free(hConn);
 }
 
@@ -295,30 +89,30 @@ static void DBReconnect(DB_HANDLE hConn)
 {
    int nCount;
 
-   m_fpDrvDisconnect(hConn->hConn);
+	hConn->m_driver->m_fpDrvDisconnect(hConn->m_connection);
    for(nCount = 0; ; nCount++)
    {
-      hConn->hConn = m_fpDrvConnect(hConn->pszServer, hConn->pszLogin,
-                                    hConn->pszPassword, hConn->pszDBName);
-      if (hConn->hConn != NULL)
+		hConn->m_connection = hConn->m_driver->m_fpDrvConnect(hConn->m_server, hConn->m_login,
+                                                            hConn->m_password, hConn->m_dbName);
+      if (hConn->m_connection != NULL)
          break;
       if (nCount == 0)
       {
-         MutexLock(m_mutexReconnect, INFINITE);
-         if ((m_nReconnect == 0) && (m_fpEventHandler != NULL))
-            m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL);
-         m_nReconnect++;
-         MutexUnlock(m_mutexReconnect);
+			MutexLock(hConn->m_driver->m_mutexReconnect, INFINITE);
+         if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
+				hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL, hConn->m_driver->m_userArg);
+         hConn->m_driver->m_reconnect++;
+         MutexUnlock(hConn->m_driver->m_mutexReconnect);
       }
       ThreadSleepMs(1000);
    }
    if (nCount > 0)
    {
-      MutexLock(m_mutexReconnect, INFINITE);
-      m_nReconnect--;
-      if ((m_nReconnect == 0) && (m_fpEventHandler != NULL))
-         m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL);
-      MutexUnlock(m_mutexReconnect);
+      MutexLock(hConn->m_driver->m_mutexReconnect, INFINITE);
+      hConn->m_driver->m_reconnect--;
+      if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
+			hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL, hConn->m_driver->m_userArg);
+      MutexUnlock(hConn->m_driver->m_mutexReconnect);
    }
 }
 
@@ -337,34 +131,34 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    WCHAR *pwszQuery = WideStringFromMBString(szQuery);
 #endif
 
-   MutexLock(hConn->mutexTransLock, INFINITE);
-   if (m_bDumpSQL)
+   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
 
-   dwResult = m_fpDrvQuery(hConn->hConn, pwszQuery, errorText);
+   dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, errorText);
    if (dwResult == DBERR_CONNECTION_LOST)
    {
       DBReconnect(hConn);
-      dwResult = m_fpDrvQuery(hConn->hConn, pwszQuery, errorText);
+      dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, errorText);
    }
 
 #ifndef UNICODE
    free(pwszQuery);
 #endif
    
-   if (m_bDumpSQL)
+   if (hConn->m_driver->m_dumpSql)
    {
       ms = GetCurrentTimeMs() - ms;
-      __DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
+      __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
    }
    
-   MutexUnlock(hConn->mutexTransLock);
+   MutexUnlock(hConn->m_mutexTransLock);
    if (dwResult != DBERR_SUCCESS)
 	{	
-		if (m_bLogSQLErrors)
-			nxlog_write(m_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
-		if (m_fpEventHandler != NULL)
-			m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText);
+		if (hConn->m_driver->m_logSqlErrors)
+			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+		if (hConn->m_driver->m_fpEventHandler != NULL)
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText, hConn->m_driver->m_userArg);
 	}
    return dwResult == DBERR_SUCCESS;
 #undef pwszQuery
@@ -384,7 +178,8 @@ BOOL LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
 
 DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
-   DB_RESULT hResult;
+   DBDRV_RESULT hResult;
+	DB_RESULT result = NULL;
    DWORD dwError;
    INT64 ms;
 #ifdef UNICODE
@@ -393,34 +188,43 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    WCHAR *pwszQuery = WideStringFromMBString(szQuery);
 #endif
    
-   MutexLock(hConn->mutexTransLock, INFINITE);
-   if (m_bDumpSQL)
+   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
-   hResult = m_fpDrvSelect(hConn->hConn, pwszQuery, &dwError, errorText);
+   hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, errorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
    {
       DBReconnect(hConn);
-      hResult = m_fpDrvSelect(hConn->hConn, pwszQuery, &dwError, errorText);
+      hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, errorText);
    }
 
 #ifndef UNICODE
    free(pwszQuery);
 #endif
    
-   if (m_bDumpSQL)
+   if (hConn->m_driver->m_dumpSql)
    {
       ms = GetCurrentTimeMs() - ms;
-      __DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
-   MutexUnlock(hConn->mutexTransLock);
+   MutexUnlock(hConn->m_mutexTransLock);
    if (hResult == NULL)
 	{
-		if (m_bLogSQLErrors)
-			nxlog_write(m_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
-		if (m_fpEventHandler != NULL)
-			m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText);
+		if (hConn->m_driver->m_logSqlErrors)
+			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+		if (hConn->m_driver->m_fpEventHandler != NULL)
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText, hConn->m_driver->m_userArg);
 	}
-   return hResult;
+
+	if (hResult != NULL)
+	{
+		result = (DB_RESULT)malloc(sizeof(db_result_t));
+		result->m_driver = hConn->m_driver;
+		result->m_connection = hConn;
+		result->m_data = hResult;
+	}
+
+   return result;
 }
 
 DB_RESULT LIBNXDB_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *query)
@@ -437,7 +241,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *query)
 
 int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_RESULT hResult)
 {
-	return m_fpDrvGetColumnCount(hResult);
+	return hResult->m_driver->m_fpDrvGetColumnCount(hResult->m_data);
 }
 
 
@@ -449,7 +253,7 @@ BOOL LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *bu
 {
 	const char *name;
 
-	name = m_fpDrvGetColumnName(hResult, column);
+	name = hResult->m_driver->m_fpDrvGetColumnName(hResult->m_data, column);
 	if (name != NULL)
 	{
 #ifdef UNICODE
@@ -469,7 +273,7 @@ BOOL LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *bu
 
 int LIBNXDB_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 {
-	return m_fpDrvGetColumnCountAsync(hResult);
+	return hResult->m_driver->m_fpDrvGetColumnCountAsync(hResult->m_data);
 }
 
 
@@ -481,7 +285,7 @@ BOOL LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column
 {
 	const char *name;
 
-	name = m_fpDrvGetColumnNameAsync(hResult, column);
+	name = hResult->m_driver->m_fpDrvGetColumnNameAsync(hResult->m_data, column);
 	if (name != NULL)
 	{
 #ifdef UNICODE
@@ -505,14 +309,14 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
 #ifdef UNICODE
    if (pszBuffer != NULL)
    {
-      return m_fpDrvGetField(hResult, iRow, iColumn, pszBuffer, nBufLen);
+      return hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszBuffer, nBufLen);
    }
    else
    {
       LONG nLen;
       WCHAR *pszTemp;
 
-      nLen = m_fpDrvGetFieldLength(hResult, iRow, iColumn);
+      nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
       if (nLen == -1)
       {
          pszTemp = NULL;
@@ -521,7 +325,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
       {
          nLen++;
          pszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
-         m_fpDrvGetField(hResult, iRow, iColumn, pszTemp, nLen);
+         hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszTemp, nLen);
       }
       return pszTemp;
    }
@@ -533,7 +337,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
    if (pszBuffer != NULL)
    {
       pwszBuffer = (WCHAR *)malloc(nBufLen * sizeof(WCHAR));
-      pwszData = m_fpDrvGetField(hResult, iRow, iColumn, pwszBuffer, nBufLen);
+      pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, nBufLen);
       if (pwszData != NULL)
       {
          WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
@@ -548,7 +352,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
    }
    else
    {
-      nLen = m_fpDrvGetFieldLength(hResult, iRow, iColumn);
+      nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
       if (nLen == -1)
       {
          pszRet = NULL;
@@ -557,7 +361,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
       {
          nLen++;
          pwszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
-         pwszData = m_fpDrvGetField(hResult, iRow, iColumn, pwszBuffer, nLen);
+         pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, nLen);
          if (pwszData != NULL)
          {
             nLen = (int)wcslen(pwszData) + 1;
@@ -740,7 +544,7 @@ int LIBNXDB_EXPORTABLE DBGetNumRows(DB_RESULT hResult)
 {
    if (hResult == NULL)
       return 0;
-   return m_fpDrvGetNumRows(hResult);
+   return hResult->m_driver->m_fpDrvGetNumRows(hResult->m_data);
 }
 
 
@@ -751,7 +555,10 @@ int LIBNXDB_EXPORTABLE DBGetNumRows(DB_RESULT hResult)
 void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 {
    if (hResult != NULL)
-      m_fpDrvFreeResult(hResult);
+	{
+      hResult->m_driver->m_fpDrvFreeResult(hResult->m_data);
+		free(hResult);
+	}
 }
 
 
@@ -761,7 +568,8 @@ void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 
 DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
-   DB_RESULT hResult;
+   DBDRV_ASYNC_RESULT hResult;
+	DB_ASYNC_RESULT result = NULL;
    DWORD dwError;
    INT64 ms;
 #ifdef UNICODE
@@ -770,34 +578,43 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    WCHAR *pwszQuery = WideStringFromMBString(szQuery);
 #endif
    
-   MutexLock(hConn->mutexTransLock, INFINITE);
-   if (m_bDumpSQL)
+   MutexLock(hConn->m_mutexTransLock, INFINITE);
+	if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
-   hResult = m_fpDrvAsyncSelect(hConn->hConn, pwszQuery, &dwError, errorText);
+   hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, errorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
    {
       DBReconnect(hConn);
-      hResult = m_fpDrvAsyncSelect(hConn->hConn, pwszQuery, &dwError, errorText);
+      hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, errorText);
    }
 
 #ifndef UNICODE
    free(pwszQuery);
 #endif
    
-   if (m_bDumpSQL)
+   if (hConn->m_driver->m_dumpSql)
    {
       ms = GetCurrentTimeMs() - ms;
-      __DbgPrintf(9, _T("%s async query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      __DBDbgPrintf(9, _T("%s async query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    if (hResult == NULL)
    {
-      MutexUnlock(hConn->mutexTransLock);
-      if (m_bLogSQLErrors)
-        nxlog_write(m_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
-		if (m_fpEventHandler != NULL)
-			m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText);
+      MutexUnlock(hConn->m_mutexTransLock);
+		if (hConn->m_driver->m_logSqlErrors)
+        nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+		if (hConn->m_driver->m_fpEventHandler != NULL)
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText, hConn->m_driver->m_userArg);
    }
-   return hResult;
+
+	if (hResult != NULL)
+	{
+		result = (DB_ASYNC_RESULT)malloc(sizeof(db_async_result_t));
+		result->m_driver = hConn->m_driver;
+		result->m_connection = hConn;
+		result->m_data = hResult;
+	}
+
+   return result;
 }
 
 DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *query)
@@ -814,7 +631,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *q
 
 BOOL LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
 {
-   return m_fpDrvFetch(hResult);
+	return hResult->m_driver->m_fpDrvFetch(hResult->m_data);
 }
 
 
@@ -827,14 +644,14 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
 #ifdef UNICODE
    if (pBuffer != NULL)
    {
-	   return m_fpDrvGetFieldAsync(hResult, iColumn, pBuffer, iBufSize);
+	   return hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pBuffer, iBufSize);
    }
    else
    {
       LONG nLen;
       WCHAR *pszTemp;
 
-      nLen = m_fpDrvGetFieldLengthAsync(hResult, iColumn);
+      nLen = hResult->m_driver->m_fpDrvGetFieldLengthAsync(hResult->m_data, iColumn);
       if (nLen == -1)
       {
          pszTemp = NULL;
@@ -843,7 +660,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
       {
          nLen++;
          pszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
-         m_fpDrvGetFieldAsync(hResult, iColumn, pszTemp, nLen);
+         hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pszTemp, nLen);
       }
       return pszTemp;
    }
@@ -855,7 +672,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
    if (pBuffer != NULL)
    {
 		pwszBuffer = (WCHAR *)malloc(iBufSize * sizeof(WCHAR));
-		if (m_fpDrvGetFieldAsync(hResult, iColumn, pwszBuffer, iBufSize) != NULL)
+		if (hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pwszBuffer, iBufSize) != NULL)
 		{
 			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
 									  pwszBuffer, -1, pBuffer, iBufSize, NULL, NULL);
@@ -869,7 +686,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
    }
    else
    {
-      nLen = m_fpDrvGetFieldLengthAsync(hResult, iColumn);
+		nLen = hResult->m_driver->m_fpDrvGetFieldLengthAsync(hResult->m_data, iColumn);
       if (nLen == -1)
       {
          pszRet = NULL;
@@ -878,7 +695,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
       {
          nLen++;
          pwszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
-         pwszData = m_fpDrvGetFieldAsync(hResult, iColumn, pwszBuffer, nLen);
+			pwszData = hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pwszBuffer, nLen);
          if (pwszData != NULL)
          {
             nLen = (int)wcslen(pwszData) + 1;
@@ -938,7 +755,7 @@ QWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iCol
 // Get field's value as signed long from asynchronous SELECT result
 //
 
-LONG LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
+LONG LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_ASYNC_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
    
@@ -950,7 +767,7 @@ LONG LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
 // Get field's value as signed 64-bit int from asynchronous SELECT result
 //
 
-INT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncInt64(DB_RESULT hResult, int iColumn)
+INT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncInt64(DB_ASYNC_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
    
@@ -962,7 +779,7 @@ INT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncInt64(DB_RESULT hResult, int iColumn)
 // Get field's value as signed long from asynchronous SELECT result
 //
 
-double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
+double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_ASYNC_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
    
@@ -974,7 +791,7 @@ double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
 // Get field's value as IP address from asynchronous SELECT result
 //
 
-DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn)
+DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
    
@@ -989,8 +806,9 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn)
 
 void LIBNXDB_EXPORTABLE DBFreeAsyncResult(DB_HANDLE hConn, DB_ASYNC_RESULT hResult)
 {
-   m_fpDrvFreeAsyncResult(hResult);
-   MutexUnlock(hConn->mutexTransLock);
+	hResult->m_driver->m_fpDrvFreeAsyncResult(hResult->m_data);
+	free(hResult);
+   MutexUnlock(hConn->m_mutexTransLock);
 }
 
 
@@ -1003,32 +821,32 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
    DWORD dwResult;
    BOOL bRet = FALSE;
 
-   MutexLock(hConn->mutexTransLock, INFINITE);
-   if (hConn->nTransactionLevel == 0)
+   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   if (hConn->m_transactionLevel == 0)
    {
-      dwResult = m_fpDrvBegin(hConn->hConn);
+      dwResult = hConn->m_driver->m_fpDrvBegin(hConn->m_connection);
       if (dwResult == DBERR_CONNECTION_LOST)
       {
          DBReconnect(hConn);
-         dwResult = m_fpDrvBegin(hConn->hConn);
+         dwResult = hConn->m_driver->m_fpDrvBegin(hConn->m_connection);
       }
       if (dwResult == DBERR_SUCCESS)
       {
-         hConn->nTransactionLevel++;
+         hConn->m_transactionLevel++;
          bRet = TRUE;
-			__DbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->nTransactionLevel);
+			__DBDbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->m_transactionLevel);
       }
       else
       {
-         MutexUnlock(hConn->mutexTransLock);
-			__DbgPrintf(9, _T("BEGIN TRANSACTION failed"), hConn->nTransactionLevel);
+         MutexUnlock(hConn->m_mutexTransLock);
+			__DBDbgPrintf(9, _T("BEGIN TRANSACTION failed"), hConn->m_transactionLevel);
       }
    }
    else
    {
-      hConn->nTransactionLevel++;
+      hConn->m_transactionLevel++;
       bRet = TRUE;
-		__DbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->nTransactionLevel);
+		__DBDbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->m_transactionLevel);
    }
    return bRet;
 }
@@ -1042,18 +860,18 @@ BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 {
    BOOL bRet = FALSE;
 
-   MutexLock(hConn->mutexTransLock, INFINITE);
-   if (hConn->nTransactionLevel > 0)
+   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   if (hConn->m_transactionLevel > 0)
    {
-      hConn->nTransactionLevel--;
-      if (hConn->nTransactionLevel == 0)
-         bRet = (m_fpDrvCommit(hConn->hConn) == DBERR_SUCCESS);
+      hConn->m_transactionLevel--;
+      if (hConn->m_transactionLevel == 0)
+         bRet = (hConn->m_driver->m_fpDrvCommit(hConn->m_connection) == DBERR_SUCCESS);
       else
          bRet = TRUE;
-		__DbgPrintf(9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->nTransactionLevel);
-      MutexUnlock(hConn->mutexTransLock);
+		__DBDbgPrintf(9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
+      MutexUnlock(hConn->m_mutexTransLock);
    }
-   MutexUnlock(hConn->mutexTransLock);
+   MutexUnlock(hConn->m_mutexTransLock);
    return bRet;
 }
 
@@ -1066,18 +884,18 @@ BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 {
    BOOL bRet = FALSE;
 
-   MutexLock(hConn->mutexTransLock, INFINITE);
-   if (hConn->nTransactionLevel > 0)
+   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   if (hConn->m_transactionLevel > 0)
    {
-      hConn->nTransactionLevel--;
-      if (hConn->nTransactionLevel == 0)
-         bRet = (m_fpDrvRollback(hConn->hConn) == DBERR_SUCCESS);
+      hConn->m_transactionLevel--;
+      if (hConn->m_transactionLevel == 0)
+         bRet = (hConn->m_driver->m_fpDrvRollback(hConn->m_connection) == DBERR_SUCCESS);
       else
          bRet = TRUE;
-		__DbgPrintf(9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->nTransactionLevel);
-      MutexUnlock(hConn->mutexTransLock);
+		__DBDbgPrintf(9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
+      MutexUnlock(hConn->m_mutexTransLock);
    }
-   MutexUnlock(hConn->mutexTransLock);
+   MutexUnlock(hConn->m_mutexTransLock);
    return bRet;
 }
 
@@ -1086,19 +904,19 @@ BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 // Prepare string for using in SQL statement
 //
 
-String LIBNXDB_EXPORTABLE DBPrepareString(const TCHAR *str, int maxSize)
+String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize)
 {
 	String out;
 	if ((maxSize > 0) && (str != NULL) && (maxSize < (int)_tcslen(str)))
 	{
 		TCHAR *temp = (TCHAR *)malloc((maxSize + 1) * sizeof(TCHAR));
 		nx_strncpy(temp, str, maxSize + 1);
-		out.setBuffer(m_fpDrvPrepareString(temp));
+		out.setBuffer(conn->m_driver->m_fpDrvPrepareString(temp));
 		free(temp);
 	}
 	else	
 	{
-		out.setBuffer(m_fpDrvPrepareString(CHECK_NULL_EX(str)));
+		out.setBuffer(conn->m_driver->m_fpDrvPrepareString(CHECK_NULL_EX(str)));
 	}
 	return out;
 }

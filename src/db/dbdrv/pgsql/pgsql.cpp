@@ -32,8 +32,8 @@
 // API version
 //
 
-extern "C" int EXPORT drvAPIVersion;
-int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" const char EXPORT *drvName = "PGSQL";
 
 
 //
@@ -126,7 +126,7 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(
 		char *szHost,
 		char *szLogin,
 		char *szPassword,
@@ -166,7 +166,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(
 		}
 	}
 
-   return (DB_CONNECTION)pConn;
+   return (DBDRV_CONNECTION)pConn;
 }
 
 
@@ -174,7 +174,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(
 // Disconnect from database
 //
 
-extern "C" void EXPORT DrvDisconnect(DB_CONNECTION pConn)
+extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
 {
 	if (pConn != NULL)
 	{
@@ -248,7 +248,7 @@ extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorT
 // Perform SELECT query
 //
 
-static DB_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
+static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
 {
 	PGresult	*pResult;
 
@@ -276,12 +276,12 @@ static DB_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorText
 
 	if (errorText != NULL)
 		*errorText = 0;
-   return (DB_RESULT)pResult;
+   return (DBDRV_RESULT)pResult;
 }
 
-extern "C" DB_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
-	DB_RESULT pResult;
+	DBDRV_RESULT pResult;
    char *pszQueryUTF8;
 
    if (pConn == NULL)
@@ -312,7 +312,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *p
 // Get field length from result
 //
 
-extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT pResult, int nRow, int nColumn)
+extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int nColumn)
 {
    char *pszValue;
 
@@ -328,7 +328,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT pResult, int nRow, int nColum
 // Get field value from result
 //
 
-extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT pResult, int nRow, int nColumn,
+extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn,
                                      WCHAR *pBuffer, int nBufLen)
 {
 	if (pResult == NULL)
@@ -345,7 +345,7 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT pResult, int nRow, int nColumn,
 // Get number of rows in result
 //
 
-extern "C" int EXPORT DrvGetNumRows(DB_RESULT pResult)
+extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
 {
 	return (pResult != NULL) ? PQntuples((PGresult *)pResult) : 0;
 }
@@ -355,7 +355,7 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT pResult)
 // Get column count in query result
 //
 
-extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
 {
 	return (hResult != NULL) ? PQnfields((PGresult *)hResult) : 0;
 }
@@ -365,7 +365,7 @@ extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
 // Get column name in query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
 {
 	return (hResult != NULL) ? PQfname((PGresult *)hResult, column) : NULL;
 }
@@ -375,7 +375,7 @@ extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
 // Free SELECT results
 //
 
-extern "C" void EXPORT DrvFreeResult(DB_RESULT pResult)
+extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT pResult)
 {
 	if (pResult != NULL)
 	{
@@ -388,7 +388,7 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuery,
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError, TCHAR *errorText)
 {
 	BOOL bSuccess = FALSE;
@@ -431,7 +431,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuer
 		return NULL;
 	}
 
-	return (DB_ASYNC_RESULT)pConn;
+	return (DBDRV_ASYNC_RESULT)pConn;
 }
 
 
@@ -439,7 +439,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuer
 // Fetch next result line from asynchronous SELECT results
 //
 
-extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
+extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT pConn)
 {
    BOOL bResult = TRUE;
    
@@ -553,7 +553,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(
 // Get column count in async query result
 //
 
-extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT hResult)
 {
 	return ((hResult != NULL) && (((PG_CONN *)hResult)->pFetchBuffer != NULL))? PQnfields(((PG_CONN *)hResult)->pFetchBuffer) : 0;
 }
@@ -563,7 +563,7 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 // Get column name in async query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameAsync(DBDRV_ASYNC_RESULT hResult, int column)
 {
 	return ((hResult != NULL) && (((PG_CONN *)hResult)->pFetchBuffer != NULL))? PQfname(((PG_CONN *)hResult)->pFetchBuffer, column) : NULL;
 }

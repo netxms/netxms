@@ -297,7 +297,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
                  _T("(" UINT64_FMT "," TIME_T_FMT ",%d,%d,%d,'%s','%s',%s)"),
                  record.qwMsgId, record.tmTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
-					  record.szHostName, record.szTag, (const TCHAR *)DBPrepareString(record.szMessage));
+					  record.szHostName, record.szTag, (const TCHAR *)DBPrepareString(g_hCoreDB, record.szMessage));
       DBQuery(g_hCoreDB, szQuery);
 
       // Send message to all connected clients

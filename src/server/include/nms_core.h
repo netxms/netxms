@@ -783,6 +783,13 @@ extern DWORD g_dwAgentCommandTimeout;
 extern DWORD g_dwThresholdRepeatInterval;
 extern int g_nRequiredPolls;
 
+extern TCHAR g_szDbDriver[];
+extern TCHAR g_szDbDrvParams[];
+extern TCHAR g_szDbServer[];
+extern TCHAR g_szDbLogin[];
+extern TCHAR g_szDbPassword[];
+extern TCHAR g_szDbName[];
+extern DB_DRIVER g_dbDriver;
 extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
 

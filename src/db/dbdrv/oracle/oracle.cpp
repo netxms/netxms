@@ -28,8 +28,8 @@
 // API version
 //
 
-extern "C" int EXPORT drvAPIVersion;
-int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" const char EXPORT *drvName = "ORACLE";
 
 
 //
@@ -158,7 +158,7 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 // Connect to database
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
                                            char *pszPassword, char *pszDatabase)
 {
 	ORACLE_CONN *pConn;
@@ -240,7 +240,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 		}
 	}
 
-   return (DB_CONNECTION)pConn;
+   return (DBDRV_CONNECTION)pConn;
 }
 
 
@@ -312,7 +312,7 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
 	ORACLE_RESULT *pResult = NULL;
 	OCIStmt *handleStmt;
@@ -557,7 +557,7 @@ extern "C" void EXPORT DrvFreeResult(ORACLE_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery,
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError, TCHAR *errorText)
 {
 	OCIParam *handleParam;

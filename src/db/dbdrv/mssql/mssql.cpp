@@ -106,6 +106,7 @@ static BOOL Reconnect(MSDB_CONN *pConn)
 //
 
 extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" const char EXPORT *drvName = "MSSQL";
 
 
 //
@@ -197,7 +198,7 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
                                            const char *password, const char *database)
 {
    LOGINREC *loginrec;
@@ -248,7 +249,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
       }
    }
 
-   return (DB_CONNECTION)pConn;
+   return (DBDRV_CONNECTION)pConn;
 }
 
 
@@ -347,7 +348,7 @@ extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery, TCHAR *erro
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
    MSDB_QUERY_RESULT *pResult = NULL;
    int i, iCurrPos, iLen, *piColTypes;
@@ -449,7 +450,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD 
 
    MutexUnlock(pConn->mutexQueryLock);
    free(pszQueryUTF8);
-   return (DB_RESULT)pResult;
+   return (DBDRV_RESULT)pResult;
 }
 
 
@@ -539,7 +540,7 @@ extern "C" void EXPORT DrvFreeResult(MSDB_QUERY_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQuery,
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError, TCHAR *errorText)
 {
    MSDB_ASYNC_QUERY_RESULT *pResult = NULL;

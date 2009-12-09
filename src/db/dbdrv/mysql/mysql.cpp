@@ -27,8 +27,8 @@
 // API version
 //
 
-extern "C" int EXPORT drvAPIVersion;
-int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" const char EXPORT *drvName = "MYSQL";
 
 
 //
@@ -127,8 +127,7 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword,
-										   char *szDatabase)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
 {
 	MYSQL *pMySQL;
 	MYSQL_CONN *pConn;
@@ -170,7 +169,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *sz
    // Switch to UTF-8 encoding
    mysql_set_character_set(pMySQL, "utf8");
 	
-	return (DB_CONNECTION)pConn;
+	return (DBDRV_CONNECTION)pConn;
 }
 
 
@@ -248,9 +247,9 @@ extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, TCHAR *err
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
-	DB_RESULT pResult = NULL;
+	DBDRV_RESULT pResult = NULL;
 	char *pszQueryUTF8;
 
 	if (pConn == NULL)
@@ -263,7 +262,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
-		pResult = (DB_RESULT)mysql_store_result(pConn->pMySQL);
+		pResult = (DBDRV_RESULT)mysql_store_result(pConn->pMySQL);
 		*pdwError = DBERR_SUCCESS;
 		if (errorText != NULL)
 			*errorText = 0;
@@ -298,7 +297,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD
 // Get field length from result
 //
 
-extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT hResult, int iRow, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iColumn)
 {
 	MYSQL_ROW row;
 	
@@ -312,7 +311,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT hResult, int iRow, int iColum
 // Get field value from result
 //
 
-extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
+extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn,
                                      WCHAR *pBuffer, int nBufSize)
 {
 	MYSQL_ROW row;
@@ -337,7 +336,7 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
 // Get number of rows in result
 //
 
-extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
+extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT hResult)
 {
 	return (hResult != NULL) ? (int)mysql_num_rows((MYSQL_RES *)hResult) : 0;
 }
@@ -347,7 +346,7 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 // Get column count in query result
 //
 
-extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
 {
 	return (hResult != NULL) ? (int)mysql_num_fields((MYSQL_RES *)hResult) : 0;
 }
@@ -357,7 +356,7 @@ extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
 // Get column name in query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
 {
 	MYSQL_FIELD *field;
 
@@ -373,7 +372,7 @@ extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
 // Free SELECT results
 //
 
-extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
+extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT hResult)
 {
 	mysql_free_result((MYSQL_RES *)hResult);
 }
@@ -383,7 +382,7 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery,
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError, TCHAR *errorText)
 {
 	MYSQL_ASYNC_RESULT *pResult = NULL;
@@ -452,7 +451,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQ
 // Fetch next result line from asynchronous SELECT results
 //
 
-extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
+extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT hResult)
 {
 	BOOL bResult = TRUE;
 	
@@ -496,7 +495,7 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 // Get field length from async query result result
 //
 
-extern "C" LONG EXPORT DrvGetFieldLengthAsync(DB_ASYNC_RESULT hResult, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(DBDRV_ASYNC_RESULT hResult, int iColumn)
 {
 	// Check if we have valid result handle
 	if (hResult == NULL)
@@ -519,7 +518,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(DB_ASYNC_RESULT hResult, int iColu
 // Get field from current row in async query result
 //
 
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColumn,
                                           WCHAR *pBuffer, int iBufSize)
 {
 	int iLen;
@@ -554,7 +553,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 // Get column count in async query result
 //
 
-extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT hResult)
 {
 	return ((hResult != NULL) && (((MYSQL_ASYNC_RESULT *)hResult)->pHandle != NULL))? (int)mysql_num_fields(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) : 0;
 }
@@ -564,7 +563,7 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 // Get column name in async query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameAsync(DBDRV_ASYNC_RESULT hResult, int column)
 {
 	MYSQL_FIELD *field;
 
@@ -580,7 +579,7 @@ extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int
 // Destroy result of async query
 //
 
-extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
+extern "C" void EXPORT DrvFreeAsyncResult(DBDRV_ASYNC_RESULT hResult)
 {
 	if (hResult != NULL)
 	{

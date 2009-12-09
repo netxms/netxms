@@ -193,7 +193,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 		INT64 id = DBGetFieldInt64(hResult, i, 0);
 		TCHAR *value = DBGetField(hResult, i, 1, NULL, 0);
 		DecodeSQLString(value);
-		String newValue = DBPrepareString(value);
+		String newValue = DBPrepareString(g_hCoreDB, value);
 		if ((int)newValue.getSize() + 256 > queryLen)
 		{
 			queryLen = newValue.getSize() + 256;

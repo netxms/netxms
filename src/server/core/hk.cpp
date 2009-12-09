@@ -120,7 +120,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    // Establish separate connection to database if needed
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
-      m_hdb = DBConnect();
+      m_hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword);
       if (m_hdb == NULL)
       {
          nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);

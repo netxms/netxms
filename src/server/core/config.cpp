@@ -34,6 +34,18 @@ extern TCHAR *g_pszModLoadList;
 
 
 //
+// database connection parameters
+//
+
+TCHAR g_szDbDriver[MAX_PATH] = _T("");
+TCHAR g_szDbDrvParams[MAX_PATH] = _T("");
+TCHAR g_szDbServer[MAX_PATH] = _T("127.0.0.1");
+TCHAR g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
+TCHAR g_szDbPassword[MAX_DB_PASSWORD] = _T("");
+TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
+
+
+//
 // Load and parse configuration file
 // Returns TRUE on success and FALSE on failure
 //

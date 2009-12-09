@@ -23,6 +23,12 @@
 
 #include "libnxdb.h"
 
+static DB_DRIVER m_driver;
+static TCHAR m_server[256];
+static TCHAR m_login[256];
+static TCHAR m_password[256];
+static TCHAR m_dbName[256];
+
 static int m_basePoolSize;
 static int m_maxPoolSize;
 static int m_currentPoolSize;
@@ -40,7 +46,7 @@ static void DBConnectionPoolPopulate()
 
 	for (int i = 0; i < m_basePoolSize; i++)
 	{
-		m_dbHandles[i] = DBConnect();
+		m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password);
 	}
 
 	MutexUnlock(m_poolAccessMutex);
@@ -71,8 +77,16 @@ static void DBConnectionPoolShrink()
 	MutexUnlock(m_poolAccessMutex);
 }
 
-bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(int basePoolSize, int maxPoolSize, int cooldownTime)
+bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
+																const TCHAR *login, const TCHAR *password,
+																int basePoolSize, int maxPoolSize, int cooldownTime)
 {
+	m_driver = driver;
+	nx_strncpy(m_server, CHECK_NULL_EX(server), 256);
+	nx_strncpy(m_dbName, CHECK_NULL_EX(dbName), 256);
+	nx_strncpy(m_login, CHECK_NULL_EX(login), 256);
+	nx_strncpy(m_password, CHECK_NULL_EX(password), 256);
+
 	m_basePoolSize = basePoolSize;
 	m_currentPoolSize = basePoolSize;
 	m_maxPoolSize = maxPoolSize;
@@ -93,7 +107,7 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(int basePoolSize, int maxPoolSiz
 
 	DBConnectionPoolPopulate();
 
-	__DbgPrintf(1, "Database Connection Pool initialized");
+	__DBDbgPrintf(1, "Database Connection Pool initialized");
 
 	return true;
 }
@@ -114,7 +128,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 	delete m_dbHandlesInUseMarker;
 	delete m_dbHandleLastAccessTime;
 	
-	__DbgPrintf(1, "Database Connection Pool terminated");
+	__DBDbgPrintf(1, "Database Connection Pool terminated");
 
 }
 
@@ -139,7 +153,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 		{
 			if (m_dbHandles[i] == NULL)
 			{
-				m_dbHandles[i] = DBConnect();
+				m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password);
 				m_currentPoolSize++;
 
 				handle = m_dbHandles[i];

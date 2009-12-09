@@ -27,8 +27,8 @@
 // API version
 //
 
-extern "C" int EXPORT drvAPIVersion;
-int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" const char EXPORT *drvName = "SQLITE";
 
 
 //
@@ -261,7 +261,7 @@ extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 // Connect to database
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
                                        char *pszPassword, char *pszDatabase)
 {
    SQLITE_CONN *pConn;
@@ -279,7 +279,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 		DrvDisconnect(pConn);
 		pConn = NULL;
 	}
-   return (DB_CONNECTION)pConn;
+   return (DBDRV_CONNECTION)pConn;
 }
 
 
@@ -318,9 +318,9 @@ extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
-   DB_RESULT pResult = NULL;
+   DBDRV_RESULT pResult = NULL;
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
@@ -340,7 +340,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWOR
 // Get field length from result
 //
 
-extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT hResult, int iRow, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iColumn)
 {
    if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
        (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
@@ -354,7 +354,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT hResult, int iRow, int iColum
 // Get field value from result
 //
 
-extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
+extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn,
                                      WCHAR *pwszBuffer, int nBufLen)
 {
    if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
@@ -374,7 +374,7 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
 // Get number of rows in result
 //
 
-extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
+extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT hResult)
 {
    return ((SQLITE_RESULT *)hResult)->nRows;
 }
@@ -384,7 +384,7 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 // Get column count in query result
 //
 
-extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
 {
 	return (hResult != NULL) ? ((SQLITE_RESULT *)hResult)->nCols : 0;
 }
@@ -394,7 +394,7 @@ extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
 // Get column name in query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
 {
    char *pszRet = NULL;
 
@@ -410,7 +410,7 @@ extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
 // Free SELECT results
 //
 
-extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
+extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT hResult)
 {
    int i, nCount;
 
@@ -436,10 +436,10 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery,
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError, TCHAR *errorText)
 {
-   DB_ASYNC_RESULT hResult;
+   DBDRV_ASYNC_RESULT hResult;
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
@@ -463,7 +463,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwsz
 // Fetch next result line from asynchronous SELECT results
 //
 
-extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
+extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT hResult)
 {
    return hResult ? (ExecCommand((SQLITE_CONN *)hResult, SQLITE_DRV_STEP, NULL, NULL) == SQLITE_ROW) : FALSE;
 }
@@ -473,7 +473,7 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 // Get field length from async query result
 //
 
-extern "C" LONG EXPORT DrvGetFieldLengthAsync(DB_RESULT hResult, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(DBDRV_RESULT hResult, int iColumn)
 {
    if ((iColumn >= 0) && (iColumn < ((SQLITE_CONN *)hResult)->nNumCols))
       return strlen((char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn));
@@ -485,7 +485,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(DB_RESULT hResult, int iColumn)
 // Get field from current row in async query result
 //
 
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColumn,
                                           WCHAR *pBuffer, int iBufSize)
 {
    char *pszData;
@@ -509,7 +509,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 // Get column count in async query result
 //
 
-extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT hResult)
 {
 	return (hResult != NULL) ? ((SQLITE_CONN *)hResult)->nNumCols : 0;
 }
@@ -519,7 +519,7 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 // Get column name in async query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameAsync(DBDRV_ASYNC_RESULT hResult, int column)
 {
    const char *pszRet = NULL;
 
@@ -535,7 +535,7 @@ extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int
 // Destroy result of async query
 //
 
-extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
+extern "C" void EXPORT DrvFreeAsyncResult(DBDRV_ASYNC_RESULT hResult)
 {
    if (hResult != NULL)
    {

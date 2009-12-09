@@ -124,6 +124,7 @@ DWORD g_dwSNMPTimeout = 2000;		// Default timeout for SNMP requests
 DWORD g_dwAgentCommandTimeout = 2000;  // Default timeout for requests to agent
 DWORD g_dwThresholdRepeatInterval = 0;	// Disabled by default
 int g_nRequiredPolls = 1;
+DB_DRIVER g_dbDriver = NULL;
 
 
 //
@@ -161,7 +162,7 @@ void NXCORE_EXPORTABLE ShutdownDB(void)
 {
 	if (g_hCoreDB != NULL)
 		DBDisconnect(g_hCoreDB);
-	DBUnloadDriver();
+	DBUnloadDriver(g_dbDriver);
 }
 
 
@@ -386,7 +387,7 @@ static BOOL IsNetxmsdProcess(DWORD dwPID)
 // Database event handler
 //
 
-static void DBEventHandler(DWORD dwEvent, const TCHAR *pszArg1, const TCHAR *pszArg2)
+static void DBEventHandler(DWORD dwEvent, const TCHAR *pszArg1, const TCHAR *pszArg2, void *userArg)
 {
 	if (!(g_dwFlags & AF_SERVER_INITIALIZED))
 		return;     // Don't try to do anything if server is not ready yet
@@ -458,13 +459,16 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 
 	// Initialize database driver and connect to database
 	DBSetDebugPrintCallback(DbgPrintf2);
-	if (!DBInit(MSG_OTHER, (g_dwFlags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0, (g_nDebugLevel >= 9), DBEventHandler))
+	if (!DBInit(MSG_OTHER, (g_dwFlags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0))
+		return FALSE;
+	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, (g_nDebugLevel >= 9), DBEventHandler, NULL);
+	if (g_dbDriver == NULL)
 		return FALSE;
 
 	// Connect to database
 	for(i = 0; ; i++)
 	{
-		g_hCoreDB = DBConnect();
+		g_hCoreDB = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword);
 		if ((g_hCoreDB != NULL) || (i == 5))
 			break;
 		ThreadSleep(5);
@@ -487,7 +491,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	int baseSize = ConfigReadInt("ConnectionPoolBaseSize", 5);
 	int maxSize = ConfigReadInt("ConnectionPoolMaxSize", 20);
 	int cooldownTime = ConfigReadInt("ConnectionPoolCooldownTime", 300);
-	DBConnectionPoolStartup(baseSize, maxSize, cooldownTime);
+	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, baseSize, maxSize, cooldownTime);
 
 	// Read database syntax
 	g_nDBSyntax = DBGetSyntax(g_hCoreDB);
@@ -729,7 +733,7 @@ void NXCORE_EXPORTABLE Shutdown(void)
 
 	DBConnectionPoolShutdown();
 
-	DBUnloadDriver();
+	DBUnloadDriver(g_dbDriver);
 	DbgPrintf(1, "Database driver unloaded");
 
 	CleanupActions();

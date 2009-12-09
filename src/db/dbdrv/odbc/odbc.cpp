@@ -34,8 +34,8 @@
 // API version
 //
 
-extern "C" int EXPORT drvAPIVersion;
-int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" const char EXPORT *drvName = "ODBC";
 
 
 //
@@ -159,7 +159,7 @@ extern "C" void EXPORT DrvUnload(void)
 // pszHost should be set to ODBC source name, and pszDatabase is ignored
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
                                            char *pszPassword, char *pszDatabase)
 {
    long iResult;
@@ -195,7 +195,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
    pConn->mutexQuery = MutexCreate();
 
    // Success
-   return (DB_CONNECTION)pConn;
+   return (DBDRV_CONNECTION)pConn;
 
    // Handle failures
 connect_failure_2:
@@ -284,7 +284,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, T
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -505,7 +505,7 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
                                                  DWORD *pdwError, TCHAR *errorText)
 {
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;

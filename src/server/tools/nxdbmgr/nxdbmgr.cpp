@@ -54,17 +54,23 @@ const TCHAR *g_pszSqlType[5][2] =
 
 static TCHAR m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
+static TCHAR s_dbDriver[MAX_PATH] = _T("");
+static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
+static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
+static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
+static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
+static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "CodePage", CT_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
    { "CreateCrashDumps", CT_IGNORE, 0, 0, 0, 0, NULL },
-   { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
-   { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
+   { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
+   { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
    { "DBEncryptedPassword", CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
-   { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
-   { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName },
-   { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
-   { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
+   { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
+   { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
+   { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
+   { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { "DataDirectory", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "DumpDirectory", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "LogFailedSQLQueries", CT_IGNORE, 0, 0, 0, 0, NULL },
@@ -609,7 +615,7 @@ int main(int argc, char *argv[])
 	// Decrypt password
 	if (s_encryptedDbPassword[0] != 0)
 	{
-		DecryptPassword(g_szDbLogin, s_encryptedDbPassword, g_szDbPassword);
+		DecryptPassword(s_dbLogin, s_encryptedDbPassword, s_dbPassword);
 	}
 
 #ifndef _WIN32
@@ -617,18 +623,24 @@ int main(int argc, char *argv[])
 #endif
 
    // Connect to database
-   if (!DBInit(0, 0, FALSE, NULL))
+   if (!DBInit(0, 0))
    {
-      _tprintf(_T("Unable to load and initialize database driver \"%s\"\n"), g_szDbDriver);
+      _tprintf(_T("Unable to initialize database library\n"));
       return 3;
    }
 
-   g_hCoreDB = DBConnect();
+	DB_DRIVER driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, false, NULL, NULL);
+	if (driver == NULL)
+   {
+      _tprintf(_T("Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
+      return 3;
+   }
+
+   g_hCoreDB = DBConnect(driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword);
    if (g_hCoreDB == NULL)
    {
-      _tprintf(_T("Unable to connect to database %s@%s as %s\n"), g_szDbName, 
-               g_szDbServer, g_szDbLogin);
-      DBUnloadDriver();
+      _tprintf(_T("Unable to connect to database %s@%s as %s\n"), s_dbName, s_dbServer, s_dbLogin);
+      DBUnloadDriver(driver);
       return 4;
    }
 
@@ -644,7 +656,7 @@ int main(int argc, char *argv[])
 		{
          _tprintf(_T("Unable to determine database syntax\n"));
          DBDisconnect(g_hCoreDB);
-         DBUnloadDriver();
+         DBUnloadDriver(driver);
          return 5;
       }
 
@@ -667,6 +679,6 @@ int main(int argc, char *argv[])
 
    // Shutdown
    DBDisconnect(g_hCoreDB);
-   DBUnloadDriver();
+   DBUnloadDriver(driver);
    return 0;
 }

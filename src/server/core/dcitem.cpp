@@ -531,7 +531,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                         pszEscScript, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
 							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, pszEscCustomUnitName,
-								pszEscPerfTabSettings, (const TCHAR *)DBPrepareString(m_systemTag));
+								pszEscPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag));
    else
       sprintf(pszQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
                         "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
@@ -546,7 +546,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                         pszEscDescr, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
 							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, pszEscCustomUnitName,
-								pszEscPerfTabSettings, (const TCHAR *)DBPrepareString(m_systemTag), m_dwId);
+								pszEscPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), m_dwId);
    bResult = DBQuery(hdb, pszQuery);
    free(pszEscName);
    free(pszEscScript);

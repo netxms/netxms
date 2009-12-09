@@ -30,7 +30,7 @@
 // API version
 //
 
-#define DBDRV_API_VERSION           7
+#define DBDRV_API_VERSION           8
 
 
 //
@@ -44,9 +44,9 @@
 // Datatypes
 //
 
-typedef void * DB_CONNECTION;
-typedef void * DB_RESULT;
-typedef void * DB_ASYNC_RESULT;
+typedef void * DBDRV_CONNECTION;
+typedef void * DBDRV_RESULT;
+typedef void * DBDRV_ASYNC_RESULT;
 
 
 //
