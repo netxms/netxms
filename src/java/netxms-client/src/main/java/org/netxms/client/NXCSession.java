@@ -80,7 +80,7 @@ public class NXCSession
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 23;
+	public static final int CLIENT_PROTOCOL_VERSION = 24;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -1504,32 +1504,19 @@ public class NXCSession
 	/**
 	 * Set password for user
 	 * 
-	 * @param id
-	 *           User ID
-	 * @param password
-	 *           New password
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @param id User ID
+	 * @param newPassword New password
+	 * @param oldPassword Old password
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void setUserPassword(final long id, final String password) throws IOException, NXCException
+	public void setUserPassword(final long id, final String newPassword, final String oldPassword) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_PASSWORD);
 		msg.setVariableInt32(NXCPCodes.VID_USER_ID, (int) id);
-
-		MessageDigest md;
-		try
-		{
-			md = MessageDigest.getInstance("SHA-1");
-		}
-		catch(NoSuchAlgorithmException e)
-		{
-			throw new NXCException(RCC.INTERNAL_ERROR);
-		}
-		byte[] digest = md.digest(password.getBytes());
-		msg.setVariable(NXCPCodes.VID_PASSWORD, digest);
-
+		msg.setVariable(NXCPCodes.VID_PASSWORD, newPassword);
+		if (oldPassword != null)
+			msg.setVariable(NXCPCodes.VID_OLD_PASSWORD, oldPassword);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

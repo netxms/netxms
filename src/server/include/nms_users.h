@@ -102,6 +102,11 @@ protected:
    int m_authMethod;
 	int m_certMappingMethod;
 	TCHAR *m_certMappingData;
+	time_t m_disabledUntil;
+	time_t m_lastPasswordChange;
+	time_t m_lastLogin;
+	int m_minPasswordLength;
+	int m_authFailures;
 
 public:
 	User();
@@ -119,12 +124,23 @@ public:
 	int getGraceLogins() { return m_graceLogins; }
 	int getAuthMethod() { return m_authMethod; }
 	int getCertMappingMethod() { return m_certMappingMethod; }
+	time_t getLastLoginTime() { return m_lastLogin; }
+	time_t getPasswordChangeTime() { return m_lastPasswordChange; }
 	const TCHAR *getCertMappingData() { return m_certMappingData; }
+	bool isIntruderLockoutActive() { return (m_flags & UF_INTRUDER_LOCKOUT) != 0; }
+	int getMinMasswordLength() { return m_minPasswordLength; }
+	time_t getReEnableTime() { return m_disabledUntil; }
 
 	bool validatePassword(const TCHAR *password);
 	bool validateHashedPassword(const BYTE *password);
-	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; }
-	void setPassword(BYTE *passwordHash, bool clearChangePasswdFlag);
+	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }
+	void setPassword(const TCHAR *password, bool clearChangePasswdFlag);
+	void increaseAuthFailures();
+	void resetAuthFailures() { m_authFailures = 0; m_flags |= UF_MODIFIED; }
+	void updateLastLogin() { m_lastLogin = time(NULL); m_flags |= UF_MODIFIED; }
+	void updatePasswordChangeTime() { m_lastPasswordChange = time(NULL); m_flags |= UF_MODIFIED; }
+	void enable();
+	void disable() { m_flags |= UF_DISABLED | UF_MODIFIED; }
 };
 
 
@@ -200,15 +216,15 @@ public:
 // Functions
 //
 
-BOOL LoadUsers(void);
+BOOL LoadUsers();
 void SaveUsers(DB_HANDLE hdb);
 void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object);
 DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 							  DWORD dwSigLen, void *pCert, BYTE *pChallenge,
 							  DWORD *pdwId, DWORD *pdwSystemRights,
-							  BOOL *pbChangePasswd);
+							  bool *pbChangePasswd, bool *pbIntruderLockout);
 
-DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, BYTE *newPassword, BYTE *oldPassword, bool changeOwnPassword);
+DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
 bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id);
 DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId);

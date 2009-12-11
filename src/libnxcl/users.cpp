@@ -224,36 +224,15 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD userId,
 {
    CSCPMessage msg;
    DWORD dwRqId;
-   BYTE hash[SHA1_DIGEST_SIZE];
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_SET_PASSWORD);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_USER_ID, userId);
-
-#ifdef UNICODE
-   char temp[256];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       newPassword, -1, temp, 256, NULL, NULL);
-   CalculateSHA1Hash((BYTE *)temp, strlen(temp), hash);
-#else
-   CalculateSHA1Hash((BYTE *)newPassword, strlen(newPassword), hash);
-#endif
-   msg.SetVariable(VID_PASSWORD, hash, SHA1_DIGEST_SIZE);
-
+   msg.SetVariable(VID_PASSWORD, newPassword);
 	if (oldPassword != NULL)
-	{
-#ifdef UNICODE
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-								  oldPassword, -1, temp, 256, NULL, NULL);
-		CalculateSHA1Hash((BYTE *)temp, strlen(temp), hash);
-#else
-		CalculateSHA1Hash((BYTE *)oldPassword, strlen(oldPassword), hash);
-#endif
-	   msg.SetVariable(VID_OLD_PASSWORD, hash, SHA1_DIGEST_SIZE);
-	}
+	   msg.SetVariable(VID_OLD_PASSWORD, oldPassword);
 
 	((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);

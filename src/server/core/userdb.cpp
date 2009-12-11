@@ -24,6 +24,18 @@
 
 
 //
+// Password complexity options
+//
+
+#define PSWD_MUST_CONTAIN_DIGITS          0x0001
+#define PSWD_MUST_CONTAIN_UPPERCASE       0x0002
+#define PSWD_MUST_CONTAIN_LOWERCASE       0x0004
+#define PSWD_MUST_CONTAIN_SPECIAL_CHARS   0x0008
+#define PSWD_FORBID_ALPHABETICAL_SEQUENCE 0x0010
+#define PSWD_FORBID_KEYBOARD_SEQUENCE     0x0020
+
+
+//
 // Externals
 //
 
@@ -37,15 +49,72 @@ bool RadiusAuth(const TCHAR *pszLogin, const TCHAR *pszPasswd);
 static int m_userCount = 0;
 static UserDatabaseObject **m_users = NULL;
 static MUTEX m_mutexUserDatabaseAccess = INVALID_MUTEX_HANDLE;
+static THREAD m_statusUpdateThread = INVALID_THREAD_HANDLE;
+
+
+//
+// Upgrade user accounts status in background
+//
+
+static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
+{
+	DbgPrintf(2, _T("User account status update thread started"));
+	while(!SleepAndCheckForShutdown(60))
+	{
+		DbgPrintf(5, _T("AccountStatusUpdater: wakeup"));
+
+		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
+
+		MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+		time_t now = time(NULL);
+		for(int i = 0; i < m_userCount; i++)
+		{
+			if (m_users[i]->isDeleted() || (m_users[i]->getId() & GROUP_FLAG))
+				continue;
+
+			User *user = (User *)m_users[i];
+
+			if (user->isDisabled() && (user->getReEnableTime() <= now))
+			{
+				// Re-enable temporary disabled user
+				user->enable();
+				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, "", 0, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
+				DbgPrintf(3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
+			}
+
+			if ((blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
+			{
+				user->disable();
+				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, "", 0, _T("User account \"%s\" disabled due to inactivity"), user->getName());
+				DbgPrintf(3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
+			}
+		}
+		MutexUnlock(m_mutexUserDatabaseAccess);
+	}
+
+	DbgPrintf(2, _T("User account status update thread stopped"));
+	return THREAD_OK;
+}
 
 
 //
 // Initialize user handling subsystem
 //
 
-void InitUsers(void)
+void InitUsers()
 {
    m_mutexUserDatabaseAccess = MutexCreate();
+	m_statusUpdateThread = ThreadCreateEx(AccountStatusUpdater, 0, NULL);
+}
+
+
+//
+// Cleanup user handling subsystem
+//
+
+void CleanupUsers()
+{
+	ThreadJoin(m_statusUpdateThread);
 }
 
 
@@ -62,7 +131,9 @@ BOOL LoadUsers(void)
    hResult = DBSelect(g_hCoreDB,
 	                   _T("SELECT id,name,system_access,flags,description,guid,")
 							 _T("password,full_name,grace_logins,auth_method,")
-							 _T("cert_mapping_method,cert_mapping_data FROM users"));
+							 _T("cert_mapping_method,cert_mapping_data,auth_failures,")
+							 _T("last_passwd_change,min_passwd_length,disabled_until,")
+							 _T("last_login FROM users"));
    if (hResult == NULL)
       return FALSE;
 
@@ -157,7 +228,7 @@ void SaveUsers(DB_HANDLE hdb)
 DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 							  DWORD dwSigLen, void *pCert, BYTE *pChallenge,
 							  DWORD *pdwId, DWORD *pdwSystemRights,
-							  BOOL *pbChangePasswd)
+							  bool *pbChangePasswd, bool *pbIntruderLockout)
 {
    int i, j;
    DWORD dwResult = RCC_ACCESS_DENIED;
@@ -225,25 +296,49 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
          {
             if (!user->isDisabled())
             {
+					user->resetAuthFailures();
 					if (user->getFlags() & UF_CHANGE_PASSWORD)
                {
+						DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
 						if (user->getId() != 0)	// Do not check grace logins for built-in admin user
 						{
 							if (user->getGraceLogins() <= 0)
 							{
+								DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
 								dwResult = RCC_NO_GRACE_LOGINS;
 								break;
 							}
 							user->decreaseGraceLogins();
 						}
-                  *pbChangePasswd = TRUE;
+                  *pbChangePasswd = true;
                }
                else
                {
-                  *pbChangePasswd = FALSE;
+						// Check if password was expired
+						int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
+						if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) && (passwordExpirationTime > 0) && (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime))
+						{
+							DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
+							if (user->getId() != 0)	// Do not check grace logins for built-in admin user
+							{
+								if (user->getGraceLogins() <= 0)
+								{
+									DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
+									dwResult = RCC_NO_GRACE_LOGINS;
+									break;
+								}
+								user->decreaseGraceLogins();
+							}
+							*pbChangePasswd = true;
+						}
+						else
+						{
+							*pbChangePasswd = false;
+						}
                }
                *pdwId = user->getId();
                *pdwSystemRights = user->getSystemRights();
+					user->updateLastLogin();
                dwResult = RCC_SUCCESS;
          
                // Collect system rights from groups this user belongs to
@@ -256,7 +351,13 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
             {
                dwResult = RCC_ACCOUNT_DISABLED;
             }
+				*pbIntruderLockout = false;
          }
+			else
+			{
+				user->increaseAuthFailures();
+				*pbIntruderLockout = user->isIntruderLockoutActive();
+			}
          break;
       }
    }
@@ -463,10 +564,84 @@ DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
 
 
 //
+// Check if string contains subsequence of given sequence
+//
+
+static bool IsStringContainsSubsequence(const TCHAR *str, const TCHAR *sequence, int len)
+{
+	int sequenceLen = (int)_tcslen(sequence);
+	if ((sequenceLen < len) || (len > 255))
+		return false;
+
+	TCHAR subseq[256];
+	for(int i = 0; i < sequenceLen - len; i++)
+	{
+		nx_strncpy(subseq, &sequence[i], len + 1);
+		if (_tcsstr(str, subseq) != NULL)
+			return true;
+	}
+
+	return false;
+}
+
+
+//
+// Check password's complexity
+//
+
+static bool CheckPasswordComplexity(const TCHAR *password)
+{
+	int flags = ConfigReadInt(_T("PasswordComplexity"), 0);
+
+	if ((flags & PSWD_MUST_CONTAIN_DIGITS) && (_tcspbrk(password, _T("0123456789")) == NULL))
+		return false;
+
+	if ((flags & PSWD_MUST_CONTAIN_UPPERCASE) && (_tcspbrk(password, _T("ABCDEFGHIJKLMNOPQRSTUVWXYZ")) == NULL))
+		return false;
+
+	if ((flags & PSWD_MUST_CONTAIN_LOWERCASE) && (_tcspbrk(password, _T("abcdefghijklmnopqrstuvwxyz")) == NULL))
+		return false;
+
+	if ((flags & PSWD_MUST_CONTAIN_SPECIAL_CHARS) && (_tcspbrk(password, _T("`~!@#$%^&*()_-=+{}[]|\\'\";:,.<>/?")) == NULL))
+		return false;
+
+	if (flags & PSWD_FORBID_ALPHABETICAL_SEQUENCE)
+	{
+		if (IsStringContainsSubsequence(password, _T("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 3))
+			return false;
+		if (IsStringContainsSubsequence(password, _T("abcdefghijklmnopqrstuvwxyz"), 3))
+			return false;
+	}
+
+	if (flags & PSWD_FORBID_KEYBOARD_SEQUENCE)
+	{
+		if (IsStringContainsSubsequence(password, _T("~!@#$%^&*()_+"), 3))
+			return false;
+		if (IsStringContainsSubsequence(password, _T("1234567890-="), 3))
+			return false;
+		if (IsStringContainsSubsequence(password, _T("qwertyuiop[]"), 3))
+			return false;
+		if (IsStringContainsSubsequence(password, _T("asdfghjkl;’"), 3))
+			return false;
+		if (IsStringContainsSubsequence(password, _T("zxcvbnm,./"), 3))
+			return false;
+		if (IsStringContainsSubsequence(password, _T("QWERTYUIOP{}"), 3))
+			return false;
+		if (IsStringContainsSubsequence(password, _T("ASDFGHJKL:\""), 3))
+			return false;
+		if (IsStringContainsSubsequence(password, _T("ZXCVBNM<>?"), 3))
+			return false;
+	}
+
+	return true;
+}
+
+
+//
 // Set user's password
 //
 
-DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, BYTE *newPassword, BYTE *oldPassword, bool changeOwnPassword)
+DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)
 {
 	int i;
    DWORD dwResult = RCC_INVALID_USER_ID;
@@ -480,15 +655,104 @@ DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, BYTE *newPassword, BYTE *oldPa
    for(i = 0; i < m_userCount; i++)
 		if (m_users[i]->getId() == id)
       {
+			User *user = (User *)m_users[i];
 			if (changeOwnPassword)
 			{
-				if (!((User *)m_users[i])->validateHashedPassword(oldPassword))
+				if (!user->validatePassword(oldPassword))
 				{
 					dwResult = RCC_ACCESS_DENIED;
 					break;
 				}
+
+				// Check password length
+				int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(_T("MinPasswordLength"), 0) : user->getMinMasswordLength();
+				if ((int)_tcslen(newPassword) < minLength)
+				{
+					dwResult = RCC_WEAK_PASSWORD;
+					break;
+				}
+
+				// Check password complexity
+				if (!CheckPasswordComplexity(newPassword))
+				{
+					dwResult = RCC_WEAK_PASSWORD;
+					break;
+				}
+
+				// Update password history
+				int passwordHistoryLength = ConfigReadInt(_T("PasswordHistoryLength"), 0);
+				if (passwordHistoryLength > 0)
+				{
+					TCHAR query[8192], *ph = NULL;
+
+					_sntprintf(query, 8192, _T("SELECT password_history FROM users WHERE id=%d"), id);
+					DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+					if (hResult != NULL)
+					{
+						if (DBGetNumRows(hResult) > 0)
+						{
+							ph = DBGetField(hResult, 0, 0, NULL, 0);
+						}
+						DBFreeResult(hResult);
+					}
+
+					if (ph != NULL)
+					{
+						BYTE newPasswdHash[SHA1_DIGEST_SIZE];
+#ifdef UNICODE
+						char *mb = MBStringFromWideString(newPassword);
+						CalculateSHA1Hash((BYTE *)mb, strlen(mb), newPasswdHash);
+						free(mb);
+#else
+						CalculateSHA1Hash((BYTE *)newPassword, strlen(newPassword), newPasswdHash);
+#endif
+
+						int phLen = (int)_tcslen(ph) / (SHA1_DIGEST_SIZE * 2);
+						if (phLen > passwordHistoryLength)
+							phLen = passwordHistoryLength;
+
+						for(int i = 0; i < phLen; i++)
+						{
+							BYTE hash[SHA1_DIGEST_SIZE];
+							StrToBin(&ph[i * SHA1_DIGEST_SIZE * 2], hash, SHA1_DIGEST_SIZE);
+							if (!memcmp(hash, newPasswdHash, SHA1_DIGEST_SIZE))
+							{
+								dwResult = RCC_REUSED_PASSWORD;
+								break;
+							}
+						}
+						
+						if (dwResult != RCC_REUSED_PASSWORD)
+						{
+							if (phLen == passwordHistoryLength)
+							{
+								memmove(ph, &ph[SHA1_DIGEST_SIZE * 2], (phLen - 1) * SHA1_DIGEST_SIZE * 2 * sizeof(TCHAR));
+							}
+							else
+							{
+								ph = (TCHAR *)realloc(ph, (phLen + 1) * SHA1_DIGEST_SIZE * 2 * sizeof(TCHAR) + sizeof(TCHAR));
+								phLen++;
+							}
+							BinToStr(newPasswdHash, SHA1_DIGEST_SIZE, &ph[(phLen - 1) * SHA1_DIGEST_SIZE * 2]);
+
+							_sntprintf(query, 8192, _T("UPDATE users SET password_history='%s' WHERE id=%d"), ph, id);
+							DBQuery(g_hCoreDB, query);
+						}
+
+						free(ph);
+						if (dwResult == RCC_REUSED_PASSWORD)
+							break;
+					}
+					else
+					{
+						dwResult = RCC_DB_FAILURE;
+						break;
+					}
+				}
+
+				user->updatePasswordChangeTime();
 			}
-			((User *)m_users[i])->setPassword(newPassword, changeOwnPassword);
+			user->setPassword(newPassword, changeOwnPassword);
          dwResult = RCC_SUCCESS;
          break;
       }

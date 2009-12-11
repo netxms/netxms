@@ -1403,7 +1403,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
    CSCPMessage msg;
    TCHAR szLogin[MAX_USER_NAME], szPassword[MAX_DB_STRING], szBuffer[32];
 	int nAuthType;
-   BOOL bChangePasswd;
+   bool changePasswd = false, intruderLockout = false;
    DWORD dwResult;
 #ifdef _WITH_ENCRYPTION
 	X509 *pCert;
@@ -1434,7 +1434,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
 			case NETXMS_AUTH_TYPE_PASSWORD:
 				pRequest->GetVariableStr(VID_PASSWORD, szPassword, MAX_DB_STRING);
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &m_dwSystemAccess, &bChangePasswd);
+													 &m_dwSystemAccess, &changePasswd, &intruderLockout);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -1446,7 +1446,8 @@ void ClientSession::Login(CSCPMessage *pRequest)
 
 					dwSigLen = pRequest->GetVariableBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
-														 m_challenge, &m_dwUserId, &m_dwSystemAccess, &bChangePasswd);
+														 m_challenge, &m_dwUserId, &m_dwSystemAccess,
+														 &changePasswd, &intruderLockout);
 					X509_free(pCert);
 				}
 				else
@@ -1469,7 +1470,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);
-         msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)bChangePasswd);
+			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? FALSE : TRUE));
          DebugPrintf(3, "User %s authenticated", m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
@@ -1481,6 +1482,11 @@ void ClientSession::Login(CSCPMessage *pRequest)
 			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szWorkstation, 0,
 			              _T("User \"%s\" login failed with error code %d (client info: %s)"),
 							  szLogin, dwResult, m_szClientInfo);
+			if (intruderLockout)
+			{
+				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szWorkstation, 0,
+								  _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), szLogin);
+			}
       }
    }
    else
@@ -2343,6 +2349,7 @@ void ClientSession::SendUserDB(DWORD dwRqId)
       sendMessage(&msg);
       msg.DeleteAllVariables();
    }
+	CloseUserDatabase();
 
    // Send end-of-database notification
    msg.SetCode(CMD_USER_DB_EOF);
@@ -2630,13 +2637,13 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
        (dwUserId == m_dwUserId))     // User can change password for itself
    {
       DWORD dwResult;
-      BYTE newPassword[SHA1_DIGEST_SIZE], oldPassword[SHA1_DIGEST_SIZE];
+      TCHAR newPassword[256], oldPassword[256];
 
-      pRequest->GetVariableBinary(VID_PASSWORD, newPassword, SHA1_DIGEST_SIZE);
+      pRequest->GetVariableStr(VID_PASSWORD, newPassword, 256);
 		if (pRequest->IsVariableExist(VID_OLD_PASSWORD))
-			pRequest->GetVariableBinary(VID_OLD_PASSWORD, oldPassword, SHA1_DIGEST_SIZE);
+			pRequest->GetVariableStr(VID_OLD_PASSWORD, oldPassword, 256);
 		else
-			memset(oldPassword, 0, SHA1_DIGEST_SIZE);
+			oldPassword[0] = 0;
       dwResult = SetUserPassword(dwUserId, newPassword, oldPassword, dwUserId == m_dwUserId);
       msg.SetVariable(VID_RCC, dwResult);
    }

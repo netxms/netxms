@@ -810,6 +810,11 @@ typedef struct
 #define VID_NUM_ENUMS               ((DWORD)347)
 #define VID_NUM_PUSH_PARAMETERS     ((DWORD)348) 
 #define VID_OLD_PASSWORD            ((DWORD)349)
+#define VID_MIN_PASSWORD_LENGTH     ((DWORD)350)
+#define VID_LAST_LOGIN              ((DWORD)351)
+#define VID_LAST_PASSWORD_CHANGE    ((DWORD)352)
+#define VID_DISABLED_UNTIL          ((DWORD)353)
+#define VID_AUTH_FAILURES           ((DWORD)354)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

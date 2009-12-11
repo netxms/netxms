@@ -204,6 +204,20 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ExternalAuditSeverity','5',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ExternalAuditTag','netxmsd-audit',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('PasswordHistoryLength','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('IntruderLockoutThreshold','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('IntruderLockoutTime','30',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('MinPasswordLength','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('PasswordComplexity','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('PasswordExpiration','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('BlockInactiveUserAccounts','0',1,0);
 
 
 /*

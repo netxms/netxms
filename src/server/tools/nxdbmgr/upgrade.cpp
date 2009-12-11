@@ -214,6 +214,62 @@ cleanup:
 
 
 //
+// Upgrade from V208 to V209
+//
+
+static BOOL H_UpgradeFromV208(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE users ADD auth_failures integer\n")
+		_T("ALTER TABLE users ADD last_passwd_change integer\n")
+		_T("ALTER TABLE users ADD min_passwd_length integer\n")
+		_T("ALTER TABLE users ADD disabled_until integer\n")
+		_T("ALTER TABLE users ADD last_login integer\n")
+		_T("ALTER TABLE users ADD password_history $SQL:TEXT\n")
+		_T("UPDATE users SET auth_failures=0,last_passwd_change=0,min_passwd_length=-1,disabled_until=0,last_login=0\n")
+		_T("<END>");
+
+	if (!SQLBatch(batch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("PasswordHistoryLength"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("MaxPasswordAuthFailures"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("IntruderLockoutTime"), _T("30"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("MinPasswordLength"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("PasswordComplexity"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("PasswordExpiration"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("BlockInactiveUserAccounts"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='209' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V207 to V208
 //
 
@@ -4492,6 +4548,7 @@ static struct
 	{ 205, 206, H_UpgradeFromV205 },
 	{ 206, 207, H_UpgradeFromV206 },
 	{ 207, 208, H_UpgradeFromV207 },
+	{ 208, 209, H_UpgradeFromV208 },
    { 0, NULL }
 };
 

@@ -420,6 +420,8 @@ enum
 #define RCC_INVALID_POLICY_ID       ((DWORD)84)
 #define RCC_UNKNOWN_LOG_NAME        ((DWORD)85)
 #define RCC_INVALID_LOG_HANDLE      ((DWORD)86)
+#define RCC_WEAK_PASSWORD           ((DWORD)87)
+#define RCC_REUSED_PASSWORD         ((DWORD)88)
 
 
 //
@@ -532,6 +534,7 @@ enum
 #define UF_DISABLED                 0x0004
 #define UF_CHANGE_PASSWORD          0x0008
 #define UF_CANNOT_CHANGE_PASSWORD   0x0010
+#define UF_INTRUDER_LOCKOUT         0x0020
 
 
 //
@@ -546,6 +549,7 @@ enum
 #define USER_MODIFY_MEMBERS         0x00000020
 #define USER_MODIFY_CERT_MAPPING    0x00000040
 #define USER_MODIFY_AUTH_METHOD     0x00000080
+#define USER_MODIFY_PASSWD_LENGTH   0x00000100
 
 
 //

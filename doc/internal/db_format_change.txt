@@ -1,4 +1,20 @@
 ***************
+* 208 ==> 209 *
+***************
+
+- New fields added to table "users":
+	auth_failures integer not null,
+	last_passwd_change integer not null,
+	min_passwd_length integer not null,
+	disabled_until integer not null,
+	last_login integer not null,
+	password_history SQL_TEXT
+- New configuration parameters added: PasswordHistoryLength,
+     IntruderLockoutThreshold, MinPasswordLength, PasswordComplexity,
+     PasswordExpiration, BlockInactiveUserAccounts, IntruderLockoutTime
+
+
+***************
 * 207 ==> 208 *
 ***************
 

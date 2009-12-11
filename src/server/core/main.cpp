@@ -73,6 +73,8 @@ extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
 void InitCertificates(void);
+void InitUsers();
+void CleanupUsers();
 
 
 //
@@ -577,6 +579,7 @@ retry_db_lock:
 	InitSMSSender();
 
 	// Load users from database
+	InitUsers();
 	if (!LoadUsers())
 	{
 		nxlog_write(MSG_ERROR_LOADING_USERS, EVENTLOG_ERROR_TYPE, NULL);
@@ -723,6 +726,8 @@ void NXCORE_EXPORTABLE Shutdown(void)
 	DbgPrintf(2, "All users saved to database");
 	StopDBWriter();
 	DbgPrintf(1, "Database writer stopped");
+
+	CleanupUsers();
 
 	// Remove database lock
 	UnlockDB();

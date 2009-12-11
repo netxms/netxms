@@ -262,7 +262,9 @@ DWORD UserDatabaseObject::getAttributeAsULong(const TCHAR *name)
 // Constructor for user object - create from database
 // Expects fields in the following order:
 //    id,name,system_access,flags,description,guid,password,full_name,
-//    grace_logins,auth_method,cert_mapping_method,cert_mapping_data
+//    grace_logins,auth_method,cert_mapping_method,cert_mapping_data,
+//    auth_failures,last_passwd_change,min_passwd_length,disabled_until,
+//    last_login
 //
 
 User::User(DB_RESULT hResult, int row)
@@ -286,6 +288,12 @@ User::User(DB_RESULT hResult, int row)
 	m_certMappingData = DBGetField(hResult, row, 11, NULL, 0);
 	if (m_certMappingData != NULL)
 		DecodeSQLString(m_certMappingData);
+
+	m_authFailures = DBGetFieldLong(hResult, row, 12);
+	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 13);
+	m_minPasswordLength = DBGetFieldLong(hResult, row, 14);
+	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 15);
+	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 16);
 
 	// Set full system access for superuser
 	if (m_id == 0)
@@ -313,6 +321,11 @@ User::User()
 	uuid_generate(m_guid);
 	m_certMappingMethod = 0;
 	m_certMappingData = NULL;
+	m_authFailures = 0;
+	m_lastPasswordChange = 0;
+	m_minPasswordLength = -1;	// Use system-wide default
+	m_disabledUntil = 0;
+	m_lastLogin = 0;
 }
 
 
@@ -329,6 +342,11 @@ User::User(DWORD id, const TCHAR *name)
 	m_certMappingMethod = USER_MAP_CERT_BY_SUBJECT;
 	m_certMappingData = NULL;
 	CalculateSHA1Hash((BYTE *)"", 0, m_passwordHash);
+	m_authFailures = 0;
+	m_lastPasswordChange = 0;
+	m_minPasswordLength = -1;	// Use system-wide default
+	m_disabledUntil = 0;
+	m_lastLogin = 0;
 }
 
 
@@ -373,17 +391,24 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    if (userExists)
       _sntprintf(query, 4096, _T("UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,")
                               _T("full_name='%s',description='%s',grace_logins=%d,guid='%s',")
-							         _T("auth_method=%d,cert_mapping_method=%d,cert_mapping_data='%s' WHERE id=%d"),
+							         _T("auth_method=%d,cert_mapping_method=%d,cert_mapping_data='%s',")
+										_T("auth_failures=%d,last_passwd_change=%d,min_passwd_length=%d,")
+										_T("disabled_until=%d,last_login=%d WHERE id=%d"),
               m_name, password, m_systemRights, m_flags, escFullName,
               escDescr, m_graceLogins, uuid_to_string(m_guid, guidText),
-              m_authMethod, m_certMappingMethod, escData, m_id);
+              m_authMethod, m_certMappingMethod, escData, m_authFailures, (int)m_lastPasswordChange,
+				  m_minPasswordLength, (int)m_disabledUntil, (int)m_lastLogin, m_id);
    else
       _sntprintf(query, 4096, _T("INSERT INTO users (id,name,password,system_access,flags,full_name,")
 		                        _T("description,grace_logins,guid,auth_method,cert_mapping_method,")
-                              _T("cert_mapping_data) VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d,%d,'%s')"),
+                              _T("cert_mapping_data,password_history,auth_failures,last_passwd_change,")
+										_T("min_passwd_length,disabled_until,last_login) VALUES ")
+										_T("(%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d,%d,'%s','%s',%d,%d,%d,%d,%d)"),
               m_id, m_name, password, m_systemRights, m_flags,
               escFullName, escDescr, m_graceLogins, uuid_to_string(m_guid, guidText),
-              m_authMethod, m_certMappingMethod, escData);
+              m_authMethod, m_certMappingMethod, escData, password,
+				  m_authFailures, (int)m_lastPasswordChange, m_minPasswordLength,
+				  (int)m_disabledUntil, (int)m_lastLogin);
 	free(escData);
 	free(escFullName);
 	free(escDescr);
@@ -460,9 +485,9 @@ bool User::validateHashedPassword(const BYTE *password)
 // Set user's password
 //
 
-void User::setPassword(BYTE *passwordHash, bool clearChangePasswdFlag)
+void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 {
-	memcpy(m_passwordHash, passwordHash, SHA1_DIGEST_SIZE);
+	CalculateSHA1Hash((BYTE *)password, _tcslen(password), m_passwordHash);
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_flags |= UF_MODIFIED;
 	if (clearChangePasswdFlag)
@@ -482,6 +507,11 @@ void User::fillMessage(CSCPMessage *msg)
    msg->SetVariable(VID_AUTH_METHOD, (WORD)m_authMethod);
 	msg->SetVariable(VID_CERT_MAPPING_METHOD, (WORD)m_certMappingMethod);
 	msg->SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(m_certMappingData));
+	msg->SetVariable(VID_LAST_LOGIN, (DWORD)m_lastLogin);
+	msg->SetVariable(VID_LAST_PASSWORD_CHANGE, (DWORD)m_lastPasswordChange);
+	msg->SetVariable(VID_MIN_PASSWORD_LENGTH, (DWORD)m_minPasswordLength);
+	msg->SetVariable(VID_DISABLED_UNTIL, (DWORD)m_disabledUntil);
+	msg->SetVariable(VID_AUTH_FAILURES, (DWORD)m_authFailures);
 }
 
 
@@ -499,12 +529,47 @@ void User::modifyFromMessage(CSCPMessage *msg)
 		msg->GetVariableStr(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
 	if (fields & USER_MODIFY_AUTH_METHOD)
 	   m_authMethod = msg->GetVariableShort(VID_AUTH_METHOD);
+	if (fields & USER_MODIFY_PASSWD_LENGTH)
+	   m_minPasswordLength = msg->GetVariableShort(VID_MIN_PASSWORD_LENGTH);
 	if (fields & USER_MODIFY_CERT_MAPPING)
 	{
 		m_certMappingMethod = msg->GetVariableShort(VID_CERT_MAPPING_METHOD);
 		safe_free(m_certMappingData);
 		m_certMappingData = msg->GetVariableStr(VID_CERT_MAPPING_DATA);
 	}
+}
+
+
+//
+// Increase auth failures and lockout account if threshold reached
+//
+
+void User::increaseAuthFailures()
+{
+	m_authFailures++;
+
+	int lockoutThreshold = ConfigReadInt(_T("IntruderLockoutThreshold"), 0);
+	if ((lockoutThreshold > 0) && (m_authFailures >= lockoutThreshold))
+	{
+		m_disabledUntil = time(NULL) + ConfigReadInt(_T("IntruderLockoutTime"), 30) * 60;
+		m_flags |= UF_DISABLED | UF_INTRUDER_LOCKOUT;
+	}
+
+	m_flags |= UF_MODIFIED;
+}
+
+
+//
+// Enable user account
+//
+
+void User::enable()
+{
+	m_authFailures = 0;
+	m_graceLogins = MAX_GRACE_LOGINS;
+	m_disabledUntil = 0;
+	m_flags &= ~(UF_DISABLED | UF_INTRUDER_LOCKOUT);
+	m_flags |= UF_MODIFIED;
 }
 
 
