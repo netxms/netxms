@@ -266,4 +266,16 @@ Language=English
 Additional configs was loaded from %1
 .
 
+MessageId=
+SymbolicName=MSG_SQL_ERROR
+Language=English
+SQL query failed (Query = "%1"): %2
+.
+
+MessageId=
+SymbolicName=MSG_DB_LIBRARY
+Language=English
+DB Library: %1
+.
+
 ;#endif

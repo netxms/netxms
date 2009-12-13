@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <nxdbapi.h>
 
 #if defined(_WIN32)
 #include <conio.h>
@@ -587,6 +588,22 @@ static BOOL SendFileToServer(void *session, DWORD requestId, const TCHAR *file, 
 
 
 //
+// Debug callback for DB library
+//
+
+static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
+{
+	if ((level == 0) || (g_dwFlags & AF_DEBUG))
+	{
+      TCHAR buffer[4096];
+
+      _vsntprintf(buffer, 4096, format, args);
+      nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
+	}
+}
+
+
+//
 // Initialization routine
 //
 
@@ -818,6 +835,9 @@ BOOL Initialize(void)
 		if (!WaitForProcess(m_szProcessToWait))
 	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", m_szProcessToWait);
 	}
+
+	DBSetDebugPrintCallback(DBLibraryDebugCallback);
+	DBInit(MSG_DB_LIBRARY, MSG_SQL_ERROR);
 
 	// Load other subagents
    if (m_pszSubagentList != NULL)
