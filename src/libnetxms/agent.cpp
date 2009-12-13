@@ -220,3 +220,43 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const T
 		return FALSE;
 	return s_fpPushData(parameter, value);
 }
+
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value)
+{
+	TCHAR buffer[64];
+
+	_sntprintf(buffer, sizeof(buffer), _T("%d"), value);
+	return AgentPushParameterData(parameter, buffer);
+}
+
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, DWORD value)
+{
+	TCHAR buffer[64];
+
+	_sntprintf(buffer, sizeof(buffer), _T("%u"), value);
+	return AgentPushParameterData(parameter, buffer);
+}
+
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value)
+{
+	TCHAR buffer[64];
+
+	_sntprintf(buffer, sizeof(buffer), INT64_FMT, value);
+	return AgentPushParameterData(parameter, buffer);
+}
+
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value)
+{
+	TCHAR buffer[64];
+
+	_sntprintf(buffer, sizeof(buffer), UINT64_FMT, value);
+	return AgentPushParameterData(parameter, buffer);
+}
+
+BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value)
+{
+	TCHAR buffer[64];
+
+	_sntprintf(buffer, sizeof(buffer), _T("%f"), value);
+	return AgentPushParameterData(parameter, buffer);
+}
