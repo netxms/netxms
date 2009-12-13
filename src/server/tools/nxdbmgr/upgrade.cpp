@@ -237,7 +237,7 @@ static BOOL H_UpgradeFromV208(int currVersion, int newVersion)
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
-	if (!CreateConfigParam(_T("MaxPasswordAuthFailures"), _T("0"), 1, 0))
+	if (!CreateConfigParam(_T("IntruderLockoutThreshold"), _T("0"), 1, 0))
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
