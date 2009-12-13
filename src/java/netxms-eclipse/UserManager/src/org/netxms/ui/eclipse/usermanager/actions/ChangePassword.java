@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.usermanager.actions;
 
@@ -18,12 +33,13 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 
 /**
- * @author Victor
+ * Workbench action - change password for currently logged in user.
  *
  */
 public class ChangePassword implements IWorkbenchWindowActionDelegate
@@ -53,43 +69,32 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final ChangePasswordDialog dlg = new ChangePasswordDialog(window.getShell());
+		final ChangePasswordDialog dlg = new ChangePasswordDialog(window.getShell(), true);
 		if (dlg.open() == Window.OK)
 		{
-			Job job = new Job("Change password for current user") {
+			ConsoleJob job = new ConsoleJob("Change password for current user", null, Activator.PLUGIN_ID, null) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected String getErrorMessage()
 				{
-					IStatus status;
-					try
-					{
-						NXCSession session = NXMCSharedData.getInstance().getSession();
-						session.setUserPassword(session.getUserId(), dlg.getPassword());
-						new UIJob("Password change notification") {
-							@Override
-							public IStatus runInUIThread(IProgressMonitor monitor)
-							{
-								MessageDialog.openInformation(window.getShell(), "Information", "Password changed successfully");
-								return Status.OK_STATUS;
-							}
-						}.schedule();
-						status = Status.OK_STATUS;
-					}
-					catch(NXCException e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getErrorCode(),
-									           "Cannot change password: " + e.getMessage(), null);
-					}
-					catch(IOException e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 0,
-						                    "Cannot change password: I/O error (" + e.getMessage() + ")", null);
-					}
-					return status;
+					return "Cannot change password";
+				}
+
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					NXCSession session = NXMCSharedData.getInstance().getSession();
+					session.setUserPassword(session.getUserId(), dlg.getPassword(), dlg.getOldPassword());
+					new UIJob("Password change notification") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							MessageDialog.openInformation(window.getShell(), "Information", "Password changed successfully");
+							return Status.OK_STATUS;
+						}
+					}.schedule();
 				}
 			};
-			job.setUser(true);
-			job.schedule();
+			job.start();
 		}
 	}
 

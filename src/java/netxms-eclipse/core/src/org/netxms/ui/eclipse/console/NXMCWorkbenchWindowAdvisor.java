@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.console;
 
 import java.io.IOException;
@@ -81,17 +99,18 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		final Shell shell = getWindowConfigurer().getWindow().getShell();
 		boolean success = false;
 
+		LoginDialog loginDialog;
 		do
 		{
-			LoginDialog dialog = new LoginDialog(shell);
-			dialog.open();
-			if (!dialog.isOk())
+			loginDialog = new LoginDialog(shell);
+			loginDialog.open();
+			if (!loginDialog.isOk())
 				break;
 
 			try
 			{
-				LoginJob job = new LoginJob(settings.get("Connect.Server"), settings.get("Connect.Login"), dialog //$NON-NLS-1$ //$NON-NLS-2$
-						.getPassword());
+				LoginJob job = new LoginJob(settings.get("Connect.Server"), settings.get("Connect.Login"), //$NON-NLS-1$ //$NON-NLS-2$
+				                            loginDialog.getPassword());
 
 				new ProgressMonitorDialog(shell).run(true, true, job);
 				success = true;
@@ -121,6 +140,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(shell);
 				if (dlg.open() == Window.OK)
 				{
+					final String currentPassword = loginDialog.getPassword();
 					Job job = new Job("Change password for current user") {
 						@Override
 						protected IStatus run(IProgressMonitor monitor)
@@ -129,7 +149,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 							try
 							{
 								NXCSession session = NXMCSharedData.getInstance().getSession();
-								session.setUserPassword(session.getUserId(), dlg.getPassword());
+								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
 								new UIJob("Password change notification") {
 									@Override
 									public IStatus runInUIThread(IProgressMonitor monitor)

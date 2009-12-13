@@ -98,7 +98,9 @@ public class NXCException extends Exception
 		"Job cannot be cancelled",
 		"Invalid policy ID",
 		"Unknown log name",
-		"Invalid log handle"
+		"Invalid log handle",
+		"New password is too weak",
+		"Password was used before"
 	};
 
 	private int errorCode;
