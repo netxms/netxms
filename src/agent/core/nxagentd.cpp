@@ -57,6 +57,8 @@ void StartWatchdog();
 void StopWatchdog();
 int WatchdogMain(DWORD pid);
 
+void InitSessionList();
+
 BOOL PushData(const TCHAR *parameter, const TCHAR *value);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
@@ -682,6 +684,8 @@ BOOL Initialize(void)
          InsertSearchPath(getnetwarelogger(), 0, szLoadPath);
    }
 #endif
+
+   InitSessionList();
 
    // Initialize API for subagents
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer, PushData);

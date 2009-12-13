@@ -42,6 +42,20 @@ static MUTEX m_mutexWatchdogActive = INVALID_MUTEX_HANDLE;
 
 
 //
+// Initialize session list
+//
+
+void InitSessionList()
+{
+	// Create session list and it's access mutex
+	g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
+	g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
+	memset(g_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
+	g_hSessionListAccess = MutexCreate();
+}
+
+
+//
 // Validates server's address
 //
 
@@ -111,12 +125,6 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    BOOL bMasterServer, bControlServer;
    struct timeval tv;
    fd_set rdfs;
-
-   // Create session list and it's access mutex
-   g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
-   g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
-   memset(g_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
-   g_hSessionListAccess = MutexCreate();
 
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
