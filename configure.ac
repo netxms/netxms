@@ -99,10 +99,10 @@ AC_ARG_WITH(ipso-agent,
 	COMPONENTS="$COMPONENTS sqlite ipso-agent"
 ])
 
-AC_ARG_WITH(nxhttpd,
-[AS_HELP_STRING(--with-nxhttpd,build web interface)],
+AC_ARG_WITH(webui,
+[AS_HELP_STRING(--with-webui,build web interface)],
 [
-	COMPONENTS="$COMPONENTS nxhttpd"
+	COMPONENTS="$COMPONENTS webui"
 ])
 
 AC_ARG_WITH(mdebug,
@@ -228,7 +228,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxhttpd nxscript nxcptest"
+	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcptest webui"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -379,10 +379,10 @@ if test $? = 0; then
 	esac
 fi
 
-check_substr "$COMPONENTS" "nxhttpd"
+check_substr "$COMPONENTS" "webui"
 if test $? = 0; then
 	BUILD_NXHTTPD="yes"
-	MODULES="$MODULES libnxmap libnxcl nxhttpd"
+	MODULES="$MODULES libnxmap libnxcl webui"
 fi
 
 check_substr "$COMPONENTS" "mysql"
@@ -1437,7 +1437,7 @@ fi
 # nxhttpd
 #--------------------------------------------------------------------
 
-check_substr "$COMPONENTS" "nxhttpd"
+check_substr "$COMPONENTS" "webui"
 if test $? = 0; then
 	AC_CHECK_HEADER(gd.h,,AC_MSG_ERROR([*** GD support not installed - please install first ***]))
 	AC_CHECK_LIB(gd, gdImageCreate, [], [
@@ -1618,6 +1618,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
 	src/agent/subagents/logwatch/Makefile
+	src/webui/Makefile
 	src/webui/nxhttpd/Makefile
 	src/webui/nxhttpd/static/Makefile
 	src/webui/nxhttpd/static/images/Makefile

@@ -86,12 +86,14 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 														bool dumpSQL, void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *, void *),
 														void *userArg)
 {
+   static DWORD dwVersionZero = 0;
    BOOL (* fpDrvInit)(const char *);
    DWORD *pdwAPIVersion;
    char szErrorText[256];
 	const char *driverName;
 	DB_DRIVER driver;
-   static DWORD dwVersionZero = 0;
+	bool alreadyLoaded = false;
+	int position = -1;
 
 	MutexLock(s_driverListLock, INFINITE);
 
@@ -128,13 +130,11 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	driverName = (const char *)DLGetSymbolAddr(driver->m_handle, "drvName", NULL);
 	if (driverName == NULL)
 	{
-      if (s_writeLog)
-         __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to find all required entry points in database driver \"%s\""), module);
+		if (s_writeLog)
+			__DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to find all required entry points in database driver \"%s\""), module);
 		goto failure;
 	}
 
-	bool alreadyLoaded = false;
-	int position = -1;
 	for(int i = 0; i < MAX_DB_DRIVERS; i++)
 	{
 		if ((s_drivers[i] != NULL) && (!stricmp(s_drivers[i]->m_name, driverName)))

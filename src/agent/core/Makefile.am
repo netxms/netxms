@@ -7,9 +7,9 @@ nxagentd_SOURCES = messages.c actions.cpp comm.cpp config.cpp exec.cpp \
                    subagent.cpp sysinfo.cpp tools.cpp trap.cpp upgrade.cpp \
                    watchdog.cpp
 if USE_INTERNAL_EXPAT
-nxagentd_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/libexpat/libexpat/libnxexpat.la @SUBAGENT_LIBS@
+nxagentd_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libexpat/libexpat/libnxexpat.la @SUBAGENT_LIBS@
 else
-nxagentd_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @SUBAGENT_LIBS@
+nxagentd_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/db/libnxdb/libnxdb.la @SUBAGENT_LIBS@
 endif
 AM_CPPFLAGS = $(all_includes) -DPREFIX=\"@prefix@\"
 CLEANFILES = messages.c messages.h static_subagents.cpp

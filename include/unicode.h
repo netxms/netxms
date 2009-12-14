@@ -177,6 +177,7 @@
 #define _tcscspn  wcscspn
 #define _tcsstr   wcsstr
 #define _tcscat   wcscat
+#define _tcspbrk  wcspbrk
 #define _topen    wopen
 #define _taccess  waccess
 #define _tstat    wstat
@@ -231,6 +232,7 @@
 #define _tcscspn  strcspn
 #define _tcsstr   strstr
 #define _tcscat   strcat
+#define _tcspbrk  strpbrk
 #define _topen    open
 #define _taccess  access
 #define _tstat    stat
