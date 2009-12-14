@@ -14,12 +14,12 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="Empty Perspective"
+            name="Empty Workspace"
             class="org.netxms.ui.eclipse.console.perspectives.EmptyPerspective"
             id="org.netxms.ui.eclipse.console.EmptyPerspective">
       </perspective>
       <perspective
-            name="Default Perspective"
+            name="Default"
             class="org.netxms.ui.eclipse.console.perspectives.DefaultPerspective"
             id="org.netxms.ui.eclipse.console.DefaultPerspective">
       </perspective>

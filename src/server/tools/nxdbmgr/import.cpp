@@ -49,7 +49,11 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	query.shrink();
 	query += ") VALUES (";
 	for(i = 0; i < cols; i++)
-		query.addFormattedString("'%s',", data[i]);
+	{
+		String prepData = DBPrepareString(g_hCoreDB, data[i]);
+		query += (const TCHAR *)prepData;
+		query += ",";
+	}
 	query.shrink();
 	query += ")";
 

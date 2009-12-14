@@ -109,6 +109,44 @@ const TCHAR *g_tables[] =
 
 
 //
+// Escape string for SQLite
+//
+
+static TCHAR *EscapeString(const TCHAR *str)
+{
+	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
+	out[0] = _T('\'');
+
+	const TCHAR *src = str;
+	int outPos;
+	for(outPos = 1; *src != 0; src++)
+	{
+		if (*src == _T('\''))
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+			}
+			out[outPos++] = _T('\'');
+			out[outPos++] = _T('\'');
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = _T('\'');
+	out[outPos++] = 0;
+
+	return out;
+}
+
+
+//
 // Export single database table
 //
 
@@ -116,7 +154,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 {
 	String query;
 	TCHAR buffer[256];
-	char *errmsg, *data;
+	char *errmsg;
 	DB_ASYNC_RESULT hResult;
 	int i, columnCount = 0;
 	BOOL success = TRUE;
@@ -147,12 +185,12 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				query += ") VALUES (";
 
 				// Data
+				TCHAR data[8192];
 				for(i = 0; i < columnCount; i++)
 				{
-					query += "'";
-					data = (char *)malloc(8192);
-					query.addDynamicString(DBGetFieldAsync(hResult, i, data, 8192));
-					query += "',";
+					TCHAR *escapedString = EscapeString(DBGetFieldAsync(hResult, i, data, 8192));
+					query.addDynamicString(escapedString);
+					query += ",";
 				}
 				query.shrink();
 				query += ")";

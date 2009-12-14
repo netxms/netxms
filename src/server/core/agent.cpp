@@ -94,10 +94,16 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 	Node *node = FindNodeByIP(GetIpAddr());
 	if (node != NULL)
 	{
+		DbgPrintf(5, _T("%s: agent data push: %s=%s"), node->Name(), name, value);
 		DCItem *dci = node->GetItemByName(name);
 		if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT))
 		{
+			DbgPrintf(5, _T("%s: agent data push: found DCI %d"), node->Name(), dci->getId());
 			dci->processNewValue(time(NULL), value);
+		}
+		else
+		{
+			DbgPrintf(5, _T("%s: agent data push: DCI not found for %s"), node->Name(), name);
 		}
 	}
 }
