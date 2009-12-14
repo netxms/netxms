@@ -1962,6 +1962,7 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
          msg.SetVariable(dwId++, szBuffer);
          DBGetFieldAsync(hResult, 6, szBuffer, 1024);
          msg.SetVariable(dwId++, szBuffer);
+         msg.SetVariable(dwId++, (DWORD)0);	// Do not send parameters
       }
       DBFreeAsyncResult(g_hCoreDB, hResult);
 

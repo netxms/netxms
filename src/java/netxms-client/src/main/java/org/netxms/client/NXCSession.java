@@ -51,6 +51,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.events.Event;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -307,6 +308,9 @@ public class NXCSession
 						case NXCPCodes.CMD_NOTIFY:
 							processNotificationMessage(msg);
 							break;
+						case NXCPCodes.CMD_EVENTLOG_RECORDS:
+							processNewEvents(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -324,6 +328,23 @@ public class NXCSession
 				catch(NXCPException e)
 				{
 				}
+			}
+		}
+		
+		/**
+		 * Process event notification messages.
+		 * 
+		 * @param msg NXCP message
+		 */
+		private void processNewEvents(final NXCPMessage msg)
+		{
+			int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_RECORDS);
+			int order = msg.getVariableAsInteger(NXCPCodes.VID_RECORDS_ORDER);
+			long varId = NXCPCodes.VID_EVENTLOG_MSG_BASE;
+			for(int i = 0; i < count; i++)
+			{
+				Event event = new Event(msg, varId);
+				sendNotification(new NXCNotification(NXCNotification.NEW_EVENTLOG_RECORD, order, event));
 			}
 		}
 		

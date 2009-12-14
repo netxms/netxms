@@ -472,6 +472,9 @@ void Event::prepareMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(dwId++, (WORD)m_dwSeverity);
 	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszMessageText));
 	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszUserTag));
+	pMsg->SetVariable(dwId++, m_dwNumParameters);
+	for(DWORD i = 0; i < m_dwNumParameters; i++)
+		pMsg->SetVariable(dwId++, m_ppszParameters[i]);
 }
 
 

@@ -48,6 +48,10 @@ void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
       event.dwSeverity = pMsg->GetVariableShort(dwId++);
       pMsg->GetVariableStr(dwId++, event.szMessage, MAX_EVENT_MSG_LENGTH);
       pMsg->GetVariableStr(dwId++, event.szUserTag, MAX_USERTAG_LENGTH);
+		
+		// Skip parameters
+		DWORD count = pMsg->GetVariableLong(dwId++);
+		dwId += count;
 
       // Call client's callback to handle new record
       pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, nOrder, &event);

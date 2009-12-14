@@ -266,6 +266,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciDataRow
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Alarm.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/events/Event.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicyRule.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventTemplate.java -text
