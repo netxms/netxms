@@ -626,7 +626,6 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/LoginDial
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/PasswordExpiredDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
-src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/EmptyPerspective.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/WorkbenchGeneralPrefs.java -text
 src/java/netxms-eclipse/library/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/library/build.properties -text

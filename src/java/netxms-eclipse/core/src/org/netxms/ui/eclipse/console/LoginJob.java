@@ -3,7 +3,6 @@
  */
 package org.netxms.ui.eclipse.console;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -53,16 +52,12 @@ public class LoginJob implements IRunnableWithProgress
 			monitor.worked(5);
 			
 			monitor.setTaskName(Messages.getString("LoginJob.subscribe")); //$NON-NLS-1$
-			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
+			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
 			monitor.worked(5);
 			
 			NXMCSharedData.getInstance().setSession(session);
 		}
-		catch(IOException e)
-		{
-			throw new InvocationTargetException(e);
-		}
-		catch(NXCException e)
+		catch(Exception e)
 		{
 			throw new InvocationTargetException(e);
 		}

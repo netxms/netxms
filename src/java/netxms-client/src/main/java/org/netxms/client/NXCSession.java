@@ -25,8 +25,6 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -956,6 +954,26 @@ public class NXCSession
 		this.recvBufferSize = recvBufferSize;
 	}
 
+	/**
+	 * Get server address
+	 * 
+	 * @return Server address
+	 */
+	public String getServerAddress()
+	{
+		return connAddress;
+	}
+
+	/**
+	 * Get login name of currently logged in user
+	 * 
+	 * @return login name of currently logged in user
+	 */
+	public String getUserName()
+	{
+		return connLoginName;
+	}
+	
 	/**
 	 * Get NetXMS server version.
 	 * 

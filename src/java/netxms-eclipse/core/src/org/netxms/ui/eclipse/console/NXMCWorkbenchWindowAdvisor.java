@@ -18,26 +18,20 @@
  */
 package org.netxms.ui.eclipse.console;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
@@ -45,9 +39,6 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
-	private static final String PERSPECTIVE_PROPERTY_NAME = "org.netxms.ui.DefaultPerspective"; //$NON-NLS-1$
-	private static final String DEFAULT_PERSPECTIVE_NAME = "org.netxms.ui.eclipse.console.DefaultPerspective"; //$NON-NLS-1$
-
 	public NXMCWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{
 		super(configurer);
@@ -62,6 +53,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
 	public void preWindowOpen()
 	{
+		doLogin();
+		
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(true);
@@ -78,17 +71,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		IWorkbenchWindow window = configurer.getWindow();
 		window.getShell().setMaximized(true);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#openIntro()
-	 */
-	@Override
-	public void openIntro()
-	{
-		doLogin();
+		
+		NXCSession session = NXMCSharedData.getInstance().getSession();
+		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")");
 	}
 
 	/**
@@ -132,8 +117,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
 		if (success)
 		{
-			Activator.getDefault().getStatusItemConnection().setText(Messages.getString("NXMCWorkbenchWindowAdvisor.connected")); //$NON-NLS-1$
-			
 			// Suggest user to change password if it is expired
 			final NXCSession session = NXMCSharedData.getInstance().getSession();
 			if (session.isPasswordExpired())
@@ -142,62 +125,44 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 				if (dlg.open() == Window.OK)
 				{
 					final String currentPassword = loginDialog.getPassword();
-					Job job = new Job("Change password for current user") {
+					IRunnableWithProgress job = new IRunnableWithProgress() {
 						@Override
-						protected IStatus run(IProgressMonitor monitor)
+						public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 						{
-							IStatus status;
 							try
 							{
 								NXCSession session = NXMCSharedData.getInstance().getSession();
 								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
-								new UIJob("Password change notification") {
-									@Override
-									public IStatus runInUIThread(IProgressMonitor monitor)
-									{
-										MessageDialog.openInformation(shell, "Information", "Password changed successfully");
-										return Status.OK_STATUS;
-									}
-								}.schedule();
-								status = Status.OK_STATUS;
 							}
-							catch(NXCException e)
+							catch(Exception e)
 							{
-								status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getErrorCode(),
-											           "Cannot change password: " + e.getMessage(), null);
+								throw new InvocationTargetException(e);
 							}
-							catch(IOException e)
+							finally
 							{
-								status = new Status(Status.ERROR, Activator.PLUGIN_ID, 0,
-								                    "Cannot change password: I/O error (" + e.getMessage() + ")", null);
+								monitor.done();
 							}
-							return status;
 						}
 					};
-					job.setUser(true);
-					job.schedule();
+					try
+					{
+						new ProgressMonitorDialog(shell).run(true, true, job);
+						MessageDialog.openInformation(shell, "Information", "Password changed successfully");
+					}
+					catch(InvocationTargetException e)
+					{
+						MessageDialog.openError(shell, "Error", "Cannot change password: " + e.getCause().getLocalizedMessage());
+					}
+					catch(InterruptedException e)
+					{
+						MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString()); //$NON-NLS-1$
+					}
 				}
-			}
-			
-			try
-			{
-				IWorkbenchWindow window = getWindowConfigurer().getWindow();
-				window.getWorkbench().showPerspective(getDefaultPerspectiveName(), window);
-			}
-			catch(WorkbenchException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
 		else
 		{
 			shell.close();
 		}
-	}
-
-	private String getDefaultPerspectiveName()
-	{
-		return System.getProperty(PERSPECTIVE_PROPERTY_NAME, DEFAULT_PERSPECTIVE_NAME);
 	}
 }
