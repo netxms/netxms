@@ -509,7 +509,7 @@ void User::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(m_certMappingData));
 	msg->SetVariable(VID_LAST_LOGIN, (DWORD)m_lastLogin);
 	msg->SetVariable(VID_LAST_PASSWORD_CHANGE, (DWORD)m_lastPasswordChange);
-	msg->SetVariable(VID_MIN_PASSWORD_LENGTH, (DWORD)m_minPasswordLength);
+	msg->SetVariable(VID_MIN_PASSWORD_LENGTH, (WORD)m_minPasswordLength);
 	msg->SetVariable(VID_DISABLED_UNTIL, (DWORD)m_disabledUntil);
 	msg->SetVariable(VID_AUTH_FAILURES, (DWORD)m_authFailures);
 }
@@ -531,6 +531,8 @@ void User::modifyFromMessage(CSCPMessage *msg)
 	   m_authMethod = msg->GetVariableShort(VID_AUTH_METHOD);
 	if (fields & USER_MODIFY_PASSWD_LENGTH)
 	   m_minPasswordLength = msg->GetVariableShort(VID_MIN_PASSWORD_LENGTH);
+	if (fields & USER_MODIFY_TEMP_DISABLE)
+	   m_disabledUntil = (time_t)msg->GetVariableLong(VID_DISABLED_UNTIL);
 	if (fields & USER_MODIFY_CERT_MAPPING)
 	{
 		m_certMappingMethod = msg->GetVariableShort(VID_CERT_MAPPING_METHOD);

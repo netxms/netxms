@@ -50,6 +50,7 @@ public abstract class NXCUserDBObject
 	public static final int DISABLED = 0x0004;
 	public static final int CHANGE_PASSWORD = 0x0008;
 	public static final int CANNOT_CHANGE_PASSWORD = 0x0010;
+	public static final int INTRUDER_LOCKOUT = 0x0020;
 	
 	protected long id;
 	protected String name;

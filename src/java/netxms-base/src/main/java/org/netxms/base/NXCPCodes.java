@@ -616,6 +616,11 @@ public final class NXCPCodes
 	public static final long VID_NUM_ENUMS               = 347;
 	public static final long VID_NUM_PUSH_PARAMETERS     = 348;
 	public static final long VID_OLD_PASSWORD            = 349;
+	public static final long VID_MIN_PASSWORD_LENGTH     = 350;
+	public static final long VID_LAST_LOGIN              = 351;
+	public static final long VID_LAST_PASSWORD_CHANGE    = 352;
+	public static final long VID_DISABLED_UNTIL          = 353;
+	public static final long VID_AUTH_FAILURES           = 354;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
