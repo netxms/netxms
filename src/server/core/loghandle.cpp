@@ -156,7 +156,9 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount)
 				query += _T(" AND ");
 			}
 
+			query += _T("(");
 			query += cf->generateSql();
+			query += _T(")");
 		}
 	}
 

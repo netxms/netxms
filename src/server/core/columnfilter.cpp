@@ -107,13 +107,19 @@ String ColumnFilter::generateSql()
 			sql.addFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
 			break;
 		case FILTER_LIKE:
-			sql.addFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_hCoreDB, m_value.like));
+			if (m_value.like[0] == 0)
+			{
+				sql.addFormattedString(_T("(%s IS NULL) OR (%s = '')"), m_column, m_column);
+			}
+			else
+			{
+				sql.addFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_hCoreDB, m_value.like));
+			}
 			break;
 		case FILTER_SET:
 			if (m_value.set.count > 0)
 			{
 				bool first = true;
-				sql += _T("(");
 				for(int i = 0; i < m_value.set.count; i++)
 				{
 					String subExpr = m_value.set.filters[i]->generateSql();
@@ -132,7 +138,6 @@ String ColumnFilter::generateSql()
 						sql += _T(")");
 					}
 				}
-				sql += _T(")");
 			}
 			break;
 	}
