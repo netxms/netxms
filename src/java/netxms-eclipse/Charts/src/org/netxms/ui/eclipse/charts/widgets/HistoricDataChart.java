@@ -157,4 +157,17 @@ public class HistoricDataChart extends Chart
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
 	}
+	
+	/**
+	 * Set time range for chart
+	 * 
+	 * @param from Chart's "from" time
+	 * @param to Chart's "to" time
+	 */
+	public void setTimeRange(final Date from, final Date to)
+	{
+		timeFrom = from.getTime();
+		timeTo = to.getTime();
+		getAxisSet().getXAxis(0).setRange(new Range(timeFrom, timeTo));
+	}
 }

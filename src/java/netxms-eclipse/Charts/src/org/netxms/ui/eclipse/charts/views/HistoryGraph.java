@@ -24,8 +24,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
@@ -39,6 +42,7 @@ import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.views.helpers.DCIInfo;
 import org.netxms.ui.eclipse.charts.widgets.HistoricDataChart;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.tools.RefreshAction;
 
 /**
  * @author Victor
@@ -52,6 +56,13 @@ public class HistoryGraph extends ViewPart
 	private NXCSession session;
 	private ArrayList<DCIInfo> items = new ArrayList<DCIInfo>(1);
 	private HistoricDataChart chart;
+	private boolean updateInProgress = false;
+	
+	private Date timeFrom;
+	private Date timeTo;
+	private long timeRange = 3600000;
+	
+	private RefreshAction actionRefresh;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -63,6 +74,9 @@ public class HistoryGraph extends ViewPart
 		
 		session = NXMCSharedData.getInstance().getSession();
 		String id = site.getSecondaryId();
+		
+		timeFrom = new Date(System.currentTimeMillis() - timeRange);
+		timeTo = new Date(System.currentTimeMillis());
 		
 		// Extract DCI ids from view id
 		// (first field will be unique view id, so we skip it)
@@ -88,6 +102,17 @@ public class HistoryGraph extends ViewPart
 	{
 		chart = new HistoricDataChart(parent, SWT.NONE);
 		
+		makeActions();
+		contributeToActionBars();
+		
+		getDataFromServer();
+	}
+
+	/**
+	 * Get DCI data from server
+	 */
+	private void getDataFromServer()
+	{
 		// Request data from server
 		Job job = new Job("Get DCI values history graph")
 		{
@@ -96,16 +121,13 @@ public class HistoryGraph extends ViewPart
 			{
 				IStatus status;
 				
-				final Date from = new Date(System.currentTimeMillis() - 3600000);
-				final Date to = new Date(System.currentTimeMillis());
 				final DciData[] data = new DciData[items.size()];
-
 				try
 				{
 					for(int i = 0; i < items.size(); i++)
 					{
 						DCIInfo info = items.get(i);
-						data[i] = session.getCollectedData(info.getNodeId(), info.getDciId(), from, to, 0);
+						data[i] = session.getCollectedData(info.getNodeId(), info.getDciId(), timeFrom, timeTo, 0);
 					}
 					status = Status.OK_STATUS;
 	
@@ -113,7 +135,9 @@ public class HistoryGraph extends ViewPart
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
+							chart.setTimeRange(timeFrom, timeTo);
 							setChartData(data);
+							updateInProgress = false;
 							return Status.OK_STATUS;
 						}
 					}.schedule();
@@ -123,6 +147,7 @@ public class HistoryGraph extends ViewPart
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 	                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
 	                    "Cannot get DCI values for history graph: " + e.getMessage(), e);
+					updateInProgress = false;
 				}
 				return status;
 			}
@@ -150,6 +175,43 @@ public class HistoryGraph extends ViewPart
 		chart.setFocus();
 	}
 	
+	/**
+	 * Create actions
+	 */
+	private void makeActions()
+	{
+		actionRefresh = new RefreshAction() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				updateChart();
+			}
+		};
+	}
+	
+	/**
+	 * Fill action bars
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionRefresh);
+	}
+
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionRefresh);
+	}
+
 	/**
 	 * Set chart data
 	 * 
@@ -183,5 +245,19 @@ public class HistoryGraph extends ViewPart
 		}
 		
 		chart.addLineSeries(index, info.getDescription(), xSeries, ySeries);
+	}
+	
+	/**
+	 * Update chart
+	 */
+	private void updateChart()
+	{
+		if (updateInProgress)
+			return;
+		
+		updateInProgress = true;
+		timeFrom = new Date(System.currentTimeMillis() - timeRange);
+		timeTo = new Date(System.currentTimeMillis());
+		getDataFromServer();
 	}
 }
