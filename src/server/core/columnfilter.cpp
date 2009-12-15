@@ -110,24 +110,29 @@ String ColumnFilter::generateSql()
 			sql.addFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_hCoreDB, m_value.like));
 			break;
 		case FILTER_SET:
-			bool first = true;
-			for(int i = 0; i < m_value.set.count; i++)
+			if (m_value.set.count > 0)
 			{
-				String subExpr = m_value.set.filters[i]->generateSql();
-				if (!subExpr.isEmpty())
+				bool first = true;
+				sql += _T("(");
+				for(int i = 0; i < m_value.set.count; i++)
 				{
-					if (first)
+					String subExpr = m_value.set.filters[i]->generateSql();
+					if (!subExpr.isEmpty())
 					{
-						first = false;
+						if (first)
+						{
+							first = false;
+						}
+						else
+						{
+							sql += (m_value.set.operation == SET_OPERATION_AND) ? _T(" AND ") : _T(" OR ");
+						}
+						sql += _T("(");
+						sql += subExpr;
+						sql += _T(")");
 					}
-					else
-					{
-						sql += (m_value.set.operation == SET_OPERATION_AND) ? _T(" AND ") : _T(" OR ");
-					}
-					sql += _T("(");
-					sql += subExpr;
-					sql += _T(")");
 				}
+				sql += _T(")");
 			}
 			break;
 	}
