@@ -24,10 +24,16 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -53,16 +59,25 @@ public class HistoryGraph extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.charts.view.history_graph";
 	public static final String JOB_FAMILY = "HistoryGraphJob";
 	
+	private static final int[] presetRanges = { 10, 30, 60, 120, 240, 1440, 10080, 44640, 525600 };
+	private static final String[] presetNames = { "10 minutes", "30 minutes", "hour", "2 hours", "4 hours",
+	                                              "day", "week", "month", "year" };
+	
 	private NXCSession session;
 	private ArrayList<DCIInfo> items = new ArrayList<DCIInfo>(1);
 	private HistoricDataChart chart;
 	private boolean updateInProgress = false;
+	private Runnable refreshTimer;
 	
 	private Date timeFrom;
 	private Date timeTo;
-	private long timeRange = 3600000;
+	private long timeRange = 3600000;	// 1 hour
+	private boolean autoRefreshEnabled = true;
+	private int autoRefreshInterval = 30000;	// 30 seconds
 	
 	private RefreshAction actionRefresh;
+	private Action actionAutoRefresh;
+	private Action[] presetActions;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -71,6 +86,19 @@ public class HistoryGraph extends ViewPart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
+
+		final Display display = site.getShell().getDisplay();
+		refreshTimer = new Runnable() {
+			@Override
+			public void run()
+			{
+				if (chart.isDisposed())
+					return;
+				
+				updateChart();
+				display.timerExec(autoRefreshInterval, this);
+			}
+		};
 		
 		session = NXMCSharedData.getInstance().getSession();
 		String id = site.getSecondaryId();
@@ -104,8 +132,32 @@ public class HistoryGraph extends ViewPart
 		
 		makeActions();
 		contributeToActionBars();
+		createPopupMenu();
 		
 		getDataFromServer();
+		if (autoRefreshEnabled)
+			getSite().getShell().getDisplay().timerExec(autoRefreshInterval, refreshTimer);
+	}
+
+	/**
+	 * Create pop-up menu for user list
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(chart);
+		chart.setMenu(menu);
 	}
 
 	/**
@@ -190,6 +242,35 @@ public class HistoryGraph extends ViewPart
 				updateChart();
 			}
 		};
+		
+		actionAutoRefresh = new Action() {
+			@Override
+			public void run()
+			{
+				autoRefreshEnabled = !autoRefreshEnabled;
+				setChecked(autoRefreshEnabled);
+				HistoryGraph.this.getSite().getShell().getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
+			}
+		};
+		actionAutoRefresh.setText("Refresh automatically");
+		actionAutoRefresh.setChecked(autoRefreshEnabled);
+
+		presetActions = new Action[presetRanges.length];
+		for(int i = 0; i < presetRanges.length; i++)
+		{
+			final Integer presetIndex = i;
+			presetActions[i] = new Action() {
+				/* (non-Javadoc)
+				 * @see org.eclipse.jface.action.Action#run()
+				 */
+				@Override
+				public void run()
+				{
+					setTimeRange((long)presetRanges[presetIndex] * 60000L);
+				}
+			};
+			presetActions[i].setText("Last " + presetNames[i]);
+		}
 	}
 	
 	/**
@@ -204,6 +285,25 @@ public class HistoryGraph extends ViewPart
 
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		MenuManager presets = new MenuManager("&Presets");
+		for(int i = 0; i < presetActions.length; i++)
+			presets.add(presetActions[i]);
+		
+		manager.add(presets);
+		manager.add(new Separator());
+		manager.add(actionAutoRefresh);
+		manager.add(actionRefresh);
+	}
+
+	private void fillContextMenu(IMenuManager manager)
+	{
+		MenuManager presets = new MenuManager("&Presets");
+		for(int i = 0; i < presetActions.length; i++)
+			presets.add(presetActions[i]);
+		
+		manager.add(presets);
+		manager.add(new Separator());
+		manager.add(actionAutoRefresh);
 		manager.add(actionRefresh);
 	}
 
@@ -259,5 +359,25 @@ public class HistoryGraph extends ViewPart
 		timeFrom = new Date(System.currentTimeMillis() - timeRange);
 		timeTo = new Date(System.currentTimeMillis());
 		getDataFromServer();
+	}
+
+	/**
+	 * Set new time range
+	 * @param range Offset from "now" in milliseconds
+	 */
+	private void setTimeRange(long range)
+	{
+		timeRange = range;
+		updateChart();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		getSite().getShell().getDisplay().timerExec(-1, refreshTimer);
+		super.dispose();
 	}
 }
