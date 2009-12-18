@@ -2,7 +2,8 @@ INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
 lib_LTLIBRARIES = libnxddr_oracle.la
 libnxddr_oracle_la_SOURCES = oracle.cpp
-libnxddr_oracle_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) ../../../libnetxms/libnetxms.la
+libnxddr_oracle_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @ORACLE_LIBS@
+libnxddr_oracle_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	oracle.vcproj \

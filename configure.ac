@@ -57,6 +57,7 @@ CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
 BUILD_UNICODE="no"
 WX_UNICODE="no"
+ORACLE_LIBS=""
 
 
 #--------------------------------------------------------------------
@@ -134,9 +135,19 @@ AC_ARG_WITH(oracle,
 [AS_HELP_STRING(--with-oracle,build Oracle database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		if test -x "$withval/lib" ; then
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}/lib"
+		else
+			LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}"
+		fi
+		if test -x "$withval/include" ; then
+			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		fi
+		if test -x "$withval/sdk/include" ; then
+			CPPFLAGS="$CPPFLAGS -I${withval}/sdk/include"
+		fi
 	fi
 	COMPONENTS="$COMPONENTS oracle"
 	DBDRIVER_SELECTED="yes"
@@ -1428,8 +1439,12 @@ fi
 check_substr "$COMPONENTS" "oracle"
 if test $? = 0; then
 	AC_CHECK_HEADER(oci.h,,AC_MSG_ERROR([*** Cannot find oci.h - check your Oracle client installation ***]))
-	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [],
-		[AC_MSG_ERROR(libclntsh is required for Oracle support)])
+	AC_CHECK_LIB(nnz11, nzstrcpy, [NNZ_LIB=-lnnz11],
+		[
+			AC_CHECK_LIB(nnz10, nzstrcpy, [NNZ_LIB=-lnnz10], [], [-lclntsh])
+		], [-lclntsh])
+	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [ORACLE_LIBS="-lclntsh $NNZ_LIB"],
+		[AC_MSG_ERROR(libclntsh is required for Oracle support)], [$NNZ_LIB])
 fi
 
 
@@ -1473,6 +1488,7 @@ AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
 AC_SUBST(WXRC)
+AC_SUBST(ORACLE_LIBS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -1699,4 +1715,13 @@ if test "x${HAVE_LIBEXPAT}" = "xno"; then
 	echo "Use internal libexpat   : YES"
 else
 	echo "Use internal libexpat   : NO"
+fi
+
+echo "CPPFLAGS                : ${CPPFLAGS}"
+echo "CXXFLAGS                : ${CXXFLAGS}"
+echo "CFLAGS                  : ${CFLAGS}"
+echo "LDFLAGS                 : ${LDFLAGS}"
+
+if test "x${ORACLE_LIBS}" != "x"; then
+	echo "Oracle libs             : ${ORACLE_LIBS}"
 fi

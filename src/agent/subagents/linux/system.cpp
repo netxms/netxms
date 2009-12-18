@@ -250,7 +250,10 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 				ret_uint64(pValue, ((QWORD)nSwapFree) * 1024);
 				break;
 			case SWAP_FREE_PCT: // sw-free percentage
-				ret_uint(pValue, (DWORD)((QWORD)nSwapFree * 100 / (QWORD)nSwapTotal));
+				if (nSwapTotal > 0)
+					ret_uint(pValue, (DWORD)((QWORD)nSwapFree * 100 / (QWORD)nSwapTotal));
+				else
+					ret_uint(pValue, 100);
 				break;
 			case SWAP_TOTAL: // sw-total
 				ret_uint64(pValue, ((QWORD)nSwapTotal) * 1024);
@@ -259,7 +262,10 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 				ret_uint64(pValue, ((QWORD)(nSwapTotal - nSwapFree)) * 1024);
 				break;
 			case SWAP_USED_PCT: // sw-used percentage
-				ret_uint(pValue, (DWORD)((QWORD)(nSwapTotal - nSwapFree) * 100 / (QWORD)nSwapTotal));
+				if (nSwapTotal > 0)
+					ret_uint(pValue, (DWORD)((QWORD)(nSwapTotal - nSwapFree) * 100 / (QWORD)nSwapTotal));
+				else
+					ret_uint(pValue, 0);
 				break;
 			case VIRTUAL_FREE: // vi-free
 				ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nSwapFree) * 1024);
