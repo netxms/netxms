@@ -532,10 +532,11 @@ src/java/netxms-eclipse/ObjectView/icons/last_values.png -text
 src/java/netxms-eclipse/ObjectView/icons/unsupported.ico -text
 src/java/netxms-eclipse/ObjectView/plugin.xml -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -text
-src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/LastValuesLabelProvider.java -text
-src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/LastValuesView.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowLastValues.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/LastValues.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/LastValuesView.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/helpers/LastValuesComparator.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/widgets/helpers/LastValuesLabelProvider.java -text
 src/java/netxms-eclipse/PolicyManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PolicyManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/PolicyManager/build.properties -text

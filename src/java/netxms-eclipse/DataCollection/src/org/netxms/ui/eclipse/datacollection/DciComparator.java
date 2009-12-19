@@ -31,6 +31,16 @@ import org.netxms.ui.eclipse.tools.SortableTableViewer;
  */
 public class DciComparator extends ViewerComparator
 {
+	private DciLabelProvider labelProvider;
+	
+	/**
+	 * Default constructor
+	 */
+	public DciComparator(DciLabelProvider labelProvider)
+	{
+		this.labelProvider = labelProvider;
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -42,10 +52,31 @@ public class DciComparator extends ViewerComparator
 		DataCollectionItem dci1 = (DataCollectionItem)e1;
 		DataCollectionItem dci2 = (DataCollectionItem)e2;
 
-		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
+		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+		switch(column)
 		{
+			case DataCollectionEditor.COLUMN_ID:
+				result = (int)(dci1.getId() - dci2.getId());
+				break;
 			case DataCollectionEditor.COLUMN_DESCRIPTION:
 				result = dci1.getDescription().compareToIgnoreCase(dci2.getDescription());
+				break;
+			case DataCollectionEditor.COLUMN_PARAMETER:
+				result = dci1.getName().compareToIgnoreCase(dci2.getName());
+				break;
+			case DataCollectionEditor.COLUMN_INTERVAL:
+				result = (int)(dci1.getPollingInterval() - dci2.getPollingInterval());
+				break;
+			case DataCollectionEditor.COLUMN_RETENTION:
+				result = (int)(dci1.getRetentionTime() - dci2.getRetentionTime());
+				break;
+			case DataCollectionEditor.COLUMN_ORIGIN:
+			case DataCollectionEditor.COLUMN_DATATYPE:
+			case DataCollectionEditor.COLUMN_STATUS:
+			case DataCollectionEditor.COLUMN_TEMPLATE:
+				final String text1 = labelProvider.getColumnText(e1, column);
+				final String text2 = labelProvider.getColumnText(e2, column);
+				result = text1.compareToIgnoreCase(text2);
 				break;
 			default:
 				result = 0;

@@ -110,7 +110,7 @@ public class DataCollectionEditor extends ViewPart
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DciLabelProvider());
-		viewer.setComparator(new DciComparator());
+		viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
 		{
 			@SuppressWarnings("unchecked")

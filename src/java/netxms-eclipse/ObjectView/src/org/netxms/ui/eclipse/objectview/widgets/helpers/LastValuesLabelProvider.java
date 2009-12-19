@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectview;
+package org.netxms.ui.eclipse.objectview.widgets.helpers;
 
 import java.text.DateFormat;
 
@@ -9,6 +9,8 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.widgets.LastValuesView;
 
 
 /**
@@ -31,15 +33,19 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 		stateImages[1] = Activator.getImageDescriptor("icons/disabled.ico").createImage();
 		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.ico").createImage();
 	}
-
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+	 */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return (columnIndex == LastValuesView.COLUMN_ID) ? stateImages[((DciValue)element).getStatus()] : null;
 	}
 
-	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+	 */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -57,13 +63,17 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
+	 */
 	@Override
 	public void addListener(ILabelProviderListener listener)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+	 */
 	@Override
 	public void dispose()
 	{
@@ -71,17 +81,20 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 			stateImages[i].dispose();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
+	 */
 	@Override
 	public boolean isLabelProperty(Object element, String property)
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
+	 */
 	@Override
 	public void removeListener(ILabelProviderListener listener)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 }

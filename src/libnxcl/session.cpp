@@ -410,7 +410,7 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
       pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
       pMsg->GetVariableStr(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription, MAX_DB_STRING);
       pMsg->GetVariableStr(VID_INSTANCE, m_pItemList->pItems[i].szInstance, MAX_DB_STRING);
-      pMsg->GetVariableStr(VID_SYSTEM_TAG, m_pItemList->pItems[i].szInstance, MAX_DB_STRING);
+		pMsg->GetVariableStr(VID_SYSTEM_TAG, m_pItemList->pItems[i].szSystemTag, MAX_DB_STRING);
 		m_pItemList->pItems[i].nBaseUnits = (int)pMsg->GetVariableShort(VID_BASE_UNITS);
 		m_pItemList->pItems[i].nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
 		m_pItemList->pItems[i].pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);

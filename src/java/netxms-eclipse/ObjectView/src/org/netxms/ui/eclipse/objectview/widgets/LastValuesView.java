@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectview;
+package org.netxms.ui.eclipse.objectview.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -41,6 +41,9 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.widgets.helpers.LastValuesComparator;
+import org.netxms.ui.eclipse.objectview.widgets.helpers.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 
@@ -77,7 +80,7 @@ public class LastValuesView extends Composite
 	
 		dataViewer.setLabelProvider(new LastValuesLabelProvider());
 		dataViewer.setContentProvider(new ArrayContentProvider());
-		//dataViewer.setComparator(new LastValuesComparator());
+		dataViewer.setComparator(new LastValuesComparator());
 		
 		createPopupMenu();
 
@@ -133,26 +136,6 @@ public class LastValuesView extends Composite
 		siteService.schedule(job, 0, true);
 	}
 	
-	
-	/**
-	 * Schedule alarm viewer update
-	 */
-	/*private void scheduleAlarmViewerUpdate()
-	{
-		new UIJob("Update last values view") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
-			{
-				synchronized(alarmList)
-				{
-					alarmViewer.refresh();
-				}
-				return Status.OK_STATUS;
-			}
-		}.schedule();
-	}*/
-	
-
 	/**
 	 * Create pop-up menu for alarm list
 	 */
@@ -178,7 +161,6 @@ public class LastValuesView extends Composite
 			viewPart.getSite().registerContextMenu(menuMgr, dataViewer);
 	}
 	
-
 	/**
 	 * Fill context menu
 	 * @param mgr Menu manager

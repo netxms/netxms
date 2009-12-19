@@ -14,7 +14,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.objectview.LastValuesView;
+import org.netxms.ui.eclipse.objectview.widgets.LastValuesView;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
