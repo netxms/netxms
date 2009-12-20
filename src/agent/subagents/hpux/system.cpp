@@ -255,14 +255,26 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 		case PHYSICAL_FREE: // ph-free
 			ret_uint64(pValue, (QWORD)psd.psd_free * (QWORD)pss.page_size);
 			break;
+		case PHYSICAL_FREE_PCT:
+			ret_uint(pValue, (DWORD)(((QWORD)psd.psd_free * 100) / (QWORD)pss.physical_memory));
+			break;
 		case PHYSICAL_TOTAL: // ph-total
 			ret_uint64(pValue, (QWORD)pss.physical_memory * (QWORD)pss.page_size);
 			break;
 		case PHYSICAL_USED: // ph-used
 			ret_uint64(pValue, (QWORD)(pss.physical_memory - psd.psd_free) * (QWORD)pss.page_size);
 			break;
+		case PHYSICAL_USED_PCT:
+			ret_uint(pValue, (DWORD)(((QWORD)(pss.physical_memory - psd.psd_free) * 100) / (QWORD)pss.physical_memory));
+			break;
 		case SWAP_FREE: // sw-free
 			ret_uint64(pValue, qwSwapFree);
+			break;
+		case SWAP_FREE_PCT:
+			if (qwSwapTotal > 0)
+				ret_uint(pValue, (DWORD)((qwSwapFree * 100) / qwSwapTotal));
+			else
+				ret_uint(pValue, 100);
 			break;
 		case SWAP_TOTAL: // sw-total
 			ret_uint64(pValue, qwSwapTotal);
@@ -270,15 +282,26 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 		case SWAP_USED: // sw-used
 			ret_uint64(pValue, qwSwapTotal - qwSwapFree);
 			break;
+		case SWAP_USED_PCT:
+			if (qwSwapTotal > 0)
+				ret_uint(pValue, (DWORD)(((qwSwapTotal - qwSwapFree) * 100) / qwSwapTotal));
+			else
+				ret_uint(pValue, 0);
+			break;
 		case VIRTUAL_FREE: // vi-free
 			ret_uint64(pValue, (QWORD)psd.psd_free * (QWORD)pss.page_size + qwSwapFree);
+			break;
+		case VIRTUAL_FREE_PCT:
+			ret_uint(pValue, (DWORD)((((QWORD)psd.psd_free * (QWORD)pss.page_size + qwSwapFree) * 100) / ((QWORD)pss.physical_memory * (QWORD)pss.page_size + qwSwapTotal)));
 			break;
 		case VIRTUAL_TOTAL: // vi-total
 			ret_uint64(pValue, (QWORD)pss.physical_memory * (QWORD)pss.page_size + qwSwapTotal);
 			break;
 		case VIRTUAL_USED: // vi-used
-			ret_uint64(pValue, (QWORD)(pss.physical_memory - psd.psd_free) *
-                                 (QWORD)pss.page_size + (qwSwapTotal - qwSwapFree));
+			ret_uint64(pValue, (QWORD)(pss.physical_memory - psd.psd_free) * (QWORD)pss.page_size + (qwSwapTotal - qwSwapFree));
+			break;
+		case VIRTUAL_USED_PCT:
+			ret_uint(pValue, (DWORD)((((QWORD)(pss.physical_memory - psd.psd_free) * (QWORD)pss.page_size + (qwSwapTotal - qwSwapFree)) * 100) / ((QWORD)pss.physical_memory * (QWORD)pss.page_size + qwSwapTotal)));
 			break;
 		default: // error
 			nRet = SYSINFO_RC_ERROR;

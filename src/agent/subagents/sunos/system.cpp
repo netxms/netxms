@@ -300,10 +300,3 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

@@ -246,39 +246,63 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	{
 		switch((int)pArg)
 		{
-		case PHYSICAL_FREE: // ph-free
-			ret_uint64(pValue, ((int64_t)nFreeCount) * nPageSize);
-			break;
-		case PHYSICAL_TOTAL: // ph-total
-			ret_uint64(pValue, ((int64_t)nPageCount) * nPageSize);
-			break;
-		case PHYSICAL_USED: // ph-used
-			ret_uint64(pValue, ((int64_t)(nPageCount - nFreeCount)) * nPageSize);
-			break;
-		case SWAP_FREE: // sw-free
-			ret_uint64(pValue, (nSwapTotal - nSwapUsed) * nPageSize);
-			break;
-		case SWAP_TOTAL: // sw-total
-			ret_uint64(pValue, nSwapTotal * nPageSize);
-			break;
-		case SWAP_USED: // sw-used
-			ret_uint64(pValue, nSwapUsed * nPageSize);
-			break;
-		case VIRTUAL_FREE: // vi-free
-			ret_uint64(pValue, ((nSwapTotal - nSwapUsed) * nPageSize) +
-					(((int64_t)nFreeCount) * nPageSize));
-			break;
-		case VIRTUAL_TOTAL: // vi-total
-			ret_uint64(pValue, (nSwapTotal * nPageSize) +
-					(((int64_t)nPageCount) * nPageSize));
-			break;
-		case VIRTUAL_USED: // vi-used
-			ret_uint64(pValue, (nSwapUsed * nPageSize) +
-					(((int64_t)(nPageCount - nFreeCount)) * nPageSize));
-			break;
-		default: // error
-			nRet = SYSINFO_RC_ERROR;
-			break;
+			case PHYSICAL_FREE: // ph-free
+				ret_uint64(pValue, ((int64_t)nFreeCount) * nPageSize);
+				break;
+			case PHYSICAL_FREE_PCT: // ph-free %
+				ret_uint(pValue, (DWORD)(((int64_t)nFreeCount * 100) / (int64_t)nPageCount));
+				break;
+			case PHYSICAL_TOTAL: // ph-total
+				ret_uint64(pValue, ((int64_t)nPageCount) * nPageSize);
+				break;
+			case PHYSICAL_USED: // ph-used
+				ret_uint64(pValue, ((int64_t)(nPageCount - nFreeCount)) * nPageSize);
+				break;
+			case PHYSICAL_USED_PCT: // ph-used %
+				ret_uint(pValue, (DWORD)(((int64_t)(nPageCount - nFreeCount) * 100) / (int64_t)nPageCount));
+				break;
+			case SWAP_FREE: // sw-free
+				ret_uint64(pValue, (nSwapTotal - nSwapUsed) * nPageSize);
+				break;
+			case SWAP_FREE_PCT:
+				if (nSwapTotal > 0)
+					ret_uint(pValue, (DWORD)(((nSwapTotal - nSwapUsed) * 100) / nSwapTotal));
+				else
+					ret_uint(pValue, 100);
+				break;
+			case SWAP_TOTAL: // sw-total
+				ret_uint64(pValue, nSwapTotal * nPageSize);
+				break;
+			case SWAP_USED: // sw-used
+				ret_uint64(pValue, nSwapUsed * nPageSize);
+				break;
+			case SWAP_USED_PCT:
+				if (nSwapTotal > 0)
+					ret_uint(pValue, (DWORD)((nSwapUsed * 100) / nSwapTotal));
+				else
+					ret_uint(pValue, 0);
+				break;
+			case VIRTUAL_FREE: // vi-free
+				ret_uint64(pValue, ((nSwapTotal - nSwapUsed) * nPageSize) +
+						(((int64_t)nFreeCount) * nPageSize));
+				break;
+			case VIRTUAL_FREE_PCT:
+				ret_uint(pValue, (DWORD)((((int64_t)nFreeCount + (nSwapTotal - nSwapUsed) * 100) / ((int64_t)nPageCount + nSwapTotal)));
+				break;
+			case VIRTUAL_TOTAL: // vi-total
+				ret_uint64(pValue, (nSwapTotal * nPageSize) +
+						(((int64_t)nPageCount) * nPageSize));
+				break;
+			case VIRTUAL_USED: // vi-used
+				ret_uint64(pValue, (nSwapUsed * nPageSize) +
+						(((int64_t)(nPageCount - nFreeCount)) * nPageSize));
+				break;
+			case VIRTUAL_USED_PCT:
+				ret_uint(pValue, (DWORD)((((int64_t)(nPageCount - nFreeCount) + nSwapUsed) * 100) / ((int64_t)nPageCount + nSwapTotal)));
+				break;
+			default: // error
+				nRet = SYSINFO_RC_ERROR;
+				break;
 		}
 	}
 

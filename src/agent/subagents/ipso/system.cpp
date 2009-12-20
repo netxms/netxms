@@ -248,16 +248,24 @@ printf("t_armshr = %d %d %dK\n",XX(vmStat.t_armshr));
 printf("t_free   = %d %d %dK\n",XX(vmStat.t_free));
 printf("PageSize = %d\n",dwPageSize);
 */
+
+/* TODO: check what to use: t_arm or t_free for free memory size */
 		switch((int)pArg)
 		{
 			case PHYSICAL_FREE:
 				ret_uint64(pValue, (QWORD)vmStat.t_free * dwPageSize);
+				break;
+			case PHYSICAL_FREE_PCT:
+				ret_uint(pValue, (DWORD)(((QWORD)vmStat.t_free * 100 * dwPageSize) / (QWORD)dwPhysMem));
 				break;
 			case PHYSICAL_TOTAL:
 				ret_uint64(pValue, (QWORD)dwPhysMem);
 				break;
 			case PHYSICAL_USED:
 				ret_uint64(pValue, (QWORD)dwPhysMem - (QWORD)vmStat.t_arm * dwPageSize);
+				break;
+			case PHYSICAL_USED_PCT:
+				ret_uint(pValue, (DWORD)((((QWORD)dwPhysMem - (QWORD)vmStat.t_arm * dwPageSize) * 100) / (QWORD)dwPhysMem));
 				break;
 			default:
 				nRet = SYSINFO_RC_UNSUPPORTED;
