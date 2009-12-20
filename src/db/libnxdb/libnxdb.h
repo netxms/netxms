@@ -43,6 +43,7 @@
 struct db_driver_t
 {
 	const char *m_name;
+	int m_refCount;
 	bool m_logSqlErrors;
 	bool m_dumpSql;
 	int m_reconnect;

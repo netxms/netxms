@@ -277,9 +277,8 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 #endif
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	OCIHandleAlloc(pConn->handleEnv, (void **)&handleStmt, OCI_HTYPE_STMT, 0, NULL);
-	if (OCIStmtPrepare(handleStmt, pConn->handleError, (text *)ucs2Query,
-	                   (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
 		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError, 1, 0, NULL, NULL,
 		                   (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
@@ -291,12 +290,12 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 			SetLastErrorText(pConn);
 			dwResult = IsConnectionError(pConn);
 		}
+		OCIStmtRelease(handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
 	}
 	else
 	{
 		dwResult = IsConnectionError(pConn);
 	}
-	OCIHandleFree(handleStmt, OCI_HTYPE_STMT);
 	if (errorText != NULL)
 		nx_strncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
 	MutexUnlock(pConn->mutexQueryLock);
@@ -332,9 +331,8 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 #endif
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	OCIHandleAlloc(pConn->handleEnv, (void **)&handleStmt, OCI_HTYPE_STMT, 0, NULL);
-	if (OCIStmtPrepare(handleStmt, pConn->handleError, (text *)ucs2Query,
-	                   (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
 		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
@@ -450,13 +448,13 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 			SetLastErrorText(pConn);
 			*pdwError = IsConnectionError(pConn);
 		}
+		OCIStmtRelease(handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
 	}
 	else
 	{
 		SetLastErrorText(pConn);
 		*pdwError = IsConnectionError(pConn);
 	}
-	OCIHandleFree(handleStmt, OCI_HTYPE_STMT);
 	if (errorText != NULL)
 		nx_strncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
 	MutexUnlock(pConn->mutexQueryLock);
@@ -578,9 +576,8 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 	pConn->pBuffers = NULL;
 	pConn->nCols = 0;
 
-	OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleStmt, OCI_HTYPE_STMT, 0, NULL);
-	if (OCIStmtPrepare(pConn->handleStmt, pConn->handleError, (text *)ucs2Query,
-	                   (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	if (OCIStmtPrepare2(pConn->handleService, &pConn->handleStmt, pConn->handleError, (text *)ucs2Query,
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
 		if (OCIStmtExecute(pConn->handleService, pConn->handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
@@ -657,6 +654,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 		return pConn;
 
 	// On failure, unlock query mutex and do cleanup
+	OCIStmtRelease(pConn->handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
 	for(i = 0; i < pConn->nCols; i++)
 		safe_free(pConn->pBuffers[i].pData);
 	safe_free(pConn->pBuffers);
@@ -775,6 +773,8 @@ extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 
 	if (pConn == NULL)
 		return;
+
+	OCIStmtRelease(pConn->handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
 
 	for(i = 0; i < pConn->nCols; i++)
 		safe_free(pConn->pBuffers[i].pData);

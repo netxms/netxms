@@ -140,6 +140,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 		if ((s_drivers[i] != NULL) && (!stricmp(s_drivers[i]->m_name, driverName)))
 		{
 			alreadyLoaded = true;
+			position = i;
 			break;
 		}
 		if (s_drivers[i] == NULL)
@@ -149,8 +150,8 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	if (alreadyLoaded)
 	{
       if (s_writeLog)
-			__DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to load database driver \"%s\": driver with name \"%s\" already loaded"), module, driverName);
-		goto failure;
+			__DBWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Reusing already loaded database driver \"%s\""), s_drivers[position]->m_name);
+		goto reuse_driver;
 	}
 
 	if (position == -1)
@@ -210,6 +211,8 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
    // Success
    driver->m_mutexReconnect = MutexCreate();
+	driver->m_name = driverName;
+	driver->m_refCount = 1;
 	s_drivers[position] = driver;
    if (s_writeLog)
       __DBWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Database driver \"%s\" loaded and initialized successfully"), module);
@@ -222,6 +225,14 @@ failure:
 	free(driver);
 	MutexUnlock(s_driverListLock);
 	return NULL;
+
+reuse_driver:
+	if (driver->m_handle != NULL)
+		DLClose(driver->m_handle);
+	free(driver);
+	s_drivers[position]->m_refCount++;
+	MutexUnlock(s_driverListLock);
+	return s_drivers[position];
 }
 
 
@@ -237,11 +248,15 @@ void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 	{
 		if (s_drivers[i] == driver)
 		{
-			driver->m_fpDrvUnload();
-			DLClose(driver->m_handle);
-			MutexDestroy(driver->m_mutexReconnect);
-			free(driver);
-			s_drivers[i] = NULL;
+			driver->m_refCount--;
+			if (driver->m_refCount <= 0)
+			{
+				driver->m_fpDrvUnload();
+				DLClose(driver->m_handle);
+				MutexDestroy(driver->m_mutexReconnect);
+				free(driver);
+				s_drivers[i] = NULL;
+			}
 			break;
 		}
 	}
