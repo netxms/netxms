@@ -292,7 +292,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       }
    
       if (bNeedPoll && (pNode->Flags() & NF_IS_SNMP) &&
-          (!(pNode->Flags() & NF_DISABLE_SNMP)) && (!(pNode->RuntimeFlags() & NDF_SNMP_UNREACHABLE)))
+          (!(pNode->Flags() & NF_DISABLE_SNMP)) && (!(pNode->RuntimeFlags() & NDF_SNMP_UNREACHABLE)) &&
+			 (pTransport != NULL))
       {
          SendPollerMsg(dwRqId, _T("      Retrieving interface status from SNMP agent\r\n"));
          newStatus = pNode->GetInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);

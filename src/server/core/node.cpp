@@ -438,8 +438,11 @@ ARP_CACHE *Node::GetArpCache(void)
 		SNMP_Transport *pTransport;
 
 		pTransport = createSnmpTransport();
-      pArpCache = SnmpGetArpCache(m_snmpVersion, pTransport);
-		delete pTransport;
+		if (pTransport != NULL)
+		{
+			pArpCache = SnmpGetArpCache(m_snmpVersion, pTransport);
+			delete pTransport;
+		}
    }
 
    return pArpCache;
@@ -475,16 +478,19 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
 		BOOL useIfXTable;
 
 		pTransport = createSnmpTransport();
-		if (m_nUseIfXTable == IFXTABLE_DEFAULT)
+		if (pTransport != NULL)
 		{
-			useIfXTable = (ConfigReadInt(_T("UseIfXTable"), 1) != 0);
+			if (m_nUseIfXTable == IFXTABLE_DEFAULT)
+			{
+				useIfXTable = (ConfigReadInt(_T("UseIfXTable"), 1) != 0);
+			}
+			else
+			{
+				useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED);
+			}
+			pIfList = SnmpGetInterfaceList(m_snmpVersion, pTransport, m_dwNodeType, useIfXTable);
+			delete pTransport;
 		}
-		else
-		{
-			useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED);
-		}
-      pIfList = SnmpGetInterfaceList(m_snmpVersion, pTransport, m_dwNodeType, useIfXTable);
-		delete pTransport;
    }
 
    if (pIfList != NULL)
@@ -740,6 +746,12 @@ restart_agent_check:
 
       DbgPrintf(6, "StatusPoll(%s): check SNMP", m_szName);
 		pTransport = createSnmpTransport();
+		if (pTransport == NULL)
+		{
+	      DbgPrintf(6, "StatusPoll(%s): cannot create SNMP transport", m_szName);
+			goto skip_snmp_check;
+		}
+
       SetPollerInfo(nPoller, "check SNMP");
       SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
       dwResult = SnmpGet(m_snmpVersion, pTransport, ".1.3.6.1.2.1.1.2.0",
@@ -778,6 +790,7 @@ restart_agent_check:
       DbgPrintf(6, "StatusPoll(%s): SNMP check finished", m_szName);
    }
 
+skip_snmp_check:
    // Check native agent connectivity
    if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
    {
@@ -1841,9 +1854,16 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
 		SNMP_Transport *pTransport;
 
 		pTransport = createSnmpTransport();
-      dwResult = SnmpGet(m_snmpVersion, pTransport,
-                         szParam, NULL, 0, szBuffer, dwBufSize, FALSE, TRUE);
-		delete pTransport;
+		if (pTransport != NULL)
+		{
+			dwResult = SnmpGet(m_snmpVersion, pTransport,
+									 szParam, NULL, 0, szBuffer, dwBufSize, FALSE, TRUE);
+			delete pTransport;
+		}
+		else
+		{
+			dwResult = SNMP_ERR_COMM;
+		}
    }
    DbgPrintf(7, "Node(%s)->GetItemFromSNMP(%s): dwResult=%d", m_szName, szParam, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
@@ -2795,8 +2815,11 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
 		SNMP_Transport *pTransport;
 
 		pTransport = createSnmpTransport();
-      pRT = SnmpGetRoutingTable(m_snmpVersion, pTransport);
-		delete pTransport;
+		if (pTransport != NULL)
+		{
+			pRT = SnmpGetRoutingTable(m_snmpVersion, pTransport);
+			delete pTransport;
+		}
    }
 
    if (pRT != NULL)
@@ -2894,9 +2917,16 @@ DWORD Node::CallSnmpEnumerate(const char *pszRootOid,
 		DWORD dwResult;
 
 		pTransport = createSnmpTransport();
-      dwResult = SnmpEnumerate(m_snmpVersion, pTransport,
-                               pszRootOid, pHandler, pArg, FALSE);
-		delete pTransport;
+		if (pTransport != NULL)
+		{
+			dwResult = SnmpEnumerate(m_snmpVersion, pTransport,
+											 pszRootOid, pHandler, pArg, FALSE);
+			delete pTransport;
+		}
+		else
+		{
+	      dwResult = SNMP_ERR_COMM;
+		}
 		return dwResult;
 	}
    else
