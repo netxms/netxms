@@ -1133,6 +1133,11 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 	      SendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
          DbgPrintf(5, "ConfPoll(%s): calling SnmpCheckCommSettings()", m_szName);
 			pTransport = createSnmpTransport();
+			if (pTransport == NULL)
+			{
+				DbgPrintf(5, "ConfPoll(%s): unable to create SNMP transport", m_szName);
+				goto skip_snmp_checks;
+			}
 
 			SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity);
 			if (newCtx != NULL)
@@ -1296,6 +1301,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 			delete pTransport;
       }
 
+skip_snmp_checks:
       // Check for CheckPoint SNMP agent on port 260
       DbgPrintf(5, "ConfPoll(%s): checking for CheckPoint SNMP on port 260", m_szName);
       if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
