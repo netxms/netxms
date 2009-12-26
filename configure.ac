@@ -58,6 +58,9 @@ CLIENT_COMPONENTS=""
 BUILD_UNICODE="no"
 WX_UNICODE="no"
 ORACLE_LIBS=""
+PGSQL_LIBS=""
+MYSQL_LIBS=""
+ODBC_LIBS=""
 
 
 #--------------------------------------------------------------------
@@ -1374,7 +1377,7 @@ fi
 
 check_substr "$COMPONENTS" "mysql"
 if test $? = 0; then
-	AC_CHECK_LIB(mysqlclient, mysql_init, [],
+	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
 		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
 	AC_MSG_CHECKING(whether mysql clients can run)
 	AC_RUN_IFELSE([AC_LANG_SOURCE([[
@@ -1390,7 +1393,11 @@ int main(void)
 			AC_MSG_ERROR(Your MySQL client libraries aren't properly installed)
 	],[])
 	AC_MSG_RESULT(yes)
+
+	OLD_LDFLAGS="$LDFLAGS"
+	LDFLAGS="$LDFLAGS $MYSQL_LIBS"
 	AC_CHECK_FUNCS(mysql_real_escape_string)
+	LDFLAGS="$OLD_LDFLAGS"
 fi
 
 
@@ -1401,22 +1408,25 @@ fi
 check_substr "$COMPONENTS" "pgsql"
 if test $? = 0; then
 	AC_CHECK_LIB(m, floor)
-	AC_CHECK_LIB(pq, PQconnectdb, ,
+	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"],
 		[AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
-			AC_MSG_CHECKING(whether postgresql clients can run)
-			AC_RUN_IFELSE([AC_LANG_SOURCE([[
-				#include <stdio.h>
-				#include <libpq-fe.h>
-				int main(void)
-				{
-					PGconn *a = PQconnectdb("");
-					return 0;
-				}
-			]])],[],[
+
+	AC_MSG_CHECKING(whether postgresql clients can run)
+	OLD_LDFLAGS="$LDFLAGS"
+	LDFLAGS="$LDFLAGS $PGSQL_LIBS"
+	AC_RUN_IFELSE([AC_LANG_SOURCE([[
+			#include <stdio.h>
+			#include <libpq-fe.h>
+			int main(void)
+			{
+				PGconn *a = PQconnectdb("");
+				return 0;
+			}
+		]])],[AC_MSG_RESULT(yes)],[
 			AC_MSG_RESULT(no)
 			AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
 		],[])    
-	AC_MSG_RESULT(yes)
+	LDFLAGS="$OLD_LDFLAGS"
 	AC_CHECK_LIB(pq, PQfformat, [ AC_DEFINE(HAVE_PQFFORMAT, 1, PQfformat not exist in 7.3) ])
 fi
 
@@ -1427,7 +1437,7 @@ fi
 
 check_substr "$COMPONENTS" "odbc"
 if test $? = 0; then
-	AC_CHECK_LIB(odbc, SQLAllocHandle, [],
+	AC_CHECK_LIB(odbc, SQLAllocHandle, [ODBC_LIBS="-lodbc"],
 		[AC_MSG_ERROR(libodbc is required for ODBC support)])
 fi
 
@@ -1488,7 +1498,10 @@ AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
 AC_SUBST(WXRC)
+AC_SUBST(MYSQL_LIBS)
+AC_SUBST(PGSQL_LIBS)
 AC_SUBST(ORACLE_LIBS)
+AC_SUBST(ODBC_LIBS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -1722,6 +1735,16 @@ echo "CXXFLAGS                : ${CXXFLAGS}"
 echo "CFLAGS                  : ${CFLAGS}"
 echo "LDFLAGS                 : ${LDFLAGS}"
 
+if test "x${MYSQL_LIBS}" != "x"; then
+	echo "MySQL libs              : ${MYSQL_LIBS}"
+fi
+if test "x${PGSQL_LIBS}" != "x"; then
+	echo "PostgreSQL libs         : ${PGSQL_LIBS}"
+fi
 if test "x${ORACLE_LIBS}" != "x"; then
 	echo "Oracle libs             : ${ORACLE_LIBS}"
 fi
+if test "x${ODBC_LIBS}" != "x"; then
+	echo "ODBC libs               : ${ODBC_LIBS}"
+fi
+

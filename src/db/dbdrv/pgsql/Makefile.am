@@ -2,7 +2,8 @@ INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
 lib_LTLIBRARIES = libnxddr_pgsql.la
 libnxddr_pgsql_la_SOURCES = pgsql.cpp
-libnxddr_pgsql_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) ../../../libnetxms/libnetxms.la
+libnxddr_pgsql_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @PGSQL_LIBS@
+libnxddr_pgsql_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	pgsql.vcproj \

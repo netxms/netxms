@@ -2,7 +2,8 @@ INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
 lib_LTLIBRARIES = libnxddr_mysql.la
 libnxddr_mysql_la_SOURCES = mysql.cpp
-libnxddr_mysql_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) ../../../libnetxms/libnetxms.la
+libnxddr_mysql_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MYSQL_LIBS@
+libnxddr_mysql_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	mysql.vcproj \

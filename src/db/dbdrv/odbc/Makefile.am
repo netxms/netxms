@@ -2,7 +2,8 @@ INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
 lib_LTLIBRARIES = libnxddr_odbc.la
 libnxddr_odbc_la_SOURCES = odbc.cpp
-libnxddr_odbc_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) ../../../libnetxms/libnetxms.la
+libnxddr_odbc_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @ODBC_LIBS@
+libnxddr_odbc_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = odbc.vcproj odbcdrv.h
 
