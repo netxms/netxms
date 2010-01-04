@@ -64,7 +64,7 @@ typedef struct
    char szRcptAddr[MAX_RCPT_ADDR_LEN];
    char szSubject[MAX_EMAIL_SUBJECT_LEN];
    char *pszText;
-	int nRetryCount;
+   int nRetryCount;
 } MAIL_ENVELOPE;
 
 
@@ -75,6 +75,7 @@ typedef struct
 static char m_szSmtpServer[MAX_PATH] = "localhost";
 static WORD m_wSmtpPort = 25;
 static char m_szFromAddr[MAX_PATH] = "netxms@localhost";
+static char m_szFromName[MAX_PATH] = "NetXMS Server";
 static Queue *m_pMailerQueue = NULL;
 static THREAD m_hThread = INVALID_THREAD_HANDLE;
 
@@ -214,7 +215,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   if (iResp == 250)
                   {
                      iState = STATE_FROM;
-                     sprintf(szBuffer, "MAIL FROM: <%s>\r\n", m_szFromAddr);
+                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", m_szFromAddr);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                   }
                   else
@@ -227,7 +228,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   if (iResp == 250)
                   {
                      iState = STATE_RCPT;
-                     sprintf(szBuffer, "RCPT TO: <%s>\r\n", pszRcpt);
+                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "RCPT TO: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                   }
                   else
@@ -255,13 +256,13 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 
                      // Mail headers
                      // from
-                     sprintf(szBuffer, "From: NetXMS Server <%s>\r\n", m_szFromAddr);
+                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: %s <%s>\r\n", m_szFromName, m_szFromAddr);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      // to
-                     sprintf(szBuffer, "To: <%s>\r\n", pszRcpt);
+                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      // subject
-                     sprintf(szBuffer, "Subject: %s\r\n", pszSubject);
+                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: %s\r\n", pszSubject);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      
 							// date
@@ -289,7 +290,8 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      // content-type
-                     sprintf(szBuffer, "Content-Type: text/plain; charset=%s\r\n"
+                     snprintf(szBuffer, SMTP_BUFFER_SIZE,
+                                       "Content-Type: text/plain; charset=%s\r\n"
                                        "Content-Transfer-Encoding: 8bit\r\n\r\n", szEncoding);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
 
@@ -375,6 +377,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 
       ConfigReadStr("SMTPServer", m_szSmtpServer, MAX_PATH, "localhost");
       ConfigReadStr("SMTPFromAddr", m_szFromAddr, MAX_PATH, "netxms@localhost");
+      ConfigReadStr("SMTPFromName", m_szFromName, MAX_PATH, "NetXMS Server");
       m_wSmtpPort = (WORD)ConfigReadInt("SMTPPort", 25);
 
       dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
