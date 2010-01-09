@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
    int i, ch;
 
    printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING "\n"
-          "Copyright (c) 2005, 2006 Victor Kirhenshtein\n\n");
+          "Copyright (c) 2005-2010 Victor Kirhenshtein\n\n");
 
    // Parse command line
    opterr = 1;
