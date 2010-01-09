@@ -1737,67 +1737,54 @@ void DCItem::getEventList(DWORD **ppdwList, DWORD *pdwSize)
 
 void DCItem::createNXMPRecord(String &str)
 {
-   String strName, strDescr, strInstance, strTemp;
-   DWORD i;
+	DWORD i;
 
    lock();
    
-   strName = m_szName;
-   EscapeString(strName);
-
-   strDescr = m_szDescription;
-   EscapeString(strDescr);
-
-   strInstance = m_szInstance;
-   EscapeString(strInstance);
-
-   str.addFormattedString(_T("\t\t\t@DCI\n\t\t\t{\n")
-                          _T("\t\t\t\tNAME=\"%s\";\n")
-                          _T("\t\t\t\tDESCRIPTION=\"%s\";\n")
-                          _T("\t\t\t\tDATATYPE=%d;\n")
-                          _T("\t\t\t\tORIGIN=%d;\n")
-                          _T("\t\t\t\tINTERVAL=%d;\n")
-                          _T("\t\t\t\tRETENTION=%d;\n")
-                          _T("\t\t\t\tINSTANCE=\"%s\";\n")
-                          _T("\t\t\t\tDELTA=%d;\n")
-                          _T("\t\t\t\tADVANCED_SCHEDULE=%d;\n")
-                          _T("\t\t\t\tALL_THRESHOLDS=%d;\n"),
-                          (const TCHAR *)strName, (const TCHAR *)strDescr,
+   str.addFormattedString(_T("\t\t\t\t<dci>\n")
+                          _T("\t\t\t\t\t<name>%s</name>\n")
+                          _T("\t\t\t\t\t<description>%s</description>\n")
+                          _T("\t\t\t\t\t<dataType>%d</dataType>\n")
+                          _T("\t\t\t\t\t<origin>%d</origin>\n")
+                          _T("\t\t\t\t\t<interval>%d</interval>\n")
+                          _T("\t\t\t\t\t<retention>%d</retention>\n")
+                          _T("\t\t\t\t\t<instance>%s</instance>\n")
+                          _T("\t\t\t\t\t<delta>%d</delta>\n")
+                          _T("\t\t\t\t\t<advancedSchedule>%d</advancedSchedule>\n")
+                          _T("\t\t\t\t\t<allThresholds>%d</allThresholds>\n"),
+                          (const TCHAR *)EscapeStringForXML2(m_szName),
+                          (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           m_iDataType, m_iSource,
                           m_iAdvSchedule ? 0 : m_iPollingInterval,
-                          m_iRetentionTime, (const TCHAR *)strInstance,
-								  m_iDeltaCalculation, m_iAdvSchedule, 
+                          m_iRetentionTime,
+                          (const TCHAR *)EscapeStringForXML2(m_szInstance),
+								  m_iDeltaCalculation, m_iAdvSchedule,
                           m_iProcessAllThresholds);
 
 	if (m_pszScript != NULL)
 	{
-		strTemp = m_pszScript;
-		EscapeString(strTemp);
-		str += _T("\t\t\t\tSCRIPT=\"");
-		str += strTemp;
-		str += _T("\";\n");
+		str += _T("\t\t\t\t\t<transformation>");
+		str.addDynamicString(EscapeStringForXML(m_pszScript, -1));
+		str += _T("</transformation>\n");
 	}
 
    if (m_iAdvSchedule)
    {
-      str += _T("\t\t\t\t@SCHEDULE\n\t\t\t\t{\n");
+      str += _T("\t\t\t\t\t<schedules>\n");
       for(i = 0; i < m_dwNumSchedules; i++)
-      {
-         strTemp = m_ppScheduleList[i];
-         EscapeString(strTemp);
-         str.addFormattedString(_T("\t\t\t\t\t\"%s\";\n"));
-      }
-      str += _T("\t\t\t\t}\n");
+         str.addFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
+      str += _T("\t\t\t\t\t</schedules>\n");
    }
 
-   str += _T("\t\t\t\t@THRESHOLDS\n\t\t\t\t{\n");
+   str += _T("\t\t\t\t\t<thresholds>\n");
    for(i = 0; i < m_dwNumThresholds; i++)
    {
       m_ppThresholdList[i]->createNXMPRecord(str);
    }
+   str += _T("\t\t\t\t\t</thresholds>\n");
 
    unlock();
-   str += _T("\t\t\t\t}\n\t\t\t}\n");
+   str += _T("\t\t\t\t</dci>\n");
 }
 
 

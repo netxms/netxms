@@ -775,21 +775,17 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
       p = FindEventTemplate(dwCode);
       if (p != NULL)
       {
-         strText = p->pszMessageTemplate;
-         EscapeString(strText);
-
-         strDescr = p->pszDescription;
-         EscapeString(strDescr);
-
-         str.addFormattedString(_T("\t@EVENT %s\n\t{\n")
-                                _T("\t\tCODE=%d;\n")
-                                _T("\t\tSEVERITY=%d;\n")
-                                _T("\t\tFLAGS=%d;\n")
-                                _T("\t\tTEXT=\"%s\";\n")
-                                _T("\t\tDESCRIPTION=\"%s\";\n")
-                                _T("\t}\n"),
-                                p->szName, p->dwCode, p->dwSeverity,
-                                p->dwFlags, (const TCHAR *)strText, (const TCHAR *)strDescr);
+         str.addFormattedString(_T("\t\t<event>\n")
+			                       _T("\t\t\t<name>%s</name>\n")
+                                _T("\t\t\t<code>%d</code>\n")
+                                _T("\t\t\t<severity>%d</severity>\n")
+                                _T("\t\t\t<flags>%d</flags>\n")
+                                _T("\t\t\t<message>%s</message>\n")
+                                _T("\t\t\t<description>%s</description>\n")
+                                _T("\t\t</event>\n"),
+                                (const TCHAR *)EscapeStringForXML2(p->szName), p->dwCode, p->dwSeverity,
+                                p->dwFlags, (const TCHAR *)EscapeStringForXML2(p->pszMessageTemplate),
+										  (const TCHAR *)EscapeStringForXML2(p->pszDescription));
       }
    }
 

@@ -39,7 +39,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 	for(in = string, outLen = 0; (inLen > 0) && (*in != 0); in++, outLen++, inLen--)
 		if ((*in == _T('&')) || (*in == _T('<')) ||
 		    (*in == _T('>')) || (*in == _T('"')) ||
-			 (*in < 32))
+			 (*in == _T('\'')) || (*in < 32))
 			outLen += 5;
 	outLen++;
 	
@@ -86,6 +86,18 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 	out[pos] = 0;
 
 	return out;
+}
+
+
+//
+// Escape string for XML - return escaped string as String object
+//
+
+String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *string, int length)
+{
+	String s;
+	s.setBuffer(EscapeStringForXML(string, length));
+	return s;
 }
 
 

@@ -219,8 +219,8 @@ public final class NXCPCodes
 	public static final int CMD_SET_ADDR_LIST           = 0x00BD;
 	public static final int CMD_RESET_COMPONENT         = 0x00BE;
 	public static final int CMD_GET_DCI_EVENTS_LIST     = 0x00BF;
-	public static final int CMD_CREATE_MGMT_PACK        = 0x00C0;
-	public static final int CMD_INSTALL_MGMT_PACK       = 0x00C1;
+	public static final int CMD_EXPORT_CONFIGURATION    = 0x00C0;
+	public static final int CMD_IMPORT_CONFIGURATION    = 0x00C1;
 	public static final int CMD_GET_TRAP_CFG_RO         = 0x00C2;
 	public static final int CMD_SNMP_REQUEST            = 0x00C3;
 	public static final int CMD_GET_DCI_INFO            = 0x00C4;

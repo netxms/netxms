@@ -3533,11 +3533,11 @@ void CConsoleApp::OnToolsCreatemp()
    if (dlg.DoModal() != IDOK)
       return;
 
-   dwResult = DoRequestArg9(NXCCreateMPFile, g_hSession, (void *)((LPCTSTR)dlg.m_strDescription),
+   dwResult = DoRequestArg9(NXCExportConfiguration, g_hSession, (void *)((LPCTSTR)dlg.m_strDescription),
                             (void *)dlg.m_dwNumEvents, dlg.m_pdwEventList,
                             (void *)dlg.m_dwNumTemplates, dlg.m_pdwTemplateList,
                             (void *)dlg.m_dwNumTraps, dlg.m_pdwTrapList,
-                            &pszContent, _T("Creating management pack..."));
+                            &pszContent, _T("Exporting configuration..."));
    if (dwResult == RCC_SUCCESS)
    {
       hFile = CreateFile(dlg.m_strFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -3557,7 +3557,7 @@ void CConsoleApp::OnToolsCreatemp()
 #endif
          CloseHandle(hFile);
 
-         m_pMainWnd->MessageBox(_T("Management pack was successfully created"), _T("Success"), MB_OK | MB_ICONINFORMATION);
+         m_pMainWnd->MessageBox(_T("Configuration was successfully exported"), _T("Success"), MB_OK | MB_ICONINFORMATION);
       }
       else
       {
@@ -3694,13 +3694,13 @@ void CConsoleApp::OnToolsImportmp()
          CloseHandle(hFile);
          if (pszContent != NULL)
          {
-            dwResult = DoRequestArg5(NXCInstallMP, g_hSession, pszContent,
+            dwResult = DoRequestArg5(NXCImportConfiguration, g_hSession, pszContent,
                                      (void *)dwFlags, szErrorText,
-                                     (void *)1024, _T("Importing management pack..."));
+                                     (void *)1024, _T("Importing configuration..."));
             free(pszContent);
             if (dwResult == RCC_SUCCESS)
             {
-               m_pMainWnd->MessageBox(_T("Management pack successfully imported"), _T("Information"), MB_OK | MB_ICONINFORMATION);
+               m_pMainWnd->MessageBox(_T("Configuration successfully imported"), _T("Information"), MB_OK | MB_ICONINFORMATION);
             }
             else
             {

@@ -1091,11 +1091,11 @@ void ClientSession::ProcessingThread(void)
          case CMD_RESET_COMPONENT:
             ResetComponent(pMsg);
             break;
-         case CMD_CREATE_MGMT_PACK:
-            CreateManagementPack(pMsg);
+         case CMD_EXPORT_CONFIGURATION:
+            exportConfiguration(pMsg);
             break;
-         case CMD_INSTALL_MGMT_PACK:
-            InstallManagementPack(pMsg);
+         case CMD_IMPORT_CONFIGURATION:
+            importConfiguration(pMsg);
             break;
 			case CMD_GET_GRAPH_LIST:
 				SendGraphList(pMsg->GetId());
@@ -8485,10 +8485,10 @@ void ClientSession::SendDCIEventList(CSCPMessage *pRequest)
 
 
 //
-// Create management pack
+// Export server configuration (event, templates, etc.)
 //
 
-void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
+void ClientSession::exportConfiguration(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD i, dwCount, dwNumTemplates;
@@ -8539,26 +8539,27 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
 
       if (i == dwNumTemplates)   // All objects passed test
       {
-         String str, temp;
+         String str;
+			TCHAR *temp;
 
-         str = _T("@NXMP\n{\n\tVERSION=2;\n\tDESCRIPTION=\"");
-         temp.setBuffer(pRequest->GetVariableStr(VID_DESCRIPTION));
-         EscapeString(temp);
-         str += (const TCHAR *)temp;
-         str += _T("\";\n}\n\n");
+         str = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>3</formatVersion>\n\t<description>");
+         temp = pRequest->GetVariableStr(VID_DESCRIPTION);
+         str.addDynamicString(EscapeStringForXML(temp, -1));
+			free(temp);
+         str += _T("</description>\n");
 
          // Write events
-         str += _T("@EVENTS\n{\n");
+         str += _T("\t<events>\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_EVENTS);
          pdwList = (DWORD *)malloc(sizeof(DWORD) * dwCount);
          pRequest->GetVariableInt32Array(VID_EVENT_LIST, dwCount, pdwList);
          for(i = 0; i < dwCount; i++)
             CreateNXMPEventRecord(str, pdwList[i]);
          safe_free(pdwList);
-         str += _T("}\n\n");
+         str += _T("\t</events>\n");
 
          // Write templates
-         str += _T("@TEMPLATES\n{\n");
+         str += _T("\t<templates>\n");
          for(i = 0; i < dwNumTemplates; i++)
          {
             pObject = FindObjectById(pdwTemplateList[i]);
@@ -8567,17 +8568,20 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
                ((Template *)pObject)->CreateNXMPRecord(str);
             }
          }
-         str += _T("}\n\n");
+         str += _T("\t</templates>\n");
 
          // Write traps
-         str += _T("@SNMP_TRAPS\n{\n");
+         str += _T("\t<traps>\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_TRAPS);
          pdwList = (DWORD *)malloc(sizeof(DWORD) * dwCount);
          pRequest->GetVariableInt32Array(VID_TRAP_LIST, dwCount, pdwList);
          for(i = 0; i < dwCount; i++)
             CreateNXMPTrapRecord(str, pdwList[i]);
          safe_free(pdwList);
-         str += _T("}\n\n");
+         str += _T("\t</traps>\n");
+
+			// Close document
+			str += _T("</configuration>\n");
 
          // Put result into message
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -8596,10 +8600,10 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
 
 
 //
-// Install management pack
+// Import server configuration (events, templates, etc.)
 //
 
-void ClientSession::InstallManagementPack(CSCPMessage *pRequest)
+void ClientSession::importConfiguration(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR *pszContent, szLockInfo[MAX_SESSION_NAME], szError[1024];

@@ -866,25 +866,25 @@ DWORD *Template::GetDCIEventsList(DWORD *pdwCount)
 void Template::CreateNXMPRecord(String &str)
 {
    DWORD i;
-	String name;
+	TCHAR *name;
 
-	name = m_szName;
-	EscapeString(name);
-   str.addFormattedString(_T("\t@TEMPLATE \"%s\"\n\t{\n\t\t@DCI_LIST\n\t\t{\n"), (const TCHAR *)name);
+	name = EscapeStringForXML(m_szName, -1);
+   str.addFormattedString(_T("\t\t<template>\n\t\t\t<name>%s</name>\n\t\t\t<dataCollection>\n"), name);
+	free(name);
 
    LockData();
    for(i = 0; i < m_dwNumItems; i++)
       m_ppItems[i]->createNXMPRecord(str);
    UnlockData();
 
-   str += _T("\t\t}\n");
+   str += _T("\t\t\t</dataCollection>\n");
 	if (m_applyFilterSource != NULL)
 	{
-		str += _T("\t\tAPPLY_FILTER=\"");
-		str += m_applyFilterSource;
-		str += _T("\";\n");
+		str += _T("\t\t\t<filter>");
+		str.addDynamicString(EscapeStringForXML(m_applyFilterSource, -1));
+		str += _T("</filter>\n");
 	}
-	str += _T("\n\t}\n");
+	str += _T("\t\t</template>\n");
 }
 
 

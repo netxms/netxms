@@ -771,61 +771,48 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
 {
 	DWORD i, j;
 	TCHAR szBuffer[1024];
-	String strTemp;
 
    MutexLock(m_mutexTrapCfgAccess, INFINITE);
    for(i = 0; i < m_dwNumTraps; i++)
    {
       if (m_pTrapCfg[i].dwId == dwId)
       {
-			str.addFormattedString(_T("\t@TRAP %s\n\t{\n"),
+			str.addFormattedString(_T("\t\t<trap>\n")
+			                       _T("\t\t\t<oid>%s</oid>\n")
+			                       _T("\t\t\t<description>%s</description>\n")
+			                       _T("\t\t\t<tag>%s</tag>\n"),
 			                       SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen,
 			                                            m_pTrapCfg[i].pdwObjectId,
-																	  szBuffer, 1024));
-			strTemp = m_pTrapCfg[i].szDescription;
-			strTemp.escapeCharacter(_T('\\'), _T('\\'));
-			strTemp.escapeCharacter(_T('"'), _T('\\'));
-			strTemp.translate(_T("\r"), _T("\\r"));
-			strTemp.translate(_T("\n"), _T("\\n"));
-			str.addFormattedString(_T("\t\tDESCRIPTION=\"%s\";\n"), (const TCHAR *)strTemp);
-
-			strTemp = m_pTrapCfg[i].szUserTag;
-			strTemp.escapeCharacter(_T('\\'), _T('\\'));
-			strTemp.escapeCharacter(_T('"'), _T('\\'));
-			strTemp.translate(_T("\r"), _T("\\r"));
-			strTemp.translate(_T("\n"), _T("\\n"));
-			str.addFormattedString(_T("\t\tUSERTAG=\"%s\";\n"), (const TCHAR *)strTemp);
+																	  szBuffer, 1024),
+										  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].szDescription),
+										  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].szUserTag));
 
 		   ResolveEventName(m_pTrapCfg[i].dwEventCode, szBuffer);
-			str.addFormattedString(_T("\t\tEVENT=%s;\n"), szBuffer);
+			str.addFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
 			if (m_pTrapCfg[i].dwNumMaps > 0)
 			{
-				str += _T("\t\t@PARAMETERS\n\t\t{\n");
+				str += _T("\t\t\t<parameters>\n");
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
-					strTemp = m_pTrapCfg[i].pMaps[j].szDescription;
-					strTemp.escapeCharacter(_T('\\'), _T('\\'));
-					strTemp.escapeCharacter(_T('"'), _T('\\'));
-					strTemp.translate(_T("\r"), _T("\\r"));
-					strTemp.translate(_T("\n"), _T("\\n"));
+					str += _T("\t\t\t\t<parameter>\n");
+					str.addFormattedString(_T("\t\t\t\t\t<description>%s</description>\n"), (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].pMaps[j].szDescription));
                if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
 					{
-						str.addFormattedString(_T("\t\t\t%s=\"%s\";\n"),
+						str.addFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),
 						                       SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
 													                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
-																				  szBuffer, 1024),
-						                       (const TCHAR *)strTemp);
+																				  szBuffer, 1024));
 					}
 					else
 					{
-						str.addFormattedString(_T("\t\t\tPOS:%d=\"%s\";\n"),
-						                       m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF,
-						                       (const TCHAR *)strTemp);
+						str.addFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"),
+						                       m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF);
 					}
+					str += _T("\t\t\t\t</parameter>\n");
 				}
-				str += _T("\t\t}\n");
+				str += _T("\t\t\t</parameters>\n");
 			}
-			str += _T("\t}\n");
+			str += _T("\t\t</trap>\n");
 			break;
 		}
 	}

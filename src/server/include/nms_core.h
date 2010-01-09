@@ -517,8 +517,8 @@ private:
    void SendDCIEventList(CSCPMessage *pRequest);
 	void SendDCIInfo(CSCPMessage *pRequest);
    void SendSystemDCIList(CSCPMessage *pRequest);
-   void CreateManagementPack(CSCPMessage *pRequest);
-   void InstallManagementPack(CSCPMessage *pRequest);
+   void exportConfiguration(CSCPMessage *pRequest);
+   void importConfiguration(CSCPMessage *pRequest);
 	void SendGraphList(DWORD dwRqId);
 	void DefineGraph(CSCPMessage *pRequest);
 	void DeleteGraph(CSCPMessage *pRequest);

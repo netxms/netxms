@@ -28,11 +28,11 @@
 // Create management pack file
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
-                                         DWORD dwNumEvents, DWORD *pdwEventList,
-                                         DWORD dwNumTemplates, DWORD *pdwTemplateList,
-                                         DWORD dwNumTraps, DWORD *pdwTrapList,
-                                         TCHAR **ppszContent)
+DWORD LIBNXCL_EXPORTABLE NXCExportConfiguration(NXC_SESSION hSession, TCHAR *pszDescr,
+                                                DWORD dwNumEvents, DWORD *pdwEventList,
+                                                DWORD dwNumTemplates, DWORD *pdwTemplateList,
+                                                DWORD dwNumTraps, DWORD *pdwTrapList,
+                                                TCHAR **ppszContent)
 {
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
@@ -41,7 +41,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_CREATE_MGMT_PACK);
+   msg.SetCode(CMD_EXPORT_CONFIGURATION);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_DESCRIPTION, pszDescr);
    msg.SetVariable(VID_NUM_EVENTS, dwNumEvents);
@@ -74,15 +74,15 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
 // Install management pack
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
-                                      DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen)
+DWORD LIBNXCL_EXPORTABLE NXCImportConfiguration(NXC_SESSION hSession, TCHAR *pszContent,
+                                                DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen)
 {
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_INSTALL_MGMT_PACK);
+   msg.SetCode(CMD_IMPORT_CONFIGURATION);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_NXMP_CONTENT, pszContent);
    msg.SetVariable(VID_FLAGS, dwFlags);

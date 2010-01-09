@@ -722,4 +722,15 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_rotate();
 }
 #endif
 
+
+//
+// C++ only finctions
+//
+
+#ifdef __cplusplus
+
+String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *string, int length = -1);
+
+#endif
+
 #endif   /* _nms_util_h_ */

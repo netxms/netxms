@@ -2112,14 +2112,14 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CONF
 DWORD LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, DWORD dwCfgId);
 DWORD LIBNXCL_EXPORTABLE NXCSwapAgentConfigs(NXC_SESSION hSession, DWORD dwCfgId1, DWORD dwCfgId2);
 
-/** MAnagement packs **/
-DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
-                                         DWORD dwNumEvents, DWORD *pdwEventList,
-                                         DWORD dwNumTemplates, DWORD *pdwTemplateList,
-                                         DWORD dwNumTraps, DWORD *pdwTrapList,
-                                         TCHAR **ppszContent);
-DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
-                                      DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen);
+/** Server configuration export/import **/
+DWORD LIBNXCL_EXPORTABLE NXCExportConfiguration(NXC_SESSION hSession, TCHAR *pszDescr,
+                                                DWORD dwNumEvents, DWORD *pdwEventList,
+                                                DWORD dwNumTemplates, DWORD *pdwTemplateList,
+                                                DWORD dwNumTraps, DWORD *pdwTrapList,
+                                                TCHAR **ppszContent);
+DWORD LIBNXCL_EXPORTABLE NXCImportConfiguration(NXC_SESSION hSession, TCHAR *pszContent,
+                                                DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen);
 
 /** Predefined graphs **/
 DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGraphs, NXC_GRAPH **ppGraphList);

@@ -652,24 +652,24 @@ BOOL Threshold::compare(Threshold *pThr)
 void Threshold::createNXMPRecord(String &str)
 {
    TCHAR szEvent1[MAX_EVENT_NAME], szEvent2[MAX_EVENT_NAME];
-   String strValue;
 
-   strValue = (TCHAR *)m_value.String();
    ResolveEventName(m_eventCode, szEvent1);
    ResolveEventName(m_rearmEventCode, szEvent2);
-   str.addFormattedString(_T("\t\t\t\t\t@THRESHOLD\n\t\t\t\t\t{\n")
-                          _T("\t\t\t\t\t\tFUNCTION=%d;\n")
-                          _T("\t\t\t\t\t\tCONDITION=%d;\n")
-                          _T("\t\t\t\t\t\tVALUE=\"%s\";\n")
-                          _T("\t\t\t\t\t\tACTIVATION_EVENT=\"%s\";\n")
-                          _T("\t\t\t\t\t\tDEACTIVATION_EVENT=\"%s\";\n")
-                          _T("\t\t\t\t\t\tPARAM1=%d;\n")
-                          _T("\t\t\t\t\t\tPARAM2=%d;\n")
-                          _T("\t\t\t\t\t\tREPEAT_INTERVAL=%d;\n")
-                          _T("\t\t\t\t\t}\n"),
-                          m_function, m_operation, (const TCHAR *)strValue,
-                          szEvent1, szEvent2, m_param1, m_param2,
-								  m_repeatInterval);
+   str.addFormattedString(_T("\t\t\t\t\t\t<threshold>\n")
+                          _T("\t\t\t\t\t\t\t<function>%d</function>\n")
+                          _T("\t\t\t\t\t\t\t<condition>%d</condition>\n")
+                          _T("\t\t\t\t\t\t\t<value>%s</value>\n")
+                          _T("\t\t\t\t\t\t\t<activationEvent>%s</activationEvent>\n")
+                          _T("\t\t\t\t\t\t\t<deactivationEvent>%s</deactivationEvent>\n")
+                          _T("\t\t\t\t\t\t\t<param1>%d</param1>\n")
+                          _T("\t\t\t\t\t\t\t<param2>%d</param2>\n")
+                          _T("\t\t\t\t\t\t\t<repeatInterval>%d</repeatInterval>\n")
+                          _T("\t\t\t\t\t\t</threshold>\n"),
+                          m_function, m_operation,
+								  (const TCHAR *)EscapeStringForXML2(m_value.String()),
+                          (const TCHAR *)EscapeStringForXML2(szEvent1),
+								  (const TCHAR *)EscapeStringForXML2(szEvent2),
+								  m_param1, m_param2, m_repeatInterval);
 }
 
 
