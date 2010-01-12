@@ -53,7 +53,7 @@ void CSelectMPDlg::OnButtonBrowse()
 
    GetDlgItemText(IDC_EDIT_FILE, szBuffer, 1024);
    CFileDialog dlg(TRUE, NULL, szBuffer, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
-                   _T("NetXMS Management Packs (*.nxmp)|*.nxmp|All Files (*.*)|*.*||"));
+                   _T("XML Files (*.xml)|*.xml|All Files (*.*)|*.*||"));
    if (dlg.DoModal() == IDOK)
    {
       SetDlgItemText(IDC_EDIT_FILE, dlg.m_ofn.lpstrFile);

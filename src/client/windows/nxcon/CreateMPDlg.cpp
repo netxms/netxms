@@ -191,7 +191,8 @@ void CCreateMPDlg::AddTemplate(DWORD dwId)
    {
       for(i = 0; i < dwCount; i++)
       {
-         AddEvent(pdwList[i]);
+			if (pdwList[i] >= FIRST_USER_EVENT_ID)		// Export automatically only user events
+				AddEvent(pdwList[i]);
       }
       safe_free(pdwList);
    }
@@ -208,13 +209,14 @@ void CCreateMPDlg::AddTrap(DWORD dwId, DWORD dwEvent, TCHAR *pszName)
 	int nImage;
 
    if (FindTreeCtrlItemEx(m_wndTreeCtrl, m_hTrapRoot, dwId) != NULL)
-      return;  // Template already exist in the tree
+      return;  // Trap already exist in the tree
 
    nImage = NXCGetEventSeverity(g_hSession, dwEvent) + EVENT_IMAGE_BASE;
 	hItem = m_wndTreeCtrl.InsertItem(pszName, nImage, nImage, m_hTrapRoot);
 	m_wndTreeCtrl.SetItemData(hItem, dwId);
 
-	AddEvent(dwEvent);
+	if (dwEvent >= FIRST_USER_EVENT_ID)		// Export automatically only user events
+		AddEvent(dwEvent);
 }
 
 
@@ -331,7 +333,7 @@ void CCreateMPDlg::OnButtonBrowse()
 
    GetDlgItemText(IDC_EDIT_FILE, szBuffer, 1024);
    CFileDialog dlg(FALSE, _T("nxmp"), szBuffer, OFN_PATHMUSTEXIST,
-                   _T("NetXMS Management Packs (*.nxmp)|*.nxmp|All Files (*.*)|*.*||"));
+                   _T("XML files (*.xml)|*.xml|All Files (*.*)|*.*||"));
    if (dlg.DoModal() == IDOK)
    {
       SetDlgItemText(IDC_EDIT_FILE, dlg.m_ofn.lpstrFile);

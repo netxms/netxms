@@ -116,4 +116,6 @@
 #define EVENT_SNMP_AUTH_FAILURE           505
 #define EVENT_SNMP_EGP_NL                 506
 
+#define FIRST_USER_EVENT_ID               100000
+
 #endif
