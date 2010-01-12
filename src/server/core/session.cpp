@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include "nxmp_parser.h"
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -8606,9 +8604,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
 void ClientSession::importConfiguration(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR *pszContent, szLockInfo[MAX_SESSION_NAME], szError[1024];
-   NXMP_Parser *pParser;
-   NXMP_Data *pData;
+   TCHAR szLockInfo[MAX_SESSION_NAME], szError[1024];
    DWORD dwFlags;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8616,13 +8612,11 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
 
    if ((m_dwSystemAccess & (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP)) == (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
-      pszContent = pRequest->GetVariableStr(VID_NXMP_CONTENT);
-      if (pszContent != NULL)
+      TCHAR *content = pRequest->GetVariableStr(VID_NXMP_CONTENT);
+      if (content != NULL)
       {
-         pParser = new NXMP_Parser;
-         pData = pParser->Parse(pszContent);
-         free(pszContent);
-         if (pData != NULL)
+			Config *config = new Config();
+         if (config->loadXmlConfigFromMemory(content, strlen(content), NULL, "configuration"))
          {
             // Lock all required components
             if (LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szLockInfo))
@@ -8635,11 +8629,11 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
                   {
                      m_dwFlags |= CSF_TRAP_CFG_LOCKED;
 
-                     // Validate and install management pack
+                     // Validate and import configuration
                      dwFlags = pRequest->GetVariableLong(VID_FLAGS);
-                     if (pData->Validate(dwFlags, szError, 1024))
+                     if (ValidateConfig(config, dwFlags, szError, 1024))
                      {
-                        msg.SetVariable(VID_RCC, pData->Install(dwFlags));
+                        msg.SetVariable(VID_RCC, ImportConfig(config, dwFlags));
                      }
                      else
                      {
@@ -8674,14 +8668,13 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
                msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_EVENTDB);
                msg.SetVariable(VID_LOCKED_BY, szLockInfo);
             }
-            delete pData;
          }
          else
          {
             msg.SetVariable(VID_RCC, RCC_NXMP_PARSE_ERROR);
-            msg.SetVariable(VID_ERROR_TEXT, pParser->GetErrorText());
          }
-         delete pParser;
+			delete config;
+         free(content);
       }
       else
       {

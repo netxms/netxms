@@ -47,6 +47,7 @@ Template::Template()
    m_dwVersion = 0x00010000;  // Initial version is 1.0
 	m_applyFilter = NULL;
 	m_applyFilterSource = NULL;
+   m_iStatus = STATUS_NORMAL;
 }
 
 
@@ -64,7 +65,49 @@ Template::Template(const TCHAR *pszName)
    m_dwVersion = 0x00010000;  // Initial version is 1.0
 	m_applyFilter = NULL;
 	m_applyFilterSource = NULL;
+   m_iStatus = STATUS_NORMAL;
    m_bIsHidden = TRUE;
+}
+
+
+//
+// Create template object from import file
+//
+
+Template::Template(ConfigEntry *config)
+         :NetObj()
+{
+   m_bIsHidden = TRUE;
+   m_dwDCILockStatus = INVALID_INDEX;
+   m_iStatus = STATUS_NORMAL;
+
+	// Name and version
+	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
+	m_dwVersion = config->getSubEntryValueUInt(_T("version"), 0, 0x00010000);
+
+	// Auto-apply filter
+	m_applyFilter = NULL;
+	m_applyFilterSource = NULL;
+	setAutoApplyFilter(config->getSubEntryValue(_T("filter")));
+
+	// Data collection
+	ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
+	if (dcRoot != NULL)
+	{
+		ConfigEntryList *dcis = dcRoot->getSubEntries(_T("dci#*"));
+		m_dwNumItems = (DWORD)dcis->getSize();
+		m_ppItems = (DCItem **)malloc(sizeof(DCItem *) * m_dwNumItems);
+		for(int i = 0; i < dcis->getSize(); i++)
+		{
+			m_ppItems[i] = new DCItem(dcis->getEntry(i), this);
+		}
+		delete dcis;
+	}
+	else
+	{
+		m_dwNumItems = 0;
+		m_ppItems = NULL;
+	}
 }
 
 
@@ -866,11 +909,9 @@ DWORD *Template::GetDCIEventsList(DWORD *pdwCount)
 void Template::CreateNXMPRecord(String &str)
 {
    DWORD i;
-	TCHAR *name;
 
-	name = EscapeStringForXML(m_szName, -1);
-   str.addFormattedString(_T("\t\t<template>\n\t\t\t<name>%s</name>\n\t\t\t<dataCollection>\n"), name);
-	free(name);
+   str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<dataCollection>\n"),
+	                       m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName));
 
    LockData();
    for(i = 0; i < m_dwNumItems; i++)

@@ -120,6 +120,7 @@ public:
    Threshold(DCItem *pRelatedItem);
    Threshold(Threshold *pSrc);
    Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem);
+	Threshold(ConfigEntry *config, DCItem *parentItem);
    ~Threshold();
 
    void bindToItem(DWORD dwItemId) { m_itemId = dwItemId; }
@@ -146,7 +147,7 @@ public:
 
    BOOL compare(Threshold *pThr);
 
-   void createNXMPRecord(String &str);
+   void createNXMPRecord(String &str, int index);
 
 	void associate(DCItem *pItem);
 	void setFunction(int nFunc) { m_function = nFunc; }
@@ -225,6 +226,7 @@ public:
    DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
           int iPollingInterval, int iRetentionTime, Template *pNode,
           const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
+	DCItem(ConfigEntry *config, Template *owner);
    ~DCItem();
 
    void prepareForDeletion();
@@ -288,8 +290,8 @@ public:
 	void setAdvScheduleFlag(BOOL bFlag) { m_iAdvSchedule = bFlag ? 1 : 0; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
-	void addSchedule(TCHAR *pszSchedule);
-   void setTransformationScript(TCHAR *pszScript);
+	void addSchedule(const TCHAR *pszSchedule);
+   void setTransformationScript(const TCHAR *pszScript);
 
 	BOOL testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };

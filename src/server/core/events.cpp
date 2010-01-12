@@ -775,7 +775,7 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
       p = FindEventTemplate(dwCode);
       if (p != NULL)
       {
-         str.addFormattedString(_T("\t\t<event>\n")
+         str.addFormattedString(_T("\t\t<event id=\"%d\">\n")
 			                       _T("\t\t\t<name>%s</name>\n")
                                 _T("\t\t\t<code>%d</code>\n")
                                 _T("\t\t\t<severity>%d</severity>\n")
@@ -783,7 +783,7 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
                                 _T("\t\t\t<message>%s</message>\n")
                                 _T("\t\t\t<description>%s</description>\n")
                                 _T("\t\t</event>\n"),
-                                (const TCHAR *)EscapeStringForXML2(p->szName), p->dwCode, p->dwSeverity,
+										  p->dwCode, (const TCHAR *)EscapeStringForXML2(p->szName), p->dwCode, p->dwSeverity,
                                 p->dwFlags, (const TCHAR *)EscapeStringForXML2(p->pszMessageTemplate),
 										  (const TCHAR *)EscapeStringForXML2(p->pszDescription));
       }
@@ -797,7 +797,7 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
 // Resolve event name
 //
 
-BOOL ResolveEventName(DWORD dwCode, TCHAR *pszBuffer)
+BOOL EventNameFromCode(DWORD dwCode, TCHAR *pszBuffer)
 {
    EVENT_TEMPLATE *p;
    BOOL bRet = FALSE;
@@ -863,4 +863,16 @@ EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName)
    }
    RWLockUnlock(m_rwlockTemplateAccess);
    return p;
+}
+
+
+//
+// Translate event name to code
+// If event with given name does not exist, returns supplied default value
+//
+
+DWORD EventCodeFromName(const TCHAR *name, DWORD defaultValue)
+{
+	EVENT_TEMPLATE *p = FindEventTemplateByName(name);
+	return (p != NULL) ? p->dwCode : defaultValue;
 }

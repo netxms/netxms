@@ -31,6 +31,7 @@
 Node::Node()
      :Template()
 {
+   m_iStatus = STATUS_UNKNOWN;
    m_dwFlags = 0;
    m_dwDynamicFlags = 0;
    m_dwZoneGUID = 0;
@@ -84,6 +85,7 @@ Node::Node()
 Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone)
      :Template()
 {
+   m_iStatus = STATUS_UNKNOWN;
    m_dwIpAddr = dwAddr;
    m_dwFlags = dwFlags;
    m_dwDynamicFlags = 0;

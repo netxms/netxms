@@ -398,6 +398,88 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
 
 
 //
+// Create DCItem from import file
+//
+
+DCItem::DCItem(ConfigEntry *config, Template *owner)
+{
+   m_dwId = CreateUniqueId(IDG_ITEM);
+   m_dwTemplateId = 0;
+   m_dwTemplateItemId = 0;
+	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
+   nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_szName), MAX_DB_STRING);
+   nx_strncpy(m_szInstance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+	nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
+	m_iSource = (BYTE)config->getSubEntryValueInt(_T("origin"));
+   m_iDataType = (BYTE)config->getSubEntryValueInt(_T("dataType"));
+   m_iPollingInterval = config->getSubEntryValueInt(_T("interval"));
+   m_iRetentionTime = config->getSubEntryValueInt(_T("retention"));
+   m_iDeltaCalculation = (BYTE)config->getSubEntryValueInt(_T("delta"));
+   m_iStatus = ITEM_STATUS_ACTIVE;
+   m_iBusy = 0;
+   m_iProcessAllThresholds = (BYTE)config->getSubEntryValueInt(_T("allThresholds"));
+   m_tLastPoll = 0;
+   m_pNode = owner;
+   m_hMutex = MutexCreate();
+   m_dwCacheSize = 0;
+   m_ppValueCache = NULL;
+   m_tPrevValueTimeStamp = 0;
+   m_bCacheLoaded = FALSE;
+   m_tLastCheck = 0;
+   m_dwErrorCount = 0;
+	m_dwResourceId = 0;
+	m_dwProxyNode = 0;
+	m_nBaseUnits = DCI_BASEUNITS_OTHER;
+	m_nMultiplier = 1;
+	m_pszCustomUnitName = NULL;
+	m_pszPerfTabSettings = NULL;
+   
+	m_iAdvSchedule = (BYTE)config->getSubEntryValueInt(_T("advancedSchedule"));
+	ConfigEntry *schedules = config->findEntry(_T("schedules"));
+	if (schedules != NULL)
+		schedules = schedules->findEntry(_T("schedule"));
+	if (schedules != NULL)
+	{
+		m_dwNumSchedules = (DWORD)schedules->getValueCount();
+		m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+		for(int i = 0; i < (int)m_dwNumSchedules; i++)
+		{
+			m_ppScheduleList[i] = _tcsdup(schedules->getValue(i));
+		}
+	}
+	else
+	{
+		m_dwNumSchedules = 0;
+		m_ppScheduleList = NULL;
+	}
+   
+	m_pszScript = NULL;
+	m_pScript = NULL;
+	setTransformationScript(config->getSubEntryValue(_T("transformation")));
+   
+	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
+	if (thresholdsRoot != NULL)
+	{
+		ConfigEntryList *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+		m_dwNumThresholds = (DWORD)thresholds->getSize();
+		m_ppThresholdList = (Threshold **)malloc(sizeof(Threshold *) * m_dwNumThresholds);
+		for(int i = 0; i < thresholds->getSize(); i++)
+		{
+			m_ppThresholdList[i] = new Threshold(thresholds->getEntry(i), this);
+		}
+		delete thresholds;
+	}
+	else
+	{
+		m_dwNumThresholds = 0;
+		m_ppThresholdList = NULL;
+	}
+
+   updateCacheSize();
+}
+
+
+//
 // Destructor for DCItem
 //
 
@@ -1680,7 +1762,7 @@ void DCItem::updateFromTemplate(DCItem *pItem)
 // Set new formula
 //
 
-void DCItem::setTransformationScript(TCHAR *pszScript)
+void DCItem::setTransformationScript(const TCHAR *pszScript)
 {
    safe_free(m_pszScript);
    delete m_pScript;
@@ -1741,7 +1823,7 @@ void DCItem::createNXMPRecord(String &str)
 
    lock();
    
-   str.addFormattedString(_T("\t\t\t\t<dci>\n")
+   str.addFormattedString(_T("\t\t\t\t<dci id=\"%d\">\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
                           _T("\t\t\t\t\t<dataType>%d</dataType>\n")
@@ -1749,15 +1831,15 @@ void DCItem::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<interval>%d</interval>\n")
                           _T("\t\t\t\t\t<retention>%d</retention>\n")
                           _T("\t\t\t\t\t<instance>%s</instance>\n")
+                          _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<delta>%d</delta>\n")
                           _T("\t\t\t\t\t<advancedSchedule>%d</advancedSchedule>\n")
                           _T("\t\t\t\t\t<allThresholds>%d</allThresholds>\n"),
-                          (const TCHAR *)EscapeStringForXML2(m_szName),
+								  m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
-                          m_iDataType, m_iSource,
-                          m_iAdvSchedule ? 0 : m_iPollingInterval,
-                          m_iRetentionTime,
+                          m_iDataType, m_iSource, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_szInstance),
+                          (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  m_iDeltaCalculation, m_iAdvSchedule,
                           m_iProcessAllThresholds);
 
@@ -1779,7 +1861,7 @@ void DCItem::createNXMPRecord(String &str)
    str += _T("\t\t\t\t\t<thresholds>\n");
    for(i = 0; i < m_dwNumThresholds; i++)
    {
-      m_ppThresholdList[i]->createNXMPRecord(str);
+      m_ppThresholdList[i]->createNXMPRecord(str, i + 1);
    }
    str += _T("\t\t\t\t\t</thresholds>\n");
 
@@ -1838,7 +1920,7 @@ void DCItem::addThreshold(Threshold *pThreshold)
 // Add schedule
 //
 
-void DCItem::addSchedule(TCHAR *pszSchedule)
+void DCItem::addSchedule(const TCHAR *pszSchedule)
 {
 	m_dwNumSchedules++;
 	m_ppScheduleList = (TCHAR **)realloc(m_ppScheduleList, sizeof(TCHAR *) * m_dwNumSchedules);

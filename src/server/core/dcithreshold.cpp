@@ -125,6 +125,29 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 
 
 //
+// Create threshold from import file
+//
+
+Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
+{
+   createId();
+   m_itemId = parentItem->getId();
+   m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
+   m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
+   m_function = (BYTE)config->getSubEntryValueInt(_T("function"), 0, F_LAST);
+   m_operation = (BYTE)config->getSubEntryValueInt(_T("condition"), 0, OP_EQ);
+   m_dataType = parentItem->getDataType();
+	m_value = config->getSubEntryValue(_T("value"), 0, _T(""));
+   m_param1 = config->getSubEntryValueInt(_T("param1"), 0, 1);
+   m_param2 = config->getSubEntryValueInt(_T("param2"), 0, 1);
+   m_isReached = FALSE;
+	m_repeatInterval = config->getSubEntryValueInt(_T("repeatInterval"), 0, -1);
+	m_lastEventTimestamp = 0;
+	m_numMatches = 0;
+}
+
+
+//
 // Destructor
 //
 
@@ -649,13 +672,13 @@ BOOL Threshold::compare(Threshold *pThr)
 // Create management pack record
 //
 
-void Threshold::createNXMPRecord(String &str)
+void Threshold::createNXMPRecord(String &str, int index)
 {
    TCHAR szEvent1[MAX_EVENT_NAME], szEvent2[MAX_EVENT_NAME];
 
-   ResolveEventName(m_eventCode, szEvent1);
-   ResolveEventName(m_rearmEventCode, szEvent2);
-   str.addFormattedString(_T("\t\t\t\t\t\t<threshold>\n")
+   EventNameFromCode(m_eventCode, szEvent1);
+   EventNameFromCode(m_rearmEventCode, szEvent2);
+   str.addFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<function>%d</function>\n")
                           _T("\t\t\t\t\t\t\t<condition>%d</condition>\n")
                           _T("\t\t\t\t\t\t\t<value>%s</value>\n")
@@ -665,7 +688,7 @@ void Threshold::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t\t\t<param2>%d</param2>\n")
                           _T("\t\t\t\t\t\t\t<repeatInterval>%d</repeatInterval>\n")
                           _T("\t\t\t\t\t\t</threshold>\n"),
-                          m_function, m_operation,
+								  index, m_function, m_operation,
 								  (const TCHAR *)EscapeStringForXML2(m_value.String()),
                           (const TCHAR *)EscapeStringForXML2(szEvent1),
 								  (const TCHAR *)EscapeStringForXML2(szEvent2),

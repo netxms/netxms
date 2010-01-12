@@ -205,7 +205,8 @@ void ReloadEvents(void);
 void DeleteEventTemplateFromList(DWORD dwEventCode);
 void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, DWORD dwCode);
-BOOL ResolveEventName(DWORD dwCode, TCHAR *pszBuffer);
+BOOL EventNameFromCode(DWORD dwCode, TCHAR *pszBuffer);
+DWORD EventCodeFromName(const TCHAR *name, DWORD defaultValue = 0);
 EVENT_TEMPLATE *FindEventTemplateByCode(DWORD dwCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 

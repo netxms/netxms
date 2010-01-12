@@ -509,6 +509,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\import.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\interface.cpp"
 				>
 			</File>
@@ -531,42 +535,6 @@
 			<File
 				RelativePath=".\layer2.cpp"
 				>
-			</File>
-			<File
-				RelativePath=".\lex.nxmp_parser.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\locks.cpp"
@@ -618,22 +586,6 @@
 			</File>
 			<File
 				RelativePath=".\np.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\nxmp_data.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\nxmp_lexer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\nxmp_parser.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\nxmp_parser.tab.cpp"
 				>
 			</File>
 			<File
@@ -879,10 +831,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\nxmp_parser.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\include\nxqueue.h"
 				>
 			</File>
@@ -912,18 +860,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-		</Filter>
-		<Filter
-			Name="Parser Files"
-			>
-			<File
-				RelativePath=".\nxmp_parser.l"
-				>
-			</File>
-			<File
-				RelativePath=".\nxmp_parser.y"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

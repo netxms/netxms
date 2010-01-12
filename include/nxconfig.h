@@ -44,20 +44,35 @@ private:
 	TCHAR **m_values;
 	TCHAR *m_file;
 	int m_line;
+	int m_id;
 
 	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
 	void addEntry(ConfigEntry *entry) { entry->m_parent = this; entry->m_next = m_childs; m_childs = entry; }
 
 public:
-	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line);
+	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line, int id);
 	~ConfigEntry();
 
 	ConfigEntry *getNext() { return m_next; }
 
 	const TCHAR *getName() { return m_name; }
-	const TCHAR *getValue(int index = 0);
+	int getId() { return m_id; }
 	int getValueCount() { return m_valueCount; }
 	int getConcatenatedValuesLength();
+	
+	const TCHAR *getValue(int index = 0);
+	LONG getValueInt(int index = 0, LONG defaultValue = 0);
+	DWORD getValueUInt(int index = 0, DWORD defaultValue = 0);
+	INT64 getValueInt64(int index = 0, INT64 defaultValue = 0);
+	QWORD getValueUInt64(int index = 0, QWORD defaultValue = 0);
+	bool getValueBoolean(int index = 0, bool defaultValue = false);
+
+	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = NULL);
+	LONG getSubEntryValueInt(const TCHAR *name, int index = 0, LONG defaultValue = 0);
+	DWORD getSubEntryValueUInt(const TCHAR *name, int index = 0, DWORD defaultValue = 0);
+	INT64 getSubEntryValueInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0);
+	QWORD getSubEntryValueUInt64(const TCHAR *name, int index = 0, QWORD defaultValue = 0);
+	bool getSubEntryValueBoolean(const TCHAR *name, int index = 0, bool defaultValue = false);
 
 	const TCHAR *getFile() { return m_file; }
 	int getLine() { return m_line; }
@@ -67,6 +82,7 @@ public:
 
 	ConfigEntry *findEntry(const TCHAR *name);
 	ConfigEntryList *getSubEntries(const TCHAR *mask);
+	ConfigEntryList *getOrderedSubEntries(const TCHAR *mask);
 
 	void print(FILE *file, int level);
 };
@@ -88,6 +104,8 @@ public:
 
 	int getSize() { return m_size; }
 	ConfigEntry *getEntry(int index) { return ((index >= 0) && (index < m_size)) ? m_list[index] : NULL; }
+
+	void sortById();
 };
 
 
@@ -110,7 +128,8 @@ public:
 	Config();
 	~Config();
 
-	bool loadXmlConfig(const TCHAR *file);
+	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL);
+	bool loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name = NULL, const char *topLevelTag = NULL);
 	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection);
 	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection);
 
@@ -124,6 +143,7 @@ public:
 	QWORD getValueUInt64(const TCHAR *path, QWORD defaultValue);
 	bool getValueBoolean(const TCHAR *path, bool defaultValue);
 	ConfigEntryList *getSubEntries(const TCHAR *path, const TCHAR *mask);
+	ConfigEntryList *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
 
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 

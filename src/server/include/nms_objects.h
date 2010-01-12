@@ -372,6 +372,7 @@ protected:
 public:
    Template();
    Template(const TCHAR *pszName);
+	Template::Template(ConfigEntry *config);
    virtual ~Template();
 
    virtual int Type(void) { return OBJECT_TEMPLATE; }

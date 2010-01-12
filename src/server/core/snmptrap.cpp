@@ -777,25 +777,25 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
    {
       if (m_pTrapCfg[i].dwId == dwId)
       {
-			str.addFormattedString(_T("\t\t<trap>\n")
+			str.addFormattedString(_T("\t\t<trap id=\"%d\">\n")
 			                       _T("\t\t\t<oid>%s</oid>\n")
 			                       _T("\t\t\t<description>%s</description>\n")
-			                       _T("\t\t\t<tag>%s</tag>\n"),
+			                       _T("\t\t\t<userTag>%s</userTag>\n"), dwId,
 			                       SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen,
 			                                            m_pTrapCfg[i].pdwObjectId,
 																	  szBuffer, 1024),
 										  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].szDescription),
 										  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].szUserTag));
 
-		   ResolveEventName(m_pTrapCfg[i].dwEventCode, szBuffer);
+		   EventNameFromCode(m_pTrapCfg[i].dwEventCode, szBuffer);
 			str.addFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
 			if (m_pTrapCfg[i].dwNumMaps > 0)
 			{
 				str += _T("\t\t\t<parameters>\n");
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
-					str += _T("\t\t\t\t<parameter>\n");
-					str.addFormattedString(_T("\t\t\t\t\t<description>%s</description>\n"), (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].pMaps[j].szDescription));
+					str.addFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n\t\t\t\t\t<description>%s</description>\n"),
+					                       j + 1, (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].pMaps[j].szDescription));
                if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
 					{
 						str.addFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),

@@ -736,7 +736,10 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, DWORD 
                                      
 void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, void *pObject);
 void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey);
-DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey);                                     
+DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey);         
+
+bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorTextLen);
+DWORD ImportConfig(Config *config, DWORD flags);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);

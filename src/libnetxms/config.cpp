@@ -30,7 +30,7 @@
 // Constructor for config entry
 //
 
-ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line)
+ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line, int id)
 {
 	m_name = _tcsdup(CHECK_NULL(name));
 	m_childs = NULL;
@@ -41,6 +41,7 @@ ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *fi
 	m_values = NULL;
 	m_file = _tcsdup(CHECK_NULL(file));
 	m_line = line;
+	m_id = id;
 }
 
 
@@ -104,6 +105,18 @@ ConfigEntryList *ConfigEntry::getSubEntries(const TCHAR *mask)
 
 
 //
+// Get all subentries with names matched to mask ordered by id
+//
+
+ConfigEntryList *ConfigEntry::getOrderedSubEntries(const TCHAR *mask)
+{
+	ConfigEntryList *list = getSubEntries(mask);
+	list->sortById();
+	return list;
+}
+
+
+//
 // Get value
 //
 
@@ -112,6 +125,44 @@ const TCHAR *ConfigEntry::getValue(int index)
 	if ((index < 0) || (index >= m_valueCount))
 		return NULL;
 	return m_values[index];
+}
+
+LONG ConfigEntry::getValueInt(int index, LONG defaultValue)
+{
+	const TCHAR *value = getValue(index);
+	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+}
+
+DWORD ConfigEntry::getValueUInt(int index, DWORD defaultValue)
+{
+	const TCHAR *value = getValue(index);
+	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+}
+
+INT64 ConfigEntry::getValueInt64(int index, INT64 defaultValue)
+{
+	const TCHAR *value = getValue(index);
+	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+}
+
+QWORD ConfigEntry::getValueUInt64(int index, QWORD defaultValue)
+{
+	const TCHAR *value = getValue(index);
+	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+}
+
+bool ConfigEntry::getValueBoolean(int index, bool defaultValue)
+{
+	const TCHAR *value = getValue(index);
+	if (value != NULL)
+	{
+		return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || 
+		       !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
+	}
+	else
+	{
+		return defaultValue;
+	}
 }
 
 
@@ -159,6 +210,58 @@ int ConfigEntry::getConcatenatedValuesLength()
 
 
 //
+// Get value for given subentry
+//
+
+const TCHAR *ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const TCHAR *defaultValue)
+{
+	ConfigEntry *e = findEntry(name);
+	if (e == NULL)
+		return defaultValue;
+	const TCHAR *value = e->getValue(index);
+	return (value != NULL) ? value : defaultValue;
+}
+
+LONG ConfigEntry::getSubEntryValueInt(const TCHAR *name, int index, LONG defaultValue)
+{
+	const TCHAR *value = getSubEntryValue(name, index);
+	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+}
+
+DWORD ConfigEntry::getSubEntryValueUInt(const TCHAR *name, int index, DWORD defaultValue)
+{
+	const TCHAR *value = getSubEntryValue(name, index);
+	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+}
+
+INT64 ConfigEntry::getSubEntryValueInt64(const TCHAR *name, int index, INT64 defaultValue)
+{
+	const TCHAR *value = getSubEntryValue(name, index);
+	return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+}
+
+QWORD ConfigEntry::getSubEntryValueUInt64(const TCHAR *name, int index, QWORD defaultValue)
+{
+	const TCHAR *value = getSubEntryValue(name, index);
+	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+}
+
+bool ConfigEntry::getSubEntryValueBoolean(const TCHAR *name, int index, bool defaultValue)
+{
+	const TCHAR *value = getSubEntryValue(name, index);
+	if (value != NULL)
+	{
+		return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || 
+		       !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
+	}
+	else
+	{
+		return defaultValue;
+	}
+}
+
+
+//
 // Print config entry
 //
 
@@ -174,12 +277,29 @@ void ConfigEntry::print(FILE *file, int level)
 
 
 //
+// Sort entry list
+//
+
+static int CompareById(const void *p1, const void *p2)
+{
+	ConfigEntry *e1 = *((ConfigEntry **)p1);
+	ConfigEntry *e2 = *((ConfigEntry **)p2);
+	return e1->getId() - e2->getId();
+}
+
+void ConfigEntryList::sortById()
+{
+	qsort(m_list, m_size, sizeof(ConfigEntry *), CompareById);
+}
+
+
+//
 // Constructor for config
 //
 
 Config::Config()
 {
-	m_root = new ConfigEntry(_T("[root]"), NULL, NULL, 0);
+	m_root = new ConfigEntry(_T("[root]"), NULL, NULL, 0, 0);
 	m_errorCount = 0;
 }
 
@@ -368,6 +488,17 @@ ConfigEntryList *Config::getSubEntries(const TCHAR *path, const TCHAR *mask)
 
 
 //
+// Get subentries ordered by id
+//
+
+ConfigEntryList *Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask)
+{
+	ConfigEntry *entry = getEntry(path);
+	return (entry != NULL) ? entry->getOrderedSubEntries(mask) : NULL;
+}
+
+
+//
 // Get entry
 //
 
@@ -450,7 +581,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 	currentSection = m_root->findEntry(defaultIniSection);
 	if (currentSection == NULL)
 	{
-		currentSection = new ConfigEntry(defaultIniSection, m_root, file, 0);
+		currentSection = new ConfigEntry(defaultIniSection, m_root, file, 0, 0);
 	}
 
    while(!feof(cfg))
@@ -482,7 +613,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 			currentSection = m_root->findEntry(&buffer[1]);
 			if (currentSection == NULL)
 			{
-				currentSection = new ConfigEntry(&buffer[1], m_root, file, sourceLine);
+				currentSection = new ConfigEntry(&buffer[1], m_root, file, sourceLine, 0);
 			}
       }
       else
@@ -502,7 +633,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 			ConfigEntry *entry = currentSection->findEntry(buffer);
 			if (entry == NULL)
 			{
-				entry = new ConfigEntry(buffer, currentSection, file, sourceLine);
+				entry = new ConfigEntry(buffer, currentSection, file, sourceLine, 0);
 			}
 			entry->addValue(ptr);
       }
@@ -520,6 +651,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 
 typedef struct
 {
+	const char *topLevelTag;
 	XML_Parser parser;
 	Config *config;
 	const TCHAR *file;
@@ -535,7 +667,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 
 	if (ps->level == 0)
 	{
-		if (!stricmp(name, "config"))
+		if (!stricmp(name, ps->topLevelTag))
 		{
 			ps->stack[ps->level++] = ps->config->getEntry(_T("/"));
 		}
@@ -573,7 +705,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 #endif
 			ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(entryName);
 			if (ps->stack[ps->level] == NULL)
-				ps->stack[ps->level] = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser));
+				ps->stack[ps->level] = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser), (int)id);
 			ps->charData[ps->level] = _T("");
 			ps->trimValue[ps->level] = XMLGetAttrBoolean(attrs, "trim", true);
 			ps->level++;
@@ -610,7 +742,31 @@ static void CharData(void *userData, const XML_Char *s, int len)
 		ps->charData[ps->level - 1].addMultiByteString(s, len, CP_UTF8);
 }
 
-bool Config::loadXmlConfig(const TCHAR *file)
+bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name, const char *topLevelTag)
+{
+	XML_PARSER_STATE state;
+
+	XML_Parser parser = XML_ParserCreate(NULL);
+	XML_SetUserData(parser, &state);
+	XML_SetElementHandler(parser, StartElement, EndElement);
+	XML_SetCharacterDataHandler(parser, CharData);
+
+	state.topLevelTag = (topLevelTag != NULL) ? topLevelTag : "config";
+	state.config = this;
+	state.level = 0;
+	state.parser = parser;
+	state.file = (name != NULL) ? name : _T("<mem>");
+
+	bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
+	if (!success)
+	{
+		error(_T("%s at line %d"), XML_ErrorString(XML_GetErrorCode(parser)),
+            XML_GetCurrentLineNumber(parser));
+	}
+	return success;
+}
+
+bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
 {
 	BYTE *xml;
 	DWORD size;
@@ -619,24 +775,7 @@ bool Config::loadXmlConfig(const TCHAR *file)
 	xml = LoadFile(file, &size);
 	if (xml != NULL)
 	{
-		XML_PARSER_STATE state;
-
-		XML_Parser parser = XML_ParserCreate(NULL);
-		XML_SetUserData(parser, &state);
-		XML_SetElementHandler(parser, StartElement, EndElement);
-		XML_SetCharacterDataHandler(parser, CharData);
-
-		state.config = this;
-		state.level = 0;
-		state.parser = parser;
-		state.file = file;
-
-		success = (XML_Parse(parser, (char *)xml, size, TRUE) != XML_STATUS_ERROR);
-		if (!success)
-		{
-			error(_T("%s at line %d"), XML_ErrorString(XML_GetErrorCode(parser)),
-               XML_GetCurrentLineNumber(parser));
-		}
+		success = loadXmlConfigFromMemory((char *)xml, (int)size, file, topLevelTag);
 	}
 	else
 	{

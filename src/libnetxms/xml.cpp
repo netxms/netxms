@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 			default:
 				if (*in < 32)
 				{
-					_sntprintf(&out[pos], 8, _T("&#x%02d;"), *in);
+					_sntprintf(&out[pos], 8, _T("&#x%02X;"), *in);
 					pos += 6;
 				}
 				else
