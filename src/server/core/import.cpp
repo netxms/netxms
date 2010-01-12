@@ -121,12 +121,13 @@ bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorText
 {
    int i;
 	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL;
+	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
    bool success = false;
 
 	DbgPrintf(4, _T("ValidateConfig() called, flags = 0x%04X"), flags);
 
    // Validate events
-	ConfigEntry *eventsRoot = config->getEntry(_T("/events"));
+	eventsRoot = config->getEntry(_T("/events"));
 	if (eventsRoot != NULL)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
@@ -174,7 +175,7 @@ bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorText
 	}
 
 	// Validate traps
-	ConfigEntry *trapsRoot = config->getEntry(_T("/traps"));
+	trapsRoot = config->getEntry(_T("/traps"));
 	if (trapsRoot != NULL)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
@@ -191,7 +192,7 @@ bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorText
 	}
 
 	// Validate templates
-	ConfigEntry *templatesRoot = config->getEntry(_T("/templates"));
+	templatesRoot = config->getEntry(_T("/templates"));
 	if (templatesRoot != NULL)
 	{
 		templates = templatesRoot->getSubEntries(_T("template#*"));
@@ -344,13 +345,14 @@ static DWORD ImportTrap(ConfigEntry *trap)
 DWORD ImportConfig(Config *config, DWORD flags)
 {
 	ConfigEntryList *events = NULL, *traps = NULL, *templates = NULL;
+	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
 	DWORD rcc = RCC_SUCCESS;
 	int i;
 
    DbgPrintf(4, _T("ImportConfig() called, flags=0x%04X"), flags);
 
    // Import events
-	ConfigEntry *eventsRoot = config->getEntry(_T("/events"));
+	eventsRoot = config->getEntry(_T("/events"));
 	if (eventsRoot != NULL)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
@@ -371,7 +373,7 @@ DWORD ImportConfig(Config *config, DWORD flags)
 	}
 
 	// Import traps
-	ConfigEntry *trapsRoot = config->getEntry(_T("/traps"));
+	trapsRoot = config->getEntry(_T("/traps"));
 	if (trapsRoot != NULL)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
@@ -386,7 +388,7 @@ DWORD ImportConfig(Config *config, DWORD flags)
 	}
 
 	// Import templates
-	ConfigEntry *templatesRoot = config->getEntry(_T("/templates"));
+	templatesRoot = config->getEntry(_T("/templates"));
 	if (templatesRoot != NULL)
 	{
 		templates = templatesRoot->getSubEntries(_T("template#*"));
