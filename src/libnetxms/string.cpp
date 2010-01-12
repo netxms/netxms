@@ -76,6 +76,14 @@ const String& String::operator =(const TCHAR *pszStr)
    return *this;
 }
 
+const String& String::operator =(const String &src)
+{
+   safe_free(m_pszBuffer);
+	m_dwBufSize = src.m_dwBufSize;
+	m_pszBuffer = (src.m_pszBuffer != NULL) ? (TCHAR *)nx_memdup(src.m_pszBuffer, src.m_dwBufSize * sizeof(TCHAR)) : NULL;
+   return *this;
+}
+
 
 //
 // Operator +=

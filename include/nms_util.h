@@ -255,6 +255,7 @@ public:
    void setBuffer(TCHAR *pszBuffer);
 
    const String& operator =(const TCHAR *pszStr);
+	const String& operator =(const String &src);
    const String&  operator +=(const TCHAR *pszStr);
    operator const TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
 
