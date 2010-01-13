@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -70,12 +70,45 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 
 
 //
+// Get interface name by index
+// Parameters: node object and interface index
+//
+
+static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	if (!argv[0]->IsObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->IsInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	NXSL_Object *object = argv[0]->GetValueAsObject();
+	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+		return NXSL_ERR_BAD_CLASS;
+
+	Node *node = (Node *)object->Data();
+	Interface *ifc = node->FindInterface(argv[1]->GetValueAsUInt32(), INADDR_ANY);
+	if (ifc != NULL)
+	{
+		*ppResult = new NXSL_Value(ifc->Name());
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if interface not found
+	}
+
+	return 0;
+}
+
+
+//
 // Additional server functions to use within all scripts
 //
 
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
-   { "GetCustomAttribute", F_GetCustomAttribute, 2 }
+   { "GetCustomAttribute", F_GetCustomAttribute, 2 },
+   { "GetInterfaceName", F_GetInterfaceName, 2 }
 };
 
 

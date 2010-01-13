@@ -2,7 +2,12 @@
 * 1.0.0
 *
 
+- System configuration (events, SNMP traps, templates, event processing rules)
+  can be exported and imported in XML format - this solves various problems
+  with old NXMP files
+- New NXSL function: GetInterfaceName
 - Added support for encrypted DB passwords in netxmsd.conf
+- Fixed issues: #62, #278
 
 
 *
