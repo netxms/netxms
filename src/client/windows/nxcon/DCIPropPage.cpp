@@ -58,7 +58,6 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_DT, m_wndTypeList);
 	DDX_Control(pDX, IDC_BUTTON_SELECT, m_wndSelectButton);
 	DDX_Text(pDX, IDC_EDIT_INTERVAL, m_iPollingInterval);
-	DDV_MinMaxInt(pDX, m_iPollingInterval, 5, 100000);
 	DDX_Text(pDX, IDC_EDIT_RETENTION, m_iRetentionTime);
 	DDV_MinMaxInt(pDX, m_iRetentionTime, 1, 100000);
 	DDX_Text(pDX, IDC_EDIT_NAME, m_strName);
@@ -70,6 +69,15 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strDescription, 255);
 	DDX_Check(pDX, IDC_CHECK_SCHEDULE, m_bAdvSchedule);
 	//}}AFX_DATA_MAP
+
+	if (pDX->m_bSaveAndValidate)
+	{
+		if ((!m_bAdvSchedule) && ((m_iPollingInterval < 2) || (m_iPollingInterval > 100000)))
+		{
+			MessageBox(_T("Polling interval must be in range 2 .. 100000"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+			pDX->Fail();
+		}
+	}
 }
 
 

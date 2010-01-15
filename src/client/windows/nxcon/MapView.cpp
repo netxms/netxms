@@ -49,7 +49,7 @@ CMapView::CMapView()
 	m_nObjectScaleShift = 0;
    m_pMap = NULL;
    m_pSubmap = NULL;
-   m_rgbBkColor = RGB(224, 224, 224);
+   m_rgbBkColor = RGB(255, 255, 255);
    m_rgbTextColor = RGB(0, 0, 0);
 	m_rgbLabelTextColor = RGB(0, 0, 0);
 	m_rgbLabelBkColor = RGB(128, 255, 128);
