@@ -34,13 +34,13 @@ NXSL_Library *g_pScriptLibrary = NULL;
 // Read object's attribute
 //
 
-NXSL_Value *NXSL_NetXMSObjectClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_NetXMSObjectClass::getAttr(NXSL_Object *pObject, char *pszAttr)
 {
    NetObj *pSysObj;
    NXSL_Value *pValue = NULL;
    TCHAR szBuffer[256];
 
-   pSysObj = (NetObj *)pObject->Data();
+   pSysObj = (NetObj *)pObject->getData();
    if (pSysObj != NULL)
    {
       if (!strcmp(pszAttr, "id"))
@@ -64,7 +64,7 @@ NXSL_Value *NXSL_NetXMSObjectClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
 // Set object's attribute
 //
 
-BOOL NXSL_NetXMSObjectClass::SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
+BOOL NXSL_NetXMSObjectClass::setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
 {
    return FALSE;
 }
@@ -74,7 +74,7 @@ BOOL NXSL_NetXMSObjectClass::SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_V
 // Load scripts from database
 //
 
-void LoadScripts(void)
+void LoadScripts()
 {
    DB_RESULT hResult;
    NXSL_Program *pScript;
@@ -94,7 +94,7 @@ void LoadScripts(void)
          free(pszCode);
          if (pScript != NULL)
          {
-            g_pScriptLibrary->AddScript(DBGetFieldULong(hResult, i, 0),
+            g_pScriptLibrary->addScript(DBGetFieldULong(hResult, i, 0),
                                         DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), pScript);
          }
          else
@@ -119,8 +119,8 @@ void ReloadScript(DWORD dwScriptId)
    DB_RESULT hResult;
    NXSL_Program *pScript;
 
-   g_pScriptLibrary->Lock();
-   g_pScriptLibrary->DeleteScript(dwScriptId);
+   g_pScriptLibrary->lock();
+   g_pScriptLibrary->deleteScript(dwScriptId);
    
    _stprintf(szQuery, _T("SELECT script_name,script_code FROM script_library WHERE script_id=%d"), dwScriptId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -134,7 +134,7 @@ void ReloadScript(DWORD dwScriptId)
          free(pszCode);
          if (pScript != NULL)
          {
-            g_pScriptLibrary->AddScript(dwScriptId, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING), pScript);
+            g_pScriptLibrary->addScript(dwScriptId, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING), pScript);
          }
          else
          {
@@ -144,7 +144,7 @@ void ReloadScript(DWORD dwScriptId)
       }
       DBFreeResult(hResult);
    }
-   g_pScriptLibrary->Unlock();
+   g_pScriptLibrary->unlock();
 }
 
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: variable.cpp
+** File: variable.cpp
 **
 **/
 
@@ -62,7 +62,7 @@ NXSL_Variable::~NXSL_Variable()
 // Set variable's value
 //
 
-void NXSL_Variable::Set(NXSL_Value *pValue)
+void NXSL_Variable::setValue(NXSL_Value *pValue)
 {
    delete m_pValue;
    m_pValue = pValue;
@@ -73,7 +73,7 @@ void NXSL_Variable::Set(NXSL_Value *pValue)
 // Variable system constructors
 //
 
-NXSL_VariableSystem::NXSL_VariableSystem(void)
+NXSL_VariableSystem::NXSL_VariableSystem()
 {
    m_dwNumVariables = 0;
    m_ppVariableList = NULL;
@@ -94,7 +94,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *pSrc)
 // Variable system destructor
 //
 
-NXSL_VariableSystem::~NXSL_VariableSystem(void)
+NXSL_VariableSystem::~NXSL_VariableSystem()
 {
    DWORD i;
 
@@ -108,12 +108,12 @@ NXSL_VariableSystem::~NXSL_VariableSystem(void)
 // Find variable by name
 //
 
-NXSL_Variable *NXSL_VariableSystem::Find(const TCHAR *pszName)
+NXSL_Variable *NXSL_VariableSystem::find(const TCHAR *pszName)
 {
    DWORD i;
 
    for(i = 0; i < m_dwNumVariables; i++)
-      if (!_tcscmp(pszName, m_ppVariableList[i]->Name()))
+      if (!_tcscmp(pszName, m_ppVariableList[i]->getName()))
          return m_ppVariableList[i];
    return NULL;
 }
@@ -123,7 +123,7 @@ NXSL_Variable *NXSL_VariableSystem::Find(const TCHAR *pszName)
 // Create variable
 //
 
-NXSL_Variable *NXSL_VariableSystem::Create(const TCHAR *pszName, NXSL_Value *pValue)
+NXSL_Variable *NXSL_VariableSystem::create(const TCHAR *pszName, NXSL_Value *pValue)
 {
    NXSL_Variable *pVar;
 

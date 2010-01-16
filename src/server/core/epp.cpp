@@ -75,7 +75,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
       m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
       if (m_pScript != NULL)
       {
-      	m_pScript->SetGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
+      	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
       }
       else
       {
@@ -144,7 +144,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
       m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
       if (m_pScript != NULL)
       {
-      	m_pScript->SetGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
+      	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
       }
       else
       {
@@ -289,37 +289,37 @@ BOOL EPRule::MatchScript(Event *pEvent)
       ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
 
    pLocals = new NXSL_VariableSystem;
-   pLocals->Create(_T("EVENT_CODE"), new NXSL_Value(pEvent->getCode()));
-   pLocals->Create(_T("SEVERITY"), new NXSL_Value(pEvent->getSeverity()));
-   pLocals->Create(_T("SEVERITY_TEXT"), new NXSL_Value(g_szStatusText[pEvent->getSeverity()]));
-   pLocals->Create(_T("OBJECT_ID"), new NXSL_Value(pEvent->getSourceId()));
-   pLocals->Create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->getMessage()));
-   pLocals->Create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->getUserTag()));
+   pLocals->create(_T("EVENT_CODE"), new NXSL_Value(pEvent->getCode()));
+   pLocals->create(_T("SEVERITY"), new NXSL_Value(pEvent->getSeverity()));
+   pLocals->create(_T("SEVERITY_TEXT"), new NXSL_Value(g_szStatusText[pEvent->getSeverity()]));
+   pLocals->create(_T("OBJECT_ID"), new NXSL_Value(pEvent->getSourceId()));
+   pLocals->create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->getMessage()));
+   pLocals->create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->getUserTag()));
 	pObject = FindObjectById(pEvent->getSourceId());
 	if (pObject != NULL)
 	{
 		if (pObject->Type() == OBJECT_NODE)
-			m_pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
+			m_pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
 	}
-	m_pScript->SetGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
-	m_pScript->SetGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
+	m_pScript->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
+	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
 
    // Run script
-   if (m_pScript->Run(pEnv, pEvent->getParametersCount(), ppValueList, pLocals, &pGlobals) == 0)
+   if (m_pScript->run(pEnv, pEvent->getParametersCount(), ppValueList, pLocals, &pGlobals) == 0)
    {
-      pValue = m_pScript->GetResult();
+      pValue = m_pScript->getResult();
       if (pValue != NULL)
       {
-         bRet = pValue->GetValueAsInt32() ? TRUE : FALSE;
+         bRet = pValue->getValueAsInt32() ? TRUE : FALSE;
          if (bRet)
          {
          	NXSL_Variable *var;
          	
-         	var = pGlobals->Find(_T("CUSTOM_MESSAGE"));
+         	var = pGlobals->find(_T("CUSTOM_MESSAGE"));
          	if (var != NULL)
          	{
          		// Update custom message in event
-         		pEvent->setCustomMessage(CHECK_NULL_EX(var->Value()->GetValueAsCString()));
+         		pEvent->setCustomMessage(CHECK_NULL_EX(var->getValue()->getValueAsCString()));
          	}
          }
       }
@@ -327,7 +327,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
    else
    {
       nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
-               "ds", m_dwId, m_pScript->GetErrorText());
+               "ds", m_dwId, m_pScript->getErrorText());
    }
    free(ppValueList);
    delete pGlobals;

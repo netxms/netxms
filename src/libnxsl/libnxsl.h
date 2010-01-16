@@ -134,13 +134,13 @@ public:
 	NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode);
 	virtual ~NXSL_Lexer();
 
-	int LexerInput(char *pBuffer, int nMaxSize);
+	int lexerInput(char *pBuffer, int nMaxSize);
 
-	int GetCurrLine(void) { return m_nCurrLine; }
-	void Error(const char *pszText);
+	int getCurrLine() { return m_nCurrLine; }
+	void error(const char *pszText);
 
-   void SetErrorState(void) { m_bErrorState = TRUE; }
-   BOOL IsErrorState(void) { return m_bErrorState; }
+   void setErrorState() { m_bErrorState = TRUE; }
+   BOOL isErrorState() { return m_bErrorState; }
 };
 
 
@@ -158,25 +158,25 @@ protected:
 	int m_idOpCode;
 
 public:
-   NXSL_Compiler(void);
+   NXSL_Compiler();
    ~NXSL_Compiler();
 
-   NXSL_Program *Compile(const TCHAR *pszSourceCode);
-   void Error(const char *pszMsg);
+   NXSL_Program *compile(const TCHAR *pszSourceCode);
+   void error(const char *pszMsg);
 
-   TCHAR *GetErrorText(void) { return CHECK_NULL(m_pszErrorText); }
+   const TCHAR *getErrorText() { return CHECK_NULL(m_pszErrorText); }
 
-   void PushAddr(DWORD dwAddr) { m_pAddrStack->Push(CAST_TO_POINTER(dwAddr, void *)); }
-   DWORD PopAddr(void);
-   DWORD PeekAddr(void);
+   void pushAddr(DWORD dwAddr) { m_pAddrStack->push(CAST_TO_POINTER(dwAddr, void *)); }
+   DWORD popAddr();
+   DWORD peekAddr();
 
-	void AddBreakAddr(DWORD dwAddr);
-	void CloseBreakLevel(NXSL_Program *pScript);
-	BOOL CanUseBreak(void) { return m_pBreakStack->Size() > 0; }
-	void NewBreakLevel(void) { m_pBreakStack->Push(new Queue); }
+	void addBreakAddr(DWORD dwAddr);
+	void closeBreakLevel(NXSL_Program *pScript);
+	BOOL canUseBreak() { return m_pBreakStack->getSize() > 0; }
+	void newBreakLevel() { m_pBreakStack->push(new Queue); }
 
-	void SetIdentifierOperation(int opcode) { m_idOpCode = opcode; }
-	int GetIdentifierOperation(void) { return m_idOpCode; }
+	void setIdentifierOperation(int opcode) { m_idOpCode = opcode; }
+	int getIdentifierOperation() { return m_idOpCode; }
 };
 
 

@@ -28,7 +28,7 @@
 // Constructor
 //
 
-NXSL_Stack::NXSL_Stack(void)
+NXSL_Stack::NXSL_Stack()
 {
    m_nStackSize = 128;
    m_nStackPos = 0;
@@ -50,7 +50,7 @@ NXSL_Stack::~NXSL_Stack()
 // Push value to stack
 //
 
-void NXSL_Stack::Push(void *pData)
+void NXSL_Stack::push(void *pData)
 {
    if (m_nStackPos >= m_nStackSize)
    {
@@ -65,7 +65,7 @@ void NXSL_Stack::Push(void *pData)
 // Pop value from stack
 //
 
-void *NXSL_Stack::Pop(void)
+void *NXSL_Stack::pop()
 {
    if (m_nStackPos > 0)
       return m_ppData[--m_nStackPos];
@@ -77,7 +77,7 @@ void *NXSL_Stack::Pop(void)
 // Peek (get without removing) value from stack
 //
 
-void *NXSL_Stack::Peek(void)
+void *NXSL_Stack::peek()
 {
    if (m_nStackPos > 0)
       return m_ppData[m_nStackPos - 1];

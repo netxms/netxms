@@ -39,7 +39,7 @@ int yylex_destroy(yyscan_t);
 // Constructor
 //
 
-NXSL_Compiler::NXSL_Compiler(void)
+NXSL_Compiler::NXSL_Compiler()
 {
    m_pszErrorText = NULL;
    m_pLexer = NULL;
@@ -65,13 +65,13 @@ NXSL_Compiler::~NXSL_Compiler()
 // Error handler
 //
 
-void NXSL_Compiler::Error(const char *pszMsg)
+void NXSL_Compiler::error(const char *pszMsg)
 {
    char szText[1024];
 
    if (m_pszErrorText == NULL)
    {
-      snprintf(szText, 1024, "Error in line %d: %s", m_pLexer->GetCurrLine(), pszMsg);
+      snprintf(szText, 1024, "Error in line %d: %s", m_pLexer->getCurrLine(), pszMsg);
 #ifdef UNICODE
       nLen = strlen(szText) + 1;
       m_pszErrorText = (WCHAR *)malloc(nLen * sizeof(WCHAR));
@@ -88,7 +88,7 @@ void NXSL_Compiler::Error(const char *pszMsg)
 // Compile source code
 //
 
-NXSL_Program *NXSL_Compiler::Compile(const TCHAR *pszSourceCode)
+NXSL_Program *NXSL_Compiler::compile(const TCHAR *pszSourceCode)
 {
    NXSL_Program *pResult;
 	yyscan_t scanner;
@@ -100,8 +100,8 @@ NXSL_Program *NXSL_Compiler::Compile(const TCHAR *pszSourceCode)
 //yydebug=1;
    if (yyparse(scanner, m_pLexer, this, pResult) == 0)
    {
-      pResult->ResolveFunctions();
-		pResult->Optimize();
+      pResult->resolveFunctions();
+		pResult->optimize();
    }
    else
    {
@@ -120,7 +120,7 @@ NXSL_Program *NXSL_Compiler::Compile(const TCHAR *pszSourceCode)
 void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
              NXSL_Program *pScript, const char *pszText)
 {
-   pCompiler->Error(pszText);
+   pCompiler->error(pszText);
 }
 
 
@@ -128,11 +128,11 @@ void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
 // Pop address
 //
 
-DWORD NXSL_Compiler::PopAddr(void)
+DWORD NXSL_Compiler::popAddr()
 {
    void *pAddr;
 
-   pAddr = m_pAddrStack->Pop();
+   pAddr = m_pAddrStack->pop();
    return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
 }
 
@@ -141,11 +141,11 @@ DWORD NXSL_Compiler::PopAddr(void)
 // Peek address
 //
 
-DWORD NXSL_Compiler::PeekAddr(void)
+DWORD NXSL_Compiler::peekAddr()
 {
    void *pAddr;
 
-   pAddr = m_pAddrStack->Peek();
+   pAddr = m_pAddrStack->peek();
    return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
 }
 
@@ -154,11 +154,11 @@ DWORD NXSL_Compiler::PeekAddr(void)
 // Add "break" statement address
 //
 
-void NXSL_Compiler::AddBreakAddr(DWORD dwAddr)
+void NXSL_Compiler::addBreakAddr(DWORD dwAddr)
 {
 	Queue *pQueue;
 
-	pQueue = (Queue *)m_pBreakStack->Peek();
+	pQueue = (Queue *)m_pBreakStack->peek();
 	if (pQueue != NULL)
 	{
 		pQueue->Put(CAST_TO_POINTER(dwAddr, void *));
@@ -170,19 +170,19 @@ void NXSL_Compiler::AddBreakAddr(DWORD dwAddr)
 // Resolve all breal statements at current level
 //
 
-void NXSL_Compiler::CloseBreakLevel(NXSL_Program *pScript)
+void NXSL_Compiler::closeBreakLevel(NXSL_Program *pScript)
 {
 	Queue *pQueue;
 	void *pAddr;
 	DWORD dwAddr;
 
-	pQueue = (Queue *)m_pBreakStack->Pop();
+	pQueue = (Queue *)m_pBreakStack->pop();
 	if (pQueue != NULL)
 	{
 		while((pAddr = pQueue->Get()) != NULL)
 		{
 			dwAddr = CAST_FROM_POINTER(pAddr, DWORD);
-			pScript->CreateJumpAt(dwAddr, pScript->CodeSize());
+			pScript->createJumpAt(dwAddr, pScript->getCodeSize());
 		}
 		delete pQueue;
 	}

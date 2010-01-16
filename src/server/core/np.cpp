@@ -39,7 +39,7 @@ class NXSL_DiscoveryClass : public NXSL_Class
 public:
    NXSL_DiscoveryClass();
 
-   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
 };
 
 
@@ -53,13 +53,13 @@ NXSL_DiscoveryClass::NXSL_DiscoveryClass()
    strcpy(m_szName, "NewNode");
 }
 
-NXSL_Value *NXSL_DiscoveryClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, char *pszAttr)
 {
    DISCOVERY_FILTER_DATA *pData;
    NXSL_Value *pValue = NULL;
    char szBuffer[256];
 
-   pData = (DISCOVERY_FILTER_DATA *)pObject->Data();
+   pData = (DISCOVERY_FILTER_DATA *)pObject->getData();
    if (!strcmp(pszAttr, "ipAddr"))
    {
       IpToStr(pData->dwIpAddr, szBuffer);
@@ -378,30 +378,30 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    }
    else
    {
-      g_pScriptLibrary->Lock();
-      pScript = g_pScriptLibrary->FindScript(szFilter);
+      g_pScriptLibrary->lock();
+      pScript = g_pScriptLibrary->findScript(szFilter);
       if (pScript != NULL)
       {
          DbgPrintf(4, "AcceptNewNode(%s): Running filter script %s", szIpAddr, szFilter);
          pValue = new NXSL_Value(new NXSL_Object(&m_nxslDiscoveryClass, &data));
-         if (pScript->Run(NULL, 1, &pValue) == 0)
+         if (pScript->run(NULL, 1, &pValue) == 0)
          {
-            bResult = (pScript->GetResult()->GetValueAsInt32() != 0) ? TRUE : FALSE;
+            bResult = (pScript->getResult()->getValueAsInt32() != 0) ? TRUE : FALSE;
             DbgPrintf(4, "AcceptNewNode(%s): Filter script result: %d", szIpAddr, bResult);
          }
          else
          {
             DbgPrintf(4, "AcceptNewNode(%s): Filter script execution error: %s",
-                      szIpAddr, pScript->GetErrorText());
+                      szIpAddr, pScript->getErrorText());
             PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szFilter,
-                      pScript->GetErrorText(), 0);
+                      pScript->getErrorText(), 0);
          }
       }
       else
       {
          DbgPrintf(4, "AcceptNewNode(%s): Cannot find filter script %s", szIpAddr, szFilter);
       }
-      g_pScriptLibrary->Unlock();
+      g_pScriptLibrary->unlock();
    }
 
    return bResult;

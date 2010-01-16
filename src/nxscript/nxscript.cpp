@@ -28,7 +28,7 @@
 static NXSL_TestClass *m_pTestClass;
 
 
-int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	TCHAR *buffer = (TCHAR *)malloc(1024);
 	strcpy(buffer, "test value");
@@ -98,10 +98,10 @@ int main(int argc, char *argv[])
 		if (pScript != NULL)
 		{
 			if (dump)
-				pScript->Dump(stdout);
+				pScript->dump(stdout);
 			pEnv = new NXSL_Environment;
-			pEnv->SetIO(stdin, stdout);
-			pEnv->RegisterFunctionSet(1, &func);
+			pEnv->setIO(stdin, stdout);
+			pEnv->registerFunctionSet(1, &func);
 
 			// Prepare arguments
 			if (argc - optind > 1)
@@ -115,15 +115,15 @@ int main(int argc, char *argv[])
 				ppArgs = NULL;
 			}
 
-			if (pScript->Run(pEnv, argc - optind - 1, ppArgs) == 0)
+			if (pScript->run(pEnv, argc - optind - 1, ppArgs) == 0)
 			{
-				NXSL_Value *result = pScript->GetResult();
+				NXSL_Value *result = pScript->getResult();
 				if (printResult)
-					printf("Result = %s\n", (result != NULL) ? result->GetValueAsCString() : "(null)");
+					printf("Result = %s\n", (result != NULL) ? result->getValueAsCString() : "(null)");
 			}
 			else
 			{
-				printf("%s\n", pScript->GetErrorText());
+				printf("%s\n", pScript->getErrorText());
 			}
 			delete pScript;
 			safe_free(ppArgs);

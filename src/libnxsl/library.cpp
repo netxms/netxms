@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: library.cpp
+** fILE: library.cpp
 **
 **/
 
@@ -28,7 +28,7 @@
 // Constructor
 //
 
-NXSL_Library::NXSL_Library(void)
+NXSL_Library::NXSL_Library()
 {
    m_mutex = MutexCreate();
    m_dwNumScripts = 0;
@@ -62,7 +62,7 @@ NXSL_Library::~NXSL_Library()
 // Add script to list
 //
 
-BOOL NXSL_Library::AddScript(DWORD dwId, char *pszName, NXSL_Program *pScript)
+BOOL NXSL_Library::addScript(DWORD dwId, const TCHAR *pszName, NXSL_Program *pScript)
 {
    DWORD i;
 
@@ -85,7 +85,7 @@ BOOL NXSL_Library::AddScript(DWORD dwId, char *pszName, NXSL_Program *pScript)
 // Delete script from list
 //
 
-void NXSL_Library::Delete(int nIndex)
+void NXSL_Library::deleteInternal(int nIndex)
 {
    delete m_ppScriptList[nIndex];
    free(m_ppszNames[nIndex]);
@@ -98,26 +98,26 @@ void NXSL_Library::Delete(int nIndex)
            sizeof(DWORD) * (m_dwNumScripts - nIndex));
 }
 
-void NXSL_Library::DeleteScript(char *pszName)
+void NXSL_Library::deleteScript(const TCHAR *pszName)
 {
    DWORD i;
 
    for(i = 0; i < m_dwNumScripts; i++)
       if (!stricmp(m_ppszNames[i], pszName))
       {
-         Delete(i);
+         deleteInternal(i);
          break;
       }
 }
 
-void NXSL_Library::DeleteScript(DWORD dwId)
+void NXSL_Library::deleteScript(DWORD dwId)
 {
    DWORD i;
 
    for(i = 0; i < m_dwNumScripts; i++)
       if (m_pdwIdList[i] == dwId)
       {
-         Delete(i);
+         deleteInternal(i);
          break;
       }
 }
@@ -127,7 +127,7 @@ void NXSL_Library::DeleteScript(DWORD dwId)
 // Find script by name
 //
 
-NXSL_Program *NXSL_Library::FindScript(char *pszName)
+NXSL_Program *NXSL_Library::findScript(const TCHAR *pszName)
 {
    DWORD i;
 
@@ -144,7 +144,7 @@ NXSL_Program *NXSL_Library::FindScript(char *pszName)
 // Fill NXCP message with script data
 //
 
-void NXSL_Library::FillMessage(CSCPMessage *pMsg)
+void NXSL_Library::fillMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwId;
 

@@ -49,11 +49,11 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource,
    NXSL_Compiler compiler;
    NXSL_Program *pResult;
 
-   pResult = compiler.Compile(pszSource);
+   pResult = compiler.compile(pszSource);
    if (pResult == NULL)
    {
       if (pszError != NULL)
-         nx_strncpy(pszError, compiler.GetErrorText(), nBufSize);
+         nx_strncpy(pszError, compiler.getErrorText(), nBufSize);
    }
    return pResult;
 }

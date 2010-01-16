@@ -30,24 +30,24 @@
 // and second is DCI ID
 //
 
-static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
 	Node *node;
 	DCItem *dci;
 
-	if (!argv[0]->IsObject())
+	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->IsInteger())
+	if (!argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
-	object = argv[0]->GetValueAsObject();
-	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->Data();
-	dci = node->GetItemById(argv[1]->GetValueAsUInt32());
+	node = (Node *)object->getData();
+	dci = node->GetItemById(argv[1]->getValueAsUInt32());
 	if (dci != NULL)
 	{
 		*ppResult = dci->getValueForNXSL(F_LAST, 1);
@@ -65,24 +65,24 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Find DCI by name
 //
 
-static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
 	Node *node;
 	DCItem *dci;
 
-	if (!argv[0]->IsObject())
+	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->IsString())
+	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->GetValueAsObject();
-	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->Data();
-	dci = node->GetItemByName(argv[1]->GetValueAsCString());
+	node = (Node *)object->getData();
+	dci = node->GetItemByName(argv[1]->getValueAsCString());
 	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
 	return 0;
 }
@@ -92,24 +92,24 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Find DCI by description
 //
 
-static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
 	Node *node;
 	DCItem *dci;
 
-	if (!argv[0]->IsObject())
+	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->IsString())
+	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->GetValueAsObject();
-	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->Data();
-	dci = node->GetItemByDescription(argv[1]->GetValueAsCString());
+	node = (Node *)object->getData();
+	dci = node->GetItemByDescription(argv[1]->getValueAsCString());
 	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
 	return 0;
 }
@@ -128,7 +128,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 
 void RegisterDCIFunctions(NXSL_Environment *pEnv)
 {
-	pEnv->RegisterFunctionSet(sizeof(m_nxslDCIFunctions) / sizeof(NXSL_ExtFunction), m_nxslDCIFunctions);
+	pEnv->registerFunctionSet(sizeof(m_nxslDCIFunctions) / sizeof(NXSL_ExtFunction), m_nxslDCIFunctions);
 }
 
 
@@ -1147,32 +1147,32 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
       pValue = new NXSL_Value((char *)((const char *)value));
       pEnv = new NXSL_ServerEnv;
-      m_pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      m_pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 	
-      if (m_pScript->Run(pEnv, 1, &pValue) == 0)
+      if (m_pScript->run(pEnv, 1, &pValue) == 0)
       {
-         pValue = m_pScript->GetResult();
+         pValue = m_pScript->getResult();
          if (pValue != NULL)
          {
             switch(m_iDataType)
             {
                case DCI_DT_INT:
-                  value = pValue->GetValueAsInt32();
+                  value = pValue->getValueAsInt32();
                   break;
                case DCI_DT_UINT:
-                  value = pValue->GetValueAsUInt32();
+                  value = pValue->getValueAsUInt32();
                   break;
                case DCI_DT_INT64:
-                  value = pValue->GetValueAsInt64();
+                  value = pValue->getValueAsInt64();
                   break;
                case DCI_DT_UINT64:
-                  value = pValue->GetValueAsUInt64();
+                  value = pValue->getValueAsUInt64();
                   break;
                case DCI_DT_FLOAT:
-                  value = pValue->GetValueAsReal();
+                  value = pValue->getValueAsReal();
                   break;
                case DCI_DT_STRING:
-                  value = CHECK_NULL_EX(pValue->GetValueAsCString());
+                  value = CHECK_NULL_EX(pValue->getValueAsCString());
                   break;
                default:
                   break;
@@ -1186,7 +1186,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
          _sntprintf(szBuffer, 1024, _T("DCI::%s::%d"),
                     (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szBuffer,
-                   m_pScript->GetErrorText(), m_dwId);
+                   m_pScript->getErrorText(), m_dwId);
       }
    }
 }
@@ -2016,34 +2016,34 @@ void DCItem::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 			NXSL_Program *script;
 			NXSL_ServerEnv *pEnv;
 
-	      g_pScriptLibrary->Lock();
-			script = g_pScriptLibrary->FindScript(&macro[7]);
+	      g_pScriptLibrary->lock();
+			script = g_pScriptLibrary->findScript(&macro[7]);
 			if (script != NULL)
 			{
 				pEnv = new NXSL_ServerEnv;
 				if (m_pNode != NULL)
-					script->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+					script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 
-				if (script->Run(pEnv) == 0)
+				if (script->run(pEnv) == 0)
 				{
-					NXSL_Value *result = script->GetResult();
+					NXSL_Value *result = script->getResult();
 					if (result != NULL)
-						temp += CHECK_NULL_EX(result->GetValueAsCString());
+						temp += CHECK_NULL_EX(result->getValueAsCString());
 		         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully", m_dwId, src, &macro[7]);
 				}
 				else
 				{
 		         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s",
-					          m_dwId, src, &macro[7], script->GetErrorText());
+					          m_dwId, src, &macro[7], script->getErrorText());
 					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), &macro[7],
-								 script->GetErrorText(), m_dwId);
+								 script->getErrorText(), m_dwId);
 				}
 			}
 			else
 			{
 	         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Cannot find script %s", m_dwId, src, &macro[7]);
 			}
-	      g_pScriptLibrary->Unlock();
+	      g_pScriptLibrary->unlock();
 		}
 		temp += rest;
 		
@@ -2073,31 +2073,31 @@ BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
 
       pValue = new NXSL_Value(value);
       pEnv = new NXSL_ServerEnv;
-      pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+      pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 	
 	 	lock();
-		if (pScript->Run(pEnv, 1, &pValue) == 0)
+		if (pScript->run(pEnv, 1, &pValue) == 0)
       {
-         pValue = pScript->GetResult();
+         pValue = pScript->getResult();
          if (pValue != NULL)
          {
-				if (pValue->IsNull())
+				if (pValue->isNull())
 				{
 					nx_strncpy(buffer, _T("(null)"), bufSize);
 				}
-				else if (pValue->IsObject())
+				else if (pValue->isObject())
 				{
 					nx_strncpy(buffer, _T("(object)"), bufSize);
 				}
-				else if (pValue->IsArray())
+				else if (pValue->isArray())
 				{
 					nx_strncpy(buffer, _T("(array)"), bufSize);
 				}
 				else
 				{
-					TCHAR *strval;
+					const TCHAR *strval;
 
-					strval = pValue->GetValueAsCString();
+					strval = pValue->getValueAsCString();
 					nx_strncpy(buffer, CHECK_NULL(strval), bufSize);
 				}
 			}
@@ -2109,7 +2109,7 @@ BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
       }
       else
       {
-			nx_strncpy(buffer, pScript->GetErrorText(), bufSize);
+			nx_strncpy(buffer, pScript->getErrorText(), bufSize);
       }
 		unlock();
    }

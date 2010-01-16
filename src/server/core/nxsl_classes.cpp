@@ -33,13 +33,13 @@ NXSL_NodeClass::NXSL_NodeClass()
    strcpy(m_szName, "NetXMS_Node");
 }
 
-NXSL_Value *NXSL_NodeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, char *pszAttr)
 {
    Node *pNode;
    NXSL_Value *pValue = NULL;
    char szBuffer[256];
 
-   pNode = (Node *)pObject->Data();
+   pNode = (Node *)pObject->getData();
    if (!strcmp(pszAttr, "name"))
    {
       pValue = new NXSL_Value(pNode->Name());
@@ -127,12 +127,12 @@ NXSL_EventClass::NXSL_EventClass()
    strcpy(m_szName, "NetXMS_Event");
 }
 
-NXSL_Value *NXSL_EventClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, char *pszAttr)
 {
    Event *event;
    NXSL_Value *value = NULL;
 
-   event = (Event *)pObject->Data();
+   event = (Event *)pObject->getData();
    if (!strcmp(pszAttr, "code"))
    {
       value = new NXSL_Value(event->getCode());
@@ -167,7 +167,7 @@ NXSL_Value *NXSL_EventClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
 		DWORD i;
 
 		for(i = 0; i < event->getParametersCount(); i++)
-			array->Set((int)(i + 1), new NXSL_Value(event->getParameter(i)));
+			array->set((int)(i + 1), new NXSL_Value(event->getParameter(i)));
       value = new NXSL_Value(array);
    }
    return value;

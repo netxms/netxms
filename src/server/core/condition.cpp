@@ -431,10 +431,10 @@ void Condition::Check(void)
 
    DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""),
              m_dwId, m_szName);
-   if (m_pCompiledScript->Run(pEnv, dwNumValues, ppValueList) == 0)
+   if (m_pCompiledScript->run(pEnv, dwNumValues, ppValueList) == 0)
    {
-      pValue = m_pCompiledScript->GetResult();
-      if (pValue->GetValueAsInt32() == 0)
+      pValue = m_pCompiledScript->getResult();
+      if (pValue->getValueAsInt32() == 0)
       {
          if (m_bIsActive)
          {
@@ -500,7 +500,7 @@ void Condition::Check(void)
    else
    {
       nxlog_write(MSG_COND_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
-               "dss", m_dwId, m_szName, m_pCompiledScript->GetErrorText());
+               "dss", m_dwId, m_szName, m_pCompiledScript->getErrorText());
 
       LockData();
       if (m_iStatus != STATUS_UNKNOWN)

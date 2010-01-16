@@ -350,11 +350,11 @@ BOOL Container::IsSuitableForNode(Node *node)
 	if (m_bindFilter != NULL)
 	{
 		pEnv = new NXSL_ServerEnv;
-		m_bindFilter->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
-		if (m_bindFilter->Run(pEnv, 0, NULL) == 0)
+		m_bindFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+		if (m_bindFilter->run(pEnv, 0, NULL) == 0)
 		{
-			value = m_bindFilter->GetResult();
-			result = ((value != NULL) && (value->GetValueAsInt32() != 0));
+			value = m_bindFilter->getResult();
+			result = ((value != NULL) && (value->getValueAsInt32() != 0));
 		}
 		else
 		{
@@ -362,8 +362,8 @@ BOOL Container::IsSuitableForNode(Node *node)
 
 			_sntprintf(buffer, 1024, _T("Container::%s::%d"), m_szName, m_dwId);
 			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), buffer,
-						 m_bindFilter->GetErrorText(), m_dwId);
-			nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_bindFilter->GetErrorText());
+						 m_bindFilter->getErrorText(), m_dwId);
+			nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_bindFilter->getErrorText());
 		}
 	}
 	UnlockData();

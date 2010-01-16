@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ const char *g_szTypeNames[] = { "null", "object", "string", "real", "int32",
 // Type of value
 //
 
-int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-   *ppResult = new NXSL_Value(g_szTypeNames[argv[0]->DataType()]);
+   *ppResult = new NXSL_Value(g_szTypeNames[argv[0]->getDataType()]);
    return 0;
 }
 
@@ -49,12 +49,12 @@ int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Class of an object
 //
 
-int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (!argv[0]->IsObject())
+	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 		
-   *ppResult = new NXSL_Value(argv[0]->GetValueAsObject()->Class()->Name());
+   *ppResult = new NXSL_Value(argv[0]->getValueAsObject()->getClass()->getName());
    return 0;
 }
 
@@ -63,22 +63,22 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Absolute value
 //
 
-int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
 
-   if (argv[0]->IsNumeric())
+   if (argv[0]->isNumeric())
    {
-      if (argv[0]->IsReal())
+      if (argv[0]->isReal())
       {
-         *ppResult = new NXSL_Value(fabs(argv[0]->GetValueAsReal()));
+         *ppResult = new NXSL_Value(fabs(argv[0]->getValueAsReal()));
       }
       else
       {
          *ppResult = new NXSL_Value(argv[0]);
-         if (!argv[0]->IsUnsigned())
-            if ((*ppResult)->GetValueAsInt64() < 0)
-               (*ppResult)->Negate();
+         if (!argv[0]->isUnsigned())
+            if ((*ppResult)->getValueAsInt64() < 0)
+               (*ppResult)->negate();
       }
       nRet = 0;
    }
@@ -94,13 +94,13 @@ int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Calculates x raised to the power of y
 //
 
-int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
 
-   if ((argv[0]->IsNumeric()) && (argv[1]->IsNumeric()))
+   if ((argv[0]->isNumeric()) && (argv[1]->isNumeric()))
    {
-      *ppResult = new NXSL_Value(pow(argv[0]->GetValueAsReal(), argv[1]->GetValueAsReal()));
+      *ppResult = new NXSL_Value(pow(argv[0]->getValueAsReal(), argv[1]->getValueAsReal()));
       nRet = 0;
    }
    else
@@ -115,16 +115,16 @@ int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Convert string to uppercase
 //
 
-int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
    DWORD i, dwLen;
-   char *pStr;
+   TCHAR *pStr;
 
-   if (argv[0]->IsString())
+   if (argv[0]->isString())
    {
       *ppResult = new NXSL_Value(argv[0]);
-      pStr = (*ppResult)->GetValueAsString(&dwLen);
+      pStr = (TCHAR *)(*ppResult)->getValueAsString(&dwLen);
       for(i = 0; i < dwLen; i++, pStr++)
          *pStr = toupper(*pStr);
       nRet = 0;
@@ -141,16 +141,16 @@ int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Convert string to lowercase
 //
 
-int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
    DWORD i, dwLen;
-   char *pStr;
+   TCHAR *pStr;
 
-   if (argv[0]->IsString())
+   if (argv[0]->isString())
    {
       *ppResult = new NXSL_Value(argv[0]);
-      pStr = (*ppResult)->GetValueAsString(&dwLen);
+      pStr = (TCHAR *)(*ppResult)->getValueAsString(&dwLen);
       for(i = 0; i < dwLen; i++, pStr++)
          *pStr = tolower(*pStr);
       nRet = 0;
@@ -167,14 +167,14 @@ int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // String length
 //
 
-int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
    DWORD dwLen;
 
-   if (argv[0]->IsString())
+   if (argv[0]->isString())
    {
-      argv[0]->GetValueAsString(&dwLen);
+      argv[0]->getValueAsString(&dwLen);
       *ppResult = new NXSL_Value(dwLen);
       nRet = 0;
    }
@@ -190,7 +190,7 @@ int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Minimal value from the list of values
 //
 
-int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int i;
    NXSL_Value *pCurr;
@@ -201,7 +201,7 @@ int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
    pCurr = argv[0];
    for(i = 1; i < argc; i++)
    {
-      if (!argv[i]->IsNumeric())
+      if (!argv[i]->isNumeric())
          return NXSL_ERR_NOT_NUMBER;
 
       if (argv[i]->LT(pCurr))
@@ -216,7 +216,7 @@ int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Maximal value from the list of values
 //
 
-int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int i;
    NXSL_Value *pCurr;
@@ -227,7 +227,7 @@ int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
    pCurr = argv[0];
    for(i = 0; i < argc; i++)
    {
-      if (!argv[i]->IsNumeric())
+      if (!argv[i]->isNumeric())
          return NXSL_ERR_NOT_NUMBER;
 
       if (argv[i]->GT(pCurr))
@@ -242,16 +242,16 @@ int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Check if IP address is within given range
 //
 
-int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
    DWORD dwAddr, dwStart, dwEnd;
 
-   if (argv[0]->IsString() && argv[1]->IsString() && argv[2]->IsString())
+   if (argv[0]->isString() && argv[1]->isString() && argv[2]->isString())
    {
-      dwAddr = ntohl(inet_addr(argv[0]->GetValueAsCString()));
-      dwStart = ntohl(inet_addr(argv[1]->GetValueAsCString()));
-      dwEnd = ntohl(inet_addr(argv[2]->GetValueAsCString()));
+      dwAddr = ntohl(inet_addr(argv[0]->getValueAsCString()));
+      dwStart = ntohl(inet_addr(argv[1]->getValueAsCString()));
+      dwEnd = ntohl(inet_addr(argv[2]->getValueAsCString()));
       *ppResult = new NXSL_Value((LONG)(((dwAddr >= dwStart) && (dwAddr <= dwEnd)) ? 1 : 0));
       nRet = 0;
    }
@@ -267,16 +267,16 @@ int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Check if IP address is within given subnet
 //
 
-int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    int nRet;
    DWORD dwAddr, dwSubnet, dwMask;
 
-   if (argv[0]->IsString() && argv[1]->IsString() && argv[2]->IsString())
+   if (argv[0]->isString() && argv[1]->isString() && argv[2]->isString())
    {
-      dwAddr = ntohl(inet_addr(argv[0]->GetValueAsCString()));
-      dwSubnet = ntohl(inet_addr(argv[1]->GetValueAsCString()));
-      dwMask = ntohl(inet_addr(argv[2]->GetValueAsCString()));
+      dwAddr = ntohl(inet_addr(argv[0]->getValueAsCString()));
+      dwSubnet = ntohl(inet_addr(argv[1]->getValueAsCString()));
+      dwMask = ntohl(inet_addr(argv[2]->getValueAsCString()));
       *ppResult = new NXSL_Value((LONG)(((dwAddr & dwMask) == dwSubnet) ? 1 : 0));
       nRet = 0;
    }
@@ -293,7 +293,7 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // PATCH: by Edgar Chupit
 //
 
-int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {   
    TCHAR buffer[512];
    time_t tTime;
@@ -303,19 +303,19 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
    if ((argc == 0) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[0]->IsString())
+   if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 	if (argc > 1)
 	{
-		if (!argv[1]->IsNumeric() && !argv[1]->IsNull())
+		if (!argv[1]->isNumeric() && !argv[1]->isNull())
 			return NXSL_ERR_NOT_NUMBER;
-		tTime = (argv[1]->IsNull()) ? time(NULL) : (time_t)argv[1]->GetValueAsUInt64();
+		tTime = (argv[1]->isNull()) ? time(NULL) : (time_t)argv[1]->getValueAsUInt64();
 
 		if (argc > 2)
 		{
-			if (!argv[2]->IsInteger())
+			if (!argv[2]->isInteger())
 				return NXSL_ERR_BAD_CONDITION;
-			bLocalTime = argv[2]->GetValueAsInt32() ? TRUE : FALSE;
+			bLocalTime = argv[2]->getValueAsInt32() ? TRUE : FALSE;
 		}
 		else
 		{
@@ -330,7 +330,7 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	}
 
    ptm = bLocalTime ? localtime(&tTime) : gmtime(&tTime);
-   _tcsftime(buffer, 512, argv[0]->GetValueAsCString(), ptm);
+   _tcsftime(buffer, 512, argv[0]->getValueAsCString(), ptm);
    *ppResult = new NXSL_Value(buffer);   
    
    return 0;
@@ -342,14 +342,14 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // PATCH: by Edgar Chupit
 //
 
-int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    DWORD d, h, n;
 
-   if (!argv[0]->IsNumeric())
+   if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
-   QWORD arg = argv[0]->GetValueAsUInt64();
+   QWORD arg = argv[0]->getValueAsUInt64();
 
    d = (DWORD)(arg / 86400);
    arg -= d * 86400;
@@ -374,7 +374,7 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Get current time
 //
 
-int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
    *ppResult = new NXSL_Value((DWORD)time(NULL));
    return 0;
@@ -390,8 +390,8 @@ class NXSL_TimeClass : public NXSL_Class
 public:
    NXSL_TimeClass();
 
-   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
-	virtual void OnObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
+	virtual void onObjectDelete(NXSL_Object *object);
 };
 
 
@@ -405,12 +405,12 @@ NXSL_TimeClass::NXSL_TimeClass()
    strcpy(m_szName, "TIME");
 }
 
-NXSL_Value *NXSL_TimeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, char *pszAttr)
 {
    struct tm *st;
    NXSL_Value *value;
 
-   st = (struct tm *)pObject->Data();
+   st = (struct tm *)pObject->getData();
    if (!strcmp(pszAttr, "sec") || !strcmp(pszAttr, "tm_sec"))
    {
       value = new NXSL_Value((LONG)st->tm_sec);
@@ -454,9 +454,9 @@ NXSL_Value *NXSL_TimeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    return value;
 }
 
-void NXSL_TimeClass::OnObjectDelete(NXSL_Object *object)
+void NXSL_TimeClass::onObjectDelete(NXSL_Object *object)
 {
-	safe_free(object->Data());
+	safe_free(object->getData());
 }
 
 
@@ -471,7 +471,7 @@ static NXSL_TimeClass m_nxslTimeClass;
 // Return parsed local time
 //
 
-int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	struct tm *p;
 	time_t t;
@@ -482,10 +482,10 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	}
 	else if (argc == 1)
 	{
-		if (!argv[0]->IsInteger())
+		if (!argv[0]->isInteger())
 			return NXSL_ERR_NOT_INTEGER;
 
-		t = argv[0]->GetValueAsUInt32();
+		t = argv[0]->getValueAsUInt32();
 	}
 	else
 	{
@@ -502,7 +502,7 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Return parsed UTC time
 //
 
-int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	struct tm *p;
 	time_t t;
@@ -513,10 +513,10 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	}
 	else if (argc == 1)
 	{
-		if (!argv[0]->IsInteger())
+		if (!argv[0]->isInteger())
 			return NXSL_ERR_NOT_INTEGER;
 
-		t = argv[0]->GetValueAsUInt32();
+		t = argv[0]->getValueAsUInt32();
 	}
 	else
 	{
@@ -537,25 +537,25 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 //    substr(string, NULL, n) - first n characters
 //
 
-int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	int nStart, nCount;
-	TCHAR *pBase;
+	const TCHAR *pBase;
 	DWORD dwLen;
 
    if ((argc < 2) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[0]->IsString())
+   if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-	if (argv[1]->IsNull())
+	if (argv[1]->isNull())
 	{
 		nStart = 0;
 	}
-	else if (argv[1]->IsInteger())
+	else if (argv[1]->isInteger())
 	{
-		nStart = argv[1]->GetValueAsInt32();
+		nStart = argv[1]->getValueAsInt32();
 		if (nStart > 0)
 			nStart--;
 		else
@@ -568,9 +568,9 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 	if (argc == 3)
 	{
-		if (!argv[2]->IsInteger())
+		if (!argv[2]->isInteger())
 			return NXSL_ERR_NOT_INTEGER;
-		nCount = argv[2]->GetValueAsInt32();
+		nCount = argv[2]->getValueAsInt32();
 		if (nCount < 0)
 			nCount = 0;
 	}
@@ -579,7 +579,7 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 		nCount = -1;
 	}
 
-	pBase = argv[0]->GetValueAsString(&dwLen);
+	pBase = argv[0]->getValueAsString(&dwLen);
 	if ((DWORD)nStart < dwLen)
 	{
 		pBase += nStart;
@@ -605,17 +605,17 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 //   d2x(value, padding) -> hex value padded vith zeros
 //
 
-int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	TCHAR buffer[128], format[32];
 
    if ((argc < 1) || (argc > 2))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[0]->IsInteger())
+   if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if ((argc == 2) && (!argv[1]->IsInteger()))
+   if ((argc == 2) && (!argv[1]->isInteger()))
       return NXSL_ERR_NOT_INTEGER;
 
 	if (argc == 1)
@@ -624,9 +624,9 @@ int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	}
 	else
 	{
-		_sntprintf(format, 32, _T("%%0%dX"), argv[1]->GetValueAsInt32());
+		_sntprintf(format, 32, _T("%%0%dX"), argv[1]->getValueAsInt32());
 	}
-	_sntprintf(buffer, 128, format, argv[0]->GetValueAsUInt32());
+	_sntprintf(buffer, 128, format, argv[0]->getValueAsUInt32());
 	*ppResult = new NXSL_Value(buffer);
 	return 0;
 }
@@ -637,25 +637,26 @@ int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Format: left(string, len, [pad])
 //
 
-int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	TCHAR *str, *newStr, pad;
+	const TCHAR *str;
+	TCHAR *newStr, pad;
 	LONG newLen;
 	DWORD i, len;
 
    if ((argc < 2) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[1]->IsInteger())
+   if (!argv[1]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if ((!argv[0]->IsString()) ||
-		 ((argc == 3) && (!argv[2]->IsString())))
+   if ((!argv[0]->isString()) ||
+		 ((argc == 3) && (!argv[2]->isString())))
 		return NXSL_ERR_NOT_STRING;
 
 	if (argc == 3)
 	{
-		pad = *(argv[2]->GetValueAsCString());
+		pad = *(argv[2]->getValueAsCString());
 		if (pad == 0)
 			pad = _T(' ');
 	}
@@ -664,11 +665,11 @@ int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 		pad = _T(' ');
 	}
 
-	newLen = argv[1]->GetValueAsInt32();
+	newLen = argv[1]->getValueAsInt32();
 	if (newLen < 0)
 		newLen = 0;
 
-   str = argv[0]->GetValueAsString(&len);
+   str = argv[0]->getValueAsString(&len);
 	if (len > (DWORD)newLen)
 		len = (DWORD)newLen;
 	newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
@@ -686,25 +687,26 @@ int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Format: right(string, len, [pad])
 //
 
-int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	TCHAR *str, *newStr, pad;
+	const TCHAR *str;
+	TCHAR *newStr, pad;
 	LONG newLen;
 	DWORD i, len, shift;
 
    if ((argc < 2) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[1]->IsInteger())
+   if (!argv[1]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if ((!argv[0]->IsString()) ||
-		 ((argc == 3) && (!argv[2]->IsString())))
+   if ((!argv[0]->isString()) ||
+		 ((argc == 3) && (!argv[2]->isString())))
 		return NXSL_ERR_NOT_STRING;
 
 	if (argc == 3)
 	{
-		pad = *(argv[2]->GetValueAsCString());
+		pad = *(argv[2]->getValueAsCString());
 		if (pad == 0)
 			pad = _T(' ');
 	}
@@ -713,11 +715,11 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 		pad = _T(' ');
 	}
 
-	newLen = argv[1]->GetValueAsInt32();
+	newLen = argv[1]->getValueAsInt32();
 	if (newLen < 0)
 		newLen = 0;
 
-   str = argv[0]->GetValueAsString(&len);
+   str = argv[0]->getValueAsString(&len);
 	if (len > (DWORD)newLen)
 	{
 		shift = len - (DWORD)newLen;
@@ -741,7 +743,7 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Exit from script
 //
 
-int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	if (argc > 1)
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -755,13 +757,13 @@ int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Trim whitespace characters from the string
 //
 
-int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (!argv[0]->IsString())
+	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
 	DWORD len;
-	const TCHAR *string = argv[0]->GetValueAsString(&len);
+	const TCHAR *string = argv[0]->getValueAsString(&len);
 	
 	int i;
 	for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
@@ -778,13 +780,13 @@ int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Trim trailing whitespace characters from the string
 //
 
-int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (!argv[0]->IsString())
+	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
 	DWORD len;
-	const TCHAR *string = argv[0]->GetValueAsString(&len);
+	const TCHAR *string = argv[0]->getValueAsString(&len);
 	
 	int i;
 	for(i = (int)len - 1; (i >= 0) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
@@ -798,17 +800,35 @@ int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // Trim leading whitespace characters from the string
 //
 
-int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (!argv[0]->IsString())
+	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
 	DWORD len;
-	const TCHAR *string = argv[0]->GetValueAsString(&len);
+	const TCHAR *string = argv[0]->getValueAsString(&len);
 	
 	int i;
 	for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
 
 	*ppResult = new NXSL_Value(&string[i], (int)len - i);
+	return 0;
+}
+
+
+//
+// Trace
+//
+
+int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	program->trace(argv[0]->getValueAsInt32(), argv[1]->getValueAsCString());
+	*ppResult = new NXSL_Value();
 	return 0;
 }

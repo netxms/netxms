@@ -354,23 +354,23 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 							scriptName[i] = 0;
 							StrStrip(scriptName);
 
-							g_pScriptLibrary->Lock();
-							script = g_pScriptLibrary->FindScript(scriptName);
+							g_pScriptLibrary->lock();
+							script = g_pScriptLibrary->findScript(scriptName);
 							if (script != NULL)
 							{
 								pEnv = new NXSL_ServerEnv;
 								if (pObject->Type() == OBJECT_NODE)
-									script->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
-								script->SetGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, this)));
+									script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
+								script->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, this)));
 								if (pszAlarmMsg != NULL)
-									script->SetGlobalVariable(_T("$alarmMessage"), new NXSL_Value(pszAlarmMsg));
+									script->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(pszAlarmMsg));
 
-								if (script->Run(pEnv) == 0)
+								if (script->run(pEnv) == 0)
 								{
-									NXSL_Value *result = script->GetResult();
+									NXSL_Value *result = script->getResult();
 									if (result != NULL)
 									{
-										TCHAR *temp = result->GetValueAsCString();
+										const TCHAR *temp = result->getValueAsCString();
 										if (temp != NULL)
 										{
 											dwSize += (DWORD)_tcslen(temp);
@@ -385,16 +385,16 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 								else
 								{
 									DbgPrintf(4, "Event::ExpandText(%d, \"%s\"): Script %s execution error: %s",
-												 m_dwCode, pszTemplate, scriptName, script->GetErrorText());
+												 m_dwCode, pszTemplate, scriptName, script->getErrorText());
 									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), scriptName,
-												 script->GetErrorText(), 0);
+												 script->getErrorText(), 0);
 								}
 							}
 							else
 							{
 								DbgPrintf(4, "Event::ExpandText(%d, \"%s\"): Cannot find script %s", m_dwCode, pszTemplate, scriptName);
 							}
-							g_pScriptLibrary->Unlock();
+							g_pScriptLibrary->unlock();
 						}
 						break;
 					case '{':	// Custom attribute

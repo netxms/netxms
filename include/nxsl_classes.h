@@ -62,15 +62,15 @@ private:
    void **m_ppData;
 
 public:
-   NXSL_Stack(void);
+   NXSL_Stack();
    ~NXSL_Stack();
 
-   void Push(void *pData);
-   void *Pop(void);
-   void *Peek(void);
-   void **PeekList(int nLevel) { return &m_ppData[m_nStackPos - nLevel]; }
+   void push(void *pData);
+   void *pop();
+   void *peek();
+   void **peekList(int nLevel) { return &m_ppData[m_nStackPos - nLevel]; }
 
-   int Size(void) { return m_nStackPos; }
+   int getSize() { return m_nStackPos; }
 };
 
 
@@ -84,18 +84,18 @@ class NXSL_Object;
 class LIBNXSL_EXPORTABLE NXSL_Class
 {
 protected:
-   char m_szName[MAX_CLASS_NAME];
+   TCHAR m_szName[MAX_CLASS_NAME];
 
 public:
    NXSL_Class();
    virtual ~NXSL_Class();
 
-   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
-   virtual BOOL SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual BOOL setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);
 
-	virtual void OnObjectDelete(NXSL_Object *object);
+	virtual void onObjectDelete(NXSL_Object *object);
 
-   char *Name(void) { return m_szName; }
+   const TCHAR *getName(void) { return m_szName; }
 };
 
 
@@ -114,8 +114,8 @@ public:
    NXSL_Object(NXSL_Class *pClass, void *pData);
    ~NXSL_Object();
 
-   NXSL_Class *Class() { return m_pClass; }
-   void *Data() { return m_pData; }
+   NXSL_Class *getClass() { return m_pClass; }
+   void *getData() { return m_pData; }
 };
 
 
@@ -142,12 +142,12 @@ public:
 	NXSL_Array(NXSL_Array *src);
 	~NXSL_Array();
 
-	void IncRefCount() { m_refCount++; }
-	void DecRefCount() { m_refCount--; }
-	BOOL IsUnused() { return m_refCount < 1; }
+	void incRefCount() { m_refCount++; }
+	void decRefCount() { m_refCount--; }
+	BOOL isUnused() { return m_refCount < 1; }
 
-	void Set(int index, NXSL_Value *value);
-	NXSL_Value *Get(int index);
+	void set(int index, NXSL_Value *value);
+	NXSL_Value *get(int index);
 };
 
 
@@ -173,10 +173,10 @@ protected:
 		NXSL_Array *pArray;
    } m_value;
 
-   void UpdateNumber(void);
-   void UpdateString(void);
+   void updateNumber();
+   void updateString();
 
-   void InvalidateString(void)
+   void invalidateString()
    {
       safe_free(m_pszValStr);
       m_pszValStr = NULL;
@@ -184,7 +184,7 @@ protected:
    }
 
 public:
-   NXSL_Value(void);
+   NXSL_Value();
    NXSL_Value(const NXSL_Value *);
    NXSL_Value(NXSL_Object *pObject);
    NXSL_Value(NXSL_Array *pArray);
@@ -197,49 +197,49 @@ public:
    NXSL_Value(const TCHAR *pszValue, DWORD dwLen);
    ~NXSL_Value();
 
-   void Set(LONG nValue);
+   void set(LONG nValue);
 
-   BOOL Convert(int nDataType);
-   int DataType(void) { return m_nDataType; }
+   bool convert(int nDataType);
+   int getDataType() { return m_nDataType; }
 
-   BOOL IsNull(void) { return (m_nDataType == NXSL_DT_NULL); }
-   BOOL IsObject(void) { return (m_nDataType == NXSL_DT_OBJECT); }
-   BOOL IsArray(void) { return (m_nDataType == NXSL_DT_ARRAY); }
-   BOOL IsString(void) { return (m_nDataType >= NXSL_DT_STRING); }
-   BOOL IsNumeric(void) { return (m_nDataType > NXSL_DT_STRING); }
-   BOOL IsReal(void) { return (m_nDataType == NXSL_DT_REAL); }
-   BOOL IsInteger(void) { return (m_nDataType > NXSL_DT_REAL); }
-   BOOL IsUnsigned(void) { return (m_nDataType >= NXSL_DT_UINT32); }
-   BOOL IsZero(void);
-   BOOL IsNonZero(void);
+   bool isNull() { return (m_nDataType == NXSL_DT_NULL); }
+   bool isObject() { return (m_nDataType == NXSL_DT_OBJECT); }
+   bool isArray() { return (m_nDataType == NXSL_DT_ARRAY); }
+   bool isString() { return (m_nDataType >= NXSL_DT_STRING); }
+   bool isNumeric() { return (m_nDataType > NXSL_DT_STRING); }
+   bool isReal() { return (m_nDataType == NXSL_DT_REAL); }
+   bool isInteger() { return (m_nDataType > NXSL_DT_REAL); }
+   bool isUnsigned() { return (m_nDataType >= NXSL_DT_UINT32); }
+   bool isZero();
+   bool isNonZero();
 
-   char *GetValueAsString(DWORD *pdwLen);
-   char *GetValueAsCString(void);
-   LONG GetValueAsInt32(void);
-   DWORD GetValueAsUInt32(void);
-   INT64 GetValueAsInt64(void);
-   QWORD GetValueAsUInt64(void);
-   double GetValueAsReal(void);
-   NXSL_Object *GetValueAsObject(void) { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.pObject : NULL; }
-   NXSL_Array *GetValueAsArray(void) { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.pArray : NULL; }
+   const TCHAR *getValueAsString(DWORD *pdwLen);
+   const TCHAR *getValueAsCString();
+   LONG getValueAsInt32();
+   DWORD getValueAsUInt32();
+   INT64 getValueAsInt64();
+   QWORD getValueAsUInt64();
+   double getValueAsReal();
+   NXSL_Object *getValueAsObject() { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.pObject : NULL; }
+   NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.pArray : NULL; }
 
-   void Concatenate(char *pszString, DWORD dwLen);
+   void concatenate(const TCHAR *pszString, DWORD dwLen);
    
-   void Increment(void);
-   void Decrement(void);
-   void Negate(void);
-   void BitNot(void);
+   void increment();
+   void decrement();
+   void negate();
+   void bitNot();
 
-   void Add(NXSL_Value *pVal);
-   void Sub(NXSL_Value *pVal);
-   void Mul(NXSL_Value *pVal);
-   void Div(NXSL_Value *pVal);
-   void Rem(NXSL_Value *pVal);
-   void BitAnd(NXSL_Value *pVal);
-   void BitOr(NXSL_Value *pVal);
-   void BitXor(NXSL_Value *pVal);
-   void LShift(int nBits);
-   void RShift(int nBits);
+   void add(NXSL_Value *pVal);
+   void sub(NXSL_Value *pVal);
+   void mul(NXSL_Value *pVal);
+   void div(NXSL_Value *pVal);
+   void rem(NXSL_Value *pVal);
+   void bitAnd(NXSL_Value *pVal);
+   void bitOr(NXSL_Value *pVal);
+   void bitXor(NXSL_Value *pVal);
+   void lshift(int nBits);
+   void rshift(int nBits);
 
    BOOL EQ(NXSL_Value *pVal);
    BOOL LT(NXSL_Value *pVal);
@@ -264,11 +264,13 @@ struct NXSL_Function
 // External function structure
 //
 
+class NXSL_Program;
+
 struct NXSL_ExtFunction
 {
    char m_szName[MAX_FUNCTION_NAME];
-   int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-   int m_iNumArgs;   // Number of arguments or -1 fo variable number
+   int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
+   int m_iNumArgs;   // Number of arguments or -1 for variable number
 };
 
 
@@ -276,7 +278,6 @@ struct NXSL_ExtFunction
 // Environment for NXSL program
 //
 
-class NXSL_Program;
 class NXSL_Library;
 
 class LIBNXSL_EXPORTABLE NXSL_Environment
@@ -294,16 +295,18 @@ public:
    NXSL_Environment();
    ~NXSL_Environment();
 
-   void SetIO(FILE *pIn, FILE *pOut) { m_pStdIn = pIn; m_pStdOut = pOut; }
-   FILE *GetStdIn(void) { return m_pStdIn; }
-   FILE *GetStdOut(void) { return m_pStdOut; }
+	virtual void trace(int level, const TCHAR *text);
 
-   void SetLibrary(NXSL_Library *pLib) { m_pLibrary = pLib; }
+   void setIO(FILE *pIn, FILE *pOut) { m_pStdIn = pIn; m_pStdOut = pOut; }
+   FILE *getStdIn() { return m_pStdIn; }
+   FILE *getStdOut() { return m_pStdOut; }
 
-   NXSL_ExtFunction *FindFunction(char *pszName);
-   void RegisterFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList);
+   void setLibrary(NXSL_Library *pLib) { m_pLibrary = pLib; }
 
-   BOOL UseModule(NXSL_Program *pMain, char *pszName);
+   NXSL_ExtFunction *findFunction(char *pszName);
+   void registerFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList);
+
+   BOOL useModule(NXSL_Program *main, const TCHAR *name);
 };
 
 
@@ -323,9 +326,9 @@ public:
    NXSL_Variable(NXSL_Variable *pSrc);
    ~NXSL_Variable();
 
-   const TCHAR *Name(void) { return m_pszName; }
-   NXSL_Value *Value(void) { return m_pValue; }
-   void Set(NXSL_Value *pValue);
+   const TCHAR *getName() { return m_pszName; }
+   NXSL_Value *getValue() { return m_pValue; }
+   void setValue(NXSL_Value *pValue);
 };
 
 
@@ -340,12 +343,12 @@ protected:
    NXSL_Variable **m_ppVariableList;
 
 public:
-   NXSL_VariableSystem(void);
+   NXSL_VariableSystem();
    NXSL_VariableSystem(NXSL_VariableSystem *pSrc);
    ~NXSL_VariableSystem();
 
-   NXSL_Variable *Find(const TCHAR *pszName);
-   NXSL_Variable *Create(const TCHAR *pszName, NXSL_Value *pValue = NULL);
+   NXSL_Variable *find(const TCHAR *pszName);
+   NXSL_Variable *create(const TCHAR *pszName, NXSL_Value *pValue = NULL);
 };
 
 
@@ -429,45 +432,46 @@ protected:
    int m_nErrorCode;
    TCHAR *m_pszErrorText;
 
-   void Execute(void);
-   void CallFunction(int nArgCount);
-   void DoUnaryOperation(int nOpCode);
-   void DoBinaryOperation(int nOpCode);
-   void Error(int nError);
-   NXSL_Value *MatchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
+   void execute();
+   void callFunction(int nArgCount);
+   void doUnaryOperation(int nOpCode);
+   void doBinaryOperation(int nOpCode);
+   void error(int nError);
+   NXSL_Value *matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
-   NXSL_Variable *FindOrCreateVariable(TCHAR *pszName);
-	NXSL_Variable *CreateVariable(TCHAR *pszName);
+   NXSL_Variable *findOrCreateVariable(TCHAR *pszName);
+	NXSL_Variable *createVariable(TCHAR *pszName);
 
-   DWORD GetFunctionAddress(char *pszName);
-   void RelocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);
-	DWORD FinalJumpDestination(DWORD dwAddr);
+   DWORD getFunctionAddress(char *pszName);
+   void relocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);
+	DWORD getFinalJumpDestination(DWORD dwAddr);
 
 public:
    NXSL_Program();
    ~NXSL_Program();
 
-   BOOL AddFunction(const char *pszName, DWORD dwAddr, char *pszError);
-   void ResolveFunctions();
-   void AddInstruction(NXSL_Instruction *pInstruction);
-   void ResolveLastJump(int nOpCode);
-	void CreateJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr);
-   void AddPreload(char *pszName);
-   void UseModule(NXSL_Program *pModule, const char *pszName);
-	void Optimize();
+   BOOL addFunction(const char *pszName, DWORD dwAddr, char *pszError);
+   void resolveFunctions();
+   void addInstruction(NXSL_Instruction *pInstruction);
+   void resolveLastJump(int nOpCode);
+	void createJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr);
+   void addPreload(char *pszName);
+   void useModule(NXSL_Program *pModule, const char *pszName);
+	void optimize();
 
-	void SetGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
-	NXSL_Variable *FindGlobalVariable(const TCHAR *pszName) { return m_pGlobals->Find(pszName); }
+	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
+	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_pGlobals->find(pszName); }
 
-   int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
+   int run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
            NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
            NXSL_VariableSystem **ppGlobals = NULL);
 
-   DWORD CodeSize() { return m_dwCodeSize; }
+   DWORD getCodeSize() { return m_dwCodeSize; }
 
-   void Dump(FILE *pFile);
-   const TCHAR *GetErrorText() { return CHECK_NULL_EX(m_pszErrorText); }
-   NXSL_Value *GetResult() { return m_pRetValue; }
+	void trace(int level, const TCHAR *text);
+   void dump(FILE *pFile);
+   const TCHAR *getErrorText() { return CHECK_NULL_EX(m_pszErrorText); }
+   NXSL_Value *getResult() { return m_pRetValue; }
 };
 
 
@@ -484,21 +488,21 @@ private:
    DWORD *m_pdwIdList;
    MUTEX m_mutex;
 
-   void Delete(int nIndex);
+   void deleteInternal(int nIndex);
 
 public:
-   NXSL_Library(void);
+   NXSL_Library();
    ~NXSL_Library();
 
-   void Lock(void) { MutexLock(m_mutex, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_mutex); }
+   void lock() { MutexLock(m_mutex, INFINITE); }
+   void unlock() { MutexUnlock(m_mutex); }
 
-   BOOL AddScript(DWORD dwId, char *pszName, NXSL_Program *pScript);
-   void DeleteScript(char *pszName);
-   void DeleteScript(DWORD dwId);
-   NXSL_Program *FindScript(char *pszName);
+   BOOL addScript(DWORD dwId, const TCHAR *pszName, NXSL_Program *pScript);
+   void deleteScript(const TCHAR *pszName);
+   void deleteScript(DWORD dwId);
+   NXSL_Program *findScript(const TCHAR *pszName);
 
-   void FillMessage(CSCPMessage *pMsg);
+   void fillMessage(CSCPMessage *pMsg);
 };
 
 

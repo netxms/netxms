@@ -537,7 +537,7 @@ NXSL_Value *NXSL_SituationClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    NXSL_Value *value = NULL;
 	const TCHAR *attrValue;
 
-   instance = (SituationInstance *)pObject->Data();
+   instance = (SituationInstance *)pObject->getData();
    if (!strcmp(pszAttr, "name"))
    {
       value = new NXSL_Value(instance->GetParent()->GetName());
@@ -577,23 +577,23 @@ static NXSL_SituationClass m_nxslSituationClass;
 // NXSL function for finding situation
 //
 
-static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	Situation *situation;
 	SituationInstance *instance;
 
-   if (argv[0]->IsInteger())
+   if (argv[0]->isInteger())
    {
-		situation = FindSituationById(argv[0]->GetValueAsUInt32());
+		situation = FindSituationById(argv[0]->getValueAsUInt32());
    }
    else	// First parameter is not a number, assume that it's a name
    {
-		situation = FindSituationByName(argv[0]->GetValueAsCString());
+		situation = FindSituationByName(argv[0]->getValueAsCString());
    }
 
 	if (situation != NULL)
 	{
-		instance = situation->FindInstance(argv[1]->GetValueAsCString());
+		instance = situation->FindInstance(argv[1]->getValueAsCString());
 		if (instance != NULL)
 		{
 			*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslSituationClass, instance));
@@ -616,22 +616,22 @@ static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 // NXSL function: get situation instance attribute
 //
 
-static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
 	const TCHAR *attrValue;
 
-	if (!argv[0]->IsObject())
+	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->IsString())
+	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->GetValueAsObject();
-	if (_tcscmp(object->Class()->Name(), "Situation"))
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), "Situation"))
 		return NXSL_ERR_BAD_CLASS;
 
-	attrValue = ((SituationInstance *)object->Data())->GetAttribute(argv[1]->GetValueAsCString());
+	attrValue = ((SituationInstance *)object->getData())->GetAttribute(argv[1]->getValueAsCString());
 	*ppResult = (attrValue != NULL) ? new NXSL_Value(attrValue) : new NXSL_Value;
 	return 0;
 }

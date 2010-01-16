@@ -61,7 +61,7 @@ NXSL_Lexer::~NXSL_Lexer()
 // Alternative input method
 //
 
-int NXSL_Lexer::LexerInput(char *pBuffer, int nMaxSize)
+int NXSL_Lexer::lexerInput(char *pBuffer, int nMaxSize)
 {
    int nBytes;
 
@@ -83,7 +83,7 @@ int NXSL_Lexer::LexerInput(char *pBuffer, int nMaxSize)
 // Report error
 //
 
-void NXSL_Lexer::Error(const char *pszText)
+void NXSL_Lexer::error(const char *pszText)
 {
-	m_pCompiler->Error(pszText);
+	m_pCompiler->error(pszText);
 }

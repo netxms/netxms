@@ -6699,9 +6699,9 @@ void ClientSession::DeleteScript(CSCPMessage *pRequest)
          _stprintf(szQuery, _T("DELETE FROM script_library WHERE script_id=%d"), dwScriptId);
          if (DBQuery(g_hCoreDB, szQuery))
          {
-            g_pScriptLibrary->Lock();
-            g_pScriptLibrary->DeleteScript(dwScriptId);
-            g_pScriptLibrary->Unlock();
+            g_pScriptLibrary->lock();
+            g_pScriptLibrary->deleteScript(dwScriptId);
+            g_pScriptLibrary->unlock();
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -8047,10 +8047,10 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
 
             // Run script
             DbgPrintf(3, "Running configuration matching script %d", dwCfgId);
-            if (pScript->Run(NULL, 5, ppArgList) == 0)
+            if (pScript->run(NULL, 5, ppArgList) == 0)
             {
-               pValue = pScript->GetResult();
-               if (pValue->GetValueAsInt32() != 0)
+               pValue = pScript->getResult();
+               if (pValue->getValueAsInt32() != 0)
                {
                   DbgPrintf(3, "Configuration script %d matched for agent %s, sending config",
                             dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
@@ -8071,7 +8071,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
             {
                _stprintf(szError, _T("AgentCfg::%d"), dwCfgId);
                PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szError,
-                         pScript->GetErrorText(), 0);
+                         pScript->getErrorText(), 0);
             }
             delete pScript;
          }

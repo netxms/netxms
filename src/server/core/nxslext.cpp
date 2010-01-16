@@ -38,24 +38,24 @@ void RegisterDCIFunctions(NXSL_Environment *pEnv);
 // First argument is a node object, and second is an attribute name
 //
 
-static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	NXSL_Object *object;
 	Node *node;
 	const TCHAR *value;
 
-	if (!argv[0]->IsObject())
+	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->IsString())
+	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->GetValueAsObject();
-	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
 		return NXSL_ERR_BAD_CLASS;
 
-	node = (Node *)object->Data();
-	value = node->GetCustomAttribute(argv[1]->GetValueAsCString());
+	node = (Node *)object->getData();
+	value = node->GetCustomAttribute(argv[1]->getValueAsCString());
 	if (value != NULL)
 	{
 		*ppResult = new NXSL_Value(value);
@@ -74,20 +74,20 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 // Parameters: node object and interface index
 //
 
-static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
-	if (!argv[0]->IsObject())
+	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->IsInteger())
+	if (!argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
-	NXSL_Object *object = argv[0]->GetValueAsObject();
-	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
 		return NXSL_ERR_BAD_CLASS;
 
-	Node *node = (Node *)object->Data();
-	Interface *ifc = node->FindInterface(argv[1]->GetValueAsUInt32(), INADDR_ANY);
+	Node *node = (Node *)object->getData();
+	Interface *ifc = node->FindInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
 	if (ifc != NULL)
 	{
 		*ppResult = new NXSL_Value(ifc->Name());
@@ -119,8 +119,25 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 NXSL_ServerEnv::NXSL_ServerEnv()
                : NXSL_Environment()
 {
-	SetLibrary(g_pScriptLibrary);
-	RegisterFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
+	setLibrary(g_pScriptLibrary);
+	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
-	RegisterFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
+	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
+}
+
+
+//
+// Script trace output
+//
+
+void NXSL_ServerEnv::trace(int level, const TCHAR *text)
+{
+	if (level == 0)
+	{
+		nxlog_write(MSG_OTHER, EVENTLOG_INFORMATION_TYPE, "s", text);
+	}
+	else
+	{
+		DbgPrintf(level, _T("%s"), text);
+	}
 }

@@ -30,7 +30,7 @@ NXSL_TestClass::NXSL_TestClass()
    strcpy(m_szName, "TEST");
 }
 
-NXSL_Value *NXSL_TestClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, char *pszAttr)
 {
    NXSL_Value *pValue = NULL;
 
@@ -40,16 +40,16 @@ NXSL_Value *NXSL_TestClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    }
    else if (!strcmp(pszAttr, "value"))
    {
-		pValue = new NXSL_Value((char *)pObject->Data());
+		pValue = new NXSL_Value((char *)pObject->getData());
    }
    return pValue;
 }
 
-BOOL NXSL_TestClass::SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
+BOOL NXSL_TestClass::setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
 {
    if (!strcmp(pszAttr, "value"))
    {
-		_tcscpy((char *)pObject->Data(), CHECK_NULL(pValue->GetValueAsCString()));
+		_tcscpy((char *)pObject->getData(), CHECK_NULL(pValue->getValueAsCString()));
 		return TRUE;
    }
    return FALSE;

@@ -87,7 +87,7 @@
 // Constructors
 //
 
-NXSL_Value::NXSL_Value(void)
+NXSL_Value::NXSL_Value()
 {
    m_nDataType = NXSL_DT_NULL;
    m_pszValStr = NULL;
@@ -106,7 +106,7 @@ NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
       else if (m_nDataType == NXSL_DT_ARRAY)
       {
          m_value.pArray = pValue->m_value.pArray;
-			m_value.pArray->IncRefCount();
+			m_value.pArray->incRefCount();
       }
       else
       {
@@ -142,7 +142,7 @@ NXSL_Value::NXSL_Value(NXSL_Array *pArray)
 {
    m_nDataType = NXSL_DT_ARRAY;
    m_value.pArray = pArray;
-	pArray->IncRefCount();
+	pArray->incRefCount();
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
 }
@@ -201,7 +201,7 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 		m_pszValStr = _tcsdup(_T(""));
 	}
    m_bStringIsValid = TRUE;
-   UpdateNumber();
+   updateNumber();
 }
 
 NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
@@ -211,7 +211,7 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
    m_pszValStr = (TCHAR *)nx_memdup(CHECK_NULL_EX(pszValue), (dwLen + 1) * sizeof(TCHAR));
    m_pszValStr[dwLen] = 0;
    m_bStringIsValid = TRUE;
-   UpdateNumber();
+   updateNumber();
 }
 
 
@@ -228,8 +228,8 @@ NXSL_Value::~NXSL_Value()
 	}
    else if (m_nDataType == NXSL_DT_ARRAY)
 	{
-		m_value.pArray->DecRefCount();
-		if (m_value.pArray->IsUnused())
+		m_value.pArray->decRefCount();
+		if (m_value.pArray->isUnused())
 			delete m_value.pArray;
 	}
 }
@@ -239,7 +239,7 @@ NXSL_Value::~NXSL_Value()
 // Set value
 //
 
-void NXSL_Value::Set(LONG nValue)
+void NXSL_Value::set(LONG nValue)
 {
    m_nDataType = NXSL_DT_INT32;
    safe_free(m_pszValStr);
@@ -253,7 +253,7 @@ void NXSL_Value::Set(LONG nValue)
 // Update numeric value after string change
 //
 
-void NXSL_Value::UpdateNumber(void)
+void NXSL_Value::updateNumber()
 {
    char *eptr;
    INT64 nVal;
@@ -289,7 +289,7 @@ void NXSL_Value::UpdateNumber(void)
 // Update string value
 //
 
-void NXSL_Value::UpdateString()
+void NXSL_Value::updateString()
 {
    char szBuffer[64];
 
@@ -325,20 +325,20 @@ void NXSL_Value::UpdateString()
 // Convert to another data type
 //
 
-BOOL NXSL_Value::Convert(int nDataType)
+bool NXSL_Value::convert(int nDataType)
 {
    LONG nInt32;
    DWORD uInt32;
    INT64 nInt64;
    QWORD uInt64;
    double dReal;
-   BOOL bRet = TRUE;
+   bool bRet = true;
 
    if (m_nDataType == nDataType)
-      return TRUE;
+      return true;
 
-	if ((nDataType == NXSL_DT_STRING) && IsString())
-		return TRUE;
+	if ((nDataType == NXSL_DT_STRING) && isString())
+		return true;
 
    switch(nDataType)
    {
@@ -365,11 +365,11 @@ BOOL NXSL_Value::Convert(int nDataType)
       case NXSL_DT_REAL:
          if (m_nDataType == NXSL_DT_UINT64)
          {
-            bRet = FALSE;
+            bRet = false;
          }
          else
          {
-            dReal = GetValueAsReal();
+            dReal = getValueAsReal();
             m_nDataType = nDataType;
             m_value.dReal = dReal;
          }
@@ -378,17 +378,17 @@ BOOL NXSL_Value::Convert(int nDataType)
 			if (m_nDataType == NXSL_DT_NULL)
 			{
 				m_nDataType = NXSL_DT_STRING;
-				bRet = TRUE;
+				bRet = true;
 				// String value will be invalidated on exit, and next
-				// call to UpdateString() will create empty string value
+				// call to updateString() will create empty string value
 			}
 			break;
       default:
-         bRet = FALSE;
+         bRet = false;
          break;
    }
    if (bRet)
-      InvalidateString();
+      invalidateString();
    return bRet;
 }
 
@@ -397,13 +397,13 @@ BOOL NXSL_Value::Convert(int nDataType)
 // Get value as ASCIIZ string
 //
 
-char *NXSL_Value::GetValueAsCString(void)
+const TCHAR *NXSL_Value::getValueAsCString()
 {
-   if (IsNull() || IsObject() || IsArray())
+   if (isNull() || isObject() || isArray())
       return NULL;
 
    if (!m_bStringIsValid)
-      UpdateString();
+      updateString();
    return m_pszValStr;
 }
 
@@ -412,16 +412,16 @@ char *NXSL_Value::GetValueAsCString(void)
 // Get value as string
 //
 
-char *NXSL_Value::GetValueAsString(DWORD *pdwLen)
+const TCHAR *NXSL_Value::getValueAsString(DWORD *pdwLen)
 {
-   if (IsNull() || IsObject() || IsArray())
+   if (isNull() || isObject() || isArray())
 	{
 		*pdwLen = 0;
       return NULL;
 	}
 
    if (!m_bStringIsValid)
-      UpdateString();
+      updateString();
    *pdwLen = m_dwStrLen;
    return m_pszValStr;
 }
@@ -431,7 +431,7 @@ char *NXSL_Value::GetValueAsString(DWORD *pdwLen)
 // Get value as 32 bit integer
 //
 
-LONG NXSL_Value::GetValueAsInt32(void)
+LONG NXSL_Value::getValueAsInt32()
 {
    LONG nVal;
 
@@ -444,7 +444,7 @@ LONG NXSL_Value::GetValueAsInt32(void)
 // Get value as unsigned 32 bit integer
 //
 
-DWORD NXSL_Value::GetValueAsUInt32(void)
+DWORD NXSL_Value::getValueAsUInt32()
 {
    DWORD uVal;
 
@@ -457,7 +457,7 @@ DWORD NXSL_Value::GetValueAsUInt32(void)
 // Get value as 64 bit integer
 //
 
-INT64 NXSL_Value::GetValueAsInt64(void)
+INT64 NXSL_Value::getValueAsInt64()
 {
    INT64 nVal;
 
@@ -470,7 +470,7 @@ INT64 NXSL_Value::GetValueAsInt64(void)
 // Get value as unsigned 64 bit integer
 //
 
-QWORD NXSL_Value::GetValueAsUInt64(void)
+QWORD NXSL_Value::getValueAsUInt64()
 {
    QWORD uVal;
 
@@ -483,7 +483,7 @@ QWORD NXSL_Value::GetValueAsUInt64(void)
 // Get value as real number
 //
 
-double NXSL_Value::GetValueAsReal(void)
+double NXSL_Value::getValueAsReal()
 {
    double dVal;
 
@@ -516,15 +516,15 @@ double NXSL_Value::GetValueAsReal(void)
 // Concatenate string value
 //
 
-void NXSL_Value::Concatenate(char *pszString, DWORD dwLen)
+void NXSL_Value::concatenate(const TCHAR *pszString, DWORD dwLen)
 {
    if (!m_bStringIsValid)
-      UpdateString();
+      updateString();
    m_pszValStr = (char *)realloc(m_pszValStr, m_dwStrLen + dwLen + 1);
    memcpy(&m_pszValStr[m_dwStrLen], pszString, dwLen);
    m_dwStrLen += dwLen;
    m_pszValStr[m_dwStrLen] = 0;
-   UpdateNumber();
+   updateNumber();
 }
 
 
@@ -532,9 +532,9 @@ void NXSL_Value::Concatenate(char *pszString, DWORD dwLen)
 // Increment value
 //
 
-void NXSL_Value::Increment(void)
+void NXSL_Value::increment()
 {
-   if (IsNumeric())
+   if (isNumeric())
    {
       switch(m_nDataType)
       {
@@ -556,7 +556,7 @@ void NXSL_Value::Increment(void)
          default:
             break;
       }
-      InvalidateString();
+      invalidateString();
    }
 }
 
@@ -565,9 +565,9 @@ void NXSL_Value::Increment(void)
 // Decrement value
 //
 
-void NXSL_Value::Decrement(void)
+void NXSL_Value::decrement()
 {
-   if (IsNumeric())
+   if (isNumeric())
    {
       switch(m_nDataType)
       {
@@ -589,7 +589,7 @@ void NXSL_Value::Decrement(void)
          default:
             break;
       }
-      InvalidateString();
+      invalidateString();
    }
 }
 
@@ -598,9 +598,9 @@ void NXSL_Value::Decrement(void)
 // Negate value
 //
 
-void NXSL_Value::Negate(void)
+void NXSL_Value::negate()
 {
-   if (IsNumeric())
+   if (isNumeric())
    {
       switch(m_nDataType)
       {
@@ -624,7 +624,7 @@ void NXSL_Value::Negate(void)
          default:
             break;
       }
-      InvalidateString();
+      invalidateString();
    }
 }
 
@@ -633,9 +633,9 @@ void NXSL_Value::Negate(void)
 // Bitwise NOT
 //
 
-void NXSL_Value::BitNot(void)
+void NXSL_Value::bitNot()
 {
-   if (IsNumeric())
+   if (isNumeric())
    {
       switch(m_nDataType)
       {
@@ -654,7 +654,7 @@ void NXSL_Value::BitNot(void)
          default:
             break;
       }
-      InvalidateString();
+      invalidateString();
    }
 }
 
@@ -663,9 +663,9 @@ void NXSL_Value::BitNot(void)
 // Check if value is zero
 //
 
-BOOL NXSL_Value::IsZero(void)
+bool NXSL_Value::isZero()
 {
-   BOOL bVal = FALSE;
+   bool bVal = false;
 
    switch(m_nDataType)
    {
@@ -695,9 +695,9 @@ BOOL NXSL_Value::IsZero(void)
 // Check if value is not a zero
 //
 
-BOOL NXSL_Value::IsNonZero(void)
+bool NXSL_Value::isNonZero()
 {
-   BOOL bVal = FALSE;
+   bool bVal = false;
 
    switch(m_nDataType)
    {
@@ -869,7 +869,7 @@ BOOL NXSL_Value::GE(NXSL_Value *pVal)
 // All these functions assumes that both values have same type
 //
 
-void NXSL_Value::Add(NXSL_Value *pVal)
+void NXSL_Value::add(NXSL_Value *pVal)
 {
    switch(m_nDataType)
    {
@@ -891,10 +891,10 @@ void NXSL_Value::Add(NXSL_Value *pVal)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
-void NXSL_Value::Sub(NXSL_Value *pVal)
+void NXSL_Value::sub(NXSL_Value *pVal)
 {
    switch(m_nDataType)
    {
@@ -916,10 +916,10 @@ void NXSL_Value::Sub(NXSL_Value *pVal)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
-void NXSL_Value::Mul(NXSL_Value *pVal)
+void NXSL_Value::mul(NXSL_Value *pVal)
 {
    switch(m_nDataType)
    {
@@ -941,10 +941,10 @@ void NXSL_Value::Mul(NXSL_Value *pVal)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
-void NXSL_Value::Div(NXSL_Value *pVal)
+void NXSL_Value::div(NXSL_Value *pVal)
 {
    switch(m_nDataType)
    {
@@ -966,10 +966,10 @@ void NXSL_Value::Div(NXSL_Value *pVal)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
-void NXSL_Value::Rem(NXSL_Value *pVal)
+void NXSL_Value::rem(NXSL_Value *pVal)
 {
    switch(m_nDataType)
    {
@@ -988,10 +988,10 @@ void NXSL_Value::Rem(NXSL_Value *pVal)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
-void NXSL_Value::BitAnd(NXSL_Value *pVal)
+void NXSL_Value::bitAnd(NXSL_Value *pVal)
 {
    switch(m_nDataType)
    {
@@ -1010,10 +1010,10 @@ void NXSL_Value::BitAnd(NXSL_Value *pVal)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
-void NXSL_Value::BitOr(NXSL_Value *pVal)
+void NXSL_Value::bitOr(NXSL_Value *pVal)
 {
    switch(m_nDataType)
    {
@@ -1032,10 +1032,10 @@ void NXSL_Value::BitOr(NXSL_Value *pVal)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
-void NXSL_Value::BitXor(NXSL_Value *pVal)
+void NXSL_Value::bitXor(NXSL_Value *pVal)
 {
    switch(m_nDataType)
    {
@@ -1054,7 +1054,7 @@ void NXSL_Value::BitXor(NXSL_Value *pVal)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
 
@@ -1062,7 +1062,7 @@ void NXSL_Value::BitXor(NXSL_Value *pVal)
 // Bit shift operations
 //
 
-void NXSL_Value::LShift(int nBits)
+void NXSL_Value::lshift(int nBits)
 {
    switch(m_nDataType)
    {
@@ -1081,10 +1081,10 @@ void NXSL_Value::LShift(int nBits)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }
 
-void NXSL_Value::RShift(int nBits)
+void NXSL_Value::rshift(int nBits)
 {
    switch(m_nDataType)
    {
@@ -1103,5 +1103,5 @@ void NXSL_Value::RShift(int nBits)
       default:
          break;
    }
-   InvalidateString();
+   invalidateString();
 }

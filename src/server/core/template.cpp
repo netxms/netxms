@@ -1097,11 +1097,11 @@ BOOL Template::isApplicable(Node *node)
 	if (m_applyFilter != NULL)
 	{
 		pEnv = new NXSL_ServerEnv;
-		m_applyFilter->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
-		if (m_applyFilter->Run(pEnv, 0, NULL) == 0)
+		m_applyFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+		if (m_applyFilter->run(pEnv, 0, NULL) == 0)
 		{
-			value = m_applyFilter->GetResult();
-			result = ((value != NULL) && (value->GetValueAsInt32() != 0));
+			value = m_applyFilter->getResult();
+			result = ((value != NULL) && (value->getValueAsInt32() != 0));
 		}
 		else
 		{
@@ -1109,8 +1109,8 @@ BOOL Template::isApplicable(Node *node)
 
 			_sntprintf(buffer, 1024, _T("Template::%s::%d"), m_szName, m_dwId);
 			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), buffer,
-						 m_applyFilter->GetErrorText(), m_dwId);
-			nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_applyFilter->GetErrorText());
+						 m_applyFilter->getErrorText(), m_dwId);
+			nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_applyFilter->getErrorText());
 		}
 	}
 	UnlockData();

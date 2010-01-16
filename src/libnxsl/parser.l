@@ -23,7 +23,7 @@ escape		\\[bnrt0\"]
 #endif
 
 #define YY_EXTRA_TYPE	NXSL_Lexer*
-#define YY_INPUT(buf, result, maxSize) { result = yyextra->LexerInput(buf, maxSize); }
+#define YY_INPUT(buf, result, maxSize) { result = yyextra->lexerInput(buf, maxSize); }
 
 #include "libnxsl.h"
 #include "parser.tab.hpp"
@@ -42,6 +42,8 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"do"		return T_DO;
 <INITIAL>"else"		return T_ELSE;
 <INITIAL>"exit"		return T_EXIT;
+<INITIAL>"FALSE"    return T_FALSE;
+<INITIAL>"false"    return T_FALSE;
 <INITIAL>"for"		return T_FOR;
 <INITIAL>"if"		return T_IF;
 <INITIAL>"ilike"	return T_ILIKE;
@@ -51,6 +53,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"like"		return T_LIKE;
 <INITIAL>"match"	return T_MATCH;
 <INITIAL>"NULL"		return T_NULL;
+<INITIAL>"null"		return T_NULL;
 <INITIAL>"print"	return T_PRINT;
 <INITIAL>"println"	return T_PRINTLN;
 <INITIAL>"real"		return T_TYPE_REAL;
@@ -58,6 +61,8 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"string"	return T_TYPE_STRING;
 <INITIAL>"sub"		return T_SUB;
 <INITIAL>"switch"	return T_SWITCH;
+<INITIAL>"TRUE"		return T_TRUE;
+<INITIAL>"true"		return T_TRUE;
 <INITIAL>"uint32"	return T_TYPE_UINT32;
 <INITIAL>"uint64"	return T_TYPE_UINT64;
 <INITIAL>"use"		return T_USE;
@@ -227,5 +232,5 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 
 static void LexerError(const char *pszMsg, yyscan_t scanner)
 {
-   yyget_extra(scanner)->Error(pszMsg);
+   yyget_extra(scanner)->error(pszMsg);
 }

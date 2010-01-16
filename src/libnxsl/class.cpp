@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: class.cpp
+** File: class.cpp
 **
 **/
 
@@ -28,7 +28,7 @@
 // Class constructor
 //
 
-NXSL_Class::NXSL_Class(void)
+NXSL_Class::NXSL_Class()
 {
    strcpy(m_szName, "generic");
 }
@@ -48,7 +48,7 @@ NXSL_Class::~NXSL_Class()
 // Default implementation - always returns error
 //
 
-NXSL_Value *NXSL_Class::GetAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, char *pszAttr)
 {
    return NULL;
 }
@@ -59,7 +59,7 @@ NXSL_Value *NXSL_Class::GetAttr(NXSL_Object *pObject, char *pszAttr)
 // Default implementation - always returns error
 //
 
-BOOL NXSL_Class::SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
+BOOL NXSL_Class::setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
 {
    return FALSE;
 }
@@ -69,7 +69,7 @@ BOOL NXSL_Class::SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue
 // Object deletion handler
 //
 
-void NXSL_Class::OnObjectDelete(NXSL_Object *object)
+void NXSL_Class::onObjectDelete(NXSL_Object *object)
 {
 }
 

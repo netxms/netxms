@@ -658,8 +658,14 @@ static DWORD HandlerRoute(DWORD dwVersion, SNMP_Variable *pVar,
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen, dwResult;
    ROUTE route;
+	ROUTING_TABLE *rt = (ROUTING_TABLE *)pArg;
 
    dwNameLen = pVar->GetName()->Length();
+	if ((dwNameLen < 5) || (dwNameLen > MAX_OID_LEN))
+	{
+		DbgPrintf(4, _T("HandlerRoute(): strange dwNameLen %d (name=%s)"), dwNameLen, pVar->GetName()->GetValueAsText());
+		return SNMP_ERR_SUCCESS;
+	}
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
    route.dwDestAddr = ntohl(pVar->GetValueAsUInt());
 
@@ -683,12 +689,9 @@ static DWORD HandlerRoute(DWORD dwVersion, SNMP_Variable *pVar,
                            &route.dwDestMask, sizeof(DWORD), FALSE, FALSE)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   ((ROUTING_TABLE *)pArg)->iNumEntries++;
-   ((ROUTING_TABLE *)pArg)->pRoutes = 
-      (ROUTE *)realloc(((ROUTING_TABLE *)pArg)->pRoutes,
-                       sizeof(ROUTE) * ((ROUTING_TABLE *)pArg)->iNumEntries);
-   memcpy(&((ROUTING_TABLE *)pArg)->pRoutes[((ROUTING_TABLE *)pArg)->iNumEntries - 1],
-          &route, sizeof(ROUTE));
+   rt->iNumEntries++;
+   rt->pRoutes = (ROUTE *)realloc(rt->pRoutes, sizeof(ROUTE) * rt->iNumEntries);
+   memcpy(&rt->pRoutes[rt->iNumEntries - 1], &route, sizeof(ROUTE));
    return SNMP_ERR_SUCCESS;
 }
 

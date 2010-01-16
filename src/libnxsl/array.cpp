@@ -87,7 +87,7 @@ static int CompareElements(const void *p1, const void *p2)
 // Get element
 //
 
-NXSL_Value *NXSL_Array::Get(int index)
+NXSL_Value *NXSL_Array::get(int index)
 {
 	NXSL_ArrayElement *element, key;
 
@@ -101,7 +101,7 @@ NXSL_Value *NXSL_Array::Get(int index)
 // Set element
 //
 
-void NXSL_Array::Set(int index, NXSL_Value *value)
+void NXSL_Array::set(int index, NXSL_Value *value)
 {
 	NXSL_ArrayElement *element, key;
 

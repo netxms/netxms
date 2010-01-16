@@ -28,30 +28,31 @@
 // Externals
 //
 
-int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
-int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 
 
 //
@@ -78,6 +79,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 	{ "strftime", F_strftime, -1 },
 	{ "substr", F_substr, -1 },
 	{ "time", F_time, 0 },
+   { "trace", F_trace, 2 },
 	{ "trim", F_trim, 1 },
    { "typeof", F_typeof, 1 },
    { "upper", F_upper, 1 },
@@ -115,7 +117,7 @@ NXSL_Environment::~NXSL_Environment()
 // Find function by name
 //
 
-NXSL_ExtFunction *NXSL_Environment::FindFunction(char *pszName)
+NXSL_ExtFunction *NXSL_Environment::findFunction(char *pszName)
 {
    DWORD i;
 
@@ -130,7 +132,7 @@ NXSL_ExtFunction *NXSL_Environment::FindFunction(char *pszName)
 // Register function set
 //
 
-void NXSL_Environment::RegisterFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList)
+void NXSL_Environment::registerFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList)
 {
    m_pFunctionList = (NXSL_ExtFunction *)realloc(m_pFunctionList, sizeof(NXSL_ExtFunction) * (m_dwNumFunctions + dwNumFunctions));
    memcpy(&m_pFunctionList[m_dwNumFunctions], pList, sizeof(NXSL_ExtFunction) * dwNumFunctions);
@@ -142,7 +144,7 @@ void NXSL_Environment::RegisterFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunctio
 // Find module by name
 //
 
-BOOL NXSL_Environment::UseModule(NXSL_Program *pMain, TCHAR *pszName)
+BOOL NXSL_Environment::useModule(NXSL_Program *pMain, const TCHAR *pszName)
 {
    TCHAR *pData, szBuffer[MAX_PATH];
    DWORD dwSize;
@@ -152,10 +154,10 @@ BOOL NXSL_Environment::UseModule(NXSL_Program *pMain, TCHAR *pszName)
    // First, try to find module in library
    if (m_pLibrary != NULL)
    {
-      pScript = m_pLibrary->FindScript(pszName);
+      pScript = m_pLibrary->findScript(pszName);
       if (pScript != NULL)
       {
-         pMain->UseModule(pScript, pszName);
+         pMain->useModule(pScript, pszName);
          bRet = TRUE;
       }
    }
@@ -170,7 +172,7 @@ BOOL NXSL_Environment::UseModule(NXSL_Program *pMain, TCHAR *pszName)
          pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0);
          if (pScript != NULL)
          {
-            pMain->UseModule(pScript, pszName);
+            pMain->useModule(pScript, pszName);
             delete pScript;
             bRet = TRUE;
          }
@@ -179,4 +181,14 @@ BOOL NXSL_Environment::UseModule(NXSL_Program *pMain, TCHAR *pszName)
    }
 
    return bRet;
+}
+
+
+//
+// Write trace message
+// Default implementation does nothing
+//
+
+void NXSL_Environment::trace(int level, const TCHAR *text)
+{
 }
