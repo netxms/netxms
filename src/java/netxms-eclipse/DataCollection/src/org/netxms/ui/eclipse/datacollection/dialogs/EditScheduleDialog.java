@@ -46,7 +46,7 @@ public class EditScheduleDialog extends Dialog
       layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textSchedule = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "Schedule", schedule,
+      textSchedule = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Schedule", schedule,
                                                     WidgetHelper.DEFAULT_LAYOUT_DATA);
       textSchedule.getShell().setMinimumSize(300, 0);
       

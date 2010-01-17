@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
@@ -9,18 +24,20 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.tools.NXSLLineStyleListener;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -31,7 +48,7 @@ public class Transformation extends PropertyPage
 {
 	private DataCollectionItem dci;
 	private Combo deltaCalculation;
-	private Text transformationScript;
+	private StyledText transformationScript;
 	private Button testScriptButton;
 	
 	/* (non-Javadoc)
@@ -64,14 +81,22 @@ public class Transformation extends PropertyPage
       gd.grabExcessVerticalSpace = true;
       gd.widthHint = 0;
       gd.heightHint = 0;
-      transformationScript = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL,
-                                                            "Step 2 - transformation script", dci.getTransformationScript(), gd);
+      transformationScript = WidgetHelper.createLabeledStyledText(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL,
+                                                                  "Step 2 - transformation script", null, gd);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       transformationScript.setLayoutData(gd);
+      
+      transformationScript.setFont(new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL));
+      transformationScript.setTabs(3);
+      transformationScript.setWordWrap(false);
+      final NXSLLineStyleListener listener = new NXSLLineStyleListener();
+      transformationScript.addLineStyleListener(listener);
+      transformationScript.addExtendedModifyListener(listener);
+      transformationScript.setText(dci.getTransformationScript());
       
       testScriptButton = new Button(transformationScript.getParent(), SWT.PUSH);
       testScriptButton.setText("&Test...");   

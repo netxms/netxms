@@ -122,7 +122,7 @@ public class Authentication extends PropertyPage
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalSpan = 2;
-      textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, "Certificate mapping data",
+      textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Certificate mapping data",
                                                        object.getCertMappingData(), gridData);
 		
 		return dialogArea;

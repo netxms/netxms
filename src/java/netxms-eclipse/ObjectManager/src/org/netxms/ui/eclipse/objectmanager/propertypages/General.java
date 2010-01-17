@@ -49,16 +49,16 @@ public class General extends PropertyPage
       dialogArea.setLayout(layout);
       
       // Object ID
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object ID",
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Object ID",
                                      Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object class
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object class",
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Object class",
                                      object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Object name
       initialName = new String(object.getObjectName());
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "Object name",
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Object name",
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		return dialogArea;

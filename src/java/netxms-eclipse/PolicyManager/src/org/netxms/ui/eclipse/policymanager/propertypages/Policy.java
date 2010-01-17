@@ -52,7 +52,7 @@ public class Policy extends PropertyPage
       
 		// Object name
       initialDescription = new String(object.getDescription());
-      textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "Description",
+      textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Description",
       		                                    initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		return dialogArea;

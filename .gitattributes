@@ -558,7 +558,10 @@ src/java/netxms-eclipse/ServerConfig/plugin.xml -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/Activator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/DeleteVariable.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/EditVariable.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/ExportConfiguration.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/ImportConfiguration.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/actions/OpenServerConfig.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/ConfigurationImportDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/VariableEditDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/ServerConfigurationEditor.java -text
 src/java/netxms-eclipse/ServerJobManager/.settings/org.eclipse.jdt.core.prefs -text
@@ -650,6 +653,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IUIConstants.ja
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/NXMCSharedData.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/StatusDisplayInfo.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/NXSLLineStyleListener.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/RefreshAction.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/SortableTableViewer.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/StringComparator.java -text

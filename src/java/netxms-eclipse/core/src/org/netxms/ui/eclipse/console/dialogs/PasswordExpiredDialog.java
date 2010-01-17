@@ -57,8 +57,8 @@ public class PasswordExpiredDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		msg.setLayoutData(gd);
-		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, "New password:", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, "Confirm new password:", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "New password:", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "Confirm new password:", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
 
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;

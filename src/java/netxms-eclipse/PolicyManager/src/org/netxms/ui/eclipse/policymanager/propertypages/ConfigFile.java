@@ -57,7 +57,7 @@ public class ConfigFile extends PropertyPage
       
 		// File name
       initialName = new String(object.getFileName());
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "File name",
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "File name",
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// File content

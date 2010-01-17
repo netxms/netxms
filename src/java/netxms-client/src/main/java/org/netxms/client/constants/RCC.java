@@ -94,8 +94,8 @@ public final class RCC
 	public static final int ALARM_OPEN_IN_HELPDESK = 65;
 	public static final int ALARM_NOT_OUTSTANDING = 66;
 	public static final int NOT_PUSH_DCI = 67;
-	public static final int NXMP_PARSE_ERROR = 68;
-	public static final int NXMP_VALIDATION_ERROR = 69;
+	public static final int CONFIG_PARSE_ERROR = 68;
+	public static final int CONFIG_VALIDATION_ERROR = 69;
 	public static final int INVALID_GRAPH_ID = 70;
 	public static final int LOCAL_CRYPTO_ERROR = 71;
 	public static final int UNSUPPORTED_AUTH_TYPE = 72;

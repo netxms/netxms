@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.tools;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -45,12 +46,13 @@ public class WidgetHelper
 	 * 
 	 * @param parent Parent composite
 	 * @param flags Flags for Text creation
+	 * @param widthHint Width hint for text control
 	 * @param labelText Label's text
 	 * @param initialText Initial text for input field (may be null)
 	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
 	 * @return Created Text object
 	 */
-	public static Text createLabeledText(final Composite parent, int flags, final String labelText,
+	public static Text createLabeledText(final Composite parent, int flags, int widthHint, final String labelText,
 	                                     final String initialText, Object layoutData)
 	{
 		Composite group = new Composite(parent, SWT.NONE);
@@ -79,6 +81,56 @@ public class WidgetHelper
 		label.setText(labelText);
 
 		Text text = new Text(group, flags);
+		if (initialText != null)
+			text.setText(initialText);
+		GridData gridData = new GridData();
+		gridData.horizontalAlignment = GridData.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		gridData.widthHint = widthHint;
+		text.setLayoutData(gridData);		
+		
+		return text;
+	}
+
+	/**
+    * Create pair of label and StyledText widget, with label above
+	 * 
+	 * @param parent Parent composite
+	 * @param flags Flags for Text creation
+	 * @param labelText Label's text
+	 * @param initialText Initial text for input field (may be null)
+	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
+	 * @return Created Text object
+	 */
+	public static StyledText createLabeledStyledText(final Composite parent, int flags, final String labelText,
+	                                                 final String initialText, Object layoutData)
+	{
+		Composite group = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.verticalSpacing = INNER_SPACING;
+		layout.horizontalSpacing = 0;
+		layout.marginTop = 0;
+		layout.marginBottom = 0;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		group.setLayout(layout);
+
+		if (layoutData != DEFAULT_LAYOUT_DATA)
+		{
+			group.setLayoutData(layoutData);
+		}
+		else
+		{
+			GridData gridData = new GridData();
+			gridData.horizontalAlignment = GridData.FILL;
+			gridData.grabExcessHorizontalSpace = true;
+			group.setLayoutData(gridData);
+		}
+		
+		Label label = new Label(group, SWT.NONE);
+		label.setText(labelText);
+
+		StyledText text = new StyledText(group, flags);
 		if (initialText != null)
 			text.setText(initialText);
 		GridData gridData = new GridData();

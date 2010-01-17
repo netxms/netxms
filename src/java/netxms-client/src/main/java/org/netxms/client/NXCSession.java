@@ -103,6 +103,10 @@ public class NXCSession
 	public static final int USER_MODIFY_MEMBERS = 0x00000020;
 	public static final int USER_MODIFY_CERT_MAPPING = 0x00000040;
 	public static final int USER_MODIFY_AUTH_METHOD = 0x00000080;
+	
+	// Configuration import options
+	public static final int CFG_IMPORT_REPLACE_EVENT_BY_CODE = 0x0001;
+	public static final int CFG_IMPORT_REPLACE_EVENT_BY_NAME = 0x0002;
 
 	// Private constants
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
@@ -714,7 +718,20 @@ public class NXCSession
 		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id);
 		final int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
 		if (rcc != RCC.SUCCESS)
-			throw new NXCException(rcc);
+		{
+			if ((rcc == RCC.COMPONENT_LOCKED) && (msg.findVariable(NXCPCodes.VID_LOCKED_BY) != null))
+			{
+				throw new NXCException(rcc, "locked by " + msg.getVariableAsString(NXCPCodes.VID_LOCKED_BY));
+			}
+			else if (msg.findVariable(NXCPCodes.VID_ERROR_TEXT) != null)
+			{
+				throw new NXCException(rcc, msg.getVariableAsString(NXCPCodes.VID_ERROR_TEXT));
+			}
+			else
+			{
+				throw new NXCException(rcc);
+			}
+		}
 		return msg;
 	}
 
@@ -2683,5 +2700,48 @@ public class NXCSession
 			baseId += 3;
 		}
 		return list;
+	}
+
+	/**
+	 * Export server configuration. Returns requested configuration elements exported into XML.
+	 * 
+	 * @param description Description of exported configuration
+	 * @param events List of event codes
+	 * @param traps List of trap identifiers
+	 * @param templates List of template object identifiers
+	 * @return resulting XML document
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public String exportConfiguration(String description, long[] events, long[] traps, long[] templates) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
+		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_EVENTS, events.length);
+		msg.setVariable(NXCPCodes.VID_EVENT_LIST, events);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_OBJECTS, templates.length);
+		msg.setVariable(NXCPCodes.VID_OBJECT_LIST, templates);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_TRAPS, traps.length);
+		msg.setVariable(NXCPCodes.VID_TRAP_LIST, traps);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsString(NXCPCodes.VID_NXMP_CONTENT);
+	}
+	
+	/**
+	 * Import server configuration (events, traps, thresholds) from XML
+	 * 
+	 * @param config Configuration in XML format
+	 * @param flags Import flags
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void importConfiguration(String config, int flags) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_IMPORT_CONFIGURATION);
+		msg.setVariable(NXCPCodes.VID_NXMP_CONTENT, config);
+		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }

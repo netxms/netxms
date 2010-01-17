@@ -80,8 +80,8 @@ public class NXCException extends Exception
       "Alarm is still open in helpdesk system",
       "Alarm is not in \"outstanding\" state",
       "DCI data source is not a push agent",
-      "Error parsing management pack file",
-      "Management pack validation error",
+      "Error parsing configuration import file",
+      "Configuration cannot be imported because of validation errors",
 		"Invalid graph ID",
 		"Local cryptographic provider failure",
 		"Unsupported authentication type",
@@ -104,11 +104,20 @@ public class NXCException extends Exception
 	};
 
 	private int errorCode;
+	private String errorText;
 	
 	public NXCException(int errorCode)
 	{
 		super();
 		this.errorCode = errorCode;
+		this.errorText = null;
+	}
+
+	public NXCException(int errorCode, String errorText)
+	{
+		super();
+		this.errorCode = errorCode;
+		this.errorText = errorText;
 	}
 
 	/**
@@ -125,8 +134,11 @@ public class NXCException extends Exception
 	@Override
 	public String getMessage()
 	{
-		if ((errorCode >= 0) && (errorCode < errorTexts.length))
-			return errorTexts[errorCode];
-		return "Error " + errorCode;
+		String msg = ((errorCode >= 0) && (errorCode < errorTexts.length)) ? errorTexts[errorCode] : "Error " + errorCode;
+		if (errorText != null)
+		{
+			msg += " (" + errorText + ")";
+		}
+		return msg;
 	}
 }

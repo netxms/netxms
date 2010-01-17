@@ -61,19 +61,19 @@ public class General extends PropertyPage
       dialogArea.setLayout(layout);
       
       // Object ID
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object ID",
+      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Object ID",
                                      Long.toString(object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object name
       initialName = new String(object.getName());
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "Login name",
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Login name",
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Full name
       if (object instanceof NXCUser)
       {
 	      initialFullName = new String(((NXCUser)object).getFullName());
-	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "Full name",
+	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Full name",
 	      		                                        initialFullName, WidgetHelper.DEFAULT_LAYOUT_DATA);
       }
       else
@@ -83,7 +83,7 @@ public class General extends PropertyPage
       
 		// Description
       initialDescription = new String(object.getDescription());
-      textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER,
+      textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
                                                        "Description", initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		return dialogArea;
