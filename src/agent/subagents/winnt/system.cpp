@@ -187,3 +187,18 @@ LONG H_ActiveUserSessions(const char *pszCmd, const char *pArg, StringList *valu
    }
    return nRet;
 }
+
+
+//
+// Handler for System.AppAddressSpace
+//
+
+LONG H_AppAddressSpace(const char *pszCmd, const char *pArg, char *pValue)
+{
+	SYSTEM_INFO si;
+
+	GetSystemInfo(&si);
+	DWORD_PTR size = (DWORD_PTR)si.lpMaximumApplicationAddress - (DWORD_PTR)si.lpMinimumApplicationAddress;
+	ret_uint(pValue, (DWORD)(size / 1024 / 1024));
+	return SYSINFO_RC_SUCCESS;
+}

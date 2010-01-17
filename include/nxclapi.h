@@ -401,8 +401,8 @@ enum
 #define RCC_ALARM_OPEN_IN_HELPDESK  ((DWORD)65)
 #define RCC_ALARM_NOT_OUTSTANDING   ((DWORD)66)
 #define RCC_NOT_PUSH_DCI            ((DWORD)67)
-#define RCC_NXMP_PARSE_ERROR        ((DWORD)68)
-#define RCC_NXMP_VALIDATION_ERROR   ((DWORD)69)
+#define RCC_CONFIG_PARSE_ERROR      ((DWORD)68)
+#define RCC_CONFIG_VALIDATION_ERROR ((DWORD)69)
 #define RCC_INVALID_GRAPH_ID        ((DWORD)70)
 #define RCC_LOCAL_CRYPTO_ERROR		((DWORD)71)
 #define RCC_UNSUPPORTED_AUTH_TYPE	((DWORD)72)
@@ -716,11 +716,11 @@ enum
 
 
 //
-// Management pack installation flags
+// Configuration import flags
 //
 
-#define NXMPIF_REPLACE_EVENT_BY_CODE   0x0001
-#define NXMPIF_REPLACE_EVENT_BY_NAME   0x0002
+#define CFG_IMPORT_REPLACE_EVENT_BY_CODE   0x0001
+#define CFG_IMPORT_REPLACE_EVENT_BY_NAME   0x0002
 
 
 //

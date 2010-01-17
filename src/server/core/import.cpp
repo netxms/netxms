@@ -145,7 +145,7 @@ bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorText
 					EVENT_TEMPLATE *pEvent = FindEventTemplateByName(e->getValue());
 					if (pEvent != NULL)
 					{
-						if (!(flags & NXMPIF_REPLACE_EVENT_BY_NAME))
+						if (!(flags & CFG_IMPORT_REPLACE_EVENT_BY_NAME))
 						{
 							_sntprintf(errorText, errorTextLen, _T("Event with name %s already exist"), e->getValue());
 							goto stop_processing;
@@ -163,7 +163,7 @@ bool ValidateConfig(Config *config, DWORD flags, TCHAR *errorText, int errorText
 				EVENT_TEMPLATE *pEvent = FindEventTemplateByCode(code);
 				if (pEvent != NULL)
 				{
-					if (!(flags & NXMPIF_REPLACE_EVENT_BY_CODE))
+					if (!(flags & CFG_IMPORT_REPLACE_EVENT_BY_CODE))
 					{
 						_sntprintf(errorText, errorTextLen, _T("Event with code %d already exist (existing event name: %s; new event name: %s)"),
 						           pEvent->dwCode, pEvent->szName, event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));

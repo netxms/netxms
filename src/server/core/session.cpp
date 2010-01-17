@@ -8637,7 +8637,7 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
                      }
                      else
                      {
-                        msg.SetVariable(VID_RCC, RCC_NXMP_VALIDATION_ERROR);
+                        msg.SetVariable(VID_RCC, RCC_CONFIG_VALIDATION_ERROR);
                         msg.SetVariable(VID_ERROR_TEXT, szError);
                      }
 
@@ -8671,7 +8671,7 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
          }
          else
          {
-            msg.SetVariable(VID_RCC, RCC_NXMP_PARSE_ERROR);
+            msg.SetVariable(VID_RCC, RCC_CONFIG_PARSE_ERROR);
          }
 			delete config;
          free(content);

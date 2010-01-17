@@ -28,6 +28,7 @@
 //
 
 LONG H_ActiveUserSessions(const char *cmd, const char *arg, StringList *value);
+LONG H_AppAddressSpace(const char *pszCmd, const char *pArg, char *pValue);
 LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue);
 LONG H_RemoteShareStatus(const char *pszCmd, const char *pArg, char *pValue);
 LONG H_ProcessList(const char *cmd, const char *arg, StringList *value);
@@ -135,6 +136,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
 	{ "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
 	{ "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
+	{ "System.AppAddressSpace", H_AppAddressSpace, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_APPADDRESSSPACE },
 	{ "System.ConnectedUsers", H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
 	{ "System.ProcessCount", H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },

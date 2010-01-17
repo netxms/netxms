@@ -3654,17 +3654,17 @@ void CConsoleApp::OnToolsImportmp()
 
    dwFlags = GetProfileInt(_T("MPImportDialog"), _T("Flags"), 0);
    dlg.m_strFile = GetProfileString(_T("MPImportDialog"), _T("FileName"), _T(""));
-   if (dwFlags & NXMPIF_REPLACE_EVENT_BY_CODE)
+   if (dwFlags & CFG_IMPORT_REPLACE_EVENT_BY_CODE)
       dlg.m_bReplaceEventByCode = TRUE;
-   if (dwFlags & NXMPIF_REPLACE_EVENT_BY_NAME)
+   if (dwFlags & CFG_IMPORT_REPLACE_EVENT_BY_NAME)
       dlg.m_bReplaceEventByName = TRUE;
    if (dlg.DoModal() == IDOK)
    {
       dwFlags = 0;
       if (dlg.m_bReplaceEventByCode)
-         dwFlags |= NXMPIF_REPLACE_EVENT_BY_CODE;
+         dwFlags |= CFG_IMPORT_REPLACE_EVENT_BY_CODE;
       if (dlg.m_bReplaceEventByName)
-         dwFlags |= NXMPIF_REPLACE_EVENT_BY_NAME;
+         dwFlags |= CFG_IMPORT_REPLACE_EVENT_BY_NAME;
       WriteProfileInt(_T("MPImportDialog"), _T("Flags"), dwFlags);
       WriteProfileString(_T("MPImportDialog"), _T("FileName"), (LPCTSTR)dlg.m_strFile);
 
@@ -3704,14 +3704,14 @@ void CConsoleApp::OnToolsImportmp()
             }
             else
             {
-               if (dwResult == RCC_NXMP_PARSE_ERROR)
+               if (dwResult == RCC_CONFIG_PARSE_ERROR)
                {
                   TCHAR szBuffer[2048];
 
                   _sntprintf(szBuffer, 2048, _T("Error parsing management pack file:\n%s"), szErrorText);
                   m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
                }
-               else if (dwResult == RCC_NXMP_VALIDATION_ERROR)
+               else if (dwResult == RCC_CONFIG_VALIDATION_ERROR)
                {
                   TCHAR szBuffer[2048];
 

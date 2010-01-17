@@ -150,7 +150,7 @@ public:
 	~PositionCache();
 	void Clear();
 	void SetSize(size_t size_);
-	int GetSize() { return size; }
+	int GetSize() { return (int)size; }
 	void MeasureWidths(Surface *surface, ViewStyle &vstyle, unsigned int styleNumber,
 		const char *s, unsigned int len, int *positions);
 };
