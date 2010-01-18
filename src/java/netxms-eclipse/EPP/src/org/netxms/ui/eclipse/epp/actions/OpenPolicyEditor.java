@@ -6,7 +6,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.epp.views.PolicyEditor;
+import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 
 public class OpenPolicyEditor implements IWorkbenchWindowActionDelegate
 {
@@ -39,7 +39,7 @@ public class OpenPolicyEditor implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(PolicyEditor.ID);
+				window.getActivePage().showView(EventProcessingPolicyEditor.ID);
 			} 
 			catch (PartInitException e) 
 			{

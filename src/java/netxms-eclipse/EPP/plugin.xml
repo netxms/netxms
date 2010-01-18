@@ -11,7 +11,7 @@
             name="Event Processing Policy"
             icon="icons/epp.png"
             category="org.netxms.ui.eclipse.config"
-            class="org.netxms.ui.eclipse.epp.views.PolicyEditor"
+            class="org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor"
             id="org.netxms.ui.eclipse.epp.view.policy_editor">
       </view>
    </extension>

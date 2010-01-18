@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.epp.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
@@ -30,8 +31,10 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Activator;
-import org.netxms.ui.eclipse.epp.widgets.RuleList;
+import org.netxms.ui.eclipse.epp.widgets.PolicyEditor;
+import org.netxms.ui.eclipse.epp.widgets.helpers.EPPCellFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
@@ -39,7 +42,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
  * @author Victor
  *
  */
-public class PolicyEditor extends ViewPart
+public class EventProcessingPolicyEditor extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor";
 	public static final String JOB_FAMILY = "PolicyEditorJob";
@@ -47,7 +50,7 @@ public class PolicyEditor extends ViewPart
 	private NXCSession session;
 	private boolean policyLocked = false;
 	private EventProcessingPolicy policy; 
-	private RuleList ruleList;
+	private PolicyEditor editor;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -57,10 +60,13 @@ public class PolicyEditor extends ViewPart
 	{
 		session = NXMCSharedData.getInstance().getSession();
 
+		// Initiate loading of event manager plugin if it was not loaded before
+		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		
 		parent.setLayout(new FillLayout());
 		
-		ruleList = new RuleList(parent, SWT.NONE);
-		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, null) {
+		editor = new PolicyEditor(parent, SWT.NONE, new EPPCellFactory());
+		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -76,7 +82,7 @@ public class PolicyEditor extends ViewPart
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						ruleList.setContent(policy.getRules());
+						editor.setContent(policy.getRules());
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -90,7 +96,7 @@ public class PolicyEditor extends ViewPart
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						PolicyEditor.this.getViewSite().getPage().hideView(PolicyEditor.this);
+						EventProcessingPolicyEditor.this.getViewSite().getPage().hideView(EventProcessingPolicyEditor.this);
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -105,8 +111,7 @@ public class PolicyEditor extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		// TODO Auto-generated method stub
-
+		editor.setFocus();
 	}
 
 	/* (non-Javadoc)
@@ -126,6 +131,7 @@ public class PolicyEditor extends ViewPart
 
 					try
 					{
+						session.closeEventProcessingPolicy();
 						status = Status.OK_STATUS;
 					}
 					catch(Exception e)

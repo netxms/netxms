@@ -1148,6 +1148,30 @@ public class NXCSession
 	}
 
 	/**
+	 * Find multiple NetXMS objects by identifiers
+	 * 
+	 * @param idList
+	 *           array of object identifiers
+	 * @return array of found objects
+	 */
+	public GenericObject[] findMultipleObjects(final Long[] idList)
+	{
+		ArrayList<GenericObject> result = new ArrayList<GenericObject>(idList.length);
+
+		synchronized(objectList)
+		{
+			for(int i = 0; i < idList.length; i++)
+			{
+				final GenericObject object = objectList.get(idList[i]);
+				if (object != null)
+					result.add(object);
+			}
+		}
+
+		return result.toArray(new GenericObject[result.size()]);
+	}
+
+	/**
 	 * Get list of top-level objects.
 	 * 
 	 * @return List of all top level objects (either without parents or with inaccessible parents)
@@ -2453,6 +2477,28 @@ public class NXCSession
 			e = eventTemplates.get(code);
 		}
 		return e;
+	}
+	
+	/**
+	 * Find multiple event templates by event codes in event template database internally maintained by session object.
+	 * You must call NXCSession.syncEventTemplates() first to make local copy of event template database.
+	 * 
+	 * @param codes List of event codes
+	 * @return List of found event templates
+	 */
+	public List<EventTemplate> findMultipleEventTemplates(final Long[] codes)
+	{
+		List<EventTemplate> list = new ArrayList<EventTemplate>();
+		synchronized(eventTemplates)
+		{
+			for(long code : codes)
+			{
+				EventTemplate e = eventTemplates.get(code);
+				if (e != null)
+					list.add(e);
+			}
+		}
+		return list;
 	}
 
 	/**
