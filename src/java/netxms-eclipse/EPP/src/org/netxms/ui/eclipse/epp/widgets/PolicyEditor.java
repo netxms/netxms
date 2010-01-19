@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.ui.eclipse.epp.widgets.helpers.CellFactory;
 
 /**
@@ -35,6 +36,9 @@ import org.netxms.ui.eclipse.epp.widgets.helpers.CellFactory;
  */
 public class PolicyEditor extends Composite
 {
+	public static final Color COLOR_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
+	public static final Color COLOR_COLLAPSED_RULE = new Color(Display.getCurrent(), 255, 255, 150);
+	
 	private CellFactory cellFactory;
 	private int[] columnWidths;
 	private List<? extends Object> content;
@@ -54,11 +58,16 @@ public class PolicyEditor extends Composite
 		setLayout(new FillLayout());
 		
 		rulesArea = new ScrolledComposite(this, SWT.H_SCROLL | SWT.V_SCROLL);
-//rulesArea.setBackground(new Color(getShell().getDisplay(), 0, 200, 0));		
 		ruleList = new Composite(rulesArea, SWT.NONE);
-		ruleList.setLayout(new RowLayout(SWT.VERTICAL));
+		RowLayout layout = new RowLayout(SWT.VERTICAL);
+		layout.marginTop = 1;
+		layout.marginBottom = 1;
+		layout.marginLeft = 1;
+		layout.marginRight = 1;
+		layout.spacing = Rule.CELL_SPACING;
+		ruleList.setLayout(layout);
+		ruleList.setBackground(new Color(getDisplay(), 153, 180, 209));
 		rulesArea.setContent(ruleList);
-ruleList.setBackground(new Color(getShell().getDisplay(), 0, 0, 200));		
 	}
 
 	/**
@@ -79,11 +88,15 @@ ruleList.setBackground(new Color(getShell().getDisplay(), 0, 0, 200));
 		this.content = content;
 		rules = new ArrayList<Rule>(content.size());
 		
+		int id = 1;
 		for(Object o : content)
 		{
-			rules.add(new Rule(ruleList, this, o));
+			rules.add(new Rule(ruleList, this, o, id++));
 		}
 		ruleList.setSize(ruleList.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		
+		setLayoutDeferred(false);
+		setRedraw(true);
 	}
 
 	/**
@@ -103,5 +116,13 @@ ruleList.setBackground(new Color(getShell().getDisplay(), 0, 0, 200));
 	public List<? extends Object> getContent()
 	{
 		return content;
+	}
+
+	/**
+	 * Adjust rule area size after changes in rule
+	 */
+	public void adjustRuleAreaSize()
+	{
+		ruleList.setSize(ruleList.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 	}
 }

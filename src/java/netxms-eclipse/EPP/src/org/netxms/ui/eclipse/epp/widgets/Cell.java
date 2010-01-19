@@ -41,5 +41,6 @@ public abstract class Cell extends Composite
 		super(rule, SWT.NONE);
 		this.data = data;
 		setLayout(new FillLayout());
+		setBackground(PolicyEditor.COLOR_BACKGROUND);
 	}
 }

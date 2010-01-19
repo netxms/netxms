@@ -18,12 +18,17 @@
  */
 package org.netxms.ui.eclipse.epp.widgets.helpers;
 
+import org.netxms.ui.eclipse.epp.widgets.ActionsCell;
+import org.netxms.ui.eclipse.epp.widgets.AlarmCell;
 import org.netxms.ui.eclipse.epp.widgets.Cell;
 import org.netxms.ui.eclipse.epp.widgets.CommentCell;
 import org.netxms.ui.eclipse.epp.widgets.EventsCell;
 import org.netxms.ui.eclipse.epp.widgets.ObjectsCell;
+import org.netxms.ui.eclipse.epp.widgets.OptionsCell;
 import org.netxms.ui.eclipse.epp.widgets.Rule;
 import org.netxms.ui.eclipse.epp.widgets.ScriptCell;
+import org.netxms.ui.eclipse.epp.widgets.SeverityCell;
+import org.netxms.ui.eclipse.epp.widgets.SituationCell;
 
 /**
  * Cell factory for event processing policy
@@ -31,12 +36,17 @@ import org.netxms.ui.eclipse.epp.widgets.ScriptCell;
  */
 public class EPPCellFactory extends CellFactory
 {
-	private static final int COLUMN_COUNT = 4;
+	private static final int COLUMN_COUNT = 9;
 	
 	private static final int COLUMN_OBJECTS = 0;
 	private static final int COLUMN_EVENTS = 1;
-	private static final int COLUMN_SCRIPT = 2;
-	private static final int COLUMN_COMMENTS = 3;
+	private static final int COLUMN_SEVERITY = 2;
+	private static final int COLUMN_SCRIPT = 3;
+	private static final int COLUMN_ALARM = 4;
+	private static final int COLUMN_SITUATION = 5;
+	private static final int COLUMN_ACTIONS = 6;
+	private static final int COLUMN_OPTIONS = 7;
+	private static final int COLUMN_COMMENTS = 8;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.epp.widgets.helpers.CellFactory#createCell(int, org.netxms.ui.eclipse.epp.widgets.Rule, java.lang.Object)
@@ -50,8 +60,18 @@ public class EPPCellFactory extends CellFactory
 				return new ObjectsCell(rule, data);
 			case COLUMN_EVENTS:
 				return new EventsCell(rule, data);
+			case COLUMN_SEVERITY:
+				return new SeverityCell(rule, data);
 			case COLUMN_SCRIPT:
 				return new ScriptCell(rule, data);
+			case COLUMN_ALARM:
+				return new AlarmCell(rule, data);
+			case COLUMN_SITUATION:
+				return new SituationCell(rule, data);
+			case COLUMN_ACTIONS:
+				return new ActionsCell(rule, data);
+			case COLUMN_OPTIONS:
+				return new OptionsCell(rule, data);
 			case COLUMN_COMMENTS:
 				return new CommentCell(rule, data);
 			default:

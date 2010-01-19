@@ -39,5 +39,7 @@ public class CommentCell extends Cell
 		comments = new Text(this, SWT.MULTI | SWT.WRAP);
 		comments.setEditable(false);
 		comments.setText(eppRule.getComments());
+		
+		rule.setRuleName(eppRule.getComments());
 	}
 }
