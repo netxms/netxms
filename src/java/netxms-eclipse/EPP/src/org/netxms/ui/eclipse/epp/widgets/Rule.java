@@ -180,6 +180,17 @@ public class Rule extends Composite
 		collapsedLabel.setVisible(collapsed);
 		editor.adjustRuleAreaSize();
 	}
+	
+	/**
+	 * Notify rule object that content of one of the cells was changed.
+	 * This will force rule to recalculate it's bounds and resize rule list. 
+	 */
+	public void cellContentChanged()
+	{
+		editor.setModified(true);
+		if (!collapsed)
+			editor.adjustRuleAreaSize();		
+	}
 
 	/**
 	 * @return the name

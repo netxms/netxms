@@ -2394,6 +2394,38 @@ public class NXCSession
 	}
 	
 	/**
+	 * Save event processing policy. If policy was not previously open by current session exception will be thrown.
+	 *
+	 * @param epp Modified event processing policy
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void saveEventProcessingPolicy(EventProcessingPolicy epp) throws IOException, NXCException
+	{
+		final List<EventProcessingPolicyRule> rules = epp.getRules();
+		
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_EPP);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_RULES, rules.size());
+		sendMessage(msg);
+		final long msgId = msg.getMessageId();
+		waitForRCC(msgId);
+
+		int id = 1;
+		for(EventProcessingPolicyRule rule : rules)
+		{
+			msg = new NXCPMessage(NXCPCodes.CMD_EPP_RECORD);
+			msg.setMessageId(msgId);
+			msg.setVariableInt32(NXCPCodes.VID_RULE_ID, id++);
+			rule.fillMessage(msg);
+			sendMessage(msg);
+		}
+		
+		// Wait for final confirmation if there was some rules
+		if (rules.size() > 0)
+			waitForRCC(msgId);
+	}
+	
+	/**
 	 * Close event processing policy. This call will unlock event processing policy on server.
 	 * If policy was not previously open by current session exception will be thrown.
 	 * 

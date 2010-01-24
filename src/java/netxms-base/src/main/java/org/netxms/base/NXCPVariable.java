@@ -125,8 +125,10 @@ public class NXCPVariable
 	}
 
 	/**
-	 * @param varId
-	 * @param value
+	 * Create binary variable from long[]
+	 * 
+	 * @param varId Variable ID
+	 * @param value Value
 	 */
 	public NXCPVariable(final long varId, final long[] value)
 	{
@@ -139,6 +141,33 @@ public class NXCPVariable
 		{
 			for(int i = 0; i < value.length; i++)
 				out.writeInt((int)value[i]);
+		}
+		catch(IOException e)
+		{
+		}
+		binaryValue = byteStream.toByteArray();
+		stringValue = "";
+		integerValue = (long)0;
+		realValue = (double)0;
+	}
+
+	/**
+	 * Create binary variable from Long[]
+	 * 
+	 * @param varId Variable ID
+	 * @param value Value
+	 */
+	public NXCPVariable(final long varId, final Long[] value)
+	{
+		variableId = varId;
+		variableType = TYPE_BINARY;
+
+		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.length * 4);
+		final DataOutputStream out = new DataOutputStream(byteStream);
+		try
+		{
+			for(int i = 0; i < value.length; i++)
+				out.writeInt(value[i].intValue());
 		}
 		catch(IOException e)
 		{

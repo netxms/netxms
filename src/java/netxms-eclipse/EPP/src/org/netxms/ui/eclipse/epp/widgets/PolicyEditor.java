@@ -45,6 +45,7 @@ public class PolicyEditor extends Composite
 	private List<Rule> rules;
 	private ScrolledComposite rulesArea;
 	private Composite ruleList;
+	private boolean modified;
 	
 	public PolicyEditor(Composite parent, int style, CellFactory cellFactory)
 	{
@@ -85,6 +86,7 @@ public class PolicyEditor extends Composite
 	 */
 	public void setContent(List<? extends Object> content)
 	{
+		modified = false;
 		this.content = content;
 		rules = new ArrayList<Rule>(content.size());
 		
@@ -124,5 +126,21 @@ public class PolicyEditor extends Composite
 	public void adjustRuleAreaSize()
 	{
 		ruleList.setSize(ruleList.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+	}
+
+	/**
+	 * @return the modified
+	 */
+	public boolean isModified()
+	{
+		return modified;
+	}
+
+	/**
+	 * @param modified the modified to set
+	 */
+	public void setModified(boolean modified)
+	{
+		this.modified = modified;
 	}
 }

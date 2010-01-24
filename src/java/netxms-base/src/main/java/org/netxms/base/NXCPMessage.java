@@ -196,6 +196,11 @@ public class NXCPMessage
 		setVariable(new NXCPVariable(varId, value));
 	}
 
+	public void setVariable(final long varId, final Long[] value)
+	{
+		setVariable(new NXCPVariable(varId, value));
+	}
+
 	public void setVariable(final long varId, final String value)
 	{
 		setVariable(new NXCPVariable(varId, value));

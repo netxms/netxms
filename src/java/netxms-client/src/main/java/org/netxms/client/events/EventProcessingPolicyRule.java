@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -62,6 +63,43 @@ public class EventProcessingPolicyRule
 			final String attr = msg.getVariableAsString(varId++); 
 			final String value = msg.getVariableAsString(varId++);
 			situationAttributes.put(attr, value);
+		}
+	}
+	
+	/**
+	 * Fill NXCP message with rule's data
+	 * 
+	 * @param msg NXCP message
+	 */
+	public void fillMessage(final NXCPMessage msg)
+	{
+		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
+		msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
+		msg.setVariable(NXCPCodes.VID_SCRIPT, script);
+		
+		msg.setVariableInt32(NXCPCodes.VID_NUM_ACTIONS, actions.size());
+		msg.setVariable(NXCPCodes.VID_RULE_ACTIONS, actions.toArray(new Long[actions.size()]));
+		
+		msg.setVariableInt32(NXCPCodes.VID_NUM_EVENTS, events.size());
+		msg.setVariable(NXCPCodes.VID_RULE_EVENTS, events.toArray(new Long[events.size()]));
+		
+		msg.setVariableInt32(NXCPCodes.VID_NUM_SOURCES, sources.size());
+		msg.setVariable(NXCPCodes.VID_RULE_SOURCES, sources.toArray(new Long[sources.size()]));
+		
+		msg.setVariable(NXCPCodes.VID_ALARM_KEY, alarmKey);
+		msg.setVariable(NXCPCodes.VID_ALARM_MESSAGE, alarmMessage);
+		msg.setVariableInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
+
+		msg.setVariableInt32(NXCPCodes.VID_SITUATION_ID, (int)situationId);
+		msg.setVariable(NXCPCodes.VID_SITUATION_INSTANCE, situationInstance);
+		msg.setVariableInt32(NXCPCodes.VID_SITUATION_NUM_ATTRS, situationAttributes.size());
+		long varId = NXCPCodes.VID_SITUATION_ATTR_LIST_BASE;
+		for(Entry<String, String> e : situationAttributes.entrySet())
+		{
+			msg.setVariable(varId++, e.getKey());
+			msg.setVariable(varId++, e.getValue());
 		}
 	}
 

@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public abstract class Cell extends Composite
 {
+	protected Rule rule;
 	protected Object data;
 	
 	/**
@@ -39,8 +40,17 @@ public abstract class Cell extends Composite
 	public Cell(Rule rule, Object data)
 	{
 		super(rule, SWT.NONE);
+		this.rule = rule;
 		this.data = data;
 		setLayout(new FillLayout());
 		setBackground(PolicyEditor.COLOR_BACKGROUND);
+	}
+
+	/**
+	 * Notify owning rule about content change
+	 */
+	protected void contentChanged()
+	{
+		rule.cellContentChanged();
 	}
 }
