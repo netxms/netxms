@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 // Static data
 //
 
-static void (* s_fpWriteLog)(int, const TCHAR *) = NULL;
+static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(DWORD, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(DWORD, int, TCHAR **) = NULL;
 static BOOL (* s_fpSendFile)(void *, DWORD, const TCHAR *, long) = NULL;
@@ -39,7 +39,7 @@ static BOOL (* s_fpPushData)(const TCHAR *, const TCHAR *) = NULL;
 // Initialize subagent API
 //
 
-void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, const TCHAR *),
+void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
 														void (* sendTrap1)(DWORD, const char *, va_list),
 														void (* sendTrap2)(DWORD, int, TCHAR **),
 														BOOL (* sendFile)(void *, DWORD, const TCHAR *, long),
@@ -57,28 +57,53 @@ void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, const TCHAR *),
 // Write message to agent's log
 //
 
-void LIBNETXMS_EXPORTABLE AgentWriteLog(int iLevel, const TCHAR *pszFormat, ...)
+void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
 {
    TCHAR szBuffer[4096];
    va_list args;
 
    if (s_fpWriteLog != NULL)
    {
-      va_start(args, pszFormat);
-      _vsntprintf(szBuffer, 4096, pszFormat, args);
+      va_start(args, format);
+      _vsntprintf(szBuffer, 4096, format, args);
       va_end(args);
-      s_fpWriteLog(iLevel, szBuffer);
+      s_fpWriteLog(logLevel, 0, szBuffer);
    }
 }
 
-void LIBNETXMS_EXPORTABLE AgentWriteLog2(int iLevel, const TCHAR *pszFormat, va_list args)
+void LIBNETXMS_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args)
 {
    TCHAR szBuffer[4096];
 
    if (s_fpWriteLog != NULL)
    {
-      _vsntprintf(szBuffer, 4096, pszFormat, args);
-      s_fpWriteLog(iLevel, szBuffer);
+      _vsntprintf(szBuffer, 4096, format, args);
+      s_fpWriteLog(logLevel, 0, szBuffer);
+   }
+}
+
+void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...)
+{
+   TCHAR szBuffer[4096];
+   va_list args;
+
+   if (s_fpWriteLog != NULL)
+   {
+      va_start(args, format);
+      _vsntprintf(szBuffer, 4096, format, args);
+      va_end(args);
+      s_fpWriteLog(EVENTLOG_DEBUG_TYPE, level, szBuffer);
+   }
+}
+
+void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args)
+{
+   TCHAR szBuffer[4096];
+
+   if (s_fpWriteLog != NULL)
+   {
+      _vsntprintf(szBuffer, 4096, format, args);
+      s_fpWriteLog(EVENTLOG_DEBUG_TYPE, level, szBuffer);
    }
 }
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -429,8 +429,10 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 //
 
 BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArg(const TCHAR *param, int index, TCHAR *arg, int maxSize);
-void LIBNETXMS_EXPORTABLE AgentWriteLog(int iLevel, const TCHAR *pszFormat, ...);
-void LIBNETXMS_EXPORTABLE AgentWriteLog2(int iLevel, const TCHAR *pszFormat, va_list args);
+void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
+void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE AgentSendTrap(DWORD dwEvent, const char *pszFormat, ...);
 void LIBNETXMS_EXPORTABLE AgentSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList);
 BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, DWORD requestId, const TCHAR *file, long offset);

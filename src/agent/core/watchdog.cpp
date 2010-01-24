@@ -68,16 +68,15 @@ void StartWatchdog()
 	}
 
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s%s-W %u"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-D %d %s-W %u"), szExecName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-              (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
-				  szPlatformSuffixOption,
+              g_debugLevel, szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
-	DebugPrintf(INVALID_INDEX, _T("Starting agent watchdog with command line '%s'"), szCmdLine);
+	DebugPrintf(INVALID_INDEX, 1, _T("Starting agent watchdog with command line '%s'"), szCmdLine);
 
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
@@ -98,13 +97,12 @@ void StartWatchdog()
       nxlog_write(MSG_WATCHDOG_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
    }
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s-W %lu"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s-W %lu"), szExecName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-              (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
-				  szPlatformSuffixOption,
+				  g_debugLevel, szPlatformSuffixOption,
               (unsigned long)getpid());
    if (ExecuteCommand(szCmdLine, NULL, &m_pidWatchdogProcess) == ERR_SUCCESS)
 	{

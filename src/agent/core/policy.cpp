@@ -39,7 +39,7 @@ static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
 	DWORD rcc;
 
 	msg->GetVariableStr(VID_CONFIG_FILE_NAME, name, MAX_PATH);
-	DebugPrintf(session, _T("DeployConfig(): original file name is %s"), name);
+	DebugPrintf(session, 3, _T("DeployConfig(): original file name is %s"), name);
 	for(i = (int)_tcslen(name) - 1; i >= 0; i--)
 		if ((name[i] == '/') || (name[i] == '\\'))
 		{
@@ -59,7 +59,7 @@ static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
 			msg->GetVariableBinary(VID_CONFIG_FILE_DATA, data, size);
 			if (write(fh, data, size) == size)
 			{
-		      DebugPrintf(session, _T("Configuration file %s saved successfully"), path);
+		      DebugPrintf(session, 3, _T("Configuration file %s saved successfully"), path);
 				rcc = ERR_SUCCESS;
 			}
 			else
@@ -76,7 +76,7 @@ static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
 	}
 	else
 	{
-      DebugPrintf(session, _T("Error opening file %s for writing: %s"), path, _tcserror(errno));
+		DebugPrintf(session, 2, _T("DeployConfig(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
 		rcc = ERR_FILE_OPEN_ERROR;
 	}
 
@@ -102,7 +102,7 @@ DWORD DeployPolicy(DWORD session, CSCPMessage *request)
 			rcc = ERR_BAD_ARGUMENTS;
 			break;
 	}
-	DebugPrintf(session, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
+	DebugPrintf(session, 3, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
 	return rcc;
 }
 
@@ -118,7 +118,7 @@ static DWORD RemoveConfig(DWORD session, CSCPMessage *msg)
 	DWORD rcc;
 
 	msg->GetVariableStr(VID_CONFIG_FILE_NAME, name, MAX_PATH);
-	DebugPrintf(session, _T("RemoveConfig(): original file name is %s"), name);
+	DebugPrintf(session, 3, _T("RemoveConfig(): original file name is %s"), name);
 	for(i = (int)_tcslen(name) - 1; i >= 0; i--)
 		if ((name[i] == '/') || (name[i] == '\\'))
 		{
@@ -157,6 +157,6 @@ DWORD UninstallPolicy(DWORD session, CSCPMessage *request)
 			rcc = ERR_BAD_ARGUMENTS;
 			break;
 	}
-	DebugPrintf(session, _T("Policy uninstall: TYPE=%d RCC=%d"), type, rcc);
+	DebugPrintf(session, 3, _T("Policy uninstall: TYPE=%d RCC=%d"), type, rcc);
 	return rcc;
 }

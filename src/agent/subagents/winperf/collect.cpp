@@ -65,7 +65,7 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
 			*ppszNewName = (TCHAR *)malloc(_tcslen(pszName) * sizeof(TCHAR) * 4);
 			if (TranslateCounterName(pszName, *ppszNewName))
 			{
-				AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("WINPERF: Counter translated: %s ==> %s"), pszName, *ppszNewName);
+				AgentWriteDebugLog(2, _T("WINPERF: Counter translated: %s ==> %s"), pszName, *ppszNewName);
 				rc = PdhAddCounter(hQuery, *ppszNewName, 0, &hCounter);
 				if (rc != ERROR_SUCCESS)
 				{

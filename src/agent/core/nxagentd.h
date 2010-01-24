@@ -98,7 +98,7 @@
 
 #define AF_DAEMON                   0x00000001
 #define AF_USE_SYSLOG               0x00000002
-#define AF_DEBUG                    0x00000004
+//obsolete: #define AF_DEBUG                    0x00000004
 #define AF_REQUIRE_AUTH             0x00000008
 #define AF_LOG_UNRESOLVED_SYMBOLS   0x00000010
 #define AF_ENABLE_ACTIONS           0x00000020
@@ -319,7 +319,7 @@ void Shutdown(void);
 void Main(void);
 
 void ConsolePrintf(const char *pszFormat, ...);
-void DebugPrintf(DWORD dwSessionId, const char *pszFormat, ...);
+void DebugPrintf(DWORD dwSessionId, int level, const char *pszFormat, ...);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
@@ -398,6 +398,7 @@ extern DWORD g_dwIdleTimeout;
 extern DWORD g_dwMaxSessions;
 extern DWORD g_dwExecTimeout;
 extern DWORD g_dwSNMPTimeout;
+extern int g_debugLevel;
 
 extern Config *g_config;
 

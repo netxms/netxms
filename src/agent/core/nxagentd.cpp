@@ -86,11 +86,11 @@ extern const TCHAR *g_szMessages[];
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDe:EfhHIM:n:N:P:r:RsSUvX:W:Z:"
+#define VALID_OPTIONS   "c:CdD:e:EfhHIM:n:N:P:r:RsSUvX:W:Z:"
 #elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CDfhM:P:r:vZ:"
+#define VALID_OPTIONS   "c:CD:fhM:P:r:vZ:"
 #else
-#define VALID_OPTIONS   "c:CdDfhM:p:P:r:vX:W:Z:"
+#define VALID_OPTIONS   "c:CdD:fhM:p:P:r:vX:W:Z:"
 #endif
 
 
@@ -134,6 +134,7 @@ DWORD g_dwSNMPTimeout = 3000;
 time_t g_tmAgentStartTime;
 DWORD g_dwStartupDelay = 0;
 DWORD g_dwMaxSessions = 32;
+int g_debugLevel = 0;
 Config *g_config;
 #ifdef _WIN32
 DWORD g_dwIdleTimeout = 60;   // Session idle timeout
@@ -242,7 +243,7 @@ static char m_szHelpText[] =
 #ifndef _NETWARE
    "   -d         : Run as daemon/service\n"
 #endif
-   "   -D         : Turn on debug output\n"
+	"   -D <level> : Set debug level (0..9)\n"
 #ifdef _WIN32
    "   -e <name>  : Windows event source name\n"
 #endif
@@ -392,17 +393,16 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 	}
 
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s%s%s-X %u"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s-D %d %s-X %u"), szExecName,
               g_szConfigFile, g_windowsServiceName, g_windowsEventSourceName,
 				  (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-              (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
-				  szPlatformSuffixOption,
+				  g_debugLevel, szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
-	DebugPrintf(INVALID_INDEX, _T("Restarting agent with command line '%s'"), szCmdLine);
+	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
 
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
@@ -436,13 +436,12 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s-X %lu"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s-X %lu"), szExecName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-              (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
-				  szPlatformSuffixOption,
+				  g_debugLevel, szPlatformSuffixOption,
               (unsigned long)m_pid);
    return ExecuteCommand(szCmdLine, NULL, NULL);
 #endif
@@ -454,15 +453,16 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 // This function writes message from subagent to agent's log
 //
 
-static void WriteSubAgentMsg(int iLevel, const TCHAR *pszMsg)
+static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *pszMsg)
 {
-	if (iLevel == EVENTLOG_DEBUG_TYPE)
+	if (logLevel == EVENTLOG_DEBUG_TYPE)
 	{
-		DebugPrintf(INVALID_INDEX, _T("%s"), pszMsg);
+		if (debugLevel <= g_debugLevel)
+			nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", pszMsg);
 	}
 	else
 	{
-		nxlog_write(MSG_SUBAGENT_MSG, iLevel, "s", pszMsg);
+		nxlog_write(MSG_SUBAGENT_MSG, logLevel, "s", pszMsg);
 	}
 }
 
@@ -596,7 +596,7 @@ static BOOL SendFileToServer(void *session, DWORD requestId, const TCHAR *file, 
 
 static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
 {
-	if ((level == 0) || (g_dwFlags & AF_DEBUG))
+	if (level <= g_debugLevel)
 	{
       TCHAR buffer[4096];
 
@@ -637,7 +637,7 @@ BOOL Initialize(void)
 		fprintf(stderr, "FATAL ERROR: Cannot open log file\n");
 		return FALSE;
 	}
-	DebugPrintf(INVALID_INDEX, "Log file opened");
+	DebugPrintf(INVALID_INDEX, 1, "Log file opened");
 	nxlog_write(MSG_USE_CONFIG_D, EVENTLOG_INFORMATION_TYPE, "s", g_szConfigIncludeDir);
 
 #ifdef _WIN32
@@ -658,7 +658,7 @@ BOOL Initialize(void)
           (ver.dwMajorVersion <= 4))
       {
          g_dwFlags |= AF_RUNNING_ON_NT4;
-		   DebugPrintf(INVALID_INDEX, "Running on Windows NT 4.0");
+		   DebugPrintf(INVALID_INDEX, 1, "Running on Windows NT 4.0");
       }
    }
 #endif
@@ -690,7 +690,7 @@ BOOL Initialize(void)
 
    // Initialize API for subagents
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer, PushData);
-   DebugPrintf(INVALID_INDEX, "Subagent API initialized");
+   DebugPrintf(INVALID_INDEX, 1, "Subagent API initialized");
 
    // Initialize cryptografy
    if (!InitCryptoLib(m_dwEnabledCiphers))
@@ -836,7 +836,7 @@ BOOL Initialize(void)
 	// Wait for external process if requested
 	if (m_szProcessToWait[0] != 0)
 	{
-	   DebugPrintf(INVALID_INDEX, "Waiting for process %s", m_szProcessToWait);
+	   DebugPrintf(INVALID_INDEX, 1, "Waiting for process %s", m_szProcessToWait);
 		if (!WaitForProcess(m_szProcessToWait))
 	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", m_szProcessToWait);
 	}
@@ -1160,6 +1160,7 @@ int main(int argc, char *argv[])
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
    BOOL bRestart = FALSE;
    DWORD dwOldPID, dwMainPID;
+	char *eptr;
 #ifdef _WIN32
    char szModuleName[MAX_PATH];
 #endif
@@ -1201,7 +1202,13 @@ int main(int argc, char *argv[])
             g_dwFlags &= ~AF_DAEMON;
 				break;
          case 'D':   // Turn on debug output
-            g_dwFlags |= AF_DEBUG;
+				g_debugLevel = strtol(optarg, &eptr, 0);
+				if ((*eptr != 0) || (g_debugLevel < 0) || (g_debugLevel > 9))
+				{
+					fprintf(stderr, "Invalid debug level: %s\n", optarg);
+					iAction = -1;
+					iExitCode = 1;
+				}
             break;
          case 'c':   // Configuration file
             nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
@@ -1341,16 +1348,16 @@ int main(int argc, char *argv[])
 
          if (g_dwFlags & AF_CENTRAL_CONFIG)
          {
-            if (g_dwFlags & AF_DEBUG)
+            if (g_debugLevel > 0)
                printf("Downloading configuration from %s...\n", g_szConfigServer);
             if (DownloadConfig(g_szConfigServer))
             {
-               if (g_dwFlags & AF_DEBUG)
+               if (g_debugLevel > 0)
                   printf("Configuration downloaded successfully\n");
             }
             else
             {
-               if (g_dwFlags & AF_DEBUG)
+               if (g_debugLevel > 0)
                   printf("Configuration download failed\n");
             }
          }

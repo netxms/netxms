@@ -558,7 +558,7 @@ extern "C"
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
    void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const TCHAR *pszSymbol, TCHAR *pszErrorText);
 
-	void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, const TCHAR *),
+	void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
 															void (* sendTrap2)(DWORD, const char *, va_list),
 															void (* sendTrap1)(DWORD, int, TCHAR **),
 															BOOL (* sendFile)(void *, DWORD, const TCHAR *, long),

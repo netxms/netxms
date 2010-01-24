@@ -115,7 +115,7 @@ BOOL EventSource::load()
 					m_numModules++;
 					m_modules = (HMODULE *)realloc(m_modules, sizeof(HMODULE) * m_numModules);
 					m_modules[m_numModules - 1] = hModule;
-               AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Message file \"%s\" loaded"), curr);
+               AgentWriteDebugLog(4, _T("LogWatch: Message file \"%s\" loaded"), curr);
 					isLoaded = TRUE;
             }
             else
@@ -163,7 +163,7 @@ BOOL EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
    }
    if (!success)
    {
-      AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: event log %s source %s FormatMessage(%d) error: %s"),
+      AgentWriteDebugLog(4, _T("LogWatch: event log %s source %s FormatMessage(%d) error: %s"),
 		                m_logName, m_name, rec->EventID, 
 							 GetSystemErrorText(GetLastError(), msg, msgSize));
       nx_strncpy(msg, _T("**** LogWatch: cannot format message ****"), msgSize);
@@ -272,7 +272,7 @@ static void ParseEvent(LogParser *parser, EVENTLOGRECORD *rec)
 	}
 	else
 	{
-		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: unable to load event source \"%s\" for log \"%s\""), eventSourceName, &(parser->getFileName()[1]));
+		AgentWriteDebugLog(4, _T("LogWatch: unable to load event source \"%s\" for log \"%s\""), eventSourceName, &(parser->getFileName()[1]));
 	}
 }
 
@@ -323,7 +323,7 @@ reopen_log:
          NotifyChangeEventLog(hLog, nd.hLogEvent);
 			handles[0] = nd.hWakeupEvent;
 			handles[1] = g_hCondShutdown;
-			AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Start watching event log \"%s\""),
+			AgentWriteDebugLog(1, _T("LogWatch: Start watching event log \"%s\""),
 			                &(parser->getFileName()[1]));
 
          while(1)
@@ -352,7 +352,7 @@ retry_read:
 
 				if (error == ERROR_EVENTLOG_FILE_CHANGED)
 				{
-					AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""),
+					AgentWriteDebugLog(4, _T("LogWatch: Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""),
 										 &(parser->getFileName()[1]));
 					break;
 				}
@@ -364,7 +364,7 @@ retry_read:
 
 			SetEvent(nd.hStopEvent);
 			ThreadJoin(nt);
-			AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Stop watching event log \"%s\""),
+			AgentWriteDebugLog(1, _T("LogWatch: Stop watching event log \"%s\""),
 			                &(parser->getFileName()[1]));
       }
       else

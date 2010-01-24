@@ -101,7 +101,7 @@ DWORD ExecAction(char *pszAction, StringList *pArgs)
    for(i = 0; i < m_dwNumActions; i++)
       if (!stricmp(m_pActionList[i].szName, pszAction))
       {
-         DebugPrintf(INVALID_INDEX, "Executing action %s of type %d", pszAction, m_pActionList[i].iType);
+         DebugPrintf(INVALID_INDEX, 4, "Executing action %s of type %d", pszAction, m_pActionList[i].iType);
          switch(m_pActionList[i].iType)
          {
             case AGENT_ACTION_EXEC:

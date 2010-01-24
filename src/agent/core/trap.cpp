@@ -72,7 +72,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
    }
    delete m_pTrapQueue;
    m_pTrapQueue = NULL;
-	DebugPrintf(INVALID_INDEX, _T("Trap sender thread terminated"));
+	DebugPrintf(INVALID_INDEX, 1, _T("Trap sender thread terminated"));
    return THREAD_OK;
 }
 
@@ -96,7 +96,7 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
    int i;
    CSCPMessage msg;
 
-	DebugPrintf(INVALID_INDEX, _T("SendTrap(): event_code=%d, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
+	DebugPrintf(INVALID_INDEX, 5, _T("SendTrap(): event_code=%d, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
 	            dwEventCode, iNumArgs, 
 					(iNumArgs > 0) ? ppArgList[0] : _T("(null)"),
 					(iNumArgs > 1) ? ppArgList[1] : _T("(null)"),

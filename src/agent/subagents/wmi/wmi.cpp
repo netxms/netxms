@@ -231,7 +231,7 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 				}
 				else
 				{
-					AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("WMI: cannot get property \"%s\" from query \"%s\" in namespace \"%s\""), prop, query, ns);
+					AgentWriteDebugLog(5, _T("WMI: cannot get property \"%s\" from query \"%s\" in namespace \"%s\""), prop, query, ns);
 				}
 				free(pwstrProperty);
 			}
@@ -243,14 +243,14 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 		}
 		else
 		{
-			AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("WMI: no objects returned from query \"%s\" in namespace \"%s\""), query, ns);
+			AgentWriteDebugLog(5, _T("WMI: no objects returned from query \"%s\" in namespace \"%s\""), query, ns);
 		}
 		pEnumObject->Release();
 		CloseWMIQuery(&ctx);
 	}
 	else
 	{
-		AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
+		AgentWriteDebugLog(5, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
 	}
 	free(pwszNamespace);
 	free(pwszQuery);

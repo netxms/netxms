@@ -149,18 +149,14 @@ void InstallService(char *execName, char *confFile)
       return;
    }
 
-   _sntprintf(cmdLine, 8192, _T("\"%s\" -d -c \"%s\" -n \"%s\" -e \"%s\""),
-	           execName, confFile, g_windowsServiceName, g_windowsEventSourceName);
+   _sntprintf(cmdLine, 8192, _T("\"%s\" -d -c \"%s\" -n \"%s\" -e \"%s\" -D %d"),
+	           execName, confFile, g_windowsServiceName, g_windowsEventSourceName, g_debugLevel);
 	
 	if (g_szPlatformSuffix[0] != 0)
 	{
 		strcat(cmdLine, " -P \"");
 		strcat(cmdLine, g_szPlatformSuffix);
 		strcat(cmdLine, "\"");
-	}
-	if (g_dwFlags & AF_DEBUG)
-	{
-		strcat(cmdLine, " -D");
 	}
 	if (g_dwFlags & AF_CENTRAL_CONFIG)
 	{

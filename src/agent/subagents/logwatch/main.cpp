@@ -135,7 +135,7 @@ static void LogParserMatch(DWORD event, const TCHAR *text, int paramCount,
 
 static void LogParserTrace(const TCHAR *format, va_list args)
 {
-	AgentWriteLog2(EVENTLOG_DEBUG_TYPE, format, args);
+	AgentWriteDebugLog2(7, format, args);
 }
 
 
@@ -163,8 +163,8 @@ static void AddParserFromConfig(const TCHAR *file)
 				m_numParsers++;
 				m_parserList = (LogParser **)realloc(m_parserList, sizeof(LogParser *) * m_numParsers);
 				m_parserList[m_numParsers - 1] = parser;
-				AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: registered parser for file %s, trace level set to %d"),
-				                parser->getFileName(), parser->getTraceLevel());
+				AgentWriteDebugLog(1, _T("LogWatch: registered parser for file %s, trace level set to %d"),
+				                   parser->getFileName(), parser->getTraceLevel());
 			}
 			else
 			{

@@ -95,7 +95,7 @@ Communication session broken: %1
 MessageId=
 SymbolicName=MSG_DEBUG
 Language=English
-Debug: %1
+%1
 .
 
 MessageId=
@@ -209,7 +209,7 @@ Process "%1" killed because of execution timeout
 MessageId=
 SymbolicName=MSG_DEBUG_SESSION
 Language=English
-Debug: {%1} %2
+[session:%1] %2
 .
 
 MessageId=

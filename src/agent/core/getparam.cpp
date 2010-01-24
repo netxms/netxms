@@ -432,7 +432,7 @@ DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue)
    int i, rc;
    DWORD dwErrorCode;
 
-   DebugPrintf(dwSessionId, "Requesting parameter \"%s\"", pszParam);
+   DebugPrintf(dwSessionId, 5, "Requesting parameter \"%s\"", pszParam);
    for(i = 0; i < m_iNumParams; i++)
       if (MatchString(m_pParamList[i].szName, pszParam, FALSE))
       {
@@ -477,7 +477,7 @@ DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, StringList *pValue)
    int i, rc;
    DWORD dwErrorCode;
 
-   DebugPrintf(dwSessionId, "Requesting enum \"%s\"", pszParam);
+   DebugPrintf(dwSessionId, 5, "Requesting enum \"%s\"", pszParam);
    for(i = 0; i < m_iNumEnums; i++)
       if (MatchString(m_pEnumList[i].szName, pszParam, FALSE))
       {

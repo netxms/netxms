@@ -176,7 +176,7 @@ LONG H_DiskInfo(const char *pszCmd, const char *pArg, char *pValue)
    {
 		TCHAR error[256];
 
-		DebugPrintf(INVALID_INDEX, _T("%s: GetDiskFreeSpaceEx failed: %s"), pszCmd,
+		DebugPrintf(INVALID_INDEX, 2, _T("%s: GetDiskFreeSpaceEx failed: %s"), pszCmd,
 		            GetSystemErrorText(GetLastError(), error, 256));
       nRet = SYSINFO_RC_ERROR;
    }

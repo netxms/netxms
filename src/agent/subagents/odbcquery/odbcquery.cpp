@@ -251,7 +251,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 	m_pQueryList[m_dwNumQueries].pSqlCtx = NULL;
 	m_dwNumQueries++;
 	bResult = TRUE;
-	AgentWriteLog(EVENTLOG_DEBUG_TYPE, _T("ODBC: query \"%s\" successfully registered"), pszQuery);
+	AgentWriteDebugLog(1, _T("ODBC: query \"%s\" successfully registered"), pszQuery);
 
 finish_add_query:
    free(pszLine);
