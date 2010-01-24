@@ -113,6 +113,7 @@
 #define AF_REGISTER                 0x00004000
 #define AF_ENABLE_WATCHDOG          0x00008000
 #define AF_CATCH_EXCEPTIONS         0x00010000
+#define AF_WRITE_FULL_DUMP          0x00020000
 
 
 #ifdef _WIN32

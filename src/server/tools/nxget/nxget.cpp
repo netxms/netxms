@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 
    InitThreadLibrary();
 #ifdef _WIN32
-	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, "nxget", 0, FALSE);
+	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, "nxget", 0, FALSE, FALSE);
 #endif
 
    // Parse command line

@@ -206,6 +206,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "ExternalParameterShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
+   { "FullCrashDumps", CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
    { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList }, // Old name for MasterServers, deprecated
    { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
@@ -1366,7 +1367,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 					if (g_dwFlags & AF_CATCH_EXCEPTIONS)
 						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, m_szDumpDir,
-												  "nxagentd", MSG_EXCEPTION, !(g_dwFlags & AF_DAEMON));
+												  "nxagentd", MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
 					__try {
 #endif
 					if ((!stricmp(g_szLogFile, "{syslog}")) || 

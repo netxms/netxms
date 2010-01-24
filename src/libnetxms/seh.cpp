@@ -54,7 +54,8 @@ static HANDLE m_hExceptionLock = INVALID_HANDLE_VALUE;
 static TCHAR m_szBaseProcessName[64] = _T("netxms");
 static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
 static DWORD m_dwLogMessageCode = 0;
-static BOOL m_bPrintToScreen = FALSE;
+static BOOL m_printToScreen = FALSE;
+static BOOL m_writeFullDump = FALSE;
 
 
 //
@@ -98,8 +99,8 @@ void SEHInit(void)
 
 void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
 															 void (*pfWriter)(const TCHAR *), const TCHAR *pszDumpDir,
-															 const TCHAR *pszBaseProcessName,
-															 DWORD dwLogMsgCode, BOOL bPrintToScreen)
+															 const TCHAR *pszBaseProcessName, DWORD dwLogMsgCode,
+															 BOOL writeFullDump, BOOL printToScreen)
 {
 	m_pfExceptionHandler = pfHandler;
 	m_pfWriter = pfWriter;
@@ -108,7 +109,8 @@ void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTE
 	if (pszDumpDir != NULL)
 		nx_strncpy(m_szDumpDir, pszDumpDir, MAX_PATH);
 	m_dwLogMessageCode = dwLogMsgCode;
-	m_bPrintToScreen = bPrintToScreen;
+	m_writeFullDump = writeFullDump;
+	m_printToScreen = printToScreen;
 }
 
 
@@ -364,7 +366,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 		mei.ExceptionPointers = pInfo;
 		mei.ClientPointers = FALSE;
       MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
-                        MiniDumpNormal, &mei, NULL, NULL);
+		                  m_writeFullDump ? MiniDumpWithDataSegs : MiniDumpNormal, &mei, NULL, NULL);
       CloseHandle(hFile);
    }
 
@@ -375,7 +377,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	            pInfo->ExceptionRecord->ExceptionAddress,
 	            szInfoFile, szDumpFile);
 
-	if (m_bPrintToScreen)
+	if (m_printToScreen)
 	{
 		_tprintf(_T("\n\n*************************************************************\n")
 #ifdef _M_IX86

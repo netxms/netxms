@@ -99,7 +99,9 @@ void NXMBDispatcher::workerThread()
 		for(i = 0; i < m_numSubscribers; i++)
 		{
 			if (m_filters[i]->isAllowed(*msg))
+			{
 				m_subscribers[i]->messageHandler(*msg);
+			}
 		}
 		MutexUnlock(m_subscriberListAccess);
 		delete msg;

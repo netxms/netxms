@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 	if (g_dwFlags & AF_CATCH_EXCEPTIONS)
 		SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter,
-		                    g_szDumpDir, "netxmsd", MSG_EXCEPTION, IsStandalone());
+		                    g_szDumpDir, "netxmsd", MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, IsStandalone());
 	__try {
 #endif
 

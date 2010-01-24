@@ -4170,7 +4170,7 @@ int CConsoleApp::Run()
 	int nRet;
 
 #ifndef _DEBUG
-	SetExceptionHandler(ExceptionHandler, ExceptionDataWriter, NULL, _T("nxcon.exe"), NULL, FALSE);
+	SetExceptionHandler(ExceptionHandler, ExceptionDataWriter, NULL, _T("nxcon.exe"), NULL, FALSE, FALSE);
 	__try
 	{
 #endif

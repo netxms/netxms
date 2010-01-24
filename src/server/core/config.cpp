@@ -64,6 +64,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
    { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
    { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
+   { "FullCrashDumps", CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
    { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
