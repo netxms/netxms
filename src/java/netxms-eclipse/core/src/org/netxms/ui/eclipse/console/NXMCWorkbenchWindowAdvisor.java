@@ -25,6 +25,7 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -54,9 +55,11 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	public void preWindowOpen()
 	{
 		doLogin();
+
+		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setShowCoolBar(true);
+		configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR"));
 		configurer.setShowStatusLine(true);
 		configurer.setShowProgressIndicator(true);
 		configurer.setShowPerspectiveBar(true);

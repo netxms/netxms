@@ -7,8 +7,6 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
 public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 {
-	private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.DefaultPerspective"; //$NON-NLS-1$
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)
 	 */
@@ -22,7 +20,7 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	 */
 	public String getInitialWindowPerspectiveId()
 	{
-		return PERSPECTIVE_ID;
+		return Activator.getDefault().getPreferenceStore().getString("INITIAL_PERSPECTIVE");
 	}
 
 	/* (non-Javadoc)
