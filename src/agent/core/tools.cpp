@@ -47,7 +47,7 @@ void ConsolePrintf(const char *pszFormat, ...)
 
 void DebugPrintf(DWORD dwSessionId, int level, const char *pszFormat, ...)
 {
-   if (level <= g_debugLevel)
+   if (level <= (int)g_debugLevel)
    {
       va_list args;
       char szBuffer[4096];

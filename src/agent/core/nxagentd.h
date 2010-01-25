@@ -398,7 +398,7 @@ extern DWORD g_dwIdleTimeout;
 extern DWORD g_dwMaxSessions;
 extern DWORD g_dwExecTimeout;
 extern DWORD g_dwSNMPTimeout;
-extern int g_debugLevel;
+extern DWORD g_debugLevel;
 
 extern Config *g_config;
 

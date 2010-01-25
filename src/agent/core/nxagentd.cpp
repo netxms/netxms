@@ -134,7 +134,7 @@ DWORD g_dwSNMPTimeout = 3000;
 time_t g_tmAgentStartTime;
 DWORD g_dwStartupDelay = 0;
 DWORD g_dwMaxSessions = 32;
-int g_debugLevel = 0;
+DWORD g_debugLevel = 0;
 Config *g_config;
 #ifdef _WIN32
 DWORD g_dwIdleTimeout = 60;   // Session idle timeout
@@ -196,6 +196,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ActionShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
+	{ "DebugLevel", CT_LONG, 0, 0, 0, 0, &g_debugLevel },
    { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
@@ -457,7 +458,7 @@ static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *pszMsg)
 {
 	if (logLevel == EVENTLOG_DEBUG_TYPE)
 	{
-		if (debugLevel <= g_debugLevel)
+		if (debugLevel <= (int)g_debugLevel)
 			nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", pszMsg);
 	}
 	else
@@ -596,7 +597,7 @@ static BOOL SendFileToServer(void *session, DWORD requestId, const TCHAR *file, 
 
 static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
 {
-	if (level <= g_debugLevel)
+	if (level <= (int)g_debugLevel)
 	{
       TCHAR buffer[4096];
 
