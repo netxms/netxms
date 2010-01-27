@@ -277,8 +277,6 @@ protected:
    DWORD GetIpAddr(void) { return ntohl(m_dwAddr); }
 	DWORD PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
 
-	DWORD generateRequestId() { return m_dwRequestId++; }
-
    virtual void PrintMsg(const TCHAR *pszFormat, ...);
    virtual void onTrap(CSCPMessage *pMsg);
 	virtual void onDataPush(CSCPMessage *msg);
@@ -314,6 +312,8 @@ public:
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD updateConfigFile(const TCHAR *pszConfig);
    DWORD enableTraps(void);
+
+	DWORD generateRequestId() { return m_dwRequestId++; }
 	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool appendFile = false,
 	                           void (*downloadProgressCallback)(size_t, void *) = NULL, void *cbArg = NULL);
 
