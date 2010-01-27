@@ -181,13 +181,12 @@ int WatchdogMain(DWORD pid)
          break;
    }
 	syslog(LOG_WARNING, "restarting agent");
-   snprintf(cmdLine, 4096, "\"" PREFIX "/bin/nxagentd\" -c \"%s\" %s%s%s%s%s%s",
+   snprintf(cmdLine, 4096, "\"" PREFIX "/bin/nxagentd\" -c \"%s\" %s%s%s%s-D %d %s",
             g_szConfigFile, (g_dwFlags & AF_DAEMON) ? "-d " : "",
 	         (g_dwFlags & AF_CENTRAL_CONFIG) ? "-M " : "",
 				(g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : "",
 				(g_dwFlags & AF_CENTRAL_CONFIG) ? " " : "",
-            (g_dwFlags & AF_DEBUG) ? "-D " : "",
-				szPlatformSuffixOption);
+				g_debugLevel, szPlatformSuffixOption);
 	syslog(LOG_INFO, "command line: %s", cmdLine);
    if (ExecuteCommand(cmdLine, NULL, NULL) != ERR_SUCCESS)
 	{

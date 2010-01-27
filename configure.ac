@@ -360,7 +360,7 @@ fi
 check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
-	MODULES="$MODULES libnxlp agent"
+	MODULES="$MODULES libnxlp db agent"
 	if test "x$ENABLE_UNSTABLE" = "xyes"; then
 		UNSTABLE_SUBAGENT_DIRS="odbcquery"
 	fi
@@ -1027,6 +1027,16 @@ AC_CHECK_TYPES([struct kinfo_proc2],,,[
 #include <sys/sysctl.h>
 #endif
 ])
+
+
+
+#--------------------------------------------------------------------
+# FreeBSD specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xFreeBSD"; then
+	AC_CHECK_DECLS([RTF_WASCLONED])
+fi
 
 
 #--------------------------------------------------------------------

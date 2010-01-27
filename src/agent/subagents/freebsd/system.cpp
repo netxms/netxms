@@ -287,7 +287,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 						(((int64_t)nFreeCount) * nPageSize));
 				break;
 			case VIRTUAL_FREE_PCT:
-				ret_uint(pValue, (DWORD)((((int64_t)nFreeCount + (nSwapTotal - nSwapUsed) * 100) / ((int64_t)nPageCount + nSwapTotal)));
+				ret_uint(pValue, (DWORD)(((int64_t)nFreeCount + (nSwapTotal - nSwapUsed) * 100) / ((int64_t)nPageCount + nSwapTotal)));
 				break;
 			case VIRTUAL_TOTAL: // vi-total
 				ret_uint64(pValue, (nSwapTotal * nPageSize) +

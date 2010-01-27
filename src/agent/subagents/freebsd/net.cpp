@@ -336,7 +336,12 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 				}
 			}
 
-			if (rti_info[RTAX_DST] != NULL && !(rtm->rtm_flags & RTF_WASCLONED))
+			if (rti_info[RTAX_DST] != NULL
+#if HAVE_DECL_RTF_WASCLONED
+			    && !(rtm->rtm_flags & RTF_WASCLONED))
+#else
+                            )
+#endif
 			{
 				char szOut[1024];
 				char szTmp[64];

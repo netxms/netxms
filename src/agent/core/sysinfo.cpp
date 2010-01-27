@@ -372,7 +372,7 @@ LONG H_PlatformName(const char *cmd, const char *arg, char *value)
    }
    else
    {
-      DebugPrintf(INVALID_INDEX, "uname() failed: %s", strerror(errno));
+      DebugPrintf(INVALID_INDEX, 2, "uname() failed: %s", strerror(errno));
       nResult = SYSINFO_RC_ERROR;
    }
 
