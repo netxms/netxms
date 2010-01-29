@@ -400,4 +400,13 @@ public class GenericObject
 	{
 		return geolocation;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode()
+	{
+		return (int)objectId;
+	}
 }

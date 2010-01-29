@@ -1,9 +1,25 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -50,6 +66,7 @@ public class ObjectTree extends Composite
 	// Options
 	public static final int NONE = 0;
 	public static final int CHECKBOXES = 0x01;
+	public static final int MULTI = 0x02;
 
 	private boolean filterEnabled = true;
 	private TreeViewer objectTree;
@@ -105,7 +122,7 @@ public class ObjectTree extends Composite
 		filterArea.setLayout(new GridLayout(2, false));
 		
 		// Create object tree control
-		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
+		objectTree = new TreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE) | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectTree.setContentProvider(new ObjectTreeContentProvider(rootObjects));
 		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
@@ -322,11 +339,29 @@ public class ObjectTree extends Composite
 	 * 
 	 * @return ID of selected object or 0 if no objects selected
 	 */
-	public long getSelectedObject()
+	public long getFirstSelectedObject()
 	{
 		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
 		if (selection.isEmpty())
 			return 0;
 		return ((GenericObject)selection.getFirstElement()).getObjectId();
+	}
+	
+	/**
+	 * Get all selected objects
+	 * 
+	 * @return ID of selected object or 0 if no objects selected
+	 */
+	@SuppressWarnings("unchecked")
+	public Long[] getSelectedObjects()
+	{
+		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+		Set<Long> objects = new HashSet<Long>(selection.size());
+		Iterator it = selection.iterator();
+		while(it.hasNext())
+		{
+			objects.add(((GenericObject)it.next()).getObjectId());
+		}
+		return objects.toArray(new Long[objects.size()]);
 	}
 }

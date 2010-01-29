@@ -1,12 +1,24 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.policymanager.actions;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
@@ -14,10 +26,10 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -57,28 +69,22 @@ public class UninstallPolicy implements IObjectActionDelegate
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, rootObjects, ObjectSelectionDialog.createNodeSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
-			new Job("Uninstall agent policy") {
+			new ConsoleJob("Uninstall agent policy", null, Activator.PLUGIN_ID, null) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-					try
-					{
-						NXCSession session = NXMCSharedData.getInstance().getSession();
-						GenericObject[] nodeList = dlg.getAllCheckedObjects(GenericObject.OBJECT_NODE);
+					NXCSession session = NXMCSharedData.getInstance().getSession();
+					GenericObject[] nodeList = dlg.getSelectedObjects(GenericObject.OBJECT_NODE);
 						for(int i = 0; i < nodeList.length; i++)
 							session.uninstallAgentPolicy(currentObject.getObjectId(), nodeList[i].getObjectId());
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-			                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-			                    "Cannot uninstall agent policy: " + e.getMessage(), e);
-					}
-					return status;
 				}
-			}.schedule();
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot uninstall agent policy";
+				}
+			}.start();
 		}
 	}
 

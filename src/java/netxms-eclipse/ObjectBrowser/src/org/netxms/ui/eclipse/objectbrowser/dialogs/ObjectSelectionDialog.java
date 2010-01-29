@@ -1,12 +1,24 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -105,7 +117,7 @@ public class ObjectSelectionDialog extends Dialog
 
 		dialogArea.setLayout(new FormLayout());
 
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.CHECKBOXES : 0, rootObjects, classFilter);
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter);
 		
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
@@ -143,14 +155,14 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		if (multiSelection)
 		{
-			Long[] objects = objectTree.getCheckedObjects();
+			Long[] objects = objectTree.getSelectedObjects();
 			selectedObjects = new long[objects.length];
 			for(int i = 0; i < objects.length; i++)
 				selectedObjects[i] = objects[i].longValue();
 		}
 		else
 		{
-			long objectId = objectTree.getSelectedObject();
+			long objectId = objectTree.getFirstSelectedObject();
 			if (objectId != 0)
 			{
 				selectedObjects = new long[1];
@@ -181,11 +193,11 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
-	 * Retrieve selected objects
+	 * Get selected objects
 	 * 
 	 * @return
 	 */
-	public GenericObject[] getCheckedObjects()
+	public GenericObject[] getSelectedObjects()
 	{
 		if (selectedObjects == null)
 			return new GenericObject[0];
@@ -194,66 +206,25 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
-	 * Retrieve all selected objects (including childs)
+	 * Get selected objects of given type
 	 * 
+	 * @param typeFilter
 	 * @return
 	 */
-	public GenericObject[] getAllCheckedObjects()
-	{
-		return getAllCheckedObjects(-1);
-	}
-
-	/**
-	 * Retrieve all selected objects by type
-	 * 
-	 * @return
-	 */
-	public GenericObject[] getAllCheckedObjects(int objectType)
+	public GenericObject[] getSelectedObjects(int type)
 	{
 		if (selectedObjects == null)
 			return new GenericObject[0];
 
 		final NXCSession session = NXMCSharedData.getInstance().getSession();
-
-		final List<GenericObject> resuls = new ArrayList<GenericObject>();
-		final GenericObject[] objects = session.findMultipleObjects(selectedObjects);
-		for(int i = 0; i < objects.length; i++)
+		final Set<GenericObject> resultSet = new HashSet<GenericObject>(selectedObjects.length);
+		for(int i = 0; i < selectedObjects.length; i++)
 		{
-			resuls.addAll(extractAllObjects(session, objects[i]));
+			GenericObject object = session.findObjectById(selectedObjects[i]);
+			if (object.getObjectClass() == type)
+				resultSet.add(object);
 		}
-
-		if (objectType != -1)
-		{
-			final Iterator<GenericObject> it = resuls.iterator();
-			while (it.hasNext()) {
-				final GenericObject next = it.next();
-				if (next.getObjectClass() != objectType) {
-					it.remove();
-				}
-			}
-		}
-
-		return resuls.toArray(new GenericObject[] {});
-	}
-
-	private List<GenericObject> extractAllObjects(NXCSession session, GenericObject object)
-	{
-		final List<GenericObject> ret = new ArrayList<GenericObject>(0);
-
-		ret.add(object);
-
-		final Iterator<Long> it = object.getChilds();
-		while(it.hasNext())
-		{
-			final Long childId = it.next();
-			final GenericObject child = session.findObjectById(childId);
-			if (child != null)
-			{
-				ret.addAll(extractAllObjects(session, child));
-			}
-		}
-
-		return ret;
+		return resultSet.toArray(new GenericObject[resultSet.size()]);
 	}
 
 	/**
