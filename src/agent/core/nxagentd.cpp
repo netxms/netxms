@@ -370,6 +370,8 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 
 static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data)
 {
+	DebugPrintf(INVALID_INDEX, 1, _T("H_RestartAgent() called"));
+
 #ifdef _NETWARE
    return ERR_NOT_IMPLEMENTED;
 #else
@@ -445,6 +447,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
 				  g_debugLevel, szPlatformSuffixOption,
               (unsigned long)m_pid);
+	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
    return ExecuteCommand(szCmdLine, NULL, NULL);
 #endif
 #endif  /* _NETWARE */
@@ -639,8 +642,8 @@ BOOL Initialize(void)
 		fprintf(stderr, "FATAL ERROR: Cannot open log file\n");
 		return FALSE;
 	}
-	DebugPrintf(INVALID_INDEX, 1, "Log file opened");
 	nxlog_write(MSG_USE_CONFIG_D, EVENTLOG_INFORMATION_TYPE, "s", g_szConfigIncludeDir);
+	nxlog_write(MSG_DEBUG_LEVEL, EVENTLOG_INFORMATION_TYPE, "d", g_debugLevel);
 
 #ifdef _WIN32
    WSADATA wsaData;

@@ -278,4 +278,10 @@ Language=English
 DB Library: %1
 .
 
+MessageId=
+SymbolicName=MSG_DEBUG_LEVEL
+Language=English
+Debug level set to %1
+.
+
 ;#endif
