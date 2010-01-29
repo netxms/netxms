@@ -355,6 +355,7 @@ static void ImportSymbols(void)
 
 static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 {
+	DebugPrintf(INVALID_INDEX, 1, _T("Shutdown thread started"));
    Shutdown();
    ExitProcess(0);
    return THREAD_OK; // Never reached
@@ -968,6 +969,7 @@ BOOL Initialize(void)
 
 void Shutdown(void)
 {
+	DebugPrintf(INVALID_INDEX, 2, _T("Shutdown() called"));
 	if (g_dwFlags & AF_ENABLE_WATCHDOG)
 		StopWatchdog();
 
