@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author victor
+ * Dialog for editing rule comments
  *
  */
 public class EditCommentsDlg extends Dialog

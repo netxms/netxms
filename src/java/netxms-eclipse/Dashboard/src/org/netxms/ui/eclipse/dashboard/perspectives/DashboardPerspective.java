@@ -16,16 +16,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.perspectives;
+package org.netxms.ui.eclipse.dashboard.perspectives;
 
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
 
 /**
- * Default perspective
+ * Dashboard perspective
  *
  */
-public class DefaultPerspective implements IPerspectiveFactory
+public class DashboardPerspective implements IPerspectiveFactory
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IPerspectiveFactory#createInitialLayout(org.eclipse.ui.IPageLayout)
@@ -34,7 +34,5 @@ public class DefaultPerspective implements IPerspectiveFactory
 	public void createInitialLayout(IPageLayout layout)
 	{
 		layout.setEditorAreaVisible(false);
-		layout.addView("org.netxms.ui.eclipse.objectbrowser.view.object_browser", IPageLayout.LEFT, 0, "");
-		layout.addView("org.netxms.ui.eclipse.alarmviewer.view.alarm_browser", IPageLayout.RIGHT, 0.25f, "org.netxms.ui.eclipse.objectbrowser.view.object_browser");
 	}
 }

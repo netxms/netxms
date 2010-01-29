@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            name="Dashboard"
+            icon="icons/dashboard.png"
+            class="org.netxms.ui.eclipse.dashboard.perspectives.DashboardPerspective"
+            id="org.netxms.ui.eclipse.dashboard.DashboardPerspective">
+      </perspective>
+   </extension>
+
+</plugin>

@@ -2822,4 +2822,50 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Get server stats. Returns set of named properties. The following properties could be found in result set:
+	 * String: VERSION
+	 * Integer: UPTIME, SESSION_COUNT, DCI_COUNT, OBJECT_COUNT, NODE_COUNT, PHYSICAL_MEMORY_USED, VIRTUAL_MEMORY_USED,
+	 * QSIZE_CONDITION_POLLER, QSIZE_CONF_POLLER, QSIZE_DCI_POLLER, QSIZE_DBWRITER, QSIZE_EVENT, QSIZE_DISCOVERY,
+	 * QSIZE_NODE_POLLER, QSIZE_ROUTE_POLLER, QSIZE_STATUS_POLLER, ALARM_COUNT
+	 * long[]: ALARMS_BY_SEVERITY
+	 * 
+	 * @return Server stats as set of named properties.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Map<String, Object> getServerStats() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SERVER_STATS);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		
+		Map<String, Object> stats = new HashMap<String, Object>();
+		stats.put("VERSION", response.getVariableAsString(NXCPCodes.VID_SERVER_VERSION));
+		stats.put("UPTIME", response.getVariableAsInteger(NXCPCodes.VID_SERVER_UPTIME));
+		stats.put("SESSION_COUNT", response.getVariableAsInteger(NXCPCodes.VID_NUM_SESSIONS));
+		
+		stats.put("DCI_COUNT", response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS));
+		stats.put("OBJECT_COUNT", response.getVariableAsInteger(NXCPCodes.VID_NUM_OBJECTS));
+		stats.put("NODE_COUNT", response.getVariableAsInteger(NXCPCodes.VID_NUM_NODES));
+		
+		stats.put("PHYSICAL_MEMORY_USED", response.getVariableAsInteger(NXCPCodes.VID_NETXMSD_PROCESS_WKSET));
+		stats.put("VIRTUAL_MEMORY_USED", response.getVariableAsInteger(NXCPCodes.VID_NETXMSD_PROCESS_VMSIZE));
+		
+		stats.put("QSIZE_CONDITION_POLLER", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_CONDITION_POLLER));
+		stats.put("QSIZE_CONF_POLLER", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_CONF_POLLER));
+		stats.put("QSIZE_DCI_POLLER", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_DCI_POLLER));
+		stats.put("QSIZE_DBWRITER", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_DBWRITER));
+		stats.put("QSIZE_EVENT", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_EVENT));
+		stats.put("QSIZE_DISCOVERY", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_DISCOVERY));
+		stats.put("QSIZE_NODE_POLLER", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_NODE_POLLER));
+		stats.put("QSIZE_ROUTE_POLLER", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_ROUTE_POLLER));
+		stats.put("QSIZE_STATUS_POLLER", response.getVariableAsInteger(NXCPCodes.VID_QSIZE_STATUS_POLLER));
+
+		stats.put("ALARM_COUNT", response.getVariableAsInteger(NXCPCodes.VID_NUM_ALARMS));
+		stats.put("ALARMS_BY_SEVERITY", response.getVariableAsUInt32Array(NXCPCodes.VID_ALARMS_BY_SEVERITY));
+		
+		return stats;
+	}
 }

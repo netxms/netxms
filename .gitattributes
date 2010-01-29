@@ -329,6 +329,17 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/DCIInfo.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/HistoricDataChart.java -text
+src/java/netxms-eclipse/Dashboard/.classpath -text
+src/java/netxms-eclipse/Dashboard/.project -text
+src/java/netxms-eclipse/Dashboard/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/Dashboard/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/Dashboard/build.properties -text
+src/java/netxms-eclipse/Dashboard/icons/dashboard.png -text
+src/java/netxms-eclipse/Dashboard/icons/server_stats.png -text
+src/java/netxms-eclipse/Dashboard/plugin.xml -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/ServerStats.java -text
 src/java/netxms-eclipse/DataCollection/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/DataCollection/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/DataCollection/build.properties -text

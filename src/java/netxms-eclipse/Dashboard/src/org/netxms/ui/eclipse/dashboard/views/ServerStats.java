@@ -16,25 +16,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.perspectives;
+package org.netxms.ui.eclipse.dashboard.views;
 
-import org.eclipse.ui.IPageLayout;
-import org.eclipse.ui.IPerspectiveFactory;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.part.ViewPart;
 
 /**
- * Default perspective
+ * Server stats view
  *
  */
-public class DefaultPerspective implements IPerspectiveFactory
+public class ServerStats extends ViewPart
 {
+
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPerspectiveFactory#createInitialLayout(org.eclipse.ui.IPageLayout)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	public void createInitialLayout(IPageLayout layout)
+	public void createPartControl(Composite parent)
 	{
-		layout.setEditorAreaVisible(false);
-		layout.addView("org.netxms.ui.eclipse.objectbrowser.view.object_browser", IPageLayout.LEFT, 0, "");
-		layout.addView("org.netxms.ui.eclipse.alarmviewer.view.alarm_browser", IPageLayout.RIGHT, 0.25f, "org.netxms.ui.eclipse.objectbrowser.view.object_browser");
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 */
+	@Override
+	public void setFocus()
+	{
+		// TODO Auto-generated method stub
+
+	}
+
 }
