@@ -25,6 +25,67 @@ static char THIS_FILE[] = __FILE__;
 #define SCALE_SHIFT_TINY		-2
 
 
+//
+// Validate map
+// Returns TRUE if map was changed
+//
+
+static BOOL ValidateMap(nxMap *map)
+{
+	BOOL changed = FALSE;
+
+	NXC_OBJECT *object = NXCFindObjectById(g_hSession, map->ObjectId());
+	if (object == NULL)
+		return FALSE;
+
+	nxSubmap *submap = map->GetSubmap(object->dwId);
+	if (submap == NULL)
+		return FALSE;
+
+	// Validate objects
+restart_object_check:
+	DWORD i, count = submap->GetNumObjects();
+	for(i = 0; i < count; i++)
+	{
+		DWORD id = submap->GetObjectIdFromIndex(i);
+		if ((NXCFindObjectById(g_hSession, id) == NULL) || !NXCIsParent(g_hSession, object->dwId, id))
+		{
+			submap->DeleteObject(id);
+			changed = TRUE;
+			goto restart_object_check;
+		}
+	}
+
+	// Validate links
+restart_link_check:
+	count = submap->GetNumLinks();
+	for(i = 0; i < count; i++)
+	{
+		OBJLINK *link = submap->GetLinkByIndex(i);
+		if ((NXCFindObjectById(g_hSession, link->dwId1) == NULL) || (NXCFindObjectById(g_hSession, link->dwId2) == NULL) ||
+			 !NXCIsParent(g_hSession, object->dwId, link->dwId1) || !NXCIsParent(g_hSession, object->dwId, link->dwId2))
+		{
+			submap->UnlinkObjects(link->dwId1, link->dwId2);
+			changed = TRUE;
+			goto restart_link_check;
+		}
+	}
+
+	// Check for missing objects
+	int x = 2;
+	for(i = 0; i < object->dwNumChilds; i++)
+	{
+		if (submap->GetObjectIndex(object->pdwChildList[i]) == INVALID_INDEX)
+		{
+			submap->SetObjectPosition(object->pdwChildList[i], x, 2);
+			x += 40;
+		}
+	}
+
+	return changed;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CMapFrame
 
@@ -293,6 +354,7 @@ void CMapFrame::OnViewRefresh()
    dwResult = DoRequestArg3(NXCLoadMap, g_hSession, (void *)m_dwMapId, &pMap, _T("Loading map..."));
    if (dwResult == RCC_SUCCESS)
    {
+		m_wndMapView.m_bIsModified = ValidateMap(pMap);
       m_wndMapView.SetMap(pMap);
 		m_wndMapView.SetObjectScaleShift(m_nScaleShift);
       m_wndStatusBar.SetText(m_wndMapView.GetScaleText(), STATUS_PANE_SCALE, 0);

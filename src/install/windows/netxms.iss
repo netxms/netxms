@@ -166,6 +166,7 @@ Source: "Files\libintl-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Compo
 Source: "Files\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\comerr32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\krb5_32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "Files\gssapi32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
 Source: "Files\orannzsbb10.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
