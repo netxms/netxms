@@ -25,6 +25,43 @@
 
 
 //
+// Get DCI object
+// First argument is a node object (usually passed to script via $node variable),
+// and second is DCI ID
+//
+
+static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	NXSL_Object *object;
+	Node *node;
+	DCItem *dci;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	node = (Node *)object->getData();
+	dci = node->GetItemById(argv[1]->getValueAsUInt32());
+	if (dci != NULL)
+	{
+		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+	}
+
+	return 0;
+}
+
+
+//
 // Get DCI value from within transformation script
 // First argument is a node object (passed to script via $node variable),
 // and second is DCI ID
@@ -43,7 +80,7 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 		return NXSL_ERR_NOT_INTEGER;
 
 	object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	node = (Node *)object->getData();
@@ -78,7 +115,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 		return NXSL_ERR_NOT_STRING;
 
 	object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	node = (Node *)object->getData();
@@ -105,7 +142,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 		return NXSL_ERR_NOT_STRING;
 
 	object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	node = (Node *)object->getData();
@@ -123,6 +160,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
    { "FindDCIByName", F_FindDCIByName, 2 },
    { "FindDCIByDescription", F_FindDCIByDescription, 2 },
+   { "GetDCIObject", F_GetDCIObject, 2 },
    { "GetDCIValue", F_GetDCIValue, 2 }
 };
 

@@ -42,8 +42,8 @@ class NXSL_TestClass : public NXSL_Class
 public:
    NXSL_TestClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
-   virtual BOOL setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
 };
 
 #endif

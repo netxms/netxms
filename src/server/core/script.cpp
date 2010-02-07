@@ -34,7 +34,7 @@ NXSL_Library *g_pScriptLibrary = NULL;
 // Read object's attribute
 //
 
-NXSL_Value *NXSL_NetXMSObjectClass::getAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_NetXMSObjectClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    NetObj *pSysObj;
    NXSL_Value *pValue = NULL;
@@ -64,7 +64,7 @@ NXSL_Value *NXSL_NetXMSObjectClass::getAttr(NXSL_Object *pObject, char *pszAttr)
 // Set object's attribute
 //
 
-BOOL NXSL_NetXMSObjectClass::setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
+BOOL NXSL_NetXMSObjectClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
 {
    return FALSE;
 }

@@ -517,7 +517,7 @@ class NXSL_SituationClass : public NXSL_Class
 public:
    NXSL_SituationClass();
 
-   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
 
 
@@ -531,7 +531,7 @@ NXSL_SituationClass::NXSL_SituationClass()
    strcpy(m_szName, "Situation");
 }
 
-NXSL_Value *NXSL_SituationClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_SituationClass::GetAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    SituationInstance *instance;
    NXSL_Value *value = NULL;

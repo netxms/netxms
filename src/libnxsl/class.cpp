@@ -48,7 +48,7 @@ NXSL_Class::~NXSL_Class()
 // Default implementation - always returns error
 //
 
-NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    return NULL;
 }
@@ -59,7 +59,7 @@ NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, char *pszAttr)
 // Default implementation - always returns error
 //
 
-BOOL NXSL_Class::setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
+BOOL NXSL_Class::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
 {
    return FALSE;
 }

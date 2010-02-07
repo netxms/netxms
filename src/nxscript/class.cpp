@@ -30,7 +30,7 @@ NXSL_TestClass::NXSL_TestClass()
    strcpy(m_szName, "TEST");
 }
 
-NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    NXSL_Value *pValue = NULL;
 
@@ -45,7 +45,7 @@ NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, char *pszAttr)
    return pValue;
 }
 
-BOOL NXSL_TestClass::setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
+BOOL NXSL_TestClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
 {
    if (!strcmp(pszAttr, "value"))
    {

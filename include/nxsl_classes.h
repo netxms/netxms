@@ -90,8 +90,8 @@ public:
    NXSL_Class();
    virtual ~NXSL_Class();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
-   virtual BOOL setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
 
 	virtual void onObjectDelete(NXSL_Object *object);
 

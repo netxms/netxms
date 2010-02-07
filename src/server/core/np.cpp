@@ -39,7 +39,7 @@ class NXSL_DiscoveryClass : public NXSL_Class
 public:
    NXSL_DiscoveryClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
 
 
@@ -53,7 +53,7 @@ NXSL_DiscoveryClass::NXSL_DiscoveryClass()
    strcpy(m_szName, "NewNode");
 }
 
-NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    DISCOVERY_FILTER_DATA *pData;
    NXSL_Value *pValue = NULL;

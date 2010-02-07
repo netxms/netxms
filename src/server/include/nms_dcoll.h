@@ -250,6 +250,7 @@ public:
    DWORD getTemplateItemId() { return m_dwTemplateItemId; }
 	DWORD getResourceId() { return m_dwResourceId; }
 	DWORD getProxyNode() { return m_dwProxyNode; }
+	time_t getLastPollTime() { return m_tLastPoll; }
 
    BOOL isReadyForPolling(time_t currTime);
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }

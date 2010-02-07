@@ -33,7 +33,7 @@ NXSL_NodeClass::NXSL_NodeClass()
    strcpy(m_szName, "NetXMS_Node");
 }
 
-NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    Node *pNode;
    NXSL_Value *pValue = NULL;
@@ -127,7 +127,7 @@ NXSL_EventClass::NXSL_EventClass()
    strcpy(m_szName, "NetXMS_Event");
 }
 
-NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    Event *event;
    NXSL_Value *value = NULL;
@@ -175,8 +175,61 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, char *pszAttr)
 
 
 //
+// Implementation of "DCI" class
+//
+
+NXSL_DciClass::NXSL_DciClass()
+              :NXSL_Class()
+{
+   strcpy(m_szName, "DCI");
+}
+
+NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   DCItem *dci;
+   NXSL_Value *value = NULL;
+
+   dci = (DCItem *)object->getData();
+   if (!strcmp(attr, "id"))
+   {
+		value = new NXSL_Value(dci->getId());
+   }
+   else if (!strcmp(attr, "name"))
+   {
+		value = new NXSL_Value(dci->getName());
+   }
+   else if (!strcmp(attr, "description"))
+   {
+		value = new NXSL_Value(dci->getDescription());
+   }
+   else if (!strcmp(attr, "origin"))
+   {
+		value = new NXSL_Value((LONG)dci->getDataSource());
+   }
+   else if (!strcmp(attr, "dataType"))
+   {
+		value = new NXSL_Value((LONG)dci->getDataType());
+   }
+   else if (!strcmp(attr, "status"))
+   {
+		value = new NXSL_Value((LONG)dci->getStatus());
+   }
+   else if (!strcmp(attr, "lastPollTime"))
+   {
+		value = new NXSL_Value(dci->getLastPollTime());
+   }
+   else if (!strcmp(attr, "systemTag"))
+   {
+		value = new NXSL_Value(dci->getSystemTag());
+   }
+   return value;
+}
+
+
+//
 // Class objects
 //
 
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_EventClass g_nxslEventClass;
+NXSL_DciClass g_nxslDciClass;

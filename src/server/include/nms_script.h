@@ -33,8 +33,8 @@ class NXSL_NetXMSObjectClass : public NXSL_Class
 public:
    NXSL_NetXMSObjectClass() : NXSL_Class() { _tcscpy(m_szName, _T("NetXMS_Object")); }
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
-   virtual BOOL setAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
 };
 
 
@@ -47,7 +47,7 @@ class NXSL_NodeClass : public NXSL_Class
 public:
    NXSL_NodeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
 
 
@@ -60,7 +60,20 @@ class NXSL_EventClass : public NXSL_Class
 public:
    NXSL_EventClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+};
+
+
+//
+// "DCI" class
+//
+
+class NXSL_DciClass : public NXSL_Class
+{
+public:
+   NXSL_DciClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
 
 
@@ -93,6 +106,6 @@ BOOL IsValidScriptId(DWORD dwId);
 extern NXSL_Library *g_pScriptLibrary;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_EventClass g_nxslEventClass;
-
+extern NXSL_DciClass g_nxslDciClass;
 
 #endif
