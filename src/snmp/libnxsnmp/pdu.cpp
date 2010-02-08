@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1147,7 +1147,7 @@ DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityCont
 	BYTE header[256];
 	DWORD bytes, securityModel = securityContext->getSecurityModel();
 
-	BYTE flags = 0;
+	BYTE flags = SNMP_REPORTABLE_FLAG;
 	if (securityContext->getAuthoritativeEngine().getIdLen() != 0)
 	{
 		if (securityContext->needAuthentication())
@@ -1158,11 +1158,6 @@ DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityCont
 				flags |= SNMP_PRIV_FLAG;
 			}
 		}
-	}
-	else
-	{
-		// For engine discovery messages, set only reportable flag
-		flags |= SNMP_REPORTABLE_FLAG;
 	}
 
 	bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwRqId, sizeof(DWORD), header, 256);

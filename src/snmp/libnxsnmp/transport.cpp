@@ -113,6 +113,8 @@ DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response,
 
    while(numRetries-- >= 0)
    {
+		int timeSyncRetries = 3;
+
 retry:
 		rc = SNMP_ERR_SUCCESS;
       if (sendMessage(request) <= 0)
@@ -175,6 +177,20 @@ retry:
 								}
 								if (canRetry)
 									goto retry;
+							}
+							else if (rc == SNMP_ERR_TIME_WINDOW)
+							{
+								// Update cached authoritative engine with new boots and time
+								if ((timeSyncRetries > 0) &&
+								    (((*response)->getAuthoritativeEngine().getBoots() != m_authoritativeEngine->getBoots()) ||
+								     ((*response)->getAuthoritativeEngine().getTime() != m_authoritativeEngine->getTime())))
+								{
+									m_authoritativeEngine->setBoots((*response)->getAuthoritativeEngine().getBoots());
+									m_authoritativeEngine->setTime((*response)->getAuthoritativeEngine().getTime());
+									m_securityContext->setAuthoritativeEngine(*m_authoritativeEngine);
+									timeSyncRetries--;
+									goto retry;
+								}
 							}
 						}
 						else if ((*response)->getCommand() != SNMP_RESPONSE)

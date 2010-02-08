@@ -437,6 +437,9 @@ public:
 	int getIdLen() { return m_idLen; }
 	int getBoots() { return m_engineBoots; }
 	int getTime() { return m_engineTime; }
+
+	void setBoots(int boots) { m_engineBoots = boots; }
+	void setTime(int engineTime) { m_engineTime = engineTime; }
 };
 
 
