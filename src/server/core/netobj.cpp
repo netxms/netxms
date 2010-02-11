@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -253,16 +253,15 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
                     _T("last_modified=%d,status_calc_alg=%d,status_prop_alg=%d,")
                     _T("status_fixed_val=%d,status_shift=%d,status_translation='%s',")
                     _T("status_single_threshold=%d,status_thresholds='%s',")
-                    _T("comments=%s,is_system=%d,location_type=%d,latitude=%s,")
-						  _T("longitude=%s WHERE object_id=%d"),
+                    _T("comments=%s,is_system=%d,location_type=%d,latitude='%f',")
+						  _T("longitude='%f' WHERE object_id=%d"),
                     (const TCHAR *)DBPrepareString(g_hCoreDB, m_szName), m_iStatus, m_bIsDeleted,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
                     szTranslation, m_iStatusSingleThreshold, szThresholds,
 						  (const TCHAR *)DBPrepareString(g_hCoreDB, CHECK_NULL_EX(m_pszComments)),
 						  m_bIsSystem, m_geoLocation.getType(),
-						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_geoLocation.getLatitudeAsString()),
-						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_geoLocation.getLongitudeAsString()), m_dwId);
+						  m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_dwId);
       }
       else
       {
@@ -272,15 +271,14 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
 						  _T("location_type,latitude,longitude) ")
-                    _T("VALUES (%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s',%s,%d,%d,%s,%s)"),
+                    _T("VALUES (%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s',%s,%d,%d,'%f','%f')"),
                     m_dwId, (const TCHAR *)DBPrepareString(g_hCoreDB, m_szName), m_iStatus, m_bIsDeleted,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
                     szTranslation, m_iStatusSingleThreshold, szThresholds,
                     (const TCHAR *)DBPrepareString(g_hCoreDB, CHECK_NULL_EX(m_pszComments)),
 						  m_bIsSystem, m_geoLocation.getType(),
-						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_geoLocation.getLatitudeAsString()),
-						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_geoLocation.getLongitudeAsString()));
+						  m_geoLocation.getLatitude(), m_geoLocation.getLongitude());
       }
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);

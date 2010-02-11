@@ -91,12 +91,15 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
    NetObj *pNode;
    BOOL bSuccess, bLock1, bLock2;
 
+	DbgPrintf(1, _T("Apply template thread started"));
    while(1)
    {
       pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->GetOrBlock();
       if (pInfo == INVALID_POINTER_VALUE)
          break;
 
+		DbgPrintf(5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d node=%d removeDci=%d"),
+		          pInfo->pTemplate->Id(), pInfo->pTemplate->Name(), pInfo->iUpdateType, pInfo->dwNodeId, pInfo->bRemoveDCI);
       bSuccess = FALSE;
       pNode = FindObjectById(pInfo->dwNodeId);
       if (pNode != NULL)
@@ -135,16 +138,19 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 
       if (bSuccess)
       {
+			DbgPrintf(8, _T("ApplyTemplateThread: success"));
 			pInfo->pTemplate->DecRefCount();
          free(pInfo);
       }
       else
       {
+			DbgPrintf(8, _T("ApplyTemplateThread: failed"));
          g_pTemplateUpdateQueue->Put(pInfo);    // Requeue
          ThreadSleepMs(500);
       }
    }
 
+	DbgPrintf(1, _T("Apply template thread stopped"));
    return THREAD_OK;
 }
 

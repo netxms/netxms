@@ -2683,14 +2683,14 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
 
 void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 {
-   DWORD i, dwNumDeleted, *pdwDeleteList;
+   DWORD i;
 
    if (bRemoveDCI)
    {
-      LockData();
+		DWORD *pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
+		DWORD dwNumDeleted = 0;
 
-		pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
-		dwNumDeleted = 0;
+      LockData();
 
       for(i = 0; i < m_dwNumItems; i++)
          if (m_ppItems[i]->getTemplateId() == dwTemplateId)
@@ -2702,6 +2702,8 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 			DeleteItem(pdwDeleteList[i], FALSE);
 
       UnlockData();
+
+		safe_free(pdwDeleteList);
    }
    else
    {

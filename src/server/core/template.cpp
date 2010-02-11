@@ -435,19 +435,21 @@ BOOL Template::DeleteItem(DWORD dwItemId, BOOL bNeedLock)
    BOOL bResult = FALSE;
 
 	if (bNeedLock)
-			LockData();
+		LockData();
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->getId() == dwItemId)
       {
          // Destroy item
+			DbgPrintf(7, _T("Template::DeleteItem: deleting DCI %d from object %d"), m_ppItems[i]->getId(), m_dwId);
          m_ppItems[i]->prepareForDeletion();
          m_ppItems[i]->deleteFromDB();
          delete m_ppItems[i];
          m_dwNumItems--;
          memmove(&m_ppItems[i], &m_ppItems[i + 1], sizeof(DCItem *) * (m_dwNumItems - i));
          bResult = TRUE;
+			DbgPrintf(7, _T("Template::DeleteItem: DCI deleted from object %d"), m_dwId);
          break;
       }
 

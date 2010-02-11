@@ -161,6 +161,8 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(
 			pResult = PQexec(pConn->pHandle, "SET escape_string_warning TO off");
 			PQclear(pResult);
 
+			PQsetClientEncoding(pConn->pHandle, "UTF8");
+
    		pConn->mutexQueryLock = MutexCreate();
          pConn->pFetchBuffer = NULL;
 		}

@@ -1540,9 +1540,11 @@ BOOL DCItem::deleteAllData(void)
 // Prepare item for deletion
 //
 
-void DCItem::prepareForDeletion(void)
+void DCItem::prepareForDeletion()
 {
-   lock();
+	DbgPrintf(9, _T("DCItem::prepareForDeletion for DCI %d"), m_dwId);
+
+	lock();
 
    m_iStatus = ITEM_STATUS_DISABLED;   // Prevent future polls
 
@@ -1552,11 +1554,13 @@ void DCItem::prepareForDeletion(void)
    while(m_iBusy)
    {
       unlock();
+		DbgPrintf(9, _T("DCItem::prepareForDeletion: DCI %d busy"), m_dwId);
       ThreadSleepMs(100);
       lock();
    }
 
    unlock();
+	DbgPrintf(9, _T("DCItem::prepareForDeletion: completed for DCI %d"), m_dwId);
 }
 
 
