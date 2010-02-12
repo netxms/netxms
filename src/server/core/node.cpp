@@ -1847,7 +1847,8 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
    DWORD dwResult;
 
    if ((m_dwDynamicFlags & NDF_SNMP_UNREACHABLE) ||
-       (m_dwDynamicFlags & NDF_UNREACHABLE))
+       (m_dwDynamicFlags & NDF_UNREACHABLE) ||
+		 (m_dwFlags & NF_DISABLE_SNMP))
    {
       dwResult = SNMP_ERR_COMM;
    }
@@ -2543,6 +2544,7 @@ AgentConnectionEx *Node::createAgentConnection()
    AgentConnectionEx *conn;
 
    if ((!(m_dwFlags & NF_IS_NATIVE_AGENT)) ||
+	    (m_dwFlags & NF_DISABLE_NXCP) ||
        (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
        (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
