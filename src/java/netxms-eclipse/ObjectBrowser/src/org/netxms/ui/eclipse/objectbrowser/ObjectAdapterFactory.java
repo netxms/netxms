@@ -65,6 +65,8 @@ public class ObjectAdapterFactory implements IAdapterFactory
 								return Activator.getImageDescriptor("icons/container.png");
 							case GenericObject.OBJECT_SUBNET:
 								return Activator.getImageDescriptor("icons/subnet.png");
+							case GenericObject.OBJECT_CLUSTER:
+								return Activator.getImageDescriptor("icons/cluster.png");
 							case GenericObject.OBJECT_NODE:
 								return Activator.getImageDescriptor("icons/node.png");
 							case GenericObject.OBJECT_INTERFACE:

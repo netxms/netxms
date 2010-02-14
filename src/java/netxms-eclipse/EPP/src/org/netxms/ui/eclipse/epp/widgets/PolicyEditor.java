@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -69,6 +71,19 @@ public class PolicyEditor extends Composite
 		ruleList.setLayout(layout);
 		ruleList.setBackground(new Color(getDisplay(), 153, 180, 209));
 		rulesArea.setContent(ruleList);
+		
+		addFocusListener(new FocusListener() {
+			@Override
+			public void focusGained(FocusEvent e)
+			{
+				rulesArea.setFocus();
+			}
+
+			@Override
+			public void focusLost(FocusEvent e)
+			{
+			}
+		});
 	}
 
 	/**

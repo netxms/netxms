@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.epp.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * @author victor
@@ -42,7 +43,10 @@ public abstract class Cell extends Composite
 		super(rule, SWT.NONE);
 		this.rule = rule;
 		this.data = data;
-		setLayout(new FillLayout());
+		FillLayout layout = new FillLayout();
+		layout.marginHeight = WidgetHelper.INNER_SPACING;
+		layout.marginWidth = WidgetHelper.INNER_SPACING;
+		setLayout(layout);
 		setBackground(PolicyEditor.COLOR_BACKGROUND);
 	}
 

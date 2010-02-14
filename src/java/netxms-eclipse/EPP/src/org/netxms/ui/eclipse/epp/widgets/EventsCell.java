@@ -27,11 +27,14 @@ import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.epp.Activator;
+import org.netxms.ui.eclipse.epp.widgets.helpers.EventComparator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -55,6 +58,14 @@ public class EventsCell extends Cell
 		viewer = new TableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new WorkbenchLabelProvider());
+		viewer.setComparator(new EventComparator());
+		viewer.getTable().addListener(SWT.EraseItem, new Listener() {
+			@Override
+			public void handleEvent(Event event)
+			{
+				event.detail &= ~(SWT.SELECTED | SWT.FOCUSED | SWT.HOT);
+			}
+		});
 		
 		column = new TableColumn(viewer.getTable(), SWT.LEFT);
 		column.setResizable(false);

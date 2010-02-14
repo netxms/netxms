@@ -3,6 +3,9 @@
  */
 package org.netxms.ui.eclipse.console.dialogs;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -65,7 +68,9 @@ public class LoginDialog extends Dialog
       	newShell.setLocation((ma[0].getClientArea().width - newShell.getSize().x) / 2, (ma[0].getClientArea().height - newShell.getSize().y) / 2);   
 	}
 
-	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createDialogArea(Composite parent) 
 	{
@@ -174,18 +179,32 @@ public class LoginDialog extends Dialog
 		fd.top = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
-		groupOpts.setLayoutData(fd);   
+		groupOpts.setLayoutData(fd);
+		
+		if (comboServer.getText().isEmpty())
+			comboServer.setFocus();
+		else if (textLogin.getText().isEmpty())
+			textLogin.setFocus();
+		else
+			textPassword.setFocus();
 		
       return dialogArea;
    }
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 */
 	@Override
 	protected void okPressed() 
 	{
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      
+      HashSet<String> items = new HashSet<String>();
+      items.addAll(Arrays.asList(comboServer.getItems()));
+      items.add(comboServer.getText());
    
       settings.put("Connect.Server", comboServer.getText()); //$NON-NLS-1$
-      settings.put("Connect.ServerHistory", comboServer.getItems()); //$NON-NLS-1$
+      settings.put("Connect.ServerHistory", items.toArray(new String[items.size()])); //$NON-NLS-1$
       settings.put("Connect.Login", textLogin.getText()); //$NON-NLS-1$
       settings.put("Connect.Encrypt", checkBoxEncrypt.getSelection()); //$NON-NLS-1$
       settings.put("Connect.DontCache", checkBoxDontCache.getSelection()); //$NON-NLS-1$
@@ -198,7 +217,6 @@ public class LoginDialog extends Dialog
       
       super.okPressed();
    }
-
 
 	/**
 	 * @return the password
