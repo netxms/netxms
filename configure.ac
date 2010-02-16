@@ -856,6 +856,36 @@ AC_CHECK_FUNCS([usleep nanosleep getopt_long gmtime_r localtime_r lstat64])
 
 AC_CHECK_DECLS([nanosleep])
 
+# Check if strerror_r is POSIX-compliant
+if test "$ac_cv_func_strerror_r" = "yes"; then
+	AC_MSG_CHECKING(if strerror_r is POSIX compliant)
+	AC_LANG_PUSH([C++])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+		#if HAVE_STRING_H
+		#include <string.h>
+		#endif
+		#if HAVE_ERRNO_H
+		#include <errno.h>
+		#endif
+	]],[[
+		int main()
+		{
+		   int e;
+		   char buffer[256];
+		   e = strerror_r(1, buffer, 256);
+		   return e;
+		}
+	]])
+	],[
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_POSIX_STRERROR_R,1,Define to 1 if strerror_r function is POSIX compliant)
+	],[
+		AC_MSG_RESULT(no)
+		AC_DEFINE(HAVE_POSIX_STRERROR_R,0,Define to 1 if strerror_r function is POSIX compliant)
+	])
+	AC_LANG_POP([C++])
+fi
+
 # Check if timezone is a function
 AC_MSG_CHECKING(for timezone function)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[

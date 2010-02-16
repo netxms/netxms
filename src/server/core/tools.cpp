@@ -79,7 +79,7 @@ void GetSysInfoStr(char *pszBuffer, int nMaxSize)
 	}
 	else
 	{
-#if HAVE_STRERROR_R
+#if HAVE_POSIX_STRERROR_R
 		strerror_r(errno, pszBuffer, nMaxSize);
 #else
 		nx_strncpy(pszBuffer, strerror(errno), nMaxSize);

@@ -354,7 +354,7 @@ static TCHAR *FormatMessageUX(DWORD dwMsgId, TCHAR **ppStrings)
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...)
 {
    va_list args;
-   TCHAR *strings[16], *pMsg, szBuffer[64];
+   TCHAR *strings[16], *pMsg, szBuffer[256];
    int numStrings = 0;
    DWORD error;
 	time_t t;
@@ -416,8 +416,12 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                }
 #else   /* _WIN32 */
 #if HAVE_STRERROR_R
+#if HAVE_POSIX_STRERROR_R
 					strings[numStrings] = (TCHAR *)malloc(256 * sizeof(TCHAR));
 					_tcserror_r((int)error, strings[numStrings], 256);
+#else
+					strings[numStrings] = _tcsdup(_tcserror_r((int)error, szBuffer, 256));
+#endif
 #else
 					strings[numStrings] = _tcsdup(_tcserror((int)error));
 #endif

@@ -669,7 +669,11 @@ extern "C"
 	WCHAR *wcserror(int errnum);
 #endif
 #if !HAVE_WCSERROR_R && HAVE_STRERROR_R
+#if HAVE_POSIX_STRERROR_R
+	int wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
+#else
 	WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
+#endif
 #endif
 
 #endif	/* UNICODE */

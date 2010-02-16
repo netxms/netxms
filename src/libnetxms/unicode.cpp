@@ -952,21 +952,38 @@ WCHAR *wcserror(int errnum)
 
 #if !HAVE_WCSERROR_R && HAVE_STRERROR_R
 
+#if HAVE_POSIX_STRERROR_R
+int wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
+#else
 WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
+#endif
 {
 	char *mbbuf;
+#if HAVE_POSIX_STRERROR_R
+	int err;
+#endif
 
 	mbbuf = (char *)malloc(buflen);
 	if (mbbuf != NULL)
 	{
+#if HAVE_POSIX_STRERROR_R
+		err = strerror_r(errnum, mbbuf, buflen);
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbbuf, -1, strerrbuf, buflen);
+#else
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror_r(errnum, mbbuf, buflen), -1, strerrbuf, buflen);
+#endif
 		free(mbbuf);
 	}
 	else
 	{
 		*strerrbuf = 0;
 	}
+
+#if HAVE_POSIX_STRERROR_R
+	return err;
+#else
 	return strerrbuf;
+#endif
 }
 
 #endif
