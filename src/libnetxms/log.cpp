@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -369,7 +369,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 	if (!(m_flags & NXLOG_IS_OPEN))
 		return;
 
-   memset(strings, 0, sizeof(char *) * 16);
+   memset(strings, 0, sizeof(TCHAR *) * 16);
 
    if (format != NULL)
    {
@@ -379,22 +379,22 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
       {
          switch(format[numStrings])
          {
-            case _T('s'):
+            case 's':
                strings[numStrings] = _tcsdup(va_arg(args, TCHAR *));
                break;
-            case _T('d'):
+            case 'd':
                strings[numStrings] = (TCHAR *)malloc(16 * sizeof(TCHAR));
                _sntprintf(strings[numStrings], 16, _T("%d"), va_arg(args, LONG));
                break;
-            case _T('x'):
+            case 'x':
                strings[numStrings] = (TCHAR *)malloc(16 * sizeof(TCHAR));
                _sntprintf(strings[numStrings], 16, _T("0x%08X"), va_arg(args, DWORD));
                break;
-            case _T('a'):
+            case 'a':
                strings[numStrings] = (TCHAR *)malloc(20 * sizeof(TCHAR));
                IpToStr(va_arg(args, DWORD), strings[numStrings]);
                break;
-            case _T('e'):
+            case 'e':
                error = va_arg(args, DWORD);
 #ifdef _WIN32
                if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
@@ -416,10 +416,10 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                }
 #else   /* _WIN32 */
 #if HAVE_STRERROR_R
-               strings[numStrings] = (TCHAR *)malloc(256 * sizeof(TCHAR));
-			   _tcserror_r(error, strings[numStrings], 256);
+					strings[numStrings] = (TCHAR *)malloc(256 * sizeof(TCHAR));
+					_tcserror_r((int)error, strings[numStrings], 256);
 #else
-               strings[numStrings] = _tcsdup(_tcserror(error));
+					strings[numStrings] = _tcsdup(_tcserror((int)error));
 #endif
 #endif
                break;
