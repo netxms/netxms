@@ -51,7 +51,7 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_NOT_STRING;
 
 	object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	node = (Node *)object->getData();
@@ -83,7 +83,7 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 		return NXSL_ERR_NOT_INTEGER;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), "NetXMS_Node"))
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
@@ -102,13 +102,80 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 
 
 //
+// Find node object
+// First argument: current node object or null
+// Second argument: node id or name
+// Returns node object or null if requested node was not found or access to it was denied
+//
+
+static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	Node *currNode = NULL, *node = NULL;
+
+	if (!argv[0]->isNull())
+	{
+		if (!argv[0]->isObject())
+			return NXSL_ERR_NOT_OBJECT;
+
+		NXSL_Object *object = argv[0]->getValueAsObject();
+		if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+			return NXSL_ERR_BAD_CLASS;
+
+		currNode = (Node *)object->getData();
+	}
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	if (argv[1]->isInteger())
+	{
+		NetObj *o = FindObjectById(argv[1]->getValueAsUInt32());
+		if ((o != NULL) && (o->Type() == OBJECT_NODE))
+			node = (Node *)o;
+	}
+	else
+	{
+		node = (Node *)FindObjectByName(argv[1]->getValueAsCString(), OBJECT_NODE);
+	}
+
+	if (node != NULL)
+	{
+		if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+		{
+			if ((currNode != NULL) && (node->IsTrustedNode(currNode->Id())))
+			{
+				*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
+			}
+			else
+			{
+				// No access, return null
+				*ppResult = new NXSL_Value;
+			}
+		}
+		else
+		{
+			*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
+		}
+	}
+	else
+	{
+		// Node not found, return null
+		*ppResult = new NXSL_Value;
+	}
+
+	return 0;
+}
+
+
+//
 // Additional server functions to use within all scripts
 //
 
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
    { "GetCustomAttribute", F_GetCustomAttribute, 2 },
-   { "GetInterfaceName", F_GetInterfaceName, 2 }
+   { "GetInterfaceName", F_GetInterfaceName, 2 },
+	{ "FindNodeObject", F_FindNodeObject, 2 }
 };
 
 

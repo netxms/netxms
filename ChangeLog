@@ -6,9 +6,10 @@
   can be exported and imported in XML format - this solves various problems
   with old NXMP files
 - NXSL improvements:
-	- New functions: GetInterfaceName, trace
+	- New functions: GetDCIObject, GetInterfaceName, FindNodeObject, trace
 	- Added built-in constants TRUE and FALSE
 - Added support for encrypted DB passwords in netxmsd.conf
+- Improved SNMPv3 support
 - Fixed issues: #62, #278
 
 
