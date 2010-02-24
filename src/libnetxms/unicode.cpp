@@ -1036,6 +1036,7 @@ static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
 
 	fmt = wcsdup(oldFormat);
 	for(p = fmt; *p != 0; p++)
+	{
 		if ((*p == _T('%')) && (*(p + 1) != 0))
 		{
 			p++;
@@ -1055,7 +1056,9 @@ static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
 					break;
 				default:
 					break;
+			}
 		}
+	}
 	return fmt;
 }
 
