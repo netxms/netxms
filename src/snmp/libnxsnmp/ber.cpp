@@ -35,47 +35,43 @@ BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType,
    BYTE *pbCurrPos = pRawData;
    DWORD dwIdLength = 0;
 
-   // We not handle identifiers with more than 5 bits because they are not used in SNMP
-   if ((*pbCurrPos & 0x1F) != 0x1F)
+   *pdwType = (DWORD)(*pbCurrPos);
+   pbCurrPos++;
+   dwIdLength++;
+
+   // Get length
+   if ((*pbCurrPos & 0x80) == 0)
    {
-      *pdwType = (DWORD)(*pbCurrPos);
+      *pdwLength = (DWORD)(*pbCurrPos);
       pbCurrPos++;
       dwIdLength++;
+      bResult = TRUE;
+   }
+   else
+   {
+      DWORD dwLength = 0;
+      BYTE *pbTemp;
+      int iNumBytes;
 
-      // Get length
-      if ((*pbCurrPos & 0x80) == 0)
+      iNumBytes = *pbCurrPos & 0x7F;
+      pbCurrPos++;
+      dwIdLength++;
+      pbTemp = ((BYTE *)&dwLength) + (4 - iNumBytes);
+      if ((iNumBytes >= 1) && (iNumBytes <= 4))
       {
-         *pdwLength = (DWORD)(*pbCurrPos);
-         pbCurrPos++;
-         dwIdLength++;
+         while(iNumBytes > 0)
+         {
+            *pbTemp++ = *pbCurrPos++;
+            dwIdLength++;
+            iNumBytes--;
+         }
+         *pdwLength = ntohl(dwLength);
          bResult = TRUE;
       }
-      else
-      {
-         DWORD dwLength = 0;
-         BYTE *pbTemp;
-         int iNumBytes;
-
-         iNumBytes = *pbCurrPos & 0x7F;
-         pbCurrPos++;
-         dwIdLength++;
-         pbTemp = ((BYTE *)&dwLength) + (4 - iNumBytes);
-         if ((iNumBytes >= 1) && (iNumBytes <= 4))
-         {
-            while(iNumBytes > 0)
-            {
-               *pbTemp++ = *pbCurrPos++;
-               dwIdLength++;
-               iNumBytes--;
-            }
-            *pdwLength = ntohl(dwLength);
-            bResult = TRUE;
-         }
-      }
-
-      // Set pointer to variable's data
-      *pData = pbCurrPos;
    }
+
+   // Set pointer to variable's data
+   *pData = pbCurrPos;
    *pdwIdLength = dwIdLength;
    return bResult;
 }

@@ -766,8 +766,18 @@ BOOL SNMP_PDU::decryptData(BYTE *data, DWORD length, BYTE *decryptedData, SNMP_S
 		AES_set_encrypt_key(securityContext->getPrivKey(), 128, &key);
 
 		BYTE iv[16];
-		DWORD boots = htonl((DWORD)securityContext->getAuthoritativeEngine().getBoots());
-		DWORD engTime = htonl((DWORD)securityContext->getAuthoritativeEngine().getTime());
+		DWORD boots, engTime;
+		// Use auth. engine from current PDU if possible
+		if ((m_authoritativeEngine.getIdLen() > 0) && (m_authoritativeEngine.getBoots() > 0))
+		{
+			boots = htonl(m_authoritativeEngine.getBoots());
+			engTime = htonl(m_authoritativeEngine.getTime());
+		}
+		else
+		{
+			boots = htonl((DWORD)securityContext->getAuthoritativeEngine().getBoots());
+			engTime = htonl((DWORD)securityContext->getAuthoritativeEngine().getTime());
+		}
 		memcpy(iv, &boots, 4);
 		memcpy(&iv[4], &engTime, 4);
 		memcpy(&iv[8], m_salt, 8);
