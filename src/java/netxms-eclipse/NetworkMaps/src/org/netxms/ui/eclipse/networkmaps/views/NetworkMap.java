@@ -1,15 +1,11 @@
 package org.netxms.ui.eclipse.networkmaps.views;
 
-import org.eclipse.draw2d.IFigure;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -19,113 +15,23 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.zest.core.viewers.GraphViewer;
-import org.eclipse.zest.core.viewers.IFigureProvider;
-import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 public abstract class NetworkMap extends ViewPart
 {
-	/**
-	 * Content provider for map
-	 * 
-	 * @author Victor
-	 */
-	class MapContentProvider implements IGraphEntityContentProvider
-	{
-		private NetworkMapPage page;
-		
-		@Override
-		public Object[] getElements(Object inputElement)
-		{
-			if (!(inputElement instanceof NetworkMapPage))
-				return null;
-			
-			return ((NetworkMapPage)inputElement).getResolvedObjects(session);
-		}
-
-		@Override
-		public Object[] getConnectedTo(Object entity)
-		{
-			if (!(entity instanceof GenericObject) || (page == null))
-				return null;
-			
-			return page.getConnectedObjects(((GenericObject)entity).getObjectId(), session);
-		}
-
-		@Override
-		public void dispose()
-		{
-		}
-
-		@Override
-		public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
-		{
-			if (newInput instanceof NetworkMapPage)
-				page = (NetworkMapPage)newInput;
-			else
-				page = null;
-		}
-	}
-	
-	/**
-	 * Label provider for map
-	 */
-	class MapLabelProvider extends LabelProvider implements IFigureProvider
-	{
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-		 */
-		@Override
-		public String getText(Object element)
-		{
-			if (element instanceof GenericObject)
-				return ((GenericObject)element).getObjectName();
-			return null;
-		}
-
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-		 */
-		@Override
-		public Image getImage(Object element)
-		{
-			if (element instanceof GenericObject)
-				return ((GenericObject)element).getObjectClass() == GenericObject.OBJECT_NODE ? imgNode : imgSubnet;
-			return null;
-		}
-
-		/* (non-Javadoc)
-		 * @see org.eclipse.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
-		 */
-		@Override
-		public IFigure getFigure(Object element)
-		{
-			return null;
-			//return new ObjectFigure((GenericObject)element);
-		}
-	}
-	
 	protected NXCSession session;
 	protected Node node;
 	protected NetworkMapPage mapPage;
 	protected GraphViewer viewer;
-	protected Image imgNode;
-	protected Image imgSubnet;
-
-	public NetworkMap()
-	{
-		super();
-		imgNode = Activator.getImageDescriptor("icons/node.png").createImage();
-		imgSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
-	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -206,18 +112,12 @@ public abstract class NetworkMap extends ViewPart
 		mgr.add(new PropertyDialogAction(getSite(), viewer));
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 */
 	@Override
 	public void setFocus()
 	{
 		viewer.getControl().setFocus();
-	}
-
-	@Override
-	public void dispose()
-	{
-		super.dispose();
-		
-		imgNode.dispose();
-		imgSubnet.dispose();
 	}
 }

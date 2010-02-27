@@ -19,6 +19,9 @@ import org.netxms.base.NXCPMessage;
  */
 public class EventProcessingPolicyRule
 {
+	// Rule flags (options)
+	public static final int STOP_PROCESSING = 0x0001;
+	
 	private List<Long> sources;
 	private List<Long> events;
 	private String script;

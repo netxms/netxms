@@ -55,7 +55,7 @@ public class EventsCell extends Cell
 		eppRule = (EventProcessingPolicyRule)data;
 		session = NXMCSharedData.getInstance().getSession();
 		
-		viewer = new TableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new TableViewer(this, SWT.MULTI | SWT.NO_SCROLL);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new WorkbenchLabelProvider());
 		viewer.setComparator(new EventComparator());
