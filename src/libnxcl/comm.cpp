@@ -163,7 +163,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_OBJECT:        // Object information
             case CMD_OBJECT_UPDATE:
             case CMD_OBJECT_LIST_END:
-               pSession->ProcessObjectUpdate(pMsg);
+               pSession->processObjectUpdate(pMsg);
                break;
             case CMD_EVENTLOG_RECORDS:
                ProcessEventLogRecords(pSession, pMsg);
@@ -180,13 +180,13 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_USER_DATA:
             case CMD_GROUP_DATA:
             case CMD_USER_DB_EOF:
-               pSession->ProcessUserDBRecord(pMsg);
+               pSession->processUserDBRecord(pMsg);
                break;
             case CMD_USER_DB_UPDATE:
-               pSession->ProcessUserDBUpdate(pMsg);
+               pSession->processUserDBUpdate(pMsg);
                break;
             case CMD_NODE_DCI:
-               pSession->ProcessDCI(pMsg);
+               pSession->processDCI(pMsg);
                break;
             case CMD_ALARM_UPDATE:
                ProcessAlarmUpdate(pSession, pMsg);
@@ -292,7 +292,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const
 
             // Create new session and start receiver thread
             pSession = new NXCL_Session;
-            pSession->Attach(hSocket);
+            pSession->attach(hSocket);
             hThread = ThreadCreateEx((THREAD_RESULT (THREAD_CALL *)(void *))NetReceiver, 0, pSession);
             if (hThread != INVALID_THREAD_HANDLE)
                pSession->SetRecvThread(hThread);
@@ -323,7 +323,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const
 							if (ppszUpgradeURL != NULL)
 								*ppszUpgradeURL = pResp->GetVariableStr(VID_CONSOLE_UPGRADE_URL);
 							pResp->GetVariableBinary(VID_CHALLENGE, challenge, CLIENT_CHALLENGE_SIZE);
-							pResp->GetVariableStr(VID_TIMEZONE, pSession->GetServerTimeZone(), MAX_TZ_LEN);
+							pResp->GetVariableStr(VID_TIMEZONE, pSession->getServerTimeZone(), MAX_TZ_LEN);
                   }
                   delete pResp;
 

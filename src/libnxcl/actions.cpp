@@ -52,7 +52,7 @@ void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
    action.dwId = pMsg->GetVariableLong(VID_ACTION_ID);
    if (dwCode != NX_NOTIFY_ACTION_DELETED)
       ActionFromMsg(pMsg, &action);
-   pSession->CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &action);
+   pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &action);
 }
 
 

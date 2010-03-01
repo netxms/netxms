@@ -161,26 +161,26 @@ public:
 
    // Methods
 private:
-   void DestroyAllObjects(void);
-   void ProcessDCI(CSCPMessage *pMsg);
-   void DestroyEventDB(void);
-   void DestroyUserDB(void);
-   void ProcessUserDBRecord(CSCPMessage *pMsg);
-   void ProcessUserDBUpdate(CSCPMessage *pMsg);
+   void destroyAllObjects();
+   void processDCI(CSCPMessage *pMsg);
+   void destroyEventDB();
+   void destroyUserDB();
+   void processUserDBRecord(CSCPMessage *pMsg);
+   void processUserDBUpdate(CSCPMessage *pMsg);
 
-   void ProcessObjectUpdate(CSCPMessage *pMsg);
-   void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex);
-   void LoadObjectsFromCache(const TCHAR *pszCacheFile);
+   void processObjectUpdate(CSCPMessage *pMsg);
+   void addObject(NXC_OBJECT *pObject, BOOL bSortIndex);
+   void loadObjectsFromCache(const TCHAR *pszCacheFile);
 
-   void WatchdogThread(void);
-   static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg);
+   void watchdogThread();
+   static THREAD_RESULT THREAD_CALL watchdogThreadStarter(void *pArg);
 
 public:
    NXCL_Session();
    ~NXCL_Session();
 
-   void Attach(SOCKET hSocket) { m_hSocket = hSocket; }
-   void Disconnect(void);
+   void attach(SOCKET hSocket) { m_hSocket = hSocket; }
+   void disconnect();
 
    void SetRecvThread(THREAD hThread) { m_hRecvThread = hThread; }
    void StartWatchdogThread(void);
@@ -193,7 +193,7 @@ public:
    DWORD SendFile(DWORD dwRqId, TCHAR *pszFileName);
    DWORD SimpleCommand(WORD wCmd);
 
-   void CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
+   void callEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 
    DWORD WaitForSync(int nSyncOp, DWORD dwTimeOut);
    void PrepareForSync(int nSyncOp);
@@ -215,12 +215,13 @@ public:
    BOOL GetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
    NXC_USER *FindUserById(DWORD dwId);
 
-   DWORD SyncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments);
-   void LockObjectIndex(void) { MutexLock(m_mutexIndexAccess, INFINITE); }
-   void UnlockObjectIndex(void) { MutexUnlock(m_mutexIndexAccess); }
-   NXC_OBJECT *FindObjectById(DWORD dwId, BOOL bLock);
-   NXC_OBJECT *FindObjectByName(TCHAR *pszName, DWORD dwCurrObject);
-   NXC_OBJECT *FindObjectByIPAddress(DWORD dwIpAddr, DWORD dwCurrObject);
+   DWORD syncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments);
+   void lockObjectIndex() { MutexLock(m_mutexIndexAccess, INFINITE); }
+   void unlockObjectIndex() { MutexUnlock(m_mutexIndexAccess); }
+   NXC_OBJECT *findObjectById(DWORD id, BOOL lock);
+   NXC_OBJECT *findObjectByName(const TCHAR *name, DWORD currObject);
+   NXC_OBJECT *findObjectByComments(const TCHAR *comments, DWORD currObject);
+   NXC_OBJECT *findObjectByIPAddress(DWORD ipAddr, DWORD currObject);
    void EnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
    NXC_OBJECT *GetRootObject(DWORD dwId, DWORD dwIndex);
    void *GetObjectIndex(DWORD *pdwNumObjects);
@@ -244,17 +245,19 @@ public:
    BOOL NeedPasswordChange(void) { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
    BOOL IsDBConnLost(void) { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
 
-   void SetLastLock(const TCHAR *pszLock) { nx_strncpy(m_szLastLock, pszLock, MAX_LOCKINFO_LEN); }
-   TCHAR *GetLastLock(void) { return m_szLastLock; }
+   void setLastLock(const TCHAR *pszLock) { nx_strncpy(m_szLastLock, pszLock, MAX_LOCKINFO_LEN); }
+   const TCHAR *getLastLock() { return m_szLastLock; }
 
-	TCHAR *GetServerTimeZone(void) { return m_szServerTimeZone; }
+	TCHAR *getServerTimeZone() { return m_szServerTimeZone; }
 };
 
-inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+inline void NXCL_Session::callEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 {
    if (m_pEventHandler != NULL)
       m_pEventHandler(this, dwEvent, dwCode, pArg);
 }
+
+#define CHECK_SESSION_HANDLE() { if (hSession == NULL) return RCC_INVALID_SESSION_HANDLE; }
 
 
 //

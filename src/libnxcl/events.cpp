@@ -54,7 +54,7 @@ void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 		dwId += count;
 
       // Call client's callback to handle new record
-      pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, nOrder, &event);
+      pSession->callEventHandler(NXC_EVENT_NEW_ELOG_RECORD, nOrder, &event);
    }
 
    // Notify requestor thread if all messages was received
@@ -145,7 +145,7 @@ void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
       rec.pszText = pMsg->GetVariableStr(dwId++);
 
       // Call client's callback to handle new record
-      pSession->CallEventHandler(NXC_EVENT_NEW_SYSLOG_RECORD, nOrder, &rec);
+      pSession->callEventHandler(NXC_EVENT_NEW_SYSLOG_RECORD, nOrder, &rec);
       free(rec.pszText);
    }
 

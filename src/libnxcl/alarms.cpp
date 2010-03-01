@@ -63,7 +63,7 @@ void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
    dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
    alarm.dwAlarmId = pMsg->GetVariableLong(VID_ALARM_ID);
    AlarmFromMsg(pMsg, &alarm);
-   pSession->CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
+   pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
 }
 
 

@@ -271,7 +271,7 @@ void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
       rec.pszTrapVarbinds = pMsg->GetVariableStr(dwId++);
 
       // Call client's callback to handle new record
-      pSession->CallEventHandler(NXC_EVENT_NEW_SNMP_TRAP, nOrder, &rec);
+      pSession->callEventHandler(NXC_EVENT_NEW_SNMP_TRAP, nOrder, &rec);
       free(rec.pszTrapVarbinds);
    }
 

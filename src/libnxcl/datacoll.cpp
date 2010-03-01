@@ -83,6 +83,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pIt
    DWORD dwRetCode, dwRqId;
    CSCPMessage msg, *pResponse;
 
+	CHECK_SESSION_HANDLE();
+
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_CREATE_NEW_DCI);
@@ -134,6 +136,8 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
 {
    DWORD i, dwId, dwRqId, dwRetCode;
    CSCPMessage msg, *pResponse;
+
+	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -230,6 +234,8 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemL
    DWORD i, j, dwRqId, dwResult = RCC_INVALID_DCI_ID;
    CSCPMessage msg;
 
+	CHECK_SESSION_HANDLE();
+
    // Find item with given ID in list
    for(i = 0; i < pItemList->dwNumItems; i++)
       if (pItemList->pItems[i].dwId == dwItemId)
@@ -273,6 +279,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, DWORD dwNodeId, D
    CSCPMessage msg;
    DWORD dwRqId;
 
+	CHECK_SESSION_HANDLE();
+
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_SET_DCI_STATUS);
@@ -312,6 +320,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
    CSCPMessage msg;
    DWORD i, dwRqId, dwResult;
    BOOL bRun = TRUE;
+
+	CHECK_SESSION_HANDLE();
 
    msg.SetCode(CMD_GET_DCI_DATA);
    msg.SetVariable(VID_OBJECT_ID, dwNodeId);
@@ -530,6 +540,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, DWORD dwSrcNodeId, DWO
    CSCPMessage msg;
    DWORD dwRqId;
 
+	CHECK_SESSION_HANDLE();
+
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_COPY_DCI);
@@ -555,6 +567,8 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId,
 {
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
+
+	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -593,6 +607,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetLastValues(NXC_SESSION hSession, DWORD dwNodeId,
 
    *pdwNumItems = 0;
    *ppValueList = NULL;
+
+	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -641,6 +657,8 @@ DWORD LIBNXCL_EXPORTABLE NXCApplyTemplate(NXC_SESSION hSession, DWORD dwTemplate
    DWORD dwRqId;
    CSCPMessage msg;
 
+	CHECK_SESSION_HANDLE();
+
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_APPLY_TEMPLATE);
@@ -662,6 +680,8 @@ DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI
 {
    CSCPMessage msg, *pResponse;
    DWORD i, j, dwId, dwRqId, dwResult, *pdwList;
+
+	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -710,6 +730,8 @@ DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
 {
    CSCPMessage msg, *pResponse;
    DWORD i, dwRqId, dwId, dwResult;
+
+	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -765,6 +787,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
 
+	CHECK_SESSION_HANDLE();
+
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_GET_DCI_INFO);
@@ -808,6 +832,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeI
 {
    CSCPMessage msg, *pResponse;
    DWORD i, dwId, dwRqId, dwResult;
+
+	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 	*ppList = NULL;
@@ -853,6 +879,8 @@ DWORD LIBNXCL_EXPORTABLE NXCClearDCIData(NXC_SESSION hSession, DWORD dwNodeId, D
    DWORD dwRqId;
    CSCPMessage msg;
 
+	CHECK_SESSION_HANDLE();
+
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_CLEAR_DCI_DATA);
@@ -875,6 +903,8 @@ DWORD LIBNXCL_EXPORTABLE NXCTestDCITransformation(NXC_SESSION hSession, DWORD dw
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg, *pResponse;
+
+	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 

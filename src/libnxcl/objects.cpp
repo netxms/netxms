@@ -127,17 +127,17 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 // Add object to list
 //
 
-void NXCL_Session::AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
+void NXCL_Session::addObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 {
    DebugPrintf(_T("AddObject(id:%d, name:\"%s\")"), pObject->dwId, pObject->szName);
-   LockObjectIndex();
+   lockObjectIndex();
    m_pIndexById = (INDEX *)realloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
    m_pIndexById[m_dwNumObjects].dwKey = pObject->dwId;
    m_pIndexById[m_dwNumObjects].pObject = pObject;
    m_dwNumObjects++;
    if (bSortIndex)
       qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
-   UnlockObjectIndex();
+   unlockObjectIndex();
 }
 
 
@@ -401,7 +401,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 // Process object information received from server
 //
 
-void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
+void NXCL_Session::processObjectUpdate(CSCPMessage *pMsg)
 {
    NXC_OBJECT *pObject, *pNewObject;
 	TCHAR *pTmp;
@@ -411,9 +411,9 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
       case CMD_OBJECT_LIST_END:
          if (!(m_dwFlags & NXC_SF_HAS_OBJECT_CACHE))
          {
-            LockObjectIndex();
+            lockObjectIndex();
             qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
-            UnlockObjectIndex();
+            unlockObjectIndex();
          }
          CompleteSync(SYNC_OBJECTS, RCC_SUCCESS);
          break;
@@ -428,10 +428,10 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
          if (m_dwFlags & NXC_SF_HAS_OBJECT_CACHE)
          {
             // We already have some objects loaded from cache file
-            pObject = FindObjectById(pNewObject->dwId, TRUE);
+            pObject = findObjectById(pNewObject->dwId, TRUE);
             if (pObject == NULL)
             {
-               AddObject(pNewObject, TRUE);
+               addObject(pNewObject, TRUE);
             }
             else
             {
@@ -441,22 +441,22 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
          else
          {
             // No cache file, all objects are new
-            AddObject(pNewObject, FALSE);
+            addObject(pNewObject, FALSE);
          }
          break;
       case CMD_OBJECT_UPDATE:
          pNewObject = NewObjectFromMsg(pMsg);
-         pObject = FindObjectById(pNewObject->dwId, TRUE);
+         pObject = findObjectById(pNewObject->dwId, TRUE);
          if (pObject == NULL)
          {
-            AddObject(pNewObject, TRUE);
+            addObject(pNewObject, TRUE);
             pObject = pNewObject;
          }
          else
          {
             ReplaceObject(pObject, pNewObject);
          }
-         CallEventHandler(NXC_EVENT_OBJECT_CHANGED, pObject->dwId, pObject);
+         callEventHandler(NXC_EVENT_OBJECT_CHANGED, pObject->dwId, pObject);
          break;
       default:
          break;
@@ -469,7 +469,7 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD NXCL_Session::SyncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments)
+DWORD NXCL_Session::syncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments)
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
@@ -477,11 +477,11 @@ DWORD NXCL_Session::SyncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments)
    dwRqId = CreateRqId();
    PrepareForSync(SYNC_OBJECTS);
 
-   DestroyAllObjects();
+   destroyAllObjects();
 
    m_dwFlags &= ~NXC_SF_HAS_OBJECT_CACHE;
    if (pszCacheFile != NULL)
-      LoadObjectsFromCache(pszCacheFile);
+      loadObjectsFromCache(pszCacheFile);
 
    msg.SetCode(CMD_GET_OBJECTS);
    msg.SetId(dwRqId);
@@ -507,13 +507,13 @@ DWORD NXCL_Session::SyncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments)
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->SyncObjects(NULL, FALSE);
+   return ((NXCL_Session *)hSession)->syncObjects(NULL, FALSE);
 }
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, const TCHAR *pszCacheFile,
                                           BOOL bSyncComments)
 {
-   return ((NXCL_Session *)hSession)->SyncObjects(pszCacheFile, bSyncComments);
+   return ((NXCL_Session *)hSession)->syncObjects(pszCacheFile, bSyncComments);
 }
 
 
@@ -521,31 +521,31 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, const TCHAR *psz
 // Find object by ID
 //
 
-NXC_OBJECT *NXCL_Session::FindObjectById(DWORD dwId, BOOL bLock)
+NXC_OBJECT *NXCL_Session::findObjectById(DWORD dwId, BOOL bLock)
 {
    DWORD dwPos;
    NXC_OBJECT *pObject;
 
    if (bLock)
-      LockObjectIndex();
+      lockObjectIndex();
 
    dwPos = SearchIndex(m_pIndexById, m_dwNumObjects, dwId);
    pObject = (dwPos == INVALID_INDEX) ? NULL : m_pIndexById[dwPos].pObject;
 
    if (bLock)
-      UnlockObjectIndex();
+      unlockObjectIndex();
 
    return pObject;
 }
 
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(NXC_SESSION hSession, DWORD dwId)
 {
-   return ((NXCL_Session *)hSession)->FindObjectById(dwId, TRUE);
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->findObjectById(dwId, TRUE) : NULL;
 }
 
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIdNoLock(NXC_SESSION hSession, DWORD dwId)
 {
-   return ((NXCL_Session *)hSession)->FindObjectById(dwId, FALSE);
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->findObjectById(dwId, FALSE) : NULL;
 }
 
 
@@ -553,22 +553,22 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIdNoLock(NXC_SESSION hSession, DWO
 // Find object by name
 //
 
-NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName, DWORD dwCurrObject)
+NXC_OBJECT *NXCL_Session::findObjectByName(const TCHAR *name, DWORD dwCurrObject)
 {
    NXC_OBJECT *pObject = NULL;
    DWORD i;
 
-   if (pszName != NULL)
-      if (*pszName != 0)
+   if (name != NULL)
+      if (*name != 0)
       {
-         LockObjectIndex();
+         lockObjectIndex();
 
 			if (dwCurrObject != 0)
 			{
-				pObject = FindObjectById(dwCurrObject, FALSE);
+				pObject = findObjectById(dwCurrObject, FALSE);
 				if (pObject != NULL)
 				{
-	            if (!RegexpMatch(pObject->szName, pszName, FALSE))
+	            if (!RegexpMatch(pObject->szName, name, FALSE))
 					{
 						// Current object doesn't match, start search from the beginning
 						dwCurrObject = 0;
@@ -582,7 +582,7 @@ NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName, DWORD dwCurrObject)
 			}
 
          for(i = 0; i < m_dwNumObjects; i++)
-            if (RegexpMatch(m_pIndexById[i].pObject->szName, pszName, FALSE))
+            if (RegexpMatch(m_pIndexById[i].pObject->szName, name, FALSE))
             {
 					if (dwCurrObject == 0)
 					{
@@ -598,14 +598,74 @@ NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName, DWORD dwCurrObject)
 					}
             }
 
-         UnlockObjectIndex();
+         unlockObjectIndex();
       }
    return pObject;
 }
 
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, TCHAR *pszName, DWORD dwCurrObject)
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, const TCHAR *pszName, DWORD dwCurrObject)
 {
-   return ((NXCL_Session *)hSession)->FindObjectByName(pszName, dwCurrObject);
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->findObjectByName(pszName, dwCurrObject) : NULL;
+}
+
+
+//
+// Find object by comments
+//
+
+NXC_OBJECT *NXCL_Session::findObjectByComments(const TCHAR *comments, DWORD dwCurrObject)
+{
+   NXC_OBJECT *pObject = NULL;
+   DWORD i;
+
+   if (comments != NULL)
+      if (*comments != 0)
+      {
+         lockObjectIndex();
+
+			if (dwCurrObject != 0)
+			{
+				pObject = findObjectById(dwCurrObject, FALSE);
+				if (pObject != NULL)
+				{
+					if (!RegexpMatch(CHECK_NULL_EX(pObject->pszComments), comments, FALSE))
+					{
+						// Current object doesn't match, start search from the beginning
+						dwCurrObject = 0;
+					}
+				}
+				else
+				{
+					dwCurrObject = 0;
+				}
+				pObject = NULL;
+			}
+
+         for(i = 0; i < m_dwNumObjects; i++)
+				if (RegexpMatch(CHECK_NULL_EX(m_pIndexById[i].pObject->pszComments), comments, FALSE))
+            {
+					if (dwCurrObject == 0)
+					{
+						pObject = m_pIndexById[i].pObject;
+						break;
+					}
+					else
+					{
+						if (m_pIndexById[i].dwKey == dwCurrObject)
+						{
+							dwCurrObject = 0;	// Next match will stop the loop
+						}
+					}
+            }
+
+         unlockObjectIndex();
+      }
+   return pObject;
+}
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByComments(NXC_SESSION hSession, const TCHAR *comments, DWORD dwCurrObject)
+{
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->findObjectByComments(comments, dwCurrObject) : NULL;
 }
 
 
@@ -613,16 +673,16 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, TCHAR *
 // Find object by IP address
 //
 
-NXC_OBJECT *NXCL_Session::FindObjectByIPAddress(DWORD dwIpAddr, DWORD dwCurrObject)
+NXC_OBJECT *NXCL_Session::findObjectByIPAddress(DWORD dwIpAddr, DWORD dwCurrObject)
 {
    NXC_OBJECT *pObject = NULL;
    DWORD i;
 
-   LockObjectIndex();
+   lockObjectIndex();
 
 	if (dwCurrObject != 0)
 	{
-		pObject = FindObjectById(dwCurrObject, FALSE);
+		pObject = findObjectById(dwCurrObject, FALSE);
 		if (pObject != NULL)
 		{
 	      if (pObject->dwIpAddr != dwIpAddr)
@@ -655,13 +715,13 @@ NXC_OBJECT *NXCL_Session::FindObjectByIPAddress(DWORD dwIpAddr, DWORD dwCurrObje
 			}
       }
 
-   UnlockObjectIndex();
+   unlockObjectIndex();
    return pObject;
 }
 
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIPAddress(NXC_SESSION hSession, DWORD dwIpAddr, DWORD dwCurrObject)
 {
-   return ((NXCL_Session *)hSession)->FindObjectByIPAddress(dwIpAddr, dwCurrObject);
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->findObjectByIPAddress(dwIpAddr, dwCurrObject) : NULL;
 }
 
 
@@ -673,11 +733,11 @@ void NXCL_Session::EnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
 {
    DWORD i;
 
-   LockObjectIndex();
+   lockObjectIndex();
    for(i = 0; i < m_dwNumObjects; i++)
       if (!pHandler(m_pIndexById[i].pObject))
          break;
-   UnlockObjectIndex();
+   unlockObjectIndex();
 }
 
 void LIBNXCL_EXPORTABLE NXCEnumerateObjects(NXC_SESSION hSession, BOOL (* pHandler)(NXC_OBJECT *))
@@ -752,7 +812,7 @@ void LIBNXCL_EXPORTABLE *NXCGetObjectIndex(NXC_SESSION hSession, DWORD *pdwNumOb
 
 void LIBNXCL_EXPORTABLE NXCLockObjectIndex(NXC_SESSION hSession)
 {
-   ((NXCL_Session *)hSession)->LockObjectIndex();
+   ((NXCL_Session *)hSession)->lockObjectIndex();
 }
 
 
@@ -762,7 +822,7 @@ void LIBNXCL_EXPORTABLE NXCLockObjectIndex(NXC_SESSION hSession)
 
 void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(NXC_SESSION hSession)
 {
-   ((NXCL_Session *)hSession)->UnlockObjectIndex();
+   ((NXCL_Session *)hSession)->unlockObjectIndex();
 }
 
 
@@ -1127,11 +1187,11 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, DWORD dwObject)
    rcc = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 	if (rcc == RCC_SUCCESS)
 	{
-		NXC_OBJECT *object = ((NXCL_Session *)hSession)->FindObjectById(dwObject, TRUE);
+		NXC_OBJECT *object = ((NXCL_Session *)hSession)->findObjectById(dwObject, TRUE);
 		if (object != NULL)
 		{
 			object->bIsDeleted = TRUE;
-			((NXCL_Session *)hSession)->CallEventHandler(NXC_EVENT_OBJECT_CHANGED, object->dwId, object);
+			((NXCL_Session *)hSession)->callEventHandler(NXC_EVENT_OBJECT_CHANGED, object->dwId, object);
 		}
 	}
 	return rcc;
@@ -1356,7 +1416,7 @@ static BOOL ObjectHasDefaultName(NXC_OBJECT *pObject)
 
 void LIBNXCL_EXPORTABLE NXCGetComparableObjectName(NXC_SESSION hSession, DWORD dwObjectId, TCHAR *pszName)
 {
-   NXCGetComparableObjectNameEx(((NXCL_Session *)hSession)->FindObjectById(dwObjectId, TRUE), pszName);
+   NXCGetComparableObjectNameEx(((NXCL_Session *)hSession)->findObjectById(dwObjectId, TRUE), pszName);
 }
 
 
@@ -1402,7 +1462,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
    hFile = _tfopen(pszFile, _T("wb"));
    if (hFile != NULL)
    {
-      ((NXCL_Session *)hSession)->LockObjectIndex();
+      ((NXCL_Session *)hSession)->lockObjectIndex();
       pList = (INDEX *)((NXCL_Session *)hSession)->GetObjectIndex(&dwNumObjects);
 
       // Write cache file header
@@ -1503,7 +1563,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
          }
       }
 
-      ((NXCL_Session *)hSession)->UnlockObjectIndex();
+      ((NXCL_Session *)hSession)->unlockObjectIndex();
       fclose(hFile);
       dwResult = RCC_SUCCESS;
    }
@@ -1520,7 +1580,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
 // Load objects from cache file
 //
 
-void NXCL_Session::LoadObjectsFromCache(const TCHAR *pszFile)
+void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
 {
    FILE *hFile;
    OBJECT_CACHE_HEADER hdr;
@@ -1675,12 +1735,12 @@ void NXCL_Session::LoadObjectsFromCache(const TCHAR *pszFile)
                         break;
                   }
 
-                  AddObject((NXC_OBJECT *)nx_memdup(&object, sizeof(NXC_OBJECT)), FALSE);
+                  addObject((NXC_OBJECT *)nx_memdup(&object, sizeof(NXC_OBJECT)), FALSE);
                }
             }
-            LockObjectIndex();
+            lockObjectIndex();
             qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
-            UnlockObjectIndex();
+            unlockObjectIndex();
             m_dwFlags |= NXC_SF_HAS_OBJECT_CACHE;
          }
       }
@@ -1862,7 +1922,7 @@ static BOOL IsParent(NXC_SESSION hSession, DWORD dwParent, DWORD dwChild)
    NXC_OBJECT *pObject;
    BOOL bRet = FALSE;
 
-   pObject = ((NXCL_Session *)hSession)->FindObjectById(dwChild, FALSE);
+   pObject = ((NXCL_Session *)hSession)->findObjectById(dwChild, FALSE);
    if (pObject != NULL)
    {
       for(i = 0; i < pObject->dwNumParents; i++)
@@ -1898,9 +1958,9 @@ BOOL LIBNXCL_EXPORTABLE NXCIsParent(NXC_SESSION hSession, DWORD dwParent, DWORD 
 {
    BOOL bRet;
 
-   ((NXCL_Session *)hSession)->LockObjectIndex();
+   ((NXCL_Session *)hSession)->lockObjectIndex();
    bRet = IsParent(hSession, dwParent, dwChild);
-   ((NXCL_Session *)hSession)->UnlockObjectIndex();
+   ((NXCL_Session *)hSession)->unlockObjectIndex();
    return bRet;
 }
 

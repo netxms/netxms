@@ -65,7 +65,7 @@ void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg)
 
    dwCode = pMsg->GetVariableShort(VID_NOTIFICATION_CODE);
 	SituationFromMessage(pMsg, &st);
-   pSession->CallEventHandler(NXC_EVENT_SITUATION_UPDATE, dwCode, &st);
+   pSession->callEventHandler(NXC_EVENT_SITUATION_UPDATE, dwCode, &st);
 }
 
 

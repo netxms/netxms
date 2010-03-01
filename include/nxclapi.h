@@ -422,6 +422,7 @@ enum
 #define RCC_INVALID_LOG_HANDLE      ((DWORD)86)
 #define RCC_WEAK_PASSWORD           ((DWORD)87)
 #define RCC_REUSED_PASSWORD         ((DWORD)88)
+#define RCC_INVALID_SESSION_HANDLE  ((DWORD)89)
 
 
 //
@@ -1840,7 +1841,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, const TCHAR *psz
                                           BOOL bSyncComments);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(NXC_SESSION hSession, DWORD dwId);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIdNoLock(NXC_SESSION hSession, DWORD dwId);
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, TCHAR *pszName, DWORD dwCurrObject);
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, const TCHAR *pszName, DWORD dwCurrObject);
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByComments(NXC_SESSION hSession, const TCHAR *comments, DWORD dwCurrObject);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIPAddress(NXC_SESSION hSession, DWORD dwIpAddr, DWORD dwCurrObject);
 void LIBNXCL_EXPORTABLE NXCEnumerateObjects(NXC_SESSION hSession, BOOL (* pHandler)(NXC_OBJECT *));
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTopologyRootObject(NXC_SESSION hSession);

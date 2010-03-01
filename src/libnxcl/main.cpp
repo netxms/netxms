@@ -146,7 +146,8 @@ DWORD LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, DWORD dwChannels)
 
 void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
 {
-   ((NXCL_Session *)hSession)->SetClientData(pData);
+	if (hSession != NULL)
+		((NXCL_Session *)hSession)->SetClientData(pData);
 }
 
 
@@ -156,7 +157,7 @@ void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
 
 void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->GetClientData();
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->GetClientData() : NULL;
 }
 
 
@@ -186,7 +187,7 @@ BOOL LIBNXCL_EXPORTABLE NXCIsDBConnLost(NXC_SESSION hSession)
 
 void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession)
 {
-   ((NXCL_Session *)hSession)->StartWatchdogThread();
+	((NXCL_Session *)hSession)->StartWatchdogThread();
 }
 
 
@@ -198,7 +199,7 @@ void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuff
                                             int nBufSize)
 {
 	if (hSession != NULL)
-		nx_strncpy(pszBuffer, ((NXCL_Session *)hSession)->GetLastLock(), nBufSize);
+		nx_strncpy(pszBuffer, ((NXCL_Session *)hSession)->getLastLock(), nBufSize);
 	else
 		nx_strncpy(pszBuffer, _T("INVALID SESSION HANDLE"), nBufSize);
 }
@@ -212,6 +213,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *m
 {
    CSCPMessage msg;
    DWORD dwRqId;
+
+	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -234,6 +237,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
    CSCPMessage msg;
    DWORD dwRqId;
 
+	CHECK_SESSION_HANDLE();
+
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_KEEPALIVE);
@@ -251,9 +256,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
 
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession)
 {
-	TCHAR *ptr;
+	const TCHAR *ptr;
 
-	ptr = ((NXCL_Session *)hSession)->GetServerTimeZone();
+	ptr = ((NXCL_Session *)hSession)->getServerTimeZone();
 	return (*ptr == 0) ? NULL : ptr;
 }
 
@@ -274,6 +279,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession)
 
 BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
 {
+	CHECK_SESSION_HANDLE();
    return ((NXCL_Session *)hSession)->SendMsg(msg);
 }
 
@@ -284,7 +290,7 @@ BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
 
 CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, DWORD dwRqId)
 {
-   return ((NXCL_Session *)hSession)->WaitForMessage(wCode, dwRqId);
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->WaitForMessage(wCode, dwRqId) : NULL;
 }
 
 
@@ -294,7 +300,8 @@ CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCo
 
 DWORD LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, DWORD dwRqId)
 {
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+	CHECK_SESSION_HANDLE();
+	return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -394,9 +401,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Unknown log name"),
 		_T("Invalid log handle"),
 		_T("New password is too weak"),
-		_T("Password was used before")
+		_T("Password was used before"),
+		_T("Invalid session handle")
    };
-   return ((dwError >= 0) && (dwError <= RCC_REUSED_PASSWORD)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_SESSION_HANDLE)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

@@ -449,10 +449,10 @@ static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 	{
 		int notContainer1, notContainer2, nResult;
 
-		notContainer1 = ((obj1->iClass == OBJECT_CONTAINER) || 
-		                 (obj1->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
-		notContainer2 = ((obj2->iClass == OBJECT_CONTAINER) || 
-		                 (obj2->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
+		notContainer1 = ((obj1 != NULL) && ((obj1->iClass == OBJECT_CONTAINER) || 
+		                                    (obj1->iClass == OBJECT_TEMPLATEGROUP))) ? 0 : 1;
+		notContainer2 = ((obj2 != NULL) && ((obj2->iClass == OBJECT_CONTAINER) || 
+		                                    (obj2->iClass == OBJECT_TEMPLATEGROUP))) ? 0 : 1;
 		nResult = COMPARE_NUMBERS(notContainer1, notContainer2);
 		if (nResult != 0)
 			return nResult;

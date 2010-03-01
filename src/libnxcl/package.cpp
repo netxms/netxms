@@ -290,7 +290,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
 
             status.dwNodeId = pInfo->GetVariableLong(VID_OBJECT_ID);
             status.pszErrorMessage = pInfo->GetVariableStr(VID_ERROR_MESSAGE);
-            ((NXCL_Session *)hSession)->CallEventHandler(NXC_EVENT_DEPLOYMENT_STATUS, dwRqId, &status);
+            ((NXCL_Session *)hSession)->callEventHandler(NXC_EVENT_DEPLOYMENT_STATUS, dwRqId, &status);
             safe_free(status.pszErrorMessage);
 
             delete pInfo;

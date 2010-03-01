@@ -206,11 +206,11 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
                TCHAR szBuffer[MAX_LOCKINFO_LEN];
 
                pResponse->GetVariableStr(VID_LOCKED_BY, szBuffer, MAX_LOCKINFO_LEN);
-               ((NXCL_Session *)hSession)->SetLastLock(szBuffer);
+               ((NXCL_Session *)hSession)->setLastLock(szBuffer);
             }
             else
             {
-               ((NXCL_Session *)hSession)->SetLastLock(_T("<unknown>"));
+               ((NXCL_Session *)hSession)->setLastLock(_T("<unknown>"));
             }
          }
          delete pResponse;

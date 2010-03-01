@@ -94,7 +94,7 @@ NXCL_Session::~NXCL_Session()
 {
    int i;
 
-   Disconnect();
+   disconnect();
 
    // Wait for receiver thread termination
    if (m_hRecvThread != INVALID_THREAD_HANDLE)
@@ -135,7 +135,7 @@ NXCL_Session::~NXCL_Session()
 // Disconnect session
 //
 
-void NXCL_Session::Disconnect(void)
+void NXCL_Session::disconnect()
 {
    // Terminate watchdog thread
    ConditionSet(m_condStopThreads);
@@ -155,9 +155,9 @@ void NXCL_Session::Disconnect(void)
    m_msgWaitQueue.Clear();
 
    // Cleanup
-   DestroyAllObjects();
-   DestroyEventDB();
-   DestroyUserDB();
+   destroyAllObjects();
+   destroyEventDB();
+   destroyUserDB();
 
    DestroyEncryptionContext(m_pCtx);
    m_pCtx = NULL;
@@ -168,7 +168,7 @@ void NXCL_Session::Disconnect(void)
 // Destroy all objects
 //
 
-void NXCL_Session::DestroyAllObjects(void)
+void NXCL_Session::destroyAllObjects()
 {
    DWORD i;
 
@@ -380,7 +380,7 @@ void NXCL_Session::CompleteSync(int nSyncOp, DWORD dwRetCode)
 // Process DCIs coming from server
 //
 
-void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
+void NXCL_Session::processDCI(CSCPMessage *pMsg)
 {
 	if (pMsg->IsEndOfSequence())
 	{
@@ -499,7 +499,7 @@ DWORD NXCL_Session::LoadEventDB(void)
    dwRqId = CreateRqId();
    PrepareForSync(SYNC_EVENT_DB);
 
-   DestroyEventDB();
+   destroyEventDB();
    MutexLock(m_mutexEventAccess, INFINITE);
 
    msg.SetCode(CMD_LOAD_EVENT_DB);
@@ -523,7 +523,7 @@ DWORD NXCL_Session::LoadEventDB(void)
 // Destroy event template database
 //
 
-void NXCL_Session::DestroyEventDB(void)
+void NXCL_Session::destroyEventDB()
 {
    DWORD i;
 
@@ -681,7 +681,7 @@ BOOL NXCL_Session::GetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
 // Destroy user database
 //
 
-void NXCL_Session::DestroyUserDB(void)
+void NXCL_Session::destroyUserDB()
 {
    DWORD i;
 
@@ -698,7 +698,7 @@ void NXCL_Session::DestroyUserDB(void)
 // Process user record from network
 //
 
-void NXCL_Session::ProcessUserDBRecord(CSCPMessage *pMsg)
+void NXCL_Session::processUserDBRecord(CSCPMessage *pMsg)
 {
    switch(pMsg->GetCode())
    {
@@ -722,7 +722,7 @@ void NXCL_Session::ProcessUserDBRecord(CSCPMessage *pMsg)
 // Process user database update
 //
 
-void NXCL_Session::ProcessUserDBUpdate(CSCPMessage *pMsg)
+void NXCL_Session::processUserDBUpdate(CSCPMessage *pMsg)
 {
    int iCode;
    DWORD dwUserId;
@@ -768,7 +768,7 @@ void NXCL_Session::ProcessUserDBUpdate(CSCPMessage *pMsg)
    }
 
    if (pUser != NULL)
-      CallEventHandler(NXC_EVENT_USER_DB_CHANGED, iCode, pUser);
+      callEventHandler(NXC_EVENT_USER_DB_CHANGED, iCode, pUser);
 }
 
 
@@ -822,7 +822,7 @@ DWORD NXCL_Session::LoadUserDB(void)
 
    dwRqId = CreateRqId();
    PrepareForSync(SYNC_USER_DB);
-   DestroyUserDB();
+   destroyUserDB();
 
    msg.SetCode(CMD_LOAD_USER_DB);
    msg.SetId(dwRqId);
@@ -993,10 +993,10 @@ void NXCL_Session::ParseLoginMessage(CSCPMessage *pMsg)
 // Start watchdog thread
 //
 
-void NXCL_Session::StartWatchdogThread(void)
+void NXCL_Session::StartWatchdogThread()
 {
    if (m_hWatchdogThread == INVALID_THREAD_HANDLE)
-      m_hWatchdogThread = ThreadCreateEx(NXCL_Session::WatchdogThreadStarter, 0, this);
+      m_hWatchdogThread = ThreadCreateEx(NXCL_Session::watchdogThreadStarter, 0, this);
 }
 
 
@@ -1004,9 +1004,9 @@ void NXCL_Session::StartWatchdogThread(void)
 // Starter function for watchdog thread
 //
 
-THREAD_RESULT THREAD_CALL NXCL_Session::WatchdogThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL NXCL_Session::watchdogThreadStarter(void *pArg)
 {
-   ((NXCL_Session *)pArg)->WatchdogThread();
+   ((NXCL_Session *)pArg)->watchdogThread();
    return THREAD_OK;
 }
 
@@ -1015,7 +1015,7 @@ THREAD_RESULT THREAD_CALL NXCL_Session::WatchdogThreadStarter(void *pArg)
 // Watchdog thread
 //
 
-void NXCL_Session::WatchdogThread(void)
+void NXCL_Session::watchdogThread()
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -1046,7 +1046,7 @@ void NXCL_Session::WatchdogThread(void)
       if (bConnBroken)
       {
          m_dwFlags |= NXC_SF_CONN_BROKEN;
-         CallEventHandler(NXC_EVENT_CONNECTION_BROKEN, 0, NULL);
+         callEventHandler(NXC_EVENT_CONNECTION_BROKEN, 0, NULL);
          break;
       }
    }
@@ -1074,6 +1074,6 @@ void NXCL_Session::OnNotify(CSCPMessage *pMsg)
       ConditionReset(m_condStopThreads);
       m_dwFlags |= NXC_SF_CONN_BROKEN;
    }
-   CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode,
+   callEventHandler(NXC_EVENT_NOTIFICATION, dwCode,
                     CAST_TO_POINTER(pMsg->GetVariableLong(VID_NOTIFICATION_DATA), void *));
 }
