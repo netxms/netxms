@@ -43,9 +43,9 @@ protected:
 	//{{AFX_MSG(CProcessingPage)
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
-   afx_msg void OnStartStage(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnStageCompleted(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnJobFinished(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnStartStage(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnStageCompleted(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnJobFinished(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 };

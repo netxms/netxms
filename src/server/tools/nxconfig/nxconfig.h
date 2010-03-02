@@ -9,12 +9,12 @@
 #endif // _MSC_VER > 1000
 
 #ifndef __AFXWIN_H__
-	#error include 'stdafx.h' before including this file for PCH
+#error include 'stdafx.h' before including this file for PCH
 #endif
 
 #include <nms_common.h>
 #include <nms_util.h>
-#include <nxsrvapi.h>
+#include <nxdbapi.h>
 
 
 #define MAX_ERROR_TEXT        4096
@@ -78,6 +78,7 @@ struct WIZARD_CFG_INFO
    TCHAR m_szServicePassword[MAX_DB_STRING];
    DWORD m_dwDependencyListSize;
    TCHAR *m_pszDependencyList;
+	DB_DRIVER m_dbDriver;
 };
 
 

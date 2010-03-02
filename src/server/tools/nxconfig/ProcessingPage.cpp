@@ -81,11 +81,12 @@ BOOL CProcessingPage::OnInitDialog()
 // WM_START_STAGE message handler
 //
 
-void CProcessingPage::OnStartStage(WPARAM wParam, LPARAM lParam)
+LRESULT CProcessingPage::OnStartStage(WPARAM wParam, LPARAM lParam)
 {
    m_iLastItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, _T(""), 0);
    if (m_iLastItem != -1)
       m_wndListCtrl.SetItemText(m_iLastItem, 1, (TCHAR *)lParam);
+	return 0;
 }
 
 
@@ -93,7 +94,7 @@ void CProcessingPage::OnStartStage(WPARAM wParam, LPARAM lParam)
 // WM_STAGE_COMPLETED message handler
 //
 
-void CProcessingPage::OnStageCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CProcessingPage::OnStageCompleted(WPARAM wParam, LPARAM lParam)
 {
    LVITEM item;
 
@@ -102,6 +103,7 @@ void CProcessingPage::OnStageCompleted(WPARAM wParam, LPARAM lParam)
    item.mask = LVIF_IMAGE;
    item.iImage = wParam ? 1 : 2;
    m_wndListCtrl.SetItem(&item);
+	return 0;
 }
 
 
@@ -109,7 +111,7 @@ void CProcessingPage::OnStageCompleted(WPARAM wParam, LPARAM lParam)
 // WM_JOB_FINISHED message handler
 //
 
-void CProcessingPage::OnJobFinished(WPARAM wParam, LPARAM lParam)
+LRESULT CProcessingPage::OnJobFinished(WPARAM wParam, LPARAM lParam)
 {
    SetDlgItemText(IDC_STATIC_STATUS, wParam ? _T("Completed") : _T("Failed"));
    if (wParam)
@@ -118,6 +120,7 @@ void CProcessingPage::OnJobFinished(WPARAM wParam, LPARAM lParam)
    else
       MessageBox(g_szWizardErrorText, _T("Error"), MB_OK | MB_ICONSTOP);
    ((CPropertySheet *)GetParent())->SetWizardButtons(wParam ? PSWIZB_NEXT : PSWIZB_BACK);
+	return 0;
 }
 
 

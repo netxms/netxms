@@ -99,13 +99,13 @@ BOOL CSummaryPage::OnSetActive()
 
    AddParam(szBuffer, _T("\r\nRun IP autodiscovery: %s\r\n"), pc->m_bRunAutoDiscovery ? _T("yes") : _T("no"));
    if (pc->m_bRunAutoDiscovery)
-      AddParam(szBuffer, _T("Interval between discovery polls: %d\r\n"), (void *)pc->m_dwDiscoveryPI);
+      AddParam(szBuffer, _T("Interval between discovery polls: %d\r\n"), CAST_TO_POINTER(pc->m_dwDiscoveryPI, void *));
 
-   AddParam(szBuffer, _T("\r\nNumber of status pollers: %d\r\n"), (void *)pc->m_dwNumStatusPollers);
-   AddParam(szBuffer, _T("Interval between status polls: %d\r\n"), (void *)pc->m_dwStatusPI);
+   AddParam(szBuffer, _T("\r\nNumber of status pollers: %d\r\n"), CAST_TO_POINTER(pc->m_dwNumStatusPollers, void *));
+   AddParam(szBuffer, _T("Interval between status polls: %d\r\n"), CAST_TO_POINTER(pc->m_dwStatusPI, void *));
    
-   AddParam(szBuffer, _T("\r\nNumber of configuration pollers: %d\r\n"), (void *)pc->m_dwNumConfigPollers);
-   AddParam(szBuffer, _T("Interval between configuration polls: %d\r\n"), (void *)pc->m_dwConfigurationPI);
+   AddParam(szBuffer, _T("\r\nNumber of configuration pollers: %d\r\n"), CAST_TO_POINTER(pc->m_dwNumConfigPollers, void *));
+   AddParam(szBuffer, _T("Interval between configuration polls: %d\r\n"), CAST_TO_POINTER(pc->m_dwConfigurationPI, void *));
 
    AddParam(szBuffer, _T("\r\nSMTP server: %s\r\n"), pc->m_szSMTPServer);
    AddParam(szBuffer, _T("System's email address: %s\r\n"), pc->m_szSMTPMailFrom);

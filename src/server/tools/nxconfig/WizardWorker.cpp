@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Configurator for Windows
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,13 +17,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: WizardWorker.cpp
+** File: WizardWorker.cpp
 ** Worker thread for configuration wizard
 **
 **/
 
 #include "stdafx.h"
 #include "nxconfig.h"
+#include <nxsrvapi.h>
 
 
 //
@@ -395,7 +396,7 @@ static BOOL CreateSQLiteDB(WIZARD_CFG_INFO *pc)
    _stprintf(szBaseDir, _T("%s\\database"), pc->m_szInstallDir);
    SetCurrentDirectory(szBaseDir);
    DeleteFile(pc->m_szDBName);
-   hConn = DBConnectEx(NULL, pc->m_szDBName, NULL, NULL);
+	hConn = DBConnect(pc->m_dbDriver, NULL, pc->m_szDBName, NULL, NULL);
    if (hConn != NULL)
    {
       DBDisconnect(hConn);
@@ -422,9 +423,9 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
    else
    {
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database server as DBA"));
-      hConn = DBConnectEx(pc->m_szDBServer, 
-                          (pc->m_iDBEngine == DB_ENGINE_PGSQL) ? _T("template1") : NULL,
-                          pc->m_szDBALogin, pc->m_szDBAPassword);
+		hConn = DBConnect(pc->m_dbDriver, pc->m_szDBServer, 
+                        (pc->m_iDBEngine == DB_ENGINE_PGSQL) ? _T("template1") : NULL,
+                        pc->m_szDBALogin, pc->m_szDBAPassword);
       if (hConn != NULL)
       {
          PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, TRUE, 0);
@@ -479,9 +480,13 @@ static DWORD __stdcall WorkerThread(void *pArg)
    if (bResult)
    {
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Loading database driver"));
-      nx_strncpy(g_szDbDriver, pc->m_szDBDriver, MAX_PATH);
-      nx_strncpy(g_szDbServer, pc->m_szDBServer, MAX_PATH);
-      bResult = DBInit(FALSE, FALSE, FALSE, NULL);
+      bResult = DBInit(0, 0);
+		if (bResult)
+		{
+			pc->m_dbDriver = DBLoadDriver(pc->m_szDBDriver, _T(""), false, NULL, NULL);
+			if (pc->m_dbDriver == NULL)
+				bResult = FALSE;
+		}
       if (!bResult)
          _tcscpy(g_szWizardErrorText, _T("Error loading database driver"));
       PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
@@ -495,7 +500,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
    if (bResult)
    {
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database"));
-      hConn = DBConnectEx(pc->m_szDBServer, pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
+		hConn = DBConnect(pc->m_dbDriver, pc->m_szDBServer, pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
       bResult = (hConn != NULL);
       if (!bResult)
          _tcscpy(g_szWizardErrorText, _T("Unable to connect to database"));

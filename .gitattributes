@@ -738,6 +738,7 @@ src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/nxagent/nxagent.vcproj -text
 src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/nxadm.vcproj -text
+src/server/tools/nxconfig/nxconfig.vcproj -text
 src/server/tools/nxconfig/res/failed.ico -text
 src/server/tools/nxconfig/res/nxconfig.ico -text
 src/server/tools/nxconfig/res/ok.ico -text

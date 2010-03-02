@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxconfig.h"
 #include "ConfigWizard.h"
+#include <nxconfig.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -122,9 +123,13 @@ void CConfigWizard::DefaultConfig()
       cfgTemplate[6].pBuffer = &dwFlags;
       cfgTemplate[7].pBuffer = m_cfg.m_szLogFile;
 
-      if (NxLoadConfig(m_cfg.m_szConfigFile, _T(""), cfgTemplate, FALSE) == NXCFG_ERR_OK)
+		Config config;
+      if (config.loadConfig(m_cfg.m_szConfigFile, _T("server")))
       {
-         m_cfg.m_bLogFailedSQLQueries = (dwFlags ? TRUE : FALSE);
+			if (config.parseTemplate(_T("server"), cfgTemplate))
+			{
+				m_cfg.m_bLogFailedSQLQueries = (dwFlags ? TRUE : FALSE);
+			}
       }
    }
 }
