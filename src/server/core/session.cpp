@@ -8267,6 +8267,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          for(i = 0; i < dwNumItems; i++)
          {
             ppItemList[i]->processNewValue(t, ppValueList[i]);
+				ppItemList[i]->setLastPollTime(t);
          }
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
