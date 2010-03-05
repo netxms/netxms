@@ -251,6 +251,7 @@ public:
 	DWORD getResourceId() { return m_dwResourceId; }
 	DWORD getProxyNode() { return m_dwProxyNode; }
 	time_t getLastPollTime() { return m_tLastPoll; }
+	DWORD getErrorCount() { return m_dwErrorCount; }
 
    BOOL isReadyForPolling(time_t currTime);
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }

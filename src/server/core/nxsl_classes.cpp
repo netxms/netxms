@@ -214,6 +214,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
 		value = new NXSL_Value((LONG)dci->getStatus());
    }
+   else if (!strcmp(attr, "errorCount"))
+   {
+		value = new NXSL_Value(dci->getErrorCount());
+   }
    else if (!strcmp(attr, "lastPollTime"))
    {
 		value = new NXSL_Value((INT64)dci->getLastPollTime());
