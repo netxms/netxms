@@ -1427,6 +1427,10 @@ check_substr "$COMPONENTS" "mysql"
 if test $? = 0; then
 	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
 		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
+
+	OLD_LDFLAGS="$LDFLAGS"
+	LDFLAGS="$LDFLAGS $MYSQL_LIBS"
+
 	AC_MSG_CHECKING(whether mysql clients can run)
 	AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdio.h>
@@ -1442,8 +1446,6 @@ int main(void)
 	],[])
 	AC_MSG_RESULT(yes)
 
-	OLD_LDFLAGS="$LDFLAGS"
-	LDFLAGS="$LDFLAGS $MYSQL_LIBS"
 	AC_CHECK_FUNCS(mysql_real_escape_string)
 	LDFLAGS="$OLD_LDFLAGS"
 fi
