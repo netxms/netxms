@@ -59,7 +59,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR"));
+		configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
 		configurer.setShowStatusLine(true);
 		configurer.setShowProgressIndicator(true);
 		configurer.setShowPerspectiveBar(true);
@@ -76,7 +76,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		window.getShell().setMaximized(true);
 		
 		NXCSession session = NXMCSharedData.getInstance().getSession();
-		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")");
+		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/**
@@ -150,11 +150,11 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 					try
 					{
 						new ProgressMonitorDialog(shell).run(true, true, job);
-						MessageDialog.openInformation(shell, "Information", "Password changed successfully");
+						MessageDialog.openInformation(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.title_information"), Messages.getString("NXMCWorkbenchWindowAdvisor.passwd_changed")); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 					catch(InvocationTargetException e)
 					{
-						MessageDialog.openError(shell, "Error", "Cannot change password: " + e.getCause().getLocalizedMessage());
+						MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.title_error"), Messages.getString("NXMCWorkbenchWindowAdvisor.cannot_change_passwd") + " " + e.getCause().getLocalizedMessage()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					}
 					catch(InterruptedException e)
 					{

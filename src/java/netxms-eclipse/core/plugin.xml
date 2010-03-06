@@ -18,7 +18,7 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="Default"
+            name="%perspective.default"
             class="org.netxms.ui.eclipse.console.perspectives.DefaultPerspective"
             id="org.netxms.ui.eclipse.console.DefaultPerspective">
       </perspective>
@@ -27,7 +27,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Progress View"
+            name="%view.progress"
             icon="icons/pview.gif"
             category="org.eclipse.ui"
             class="org.eclipse.ui.ExtensionFactory:progressView"
@@ -40,14 +40,14 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="NetXMS Management Console">
+            name="%product.name">
          <property
                name="appName"
-               value="NetXMS Management Console">
+               value="%product.name">
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console">
+               value="%product.name">
          </property>
          <property
                name="preferenceCustomization"
@@ -69,11 +69,11 @@
    </extension>
    
    <extension point="org.eclipse.ui.preferencePages">
-     <page name="Workbench"
+     <page name="%page.workbench"
            class="org.netxms.ui.eclipse.console.preferencepages.WorkbenchGeneralPrefs"
            id="org.eclipse.ui.preferencePages.Workbench">
      </page>
-     <page name="Appearance"
+     <page name="%page.appearance"
            category="org.eclipse.ui.preferencePages.Workbench"
            class="org.eclipse.ui.ExtensionFactory:appearancePreferencePage"
            id="org.eclipse.ui.preferencePages.Views">
@@ -84,11 +84,11 @@
       <page category="org.eclipse.ui.preferencePages.Workbench"
             class="org.eclipse.ui.ExtensionFactory:keysPreferencePage"
             id="org.eclipse.ui.preferencePages.Keys"
-            name="Keys">
+            name="%page.keys">
          <keywordReference id="org.eclipse.ui.ide.keys"/>
      </page>
      <page
-            name="Label Decorators"
+            name="%page.decorators"
             category="org.eclipse.ui.preferencePages.Views"
             class="org.eclipse.ui.ExtensionFactory:decoratorsPreferencePage"
             id="org.eclipse.ui.preferencePages.Decorators">

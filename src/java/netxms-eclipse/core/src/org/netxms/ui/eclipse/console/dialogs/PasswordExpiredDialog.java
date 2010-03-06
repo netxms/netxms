@@ -13,6 +13,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -40,7 +41,7 @@ public class PasswordExpiredDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		Label pic = new Label(dialogArea, SWT.NONE);
-		pic.setImage(Activator.getImageDescriptor("icons/password.png").createImage());
+		pic.setImage(Activator.getImageDescriptor("icons/password.png").createImage()); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		pic.setLayoutData(gd);
@@ -52,13 +53,13 @@ public class PasswordExpiredDialog extends Dialog
 		editArea.setLayout(editAreaLayout);
 		
 		Label msg = new Label(editArea, SWT.WRAP);
-		msg.setText("Your password was expired. Please change your password now.");
+		msg.setText(Messages.getString("PasswordExpiredDialog.passwd_expired")); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		msg.setLayoutData(gd);
-		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "New password:", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, "Confirm new password:", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.getString("PasswordExpiredDialog.new_passwd"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$ //$NON-NLS-2$
+		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, SWT.DEFAULT, Messages.getString("PasswordExpiredDialog.confirm_passwd"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$ //$NON-NLS-2$
 
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -105,7 +106,7 @@ public class PasswordExpiredDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Change password");
+		newShell.setText(Messages.getString("PasswordExpiredDialog.title")); //$NON-NLS-1$
 	}
 
 	@Override

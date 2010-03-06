@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -35,8 +36,8 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		dialogArea.setLayout(layout);
 		
 		cbShowHeapMonitor = new Button(dialogArea, SWT.CHECK);
-		cbShowHeapMonitor.setText("Show &heap status");
-		cbShowHeapMonitor.setSelection(getPreferenceStore().getBoolean("SHOW_MEMORY_MONITOR"));
+		cbShowHeapMonitor.setText(Messages.getString("WorkbenchGeneralPrefs.show_heap")); //$NON-NLS-1$
+		cbShowHeapMonitor.setSelection(getPreferenceStore().getBoolean("SHOW_MEMORY_MONITOR")); //$NON-NLS-1$
 		
 		return dialogArea;
 	}
@@ -67,7 +68,7 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 	@Override
 	public boolean performOk()
 	{
-		getPreferenceStore().setValue("SHOW_MEMORY_MONITOR", cbShowHeapMonitor.getSelection());
+		getPreferenceStore().setValue("SHOW_MEMORY_MONITOR", cbShowHeapMonitor.getSelection()); //$NON-NLS-1$
 		return super.performOk();
 	}
 }

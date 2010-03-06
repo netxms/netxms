@@ -113,7 +113,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 						{
 							try
 							{
-								page.showView("org.eclipse.ui.views.ProgressView");
+								page.showView("org.eclipse.ui.views.ProgressView"); //$NON-NLS-1$
 							}
 							catch(PartInitException e)
 							{
@@ -124,8 +124,8 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				}
 			}
 		};
-		actionOpenProgressView.setText("&Progress");
-		actionOpenProgressView.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif"));
+		actionOpenProgressView.setText(Messages.getString("NXMCActionBarAdvisor.progress")); //$NON-NLS-1$
+		actionOpenProgressView.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif")); //$NON-NLS-1$
 	}
 
 	@Override
