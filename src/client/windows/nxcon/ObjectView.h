@@ -59,6 +59,7 @@ protected:
 	CImageList m_imageListSearch;
 	CToolBarCtrl m_wndSearchButtons;
 	CExtEditCtrl m_wndSearchText;
+	CStatic m_wndSearchHint;
 	int m_nTitleBarOffset;
 	void AdjustView(void);
 	BOOL m_bShowSearchBar;

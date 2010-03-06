@@ -1403,6 +1403,11 @@ LRESULT CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
 		pObject = NXCFindObjectByIPAddress(g_hSession, dwIpAddr,
 												     ((m_pCurrentObject != NULL) && (wParam == OBJECT_FIND_NEXT))? m_pCurrentObject->dwId : 0);
 	}
+	else if (!_tcsnicmp(pszSearchStr, _T("/"), 1))
+	{
+		pObject = NXCFindObjectByComments(g_hSession, &pszSearchStr[1],
+												    ((m_pCurrentObject != NULL) && (wParam == OBJECT_FIND_NEXT))? m_pCurrentObject->dwId : 0);
+	}
 	else
 	{
 		pObject = NXCFindObjectByName(g_hSession, (TCHAR *)lParam,

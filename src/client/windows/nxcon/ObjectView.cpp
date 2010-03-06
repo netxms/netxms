@@ -16,7 +16,7 @@ static char THIS_FILE[] = __FILE__;
 #define TITLE_BAR_HEIGHT      33
 #define TITLE_BAR_COLOR       RGB(0, 0, 128)
 
-#define SEARCH_BAR_HEIGHT		37
+#define SEARCH_BAR_HEIGHT		55
 #define SEARCH_TEXT_WIDTH		200
 #define SEARCH_BAR_X_MARGIN	5
 
@@ -119,6 +119,9 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndSearchButtons.AddStrings(L"Find next\0Find from top\0Next instance\0Close\0");
 	m_wndSearchButtons.AddButtons(sizeof(tbButtons) / sizeof(TBBUTTON), tbButtons);
 	//m_wndSearchButtons.SetButtonSize(CSize(60, 22));
+	m_wndSearchHint.Create(_T("HINT: Use ip: prefix to search by IP address, and / prefix to search by comment"),
+	                       WS_CHILD, rect, this, ID_SEARCH_HINT);
+	m_wndSearchHint.SetFont(&m_fontTabs, FALSE);
 
    // Create image list for tabs
    m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 1);
@@ -436,6 +439,7 @@ void CObjectView::ShowSearchBar(BOOL bShow)
 		m_nTitleBarOffset = SEARCH_BAR_HEIGHT;
 		m_wndSearchText.ShowWindow(SW_SHOW);
 		m_wndSearchButtons.ShowWindow(SW_SHOW);
+		m_wndSearchHint.ShowWindow(SW_SHOW);
 		m_wndSearchText.SetFocus();
 	}
 	else
@@ -443,6 +447,7 @@ void CObjectView::ShowSearchBar(BOOL bShow)
 		m_nTitleBarOffset = 0;
 		m_wndSearchText.ShowWindow(SW_HIDE);
 		m_wndSearchButtons.ShowWindow(SW_HIDE);
+		m_wndSearchHint.ShowWindow(SW_HIDE);
 	}
 	AdjustView();
 
@@ -484,6 +489,7 @@ void CObjectView::AdjustView()
 		m_wndSearchText.SetWindowPos(NULL, m_nSearchTextOffset, 7, SEARCH_TEXT_WIDTH, 20, SWP_NOZORDER);
 		m_wndSearchButtons.SetWindowPos(NULL, m_nSearchTextOffset + SEARCH_TEXT_WIDTH + 5, 6,
 		                                cx - m_nSearchTextOffset - SEARCH_TEXT_WIDTH - 10, 22, SWP_NOZORDER);
+		m_wndSearchHint.SetWindowPos(NULL, SEARCH_BAR_X_MARGIN, 31, cx - SEARCH_BAR_X_MARGIN * 2, 14, SWP_NOZORDER);
 	}
 }
 

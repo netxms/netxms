@@ -88,7 +88,8 @@ BOOL CInternalItemSelDlg::OnInitDialog()
                               rect.right - 300 - GetSystemMetrics(SM_CXVSCROLL));
 	
    for(i = 0; m_itemList[i].pszName != NULL; i++)
-      if ((m_pNode->node.dwFlags & m_itemList[i].dwMatchFlags) ||
+      if ((m_pNode->iClass == OBJECT_TEMPLATE) ||
+		    (m_pNode->node.dwFlags & m_itemList[i].dwMatchFlags) ||
           (m_itemList[i].dwMatchFlags == 0))
       {
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, m_itemList[i].pszName);

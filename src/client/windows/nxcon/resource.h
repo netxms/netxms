@@ -40,6 +40,7 @@
 #define IDI_RULEMGR                     134
 #define ID_TREE_CTRL                    134
 #define IDI_EVENT                       135
+#define ID_SEARCH_HINT                  135
 #define IDI_USER_GROUP                  136
 #define IDC_EDIT_LOGIN_NAME             137
 #define IDS_MAPFRAME                    138
@@ -1048,6 +1049,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        413
 #define _APS_NEXT_COMMAND_VALUE         33112
 #define _APS_NEXT_CONTROL_VALUE         1562
-#define _APS_NEXT_SYMED_VALUE           135
+#define _APS_NEXT_SYMED_VALUE           136
 #endif
 #endif
