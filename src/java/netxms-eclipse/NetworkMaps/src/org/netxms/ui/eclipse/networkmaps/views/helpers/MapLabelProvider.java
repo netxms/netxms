@@ -2,7 +2,10 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.networkmaps.Activator;
@@ -16,6 +19,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	private Image[] statusImages;
 	private Image imgNode;
 	private Image imgSubnet;
+	private Font font;
+	private boolean showStatusIcons = false;
+	private boolean showStatusBackground = true;
 	
 	/**
 	 * Create map label provider
@@ -28,6 +34,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 		
 		imgNode = Activator.getImageDescriptor("icons/node.png").createImage();
 		imgSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
+		
+		font = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
 	}
 
 	/* (non-Javadoc)
@@ -89,6 +97,47 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 			statusImages[i].dispose();
 		imgNode.dispose();
 		imgSubnet.dispose();
+		font.dispose();
 		super.dispose();
+	}
+
+	/**
+	 * @return the font
+	 */
+	public Font getFont()
+	{
+		return font;
+	}
+
+	/**
+	 * @return the showStatusIcons
+	 */
+	public boolean isShowStatusIcons()
+	{
+		return showStatusIcons;
+	}
+
+	/**
+	 * @param showStatusIcons the showStatusIcons to set
+	 */
+	public void setShowStatusIcons(boolean showStatusIcons)
+	{
+		this.showStatusIcons = showStatusIcons;
+	}
+
+	/**
+	 * @return the showStatusBackground
+	 */
+	public boolean isShowStatusBackground()
+	{
+		return showStatusBackground;
+	}
+
+	/**
+	 * @param showStatusBackground the showStatusBackground to set
+	 */
+	public void setShowStatusBackground(boolean showStatusBackground)
+	{
+		this.showStatusBackground = showStatusBackground;
 	}
 }
