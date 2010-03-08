@@ -861,20 +861,17 @@ if test "$ac_cv_func_strerror_r" = "yes"; then
 	AC_MSG_CHECKING(if strerror_r is POSIX compliant)
 	AC_LANG_PUSH([C++])
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-		#if HAVE_STRING_H
-		#include <string.h>
-		#endif
-		#if HAVE_ERRNO_H
-		#include <errno.h>
-		#endif
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 	]],[[
-		int main()
-		{
-		   int e;
-		   char buffer[256];
-		   e = strerror_r(1, buffer, 256);
-		   return e;
-		}
+		int e;
+		char buffer[256];
+		e = strerror_r(1, buffer, 256);
+		return e;
 	]])
 	],[
 		AC_MSG_RESULT(yes)
@@ -896,11 +893,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/time.h>
 #endif
 ]],[[
-int main()
-{
    timezone(0, 0);
-   return 0;
-}
 ]])
 ],[
 AC_MSG_RESULT(yes)
@@ -927,11 +920,8 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/time.h>
 #endif
 ]],[[
-int main()
-{
    struct tm t;
    return t.tm_gmtoff;
-}
 ]])
 ],[
 AC_MSG_RESULT(yes)
@@ -1394,16 +1384,20 @@ AC_RUN_IFELSE(
 # Check if iconv uses const in prototype declaration
 if test "x$ac_found_iconv" = "xyes"; then
   AC_CACHE_CHECK(for iconv declaration, ac_cv_iconv_const,
-    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>
-        #include <iconv.h>]],
-        [[#ifdef __cplusplus
-          "C"
-          #endif
-          #if defined(__STDC__) || defined(__cplusplus)
-          size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
-          #else
-          size_t iconv();
-          #endif]])],
+    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <stdlib.h>
+#include <iconv.h>
+	]],
+        [[
+#ifdef __cplusplus
+"C"
+#endif
+#if defined(__STDC__) || defined(__cplusplus)
+         size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
+#else
+         size_t iconv();
+#endif
+	]])],
       [ac_cv_iconv_const=],
       [ac_cv_iconv_const=const])])
   AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
