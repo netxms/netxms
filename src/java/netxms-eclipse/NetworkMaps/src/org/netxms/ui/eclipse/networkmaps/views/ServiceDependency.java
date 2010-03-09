@@ -20,23 +20,26 @@ package org.netxms.ui.eclipse.networkmaps.views;
 
 import java.util.Iterator;
 
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.GenericObject;
-import org.netxms.client.objects.Node;
-import org.netxms.client.objects.Subnet;
+import org.eclipse.zest.layouts.LayoutStyles;
+import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapObjectData;
 import org.netxms.client.maps.NetworkMapObjectLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.GenericObject;
 
 /**
- * IP neighbors for given node
+ * Service dependency for service, cluster, condition, or node object
  *
  */
-public class IPNeighbors extends NetworkMap
+public class ServiceDependency extends NetworkMap
 {
-	public static final String ID = "org.netxms.ui.eclipse.networkmaps.view.ip_neighbors";
-	
+	public static final String ID = "org.netxms.ui.eclipse.networkmaps.view.service_dependency";
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
@@ -44,52 +47,49 @@ public class IPNeighbors extends NetworkMap
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName("IP Neighbors - " + ((rootObject != null) ? rootObject.getObjectName() : "<error>"));
+		setPartName("Service Dependency - " + ((rootObject != null) ? rootObject.getObjectName() : "<error>"));
 	}
 
-	/**
-	 * Build map page
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#buildMapPage()
 	 */
+	@Override
 	protected void buildMapPage()
 	{
 		mapPage = new NetworkMapPage();
 
 		mapPage.addObject(new NetworkMapObjectData(rootObject.getObjectId()));
-		
-		Iterator<Long> it = rootObject.getParents();
+		addParentServices(rootObject);
+	}
+
+	/**
+	 * Add parent services for given object
+	 * 
+	 * @param object
+	 */
+	private void addParentServices(GenericObject object)
+	{
+		Iterator<Long> it = object.getParents();
 		while(it.hasNext())
 		{
 			long id = it.next();
-			GenericObject object = session.findObjectById(id);
-			if ((object != null) && (object instanceof Subnet))
+			GenericObject parent = session.findObjectById(id);
+			if ((parent != null) && ((parent instanceof Container) || (parent instanceof Cluster)))
 			{
 				mapPage.addObject(new NetworkMapObjectData(id));
-				mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, rootObject.getObjectId(), id));
-				addNodesFromSubnet((Subnet)object, rootObject.getObjectId());
+				mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, object.getObjectId(), id));
+				addParentServices(parent);
 			}
 		}
 	}
 
-	/**
-	 * Add nodes connected to given subnet to map
-	 * @param subnet Subnet object
-	 * @param rootNodeId ID of map's root node (used to prevent recursion)
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
-	private void addNodesFromSubnet(Subnet subnet, long rootNodeId)
+	@Override
+	public void createPartControl(Composite parent)
 	{
-		Iterator<Long> it = subnet.getChilds();
-		while(it.hasNext())
-		{
-			long id = it.next();
-			if (id != rootNodeId)
-			{
-				GenericObject object = session.findObjectById(id);
-				if ((object != null) && (object instanceof Node))
-				{
-					mapPage.addObject(new NetworkMapObjectData(id));
-					mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, subnet.getObjectId(), id));
-				}
-			}
-		}
+		super.createPartControl(parent);
+		viewer.setLayoutAlgorithm(new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 	}
 }

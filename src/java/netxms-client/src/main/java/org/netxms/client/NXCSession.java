@@ -61,6 +61,7 @@ import org.netxms.client.maps.NetworkMapObjectLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Interface;
@@ -190,6 +191,9 @@ public class NXCSession
 				break;
 			case GenericObject.OBJECT_NODE:
 				object = new Node(msg, this);
+				break;
+			case GenericObject.OBJECT_CLUSTER:
+				object = new Cluster(msg, this);
 				break;
 			case GenericObject.OBJECT_TEMPLATE:
 				object = new Template(msg, this);

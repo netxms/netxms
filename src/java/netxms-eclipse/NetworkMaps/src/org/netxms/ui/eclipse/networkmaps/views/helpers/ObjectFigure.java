@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
@@ -11,7 +26,9 @@ import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 
@@ -27,6 +44,8 @@ public class ObjectFigure extends Figure
 	private static final int IMAGE_MARGIN_Y = 4;
 	private static final int BACKGROUND_MARGIN_X = 4;
 	private static final int BACKGROUND_MARGIN_Y = 4;
+	
+	private static final Color SELECTION_COLOR = new Color(Display.getDefault(), 255, 242, 0);
 	
 	private GenericObject object;
 	private MapLabelProvider labelProvider;
@@ -61,6 +80,14 @@ public class ObjectFigure extends Figure
 	protected void paintFigure(Graphics gc)
 	{
 		Rectangle rect = new Rectangle(getBounds());
+		
+		// Selection mark
+		if (labelProvider.isObjectSelected(object))
+		{
+			gc.setBackgroundColor(SELECTION_COLOR);
+			gc.setAntialias(SWT.ON);
+			gc.fillRoundRectangle(rect, 16, 16);
+		}
 		
 		// Status background
 		if (labelProvider.isShowStatusBackground())

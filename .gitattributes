@@ -281,6 +281,9 @@ src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectLink
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapPage.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicyConfig.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/Cluster.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/ClusterResource.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/ClusterSyncNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Container.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/EntireNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/GenericObject.java -text
@@ -473,10 +476,11 @@ src/java/netxms-eclipse/NetworkMaps/icons/quickmap.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/subnet.png -text
 src/java/netxms-eclipse/NetworkMaps/plugin.xml -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
-src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/ObjectFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowIPNeighbors.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowServiceDependency.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/IPNeighbors.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/NetworkMap.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/ServiceDependency.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/MapContentProvider.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/MapLabelProvider.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigure.java -text

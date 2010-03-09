@@ -1,11 +1,31 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.networkmaps.Activator;
@@ -16,6 +36,7 @@ import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
  */
 public class MapLabelProvider extends LabelProvider implements IFigureProvider
 {
+	private GraphViewer viewer;
 	private Image[] statusImages;
 	private Image imgNode;
 	private Image imgSubnet;
@@ -26,8 +47,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	/**
 	 * Create map label provider
 	 */
-	public MapLabelProvider()
+	public MapLabelProvider(GraphViewer viewer)
 	{
+		this.viewer = viewer;
+		
 		statusImages = new Image[9];
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
@@ -139,5 +162,17 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	public void setShowStatusBackground(boolean showStatusBackground)
 	{
 		this.showStatusBackground = showStatusBackground;
+	}
+	
+	/**
+	 * Check if given object selected in the viewer
+	 * 
+	 * @param object Object to test
+	 * @return true if given object is selected
+	 */
+	public boolean isObjectSelected(GenericObject object)
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		return (selection != null) ? selection.toList().contains(object) : false;
 	}
 }

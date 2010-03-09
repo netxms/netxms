@@ -18,63 +18,64 @@
  */
 package org.netxms.client.objects;
 
-import org.netxms.base.NXCPCodes;
+import java.net.InetAddress;
+
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.NXCSession;
 
 /**
- * @author Victor
+ * This class represents single cluster resource
  *
  */
-public class AgentPolicy extends GenericObject
+public class ClusterResource
 {
-	private int version;
-	private int policyType;
-	private String description;
+	private long id;
+	private String name;
+	private InetAddress virtualAddress;
+	private long currentOwner;
 	
 	/**
-	 * @param msg
-	 * @param session
+	 * Create cluster resource object from NXCP message
+	 * 
+	 * @param msg NXCP message
+	 * @param baseId Base variable ID
 	 */
-	public AgentPolicy(NXCPMessage msg, NXCSession session)
+	protected ClusterResource(NXCPMessage msg, long baseId)
 	{
-		super(msg, session);
-		
-		policyType = msg.getVariableAsInteger(NXCPCodes.VID_POLICY_TYPE);
-		version = msg.getVariableAsInteger(NXCPCodes.VID_VERSION);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
-	 */
-	@Override
-	public String getObjectClassName()
-	{
-		return "AgentPolicy";
+		id = msg.getVariableAsInt64(baseId);
+		name = msg.getVariableAsString(baseId + 1);
+		virtualAddress = msg.getVariableAsInetAddress(baseId + 2);
+		currentOwner = msg.getVariableAsInt64(baseId + 3);
 	}
 
 	/**
-	 * @return the version
+	 * @return the id
 	 */
-	public int getVersion()
+	public long getId()
 	{
-		return version;
+		return id;
 	}
 
 	/**
-	 * @return the policyType
+	 * @return the name
 	 */
-	public int getPolicyType()
+	public String getName()
 	{
-		return policyType;
+		return name;
 	}
 
 	/**
-	 * @return the description
+	 * @return the virtualAddress
 	 */
-	public String getDescription()
+	public InetAddress getVirtualAddress()
 	{
-		return description;
+		return virtualAddress;
+	}
+
+	/**
+	 * @return the currentOwner
+	 */
+	public long getCurrentOwner()
+	{
+		return currentOwner;
 	}
 }

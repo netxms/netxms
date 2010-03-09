@@ -9,20 +9,63 @@
             allowMultiple="true"
             icon="icons/quickmap.png"
             class="org.netxms.ui.eclipse.networkmaps.views.IPNeighbors"
-            id="org.netxms.ui.eclipse.quickmaps.view.ip_neighbors">
+            id="org.netxms.ui.eclipse.networkmaps.view.ip_neighbors">
+      </view>
+      <view
+            name="Service Dependency"
+            allowMultiple="true"
+            icon="icons/quickmap.png"
+            class="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"
+            id="org.netxms.ui.eclipse.networkmaps.view.service_dependency">
       </view>
    </extension>
 
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.quickmaps.actions.popup.object.ip_neighbors"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.ip_neighbors"
             objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPNeighbors"
                enablesFor="1"
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPNeighbors"
                label="IP Neighbors"
+               icon="icons/quickmap.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.service_dependency#node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#node"
+               label="Service Dependency"
+               icon="icons/quickmap.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.service_dependency#cluster"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#cluster"
+               label="Service Dependency"
+               icon="icons/quickmap.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.service_dependency#container"
+            objectClass="org.netxms.client.objects.Container">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#container"
+               label="Service Dependency"
                icon="icons/quickmap.png"
                menubarPath="additions">
          </action>

@@ -27,17 +27,20 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.networkmaps.views.IPNeighbors;
+import org.netxms.ui.eclipse.networkmaps.views.ServiceDependency;
 
 /**
- * @author Victor
+ * @author victor
  *
  */
-public class ShowIPNeighbors implements IObjectActionDelegate
+public class ShowServiceDependency implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private Node node;
+	private GenericObject object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -54,11 +57,11 @@ public class ShowIPNeighbors implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if (node != null)
+		if (object != null)
 		{
 			try
 			{
-				window.getActivePage().showView(IPNeighbors.ID, Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(ServiceDependency.ID, Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)
 			{
@@ -73,17 +76,23 @@ public class ShowIPNeighbors implements IObjectActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		Object obj;
 		if ((selection instanceof IStructuredSelection) &&
-		    (((IStructuredSelection)selection).size() == 1) &&
-			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof Node))
+		    (((IStructuredSelection)selection).size() == 1))
 		{
-			node = (Node)obj;
+			Object obj = ((IStructuredSelection)selection).getFirstElement();
+			if ((obj instanceof Node) || (obj instanceof Container) || (obj instanceof Cluster))
+			{
+				object = (GenericObject)obj;
+			}
+			else
+			{
+				object = null;
+			}
 		}
 		else
 		{
-			node = null;
+			object = null;
 		}
-		action.setEnabled(node != null);
+		action.setEnabled(object != null);
 	}
 }

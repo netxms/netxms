@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.networkmaps.views;
 
 import org.eclipse.jface.action.GroupMarker;
@@ -20,7 +38,6 @@ import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
@@ -29,7 +46,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 public abstract class NetworkMap extends ViewPart
 {
 	protected NXCSession session;
-	protected Node node;
+	protected GenericObject rootObject;
 	protected NetworkMapPage mapPage;
 	protected GraphViewer viewer;
 
@@ -42,8 +59,7 @@ public abstract class NetworkMap extends ViewPart
 		super.init(site);
 
 		session = NXMCSharedData.getInstance().getSession();
-		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
+		rootObject = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 	
 		buildMapPage();
 	}
@@ -65,10 +81,10 @@ public abstract class NetworkMap extends ViewPart
 		
 		viewer = new GraphViewer(parent, SWT.NONE);
 		viewer.setContentProvider(new MapContentProvider());
-		viewer.setLabelProvider(new MapLabelProvider());
+		viewer.setLabelProvider(new MapLabelProvider(viewer));
 		viewer.setLayoutAlgorithm(new SpringLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 		viewer.setInput(mapPage);
-	
+		
 		createPopupMenu();
 	}
 
