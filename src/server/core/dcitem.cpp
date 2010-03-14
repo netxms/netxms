@@ -196,7 +196,7 @@ DCItem::DCItem()
    m_pszScript = NULL;
    m_pScript = NULL;
    m_pNode = NULL;
-   m_hMutex = MutexCreate();
+   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -243,7 +243,7 @@ DCItem::DCItem(const DCItem *pSrc)
    m_pScript = NULL;
    setTransformationScript(pSrc->m_pszScript);
    m_pNode = NULL;
-   m_hMutex = MutexCreate();
+   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -318,7 +318,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
    m_pNode = pNode;
-   m_hMutex = MutexCreate();
+   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -414,7 +414,7 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
    m_pNode = pNode;
-   m_hMutex = MutexCreate();
+   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
@@ -458,7 +458,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner)
    m_iProcessAllThresholds = (BYTE)config->getSubEntryValueInt(_T("allThresholds"));
    m_tLastPoll = 0;
    m_pNode = owner;
-   m_hMutex = MutexCreate();
+   m_hMutex = MutexCreateRecursive();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;

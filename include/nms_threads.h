@@ -260,7 +260,7 @@ typedef struct netxms_condition_t * CONDITION;
 #define INVALID_THREAD_HANDLE       (NULL)
 
 #ifndef INFINITE
-#define INFINITE 0
+#define INFINITE 0xFFFFFFFF
 #endif
 
 typedef void *THREAD_RESULT;
@@ -581,7 +581,7 @@ typedef struct netxms_condition_t * CONDITION;
 #define INVALID_THREAD_HANDLE       0
 
 #ifndef INFINITE
-# define INFINITE 0
+#define INFINITE 0xFFFFFFFF
 #endif
 
 typedef void *THREAD_RESULT;
@@ -678,7 +678,12 @@ inline MUTEX MutexCreate(void)
 
    mutex = (MUTEX)malloc(sizeof(netxms_mutex_t));
    if (mutex != NULL)
+   {
       pthread_mutex_init(&mutex->mutex, NULL);
+#ifndef HAVE_RECURSIVE_MUTEXES
+      mutex->isRecursive = FALSE;
+#endif
+   }
    return mutex;
 }
 
@@ -697,6 +702,7 @@ inline MUTEX MutexCreateRecursive(void)
       pthread_mutex_init(&mutex->mutex, &a);
       pthread_mutexattr_destroy(&a);
 #else
+      mutex->isRecursive = TRUE;
 #error FIXME: implement recursive mutexes
 #endif
    }
