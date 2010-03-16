@@ -40,14 +40,14 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="%product.name">
+            name="NetXMS Management Console">
          <property
                name="appName"
-               value="%product.name">
+               value="NetXMS Management Console">
          </property>
          <property
                name="aboutText"
-               value="%product.name">
+               value="NetXMS Management Console">
          </property>
          <property
                name="preferenceCustomization"
