@@ -185,10 +185,10 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine
    _tcsftime(szBuffer, 64, _T("%d-%b-%Y<br>%H:%M:%S"), &tmbuf);
    strBuf.Format(_T("<tr bgcolor=%s>")
                  _T("<td align=left><table cellpadding=2 border=0><tr>")
-                 _T("<td><img src=\"file:%s/%s.ico\" border=0/></td>")
+                 _T("<td><img src=\"file://%s/%s.ico\" border=0/></td>")
                  _T("<td><b>%s</b></td></tr></table></td>")
                  _T("<td align=left><table cellpadding=2 border=0><tr>")
-                 _T("<td><img src=\"file:%s/%s.ico\" border=0/></td>")
+                 _T("<td><img src=\"file://%s/%s.png\" border=0/></td>")
                  _T("<td><b>%s</b></td></tr></table></td>")
                  _T("<td><b>%s</b></td>")
                  _T("<td><font size=-1>%s</font></td><td><font size=-1>%s</font></td>")
@@ -230,7 +230,7 @@ void CMainFrame::GenerateHtml(CString &strHTML)
    strHTML.Empty();
 
    strHTML.Format(_T("<html><head><title>NetXMS Active Alarm List</title></head>\n")
-                  _T("<body background=\"file:%s/background.jpg\">\n")
+                  _T("<body background=\"file://%s/background.jpg\">\n")
                   _T("<font face=verdana,helvetica size=+1>\n")
                   _T("<table width=\"99%%\" align=center cellspacing=0 cellpadding=2 border=1>\n")
                   _T("<tr bgcolor=#9AAABA><td><b>Severity</b></td><td><b>State</b></td>")

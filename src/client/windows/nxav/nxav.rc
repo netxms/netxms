@@ -249,8 +249,8 @@ IDF_NORMAL              FILE                    "res\\normal.ico"
 IDF_ACK                 FILE                    "res\\ack.png"
 IDF_NOSOUND             FILE                    "res\\nosound.png"
 IDF_SOUND               FILE                    "res\\sound.png"
-IDF_ACK_ICO             FILE                    "res\\ack.ico"
-IDF_OUTSTANDING         FILE                    "res\\outstanding.ico"
+IDF_ACK_ICO             FILE                    "res\\acknowledged.png"
+IDF_OUTSTANDING         FILE                    "res\\outstanding.png"
 
 /////////////////////////////////////////////////////////////////////////////
 //

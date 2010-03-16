@@ -66,8 +66,8 @@ src/client/nxsms/nxsms.vcproj -text
 src/client/scilexer/Margin.cur -text
 src/client/scilexer/scilexer.vcproj -text
 src/client/windows/nxav/nxav.vcproj -text
-src/client/windows/nxav/res/ack.ico -text
 src/client/windows/nxav/res/ack.png -text
+src/client/windows/nxav/res/acknowledged.png -text
 src/client/windows/nxav/res/background.jpg -text
 src/client/windows/nxav/res/critical.ico -text
 src/client/windows/nxav/res/major.ico -text
@@ -75,7 +75,7 @@ src/client/windows/nxav/res/minor.ico -text
 src/client/windows/nxav/res/normal.ico -text
 src/client/windows/nxav/res/nosound.png -text
 src/client/windows/nxav/res/nxav.ico -text
-src/client/windows/nxav/res/outstanding.ico -text
+src/client/windows/nxav/res/outstanding.png -text
 src/client/windows/nxav/res/processing.ico -text
 src/client/windows/nxav/res/small_logo.bmp -text
 src/client/windows/nxav/res/sound.png -text
