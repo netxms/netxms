@@ -78,7 +78,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 			{
 				char req[1024];
 
-				int len = sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n", uri, host);
+				int len = sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s:%u\r\nConnection: close\r\n\r\n", uri, host, port);
 				if (SendEx(sd, req, len, 0) == len)
 				{
 					char buff[10240];
