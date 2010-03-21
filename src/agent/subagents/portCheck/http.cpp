@@ -34,7 +34,7 @@ LONG H_CheckHTTP(const char *pszParam, const char *pArg, char *pValue)
 	{
 		return SYSINFO_RC_ERROR;
 	}
-	
+
 	nPort = (unsigned short)atoi(szPort);
 	if (nPort == 0)
 	{
@@ -62,7 +62,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	{
 		strcpy(szMatch, "^HTTP/1.[01] 200 .*");
 	}
-	
+
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
@@ -71,8 +71,8 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 
 		nRet = PC_ERR_HANDSHAKE;
 
-		snprintf(szHostHeader, sizeof(szHostHeader), "Host: %s:%d\r\n",
-			szHost[0] != 0 ? szHost : szAddr, nPort);
+		snprintf(szHostHeader, sizeof(szHostHeader), "Host: %s:%u\r\n",
+				szHost[0] != 0 ? szHost : szAddr, nPort);
 
 		snprintf(szTmp, sizeof(szTmp),
 				"GET %s HTTP/1.1\r\nConnection: close\r\n%s\r\n",
