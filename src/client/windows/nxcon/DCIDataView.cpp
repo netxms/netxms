@@ -210,7 +210,7 @@ void CDCIDataView::OnViewRefresh()
    }
    else
    {
-      theApp.ErrorBox(dwResult, _T("Unable to retrieve colected data: %s"));
+      theApp.ErrorBox(dwResult, _T("Unable to retrieve collected data: %s"));
       iItem = m_wndListCtrl.InsertItem(0, _T(""));
       if (iItem != -1)
          m_wndListCtrl.SetItemText(iItem, 1, _T("ERROR LOADING DATA FROM SERVER"));

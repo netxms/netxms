@@ -880,7 +880,7 @@ LRESULT CGraphFrame::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
    }
    else
    {
-      theApp.ErrorBox(lParam, _T("Unable to retrieve colected data: %s"));
+      theApp.ErrorBox(lParam, _T("Unable to retrieve collected data: %s"));
    }
 
 	m_nPendingUpdates--;
