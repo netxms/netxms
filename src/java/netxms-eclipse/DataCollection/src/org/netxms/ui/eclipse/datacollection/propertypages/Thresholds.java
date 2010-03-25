@@ -18,12 +18,17 @@
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -36,6 +41,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -164,6 +170,19 @@ public class Thresholds extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
       deleteButton.setEnabled(false);
+      deleteButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				deleteThresholds();
+			}
+      });
       
       /*** Selection change listener for thresholds list ***/
       thresholds.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -179,6 +198,25 @@ public class Thresholds extends PropertyPage
       });
       
 		return dialogArea;
+	}
+
+	/**
+	 * Delete selected thresholds
+	 */
+	@SuppressWarnings("unchecked")
+	private void deleteThresholds()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
+		if (!selection.isEmpty())
+		{
+			final List<Threshold> list = dci.getThresholds();
+			Iterator<Threshold> it = selection.iterator();
+			while(it.hasNext())
+			{
+				list.remove(it.next());
+			}
+	      thresholds.setInput(dci.getThresholds().toArray());
+		}
 	}
 
 	/**

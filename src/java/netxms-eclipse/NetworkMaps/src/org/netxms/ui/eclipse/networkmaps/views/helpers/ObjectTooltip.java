@@ -47,9 +47,8 @@ public class ObjectTooltip extends Figure
 		sb.append(StatusDisplayInfo.getStatusText(object.getStatus()));
 		if ((object instanceof Node) && !((Node)object).getPrimaryIP().isAnyLocalAddress())
 		{
-			sb.append("Primary IP: ");
+			sb.append("\nPrimary IP: ");
 			sb.append(((Node)object).getPrimaryIP().toString());
-			sb.append('\n');
 		}
 		if (!object.getComments().isEmpty())
 		{
