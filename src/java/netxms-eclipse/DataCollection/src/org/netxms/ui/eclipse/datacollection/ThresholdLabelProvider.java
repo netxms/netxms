@@ -21,8 +21,12 @@ package org.netxms.ui.eclipse.datacollection;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author Victor
@@ -32,6 +36,9 @@ public class ThresholdLabelProvider implements ITableLabelProvider
 {
 	private static final String[] functions = { "last(", "average(", "deviation(", "diff()", "error(" };
 	private static final String[] operations = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" };
+	
+	private WorkbenchLabelProvider eventLabelProvider = new WorkbenchLabelProvider();
+	private NXCSession session = NXMCSharedData.getInstance().getSession();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -63,7 +70,8 @@ public class ThresholdLabelProvider implements ITableLabelProvider
 				text.append(((Threshold)element).getValue());
 				return text.toString();
 			case Thresholds.COLUMN_EVENT:
-				return Long.toString(((Threshold)element).getFireEvent());
+				final EventTemplate event = session.findEventTemplateByCode(((Threshold)element).getFireEvent());
+				return eventLabelProvider.getText(event);
 		}
 		return null;
 	}
@@ -82,6 +90,7 @@ public class ThresholdLabelProvider implements ITableLabelProvider
 	@Override
 	public void dispose()
 	{
+		eventLabelProvider.dispose();
 	}
 
 	/* (non-Javadoc)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -163,6 +163,19 @@ public class Thresholds extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       modifyButton.setLayoutData(rd);
       modifyButton.setEnabled(false);
+      modifyButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				editThreshold();
+			}
+      });
       
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("&Delete");
@@ -216,6 +229,18 @@ public class Thresholds extends PropertyPage
 				list.remove(it.next());
 			}
 	      thresholds.setInput(dci.getThresholds().toArray());
+		}
+	}
+	
+	/**
+	 * Edit selected threshold
+	 */
+	private void editThreshold()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
+		if (!selection.isEmpty())
+		{
+			selection.getFirstElement();
 		}
 	}
 
