@@ -26,6 +26,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -43,6 +44,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
+import org.netxms.ui.eclipse.datacollection.dialogs.EditThresholdDialog;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -240,7 +242,12 @@ public class Thresholds extends PropertyPage
 		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
 		if (!selection.isEmpty())
 		{
-			selection.getFirstElement();
+			final Threshold threshold = (Threshold)selection.getFirstElement();
+			EditThresholdDialog dlg = new EditThresholdDialog(getShell(), threshold);
+			if (dlg.open() == Window.OK)
+			{
+				thresholds.update(threshold, null);
+			}
 		}
 	}
 
