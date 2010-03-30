@@ -390,7 +390,7 @@ class NXSL_TimeClass : public NXSL_Class
 public:
    NXSL_TimeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -405,7 +405,7 @@ NXSL_TimeClass::NXSL_TimeClass()
    strcpy(m_szName, "TIME");
 }
 
-NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, char *pszAttr)
+NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    struct tm *st;
    NXSL_Value *value;
