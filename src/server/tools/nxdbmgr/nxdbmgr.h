@@ -46,6 +46,7 @@
 void CheckDatabase();
 void InitDatabase(const TCHAR *pszInitFile);
 void ReindexDatabase();
+void ReindexIData();
 BOOL ClearDatabase();
 void ExportDatabase(const char *file);
 void ImportDatabase(const char *file);

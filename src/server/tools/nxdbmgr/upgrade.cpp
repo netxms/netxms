@@ -214,6 +214,44 @@ cleanup:
 
 
 //
+// Upgrade from V209 to V210
+//
+
+static BOOL H_UpgradeFromV209(int currVersion, int newVersion)
+{
+	if (!SQLQuery(_T("DELETE FROM metadata WHERE var_name like 'IDataIndexCreationCommand_%'")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	const TCHAR *query;
+	switch(g_iSyntax)
+	{
+		case DB_SYNTAX_PGSQL:
+			query = _T("INSERT INTO metadata (var_name,var_value)	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)')");
+			break;
+		case DB_SYNTAX_MSSQL:
+			query = _T("INSERT INTO metadata (var_name,var_value)	VALUES ('IDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)')");
+			break;
+		default:
+			query = _T("INSERT INTO metadata (var_name,var_value)	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)')");
+			break;
+	}
+
+	if (!SQLQuery(query))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	ReindexIData();
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='210' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V208 to V209
 //
 
@@ -592,6 +630,7 @@ static BOOL H_UpgradeFromV200(int currVersion, int newVersion)
 //      or from V96 to V204
 //      or from V97 to V205
 //      or from V98 to V206
+//      or from V99 to V207
 //
 
 static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
@@ -623,6 +662,33 @@ static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
 	TCHAR query[256];
 	_sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersion'"), newVersion);
 	if (!SQLQuery(query))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
+// Upgrade from V100 to V210
+//
+
+static BOOL H_UpgradeFromV100(int currVersion, int newVersion)
+{
+	if (!H_UpgradeFromV9x(currVersion, newVersion))
+		return FALSE;
+
+	// Now database at V207 level
+	// V100 already has changes V209 -> V210,
+	// but missing V207 -> V209 changes
+
+	if (!H_UpgradeFromV207(207, 208))
+		return FALSE;
+
+	if (!H_UpgradeFromV207(208, 209))
+		return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='210' WHERE var_name='SchemaVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -4540,6 +4606,7 @@ static struct
 	{ 97, 205, H_UpgradeFromV9x },
 	{ 98, 206, H_UpgradeFromV9x },
 	{ 99, 207, H_UpgradeFromV9x },
+	{ 100, 210, H_UpgradeFromV100 },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
@@ -4549,6 +4616,7 @@ static struct
 	{ 206, 207, H_UpgradeFromV206 },
 	{ 207, 208, H_UpgradeFromV207 },
 	{ 208, 209, H_UpgradeFromV208 },
+	{ 209, 210, H_UpgradeFromV209 },
    { 0, NULL }
 };
 
