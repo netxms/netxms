@@ -197,11 +197,10 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
    fp = _tfopen(pszInfoFile, _T("r"));
    if (fp != NULL)
    {
-      while(1)
+      while(!feof(fp))
       {
-         _fgetts(szBuffer, 256, fp);
-         if (feof(fp))
-            break;
+         if (_fgetts(szBuffer, 256, fp) == NULL)
+				break;
          ptr = _tcschr(szBuffer, _T('\n'));
          if (ptr != NULL)
             *ptr = 0;
