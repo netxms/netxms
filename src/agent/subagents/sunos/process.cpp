@@ -156,6 +156,11 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
 		free(pNameList);
 	}
 
+	if ((nFound < 0) && (pEnt != NULL))
+	{
+		safe_free(*pEnt);
+		*pEnt = NULL;
+	}
 	return nFound;
 }
 
@@ -441,18 +446,7 @@ LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 			nRet = SYSINFO_RC_SUCCESS;
 		}
 	}
+	safe_free(pList);
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.9  2006/05/15 22:11:22  alk
-+ Net.Interface.Link() workaround; trying kstat() first, then
-IFF_RUNNING it kstat's link_up failed.
-- code reformated
-
-
-*/

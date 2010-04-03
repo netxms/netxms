@@ -72,7 +72,9 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 	BOOL bProcFound, bCmdFound;
 
 	nFound = -1;
-	AgentWriteLog(EVENTLOG_DEBUG_TYPE, "ProcRead(%p,\"%s\",\"%s\")", pEnt, CHECK_NULL(szProcName), CHECK_NULL(szCmdLine));
+	if (pEnt != NULL)
+		*pEnt = NULL;
+	AgentWriteDebugLog(5, "ProcRead(%p,\"%s\",\"%s\")", pEnt, CHECK_NULL(szProcName), CHECK_NULL(szCmdLine));
 
 	nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
 	// if everything is null we can simply return nCount!!!
@@ -222,7 +224,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 						           &(*pEnt)[nFound].utime, &(*pEnt)[nFound].ktime, &(*pEnt)[nFound].threads,
 						           &(*pEnt)[nFound].vmsize, &(*pEnt)[nFound].rss) != 10)
 						{
-							AgentWriteLog(EVENTLOG_DEBUG_TYPE, "Error parsing /proc/%d/stat", nPid);
+							AgentWriteDebugLog(2, "Error parsing /proc/%d/stat", nPid);
 						}
 					}
 				}
@@ -232,6 +234,12 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 			free(pNameList[nCount]);
 		}
 		free(pNameList);
+	}
+
+	if ((nFound < 0) && (pEnt != NULL))
+	{
+		safe_free(*pEnt);
+		*pEnt = NULL;
 	}
 
 	return nFound;
@@ -285,6 +293,7 @@ LONG H_ThreadCount(const char *param, const char *arg, char *value)
 			sum += procList[i].threads;
 		ret_int(value, sum);
 		ret = SYSINFO_RC_SUCCESS;
+		free(procList);
 	}
 
 	return ret;
@@ -337,7 +346,7 @@ LONG H_ProcessDetails(const char *param, const char *arg, char *value)
 	StrStrip(cmdLine);
 
 	count = ProcRead(&procList, procName, (cmdLine[0] != 0) ? cmdLine : NULL);
-	AgentWriteLog(EVENTLOG_DEBUG_TYPE, "H_ProcessDetails(\"%s\"): ProcRead() returns %d", param, count);
+	AgentWriteDebugLog(5, "H_ProcessDetails(\"%s\"): ProcRead() returns %d", param, count);
 	if (count == -1)
 		return SYSINFO_RC_ERROR;
 

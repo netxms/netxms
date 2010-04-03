@@ -24,7 +24,7 @@ fi
 
 currdir=`pwd`
 cd $prefix &&
-tar cvf nxagent-binary.tar * &&
+tar cvf nxagent-binary.tar bin/ lib/ &&
 gzip nxagent-binary.tar &&
 cd $currdir &&
 rm -rf inst &&

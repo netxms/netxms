@@ -110,7 +110,7 @@ static void ParseIoStat(char *line)
 		strcpy(m_devices[dev].name, devName);
 		m_devices[dev].isRealDevice = IsRealDevice(devName);
 		memset(m_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
-		AgentWriteLog(EVENTLOG_DEBUG_TYPE, "ParseIoStat(): new device added (name=%s isRealDevice=%d)", devName, m_devices[dev].isRealDevice);
+		AgentWriteDebugLog(2, "ParseIoStat(): new device added (name=%s isRealDevice=%d)", devName, m_devices[dev].isRealDevice);
 	}
 
 	// Parse counters
@@ -191,7 +191,7 @@ void StartIoStatCollector()
 		if (S_ISDIR(st.st_mode))
 		{
 			m_isSysFsAvailable = true;
-			AgentWriteLog(EVENTLOG_DEBUG_TYPE, "Linux: using /sys/block to distinguish devices from partitions");
+			AgentWriteDebugLog(2, "Linux: using /sys/block to distinguish devices from partitions");
 		}
 	}	
 

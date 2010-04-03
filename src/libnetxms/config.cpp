@@ -59,6 +59,7 @@ ConfigEntry::~ConfigEntry()
 		delete entry;
 	}
 	safe_free(m_name);
+	safe_free(m_file);
 
 	for(int i = 0; i < m_valueCount; i++)
 		safe_free(m_values[i]);
