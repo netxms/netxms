@@ -419,7 +419,10 @@ src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/Even
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/EventTemplateLabelProvider.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/actions/OpenEventConfigurator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EditEventTemplateDialog.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/EventSelectionDialog.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dialogs/helpers/EventListFilter.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventConfigurator.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/widgets/EventSelector.java -text
 src/java/netxms-eclipse/GoogleMaps/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/GoogleMaps/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/GoogleMaps/build.properties -text

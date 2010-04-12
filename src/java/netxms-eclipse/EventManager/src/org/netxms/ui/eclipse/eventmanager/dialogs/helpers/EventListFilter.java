@@ -16,17 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
+package org.netxms.ui.eclipse.eventmanager.dialogs.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.events.EventTemplate;
 
 /**
- * Filter for object list
+ * Filter for event list
  *
  */
-public class ObjectListFilter extends ViewerFilter
+public class EventListFilter extends ViewerFilter
 {
 	private String filterString = null;
 	
@@ -39,9 +39,9 @@ public class ObjectListFilter extends ViewerFilter
 		if (filterString == null)
 			return true;
 		
-		return ((GenericObject)element).getObjectName().toLowerCase().startsWith(filterString);
+		return ((EventTemplate)element).getName().toLowerCase().contains(filterString);
 	}
-		
+
 	/**
 	 * Set filter string
 	 */

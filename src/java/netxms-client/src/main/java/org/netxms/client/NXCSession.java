@@ -2499,6 +2499,20 @@ public class NXCSession
 	}
 	
 	/**
+	 * Get cached list event templates
+	 * @return List of event templates cached by client library
+	 */
+	public EventTemplate[] getCachedEventTemplates()
+	{
+		EventTemplate[] events = null;
+		synchronized(eventTemplates)
+		{
+			events = eventTemplates.values().toArray(new EventTemplate[eventTemplates.size()]);
+		}
+		return events;
+	}
+	
+	/**
 	 * Find event template by code in event template database internally maintained by session object.
 	 * You must call NXCSession.syncEventTemplates() first to make local copy of event template database.
 	 * 
