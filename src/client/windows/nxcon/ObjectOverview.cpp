@@ -203,22 +203,22 @@ void CObjectOverview::Refresh()
 				InsertItem(_T("System Description"), m_pObject->node.szSysDescription);
 				if (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
 				{
-					InsertItem(_T("NetXMS Agent"), _T("Active"));
+					InsertItem(_T("NetXMS Agent"), (m_pObject->node.dwFlags & NDF_AGENT_UNREACHABLE) ? _T("Down") : _T("Active"));
 					InsertItem(_T("Agent Version"), m_pObject->node.szAgentVersion);
 					InsertItem(_T("Platform Name"), m_pObject->node.szPlatformName);
 				}
 				else
 				{
-					InsertItem(_T("NetXMS Agent"), _T("Inactive"));
+					InsertItem(_T("NetXMS Agent"), _T("Not detected"));
 				}
 				if (m_pObject->node.dwFlags & NF_IS_SNMP)
 				{
-					InsertItem(_T("SNMP Agent"), _T("Active"));
+					InsertItem(_T("SNMP Agent"), (m_pObject->node.dwFlags & NDF_SNMP_UNREACHABLE) ? _T("Down") : _T("Active"));
 					InsertItem(_T("SNMP OID"), CHECK_NULL_EX(m_pObject->node.pszSnmpObjectId));
 				}
 				else
 				{
-					InsertItem(_T("SNMP Agent"), _T("Inactive"));
+					InsertItem(_T("SNMP Agent"), _T("Not detected"));
 				}
 				InsertItem(_T("Node Type"), (TCHAR *)CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
 				break;

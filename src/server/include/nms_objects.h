@@ -98,6 +98,8 @@ extern DWORD g_dwConditionPollingInterval;
 #define NDF_POLLING_DISABLED           0x0800
 #define NDF_CONFIGURATION_POLL_PASSED  0x1000
 
+#define __NDF_FLAGS_DEFINED
+
 
 //
 // Cluster runtime flags

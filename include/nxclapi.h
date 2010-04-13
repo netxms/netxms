@@ -879,6 +879,19 @@ typedef struct
 
 
 //
+// Node dynamic flags useful for client
+//
+
+#ifndef __NDF_FLAGS_DEFINED
+#define NDF_UNREACHABLE                0x0004
+#define NDF_AGENT_UNREACHABLE          0x0008
+#define NDF_SNMP_UNREACHABLE           0x0010
+#define NDF_CPSNMP_UNREACHABLE         0x0200
+#define NDF_POLLING_DISABLED           0x0800
+#endif
+
+
+//
 // Callbacks data types
 //
 
