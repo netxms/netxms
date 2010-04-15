@@ -108,18 +108,16 @@ bool NetCanWrite(SOCKET nSocket, int nTimeout /* ms */)
 
 int NetRead(SOCKET nSocket, char *pBuff, int nSize)
 {
-	return recv(nSocket, pBuff, nSize, 0);
+	return RecvEx(nSocket, pBuff, nSize, 0, INFINITE);
 }
 
 int NetWrite(SOCKET nSocket, const char *pBuff, int nSize)
 {
-	return send(nSocket, pBuff, nSize, 0);
+	return SendEx(nSocket, pBuff, nSize, 0);
 }
 
 void NetClose(SOCKET nSocket)
 {
 	shutdown(nSocket, SHUT_RDWR);
-	{
-		closesocket(nSocket);
-	}
+	closesocket(nSocket);
 }
