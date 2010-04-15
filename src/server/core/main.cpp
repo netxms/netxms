@@ -419,7 +419,7 @@ static void DBEventHandler(DWORD dwEvent, const TCHAR *pszArg1, const TCHAR *psz
 // Server initialization
 //
 
-BOOL NXCORE_EXPORTABLE Initialize(void)
+BOOL NXCORE_EXPORTABLE Initialize()
 {
 	int i, iDBVersion;
 	DWORD dwAddr;

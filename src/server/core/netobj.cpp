@@ -442,7 +442,7 @@ void NetObj::Delete(BOOL bIndexLocked)
 	// (to prevent object re-appearance in GUI if client hides object
 	// after successful call to Session::deleteObject())
 	LockData();
-   m_bIsHidden = FALSE;
+   m_bIsHidden = TRUE;
 	UnlockData();
 
    PrepareForDeletion();

@@ -183,7 +183,7 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 // Initialize objects infrastructure
 //
 
-void ObjectsInit(void)
+void ObjectsInit()
 {
    // Load default status calculation info
    m_iStatusCalcAlg = ConfigReadInt("StatusCalculationAlgorithm", SA_CALCULATE_MOST_CRITICAL);
@@ -352,6 +352,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_TEMPLATEGROUP:
          case OBJECT_TEMPLATEROOT:
 			case OBJECT_CLUSTER:
+			case OBJECT_VPNCONNECTOR:
 			case OBJECT_POLICYGROUP:
 			case OBJECT_POLICYROOT:
 			case OBJECT_AGENTPOLICY:
@@ -421,6 +422,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_TEMPLATEGROUP:
       case OBJECT_TEMPLATEROOT:
 		case OBJECT_CLUSTER:
+		case OBJECT_VPNCONNECTOR:
 		case OBJECT_POLICYGROUP:
 		case OBJECT_POLICYROOT:
 		case OBJECT_AGENTPOLICY:
@@ -499,7 +501,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr)
 
    RWLockReadLock(g_rwlockInterfaceIndex, INFINITE);
    dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwAddr);
-   pNode = (dwPos == INVALID_INDEX) ? NULL : (Node *)((Interface *)g_pInterfaceIndexByAddr[dwPos].pObject)->GetParentNode();
+   pNode = (dwPos == INVALID_INDEX) ? NULL : ((Interface *)g_pInterfaceIndexByAddr[dwPos].pObject)->GetParentNode();
    RWLockUnlock(g_rwlockInterfaceIndex);
    return pNode;
 }
@@ -671,7 +673,7 @@ DWORD FindLocalMgmtNode(void)
 // Load objects from database at stratup
 //
 
-BOOL LoadObjects(void)
+BOOL LoadObjects()
 {
    DB_RESULT hResult;
    DWORD i, dwNumRows;
