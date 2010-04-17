@@ -48,17 +48,20 @@ int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass
 
 		nRet = PC_ERR_HANDSHAKE;
 
-		if (NetRead(nSd, szBuff, sizeof(szBuff)) >= 8)
+		if (NetCanRead(nSd, 1000))
 		{
-			int nMajor, nMinor;
-
-			if (sscanf(szBuff, "SSH-%d.%d-", &nMajor, &nMinor) == 2)
+			if (NetRead(nSd, szBuff, sizeof(szBuff)) >= 8)
 			{
-				snprintf(szTmp, sizeof(szTmp), "SSH-%d.%d-NetXMS\n",
-						nMajor, nMinor);
-				if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+				int nMajor, nMinor;
+
+				if (sscanf(szBuff, "SSH-%d.%d-", &nMajor, &nMinor) == 2)
 				{
-					nRet = PC_ERR_NONE;
+					snprintf(szTmp, sizeof(szTmp), "SSH-%d.%d-NetXMS\n",
+							nMajor, nMinor);
+					if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
+					{
+						nRet = PC_ERR_NONE;
+					}
 				}
 			}
 		}

@@ -22,4 +22,6 @@ int CheckCustom(char *, DWORD, short, char *, char *, DWORD);
 LONG H_CheckTelnet(const char *, const char *, char *);
 int CheckTelnet(char *, DWORD, short, char *, char *, DWORD);
 
+extern TCHAR g_szDomainName[];
+
 #endif // __MAIN__H__

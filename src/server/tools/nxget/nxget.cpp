@@ -253,6 +253,7 @@ int main(int argc, char *argv[])
                    "   -s <secret>  : Shared secret for authentication.\n"
                    "   -S <addr>    : Check state of network service at given address.\n"
                    "   -t <type>    : Set type of service to be checked.\n"
+						 "                  Possible types are: custom, ssh, pop3, smtp, ftp, http, telnet.\n"
                    "   -T <proto>   : Protocol number to be used for service check.\n"
                    "   -v           : Display version and exit.\n"
                    "   -w <seconds> : Specify command timeout (default is 3 seconds).\n"
@@ -352,8 +353,39 @@ int main(int argc, char *argv[])
             iServiceType = strtol(optarg, &eptr, 0);
             if (*eptr != 0)
             {
-               printf("Invalid service type \"%s\"\n", optarg);
-               bStart = FALSE;
+					if (!stricmp(optarg, "custom"))
+					{
+						iServiceType = NETSRV_CUSTOM;
+					}
+					else if (!stricmp(optarg, "ftp"))
+					{
+						iServiceType = NETSRV_FTP;
+					}
+					else if (!stricmp(optarg, "http"))
+					{
+						iServiceType = NETSRV_HTTP;
+					}
+					else if (!stricmp(optarg, "pop3"))
+					{
+						iServiceType = NETSRV_POP3;
+					}
+					else if (!stricmp(optarg, "smtp"))
+					{
+						iServiceType = NETSRV_SMTP;
+					}
+					else if (!stricmp(optarg, "ssh"))
+					{
+						iServiceType = NETSRV_SSH;
+					}
+					else if (!stricmp(optarg, "telnet"))
+					{
+						iServiceType = NETSRV_TELNET;
+					}
+					else
+					{
+						printf("Invalid service type \"%s\"\n", optarg);
+						bStart = FALSE;
+					}
             }
             break;
          case 'T':   // Protocol number for service check

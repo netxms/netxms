@@ -15,6 +15,14 @@
 #include "main.h"
 #include "net.h"
 
+
+//
+// Global variables
+//
+
+TCHAR g_szDomainName[128] = _T("netxms.org");
+
+
 //
 // Command handler
 //
@@ -132,6 +140,7 @@ DWORD m_dwDefaultTimeout = 30000;
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
+	{ _T("DomainName"), CT_STRING, 0, 0, 128, 0, g_szDomainName },
 	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_dwDefaultTimeout },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };

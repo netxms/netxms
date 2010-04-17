@@ -42,10 +42,12 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo, DWORD dwTimeo
 		nRet = PC_ERR_HANDSHAKE;
 
 #define CHECK_OK(x) nErr = 1; while(1) { \
-	if (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) { \
+	if (NetCanRead(nSd, 1000)) { \
+		if (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) { \
 			if (szBuff[3] == '-') { continue; } \
 			if (strncmp(szBuff, x" ", 4) == 0) { nErr = 0; } break; \
-		} else { break; } } \
+		} else { break; } \
+	} else { break; } } \
 	if (nErr == 0)
 
 
@@ -55,14 +57,13 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo, DWORD dwTimeo
 			{
 				strcpy(szHostname, "netxms-portcheck");
 			}
-
+			
 			snprintf(szTmp, sizeof(szTmp), "HELO %s\r\n", szHostname);
 			if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 			{
 				CHECK_OK("250")
 				{
-					snprintf(szTmp, sizeof(szTmp), "MAIL FROM: noreply@%s\r\n",
-						szHostname);
+					snprintf(szTmp, sizeof(szTmp), "MAIL FROM: noreply@%s\r\n", g_szDomainName);
 					if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 					{
 						CHECK_OK("250")

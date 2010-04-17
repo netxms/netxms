@@ -86,7 +86,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 			int offset = 0;
 			int buffSize = CHUNK_SIZE;
 
-			while (NetCanRead(nSd, READ_TIMEOUT))
+			while(NetCanRead(nSd, READ_TIMEOUT))
 			{
 				nBytes = NetRead(nSd, buff + offset, buffSize - offset);
 				if (nBytes > 0) {

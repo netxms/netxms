@@ -46,7 +46,7 @@ int CheckTelnet(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szP
 		unsigned char szBuff[512];
 
 		nRet = PC_ERR_HANDSHAKE;
-		while (NetCanRead(nSd, 1000) && nRet == PC_ERR_HANDSHAKE) // 1sec
+		while(NetCanRead(nSd, 1000) && nRet == PC_ERR_HANDSHAKE) // 1sec
 		{
 			int size = NetRead(nSd, (char *)szBuff, sizeof(szBuff));
 			unsigned char out[4];

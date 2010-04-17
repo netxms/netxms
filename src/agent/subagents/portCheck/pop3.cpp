@@ -43,7 +43,7 @@ int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPas
 
 		nRet = PC_ERR_HANDSHAKE;
 
-#define CHECK_OK ((NetRead(nSd, szBuff, sizeof(szBuff)) > 3) \
+#define CHECK_OK (NetCanRead(nSd, 1000) && (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) \
 				&& (strncmp(szBuff, "+OK", 3) == 0))
 
 		if (CHECK_OK)
