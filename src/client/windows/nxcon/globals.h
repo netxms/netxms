@@ -46,8 +46,10 @@ extern CConsoleApp theApp;
 #define TOOLBOX_X_MARGIN      5
 #define TOOLBOX_Y_MARGIN      5
 
-#define OBJTOOL_MENU_FIRST_ID 4000
-#define OBJTOOL_MENU_LAST_ID  4999
+#define OBJTOOL_OB_MENU_FIRST_ID 4000	/* object tools in object browser */
+#define OBJTOOL_OB_MENU_LAST_ID  4999
+#define OBJTOOL_AV_MENU_FIRST_ID 6000	/* object tools in alarm viewer */
+#define OBJTOOL_AV_MENU_LAST_ID  6999
 
 #define GRAPH_MENU_FIRST_ID	5000
 #define GRAPH_MENU_LAST_ID		5999
@@ -347,7 +349,7 @@ void UpdateGraphList(void);
 //
 
 DWORD LoadObjectTools(void);
-CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwStart);
+CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwStart, UINT nBaseID);
 
 
 //

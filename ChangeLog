@@ -11,7 +11,7 @@
 - Added support for encrypted DB passwords in netxmsd.conf
 - Improved SNMPv3 support
 - Windows management console: implemented object search by comments
-- Fixed issues: #62, #278, #283, #290
+- Fixed issues: #62, #278, #283, #290, #292
 
 
 *

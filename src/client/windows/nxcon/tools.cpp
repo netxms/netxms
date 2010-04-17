@@ -560,7 +560,7 @@ void CopyMenuItems(CMenu *pDst, CMenu *pSrc)
 // Create object tools pop-up menu
 //
 
-CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwStart)
+CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwStart, UINT nBaseID)
 {
    CMenu *pMenu;
    TCHAR szName[MAX_DB_STRING], szPath[MAX_DB_STRING];
@@ -570,7 +570,7 @@ CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwSta
 
    pMenu = new CMenu;
    pMenu->CreatePopupMenu();
-   for(i = *pdwStart, nId = OBJTOOL_MENU_FIRST_ID + *pdwStart; i < g_dwNumObjectTools; i++, nId++)
+   for(i = *pdwStart, nId = nBaseID + *pdwStart; i < g_dwNumObjectTools; i++, nId++)
    {
       if (NXCIsAppropriateTool(&g_pObjectToolList[i], pObject))
       {
@@ -615,8 +615,8 @@ CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwSta
                pszName = &szPath[j];
                for(; (szPath[j] != 0) && (memcmp(&szPath[j], _T("->"), sizeof(TCHAR) * 2)); j++);
                szPath[j] = 0;
-               pSubMenu = CreateToolsSubmenu(pObject, szPath, &i);
-               nId = OBJTOOL_MENU_FIRST_ID + i;
+               pSubMenu = CreateToolsSubmenu(pObject, szPath, &i, nBaseID);
+               nId = nBaseID + i;
                StrStrip(pszName);
                pMenu->AppendMenu(MF_ENABLED | MF_STRING | MF_POPUP,
                                  (UINT)pSubMenu->Detach(), pszName);

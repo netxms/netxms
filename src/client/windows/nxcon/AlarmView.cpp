@@ -112,8 +112,8 @@ BEGIN_MESSAGE_MAP(CAlarmView, CWnd)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
    ON_MESSAGE(NXCM_SET_OBJECT, OnSetObject)
-   ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
-   ON_UPDATE_COMMAND_UI_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnUpdateObjectTool)
+   ON_COMMAND_RANGE(OBJTOOL_AV_MENU_FIRST_ID, OBJTOOL_AV_MENU_LAST_ID, OnObjectTool)
+   ON_UPDATE_COMMAND_UI_RANGE(OBJTOOL_AV_MENU_FIRST_ID, OBJTOOL_AV_MENU_LAST_ID, OnUpdateObjectTool)
 END_MESSAGE_MAP()
 
 
@@ -396,7 +396,7 @@ void CAlarmView::OnContextMenu(CWnd* pWnd, CPoint point)
          if (pObject != NULL)
          {
             dwTemp = 0;
-            pToolsMenu = CreateToolsSubmenu(pObject, _T(""), &dwTemp);
+            pToolsMenu = CreateToolsSubmenu(pObject, _T(""), &dwTemp, OBJTOOL_AV_MENU_FIRST_ID);
             if (pToolsMenu->GetMenuItemCount() > 0)
             {
                pMenu->InsertMenu(5, MF_BYPOSITION | MF_STRING | MF_POPUP,
@@ -664,7 +664,7 @@ void CAlarmView::OnObjectTool(UINT nID)
          pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
          if (pObject != NULL)
          {
-            theApp.ExecuteObjectTool(pObject, nID - OBJTOOL_MENU_FIRST_ID);
+            theApp.ExecuteObjectTool(pObject, nID - OBJTOOL_AV_MENU_FIRST_ID);
          }
       }
    }

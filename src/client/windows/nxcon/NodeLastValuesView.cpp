@@ -616,4 +616,3 @@ void CNodeLastValuesView::OnItemCleardata()
    }
 	safe_free(pdwItemList);
 }
-

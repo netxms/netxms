@@ -298,17 +298,17 @@ private:
 
 public:
 	TCHAR *GetSituationName(DWORD id, TCHAR *buffer);
-	void UnlockSituationList(void);
-	NXC_SITUATION_LIST * GetSituationList(void);
-	DWORD LoadSituations(void);
+	void UnlockSituationList();
+	NXC_SITUATION_LIST * GetSituationList();
+	DWORD LoadSituations();
 	void CreateIfDCI(NXC_OBJECT *pObject);
 	DWORD m_dwMainThreadId;
 	void CreateCluster(DWORD dwParent);
 	HGLOBAL GetProfileGMem(TCHAR *pszSection, TCHAR *pszKey);
 	void WriteProfileGMem(TCHAR *pszSection, TCHAR *pszKey, HGLOBAL hMem);
 	DWORD OpenAlarmList(NXC_ALARM **ppList);
-	void CloseAlarmList(void);
-	DWORD LoadAlarms(void);
+	void CloseAlarmList();
+	DWORD LoadAlarms();
 	void ShowDetailsWindow(DWORD dwType, HWND hwndOrigin, Table *pData);
 	void ShowObjectComments(NXC_OBJECT *pObject);
 	void CreateCondition(DWORD dwParent);
@@ -321,12 +321,12 @@ public:
 	void ChangeNodeAddress(DWORD dwNodeId);
 	void UnbindObject(NXC_OBJECT *pObject);
 	void BindObject(NXC_OBJECT *pObject);
-	CMDIChildWnd *ShowControlPanel(void);
-	CMDIChildWnd *ShowEventBrowser(void);
-	CMDIChildWnd *ShowSyslogBrowser(void);
-	CMDIChildWnd *ShowTrapLogBrowser(void);
+	CMDIChildWnd *ShowControlPanel();
+	CMDIChildWnd *ShowEventBrowser();
+	CMDIChildWnd *ShowSyslogBrowser();
+	CMDIChildWnd *ShowTrapLogBrowser();
 	CMDIChildWnd *ShowAlarmBrowser(TCHAR *pszParams = NULL);
-	CMDIChildWnd *ShowNetworkSummary(void);
+	CMDIChildWnd *ShowNetworkSummary();
 	void ApplyTemplate(NXC_OBJECT *pObject);
 	CMDIChildWnd *ShowLastValues(NXC_OBJECT *pObject, TCHAR *pszParams = NULL);
 	void DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObjectList);
@@ -356,11 +356,11 @@ public:
       if (m_viewState[VIEW_DEBUG].bActive)
          ((CDebugFrame *)m_viewState[VIEW_DEBUG].pWnd)->AddMessage(pszMsg);
    }
-   CAlarmBrowser *GetAlarmBrowser(void) { return m_viewState[VIEW_ALARMS].bActive ? (CAlarmBrowser *)m_viewState[VIEW_ALARMS].pWnd : NULL; }
-   CObjectBrowser *GetObjectBrowser(void) { return m_viewState[VIEW_OBJECTS].bActive ? (CObjectBrowser *)m_viewState[VIEW_OBJECTS].pWnd : NULL; }
+   CAlarmBrowser *GetAlarmBrowser() { return m_viewState[VIEW_ALARMS].bActive ? (CAlarmBrowser *)m_viewState[VIEW_ALARMS].pWnd : NULL; }
+   CObjectBrowser *GetObjectBrowser() { return m_viewState[VIEW_OBJECTS].bActive ? (CObjectBrowser *)m_viewState[VIEW_OBJECTS].pWnd : NULL; }
 
-   HGLOBAL GetDevMode(void) { return m_hDevMode; }
-   HGLOBAL GetDevNames(void) { return m_hDevNames; }
+   HGLOBAL GetDevMode() { return m_hDevMode; }
+   HGLOBAL GetDevNames() { return m_hDevNames; }
 };
 
 

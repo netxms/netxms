@@ -121,7 +121,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_FIND_OBJECT, OnFindObject)
    ON_MESSAGE(NXCM_ACTIVATE_OBJECT_TREE, OnActivateObjectTree)
-   ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
+   ON_COMMAND_RANGE(OBJTOOL_OB_MENU_FIRST_ID, OBJTOOL_OB_MENU_LAST_ID, OnObjectTool)
+   ON_UPDATE_COMMAND_UI_RANGE(OBJTOOL_OB_MENU_FIRST_ID, OBJTOOL_OB_MENU_LAST_ID, OnUpdateObjectTool)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -810,7 +811,7 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
 
       pMenu = theApp.GetContextMenu(1);
       dwTemp = 0;
-      pToolsMenu = CreateToolsSubmenu(m_pCurrentObject, _T(""), &dwTemp);
+      pToolsMenu = CreateToolsSubmenu(m_pCurrentObject, _T(""), &dwTemp, OBJTOOL_OB_MENU_FIRST_ID);
       if (pToolsMenu->GetMenuItemCount() > 0)
       {
          pMenu->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
@@ -1335,7 +1336,12 @@ void CObjectBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 void CObjectBrowser::OnObjectTool(UINT nID)
 {
    if (m_pCurrentObject != NULL)
-      theApp.ExecuteObjectTool(m_pCurrentObject, nID - OBJTOOL_MENU_FIRST_ID);
+      theApp.ExecuteObjectTool(m_pCurrentObject, nID - OBJTOOL_OB_MENU_FIRST_ID);
+}
+
+void CObjectBrowser::OnUpdateObjectTool(CCmdUI *pCmdUI)
+{
+   pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
 }
 
 

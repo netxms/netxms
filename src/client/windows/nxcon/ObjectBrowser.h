@@ -153,6 +153,7 @@ protected:
    afx_msg void OnTreeViewItemExpanding(NMHDR *lpnmt, LRESULT *pResult);
    afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnObjectTool(UINT nID);
+	afx_msg void OnUpdateObjectTool(CCmdUI *pCmdUI);
    afx_msg LRESULT OnFindObject(WPARAM wParam, LPARAM);
 	afx_msg LRESULT OnActivateObjectTree(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()

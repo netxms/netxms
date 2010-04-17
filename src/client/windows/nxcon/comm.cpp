@@ -114,7 +114,7 @@ static int CompareTools(const void *p1, const void *p2)
 // (Re)load object tools
 //
 
-DWORD LoadObjectTools(void)
+DWORD LoadObjectTools()
 {
    DWORD dwResult, dwTemp;
    CMenu *pMenu;
@@ -130,7 +130,7 @@ DWORD LoadObjectTools(void)
 
       // Create tools submenu
       dwTemp = 0;
-      pMenu = CreateToolsSubmenu(NULL, _T(""), &dwTemp);
+      pMenu = CreateToolsSubmenu(NULL, _T(""), &dwTemp, OBJTOOL_OB_MENU_FIRST_ID);
       hObjMenu = GetSubMenu(theApp.m_hObjectBrowserMenu, LAST_APP_MENU - 1);
       if (bReload)
          DeleteMenu(hObjMenu, 18, MF_BYPOSITION);

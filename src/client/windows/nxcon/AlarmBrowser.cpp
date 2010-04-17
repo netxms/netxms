@@ -138,7 +138,7 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST + 1, OnListViewColumnClick)
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
-   ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
+   ON_COMMAND_RANGE(OBJTOOL_AV_MENU_FIRST_ID, OBJTOOL_AV_MENU_LAST_ID, OnObjectTool)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -525,7 +525,7 @@ void CAlarmBrowser::OnContextMenu(CWnd *pWnd, CPoint point)
                if (pObject != NULL)
                {
                   dwTemp = 0;
-                  pToolsMenu = CreateToolsSubmenu(pObject, _T(""), &dwTemp);
+                  pToolsMenu = CreateToolsSubmenu(pObject, _T(""), &dwTemp, OBJTOOL_AV_MENU_FIRST_ID);
                   if (pToolsMenu->GetMenuItemCount() > 0)
                   {
                      pMenu->InsertMenu(5, MF_BYPOSITION | MF_STRING | MF_POPUP,
@@ -947,7 +947,7 @@ void CAlarmBrowser::OnObjectTool(UINT nID)
          pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
          if (pObject != NULL)
          {
-            theApp.ExecuteObjectTool(pObject, nID - OBJTOOL_MENU_FIRST_ID);
+            theApp.ExecuteObjectTool(pObject, nID - OBJTOOL_AV_MENU_FIRST_ID);
          }
       }
    }
