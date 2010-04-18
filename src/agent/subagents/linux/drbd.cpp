@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,84 +19,170 @@
 **/
 
 #include <linux_subagent.h>
-#include "drbd.h"
+#include <regex.h>
 
 
 //
-// Open DRBD device
+// Constants
 //
 
-static int OpenDRBDDevice(int nDev)
+#define MAX_DEVICE_COUNT        64
+#define STATUS_FIELD_LEN        64
+
+
+//
+// DRBD device structure
+//
+
+typedef struct
 {
-	char szDevName[MAX_PATH];
-	int nFd;
-	struct stat drbdStat;
+	int id;
+	int protocol;
+	char connState[STATUS_FIELD_LEN];
+	char localDeviceState[STATUS_FIELD_LEN];
+	char remoteDeviceState[STATUS_FIELD_LEN];
+	char localDataState[STATUS_FIELD_LEN];
+	char remoteDataState[STATUS_FIELD_LEN];
+} DRBD_DEVICE;
 
-	snprintf(szDevName, MAX_PATH, "/dev/drbd%d", nDev);
-	nFd = open(szDevName, O_RDONLY);
-	if (nFd != -1)
+
+//
+// Static data
+//
+
+static DRBD_DEVICE s_devices[MAX_DEVICE_COUNT];
+static MUTEX s_deviceAccess = INVALID_MUTEX_HANDLE;
+static MUTEX s_versionAccess = INVALID_MUTEX_HANDLE;
+static char s_drbdVersion[32] = "0.0.0";
+static int s_apiVersion = 0;
+static char s_protocolVersion = 0;
+static CONDITION s_stopCondition = INVALID_CONDITION_HANDLE;
+static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
+
+
+//
+// Read and parse /proc/drbd file
+//
+
+static bool ParseDrbdStatus()
+{
+	char line[1024];
+	FILE *fp;
+	regex_t pregDevice, pregVersion;
+	regmatch_t pmatch[8];
+	DRBD_DEVICE device;
+	bool rc = false;
+
+	if (regcomp(&pregVersion, "version: (.*) \\(api\\:([0-9]+)\\/proto\\:([0-9]+)\\)", REG_EXTENDED) != 0)
+		return false;
+	if (regcomp(&pregDevice, "^[[:space:]]*([0-9]+)\\: cs\\:(.*) st\\:(.*)\\/(.*) ds\\:(.*)\\/(.*) ([A-Z]).*", REG_EXTENDED) != 0)
 	{
-		if (fstat(nFd, &drbdStat) == 0)
+		regfree(&pregVersion);
+		return false;
+	}
+
+	fp = fopen("/proc/drbd", "r");
+	if (fp != NULL)
+	{
+		MutexLock(s_deviceAccess, INFINITE);
+		for(int i = 0; i < MAX_DEVICE_COUNT; i++)
+			s_devices[i].id = -1;
+
+		while(!feof(fp))
 		{
-			if (!S_ISBLK(drbdStat.st_mode))
+			if (fgets(line, 1024, fp) == NULL)
+				break;
+			if (regexec(&pregDevice, line, 8, pmatch, 0) == 0)
 			{
-				close(nFd);
-				nFd = -1;
+				for(int i = 1; i < 8; i++)
+					line[pmatch[i].rm_eo] = 0;
+
+				memset(&device, 0, sizeof(DRBD_DEVICE));
+				device.id = strtol(&line[pmatch[1].rm_so], NULL, 10);
+				device.protocol = line[pmatch[7].rm_so];
+				nx_strncpy(device.connState, &line[pmatch[2].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy(device.localDeviceState, &line[pmatch[3].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy(device.remoteDeviceState, &line[pmatch[4].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy(device.localDataState, &line[pmatch[5].rm_so], STATUS_FIELD_LEN);
+				nx_strncpy(device.remoteDataState, &line[pmatch[6].rm_so], STATUS_FIELD_LEN);
+
+				if ((device.id >= 0) && (device.id < MAX_DEVICE_COUNT))
+				{
+					memcpy(&s_devices[device.id], &device, sizeof(DRBD_DEVICE));
+				}
+			}
+			else if (regexec(&pregVersion, line, 8, pmatch, 0) == 0)
+			{
+				for(int i = 1; i < 4; i++)
+					line[pmatch[i].rm_eo] = 0;
+
+				MutexLock(s_versionAccess, INFINITE);
+				nx_strncpy(s_drbdVersion, &line[pmatch[1].rm_so], 64);
+				s_apiVersion = strtol(&line[pmatch[2].rm_so], NULL, 10);
+				s_protocolVersion = strtol(&line[pmatch[3].rm_so], NULL, 10);
+				MutexUnlock(s_versionAccess);
 			}
 		}
-		else
-		{
-			close(nFd);
-			nFd = -1;
-		}
+		MutexUnlock(s_deviceAccess);
+		fclose(fp);
+		rc = true;
 	}
-	return nFd;
+	else
+	{
+		MutexLock(s_deviceAccess, INFINITE);
+		for(int i = 0; i < MAX_DEVICE_COUNT; i++)
+			s_devices[i].id = -1;
+		MutexUnlock(s_deviceAccess);
+	}
+
+	regfree(&pregVersion);
+	regfree(&pregDevice);
+	return rc;
 }
 
 
 //
-// Get description of cstate code
+// DRBD stat collector thread
 //
 
-static const char *CStateText(int nCode)
+static THREAD_RESULT THREAD_CALL CollectorThread(void *arg)
 {
-	static const char *pszCStateText[] =
+	if (!ParseDrbdStatus())
 	{
-		"Unconfigured",
-		"StandAlone",
-		"Unconnected",
-		"Timeout",
-		"BrokenPipe",
-		"NetworkFailure",
-		"WFConnection",
-		"WFReportParams",
-		"Connected",
-		"SkippedSyncS",
-		"SkippedSyncT",
-		"WFBitMapS",
-		"WFBitMapT",
-		"SyncSource",
-		"SyncTarget",
-		"PausedSyncS",
-		"PausedSyncT"
-	};
-	return ((nCode >= 0) && (nCode <= PausedSyncT)) ? pszCStateText[nCode] : "Unknown";
+		AgentWriteDebugLog(1, "Unable to parse /proc/drbd, DRBD data collector will not start");
+		return THREAD_OK;
+	}
+
+	while(!ConditionWait(s_stopCondition, 15000))
+		ParseDrbdStatus();
+	return THREAD_OK;
 }
 
 
 //
-// Get description of state code
+// Initialize DRBD stat collector
 //
 
-static const char *StateText(int nCode)
+void InitDrbdCollector()
 {
-	static const char *pszStateText[] =
-	{
-		"Unknown",
-		"Primary",
-		"Secondary"
-	};
-	return ((nCode >= 0) && (nCode <= Secondary)) ? pszStateText[nCode] : "Unknown";
+	s_deviceAccess = MutexCreate();
+	s_versionAccess = MutexCreate();
+	s_stopCondition = ConditionCreate(TRUE);
+	s_collectorThread = ThreadCreateEx(CollectorThread, 0, NULL);
+}
+
+
+//
+// Stop DRBD stat collector
+//
+
+void StopDrbdCollector()
+{
+	ConditionSet(s_stopCondition);
+	ThreadJoin(s_collectorThread);
+	ConditionDestroy(s_stopCondition);
+	MutexDestroy(s_deviceAccess);
+	MutexDestroy(s_versionAccess);
 }
 
 
@@ -108,28 +192,48 @@ static const char *StateText(int nCode)
 
 LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue)
 {
-	int nDev, nFd;
-	struct ioctl_get_config drbdConfig;
 	char szBuffer[1024];
 
-	for(nDev = 0; nDev < 16; nDev++)
+	MutexLock(s_deviceAccess, INFINITE);
+	for(int i = 0; i < MAX_DEVICE_COUNT; i++)
 	{
-		nFd = OpenDRBDDevice(nDev);
-		if (nFd != -1)
+		if (s_devices[i].id != -1)
 		{
-			if (ioctl(nFd, DRBD_IOCTL_GET_CONFIG, &drbdConfig) == 0)
-			{
-				snprintf(szBuffer, 1024, "/dev/drbd%d %d %d/%d %s %s/%s %s",
-						nDev, drbdConfig.cstate, drbdConfig.state,
-						drbdConfig.peer_state, CStateText(drbdConfig.cstate),
-						StateText(drbdConfig.state), StateText(drbdConfig.peer_state),
-						drbdConfig.lower_device_name);
-				pValue->add(szBuffer);
-			}
-			close(nFd);
+			snprintf(szBuffer, 1024, "/dev/drbd%d %s %s/%s %s/%s %c",
+			         i, s_devices[i].connState, s_devices[i].localDeviceState,
+			         s_devices[i].remoteDeviceState, s_devices[i].localDataState,
+			         s_devices[i].remoteDataState, s_devices[i].protocol);
+			pValue->add(szBuffer);
 		}
 	}
+	MutexUnlock(s_deviceAccess);
 	return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Get DRBD version
+//
+
+LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+{
+	LONG nRet = SYSINFO_RC_SUCCESS;
+	switch(*pArg)
+	{
+		case 'v':	// DRBD version
+			ret_string(pValue, s_drbdVersion);
+			break;
+		case 'a':	// API version
+			ret_int(pValue, s_apiVersion);
+			break;
+		case 'p':	// Protocol version
+			ret_int(pValue, s_protocolVersion);
+			break;
+		default:
+			nRet = SYSINFO_RC_UNSUPPORTED;
+			break;
+	}
+	return nRet;
 }
 
 
@@ -139,8 +243,7 @@ LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue
 
 LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
-	int nDev, nFd;
-	struct ioctl_get_config drbdConfig;
+	int nDev;
 	TCHAR szDev[256], *eptr;
 	LONG nRet = SYSINFO_RC_ERROR;
 
@@ -148,52 +251,40 @@ LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 		return SYSINFO_RC_UNSUPPORTED;
 
 	nDev = _tcstol(szDev, &eptr, 0);
-	if ((nDev < 0) || (nDev > 255) || (*eptr != 0))
+	if ((nDev < 0) || (nDev > MAX_DEVICE_COUNT) || (*eptr != 0))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	nFd = OpenDRBDDevice(nDev);
-	if (nFd != -1)
+	MutexLock(s_deviceAccess, INFINITE);
+	if (s_devices[nDev].id != -1)
 	{
-		if (ioctl(nFd, DRBD_IOCTL_GET_CONFIG, &drbdConfig) == 0)
+		nRet = SYSINFO_RC_SUCCESS;
+		switch(*pArg)
 		{
-			nRet = SYSINFO_RC_SUCCESS;
-			switch(*pArg)
-			{
-				case 'c':	// Connection state
-					ret_int(pValue, drbdConfig.cstate);
-					break;
-				case 'C':	// Connection state as text
-					ret_string(pValue, (char *)CStateText(drbdConfig.cstate));
-					break;
-				case 's':	// State
-					ret_int(pValue, drbdConfig.state);
-					break;
-				case 'S':	// State as text
-					ret_string(pValue, (char *)StateText(drbdConfig.state));
-					break;
-				case 'p':	// Peer state
-					ret_int(pValue, drbdConfig.peer_state);
-					break;
-				case 'P':	// Peer state as text
-					ret_string(pValue, (char *)StateText(drbdConfig.peer_state));
-					break;
-				case 'L':	// Lower device
-					ret_string(pValue, drbdConfig.lower_device_name);
-					break;
-				default:
-					nRet = SYSINFO_RC_UNSUPPORTED;
-					break;
-			}
+			case 'c':	// Connection state as text
+				ret_string(pValue, s_devices[nDev].connState);
+				break;
+			case 's':	// State as text
+				ret_string(pValue, s_devices[nDev].localDeviceState);
+				break;
+			case 'S':	// Peer state as text
+				ret_string(pValue, s_devices[nDev].remoteDeviceState);
+				break;
+			case 'd':	// Data state as text
+				ret_string(pValue, s_devices[nDev].localDataState);
+				break;
+			case 'D':	// Peer data state as text
+				ret_string(pValue, s_devices[nDev].remoteDataState);
+				break;
+			case 'p':	// Protocol
+				pValue[0] = s_devices[nDev].protocol;
+				pValue[1] = 0;
+				break;
+			default:
+				nRet = SYSINFO_RC_UNSUPPORTED;
+				break;
 		}
-		close(nFd);
 	}
+	MutexUnlock(s_deviceAccess);
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

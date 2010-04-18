@@ -33,6 +33,7 @@ static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
 	StartIoStatCollector();
+	InitDrbdCollector();
 	return TRUE;
 }
 
@@ -45,6 +46,7 @@ static void SubAgentShutdown(void)
 {
 	ShutdownCpuUsageCollector();
 	ShutdownIoStatCollector();
+	StopDrbdCollector();
 }
 
 
@@ -54,6 +56,7 @@ static void SubAgentShutdown(void)
 
 LONG H_DRBDDeviceList(const char *pszParam, const char *pszArg, StringList *pValue);
 LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue);
 
 
@@ -79,19 +82,23 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_DISK_USEDPERC },
 
 	{ "DRBD.ConnState(*)",            H_DRBDDeviceInfo,  "c",
-		DCI_DT_INT,    "Connection state of DRBD device {instance}" },
-	{ "DRBD.ConnStateText(*)",        H_DRBDDeviceInfo,  "C",
-		DCI_DT_STRING, "Connection state of DRBD device {instance} as text" },
-	{ "DRBD.LowerDevice(*)",          H_DRBDDeviceInfo,  "L",
-		DCI_DT_STRING, "Underlaying device of DRBD device {instance}" },
-	{ "DRBD.PeerState(*)",            H_DRBDDeviceInfo,  "p",
-		DCI_DT_INT,    "State of DRBD peer device {instance}" },
-	{ "DRBD.PeerStateText(*)",        H_DRBDDeviceInfo,  "P",
-		DCI_DT_STRING, "State of DRBD peer device {instance} as text" },
-	{ "DRBD.State(*)",                H_DRBDDeviceInfo,  "s",
-		DCI_DT_INT,    "State of DRBD device {instance}" },
-	{ "DRBD.StateText(*)",            H_DRBDDeviceInfo,  "S",
-		DCI_DT_STRING, "State of DRBD device {instance} as text" },
+		DCI_DT_STRING, "Connection state of DRBD device {instance}" },
+	{ "DRBD.DataState(*)",            H_DRBDDeviceInfo,  "d",
+		DCI_DT_STRING, "Data state of DRBD device {instance}" },
+	{ "DRBD.DeviceState(*)",          H_DRBDDeviceInfo,  "s",
+		DCI_DT_STRING, "State of DRBD device {instance}" },
+	{ "DRBD.PeerDataState(*)",        H_DRBDDeviceInfo,  "D",
+		DCI_DT_STRING, "Data state of DRBD peer device {instance}" },
+	{ "DRBD.PeerDeviceState(*)",      H_DRBDDeviceInfo,  "S",
+		DCI_DT_STRING, "State of DRBD peer device {instance}" },
+	{ "DRBD.Protocol(*)",             H_DRBDDeviceInfo,  "p",
+		DCI_DT_STRING, "Protocol type used by DRBD device {instance}" },
+	{ "DRBD.Version.API",             H_DRBDVersion,     "a",
+		DCI_DT_STRING, "DRBD API version" },
+	{ "DRBD.Version.Driver",          H_DRBDVersion,     "v",
+		DCI_DT_STRING, "DRBD driver version" },
+	{ "DRBD.Version.Protocol",        H_DRBDVersion,     "p",
+		DCI_DT_STRING, "DRBD protocol version" },
 
 	{ "Net.Interface.AdminStatus(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_ADMIN_STATUS,
 		DCI_DT_INT,		DCIDESC_NET_INTERFACE_ADMINSTATUS },

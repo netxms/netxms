@@ -220,6 +220,9 @@ void ShutdownCpuUsageCollector();
 void StartIoStatCollector();
 void ShutdownIoStatCollector();
 
+void InitDrbdCollector();
+void StopDrbdCollector();
+
 int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine);
 
 #endif // __LINUX_SUBAGENT_H__
