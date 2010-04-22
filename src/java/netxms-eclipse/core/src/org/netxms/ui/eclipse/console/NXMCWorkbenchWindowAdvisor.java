@@ -165,7 +165,10 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		}
 		else
 		{
-			shell.close();
+			if (shell != null)
+			{
+				shell.close();
+			}
 		}
 	}
 }

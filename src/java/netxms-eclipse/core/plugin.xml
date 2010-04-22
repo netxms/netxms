@@ -40,14 +40,14 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="NetXMS Alarm Viewer">
+            name="NetXMS Management Console">
          <property
                name="appName"
-               value="NetXMS Alarm Viewer">
+               value="NetXMS Management Console">
          </property>
          <property
                name="aboutText"
-               value="NetXMS Alarm Viewer">
+               value="NetXMS Management Console">
          </property>
          <property
                name="preferenceCustomization"
