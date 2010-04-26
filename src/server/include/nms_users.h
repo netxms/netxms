@@ -128,6 +128,7 @@ public:
 	time_t getPasswordChangeTime() { return m_lastPasswordChange; }
 	const TCHAR *getCertMappingData() { return m_certMappingData; }
 	bool isIntruderLockoutActive() { return (m_flags & UF_INTRUDER_LOCKOUT) != 0; }
+	bool canChangePassword() { return (m_flags & UF_CANNOT_CHANGE_PASSWORD) == 0; }
 	int getMinMasswordLength() { return m_minPasswordLength; }
 	time_t getReEnableTime() { return m_disabledUntil; }
 

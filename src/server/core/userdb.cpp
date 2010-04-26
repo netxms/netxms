@@ -658,7 +658,7 @@ DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, cons
 			User *user = (User *)m_users[i];
 			if (changeOwnPassword)
 			{
-				if (!user->validatePassword(oldPassword))
+				if (!user->canChangePassword() || !user->validatePassword(oldPassword))
 				{
 					dwResult = RCC_ACCESS_DENIED;
 					break;
