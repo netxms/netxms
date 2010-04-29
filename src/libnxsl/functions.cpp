@@ -112,6 +112,69 @@ int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 
 
 //
+// Calculates natural logarithm
+//
+
+int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+   int nRet;
+
+   if (argv[0]->isNumeric())
+   {
+      *ppResult = new NXSL_Value(log(argv[0]->getValueAsReal()));
+      nRet = 0;
+   }
+   else
+   {
+      nRet = NXSL_ERR_NOT_NUMBER;
+   }
+   return nRet;
+}
+
+
+//
+// Calculates common logarithm
+//
+
+int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+   int nRet;
+
+   if (argv[0]->isNumeric())
+   {
+      *ppResult = new NXSL_Value(log10(argv[0]->getValueAsReal()));
+      nRet = 0;
+   }
+   else
+   {
+      nRet = NXSL_ERR_NOT_NUMBER;
+   }
+   return nRet;
+}
+
+
+//
+// Calculates x raised to the power of e
+//
+
+int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+   int nRet;
+
+   if (argv[0]->isNumeric())
+   {
+      *ppResult = new NXSL_Value(exp(argv[0]->getValueAsReal()));
+      nRet = 0;
+   }
+   else
+   {
+      nRet = NXSL_ERR_NOT_NUMBER;
+   }
+   return nRet;
+}
+
+
+//
 // Convert string to uppercase
 //
 

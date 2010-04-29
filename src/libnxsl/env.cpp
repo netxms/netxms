@@ -32,10 +32,13 @@ int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -65,10 +68,13 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { "abs", F_abs, 1 },
    { "classof", F_classof, 1 },
 	{ "d2x", F_d2x, -1 },
+   { "exp", F_exp, 1 },
    { "gmtime", F_gmtime, -1 },
    { "left", F_left, -1 },
    { "length", F_length, 1 },
    { "localtime", F_localtime, -1 },
+   { "log", F_log, 1 },
+   { "log10", F_log10, 1 },
    { "lower", F_lower, 1 },
 	{ "ltrim", F_ltrim, 1 },
    { "max", F_max, -1 },
