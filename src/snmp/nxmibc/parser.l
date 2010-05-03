@@ -151,9 +151,6 @@ static void CountNewlines(char *pszStr, int len)
          /* first one shifts us into comment mode */
          PushState(COMMENT);
          break;
-      case COMMENT:
-         PopState();
-         break;
       case KEYWORD:
          /* Ignore other states for now */
          mperror("Cannot embed comments within keyword definition");
