@@ -737,6 +737,7 @@
 #define IDC_RADIO_GPS                   1559
 #define IDC_EDIT_LATITUDE               1560
 #define IDC_EDIT_LONGITUDE              1561
+#define IDC_CHECK_LOGSCALE              1562
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -1036,6 +1037,7 @@
 #define ID_MAP_OBJECTSIZE_NORMAL        33109
 #define ID_MAP_OBJECTSIZE_SMALL         33110
 #define ID_MAP_OBJECTSIZE_TINY          33111
+#define ID_GRAPH_LOGARITHMICSCALE       33112
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -1047,8 +1049,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        413
-#define _APS_NEXT_COMMAND_VALUE         33112
-#define _APS_NEXT_CONTROL_VALUE         1562
+#define _APS_NEXT_COMMAND_VALUE         33113
+#define _APS_NEXT_CONTROL_VALUE         1563
 #define _APS_NEXT_SYMED_VALUE           136
 #endif
 #endif

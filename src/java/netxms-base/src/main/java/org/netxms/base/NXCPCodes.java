@@ -621,6 +621,7 @@ public final class NXCPCodes
 	public static final long VID_LAST_PASSWORD_CHANGE    = 352;
 	public static final long VID_DISABLED_UNTIL          = 353;
 	public static final long VID_AUTH_FAILURES           = 354;
+	public static final long VID_RUNTIME_FLAGS           = 355;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

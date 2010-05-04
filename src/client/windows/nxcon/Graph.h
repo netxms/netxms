@@ -8,6 +8,9 @@
 // Graph.h : header file
 //
 
+#include <math.h>
+
+
 #define MAX_GRAPH_ITEMS    16
 #define ZOOM_HISTORY_SIZE  16
 
@@ -100,6 +103,9 @@ protected:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+	double ROW_DATA(NXC_DCI_ROW *row, int dt);
+
 private:
 	DCIInfo **m_ppItems;
 	RECT m_rectGraph;
@@ -117,6 +123,7 @@ private:
    int m_nLastGridSizeY;
 
 public:
+	BOOL m_bLogarithmicScale;
 	BOOL m_bShowHostNames;
 	BOOL m_bUpdating;
 	BOOL m_bShowTitle;
@@ -139,5 +146,20 @@ public:
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+inline double CGraph::ROW_DATA(NXC_DCI_ROW *row, int dt)
+{
+	double value = ((dt == DCI_DT_STRING) ? _tcstod(row->value.szString, NULL) :
+	                ((dt == DCI_DT_INT) ? *((LONG *)(&row->value.dwInt32)) :
+	                 ((dt == DCI_DT_UINT) ? row->value.dwInt32 :
+	                  (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? (INT64)row->value.qwInt64 :
+	                   ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0)
+	                  )
+	                 )
+	                )
+	               );
+	return m_bLogarithmicScale ? log10(value) : value;
+}
+
 
 #endif // !defined(AFX_GRAPH_H__021ACC81_A267_4464_889B_5718D2985D19__INCLUDED_)

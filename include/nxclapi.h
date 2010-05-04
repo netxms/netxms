@@ -1001,6 +1001,7 @@ struct __nxc_object_iface
 struct __nxc_object_node
 {
    DWORD dwFlags;
+	DWORD dwRuntimeFlags;
    DWORD dwNodeType;
    DWORD dwPollerNode;
    DWORD dwProxyNode;

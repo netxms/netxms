@@ -485,6 +485,7 @@ BEGIN
         MENUITEM "&Autoscale\tCtrl+Alt+A",      ID_GRAPH_AUTOSCALE
         MENUITEM "&Legend\tCtrl+Alt+L",         ID_GRAPH_LEGEND
         MENUITEM "R&uler\tCtrl+Alt+R",          ID_GRAPH_RULER
+        MENUITEM "L&ogarithmic scale\tCtrl+Alt+O", ID_GRAPH_LOGARITHMICSCALE
         MENUITEM SEPARATOR
         MENUITEM "&Save as predefined...\tCtrl+S", ID_GRAPH_DEFINE
         MENUITEM "Pr&int...",                   ID_FILE_PRINT
@@ -879,6 +880,7 @@ BEGIN
         MENUITEM "&Autoscale",                  ID_GRAPH_AUTOSCALE
         MENUITEM "&Legend",                     ID_GRAPH_LEGEND
         MENUITEM "R&uler",                      ID_GRAPH_RULER
+        MENUITEM "L&ogarithmic scale",          ID_GRAPH_LOGARITHMICSCALE
         MENUITEM SEPARATOR
         MENUITEM "Pr&int...",                   ID_FILE_PRINT
         MENUITEM "&Copy to clipboard",          ID_GRAPH_COPYTOCLIPBOARD
@@ -1158,6 +1160,8 @@ BEGIN
     "A",            ID_GRAPH_AUTOSCALE,     VIRTKEY, CONTROL, ALT, NOINVERT
     "C",            ID_GRAPH_COPYTOCLIPBOARD, VIRTKEY, CONTROL, NOINVERT
     "L",            ID_GRAPH_LEGEND,        VIRTKEY, CONTROL, ALT, NOINVERT
+    "O",            ID_GRAPH_LOGARITHMICSCALE, VIRTKEY, CONTROL, ALT, 
+                                                    NOINVERT
     "P",            ID_GRAPH_PROPERTIES,    VIRTKEY, CONTROL, ALT, NOINVERT
     "R",            ID_GRAPH_RULER,         VIRTKEY, CONTROL, ALT, NOINVERT
     "S",            ID_GRAPH_DEFINE,        VIRTKEY, CONTROL, NOINVERT
@@ -2119,6 +2123,8 @@ BEGIN
     CONTROL         "Show &host names",IDC_CHECK_HOSTNAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,69,72,10
     CONTROL         "Enable &zoom",IDC_CHECK_ZOOM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,100,69,57,10
     CONTROL         "&Refresh automatically",IDC_CHECK_REFRESH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,82,83,10
+    CONTROL         "L&og. scale",IDC_CHECK_LOGSCALE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,100,82,49,10
     EDITTEXT        IDC_EDIT_REFRESH,67,96,30,14,ES_AUTOHSCROLL | ES_NUMBER
     PUSHBUTTON      "X",IDC_CB_BACKGROUND,57,129,27,12
     PUSHBUTTON      "X",IDC_CB_TEXT,128,129,27,12

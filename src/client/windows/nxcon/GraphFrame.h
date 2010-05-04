@@ -116,6 +116,8 @@ protected:
 	afx_msg void OnUpdateGraphPresetsLastweek(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateGraphPresetsLastyear(CCmdUI* pCmdUI);
 	afx_msg void OnGraphDefine();
+	afx_msg void OnGraphLogarithmicscale();
+	afx_msg void OnUpdateGraphLogarithmicscale(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnUpdateGraphPoint(WPARAM wParam, LPARAM lParam);

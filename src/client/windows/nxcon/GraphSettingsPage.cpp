@@ -41,6 +41,7 @@ CGraphSettingsPage::CGraphSettingsPage() : CPropertyPage(CGraphSettingsPage::IDD
 	m_bEnableZoom = FALSE;
 	m_bShowHostNames = FALSE;
 	m_strTitle = _T("");
+	m_bLogarithmicScale = FALSE;
 	//}}AFX_DATA_INIT
 
    m_iTimeUnit = 0;
@@ -73,6 +74,7 @@ void CGraphSettingsPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_HOSTNAMES, m_bShowHostNames);
 	DDX_Text(pDX, IDC_EDIT_TITLE, m_strTitle);
 	DDV_MaxChars(pDX, m_strTitle, 127);
+	DDX_Check(pDX, IDC_CHECK_LOGSCALE, m_bLogarithmicScale);
 	//}}AFX_DATA_MAP
 
 	DDX_Control(pDX, IDC_CB_BACKGROUND, m_wndCSBackground);

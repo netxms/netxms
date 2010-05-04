@@ -115,6 +115,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTWEEK, OnUpdateGraphPresetsLastweek)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTYEAR, OnUpdateGraphPresetsLastyear)
 	ON_COMMAND(ID_GRAPH_DEFINE, OnGraphDefine)
+	ON_COMMAND(ID_GRAPH_LOGARITHMICSCALE, OnGraphLogarithmicscale)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_LOGARITHMICSCALE, OnUpdateGraphLogarithmicscale)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -342,7 +344,7 @@ void CGraphFrame::GetConfiguration(TCHAR *config)
               _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F") _T("A:%d\x7F")
               _T("TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F")
               _T("CA:%u\x7F") _T("CB:%u\x7F") _T("CG:%u\x7F") _T("CS:%u\x7F")
-              _T("CT:%u\x7F") _T("CR:%u\x7FR:%d\x7FG:%d\x7FL:%d\x7FH:%d"),
+              _T("CT:%u\x7F") _T("CR:%u\x7FR:%d\x7FG:%d\x7FL:%d\x7FH:%d\x7FO:%d"),
               m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
               m_iTimeFrameType, m_iTimeUnit, m_dwNumTimeUnits,
               m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 
@@ -350,7 +352,7 @@ void CGraphFrame::GetConfiguration(TCHAR *config)
               m_wndGraph.m_rgbSelRectColor, m_wndGraph.m_rgbTextColor,
 				  m_wndGraph.m_rgbRulerColor, m_wndGraph.m_bShowRuler,
               m_wndGraph.m_bShowGrid, m_wndGraph.m_bShowLegend,
-				  m_wndGraph.m_bShowHostNames);
+				  m_wndGraph.m_bShowHostNames, m_wndGraph.m_bLogarithmicScale);
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
@@ -412,6 +414,7 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
    m_wndGraph.m_bShowLegend = (BOOL)ExtractWindowParamLong(pszParams, _T("L"), TRUE);
    m_wndGraph.m_bShowRuler = (BOOL)ExtractWindowParamLong(pszParams, _T("R"), TRUE);
 	m_wndGraph.m_bShowHostNames = (BOOL)ExtractWindowParamLong(pszParams, _T("H"), FALSE);
+	m_wndGraph.m_bLogarithmicScale = (BOOL)ExtractWindowParamLong(pszParams, _T("O"), FALSE);
    m_wndGraph.m_rgbAxisColor = ExtractWindowParamULong(pszParams, _T("CA"), m_wndGraph.m_rgbAxisColor);
    m_wndGraph.m_rgbBkColor = ExtractWindowParamULong(pszParams, _T("CB"), m_wndGraph.m_rgbBkColor);
    m_wndGraph.m_rgbGridColor = ExtractWindowParamULong(pszParams, _T("CG"), m_wndGraph.m_rgbGridColor);
@@ -611,6 +614,22 @@ void CGraphFrame::OnGraphLegend()
 void CGraphFrame::OnUpdateGraphLegend(CCmdUI* pCmdUI) 
 {
    pCmdUI->SetCheck(m_wndGraph.m_bShowLegend);
+}
+
+
+//
+// WM_COMMAND::ID_GRAPH_LOGARITHMICSCALE message handlers
+//
+
+void CGraphFrame::OnGraphLogarithmicscale() 
+{
+	m_wndGraph.m_bLogarithmicScale = !m_wndGraph.m_bLogarithmicScale;
+   m_wndGraph.Update();
+}
+
+void CGraphFrame::OnUpdateGraphLogarithmicscale(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_wndGraph.m_bLogarithmicScale);
 }
 
 
@@ -975,6 +994,7 @@ void CGraphFrame::LoadSettings(const TCHAR *pszName)
 	m_wndGraph.m_bShowLegend = theApp.GetProfileInt(section, _T("ShowLegend"), m_wndGraph.m_bShowLegend);
 	m_wndGraph.m_bShowRuler = theApp.GetProfileInt(section, _T("ShowRuler"), m_wndGraph.m_bShowRuler);
 	m_wndGraph.m_bShowTitle = theApp.GetProfileInt(section, _T("ShowTitle"), m_wndGraph.m_bShowTitle);
+	m_wndGraph.m_bLogarithmicScale = theApp.GetProfileInt(section, _T("LogarithmicScale"), m_wndGraph.m_bLogarithmicScale);
 	m_wndGraph.m_rgbAxisColor = theApp.GetProfileInt(section, _T("AxisColor"), m_wndGraph.m_rgbAxisColor);
 	m_wndGraph.m_rgbBkColor = theApp.GetProfileInt(section, _T("BkColor"), m_wndGraph.m_rgbBkColor);
 	m_wndGraph.m_rgbGridColor = theApp.GetProfileInt(section, _T("GridColor"), m_wndGraph.m_rgbGridColor);
@@ -1030,6 +1050,7 @@ BOOL CGraphFrame::EditProperties(BOOL frameIsValid)
    pgSettings.m_bShowLegend = m_wndGraph.m_bShowLegend;
    pgSettings.m_bEnableZoom = m_wndGraph.m_bEnableZoom;
    pgSettings.m_bShowHostNames = m_wndGraph.m_bShowHostNames;
+	pgSettings.m_bLogarithmicScale = m_wndGraph.m_bLogarithmicScale;
    pgSettings.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
    pgSettings.m_dwRefreshInterval = m_dwRefreshInterval;
    pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
@@ -1101,6 +1122,7 @@ BOOL CGraphFrame::EditProperties(BOOL frameIsValid)
       m_wndGraph.m_bShowRuler = pgSettings.m_bRuler;
       m_wndGraph.m_bEnableZoom = pgSettings.m_bEnableZoom;
       m_wndGraph.m_bShowHostNames = pgSettings.m_bShowHostNames;
+		m_wndGraph.m_bLogarithmicScale = pgSettings.m_bLogarithmicScale;
 
       m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
       m_wndGraph.m_rgbBkColor = pgSettings.m_rgbBackground;

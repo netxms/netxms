@@ -62,7 +62,15 @@ public class Node extends GenericObject
 	public static final int NF_DISABLE_ROUTE_POLL   = 0x40000000;
 	public static final int NF_DISABLE_DATA_COLLECT = 0x80000000;
 	
+	// Node flags (runtime)
+	public static final int NDF_UNREACHABLE         = 0x000000004;
+	public static final int NDF_AGENT_UNREACHABLE   = 0x000000008;
+	public static final int NDF_SNMP_UNREACHABLE    = 0x000000010;
+	public static final int NDF_CPSNMP_UNREACHABLE  = 0x000000200;
+	public static final int NDF_POLLING_DISABLED    = 0x000000800;
+	
 	private int flags;
+	private int runtimeFlags;
 	private int nodeType;
 	private int requredPollCount;
 	private long pollerNodeId;
@@ -90,6 +98,7 @@ public class Node extends GenericObject
 		super(msg, session);
 
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
+		runtimeFlags = msg.getVariableAsInteger(NXCPCodes.VID_RUNTIME_FLAGS);
 		nodeType = msg.getVariableAsInteger(NXCPCodes.VID_NODE_TYPE);
 		requredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
 		pollerNodeId = msg.getVariableAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
@@ -112,11 +121,19 @@ public class Node extends GenericObject
 	}
 
 	/**
-	 * @return the flags
+	 * @return Flags
 	 */
 	public int getFlags()
 	{
 		return flags;
+	}
+
+	/**
+	 * @return Runtime flags
+	 */
+	public int getRuntimeFlags()
+	{
+		return runtimeFlags;
 	}
 
 	/**

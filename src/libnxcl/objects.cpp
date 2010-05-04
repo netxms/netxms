@@ -283,6 +283,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_NODE:
          pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
+         pObject->node.dwRuntimeFlags = pMsg->GetVariableLong(VID_RUNTIME_FLAGS);
          pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
          pObject->node.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
          pObject->node.dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);

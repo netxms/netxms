@@ -2192,6 +2192,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 {
    Template::CreateMessage(pMsg);
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
+   pMsg->SetVariable(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
    pMsg->SetVariable(VID_AGENT_PORT, m_wAgentPort);
    pMsg->SetVariable(VID_AUTH_METHOD, m_wAuthMethod);
    pMsg->SetVariable(VID_SHARED_SECRET, m_szSharedSecret);

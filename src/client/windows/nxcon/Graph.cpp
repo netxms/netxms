@@ -6,15 +6,6 @@
 #include "Graph.h"
 #include <math.h>
 
-#define ROW_DATA(row, dt)  ((dt == DCI_DT_STRING) ? _tcstod(row->value.szString, NULL) : \
-                            ((dt == DCI_DT_INT) ? *((LONG *)(&row->value.dwInt32)) : \
-                             ((dt == DCI_DT_UINT) ? row->value.dwInt32 : \
-                              (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? (INT64)row->value.qwInt64 : \
-                               ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0) \
-                              ) \
-                             ) \
-                            ) \
-                           )
 #define LEGEND_TEXT_SPACING   4
 
 #define STATE_NORMAL          0
@@ -59,6 +50,7 @@ CGraph::CGraph()
 	m_bShowTitle = FALSE;
 	m_bShowHostNames = FALSE;
 	m_bUpdating = FALSE;
+	m_bLogarithmicScale = FALSE;
    m_dwNumItems = 0;
 	m_szTitle[0] = 0;
 	m_dwTimeFrom = 0;
@@ -324,12 +316,12 @@ void CGraph::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
 
 void CGraph::SetData(DWORD dwIndex, NXC_DCI_DATA *pData)
 {
-   if (dwIndex < MAX_GRAPH_ITEMS)
-   {
-      if (m_pData[dwIndex] != NULL)
-         NXCDestroyDCIData(m_pData[dwIndex]);
-      m_pData[dwIndex] = pData;
-   }
+   if (dwIndex >= MAX_GRAPH_ITEMS)
+		return;
+
+   if (m_pData[dwIndex] != NULL)
+      NXCDestroyDCIData(m_pData[dwIndex]);
+   m_pData[dwIndex] = pData;
 }
 
 
@@ -430,7 +422,7 @@ void CGraph::DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
 
    pen.CreatePen(PS_SOLID, 1, rgbColor);
    pOldPen = dc.SelectObject(&pen);
-	brush.CreateSolidBrush(rgbColor);
+	brush.CreateHatchBrush(HS_DIAGCROSS, rgbColor);
 	pOldBrush = dc.SelectObject(&brush);
 
    // Calculate scale factor for values
@@ -557,6 +549,51 @@ void CGraph::OnKillFocus(CWnd* pNewWnd)
 				x--; \
 			} \
    }
+
+/* Display Y axis mark */
+#define DISPLAY_Y_MARK \
+	{ \
+		if (m_bLogarithmicScale) \
+		{ \
+			bool useInt = true; \
+			const TCHAR *modifier = _T(""); \
+			double m = pow(10.0, dMark); \
+			if (m > 100000000000) \
+			{ \
+				m /= 1000000000; \
+				modifier = _T("G"); \
+			} \
+			else if (m > 100000000) \
+			{ \
+				m /= 1000000; \
+				modifier = _T("M"); \
+			} \
+			else if (m > 100000) \
+			{ \
+				m /= 1000; \
+				modifier = _T("K"); \
+			} \
+			else \
+			{ \
+				if (m != floor(m)) \
+					useInt = false; \
+			} \
+			if (useInt) \
+				_sntprintf_s(szBuffer, 256, _TRUNCATE, INT64_FMT _T("%s"), (INT64)m, modifier); \
+			else \
+				_sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%5.3f"), m); \
+		} \
+		else \
+		{ \
+			if (bIntMarks) \
+				_sntprintf_s(szBuffer, 256, _TRUNCATE, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier); \
+			else \
+				_sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%5.3f%s"), dMark, szModifier); \
+		} \
+		CSize cz = dc.GetTextExtent(szBuffer); \
+		dc.TextOut(iLeftMargin - cz.cx - 5, y, szBuffer); \
+	}
+
 
 void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 {
@@ -890,21 +927,11 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    dStep = (m_dCurrMaxValue - m_dCurrMinValue) / ((rect.bottom - iBottomMargin - iTopMargin) / nGridSizeY);
    for(y = m_nZeroLine - textSize.cy / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
    {
-      if (bIntMarks)
-         _sntprintf_s(szBuffer, 256, _TRUNCATE, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
-      else
-         _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%5.3f%s"), dMark, szModifier);
-      CSize cz = dc.GetTextExtent(szBuffer);
-      dc.TextOut(iLeftMargin - cz.cx - 5, y, szBuffer);
+		DISPLAY_Y_MARK;
    }
    for(y = m_nZeroLine + nGridSizeY - textSize.cy / 2, dMark = -dStep; y < rect.bottom - iBottomMargin; y += nGridSizeY, dMark -= dStep)
    {
-      if (bIntMarks)
-         _sntprintf_s(szBuffer, 256, _TRUNCATE, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
-      else
-         _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%5.3f%s"), dMark, szModifier);
-      CSize cz = dc.GetTextExtent(szBuffer);
-      dc.TextOut(iLeftMargin - cz.cx - 5, y, szBuffer);
+		DISPLAY_Y_MARK;
    }
 
    // Display absciss marks
@@ -1058,6 +1085,8 @@ void CGraph::OnMouseMove(UINT nFlags, CPoint point)
       dValue = (m_dCurrMaxValue - m_dCurrMinValue) / (m_rectGraph.bottom - m_rectGraph.top - 
                   (m_rectGraph.bottom - m_rectGraph.top) % m_nLastGridSizeY) * 
                   (m_nZeroLine - point.y);
+		if (m_bLogarithmicScale)
+			dValue = pow(10.0, dValue);
       GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, dwTimeStamp, (LPARAM)&dValue);
       bChanged = TRUE;
    }

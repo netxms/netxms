@@ -1,4 +1,13 @@
 *
+* 1.0.1
+*
+
+- New NXSL functions: log, log10, and exp
+- Windows console: added logarithmic scale option on graphs
+- Fixed issues: #294
+
+
+*
 * 1.0.0
 *
 

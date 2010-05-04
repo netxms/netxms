@@ -52,6 +52,7 @@ public:
 	BOOL	m_bEnableZoom;
 	BOOL	m_bShowHostNames;
 	CString	m_strTitle;
+	BOOL	m_bLogarithmicScale;
 	//}}AFX_DATA
 
 
