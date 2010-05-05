@@ -188,7 +188,6 @@ int main(int argc, char *argv[])
    SNMP_MIBObject *pRoot;
    DWORD dwFlags = 0, dwRet;
    int i, ch, rc = 0;
-	bool pauseBeforeExit = false;
 
    printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING "\n"
           "Copyright (c) 2005-2010 Victor Kirhenshtein\n\n");
