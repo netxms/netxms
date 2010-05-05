@@ -17,11 +17,15 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxmibc.cpp
+** File: nxmibc.cpp
 **
 **/
 
 #include "nxmibc.h"
+
+#ifdef _WIN32
+#include <conio.h>
+#endif
 
 
 //
@@ -47,6 +51,7 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot);
 static char m_szOutFile[MAX_PATH] = "netxms.mib";
 static int m_iNumFiles = 0;
 static char **m_ppFileList = NULL;
+static bool s_pauseBeforeExit = false;
 
 
 //
@@ -70,6 +75,26 @@ static struct
 
 
 //
+// Pause if needed
+//
+
+static void Pause()
+{
+	if (s_pauseBeforeExit)
+	{
+#ifdef _WIN32
+		printf("Press any key to continue...\n");
+		_getch();
+#else
+		printf("Press ENTER to continue...\n");
+		char temp[256];
+		fgets(temp, 255, stdin);
+#endif
+	}
+}
+
+
+//
 // Display error text and abort compilation
 //
 
@@ -84,7 +109,10 @@ extern "C" void Error(int nError, char *pszModule, ...)
    va_end(args);
    printf("\n");
    if (m_errorList[nError].nSeverity == MIBC_ERROR)
+	{
+		Pause();
       exit(1);
+	}
 }
 
 
@@ -99,10 +127,11 @@ static void Help(void)
           "Valid options:\n"
           "   -d <dir>  : Include all MIB files from given directory to compilation\n"
           "   -o <file> : Set output file name (default is netxms.mib)\n"
+			 "   -P        : Pause before exit\n"
           "   -s        : Strip descriptions from MIB objects\n"
           "   -z        : Compress output file\n"
           "\n");
-   exit(255);
+   exit(0);
 }
 
 
@@ -158,14 +187,15 @@ int main(int argc, char *argv[])
 {
    SNMP_MIBObject *pRoot;
    DWORD dwFlags = 0, dwRet;
-   int i, ch;
+   int i, ch, rc = 0;
+	bool pauseBeforeExit = false;
 
    printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING "\n"
           "Copyright (c) 2005-2010 Victor Kirhenshtein\n\n");
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "d:ho:sz")) != -1)
+   while((ch = getopt(argc, argv, "d:ho:Psz")) != -1)
    {
       switch(ch)
       {
@@ -177,6 +207,9 @@ int main(int argc, char *argv[])
             break;
          case 'o':
             nx_strncpy(m_szOutFile, optarg, MAX_PATH);
+            break;
+			case 'P':
+            s_pauseBeforeExit = true;
             break;
          case 's':
             dwFlags |= SMT_SKIP_DESCRIPTIONS;
@@ -209,8 +242,9 @@ int main(int argc, char *argv[])
    else
    {
       printf("ERROR: No source files given\n");
-      return 255;
+      rc = 1;
    }
 
-   return 0;
+	Pause();
+   return rc;
 }
