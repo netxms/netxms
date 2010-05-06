@@ -433,7 +433,7 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    // Preload modules
    for(i = 0; i < m_dwNumPreloads; i++)
    {
-      if (!pEnv->useModule(this, m_ppszPreloadList[i]))
+      if (!m_pEnv->useModule(this, m_ppszPreloadList[i]))
       {
          error(NXSL_ERR_MODULE_NOT_FOUND);
          break;

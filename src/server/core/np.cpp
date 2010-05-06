@@ -384,7 +384,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       {
          DbgPrintf(4, "AcceptNewNode(%s): Running filter script %s", szIpAddr, szFilter);
          pValue = new NXSL_Value(new NXSL_Object(&m_nxslDiscoveryClass, &data));
-         if (pScript->run(NULL, 1, &pValue) == 0)
+         if (pScript->run(new NXSL_ServerEnv, 1, &pValue) == 0)
          {
             bResult = (pScript->getResult()->getValueAsInt32() != 0) ? TRUE : FALSE;
             DbgPrintf(4, "AcceptNewNode(%s): Filter script result: %d", szIpAddr, bResult);

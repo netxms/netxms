@@ -8047,7 +8047,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
 
             // Run script
             DbgPrintf(3, "Running configuration matching script %d", dwCfgId);
-            if (pScript->run(NULL, 5, ppArgList) == 0)
+            if (pScript->run(new NXSL_ServerEnv, 5, ppArgList) == 0)
             {
                pValue = pScript->getResult();
                if (pValue->getValueAsInt32() != 0)
