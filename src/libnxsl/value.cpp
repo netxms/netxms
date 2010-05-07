@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -208,8 +208,16 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 {
    m_nDataType = NXSL_DT_STRING;
    m_dwStrLen = dwLen;
-   m_pszValStr = (TCHAR *)nx_memdup(CHECK_NULL_EX(pszValue), (dwLen + 1) * sizeof(TCHAR));
-   m_pszValStr[dwLen] = 0;
+   m_pszValStr = (TCHAR *)malloc((dwLen + 1) * sizeof(TCHAR));
+	if (pszValue != NULL)
+	{
+		memcpy(m_pszValStr, pszValue, dwLen * sizeof(TCHAR));
+	   m_pszValStr[dwLen] = 0;
+	}
+	else
+	{
+		memset(m_pszValStr, 0, (dwLen + 1) * sizeof(TCHAR));
+	}
    m_bStringIsValid = TRUE;
    updateNumber();
 }
