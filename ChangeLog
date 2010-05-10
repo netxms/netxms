@@ -2,9 +2,10 @@
 * 1.0.1
 *
 
+- Added events for DCI state change
 - New NXSL functions: log, log10, and exp
 - Windows console: added logarithmic scale option on graphs
-- Fixed issues: #294
+- Fixed issues: #289, #294
 
 
 *
