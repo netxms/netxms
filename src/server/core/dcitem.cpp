@@ -890,7 +890,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    m_iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
    m_iRetentionTime = pMsg->GetVariableLong(VID_RETENTION_TIME);
-   m_iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
+   setStatus(pMsg->GetVariableShort(VID_DCI_STATUS), true);
    m_iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
    m_iProcessAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
 	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
@@ -1686,6 +1686,24 @@ BOOL DCItem::matchClusterResource(void)
 
 
 //
+// Set DCI status
+//
+
+void DCItem::setStatus(int status, bool generateEvent)
+{
+	if (generateEvent && (m_pNode != NULL) && (m_iStatus != (BYTE)status))
+	{
+		static DWORD eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
+		static TCHAR *originName[5] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push") };
+
+		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription,
+		          m_iSource, originName[m_iSource]);
+	}
+	m_iStatus = (BYTE)status;
+}
+
+
+//
 // Check if DCI have to be polled
 //
 
@@ -1751,7 +1769,7 @@ void DCItem::updateFromTemplate(DCItem *pItem)
    m_iRetentionTime = pItem->m_iRetentionTime;
    m_iDeltaCalculation = pItem->m_iDeltaCalculation;
    m_iSource = pItem->m_iSource;
-   m_iStatus = pItem->m_iStatus;
+   setStatus(pItem->m_iStatus, true);
    m_iProcessAllThresholds = pItem->m_iProcessAllThresholds;
 	m_dwProxyNode = pItem->m_dwProxyNode;
    setTransformationScript(pItem->m_pszScript);

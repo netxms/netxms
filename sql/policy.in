@@ -37,6 +37,12 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
 	VALUES (10,7944,'Acknowlege DB connection loss alarm when connection restored',
 		'%m',6,'DB_CONN','#00',0,EVENT_ALARM_TIMEOUT,0,'#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (11,7944,'Show alarm when DCI status changes to DISABLED or UNSUPPORTED',
+		'%m',5,'DCI_STATUS_%i_%1','#00',0,EVENT_ALARM_TIMEOUT,0,'#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (12,7944,'Acknowlege DCI status alarms when DCI status returns to ACTIVE',
+		'%m',6,'DCI_STATUS_%i_%1','#00',0,EVENT_ALARM_TIMEOUT,0,'#00');
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
@@ -50,3 +56,6 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (7,EVENT_MAC_ADDR_CHAN
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (8,EVENT_SCRIPT_ERROR);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_DB_CONNECTION_LOST);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (10,EVENT_DB_CONNECTION_RESTORED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (11,EVENT_DCI_DISABLED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (11,EVENT_DCI_UNSUPPORTED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (12,EVENT_DCI_ACTIVE);

@@ -255,7 +255,7 @@ public:
 
    BOOL isReadyForPolling(time_t currTime);
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
-   void setStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
+   void setStatus(int status, bool generateEvent);
    void setBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
    void changeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
    void setTemplateId(DWORD dwTemplateId, DWORD dwItemId) 

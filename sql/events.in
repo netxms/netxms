@@ -567,6 +567,45 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   1) Query#0D#0A' CONCAT
 		'   2) Error message'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_DCI_UNSUPPORTED, 'SYS_DCI_UNSUPPORTED',
+		EVENT_SEVERITY_MINOR, 1,
+		'Status of DCI %1 (%5: %2) changed to UNSUPPORTED',
+		'Generated when DCI status changed to UNSUPPORTED.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) DCI ID#0D#0A' CONCAT
+		'   2) DCI Name#0D#0A' CONCAT
+		'   3) DCI Description#0D#0A' CONCAT
+		'   4) DCI Origin code#0D#0A' CONCAT
+		'   5) DCI Origin name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_DCI_DISABLED, 'SYS_DCI_DISABLED',
+		EVENT_SEVERITY_WARNING, 1,
+		'Status of DCI %1 (%5: %2) changed to DISABLED',
+		'Generated when DCI status changed to DISABLED.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) DCI ID#0D#0A' CONCAT
+		'   2) DCI Name#0D#0A' CONCAT
+		'   3) DCI Description#0D#0A' CONCAT
+		'   4) DCI Origin code#0D#0A' CONCAT
+		'   5) DCI Origin name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_DCI_ACTIVE, 'SYS_DCI_ACTIVE',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Status of DCI %1 (%5: %2) changed to ACTIVE',
+		'Generated when DCI status changed to ACTIVE.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) DCI ID#0D#0A' CONCAT
+		'   2) DCI Name#0D#0A' CONCAT
+		'   3) DCI Description#0D#0A' CONCAT
+		'   4) DCI Origin code#0D#0A' CONCAT
+		'   5) DCI Origin name'
+	);
 
 
 /*

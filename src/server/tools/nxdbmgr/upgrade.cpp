@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -210,6 +210,39 @@ cleanup:
 	DBFreeResult(hResult);
 	free(query);
 	return success;
+}
+
+
+//
+// Upgrade from V210 to V211
+//
+
+static BOOL H_UpgradeFromV210(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
+			_T(" (53,'SYS_DCI_UNSUPPORTED',2,1,'Status of DCI %1 (%5: %2) changed to UNSUPPORTED',")
+			_T("'Generated when DCI status changed to UNSUPPORTED.#0D#0AParameters:#0D#0A")
+			_T("   1) DCI ID#0D#0A   2) DCI Name#0D#0A   3) DCI Description#0D#0A   4) DCI Origin code#0D#0A   5) DCI Origin name')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
+			_T(" (54,'SYS_DCI_DISABLED',1,1,'Status of DCI %1 (%5: %2) changed to DISABLED',")
+			_T("'Generated when DCI status changed to DISABLED.#0D#0AParameters:#0D#0A")
+			_T("   1) DCI ID#0D#0A   2) DCI Name#0D#0A   3) DCI Description#0D#0A   4) DCI Origin code#0D#0A   5) DCI Origin name')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
+			_T(" (55,'SYS_DCI_ACTIVE',0,1,'Status of DCI %1 (%5: %2) changed to ACTIVE',")
+			_T("'Generated when DCI status changed to ACTIVE.#0D#0AParameters:#0D#0A")
+			_T("   1) DCI ID#0D#0A   2) DCI Name#0D#0A   3) DCI Description#0D#0A   4) DCI Origin code#0D#0A   5) DCI Origin name')\n")
+		_T("<END>");
+
+	if (!SQLBatch(batch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='211' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
 }
 
 
@@ -670,17 +703,18 @@ static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
 
 
 //
-// Upgrade from V100 to V210
+// Upgrade from V100 to V211
+//      or from V101 to V211
 //
 
-static BOOL H_UpgradeFromV100(int currVersion, int newVersion)
+static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 {
 	if (!H_UpgradeFromV9x(currVersion, newVersion))
 		return FALSE;
 
 	// Now database at V207 level
-	// V100 already has changes V209 -> V210,
-	// but missing V207 -> V209 changes
+	// V100 already has changes V209 -> V210, but missing V207 -> V209 and V210 -> V211 changes
+	// V101 already has changes V209 -> V211, but missing V207 -> V209 changes
 
 	if (!H_UpgradeFromV207(207, 208))
 		return FALSE;
@@ -688,7 +722,10 @@ static BOOL H_UpgradeFromV100(int currVersion, int newVersion)
 	if (!H_UpgradeFromV207(208, 209))
 		return FALSE;
 
-	if (!SQLQuery(_T("UPDATE metadata SET var_value='210' WHERE var_name='SchemaVersion'")))
+	if (currVersion == 100)
+		H_UpgradeFromV210(210, 211);
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='211' WHERE var_name='SchemaVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -4606,7 +4643,8 @@ static struct
 	{ 97, 205, H_UpgradeFromV9x },
 	{ 98, 206, H_UpgradeFromV9x },
 	{ 99, 207, H_UpgradeFromV9x },
-	{ 100, 210, H_UpgradeFromV100 },
+	{ 100, 211, H_UpgradeFromV10x },
+	{ 101, 211, H_UpgradeFromV10x },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
@@ -4617,6 +4655,7 @@ static struct
 	{ 207, 208, H_UpgradeFromV207 },
 	{ 208, 209, H_UpgradeFromV208 },
 	{ 209, 210, H_UpgradeFromV209 },
+	{ 210, 211, H_UpgradeFromV210 },
    { 0, NULL }
 };
 

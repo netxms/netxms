@@ -86,7 +86,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 				else
 				{
                // Change item's status to "not supported"
-               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED);
+               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
 
 					if (pNode != NULL)
 					{
@@ -131,7 +131,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
          {
             case DCE_SUCCESS:
 					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-	               pItem->setStatus(ITEM_STATUS_ACTIVE);
+	               pItem->setStatus(ITEM_STATUS_ACTIVE, true);
 					pItem->processNewValue(currTime, pBuffer);
                break;
             case DCE_COMM_ERROR:
@@ -139,7 +139,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                break;
             case DCE_NOT_SUPPORTED:
                // Change item's status
-               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED);
+               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
                break;
          }
 

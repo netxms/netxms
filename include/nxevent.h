@@ -107,6 +107,9 @@
 #define EVENT_NETWORK_CONNECTION_LOST     50
 #define EVENT_NETWORK_CONNECTION_RESTORED 51
 #define EVENT_DB_QUERY_FAILED             52
+#define EVENT_DCI_UNSUPPORTED             53
+#define EVENT_DCI_DISABLED                54
+#define EVENT_DCI_ACTIVE                  55
 
 #define EVENT_SNMP_UNMATCHED_TRAP         500
 #define EVENT_SNMP_COLD_START             501

@@ -413,7 +413,7 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
       m_ppItems[i] = pItem;
       m_ppItems[i]->setLastPollTime(0);    // Cause item to be polled immediatelly
       if (m_ppItems[i]->getStatus() != ITEM_STATUS_DISABLED)
-         m_ppItems[i]->setStatus(ITEM_STATUS_ACTIVE);
+         m_ppItems[i]->setStatus(ITEM_STATUS_ACTIVE, false);
       m_ppItems[i]->setBusyFlag(FALSE);
       Modify();
       bResult = TRUE;
@@ -502,7 +502,7 @@ BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
       {
          if (m_ppItems[j]->getId() == pdwItemList[i])
          {
-            m_ppItems[j]->setStatus(iStatus);
+            m_ppItems[j]->setStatus(iStatus, true);
             break;
          }
       }

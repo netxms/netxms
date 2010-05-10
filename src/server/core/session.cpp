@@ -2833,7 +2833,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      // Create dummy DCI
                      pItem = new DCItem(CreateUniqueId(IDG_ITEM), "no name", DS_INTERNAL, 
                                         DCI_DT_INT, 60, 30, (Node *)pObject);
-                     pItem->setStatus(ITEM_STATUS_DISABLED);
+                     pItem->setStatus(ITEM_STATUS_DISABLED, false);
                      if ((bSuccess = ((Template *)pObject)->AddItem(pItem)))
                      {
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
