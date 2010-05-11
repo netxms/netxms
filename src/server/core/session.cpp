@@ -10412,7 +10412,7 @@ void ClientSession::queryServerLog(CSCPMessage *request)
 void ClientSession::getServerLogQueryData(CSCPMessage *request)
 {
 	CSCPMessage msg;
-	Table *data;
+	Table *data = NULL;
 
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(request->GetId());
