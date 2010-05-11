@@ -1051,7 +1051,7 @@ void ClientSession::ProcessingThread(void)
 				SendDCIInfo(pMsg);
 				break;
          case CMD_GET_DCI_EVENTS_LIST:
-            SendDCIEventList(pMsg);
+            sendDCIEventList(pMsg);
             break;
 			case CMD_GET_SYSTEM_DCI_LIST:
 				SendSystemDCIList(pMsg);
