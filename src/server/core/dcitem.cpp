@@ -1860,12 +1860,13 @@ void DCItem::getEventList(DWORD **ppdwList, DWORD *pdwSize)
 
    if (m_dwNumThresholds > 0)
    {
-      *ppdwList = (DWORD *)realloc(*ppdwList, sizeof(DWORD) * (*pdwSize + m_dwNumThresholds));
+      *ppdwList = (DWORD *)realloc(*ppdwList, sizeof(DWORD) * (*pdwSize + m_dwNumThresholds * 2));
       j = *pdwSize;
-      *pdwSize += m_dwNumThresholds;
-      for(i = 0; i < m_dwNumThresholds; i++, j++)
+      *pdwSize += m_dwNumThresholds * 2;
+      for(i = 0; i < m_dwNumThresholds; i++)
       {
-         (*ppdwList)[j] = m_ppThresholdList[i]->getEventCode();
+         (*ppdwList)[j++] = m_ppThresholdList[i]->getEventCode();
+			(*ppdwList)[j++] = m_ppThresholdList[i]->getRearmEventCode();
       }
    }
 

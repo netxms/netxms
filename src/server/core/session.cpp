@@ -8433,16 +8433,16 @@ void ClientSession::ResetComponent(CSCPMessage *pRequest)
 // Send list of events used by template's or node's DCIs
 //
 
-void ClientSession::SendDCIEventList(CSCPMessage *pRequest)
+void ClientSession::sendDCIEventList(CSCPMessage *request)
 {
    CSCPMessage msg;
    NetObj *pObject;
    DWORD *pdwEventList, dwCount;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(pRequest->GetId());
+   msg.SetId(request->GetId());
 
-   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   pObject = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -8542,8 +8542,8 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
 			TCHAR *temp;
 
          str = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>3</formatVersion>\n\t<description>");
-         temp = pRequest->GetVariableStr(VID_DESCRIPTION);
-         str.addDynamicString(EscapeStringForXML(temp, -1));
+			temp = pRequest->GetVariableStr(VID_DESCRIPTION);
+			str.addDynamicString(EscapeStringForXML(temp, -1));
 			free(temp);
          str += _T("</description>\n");
 

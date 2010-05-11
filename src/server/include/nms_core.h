@@ -514,7 +514,7 @@ private:
    void GetAddrList(CSCPMessage *pRequest);
    void SetAddrList(CSCPMessage *pRequest);
    void ResetComponent(CSCPMessage *pRequest);
-   void SendDCIEventList(CSCPMessage *pRequest);
+   void sendDCIEventList(CSCPMessage *request);
 	void SendDCIInfo(CSCPMessage *pRequest);
    void SendSystemDCIList(CSCPMessage *pRequest);
    void exportConfiguration(CSCPMessage *pRequest);
