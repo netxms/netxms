@@ -250,21 +250,6 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 static BOOL H_UpgradeFromV211(int currVersion, int newVersion)
 {
-	/*
-	static TCHAR batch[] = 
-		_T("ALTER TABLE snmp_trap_cfg MODIFY snmp_oid varchar(255) null\n")
-		_T("ALTER TABLE snmp_trap_cfg MODIFY user_tag varchar(63) null\n")
-		_T("ALTER TABLE snmp_trap_cfg MODIFY description varchar(255) null\n")
-		_T("<END>");
-
-	if (g_iSyntax == DB_SYNTAX_ORACLE)
-	{
-		if (!SQLBatch(batch))
-			if (!g_bIgnoreErrors)
-				return FALSE;
-	}
-	*/
-
 	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("snmp_oid"), _T("varchar(255)")));
 	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("user_tag"), _T("varchar(63)")));
 	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("description"), _T("varchar(255)")));
