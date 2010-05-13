@@ -6,7 +6,7 @@
 - New NXSL functions: log, log10, and exp
 - Windows console: added logarithmic scale option on graphs
 - MIB compiler improved
-- Fixed issues: #289, #294
+- Fixed issues: #289, #294, #295
 
 
 *
