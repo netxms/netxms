@@ -839,9 +839,9 @@ CREATE TABLE oid_to_type
 CREATE TABLE snmp_trap_cfg
 (
 	trap_id integer not null,
-	snmp_oid varchar(255) not null,
+	snmp_oid varchar(255),
 	event_code integer not null,
-	user_tag varchar(63) not null,
+	user_tag varchar(63),
 	description varchar(255),
 	PRIMARY KEY(trap_id)
 ) TABLE_TYPE;

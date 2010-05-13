@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ static INT64 m_qnTrapId = 1;
 // Load trap configuration from database
 //
 
-static BOOL LoadTrapCfg(void)
+static BOOL LoadTrapCfg()
 {
    DB_RESULT hResult;
    BOOL bResult = TRUE;
@@ -76,9 +76,7 @@ static BOOL LoadTrapCfg(void)
          }
          m_pTrapCfg[i].dwEventCode = DBGetFieldULong(hResult, i, 2);
          DBGetField(hResult, i, 3, m_pTrapCfg[i].szDescription, MAX_DB_STRING);
-         DecodeSQLString(m_pTrapCfg[i].szDescription);
          DBGetField(hResult, i, 4, m_pTrapCfg[i].szUserTag, MAX_USERTAG_LENGTH);
-         DecodeSQLString(m_pTrapCfg[i].szUserTag);
       }
       DBFreeResult(hResult);
 
@@ -612,7 +610,7 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
    MutexUnlock(m_mutexTrapCfgAccess);
 
    _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
-                      _T("VALUES (%d,'',%d,'#00','#00')"), *pdwTrapId, (DWORD)EVENT_SNMP_UNMATCHED_TRAP);
+                      _T("VALUES (%d,'',%d,'','')"), *pdwTrapId, (DWORD)EVENT_SNMP_UNMATCHED_TRAP);
    if (!DBQuery(g_hCoreDB, szQuery))
       dwResult = RCC_DB_FAILURE;
 
@@ -627,7 +625,7 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 {
    DWORD i, dwResult;
-   TCHAR szQuery[4096], szOID[1024], *pszEscDescr, *pszEscTag;
+   TCHAR szQuery[4096], szOID[1024];
 	BOOL bSuccess;
 
    MutexLock(m_mutexTrapCfgAccess, INFINITE);
@@ -645,13 +643,11 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 
 	// Write new trap to database
    SNMPConvertOIDToText(m_pTrapCfg[m_dwNumTraps].dwOidLen, m_pTrapCfg[m_dwNumTraps].pdwObjectId, szOID, 1024);
-	pszEscDescr = EncodeSQLString(m_pTrapCfg[m_dwNumTraps].szDescription);
-	pszEscTag = EncodeSQLString(m_pTrapCfg[m_dwNumTraps].szUserTag);
    _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
-                      _T("VALUES (%d,'%s',%d,'%s','%s')"), m_pTrapCfg[m_dwNumTraps].dwId,
-	          szOID, m_pTrapCfg[m_dwNumTraps].dwEventCode, pszEscDescr, pszEscTag);
-	free(pszEscDescr);
-	free(pszEscTag);
+                      _T("VALUES (%d,'%s',%d,%s,%s)"), m_pTrapCfg[m_dwNumTraps].dwId,
+	          szOID, m_pTrapCfg[m_dwNumTraps].dwEventCode,
+				 (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[m_dwNumTraps].szDescription),
+				 (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[m_dwNumTraps].szUserTag));
 
 	if(DBBegin(g_hCoreDB))
    {
@@ -685,7 +681,7 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
 {
    DWORD i, j, dwId1, dwId2, dwId3, dwTrapId, dwResult = RCC_INVALID_TRAP_ID;
-   TCHAR szQuery[1024], szOID[1024], *pszEscDescr, *pszEscTag;
+   TCHAR szQuery[1024], szOID[1024];
    BOOL bSuccess;
 
    dwTrapId = pMsg->GetVariableLong(VID_TRAP_ID);
@@ -730,13 +726,11 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          }
 
          // Update database
-         pszEscDescr = EncodeSQLString(m_pTrapCfg[i].szDescription);
-         pszEscTag = EncodeSQLString(m_pTrapCfg[i].szUserTag);
          SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId, szOID, 1024);
-         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%d,description='%s',user_tag='%s' WHERE trap_id=%d"),
-                    szOID, m_pTrapCfg[i].dwEventCode, pszEscDescr, pszEscTag, m_pTrapCfg[i].dwId);
-         free(pszEscDescr);
-			free(pszEscTag);
+         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%d,description=%s,user_tag=%s WHERE trap_id=%d"),
+                    szOID, m_pTrapCfg[i].dwEventCode,
+						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[i].szDescription),
+						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[i].szUserTag), m_pTrapCfg[i].dwId);
          if(DBBegin(g_hCoreDB))
          {
             bSuccess = DBQuery(g_hCoreDB, szQuery);
