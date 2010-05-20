@@ -10,8 +10,6 @@
 
 INCLUDES=-I@top_srcdir@/include
 
-bin_PROGRAMS = nxcptest
-nxcptest_SOURCES = nxcptest.cpp
-nxcptest_LDADD = ../libnetxms/libnetxms.la
-
-EXTRA_DIST = nxcptest.vcproj nxcptest.h
+bin_PROGRAMS = nxdevcfg
+nxdevcfg_SOURCES = nxdevcfg.cpp
+nxdevcfg_LDADD = ../../libnetxms/libnetxms.la

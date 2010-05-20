@@ -731,7 +731,6 @@ src/libnxmap/libnxmapw.vcproj -text
 src/libnxmb/libnxmb.vcproj -text
 src/libnxsl/libnxsl.vcproj -text
 src/libnxsl/parser.l -text
-src/nxcptest/nxcptest.vcproj -text
 src/nxlptest/nxlptest.vcproj -text
 src/nxscript/nxscript.vcproj -text
 src/server/core/import.cpp -text
@@ -764,6 +763,10 @@ src/snmp/nxsnmpset/nxsnmpset.vcproj -text
 src/snmp/nxsnmpwalk/nxsnmpwalk.vcproj -text
 src/sqlite/dllmain.c -text
 src/sqlite/nxsqlite.vcproj -text
+src/tools/Makefile.am -text
+src/tools/nxcptest/nxcptest.vcproj -text
+src/tools/nxdevcfg/Makefile.am -text
+src/tools/nxdevcfg/nxdevcfg.cpp -text
 src/webui/Makefile.am -text
 src/webui/libgd/freetype/ChangeLog.20 -text
 src/webui/libgd/freetype/ChangeLog.21 -text

@@ -46,7 +46,7 @@ BUILD_NXHTTPD="no"
 BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
 NEED_WXWIDGETS="no"
-MODULES="libnetxms nxcptest install"
+MODULES="libnetxms tools install"
 STATIC_SUBAGENT_LIST=""
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
@@ -242,7 +242,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcptest webui"
+	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -1520,7 +1520,7 @@ fi
 # Other settings
 #--------------------------------------------------------------------
 
-CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
+CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 AM_CONDITIONAL([BUILD_UNICODE_LIBS], [test "x$BUILD_UNICODE" = "xyes"])
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
@@ -1632,7 +1632,6 @@ AC_CONFIG_FILES([
 	src/client/windows/nxav/res/Makefile
 	src/client/windows/nxnotify/Makefile
 	src/client/windows/nxnotify/res/Makefile
-	src/nxcptest/Makefile
 	src/nxscript/Makefile
 	src/db/Makefile
 	src/db/dbdrv/Makefile
@@ -1666,6 +1665,9 @@ AC_CONFIG_FILES([
 	src/snmp/nxsnmpget/Makefile
 	src/snmp/nxsnmpset/Makefile
 	src/snmp/nxsnmpwalk/Makefile
+	src/tools/Makefile
+	src/tools/nxcptest/Makefile
+	src/tools/nxdevcfg/Makefile
 	src/agent/Makefile
 	src/agent/core/Makefile
 	src/agent/install/Makefile
