@@ -245,6 +245,7 @@ public:
    const TCHAR *getName() { return m_szName; }
    const TCHAR *getDescription() { return m_szDescription; }
 	const TCHAR *getSystemTag() { return m_systemTag; }
+	const TCHAR *getPerfTabSettings() { return m_pszPerfTabSettings; }
    Template *getRelatedNode() { return m_pNode; }
    DWORD getTemplateId() { return m_dwTemplateId; }
    DWORD getTemplateItemId() { return m_dwTemplateItemId; }

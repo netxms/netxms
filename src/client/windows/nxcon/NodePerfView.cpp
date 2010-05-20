@@ -204,7 +204,7 @@ void CNodePerfView::OnPaint()
 // Find DCI by name
 //
 
-DWORD CNodePerfView::FindItemByName(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems, TCHAR *pszName)
+DWORD CNodePerfView::FindItemByName(NXC_PERFTAB_DCI *pItemList, DWORD dwNumItems, TCHAR *pszName)
 {
 	DWORD i;
 
@@ -220,7 +220,7 @@ DWORD CNodePerfView::FindItemByName(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems,
 // Create graph if appropriate parameter exists
 //
 
-BOOL CNodePerfView::CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems,
+BOOL CNodePerfView::CreateGraph(NXC_PERFTAB_DCI *pItemList, DWORD dwNumItems,
 										  TCHAR *pszParam, TCHAR *pszTitle, RECT &rect,
 										  BOOL bArea)
 {
@@ -287,11 +287,11 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 			NULL
 		};
 		for(int i = 0; cpuUsageDciNames[i] != NULL; i++)
-			if (CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, cpuUsageDciNames[i], _T("CPU Utilization"), rect, FALSE))
+			if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, cpuUsageDciNames[i], _T("CPU Utilization"), rect, FALSE))
 				break;
 
 		// CPU load average
-		if (CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.load_avg"), _T("CPU Load Average"), rect, FALSE))
+		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, _T("@system.load_avg"), _T("CPU Load Average"), rect, FALSE))
 		{
 /*			m_pGraphList[m_dwNumGraphs - 1].dwItemId[1] = FindItemByName((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.load_avg5"));
 			m_pGraphList[m_dwNumGraphs - 1].dwItemId[2] = FindItemByName((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.load_avg15"));
@@ -300,20 +300,23 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 		}
 
 		// Physical memory
-		if (CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.usedmem"), _T("Physical Memory"), rect, TRUE))
+		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, _T("@system.usedmem"), _T("Physical Memory"), rect, TRUE))
 		{
-			m_pGraphList[m_dwNumGraphs - 1].dwItemId[1] = FindItemByName((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.totalmem"));
+			m_pGraphList[m_dwNumGraphs - 1].dwItemId[1] = FindItemByName((NXC_PERFTAB_DCI *)lParam, wParam, _T("@system.totalmem"));
 			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[0].rgbColor = RGB(210, 180, 140);
 			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[1].rgbColor = RGB(192, 0, 0);
 		}
 
 		// Disk queue
-		if (CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.disk_queue"), _T("Disk Queue"), rect, FALSE))
+		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, _T("@system.disk_queue"), _T("Disk Queue"), rect, FALSE))
 		{
 			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[0].rgbColor = RGB(0, 0, 192);
 		}
 
+		for(int i = 0; i < (int)wParam; i++)
+			safe_free(((NXC_PERFTAB_DCI *)lParam)[i].pszSettings);
 		safe_free(CAST_TO_POINTER(lParam, void *));
+
 		if (m_dwNumGraphs > 0)
 		{
 			AdjustView();
@@ -342,7 +345,7 @@ void CNodePerfView::WorkerThread()
 {
 	WorkerTask *pTask;
 	DWORD dwResult, dwNumItems;
-	NXC_SYSTEM_DCI *pItemList;
+	NXC_PERFTAB_DCI *pItemList;
 	NXC_DCI_DATA *pData;
 
 	while(1)
@@ -354,7 +357,7 @@ void CNodePerfView::WorkerThread()
 		switch(pTask->m_nTask)
 		{
 			case TASK_GET_AVAIL_DCI:
-				dwResult = NXCGetSystemDCIList(g_hSession, m_pObject->dwId, &dwNumItems, &pItemList);
+				dwResult = NXCGetPerfTabDCIList(g_hSession, m_pObject->dwId, &dwNumItems, &pItemList);
 				::PostMessage(pTask->m_hWnd, NXCM_REQUEST_COMPLETED,
 				              (dwResult == RCC_SUCCESS) ? dwNumItems : 0xFFFFFFFF,
 				              CAST_FROM_POINTER(pItemList, LPARAM));

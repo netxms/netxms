@@ -332,11 +332,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 	m_nBaseUnits = DBGetFieldLong(hResult, iRow, 17);
 	m_nMultiplier = DBGetFieldLong(hResult, iRow, 18);
 	m_pszCustomUnitName = DBGetField(hResult, iRow, 19, NULL, 0);
-	if (m_pszCustomUnitName != NULL)
-		DecodeSQLString(m_pszCustomUnitName);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 20, NULL, 0);
-	if (m_pszPerfTabSettings != NULL)
-		DecodeSQLString(m_pszPerfTabSettings);
 	DBGetField(hResult, iRow, 21, m_systemTag, MAX_DB_STRING);
 
    if (m_iAdvSchedule)
@@ -613,7 +609,7 @@ BOOL DCItem::loadThresholdsFromDB(void)
 BOOL DCItem::saveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscName, *pszEscScript, *pszEscDescr, *pszEscInstance;
-	TCHAR *pszEscCustomUnitName, *pszEscPerfTabSettings, *pszQuery;
+	TCHAR *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
@@ -623,9 +619,9 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_pszScript));
    pszEscDescr = EncodeSQLString(m_szDescription);
    pszEscInstance = EncodeSQLString(m_szInstance);
-	pszEscCustomUnitName = EncodeSQLString(CHECK_NULL_EX(m_pszCustomUnitName));
-	pszEscPerfTabSettings = EncodeSQLString(CHECK_NULL_EX(m_pszPerfTabSettings));
-   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscScript) + _tcslen(pszEscPerfTabSettings) + 2048));
+	String escCustomUnitName = DBPrepareString(g_hCoreDB, m_pszCustomUnitName);
+	String escPerfTabSettings = DBPrepareString(g_hCoreDB, m_pszPerfTabSettings);
+	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscScript) + escPerfTabSettings.getSize() + 2048));
 
    // Check for object's existence in database
    sprintf(pszQuery, "SELECT item_id FROM items WHERE item_id=%d", m_dwId);
@@ -644,36 +640,34 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                         "transformation,instance,template_item_id,adv_schedule,"
                         "all_thresholds,resource_id,proxy_node,base_units,unit_multiplier,"
 								"custom_units_name,perftab_settings,system_tag) VALUES "
-						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,%d,'%s','%s',%s)",
+						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,%d,%s,%s,%s)",
                         m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
                         pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                         m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
                         pszEscScript, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
-							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, pszEscCustomUnitName,
-								pszEscPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag));
+							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
+								(const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag));
    else
       sprintf(pszQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
                         "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
                         "delta_calculation=%d,transformation='%s',description='%s',"
                         "instance='%s',template_item_id=%d,adv_schedule=%d,"
                         "all_thresholds=%d,resource_id=%d,proxy_node=%d,base_units=%d,"
-								"unit_multiplier=%d,custom_units_name='%s',perftab_settings='%s',"
+								"unit_multiplier=%d,custom_units_name=%s,perftab_settings=%s,"
 	                     "system_tag=%s WHERE item_id=%d",
                         (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                         pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                         m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscScript,
                         pszEscDescr, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
-							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, pszEscCustomUnitName,
-								pszEscPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), m_dwId);
+							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
+								(const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), m_dwId);
    bResult = DBQuery(hdb, pszQuery);
    free(pszEscName);
    free(pszEscScript);
    free(pszEscDescr);
    free(pszEscInstance);
-	free(pszEscCustomUnitName);
-	free(pszEscPerfTabSettings);
 
    // Save thresholds
    if (bResult)

@@ -1053,8 +1053,8 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_DCI_EVENTS_LIST:
             sendDCIEventList(pMsg);
             break;
-			case CMD_GET_SYSTEM_DCI_LIST:
-				SendSystemDCIList(pMsg);
+			case CMD_GET_PERFTAB_DCI_LIST:
+				sendPerfTabDCIList(pMsg);
 				break;
          case CMD_PUSH_DCI_DATA:
             PushDCIData(pMsg);
@@ -9125,7 +9125,7 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 // Send list of system DCIs
 //
 
-void ClientSession::SendSystemDCIList(CSCPMessage *pRequest)
+void ClientSession::sendPerfTabDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	NetObj *pObject;
@@ -9140,7 +9140,7 @@ void ClientSession::SendSystemDCIList(CSCPMessage *pRequest)
 		{
 			if (pObject->Type() == OBJECT_NODE)
 			{
-				msg.SetVariable(VID_RCC, ((Node *)pObject)->GetSystemDCIList(&msg));
+				msg.SetVariable(VID_RCC, ((Node *)pObject)->getPerfTabDCIList(&msg));
 			}
 			else
 			{

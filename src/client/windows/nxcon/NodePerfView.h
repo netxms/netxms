@@ -46,14 +46,14 @@ public:
 
 	// Generated message map functions
 protected:
-	DWORD FindItemByName(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems, TCHAR *pszName);
+	DWORD FindItemByName(NXC_PERFTAB_DCI *pItemList, DWORD dwNumItems, TCHAR *pszName);
 	int m_nViewHeight;
 	int m_nOrigin;
 	int m_nTotalHeight;
 	void AdjustView(void);
 	CFont m_fontTitle;
 	int m_nTitleHeight;
-	BOOL CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems, TCHAR *pszParam,
+	BOOL CreateGraph(NXC_PERFTAB_DCI *pItemList, DWORD dwNumItems, TCHAR *pszParam,
 	                 TCHAR *pszTitle, RECT &rect, BOOL bArea);
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;

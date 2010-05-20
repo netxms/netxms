@@ -516,7 +516,7 @@ private:
    void ResetComponent(CSCPMessage *pRequest);
    void sendDCIEventList(CSCPMessage *request);
 	void SendDCIInfo(CSCPMessage *pRequest);
-   void SendSystemDCIList(CSCPMessage *pRequest);
+   void sendPerfTabDCIList(CSCPMessage *pRequest);
    void exportConfiguration(CSCPMessage *pRequest);
    void importConfiguration(CSCPMessage *pRequest);
 	void SendGraphList(DWORD dwRqId);

@@ -1717,7 +1717,8 @@ typedef struct
 	DWORD dwId;
 	TCHAR szName[MAX_DB_STRING];
 	int nStatus;
-} NXC_SYSTEM_DCI;
+	TCHAR *pszSettings;
+} NXC_PERFTAB_DCI;
 
 
 //
@@ -1981,8 +1982,8 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId,
                                            TCHAR *pszBuffer, DWORD dwBufferSize);
 DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI,
                                             INPUT_DCI *pDCIList, TCHAR ***pppszNames);
-DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeId,
-                                             DWORD *pdwNumItems, NXC_SYSTEM_DCI **ppList);
+DWORD LIBNXCL_EXPORTABLE NXCGetPerfTabDCIList(NXC_SESSION hSession, DWORD dwNodeId,
+                                              DWORD *pdwNumItems, NXC_PERFTAB_DCI **ppList);
 DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
                                         NXC_DCI_PUSH_DATA *pItems, DWORD *pdwIndex);
 DWORD LIBNXCL_EXPORTABLE NXCTestDCITransformation(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwItemId,

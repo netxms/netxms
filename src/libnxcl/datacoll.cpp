@@ -827,8 +827,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
 // Get list of system DCIs
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeId,
-                                             DWORD *pdwNumItems, NXC_SYSTEM_DCI **ppList)
+DWORD LIBNXCL_EXPORTABLE NXCGetPerfTabDCIList(NXC_SESSION hSession, DWORD dwNodeId,
+                                             DWORD *pdwNumItems, NXC_PERFTAB_DCI **ppList)
 {
    CSCPMessage msg, *pResponse;
    DWORD i, dwId, dwRqId, dwResult;
@@ -839,7 +839,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeI
 	*ppList = NULL;
 	*pdwNumItems = 0;
 
-   msg.SetCode(CMD_GET_SYSTEM_DCI_LIST);
+   msg.SetCode(CMD_GET_PERFTAB_DCI_LIST);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, dwNodeId);
 
@@ -852,12 +852,13 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeI
       if (dwResult == RCC_SUCCESS)
       {
 			*pdwNumItems = pResponse->GetVariableLong(VID_NUM_ITEMS);
-			*ppList = (NXC_SYSTEM_DCI *)malloc(sizeof(NXC_SYSTEM_DCI) * (*pdwNumItems));
-			for(i = 0, dwId = VID_SYSDCI_LIST_BASE; i < *pdwNumItems; i++, dwId += 7)
+			*ppList = (NXC_PERFTAB_DCI *)malloc(sizeof(NXC_PERFTAB_DCI) * (*pdwNumItems));
+			for(i = 0, dwId = VID_SYSDCI_LIST_BASE; i < *pdwNumItems; i++, dwId += 6)
 			{
 				(*ppList)[i].dwId = pResponse->GetVariableLong(dwId++);
 				pResponse->GetVariableStr(dwId++, (*ppList)[i].szName, MAX_DB_STRING);
 				(*ppList)[i].nStatus = pResponse->GetVariableShort(dwId++);
+				(*ppList)[i].pszSettings = pResponse->GetVariableStr(dwId++);
 			}
       }
       delete pResponse;

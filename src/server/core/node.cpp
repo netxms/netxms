@@ -3226,7 +3226,7 @@ BOOL Node::ResolveName(BOOL useOnlyDNS)
 // Send list of system DCIs
 //
 
-DWORD Node::GetSystemDCIList(CSCPMessage *pMsg)
+DWORD Node::getPerfTabDCIList(CSCPMessage *pMsg)
 {
    DWORD i, dwId, dwCount;
 
@@ -3234,12 +3234,14 @@ DWORD Node::GetSystemDCIList(CSCPMessage *pMsg)
 
    for(i = 0, dwId = VID_SYSDCI_LIST_BASE, dwCount = 0; i < m_dwNumItems; i++)
 	{
-		if (!_tcsnicmp(m_ppItems[i]->getDescription(), _T("@System."), 8))
+		if (!_tcsnicmp(m_ppItems[i]->getDescription(), _T("@System."), 8) ||
+			 (m_ppItems[i]->getPerfTabSettings() != NULL))
 		{
 			pMsg->SetVariable(dwId++, m_ppItems[i]->getId());
 			pMsg->SetVariable(dwId++, (TCHAR *)m_ppItems[i]->getDescription());
 			pMsg->SetVariable(dwId++, (WORD)m_ppItems[i]->getStatus());
-			dwId += 7;
+			pMsg->SetVariable(dwId++, m_ppItems[i]->getPerfTabSettings());
+			dwId += 6;
 			dwCount++;
 		}
 	}
