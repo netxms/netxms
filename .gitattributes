@@ -4,6 +4,7 @@ contrib/logo.jpg -text
 contrib/mibs/NETWORK-APPLIANCE-MIB.mib.txt -text
 doc/comparison_netxms_nnm.doc -text
 doc/internal/build.w64 -text
+doc/internal/dci_perftab.txt -text
 doc/internal/netxms_architecture.vsd -text
 doc/manuals/client_library.doc -text
 doc/manuals/netxms_install_guide.odt -text
@@ -80,6 +81,8 @@ src/client/windows/nxav/res/processing.ico -text
 src/client/windows/nxav/res/small_logo.bmp -text
 src/client/windows/nxav/res/sound.png -text
 src/client/windows/nxav/res/warning.ico -text
+src/client/windows/nxcon/DCIPerfTabPage.cpp -text
+src/client/windows/nxcon/DCIPerfTabPage.h -text
 src/client/windows/nxcon/icons/RuleManager.ico -text
 src/client/windows/nxcon/icons/SeverityCritical.ico -text
 src/client/windows/nxcon/icons/SeverityMajor.ico -text

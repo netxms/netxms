@@ -72,12 +72,16 @@ protected:
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
+	afx_msg int OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message);
 	//}}AFX_MSG
    afx_msg LRESULT OnSetObject(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnRequestCompleted(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdateFinished(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnGraphData(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
+private:
+	void CreateCustomGraph(NXC_PERFTAB_DCI *dci, RECT &rect);
 };
 
 /////////////////////////////////////////////////////////////////////////////

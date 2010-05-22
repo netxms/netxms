@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "NodePerfView.h"
+#include <nxconfig.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -99,6 +100,8 @@ BEGIN_MESSAGE_MAP(CNodePerfView, CWnd)
 	ON_WM_TIMER()
 	ON_WM_SIZE()
 	ON_WM_VSCROLL()
+	ON_WM_MOUSEWHEEL()
+	ON_WM_MOUSEACTIVATE()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_SET_OBJECT, OnSetObject)
    ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
@@ -254,12 +257,61 @@ BOOL CNodePerfView::CreateGraph(NXC_PERFTAB_DCI *pItemList, DWORD dwNumItems,
 
 
 //
+// Create custom graph
+//
+
+void CNodePerfView::CreateCustomGraph(NXC_PERFTAB_DCI *dci, RECT &rect)
+{
+	if (dci->pszSettings[0] == 0)
+		return;
+
+	Config config;
+	char *xml;
+
+#ifdef UNICODE
+	xml = UTF8StringFromWideString(dci->pszSettings);
+#else
+	xml = strdup(dci->pszSettings);
+#endif
+	if (!config.loadXmlConfigFromMemory(xml, strlen(xml)))
+	{
+		free(xml);
+		return;
+	}
+	free(xml);
+
+	if (!config.getValueBoolean(_T("/enabled"), false))
+		return;
+
+
+	memset(m_pGraphList[m_dwNumGraphs].dwItemId, 0, sizeof(DWORD) * MAX_GRAPH_ITEMS);
+	m_pGraphList[m_dwNumGraphs].dwItemId[0] = dci->dwId;
+	m_pGraphList[m_dwNumGraphs].pWnd = new CGraph;
+	m_pGraphList[m_dwNumGraphs].pWnd->m_bSet3DEdge = FALSE;
+	m_pGraphList[m_dwNumGraphs].pWnd->m_bShowLegend = FALSE;
+	m_pGraphList[m_dwNumGraphs].pWnd->m_bShowTitle = TRUE;
+	const TCHAR *title = config.getValue(_T("/title"), dci->szName);
+	m_pGraphList[m_dwNumGraphs].pWnd->SetTitle((*title != 0) ? title : dci->szName);
+	m_pGraphList[m_dwNumGraphs].pWnd->SetColorScheme(GCS_LIGHT);
+	m_pGraphList[m_dwNumGraphs].pWnd->m_rgbBkColor = GetSysColor(COLOR_WINDOW);
+	m_pGraphList[m_dwNumGraphs].pWnd->m_rgbTextColor = GetSysColor(COLOR_WINDOWTEXT);
+	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].nType = config.getValueInt(_T("/type"), GRAPH_TYPE_LINE);
+	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].rgbColor = config.getValueUInt(_T("/color"), 0x00C000);
+	m_pGraphList[m_dwNumGraphs].pWnd->Create(WS_CHILD | WS_VISIBLE, rect, this, m_dwNumGraphs);
+	m_dwNumGraphs++;
+	rect.top += GRAPH_HEIGHT + GRAPH_Y_MARGIN;
+	rect.bottom = rect.top + GRAPH_HEIGHT;
+}
+
+
+//
 // Handler for NXCM_REQUEST_COMPLETED message
 //
 
 LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
 	RECT rect;
+	int i;
 
 	if (m_nState != STATE_LOADING)
 		return 0;
@@ -286,7 +338,7 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 			_T("@system.cpu_usage.ipso"),
 			NULL
 		};
-		for(int i = 0; cpuUsageDciNames[i] != NULL; i++)
+		for(i = 0; cpuUsageDciNames[i] != NULL; i++)
 			if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, cpuUsageDciNames[i], _T("CPU Utilization"), rect, FALSE))
 				break;
 
@@ -313,8 +365,15 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[0].rgbColor = RGB(0, 0, 192);
 		}
 
-		for(int i = 0; i < (int)wParam; i++)
-			safe_free(((NXC_PERFTAB_DCI *)lParam)[i].pszSettings);
+		// Custom graphs
+		for(i = 0; i < (int)wParam; i++)
+		{
+			if (((NXC_PERFTAB_DCI *)lParam)[i].pszSettings != NULL)
+			{
+				CreateCustomGraph(&(((NXC_PERFTAB_DCI *)lParam)[i]), rect);
+				free(((NXC_PERFTAB_DCI *)lParam)[i].pszSettings);
+			}
+		}
 		safe_free(CAST_TO_POINTER(lParam, void *));
 
 		if (m_dwNumGraphs > 0)
@@ -505,7 +564,7 @@ void CNodePerfView::AdjustView()
 	}
 
 	// Setup scroll bar
-	m_nTotalHeight = m_dwNumGraphs / nColumns * (GRAPH_Y_MARGIN + GRAPH_HEIGHT);
+	m_nTotalHeight = (m_dwNumGraphs + nColumns - 1) / nColumns * (GRAPH_Y_MARGIN + GRAPH_HEIGHT);
 	m_nViewHeight = rect.bottom;
 	if (m_nTotalHeight > m_nViewHeight)
 	{
@@ -572,14 +631,14 @@ void CNodePerfView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		case SB_LINEUP:
 			if (m_nOrigin > 0)
 			{
-				m_nOrigin -= min(m_nOrigin, 10);
+				m_nOrigin -= min(m_nOrigin, 25);
 				bUpdate = TRUE;
 			}
 			break;
 		case SB_LINEDOWN:
 			if (m_nOrigin < m_nTotalHeight - m_nViewHeight)
 			{
-				m_nOrigin += min(m_nTotalHeight - m_nViewHeight - m_nOrigin, 10);
+				m_nOrigin += min(m_nTotalHeight - m_nViewHeight - m_nOrigin, 25);
 				bUpdate = TRUE;
 			}
 			break;
@@ -611,4 +670,28 @@ void CNodePerfView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		ScrollWindow(0, nPrevOrigin - m_nOrigin);
 		AdjustView();
 	}
+}
+
+
+//
+// WM_MOUSEWHEEL message handler
+//
+
+BOOL CNodePerfView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+{
+	int lines = zDelta / WHEEL_DELTA;
+	for(int i = 0; i < abs(lines); i++)
+		OnVScroll(lines > 0 ? SB_LINEUP : SB_LINEDOWN, 0, NULL);
+	return TRUE;
+}
+
+
+//
+// WM_MOUSEACTIVATE message handler
+//
+
+int CNodePerfView::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message) 
+{
+	SetFocus();
+	return CWnd::OnMouseActivate(pDesktopWnd, nHitTest, message);
 }

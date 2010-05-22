@@ -139,7 +139,7 @@ public:
 	void ZoomIn(RECT &rect);
    void SetDCIInfo(DCIInfo **ppInfo) { m_ppItems = ppInfo; }
    CBitmap *GetBitmap(void) { return &m_bmpGraph; }
-	void SetTitle(TCHAR *pszTitle) { nx_strncpy(m_szTitle, pszTitle, MAX_DB_STRING); }
+	void SetTitle(const TCHAR *pszTitle) { nx_strncpy(m_szTitle, pszTitle, MAX_DB_STRING); }
 };
 
 /////////////////////////////////////////////////////////////////////////////

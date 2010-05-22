@@ -1,0 +1,34 @@
+Format of DCI performance tab settings
+
+DCI's performance tab settings stored as XML config. Top-level tag is <config>.
+
+
+Tags inside <config>:
+
+<enabled>
+
+Boolean value. If set to true, DCI will be shown on performance tab. Default
+value is false.
+
+<title>
+
+Graph title. Default value is empty string.
+
+<color>
+
+Line (area) color as RGB value. Default value is 0x00C000.
+
+<type>
+
+Graph type. 0 = line graph, 1 = area graph. Default value is 0.
+
+
+
+Example:
+
+<config>
+	<enabled>true</enabled>
+	<color>0xC00000</color>
+	<type>0</type>
+	<title>Connected users</title>
+</config>

@@ -54,6 +54,7 @@ EXTRA_DIST = \
 	DataExportDlg.cpp DataExportDlg.h \
 	DataQueryDlg.cpp DataQueryDlg.h \
 	DCIDataView.cpp DCIDataView.h \
+	DCIPerfTabPage.cpp DCIPerfTabPage.h \
 	DCIPropPage.cpp DCIPropPage.h \
 	DCISchedulePage.cpp DCISchedulePage.h \
 	DCIThresholdsPage.cpp DCIThresholdsPage.h \

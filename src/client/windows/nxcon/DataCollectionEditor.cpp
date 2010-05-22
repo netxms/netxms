@@ -8,6 +8,7 @@
 #include "DCISchedulePage.h"
 #include "DCIThresholdsPage.h"
 #include "DCITransformPage.h"
+#include "DCIPerfTabPage.h"
 #include "DataExportDlg.h"
 #include "ObjectSelDlg.h"
 
@@ -430,6 +431,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    CDCISchedulePage pgSchedule;
    CDCITransformPage pgTransform;
    CDCIThresholdsPage pgThresholds;
+	CDCIPerfTabPage pgPerfTab;
 
    // Setup "Collection" page
    pgCollection.m_iDataType = pItem->iDataType;
@@ -467,6 +469,10 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgThresholds.m_strInstance = pItem->szInstance;
    pgThresholds.m_bAllThresholds = pItem->iProcessAllThresholds ? TRUE : FALSE;
 
+	// Setup "Performance Tab" page
+	pgPerfTab.m_strConfig = CHECK_NULL_EX(pItem->pszPerfTabSettings);
+	pgPerfTab.m_dciDescription = pItem->szDescription;
+
    // Setup property sheet and run
    dlg.SetTitle(_T("Data Collection Item"));
    dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
@@ -474,6 +480,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    dlg.AddPage(&pgSchedule);
    dlg.AddPage(&pgTransform);
    dlg.AddPage(&pgThresholds);
+   dlg.AddPage(&pgPerfTab);
    if (dlg.DoModal() == IDOK)
    {
       pItem->iDataType = pgCollection.m_iDataType;
@@ -506,6 +513,8 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
          pItem->ppScheduleList = NULL;
       }
       pItem->iProcessAllThresholds = pgThresholds.m_bAllThresholds ? 1 : 0;
+		safe_free(pItem->pszPerfTabSettings);
+		pItem->pszPerfTabSettings = _tcsdup((LPCTSTR)pgPerfTab.m_strConfig);
       bSuccess = TRUE;
    }
    return bSuccess;

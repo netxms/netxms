@@ -15,4 +15,5 @@ EXTRA_DIST = \
 	ipso.txt \
 	netxms_architecture.vsd \
 	nxcp_command_ranges.txt \
+	svn_perftab.txt \
 	unicode.txt

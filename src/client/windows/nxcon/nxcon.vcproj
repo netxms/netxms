@@ -357,6 +357,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DCIPerfTabPage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\DCIPropPage.cpp"
 				>
 			</File>
@@ -1068,6 +1072,10 @@
 			</File>
 			<File
 				RelativePath=".\DCIDataView.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DCIPerfTabPage.h"
 				>
 			</File>
 			<File
