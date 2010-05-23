@@ -233,14 +233,32 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 		case DB_SYNTAX_ORACLE:
 			_sntprintf(query, 1024, _T("DECLARE already_null EXCEPTION; ")
 			                        _T("PRAGMA EXCEPTION_INIT(already_null, -1451); ")
-											_T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s %s null'; ")
-											_T("EXCEPTION WHEN already_null THEN null; END;"), table, column, type);
+											_T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s null'; ")
+											_T("EXCEPTION WHEN already_null THEN null; END;"), table, column);
 			break;
 		default:
 			break;
 	}
 
 	return (query[0] != 0) ? SQLQuery(query) : TRUE;
+}
+
+
+//
+// Upgrade from V212 to V213
+//
+
+static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
+{
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("custom_units_name"), _T("varchar(63)")));
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("perftab_settings"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+
+	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("custom_units_name")));
+	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("perftab_settings")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='213' WHERE var_name='SchemaVersion'")));
+
+   return TRUE;
 }
 
 
@@ -751,6 +769,7 @@ static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
 // Upgrade from V100 to V211
 //      or from V101 to V211
 //      or from V102 to V212
+//      or from V103 to V213
 //
 
 static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
@@ -759,9 +778,10 @@ static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 		return FALSE;
 
 	// Now database at V207 level
-	// V100 already has changes V209 -> V210, but missing V207 -> V209 and V210 -> V212 changes
-	// V101 already has changes V209 -> V211, but missing V207 -> V209 and V211 -> V212 changes
-	// V102 already has changes V209 -> V212, but missing V207 -> V209 changes
+	// V100 already has changes V209 -> V210, but missing V207 -> V209 and V210 -> V213 changes
+	// V101 already has changes V209 -> V211, but missing V207 -> V209 and V211 -> V213 changes
+	// V102 already has changes V209 -> V212, but missing V207 -> V209 and V212 -> V213 changes
+	// V103 already has changes V209 -> V213, but missing V207 -> V209 changes
 
 	if (!H_UpgradeFromV207(207, 208))
 		return FALSE;
@@ -775,7 +795,10 @@ static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 	if (currVersion < 102)
 		H_UpgradeFromV211(211, 212);
 
-	if (!SQLQuery(_T("UPDATE metadata SET var_value='212' WHERE var_name='SchemaVersion'")))
+	if (currVersion < 103)
+		H_UpgradeFromV212(212, 213);
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='213' WHERE var_name='SchemaVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -4696,6 +4719,7 @@ static struct
 	{ 100, 212, H_UpgradeFromV10x },
 	{ 101, 212, H_UpgradeFromV10x },
 	{ 102, 212, H_UpgradeFromV10x },
+	{ 103, 213, H_UpgradeFromV10x },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
@@ -4708,6 +4732,7 @@ static struct
 	{ 209, 210, H_UpgradeFromV209 },
 	{ 210, 211, H_UpgradeFromV210 },
 	{ 211, 212, H_UpgradeFromV211 },
+	{ 212, 213, H_UpgradeFromV212 },
    { 0, NULL }
 };
 
