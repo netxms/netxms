@@ -3240,8 +3240,15 @@ DWORD Node::getPerfTabDCIList(CSCPMessage *pMsg)
 			pMsg->SetVariable(dwId++, m_ppItems[i]->getId());
 			pMsg->SetVariable(dwId++, (TCHAR *)m_ppItems[i]->getDescription());
 			pMsg->SetVariable(dwId++, (WORD)m_ppItems[i]->getStatus());
-			pMsg->SetVariable(dwId++, m_ppItems[i]->getPerfTabSettings());
-			dwId += 6;
+			if (m_ppItems[i]->getPerfTabSettings() != NULL)
+			{
+				pMsg->SetVariable(dwId++, m_ppItems[i]->getPerfTabSettings());
+				dwId += 6;
+			}
+			else
+			{
+				dwId += 7;
+			}
 			dwCount++;
 		}
 	}
