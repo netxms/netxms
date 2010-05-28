@@ -1900,6 +1900,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIEventsList(NXC_SESSION hSession, DWORD dwObjec
                                              DWORD **ppdwList, DWORD *pdwListSize);
 DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
 													DWORD dwItemId, NXC_DCI *pInfo);
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIThresholds(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwItemId,
+															NXC_DCI_THRESHOLD **ppList, DWORD *pdwSize);
 
 /** Container categories **/
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList);

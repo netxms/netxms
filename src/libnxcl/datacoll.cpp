@@ -596,6 +596,60 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId,
 
 
 //
+// Get threshold list for given DCI
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIThresholds(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwItemId,
+															NXC_DCI_THRESHOLD **ppList, DWORD *pdwSize)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD i, dwId, dwRqId, dwResult;
+
+	CHECK_SESSION_HANDLE();
+
+	*ppList = NULL;
+	*pdwSize = 0;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_DCI_THRESHOLDS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+	msg.SetVariable(VID_DCI_ID, dwItemId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+		{
+			*pdwSize = pResponse->GetVariableLong(VID_NUM_THRESHOLDS);
+			*ppList = (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * (*pdwSize));
+			for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < *pdwSize; i++, dwId++)
+			{
+				(*ppList)[i].dwId = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].dwEvent = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].dwRearmEvent = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].wFunction = pResponse->GetVariableShort(dwId++);
+				(*ppList)[i].wOperation = pResponse->GetVariableShort(dwId++);
+				(*ppList)[i].dwArg1 = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].dwArg2 = pResponse->GetVariableLong(dwId++);
+				(*ppList)[i].nRepeatInterval = (LONG)pResponse->GetVariableLong(dwId++);
+				pResponse->GetVariableStr(dwId++, (*ppList)[i].szValue, MAX_STRING_VALUE);
+			}
+		}
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}
+
+
+//
 // Get last values for all DCIs of selected node
 //
 

@@ -455,6 +455,7 @@ typedef struct
 #define CMD_FORWARD_EVENT           0x00EB
 #define CMD_GET_USM_CREDENTIALS     0x00EC
 #define CMD_UPDATE_USM_CREDENTIALS  0x00ED
+#define CMD_GET_DCI_THRESHOLDS      0x00EE
 
 
 //

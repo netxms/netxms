@@ -1050,6 +1050,9 @@ void ClientSession::ProcessingThread(void)
 			case CMD_GET_DCI_INFO:
 				SendDCIInfo(pMsg);
 				break;
+			case CMD_GET_DCI_THRESHOLDS:
+				sendDCIThresholds(pMsg);
+				break;
          case CMD_GET_DCI_EVENTS_LIST:
             sendDCIEventList(pMsg);
             break;
@@ -3145,6 +3148,58 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
 
 
 //
+// Send list of thresholds for DCI
+//
+
+void ClientSession::sendDCIThresholds(CSCPMessage *request)
+{
+   CSCPMessage msg;
+   NetObj *object;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+			if (object->Type() == OBJECT_NODE)
+			{
+				DCItem *dci = ((Node *)object)->GetItemById(request->GetVariableLong(VID_DCI_ID));
+				if (dci != NULL)
+				{
+					dci->fillMessageWithThresholds(&msg);
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+				}
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
 // Get collected data
 //
 
@@ -3202,7 +3257,6 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 
             // Get item's data type to determine actual row size
             iType = ((Node *)pObject)->GetItemType(dwItemId);
-//DWORD s=GetTickCount();
             // Create database-dependent query for fetching N rows
             switch(g_nDBSyntax)
             {
@@ -3226,7 +3280,6 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                   break;
             }
             hResult = DBSelect(g_hCoreDB, szQuery);
-//printf("[%d] **** QUERY DONE\n", GetTickCount() - s);
             if (hResult != NULL)
             {
                // Send CMD_REQUEST_COMPLETED message
@@ -3277,7 +3330,6 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                }
                DBFreeResult(hResult);
                pData->dwNumRows = htonl(dwNumRows);
-//printf("[%d] **** %d ROWS\n", GetTickCount() - s, dwNumRows);
 
                // Prepare and send raw message with fetched data
                m_pSendQueue->Put(

@@ -128,6 +128,8 @@ public:
    DWORD getId() { return m_id; }
    DWORD getEventCode() { return m_eventCode; }
    DWORD getRearmEventCode() { return m_rearmEventCode; }
+	int getFunction() { return m_function; }
+	int getOperation() { return m_operation; }
    const char *getStringValue() { return m_value.String(); }
    BOOL isReached() { return m_isReached; }
 	
@@ -271,6 +273,7 @@ public:
 
    void createMessage(CSCPMessage *pMsg);
    void updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
+	void fillMessageWithThresholds(CSCPMessage *msg);
 
    void deleteExpiredData();
 	BOOL deleteAllData();

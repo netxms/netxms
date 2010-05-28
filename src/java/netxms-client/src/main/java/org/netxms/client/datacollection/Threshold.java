@@ -43,7 +43,7 @@ public class Threshold
 	 * @param msg NXCP message
 	 * @param baseId Base variable ID for this threshold in message
 	 */
-	protected Threshold(final NXCPMessage msg, final long baseId)
+	public Threshold(final NXCPMessage msg, final long baseId)
 	{
 		long varId = baseId;
 		

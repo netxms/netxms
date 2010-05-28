@@ -557,6 +557,7 @@ private:
 	void getServerLogQueryData(CSCPMessage *request);
 	void sendUsmCredentials(DWORD dwRqId);
 	void updateUsmCredentials(CSCPMessage *pRequest);
+	void sendDCIThresholds(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

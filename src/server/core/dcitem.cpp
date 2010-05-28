@@ -2170,3 +2170,23 @@ BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
    }
 	return success;
 }
+
+
+//
+// Fill NXCP message with thresholds
+//
+
+void DCItem::fillMessageWithThresholds(CSCPMessage *msg)
+{
+	DWORD i, id;
+
+	lock();
+
+	msg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
+	for(i = 0, id = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, id += 10)
+	{
+		m_ppThresholdList[i]->createMessage(msg, id);
+	}
+
+	unlock();
+}

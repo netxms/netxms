@@ -29,7 +29,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
  */
 public class ObjectBrowser extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objectbrowser.view.object_browser"; //$NON-NLS-1$
+	public static final String ID = "org.netxms.ui.eclipse.view.navigation.objectbrowser"; //$NON-NLS-1$
 	
 	private ObjectTree objectTree;
 
@@ -221,6 +221,8 @@ public class ObjectBrowser extends ViewPart
 		
 		createMenu();
 		createPopupMenu();
+		
+		getSite().setSelectionProvider(objectTree.getTreeViewer());
 	}
 
 	public void setFocus() 

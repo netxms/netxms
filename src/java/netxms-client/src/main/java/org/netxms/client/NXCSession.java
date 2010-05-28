@@ -49,6 +49,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -1868,21 +1869,48 @@ public class NXCSession
 
 		return data;
 	}
+	
+	/**
+	 * Get list of thresholds configured for given DCI
+	 * 
+	 * @param nodeId Node object ID
+	 * @param dciId DCI ID
+	 * @return List of configured thresholds
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Threshold[] getThresholds(final long nodeId, final long dciId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_THRESHOLDS);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
+		sendMessage(msg);
+		
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_THRESHOLDS);
+		final Threshold[] list = new Threshold[count];
+		
+		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list[i] = new Threshold(response, varId);
+			varId += 10;
+		}
+		
+		return list;
+	}
 
 	/**
 	 * Create object
 	 * 
-	 * @param data
-	 *           Object creation data
+	 * @param data Object creation data
 	 * @return ID of new object
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public long createObject(final NXCObjectCreationData data) throws IOException, NXCException
 	{
-		NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_OBJECT);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_OBJECT);
 
 		// Common attributes
 		msg.setVariableInt32(NXCPCodes.VID_PARENT_ID, (int) data.getParentId());
@@ -1904,7 +1932,7 @@ public class NXCSession
 		}
 
 		sendMessage(msg);
-		NXCPMessage response = waitForRCC(msg.getMessageId());
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
 	}
 

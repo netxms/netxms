@@ -18,8 +18,10 @@
  */
 package org.netxms.client;
 
+import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
 
 /**
  * @author Victor
@@ -27,11 +29,13 @@ import org.netxms.client.datacollection.DciValue;
  */
 public class DataCollectionTest extends SessionTest
 {
+	private static final long nodeId = 12;
+	
 	public void testGetLastValues() throws Exception
 	{
 		final NXCSession session = connect();
 		
-		DciValue[] list = session.getLastValues(12);
+		DciValue[] list = session.getLastValues(nodeId);
 		assertEquals(true, list.length > 0);
 		
 		boolean statusFound = false;
@@ -40,6 +44,25 @@ public class DataCollectionTest extends SessionTest
 				statusFound = true;
 		assertEquals(true, statusFound);
 		
+		session.disconnect();
+	}
+
+	public void testGetThresholds() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(nodeId);
+		final long dciId = dc.createItem();
+		DataCollectionItem dci = dc.findItem(dciId);
+		dci.setName("TEST");
+		dc.modifyItem(dciId);
+		
+		Threshold[] thresholds = session.getThresholds(nodeId, dciId);
+		assertNotNull(thresholds);
+		assertEquals(0, thresholds.length);
+
+		dc.deleteItem(dciId);
+		dc.close();
 		session.disconnect();
 	}
 }

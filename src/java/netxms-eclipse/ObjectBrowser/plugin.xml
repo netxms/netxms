@@ -8,7 +8,7 @@
             allowMultiple="false"
             icon="icons/object_browser.png"
             class="org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser"
-            id="org.netxms.ui.eclipse.objectbrowser.view.object_browser">
+            id="org.netxms.ui.eclipse.view.navigation.objectbrowser">
       </view>
    </extension>
 

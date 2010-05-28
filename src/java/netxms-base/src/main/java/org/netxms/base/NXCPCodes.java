@@ -265,6 +265,7 @@ public final class NXCPCodes
 	public static final int CMD_FORWARD_EVENT           = 0x00EB;
 	public static final int CMD_GET_USM_CREDENTIALS     = 0x00EC;
 	public static final int CMD_UPDATE_USM_CREDENTIALS  = 0x00ED;
+	public static final int CMD_GET_DCI_THRESHOLDS      = 0x00EE;
 	
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

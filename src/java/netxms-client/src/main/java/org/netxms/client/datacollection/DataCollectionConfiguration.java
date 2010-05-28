@@ -136,7 +136,7 @@ public class DataCollectionConfiguration
 	/**
 	 * Modify data collection item.
 	 * 
-	 * @param itemId Data collection item
+	 * @param item Data collection item
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
