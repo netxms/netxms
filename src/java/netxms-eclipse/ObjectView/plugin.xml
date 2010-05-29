@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
+   <extension-point id="org.netxms.ui.eclipse.objectview.tabs" name="Object Tabs" schema="schema/org.netxms.ui.eclipse.objectview.tabs.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">
@@ -10,6 +11,13 @@
             icon="icons/last_values.png"
             class="org.netxms.ui.eclipse.objectview.views.LastValues"
             id="org.netxms.ui.eclipse.objectview.view.last_values">
+      </view>
+      <view
+            name="Object Information"
+            allowMultiple="false"
+            icon="icons/last_values.png"
+            class="org.netxms.ui.eclipse.objectview.views.TabbedObjectView"
+            id="org.netxms.ui.eclipse.objectview.view.tabbed_object_view">
       </view>
    </extension>
 
@@ -27,6 +35,9 @@
                menubarPath="datacollection">
          </action>
       </objectContribution>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
    </extension>
 
 </plugin>

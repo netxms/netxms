@@ -55,6 +55,7 @@ public class DataCollectionTest extends SessionTest
 		final long dciId = dc.createItem();
 		DataCollectionItem dci = dc.findItem(dciId);
 		dci.setName("TEST");
+		dci.getThresholds().add(new Threshold());
 		dc.modifyItem(dciId);
 		
 		Threshold[] thresholds = session.getThresholds(nodeId, dciId);

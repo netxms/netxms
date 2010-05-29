@@ -16,26 +16,32 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.perspectives;
+package org.netxms.ui.eclipse.objectview.objecttabs;
 
-import org.eclipse.ui.IPageLayout;
-import org.eclipse.ui.IPerspectiveFactory;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.objects.GenericObject;
 
 /**
- * Default perspective
+ * Object overview tab
  *
  */
-public class DefaultPerspective implements IPerspectiveFactory
+public class ObjectOverview extends ObjectTab
 {
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPerspectiveFactory#createInitialLayout(org.eclipse.ui.IPageLayout)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	public void createInitialLayout(IPageLayout layout)
+	protected void createTabContent(Composite parent)
 	{
-		layout.setEditorAreaVisible(false);
-		
-		layout.addView("org.netxms.ui.eclipse.view.navigation.objectbrowser", IPageLayout.LEFT, 0, "");
-		layout.addView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view", IPageLayout.RIGHT, 0.25f, "org.netxms.ui.eclipse.view.navigation.objectbrowser");
+		parent.setLayout(new FillLayout());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
+	 */
+	@Override
+	public void objectChanged(GenericObject object)
+	{
 	}
 }
