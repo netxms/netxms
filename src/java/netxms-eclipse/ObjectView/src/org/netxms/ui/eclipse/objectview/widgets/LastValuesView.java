@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectview.widgets;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -35,12 +34,11 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.LastValuesComparator;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.LastValuesLabelProvider;
@@ -62,7 +60,7 @@ public class LastValuesView extends Composite
 	public static final int COLUMN_TIMESTAMP = 3;
 	
 	private final ViewPart viewPart;
-	private final Node node;
+	private Node node;
 	private NXCSession session;
 	private TableViewer dataViewer;
 	
@@ -91,49 +89,7 @@ public class LastValuesView extends Composite
 			}
 		});
 
-		// Request data from server
-		Job job = new Job("Get DCI values for node " + node.getObjectName())
-		{
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				IStatus status;
-				
-				try
-				{
-					final DciValue[] data = session.getLastValues(node.getObjectId());
-					status = Status.OK_STATUS;
-
-					new UIJob("Initialize last values view") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							dataViewer.setInput(data);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-	                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-	                    "Cannot get DCI values for node " + node.getObjectName() + ": " + e.getMessage(), null);
-				}
-				return status;
-			}
-
-			/* (non-Javadoc)
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
-			@Override
-			public boolean belongsTo(Object family)
-			{
-				return family == LastValuesView.JOB_FAMILY;
-			}
-		};
-		IWorkbenchSiteProgressService siteService =
-	      (IWorkbenchSiteProgressService)viewPart.getSite().getAdapter(IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
+		getDataFromServer();
 	}
 	
 	/**
@@ -168,5 +124,51 @@ public class LastValuesView extends Composite
 	protected void fillContextMenu(IMenuManager mgr)
 	{
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+	}
+	
+	/**
+	 * Get data from server
+	 */
+	private void getDataFromServer()
+	{
+		if (node == null)
+		{
+			dataViewer.setInput(new DciValue[0]);
+			return;
+		}
+
+		ConsoleJob job = new ConsoleJob("Get DCI values for node " + node.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesView.JOB_FAMILY) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get DCI values for node " + node.getObjectName();
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final DciValue[] data = session.getLastValues(node.getObjectId());
+				new UIJob("Initialize last values view") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						dataViewer.setInput(data);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		};
+		job.start();
+	}
+	
+	/**
+	 * Change node object
+	 * 
+	 * @param _node new node object
+	 */
+	public void setNode(Node _node)
+	{
+		this.node = _node;
+		getDataFromServer();
 	}
 }

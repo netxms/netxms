@@ -36,8 +36,20 @@
          </action>
       </objectContribution>
    </extension>
+   
    <extension
          point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.ObjectOverview"
+            name="Overview"
+            order="0">
+      </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.LastValues"
+            icon="icons/last_values.png"
+            name="Last Values"
+            order="20">
+      </tab>
    </extension>
 
 </plugin>

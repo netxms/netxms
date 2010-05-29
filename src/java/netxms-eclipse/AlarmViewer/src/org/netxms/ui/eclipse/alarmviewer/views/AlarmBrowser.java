@@ -44,14 +44,6 @@ public class AlarmBrowser extends ViewPart
 	private ISelectionService selectionService;
 	private ISelectionListener selectionListener;
 
-	/**
-	 * 
-	 */
-	public AlarmBrowser()
-	{
-		// TODO Auto-generated constructor stub
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */

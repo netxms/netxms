@@ -578,6 +578,7 @@ src/java/netxms-eclipse/ObjectView/plugin.xml -text
 src/java/netxms-eclipse/ObjectView/schema/org.netxms.ui.eclipse.objectview.tabs.exsd -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowLastValues.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/LastValues.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectOverview.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectTab.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/LastValues.java -text

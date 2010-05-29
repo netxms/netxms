@@ -17,6 +17,9 @@
          </appInfo>
       </annotation>
       <complexType>
+         <sequence>
+            <element ref="tab" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
                <documentation>
@@ -61,13 +64,30 @@
                </appInfo>
             </annotation>
          </attribute>
-         <attribute name="name" type="string">
+         <attribute name="name" type="string" use="required">
             <annotation>
                <documentation>
                   Tab name
                </documentation>
                <appInfo>
                   <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="order" type="string">
+            <annotation>
+               <documentation>
+                  Tab order (0 is leftmost tab)
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="icon" type="string">
+            <annotation>
+               <documentation>
+                  a relative name of the icon associated with the tab
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="resource"/>
                </appInfo>
             </annotation>
          </attribute>

@@ -18,15 +18,26 @@
  */
 package org.netxms.ui.eclipse.objectview.views;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
@@ -38,6 +49,9 @@ public class TabbedObjectView extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.objectview.view.tabbed_object_view";
 	
 	private CTabFolder tabFolder;
+	private List<ObjectTab> tabs;
+	private ISelectionService selectionService;
+	private ISelectionListener selectionListener;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -46,9 +60,51 @@ public class TabbedObjectView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		parent.setLayout(new FillLayout());
-		tabFolder = new CTabFolder(parent, SWT.TOP);
+		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
+		tabFolder.setUnselectedImageVisible(true);
+		tabFolder.setSimple(true);
+		tabs = new ArrayList<ObjectTab>();
 		
 		addTabs();
+
+		selectionService = getSite().getWorkbenchWindow().getSelectionService();
+		selectionListener = new ISelectionListener() {
+			@Override
+			public void selectionChanged(IWorkbenchPart part, ISelection selection)
+			{
+				if ((selection instanceof IStructuredSelection) && !selection.isEmpty())
+				{
+					Object object = ((IStructuredSelection)selection).getFirstElement();
+					if (object instanceof GenericObject)
+					{
+						setObject((GenericObject)object);
+					}
+				}
+			}
+		};
+		selectionService.addSelectionListener(selectionListener);
+	}
+
+	/**
+	 * Set new active object
+	 * 
+	 * @param object New object
+	 */
+	private void setObject(GenericObject object)
+	{
+		this.setPartName("Object Information - " + object.getObjectName());
+		for(final ObjectTab tab : tabs)
+		{
+			if (tab.showForObject(object))
+			{
+				tab.show();
+				tab.changeObject(object);
+			}
+			else
+			{
+				tab.hide();
+			}
+		}
 	}
 
 	/* (non-Javadoc)
@@ -65,20 +121,37 @@ public class TabbedObjectView extends ViewPart
 	 */
 	private void addTabs()
 	{
+		// Read all registered extensions and create tabs
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectview.tabs");
 		for(int i = 0; i < elements.length; i++)
 		{
 			try
 			{
-				ObjectTab tab = (ObjectTab)elements[i].createExecutableExtension("class");
-				tab.create(tabFolder, elements[i]);
+				final ObjectTab tab = (ObjectTab)elements[i].createExecutableExtension("class");
+				tab.configure(elements[i], this);
+				tabs.add(tab);
 			}
 			catch(CoreException e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		
+		// Sort tabs by appearance order
+		Collections.sort(tabs, new Comparator<ObjectTab>() {
+			@Override
+			public int compare(ObjectTab arg0, ObjectTab arg1)
+			{
+				return arg0.getOrder() - arg1.getOrder();
+			}
+		});
+		
+		// Create widgets for all tabs
+		for(final ObjectTab tab : tabs)
+		{
+			tab.create(tabFolder);
 		}
 	}
 }
