@@ -322,6 +322,7 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmL
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/AcknowledgeAlarm.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/OpenAlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/TerminateAlarm.java -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList.java -text
 src/java/netxms-eclipse/Charts/.settings/org.eclipse.jdt.core.prefs -text
@@ -336,6 +337,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/DCIInfo.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/HistoricDataChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal/SelectionRectangle.java -text
 src/java/netxms-eclipse/Dashboard/.classpath -text
 src/java/netxms-eclipse/Dashboard/.project -text
 src/java/netxms-eclipse/Dashboard/.settings/org.eclipse.jdt.core.prefs -text

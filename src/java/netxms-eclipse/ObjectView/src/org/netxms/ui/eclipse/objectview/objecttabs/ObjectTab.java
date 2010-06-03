@@ -25,8 +25,8 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.objectview.Activator;
 
 /**
  * Abstract object tab class
@@ -68,7 +68,7 @@ public abstract class ObjectTab
 		String path = ce.getAttribute("icon");
 		if (path != null)
 		{
-			icon = Activator.getImageDescriptor(path);
+			icon = AbstractUIPlugin.imageDescriptorFromPlugin(ce.getContributor().getName(), path);
 		}
 	}
 	

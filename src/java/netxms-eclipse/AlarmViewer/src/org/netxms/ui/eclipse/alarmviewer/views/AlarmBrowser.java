@@ -18,18 +18,12 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.views;
 
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.ISelectionListener;
-import org.eclipse.ui.ISelectionService;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 
 /**
@@ -41,8 +35,6 @@ public class AlarmBrowser extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.view.alarm_browser";
 	
 	private AlarmList alarmView;
-	private ISelectionService selectionService;
-	private ISelectionListener selectionListener;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -60,23 +52,6 @@ public class AlarmBrowser extends ViewPart
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
 		alarmView.setLayoutData(fd);
-		
-		selectionService = getSite().getWorkbenchWindow().getSelectionService();
-		selectionListener = new ISelectionListener() {
-			@Override
-			public void selectionChanged(IWorkbenchPart part, ISelection selection)
-			{
-				if ((selection instanceof IStructuredSelection) && !selection.isEmpty())
-				{
-					Object object = ((IStructuredSelection)selection).getFirstElement();
-					if (object instanceof GenericObject)
-					{
-						alarmView.setRootObject(((GenericObject)object).getObjectId());
-					}
-				}
-			}
-		};
-		selectionService.addSelectionListener(selectionListener);
 	}
 
 	/* (non-Javadoc)

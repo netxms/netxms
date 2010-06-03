@@ -64,6 +64,7 @@ public class Activator extends AbstractUIPlugin
 	   ps.setDefault("Chart.Colors.Data.14", "0,128,255");
 	   ps.setDefault("Chart.Colors.Data.15", "192,192,192");
 	   ps.setDefault("Chart.Colors.PlotArea", "255,255,255");
+	   ps.setDefault("Chart.Colors.Selection", "0,0,128");
 	   ps.setDefault("Chart.Colors.Title", "0,0,0");
 	   ps.setDefault("Chart.Axis.X.Color", "22,22,22");
 	   ps.setDefault("Chart.Axis.Y.Color", "22,22,22");
@@ -71,6 +72,7 @@ public class Activator extends AbstractUIPlugin
 	   ps.setDefault("Chart.Grid.X.Style", LineStyle.DOT.label);
 	   ps.setDefault("Chart.Grid.Y.Color", "232,232,232");
 	   ps.setDefault("Chart.Grid.Y.Style", LineStyle.DOT.label);
+	   ps.setDefault("Chart.EnableZoom", true);
 	   ps.setDefault("Chart.ShowTitle", false);
 	   ps.setDefault("Chart.ShowToolTips", true);
 	}

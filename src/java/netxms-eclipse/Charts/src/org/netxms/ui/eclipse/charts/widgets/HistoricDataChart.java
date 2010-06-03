@@ -11,10 +11,16 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
 import org.swtchart.IAxisSet;
@@ -25,6 +31,7 @@ import org.swtchart.ISeriesSet;
 import org.swtchart.ITitle;
 import org.swtchart.LineStyle;
 import org.swtchart.Range;
+import org.swtchart.IAxis.Direction;
 import org.swtchart.ILineSeries.PlotSymbolType;
 import org.swtchart.ISeries.SeriesType;
 
@@ -34,9 +41,16 @@ import org.swtchart.ISeries.SeriesType;
  */
 public class HistoricDataChart extends Chart
 {
+	private static final int MAX_ZOOM_LEVEL = 16;
+	
 	private long timeFrom;
 	private long timeTo;
 	private boolean showToolTips;
+	private boolean enableZoom;
+	private boolean selectionActive = false;
+	private int zoomLevel = 0;
+	private MouseMoveListener moveListener;
+	private SelectionRectangle selection = new SelectionRectangle();
 	private IPreferenceStore preferenceStore;
 	
 	/**
@@ -49,7 +63,9 @@ public class HistoricDataChart extends Chart
 		
 		preferenceStore = Activator.getDefault().getPreferenceStore();
 		showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips");
+		enableZoom = preferenceStore.getBoolean("Chart.EnableZoom");
 		setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		selection.setColor(getColorFromPreferences("Chart.Colors.Selection"));
 
 		// Setup title
 		ITitle title = getTitle();
@@ -109,9 +125,111 @@ public class HistoricDataChart extends Chart
 				}
 			});
 		}
+		
+		if (enableZoom)
+		{
+			plotArea.addMouseListener(new MouseListener() {
+				@Override
+				public void mouseDoubleClick(MouseEvent e)
+				{
+				}
+
+				@Override
+				public void mouseDown(MouseEvent e)
+				{
+					if (e.button == 1)
+						startSelection(e);
+				}
+
+				@Override
+				public void mouseUp(MouseEvent e)
+				{
+					if (e.button == 1)
+						endSelection();
+				}
+			});
+			
+			plotArea.addPaintListener(new PaintListener() {
+				@Override
+				public void paintControl(PaintEvent e)
+				{
+					if (selectionActive)
+						selection.draw(e.gc);
+				}
+			});
+		}
 	}
 	
-	/**
+	private void startSelection(MouseEvent e)
+	{
+		if (zoomLevel >= MAX_ZOOM_LEVEL)
+			return;
+		
+		selectionActive = true;
+		selection.setStartPoint(e.x, e.y);
+		selection.setEndPoint(e.x, e.y);
+		
+		final Composite plotArea = getPlotArea();
+		moveListener = new MouseMoveListener() {
+			@Override
+			public void mouseMove(MouseEvent e)
+			{
+				selection.setEndPoint(e.x, e.y);
+				plotArea.redraw();
+			}
+		};
+		plotArea.addMouseMoveListener(moveListener);
+	}
+	
+	private void endSelection()
+	{
+		if (!selectionActive)
+			return;
+		
+		selectionActive = false;
+		final Composite plotArea = getPlotArea();
+		plotArea.removeMouseMoveListener(moveListener);
+
+		for(IAxis axis : getAxisSet().getAxes())
+		{
+			Point range = null;
+			if ((getOrientation() == SWT.HORIZONTAL && axis.getDirection() == Direction.X) ||
+			    (getOrientation() == SWT.VERTICAL && axis.getDirection() == Direction.Y))
+			{
+				range = selection.getHorizontalRange();
+			} 
+			else 
+			{
+				range = selection.getVerticalRange();
+			}
+
+			if (range != null && range.x != range.y)
+			{
+				setRange(range, axis);
+			}
+		}
+      
+		selection.dispose();
+		redraw();
+	}
+	
+   /**
+    * Sets the axis range.
+    * 
+    * @param range
+    *            the axis range in pixels
+    * @param axis
+    *            the axis to set range
+    */
+	private void setRange(Point range, IAxis axis)
+	{
+		double min = axis.getDataCoordinate(range.x);
+		double max = axis.getDataCoordinate(range.y);
+
+		axis.setRange(new Range(min, max));
+	}
+
+   /**
 	 * Create color object from preference string
 	 *  
 	 * @param name Preference name

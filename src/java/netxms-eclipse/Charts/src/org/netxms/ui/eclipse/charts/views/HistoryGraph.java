@@ -32,6 +32,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -49,6 +50,7 @@ import org.netxms.ui.eclipse.charts.views.helpers.DCIInfo;
 import org.netxms.ui.eclipse.charts.widgets.HistoricDataChart;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
+import org.swtchart.IAxis;
 
 /**
  * @author Victor
@@ -73,10 +75,17 @@ public class HistoryGraph extends ViewPart
 	private Date timeTo;
 	private long timeRange = 3600000;	// 1 hour
 	private boolean autoRefreshEnabled = true;
+	private boolean useLogScale = false;
 	private int autoRefreshInterval = 30000;	// 30 seconds
 	
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
+	private Action actionZoomIn;
+	private Action actionZoomOut;
+	private Action actionAdjustX;
+	private Action actionAdjustY;
+	private Action actionAdjustBoth;
+	private Action actionLogScale;
 	private Action[] presetActions;
 
 	/* (non-Javadoc)
@@ -130,6 +139,8 @@ public class HistoryGraph extends ViewPart
 	{
 		chart = new HistoricDataChart(parent, SWT.NONE);
 		
+		chart.getAxisSet().getYAxis(0).enableLogScale(useLogScale);
+		
 		makeActions();
 		contributeToActionBars();
 		createPopupMenu();
@@ -158,6 +169,10 @@ public class HistoryGraph extends ViewPart
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(chart);
 		chart.setMenu(menu);
+		for(Control ch : chart.getChildren())
+		{
+			ch.setMenu(menu);
+		}
 	}
 
 	/**
@@ -166,7 +181,7 @@ public class HistoryGraph extends ViewPart
 	private void getDataFromServer()
 	{
 		// Request data from server
-		Job job = new Job("Get DCI values history graph")
+		Job job = new Job("Get DCI values for history graph")
 		{
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
@@ -252,8 +267,95 @@ public class HistoryGraph extends ViewPart
 				HistoryGraph.this.getSite().getShell().getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
 			}
 		};
-		actionAutoRefresh.setText("Refresh automatically");
+		actionAutoRefresh.setText("Refresh &automatically");
 		actionAutoRefresh.setChecked(autoRefreshEnabled);
+		
+		actionLogScale = new Action() {
+			@Override
+			public void run()
+			{
+				useLogScale = !useLogScale;
+				setChecked(useLogScale);
+				chart.getAxisSet().getYAxis(0).enableLogScale(useLogScale);
+				chart.redraw();
+			}
+		};
+		actionLogScale.setText("&Logarithmic scale");
+		actionLogScale.setChecked(useLogScale);
+		
+		actionZoomIn = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				chart.getAxisSet().zoomIn();
+				chart.redraw();
+			}
+		};
+		actionZoomIn.setText("Zoom &in");
+
+		actionZoomOut = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				chart.getAxisSet().zoomOut();
+				chart.redraw();
+			}
+		};
+		actionZoomOut.setText("Zoom &out");
+
+		actionAdjustX = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				for(IAxis axis : chart.getAxisSet().getXAxes())
+				{
+					axis.adjustRange();
+				}
+				chart.redraw();
+			}
+		};
+		actionAdjustX.setText("Adjust &X axis");
+
+		actionAdjustY = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				for(IAxis axis : chart.getAxisSet().getYAxes())
+				{
+					axis.adjustRange();
+				}
+				chart.redraw();
+			}
+		};
+		actionAdjustY.setText("Adjust &Y axis");
+
+		actionAdjustBoth = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				for(IAxis axis : chart.getAxisSet().getAxes())
+				{
+					axis.adjustRange();
+				}
+				chart.redraw();
+			}
+		};
+		actionAdjustBoth.setText("&Adjust");
 
 		presetActions = new Action[presetRanges.length];
 		for(int i = 0; i < presetRanges.length; i++)
@@ -283,6 +385,10 @@ public class HistoryGraph extends ViewPart
 		fillLocalToolBar(bars.getToolBarManager());
 	}
 
+	/**
+	 * Fill local pull-down menu
+	 * @param manager
+	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		MenuManager presets = new MenuManager("&Presets");
@@ -291,10 +397,23 @@ public class HistoryGraph extends ViewPart
 		
 		manager.add(presets);
 		manager.add(new Separator());
+		manager.add(actionAdjustBoth);
+		manager.add(actionAdjustX);
+		manager.add(actionAdjustY);
+		manager.add(new Separator());
+		manager.add(actionZoomIn);
+		manager.add(actionZoomOut);
+		manager.add(new Separator());
+		manager.add(actionLogScale);
 		manager.add(actionAutoRefresh);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
+	/**
+	 * Fill context menu
+	 * @param manager
+	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
 		MenuManager presets = new MenuManager("&Presets");
@@ -303,10 +422,23 @@ public class HistoryGraph extends ViewPart
 		
 		manager.add(presets);
 		manager.add(new Separator());
+		manager.add(actionAdjustBoth);
+		manager.add(actionAdjustX);
+		manager.add(actionAdjustY);
+		manager.add(new Separator());
+		manager.add(actionZoomIn);
+		manager.add(actionZoomOut);
+		manager.add(new Separator());
+		manager.add(actionLogScale);
 		manager.add(actionAutoRefresh);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
+	/**
+	 * Fill local tool bar
+	 * @param manager
+	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionRefresh);
