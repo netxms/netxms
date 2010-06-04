@@ -50,5 +50,18 @@
             category="org.eclipse.ui.preferencePages.Charts">
       </page>
    </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.charts.propertypages.PerfTab"
+            id="org.netxms.ui.eclipse.charts.propertypages.PerfTab"
+            name="Performance Tab">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
 
 </plugin>

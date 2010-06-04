@@ -227,7 +227,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_GRAPH_LIST          = 0x00C5;
 	public static final int CMD_DEFINE_GRAPH				 = 0x00C6;
 	public static final int CMD_DELETE_GRAPH            = 0x00C7;
-	public static final int CMD_GET_SYSTEM_DCI_LIST     = 0x00C8;
+	public static final int CMD_GET_PERFTAB_DCI_LIST    = 0x00C8;
 	public static final int CMD_ADD_CA_CERTIFICATE      = 0x00C9;
 	public static final int CMD_DELETE_CERTIFICATE      = 0x00CA;
 	public static final int CMD_GET_CERT_LIST           = 0x00CB;

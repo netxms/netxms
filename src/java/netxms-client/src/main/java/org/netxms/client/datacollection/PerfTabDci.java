@@ -18,74 +18,56 @@
  */
 package org.netxms.client.datacollection;
 
-import java.util.Date;
+import org.netxms.base.NXCPMessage;
 
 /**
- * Single row in DCI data
- * @author Victor
+ * DCI information for performance tab in console
  *
  */
-public class DciDataRow
+public class PerfTabDci
 {
-	private Date timestamp;
-	private Object value;
-
-	public DciDataRow(Date timestamp, Object value)
-	{
-		super();
-		this.timestamp = timestamp;
-		this.value = value;
-	}
-
-	/**
-	 * @return the timestamp
-	 */
-	public Date getTimestamp()
-	{
-		return timestamp;
-	}
-
-	/**
-	 * @return the value
-	 */
-	public Object getValue()
-	{
-		return value;
-	}
+	private long id;		// DCI ID
+	private int status;
+	private String description;
+	private String perfTabSettings;
 	
-	/**
-	 * @return the value
-	 */
-	public String getValueAsString()
+	public PerfTabDci(NXCPMessage msg, long baseId)
 	{
-		return value.toString();
+		id = msg.getVariableAsInt64(baseId);
+		description = msg.getVariableAsString(baseId + 1);
+		status = msg.getVariableAsInteger(baseId + 2);
+		perfTabSettings = msg.getVariableAsString(baseId + 3);
 	}
 
 	/**
-	 * @return the value
+	 * @return the id
 	 */
-	public long getValueAsLong()
+	public long getId()
 	{
-		if (value instanceof Long)
-			return ((Long)value).longValue();
-
-		if (value instanceof Double)
-			return ((Double)value).longValue();
-		
-		return 0;
+		return id;
 	}
 
 	/**
-	 * @return the value
+	 * @return the status
 	 */
-	public double getValueAsDouble()
+	public int getStatus()
 	{
-		if (value instanceof Long)
-			return ((Long)value).doubleValue();
+		return status;
+	}
 
-		if (value instanceof Double)
-			return ((Double)value).doubleValue();
-		
-		return 0;
+	/**
+	 * @return the description
+	 */
+	public String getDescription()
+	{
+		return description;
+	}
+
+	/**
+	 * @return the perfTabSettings
+	 */
+	public String getPerfTabSettings()
+	{
+		return perfTabSettings;
 	}
 }

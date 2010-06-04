@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client.datacollection;
 
@@ -61,6 +76,7 @@ public class DataCollectionItem
 	private String transformationScript;
 	private String instance;
 	private String systemTag;
+	private String perfTabSettings;
 	private int baseUnits;
 	private int multiplier;
 	private String customUnitName;
@@ -96,6 +112,7 @@ public class DataCollectionItem
 		baseUnits = msg.getVariableAsInteger(NXCPCodes.VID_BASE_UNITS);
 		multiplier = msg.getVariableAsInteger(NXCPCodes.VID_MULTIPLIER);
 		customUnitName = msg.getVariableAsString(NXCPCodes.VID_CUSTOM_UNITS_NAME);
+		perfTabSettings = msg.getVariableAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_SCHEDULES);
 		schedules = new ArrayList<String>(count);
@@ -136,6 +153,7 @@ public class DataCollectionItem
 		processAllThresholds = false;
 		useAdvancedSchedule = false;
 		transformationScript = null;
+		perfTabSettings = null;
 		name = "";
 		description = "";
 		instance = "";
@@ -174,6 +192,8 @@ public class DataCollectionItem
 		msg.setVariableInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (customUnitName != null)
 			msg.setVariable(NXCPCodes.VID_CUSTOM_UNITS_NAME, customUnitName);
+		if (perfTabSettings != null)
+			msg.setVariable(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		
 		if (useAdvancedSchedule)
 		{
@@ -561,5 +581,21 @@ public class DataCollectionItem
 	public void setSystemTag(String systemTag)
 	{
 		this.systemTag = systemTag;
+	}
+
+	/**
+	 * @return the perfTabSettings
+	 */
+	public String getPerfTabSettings()
+	{
+		return perfTabSettings;
+	}
+
+	/**
+	 * @param perfTabSettings the perfTabSettings to set
+	 */
+	public void setPerfTabSettings(String perfTabSettings)
+	{
+		this.perfTabSettings = perfTabSettings;
 	}
 }

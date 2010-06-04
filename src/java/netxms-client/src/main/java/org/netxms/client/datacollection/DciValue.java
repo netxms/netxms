@@ -8,7 +8,7 @@ import java.util.Date;
 import org.netxms.base.NXCPMessage;
 
 /**
- * @author Victor
+ * DCI value
  *
  */
 public class DciValue

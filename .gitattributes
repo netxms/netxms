@@ -268,6 +268,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollec
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciDataRow.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciValue.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/PerfTabDci.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Alarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Event.java -text
@@ -334,6 +335,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowHistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/propertypages/PerfTab.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/DCIInfo.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/HistoricDataChart.java -text

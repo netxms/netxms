@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,11 @@ package org.netxms.client;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 
 /**
- * @author Victor
+ * Test cases for data collection
  *
  */
 public class DataCollectionTest extends SessionTest
@@ -65,5 +66,21 @@ public class DataCollectionTest extends SessionTest
 		dc.deleteItem(dciId);
 		dc.close();
 		session.disconnect();
+	}
+	
+	public void testGetPerfTabItems() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		PerfTabDci[] list = session.getPerfTabItems(nodeId);
+		assertNotNull(list);
+		assertTrue(list.length > 0);
+		
+		for(PerfTabDci p : list)
+		{
+			System.out.println("id=" + p.getId() + " descr='" + p.getDescription() + "' settings='" + p.getPerfTabSettings() + "'");
+		}
+		
+		session.disconnect();		
 	}
 }
