@@ -13,9 +13,6 @@
 #use strict;
 #use Data::Dumper;
 
-# Change input record separator (internal perl variable)
-$/ = "\r\n";
-
 # file names
 my $inFile = shift || die "Usage : mc.pl <input_file>";
 my $outHeader = $inFile;
