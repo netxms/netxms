@@ -26,6 +26,7 @@
 #include <nms_threads.h>
 
 #ifdef _WIN32
+#include <psapi.h>
 #include <netxms-regex.h>
 #define read	_read
 #define close	_close
@@ -1307,5 +1308,23 @@ extern "C" void funlockfile(FILE *fp)
 }
 
 extern "C" int __isthreaded = 1;
+
+#endif
+
+
+//
+// Get memory consumed by current process
+//
+
+#ifdef _WIN32
+
+INT64 LIBNETXMS_EXPORTABLE GetProcessRSS()
+{
+	PROCESS_MEMORY_COUNTERS pmc;
+
+	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
+		return pmc.WorkingSetSize;
+	return 0;
+}
 
 #endif

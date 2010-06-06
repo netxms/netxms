@@ -484,6 +484,8 @@ enum
 // Global user rights
 //
 
+#ifndef LIBNXCL_CUSTOM_USER_RIGHTS
+
 #define SYSTEM_ACCESS_MANAGE_USERS        0x00000001
 #define SYSTEM_ACCESS_SERVER_CONFIG       0x00000002
 #define SYSTEM_ACCESS_CONFIGURE_TRAPS     0x00000004
@@ -507,6 +509,8 @@ enum
 #define SYSTEM_ACCESS_READ_FILES          0x00100000
 
 #define SYSTEM_ACCESS_FULL                0x001FFFFF
+
+#endif	/* LIBNXCL_CUSTOM_USER_RIGHTS */
 
 
 //

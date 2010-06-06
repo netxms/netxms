@@ -313,6 +313,8 @@ reopen_log:
 					bufferSize = bytesNeeded;
 					buffer = (BYTE *)realloc(buffer, bufferSize);
 					success = TRUE;
+					AgentWriteDebugLog(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes on initial read"),
+										    &(parser->getFileName()[1]), bufferSize);
 				}
 			} while(success);
 		}
@@ -325,6 +327,9 @@ reopen_log:
 			handles[1] = g_hCondShutdown;
 			AgentWriteDebugLog(1, _T("LogWatch: Start watching event log \"%s\""),
 			                &(parser->getFileName()[1]));
+#ifdef _WIN32
+			AgentWriteDebugLog(7, _T("LogWatch: Process RSS is ") INT64_FMT _T(" bytes"), GetProcessRSS());
+#endif
 
          while(1)
          {
@@ -341,6 +346,8 @@ retry_read:
 					{
 						bufferSize = bytesNeeded;
 						buffer = (BYTE *)realloc(buffer, bufferSize);
+						AgentWriteDebugLog(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes"),
+												 &(parser->getFileName()[1]), bufferSize);
 						goto retry_read;
 					}
                if (success)

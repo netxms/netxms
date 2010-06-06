@@ -583,6 +583,7 @@ extern "C"
 #ifdef _WIN32
    TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, size_t iBufSize);
 	BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize);
+	INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 #endif
 
 #if !(HAVE_DAEMON)

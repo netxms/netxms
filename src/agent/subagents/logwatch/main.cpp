@@ -165,6 +165,9 @@ static void AddParserFromConfig(const TCHAR *file)
 				m_parserList[m_numParsers - 1] = parser;
 				AgentWriteDebugLog(1, _T("LogWatch: registered parser for file %s, trace level set to %d"),
 				                   parser->getFileName(), parser->getTraceLevel());
+#ifdef _WIN32
+				AgentWriteDebugLog(7, _T("LogWatch: Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
+#endif
 			}
 			else
 			{
