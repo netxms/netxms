@@ -318,8 +318,11 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const
                         if (_tcsncmp(szServerVersion, NETXMS_VERSION_STRING, 64))
                            dwRetCode = RCC_VERSION_MISMATCH;
                      }
-                     if (pResp->GetVariableLong(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
-                        dwRetCode = RCC_BAD_PROTOCOL;
+							if (!(dwFlags & NXCF_IGNORE_PROTOCOL_VERSION))
+							{
+								if (pResp->GetVariableLong(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
+									dwRetCode = RCC_BAD_PROTOCOL;
+							}
 							if (ppszUpgradeURL != NULL)
 								*ppszUpgradeURL = pResp->GetVariableStr(VID_CONSOLE_UPGRADE_URL);
 							pResp->GetVariableBinary(VID_CHALLENGE, challenge, CLIENT_CHALLENGE_SIZE);

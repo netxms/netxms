@@ -876,10 +876,11 @@ typedef struct
 // NXCConnect flags
 //
 
-#define NXCF_DEFAULT						0
-#define NXCF_ENCRYPT						0x01
-#define NXCF_EXACT_VERSION_MATCH		0x02
-#define NXCF_USE_CERTIFICATE			0x04
+#define NXCF_DEFAULT						   0
+#define NXCF_ENCRYPT						   0x0001
+#define NXCF_EXACT_VERSION_MATCH		   0x0002
+#define NXCF_USE_CERTIFICATE			   0x0004
+#define NXCF_IGNORE_PROTOCOL_VERSION   0x0008
 
 
 //
