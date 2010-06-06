@@ -68,4 +68,14 @@ public class AlarmTab extends ObjectTab
 		       (object instanceof EntireNetwork) || (object instanceof Container) ||
 		       (object instanceof Cluster) || (object instanceof ServiceRoot);
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		alarmList.dispose();
+		super.dispose();
+	}
 }

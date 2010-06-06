@@ -62,4 +62,14 @@ public class AlarmBrowser extends ViewPart
 	{
 		alarmView.setFocus();
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		alarmView.dispose();
+		super.dispose();
+	}
 }

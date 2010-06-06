@@ -177,4 +177,19 @@ public abstract class ObjectTab
 	{
 		return viewPart;
 	}
+	
+	/**
+	 * Disposes the tab.
+	 * 
+	 * This is the last method called on the ObjectTab. There is no guarantee that createTabContent() has been called,
+	 * so the tab controls may never have been created.
+	 * 
+	 * Within this method a part may release any resources, fonts, images, etc.  held by this part. It is also very
+	 * important to deregister all listeners from the workbench.
+	 * 
+	 * Clients should not call this method (the workbench calls this method at appropriate times). 
+	 */
+	public void dispose()
+	{
+	}
 }

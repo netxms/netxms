@@ -154,4 +154,17 @@ public class TabbedObjectView extends ViewPart
 			tab.create(tabFolder);
 		}
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		for(final ObjectTab tab : tabs)
+		{
+			tab.dispose();
+		}
+		super.dispose();
+	}
 }
