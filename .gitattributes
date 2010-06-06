@@ -332,6 +332,7 @@ src/java/netxms-eclipse/Charts/build.properties -text
 src/java/netxms-eclipse/Charts/icons/graph.png -text
 src/java/netxms-eclipse/Charts/plugin.xml -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/PerfTabGraphSettings.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowHistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
@@ -700,6 +701,7 @@ src/java/netxms-eclipse/library/icons/status/testing.png -text
 src/java/netxms-eclipse/library/icons/status/unknown.png -text
 src/java/netxms-eclipse/library/icons/status/unmanaged.png -text
 src/java/netxms-eclipse/library/icons/status/warning.png -text
+src/java/netxms-eclipse/library/jar/simple-xml-2.3.5.jar -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/DataCollectionDisplayInfo.java -text

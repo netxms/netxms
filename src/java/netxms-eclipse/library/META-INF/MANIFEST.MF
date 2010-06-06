@@ -8,7 +8,8 @@ Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  jar/netxms-base-1.1.0.jar,
- jar/netxms-client-1.1.0.jar
+ jar/netxms-client-1.1.0.jar,
+ jar/simple-xml-2.3.5.jar
 Export-Package: org.netxms.base,
  org.netxms.client,
  org.netxms.client.constants,
@@ -20,7 +21,9 @@ Export-Package: org.netxms.base,
  org.netxms.ui.eclipse.jobs,
  org.netxms.ui.eclipse.shared,
  org.netxms.ui.eclipse.tools,
- org.netxms.ui.eclipse.widgets
+ org.netxms.ui.eclipse.widgets,
+ org.simpleframework.xml,
+ org.simpleframework.xml.core
 Require-Bundle: org.eclipse.ui;bundle-version="3.5.0",
  org.eclipse.core.runtime;bundle-version="3.5.0"
 Bundle-ActivationPolicy: lazy

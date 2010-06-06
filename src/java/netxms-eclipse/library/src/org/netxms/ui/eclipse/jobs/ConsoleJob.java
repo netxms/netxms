@@ -119,4 +119,11 @@ public abstract class ConsoleJob extends Job
 	protected void jobFailureHandler()
 	{		
 	}
+	
+	/**
+	 * Called from within Job.run() if job completes, either successfully or not. Default implementation does nothing.
+	 */
+	protected void jobFinalize()
+	{
+	}
 }
