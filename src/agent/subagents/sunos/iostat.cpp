@@ -239,8 +239,41 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
 
 LONG H_IOStats(const char *cmd, const char *arg, char *value)
 {
+	char device[KSTAT_STRLEN];
 	LONG rc = SYSINFO_RC_SUCCESS;
+	int i;
 
+	if (!AgentGetParameterArg(cmd, 1, device, KSTAT_STRLEN))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	// find device
+	for(i = 1; (i <= MAX_DEVICES) && (s_data[i].dev[0] != 0); i++)
+		if (!strcmp(device, s_data[i].dev))
+			break;
+	if ((i > MAX_DEVICES) || (s_data[i].dev[0] == 0))
+		return SYSINFO_RC_UNSUPPORTED;	// unknown device
+
+	switch(CAST_FROM_POINTER(arg, int))
+	{
+		case IOSTAT_NUM_READS:
+			ret_double(value, CalculateAverage32(s_data[i].histReadOps));
+			break;
+		case IOSTAT_NUM_WRITES:
+			ret_double(value, CalculateAverage32(s_data[i].histWriteOps));
+			break;
+		case IOSTAT_QUEUE:
+			ret_double(value, CalculateAverage32(s_data[i].histQueue));
+			break;
+		case IOSTAT_NUM_RBYTES:
+			ret_uint64(value, CalculateAverage64(s_data[i].histBytesRead));
+			break;
+		case IOSTAT_NUM_WBYTES:
+			ret_uint64(value, CalculateAverage64(s_data[i].histBytesWritten));
+			break;
+		default:
+			rc = SYSINFO_RC_UNSUPPORTED;
+			break;
+	}
 	return rc;
 }
 
