@@ -72,7 +72,7 @@ kvm_t *kvmd = NULL;
 
 LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 {
-	int nVer = (int)pArg;
+	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[4];
 	size_t nSize = sizeof(mib), nValSize;

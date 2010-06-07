@@ -182,6 +182,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	int nPageSize;
 	char szArg[16] = {0};
 	kvm_t *kd;
+	int type = CAST_FROM_POINTER(pArg, int);
 #if HAVE_KVM_GETSWAPINFO
 	struct kvm_swap swap[16];
 #endif
@@ -235,16 +236,16 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	}
 	else
 	{
-		if ((int)pArg != PHYSICAL_FREE &&
-				(int)pArg != PHYSICAL_TOTAL &&
-				(int)pArg != PHYSICAL_USED)
+		if ((type != PHYSICAL_FREE) &&
+		    (type != PHYSICAL_TOTAL) &&
+		    (type != PHYSICAL_USED))
 		nRet = SYSINFO_RC_ERROR;
 	}
 #endif
 
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
-		switch((int)pArg)
+		switch(type)
 		{
 			case PHYSICAL_FREE: // ph-free
 				ret_uint64(pValue, ((int64_t)nFreeCount) * nPageSize);
