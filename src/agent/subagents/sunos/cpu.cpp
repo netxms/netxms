@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004, 2005 Victor Kirhenshtein
+ ** Copyright (C) 2004-2010 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -18,7 +16,7 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** $module: cpu.cpp
+ ** File: cpu.cpp
  **
  **/
 
@@ -73,7 +71,7 @@ static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
 // CPU usage statistics collector thread
 //
 
-THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
+THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -89,7 +87,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 	if (kc == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE,
-				"Unable to open kstat() context: %s", 
+				"SunOS: Unable to open kstat() context (%s), CPU statistics will not be collected", 
 				strerror(errno));
 		return THREAD_OK;
 	}
@@ -126,10 +124,11 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 	pnLastTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
 	pnCurrTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
 	dwHistoryPos = 0;
+	AgentWriteDebugLog(1, "CPU stat collector thread started");
 
 	// Do first read
 	ReadCPUTimes(kc, pnLastTimes);
-	ThreadSleep(1);
+	ThreadSleepMs(1000);
 
 	// Collection loop
 	while(!g_bShutdown)
@@ -202,7 +201,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 		if (dwHistoryPos == 900)
 			dwHistoryPos = 0;
 
-		ThreadSleep(1);
+		ThreadSleepMs(1000);
 	}
 
 	// Cleanup
@@ -210,6 +209,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 	free(pnCurrTimes);
 	free(pdwHistory);
 	kstat_close(kc);
+	AgentWriteDebugLog(1, "CPU stat collector thread stopped");
 	return THREAD_OK;
 }
 

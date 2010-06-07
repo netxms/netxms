@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004, 2005 Victor Kirhenshtein
+ ** Copyright (C) 2004-2010 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -18,7 +16,7 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** $module: system.cpp
+ ** File: system.cpp
  **
  **/
 
@@ -253,7 +251,19 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 
 					nRet = SYSINFO_RC_SUCCESS;
 				}
+				else
+				{
+					AgentWriteDebugLog(6, "SunOS::ReadKStatValue(%s,%d,%s,%s): kstat_data_lookup failed (%s)", pszModule, nInstance, pszName, pszStat, strerror(errno));
+				}
 			}
+			else
+			{
+				AgentWriteDebugLog(6, "SunOS::ReadKStatValue(%s,%d,%s,%s): kstat_read failed (%s)", pszModule, nInstance, pszName, pszStat, strerror(errno));
+			}
+		}
+		else
+		{
+			AgentWriteDebugLog(6, "SunOS::ReadKStatValue(%s,%d,%s,%s): kstat_lookup failed (%s)", pszModule, nInstance, pszName, pszStat, strerror(errno));
 		}
 		kstat_close(kc);
 	}

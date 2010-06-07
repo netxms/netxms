@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2009 Victor Kirhenshtein
+ ** Copyright (C) 2004-2010 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -33,6 +31,8 @@ LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue);
 LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue);
+LONG H_IOStats(const char *pszParam, const char *pArg, char *pValue);
+LONG H_IOStatsTotal(const char *pszParam, const char *pArg, char *pValue);
 LONG H_KStat(const char *pszParam, const char *pArg, char *pValue);
 LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue);
@@ -60,7 +60,8 @@ BOOL g_bShutdown = FALSE;
 // Static data
 //
 
-static THREAD m_hCPUStatThread = INVALID_THREAD_HANDLE;
+static THREAD m_cpuStatThread = INVALID_THREAD_HANDLE;
+static THREAD m_ioStatThread = INVALID_THREAD_HANDLE;
 
 
 //
@@ -73,25 +74,29 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
+
 //
 // Initalization callback
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
-	m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
+	m_cpuStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
+	m_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
 
 	return TRUE;
 }
+
 
 //
 // Called by master agent at unload
 //
 
-static void UnloadHandler(void)
+static void SubAgentShutdown()
 {
 	g_bShutdown = TRUE;
-	ThreadJoin(m_hCPUStatThread);
+	ThreadJoin(m_cpuStatThread);
+	ThreadJoin(m_ioStatThread);
 }
 
 
@@ -145,12 +150,24 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.CPU.Usage15(*)", H_CPUUsage, "C2", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
 	{ "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.KStat(*)", H_KStat, NULL, DCI_DT_STRING, "" },
-	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
-	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
-	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
-	{ "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
-	{ "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
-	{ "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_USED },
+	{ "System.IO.ReadRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
+	{ "System.IO.ReadRate(*)", H_IOStats, (const char *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
+	{ "System.IO.WriteRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
+	{ "System.IO.WriteRate(*)", H_IOStats, (const char *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
+	{ "System.IO.BytesReadRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
+	{ "System.IO.BytesReadRate(*)", H_IOStats, (const char *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
+	{ "System.IO.BytesWriteRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
+	{ "System.IO.BytesWriteRate(*)", H_IOStats, (const char *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
+	{ "System.IO.DiskQueue", H_IOStatsTotal, (const char *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
+	{ "System.IO.DiskQueue(*)", H_IOStats, (const char *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
+//        { "System.IO.DiskTime", H_IoStatsTotal, (const char *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME },
+//        { "System.IO.DiskTime(*)", H_IoStats, (const char *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME_EX },
+	{ "System.Memory.Physical.Free", H_MemoryInfo, (const char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+	{ "System.Memory.Physical.Total", H_MemoryInfo, (const char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
+	{ "System.Memory.Physical.Used", H_MemoryInfo, (const char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+	{ "System.Memory.Swap.Free", H_MemoryInfo, (const char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
+	{ "System.Memory.Swap.Total", H_MemoryInfo, (const char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
+	{ "System.Memory.Swap.Used", H_MemoryInfo, (const char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_USED },
 	{ "System.ProcessCount", H_SysProcCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ "System.Uname", H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
 	{ "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
@@ -166,8 +183,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("SUNOS"), NETXMS_VERSION_STRING,
-	NULL, // init handler
-	UnloadHandler, // unload handler
+	SubAgentInit, // init handler
+	SubAgentShutdown, // unload handler
 	NULL, // command handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,

@@ -79,6 +79,18 @@
 
 
 //
+// I/O stats request types
+//
+
+#define IOSTAT_NUM_READS      0
+#define IOSTAT_NUM_WRITES     1
+#define IOSTAT_NUM_RBYTES     2
+#define IOSTAT_NUM_WBYTES     3
+#define IOSTAT_IO_TIME        4
+#define IOSTAT_QUEUE          5
+
+
+//
 // Process list entry structure
 //
 
@@ -97,7 +109,8 @@ int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
 LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 		char *pszStat, char *pValue, kstat_named_t *pRawValue);
 
-THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg);
+THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg);
+THREAD_RESULT THREAD_CALL IOStatCollector(void *arg);
 
 
 //
@@ -108,15 +121,3 @@ extern BOOL g_bShutdown;
 
 
 #endif
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.12  2006/05/15 22:11:22  alk
-+ Net.Interface.Link() workaround; trying kstat() first, then
-IFF_RUNNING it kstat's link_up failed.
-- code reformated
-
-
-*/
