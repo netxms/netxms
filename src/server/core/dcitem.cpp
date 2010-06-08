@@ -1769,6 +1769,14 @@ void DCItem::updateFromTemplate(DCItem *pItem)
    setTransformationScript(pItem->m_pszScript);
    m_iAdvSchedule = pItem->m_iAdvSchedule;
 
+	safe_free(m_pszPerfTabSettings);
+	m_pszPerfTabSettings = (pItem->m_pszPerfTabSettings != NULL) ? _tcsdup(pItem->m_pszPerfTabSettings) : NULL;
+
+	m_nBaseUnits = pItem->m_nBaseUnits;
+	m_nMultiplier = pItem->m_nMultiplier;
+	safe_free(m_pszCustomUnitName);
+	m_pszCustomUnitName = (pItem->m_pszCustomUnitName != NULL) ? _tcsdup(pItem->m_pszCustomUnitName) : NULL;
+
    // Copy schedules
    for(i = 0; i < m_dwNumSchedules; i++)
       safe_free(m_ppScheduleList[i]);
