@@ -16,13 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console;
+package org.netxms.ui.eclipse.objectbrowser;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
- * Preference initializer for console
+ * Preference initializer for object browser
  *
  */
 public class PreferenceInitializer extends AbstractPreferenceInitializer
@@ -34,8 +34,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	public void initializeDefaultPreferences()
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setDefault("INITIAL_PERSPECTIVE", "org.netxms.ui.eclipse.console.DefaultPerspective");
-		ps.setDefault("SHOW_COOLBAR", true);
-		ps.setDefault("SHOW_TRAY_ICON", true);
+		ps.setDefault("SHOW_COMMENTS", false);
 	}
 }

@@ -24,6 +24,16 @@ public class ObjectAdapterFactory implements IAdapterFactory
 		IWorkbenchAdapter.class
 	};
 
+	private boolean showComments;
+
+	/**
+	 * Default constructor
+	 */
+	public ObjectAdapterFactory()
+	{
+		showComments = Activator.getDefault().getPreferenceStore().getBoolean("SHOW_COMMENTS");
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
@@ -94,6 +104,18 @@ public class ObjectAdapterFactory implements IAdapterFactory
 					@Override
 					public String getLabel(Object o)
 					{
+						if (showComments)
+						{
+							final String comments = ((GenericObject)o).getComments();
+							if (comments != null)
+							{
+								final String s = comments.replace("\r", "").replace("\n", " ").trim();
+								if (s.length() > 0)
+								{
+									return ((GenericObject)o).getObjectName() + " [" + ((s.length() > 100) ? s.substring(0, 100) : s) + "]";
+								}
+							}
+						}
 						return ((GenericObject)o).getObjectName();
 					}
 

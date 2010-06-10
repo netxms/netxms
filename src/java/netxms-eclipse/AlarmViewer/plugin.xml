@@ -85,5 +85,11 @@
             order="20">
       </tab>
    </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="org.netxms.ui.eclipse.alarmviewer.Startup">
+      </startup>
+   </extension>
 
 </plugin>

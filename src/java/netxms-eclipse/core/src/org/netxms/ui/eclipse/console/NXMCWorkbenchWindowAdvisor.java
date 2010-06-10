@@ -77,6 +77,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		NXCSession session = NXMCSharedData.getInstance().getSession();
 		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		
+		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON"))
+			Activator.showTrayIcon();
 	}
 
 	/**

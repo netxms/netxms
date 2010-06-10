@@ -28,7 +28,6 @@ import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
  */
 public class PerformanceTab extends ObjectTab
 {
-	private 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
 	 */

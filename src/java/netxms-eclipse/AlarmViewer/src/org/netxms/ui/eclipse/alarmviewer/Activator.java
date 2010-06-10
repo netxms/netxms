@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,6 @@ public class Activator extends AbstractUIPlugin
 		IProgressService service = PlatformUI.getWorkbench().getProgressService();
 	   service.registerIconForFamily(getImageDescriptor("icons/alarm_browser.png"), AlarmList.JOB_FAMILY);
 	}
-
 	
 	/*
 	 * (non-Javadoc)
@@ -64,6 +63,7 @@ public class Activator extends AbstractUIPlugin
 	 */
 	public void stop(BundleContext context) throws Exception
 	{
+		AlarmNotifier.stop();
 		plugin = null;
 		super.stop(context);
 	}

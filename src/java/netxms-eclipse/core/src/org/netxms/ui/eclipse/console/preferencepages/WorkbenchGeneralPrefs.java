@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -22,6 +23,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchPreferencePage
 {
 	private Button cbShowHeapMonitor;
+	private Button cbShowTrayIcon;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -38,6 +40,10 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		cbShowHeapMonitor = new Button(dialogArea, SWT.CHECK);
 		cbShowHeapMonitor.setText(Messages.getString("WorkbenchGeneralPrefs.show_heap")); //$NON-NLS-1$
 		cbShowHeapMonitor.setSelection(getPreferenceStore().getBoolean("SHOW_MEMORY_MONITOR")); //$NON-NLS-1$
+		
+		cbShowTrayIcon = new Button(dialogArea, SWT.CHECK);
+		cbShowTrayIcon.setText(Messages.getString("WorkbenchGeneralPrefs.show_tray_icon")); //$NON-NLS-1$
+		cbShowTrayIcon.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON")); //$NON-NLS-1$
 		
 		return dialogArea;
 	}
@@ -60,6 +66,7 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		super.performDefaults();
 		
 		cbShowHeapMonitor.setEnabled(true);
+		cbShowTrayIcon.setEnabled(true);
 	}
 
 	/* (non-Javadoc)
@@ -69,6 +76,13 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 	public boolean performOk()
 	{
 		getPreferenceStore().setValue("SHOW_MEMORY_MONITOR", cbShowHeapMonitor.getSelection()); //$NON-NLS-1$
+		Activator.getDefault().getPreferenceStore().setValue("SHOW_TRAY_ICON", cbShowTrayIcon.getSelection()); //$NON-NLS-1$
+		
+		if (cbShowTrayIcon.getSelection())
+			Activator.showTrayIcon();
+		else
+			Activator.hideTrayIcon();
+		
 		return super.performOk();
 	}
 }
