@@ -18,9 +18,18 @@
  */
 package org.netxms.ui.eclipse.charts.objecttabs;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.progress.UIJob;
+import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * Performance tab
@@ -34,8 +43,9 @@ public class PerformanceTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		// TODO Auto-generated method stub
-
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		parent.setLayout(layout);
 	}
 
 	/* (non-Javadoc)
@@ -44,7 +54,43 @@ public class PerformanceTab extends ObjectTab
 	@Override
 	public void objectChanged(GenericObject object)
 	{
-		// TODO Auto-generated method stub
-
+		update(object);
+	}
+	
+	/**
+	 * Update tab with object's data
+	 * 
+	 * @param object New object
+	 */
+	private void update(final GenericObject object)
+	{
+		Job job = new Job("Update performance tab") {
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				final NXCSession session = NXMCSharedData.getInstance().getSession();
+				try
+				{
+					final PerfTabDci[] items = session.getPerfTabItems(object.getObjectId());
+					new UIJob("Update performance tab") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							if (PerformanceTab.this.getObject().getObjectId() == object.getObjectId())
+							{
+								
+							}
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				}
+				catch(Exception e)
+				{
+				}
+				return Status.OK_STATUS;
+			}
+		};
+		job.setSystem(true);
+		job.schedule();
 	}
 }
