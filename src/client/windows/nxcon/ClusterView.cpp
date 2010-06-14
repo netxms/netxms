@@ -76,14 +76,16 @@ int CClusterView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_imageList.Add(theApp.LoadIcon(IDI_OVL_STATUS_DISABLED));
 	m_imageList.Add(theApp.LoadIcon(IDI_OVL_STATUS_TESTING));
 
-   m_fontNormal.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+	HDC hdc = ::GetDC(m_hWnd);
+   m_fontNormal.CreateFont(-MulDiv(7, GetDeviceCaps(hdc, LOGPIXELSY), 72),
                           0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                           VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
-   m_fontHeading.CreateFont(-MulDiv(10, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+   m_fontHeading.CreateFont(-MulDiv(10, GetDeviceCaps(hdc, LOGPIXELSY), 72),
                             0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                             VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
+	::ReleaseDC(m_hWnd, hdc);
 	
    GetClientRect(&rect);
    rect.top += 50;

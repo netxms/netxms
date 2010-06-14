@@ -125,18 +125,20 @@ int CMapView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 	
    // Create fonts
-   m_fontList[0].CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+	HDC hdc = ::GetDC(m_hWnd);
+   m_fontList[0].CreateFont(-MulDiv(7, GetDeviceCaps(hdc, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                             VARIABLE_PITCH | FF_DONTCARE, _T("Helvetica"));
-   m_fontList[1].CreateFont(-MulDiv(5, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+   m_fontList[1].CreateFont(-MulDiv(5, GetDeviceCaps(hdc, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                             VARIABLE_PITCH | FF_DONTCARE, _T("Helvetica"));
-   m_fontList[2].CreateFont(-MulDiv(11, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+   m_fontList[2].CreateFont(-MulDiv(11, GetDeviceCaps(hdc, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                             VARIABLE_PITCH | FF_DONTCARE, _T("Helvetica"));
+	::ReleaseDC(m_hWnd, hdc);
 
    // Create pens for different link types
    m_penLinkTypes[0].CreatePen(PS_SOLID, 0, RGB(0, 0, 0));

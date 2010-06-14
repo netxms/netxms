@@ -490,14 +490,14 @@ void CColourPickerXP::SetStyle(BOOL bComboBoxStyle)
 		CRect rc;
 		GetWindowRect(rc);
 
-		CDC *pDC = this->GetDC();
+		CDC *pDC = GetDC();
 		CFont *pOldFont = pDC->SelectObject(GetFont());
 
 		TEXTMETRIC tm;
 		pDC->GetTextMetrics(&tm);
 
 		pDC->SelectObject(pOldFont);
-		this->ReleaseDC(pDC);
+		ReleaseDC(pDC);
 
 		SetWindowPos(NULL, 0, 0, rc.Width(), tm.tmHeight + 8, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOREDRAW);
 	}

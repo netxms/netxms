@@ -41,18 +41,6 @@ int CValueList::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CListCtrl::OnCreate(lpCreateStruct) == -1)
 		return -1;
-/*
-   m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
-                           0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                           VARIABLE_PITCH | FF_DONTCARE, "Verdana");
-   m_fontBold.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
-                         0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                         VARIABLE_PITCH | FF_DONTCARE, "Verdana");
-
-   SetFont(&m_fontNormal);
-*/	
 	return 0;
 }
 

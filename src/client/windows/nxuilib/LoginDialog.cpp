@@ -136,10 +136,14 @@ BOOL CLoginDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 
    if (m_font.m_hObject == NULL)
-      m_font.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+	{
+		HDC hdc = ::GetDC(m_hWnd);
+      m_font.CreateFont(-MulDiv(8, GetDeviceCaps(hdc, LOGPIXELSY), 72),
                         0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                         VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
+		::ReleaseDC(m_hWnd, hdc);
+	}
 
    SetDlgItemText(IDC_STATIC_VERSION, _T("Ver. ") NETXMS_VERSION_STRING);
 

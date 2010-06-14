@@ -347,11 +347,11 @@ int CRuleList::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
    // Create font for elements
-   m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+   pDC = GetDC();
+   m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(pDC->m_hDC, LOGPIXELSY), 72),
                           0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                           VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
-   pDC = GetDC();
    m_iTextHeight = max(pDC->GetTextExtent(_T("gqhXQ|"), 6).cy, ITEM_IMAGE_SIZE);
    ReleaseDC(pDC);
 

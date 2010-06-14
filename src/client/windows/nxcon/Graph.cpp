@@ -635,7 +635,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    brush.DeleteObject();
 
    // Setup text parameters
-   font.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+   font.CreateFont(-MulDiv(7, GetDeviceCaps(dc.m_hDC, LOGPIXELSY), 72),
                    0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                    VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));

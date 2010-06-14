@@ -779,6 +779,7 @@ HBITMAP LoadPicture(TCHAR *pszFile, int nScaleFactor)
                                     hmHeight, hmWidth, -hmHeight, NULL);
 			   dcMem.SelectObject(pOldBM);
 		   }
+			dcMem.DeleteDC();
 	   }
 
 	   theApp.m_pMainWnd->ReleaseDC(pDC);
