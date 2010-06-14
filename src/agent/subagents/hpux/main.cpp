@@ -37,7 +37,7 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 // Initialization callback
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
 	return TRUE;
@@ -48,7 +48,7 @@ static BOOL SubAgentInit(TCHAR *pszConfigFile)
 // Called by master agent at unload
 //
 
-static void SubAgentShutdown(void)
+static void SubAgentShutdown()
 {
 	ShutdownCpuUsageCollector();
 }
@@ -204,48 +204,3 @@ extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
 	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.11  2007/06/27 18:41:56  victor
-Fixed bug 163
-
-Revision 1.10  2007/06/08 00:02:36  alk
-DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
-
-NETXMS_SUBAGENT_INFO initialization fixed (actions)
-
-Revision 1.9  2007/06/07 22:07:11  alk
-descriptions changed to defines
-
-Revision 1.8  2007/04/25 07:44:09  victor
-- Linux and HPUX subagents changed to new model
-- ODBCQUERY subagent code cleaned
-
-Revision 1.7  2006/10/26 17:46:22  victor
-System.CPU.Usage almost complete
-
-Revision 1.6  2006/10/26 15:19:39  victor
-Fixed problems with Process.Count and System.ProcessCount on HP-UX 11.23
-
-Revision 1.5  2006/10/26 06:55:17  victor
-Minor changes
-
-Revision 1.4  2006/10/06 14:06:11  victor
-AIX -> HPUX
-
-Revision 1.3  2006/10/05 12:41:32  alk
-generic: iconv - const detection added
-hpux: System.LoggedInCount renamed to System.ConnectedUsers
-freebsd: _XOPEN_SOURCE fixed
-
-Revision 1.2  2006/10/05 00:34:24  alk
-HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
-
-Revision 1.1  2006/10/04 14:59:14  alk
-initial version of HPUX subagent
-
-
-*/
