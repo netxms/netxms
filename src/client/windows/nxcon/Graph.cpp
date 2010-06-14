@@ -363,7 +363,7 @@ void CGraph::UpdateData(DWORD dwIndex, NXC_DCI_DATA *pData)
 // Draw single line
 //
 
-void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize)
+void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize)
 {
    DWORD i;
    int x;
@@ -374,7 +374,7 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
    if (pData->dwNumRows < 2)
       return;  // Nothing to draw
 
-   pen.CreatePen(PS_SOLID, 2, rgbColor);
+   pen.CreatePen(PS_SOLID, (style->nLineWidth == 0) ? DEFAULT_LINE_WIDTH : style->nLineWidth, style->rgbColor);
    pOldPen = dc.SelectObject(&pen);
 
    // Calculate scale factor for values
@@ -408,7 +408,7 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
 // Draw single area
 //
 
-void CGraph::DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize)
+void CGraph::DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize)
 {
    DWORD i;
    CPen pen, *pOldPen;
@@ -420,9 +420,9 @@ void CGraph::DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
    if (pData->dwNumRows < 2)
       return;  // Nothing to draw
 
-   pen.CreatePen(PS_SOLID, 1, rgbColor);
+   pen.CreatePen(PS_SOLID, (style->nLineWidth == 0) ? DEFAULT_LINE_WIDTH : style->nLineWidth, style->rgbColor);
    pOldPen = dc.SelectObject(&pen);
-	brush.CreateHatchBrush(HS_DIAGCROSS, rgbColor);
+	brush.CreateHatchBrush(HS_DIAGCROSS, style->rgbColor);
 	pOldBrush = dc.SelectObject(&brush);
 
    // Calculate scale factor for values
@@ -457,6 +457,124 @@ void CGraph::DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
 
    dc.SelectObject(pOldPen);
 	dc.SelectObject(pOldBrush);
+}
+
+
+//
+// Draw average mark
+//
+
+void CGraph::DrawAverage(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize)
+{
+	if (!style->bShowAverage)
+		return;
+
+	CPen pen, *oldPen;
+   NXC_DCI_ROW *pRow;
+	DWORD i;
+
+   pRow = pData->pRows;
+   for(i = 0; (i < pData->dwNumRows) && (pRow->dwTimeStamp > m_dwTimeTo); i++)
+      inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+   if (i < pData->dwNumRows)
+   {
+		double sum = 0;
+		int samples = 0;
+
+      for(; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
+      {
+			sum += (double)ROW_DATA(pRow, pData->wDataType);
+			samples++;
+         inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+      }
+
+		if (samples > 0)
+		{
+			double avg = sum / samples;
+		   double scale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
+			                  (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / (m_dCurrMaxValue - m_dCurrMinValue);
+			int y = (int)(m_nZeroLine - avg * scale - 1);
+
+			pen.CreatePen(PS_DASH, 1, style->rgbColor);
+			oldPen = dc.SelectObject(&pen);
+			dc.MoveTo(m_rectGraph.left, y);
+			dc.LineTo(m_rectGraph.right, y);
+			dc.SelectObject(oldPen);
+			pen.DeleteObject();
+		}
+   }
+}
+
+
+//
+// Draw trend line
+//
+
+void CGraph::DrawTrendLine(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize)
+{
+	if (!style->bShowTrend)
+		return;
+
+	CPen pen, *oldPen;
+   NXC_DCI_ROW *pRow;
+	DWORD i;
+
+   pRow = pData->pRows;
+   for(i = 0; (i < pData->dwNumRows) && (pRow->dwTimeStamp > m_dwTimeTo); i++)
+      inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+   if (i < pData->dwNumRows)
+   {
+		double scale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
+			               (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / (m_dCurrMaxValue - m_dCurrMinValue);
+
+		INT64 xSum = 0, ySum = 0, xxSum = 0, xySum = 0, count = 0;
+
+      for(; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
+      {
+         int x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
+			int y = (int)(m_nZeroLine - (double)ROW_DATA(pRow, pData->wDataType) * scale - 1);
+			
+			xSum += x;
+			ySum += y;
+			xySum += x * y;
+			xxSum += x * x;
+			count++;
+
+         inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+      }
+
+		if (count > 1)
+		{
+			double xx = (double)(xxSum * count - xSum * xSum);
+			double slope = ((xx != 0) ? ((double)(xySum * count - xSum * ySum) / xx) : 0);
+			double intercept = ((double)ySum - (double)xSum * slope) / (double)count;
+
+			int yStart = (int)(slope * (double)m_rectGraph.left + intercept);
+			int yEnd = (int)(slope * (double)m_rectGraph.right + intercept);
+
+			//theApp.DebugPrintf(_T("DrawTrendLine: count=%I64d yStart=%d yEnd=%d slope=%f intercept=%d"), count, yStart, yEnd, slope, intercept);
+
+			pen.CreatePen(PS_DOT, 1, style->rgbColor);
+//			pen.CreatePen(PS_SOLID, 10, style->rgbColor);
+			oldPen = dc.SelectObject(&pen);
+			dc.MoveTo(m_rectGraph.left, yStart);
+			dc.LineTo(m_rectGraph.right, yEnd);
+			dc.SelectObject(oldPen);
+			pen.DeleteObject();
+		}
+   }
+}
+
+
+//
+// Draw thresholds
+//
+
+void CGraph::DrawThresholds(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize)
+{
+	if (!style->bShowThresholds)
+		return;
+
 }
 
 
@@ -900,14 +1018,17 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 			switch(m_graphItemStyles[i].nType)
 			{
 				case GRAPH_TYPE_LINE:
-					DrawLineGraph(dc, m_pData[i], m_graphItemStyles[i].rgbColor, nGridSizeY);
+					DrawLineGraph(dc, m_pData[i], &m_graphItemStyles[i], nGridSizeY);
 					break;
 				case GRAPH_TYPE_AREA:
-					DrawAreaGraph(dc, m_pData[i], m_graphItemStyles[i].rgbColor, nGridSizeY);
+					DrawAreaGraph(dc, m_pData[i], &m_graphItemStyles[i], nGridSizeY);
 					break;
 				default:
 					break;
 			}
+
+			DrawAverage(dc, m_pData[i], &m_graphItemStyles[i], nGridSizeY);
+			DrawTrendLine(dc, m_pData[i], &m_graphItemStyles[i], nGridSizeY);
 		}
 	}
    dc.SelectClipRgn(NULL);

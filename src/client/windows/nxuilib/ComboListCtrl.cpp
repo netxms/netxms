@@ -94,7 +94,7 @@ CInPlaceCombo* CComboListCtrl::ShowInPlaceList(int iRowIndex, int iColumnIndex, 
 	iCount = (iCount < MAX_DROP_DOWN_ITEM_COUNT) ? 
 		iCount + MAX_DROP_DOWN_ITEM_COUNT : (MAX_DROP_DOWN_ITEM_COUNT + 1); 
 
-	//obCellRect.bottom += iHeight * iCount; 
+	obCellRect.bottom += iHeight * min(iCount, 10); 
 
 	// Create the in place combobox
 	CInPlaceCombo *pInPlaceCombo = CInPlaceCombo::GetInstance();

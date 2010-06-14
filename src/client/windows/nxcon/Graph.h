@@ -21,6 +21,8 @@
 #define GCS_CLASSIC			0
 #define GCS_LIGHT				1
 
+#define DEFAULT_LINE_WIDTH 2
+
 struct ZOOM_INFO
 {
    DWORD dwTimeFrom;
@@ -110,8 +112,11 @@ private:
 	DCIInfo **m_ppItems;
 	RECT m_rectGraph;
 	double m_dSecondsPerPixel;
-	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize);
-	void DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize);
+	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
+	void DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
+	void DrawAverage(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
+	void DrawTrendLine(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
+	void DrawThresholds(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
 	DWORD m_dwNumItems;
