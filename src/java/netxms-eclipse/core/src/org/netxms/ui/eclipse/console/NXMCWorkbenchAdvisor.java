@@ -30,6 +30,6 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	public void initialize(IWorkbenchConfigurer configurer)
 	{
 		super.initialize(configurer);
-		configurer.setSaveAndRestore(true);
+		configurer.setSaveAndRestore(Activator.getDefault().getPreferenceStore().getBoolean("SAVE_AND_RESTORE"));
 	}
 }

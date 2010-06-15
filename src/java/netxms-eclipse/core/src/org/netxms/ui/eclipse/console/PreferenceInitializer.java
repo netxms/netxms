@@ -37,5 +37,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("INITIAL_PERSPECTIVE", "org.netxms.ui.eclipse.console.DefaultPerspective");
 		ps.setDefault("SHOW_COOLBAR", true);
 		ps.setDefault("SHOW_TRAY_ICON", true);
+		ps.setDefault("SAVE_AND_RESTORE", true);
 	}
 }
