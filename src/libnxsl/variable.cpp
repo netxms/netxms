@@ -32,18 +32,21 @@ NXSL_Variable::NXSL_Variable(const TCHAR *pszName)
 {
    m_pszName = _tcsdup(pszName);
    m_pValue = new NXSL_Value;    // Create NULL value
+	m_isConstant = false;
 }
 
-NXSL_Variable::NXSL_Variable(const TCHAR *pszName, NXSL_Value *pValue)
+NXSL_Variable::NXSL_Variable(const TCHAR *pszName, NXSL_Value *pValue, bool constant)
 {
    m_pszName = _tcsdup(pszName);
    m_pValue = pValue;
+	m_isConstant = constant;
 }
 
 NXSL_Variable::NXSL_Variable(NXSL_Variable *pSrc)
 {
    m_pszName = _tcsdup(pSrc->m_pszName);
    m_pValue = new NXSL_Value(pSrc->m_pValue);
+	m_isConstant = pSrc->m_isConstant;
 }
 
 
@@ -73,10 +76,11 @@ void NXSL_Variable::setValue(NXSL_Value *pValue)
 // Variable system constructors
 //
 
-NXSL_VariableSystem::NXSL_VariableSystem()
+NXSL_VariableSystem::NXSL_VariableSystem(bool constant)
 {
    m_dwNumVariables = 0;
    m_ppVariableList = NULL;
+	m_isConstant = constant;
 }
 
 NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *pSrc)
@@ -87,6 +91,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *pSrc)
    m_ppVariableList = (NXSL_Variable **)malloc(sizeof(NXSL_Variable *) * m_dwNumVariables);
    for(i = 0; i < m_dwNumVariables; i++)
       m_ppVariableList[i] = new NXSL_Variable(pSrc->m_ppVariableList[i]);
+	m_isConstant = pSrc->m_isConstant;
 }
 
 
@@ -101,6 +106,25 @@ NXSL_VariableSystem::~NXSL_VariableSystem()
    for(i = 0; i < m_dwNumVariables; i++)
       delete m_ppVariableList[i];
    safe_free(m_ppVariableList);
+}
+
+
+//
+// Merge with another variable system
+//
+
+void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
+{
+	DWORD i;
+
+	for(i = 0; i < src->m_dwNumVariables; i++)
+	{
+		const TCHAR *name = src->m_ppVariableList[i]->getName();
+		if (find(name) == NULL)
+		{
+			create(name, new NXSL_Value(src->m_ppVariableList[i]->getValue()));
+		}
+	}
 }
 
 
@@ -127,7 +151,7 @@ NXSL_Variable *NXSL_VariableSystem::create(const TCHAR *pszName, NXSL_Value *pVa
 {
    NXSL_Variable *pVar;
 
-   pVar = (pValue == NULL) ? new NXSL_Variable(pszName) : new NXSL_Variable(pszName, pValue);
+	pVar = new NXSL_Variable(pszName, (pValue != NULL) ? pValue : new NXSL_Value, m_isConstant);
    m_ppVariableList = (NXSL_Variable **)realloc(m_ppVariableList, sizeof(NXSL_Variable *) * (m_dwNumVariables + 1));
    m_ppVariableList[m_dwNumVariables] = pVar;
    m_dwNumVariables++;

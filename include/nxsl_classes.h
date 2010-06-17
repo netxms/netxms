@@ -319,16 +319,18 @@ class LIBNXSL_EXPORTABLE NXSL_Variable
 protected:
    TCHAR *m_pszName;
    NXSL_Value *m_pValue;
+	bool m_isConstant;
 
 public:
    NXSL_Variable(const TCHAR *pszName);
-   NXSL_Variable(const TCHAR *pszName, NXSL_Value *pValue);
+   NXSL_Variable(const TCHAR *pszName, NXSL_Value *pValue, bool constant = false);
    NXSL_Variable(NXSL_Variable *pSrc);
    ~NXSL_Variable();
 
    const TCHAR *getName() { return m_pszName; }
    NXSL_Value *getValue() { return m_pValue; }
    void setValue(NXSL_Value *pValue);
+	bool isConstant() { return m_isConstant; }
 };
 
 
@@ -341,14 +343,17 @@ class LIBNXSL_EXPORTABLE NXSL_VariableSystem
 protected:
    DWORD m_dwNumVariables;
    NXSL_Variable **m_ppVariableList;
+	bool m_isConstant;
 
 public:
-   NXSL_VariableSystem();
+   NXSL_VariableSystem(bool constant = false);
    NXSL_VariableSystem(NXSL_VariableSystem *pSrc);
    ~NXSL_VariableSystem();
 
    NXSL_Variable *find(const TCHAR *pszName);
    NXSL_Variable *create(const TCHAR *pszName, NXSL_Value *pValue = NULL);
+	void merge(NXSL_VariableSystem *src);
+	bool isConstant() { return m_isConstant; }
 };
 
 
@@ -464,7 +469,7 @@ public:
 
    int run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
            NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
-           NXSL_VariableSystem **ppGlobals = NULL);
+           NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL);
 
    DWORD getCodeSize() { return m_dwCodeSize; }
 

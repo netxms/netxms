@@ -33,7 +33,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         24
+#define MAX_ERROR_NUMBER         25
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -87,7 +87,8 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Bad (or incompatible) object class"),
 	_T("Variable already exist"),
 	_T("Array index is not an integer"),
-	_T("Attempt to use array element access operation on non-array")
+	_T("Attempt to use array element access operation on non-array"),
+	_T("Cannot assign to a variable that is constant")
 };
 
 
@@ -149,8 +150,8 @@ NXSL_Program::NXSL_Program()
    m_pCodeStack = NULL;
    m_nErrorCode = 0;
    m_pszErrorText = NULL;
-   m_pConstants = new NXSL_VariableSystem;
-   m_pGlobals = new NXSL_VariableSystem;
+   m_pConstants = new NXSL_VariableSystem(true);
+   m_pGlobals = new NXSL_VariableSystem(false);
    m_pLocals = NULL;
    m_dwNumFunctions = 0;
    m_pFunctionList = NULL;
@@ -395,10 +396,11 @@ void NXSL_Program::error(int nError)
 //
 
 int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
-                      NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals)
+                      NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
+							 NXSL_VariableSystem *pConstants)
 {
    DWORD i, dwOrigCodeSize, dwOrigNumFn;
-   NXSL_VariableSystem *pSavedGlobals;
+   NXSL_VariableSystem *pSavedGlobals, *pSavedConstants = NULL;
    NXSL_Value *pValue;
    char szBuffer[32];
 
@@ -427,8 +429,13 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
       m_pLocals->create(szBuffer, argv[i]);
    }
 
-   // Preserve original global variables
+   // Preserve original global variables and constants
    pSavedGlobals = new NXSL_VariableSystem(m_pGlobals);
+	if (pConstants != NULL)
+	{
+		pSavedConstants = new NXSL_VariableSystem(m_pConstants);
+		m_pConstants->merge(pConstants);
+	}
 
    // Preload modules
    for(i = 0; i < m_dwNumPreloads; i++)
@@ -466,6 +473,13 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
 	else
 		*ppGlobals = m_pGlobals;
    m_pGlobals = pSavedGlobals;
+
+	// Restore constants
+	if (pSavedConstants != NULL)
+	{
+		delete m_pConstants;
+		m_pConstants = pSavedConstants;
+	}
 
    // Cleanup
    while((pValue = (NXSL_Value *)m_pDataStack->pop()) != NULL)
@@ -583,22 +597,29 @@ void NXSL_Program::execute()
          break;
       case OPCODE_SET:
          pVar = findOrCreateVariable(cp->m_operand.m_pszString);
-         pValue = (NXSL_Value *)m_pDataStack->peek();
-         if (pValue != NULL)
-         {
-				if (pValue->isArray())
+			if (!pVar->isConstant())
+			{
+				pValue = (NXSL_Value *)m_pDataStack->peek();
+				if (pValue != NULL)
 				{
-					pVar->setValue(new NXSL_Value(new NXSL_Array(pValue->getValueAsArray())));
+					if (pValue->isArray())
+					{
+						pVar->setValue(new NXSL_Value(new NXSL_Array(pValue->getValueAsArray())));
+					}
+					else
+					{
+						pVar->setValue(new NXSL_Value(pValue));
+					}
 				}
 				else
 				{
-					pVar->setValue(new NXSL_Value(pValue));
+					error(NXSL_ERR_DATA_STACK_UNDERFLOW);
 				}
-         }
-         else
-         {
-            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
-         }
+			}
+			else
+			{
+				error(NXSL_ERR_ASSIGNMENT_TO_CONSTANT);
+			}
          break;
 		case OPCODE_ARRAY:
          pVar = createVariable(cp->m_operand.m_pszString);
