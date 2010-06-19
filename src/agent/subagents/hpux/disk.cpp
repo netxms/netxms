@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for HP-UX
-** Copyright (C) 2006 Alex Kirhenshtein
+** Copyright (C) 2006-2010 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,16 +74,3 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.2  2007/09/27 09:20:41  alk
-DISK_* params fixed in all subagents
-
-Revision 1.1  2006/10/04 14:59:13  alk
-initial version of HPUX subagent
-
-
-*/

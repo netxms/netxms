@@ -48,6 +48,7 @@ include/nxlpapi.h -text
 src/agent/core/nxagentd.vcproj -text
 src/agent/core/push.cpp -text
 src/agent/subagents/ecs/ecs.vcproj -text
+src/agent/subagents/hpux/iostat.cpp -text
 src/agent/subagents/logwatch/logwatch.vcproj -text
 src/agent/subagents/odbcquery/odbcquery.vcproj -text
 src/agent/subagents/ping/ping.vcproj -text

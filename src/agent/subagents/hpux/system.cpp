@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for HP-UX
 ** Copyright (C) 2006 Alex Kirhenshtein
+** Copyright (C) 2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -180,7 +179,7 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 	int nRet = SYSINFO_RC_ERROR;
 	struct pst_dynamic info;
 
-	if(pstat_getdynamic(&info, sizeof(info), 0, 0) >= 0)
+	if (pstat_getdynamic(&info, sizeof(info), 0, 0) >= 0)
 	{
 		switch (pszParam[19])
 		{
@@ -229,7 +228,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	{
 		qwSwapTotal = 0;
 		qwSwapFree = 0;
-		for (i = 0; pstat_getswap(&pssw, sizeof(pssw), (size_t)1, i); i++)
+		for(i = 0; pstat_getswap(&pssw, sizeof(pssw), (size_t)1, i); i++)
 		{
 			/* I was unable to find any explanation what pss_swapchunk actually
 			 * means - in header file it's commented as "block size", but on
@@ -349,16 +348,13 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 
 LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue)
 {
-	struct pst_status *pst;
-	int nCount;
+	struct pst_dynamic pd;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	pst = GetProcessList(&nCount);
-	if (pst != NULL)
+	if (pstat_getdynamic(&pd, sizeof(struct pst_dynamic), 1, 0) == 1)
 	{
-		free(pst);
 		nRet = SYSINFO_RC_SUCCESS;
-		ret_int(pValue, nCount);
+		ret_int(pValue, (LONG)pd.psd_activeprocs);
 	}
 	return nRet;
 }
@@ -563,39 +559,3 @@ LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 
 	return SYSINFO_RC_SUCCESS;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.9  2006/10/30 18:24:04  victor
-Implemented System.ActiveUserSessions
-
-Revision 1.8  2006/10/27 10:00:51  victor
-- Changed compiler search order on HP-UX
-- Finished System.CPU.Usage on HP-UX
-- Fix in gen_uuid.c (uninitialized variable)
-
-Revision 1.7  2006/10/26 17:46:22  victor
-System.CPU.Usage almost complete
-
-Revision 1.6  2006/10/26 15:19:39  victor
-Fixed problems with Process.Count and System.ProcessCount on HP-UX 11.23
-
-Revision 1.5  2006/10/26 06:55:17  victor
-Minor changes
-
-Revision 1.4  2006/10/25 22:12:05  victor
-System.Memory.xxx seems to be working
-
-Revision 1.3  2006/10/25 16:13:37  victor
-Implemented Memory.xxx parameters
-
-Revision 1.2  2006/10/05 00:34:24  alk
-HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
-
-Revision 1.1  2006/10/04 14:59:14  alk
-initial version of HPUX subagent
-
-
-*/
