@@ -12,6 +12,7 @@ doc/manuals/netxms_solution_guide.doc -text
 doc/manuals/netxms_user_manual.odt -text
 doc/manuals/netxms_webapi_reference.odt -text
 doc/manuals/nxcp_reference.odt -text
+doc/misc/agent_parameters.xlsx -text
 images/cluster.ico -text
 images/cluster.png -text
 images/condition.ico -text
