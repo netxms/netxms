@@ -99,7 +99,7 @@ public abstract class ObjectTab
 	 * @param object Object to test
 	 * @return Should return true if tab must be shown for given object
 	 */
-	public boolean showForObject(GenericObject object)
+	public boolean showForObject(final GenericObject object)
 	{
 		return true;
 	}

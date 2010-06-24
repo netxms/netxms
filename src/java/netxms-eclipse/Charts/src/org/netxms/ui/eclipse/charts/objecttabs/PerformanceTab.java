@@ -52,17 +52,7 @@ public class PerformanceTab extends ObjectTab
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
 	 */
 	@Override
-	public void objectChanged(GenericObject object)
-	{
-		update(object);
-	}
-	
-	/**
-	 * Update tab with object's data
-	 * 
-	 * @param object New object
-	 */
-	private void update(final GenericObject object)
+	public void objectChanged(final GenericObject object)
 	{
 		Job job = new Job("Update performance tab") {
 			@Override
@@ -78,7 +68,7 @@ public class PerformanceTab extends ObjectTab
 						{
 							if (PerformanceTab.this.getObject().getObjectId() == object.getObjectId())
 							{
-								
+								update(items);
 							}
 							return Status.OK_STATUS;
 						}
@@ -92,5 +82,17 @@ public class PerformanceTab extends ObjectTab
 		};
 		job.setSystem(true);
 		job.schedule();
+	}
+	
+	/**
+	 * Update tab with received DCIs
+	 * 
+	 * @param items Performance tab items
+	 */
+	private void update(final PerfTabDci[] items)
+	{
+		for(int i = 0; i < items.length; i++)
+		{
+		}
 	}
 }

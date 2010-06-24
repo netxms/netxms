@@ -339,6 +339,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/PerfTabGraphSettings.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowHistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/objecttabs/PerformanceTab.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/objecttabs/internal/PerfTabGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/propertypages/PerfTab.java -text

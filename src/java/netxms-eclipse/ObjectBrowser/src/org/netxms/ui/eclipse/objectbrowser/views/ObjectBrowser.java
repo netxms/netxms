@@ -32,16 +32,6 @@ public class ObjectBrowser extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.view.navigation.objectbrowser"; //$NON-NLS-1$
 	
 	private ObjectTree objectTree;
-
-	
-	/**
-	 * 
-	 */
-	public ObjectBrowser()
-	{
-		super();
-	}
-
 	
 	/**
 	 * Create popup menu for object browser

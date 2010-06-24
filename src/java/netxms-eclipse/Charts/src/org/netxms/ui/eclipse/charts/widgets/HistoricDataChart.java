@@ -277,7 +277,7 @@ public class HistoricDataChart extends Chart
 	 * @param xSeries X axis data
 	 * @param ySeries Y axis data
 	 */
-	public void addLineSeries(int index, String description, Date[] xSeries, double[] ySeries)
+	public ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries)
 	{
 		ISeriesSet seriesSet = getSeriesSet();
 		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, description);
@@ -289,6 +289,8 @@ public class HistoricDataChart extends Chart
 		
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
+		
+		return series;
 	}
 	
 	/**

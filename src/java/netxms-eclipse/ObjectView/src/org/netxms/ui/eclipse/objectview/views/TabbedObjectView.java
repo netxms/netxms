@@ -161,6 +161,7 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
+		selectionService.removeSelectionListener(selectionListener);
 		for(final ObjectTab tab : tabs)
 		{
 			tab.dispose();
