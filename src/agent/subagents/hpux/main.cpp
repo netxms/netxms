@@ -40,6 +40,7 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
+	StartIOStatCollector();
 	return TRUE;
 }
 
@@ -51,6 +52,7 @@ static BOOL SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
 	ShutdownCpuUsageCollector();
+	ShutdownIOStatCollector();
 }
 
 
@@ -64,19 +66,34 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
 	{ "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
-		DCI_DT_UINT64,	DCIDESC_DISK_AVAIL },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,
-		DCI_DT_FLOAT,	DCIDESC_DISK_AVAILPERC },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
-		DCI_DT_UINT64,	DCIDESC_DISK_FREE },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,
-		DCI_DT_FLOAT,	DCIDESC_DISK_FREEPERC },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
-		DCI_DT_UINT64,	DCIDESC_DISK_TOTAL },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
-		DCI_DT_UINT64,	DCIDESC_DISK_USED },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
-		DCI_DT_FLOAT,	DCIDESC_DISK_USEDPERC },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+
+	{ "FileSystem.Avail(*)",          H_DiskInfo,        (char *)DISK_AVAIL,
+		DCI_DT_UINT64,	DCIDESC_FS_AVAIL },
+	{ "FileSystem.AvailPerc(*)",      H_DiskInfo,        (char *)DISK_AVAIL_PERC,
+		DCI_DT_FLOAT,	DCIDESC_FS_AVAILPERC },
+	{ "FileSystem.Free(*)",           H_DiskInfo,        (char *)DISK_FREE,
+		DCI_DT_UINT64,	DCIDESC_FS_FREE },
+	{ "FileSystem.FreePerc(*)",       H_DiskInfo,        (char *)DISK_FREE_PERC,
+		DCI_DT_FLOAT,	DCIDESC_FS_FREEPERC },
+	{ "FileSystem.Total(*)",          H_DiskInfo,        (char *)DISK_TOTAL,
+		DCI_DT_UINT64,	DCIDESC_FS_TOTAL },
+	{ "FileSystem.Used(*)",           H_DiskInfo,        (char *)DISK_USED,
+		DCI_DT_UINT64,	DCIDESC_FS_USED },
+	{ "FileSystem.UsedPerc(*)",       H_DiskInfo,        (char *)DISK_USED_PERC,
+		DCI_DT_FLOAT,	DCIDESC_FS_USEDPERC },
 
 	{ "Net.Interface.AdminStatus(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_ADMIN_STATUS,
 		DCI_DT_INT,		DCIDESC_NET_INTERFACE_ADMINSTATUS },
@@ -120,6 +137,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15 },
 	{ "System.Hostname",              H_Hostname,        NULL,
 		DCI_DT_STRING,	DCIDESC_SYSTEM_HOSTNAME },
+	{ "System.IO.ReadRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
+	{ "System.IO.ReadRate(*)", H_IOStats, (const char *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
+	{ "System.IO.WriteRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
+	{ "System.IO.WriteRate(*)", H_IOStats, (const char *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
+	{ "System.IO.TransferRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_XFERS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_XFERS },
+	{ "System.IO.TransferRate(*)", H_IOStats, (const char *)IOSTAT_NUM_XFERS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_XFERS_EX },
+	{ "System.IO.BytesReadRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
+	{ "System.IO.BytesReadRate(*)", H_IOStats, (const char *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
+	{ "System.IO.BytesWriteRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
+	{ "System.IO.BytesWriteRate(*)", H_IOStats, (const char *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
+	{ "System.IO.DiskQueue", H_IOStatsTotal, (const char *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
+	{ "System.IO.DiskQueue(*)", H_IOStats, (const char *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
+
 	{ "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
 		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
 	{ "System.Memory.Physical.FreePerc", H_MemoryInfo,   (char *)PHYSICAL_FREE_PCT,

@@ -284,6 +284,8 @@
 #define DCIDESC_SYSTEM_IO_READS_EX                "Average number of read operations on device {instance} for last minute"
 #define DCIDESC_SYSTEM_IO_WRITES                  "Average number of write operations for last minute"
 #define DCIDESC_SYSTEM_IO_WRITES_EX               "Average number of write operations on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_XFERS                   "Average number of I/O transfers for last minute"
+#define DCIDESC_SYSTEM_IO_XFERS_EX                "Average number of I/O transfers on device {instance} for last minute"
 #define DCIDESC_SYSTEM_IO_BYTEREADS               "Average number of bytes read for last minute"
 #define DCIDESC_SYSTEM_IO_BYTEREADS_EX            "Average number of bytes read on device {instance} for last minute"
 #define DCIDESC_SYSTEM_IO_BYTEWRITES              "Average number of bytes written for last minute"

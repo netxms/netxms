@@ -69,6 +69,20 @@ enum
 
 
 //
+// I/O stats request types
+//
+
+#define IOSTAT_NUM_READS      0
+#define IOSTAT_NUM_WRITES     1
+#define IOSTAT_NUM_RBYTES     2
+#define IOSTAT_NUM_WBYTES     3
+#define IOSTAT_IO_TIME        4
+#define IOSTAT_QUEUE          5
+#define IOSTAT_NUM_XFERS      6
+#define IOSTAT_WAIT_TIME      7
+
+
+//
 // Process list entry structure
 //
 
@@ -80,6 +94,17 @@ typedef struct t_ProcEnt
 
 
 //
+// Functions
+//
+
+void StartIOStatCollector();
+void ShutdownIOStatCollector();
+
+LONG H_IOStats(const char *cmd, const char *arg, char *value);
+LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value);
+
+
+//
 // Global variables
 //
 
@@ -87,10 +112,3 @@ extern BOOL g_bShutdown;
 
 
 #endif
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/
