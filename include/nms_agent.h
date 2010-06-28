@@ -113,30 +113,30 @@
 // Descriptions for common parameters
 //
 
-#define DCIDESC_DISK_AVAIL			"Available disk space on {instance}"
-#define DCIDESC_DISK_AVAILPERC			"Percentage of available disk space on {instance}"
-#define DCIDESC_DISK_FREE			"Free disk space on {instance}"
-#define DCIDESC_DISK_FREEPERC			"Percentage of free disk space on {instance}"
-#define DCIDESC_DISK_TOTAL			"Total disk space on {instance}"
-#define DCIDESC_DISK_USED			"Used disk space on {instance}"
-#define DCIDESC_DISK_USEDPERC			"Percentage of used disk space on {instance}"
-#define DCIDESC_NET_INTERFACE_ADMINSTATUS	"Administrative status of interface {instance}"
-#define DCIDESC_NET_INTERFACE_BYTESIN		"Number of input bytes on interface {instance}"
-#define DCIDESC_NET_INTERFACE_BYTESOUT		"Number of output bytes on interface {instance}"
-#define DCIDESC_NET_INTERFACE_DESCRIPTION	"Description of interface {instance}"
-#define DCIDESC_NET_INTERFACE_INERRORS		"Number of input errors on interface {instance}"
-#define DCIDESC_NET_INTERFACE_LINK		"Link status for interface {instance}"
-#define DCIDESC_NET_INTERFACE_OUTERRORS		"Number of output errors on interface {instance}"
-#define DCIDESC_NET_INTERFACE_PACKETSIN		"Number of input packets on interface {instance}"
-#define DCIDESC_NET_INTERFACE_PACKETSOUT	"Number of output packets on interface {instance}"
-#define DCIDESC_NET_INTERFACE_SPEED		"Speed of interface {instance}"
-#define DCIDESC_NET_IP_FORWARDING		"IP forwarding status"
-#define DCIDESC_NET_IP6_FORWARDING		"IPv6 forwarding status"
-#define DCIDESC_PHYSICALDISK_FIRMWARE		"Firmware version of hard disk {instance}"
-#define DCIDESC_PHYSICALDISK_MODEL		"Model of hard disk {instance}"
-#define DCIDESC_PHYSICALDISK_SERIALNUMBER	"Serial number of hard disk {instance}"
-#define DCIDESC_PHYSICALDISK_SMARTATTR		""
-#define DCIDESC_PHYSICALDISK_SMARTSTATUS	"Status of hard disk {instance} reported by SMART"
+#define DCIDESC_FS_AVAIL                          "Available space on file system {instance}"
+#define DCIDESC_FS_AVAILPERC                      "Percentage of available space on file system {instance}"
+#define DCIDESC_FS_FREE                           "Free space on file system {instance}"
+#define DCIDESC_FS_FREEPERC                       "Percentage of free space on file system {instance}"
+#define DCIDESC_FS_TOTAL                          "Total space on file system {instance}"
+#define DCIDESC_FS_USED                           "Used space on file system {instance}"
+#define DCIDESC_FS_USEDPERC                       "Percentage of used space on file system {instance}"
+#define DCIDESC_NET_INTERFACE_ADMINSTATUS         "Administrative status of interface {instance}"
+#define DCIDESC_NET_INTERFACE_BYTESIN             "Number of input bytes on interface {instance}"
+#define DCIDESC_NET_INTERFACE_BYTESOUT            "Number of output bytes on interface {instance}"
+#define DCIDESC_NET_INTERFACE_DESCRIPTION         "Description of interface {instance}"
+#define DCIDESC_NET_INTERFACE_INERRORS            "Number of input errors on interface {instance}"
+#define DCIDESC_NET_INTERFACE_LINK                "Link status for interface {instance}"
+#define DCIDESC_NET_INTERFACE_OUTERRORS           "Number of output errors on interface {instance}"
+#define DCIDESC_NET_INTERFACE_PACKETSIN           "Number of input packets on interface {instance}"
+#define DCIDESC_NET_INTERFACE_PACKETSOUT          "Number of output packets on interface {instance}"
+#define DCIDESC_NET_INTERFACE_SPEED               "Speed of interface {instance}"
+#define DCIDESC_NET_IP_FORWARDING                 "IP forwarding status"
+#define DCIDESC_NET_IP6_FORWARDING                "IPv6 forwarding status"
+#define DCIDESC_PHYSICALDISK_FIRMWARE             "Firmware version of hard disk {instance}"
+#define DCIDESC_PHYSICALDISK_MODEL                "Model of hard disk {instance}"
+#define DCIDESC_PHYSICALDISK_SERIALNUMBER         "Serial number of hard disk {instance}"
+#define DCIDESC_PHYSICALDISK_SMARTATTR            ""
+#define DCIDESC_PHYSICALDISK_SMARTSTATUS          "Status of hard disk {instance} reported by SMART"
 #define DCIDESC_PHYSICALDISK_TEMPERATURE          "Temperature of hard disk {instance}"
 #define DCIDESC_SYSTEM_CPU_COUNT                  "Number of CPU in the system"
 #define DCIDESC_SYSTEM_HOSTNAME                   "Host name"
@@ -212,12 +212,12 @@
 #define DCIDESC_SYSTEM_CPU_LOADAVG15              "Average CPU load for last 15 minutes"
 
 
-#define DCIDESC_SYSTEM_CPU_USAGE_EX		"Average CPU {instance} utilization for last minute"
-#define DCIDESC_SYSTEM_CPU_USAGE5_EX		"Average CPU {instance} utilization for last 5 minutes"
-#define DCIDESC_SYSTEM_CPU_USAGE15_EX		"Average CPU {instance} utilization for last 15 minutes"
-#define DCIDESC_SYSTEM_CPU_USAGE		"Average CPU utilization for last minute"
-#define DCIDESC_SYSTEM_CPU_USAGE5		"Average CPU utilization for last 5 minutes"
-#define DCIDESC_SYSTEM_CPU_USAGE15		"Average CPU utilization for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_EX               "Average CPU {instance} utilization for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_EX              "Average CPU {instance} utilization for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_EX             "Average CPU {instance} utilization for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE                  "Average CPU utilization for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5                 "Average CPU utilization for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15                "Average CPU utilization for last 15 minutes"
 
 #define DCIDESC_SYSTEM_CPU_USAGE_USER_EX		"Average CPU {instance} utilization (user) for last minute"
 #define DCIDESC_SYSTEM_CPU_USAGE5_USER_EX		"Average CPU {instance} utilization (user) for last 5 minutes"
@@ -276,18 +276,21 @@
 #define DCIDESC_SYSTEM_CPU_USAGE15_STEAL		"Average CPU utilization (steal) for last 15 minutes"
 
 
-#define DCIDESC_SYSTEM_IO_DISKQUEUE       "Average disk queue length for last minute"
-#define DCIDESC_SYSTEM_IO_DISKQUEUE_EX    "Average disk queue length of device {instance} for last minute"
-#define DCIDESC_SYSTEM_IO_DISKTIME        "Percent of CPU time spent on I/O for last minute"
-#define DCIDESC_SYSTEM_IO_DISKTIME_EX     "Percent of CPU time spent on I/O on device {instance} for last minute"
-#define DCIDESC_SYSTEM_IO_READS           "Average number of read operations for last minute"
-#define DCIDESC_SYSTEM_IO_READS_EX        "Average number of read operations on device {instance} for last minute"
-#define DCIDESC_SYSTEM_IO_WRITES          "Average number of write operations for last minute"
-#define DCIDESC_SYSTEM_IO_WRITES_EX       "Average number of write operations on device {instance} for last minute"
-#define DCIDESC_SYSTEM_IO_BYTEREADS       "Average number of bytes read for last minute"
-#define DCIDESC_SYSTEM_IO_BYTEREADS_EX    "Average number of bytes read on device {instance} for last minute"
-#define DCIDESC_SYSTEM_IO_BYTEWRITES      "Average number of bytes written for last minute"
-#define DCIDESC_SYSTEM_IO_BYTEWRITES_EX   "Average number of bytes written on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_DISKQUEUE               "Average disk queue length for last minute"
+#define DCIDESC_SYSTEM_IO_DISKQUEUE_EX            "Average disk queue length of device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_DISKTIME                "Percent of CPU time spent on I/O for last minute"
+#define DCIDESC_SYSTEM_IO_DISKTIME_EX             "Percent of CPU time spent on I/O on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_READS                   "Average number of read operations for last minute"
+#define DCIDESC_SYSTEM_IO_READS_EX                "Average number of read operations on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_WRITES                  "Average number of write operations for last minute"
+#define DCIDESC_SYSTEM_IO_WRITES_EX               "Average number of write operations on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_BYTEREADS               "Average number of bytes read for last minute"
+#define DCIDESC_SYSTEM_IO_BYTEREADS_EX            "Average number of bytes read on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_BYTEWRITES              "Average number of bytes written for last minute"
+#define DCIDESC_SYSTEM_IO_BYTEWRITES_EX           "Average number of bytes written on device {instance} for last minute"
+
+
+#define DCIDESC_DEPRECATED                        "<deprecated>"
 
 
 //
@@ -299,7 +302,7 @@ typedef struct
    TCHAR szName[MAX_PARAM_NAME];
    LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *);
    const TCHAR *pArg;
-   int iDataType;
+   int iDataType;		// Use DT_DEPRECATED to indicate deprecated parameter
    TCHAR szDescription[MAX_DB_STRING];
 } NETXMS_SUBAGENT_PARAM;
 

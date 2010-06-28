@@ -841,6 +841,7 @@ typedef struct tagICMPHDR
 #define DCI_DT_STRING      4
 #define DCI_DT_FLOAT       5
 #define DCI_DT_NULL        6
+#define DCI_DT_DEPRECATED  255	/* used internally by agent */
 
 
 //

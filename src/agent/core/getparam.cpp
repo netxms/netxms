@@ -184,11 +184,16 @@ static LONG H_EnumList(const char *cmd, const char *arg, StringList *value)
 static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 {
 #ifdef _WIN32
-   { "Disk.Free(*)", H_DiskInfo, (char *)DISKINFO_FREE_BYTES, DCI_DT_UINT64, DCIDESC_DISK_FREE },
-   { "Disk.FreePerc(*)", H_DiskInfo, (char *)DISKINFO_FREE_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_DISK_FREEPERC },
-   { "Disk.Total(*)", H_DiskInfo, (char *)DISKINFO_TOTAL_BYTES, DCI_DT_UINT64, DCIDESC_DISK_TOTAL },
-   { "Disk.Used(*)", H_DiskInfo, (char *)DISKINFO_USED_BYTES, DCI_DT_UINT64, DCIDESC_DISK_USED },
-   { "Disk.UsedPerc(*)", H_DiskInfo, (char *)DISKINFO_USED_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_DISK_USEDPERC },
+   { "Disk.Free(*)", H_DiskInfo, (char *)DISKINFO_FREE_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.FreePerc(*)", H_DiskInfo, (char *)DISKINFO_FREE_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.Total(*)", H_DiskInfo, (char *)DISKINFO_TOTAL_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.Used(*)", H_DiskInfo, (char *)DISKINFO_USED_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.UsedPerc(*)", H_DiskInfo, (char *)DISKINFO_USED_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "FileSystem.Free(*)", H_DiskInfo, (char *)DISKINFO_FREE_BYTES, DCI_DT_UINT64, DCIDESC_FS_FREE },
+   { "FileSystem.FreePerc(*)", H_DiskInfo, (char *)DISKINFO_FREE_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
+   { "FileSystem.Total(*)", H_DiskInfo, (char *)DISKINFO_TOTAL_BYTES, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
+   { "FileSystem.Used(*)", H_DiskInfo, (char *)DISKINFO_USED_BYTES, DCI_DT_UINT64, DCIDESC_FS_USED },
+   { "FileSystem.UsedPerc(*)", H_DiskInfo, (char *)DISKINFO_USED_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
    { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
    { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NETINFO_IF_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
    { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NETINFO_IF_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
@@ -270,7 +275,7 @@ static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
 // Initialize dynamic parameters list from default static list
 //
 
-BOOL InitParameterList(void)
+BOOL InitParameterList()
 {
    if ((m_pParamList != NULL) || (m_pEnumList != NULL))
       return FALSE;
@@ -520,16 +525,19 @@ DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, StringList *pValue)
 void GetParameterList(CSCPMessage *pMsg)
 {
    int i;
-   DWORD dwId;
+   DWORD dwId, count;
 
 	// Parameters
-   pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)m_iNumParams);
-   for(i = 0, dwId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
+   for(i = 0, count = 0, dwId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
    {
-      pMsg->SetVariable(dwId++, m_pParamList[i].szName);
-      pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
-      pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
+		if (m_pParamList[i].iDataType != DCI_DT_DEPRECATED)
+		{
+			pMsg->SetVariable(dwId++, m_pParamList[i].szName);
+			pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
+			pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
+		}
    }
+   pMsg->SetVariable(VID_NUM_PARAMETERS, count);
 
 	// Push parameters
    pMsg->SetVariable(VID_NUM_PUSH_PARAMETERS, (DWORD)m_iNumPushParams);
