@@ -290,6 +290,7 @@
 #define DCIDESC_SYSTEM_IO_BYTEREADS_EX            "Average number of bytes read on device {instance} for last minute"
 #define DCIDESC_SYSTEM_IO_BYTEWRITES              "Average number of bytes written for last minute"
 #define DCIDESC_SYSTEM_IO_BYTEWRITES_EX           "Average number of bytes written on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_OPENFILES               "Number of open files"
 
 
 #define DCIDESC_DEPRECATED                        "<deprecated>"
