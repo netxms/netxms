@@ -1037,6 +1037,15 @@ fi
 
 
 #--------------------------------------------------------------------
+# HP-UX specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xHP-UX"; then
+	AC_CHECK_HEADERS([mib.h],,,[[ ]])
+fi
+
+
+#--------------------------------------------------------------------
 # *BSD specific checks
 #--------------------------------------------------------------------
 
@@ -1112,6 +1121,7 @@ AC_CHECK_TYPES([wchar_t, wint_t],,,[
 ])
 AC_CHECK_SIZEOF(wchar_t)
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper wcserror wcserror_r])
+AC_CHECK_FUNCS([wfopen wopen wstat wgetenv wrename wunlink])
 AC_CHECK_FUNCS([wfopen wopen wstat wgetenv wrename wunlink])
 
 if test "x$DISABLE_ICONV" != "xyes"; then

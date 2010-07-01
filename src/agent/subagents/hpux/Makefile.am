@@ -19,6 +19,7 @@ INCLUDES=-I@top_srcdir@/include
 lib_LTLIBRARIES = libnsm_hpux.la
 libnsm_hpux_la_SOURCES = disk.cpp iostat.cpp main.cpp net.cpp system.cpp
 libnsm_hpux_la_CPPFLAGS = -D_PSTAT64
-libnsm_hpux_la_LDFLAGS = ../../../libnetxms/libnetxms.la
+libnsm_hpux_la_LIBADD = ../../../libnetxms/libnetxms.la -lnm
+libnsm_hpux_la_LDFLAGS = -lnm
 
 EXTRA_DIST = disk.h hpux.h net.h system.h

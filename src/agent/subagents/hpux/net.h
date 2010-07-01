@@ -38,9 +38,9 @@ enum
 };
 
 
-LONG H_NetIfInfoFromIOCTL(const char *, const char *, char *);
-LONG H_NetIfInfoFromProc(const char *, const char *, char *);
+LONG H_NetIfInfo(const char *, const char *, char *);
 LONG H_NetIpForwarding(const char *, const char *, char *);
+
 LONG H_NetArpCache(const char *, const char *, StringList *);
 LONG H_NetRoutingTable(const char *, const char *, StringList *);
 LONG H_NetIfList(const char *, const char *, StringList *);

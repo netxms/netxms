@@ -171,6 +171,25 @@ LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pV
 
 
 //
+// Handler for System.IO.OpenFiles parameter
+//
+
+LONG H_OpenFiles(const char *pszParam, const char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	struct pst_dynamic info;
+
+	if (pstat_getdynamic(&info, sizeof(info), 0, 0) >= 0)
+	{
+		ret_int(pValue, (int)info.psd_activefiles);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+	return nRet;
+}
+
+
+//
 // Handler for System.CPU.LoadAvg parameter
 //
 

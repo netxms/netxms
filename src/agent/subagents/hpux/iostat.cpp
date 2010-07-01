@@ -224,6 +224,24 @@ static QWORD CalculateAverage64(QWORD *series)
 
 
 //
+// Calculate average wait time
+//
+
+static DWORD CalculateAverageTime(QWORD *opcount, QWORD *times)
+{
+	QWORD totalOps = 0;
+	QWORD totalTime = 0;
+
+	for(int i = 0; i < SAMPLE_COUNT; i++)
+	{
+		totalOps += opcount[i];
+		totalTime += times[i];
+	}
+	return (DWORD)(totalTime / totalOps);
+}
+
+
+//
 // Get total I/O stat value
 //
 
@@ -251,6 +269,9 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
 			break;
 		case IOSTAT_NUM_WBYTES:
 			ret_uint64(value, CalculateAverage64(s_total.bytesWritten));
+			break;
+		case IOSTAT_WAIT_TIME:
+			ret_uint(value, CalculateAverageTime(s_total.transfers, s_total.waitTime));
 			break;
 		default:
 			rc = SYSINFO_RC_UNSUPPORTED;
@@ -309,6 +330,9 @@ LONG H_IOStats(const char *cmd, const char *arg, char *value)
 			break;
 		case IOSTAT_NUM_WBYTES:
 			ret_uint64(value, CalculateAverage64(s_devices[i].bytesWritten));
+			break;
+		case IOSTAT_WAIT_TIME:
+			ret_uint(value, CalculateAverageTime(s_devices[i].transfers, s_devices[i].waitTime));
 			break;
 		default:
 			rc = SYSINFO_RC_UNSUPPORTED;

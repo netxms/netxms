@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for HP-UX
-** Copyright (C) 2006 Alex Kirhenshtein
+** Copyright (C) 2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,65 +20,284 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-
-#include <stdio.h>
-#include <sys/ioctl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <net/if.h>
+#include <net/if_types.h>
+
+extern "C" {
+#include <sys/mib.h>
+}
 
 #include "net.h"
 
-#define SA_LEN(addr) (sizeof (struct sockaddr))
 
-static char *if_index2name(int fd, int index)
+//
+// Internal interface representation
+//
+
+#define MAX_IPADDR_COUNT        256
+
+struct IPADDR
 {
+	DWORD addr;
+	DWORD mask;
+};
+
+struct NETIF
+{
+	char device[MAX_PHYSADDR_LEN];
+	int ppa;
+	int ifIndex;
+	char ifName[MAX_NAME_LENGTH];
+	int ifType;
+	BYTE macAddr[MAX_PHYSADDR_LEN];
+	int ipAddrCount;
+	IPADDR ipAddrList[MAX_IPADDR_COUNT];
+};
+
+
+//
+// Find interface name by interface index
+//
+
+static char *IfIndexToName(int index, char *buffer)
+{
+	int fd;
+	struct ifreq ifr;
 	char *ret = NULL;
-	struct ifreq ifr;
 
-	ifr.ifr_index = index;
-	if (ioctl (fd, SIOCGIFNAME, &ifr) == 0)
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd != -1)
 	{
-		ret = strdup(ifr.ifr_name);
+		ifr.ifr_index = index;
+		if (ioctl(fd, SIOCGIFNAME, &ifr) == 0)
+		{
+			strcpy(buffer, ifr.ifr_name);
+			ret = buffer;
+		}
+		close(fd);
 	}
 
 	return ret;
 }
 
-static int if_name2index(int fd, char *name)
-{
-	int ret = 0;
-	struct ifreq ifr;
 
-	nx_strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
-	if (ioctl (fd, SIOCGIFINDEX, &ifr) == 0)
+//
+// Get interface list
+//
+
+static int GetInterfaceList(NETIF **iflist)
+{
+	nmapi_iftable ift[1024];
+	unsigned int size;
+	int i, mib, ifcount;
+	NETIF *curr;
+
+	size = sizeof(ift);
+	if (get_if_table(ift, &size) != 0)
+		return -1;
+
+	ifcount = size / sizeof(nmapi_iftable);
+	*iflist = (NETIF *)malloc(ifcount * sizeof(NETIF));
+	memset(*iflist, 0, ifcount * sizeof(NETIF));
+
+	for(i = 0; i < ifcount; i++)
 	{
-		ret = ifr.ifr_index;
+		mib = open_mib(ift[i].nm_device, O_RDWR, ift[i].nm_ppanum, 0);
+		if (mib >= 0)
+		{
+			struct nmparms np;
+			mib_ifEntry iface;
+			unsigned int ifeSize = sizeof(mib_ifEntry);
+
+			np.objid = ID_ifEntry;
+			np.buffer = &iface;
+			np.len = &ifeSize;
+			iface.ifIndex = ift[i].nm_ifindex;
+			if (get_mib_info(mib, &np) == 0)
+			{
+				curr = *iflist + i;
+				strcpy(curr->device, ift[i].nm_device);
+				curr->ppa = ift[i].nm_ppanum;
+				curr->ifIndex = iface.ifIndex;
+				curr->ifType = iface.ifType;
+				memcpy(curr->macAddr, iface.ifPhysAddress.o_bytes, iface.ifPhysAddress.o_length);
+				IfIndexToName(iface.ifIndex, curr->ifName);
+			}
+			close_mib(mib);
+		}
 	}
 
-	return ret;
+	// Remove loopback and unplumbed interfaces
+	for(i = 0; i < ifcount; i++)
+	{
+		if (((*iflist)[i].ifType == IFT_LOOP) ||	// loopback
+		    ((*iflist)[i].ifName[0] == 0))		      // unplumbed
+		{
+			ifcount--;
+			memmove(*iflist + i, *iflist + i + 1, (ifcount - i) * sizeof(NETIF));
+			i--;
+		}
+	}
+
+	// Get IP addresses
+	mib = open_mib("/dev/ip", O_RDWR, 0, 0);
+	if (mib >= 0)
+	{
+		struct nmparms np;
+		unsigned int addrCount;
+		unsigned int bufSize = sizeof(unsigned int);
+
+		np.objid = ID_ipAddrNumEnt;
+		np.buffer = &addrCount;
+		np.len = &bufSize;
+		if (get_mib_info(mib, &np) == 0)
+		{
+			bufSize = addrCount * sizeof(mib_ipAdEnt);
+			mib_ipAdEnt *ipList = (mib_ipAdEnt *)malloc(bufSize);
+			memset(ipList, 0, bufSize);
+			np.objid = ID_ipAddrTable;
+			np.buffer = ipList;
+			np.len = &bufSize;
+			if (get_mib_info(mib, &np) == 0)
+			{
+				for(i = 0; i < (int)addrCount; i++)
+				{
+					if (ipList[i].Addr != 0)
+					{
+						for(int j = 0; j < ifcount; j++)
+						{
+							if (((*iflist)[j].ifIndex == ipList[i].IfIndex) && ((*iflist)[j].ipAddrCount < MAX_IPADDR_COUNT))
+							{
+								int pos = (*iflist)[j].ipAddrCount++;
+								(*iflist)[j].ipAddrList[pos].addr = ipList[i].Addr;
+								(*iflist)[j].ipAddrList[pos].mask = ipList[i].NetMask;
+								break;
+							}
+						}
+					}
+				}
+			}
+			free(ipList);
+		}
+		close_mib(mib);
+	}
+
+	return ifcount;
 }
 
-LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
+
+//
+// Handler for Net.InterfaceList enum
+//
+
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 {
-	int nVer = CAST_FROM_POINTER(pArg, int);
-	int nRet = SYSINFO_RC_ERROR;
+	int i, j, ifCount;
+	NETIF *ifList;
+	char macAddr[16], ipAddr[32], buffer[256];
 
-	// TODO
+	ifCount = GetInterfaceList(&ifList);
+	if (ifCount == -1)
+		return SYSINFO_RC_ERROR;
 
-	return nRet;
+	for(i = 0; i < ifCount; i++)
+	{
+		BinToStr(ifList[i].macAddr, 6, macAddr);
+		if (ifList[i].ipAddrCount == 0)
+		{
+			snprintf(buffer, 256, "%d 0.0.0.0/0 %d %s %s", ifList[i].ifIndex, ifList[i].ifType, macAddr, ifList[i].ifName);
+			pValue->add(buffer);
+		}
+		else
+		{
+			snprintf(buffer, 256, "%d %s/%d %d %s %s", ifList[i].ifIndex, IpToStr(ifList[i].ipAddrList[0].addr, ipAddr),
+			         BitsInMask(ifList[i].ipAddrList[0].mask), ifList[i].ifType, macAddr, ifList[i].ifName);
+			pValue->add(buffer);
+
+			for(j = 1; j < ifList[i].ipAddrCount; j++)
+			{
+				snprintf(buffer, 256, "%d %s/%d %d %s %s:%d", ifList[i].ifIndex, IpToStr(ifList[i].ipAddrList[j].addr, ipAddr),
+				         BitsInMask(ifList[i].ipAddrList[j].mask), ifList[i].ifType, macAddr, ifList[i].ifName, j);
+				pValue->add(buffer);
+			}
+		}
+	}
+	free(ifList);
+	return SYSINFO_RC_SUCCESS;
 }
+
+
+//
+// Handler for Net.ArpCache enum
+//
 
 LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
+	int i, mib;
+	struct nmparms np;
+	mib_ipNetToMediaEnt arpCache[8192];
+	unsigned int size, count;
+	char buffer[256], mac[MAX_PHYSADDR_LEN * 2 + 1], ip[32];
+	LONG nRet = SYSINFO_RC_ERROR;
 
-	// TODO
+	mib = open_mib("/dev/ip", O_RDWR, 0, 0);
+	if (mib >= 0)
+	{
+		size = sizeof(arpCache);
+		np.objid = ID_ipNetToMediaTable;
+		np.buffer = arpCache;
+		np.len = &size;
+		if (get_mib_info(mib, &np) == 0)
+		{
+			count = size / sizeof(mib_AtEntry);
+			for(i = 0; i < count; i++)
+			{
+				if (((arpCache[i].Type == INTM_DYNAMIC) || (arpCache[i].Type == INTM_STATIC)) &&
+				    (arpCache[i].PhysAddr.o_length > 0))
+				{
+					snprintf(buffer, 256, "%s %s %d", BinToStr(arpCache[i].PhysAddr.o_bytes, arpCache[i].PhysAddr.o_length, mac),
+					         IpToStr(arpCache[i].NetAddr, ip), arpCache[i].IfIndex);
+					pValue->add(buffer);
+				}
+			}
+			nRet = SYSINFO_RC_SUCCESS;
+		}
+		close_mib(mib);
+	}
+	return nRet;
+}
+
+
+//
+// Handler for Net.IP.Forwarding parameter
+//
+
+LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
+{
+	int ipVer = CAST_FROM_POINTER(pArg, int);
+	int nRet = SYSINFO_RC_ERROR;
+	int mib;
+	unsigned int size, fwFlag;
+	struct nmparms np;
+	
+	mib = open_mib((ipVer == 4) ? "/dev/ip" : "/dev/ip6", O_RDWR, 0, 0);
+	if (mib >= 0)
+	{
+		size = sizeof(unsigned int);
+		np.objid = (ipVer == 4) ? ID_ipForwarding : ID_ipv6Forwarding;
+		np.buffer = &fwFlag;
+		np.len = &size;
+		if (get_mib_info(mib, &np) == 0)
+		{
+			ret_int(pValue, (fwFlag == 1) ? 1 : 0);
+			nRet = SYSINFO_RC_SUCCESS;
+		}
+		close_mib(mib);
+	}
 
 	return nRet;
 }
+
 
 LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue)
 {
@@ -91,224 +308,39 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 	return nRet;
 }
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
+
+//
+// Handler for Net.Interface.* parameters
+//
+
+LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
-
-	int fd, n;
-	char *pBuff = NULL;
-	int nBuffSize;
-	struct ifconf ifc;
-	struct ifreq *ifr, *ifend, *ifnext;
-	struct ifreq ifrflags, ifrnetmask;
-	struct sockaddr *pNetMask;
-	int nNetMaskSize;
-
-	fd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (fd < 0)
-	{
-		return SYSINFO_RC_ERROR;
-	}
-
-	nBuffSize = 8192;
-	while(1)
-	{
-		pBuff = (char *)malloc(nBuffSize);
-		if (pBuff == NULL)
-		{
-			break;
-		}
-
-		ifc.ifc_len = nBuffSize;
-		ifc.ifc_buf = pBuff;
-		memset(pBuff, 0, nBuffSize);
-		if (ioctl(fd, SIOCGIFCONF, (char *)&ifc) < 0 && errno != EINVAL)
-		{
-			close(fd);
-			free(pBuff);
-			return SYSINFO_RC_ERROR;
-		}
-
-		if (ifc.ifc_len < nBuffSize &&
-				(nBuffSize - ifc.ifc_len) > sizeof(ifr->ifr_name) + 255)
-		{
-			break;
-		}
-
-		free(pBuff);
-		nBuffSize *= 2;
-	}
-
-	ifr = (struct ifreq *)pBuff;
-	ifend = (struct ifreq *)(pBuff + ifc.ifc_len);
-
-	for (; ifr < ifend; ifr = ifnext)
-	{
-		n = SA_LEN(&ifr->ifr_addr) + sizeof(ifr->ifr_name);
-		if (n < sizeof(*ifr))
-		{
-			ifnext = ifr + 1;
-		}
-		else
-		{
-			ifnext = (struct ifreq *)((char *)ifr + n);
-		}
-
-		if (!(*ifr->ifr_name))
-		{
-			break;
-		}
-
-		nx_strncpy(ifrflags.ifr_name, ifr->ifr_name, sizeof(ifrflags.ifr_name));
-		if (ioctl(fd, SIOCGIFFLAGS, (char *)&ifrflags) < 0)
-		{
-			if (errno == ENXIO)
-			{
-				continue;
-			}
-
-			close(fd);
-			free(pBuff);
-			return SYSINFO_RC_ERROR;
-		}
-
-		strncpy(ifrnetmask.ifr_name, ifr->ifr_name, sizeof(ifrnetmask.ifr_name));
-		memcpy(&ifrnetmask.ifr_addr, &ifr->ifr_addr, sizeof(ifrnetmask.ifr_addr));
-		if (ioctl(fd, SIOCGIFNETMASK, (char *)&ifrnetmask) < 0)
-		{
-			if (errno == EADDRNOTAVAIL)
-			{
-				pNetMask = NULL;
-				nNetMaskSize = 0;
-			}
-			else
-			{
-				close(fd);
-				free(pBuff);
-				return SYSINFO_RC_ERROR;
-			}
-		}
-		else
-		{
-			pNetMask = &ifrnetmask.ifr_addr;
-			nNetMaskSize = SA_LEN(netmask);
-		}
-
-		char szOut[1024];
-
-		snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-				if_name2index(fd, ifr->ifr_name),
-				inet_ntoa(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr),
-				BitsInMask(htonl(((struct sockaddr_in *)pNetMask)->sin_addr.s_addr)),
-				IFTYPE_OTHER,
-				"000000000000",
-				ifr->ifr_name);
-		pValue->add(szOut);
-	}
-
-	nRet = SYSINFO_RC_SUCCESS;
-
-	free(pBuff);
-	close(fd);
-
-	return nRet;
-}
-
-LONG H_NetIfInfoFromIOCTL(const char *pszParam, const char *pArg, char *pValue)
-{
-	char *eptr, szBuffer[256];
+	char *eptr, buffer[256];
+	int ifIndex;
 	LONG nRet = SYSINFO_RC_SUCCESS;
-	struct ifreq ifr;
-	int fd;
 
-	if (!AgentGetParameterArg(pszParam, 1, szBuffer, 256))
-	{
-		return nRet;
-	}
-
-	fd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (fd == -1)
+	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 	{
 		return nRet;
 	}
 
 	// Check if we have interface name or index
-	ifr.ifr_index = strtol(szBuffer, &eptr, 10);
-	if (*eptr == 0)
+	ifIndex = strtol(buffer, &eptr, 10);
+	if (*eptr != 0)
 	{
-		// Index passed as argument, convert to name
-		char *tmpName = if_index2name(fd, ifr.ifr_index);
-		if (tmpName == NULL)
-		{
-			nRet = SYSINFO_RC_ERROR;
-		}
-		else
-		{
-			nx_strncpy(ifr.ifr_name, tmpName, IFNAMSIZ);
-			free(tmpName);
-		}
-	}
-	else
-	{
-		// Name passed as argument
-		nx_strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
-		nRet = SYSINFO_RC_SUCCESS;
+		// Name passed as argument, convert to index
 	}
 
 	// Get interface information
-	if (nRet == SYSINFO_RC_SUCCESS)
+	switch((long)pArg)
 	{
-		switch((long)pArg)
-		{
-			case IF_INFO_ADMIN_STATUS:
-				if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
-				{
-					ret_int(pValue, (ifr.ifr_flags & IFF_UP) ? 1 : 2);
-					nRet = SYSINFO_RC_SUCCESS;
-				}
-				else
-				{
-					printf("failed\n");
-				}
-				break;
-			case IF_INFO_OPER_STATUS:
-				if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
-				{
-					// IFF_RUNNING should be set only if interface can
-					// transmit/receive data, but in fact looks like it
-					// always set. I have unverified information that
-					// newer kernels set this flag correctly.
-					ret_int(pValue, (ifr.ifr_flags & IFF_RUNNING) ? 1 : 0);
-					nRet = SYSINFO_RC_SUCCESS;
-				}
-				break;
-			case IF_INFO_DESCRIPTION:
-				ret_string(pValue, ifr.ifr_name);
-				nRet = SYSINFO_RC_SUCCESS;
-				break;
-		}
+		case IF_INFO_ADMIN_STATUS:
+			break;
+		case IF_INFO_OPER_STATUS:
+			break;
+		case IF_INFO_DESCRIPTION:
+			break;
 	}
-
-	// Cleanup
-	close(fd);
 
 	return nRet;
 }
-
-LONG H_NetIfInfoFromProc(const char *pszParam, const char *pArg, char *pValue)
-{
-	return SYSINFO_RC_ERROR;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.2  2006/10/05 00:34:24  alk
-HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
-
-Revision 1.1  2006/10/04 14:59:14  alk
-initial version of HPUX subagent
-
-
-*/
