@@ -480,18 +480,21 @@ void ClientSession::ReadThread(void)
    free(pDecryptionBuffer);
 #endif
 
-   // Notify other threads to exit
-   m_pSendQueue->Clear();
-   m_pSendQueue->Put(INVALID_POINTER_VALUE);
-   m_pMessageQueue->Clear();
-   m_pMessageQueue->Put(INVALID_POINTER_VALUE);
-   m_pUpdateQueue->Clear();
+	// Finish update thread first
    m_pUpdateQueue->Put(INVALID_POINTER_VALUE);
+   ThreadJoin(m_hUpdateThread);
+
+   // Notify other threads to exit
+	while((pRawMsg = (CSCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
+		free(pRawMsg);
+   m_pSendQueue->Put(INVALID_POINTER_VALUE);
+	while((pMsg = (CSCPMessage *)m_pMessageQueue->Get()) != NULL)
+		delete pMsg;
+   m_pMessageQueue->Put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
    ThreadJoin(m_hWriteThread);
    ThreadJoin(m_hProcessingThread);
-   ThreadJoin(m_hUpdateThread);
 
    // Abort current file upload operation, if any
    if (m_hCurrFile != -1)
@@ -579,7 +582,7 @@ void ClientSession::WriteThread(void)
 // Update processing thread
 //
 
-void ClientSession::UpdateThread(void)
+void ClientSession::UpdateThread()
 {
    UPDATE_INFO *pUpdate;
    CSCPMessage msg;

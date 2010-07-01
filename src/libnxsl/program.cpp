@@ -778,7 +778,7 @@ void NXSL_Program::execute()
                   if (nRet == 0)
                   {
                      for(i = 0; i < cp->m_nStackItems; i++)
-                        m_pDataStack->pop();
+                        delete m_pDataStack->pop();
                      m_pDataStack->push(pValue);
                   }
                   else if (nRet == NXSL_STOP_SCRIPT_EXECUTION)
