@@ -21,13 +21,19 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <net/if.h>
+#if HAVE_NET_IF_TYPES_H
 #include <net/if_types.h>
+#endif
 
 extern "C" {
 #include <sys/mib.h>
 }
 
 #include "net.h"
+
+#ifndef IFT_LOOP
+#define IFT_LOOP 24
+#endif
 
 
 //
@@ -59,6 +65,8 @@ struct NETIF
 // Find interface name by interface index
 //
 
+#if HAVE_DECL_SIOCGIFNAME
+
 static char *IfIndexToName(int index, char *buffer)
 {
 	int fd;
@@ -79,6 +87,36 @@ static char *IfIndexToName(int index, char *buffer)
 
 	return ret;
 }
+
+#endif
+
+
+//
+// Find interface index by name
+//
+
+#if HAVE_DECL_SIOCGIFINDEX
+
+static int IfNameToIndex(const char *name)
+{
+	int fd, index = -1;
+	struct ifreq ifr;
+
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd != -1)
+	{
+		nx_strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
+		if (ioctl(fd, SIOCGIFINDEX, &ifr) == 0)
+		{
+			index = ifr.ifr_index;
+		}
+		close(fd);
+	}
+
+	return index;
+}
+
+#endif
 
 
 //
@@ -121,7 +159,11 @@ static int GetInterfaceList(NETIF **iflist)
 				curr->ifIndex = iface.ifIndex;
 				curr->ifType = iface.ifType;
 				memcpy(curr->macAddr, iface.ifPhysAddress.o_bytes, iface.ifPhysAddress.o_length);
+#if HAVE_DECL_SIOCGIFNAME
 				IfIndexToName(iface.ifIndex, curr->ifName);
+#else
+				nx_strncpy(curr->ifName, iface.ifDescr, MAX_NAME_LENGTH);
+#endif
 			}
 			close_mib(mib);
 		}
@@ -316,7 +358,9 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, buffer[256];
-	int ifIndex;
+	nmapi_iftable ift[1024];
+	int i, mib, ifCount, ifIndex;
+	unsigned int size;
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
 	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
@@ -329,17 +373,83 @@ LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue)
 	if (*eptr != 0)
 	{
 		// Name passed as argument, convert to index
+#if HAVE_DECL_SIOCGIFINDEX
+		ifIndex = IfNameToIndex(buffer);
+#else
+		return SYSINFO_RC_UNSUPPORTED;	// Unable to convert interface name to index
+#endif
 	}
+	if (ifIndex <= 0)
+		return SYSINFO_RC_UNSUPPORTED;
 
-	// Get interface information
-	switch((long)pArg)
+	// Find driver for interface
+	size = sizeof(ift);
+	if (get_if_table(ift, &size) != 0)
+		return SYSINFO_RC_ERROR;
+	ifCount = size / sizeof(nmapi_iftable);
+	for(i = 0; i < ifCount; i++)
+		if (ift[i].nm_ifindex == ifIndex)
+			break;
+	if (i == ifCount)
+		return SYSINFO_RC_UNSUPPORTED;	// Interface not found
+
+	mib = open_mib(ift[i].nm_device, O_RDWR, ift[i].nm_ppanum, 0);
+	if (mib >= 0)
 	{
-		case IF_INFO_ADMIN_STATUS:
-			break;
-		case IF_INFO_OPER_STATUS:
-			break;
-		case IF_INFO_DESCRIPTION:
-			break;
+		struct nmparms np;
+		mib_ifEntry iface;
+		unsigned int ifeSize = sizeof(mib_ifEntry);
+
+		np.objid = ID_ifEntry;
+		np.buffer = &iface;
+		np.len = &ifeSize;
+		iface.ifIndex = ift[i].nm_ifindex;
+		if (get_mib_info(mib, &np) == 0)
+		{
+			nRet = SYSINFO_RC_SUCCESS;
+
+			// Get interface information
+			switch((long)pArg)
+			{
+				case IF_INFO_ADMIN_STATUS:
+					ret_int(pValue, iface.ifAdmin);
+					break;
+				case IF_INFO_OPER_STATUS:
+					ret_int(pValue, (iface.ifOper == 1) ? 1 : 0);
+					break;
+				case IF_INFO_DESCRIPTION:
+					ret_string(pValue, iface.ifDescr);
+					break;
+				case IF_INFO_MTU:
+					ret_int(pValue, iface.ifMtu);
+					break;
+				case IF_INFO_SPEED:
+					ret_uint(pValue, iface.ifSpeed);
+					break;
+				case IF_INFO_BYTES_IN:
+					ret_uint(pValue, iface.ifInOctets);
+					break;
+				case IF_INFO_BYTES_OUT:
+					ret_uint(pValue, iface.ifOutOctets);
+					break;
+				case IF_INFO_PACKETS_IN:
+					ret_uint(pValue, iface.ifInUcastPkts + iface.ifInNUcastPkts);
+					break;
+				case IF_INFO_PACKETS_OUT:
+					ret_uint(pValue, iface.ifOutUcastPkts + iface.ifOutNUcastPkts);
+					break;
+				case IF_INFO_IN_ERRORS:
+					ret_uint(pValue, iface.ifInErrors);
+					break;
+				case IF_INFO_OUT_ERRORS:
+					ret_uint(pValue, iface.ifOutErrors);
+					break;
+				default:
+					nRet = SYSINFO_RC_UNSUPPORTED;
+					break;
+			}
+		}
+		close_mib(mib);
 	}
 
 	return nRet;

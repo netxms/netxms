@@ -731,7 +731,7 @@ AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h getopt.h])
-AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
+AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
 #endif
@@ -1041,7 +1041,17 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xHP-UX"; then
-	AC_CHECK_HEADERS([mib.h],,,[[ ]])
+	AC_CHECK_HEADERS([sys/mib.h],,,[[ ]])
+	AC_CHECK_DECLS([SIOCGIFNAME, SIOCGIFINDEX],,,[
+#if HAVE_NET_IF_H
+#include <net/if.h>
+#endif
+	])
+	AC_CHECK_DECLS([ID_ifXEntry, open_mib_64],,,[
+#if HAVE_SYS_MIB_H
+#include <sys/mib.h>
+#endif
+	])
 fi
 
 

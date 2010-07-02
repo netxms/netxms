@@ -126,6 +126,8 @@
 #define DCIDESC_NET_INTERFACE_DESCRIPTION         "Description of interface {instance}"
 #define DCIDESC_NET_INTERFACE_INERRORS            "Number of input errors on interface {instance}"
 #define DCIDESC_NET_INTERFACE_LINK                "Link status for interface {instance}"
+#define DCIDESC_NET_INTERFACE_MTU                 "MTU for interface {instance}"
+#define DCIDESC_NET_INTERFACE_OPERSTATUS          "Operational status of interface {instance}"
 #define DCIDESC_NET_INTERFACE_OUTERRORS           "Number of output errors on interface {instance}"
 #define DCIDESC_NET_INTERFACE_PACKETSIN           "Number of input packets on interface {instance}"
 #define DCIDESC_NET_INTERFACE_PACKETSOUT          "Number of output packets on interface {instance}"
