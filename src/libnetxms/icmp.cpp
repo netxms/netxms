@@ -126,6 +126,12 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
    INT64 qwStartTime;
    static char szPayload[64] = "NetXMS ICMP probe [01234567890]";
 
+#ifdef _WIN32
+	LARGE_INTEGER pc, pcFreq;
+	BOOL pcSupported = QueryPerformanceFrequency(&pcFreq);
+	QWORD pcTicksPerMs = pcFreq.QuadPart / 1000;	// Ticks per millisecond
+#endif
+
    // Check packet size
    if (dwPacketSize < sizeof(ICMPHDR) + sizeof(IPHDR))
       dwPacketSize = sizeof(ICMPHDR) + sizeof(IPHDR);
@@ -208,16 +214,42 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
 	         timeout.tv_sec = dwTimeLeft / 1000;
 	         timeout.tv_usec = (dwTimeLeft % 1000) * 1000;
 #endif
+
+#ifdef _WIN32
+				if (pcSupported)
+				{
+					QueryPerformanceCounter(&pc);
+				}
+				else
+				{
+	            qwStartTime = GetCurrentTimeMs();
+				}
+#else		/* _WIN32 */
             qwStartTime = GetCurrentTimeMs();
+#endif	/* _WIN32 else */
+
 #if HAVE_POLL
 	         if (poll(&fds, 1, dwTimeLeft) > 0)
 #else
 	         if (select(SELECT_NFDS(sock + 1), &rdfs, NULL, NULL, &timeout) > 0)
 #endif
 
-#endif   /* USE_KQUEUE */
+#endif   /* USE_KQUEUE else */
             {
+#ifdef _WIN32
+					if (pcSupported)
+					{
+						LARGE_INTEGER pcCurr;
+						QueryPerformanceCounter(&pcCurr);
+						dwElapsedTime = (DWORD)((pcCurr.QuadPart - pc.QuadPart) / pcTicksPerMs);
+					}
+					else
+					{
+	               dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
+					}
+#else
                dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
+#endif
                dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
                dwRTT += dwElapsedTime;
 
