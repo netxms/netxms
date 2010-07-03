@@ -808,6 +808,8 @@ inline BOOL Node::ReadyForStatusPoll(void)
 {
 	if (m_bIsDeleted)
 		return FALSE;
+	//if (GetMyCluster() != NULL)
+	//	return FALSE;	// Cluster nodes should be polled from cluster status poll
    if (m_dwDynamicFlags & NDF_FORCE_STATUS_POLL)
    {
       m_dwDynamicFlags &= ~NDF_FORCE_STATUS_POLL;
