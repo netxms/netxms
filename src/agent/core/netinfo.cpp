@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -205,7 +205,7 @@ LONG H_NetIPStats(const char *cmd, const char *arg, char *value)
       switch(CAST_FROM_POINTER(arg, int))
       {
          case NETINFO_IP_FORWARDING:
-            ret_int(value, ips.dwForwarding);
+				ret_int(value, (ips.dwForwarding == MIB_IP_FORWARDING) ? 1 : 0);
             break;
          default:
             iResult = SYSINFO_RC_UNSUPPORTED;
@@ -322,7 +322,7 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
                case NETINFO_IF_IN_ERRORS:
                   ret_uint(value, info.dwInErrors);
                   break;
-               case NETINFO_IF_LINK:
+               case NETINFO_IF_OPER_STATUS:
                   ret_uint(value, (info.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL) ? 1 : 0);
                   break;
                case NETINFO_IF_OUT_ERRORS:
@@ -336,6 +336,9 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
                   break;
                case NETINFO_IF_SPEED:
                   ret_uint(value, info.dwSpeed);
+                  break;
+               case NETINFO_IF_MTU:
+                  ret_uint(value, info.dwMtu);
                   break;
                case NETINFO_IF_ADMIN_STATUS:
                   ret_uint(value, info.dwAdminStatus ? 1 : 2);

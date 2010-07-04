@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -639,66 +637,3 @@ LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue)
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.9  2005/08/22 23:00:05  alk
-Net.IP.RoutingTable added
-
-Revision 1.8  2005/06/12 17:58:36  victor
-Net.Interface.AdminStatus should return 2 for disabled interfaces
-
-Revision 1.7  2005/05/30 16:31:58  alk
-fix: InterfaceList now return interfaces w/o IP address
-
-Revision 1.6  2005/05/23 20:30:28  alk
-! memory allocation for address list now in sizeof * count, fixes "mixing" lists of aliases
-
-Revision 1.5  2005/03/10 19:04:07  alk
-implemented:
-	Net.Interface.AdminStatus(*)
-	Net.Interface.Link(*)
-
-Revision 1.4  2005/03/10 12:23:56  alk
-issue #18
-alias handling on inet interfaces
-status: fixed
-
-Revision 1.3  2005/02/14 17:03:37  alk
-issue #9
-
-mask calculation chaged to BitsInMask()
-
-Revision 1.2  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.4  2005/01/05 12:21:24  victor
-- Added wrappers for new and delete from gcc2 libraries
-- sys/stat.h and fcntl.h included in nms_common.h
-
-Revision 1.3  2004/11/25 08:01:27  victor
-Processing of interface list will be stopped on error
-
-Revision 1.2  2004/10/23 22:53:23  alk
-ArpCache: ignore incomplete entries
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

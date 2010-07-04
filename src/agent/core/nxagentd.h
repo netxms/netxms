@@ -129,12 +129,13 @@
 #define NETINFO_IF_BYTES_OUT         2
 #define NETINFO_IF_DESCR             3
 #define NETINFO_IF_IN_ERRORS         4
-#define NETINFO_IF_LINK              5
+#define NETINFO_IF_OPER_STATUS       5
 #define NETINFO_IF_OUT_ERRORS        6
 #define NETINFO_IF_PACKETS_IN        7
 #define NETINFO_IF_PACKETS_OUT       8
 #define NETINFO_IF_SPEED             9
 #define NETINFO_IF_ADMIN_STATUS      10
+#define NETINFO_IF_MTU               11
 
 
 //

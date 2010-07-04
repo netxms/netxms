@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /* 
-** NetXMS subagent for FreeBSD
+** NetXMS subagent for IPSO
 ** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2007-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -601,19 +600,3 @@ LONG H_NetIfList(char *pszParam, char *pArg, StringList *pValue)
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2006/08/16 22:26:09  victor
-- Most of Net.Interface.XXX functions implemented on IPSO
-- Added function MACToStr
-
-Revision 1.2  2006/07/21 16:22:44  victor
-Some parameters are working
-
-Revision 1.1  2006/07/21 11:48:35  victor
-Initial commit
-
-*/

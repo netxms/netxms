@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,7 +199,9 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NETINFO_IF_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
    { "Net.Interface.Description(*)", H_NetInterfaceStats, (char *)NETINFO_IF_DESCR, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
    { "Net.Interface.InErrors(*)", H_NetInterfaceStats, (char *)NETINFO_IF_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
-   { "Net.Interface.Link(*)", H_NetInterfaceStats, (char *)NETINFO_IF_LINK, DCI_DT_INT, DCIDESC_NET_INTERFACE_LINK },
+   { "Net.Interface.Link(*)", H_NetInterfaceStats, (char *)NETINFO_IF_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Net.Interface.MTU(*)", H_NetInterfaceStats, (char *)NETINFO_IF_MTU, DCI_DT_UINT, DCIDESC_NET_INTERFACE_MTU },
+   { "Net.Interface.OperStatus(*)", H_NetInterfaceStats, (char *)NETINFO_IF_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
    { "Net.Interface.OutErrors(*)", H_NetInterfaceStats, (char *)NETINFO_IF_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
    { "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, (char *)NETINFO_IF_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
    { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, (char *)NETINFO_IF_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },

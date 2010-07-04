@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -212,13 +212,8 @@ LONG H_SystemUname(const char *cmd, const char *arg, char *value)
 						(versionInfo.dwMinorVersion == 90 ? "Me" : "Unknown")),versionInfo.szCSDVersion);
 				break;
 			case VER_PLATFORM_WIN32_NT:
-				if (versionInfo.dwMajorVersion != 5)
-					sprintf(osVersion,"Windows NT %d.%d %s",versionInfo.dwMajorVersion,
-							  versionInfo.dwMinorVersion,versionInfo.szCSDVersion);
-				else      // Windows 2000, Windows XP or Windows Server 2003
-					sprintf(osVersion,"Windows %s%s%s",versionInfo.dwMinorVersion == 0 ? "2000" : 
-							  (versionInfo.dwMinorVersion == 1 ? "XP" : "Server 2003"),
-								  versionInfo.szCSDVersion[0] == 0 ? "" : " ", versionInfo.szCSDVersion);
+				sprintf(osVersion,"Windows NT %d.%d %s",versionInfo.dwMajorVersion,
+						  versionInfo.dwMinorVersion,versionInfo.szCSDVersion);
 				break;
 			default:
 				strcpy(osVersion,"Windows [Unknown Version]");

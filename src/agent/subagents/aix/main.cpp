@@ -101,13 +101,23 @@ static void SubAgentShutdown(void)
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { "Agent.SourcePackageSupport", H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
-   { "Disk.Avail(*)", H_DiskInfo, (char *)DISK_AVAIL, DCI_DT_UINT64, DCIDESC_DISK_AVAIL },
-   { "Disk.AvailPerc(*)", H_DiskInfo, (char *)DISK_AVAIL_PERC, DCI_DT_FLOAT, DCIDESC_DISK_AVAILPERC },
-   { "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE, DCI_DT_UINT64, DCIDESC_DISK_FREE },
-   { "Disk.FreePerc(*)", H_DiskInfo, (char *)DISK_FREE_PERC, DCI_DT_FLOAT, DCIDESC_DISK_FREEPERC },
-   { "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL, DCI_DT_UINT64, DCIDESC_DISK_TOTAL },
-   { "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, DCIDESC_DISK_USED },
-   { "Disk.UsedPerc(*)", H_DiskInfo, (char *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_DISK_USEDPERC },
+
+   { "Disk.Avail(*)", H_DiskInfo, (char *)DISK_AVAIL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.AvailPerc(*)", H_DiskInfo, (char *)DISK_AVAIL_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.FreePerc(*)", H_DiskInfo, (char *)DISK_FREE_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { "Disk.UsedPerc(*)", H_DiskInfo, (char *)DISK_USED_PERC, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+
+   { "FileSystem.Avail(*)", H_DiskInfo, (char *)DISK_AVAIL, DCI_DT_UINT64, DCIDESC_FS_AVAIL },
+   { "FileSystem.AvailPerc(*)", H_DiskInfo, (char *)DISK_AVAIL_PERC, DCI_DT_FLOAT, DCIDESC_FS_AVAILPERC },
+   { "FileSystem.Free(*)", H_DiskInfo, (char *)DISK_FREE, DCI_DT_UINT64, DCIDESC_FS_FREE },
+   { "FileSystem.FreePerc(*)", H_DiskInfo, (char *)DISK_FREE_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
+   { "FileSystem.Total(*)", H_DiskInfo, (char *)DISK_TOTAL, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
+   { "FileSystem.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
+   { "FileSystem.UsedPerc(*)", H_DiskInfo, (char *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
+
 /*
    { "Net.Interface.AdminStatus(*)", H_NetIfAdminStatus, NULL, DCI_DT_INT, "Administrative status of interface {instance}" },
    { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, "rbytes", DCI_DT_UINT, "Number of input bytes on interface {instance}" },
@@ -120,6 +130,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, "opackets", DCI_DT_UINT, "Number of output packets on interface {instance}" },
    { "Net.Interface.Speed(*)", H_NetInterfaceStats, "ifspeed", DCI_DT_UINT, "Speed of interface {instance}" },
 */
+
    { "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
    { "Process.IO.ReadOp(*)", H_ProcessInfo, (char *)PROCINFO_IO_READ_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_READOP },
    { "Process.IO.WriteOp(*)", H_ProcessInfo, (char *)PROCINFO_IO_WRITE_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_WRITEOP },
@@ -132,6 +143,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.LoadAvg", H_LoadAvg, "0", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
    { "System.CPU.LoadAvg5", H_LoadAvg, "1", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
    { "System.CPU.LoadAvg15", H_LoadAvg, "2", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
+   
 /*
    { "System.CPU.Usage", H_CPUUsage, "T0", DCI_DT_FLOAT, "Average CPU(s) utilization for last minute" },
    { "System.CPU.Usage5", H_CPUUsage, "T1", DCI_DT_FLOAT, "Average CPU(s) utilization for last 5 minutes" },
@@ -140,6 +152,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.Usage5(*)", H_CPUUsage, "C1", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 5 minutes" },
    { "System.CPU.Usage15(*)", H_CPUUsage, "C2", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 15 minutes" },
 */
+
    { "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
    { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },

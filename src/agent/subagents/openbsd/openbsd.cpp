@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -37,18 +35,33 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
 
 	{ "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
-		DCI_DT_UINT64,	DCIDESC_DISK_AVAIL },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,
-		DCI_DT_FLOAT,	DCIDESC_DISK_AVAILPERC },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
-		DCI_DT_UINT64,	DCIDESC_DISK_FREE },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,
-		DCI_DT_FLOAT,	DCIDESC_DISK_FREEPERC },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
-		DCI_DT_UINT64,	DCIDESC_DISK_TOTAL },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
-		DCI_DT_UINT64,	DCIDESC_DISK_USED },
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
+		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+
+	{ "FileSystem.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
+		DCI_DT_UINT64,	DCIDESC_DISK_AVAIL },
+	{ "FileSystem.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,
+		DCI_DT_FLOAT,	DCIDESC_DISK_AVAILPERC },
+	{ "FileSystem.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
+		DCI_DT_UINT64,	DCIDESC_DISK_FREE },
+	{ "FileSystem.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,
+		DCI_DT_FLOAT,	DCIDESC_DISK_FREEPERC },
+	{ "FileSystem.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
+		DCI_DT_UINT64,	DCIDESC_DISK_TOTAL },
+	{ "FileSystem.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
+		DCI_DT_UINT64,	DCIDESC_DISK_USED },
+	{ "FileSystem.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
 		DCI_DT_FLOAT,	DCIDESC_DISK_USEDPERC },
 
 	{ "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
@@ -58,7 +71,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Net.Interface.AdminStatus(*)", H_NetIfAdmStatus,  NULL,
 		DCI_DT_INT,		DCIDESC_NET_INTERFACE_ADMINSTATUS },
 	{ "Net.Interface.Link(*)",        H_NetIfLink,       NULL,
-		DCI_DT_INT,		DCIDESC_NET_INTERFACE_LINK },
+		DCI_DT_DEPRECATED,		DCIDESC_DEPRECATED },
+	{ "Net.Interface.OperStatus(*)",        H_NetIfLink,       NULL,
+		DCI_DT_INT,		DCIDESC_NET_INTERFACE_OPERSTATUS },
 	{ "Net.Interface.BytesIn(*)",     H_NetIfInfoFromKVM, (char *)IF_INFO_BYTES_IN,
 		DCI_DT_UINT64,		DCIDESC_NET_INTERFACE_BYTESIN },
 	{ "Net.Interface.BytesOut(*)",    H_NetIfInfoFromKVM, (char *)IF_INFO_BYTES_OUT,
