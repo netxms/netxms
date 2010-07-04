@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004 Victor Kirhenshtein
+ ** Copyright (C) 2004-2010 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -33,7 +31,7 @@
 
 
 //
-// Disk info types
+// File system info types
 //
 
 #define DISK_FREE	0
@@ -49,45 +47,60 @@
 // Request types for H_MemoryInfo
 //
 
-#define MEMINFO_PHYSICAL_FREE    1
-#define MEMINFO_PHYSICAL_TOTAL   2
-#define MEMINFO_PHYSICAL_USED    3
-#define MEMINFO_SWAP_FREE        4
-#define MEMINFO_SWAP_TOTAL       5
-#define MEMINFO_SWAP_USED        6
-#define MEMINFO_VIRTUAL_FREE     7
-#define MEMINFO_VIRTUAL_TOTAL    8
-#define MEMINFO_VIRTUAL_USED     9
+enum
+{
+	MEMINFO_PHYSICAL_FREE,
+	MEMINFO_PHYSICAL_FREEPCT,
+	MEMINFO_PHYSICAL_TOTAL,
+	MEMINFO_PHYSICAL_USED,
+	MEMINFO_PHYSICAL_USEDPCT,
+	MEMINFO_SWAP_FREE,
+	MEMINFO_SWAP_FREEPCT,
+	MEMINFO_SWAP_TOTAL,
+	MEMINFO_SWAP_USED,
+	MEMINFO_SWAP_USEDPCT,
+	MEMINFO_VIRTUAL_FREE,
+	MEMINFO_VIRTUAL_FREEPCT,
+	MEMINFO_VIRTUAL_TOTAL,
+	MEMINFO_VIRTUAL_USED,
+	MEMINFO_VIRTUAL_USEDPCT
+};
 
 
 //
 // Types for Process.XXX() parameters
 //
 
-#define PROCINFO_IO_READ_B       1
-#define PROCINFO_IO_READ_OP      2
-#define PROCINFO_IO_WRITE_B      3
-#define PROCINFO_IO_WRITE_OP     4
-#define PROCINFO_KTIME           5
-#define PROCINFO_PF              6
-#define PROCINFO_UTIME           7
-#define PROCINFO_VMSIZE          8
-#define PROCINFO_WKSET           9
-#define PROCINFO_SYSCALLS        10
-#define PROCINFO_THREADS         11
-#define PROCINFO_CPUTIME         12
+enum
+{
+	PROCINFO_IO_READ_B,
+	PROCINFO_IO_READ_OP,
+	PROCINFO_IO_WRITE_B,
+	PROCINFO_IO_WRITE_OP,
+	PROCINFO_KTIME,
+	PROCINFO_PF,
+	PROCINFO_UTIME,
+	PROCINFO_VMSIZE,
+	PROCINFO_WKSET,
+	PROCINFO_SYSCALLS,
+	PROCINFO_THREADS,
+	PROCINFO_CPUTIME
+};
 
 
 //
 // I/O stats request types
 //
 
-#define IOSTAT_NUM_READS      0
-#define IOSTAT_NUM_WRITES     1
-#define IOSTAT_NUM_RBYTES     2
-#define IOSTAT_NUM_WBYTES     3
-#define IOSTAT_IO_TIME        4
-#define IOSTAT_QUEUE          5
+enum
+{	
+	IOSTAT_NUM_READS,
+	IOSTAT_NUM_WRITES,
+	IOSTAT_NUM_RBYTES,
+	IOSTAT_NUM_WBYTES,
+	IOSTAT_IO_TIME,
+	IOSTAT_QUEUE
+};
 
 
 //

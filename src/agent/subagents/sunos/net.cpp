@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004 Victor Kirhenshtein
+ ** Copyright (C) 2004-2010 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -18,7 +16,7 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** $module: net.cpp
+ ** File: net.cpp
  **
  **/
 
@@ -355,9 +353,11 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
+
 //
 // Get Link status
 //
+
 LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
@@ -394,7 +394,7 @@ LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
 				strcpy(rq.lifr_name, szIfName);
 				if (ioctl(nFd, SIOCGLIFFLAGS, &rq) == 0)
 				{
-					ret_int(pValue, (rq.lifr_flags & IFF_RUNNING) ? 1 : 2);
+					ret_int(pValue, (rq.lifr_flags & IFF_RUNNING) ? 1 : 0);
 					nRet = SYSINFO_RC_SUCCESS;
 				}
 			}
@@ -404,9 +404,3 @@ LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

@@ -296,11 +296,25 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 				ret_uint64(pValue, (QWORD)kn.value.ul * qwPageSize);
 			}
 			break;
+		case MEMINFO_PHYSICAL_FREEPCT:
+			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+			if (nRet == SYSINFO_RC_SUCCESS)
+			{
+				ret_double(pValue, (double)kn.value.ul * 100.0 / (double)sysconf(_SC_PHYS_PAGES));
+			}
+			break;
 		case MEMINFO_PHYSICAL_USED:
 			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
 			if (nRet == SYSINFO_RC_SUCCESS)
 			{
 				ret_uint64(pValue, (QWORD)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * qwPageSize);
+			}
+			break;
+		case MEMINFO_PHYSICAL_USEDPCT:
+			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+			if (nRet == SYSINFO_RC_SUCCESS)
+			{
+				ret_double(pValue, (double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * 100.0 /  (double)sysconf(_SC_PHYS_PAGES));
 			}
 			break;
 		default:
