@@ -228,6 +228,7 @@ void CGraphFrame::OnViewRefresh()
 		return;
 
 	m_nPendingUpdates = m_dwNumItems;
+	theApp.DebugPrintf(_T("CGraphFrame::OnViewRefresh(): queued %d updates"), m_nPendingUpdates);
 
    // Set new time frame
    if (m_iTimeFrameType == 1)

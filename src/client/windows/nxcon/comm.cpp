@@ -430,6 +430,8 @@ static DWORD WINAPI RequestThread(void *pArg)
 
 	__try
 	{
+		if (pData->hWnd != NULL)
+	      PostMessage(pData->hWnd, NXCM_PROCESSING_REQUEST, pData->wParam, 0);
 		switch(pData->dwNumParams)
 		{
 			case 0:
@@ -753,12 +755,6 @@ static void ExecuteAsyncRequest(RqData *pData)
    hThread = CreateThread(NULL, 0, RequestThread, pData, 0, &dwThreadId);
    if (hThread != NULL)
    {
-      // Wait for request completion
-      if (WaitForSingleObject(hThread, UI_THREAD_WAIT_TIME) == WAIT_TIMEOUT)
-      {
-         // Thread still not finished, notify calling window
-         PostMessage(hWnd, NXCM_PROCESSING_REQUEST, wParam, 0);
-      }
       CloseHandle(hThread);
    }
 	else
