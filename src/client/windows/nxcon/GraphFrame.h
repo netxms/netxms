@@ -65,7 +65,9 @@ public:
 protected:
 	void LoadSettings(const TCHAR *pszName);
 	void SaveCurrentSettings(const TCHAR *pszName);
-	NXC_DCI_DATA * m_pDCIData[MAX_GRAPH_ITEMS];
+	NXC_DCI_DATA *m_pDCIData[MAX_GRAPH_ITEMS];
+	NXC_DCI_THRESHOLD *m_dciThresholds[MAX_GRAPH_ITEMS];
+	DWORD m_dciNumThresholds[MAX_GRAPH_ITEMS];
 	int m_nPendingUpdates;
 	BOOL m_bFullRefresh;
 	void Preset(int nTimeUnit, DWORD dwNumUnits);

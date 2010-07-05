@@ -1,8 +1,7 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Windows Console
-** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -786,6 +785,35 @@ void DoAsyncRequestArg7(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void
    pData->pArg5 = pArg5;
    pData->pArg6 = pArg6;
    pData->pArg7 = pArg7;
+   pData->pFunc = (DWORD (*)(...))pFunc;
+   ExecuteAsyncRequest(pData);
+}
+
+
+//
+// Perform async request with 9 parameter
+//
+
+void DoAsyncRequestArg9(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2,
+                        void *pArg3, void *pArg4, void *pArg5, void *pArg6, void *pArg7,
+								void *pArg8, void *pArg9)
+{
+   RqData *pData;
+
+	pData = (RqData *)malloc(sizeof(RqData));
+   pData->hWnd = hWnd;
+	pData->bDynamic = TRUE;
+	pData->wParam = wParam;
+   pData->dwNumParams = 9;
+   pData->pArg1 = pArg1;
+   pData->pArg2 = pArg2;
+   pData->pArg3 = pArg3;
+   pData->pArg4 = pArg4;
+   pData->pArg5 = pArg5;
+   pData->pArg6 = pArg6;
+   pData->pArg7 = pArg7;
+   pData->pArg8 = pArg8;
+   pData->pArg9 = pArg9;
    pData->pFunc = (DWORD (*)(...))pFunc;
    ExecuteAsyncRequest(pData);
 }

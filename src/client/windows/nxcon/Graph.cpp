@@ -60,6 +60,8 @@ CGraph::CGraph()
 	SetColorScheme(GCS_CLASSIC);
 
    memset(m_pData, 0, sizeof(NXC_DCI_DATA *) * MAX_GRAPH_ITEMS);
+   memset(m_thresholds, 0, sizeof(NXC_DCI_THRESHOLD *) * MAX_GRAPH_ITEMS);
+   memset(m_numThresholds, 0, sizeof(DWORD) * MAX_GRAPH_ITEMS);
    m_ppItems = NULL;
    
    m_bIsActive = FALSE;
@@ -72,8 +74,11 @@ CGraph::~CGraph()
    DWORD i;
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+	{
       if (m_pData[i] != NULL)
          NXCDestroyDCIData(m_pData[i]);
+		safe_free(m_thresholds[i]);
+	}
 }
 
 
@@ -570,11 +575,27 @@ void CGraph::DrawTrendLine(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style
 // Draw thresholds
 //
 
-void CGraph::DrawThresholds(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize)
+void CGraph::DrawThresholds(CDC &dc, NXC_DCI_THRESHOLD *thresholds, DWORD numThresholds, GRAPH_ITEM_STYLE *style, int nGridSize)
 {
-	if (!style->bShowThresholds)
+	if ((!style->bShowThresholds) || (thresholds == NULL))
 		return;
 
+	CPen pen, *oldPen;
+
+	pen.CreatePen(PS_DOT, 1, style->rgbColor);
+	oldPen = dc.SelectObject(&pen);
+
+	for(DWORD i = 0; i < numThresholds; i++)
+	{
+	   double scale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
+		                  (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / (m_dCurrMaxValue - m_dCurrMinValue);
+		int y = (int)(m_nZeroLine - _tcstod(thresholds[i].szValue, NULL) * scale - 1);
+
+		dc.MoveTo(m_rectGraph.left, y);
+		dc.LineTo(m_rectGraph.right, y);
+	}
+	dc.SelectObject(oldPen);
+	pen.DeleteObject();
 }
 
 
@@ -904,7 +925,6 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
       // Round max value
       for(double d = 0.00001; d < 10000000000000000000; d *= 10)
 		{
-//         if ((m_dCurrMaxValue >= d) && (m_dCurrMaxValue <= d * 10))
          if ((dMaxAbsValue >= d) && (dMaxAbsValue <= d * 10))
          {
             m_dCurrMaxValue -= fmod(m_dCurrMaxValue, d);
@@ -1029,6 +1049,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 
 			DrawAverage(dc, m_pData[i], &m_graphItemStyles[i], nGridSizeY);
 			DrawTrendLine(dc, m_pData[i], &m_graphItemStyles[i], nGridSizeY);
+			DrawThresholds(dc, m_thresholds[i], m_numThresholds[i], &m_graphItemStyles[i], nGridSizeY);
 		}
 	}
    dc.SelectClipRgn(NULL);
@@ -1459,4 +1480,16 @@ void CGraph::SetColorScheme(int nScheme)
 		default:
 			break;
 	}
+}
+
+
+//
+// Set thresholds information
+//
+
+void CGraph::SetThresholds(DWORD index, DWORD numThresholds, NXC_DCI_THRESHOLD *thresholds)
+{
+	safe_free(m_thresholds[index]);
+	m_thresholds[index] = thresholds;
+	m_numThresholds[index] = numThresholds;
 }

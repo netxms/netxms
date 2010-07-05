@@ -54,6 +54,8 @@ CGraphFrame::CGraphFrame()
 {
    m_dwNumItems = 0;
    memset(m_ppItems, 0, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
+   memset(m_dciThresholds, 0, sizeof(NXC_DCI_THRESHOLD *) * MAX_GRAPH_ITEMS);
+   memset(m_dciNumThresholds, 0, sizeof(DWORD) * MAX_GRAPH_ITEMS);
    m_dwRefreshInterval = 30;
    m_dwFlags = 0;
    m_hTimer = 0;
@@ -256,10 +258,10 @@ void CGraphFrame::OnViewRefresh()
          dwTimeFrom = m_dwTimeFrom;
          dwTimeTo = m_dwTimeTo;
       }
-      DoAsyncRequestArg7(m_hWnd, MAKEWPARAM(i, bPartial), NXCGetDCIData, g_hSession,
+      DoAsyncRequestArg9(m_hWnd, MAKEWPARAM(i, bPartial), NXCGetDCIDataEx, g_hSession,
 		                   (void *)m_ppItems[i]->m_dwNodeId, 
                          (void *)m_ppItems[i]->m_dwItemId, 0, (void *)dwTimeFrom,
-                         (void *)dwTimeTo, &m_pDCIData[i]);
+                         (void *)dwTimeTo, &m_pDCIData[i], &m_dciThresholds[i], &m_dciNumThresholds[i]);
    }
 	if (m_bFullRefresh)
 	{
@@ -897,6 +899,7 @@ LRESULT CGraphFrame::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
       {
          m_wndGraph.SetData(nIndex, m_pDCIData[nIndex]);
       }
+		m_wndGraph.SetThresholds(nIndex, m_dciNumThresholds[nIndex], m_dciThresholds[nIndex]);
    }
    else
    {

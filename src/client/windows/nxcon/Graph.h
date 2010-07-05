@@ -75,10 +75,11 @@ public:
 // Implementation
 public:
 	void DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect);
-	void Update(void);
+	void Update();
 	BOOL m_bShowRuler;
 	void SetData(DWORD dwIndex, NXC_DCI_DATA *pData);
 	void SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo);
+	void SetThresholds(DWORD index, DWORD numThresholds, NXC_DCI_THRESHOLD *thresholds);
 	BOOL Create(DWORD dwStyle, const RECT &rect, CWnd *pwndParent, int nId);
 	virtual ~CGraph();
 
@@ -116,7 +117,7 @@ private:
 	void DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
 	void DrawAverage(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
 	void DrawTrendLine(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
-	void DrawThresholds(CDC &dc, NXC_DCI_DATA *pData, GRAPH_ITEM_STYLE *style, int nGridSize);
+	void DrawThresholds(CDC &dc, NXC_DCI_THRESHOLD *thresholds, DWORD numThresholds, GRAPH_ITEM_STYLE *style, int nGridSize);
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
 	DWORD m_dwNumItems;
@@ -125,6 +126,8 @@ private:
 	double m_dMinValue;
 	double m_dCurrMinValue;
 	NXC_DCI_DATA *m_pData[MAX_GRAPH_ITEMS];
+	NXC_DCI_THRESHOLD *m_thresholds[MAX_GRAPH_ITEMS];
+	DWORD m_numThresholds[MAX_GRAPH_ITEMS];
    int m_nLastGridSizeY;
 
 public:

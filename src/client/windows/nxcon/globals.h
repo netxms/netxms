@@ -281,6 +281,9 @@ DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
                     TCHAR *pszInfoText);
 void DoAsyncRequestArg7(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2,
                         void *pArg3, void *pArg4, void *pArg5, void *pArg6, void *pArg7);
+void DoAsyncRequestArg9(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2,
+                        void *pArg3, void *pArg4, void *pArg5, void *pArg6, void *pArg7,
+								VOID *pArg8, void *pArg9);
 THREAD_RESULT THREAD_CALL PollerThread(void *pArg);
 BOOL DownloadUpgradeFile(HANDLE hFile);
 

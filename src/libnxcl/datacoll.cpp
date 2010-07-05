@@ -317,8 +317,15 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
                                        DWORD dwMaxRows, DWORD dwTimeFrom, DWORD dwTimeTo, 
                                        NXC_DCI_DATA **ppData)
 {
-   CSCPMessage msg;
-   DWORD i, dwRqId, dwResult;
+	return NXCGetDCIDataEx(hSession, dwNodeId, dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo, ppData, NULL, NULL);
+}
+
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwItemId, 
+                                         DWORD dwMaxRows, DWORD dwTimeFrom, DWORD dwTimeTo, 
+                                         NXC_DCI_DATA **ppData, NXC_DCI_THRESHOLD **thresholds, DWORD *numThresholds)
+{
+   CSCPMessage msg, *response;
+   DWORD i, dwRqId, dwId, dwResult;
    BOOL bRun = TRUE;
 
 	CHECK_SESSION_HANDLE();
@@ -333,6 +340,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
    (*ppData)->dwNodeId = dwNodeId;
    (*ppData)->dwItemId = dwItemId;
    (*ppData)->pRows = NULL;
+	if (thresholds != NULL)
+	{
+		*thresholds = NULL;
+		*numThresholds = 0;
+	}
 
    do
    {
@@ -344,10 +356,34 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
       msg.SetVariable(VID_TIME_TO, dwTimeTo);
       ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-      dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+		response = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+		if (response == NULL)
+		{
+			dwResult = RCC_TIMEOUT;
+			break;
+		}
+		dwResult = response->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
          CSCP_MESSAGE *pRawMsg;
+
+			if ((thresholds != NULL) && (*thresholds == NULL))
+			{
+				*numThresholds = response->GetVariableLong(VID_NUM_THRESHOLDS);
+				*thresholds = (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * (*numThresholds));
+				for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < *numThresholds; i++, dwId++)
+				{
+					(*thresholds)[i].dwId = response->GetVariableLong(dwId++);
+					(*thresholds)[i].dwEvent = response->GetVariableLong(dwId++);
+					(*thresholds)[i].dwRearmEvent = response->GetVariableLong(dwId++);
+					(*thresholds)[i].wFunction = response->GetVariableShort(dwId++);
+					(*thresholds)[i].wOperation = response->GetVariableShort(dwId++);
+					(*thresholds)[i].dwArg1 = response->GetVariableLong(dwId++);
+					(*thresholds)[i].dwArg2 = response->GetVariableLong(dwId++);
+					(*thresholds)[i].nRepeatInterval = (LONG)response->GetVariableLong(dwId++);
+					response->GetVariableStr(dwId++, (*thresholds)[i].szValue, MAX_STRING_VALUE);
+				}
+			}
 
          // We wait a long time because data message can be quite large
          pRawMsg = ((NXCL_Session *)hSession)->WaitForRawMessage(CMD_DCI_DATA, dwRqId, 60000);
@@ -439,6 +475,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
    {
       safe_free((*ppData)->pRows);
       free(*ppData);
+		if (thresholds != NULL)
+			safe_free(*thresholds);
    }
 
    return dwResult;
