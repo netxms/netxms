@@ -204,10 +204,10 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
-	unsigned long nMemTotal, nMemFree, nSwapTotal, nSwapFree;
+	unsigned long nMemTotal, nMemFree, nSwapTotal, nSwapFree, nBuffers;
 	char *pTag;
 
-	nMemTotal = nMemFree = nSwapTotal = nSwapFree = 0;
+	nMemTotal = nMemFree = nSwapTotal = nSwapFree = nBuffers = 0;
 
 	hFile = fopen("/proc/meminfo", "r");
 	if (hFile != NULL)
@@ -222,6 +222,8 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 			if (sscanf(szTmp, "SwapTotal: %lu kB\n", &nSwapTotal) == 1)
 				continue;
 			if (sscanf(szTmp, "SwapFree: %lu kB\n", &nSwapFree) == 1)
+				continue;
+			if (sscanf(szTmp, "Buffers: %lu kB\n", &nBuffers) == 1)
 				continue;
 		}
 
@@ -244,6 +246,12 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 				break;
 			case PHYSICAL_USED_PCT: // ph-used percentage
 				ret_uint(pValue, (DWORD)((QWORD)(nMemTotal - nMemFree) * 100 / (QWORD)nMemTotal));
+				break;
+			case PHYSICAL_AVAILABLE:
+				ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nBuffers) * 1024);
+				break;
+			case PHYSICAL_AVAILABLE_PCT:
+				ret_uint(pValue, (DWORD)(((QWORD)nMemFree + (QWORD)nBuffers) * 100 / (QWORD)nMemTotal));
 				break;
 			case SWAP_FREE: // sw-free
 				ret_uint64(pValue, ((QWORD)nSwapFree) * 1024);
@@ -280,6 +288,12 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 				break;
 			case VIRTUAL_USED_PCT: // vi-used percentage
 				ret_uint(pValue, (DWORD)(((QWORD)(nMemTotal - nMemFree) + (QWORD)(nSwapTotal - nSwapFree)) * 100 / ((QWORD)nMemTotal + (QWORD)nSwapTotal)));
+				break;
+			case VIRTUAL_AVAILABLE:
+				ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nSwapFree + (QWORD)nBuffers) * 1024);
+				break;
+			case VIRTUAL_AVAILABLE_PCT:
+				ret_uint(pValue, (DWORD)(((QWORD)nMemFree + (QWORD)nSwapFree + (QWORD)nBuffers) * 100 / ((QWORD)nMemTotal + (QWORD)nSwapTotal)));
 				break;
 			default: // error
 				nRet = SYSINFO_RC_ERROR;
