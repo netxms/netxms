@@ -401,18 +401,18 @@ inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 inline void ret_int(TCHAR *rbuf, LONG value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300)
-   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%ld"), value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%ld"), (long)value);
 #else
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%ld"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%ld"), (long)value);
 #endif
 }
 
 inline void ret_uint(TCHAR *rbuf, DWORD value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300)
-   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%lu"), value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%lu"), (unsigned long)value);
 #else
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%lu"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%lu"), (unsigned long)value);
 #endif
 }
 
