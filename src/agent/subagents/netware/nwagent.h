@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for Novell NetWare
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nwagent.h
+** File: nwagent.h
 **
 **/
 
@@ -39,9 +39,14 @@
 #define CPU_HISTORY_SIZE         1200
 #define MAX_CPU                  32
 
-#define MEMINFO_PHYSICAL_TOTAL	0
-#define MEMINFO_PHYSICAL_FREE    1
-#define MEMINFO_PHYSICAL_USED    2
+enum
+{
+	MEMINFO_PHYSICAL_TOTAL,
+	MEMINFO_PHYSICAL_FREE,
+	MEMINFO_PHYSICAL_FREE_PCT,
+	MEMINFO_PHYSICAL_USED,
+	MEMINFO_PHYSICAL_USED_PCT
+};
 
 
 #endif

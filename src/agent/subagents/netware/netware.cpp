@@ -67,8 +67,14 @@ static LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 		case MEMINFO_PHYSICAL_USED:
 			ret_uint64(pValue, info.TotalWorkMemory);
 			break;
+		case MEMINFO_PHYSICAL_USED_PCT:
+			ret_double(pValue, (double)(info.TotalWorkMemory * 100) / (double)nTotalMem);
+			break;
 		case MEMINFO_PHYSICAL_FREE:
 			ret_uint64(pValue, nTotalMem - info.TotalWorkMemory);
+			break;
+		case MEMINFO_PHYSICAL_FREE_PCT:
+			ret_double(pValue, (double)((nTotalMem - info.TotalWorkMemory) * 100) / (double)nTotalMem);
 			break;
 		default:
 			break;
@@ -382,8 +388,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.IO.OpenFiles", H_OpenFiles, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IO_OPENFILES },
 	{ "System.Hostname", H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+	{ "System.Memory.Physical.FreePerc", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
 	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
 	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+	{ "System.Memory.Physical.UsedPerc", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
 	{ "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
