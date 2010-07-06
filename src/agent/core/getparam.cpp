@@ -144,7 +144,8 @@ static LONG H_ParamList(const char *cmd, const char *arg, StringList *value)
    int i;
 
    for(i = 0; i < m_iNumParams; i++)
-		value->add(m_pParamList[i].szName);
+		if (m_pParamList[i].iDataType != DCI_DT_DEPRECATED)
+			value->add(m_pParamList[i].szName);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -537,6 +538,7 @@ void GetParameterList(CSCPMessage *pMsg)
 			pMsg->SetVariable(dwId++, m_pParamList[i].szName);
 			pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
 			pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
+			count++;
 		}
    }
    pMsg->SetVariable(VID_NUM_PARAMETERS, count);
