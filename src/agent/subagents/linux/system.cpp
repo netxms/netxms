@@ -22,7 +22,6 @@
 
 #include "linux_subagent.h"
 
-
 //
 // Handler for System.ConnectedUsers parameter
 //
@@ -329,7 +328,7 @@ LONG H_SourcePkgSupport(const char *pszParam, const char *pArg, char *pValue)
 // CPU Usage
 //
 
-#define CPU_USAGE_SLOTS			900
+#define CPU_USAGE_SLOTS			900 // 60 sec * 15 min => 900 sec
 // 64 + 1 for overal
 #define MAX_CPU					(64 + 1)
 
@@ -344,7 +343,7 @@ static uint64_t m_iowait[MAX_CPU];
 static uint64_t m_irq[MAX_CPU];
 static uint64_t m_softirq[MAX_CPU];
 static uint64_t m_steal[MAX_CPU];
-// 60 sec * 15 min => 900 sec
+static uint64_t m_guest[MAX_CPU];
 static float *m_cpuUsage;
 static float *m_cpuUsageUser;
 static float *m_cpuUsageNice;
@@ -354,6 +353,7 @@ static float *m_cpuUsageIoWait;
 static float *m_cpuUsageIrq;
 static float *m_cpuUsageSoftIrq;
 static float *m_cpuUsageSteal;
+static float *m_cpuUsageGuest;
 static int m_currentSlot = 0;
 static int m_maxCPU = 0;
 
@@ -361,103 +361,116 @@ static void CpuUsageCollector()
 {
 	FILE *hStat = fopen("/proc/stat", "r");
 
-	if (hStat != NULL)
-	{
-		uint64_t user, nice, system, idle;
-		uint64_t iowait = 0, irq = 0, softirq = 0, steal = 0;
-		int cpu;
-		char pattern[128];
-		
-		strcpy(pattern, "cpu %llu %llu %llu %llu %llu %llu %llu %llu\n");
-		for(cpu = 0; fscanf(hStat, pattern,
-					           &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) >= 4 && cpu < MAX_CPU; cpu++)
-		{
-			int64_t userDelta, niceDelta, systemDelta, idleDelta;
-			int64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
-
-			// inspired by top from procps-3.2.7
-			userDelta = user - m_user[cpu];
-			niceDelta = nice - m_nice[cpu];
-			systemDelta = system - m_system[cpu];
-			idleDelta = idle - m_idle[cpu];
-			if (idleDelta < 0)
-			{
-				idleDelta = 0;
-			}
-			iowaitDelta = iowait - m_iowait[cpu];
-			irqDelta = irq - m_irq[cpu];
-			softirqDelta = softirq - m_softirq[cpu];
-			stealDelta = steal - m_steal[cpu]; // steal=time spent in virtualization stuff (xen).
-
-			int64_t total = userDelta + niceDelta + systemDelta + idleDelta +
-				iowaitDelta + irqDelta + softirqDelta + stealDelta;
-			if (total < 1)
-			{
-				total = 1;
-			}
-
-			float scale = 100.0 / (float)total; // 100 -> HZ (from asm/param.h)
-
-			MutexLock(m_cpuUsageMutex, INFINITE);
-
-			if (m_currentSlot == CPU_USAGE_SLOTS)
-			{
-				m_currentSlot = 0;
-			}
-			
-			/* update detailed stats */
-#define UPDATE(d, t) { \
-			if (d > 0) { *(t + (cpu * MAX_CPU) + m_currentSlot) = (float)d * scale; } \
-			else { \
-				if (m_currentSlot == 0) { *(t + (cpu * MAX_CPU) + m_currentSlot) = *(t + (cpu * MAX_CPU) + (CPU_USAGE_SLOTS - 1)); } \
-				else { *(t + (cpu * MAX_CPU) + m_currentSlot) = *(t + (cpu * MAX_CPU) + (m_currentSlot - 1)); } \
-			} }
-
-			UPDATE(userDelta, m_cpuUsageUser)
-			UPDATE(niceDelta, m_cpuUsageNice)
-			UPDATE(systemDelta, m_cpuUsageSystem)
-			UPDATE(idleDelta, m_cpuUsageIdle)
-			UPDATE(iowaitDelta, m_cpuUsageIoWait)
-			UPDATE(irqDelta, m_cpuUsageIrq)
-			UPDATE(softirqDelta, m_cpuUsageSoftIrq)
-			UPDATE(stealDelta, m_cpuUsageSteal)
-
-			/* update overal cpu usage */
-			if (total > 0)
-			{
-				*(m_cpuUsage + (cpu * MAX_CPU) + m_currentSlot) = 100.0 - (float)idleDelta * scale;
-			}
-			else
-			{
-				if (m_currentSlot == 0)
-				{
-					*(m_cpuUsage + (cpu * MAX_CPU) + m_currentSlot) = *(m_cpuUsage + (cpu * MAX_CPU) + (CPU_USAGE_SLOTS - 1));
-				}
-				else
-				{
-					*(m_cpuUsage + (cpu * MAX_CPU) + m_currentSlot) = *(m_cpuUsage + (cpu * MAX_CPU) + (m_currentSlot - 1));
-				}
-			}
-
-			/* go to the next slot */
-			m_currentSlot++;
-
-			MutexUnlock(m_cpuUsageMutex);
-
-			m_user[cpu] = user;
-			m_nice[cpu] = nice;
-			m_system[cpu] = system;
-			m_idle[cpu] = idle;
-			m_iowait[cpu] = iowait;
-			m_irq[cpu] = irq;
-			m_softirq[cpu] = softirq;
-			m_steal[cpu] = steal;
-			
-			sprintf(pattern, "cpu%d %%llu %%llu %%llu %%llu %%llu %%llu %%llu %%llu\n", cpu);
-		}
-		fclose(hStat);
-		m_maxCPU = cpu - 1;
+	if (hStat == NULL) {
+		// TODO: logging
+		return;
 	}
+
+	uint64_t user, nice, system, idle;
+	uint64_t iowait = 0, irq = 0, softirq = 0; // 2.6
+	uint64_t steal = 0; // 2.6.11
+	uint64_t guest = 0; // 2.6.24
+	unsigned int cpu;
+	unsigned int maxCpu;
+	char buffer[1024];
+
+	MutexLock(m_cpuUsageMutex, INFINITE);
+	if (m_currentSlot == CPU_USAGE_SLOTS) {
+		m_currentSlot = 0;
+	}
+
+	// scan for all CPUs
+	while (1) {
+		if (fgets(buffer, sizeof(buffer), hStat) == NULL) {
+			break;
+		}
+
+		if (buffer[0] != 'c' || buffer[1] != 'p' || buffer[2] != 'u') {
+			continue;
+		}
+
+		int ret;
+		if (buffer[3] == ' ') {
+			// "cpu ..." - Overal
+			cpu = 0;
+			ret = sscanf(buffer, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+					&user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
+		}
+		else {
+			ret = sscanf(buffer, "cpu%u %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+					&cpu, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
+			cpu++;
+		}
+
+		if (ret < 4) {
+			continue;
+		}
+
+		maxCpu = max(cpu, maxCpu);
+
+		uint64_t userDelta, niceDelta, systemDelta, idleDelta;
+		uint64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
+		uint64_t guestDelta;
+
+		// TODO: handle overflow
+		userDelta = user - m_user[cpu];
+		niceDelta = nice - m_nice[cpu];
+		systemDelta = system - m_system[cpu];
+		idleDelta = idle - m_idle[cpu];
+		iowaitDelta = iowait - m_iowait[cpu];
+		irqDelta = irq - m_irq[cpu];
+		softirqDelta = softirq - m_softirq[cpu];
+		stealDelta = steal - m_steal[cpu]; // steal=time spent in virtualization stuff (xen).
+		guestDelta = guest - m_guest[cpu]; //
+
+		uint64_t totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
+
+		float onePercent = (float)totalDelta / 100.0; // 1% of total
+		if (onePercent == 0) {
+			onePercent = 1; // TODO: why 1?
+		}
+			
+		/* update detailed stats */
+#define UPDATE(delta, target) { \
+			if (delta > 0) { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = (float)delta / onePercent; } \
+			else { *(target + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0; } \
+		}
+
+		UPDATE(userDelta, m_cpuUsageUser);
+		UPDATE(niceDelta, m_cpuUsageNice);
+		UPDATE(systemDelta, m_cpuUsageSystem);
+		UPDATE(idleDelta, m_cpuUsageIdle);
+		UPDATE(iowaitDelta, m_cpuUsageIoWait);
+		UPDATE(irqDelta, m_cpuUsageIrq);
+		UPDATE(softirqDelta, m_cpuUsageSoftIrq);
+		UPDATE(stealDelta, m_cpuUsageSteal);
+		UPDATE(guestDelta, m_cpuUsageGuest);
+
+		/* update overal cpu usage */
+		if (totalDelta > 0) {
+			*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100.0 - ((float)idleDelta / onePercent);
+		}
+		else {
+			*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
+		}
+
+		m_user[cpu] = user;
+		m_nice[cpu] = nice;
+		m_system[cpu] = system;
+		m_idle[cpu] = idle;
+		m_iowait[cpu] = iowait;
+		m_irq[cpu] = irq;
+		m_softirq[cpu] = softirq;
+		m_steal[cpu] = steal;
+		m_guest[cpu] = guest;
+	}
+
+	/* go to the next slot */
+	m_currentSlot++;
+	MutexUnlock(m_cpuUsageMutex);
+
+	fclose(hStat);
+	m_maxCPU = maxCpu - 1;
 }
 
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
@@ -479,29 +492,31 @@ void StartCpuUsageCollector(void)
 	m_cpuUsageMutex = MutexCreate();
 
 #define SIZE sizeof(float) * CPU_USAGE_SLOTS * MAX_CPU
-#define AC(x) x = (float *)malloc(SIZE); memset(x, 0, SIZE);
-	AC(m_cpuUsage);
-	AC(m_cpuUsageUser);
-	AC(m_cpuUsageNice);
-	AC(m_cpuUsageSystem);
-	AC(m_cpuUsageIdle);
-	AC(m_cpuUsageIoWait);
-	AC(m_cpuUsageIrq);
-	AC(m_cpuUsageSoftIrq);
-	AC(m_cpuUsageSteal);
-#undef AC
+#define ALLOCATE_AND_CLEAR(x) x = (float *)malloc(SIZE); memset(x, 0, SIZE);
+	ALLOCATE_AND_CLEAR(m_cpuUsage);
+	ALLOCATE_AND_CLEAR(m_cpuUsageUser);
+	ALLOCATE_AND_CLEAR(m_cpuUsageNice);
+	ALLOCATE_AND_CLEAR(m_cpuUsageSystem);
+	ALLOCATE_AND_CLEAR(m_cpuUsageIdle);
+	ALLOCATE_AND_CLEAR(m_cpuUsageIoWait);
+	ALLOCATE_AND_CLEAR(m_cpuUsageIrq);
+	ALLOCATE_AND_CLEAR(m_cpuUsageSoftIrq);
+	ALLOCATE_AND_CLEAR(m_cpuUsageSteal);
+	ALLOCATE_AND_CLEAR(m_cpuUsageGuest);
+#undef ALLOCATE_AND_CLEAR
 #undef SIZE
 
-#define C(x) memset(x, 0, sizeof(uint64_t) * MAX_CPU);
-	C(m_user)
-	C(m_nice)
-	C(m_system)
-	C(m_idle)
-	C(m_iowait)
-	C(m_irq)
-	C(m_softirq)
-	C(m_steal)
-#undef C
+#define CLEAR(x) memset(x, 0, sizeof(uint64_t) * MAX_CPU);
+	CLEAR(m_user)
+	CLEAR(m_nice)
+	CLEAR(m_system)
+	CLEAR(m_idle)
+	CLEAR(m_iowait)
+	CLEAR(m_irq)
+	CLEAR(m_softirq)
+	CLEAR(m_steal)
+	CLEAR(m_guest)
+#undef CLEAR
 
 	// get initial count of user/system/idle time
 	m_currentSlot = 0;
@@ -515,7 +530,7 @@ void StartCpuUsageCollector(void)
 
 	// fill all slots with current cpu usage
 #define FILL(x) memcpy(x + i, x, sizeof(float));
-	for (i = 1; i < CPU_USAGE_SLOTS * MAX_CPU; i++)
+	for (i = 0; i < (CPU_USAGE_SLOTS * MAX_CPU) - 1; i++)
 	{
 			FILL(m_cpuUsage);
 			FILL(m_cpuUsageUser);
@@ -525,6 +540,7 @@ void StartCpuUsageCollector(void)
 			FILL(m_cpuUsageIrq);
 			FILL(m_cpuUsageSoftIrq);
 			FILL(m_cpuUsageSteal);
+			FILL(m_cpuUsageGuest);
 	}
 #undef FILL
 
@@ -547,13 +563,11 @@ void ShutdownCpuUsageCollector(void)
 	free(m_cpuUsageIrq);
 	free(m_cpuUsageSoftIrq);
 	free(m_cpuUsageSteal);
+	free(m_cpuUsageGuest);
 }
 
-static void GetUsage(int source, int slot, int count, char *value)
+static void GetUsage(int source, int cpu, int count, char *value)
 {
-	float usage = 0;
-	int i;
-
 	float *table;
 	switch (source)
 	{
@@ -584,22 +598,25 @@ static void GetUsage(int source, int slot, int count, char *value)
 		case CPU_USAGE_STEAL:
 			table = (float *)m_cpuUsageSteal;
 			break;
+		case CPU_USAGE_GUEST:
+			table = (float *)m_cpuUsageGuest;
+			break;
 		default:
 			table = (float *)m_cpuUsage;
 	}
 
+	table += cpu * CPU_USAGE_SLOTS;
+
+	float usage = 0;
+	float *p = table + m_currentSlot - 1;
+
 	MutexLock(m_cpuUsageMutex, INFINITE);
-
-	for (i = 0; i < count; i++)
-	{
-		int position = m_currentSlot - i - 1;
-
-		if (position < 0)
-		{
-			position += CPU_USAGE_SLOTS;
+	for (int i = 0; i < count; i++) {
+		usage += *p;
+		if (p == table) {
+			p += CPU_USAGE_SLOTS;
 		}
-
-		usage += *(table + (slot * MAX_CPU) + position);
+		p--;
 	}
 
 	MutexUnlock(m_cpuUsageMutex);

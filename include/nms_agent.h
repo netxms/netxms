@@ -277,6 +277,12 @@
 #define DCIDESC_SYSTEM_CPU_USAGE5_STEAL           "Average CPU utilization (steal) for last 5 minutes"
 #define DCIDESC_SYSTEM_CPU_USAGE15_STEAL          "Average CPU utilization (steal) for last 15 minutes"
 
+#define DCIDESC_SYSTEM_CPU_USAGE_GUEST_EX         "Average CPU {instance} utilization (guest) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_GUEST_EX        "Average CPU {instance} utilization (guest) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_GUEST_EX       "Average CPU {instance} utilization (guest) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_GUEST            "Average CPU utilization (guest) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_GUEST           "Average CPU utilization (guest) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_GUEST          "Average CPU utilization (guest) for last 15 minutes"
 
 #define DCIDESC_SYSTEM_IO_DISKQUEUE               "Average disk queue length for last minute"
 #define DCIDESC_SYSTEM_IO_DISKQUEUE_EX            "Average disk queue length of device {instance} for last minute"
@@ -391,18 +397,18 @@ inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 inline void ret_int(TCHAR *rbuf, LONG value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300)
-   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%d"), value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%ld"), value);
 #else
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%d"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%ld"), value);
 #endif
 }
 
 inline void ret_uint(TCHAR *rbuf, DWORD value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300)
-   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%u"), value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%lu"), value);
 #else
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%u"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%lu"), value);
 #endif
 }
 

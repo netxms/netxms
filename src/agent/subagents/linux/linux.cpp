@@ -308,6 +308,20 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.CPU.Usage15.Steal(*)",        H_CpuUsageEx,      MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_STEAL),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_STEAL_EX },
 
+	/* Guest */
+	{ "System.CPU.Usage.Guest",             H_CpuUsage,        MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_GUEST),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_GUEST },
+	{ "System.CPU.Usage5.Guest",            H_CpuUsage,        MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_GUEST),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_GUEST },
+	{ "System.CPU.Usage15.Guest",           H_CpuUsage,        MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_GUEST),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_GUEST },
+	{ "System.CPU.Usage.Guest(*)",          H_CpuUsageEx,      MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_GUEST),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_GUEST_EX },
+	{ "System.CPU.Usage5.Guest(*)",         H_CpuUsageEx,      MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_GUEST),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_GUEST_EX },
+	{ "System.CPU.Usage15.Guest(*)",        H_CpuUsageEx,      MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_GUEST),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_GUEST_EX },
+
 	/**************************************************************/
 	{ "System.Hostname",              H_Hostname,        NULL,
 		DCI_DT_STRING,	DCIDESC_SYSTEM_HOSTNAME },

@@ -161,6 +161,7 @@ enum
 	CPU_USAGE_IRQ,
 	CPU_USAGE_SOFTIRQ,
 	CPU_USAGE_STEAL,
+	CPU_USAGE_GUEST,
 };
 
 #define MAKE_CPU_USAGE_PARAM(interval, source)	(const char *)((((DWORD)(interval)) << 16) | ((DWORD)(source)))

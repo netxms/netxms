@@ -86,7 +86,7 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 		{
 			nRet = SYSINFO_RC_SUCCESS;
 
-			fgets(szBuff, sizeof(szBuff), hFile); // skip first line
+			char *__unused = fgets(szBuff, sizeof(szBuff), hFile); // skip first line
 
 			while (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
 			{
@@ -450,8 +450,8 @@ LONG H_NetIfInfoFromProc(const char *pszParam, const char *pArg, char *pValue)
 		{
 			while(1)
 			{
-				fgets(szBuffer, 256, fp);
-				if (feof(fp))
+				char *ret = fgets(szBuffer, 256, fp);
+				if (ret == NULL || feof(fp))
 				{
 					nRet = SYSINFO_RC_ERROR;   // Interface record not found
 					break;
