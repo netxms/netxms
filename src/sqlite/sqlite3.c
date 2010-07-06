@@ -17,14 +17,25 @@
 ** language. The code for the "sqlite3" command-line shell is also in a
 ** separate file. This file contains only code for the core SQLite library.
 */
+
+#ifdef _WIN32
+#pragma warning(disable : 4049 4244 4761)
+#endif
+
 #define SQLITE_CORE 1
 #define SQLITE_AMALGAMATION 1
 #ifndef SQLITE_PRIVATE
 # define SQLITE_PRIVATE static
 #endif
+
 #ifndef SQLITE_API
-# define SQLITE_API
+#ifdef _WIN32
+#define SQLITE_API __declspec(dllexport)
+#else
+#define SQLITE_API
 #endif
+#endif
+
 /************** Begin file sqliteInt.h ***************************************/
 /*
 ** 2001 September 15
