@@ -130,7 +130,7 @@ BOOL CGraph::PreCreateWindow(CREATESTRUCT& cs)
 // WM_PAINT message handler
 //
 
-void CGraph::OnPaint(void) 
+void CGraph::OnPaint() 
 {
 	CPaintDC sdc(this);  // original device context for painting
    CDC dc;              // In-memory dc
@@ -886,6 +886,29 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
             NXC_DCI_ROW *pRow;
             double dCurrValue;
             DWORD j;
+
+				// Include thresholds into evaluation
+				if ((m_graphItemStyles[i].bShowThresholds) && (m_thresholds[i] != NULL))
+				{
+					for(j = 0; j < m_numThresholds[i]; j++)
+					{
+						dCurrValue = _tcstod(m_thresholds[i][j].szValue, NULL);
+						if (dCurrValue > 0)
+						{
+							if (dCurrValue > m_dCurrMaxValue)
+								m_dCurrMaxValue = dCurrValue;
+							if (dCurrValue > dMaxAbsValue)
+								dMaxAbsValue = dCurrValue;
+						}
+						else
+						{
+							if (dCurrValue < m_dCurrMinValue)
+								m_dCurrMinValue = dCurrValue;
+							if (-dCurrValue > dMaxAbsValue)
+								dMaxAbsValue = -dCurrValue;
+						}
+					}
+				}
 
             // Skip values beyond right graph border
             pRow = m_pData[i]->pRows;

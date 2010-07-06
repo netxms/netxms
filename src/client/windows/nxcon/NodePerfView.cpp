@@ -58,6 +58,26 @@ public:
 
 
 //
+// Graph data
+//
+
+class GraphData
+{
+public:
+	NXC_DCI_DATA *m_data;
+	DWORD m_numThresholds;
+	NXC_DCI_THRESHOLD *m_thresholds;
+
+	GraphData(NXC_DCI_DATA *data, DWORD numThr, NXC_DCI_THRESHOLD *thr)
+	{
+		m_data = data;
+		m_numThresholds = numThr;
+		m_thresholds = thr;
+	}
+};
+
+
+//
 // Worker thread
 //
 
@@ -297,6 +317,7 @@ void CNodePerfView::CreateCustomGraph(NXC_PERFTAB_DCI *dci, RECT &rect)
 	m_pGraphList[m_dwNumGraphs].pWnd->m_rgbTextColor = GetSysColor(COLOR_WINDOWTEXT);
 	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].nType = config.getValueInt(_T("/type"), GRAPH_TYPE_LINE);
 	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].rgbColor = config.getValueUInt(_T("/color"), 0x00C000);
+	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].bShowThresholds = config.getValueBoolean(_T("/showThresholds"), false);
 	m_pGraphList[m_dwNumGraphs].pWnd->Create(WS_CHILD | WS_VISIBLE, rect, this, m_dwNumGraphs);
 	m_dwNumGraphs++;
 	rect.top += GRAPH_HEIGHT + GRAPH_Y_MARGIN;
@@ -403,9 +424,11 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 void CNodePerfView::WorkerThread()
 {
 	WorkerTask *pTask;
-	DWORD dwResult, dwNumItems;
+	DWORD dwResult, dwNumItems, numThresholds;
+	GraphData *data;
 	NXC_PERFTAB_DCI *pItemList;
-	NXC_DCI_DATA *pData;
+	NXC_DCI_DATA *dciData;
+	NXC_DCI_THRESHOLD *thresholds;
 
 	while(1)
 	{
@@ -425,10 +448,12 @@ void CNodePerfView::WorkerThread()
 				::PostMessage(pTask->m_hWnd, NXCM_UPDATE_FINISHED, 0, pTask->m_dwId);
 				break;
 			case TASK_UPDATE_GRAPH:
-				dwResult = NXCGetDCIData(g_hSession, pTask->m_dwId2, pTask->m_dwId, 0,
-				                         pTask->m_dwTimeFrom, pTask->m_dwTimeTo, &pData);
+				dwResult = NXCGetDCIDataEx(g_hSession, pTask->m_dwId2, pTask->m_dwId, 0,
+				                           pTask->m_dwTimeFrom, pTask->m_dwTimeTo, &dciData,
+													&thresholds, &numThresholds);
+				data = new GraphData(dciData, numThresholds, thresholds);
 				::PostMessage(pTask->m_hWnd, NXCM_GRAPH_DATA, pTask->m_dwId,
-				              (dwResult == RCC_SUCCESS) ? CAST_FROM_POINTER(pData, LPARAM) : 0);
+				              (dwResult == RCC_SUCCESS) ? CAST_FROM_POINTER(data, LPARAM) : 0);
 				break;
 			default:
 				break;
@@ -506,9 +531,15 @@ void CNodePerfView::UpdateAllGraphs()
 LRESULT CNodePerfView::OnGraphData(WPARAM wParam, LPARAM lParam)
 {
 	DWORD i, j;
+	GraphData *data = CAST_TO_POINTER(lParam, GraphData *);
 
 	if (m_nState != STATE_UPDATING)
+	{
+		NXCDestroyDCIData(data->m_data);
+		safe_free(data->m_thresholds);
+		delete data;
 		return 0;
+	}
 
 	for(i = 0; i < m_dwNumGraphs; i++)
 	{
@@ -516,7 +547,8 @@ LRESULT CNodePerfView::OnGraphData(WPARAM wParam, LPARAM lParam)
 		{
 			if (m_pGraphList[i].dwItemId[j] == wParam)
 			{
-				m_pGraphList[i].pWnd->SetData(j, CAST_TO_POINTER(lParam, NXC_DCI_DATA *));
+				m_pGraphList[i].pWnd->SetData(j, data->m_data);
+				m_pGraphList[i].pWnd->SetThresholds(j, data->m_numThresholds, data->m_thresholds);
 				m_pGraphList[i].pWnd->SetTimeFrame(m_dwTimeFrom, m_dwTimeTo);
 				m_pGraphList[i].pWnd->Update();
 				goto stop_search;
@@ -526,7 +558,11 @@ LRESULT CNodePerfView::OnGraphData(WPARAM wParam, LPARAM lParam)
 
 stop_search:
 	if (i == m_dwNumGraphs)		// Graph for given DCI ID not found
-		NXCDestroyDCIData(CAST_TO_POINTER(lParam, NXC_DCI_DATA *));
+	{
+		NXCDestroyDCIData(data->m_data);
+		safe_free(data->m_thresholds);
+	}
+	delete data;
 	return 0;
 }
 

@@ -741,6 +741,7 @@
 #define IDC_CHECK_LOGSCALE              1562
 #define IDC_CHECK_SHOW                  1563
 #define IDC_COLOR_SELECTOR              1565
+#define IDC_CHECK_THRESHOLDS            1566
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -1053,7 +1054,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        414
 #define _APS_NEXT_COMMAND_VALUE         33113
-#define _APS_NEXT_CONTROL_VALUE         1566
+#define _APS_NEXT_CONTROL_VALUE         1567
 #define _APS_NEXT_SYMED_VALUE           136
 #endif
 #endif

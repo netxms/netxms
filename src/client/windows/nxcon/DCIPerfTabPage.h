@@ -42,6 +42,7 @@ protected:
 	COLORREF m_graphColor;
 	CString m_graphTitle;
 	bool m_showOnPerfTab;
+	bool m_showThresholds;
 	// Generated message map functions
 	//{{AFX_MSG(CDCIPerfTabPage)
 	virtual BOOL OnInitDialog();

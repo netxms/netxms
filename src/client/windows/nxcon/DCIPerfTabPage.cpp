@@ -45,6 +45,7 @@ void CDCIPerfTabPage::DoDataExchange(CDataExchange* pDX)
 	if (pDX->m_bSaveAndValidate)
 	{
 		m_showOnPerfTab = (SendDlgItemMessage(IDC_CHECK_SHOW, BM_GETCHECK, 0, 0) == BST_CHECKED);
+		m_showThresholds = (SendDlgItemMessage(IDC_CHECK_THRESHOLDS, BM_GETCHECK, 0, 0) == BST_CHECKED);
 		GetDlgItemText(IDC_EDIT_TITLE, m_graphTitle);
 
 		// Check for default settings
@@ -62,8 +63,10 @@ void CDCIPerfTabPage::DoDataExchange(CDataExchange* pDX)
 			m_strConfig += _T("</enabled><title>");
 			m_strConfig += (const TCHAR *)EscapeStringForXML2((LPCTSTR)m_graphTitle, -1);
 			m_strConfig += _T("</title><color>");
-			_sntprintf(temp, 64, _T("0x%06X</color></config>"), m_graphColor);
+			_sntprintf(temp, 64, _T("0x%06X</color><showThresholds>"), m_graphColor);
 			m_strConfig += temp;
+			m_strConfig += m_showThresholds ? _T("true") : _T("false");
+			m_strConfig += _T("</showThresholds></config>");
 		}
 	}
 }
@@ -96,10 +99,12 @@ BOOL CDCIPerfTabPage::OnInitDialog()
 			m_showOnPerfTab = config.getValueBoolean(_T("/enabled"), false);
 			m_graphTitle = config.getValue(_T("/title"), _T(""));
 			m_graphColor = config.getValueUInt(_T("/color"), 0x00C000);
+			m_showThresholds = config.getValueBoolean(_T("/showThresholds"), false);
 
 			SendDlgItemMessage(IDC_CHECK_SHOW, BM_SETCHECK, m_showOnPerfTab ? BST_CHECKED : BST_UNCHECKED, 0);
 			SetDlgItemText(IDC_EDIT_TITLE, m_graphTitle);
 			m_wndGraphColor.SetColor(m_graphColor);
+			SendDlgItemMessage(IDC_CHECK_THRESHOLDS, BM_SETCHECK, m_showThresholds ? BST_CHECKED : BST_UNCHECKED, 0);
 		}
 		free(xml);
 	}

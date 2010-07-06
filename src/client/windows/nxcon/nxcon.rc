@@ -3201,9 +3201,11 @@ BEGIN
     CONTROL         "&Show this DCI on node's performance tab",
                     IDC_CHECK_SHOW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,
                     147,10
-    LTEXT           "Graph title",IDC_STATIC,7,25,33,8
     EDITTEXT        IDC_EDIT_TITLE,7,35,181,14,ES_AUTOHSCROLL
     PUSHBUTTON      "X",IDC_COLOR_SELECTOR,194,36,27,12
+    CONTROL         "Show &thresholds on graph",IDC_CHECK_THRESHOLDS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,55,98,10
+    LTEXT           "Graph title",IDC_STATIC,7,25,33,8
     LTEXT           "Color",IDC_STATIC,194,25,17,8
 END
 
