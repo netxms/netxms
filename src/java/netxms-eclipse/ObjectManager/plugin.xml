@@ -109,6 +109,30 @@
       </objectContribution>
 
       <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.unbind_NXCContainer"
+            objectClass="org.netxms.client.objects.Container">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.UnbindObject"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject"
+               label="Unbind..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.unbind_NXCServiceRoot"
+            objectClass="org.netxms.client.objects.ServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.UnbindObject"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject"
+               label="Unbind..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+
+      <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind_NXCContainer"
             objectClass="org.netxms.client.objects.Container">
          <action

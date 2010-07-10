@@ -68,7 +68,11 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
-	 * @param parentShell
+	 * Create object selection dialog.
+	 * 
+	 * @param parentShell parent shell
+	 * @param rootObjects list of root objects (set to null to show entire object tree)
+	 * @param classFilter set of allowed object classes (set to null to show all classes)
 	 */
 	public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter)
 	{

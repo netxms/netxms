@@ -35,7 +35,11 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.ExpandBar;
+import org.eclipse.swt.widgets.ExpandItem;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -53,6 +57,7 @@ import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.dialogs.QueryBuilder;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
+import org.netxms.ui.eclipse.logviewer.widgets.FilterBuilder;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 
@@ -72,6 +77,7 @@ public class LogViewer extends ViewPart
 	private static final int NEXT_PAGE = 1;
 		
 	private NXCSession session;
+	private FilterBuilder filterBuilder;
 	private TableViewer viewer;
 	private String logName;
 	private Log logHandle;
@@ -115,13 +121,29 @@ public class LogViewer extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		parent.setLayout(new FillLayout());
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		parent.setLayout(layout);
 
+		/* create filter builder */
+		filterBuilder = new FilterBuilder(parent, SWT.NONE);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		filterBuilder.setLayoutData(gd);
+		
+		/* create viewer */
 		viewer = new TableViewer(parent, SWT.MULTI | SWT.FULL_SELECTION);
 		org.eclipse.swt.widgets.Table table = viewer.getTable();
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 		viewer.setContentProvider(new ArrayContentProvider());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		viewer.getControl().setLayoutData(gd);
 
 		makeActions();
 		contributeToActionBars();
