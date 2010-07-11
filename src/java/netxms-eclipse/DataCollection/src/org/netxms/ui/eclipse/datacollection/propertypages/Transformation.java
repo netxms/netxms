@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
@@ -34,9 +33,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.NXSLLineStyleListener;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -120,32 +119,34 @@ public class Transformation extends PropertyPage
 		
 		dci.setDeltaCalculation(deltaCalculation.getSelectionIndex());
 		dci.setTransformationScript(transformationScript.getText());
-		new Job("Update transformation settings for DCI " + dci.getId()) {
+		
+		new ConsoleJob("Update transformation settings for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected String getErrorMessage()
 			{
-				IStatus status;
-				
-				try
-				{
-					dci.getOwner().modifyItem(dci);
-					new UIJob("Update data collection item list") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							((TableViewer)dci.getOwner().getUserData()).update(dci, null);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot update transformation settings: " + e.getMessage(), null);
-				}
+				return "Cannot update transformation settings";
+			}
 
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				dci.getOwner().modifyItem(dci);
+				new UIJob("Update data collection item list") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+
+			/* (non-Javadoc)
+			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
+			 */
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
 					new UIJob("Update \"Transformation\" property page") {
@@ -157,10 +158,8 @@ public class Transformation extends PropertyPage
 						}
 					}.schedule();
 				}
-
-				return status;
 			}
-		}.schedule();
+		}.start();
 	}
 
 	/* (non-Javadoc)

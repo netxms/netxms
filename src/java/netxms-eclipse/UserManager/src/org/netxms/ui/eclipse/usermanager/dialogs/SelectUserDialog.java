@@ -23,6 +23,8 @@ import java.util.Iterator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -96,6 +98,13 @@ public class SelectUserDialog extends Dialog
       userList.setContentProvider(new ArrayContentProvider());
       userList.setLabelProvider(new WorkbenchLabelProvider());
       userList.setComparator(new UserComparator());
+      userList.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				SelectUserDialog.this.okPressed();
+			}
+      });
       userList.addFilter(new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element)

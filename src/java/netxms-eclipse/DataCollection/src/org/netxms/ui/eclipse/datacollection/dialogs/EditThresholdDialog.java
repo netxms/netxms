@@ -19,7 +19,10 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -149,6 +152,19 @@ public class EditThresholdDialog extends Dialog
 		repeatCustom = new Button(repeatGroup, SWT.RADIO);
 		repeatCustom.setText("&Every");
 		repeatCustom.setSelection(threshold.getRepeatInterval() > 0);
+		repeatCustom.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				repeatInterval.setEnabled(repeatCustom.getSelection());
+			}
+		});
 		
 		repeatInterval = new Text(repeatGroup, SWT.BORDER);
 		repeatInterval.setTextLimit(5);
@@ -168,5 +184,63 @@ public class EditThresholdDialog extends Dialog
 	{
 		super.configureShell(newShell);
 		newShell.setText("Edit Threshold");
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 */
+	@Override
+	protected void okPressed()
+	{
+		int numSamples;
+		try
+		{
+			numSamples = Integer.parseInt(samples.getText());
+		}
+		catch(NumberFormatException e)
+		{
+			numSamples = 0;
+		}
+		if ((numSamples < 1) || (numSamples > 1000))
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Invalid number of samples: please enter value in range 1 .. 1000");
+			return;
+		}
+		
+		int rpt;
+		if (repeatDefault.getSelection())
+		{
+			rpt = -1;
+		}
+		else if (repeatNever.getSelection())
+		{
+			rpt = 0;
+		}
+		else
+		{
+			try
+			{
+				rpt = Integer.parseInt(repeatInterval.getText());
+			}
+			catch(NumberFormatException e)
+			{
+				rpt = -2;
+			}
+		}
+		if (rpt == -2)
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Invalid repeat interval: please enter positive numeric value");
+			return;
+		}
+		
+		threshold.setFunction(function.getSelectionIndex());
+		threshold.setOperation(operation.getSelectionIndex());
+		threshold.setValue(value.getText());
+		threshold.setArg1(numSamples);
+		threshold.setRepeatInterval(rpt);
+		threshold.setFireEvent((int)activationEvent.getEventCode());
+		threshold.setRearmEvent((int)deactivationEvent.getEventCode());
+				
+		super.okPressed();
 	}
 }

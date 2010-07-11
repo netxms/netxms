@@ -52,6 +52,7 @@ public class AccessControl extends PropertyPage
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
 	private HashMap<Long, NXCAccessListElement> acl;
+	private Button checkInherit;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -209,6 +210,10 @@ public class AccessControl extends PropertyPage
 			}
       });
       
+      checkInherit = new Button(dialogArea, SWT.CHECK);
+      checkInherit.setText("&Inherit access rights from parent object(s)");
+      checkInherit.setSelection(object.isInheritAccessRights());
+      
 		return dialogArea;
 	}
 	
@@ -271,6 +276,8 @@ public class AccessControl extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
+		final boolean inheritAccessRights = checkInherit.getSelection();
+		
 		new Job("Update access control list for object " + object.getObjectName()) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
@@ -281,6 +288,7 @@ public class AccessControl extends PropertyPage
 				{
 					NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 					md.setACL(acl.values().toArray(new NXCAccessListElement[acl.size()]));
+					md.setInheritAccessRights(inheritAccessRights);
 					NXMCSharedData.getInstance().getSession().modifyObject(md);
 					status = Status.OK_STATUS;
 				}
@@ -325,5 +333,17 @@ public class AccessControl extends PropertyPage
 	protected void performApply()
 	{
 		applyChanges(true);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+	 */
+	@Override
+	protected void performDefaults()
+	{
+		super.performDefaults();
+		checkInherit.setSelection(true);
+		acl.clear();
+		userList.setInput(acl.values().toArray());
 	}
 }

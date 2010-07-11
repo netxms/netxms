@@ -73,11 +73,12 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	{
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		IWorkbenchWindow window = configurer.getWindow();
+		
 		window.getShell().setMaximized(true);
 		
 		NXCSession session = NXMCSharedData.getInstance().getSession();
 		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		
+
 		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON"))
 			Activator.showTrayIcon();
 	}
@@ -95,9 +96,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		do
 		{
 			loginDialog = new LoginDialog(shell);
-			loginDialog.open();
-			if (!loginDialog.isOk())
-				break;
+			if (loginDialog.open() != Window.OK)
+				System.exit(0);	// TODO: do we need to use more graceful method?
 
 			try
 			{
@@ -164,13 +164,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 						MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString()); //$NON-NLS-1$
 					}
 				}
-			}
-		}
-		else
-		{
-			if (shell != null)
-			{
-				shell.close();
 			}
 		}
 	}

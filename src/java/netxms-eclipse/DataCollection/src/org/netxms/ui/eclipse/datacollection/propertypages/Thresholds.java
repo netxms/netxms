@@ -18,13 +18,21 @@
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -41,10 +49,14 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditThresholdDialog;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -56,6 +68,8 @@ public class Thresholds extends PropertyPage
 {
 	public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
+	
+	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList";
 	
 	private DataCollectionItem dci;
 	private LabeledText instance;
@@ -72,6 +86,9 @@ public class Thresholds extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
+		// Initiate loading of event manager plugin if it was not loaded before
+		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		
 		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -134,10 +151,36 @@ public class Thresholds extends PropertyPage
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText("&Up");
       upButton.setEnabled(false);
+      upButton.addSelectionListener(new SelectionListener() {
+		@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+			widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveUp();
+			}
+      });
       
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText("&Down");
       downButton.setEnabled(false);
+      downButton.addSelectionListener(new SelectionListener() {
+   		@Override
+   			public void widgetDefaultSelected(SelectionEvent e)
+   			{
+   			widgetSelected(e);
+   			}
+
+   			@Override
+   			public void widgetSelected(SelectionEvent e)
+   			{
+   				moveDown();
+   			}
+         });
       
       Composite buttons = new Composite(thresholdArea, SWT.NONE);
       gd = new GridData();
@@ -158,6 +201,19 @@ public class Thresholds extends PropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
+      addButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+			
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				addThreshold();
+			}
+		});
       
       modifyButton = new Button(buttons, SWT.PUSH);
       modifyButton.setText("&Edit...");
@@ -205,10 +261,20 @@ public class Thresholds extends PropertyPage
 			public void selectionChanged(SelectionChangedEvent event)
 			{
 				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-				upButton.setEnabled(selection.size() == 1);
-				downButton.setEnabled(selection.size() == 1);
+				List<Threshold> tlist = dci.getThresholds();
+				int index = tlist.indexOf(selection.getFirstElement());
+				upButton.setEnabled((selection.size() == 1) && (index > 0));
+				downButton.setEnabled((selection.size() == 1) && (index >= 0) && (index < tlist.size() - 1));
 				modifyButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
+			}
+      });
+      
+      thresholds.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				editThreshold();
 			}
       });
       
@@ -240,13 +306,70 @@ public class Thresholds extends PropertyPage
 	private void editThreshold()
 	{
 		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
-		if (!selection.isEmpty())
+		if (selection.size() == 1)
 		{
 			final Threshold threshold = (Threshold)selection.getFirstElement();
 			EditThresholdDialog dlg = new EditThresholdDialog(getShell(), threshold);
 			if (dlg.open() == Window.OK)
 			{
 				thresholds.update(threshold, null);
+			}
+		}
+	}
+	
+	/**
+	 * Add new threshold
+	 */
+	private void addThreshold()
+	{
+		Threshold threshold = new Threshold();
+		EditThresholdDialog dlg = new EditThresholdDialog(getShell(), threshold);
+		if (dlg.open() == Window.OK)
+		{
+			dci.getThresholds().add(threshold);
+	      thresholds.setInput(dci.getThresholds().toArray());
+	      thresholds.setSelection(new StructuredSelection(threshold));
+		}
+	}
+	
+	/**
+	 * Move currently selected threshold up
+	 */
+	private void moveUp()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
+		if (selection.size() == 1)
+		{
+			final List<Threshold> list = dci.getThresholds();
+			final Threshold threshold = (Threshold)selection.getFirstElement();
+			
+			int index = list.indexOf(threshold);
+			if (index > 0)
+			{
+				Collections.swap(list, index - 1, index);
+		      thresholds.setInput(dci.getThresholds().toArray());
+		      thresholds.setSelection(new StructuredSelection(threshold));
+			}
+		}
+	}
+	
+	/**
+	 * Move currently selected threshold down
+	 */
+	private void moveDown()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)thresholds.getSelection();
+		if (selection.size() == 1)
+		{
+			final List<Threshold> list = dci.getThresholds();
+			final Threshold threshold = (Threshold)selection.getFirstElement();
+			
+			int index = list.indexOf(threshold);
+			if ((index < list.size() - 1) && (index >= 0))
+			{
+				Collections.swap(list, index + 1, index);
+		      thresholds.setInput(dci.getThresholds().toArray());
+		      thresholds.setSelection(new StructuredSelection(threshold));
 			}
 		}
 	}
@@ -268,7 +391,102 @@ public class Thresholds extends PropertyPage
 		column.setText("Event");
 		column.setWidth(150);
 		
+		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
+		
       thresholds.setContentProvider(new ArrayContentProvider());
       thresholds.setLabelProvider(new ThresholdLabelProvider());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
+	 */
+	@Override
+	protected void performApply()
+	{
+		saveSettings();
+		applyChanges(true);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 */
+	@Override
+	public boolean performOk()
+	{
+		saveSettings();
+		applyChanges(false);
+		return true;
+	}
+	
+	/**
+	 * Apply changes
+	 * 
+	 * @param isApply true if update operation caused by "Apply" button
+	 */
+	protected void applyChanges(final boolean isApply)
+	{
+		if (isApply)
+			setValid(false);
+		
+		dci.setInstance(instance.getText());
+		
+		new ConsoleJob("Update thresholds for DCI " + dci.getId(), null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update thresholds";
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				dci.getOwner().modifyItem(dci);
+				new UIJob("Update data collection item list") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						((TableViewer)dci.getOwner().getUserData()).update(dci, null);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+
+			/* (non-Javadoc)
+			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
+			 */
+			@Override
+			protected void jobFinalize()
+			{
+				if (isApply)
+				{
+					new UIJob("Update \"Thresholds\" property page") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							Thresholds.this.setValid(true);
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				}
+			}
+		}.start();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
+	 */
+	@Override
+	public boolean performCancel()
+	{
+		saveSettings();
+		return true;
+	}
+	
+	/**
+	 * Save settings
+	 */
+	private void saveSettings()
+	{
+		WidgetHelper.saveColumnSettings(thresholds.getTable(), Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
 	}
 }

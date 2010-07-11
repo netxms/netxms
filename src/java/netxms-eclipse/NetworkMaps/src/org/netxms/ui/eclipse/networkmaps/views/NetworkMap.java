@@ -118,7 +118,11 @@ public abstract class NetworkMap extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager mgr)
 	{
+		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		mgr.add(new Separator());
+		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());

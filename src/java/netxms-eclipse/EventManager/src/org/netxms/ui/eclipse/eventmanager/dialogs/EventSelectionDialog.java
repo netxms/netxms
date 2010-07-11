@@ -22,6 +22,8 @@ import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
@@ -141,7 +143,15 @@ public class EventSelectionDialog extends Dialog
 				eventList.refresh();
 			}
 		});
-
+		
+		eventList.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				EventSelectionDialog.this.okPressed();
+			}
+		});
+		
 		return dialogArea;
 	}
 	
