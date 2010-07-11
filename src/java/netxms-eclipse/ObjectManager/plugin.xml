@@ -116,7 +116,7 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject"
                label="Unbind..."
-               menubarPath="objectmgmt">
+               menubarPath="objectbinding">
          </action>
       </objectContribution>
 
@@ -128,7 +128,7 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject"
                label="Unbind..."
-               menubarPath="objectmgmt">
+               menubarPath="objectbinding">
          </action>
       </objectContribution>
 
@@ -140,7 +140,7 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject"
                label="Bind..."
-               menubarPath="objectmgmt">
+               menubarPath="objectbinding">
          </action>
       </objectContribution>
 
@@ -152,7 +152,7 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject"
                label="Bind..."
-               menubarPath="objectmgmt">
+               menubarPath="objectbinding">
          </action>
       </objectContribution>
 

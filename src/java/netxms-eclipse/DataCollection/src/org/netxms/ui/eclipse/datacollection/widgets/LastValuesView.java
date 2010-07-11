@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectview.widgets;
+package org.netxms.ui.eclipse.datacollection.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -38,10 +38,10 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesComparator;
+import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectview.Activator;
-import org.netxms.ui.eclipse.objectview.widgets.helpers.LastValuesComparator;
-import org.netxms.ui.eclipse.objectview.widgets.helpers.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 

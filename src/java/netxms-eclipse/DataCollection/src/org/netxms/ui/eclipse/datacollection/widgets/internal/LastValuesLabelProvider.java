@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectview.widgets.helpers;
+package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
 import java.text.DateFormat;
 
@@ -9,8 +9,8 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.objectview.Activator;
-import org.netxms.ui.eclipse.objectview.widgets.LastValuesView;
+import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
 
 
 /**
@@ -29,9 +29,9 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 	{
 		super();
 
-		stateImages[0] = Activator.getImageDescriptor("icons/active.ico").createImage();
-		stateImages[1] = Activator.getImageDescriptor("icons/disabled.ico").createImage();
-		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.ico").createImage();
+		stateImages[0] = Activator.getImageDescriptor("icons/active.gif").createImage();
+		stateImages[1] = Activator.getImageDescriptor("icons/disabled.gif").createImage();
+		stateImages[2] = Activator.getImageDescriptor("icons/unsupported.gif").createImage();
 	}
 	
 	/* (non-Javadoc)

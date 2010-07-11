@@ -11,6 +11,13 @@
             class="org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor"
             id="org.netxms.ui.eclipse.datacollection.view.data_collection_editor">
       </view>
+      <view
+            name="Last Values"
+            allowMultiple="true"
+            icon="icons/last_values.png"
+            class="org.netxms.ui.eclipse.datacollection.views.LastValues"
+            id="org.netxms.ui.eclipse.datacollection.view.last_values">
+      </view>
    </extension>
    
    <extension
@@ -36,6 +43,18 @@
                id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor"
                label="Data Collection Configuration"
                icon="icons/dc_editor.png"
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.lastvalues"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues"
+               label="Last values"
+               icon="icons/last_values.png"
                menubarPath="datacollection">
          </action>
       </objectContribution>
@@ -93,5 +112,15 @@
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
         </factory>
   </extension>
+
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues"
+            icon="icons/last_values.png"
+            name="Last Values"
+            order="20">
+      </tab>
+   </extension>
 
 </plugin>

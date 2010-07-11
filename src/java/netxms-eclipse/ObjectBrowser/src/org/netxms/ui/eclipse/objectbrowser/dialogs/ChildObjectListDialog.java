@@ -27,19 +27,33 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
+import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Dialog used to select child object(s) of given object
@@ -49,6 +63,8 @@ public class ChildObjectListDialog extends Dialog
 {
 	private long parentObject;
 	private Set<Integer> classFilter;
+	private ObjectListFilter filter;
+	private Text filterText;
 	private TableViewer objectList;
 	private List<GenericObject> selectedObjects;
 	
@@ -58,7 +74,7 @@ public class ChildObjectListDialog extends Dialog
 	public ChildObjectListDialog(Shell parentShell, long parentObject, Set<Integer> classFilter)
 	{
 		super(parentShell);
-		
+		setShellStyle(getShellStyle() | SWT.RESIZE);
 		this.parentObject = parentObject;
 		this.classFilter = classFilter;
 	}
@@ -92,16 +108,84 @@ public class ChildObjectListDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
-		dialogArea.setLayout(new FillLayout());
+		GenericObject object = NXMCSharedData.getInstance().getSession().findObjectById(parentObject);
+		GenericObject[] sourceObjects = object.getChildsAsArray();
 		
-		objectList = new SortableTableViewer(dialogArea, new String[] { "Name" }, new int[] { 280 }, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
+		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		dialogArea.setLayout(layout);
+		
+		// Create filter area
+		Composite filterArea = new Composite(dialogArea, SWT.NONE);
+		layout = new GridLayout();
+		layout.numColumns = 2;
+		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		filterArea.setLayout(layout);
+		filterArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		Label filterLabel = new Label(filterArea, SWT.NONE);
+		filterLabel.setText(Messages.getString("ChildObjectListDialog.filter")); //$NON-NLS-1$
+		
+		filterText = new Text(filterArea, SWT.BORDER);
+		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		filterText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				filter.setFilterString(filterText.getText());
+				objectList.refresh(false);
+				GenericObject obj = filter.getLastMatch();
+				if (obj != null)
+				{
+					objectList.setSelection(new StructuredSelection(obj), true);
+					objectList.reveal(obj);
+				}
+			}
+		});
+		
+		// Create object list
+		objectList = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
+		TableColumn tc = new TableColumn(objectList.getTable(), SWT.LEFT); 
+		tc.setText(Messages.getString("ChildObjectListDialog.name")); //$NON-NLS-1$
+		tc.setWidth(280);
+		objectList.getTable().setHeaderVisible(false);
 		objectList.setContentProvider(new ArrayContentProvider());
 		objectList.setLabelProvider(new WorkbenchLabelProvider());
 		objectList.setComparator(new ViewerComparator());
+		filter = new ObjectListFilter(sourceObjects, classFilter);
+		objectList.addFilter(filter);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		objectList.getControl().setLayoutData(gd);
+		objectList.getTable().addControlListener(new ControlListener() {
+			@Override
+			public void controlMoved(ControlEvent e)
+			{
+			}
+
+			@Override
+			public void controlResized(ControlEvent e)
+			{
+				Table table = objectList.getTable();
+				int w = table.getSize().x - table.getBorderWidth() * 2;
+				ScrollBar sc = table.getVerticalBar();
+				if ((sc != null) && sc.isVisible())
+					w -= sc.getSize().x;
+				table.getColumn(0).setWidth(w);
+			}
+		});
 		
-		GenericObject object = NXMCSharedData.getInstance().getSession().findObjectById(parentObject);
 		if (object != null)
-			objectList.setInput(object.getChildsAsArray());
+			objectList.setInput(sourceObjects);
+		
+		filterText.setFocus();
 		
 		return dialogArea;
 	}
@@ -140,8 +224,8 @@ public class ChildObjectListDialog extends Dialog
 		Point size = getShell().getSize();
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 
-		settings.put("ChildObjectListDialog.cx.cx", size.x); //$NON-NLS-1$
-		settings.put("ChildObjectListDialog.cx.cy", size.y); //$NON-NLS-1$
+		settings.put("ChildObjectListDialog.cx", size.x); //$NON-NLS-1$
+		settings.put("ChildObjectListDialog.cy", size.y); //$NON-NLS-1$
 	}
 
 	/**

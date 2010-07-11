@@ -27,14 +27,14 @@ public class ObjectDecorator implements ILabelDecorator
 	public ObjectDecorator()
 	{
 		statusImages = new ImageDescriptor[9];
-		statusImages[1] = Activator.getImageDescriptor("icons/status/warning.png");
-		statusImages[2] = Activator.getImageDescriptor("icons/status/minor.png");
-		statusImages[3] = Activator.getImageDescriptor("icons/status/major.png");
-		statusImages[4] = Activator.getImageDescriptor("icons/status/critical.png");
-		statusImages[5] = Activator.getImageDescriptor("icons/status/unknown.gif");
-		statusImages[6] = Activator.getImageDescriptor("icons/status/unmanaged.gif");
-		statusImages[7] = Activator.getImageDescriptor("icons/status/disabled.gif");
-		statusImages[8] = Activator.getImageDescriptor("icons/status/testing.png");
+		statusImages[1] = Activator.getImageDescriptor("icons/status/warning.png"); //$NON-NLS-1$
+		statusImages[2] = Activator.getImageDescriptor("icons/status/minor.png"); //$NON-NLS-1$
+		statusImages[3] = Activator.getImageDescriptor("icons/status/major.png"); //$NON-NLS-1$
+		statusImages[4] = Activator.getImageDescriptor("icons/status/critical.png"); //$NON-NLS-1$
+		statusImages[5] = Activator.getImageDescriptor("icons/status/unknown.gif"); //$NON-NLS-1$
+		statusImages[6] = Activator.getImageDescriptor("icons/status/unmanaged.gif"); //$NON-NLS-1$
+		statusImages[7] = Activator.getImageDescriptor("icons/status/disabled.gif"); //$NON-NLS-1$
+		statusImages[8] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
 	}
 	                           
 	/* (non-Javadoc)

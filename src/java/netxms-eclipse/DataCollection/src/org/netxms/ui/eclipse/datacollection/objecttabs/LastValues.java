@@ -16,58 +16,36 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectview.views;
+package org.netxms.ui.eclipse.datacollection.objecttabs;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.objectview.widgets.LastValuesView;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
- * @author Victor
+ * Last values tab
  *
  */
-public class LastValues extends ViewPart
+public class LastValues extends ObjectTab
 {
-	public static final String ID = "org.netxms.ui.eclipse.objectview.view.last_values";
-	
-	private NXCSession session;
-	private Node node;
 	private LastValuesView dataView;
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
-		
-		session = NXMCSharedData.getInstance().getSession();
-		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
-		setPartName("Last Values - " + ((node != null) ? node.getObjectName() : "<error>"));
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createPartControl(Composite parent)
+	protected void createTabContent(Composite parent)
 	{
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		dataView = new LastValuesView(this, parent, SWT.NONE, node);
+		dataView = new LastValuesView(getViewPart(), parent, SWT.NONE, (Node)getObject());
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -77,11 +55,20 @@ public class LastValues extends ViewPart
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.GenericObject)
 	 */
 	@Override
-	public void setFocus()
+	public void objectChanged(GenericObject object)
 	{
-		dataView.setFocus();
+		dataView.setNode((object instanceof Node) ? (Node)object : null);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.GenericObject)
+	 */
+	@Override
+	public boolean showForObject(GenericObject object)
+	{
+		return object instanceof Node;
 	}
 }

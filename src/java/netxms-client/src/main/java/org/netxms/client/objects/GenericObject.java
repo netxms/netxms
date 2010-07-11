@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.net.InetAddress;
 import org.netxms.base.*;
 import org.netxms.client.GeoLocation;
@@ -301,17 +302,19 @@ public class GenericObject
 	 */
 	public GenericObject[] getParentsAsArray()
 	{
-		final GenericObject[] list;
+		final Set<GenericObject> list;
 		synchronized(parents)
 		{
-			list = new GenericObject[parents.size()];
+			list = new HashSet<GenericObject>(childs.size());
 			final Iterator<Long> it = parents.iterator();
-			for(int i = 0; it.hasNext(); i++)
+			while(it.hasNext())
 			{
-				list[i] = session.findObjectById(it.next());
+				GenericObject obj = session.findObjectById(it.next());
+				if (obj != null)
+					list.add(obj);
 			}
 		}
-		return list;
+		return list.toArray(new GenericObject[list.size()]);
 	}
 
 	/**
@@ -319,17 +322,19 @@ public class GenericObject
 	 */
 	public GenericObject[] getChildsAsArray()
 	{
-		final GenericObject[] list;
+		final Set<GenericObject> list;
 		synchronized(childs)
 		{
-			list = new GenericObject[childs.size()];
+			list = new HashSet<GenericObject>(childs.size());
 			final Iterator<Long> it = childs.iterator();
-			for(int i = 0; it.hasNext(); i++)
+			while(it.hasNext())
 			{
-				list[i] = session.findObjectById(it.next());
+				GenericObject obj = session.findObjectById(it.next());
+				if (obj != null)
+					list.add(obj);
 			}
 		}
-		return list;
+		return list.toArray(new GenericObject[list.size()]);
 	}
 
 	/**

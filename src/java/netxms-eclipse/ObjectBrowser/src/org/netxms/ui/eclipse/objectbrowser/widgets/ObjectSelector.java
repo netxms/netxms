@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objectbrowser.widgets;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -41,7 +42,7 @@ public class ObjectSelector extends AbstractSelector
 	public ObjectSelector(Composite parent, int style)
 	{
 		super(parent, style);
-		setText("<none>");
+		setText(Messages.getString("ObjectSelector.none")); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -63,7 +64,7 @@ public class ObjectSelector extends AbstractSelector
 			else
 			{
 				objectId = 0;
-				setText("<none>");
+				setText(Messages.getString("ObjectSelector.none")); //$NON-NLS-1$
 			}
 		}
 	}
@@ -84,12 +85,12 @@ public class ObjectSelector extends AbstractSelector
 		this.objectId = objectId;
 		if (objectId == 0)
 		{
-			setText("<none>");
+			setText(Messages.getString("ObjectSelector.none")); //$NON-NLS-1$
 		}
 		else
 		{
 			final GenericObject object = NXMCSharedData.getInstance().getSession().findObjectById(objectId);
-			setText((object != null) ? object.getObjectName() : "<unknown>");
+			setText((object != null) ? object.getObjectName() : Messages.getString("ObjectSelector.unknown")); //$NON-NLS-1$
 		}
 	}
 

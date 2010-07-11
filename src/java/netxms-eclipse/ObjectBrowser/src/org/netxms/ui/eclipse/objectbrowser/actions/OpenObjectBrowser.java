@@ -6,6 +6,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser;
 
 public class OpenObjectBrowser implements IWorkbenchWindowActionDelegate

@@ -6,49 +6,45 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Last Values"
-            allowMultiple="true"
-            icon="icons/last_values.png"
-            class="org.netxms.ui.eclipse.objectview.views.LastValues"
-            id="org.netxms.ui.eclipse.objectview.view.last_values">
-      </view>
-      <view
-            name="Object Information"
+            name="Object Details"
             allowMultiple="false"
-            icon="icons/last_values.png"
+            icon="icons/object_details.png"
             class="org.netxms.ui.eclipse.objectview.views.TabbedObjectView"
             id="org.netxms.ui.eclipse.objectview.view.tabbed_object_view">
       </view>
    </extension>
 
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            id="org.netxms.ui.eclipse.objectview.actions.popup.object.lastvalues"
-            objectClass="org.netxms.client.objects.Node">
-         <action
-               class="org.netxms.ui.eclipse.objectview.actions.ShowLastValues"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectview.popupActions.ShowLastValues"
-               label="Last values"
-               icon="icons/last_values.png"
-               menubarPath="datacollection">
-         </action>
-      </objectContribution>
+         point="org.eclipse.ui.commands">
+      <command
+            name="Object Details"
+            description="Open Object Details"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.objectview.commands.open_tabbed_object_view">
+      </command>
    </extension>
    
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.objectview.action_set"
+		   label="Object Details"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.objectview.actions.open_tabbed_object_view"
+			   menubarPath="view/primary"
+			   label="Object Details"
+			   tooltip="Open Object Details"
+			   icon="icons/object_details.png"
+			   class="org.netxms.ui.eclipse.objectview.actions.ShowObjectDetailsView"
+			   definitionId="org.netxms.ui.eclipse.objectview.commands.open_tabbed_object_view">
+		   </action>
+	   </actionSet>
+   </extension>
+
    <extension
          point="org.netxms.ui.eclipse.objectview.tabs">
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.ObjectOverview"
             name="Overview"
             order="0">
-      </tab>
-      <tab
-            class="org.netxms.ui.eclipse.objectview.objecttabs.LastValues"
-            icon="icons/last_values.png"
-            name="Last Values"
-            order="20">
       </tab>
    </extension>
 

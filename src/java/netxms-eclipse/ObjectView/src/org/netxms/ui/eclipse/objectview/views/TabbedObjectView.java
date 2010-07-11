@@ -30,8 +30,12 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
@@ -48,7 +52,9 @@ public class TabbedObjectView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.objectview.view.tabbed_object_view";
 	
+	private CLabel header;
 	private CTabFolder tabFolder;
+	private Font headerFont;
 	private List<ObjectTab> tabs;
 	private ISelectionService selectionService;
 	private ISelectionListener selectionListener;
@@ -59,12 +65,26 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		parent.setLayout(new FillLayout());
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = 0;
+		parent.setLayout(layout);
+		
+		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD);
+		
+		header = new CLabel(parent, SWT.NONE);
+		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		header.setFont(headerFont);
+		header.setBackground(new Color(parent.getDisplay(), 0, 0, 128));
+		header.setForeground(new Color(parent.getDisplay(), 255, 255, 255));
+		
 		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
 		tabFolder.setSimple(true);
-		tabs = new ArrayList<ObjectTab>();
+		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
+		tabs = new ArrayList<ObjectTab>();	
 		addTabs();
 
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
@@ -92,7 +112,8 @@ public class TabbedObjectView extends ViewPart
 	 */
 	private void setObject(GenericObject object)
 	{
-		this.setPartName("Object Information - " + object.getObjectName());
+		//this.setPartName("Object Details - " + object.getObjectName());
+		header.setText(object.getObjectName());
 		for(final ObjectTab tab : tabs)
 		{
 			if (tab.showForObject(object))
@@ -166,6 +187,7 @@ public class TabbedObjectView extends ViewPart
 		{
 			tab.dispose();
 		}
+		headerFont.dispose();
 		super.dispose();
 	}
 }

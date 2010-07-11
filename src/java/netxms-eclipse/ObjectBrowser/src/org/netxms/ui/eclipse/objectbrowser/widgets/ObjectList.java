@@ -110,7 +110,7 @@ public class ObjectList extends Composite
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
-					new UIJob("Update object list") {
+					new UIJob(Messages.getString("ObjectList.update_object_list")) { //$NON-NLS-1$
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{

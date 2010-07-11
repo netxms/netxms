@@ -34,6 +34,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	public void initializeDefaultPreferences()
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setDefault("SHOW_COMMENTS", false);
+		ps.setDefault("SHOW_COMMENTS", false); //$NON-NLS-1$
 	}
 }

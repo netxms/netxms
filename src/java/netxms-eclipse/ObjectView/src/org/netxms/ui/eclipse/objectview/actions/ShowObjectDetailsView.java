@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.alarmviewer.actions;
+package org.netxms.ui.eclipse.objectview.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -24,9 +24,9 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.alarmviewer.views.AlarmBrowser;
+import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 
-public class OpenAlarmBrowser implements IWorkbenchWindowActionDelegate
+public class ShowObjectDetailsView implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
 	
@@ -57,7 +57,7 @@ public class OpenAlarmBrowser implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(AlarmBrowser.ID);
+				window.getActivePage().showView(TabbedObjectView.ID);
 			} 
 			catch (PartInitException e) 
 			{

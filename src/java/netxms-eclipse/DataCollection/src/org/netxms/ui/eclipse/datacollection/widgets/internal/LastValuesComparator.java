@@ -1,13 +1,13 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectview.widgets.helpers;
+package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.objectview.widgets.LastValuesView;
+import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 
 /**

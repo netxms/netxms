@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -68,81 +69,14 @@ public class ObjectBrowser extends ViewPart
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
 		mgr.add(new Separator());
+		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
 		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
-		
-		/*
-		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
-		mgr.add(new Action("Unbind") { });
-		mgr.add(new Action("Rename") { });
-		mgr.add(new Action("Delete") { });
-		mgr.add(new Action("Move to another container...") { });
-		mgr.add(new Action("Change IP address...") { });
-		mgr.add(new Action("Manage") { });
-		mgr.add(new Action("Unmanage") { });
-		mgr.add(new Separator());
-		mgr.add(new Action("Edit agent configuration file") { });
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		mgr.add(new Separator());
-		
-		MenuManager tools = new MenuManager("Tools");
-		
-		MenuManager atm = new MenuManager("Terminal");
-		atm.add(new Action("Restart application") { });
-		atm.add(new Separator());
-		atm.add(new Action("Eject card") { });
-		atm.add(new Action("Retain card") { });
-		atm.add(new Separator());
-		atm.add(new Action("Detailed device stats") { });
-		atm.add(new Action("Execute command...") { });
-		tools.add(atm);
-		
-		MenuManager diag = new MenuManager("Diagnostics");
-		diag.add(new Action("Shutdown system") { });
-		tools.add(diag);
-		
-		tools.add(new Separator());
-		tools.add(new Action("Shutdown system") { });
-		tools.add(new Action("Restart system") { });
-		tools.add(new Action("Restart agent") { });
-		mgr.add(tools);
-		
-		mgr.add(new Separator());
-		mgr.add(new Action("Configure data collection") { });
-		mgr.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
-		mgr.add(new Action("Comments") { });
-		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
-		*/
-
-		/*
-		MenuManager diag = new MenuManager("Create");
-		diag.add(new Action("Shutdown system") { });
-		mgr.add(diag);
-
-		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
-		mgr.add(new Action("Unbind") { });
-		mgr.add(new Action("Rename") { });
-		mgr.add(new Action("Delete") { });
-		mgr.add(new Action("Move to another container...") { });
-		mgr.add(new Action("Manage") { });
-		mgr.add(new Action("Unmanage") { });
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		mgr.add(new Action("Execute on all...") { });
-		mgr.add(new Action("Upload file to all...") { });
-		mgr.add(new Action("Force status poll") { });
-		mgr.add(new Action("Force configuration poll") { });
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
-		mgr.add(new Action("Comments") { });
-		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
-		*/
 	}
 	
 	/**

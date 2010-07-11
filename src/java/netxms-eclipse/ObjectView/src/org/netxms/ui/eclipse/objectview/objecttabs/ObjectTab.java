@@ -58,7 +58,7 @@ public abstract class ObjectTab
 		
 		try
 		{
-			order = Integer.parseInt(ce.getAttribute("order"), 0);
+			order = Integer.parseInt(ce.getAttribute("order"), 10);
 		}
 		catch(NumberFormatException e)
 		{
@@ -138,6 +138,14 @@ public abstract class ObjectTab
 		}
 	}
 	
+	/**
+	 * @return the name
+	 */
+	public String getName()
+	{
+		return name;
+	}
+
 	/**
 	 * Hide tab
 	 */

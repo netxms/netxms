@@ -20,6 +20,7 @@ public interface IActionConstants
 
 	public static final String MB_OBJECT_CREATION = "objectcreation";
 	public static final String MB_OBJECT_MANAGEMENT = "objectmgmt";
+	public static final String MB_OBJECT_BINDING = "objectbinding";
 	public static final String MB_DATA_COLLECTION = "datacollection";
 	public static final String MB_PROPERTIES = "properties";
 }

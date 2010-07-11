@@ -18,8 +18,14 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.GenericObject;
 
 /**
@@ -28,13 +34,36 @@ import org.netxms.client.objects.GenericObject;
  */
 public class ObjectOverview extends ObjectTab
 {
+	private Font headerFont;
+	private Text comments;
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		parent.setLayout(new FillLayout());
+		GridLayout layout = new GridLayout();
+		//layout.marginHeight = 0;
+		//layout.marginWidth = 0;
+		parent.setLayout(layout);
+		parent.setBackground(new Color(parent.getDisplay(), 255, 255, 255));
+		
+		headerFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);
+		
+		Label label = new Label(parent, SWT.NONE);
+		label.setFont(headerFont);
+		label.setText("Attributes");
+		label.setBackground(parent.getBackground());
+		
+		label = new Label(parent, SWT.NONE);
+		label.setFont(headerFont);
+		label.setText("Comments");
+		label.setBackground(parent.getBackground());
+		
+		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY);
+		comments.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		comments.setBackground(parent.getBackground());
 	}
 
 	/* (non-Javadoc)
@@ -43,5 +72,16 @@ public class ObjectOverview extends ObjectTab
 	@Override
 	public void objectChanged(GenericObject object)
 	{
+		comments.setText(object.getComments());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		headerFont.dispose();
+		super.dispose();
 	}
 }
