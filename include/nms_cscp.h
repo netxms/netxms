@@ -50,6 +50,8 @@
 #define RECORD_ORDER_NORMAL            0
 #define RECORD_ORDER_REVERSED          1
 
+#define CSCP_TEMP_BUF_SIZE             65536
+
 
 //
 // Ciphers

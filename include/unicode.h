@@ -31,7 +31,7 @@
 #undef UNICODE_UCS4
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 // Ensure that both UNICODE and _UNICODE are defined
 #ifdef _UNICODE
@@ -78,7 +78,35 @@
 
 #define UCS2CHAR	WCHAR
 
-#else    /* not _WIN32 */
+#elif defined(__SYMBIAN32__)
+
+// Ensure that both UNICODE and _UNICODE are defined
+#ifdef _UNICODE
+#ifndef UNICODE
+#define UNICODE
+#endif
+#endif
+
+#ifdef UNICODE
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+#endif
+
+// Symbian always use UCS-2
+#define UNICODE_UCS2				1
+
+#define TCHAR     TText
+#define WCHAR     TText16
+#define UCS2CHAR  TText16
+
+#ifdef UNICODE
+#define _T(x)     L##x
+#else
+#define _T(x)     x
+#endif
+
+#else    /* not _WIN32 and __SYMBIAN32__ */
 
 #if defined(_NETWARE) && defined(__GNUC__) && defined(__cplusplus)
 #define _WCHAR_T

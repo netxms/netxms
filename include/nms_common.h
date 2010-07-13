@@ -29,7 +29,15 @@
 #endif
 #endif
 
+#ifdef __SYMBIAN32__
+
+// Symbian compiler defines _WIN32 in builds for emulator.
+#undef _WIN32
+
+#else
+
 #if !defined(_WIN32) && !defined(UNDER_CE)
+
 #ifdef _NETWARE
 #include <config-netware.h>
 #else
@@ -38,20 +46,26 @@
 #define _WITH_ENCRYPTION   1
 #endif
 #endif
+
 #else    /* _WIN32 */
+
 #ifndef UNDER_CE
 #define _WITH_ENCRYPTION   1
 #if !defined(WINDOWS_ONLY) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
 #endif
+
 #endif
 
+#endif	/* __SYMBIAN32__ */
+
 #ifdef HAVE_STDARG_H
-# include <stdarg.h>
+#include <stdarg.h>
 #endif
 
 #include <unicode.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -110,6 +124,10 @@
 #ifndef EVENTLOG_DEBUG_TYPE
 #define EVENTLOG_DEBUG_TYPE		0x0080
 #endif
+
+#define INVALID_INDEX         0xFFFFFFFF
+#define MD5_DIGEST_SIZE       16
+#define SHA1_DIGEST_SIZE      20
 
 
 //
@@ -332,7 +350,42 @@ typedef int SOCKET;
 
 #define SELECT_NFDS(x)  (x)
 
-#else    /* not _WIN32 and not _NETWARE */
+#elif defined(__SYMBIAN32__)
+
+/********** SYMBIAN ********************/
+
+#define _SYMBIAN
+
+#include <e32base.h>
+#include <e32std.h>
+
+#include <sys/types.h>
+#include <stdlib_r.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+
+#define FS_PATH_SEPARATOR       _T("\\")
+#define FS_PATH_SEPARATOR_CHAR  _T('\\')
+
+typedef int BOOL;
+typedef TInt32 LONG;
+typedef TUint32 DWORD;
+typedef TUint16 WORD;
+typedef unsigned char BYTE;
+typedef TInt64 INT64;
+typedef TUint64 QWORD;
+
+#define INT64_FMT			_T("%lld")
+#define UINT64_FMT		_T("%llu")
+#define UINT64X_FMT(m)  _T("%") m _T("llX")
+#define TIME_T_FMT		_T("%u")
+#define TIME_T_FCAST(x) ((DWORD)(x))
+
+#ifndef MAX_PATH
+#define MAX_PATH 256
+#endif
+
+#else    /* not _WIN32, _NETWARE, or __SYMBIAN32__ */
 
 /*********** UNIX *********************/
 

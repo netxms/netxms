@@ -25,6 +25,14 @@
 #ifndef _nxclapi_h_
 #define _nxclapi_h_
 
+#ifdef LIBNXCL_CONSTANTS_ONLY
+
+#ifndef LIBNXCL_NO_DECLARATIONS
+#define LIBNXCL_NO_DECLARATIONS
+#endif
+
+#else
+
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxevent.h>
@@ -43,12 +51,16 @@
 #define LIBNXCL_EXPORTABLE
 #endif
 
+#endif /* not LIBNXCL_CONSTANTS_ONLY */
+
 
 //
 // Session handle type
 //
 
+#ifndef LIBNXCL_CONSTANTS_ONLY
 typedef void * NXC_SESSION;
+#endif
 
 
 //
