@@ -20,7 +20,18 @@ import org.netxms.base.NXCPMessage;
 public class EventProcessingPolicyRule
 {
 	// Rule flags (options)
-	public static final int STOP_PROCESSING = 0x0001;
+	public static final int STOP_PROCESSING   = 0x0001;
+	public static final int NEGATED_SOURCE    = 0x0002;
+	public static final int NEGATED_EVENTS    = 0x0004;
+	public static final int GENERATE_ALARM    = 0x0008;
+	public static final int DISABLED          = 0x0010;
+	public static final int SEVERITY_NORMAL   = 0x0100;
+	public static final int SEVERITY_WARNING  = 0x0200;
+	public static final int SEVERITY_MINOR    = 0x0400;
+	public static final int SEVERITY_MAJOR    = 0x0800;
+	public static final int SEVERITY_CRITICAL = 0x1000;
+
+	public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 	
 	private List<Long> sources;
 	private List<Long> events;

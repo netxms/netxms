@@ -35,7 +35,7 @@
 		   label="Event Processing Policy"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.epp.actions.open"
-			   menubarPath="view/config/additions"
+			   menubarPath="config/additions"
 			   label="Event Processing Policy"
 			   tooltip="Open event processing policy editor"
 			   icon="icons/epp.png"

@@ -134,12 +134,14 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		MenuManager fileMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_file"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_FILE);
 		MenuManager viewMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_view"), IActionConstants.M_VIEW); //$NON-NLS-1$
+		MenuManager configMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_configuration"), IActionConstants.M_CONFIG); //$NON-NLS-1$
 		MenuManager toolsMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_tools"), IActionConstants.M_TOOLS); //$NON-NLS-1$
 		MenuManager helpMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_help"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_HELP);
 
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
+		menuBar.add(configMenu);
 		menuBar.add(toolsMenu);
 
 		// Add a group marker indicating where action set menus will appear.
@@ -162,11 +164,6 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		viewMenu.add(actionOpenConsole);
 		viewMenu.add(actionOpenProgressView);
 		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
-		viewMenu.add(new Separator());
-		MenuManager configMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_configuration"), //$NON-NLS-1$
-				IActionConstants.M_CONFIG);
-		configMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		viewMenu.add(configMenu);
 		
 		// Tools
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

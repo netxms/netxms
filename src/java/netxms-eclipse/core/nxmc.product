@@ -32,6 +32,7 @@
    <vm>
    </vm>
 
+
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.servlet"/>
@@ -85,6 +86,7 @@
       <plugin id="org.netxms.ui.eclipse.charts"/>
       <plugin id="org.netxms.ui.eclipse.console"/>
       <plugin id="org.netxms.ui.eclipse.datacollection"/>
+      <plugin id="org.netxms.ui.eclipse.epp"/>
       <plugin id="org.netxms.ui.eclipse.eventmanager"/>
       <plugin id="org.netxms.ui.eclipse.googlemaps"/>
       <plugin id="org.netxms.ui.eclipse.library"/>

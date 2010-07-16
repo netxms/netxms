@@ -36,7 +36,7 @@
 		   label="Event Configurator"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.eventmanager.actions.open"
-			   menubarPath="view/config/additions"
+			   menubarPath="config/additions"
 			   toolbarPath="config/additions"
 			   label="Event Configurator"
 			   tooltip="Open event configurator"

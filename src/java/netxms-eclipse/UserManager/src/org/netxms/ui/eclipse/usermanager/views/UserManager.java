@@ -378,7 +378,8 @@ public class UserManager extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
-		mgr.add(actionDeleteUser);
+		mgr.add(actionAddUser);
+		mgr.add(actionAddGroup);
 
 		final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 		final Object firstElement = selection.getFirstElement();
@@ -387,6 +388,7 @@ public class UserManager extends ViewPart
 			mgr.add(actionChangePassword);
 		}
 
+		mgr.add(actionDeleteUser);
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
