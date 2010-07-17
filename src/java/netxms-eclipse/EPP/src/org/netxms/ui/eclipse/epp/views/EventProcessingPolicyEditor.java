@@ -35,6 +35,7 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.widgets.PolicyEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.EPPCellFactory;
+import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
@@ -144,6 +145,9 @@ public class EventProcessingPolicyEditor extends ViewPart
 				}
 			}.schedule();
 		}
+		
 		super.dispose();
+		
+		ImageFactory.clearCache();
 	}
 }

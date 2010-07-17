@@ -1134,11 +1134,11 @@ public class NXCSession
 	 * 
 	 * @param idList
 	 *           array of object identifiers
-	 * @return array of found objects
+	 * @return list of found objects
 	 */
-	public GenericObject[] findMultipleObjects(final long[] idList)
+	public List<GenericObject> findMultipleObjects(final long[] idList)
 	{
-		ArrayList<GenericObject> result = new ArrayList<GenericObject>(idList.length);
+		List<GenericObject> result = new ArrayList<GenericObject>(idList.length);
 
 		synchronized(objectList)
 		{
@@ -1150,7 +1150,7 @@ public class NXCSession
 			}
 		}
 
-		return result.toArray(new GenericObject[result.size()]);
+		return result;
 	}
 
 	/**
@@ -1160,9 +1160,9 @@ public class NXCSession
 	 *           array of object identifiers
 	 * @return array of found objects
 	 */
-	public GenericObject[] findMultipleObjects(final Long[] idList)
+	public List<GenericObject> findMultipleObjects(final Long[] idList)
 	{
-		ArrayList<GenericObject> result = new ArrayList<GenericObject>(idList.length);
+		List<GenericObject> result = new ArrayList<GenericObject>(idList.length);
 
 		synchronized(objectList)
 		{
@@ -1174,7 +1174,7 @@ public class NXCSession
 			}
 		}
 
-		return result.toArray(new GenericObject[result.size()]);
+		return result;
 	}
 
 	/**

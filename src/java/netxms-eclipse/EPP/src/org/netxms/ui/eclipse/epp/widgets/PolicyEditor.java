@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.epp.widgets;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -52,6 +53,8 @@ public class PolicyEditor extends Composite
 	public PolicyEditor(Composite parent, int style, CellFactory cellFactory)
 	{
 		super(parent, style);
+		
+		System.out.println("constructor " + new Date(System.currentTimeMillis()).toString());
 		
 		this.cellFactory = cellFactory;
 		columnWidths = new int[cellFactory.getColumnCount()];
@@ -105,6 +108,10 @@ public class PolicyEditor extends Composite
 		this.content = content;
 		rules = new ArrayList<Rule>(content.size());
 		
+		System.out.println("setContent started " + new Date(System.currentTimeMillis()).toString());
+		setLayoutDeferred(true);
+		setRedraw(false);
+		
 		int id = 1;
 		for(Object o : content)
 		{
@@ -114,6 +121,7 @@ public class PolicyEditor extends Composite
 		
 		setLayoutDeferred(false);
 		setRedraw(true);
+		System.out.println("setContent finished " + new Date(System.currentTimeMillis()).toString());
 	}
 
 	/**

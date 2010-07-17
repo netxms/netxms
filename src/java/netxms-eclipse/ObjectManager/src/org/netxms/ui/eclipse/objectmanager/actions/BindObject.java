@@ -17,6 +17,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */package org.netxms.ui.eclipse.objectmanager.actions;
 
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -70,9 +72,9 @@ public class BindObject implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					GenericObject[] objects = dlg.getSelectedObjects();
-					for(int i = 0; i < objects.length; i++)
-						session.bindObject(parentId, objects[i].getObjectId());
+					List<GenericObject> objects = dlg.getSelectedObjects();
+					for(GenericObject o : objects)
+						session.bindObject(parentId, o.getObjectId());
 				}
 			}.start();
 		}

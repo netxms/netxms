@@ -42,7 +42,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	{
 		if (session != null)
 		{
-			return (rootObjects != null) ? session.findMultipleObjects(rootObjects) : session.getTopLevelObjects();
+			return (rootObjects != null) ? session.findMultipleObjects(rootObjects).toArray() : session.getTopLevelObjects();
 		}
 		return new GenericObject[0];
 	}

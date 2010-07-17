@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -196,10 +198,10 @@ public class ObjectSelectionDialog extends Dialog
 	 * 
 	 * @return
 	 */
-	public GenericObject[] getSelectedObjects()
+	public List<GenericObject> getSelectedObjects()
 	{
 		if (selectedObjects == null)
-			return new GenericObject[0];
+			return new ArrayList<GenericObject>(0);
 
 		return NXMCSharedData.getInstance().getSession().findMultipleObjects(selectedObjects);
 	}

@@ -330,7 +330,7 @@ public class ObjectTree extends Composite
 		if (expandedElements == null)
 			return;
 		
-		GenericObject[] objects = session.findMultipleObjects(expandedElements);
+		Object[] objects = session.findMultipleObjects(expandedElements).toArray();
 		objectTree.setExpandedElements(objects);
 	}
 	
