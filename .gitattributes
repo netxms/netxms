@@ -312,6 +312,13 @@ src/java/netxms-client/src/test/java/org/netxms/client/ObjectTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ServerConfigTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/SessionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/UserTest.java -text
+src/java/netxms-eclipse/ActionManager/.classpath -text
+src/java/netxms-eclipse/ActionManager/.project -text
+src/java/netxms-eclipse/ActionManager/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/ActionManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ActionManager/build.properties -text
+src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/Activator.java -text
+src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/ActionManager.java -text
 src/java/netxms-eclipse/AlarmViewer/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/AlarmViewer/build.properties -text
 src/java/netxms-eclipse/AlarmViewer/icons/acknowledged.png -text

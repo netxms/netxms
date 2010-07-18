@@ -18,6 +18,10 @@
  */
 package org.netxms.ui.eclipse.epp.views;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -29,7 +33,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCListener;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ServerAction;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Activator;
@@ -52,6 +59,8 @@ public class EventProcessingPolicyEditor extends ViewPart
 	private boolean policyLocked = false;
 	private EventProcessingPolicy policy; 
 	private PolicyEditor editor;
+	private NXCListener sessionListener;
+	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -61,8 +70,24 @@ public class EventProcessingPolicyEditor extends ViewPart
 	{
 		session = NXMCSharedData.getInstance().getSession();
 
-		// Initiate loading of event manager plugin if it was not loaded before
-		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		// Initiate loading of event manager and object manager plugins if it was not loaded before
+		try
+		{
+			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+		}
+		catch(Exception e)
+		{
+		}
+		
+		sessionListener = new NXCListener() {
+			@Override
+			public void notificationHandler(NXCNotification n)
+			{
+				processSessionNotification(n);
+			}
+		};
+		session.addListener(sessionListener);
 		
 		parent.setLayout(new FillLayout());
 		
@@ -77,6 +102,12 @@ public class EventProcessingPolicyEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				List<ServerAction> actions = session.getActions();
+				for(ServerAction a : actions)
+				{
+					EventProcessingPolicyEditor.this.actions.put(a.getId(), a);
+				}
+				
 				policy = session.openEventProcessingPolicy();
 				policyLocked = true;
 				new UIJob("Fill rules list") {
@@ -106,6 +137,36 @@ public class EventProcessingPolicyEditor extends ViewPart
 		job.start();
 	}
 
+	/**
+	 * Process session notifications
+	 * 
+	 * @param n notification
+	 */
+	private void processSessionNotification(NXCNotification n)
+	{
+		switch(n.getCode())
+		{
+			case NXCNotification.ACTION_CREATED:
+				synchronized(actions)
+				{
+					actions.put(n.getSubCode(), (ServerAction)n.getObject());
+				}
+				break;
+			case NXCNotification.ACTION_MODIFIED:
+				synchronized(actions)
+				{
+					actions.put(n.getSubCode(), (ServerAction)n.getObject());
+				}
+				break;
+			case NXCNotification.ACTION_DELETED:
+				synchronized(actions)
+				{
+					actions.remove(n.getSubCode());
+				}
+				break;
+		}
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
@@ -121,6 +182,9 @@ public class EventProcessingPolicyEditor extends ViewPart
 	@Override
 	public void dispose()
 	{
+		if (sessionListener != null)
+			session.removeListener(sessionListener);
+		
 		if (policyLocked)
 		{
 			new Job("Close event processing policy")

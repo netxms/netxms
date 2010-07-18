@@ -319,6 +319,9 @@ public class NXCSession
 						case NXCPCodes.CMD_EVENTLOG_RECORDS:
 							processNewEvents(msg);
 							break;
+						case NXCPCodes.CMD_ACTION_DB_UPDATE:
+							processActionConfigChange(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -449,6 +452,14 @@ public class NXCSession
 			// or added to it and notification code was known
 			if (object != null)
 				sendNotification(new NXCNotification(NXCNotification.USER_DB_CHANGED, code, object));
+		}
+		
+		private void processActionConfigChange(final NXCPMessage msg)
+		{
+			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
+			long id = msg.getVariableAsInt64(NXCPCodes.VID_ACTION_ID);
+			ServerAction action = (code != NXCNotification.ACTION_DELETED) ? new ServerAction(msg) : null;
+			sendNotification(new NXCNotification(code, id, action));
 		}
 	}
 
@@ -2963,29 +2974,50 @@ public class NXCSession
 		
 		return actions;
 	}
-	
+
 	/**
-	 * Lock action configuration for modifications.
+	 * Create new server action.
 	 * 
+	 * @param name action name
+	 * @return ID assigned to new action
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void lockActionsConfig() throws IOException, NXCException
+	public long createAction(final String name) throws IOException, NXCException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_LOCK_ACTION_DB);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_ACTION);
+		msg.setVariable(NXCPCodes.VID_ACTION_NAME, name);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_ACTION_ID);
+	}
+	
+	/**
+	 * Modify server action
+	 * 
+	 * @param action Action object
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifyAction(ServerAction action) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_ACTION);
+		action.fillMessage(msg);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
-
+	
 	/**
-	 * Unlock action configuration.
+	 * Delete server action
 	 * 
+	 * @param actionId Action ID
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void unlockActionsConfig() throws IOException, NXCException
+	public void deleteAction(long actionId) throws IOException, NXCException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLOCK_ACTION_DB);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ACTION);
+		msg.setVariableInt32(NXCPCodes.VID_ACTION_ID, (int)actionId);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

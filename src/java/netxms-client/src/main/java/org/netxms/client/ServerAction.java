@@ -42,6 +42,20 @@ public class ServerAction
 	private boolean disabled;
 
 	/**
+	 * Create server action object with given ID
+	 * 
+	 * @param id Action ID
+	 */
+	public ServerAction(long id)
+	{
+		this.id = id;
+		type = EXEC_LOCAL;
+		name = "New action";
+		data = "";
+		disabled = false;
+	}
+	
+	/**
 	 * Create server action object from NXCP message
 	 * 
 	 * @param msg NXCP message
@@ -55,6 +69,21 @@ public class ServerAction
 		recipientAddress = msg.getVariableAsString(NXCPCodes.VID_RCPT_ADDR);
 		emailSubject = msg.getVariableAsString(NXCPCodes.VID_EMAIL_SUBJECT);
 		disabled = msg.getVariableAsBoolean(NXCPCodes.VID_IS_DISABLED);
+	}
+	
+	/**
+	 * Fill NXCP message with action's data
+	 * @param msg NXCP message
+	 */
+	public void fillMessage(final NXCPMessage msg)
+	{
+		msg.setVariableInt32(NXCPCodes.VID_ACTION_ID, (int)id);
+		msg.setVariableInt16(NXCPCodes.VID_ACTION_TYPE, type);
+		msg.setVariable(NXCPCodes.VID_ACTION_NAME, name);
+		msg.setVariable(NXCPCodes.VID_ACTION_DATA, data);
+		msg.setVariable(NXCPCodes.VID_RCPT_ADDR, recipientAddress);
+		msg.setVariable(NXCPCodes.VID_EMAIL_SUBJECT, emailSubject);
+		msg.setVariableInt16(NXCPCodes.VID_IS_DISABLED, disabled ? 1 : 0);
 	}
 
 	/**
