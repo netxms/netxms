@@ -60,22 +60,19 @@
                menubarPath="additions">
          </action>
       </objectContribution>
-   </extension>
-
-   <extension
-         point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.alarmviewer.actions.popup.acknowledge_alarm"
             objectClass="org.netxms.client.events.Alarm">
          <action
                class="org.netxms.ui.eclipse.alarmviewer.actions.AcknowledgeAlarm"
+               icon="icons/acknowledged.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.AcknowledgeAlarm"
                label="Acknowledge"
-   		       icon="icons/acknowledged.png"
                menubarPath="additions">
          </action>
       </objectContribution>
    </extension>
+
    <extension
          point="org.netxms.ui.eclipse.objectview.tabs">
       <tab

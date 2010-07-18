@@ -19,7 +19,9 @@
 package org.netxms.ui.eclipse.actionmanager;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.progress.IProgressService;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -51,6 +53,9 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
+
+		IProgressService service = PlatformUI.getWorkbench().getProgressService();
+	   service.registerIconForFamily(getImageDescriptor("icons/actionmgr.png"), PLUGIN_ID);
 	}
 
 	/*
