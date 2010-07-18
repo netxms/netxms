@@ -846,12 +846,6 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_ALARM:
             DeleteAlarm(pMsg);
             break;
-         case CMD_LOCK_ACTION_DB:
-            LockActionDB(pMsg->GetId(), TRUE);
-            break;
-         case CMD_UNLOCK_ACTION_DB:
-            LockActionDB(pMsg->GetId(), FALSE);
-            break;
          case CMD_CREATE_ACTION:
             CreateAction(pMsg);
             break;
@@ -4124,55 +4118,6 @@ void ClientSession::DeleteAlarm(CSCPMessage *pRequest)
 
 
 //
-// Lock/unlock action configuration database
-//
-
-void ClientSession::LockActionDB(DWORD dwRqId, BOOL bLock)
-{
-   CSCPMessage msg;
-   char szBuffer[256];
-
-   // Prepare response message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
-
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
-   {
-      if (bLock)
-      {
-         if (!LockComponent(CID_ACTION_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
-         {
-            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-            msg.SetVariable(VID_LOCKED_BY, szBuffer);
-         }
-         else
-         {
-            m_dwFlags |= CSF_ACTION_DB_LOCKED;
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         }
-      }
-      else
-      {
-         if (m_dwFlags & CSF_ACTION_DB_LOCKED)
-         {
-            UnlockComponent(CID_ACTION_DB);
-            m_dwFlags &= ~CSF_ACTION_DB_LOCKED;
-         }
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-      }
-   }
-   else
-   {
-      // Current user has no rights for action management
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   // Send response
-   sendMessage(&msg);
-}
-
-
-//
 // Create new action
 //
 
@@ -4185,20 +4130,10 @@ void ClientSession::CreateAction(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Check user rights
-   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS))
-   {
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   else if (!(m_dwFlags & CSF_ACTION_DB_LOCKED))
-   {
-      // Action database have to be locked before any
-      // changes can be made
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
-   else
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       DWORD dwResult, dwActionId;
-      char szActionName[MAX_USER_NAME];
+      char szActionName[MAX_OBJECT_NAME];
 
       pRequest->GetVariableStr(VID_ACTION_NAME, szActionName, MAX_OBJECT_NAME);
       if (IsValidObjectName(szActionName, TRUE))
@@ -4212,6 +4147,10 @@ void ClientSession::CreateAction(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
       }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -4232,19 +4171,13 @@ void ClientSession::UpdateAction(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Check user rights
-   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS))
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   else if (!(m_dwFlags & CSF_ACTION_DB_LOCKED))
-   {
-      // Action database have to be locked before any
-      // changes can be made
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      msg.SetVariable(VID_RCC, ModifyActionFromMessage(pRequest));
    }
    else
    {
-      msg.SetVariable(VID_RCC, ModifyActionFromMessage(pRequest));
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -4266,17 +4199,7 @@ void ClientSession::DeleteAction(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Check user rights
-   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS))
-   {
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   else if (!(m_dwFlags & CSF_ACTION_DB_LOCKED))
-   {
-      // Action database have to be locked before any
-      // changes can be made
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
-   else
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       // Get Id of action to be deleted
       dwActionId = pRequest->GetVariableLong(VID_ACTION_ID);
@@ -4288,6 +4211,10 @@ void ClientSession::DeleteAction(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_ACTION_IN_USE);
       }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -4305,7 +4232,8 @@ void ClientSession::onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
 
    if (isAuthenticated())
    {
-      if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
+      if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS) ||
+			 (m_dwSystemAccess & SYSTEM_ACCESS_EPP))
       {
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
          pUpdate->dwCategory = INFO_CAT_ACTION;

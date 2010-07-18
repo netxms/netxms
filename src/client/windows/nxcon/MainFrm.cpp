@@ -7,6 +7,7 @@
 #include "MainFrm.h"
 #include "SaveDesktopDlg.h"
 #include "LastValuesView.h"
+#include "ActionEditor.h"
 #include "AlarmBrowser.h"
 #include "ObjectBrowser.h"
 #include "FatalErrorDlg.h"
@@ -40,6 +41,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
    ON_MESSAGE(NXCM_SITUATION_CHANGE, OnSituationChange)
    ON_MESSAGE(NXCM_STATE_CHANGE, OnStateChange)
    ON_MESSAGE(NXCM_ALARM_UPDATE, OnAlarmUpdate)
+   ON_MESSAGE(NXCM_ACTION_UPDATE, OnActionUpdate)
    ON_MESSAGE(NXCM_DEPLOYMENT_INFO, OnDeploymentInfo)
    ON_MESSAGE(NXCM_UPDATE_EVENT_LIST, OnUpdateEventList)
    ON_MESSAGE(NXCM_UPDATE_OBJECT_TOOLS, OnUpdateObjectTools)
@@ -144,9 +146,6 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if( !CMDIFrameWnd::PreCreateWindow(cs) )
 		return FALSE;
-	// TODO: Modify the Window class or styles here by modifying
-	//  the CREATESTRUCT cs
-
 	return TRUE;
 }
 
@@ -307,6 +306,23 @@ LRESULT CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    pWnd = theApp.GetObjectBrowser();
    if (pWnd != NULL)
       ((CObjectBrowser *)pWnd)->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
+   free((void *)lParam);
+	return 0;
+}
+
+
+//
+// NXCM_ACTION_UPDATE message handler
+//
+
+LRESULT CMainFrame::OnActionUpdate(WPARAM wParam, LPARAM lParam)
+{
+   CMDIChildWnd *pWnd;
+
+	pWnd = theApp.GetActionEditor();
+	theApp.DebugPrintf(_T("actionEditor=%p"), pWnd);
+   if (pWnd != NULL)
+      ((CActionEditor *)pWnd)->OnActionUpdate(wParam, (NXC_ACTION *)lParam);
    free((void *)lParam);
 	return 0;
 }

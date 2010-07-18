@@ -1172,6 +1172,8 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             case NX_NOTIFY_ACTION_MODIFIED:
             case NX_NOTIFY_ACTION_DELETED:
                UpdateActions(dwCode, (NXC_ACTION *)pArg);
+               m_pMainWnd->PostMessage(NXCM_ACTION_UPDATE, dwCode, 
+                                       (LPARAM)nx_memdup(pArg, sizeof(NXC_ACTION)));
                break;
 				case NX_NOTIFY_GRAPHS_CHANGED:
 					UpdateGraphList();
@@ -1947,18 +1949,8 @@ void CConsoleApp::OnControlpanelActions()
    }
    else
    {
-      DWORD dwResult;
-
-      dwResult = DoRequestArg1(NXCLockActionDB, g_hSession, _T("Locking action configuration database..."));
-      if (dwResult == RCC_SUCCESS)
-      {
-	      pFrame->CreateNewChild(RUNTIME_CLASS(CActionEditor), IDR_ACTION_EDITOR,
-                                m_hActionEditorMenu, m_hActionEditorAccel);
-      }
-      else
-      {
-         ErrorBox(dwResult, _T("Unable to lock action configuration database:\n%s"));
-      }
+      pFrame->CreateNewChild(RUNTIME_CLASS(CActionEditor), IDR_ACTION_EDITOR,
+                             m_hActionEditorMenu, m_hActionEditorAccel);
    }
 }
 

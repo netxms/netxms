@@ -153,7 +153,6 @@ void CActionEditor::OnSize(UINT nType, int cx, int cy)
 
 void CActionEditor::OnClose() 
 {
-   DoRequestArg1(NXCUnlockActionDB, g_hSession, _T("Unlocking action configuration database..."));
 	CMDIChildWnd::OnClose();
 }
 
@@ -520,4 +519,37 @@ void CActionEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 	UnlockActions();
    
    *pResult = 0;
+}
+
+
+//
+// Process action update
+//
+
+void CActionEditor::OnActionUpdate(DWORD code, NXC_ACTION *action)
+{
+	LVFINDINFO lvfi;
+	int item;
+
+	lvfi.flags = LVFI_PARAM;
+	lvfi.lParam = action->dwId;
+	item = m_wndListCtrl.FindItem(&lvfi);
+
+	if (code == NX_NOTIFY_ACTION_DELETED)
+	{
+		if (item != -1)
+		{
+			m_wndListCtrl.DeleteItem(item);
+		}
+	}
+	else
+	{
+		if (item == -1)
+			AddItem(action);
+		else
+			ReplaceItem(item, action);
+		LockActions();
+		SortList();
+		UnlockActions();
+	}
 }

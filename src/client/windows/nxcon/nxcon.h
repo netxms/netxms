@@ -143,6 +143,7 @@ struct OBJECT_VIEW
 
 class CAlarmBrowser;
 class CObjectBrowser;
+class CActionEditor;
 
 class CConsoleApp : public CWinApp
 {
@@ -358,6 +359,7 @@ public:
    }
    CAlarmBrowser *GetAlarmBrowser() { return m_viewState[VIEW_ALARMS].bActive ? (CAlarmBrowser *)m_viewState[VIEW_ALARMS].pWnd : NULL; }
    CObjectBrowser *GetObjectBrowser() { return m_viewState[VIEW_OBJECTS].bActive ? (CObjectBrowser *)m_viewState[VIEW_OBJECTS].pWnd : NULL; }
+   CActionEditor *GetActionEditor() { return m_viewState[VIEW_ACTION_EDITOR].bActive ? (CActionEditor *)m_viewState[VIEW_ACTION_EDITOR].pWnd : NULL; }
 
    HGLOBAL GetDevMode() { return m_hDevMode; }
    HGLOBAL GetDevNames() { return m_hDevNames; }

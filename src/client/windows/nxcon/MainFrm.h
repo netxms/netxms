@@ -62,6 +62,7 @@ protected:
    afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnUserDBChange(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnActionUpdate(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnDeploymentInfo(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnUpdateEventList(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnUpdateObjectTools(WPARAM wParam, LPARAM lParam);

@@ -117,26 +117,6 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActio
 
 
 //
-// Lock action configuration database
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCLockActionDB(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_ACTION_DB);
-}
-
-
-//
-// Unlock action configuration database
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_ACTION_DB);
-}
-
-
-//
 // Create new action on server
 //
 

@@ -119,8 +119,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_ALARM_UPDATE"),
       _T("CMD_ALARM_DATA"),
       _T("CMD_DELETE_ALARM"),
-      _T("CMD_LOCK_ACTION_DB"),
-      _T("CMD_UNLOCK_ACTION_DB"),
+      _T("0x004C"),	// was CMD_LOCK_ACTION_DB
+      _T("0x004D"),	// was CMD_UNLOCK_ACTION_DB
       _T("CMD_LOAD_ACTIONS"),
       _T("CMD_ACTION_DB_UPDATE"),
       _T("CMD_MODIFY_ACTION"),

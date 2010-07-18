@@ -21,11 +21,12 @@ public:
 
 // Operations
 public:
+	void OnActionUpdate(DWORD code, NXC_ACTION *action);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CActionEditor)
-	protected:
+protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 

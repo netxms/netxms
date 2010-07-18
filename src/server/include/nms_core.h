@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -183,7 +182,6 @@ typedef void * HSNMPSESSION;
 #define CSF_PACKAGE_DB_LOCKED    ((DWORD)0x0004)
 #define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
 #define CSF_EPP_UPLOAD           ((DWORD)0x0010)
-#define CSF_ACTION_DB_LOCKED     ((DWORD)0x0020)
 #define CSF_TRAP_CFG_LOCKED      ((DWORD)0x0040)
 #define CSF_AUTHENTICATED        ((DWORD)0x0080)
 #define CSF_OBJECT_TOOLS_LOCKED  ((DWORD)0x0100)
@@ -445,7 +443,6 @@ private:
    void CreateAction(CSCPMessage *pRequest);
    void UpdateAction(CSCPMessage *pRequest);
    void DeleteAction(CSCPMessage *pRequest);
-   void LockActionDB(DWORD dwRqId, BOOL bLock);
    void SendAllActions(DWORD dwRqId);
    void SendContainerCategories(DWORD dwRqId);
    void ForcedNodePoll(CSCPMessage *pRequest);
