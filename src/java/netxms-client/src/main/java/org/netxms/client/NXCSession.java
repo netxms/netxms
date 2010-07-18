@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -2937,5 +2937,56 @@ public class NXCSession
 		stats.put("ALARMS_BY_SEVERITY", response.getVariableAsUInt32Array(NXCPCodes.VID_ALARMS_BY_SEVERITY));
 		
 		return stats;
+	}
+	
+	/**
+	 * Get list of configured actions from server
+	 * 
+	 * @return List of configured actions
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<ServerAction> getActions() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_LOAD_ACTIONS);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+		
+		List<ServerAction> actions = new ArrayList<ServerAction>();
+		while(true)
+		{
+			final NXCPMessage response = waitForMessage(NXCPCodes.CMD_ACTION_DATA, msg.getMessageId());
+			if (response.getVariableAsInt64(NXCPCodes.VID_ACTION_ID) == 0)
+				break;	// End of list
+			actions.add(new ServerAction(response));
+		}
+		
+		return actions;
+	}
+	
+	/**
+	 * Lock action configuration for modifications.
+	 * 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void lockActionsConfig() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_LOCK_ACTION_DB);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Unlock action configuration.
+	 * 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void unlockActionsConfig() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLOCK_ACTION_DB);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }

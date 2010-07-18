@@ -4443,7 +4443,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
 
 
 //
-// Send message fro poller to client
+// Send message from poller to client
 //
 
 void ClientSession::sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg)
