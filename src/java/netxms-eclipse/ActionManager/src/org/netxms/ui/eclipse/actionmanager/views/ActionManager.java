@@ -38,6 +38,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -51,6 +52,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.ui.eclipse.actionmanager.Activator;
+import org.netxms.ui.eclipse.actionmanager.dialogs.EditActionDlg;
 import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionComparator;
 import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -350,7 +352,12 @@ public class ActionManager extends ViewPart
 	 */
 	private void createAction()
 	{
-		
+		ServerAction action = new ServerAction(0);
+		EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action);
+		if (dlg.open() == Window.OK)
+		{
+			
+		}
 	}
 	
 	/**

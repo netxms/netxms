@@ -327,6 +327,7 @@ src/java/netxms-eclipse/ActionManager/icons/sms.png -text
 src/java/netxms-eclipse/ActionManager/plugin.xml -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/Activator.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/actions/OpenActionManager.java -text
+src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/dialogs/EditActionDlg.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/ActionManager.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionComparator.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionLabelProvider.java -text

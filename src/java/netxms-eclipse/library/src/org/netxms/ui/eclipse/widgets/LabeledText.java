@@ -142,4 +142,15 @@ public class LabeledText extends Composite
 	{
 		return text;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+	 */
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		super.setEnabled(enabled);
+		text.setEnabled(enabled);
+		label.setEnabled(enabled);
+	}
 }
