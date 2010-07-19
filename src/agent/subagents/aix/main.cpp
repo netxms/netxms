@@ -75,7 +75,7 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 // Initalization callback
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
   // m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
 
@@ -87,7 +87,7 @@ static BOOL SubAgentInit(TCHAR *pszConfigFile)
 // Called by master agent at unload
 //
 
-static void SubAgentShutdown(void)
+static void SubAgentShutdown()
 {
 	g_bShutdown = TRUE;
 	//ThreadJoin(m_hCPUStatThread);
