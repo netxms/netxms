@@ -137,6 +137,10 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       value = new NXSL_Value(event->getCode());
    }
+   else if (!strcmp(pszAttr, "name"))
+   {
+		value = new NXSL_Value(event->getName());
+   }
    else if (!strcmp(pszAttr, "id"))
    {
       value = new NXSL_Value(event->getId());
