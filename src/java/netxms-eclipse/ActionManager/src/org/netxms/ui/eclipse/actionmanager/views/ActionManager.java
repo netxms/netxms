@@ -40,6 +40,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -59,6 +61,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Action configuration view
@@ -67,6 +70,8 @@ import org.netxms.ui.eclipse.tools.SortableTableViewer;
 public class ActionManager extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.actionmanager.views.ActionManager";
+	
+	private static final String TABLE_CONFIG_PREFIX = "ActionList";
 	
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TYPE = 1;
@@ -96,6 +101,7 @@ public class ActionManager extends ViewPart
 		final String[] columnNames = { "Name", "Type", "Recipient", "Subject", "Data" };
 		final int[] columnWidths = { 150, 90, 100, 120, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ActionLabelProvider());
 		viewer.setComparator(new ActionComparator());
@@ -117,6 +123,13 @@ public class ActionManager extends ViewPart
 			public void doubleClick(DoubleClickEvent event)
 			{
 				actionEdit.run();
+			}
+		});
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
 		
@@ -352,11 +365,25 @@ public class ActionManager extends ViewPart
 	 */
 	private void createAction()
 	{
-		ServerAction action = new ServerAction(0);
-		EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action);
+		final ServerAction action = new ServerAction(0);
+		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, true);
 		if (dlg.open() == Window.OK)
 		{
-			
+			new ConsoleJob("Create new action", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot create action";
+				}
+
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					long id = session.createAction(action.getName());
+					action.setId(id);
+					session.modifyAction(action);
+				}
+			}.start();
 		}
 	}
 	
@@ -365,7 +392,28 @@ public class ActionManager extends ViewPart
 	 */
 	private void editAction()
 	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
 		
+		final ServerAction action = (ServerAction)selection.getFirstElement();
+		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
+		if (dlg.open() == Window.OK)
+		{
+			new ConsoleJob("Update action", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot update action";
+				}
+
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					session.modifyAction(action);
+				}
+			}.start();
+		}
 	}
 	
 	/**

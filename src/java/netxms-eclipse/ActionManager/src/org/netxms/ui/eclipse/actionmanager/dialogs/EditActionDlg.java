@@ -42,6 +42,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class EditActionDlg extends Dialog
 {
 	private ServerAction action;
+	private boolean createNew;
 	private Text name;
 	private LabeledText recipient;
 	private LabeledText subject;
@@ -51,6 +52,7 @@ public class EditActionDlg extends Dialog
 	private Button typeEMail;
 	private Button typeSMS;
 	private Button typeForward;
+	private Button markDisabled;
 
 	/**
 	 * Selection listener for action type radio buttons
@@ -74,10 +76,21 @@ public class EditActionDlg extends Dialog
 	/**
 	 * @param parentShell
 	 */
-	public EditActionDlg(Shell parentShell, ServerAction action)
+	public EditActionDlg(Shell parentShell, ServerAction action, boolean createNew)
 	{
 		super(parentShell);
 		this.action = action;
+		this.createNew = createNew;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
+	@Override
+	protected void configureShell(Shell newShell)
+	{
+		super.configureShell(newShell);
+		newShell.setText(createNew ? "Create action" : "Edit action");
 	}
 
 	/* (non-Javadoc)
@@ -129,6 +142,18 @@ public class EditActionDlg extends Dialog
 		typeForward.setSelection(action.getType() == ServerAction.FORWARD_EVENT);
 		typeForward.addSelectionListener(new TypeButtonSelectionListener());
 		/* type selection radio buttons - end */
+
+		Group optionsGroup = new Group(dialogArea, SWT.NONE);
+		optionsGroup.setText("Options");
+		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		optionsGroup.setLayoutData(gd);
+		
+		markDisabled = new Button(optionsGroup, SWT.CHECK);
+		markDisabled.setText("Action is &disabled");
+		markDisabled.setSelection(action.isDisabled());
 		
 		recipient = new LabeledText(dialogArea, SWT.NONE);
 		recipient.setLabel(getRcptLabel(action.getType()));
@@ -153,6 +178,8 @@ public class EditActionDlg extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		data.setLayoutData(gd);
+		
+		onTypeChange();
 		
 		return dialogArea;
 	}
@@ -216,6 +243,7 @@ public class EditActionDlg extends Dialog
 		action.setRecipientAddress(recipient.getText());
 		action.setEmailSubject(subject.getText());
 		action.setData(data.getText());
+		action.setDisabled(markDisabled.getSelection());
 		
 		super.okPressed();
 	}

@@ -71,6 +71,9 @@
          <enablement>
            <objectClass name="org.netxms.client.objects.GenericObject"/>
          </enablement>
+         <description>
+            Decorate NetXMS objects (nodes, containers, etc.) with current status indicators
+         </description>
     </decorator>
   </extension>
 </plugin>
