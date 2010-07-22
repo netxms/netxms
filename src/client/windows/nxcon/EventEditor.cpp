@@ -207,7 +207,7 @@ BOOL CEventEditor::EditEvent(int iItem)
          evt.pszMessage = _tcsdup((LPCTSTR)dlgEditEvent.m_strMessage);
          nx_strncpy(evt.szName, (LPCTSTR)dlgEditEvent.m_strName, MAX_EVENT_NAME);
 
-         dwResult = DoRequestArg2(NXCSetEventInfo, g_hSession, 
+         dwResult = DoRequestArg2(NXCModifyEventTemplate, g_hSession, 
                                   &evt, _T("Updating event configuration database..."));
          if (dwResult == RCC_SUCCESS)
          {
@@ -251,11 +251,6 @@ void CEventEditor::OnSetFocus(CWnd* pOldWnd)
 
 void CEventEditor::OnClose() 
 {
-   DWORD dwResult;
-
-   dwResult = DoRequestArg1(NXCUnlockEventDB, g_hSession, _T("Unlocking event configuration database..."));
-   if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, _T("Unable to unlock event configuration database: %s"));
 	CMDIChildWnd::OnClose();
 }
 

@@ -673,7 +673,7 @@ void ClientSession::UpdateThread()
 // Message processing thread
 //
 
-void ClientSession::ProcessingThread(void)
+void ClientSession::ProcessingThread()
 {
    CSCPMessage *pMsg;
    char szBuffer[128];
@@ -735,22 +735,16 @@ void ClientSession::ProcessingThread(void)
 				SetConfigCLOB(pMsg);
 				break;
          case CMD_LOAD_EVENT_DB:
-            SendEventDB(pMsg->GetId());
-            break;
-         case CMD_LOCK_EVENT_DB:
-            LockEventDB(pMsg->GetId());
-            break;
-         case CMD_UNLOCK_EVENT_DB:
-            UnlockEventDB(pMsg->GetId());
+            sendEventDB(pMsg->GetId());
             break;
          case CMD_SET_EVENT_INFO:
-            SetEventInfo(pMsg);
+            modifyEventTemplate(pMsg);
             break;
          case CMD_DELETE_EVENT_TEMPLATE:
-            DeleteEventTemplate(pMsg);
+            deleteEventTemplate(pMsg);
             break;
          case CMD_GENERATE_EVENT_CODE:
-            GenerateEventCode(pMsg->GetId());
+            generateEventCode(pMsg->GetId());
             break;
          case CMD_MODIFY_OBJECT:
             ModifyObject(pMsg);
@@ -1501,7 +1495,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
 // Send event configuration to client
 //
 
-void ClientSession::SendEventDB(DWORD dwRqId)
+void ClientSession::sendEventDB(DWORD dwRqId)
 {
    DB_ASYNC_RESULT hResult;
    CSCPMessage msg;
@@ -1511,7 +1505,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB))
+   if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
       if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
       {
@@ -1565,70 +1559,10 @@ void ClientSession::SendEventDB(DWORD dwRqId)
 
 
 //
-// Lock event configuration database
-//
-
-void ClientSession::LockEventDB(DWORD dwRqId)
-{
-   CSCPMessage msg;
-   char szBuffer[1024];
-
-   // Prepare response message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
-
-   if (!checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
-   {
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   else if (!LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
-   {
-      msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-      msg.SetVariable(VID_LOCKED_BY, szBuffer);
-   }
-   else
-   {
-      m_dwFlags |= CSF_EVENT_DB_LOCKED;
-      msg.SetVariable(VID_RCC, RCC_SUCCESS);
-		WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
-			           _T("Event configuration database locked"));
-   }
-   sendMessage(&msg);
-}
-
-
-//
-// Close event configuration database
-//
-
-void ClientSession::UnlockEventDB(DWORD dwRqId)
-{
-   CSCPMessage msg;
-
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
-
-   if (m_dwFlags & CSF_EVENT_DB_LOCKED)
-   {
-      UnlockComponent(CID_EVENT_DB);
-      m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
-      msg.SetVariable(VID_RCC, RCC_SUCCESS);
-		WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
-			           _T("Event configuration database unlocked"));
-   }
-   else
-   {
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
-   sendMessage(&msg);
-}
-
-
-//
 // Update event template
 //
 
-void ClientSession::SetEventInfo(CSCPMessage *pRequest)
+void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 
@@ -1636,90 +1570,82 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   // Check if we have event configuration database opened
-   if (!(m_dwFlags & CSF_EVENT_DB_LOCKED))
+   // Check access rights
+   if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
-   else
-   {
-      // Check access rights
-      if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
+      char szQuery[4096], szName[MAX_EVENT_NAME];
+      DWORD dwEventCode;
+      BOOL bEventExist = FALSE;
+      DB_RESULT hResult;
+
+      // Check if event with specific code exists
+      dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
+      sprintf(szQuery, "SELECT event_code FROM event_cfg WHERE event_code=%d", dwEventCode);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
       {
-         char szQuery[4096], szName[MAX_EVENT_NAME];
-         DWORD dwEventCode;
-         BOOL bEventExist = FALSE;
-         DB_RESULT hResult;
+         if (DBGetNumRows(hResult) > 0)
+            bEventExist = TRUE;
+         DBFreeResult(hResult);
+      }
 
-         // Check if event with specific code exists
-         dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
-         sprintf(szQuery, "SELECT event_code FROM event_cfg WHERE event_code=%d", dwEventCode);
-         hResult = DBSelect(g_hCoreDB, szQuery);
-         if (hResult != NULL)
+      // Check that we are not trying to create event below 100000
+      if (bEventExist || (dwEventCode >= FIRST_USER_EVENT_ID))
+      {
+         // Prepare and execute SQL query
+         pRequest->GetVariableStr(VID_NAME, szName, MAX_EVENT_NAME);
+         if (IsValidObjectName(szName))
          {
-            if (DBGetNumRows(hResult) > 0)
-               bEventExist = TRUE;
-            DBFreeResult(hResult);
-         }
+            char szMessage[MAX_DB_STRING], *pszDescription, *pszEscMsg, *pszEscDescr;
 
-         // Check that we are not trying to create event below 100000
-         if (bEventExist || (dwEventCode >= FIRST_USER_EVENT_ID))
-         {
-            // Prepare and execute SQL query
-            pRequest->GetVariableStr(VID_NAME, szName, MAX_EVENT_NAME);
-            if (IsValidObjectName(szName))
+            pRequest->GetVariableStr(VID_MESSAGE, szMessage, MAX_DB_STRING);
+            pszEscMsg = EncodeSQLString(szMessage);
+
+            pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
+            pszEscDescr = EncodeSQLString(pszDescription);
+            safe_free(pszDescription);
+
+            if (bEventExist)
             {
-               char szMessage[MAX_DB_STRING], *pszDescription, *pszEscMsg, *pszEscDescr;
-
-               pRequest->GetVariableStr(VID_MESSAGE, szMessage, MAX_DB_STRING);
-               pszEscMsg = EncodeSQLString(szMessage);
-
-               pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-               pszEscDescr = EncodeSQLString(pszDescription);
-               safe_free(pszDescription);
-
-               if (bEventExist)
-               {
-                  sprintf(szQuery, "UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message='%s',description='%s' WHERE event_code=%d",
-                          szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
-                          pszEscMsg, pszEscDescr, dwEventCode);
-               }
-               else
-               {
-                  sprintf(szQuery, "INSERT INTO event_cfg (event_code,event_name,severity,flags,"
-                                   "message,description) VALUES (%d,'%s',%d,%d,'%s','%s')",
-                          dwEventCode, szName, pRequest->GetVariableLong(VID_SEVERITY),
-                          pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
-               }
-
-               free(pszEscMsg);
-               free(pszEscDescr);
-
-               if (DBQuery(g_hCoreDB, szQuery))
-               {
-                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                  ReloadEvents();
-                  NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
-               }
-               else
-               {
-                  msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-               }
+               sprintf(szQuery, "UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message='%s',description='%s' WHERE event_code=%d",
+                       szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
+                       pszEscMsg, pszEscDescr, dwEventCode);
             }
             else
             {
-               msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+               sprintf(szQuery, "INSERT INTO event_cfg (event_code,event_name,severity,flags,"
+                                "message,description) VALUES (%d,'%s',%d,%d,'%s','%s')",
+                       dwEventCode, szName, pRequest->GetVariableLong(VID_SEVERITY),
+                       pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
+            }
+
+            free(pszEscMsg);
+            free(pszEscDescr);
+
+            if (DBQuery(g_hCoreDB, szQuery))
+            {
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
+               ReloadEvents();
+               NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
             }
          }
          else
          {
-            msg.SetVariable(VID_RCC, RCC_INVALID_EVENT_CODE);
+            msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
          }
       }
       else
       {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         msg.SetVariable(VID_RCC, RCC_INVALID_EVENT_CODE);
       }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -1731,7 +1657,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 // Delete event template
 //
 
-void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
+void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwEventCode;
@@ -1740,39 +1666,31 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   // Check if we have event configuration database opened
-   if (!(m_dwFlags & CSF_EVENT_DB_LOCKED))
-   {
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
-   else
-   {
-      dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
+   dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
 
-      // Check access rights
-      if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
+   // Check access rights
+   if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
+   {
+      TCHAR szQuery[256];
+
+      _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%d"), dwEventCode);
+      if (DBQuery(g_hCoreDB, szQuery))
       {
-         TCHAR szQuery[256];
+         DeleteEventTemplateFromList(dwEventCode);
+         NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
-         _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%d"), dwEventCode);
-         if (DBQuery(g_hCoreDB, szQuery))
-         {
-            DeleteEventTemplateFromList(dwEventCode);
-            NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
-
-				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
-								  _T("Event template %d deleted"), dwEventCode);
-         }
-         else
-         {
-            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-         }
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+							  _T("Event template %d deleted"), dwEventCode);
       }
       else
       {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
       }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -1781,10 +1699,10 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
 
 
 //
-// Generate ID for new event template
+// Generate event code for new event template
 //
 
-void ClientSession::GenerateEventCode(DWORD dwRqId)
+void ClientSession::generateEventCode(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -1792,22 +1710,14 @@ void ClientSession::GenerateEventCode(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   // Check if we have event configuration database opened
-   if (!(m_dwFlags & CSF_EVENT_DB_LOCKED))
+   // Check access rights
+   if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      msg.SetVariable(VID_EVENT_CODE, CreateUniqueId(IDG_EVENT));
    }
    else
    {
-      // Check access rights
-      if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
-      {
-         msg.SetVariable(VID_EVENT_CODE, CreateUniqueId(IDG_EVENT));
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-      }
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -8613,53 +8523,41 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
          if (config->loadXmlConfigFromMemory(content, strlen(content), NULL, "configuration"))
          {
             // Lock all required components
-            if (LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szLockInfo))
+            if (LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, szLockInfo))
             {
-               m_dwFlags |= CSF_EVENT_DB_LOCKED;
-               if (LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, szLockInfo))
+               m_dwFlags |= CSF_EPP_LOCKED;
+               if (LockComponent(CID_TRAP_CFG, m_dwIndex, m_szUserName, NULL, szLockInfo))
                {
-                  m_dwFlags |= CSF_EPP_LOCKED;
-                  if (LockComponent(CID_TRAP_CFG, m_dwIndex, m_szUserName, NULL, szLockInfo))
+                  m_dwFlags |= CSF_TRAP_CFG_LOCKED;
+
+                  // Validate and import configuration
+                  dwFlags = pRequest->GetVariableLong(VID_FLAGS);
+                  if (ValidateConfig(config, dwFlags, szError, 1024))
                   {
-                     m_dwFlags |= CSF_TRAP_CFG_LOCKED;
-
-                     // Validate and import configuration
-                     dwFlags = pRequest->GetVariableLong(VID_FLAGS);
-                     if (ValidateConfig(config, dwFlags, szError, 1024))
-                     {
-                        msg.SetVariable(VID_RCC, ImportConfig(config, dwFlags));
-                     }
-                     else
-                     {
-                        msg.SetVariable(VID_RCC, RCC_CONFIG_VALIDATION_ERROR);
-                        msg.SetVariable(VID_ERROR_TEXT, szError);
-                     }
-
-                     UnlockComponent(CID_TRAP_CFG);
-                     m_dwFlags &= ~CSF_TRAP_CFG_LOCKED;
+                     msg.SetVariable(VID_RCC, ImportConfig(config, dwFlags));
                   }
                   else
                   {
-                     msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-                     msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_TRAPCFG);
-                     msg.SetVariable(VID_LOCKED_BY, szLockInfo);
+                     msg.SetVariable(VID_RCC, RCC_CONFIG_VALIDATION_ERROR);
+                     msg.SetVariable(VID_ERROR_TEXT, szError);
                   }
-                  UnlockComponent(CID_EPP);
-                  m_dwFlags &= ~CSF_EPP_LOCKED;
+
+                  UnlockComponent(CID_TRAP_CFG);
+                  m_dwFlags &= ~CSF_TRAP_CFG_LOCKED;
                }
                else
                {
                   msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-                  msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_EPP);
+                  msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_TRAPCFG);
                   msg.SetVariable(VID_LOCKED_BY, szLockInfo);
                }
-               UnlockComponent(CID_EVENT_DB);
-               m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
+               UnlockComponent(CID_EPP);
+               m_dwFlags &= ~CSF_EPP_LOCKED;
             }
             else
             {
                msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-               msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_EVENTDB);
+               msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_EPP);
                msg.SetVariable(VID_LOCKED_BY, szLockInfo);
             }
          }

@@ -243,8 +243,8 @@ typedef struct
 #define CMD_CLOSE_EPP               0x0015
 #define CMD_SAVE_EPP                0x0016
 #define CMD_EPP_RECORD              0x0017
-#define CMD_LOCK_EVENT_DB           0x0018
-#define CMD_UNLOCK_EVENT_DB         0x0019
+//#define CMD_LOCK_EVENT_DB           0x0018
+//#define CMD_UNLOCK_EVENT_DB         0x0019
 #define CMD_SET_EVENT_INFO          0x001A
 #define CMD_EVENT_DB_RECORD         0x001B
 #define CMD_LOAD_EVENT_DB           0x001C

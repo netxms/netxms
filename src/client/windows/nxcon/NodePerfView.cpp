@@ -451,9 +451,11 @@ void CNodePerfView::WorkerThread()
 				dwResult = NXCGetDCIDataEx(g_hSession, pTask->m_dwId2, pTask->m_dwId, 0,
 				                           pTask->m_dwTimeFrom, pTask->m_dwTimeTo, &dciData,
 													&thresholds, &numThresholds);
-				data = new GraphData(dciData, numThresholds, thresholds);
-				::PostMessage(pTask->m_hWnd, NXCM_GRAPH_DATA, pTask->m_dwId,
-				              (dwResult == RCC_SUCCESS) ? CAST_FROM_POINTER(data, LPARAM) : 0);
+				if (dwResult == RCC_SUCCESS)
+				{
+					data = new GraphData(dciData, numThresholds, thresholds);
+					::PostMessage(pTask->m_hWnd, NXCM_GRAPH_DATA, pTask->m_dwId, CAST_FROM_POINTER(data, LPARAM));
+				}
 				break;
 			default:
 				break;

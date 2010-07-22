@@ -1203,18 +1203,8 @@ void CConsoleApp::OnControlpanelEvents()
    }
    else
    {
-      DWORD dwResult;
-
-      dwResult = DoRequestArg1(NXCLockEventDB, g_hSession, _T("Locking event configuration database..."));
-      if (dwResult == RCC_SUCCESS)
-      {
-	      pFrame->CreateNewChild(RUNTIME_CLASS(CEventEditor), IDR_EVENT_EDITOR,
-                                m_hEventEditorMenu, m_hEventEditorAccel);
-      }
-      else
-      {
-         ErrorBox(dwResult, _T("Unable to open event configuration database:\n%s"));
-      }
+      pFrame->CreateNewChild(RUNTIME_CLASS(CEventEditor), IDR_EVENT_EDITOR,
+                             m_hEventEditorMenu, m_hEventEditorAccel);
    }
 }
 

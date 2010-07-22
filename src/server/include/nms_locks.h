@@ -33,8 +33,8 @@
 
 #define CID_EPP               0
 #define CID_USER_DB           1
-#define CID_EVENT_DB          2
-#define CID_ACTION_DB         3
+//deprecated: #define CID_EVENT_DB          2
+//deprecated: #define CID_ACTION_DB         3
 #define CID_TRAP_CFG          4
 #define CID_PACKAGE_DB        5
 #define CID_OBJECT_TOOLS      6

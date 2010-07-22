@@ -52,8 +52,8 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
 {
    { UNLOCKED, _T("Event Processing Policy"), _T("") },
    { UNLOCKED, _T("User Database"), _T("") },
-   { UNLOCKED, _T("Event Configuration Database"), _T("") },
-   { UNLOCKED, _T("Action Configuration Database"), _T("") },
+	{ UNLOCKED, _T("deprecated: Event Configuration Database"), _T("") },
+	{ UNLOCKED, _T("deprecated: Action Configuration Database"), _T("") },
    { UNLOCKED, _T("SNMP Trap Configuration"), _T("") },
    { UNLOCKED, _T("Package Database"), _T("") },
    { UNLOCKED, _T("Object Tools Configuration"), _T("") }

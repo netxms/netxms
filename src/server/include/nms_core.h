@@ -177,7 +177,6 @@ typedef void * HSNMPSESSION;
 // Client session flags
 //
 
-#define CSF_EVENT_DB_LOCKED      ((DWORD)0x0001)
 #define CSF_EPP_LOCKED           ((DWORD)0x0002)
 #define CSF_PACKAGE_DB_LOCKED    ((DWORD)0x0004)
 #define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
@@ -411,12 +410,10 @@ private:
    void DeleteUser(CSCPMessage *pRequest);
    void SetPassword(CSCPMessage *pRequest);
    void LockUserDB(DWORD dwRqId, BOOL bLock);
-   void SendEventDB(DWORD dwRqId);
-   void LockEventDB(DWORD dwRqId);
-   void UnlockEventDB(DWORD dwRqId);
-   void SetEventInfo(CSCPMessage *pRequest);
-   void DeleteEventTemplate(CSCPMessage *pRequest);
-   void GenerateEventCode(DWORD dwRqId);
+   void sendEventDB(DWORD dwRqId);
+   void modifyEventTemplate(CSCPMessage *pRequest);
+   void deleteEventTemplate(CSCPMessage *pRequest);
+   void generateEventCode(DWORD dwRqId);
    void ModifyObject(CSCPMessage *pRequest);
    void ChangeObjectMgmtStatus(CSCPMessage *pRequest);
    void OpenNodeDCIList(CSCPMessage *pRequest);

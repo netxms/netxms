@@ -105,7 +105,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(NXC_SESSION hSession)
 // Set event information
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pArg)
+DWORD LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pArg)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -233,24 +233,4 @@ int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, DWORD dwId)
 BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
 {
    return ((NXCL_Session *)hSession)->GetEventText(dwId, pszBuffer, dwBufSize);
-}
-
-
-//
-// Lock event DB
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_EVENT_DB);
-}
-
-
-//
-// Unlock event DB
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_EVENT_DB);
 }
