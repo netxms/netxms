@@ -268,6 +268,7 @@ void DestroyObject(NXC_OBJECT *pObject);
 void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser);
 
 void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
+void ProcessEventDBUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);

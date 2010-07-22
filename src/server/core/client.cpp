@@ -285,7 +285,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData)
 // Get number of active sessions
 //
 
-int GetSessionCount(void)
+int GetSessionCount()
 {
    int i, nCount;
 

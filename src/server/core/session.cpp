@@ -1562,6 +1562,12 @@ void ClientSession::sendEventDB(DWORD dwRqId)
 // Update event template
 //
 
+static void SendEventDBChangeNotification(ClientSession *session, void *arg)
+{
+	if (session->isAuthenticated() && session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
+		session->sendMessage((CSCPMessage *)arg);
+}
+
 void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -1627,6 +1633,11 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
                ReloadEvents();
                NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
+
+					CSCPMessage nmsg(pRequest);
+					nmsg.SetCode(CMD_EVENT_DB_UPDATE);
+					nmsg.SetVariable(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
+					EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
             }
             else
             {
@@ -1678,6 +1689,13 @@ void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
       {
          DeleteEventTemplateFromList(dwEventCode);
          NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
+
+			CSCPMessage nmsg;
+			nmsg.SetCode(CMD_EVENT_DB_UPDATE);
+			nmsg.SetVariable(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_DELETED);
+			nmsg.SetVariable(VID_EVENT_CODE, dwEventCode);
+			EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
 			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,

@@ -25,6 +25,38 @@
 
 
 //
+// Fill event template structure from NXCP message
+//
+
+static void EventTemplateFromMsg(CSCPMessage *pMsg, NXC_EVENT_TEMPLATE *pEventTemplate)
+{
+   pEventTemplate->dwCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+   pEventTemplate->dwSeverity = pMsg->GetVariableLong(VID_SEVERITY);
+   pEventTemplate->dwFlags = pMsg->GetVariableLong(VID_FLAGS);
+   pMsg->GetVariableStr(VID_NAME, pEventTemplate->szName, MAX_EVENT_NAME);
+   pEventTemplate->pszMessage = pMsg->GetVariableStr(VID_MESSAGE, NULL, 0);
+   pEventTemplate->pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION, NULL, 0);
+}
+
+
+//
+// Process CMD_EVENT_DB_UPDATE message
+//
+
+void ProcessEventDBUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
+{
+   NXC_EVENT_TEMPLATE et;
+   DWORD dwCode;
+
+   dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
+	et.dwCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+   if (dwCode != NX_NOTIFY_ETMPL_DELETED)
+      EventTemplateFromMsg(pMsg, &et);
+   pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &et);
+}
+
+
+//
 // Duplicate event template
 //
 
@@ -75,12 +107,7 @@ void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg)
       {
          // Allocate new event template structure and fill it with values from message
          pEventTemplate = (NXC_EVENT_TEMPLATE *)malloc(sizeof(NXC_EVENT_TEMPLATE));
-         pEventTemplate->dwCode = dwEventCode;
-         pEventTemplate->dwSeverity = pMsg->GetVariableLong(VID_SEVERITY);
-         pEventTemplate->dwFlags = pMsg->GetVariableLong(VID_FLAGS);
-         pMsg->GetVariableStr(VID_NAME, pEventTemplate->szName, MAX_EVENT_NAME);
-         pEventTemplate->pszMessage = pMsg->GetVariableStr(VID_MESSAGE, NULL, 0);
-         pEventTemplate->pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION, NULL, 0);
+			EventTemplateFromMsg(pMsg, pEventTemplate);
          pSession->AddEventTemplate(pEventTemplate, FALSE);
       }
       else

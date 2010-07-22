@@ -194,6 +194,9 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_ACTION_DB_UPDATE:
                ProcessActionUpdate(pSession, pMsg);
                break;
+            case CMD_EVENT_DB_UPDATE:
+               ProcessEventDBUpdate(pSession, pMsg);
+               break;
             case CMD_NOTIFY:
                pSession->OnNotify(pMsg);
                break;

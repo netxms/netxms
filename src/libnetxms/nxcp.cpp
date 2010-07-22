@@ -67,7 +67,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_CLOSE_EPP"),
       _T("CMD_SAVE_EPP"),
       _T("CMD_EPP_RECORD"),
-      _T("0x0018"), // was: CMD_LOCK_EVENT_DB
+      _T("CMD_EVENT_DB_UPDATE"),
       _T("0x0019"), // was: CMD_UNLOCK_EVENT_DB
       _T("CMD_SET_EVENT_INFO"),
       _T("CMD_EVENT_DB_RECORD"),
