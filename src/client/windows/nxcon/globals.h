@@ -140,6 +140,7 @@ extern CConsoleApp theApp;
 #define NXCM_SITUATION_CHANGE      (WM_USER + 132)
 #define NXCM_CHILD_VSCROLL         (WM_USER + 133)
 #define NXCM_ACTION_UPDATE         (WM_USER + 134)
+#define NXCM_EVENTDB_UPDATE        (WM_USER + 135)
 
 
 //

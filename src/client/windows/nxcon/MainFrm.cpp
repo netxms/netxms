@@ -8,6 +8,7 @@
 #include "SaveDesktopDlg.h"
 #include "LastValuesView.h"
 #include "ActionEditor.h"
+#include "EventEditor.h"
 #include "AlarmBrowser.h"
 #include "ObjectBrowser.h"
 #include "FatalErrorDlg.h"
@@ -42,6 +43,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
    ON_MESSAGE(NXCM_STATE_CHANGE, OnStateChange)
    ON_MESSAGE(NXCM_ALARM_UPDATE, OnAlarmUpdate)
    ON_MESSAGE(NXCM_ACTION_UPDATE, OnActionUpdate)
+   ON_MESSAGE(NXCM_EVENTDB_UPDATE, OnEventDBUpdate)
    ON_MESSAGE(NXCM_DEPLOYMENT_INFO, OnDeploymentInfo)
    ON_MESSAGE(NXCM_UPDATE_EVENT_LIST, OnUpdateEventList)
    ON_MESSAGE(NXCM_UPDATE_OBJECT_TOOLS, OnUpdateObjectTools)
@@ -317,12 +319,27 @@ LRESULT CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 
 LRESULT CMainFrame::OnActionUpdate(WPARAM wParam, LPARAM lParam)
 {
-   CMDIChildWnd *pWnd;
+   CActionEditor *pWnd;
 
 	pWnd = theApp.GetActionEditor();
-	theApp.DebugPrintf(_T("actionEditor=%p"), pWnd);
    if (pWnd != NULL)
-      ((CActionEditor *)pWnd)->OnActionUpdate(wParam, (NXC_ACTION *)lParam);
+      pWnd->OnActionUpdate(wParam, (NXC_ACTION *)lParam);
+   free((void *)lParam);
+	return 0;
+}
+
+
+//
+// NXCM_EVENTDB_UPDATE message handler
+//
+
+LRESULT CMainFrame::OnEventDBUpdate(WPARAM wParam, LPARAM lParam)
+{
+   CEventEditor *pWnd;
+
+	pWnd = theApp.GetEventEditor();
+   if (pWnd != NULL)
+      pWnd->OnEventDBUpdate(wParam, (NXC_EVENT_TEMPLATE *)lParam);
    free((void *)lParam);
 	return 0;
 }

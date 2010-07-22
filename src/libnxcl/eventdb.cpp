@@ -48,7 +48,7 @@ void ProcessEventDBUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
    NXC_EVENT_TEMPLATE et;
    DWORD dwCode;
 
-   dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
+   dwCode = pMsg->GetVariableShort(VID_NOTIFICATION_CODE);
 	et.dwCode = pMsg->GetVariableLong(VID_EVENT_CODE);
    if (dwCode != NX_NOTIFY_ETMPL_DELETED)
       EventTemplateFromMsg(pMsg, &et);

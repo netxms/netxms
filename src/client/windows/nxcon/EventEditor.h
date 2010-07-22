@@ -23,6 +23,7 @@ public:
 public:
 	int CompareListItems(DWORD dwId1, DWORD dwId2);
    DWORD DeleteEvents(DWORD dwNumEvents, DWORD *pdwEventList);
+	void OnEventDBUpdate(DWORD code, NXC_EVENT_TEMPLATE *etmpl);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

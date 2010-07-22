@@ -1175,6 +1175,11 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                m_pMainWnd->PostMessage(NXCM_ACTION_UPDATE, dwCode, 
                                        (LPARAM)nx_memdup(pArg, sizeof(NXC_ACTION)));
                break;
+            case NX_NOTIFY_ETMPL_CHANGED:
+            case NX_NOTIFY_ETMPL_DELETED:
+               m_pMainWnd->PostMessage(NXCM_EVENTDB_UPDATE, dwCode, 
+                                       (LPARAM)nx_memdup(pArg, sizeof(NXC_EVENT_TEMPLATE)));
+               break;
 				case NX_NOTIFY_GRAPHS_CHANGED:
 					UpdateGraphList();
 					break;

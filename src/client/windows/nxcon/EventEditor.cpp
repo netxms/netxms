@@ -520,3 +520,39 @@ void CEventEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
    
    *pResult = 0;
 }
+
+
+//
+// Handler for event DB update notifications
+//
+
+void CEventEditor::OnEventDBUpdate(DWORD code, NXC_EVENT_TEMPLATE *etmpl)
+{
+	LVFINDINFO lvfi;
+	int item;
+
+	lvfi.flags = LVFI_PARAM;
+	lvfi.lParam = etmpl->dwCode;
+	item = m_wndListCtrl.FindItem(&lvfi);
+
+	if (code == NX_NOTIFY_ETMPL_DELETED)
+	{
+		if (item != -1)
+		{
+			m_wndListCtrl.DeleteItem(item);
+		}
+	}
+	else
+	{
+		if (item == -1)
+		{
+			TCHAR buffer[64];
+
+			_sntprintf(buffer, 64, _T("%d"), etmpl->dwCode);
+			item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer);
+			m_wndListCtrl.SetItemData(item, etmpl->dwCode);
+		}
+		UpdateItem(item, etmpl);
+	   m_wndListCtrl.SortItems(CompareItems, (UINT_PTR)this);
+	}
+}
