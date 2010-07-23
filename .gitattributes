@@ -319,10 +319,12 @@ src/java/netxms-eclipse/ActionManager/build.properties -text
 src/java/netxms-eclipse/ActionManager/icons/actionmgr.png -text
 src/java/netxms-eclipse/ActionManager/icons/delete.png -text
 src/java/netxms-eclipse/ActionManager/icons/disabled_overlay.png -text
+src/java/netxms-eclipse/ActionManager/icons/edit.png -text
 src/java/netxms-eclipse/ActionManager/icons/email.png -text
 src/java/netxms-eclipse/ActionManager/icons/exec_local.png -text
 src/java/netxms-eclipse/ActionManager/icons/exec_remote.png -text
 src/java/netxms-eclipse/ActionManager/icons/fwd_event.png -text
+src/java/netxms-eclipse/ActionManager/icons/new.png -text
 src/java/netxms-eclipse/ActionManager/icons/sms.png -text
 src/java/netxms-eclipse/ActionManager/plugin.xml -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/Activator.java -text

@@ -179,4 +179,12 @@ public class EventTemplate
 	{
 		return code;
 	}
+
+	/**
+	 * @param code the code to set
+	 */
+	public void setCode(long code)
+	{
+		this.code = code;
+	}
 }

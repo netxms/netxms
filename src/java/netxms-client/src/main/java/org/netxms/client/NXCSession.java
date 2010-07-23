@@ -81,7 +81,7 @@ public class NXCSession
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 24;
+	public static final int CLIENT_PROTOCOL_VERSION = 25;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;

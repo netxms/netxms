@@ -1,7 +1,10 @@
 package org.netxms.ui.eclipse.eventmanager;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.progress.IProgressService;
+import org.netxms.ui.eclipse.eventmanager.views.EventConfigurator;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -34,6 +37,9 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
+
+		IProgressService service = PlatformUI.getWorkbench().getProgressService();
+	   service.registerIconForFamily(getImageDescriptor("icons/event_configurator.png"), EventConfigurator.JOB_FAMILY);
 	}
 
 	/*

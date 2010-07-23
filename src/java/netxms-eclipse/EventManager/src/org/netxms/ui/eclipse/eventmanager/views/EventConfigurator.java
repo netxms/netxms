@@ -25,7 +25,6 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -44,25 +43,28 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
+import org.netxms.client.NXCListener;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.RCC;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.EventTemplateComparator;
 import org.netxms.ui.eclipse.eventmanager.EventTemplateLabelProvider;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventTemplateDialog;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * @author Victor
@@ -73,6 +75,8 @@ public class EventConfigurator extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.eventmanager.view.event_configurator";
 	public static final String JOB_FAMILY = "EventConfiguratorJob";
 
+	private static final String TABLE_CONFIG_PREFIX = "EventTemplateList";
+	
 	// Columns
 	public static final int COLUMN_CODE = 0;
 	public static final int COLUMN_NAME = 1;
@@ -83,11 +87,12 @@ public class EventConfigurator extends ViewPart
 
 	private HashMap<Long, EventTemplate> eventTemplates;
 	private TableViewer viewer;
-	private boolean databaseLocked = false;
 	private Action actionNew;
 	private Action actionEdit;
 	private Action actionDelete;
 	private RefreshAction actionRefresh;
+	private NXCSession session;
+	private NXCListener sessionListener;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -95,9 +100,12 @@ public class EventConfigurator extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+		session = NXMCSharedData.getInstance().getSession();
+		
 		final String[] names = { "Code", "Name", "Severity", "Flags", "Message", "Description" };
 		final int[] widths = { 70, 200, 90, 50, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new EventTemplateLabelProvider());
 		viewer.setComparator(new EventTemplateComparator());
@@ -121,82 +129,103 @@ public class EventConfigurator extends ViewPart
 				actionEdit.run();
 			}
 		});
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+			}
+		});
 
 		makeActions();
 		contributeToActionBars();
 		createPopupMenu();
 
-		// Request server to lock event database, and on success refresh view
-		Job job = new Job("Open event configuration")
-		{
+		refreshView();
+		
+		sessionListener = new NXCListener() {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			public void notificationHandler(NXCNotification n)
 			{
-				IStatus status;
-
-				try
-				{
-					final NXCSession session = NXMCSharedData.getInstance().getSession();
-					session.lockEventConfiguration();
-					databaseLocked = true;
-					final List<EventTemplate> list = session.getEventTemplates();
-					new UIJob("Update event list")
-					{
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							EventConfigurator.this.updateLocalCopy(list);
-							viewer.setInput(list.toArray());
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								           (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-											  "Cannot open event configuration for modification: " + e.getMessage(), null);
-					new UIJob("Close event configurator")
-					{
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							EventConfigurator.this.getViewSite().getPage().hideView(EventConfigurator.this);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-				return status;
+				processSessionNotifications(n);
 			}
 		};
-		job.setUser(true);
-		runJob(job);
-	}
-	
-	/**
-	 * Update local copy of event template list.
-	 * 
-	 * @param list List of event templates received from server
-	 */
-	private void updateLocalCopy(List<EventTemplate> list)
-	{
-		eventTemplates = new HashMap<Long, EventTemplate>(list.size());
-		for(final EventTemplate t: list)
-		{
-			eventTemplates.put(t.getCode(), t);
-		}
+		session.addListener(sessionListener);
 	}
 
 	/**
-	 * Run job via site service
-	 * 
-	 * @param job Job to run
+	 * Refresh view
 	 */
-	private void runJob(final Job job)
+	private void refreshView()
 	{
-		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
+		new ConsoleJob("Open event configuration", this, Activator.PLUGIN_ID, JOB_FAMILY)
+		{
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot open event configuration";
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final List<EventTemplate> list = session.getEventTemplates();
+				new UIJob("Update event configurator") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						eventTemplates = new HashMap<Long, EventTemplate>(list.size());
+						for(final EventTemplate t: list)
+						{
+							eventTemplates.put(t.getCode(), t);
+						}
+						viewer.setInput(eventTemplates.values().toArray());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		}.start();
+	}
+
+	/**
+	 * Process client session notifications
+	 */
+	void processSessionNotifications(final NXCNotification n)
+	{
+		switch(n.getCode())
+		{
+			case NXCNotification.EVENT_TEMPLATE_MODIFIED:
+				new UIJob("Update event template list") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						EventTemplate oldTmpl = eventTemplates.get(n.getSubCode());
+						if (oldTmpl != null)
+						{
+							oldTmpl.setAll((EventTemplate)n.getObject());
+							viewer.update(oldTmpl, null);
+						}
+						else
+						{
+							eventTemplates.put(n.getSubCode(), (EventTemplate)n.getObject());
+							viewer.setInput(eventTemplates.values().toArray());
+						}
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+				break;
+			case NXCNotification.EVENT_TEMPLATE_DELETED:
+				new UIJob("Remove event template from list") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						eventTemplates.remove(n.getSubCode());
+						viewer.setInput(eventTemplates.values().toArray());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+				break;
+		}
 	}
 
 	/**
@@ -252,37 +281,7 @@ public class EventConfigurator extends ViewPart
 			@Override
 			public void run()
 			{
-				Job job = new Job("Refresh event template list") {
-					@Override
-					protected IStatus run(IProgressMonitor monitor)
-					{
-						IStatus status;
-						try
-						{
-							final List<EventTemplate> list = NXMCSharedData.getInstance().getSession().getEventTemplates();
-							new UIJob("Update event list")
-							{
-								@Override
-								public IStatus runInUIThread(IProgressMonitor monitor)
-								{
-									EventConfigurator.this.updateLocalCopy(list);
-									viewer.setInput(list.toArray());
-									return Status.OK_STATUS;
-								}
-							}.schedule();
-							status = Status.OK_STATUS;
-						}
-						catch(Exception e)
-						{
-							status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-										           (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-													  "Cannot reload event configuration: " + e.getMessage(), null);
-						}
-						return status;
-					}
-				};
-				job.setUser(true);
-				runJob(job);
+				refreshView();
 			}
 		};
 
@@ -296,7 +295,7 @@ public class EventConfigurator extends ViewPart
 				createNewEventTemplate();
 			}
 		};
-		actionNew.setText("&New...");
+		actionNew.setText("&New event template...");
 		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 
 		actionEdit = new Action() {
@@ -309,7 +308,7 @@ public class EventConfigurator extends ViewPart
 				editEventTemplate();
 			}
 		};
-		actionEdit.setText("&Edit...");
+		actionEdit.setText("&Properties...");
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
 		actionEdit.setEnabled(false);
 
@@ -360,6 +359,7 @@ public class EventConfigurator extends ViewPart
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		mgr.add(actionNew);
 		mgr.add(actionDelete);
 		mgr.add(new Separator());
 		mgr.add(actionEdit);
@@ -379,86 +379,36 @@ public class EventConfigurator extends ViewPart
 	 */
 	protected void createNewEventTemplate()
 	{
-		final NXCSession session = NXMCSharedData.getInstance().getSession();
-		
-		Job job = new Job("Create new event template") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				IStatus status;
-				
-				try
+		final EventTemplate etmpl = new EventTemplate(0);
+		EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), etmpl, false);
+		if (dlg.open() == Window.OK)
+		{
+			new ConsoleJob("Create new event template", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+				@Override
+				protected String getErrorMessage()
 				{
-					final long code = session.generateEventCode();
-					new UIJob("Edit created event template") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							final EventTemplate object = new EventTemplate(code);
-							EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), object, false);
-							if (dlg.open() == Window.OK)
-							{
-								finishCreation(object);
-							}
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					status = Status.OK_STATUS;
+					return "Cannot create new event template";
 				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-								"Cannot get code for new event template: " + e.getMessage(), null);
-				}
-				return status;
-			}
-		};
-		job.setUser(true);
-		runJob(job);
-	}
 	
-	/**
-	 * Finish creation of new event template object (called after user press OK in properties dialog).
-	 * Called in UI thread.
-	 * 
-	 * @param object New event template object
-	 */
-	private void finishCreation(final EventTemplate object)
-	{
-		Job job = new Job("Finish event template creation") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				IStatus status;
-				
-				try
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					final NXCSession session = NXMCSharedData.getInstance().getSession();
-					session.modifyEventTemplate(object);
-					new UIJob("Update event template list") {
+					long code = session.generateEventCode();
+					etmpl.setCode(code);
+					session.modifyEventTemplate(etmpl);
+					new UIJob("Update event configurator") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							eventTemplates.put(object.getCode(), object);
+							eventTemplates.put(etmpl.getCode(), etmpl);
 							viewer.setInput(eventTemplates.values().toArray());
-							viewer.setSelection(new StructuredSelection(object), true);
+							viewer.setSelection(new StructuredSelection(etmpl), true);
 							return Status.OK_STATUS;
 						}
 					}.schedule();
-					status = Status.OK_STATUS;
 				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-								"Cannot create event template: " + e.getMessage(), null);
-				}
-				return status;
-			}
-		};
-		job.setUser(true);
-		runJob(job);
+			}.start();
+		}
 	}
 
 	/**
@@ -470,50 +420,33 @@ public class EventConfigurator extends ViewPart
 		if (selection.size() != 1)
 			return;
 		
-		final EventTemplate object = (EventTemplate)selection.getFirstElement();
-		final EventTemplate originalObject = new EventTemplate(object);
-		EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), object, false);
+		final EventTemplate etmpl = new EventTemplate((EventTemplate)selection.getFirstElement());
+		EditEventTemplateDialog dlg = new EditEventTemplateDialog(getSite().getShell(), etmpl, false);
 		if (dlg.open() == Window.OK)
 		{
-			Job job = new Job("Update event template") {
+			new ConsoleJob("Update event template", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected String getErrorMessage()
 				{
-					IStatus status;
-					
-					try
-					{
-						final NXCSession session = NXMCSharedData.getInstance().getSession();
-						session.modifyEventTemplate(object);
-						new UIJob("Update event template list") {
-							@Override
-							public IStatus runInUIThread(IProgressMonitor monitor)
-							{
-								viewer.update(object, null);
-								return Status.OK_STATUS;
-							}
-						}.schedule();
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						new UIJob("Restore event template object") {
-							@Override
-							public IStatus runInUIThread(IProgressMonitor monitor)
-							{
-								object.setAll(originalObject);
-								return Status.OK_STATUS;
-							}
-						}.schedule();
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-									(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-									"Cannot update event template: " + e.getMessage(), null);
-					}
-					return status;
+					return "Cannot update event template";
 				}
-			};
-			job.setUser(true);
-			runJob(job);
+
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					session.modifyEventTemplate(etmpl);
+					new UIJob("Update event template list") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							eventTemplates.put(etmpl.getCode(), etmpl);
+							viewer.setInput(eventTemplates.values());
+							viewer.setSelection(new StructuredSelection(etmpl));
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				}
+			}.start();
 		}
 	}
 
@@ -531,67 +464,24 @@ public class EventConfigurator extends ViewPart
 			return;
 		}
 		
-		Job job = new Job("Delete event templates") {
+		new ConsoleJob("Delete event templates", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot delete event template";
+			}
+
 			@SuppressWarnings("unchecked")
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-
-				try
+				Iterator<EventTemplate> it = selection.iterator();
+				while(it.hasNext())
 				{
-					final NXCSession session = NXMCSharedData.getInstance().getSession();
-					Iterator it = selection.iterator();
-					while(it.hasNext())
-					{
-						Object object = it.next();
-						if (object instanceof EventTemplate)
-						{
-							session.deleteEventTemplate(((EventTemplate)object).getCode());
-						}
-						else
-						{
-							throw new NXCException(RCC.INTERNAL_ERROR);
-						}
-					}
-					
-					// If event templates was successfully deleted on server,
-					// delete them from internal list and refresh viewer
-					new UIJob("Update event template list") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							Iterator it = selection.iterator();
-							while(it.hasNext())
-							{
-								EventTemplate evt = (EventTemplate)it.next();
-								EventConfigurator.this.eventTemplates.remove(evt.getCode());
-							}
-							EventConfigurator.this.viewer.setInput(EventConfigurator.this.eventTemplates.values().toArray());
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					status = Status.OK_STATUS;
+					session.deleteEventTemplate(it.next().getCode());
 				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-							(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-							"Cannot delete event template: " + e.getMessage(), null);
-				}
-				return status;
 			}
-
-			/* (non-Javadoc)
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
-			@Override
-			public boolean belongsTo(Object family)
-			{
-				return family == EventConfigurator.JOB_FAMILY;
-			}
-		};
-		runJob(job);
+		}.start();
 	}
 
 	/* (non-Javadoc)
@@ -600,30 +490,8 @@ public class EventConfigurator extends ViewPart
 	@Override
 	public void dispose()
 	{
-		if (databaseLocked)
-		{
-			new Job("Unlock event configuration")
-			{
-				@Override
-				protected IStatus run(IProgressMonitor monitor)
-				{
-					IStatus status;
-
-					try
-					{
-						NXMCSharedData.getInstance().getSession().unlockEventConfiguration();
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-								"Cannot unlock event configuration: " + e.getMessage(), null);
-					}
-					return status;
-				}
-			}.schedule();
-		}
+		if (sessionListener != null)
+			session.removeListener(sessionListener);
 		super.dispose();
 	}
 }

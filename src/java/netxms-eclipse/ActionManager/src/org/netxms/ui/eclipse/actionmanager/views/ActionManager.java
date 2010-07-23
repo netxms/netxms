@@ -263,6 +263,9 @@ public class ActionManager extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionNew);
+		manager.add(actionDelete);
+		manager.add(actionEdit);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -294,6 +297,7 @@ public class ActionManager extends ViewPart
 			}
 		};
 		actionNew.setText("&New action...");
+		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 		
 		actionEdit = new Action() {
 			/* (non-Javadoc)
@@ -306,6 +310,7 @@ public class ActionManager extends ViewPart
 			}
 		};
 		actionEdit.setText("&Properties...");
+		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png"));
 		
 		actionDelete = new Action() {
 			/* (non-Javadoc)
