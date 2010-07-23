@@ -278,7 +278,6 @@ src/java/netxms-client/src/main/java/org/netxms/client/events/Event.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicyRule.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventTemplate.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/internal/jobs/ResyncEventTemplatesThread.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/ColumnFilter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/Log.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogColumn.java -text

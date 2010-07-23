@@ -56,7 +56,6 @@ import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.internal.jobs.ResyncEventTemplatesThread;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.NetworkMapObjectData;
 import org.netxms.client.maps.NetworkMapObjectLink;
@@ -115,7 +114,7 @@ public class NXCSession
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
 	private static final int MAX_DCI_DATA_ROWS = 200000;
 	private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
-	private static final int RECEIVED_FILE_TTL = 300000; // 300 secunds
+	private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
 
 	// Internal synchronization objects
 	private final Semaphore syncObjects = new Semaphore(1);
@@ -322,6 +321,9 @@ public class NXCSession
 						case NXCPCodes.CMD_ACTION_DB_UPDATE:
 							processActionConfigChange(msg);
 							break;
+						case NXCPCodes.CMD_EVENT_DB_UPDATE:
+							processEventConfigChange(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -368,21 +370,7 @@ public class NXCSession
 		{
 			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
 			int data = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_DATA);
-			
-			NXCNotification n;
-			switch(code)
-			{
-				case NXCNotification.EVENT_DB_CHANGED:
-					if (eventTemplatesNeedSync)
-						new ResyncEventTemplatesThread(NXCSession.this);
-					n = new NXCNotification(code);
-					break;
-				default:
-					n = new NXCNotification(code, data);
-					break;
-			}
-			
-			sendNotification(n);
+			sendNotification(new NXCNotification(code, data));
 		}
 
 		/**
@@ -460,6 +448,24 @@ public class NXCSession
 			long id = msg.getVariableAsInt64(NXCPCodes.VID_ACTION_ID);
 			ServerAction action = (code != NXCNotification.ACTION_DELETED) ? new ServerAction(msg) : null;
 			sendNotification(new NXCNotification(code, id, action));
+		}
+
+		private void processEventConfigChange(final NXCPMessage msg)
+		{
+			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
+			long eventCode = msg.getVariableAsInt64(NXCPCodes.VID_EVENT_CODE);
+			EventTemplate et = (code != NXCNotification.EVENT_TEMPLATE_DELETED) ? new EventTemplate(msg) : null;
+			if (eventTemplatesNeedSync)
+			{
+				synchronized(eventTemplates)
+				{
+					if (code == NXCNotification.EVENT_TEMPLATE_DELETED)
+						eventTemplates.remove(eventCode);
+					else
+						eventTemplates.put(eventCode, et);
+				}
+			}
+			sendNotification(new NXCNotification(code, eventCode, et));
 		}
 	}
 
@@ -2635,28 +2641,6 @@ public class NXCSession
 			list.add(new EventTemplate(response));
 		}
 		return list;
-	}
-	
-	/**
-	 * Lock event configuration.
-	 * 
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public void lockEventConfiguration() throws IOException, NXCException
-	{
-		executeSimpleCommand(NXCPCodes.CMD_LOCK_EVENT_DB);
-	}
-	
-	/**
-	 * Unlock event configuration.
-	 * 
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public void unlockEventConfiguration() throws IOException, NXCException
-	{
-		executeSimpleCommand(NXCPCodes.CMD_UNLOCK_EVENT_DB);
 	}
 	
 	/**

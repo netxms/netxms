@@ -48,6 +48,8 @@ public class NXCNotification
 	public static final int DBCON_STATUS_CHANGED = 1010;
 	public static final int ALARM_TERMINATED = 1011;
 	public static final int PREDEFINED_GRAPHS_CHANGED = 1012;
+	public static final int EVENT_TEMPLATE_MODIFIED = 1013;
+	public static final int EVENT_TEMPLATE_DELETED = 1014;
 	
 	public static final int CUSTOM_MESSAGE = 2000;
 	

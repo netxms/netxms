@@ -51,8 +51,8 @@ public final class NXCPCodes
 	public static final int CMD_CLOSE_EPP               = 0x0015;
 	public static final int CMD_SAVE_EPP                = 0x0016;
 	public static final int CMD_EPP_RECORD              = 0x0017;
-	public static final int CMD_LOCK_EVENT_DB           = 0x0018;
-	public static final int CMD_UNLOCK_EVENT_DB         = 0x0019;
+	public static final int CMD_EVENT_DB_UPDATE         = 0x0018;
+	//public static final int CMD_UNLOCK_EVENT_DB         = 0x0019;
 	public static final int CMD_SET_EVENT_INFO          = 0x001A;
 	public static final int CMD_EVENT_DB_RECORD         = 0x001B;
 	public static final int CMD_LOAD_EVENT_DB           = 0x001C;
