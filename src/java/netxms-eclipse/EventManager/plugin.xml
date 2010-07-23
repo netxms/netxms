@@ -9,7 +9,7 @@
             id="org.netxms.ui.eclipse.config">
       </category>
       <view
-            name="Event Configurator"
+            name="Event Configuration"
             icon="icons/event_configurator.png"
             category="org.netxms.ui.eclipse.config"
             class="org.netxms.ui.eclipse.eventmanager.views.EventConfigurator"
@@ -24,8 +24,8 @@
             id="org.netxms.ui.eclipse.console.category.views">
       </category>
       <command
-            name="Event Configurator"
-            description="Open event configurator"
+            name="Event Configuration"
+            description="Open event configuration"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
       </command>
@@ -33,13 +33,13 @@
 
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.eventmanager.action_sets.open"
-		   label="Event Configurator"
+		   label="Event Configuration"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.eventmanager.actions.open"
 			   menubarPath="config/additions"
 			   toolbarPath="config/additions"
-			   label="Event Configurator"
-			   tooltip="Open event configurator"
+			   label="Event Configuration"
+			   tooltip="Open event configuration"
 			   icon="icons/event_configurator.png"
 			   class="org.netxms.ui.eclipse.eventmanager.actions.OpenEventConfigurator"
 			   definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">

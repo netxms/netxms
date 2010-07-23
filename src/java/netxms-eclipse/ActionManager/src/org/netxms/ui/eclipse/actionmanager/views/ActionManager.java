@@ -101,7 +101,7 @@ public class ActionManager extends ViewPart
 		final String[] columnNames = { "Name", "Type", "Recipient", "Subject", "Data" };
 		final int[] columnWidths = { 150, 90, 100, 120, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ActionLabelProvider());
 		viewer.setComparator(new ActionComparator());
@@ -129,7 +129,7 @@ public class ActionManager extends ViewPart
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
 		

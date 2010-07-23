@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -67,7 +66,7 @@ import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
+ * Event configuration view
  * 
  */
 public class EventConfigurator extends ViewPart
@@ -86,7 +85,7 @@ public class EventConfigurator extends ViewPart
 	public static final int COLUMN_DESCRIPTION = 5;
 
 	private HashMap<Long, EventTemplate> eventTemplates;
-	private TableViewer viewer;
+	private SortableTableViewer viewer;
 	private Action actionNew;
 	private Action actionEdit;
 	private Action actionDelete;
@@ -105,7 +104,7 @@ public class EventConfigurator extends ViewPart
 		final String[] names = { "Code", "Name", "Severity", "Flags", "Message", "Description" };
 		final int[] widths = { 70, 200, 90, 50, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
-		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new EventTemplateLabelProvider());
 		viewer.setComparator(new EventTemplateComparator());
@@ -133,7 +132,7 @@ public class EventConfigurator extends ViewPart
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
 

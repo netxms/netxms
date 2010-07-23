@@ -229,4 +229,43 @@ public class WidgetHelper
 			}
 		}
 	}
+	
+	/**
+	 * Save settings for sortable table viewer
+	 * @param viewer Viewer
+	 * @param settings Dialog settings object
+	 * @param prefix Prefix for properties
+	 */
+	public static void saveTableViewerSettings(SortableTableViewer viewer, IDialogSettings settings, String prefix)
+	{
+		final Table table = viewer.getTable();
+		saveColumnSettings(table, settings, prefix);
+		TableColumn column = table.getSortColumn();
+		settings.put(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1);
+		settings.put(prefix + ".sortDirection", table.getSortDirection());
+	}
+	
+	/**
+	 * Restore settings for sortable table viewer
+	 * @param viewer Viewer
+	 * @param settings Dialog settings object
+	 * @param prefix Prefix for properties
+	 */
+	public static void restoreTableViewerSettings(SortableTableViewer viewer, IDialogSettings settings, String prefix)
+	{
+		final Table table = viewer.getTable();
+		restoreColumnSettings(table, settings, prefix);
+		try
+		{
+			table.setSortDirection(settings.getInt(prefix + ".sortDirection"));
+			int column = settings.getInt(prefix + ".sortColumn");
+			if (column >= 0)
+			{
+				table.setSortColumn(viewer.getColumnById(column));
+			}
+		}
+		catch(NumberFormatException e)
+		{
+		}
+	}
 }

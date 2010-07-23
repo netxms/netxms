@@ -69,4 +69,21 @@ public class SortableTableViewer extends TableViewer
 		getTable().setSortColumn(columns[defaultSortingColumn]);
 		getTable().setSortDirection(defaultSortDir);
 	}
+
+	/**
+	 * Get column object by id (named data with key ID)
+	 * @param id Column ID
+	 * @return Column object or null if object with given ID not found
+	 */
+	public TableColumn getColumnById(int id)
+	{
+		for(int i = 0; i < columns.length; i++)
+		{
+			if ((Integer)columns[i].getData("ID") == id)
+			{
+				return columns[i];
+			}
+		}
+		return null;
+	}
 }
