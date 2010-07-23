@@ -49,7 +49,7 @@ public class NXCObjectModificationData
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
 	private String name;
-	private NXCAccessListElement[] acl;
+	private AccessListElement[] acl;
 	private boolean inheritAccessRights;
 	private Map<String, String> customAttributes;
 	private boolean autoApplyEnabled;
@@ -127,15 +127,15 @@ public class NXCObjectModificationData
 	/**
 	 * @return the acl
 	 */
-	public NXCAccessListElement[] getACL()
+	public AccessListElement[] getACL()
 	{
-		return (acl != null) ? acl : new NXCAccessListElement[0];
+		return (acl != null) ? acl : new AccessListElement[0];
 	}
 
 	/**
 	 * @param acl the acl to set
 	 */
-	public void setACL(NXCAccessListElement[] acl)
+	public void setACL(AccessListElement[] acl)
 	{
 		this.acl = acl;
 		flags |= MODIFY_ACL;

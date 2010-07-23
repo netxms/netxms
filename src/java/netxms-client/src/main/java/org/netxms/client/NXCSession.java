@@ -73,6 +73,8 @@ import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.client.objecttools.ObjectToolDetails;
 
 /**
  * @author victor
@@ -576,20 +578,18 @@ public class NXCSession
 		this.connUseEncryption = connUseEncryption;
 	}
 
-	//
-	// Finalize
-	//
-
+	/* (non-Javadoc)
+	 * @see java.lang.Object#finalize()
+	 */
 	@Override
 	protected void finalize()
 	{
 		disconnect();
 	}
 
-	//
-	// Wait for synchronization
-	//
-
+	/**
+	 * Wait for synchronization completion
+	 */
 	private void waitForSync(final Semaphore syncObject, final int timeout) throws NXCException
 	{
 		if (timeout == 0)
@@ -2021,7 +2021,7 @@ public class NXCSession
 		// Access control list
 		if ((flags & NXCObjectModificationData.MODIFY_ACL) != 0)
 		{
-			final NXCAccessListElement[] acl = data.getACL();
+			final AccessListElement[] acl = data.getACL();
 			msg.setVariableInt32(NXCPCodes.VID_ACL_SIZE, acl.length);
 			msg.setVariableInt16(NXCPCodes.VID_INHERIT_RIGHTS, data.isInheritAccessRights() ? 1 : 0);
 
@@ -2177,7 +2177,7 @@ public class NXCSession
 	 * @throws NXCException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-	public void setObjectACL(final long objectId, final NXCAccessListElement[] acl, final boolean inheritAccessRights)
+	public void setObjectACL(final long objectId, final AccessListElement[] acl, final boolean inheritAccessRights)
 			throws IOException, NXCException
 	{
 		NXCObjectModificationData data = new NXCObjectModificationData(objectId);
@@ -3002,6 +3002,94 @@ public class NXCSession
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ACTION);
 		msg.setVariableInt32(NXCPCodes.VID_ACTION_ID, (int)actionId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get list of configured object tools
+	 * 
+	 * @return List of object tools
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<ObjectTool> getObjectTools() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECT_TOOLS);
+		sendMessage(msg);
+		
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_TOOLS);
+		final List<ObjectTool> list = new ArrayList<ObjectTool>(count);
+		
+		long varId = NXCPCodes.VID_OBJECT_TOOLS_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(new ObjectTool(response, varId));
+			varId += 10;
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * Get object tool details
+	 * @param toolId Tool ID
+	 * @return Object tool details
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public ObjectToolDetails getObjectToolDetails(long toolId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECT_TOOL_DETAILS);
+		msg.setVariableInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
+		sendMessage(msg);
+		
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return new ObjectToolDetails(response);
+	}
+
+	/**
+	 * Generate unique ID for new object tool.
+	 * 
+	 * @return Unique ID for object tool
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long generateObjectToolId() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GENERATE_OBJECT_TOOL_ID);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_TOOL_ID);
+	}
+	
+	/**
+	 * Modify object tool.
+	 * 
+	 * @param tool Object tool
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifyObjectTool(ObjectToolDetails tool) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_OBJECT_TOOL);
+		tool.fillMessage(msg);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Delete object tool.
+	 * 
+	 * @param toolId Object tool ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteObjectTool(long toolId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_OBJECT_TOOL);
+		msg.setVariableInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

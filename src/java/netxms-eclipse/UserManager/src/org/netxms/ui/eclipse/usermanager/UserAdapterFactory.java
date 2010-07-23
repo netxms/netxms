@@ -1,12 +1,27 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.usermanager;
 
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
-import org.netxms.client.NXCAccessListElement;
+import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NXCUser;
 import org.netxms.client.NXCUserDBObject;
@@ -16,8 +31,6 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 /**
  * Adapter factory for NXCUserDBObject and derived classes
  * 
- * @author Victor
- *
  */
 public class UserAdapterFactory implements IAdapterFactory
 {
@@ -110,8 +123,8 @@ public class UserAdapterFactory implements IAdapterFactory
 				};
 			}
 
-			// NXCAccessListElement
-			if (adaptableObject instanceof NXCAccessListElement)
+			// AccessListElement
+			if (adaptableObject instanceof AccessListElement)
 			{
 				return new IWorkbenchAdapter() {
 					@Override
@@ -123,14 +136,14 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
-						long userId = ((NXCAccessListElement)object).getUserId();
+						long userId = ((AccessListElement)object).getUserId();
 						return Activator.getImageDescriptor((userId < 0x80000000L) ? "icons/user.png" : "icons/group.png");
 					}
 
 					@Override
 					public String getLabel(Object object)
 					{
-						long userId = ((NXCAccessListElement)object).getUserId();
+						long userId = ((AccessListElement)object).getUserId();
 						NXCSession session = NXMCSharedData.getInstance().getSession();
 						NXCUserDBObject dbo = session.findUserDBObjectById(userId);
 						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}");

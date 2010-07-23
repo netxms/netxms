@@ -43,7 +43,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCAccessListElement;
+import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.log.Log;
@@ -109,7 +109,7 @@ public class LogViewer extends ViewPart
 		filter = new LogFilter();
 
 		// Initiate loading of user manager plugin if it was not loaded before
-		Platform.getAdapterManager().loadAdapter(new NXCAccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
 	}
 	
 	/* (non-Javadoc)

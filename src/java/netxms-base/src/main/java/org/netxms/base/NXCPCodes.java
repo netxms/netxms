@@ -172,8 +172,8 @@ public final class NXCPCodes
 	public static final int CMD_DEPLOY_AGENT_POLICY     = 0x008E;
 	public static final int CMD_LOG_DATA                = 0x008F;
 	public static final int CMD_GET_OBJECT_TOOL_DETAILS = 0x0090;
-	public static final int CMD_LOCK_OBJECT_TOOLS       = 0x0091;
-	public static final int CMD_UNLOCK_OBJECT_TOOLS     = 0x0092;
+	//public static final int CMD_LOCK_OBJECT_TOOLS       = 0x0091;
+	//public static final int CMD_UNLOCK_OBJECT_TOOLS     = 0x0092;
 	public static final int CMD_UPDATE_OBJECT_TOOL      = 0x0093;
 	public static final int CMD_DELETE_OBJECT_TOOL      = 0x0094;
 	public static final int CMD_SETUP_PROXY_CONNECTION  = 0x0095;

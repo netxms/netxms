@@ -13,7 +13,7 @@ import java.util.Set;
 import java.net.InetAddress;
 import org.netxms.base.*;
 import org.netxms.client.GeoLocation;
-import org.netxms.client.NXCAccessListElement;
+import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 
 public class GenericObject
@@ -68,7 +68,7 @@ public class GenericObject
 	private Map<String, String> customAttributes = new HashMap<String, String>(0);
 	
 	private boolean inheritAccessRights = true;
-	private HashSet<NXCAccessListElement> accessList = new HashSet<NXCAccessListElement>(0);
+	private HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
 
 
 	/**
@@ -131,7 +131,7 @@ public class GenericObject
 		count = msg.getVariableAsInteger(NXCPCodes.VID_ACL_SIZE);
 		for(i = 0, id = NXCPCodes.VID_ACL_USER_BASE, id2 = NXCPCodes.VID_ACL_RIGHTS_BASE; i < count; i++, id++, id2++)
 		{
-			accessList.add(new NXCAccessListElement(msg.getVariableAsInt64(id), msg.getVariableAsInteger(id2)));
+			accessList.add(new AccessListElement(msg.getVariableAsInt64(id), msg.getVariableAsInteger(id2)));
 		}
 	}
 
@@ -157,9 +157,9 @@ public class GenericObject
 	/**
 	 * @return Access list
 	 */
-	public NXCAccessListElement[] getAccessList()
+	public AccessListElement[] getAccessList()
 	{
-		return accessList.toArray(new NXCAccessListElement[accessList.size()]);
+		return accessList.toArray(new AccessListElement[accessList.size()]);
 	}
 
 	/**

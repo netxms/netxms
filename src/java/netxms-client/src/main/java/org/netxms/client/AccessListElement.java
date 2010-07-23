@@ -18,7 +18,7 @@
  */
 package org.netxms.client;
 
-public final class NXCAccessListElement
+public final class AccessListElement
 {
 	private long userId;
 	private int accessRights;
@@ -29,7 +29,7 @@ public final class NXCAccessListElement
 	 * @param userId
 	 * @param accessRights
 	 */
-	public NXCAccessListElement(long userId, int accessRights)
+	public AccessListElement(long userId, int accessRights)
 	{
 		this.userId = userId;
 		this.accessRights = accessRights;
@@ -40,7 +40,7 @@ public final class NXCAccessListElement
 	 * 
 	 * @param src Source ACL element
 	 */
-	public NXCAccessListElement(NXCAccessListElement src)
+	public AccessListElement(AccessListElement src)
 	{
 		this.userId = src.userId;
 		this.accessRights = src.accessRights;
@@ -164,11 +164,11 @@ public final class NXCAccessListElement
 		if (this == aThat)
 			return true;
 		
-		if (!(aThat instanceof NXCAccessListElement))
+		if (!(aThat instanceof AccessListElement))
 			return false;
 		
-		return (this.userId == ((NXCAccessListElement)aThat).userId) &&
-		       (this.accessRights == ((NXCAccessListElement)aThat).accessRights);
+		return (this.userId == ((AccessListElement)aThat).userId) &&
+		       (this.accessRights == ((AccessListElement)aThat).accessRights);
 	}
 	
 	@Override

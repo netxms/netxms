@@ -246,9 +246,9 @@ src/java/netxms-base/src/test/java/org/netxms/base/NXCPMessageTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPMsgWaitQueueTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPVariableTest.java -text
 src/java/netxms-client/pom.xml -text
+src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/NXCAccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -text
@@ -301,6 +301,9 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/PolicyRoot.java -
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ServiceRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Subnet.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Template.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectTool.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolDetails.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolTableColumn.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/AlarmTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ConnectionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/DataCollectionTest.java -text
@@ -308,6 +311,7 @@ src/java/netxms-client/src/test/java/org/netxms/client/EventDatabaseSyncTest.jav
 src/java/netxms-client/src/test/java/org/netxms/client/JobTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/LogTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ObjectTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/ObjectToolsTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ServerConfigTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/SessionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/UserTest.java -text

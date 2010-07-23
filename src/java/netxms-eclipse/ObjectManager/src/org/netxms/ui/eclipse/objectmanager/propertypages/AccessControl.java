@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCAccessListElement;
+import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCUserDBObject;
@@ -51,7 +51,7 @@ public class AccessControl extends PropertyPage
 	private GenericObject object;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
-	private HashMap<Long, NXCAccessListElement> acl;
+	private HashMap<Long, AccessListElement> acl;
 	private Button checkInherit;
 	
 	/* (non-Javadoc)
@@ -62,13 +62,13 @@ public class AccessControl extends PropertyPage
 	{
 		object = (GenericObject)getElement().getAdapter(GenericObject.class);
 		
-		NXCAccessListElement[] origAcl = object.getAccessList();
-		acl = new HashMap<Long, NXCAccessListElement>(origAcl.length);
+		AccessListElement[] origAcl = object.getAccessList();
+		acl = new HashMap<Long, AccessListElement>(origAcl.length);
 		for(int i = 0; i < origAcl.length; i++)
-			acl.put(origAcl[i].getUserId(), new NXCAccessListElement(origAcl[i]));
+			acl.put(origAcl[i].getUserId(), new AccessListElement(origAcl[i]));
 		
 		// Initiate loading of user manager plugin if it was not loaded before
-		Platform.getAdapterManager().loadAdapter(new NXCAccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -131,7 +131,7 @@ public class AccessControl extends PropertyPage
 				{
 					NXCUserDBObject[] selection = dlg.getSelection();
 					for(NXCUserDBObject user : selection)
-						acl.put(user.getId(), new NXCAccessListElement(user.getId(), 0));
+						acl.put(user.getId(), new AccessListElement(user.getId(), 0));
 					userList.setInput(acl.values().toArray());
 				}
 			}
@@ -152,10 +152,10 @@ public class AccessControl extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
-				Iterator<NXCAccessListElement> it = sel.iterator();
+				Iterator<AccessListElement> it = sel.iterator();
 				while(it.hasNext())
 				{
-					NXCAccessListElement element = it.next();
+					AccessListElement element = it.next();
 					acl.remove(element.getUserId());
 				}
 				userList.setInput(acl.values().toArray());
@@ -191,7 +191,7 @@ public class AccessControl extends PropertyPage
 				if (sel.size() == 1)
 				{
 					enableAllChecks(true);
-					NXCAccessListElement element = (NXCAccessListElement)sel.getFirstElement();
+					AccessListElement element = (AccessListElement)sel.getFirstElement();
 					int rights = element.getAccessRights();
 					for(int i = 0, mask = 1; i < 16; i++, mask <<= 1)
 					{
@@ -240,7 +240,7 @@ public class AccessControl extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
-				NXCAccessListElement element = (NXCAccessListElement)sel.getFirstElement();
+				AccessListElement element = (AccessListElement)sel.getFirstElement();
 				int rights = element.getAccessRights();
 				if (check.getSelection())
 					rights |= bitMask;
@@ -287,7 +287,7 @@ public class AccessControl extends PropertyPage
 				try
 				{
 					NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-					md.setACL(acl.values().toArray(new NXCAccessListElement[acl.size()]));
+					md.setACL(acl.values().toArray(new AccessListElement[acl.size()]));
 					md.setInheritAccessRights(inheritAccessRights);
 					NXMCSharedData.getInstance().getSession().modifyObject(md);
 					status = Status.OK_STATUS;
