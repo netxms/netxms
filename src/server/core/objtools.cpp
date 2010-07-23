@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -528,7 +528,7 @@ DWORD DeleteObjectToolFromDB(DWORD dwToolId)
    _stprintf(szQuery, _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
    DBQuery(g_hCoreDB, szQuery);
 
-   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, 0);
+   NotifyClientSessions(NX_NOTIFY_OBJTOOL_DELETED, dwToolId);
    return RCC_SUCCESS;
 }
 

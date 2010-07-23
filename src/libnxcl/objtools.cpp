@@ -181,26 +181,6 @@ void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData)
 
 
 //
-// Lock object tools configuration
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCLockObjectTools(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_OBJECT_TOOLS);
-}
-
-
-//
-// Unlock object tools configuration
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCUnlockObjectTools(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_OBJECT_TOOLS);
-}
-
-
-//
 // Delete object tool
 //
 

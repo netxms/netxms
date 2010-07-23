@@ -37,7 +37,7 @@
 //deprecated: #define CID_ACTION_DB         3
 #define CID_TRAP_CFG          4
 #define CID_PACKAGE_DB        5
-#define CID_OBJECT_TOOLS      6
+//deprecated: #define CID_OBJECT_TOOLS      6
 
 
 //

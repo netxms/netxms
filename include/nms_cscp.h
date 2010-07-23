@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -364,8 +364,8 @@ typedef struct
 #define CMD_DEPLOY_AGENT_POLICY     0x008E
 #define CMD_LOG_DATA                0x008F
 #define CMD_GET_OBJECT_TOOL_DETAILS 0x0090
-#define CMD_LOCK_OBJECT_TOOLS       0x0091
-#define CMD_UNLOCK_OBJECT_TOOLS     0x0092
+//#define CMD_LOCK_OBJECT_TOOLS       0x0091
+//#define CMD_UNLOCK_OBJECT_TOOLS     0x0092
 #define CMD_UPDATE_OBJECT_TOOL      0x0093
 #define CMD_DELETE_OBJECT_TOOL      0x0094
 #define CMD_SETUP_PROXY_CONNECTION  0x0095

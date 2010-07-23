@@ -183,7 +183,6 @@ typedef void * HSNMPSESSION;
 #define CSF_EPP_UPLOAD           ((DWORD)0x0010)
 #define CSF_TRAP_CFG_LOCKED      ((DWORD)0x0040)
 #define CSF_AUTHENTICATED        ((DWORD)0x0080)
-#define CSF_OBJECT_TOOLS_LOCKED  ((DWORD)0x0100)
 #define CSF_RECEIVING_MAP_DATA   ((DWORD)0x0200)
 #define CSF_SYNC_OBJECT_COMMENTS ((DWORD)0x0400)
 
@@ -465,13 +464,12 @@ private:
    void GetAgentConfig(CSCPMessage *pRequest);
    void UpdateAgentConfig(CSCPMessage *pRequest);
    void ExecuteAction(CSCPMessage *pRequest);
-   void SendObjectTools(DWORD dwRqId);
-   void SendObjectToolDetails(CSCPMessage *pRequest);
-   void UpdateObjectTool(CSCPMessage *pRequest);
-   void DeleteObjectTool(CSCPMessage *pRequest);
-   void GenerateObjectToolId(DWORD dwRqId);
-   void ExecTableTool(CSCPMessage *pRequest);
-   void LockObjectTools(DWORD dwRqId, BOOL bLock);
+   void sendObjectTools(DWORD dwRqId);
+   void sendObjectToolDetails(CSCPMessage *pRequest);
+   void updateObjectTool(CSCPMessage *pRequest);
+   void deleteObjectTool(CSCPMessage *pRequest);
+   void generateObjectToolId(DWORD dwRqId);
+   void execTableTool(CSCPMessage *pRequest);
    void ChangeSubscription(CSCPMessage *pRequest);
    void SendSyslog(CSCPMessage *pRequest);
    void SendServerStats(DWORD dwRqId);

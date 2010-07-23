@@ -946,28 +946,22 @@ void ClientSession::ProcessingThread()
             ExecuteAction(pMsg);
             break;
          case CMD_GET_OBJECT_TOOLS:
-            SendObjectTools(pMsg->GetId());
+            sendObjectTools(pMsg->GetId());
             break;
          case CMD_EXEC_TABLE_TOOL:
-            ExecTableTool(pMsg);
-            break;
-         case CMD_LOCK_OBJECT_TOOLS:
-            LockObjectTools(pMsg->GetId(), TRUE);
-            break;
-         case CMD_UNLOCK_OBJECT_TOOLS:
-            LockObjectTools(pMsg->GetId(), FALSE);
+            execTableTool(pMsg);
             break;
          case CMD_GET_OBJECT_TOOL_DETAILS:
-            SendObjectToolDetails(pMsg);
+            sendObjectToolDetails(pMsg);
             break;
          case CMD_UPDATE_OBJECT_TOOL:
-            UpdateObjectTool(pMsg);
+            updateObjectTool(pMsg);
             break;
          case CMD_DELETE_OBJECT_TOOL:
-            DeleteObjectTool(pMsg);
+            deleteObjectTool(pMsg);
             break;
          case CMD_GENERATE_OBJECT_TOOL_ID:
-            GenerateObjectToolId(pMsg->GetId());
+            generateObjectToolId(pMsg->GetId());
             break;
          case CMD_CHANGE_SUBSCRIPTION:
             ChangeSubscription(pMsg);
@@ -5869,7 +5863,7 @@ void ClientSession::ExecuteAction(CSCPMessage *pRequest)
 // Send tool list to client
 //
 
-void ClientSession::SendObjectTools(DWORD dwRqId)
+void ClientSession::sendObjectTools(DWORD dwRqId)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
@@ -5976,7 +5970,7 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
 // Send tool list to client
 //
 
-void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
+void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
@@ -6095,59 +6089,10 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
 
 
 //
-// Lock/unlock object tools configuration
-//
-
-void ClientSession::LockObjectTools(DWORD dwRqId, BOOL bLock)
-{
-   CSCPMessage msg;
-   char szBuffer[256];
-
-   // Prepare response message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
-
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
-   {
-      if (bLock)
-      {
-         if (!LockComponent(CID_OBJECT_TOOLS, m_dwIndex, m_szUserName, NULL, szBuffer))
-         {
-            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-            msg.SetVariable(VID_LOCKED_BY, szBuffer);
-         }
-         else
-         {
-            m_dwFlags |= CSF_OBJECT_TOOLS_LOCKED;
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         }
-      }
-      else
-      {
-         if (m_dwFlags & CSF_OBJECT_TOOLS_LOCKED)
-         {
-            UnlockComponent(CID_OBJECT_TOOLS);
-            m_dwFlags &= ~CSF_OBJECT_TOOLS_LOCKED;
-         }
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-      }
-   }
-   else
-   {
-      // Current user has no rights for object tools management
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   // Send response
-   sendMessage(&msg);
-}
-
-
-//
 // Update object tool
 //
 
-void ClientSession::UpdateObjectTool(CSCPMessage *pRequest)
+void ClientSession::updateObjectTool(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 
@@ -6158,16 +6103,7 @@ void ClientSession::UpdateObjectTool(CSCPMessage *pRequest)
    // Check user rights
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
-      if (m_dwFlags & CSF_OBJECT_TOOLS_LOCKED)
-      {
-         msg.SetVariable(VID_RCC, UpdateObjectToolFromMessage(pRequest));
-      }
-      else
-      {
-         // Object tools have to be locked before any
-         // changes can be made
-         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      }
+      msg.SetVariable(VID_RCC, UpdateObjectToolFromMessage(pRequest));
    }
    else
    {
@@ -6183,7 +6119,7 @@ void ClientSession::UpdateObjectTool(CSCPMessage *pRequest)
 // Delete object tool
 //
 
-void ClientSession::DeleteObjectTool(CSCPMessage *pRequest)
+void ClientSession::deleteObjectTool(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwToolId;
@@ -6195,17 +6131,8 @@ void ClientSession::DeleteObjectTool(CSCPMessage *pRequest)
    // Check user rights
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
-      if (m_dwFlags & CSF_OBJECT_TOOLS_LOCKED)
-      {
-         dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
-         msg.SetVariable(VID_RCC, DeleteObjectToolFromDB(dwToolId));
-      }
-      else
-      {
-         // Object tools have to be locked before any
-         // changes can be made
-         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      }
+      dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
+      msg.SetVariable(VID_RCC, DeleteObjectToolFromDB(dwToolId));
    }
    else
    {
@@ -6221,7 +6148,7 @@ void ClientSession::DeleteObjectTool(CSCPMessage *pRequest)
 // Generate ID for new object tool
 //
 
-void ClientSession::GenerateObjectToolId(DWORD dwRqId)
+void ClientSession::generateObjectToolId(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -6229,22 +6156,14 @@ void ClientSession::GenerateObjectToolId(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   // Check if we have event configuration database opened
-   if (!(m_dwFlags & CSF_OBJECT_TOOLS_LOCKED))
+   // Check access rights
+   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
    {
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      msg.SetVariable(VID_TOOL_ID, CreateUniqueId(IDG_OBJECT_TOOL));
    }
    else
    {
-      // Check access rights
-      if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
-      {
-         msg.SetVariable(VID_TOOL_ID, CreateUniqueId(IDG_OBJECT_TOOL));
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-      }
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -6256,7 +6175,7 @@ void ClientSession::GenerateObjectToolId(DWORD dwRqId)
 // Execute table tool (either SNMP or agent table)
 //
 
-void ClientSession::ExecTableTool(CSCPMessage *pRequest)
+void ClientSession::execTableTool(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwToolId;

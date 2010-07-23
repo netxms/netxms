@@ -341,6 +341,7 @@ enum
 #define NX_NOTIFY_GRAPHS_CHANGED		12
 #define NX_NOTIFY_ETMPL_CHANGED     13
 #define NX_NOTIFY_ETMPL_DELETED     14
+#define NX_NOTIFY_OBJTOOL_DELETED   15
 
 
 //
@@ -2086,8 +2087,6 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TO
 DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeId,
                                              DWORD dwToolId, NXC_TABLE_DATA **ppData);
 void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData);
-DWORD LIBNXCL_EXPORTABLE NXCLockObjectTools(NXC_SESSION hSession);
-DWORD LIBNXCL_EXPORTABLE NXCUnlockObjectTools(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, DWORD dwToolId,
                                                  NXC_OBJECT_TOOL_DETAILS **ppData);
 void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pData);
