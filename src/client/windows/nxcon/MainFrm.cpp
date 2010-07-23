@@ -12,6 +12,7 @@
 #include "AlarmBrowser.h"
 #include "ObjectBrowser.h"
 #include "FatalErrorDlg.h"
+#include "ObjectToolsEditor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -268,6 +269,9 @@ LRESULT CMainFrame::OnUpdateEventList(WPARAM wParam, LPARAM lParam)
 LRESULT CMainFrame::OnUpdateObjectTools(WPARAM wParam, LPARAM lParam)
 {
    DoRequest(LoadObjectTools, _T("Reloading object tools information..."));
+	CObjectToolsEditor *pWnd = theApp.GetObjectToolsEditor();
+	if (pWnd != NULL)
+		pWnd->OnObjectToolsUpdate(lParam, wParam == NX_NOTIFY_OBJTOOL_DELETED);
 	return 0;
 }
 

@@ -91,6 +91,7 @@ BEGIN_MESSAGE_MAP(CObjectToolsEditor, CMDIChildWnd)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
+	ON_MESSAGE(NXMC_UPDATE_OBJTOOL_LIST, OnUpdateObjectToolsList)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -199,7 +200,6 @@ void CObjectToolsEditor::OnSize(UINT nType, int cx, int cy)
 
 void CObjectToolsEditor::OnClose() 
 {
-   DoRequestArg1(NXCUnlockObjectTools, g_hSession, _T("Unlocking object tools..."));
 	CMDIChildWnd::OnClose();
 }
 
@@ -353,22 +353,13 @@ static DWORD DeleteObjectTools(DWORD dwNumTools, DWORD *pdwToolList,
                                CListCtrl *pwndListCtrl, CObjectToolsEditor *pWnd)
 {
    DWORD i, dwResult;
-   LVFINDINFO lvfi;
-   int iItem;
 
    for(i = 0; i < dwNumTools; i++)
    {
       dwResult = NXCDeleteObjectTool(g_hSession, pdwToolList[i]);
       if (dwResult != RCC_SUCCESS)
          break;
-      lvfi.flags = LVFI_PARAM;
-      lvfi.lParam = pdwToolList[i];
-      iItem = pwndListCtrl->FindItem(&lvfi, -1);
-      if (iItem != -1)
-         pwndListCtrl->DeleteItem(iItem);
    }
-
-   pWnd->RefreshInternalToolList();
 
    return dwResult;
 }
@@ -384,7 +375,8 @@ void CObjectToolsEditor::OnObjecttoolsDelete()
    DWORD i, dwNumItems, *pdwList, dwResult;
 
    dwNumItems = m_wndListCtrl.GetSelectedCount();
-   if (dwNumItems > 0)
+   if ((dwNumItems > 0) &&
+		 (MessageBox(_T("Do you really want to delete selected tool(s)?"), _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDYES))
    {
       pdwList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
       iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
@@ -541,8 +533,6 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
                                _T("Updating object tool configuration..."));
       if (dwResult == RCC_SUCCESS)
       {
-         int iItem;
-         LVFINDINFO lvfi;
          NXC_OBJECT_TOOL *pTool;
 
          // Update internal tool list
@@ -569,24 +559,7 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
          pTool->pszData = _tcsdup(pData->pszData);
          pTool->pszMatchingOID = (pData->pszMatchingOID == NULL) ? NULL : _tcsdup(pData->pszMatchingOID);
 
-         // Update list control
-         lvfi.flags = LVFI_PARAM;
-         lvfi.lParam = pData->dwId;
-         iItem = m_wndListCtrl.FindItem(&lvfi, -1);
-         if (iItem == -1)
-         {
-            _sntprintf_s(szBuffer, 1024, _TRUNCATE, _T("%d"), pData->dwId);
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pData->wType);
-            if (iItem != -1)
-               m_wndListCtrl.SetItemData(iItem, pData->dwId);
-         }
-         if (iItem != -1)
-         {
-            m_wndListCtrl.SetItemText(iItem, 1, pData->szName);
-            m_wndListCtrl.SetItemText(iItem, 2, g_szToolType[pData->wType]);
-            m_wndListCtrl.SetItemText(iItem, 3, pData->szDescription);
-            m_wndListCtrl.SortItems(ToolCompareProc, (LPARAM)this);
-         }
+			UpdateListItem(pData);
       }
       else
       {
@@ -594,6 +567,36 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
       }
    }
    NXCDestroyObjectToolDetails(pData);
+}
+
+
+//
+// Update list control
+//
+
+void CObjectToolsEditor::UpdateListItem(NXC_OBJECT_TOOL_DETAILS *pData)
+{
+   int iItem;
+   LVFINDINFO lvfi;
+	TCHAR szBuffer[32];
+
+   lvfi.flags = LVFI_PARAM;
+   lvfi.lParam = pData->dwId;
+   iItem = m_wndListCtrl.FindItem(&lvfi, -1);
+   if (iItem == -1)
+   {
+      _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), pData->dwId);
+      iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pData->wType);
+      if (iItem != -1)
+         m_wndListCtrl.SetItemData(iItem, pData->dwId);
+   }
+   if (iItem != -1)
+   {
+      m_wndListCtrl.SetItemText(iItem, 1, pData->szName);
+      m_wndListCtrl.SetItemText(iItem, 2, g_szToolType[pData->wType]);
+      m_wndListCtrl.SetItemText(iItem, 3, pData->szDescription);
+      m_wndListCtrl.SortItems(ToolCompareProc, (LPARAM)this);
+   }
 }
 
 
@@ -649,11 +652,93 @@ void CObjectToolsEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 
 //
-// Reload internal tool list from server
+// NXMC_UPDATE_OBJTOOL_LIST message handler
 //
 
-void CObjectToolsEditor::RefreshInternalToolList()
+LPARAM CObjectToolsEditor::OnUpdateObjectToolsList(WPARAM wParam, LPARAM lParam)
 {
-   NXCDestroyObjectToolList(m_dwNumTools, m_pToolList);
-   NXCGetObjectTools(g_hSession, &m_dwNumTools, &m_pToolList);
+	NXC_OBJECT_TOOL_DETAILS *data = CAST_TO_POINTER(lParam, NXC_OBJECT_TOOL_DETAILS *);
+
+	NXC_OBJECT_TOOL *tool = GetToolById(data->dwId);
+	if (tool == NULL)
+	{
+      // New tool, create new record in internal list
+      m_pToolList = (NXC_OBJECT_TOOL *)realloc(m_pToolList, sizeof(NXC_OBJECT_TOOL) * (m_dwNumTools + 1));
+      tool = &m_pToolList[m_dwNumTools];
+      m_dwNumTools++;
+
+      memset(tool, 0, sizeof(NXC_OBJECT_TOOL));
+      tool->dwId = data->dwId;
+	}
+
+	tool->dwFlags = data->dwFlags;
+	tool->wType = data->wType;
+	_tcscpy(tool->szName, data->szName);
+	_tcscpy(tool->szDescription, data->szDescription);
+	safe_free(tool->pszMatchingOID);
+	safe_free(tool->pszData);
+	safe_free(tool->pszConfirmationText);
+	tool->pszMatchingOID = data->pszMatchingOID;
+	tool->pszData = data->pszData;
+	tool->pszConfirmationText = data->pszConfirmationText;
+
+	UpdateListItem(data);
+
+	free(data);
+	return 0;
+}
+
+
+//
+// Update tool
+//
+
+static DWORD UpdateTool(DWORD toolId, CObjectToolsEditor *pWnd)
+{
+	DWORD rcc;
+	NXC_OBJECT_TOOL_DETAILS *data;
+
+	rcc = NXCGetObjectToolDetails(g_hSession, toolId, &data);
+	if (rcc == RCC_SUCCESS)
+	{
+		pWnd->PostMessage(NXMC_UPDATE_OBJTOOL_LIST, 0, (LPARAM)data);
+	}
+	return rcc;
+}
+
+
+//
+// Handler for object tool update or deletion
+//
+
+void CObjectToolsEditor::OnObjectToolsUpdate(DWORD toolId, bool isDelete)
+{
+	if (isDelete)
+	{
+		LVFINDINFO lvfi;
+		int item;
+
+      lvfi.flags = LVFI_PARAM;
+      lvfi.lParam = toolId;
+      item = m_wndListCtrl.FindItem(&lvfi, -1);
+      if (item != -1)
+         m_wndListCtrl.DeleteItem(item);
+
+		for(DWORD i = 0; i < m_dwNumTools; i++)
+		{
+			if (m_pToolList[i].dwId == toolId)
+			{
+				safe_free(m_pToolList[i].pszData);
+				safe_free(m_pToolList[i].pszMatchingOID);
+				safe_free(m_pToolList[i].pszConfirmationText);
+				m_dwNumTools--;
+				memmove(&m_pToolList[i], &m_pToolList[i + 1], sizeof(NXC_OBJECT_TOOL) * (m_dwNumTools - i));
+				break;
+			}
+		}
+	}
+	else
+	{
+		DoAsyncRequestArg2(m_hWnd, toolId, UpdateTool, (void *)toolId, this);
+	}
 }

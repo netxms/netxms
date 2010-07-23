@@ -765,6 +765,26 @@ static void ExecuteAsyncRequest(RqData *pData)
 
 
 //
+// Perform async request with 2 parameter
+//
+
+void DoAsyncRequestArg2(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2)
+{
+   RqData *pData;
+
+	pData = (RqData *)malloc(sizeof(RqData));
+   pData->hWnd = hWnd;
+	pData->bDynamic = TRUE;
+	pData->wParam = wParam;
+   pData->dwNumParams = 2;
+   pData->pArg1 = pArg1;
+   pData->pArg2 = pArg2;
+   pData->pFunc = (DWORD (*)(...))pFunc;
+   ExecuteAsyncRequest(pData);
+}
+
+
+//
 // Perform async request with 7 parameter
 //
 

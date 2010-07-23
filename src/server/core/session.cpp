@@ -5991,6 +5991,8 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
       {
          if (DBGetNumRows(hResult) > 0)
          {
+				msg.SetVariable(VID_TOOL_ID, dwToolId);
+
             DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING);
             DecodeSQLStringAndSetVariable(&msg, VID_NAME, szBuffer);
 

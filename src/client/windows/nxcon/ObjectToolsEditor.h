@@ -41,6 +41,8 @@ protected:
 	CListCtrl m_wndListCtrl;
 	virtual ~CObjectToolsEditor();
 
+	void UpdateListItem(NXC_OBJECT_TOOL_DETAILS *pData);
+
 	// Generated message map functions
 	//{{AFX_MSG(CObjectToolsEditor)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -56,12 +58,13 @@ protected:
 	afx_msg void OnObjecttoolsNew();
 	afx_msg void OnObjecttoolsDelete();
 	//}}AFX_MSG
+	afx_msg LPARAM OnUpdateObjectToolsList(WPARAM wParam, LPARAM lParam);
    afx_msg void OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 
 public:
-	void RefreshInternalToolList(void);
+	void OnObjectToolsUpdate(DWORD toolId, bool isDelete);
 	NXC_OBJECT_TOOL * GetToolById(DWORD dwId);
    int SortMode(void) { return m_iSortMode; }
    int SortDir(void) { return m_iSortDir; }

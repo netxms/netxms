@@ -1158,7 +1158,8 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                m_pMainWnd->PostMessage(NXCM_UPDATE_EVENT_LIST);
                break;
             case NX_NOTIFY_OBJTOOLS_CHANGED:
-               m_pMainWnd->PostMessage(NXCM_UPDATE_OBJECT_TOOLS);
+            case NX_NOTIFY_OBJTOOL_DELETED:
+               m_pMainWnd->PostMessage(NXCM_UPDATE_OBJECT_TOOLS, dwCode, CAST_FROM_POINTER(pArg, LPARAM));
                break;
             case NX_NOTIFY_NEW_ALARM:
             case NX_NOTIFY_ALARM_DELETED:
@@ -1282,19 +1283,9 @@ void CConsoleApp::OnControlpanelObjecttools()
    }
    else
    {
-      DWORD dwResult;
-
-      dwResult = DoRequestArg1(NXCLockObjectTools, g_hSession, _T("Locking object tools..."));
-      if (dwResult == RCC_SUCCESS)
-      {
-	      pFrame->CreateNewChild(RUNTIME_CLASS(CObjectToolsEditor),
-                                IDR_OBJECT_TOOLS_EDITOR,
-                                m_hObjToolsEditorMenu, m_hObjToolsEditorAccel);
-      }
-      else
-      {
-         ErrorBox(dwResult, _T("Unable to lock object tools: %s"));
-      }
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CObjectToolsEditor),
+                             IDR_OBJECT_TOOLS_EDITOR,
+                             m_hObjToolsEditorMenu, m_hObjToolsEditorAccel);
    }
 }
 

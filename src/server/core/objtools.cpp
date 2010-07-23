@@ -632,6 +632,6 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
       }
    }
 
-   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, 0);
+   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, dwToolId);
    return RCC_SUCCESS;
 }

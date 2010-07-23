@@ -141,6 +141,7 @@ extern CConsoleApp theApp;
 #define NXCM_CHILD_VSCROLL         (WM_USER + 133)
 #define NXCM_ACTION_UPDATE         (WM_USER + 134)
 #define NXCM_EVENTDB_UPDATE        (WM_USER + 135)
+#define NXMC_UPDATE_OBJTOOL_LIST   (WM_USER + 136)
 
 
 //
@@ -281,6 +282,7 @@ DWORD DoRequestArg8(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, void *pArg7, void *pArg8, void *pArg9,
                     TCHAR *pszInfoText);
+void DoAsyncRequestArg2(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2);
 void DoAsyncRequestArg7(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2,
                         void *pArg3, void *pArg4, void *pArg5, void *pArg6, void *pArg7);
 void DoAsyncRequestArg9(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2,

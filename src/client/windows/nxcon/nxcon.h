@@ -145,6 +145,7 @@ class CAlarmBrowser;
 class CObjectBrowser;
 class CActionEditor;
 class CEventEditor;
+class CObjectToolsEditor;
 
 class CConsoleApp : public CWinApp
 {
@@ -362,6 +363,7 @@ public:
    CObjectBrowser *GetObjectBrowser() { return m_viewState[VIEW_OBJECTS].bActive ? (CObjectBrowser *)m_viewState[VIEW_OBJECTS].pWnd : NULL; }
    CActionEditor *GetActionEditor() { return m_viewState[VIEW_ACTION_EDITOR].bActive ? (CActionEditor *)m_viewState[VIEW_ACTION_EDITOR].pWnd : NULL; }
    CEventEditor *GetEventEditor() { return m_viewState[VIEW_EVENT_EDITOR].bActive ? (CEventEditor *)m_viewState[VIEW_EVENT_EDITOR].pWnd : NULL; }
+	CObjectToolsEditor *GetObjectToolsEditor() { return m_viewState[VIEW_OBJECT_TOOLS].bActive ? (CObjectToolsEditor *)m_viewState[VIEW_OBJECT_TOOLS].pWnd : NULL; }
 
    HGLOBAL GetDevMode() { return m_hDevMode; }
    HGLOBAL GetDevNames() { return m_hDevNames; }
