@@ -249,6 +249,7 @@ src/java/netxms-client/pom.xml -text
 src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/Glob.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -text
@@ -308,6 +309,7 @@ src/java/netxms-client/src/test/java/org/netxms/client/AlarmTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ConnectionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/DataCollectionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/EventDatabaseSyncTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/GlobTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/JobTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/LogTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ObjectTest.java -text
@@ -611,6 +613,16 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/pr
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/CustomAttributes.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/General.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/TrustedNodes.java -text
+src/java/netxms-eclipse/ObjectTools/.classpath -text
+src/java/netxms-eclipse/ObjectTools/.project -text
+src/java/netxms-eclipse/ObjectTools/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/ObjectTools/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ObjectTools/build.properties -text
+src/java/netxms-eclipse/ObjectTools/plugin.xml -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Activator.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsCache.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsDynamicMenu.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Startup.java -text
 src/java/netxms-eclipse/ObjectView/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectView/build.properties -text
 src/java/netxms-eclipse/ObjectView/icons/object_details.png -text

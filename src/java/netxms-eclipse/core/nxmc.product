@@ -94,6 +94,7 @@
       <plugin id="org.netxms.ui.eclipse.networkmaps"/>
       <plugin id="org.netxms.ui.eclipse.objectbrowser"/>
       <plugin id="org.netxms.ui.eclipse.objectmanager"/>
+      <plugin id="org.netxms.ui.eclipse.objecttools"/>
       <plugin id="org.netxms.ui.eclipse.objectview"/>
       <plugin id="org.netxms.ui.eclipse.policymanager"/>
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>

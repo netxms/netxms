@@ -19,6 +19,8 @@
 package org.netxms.client.objecttools;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.Glob;
+import org.netxms.client.objects.Node;
 
 /**
  * NetXMS object tool representation
@@ -71,6 +73,31 @@ public class ObjectTool
 		description = msg.getVariableAsString(baseId + 5);
 		snmpOid = msg.getVariableAsString(baseId + 6);
 		confirmationText = msg.getVariableAsString(baseId + 7);
+	}
+	
+	/**
+	 * Check if tool is applicable for given node.
+	 * 
+	 * @param node Node object
+	 * @return true if tool is applicable for given node
+	 */
+	public boolean isApplicableForNode(Node node)
+	{
+		if (((flags & REQUIRES_SNMP) != 0) &&
+			 ((node.getFlags() & Node.NF_IS_SNMP) == 0))
+			return false;	// Node does not support SNMP
+		
+		if (((flags & REQUIRES_AGENT) != 0) &&
+				 ((node.getFlags() & Node.NF_IS_NATIVE_AGENT) == 0))
+				return false;	// Node does not have NetXMS agent
+		
+		if ((flags & REQUIRES_OID_MATCH) != 0)
+		{
+			if (!Glob.matchIgnoreCase(snmpOid, node.getSnmpOID()))
+				return false;	// OID does not match
+		}
+		
+		return true;
 	}
 
 	/**

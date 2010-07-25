@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.alarmviewer;
+package org.netxms.ui.eclipse.objecttools;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -38,7 +38,7 @@ public class Startup implements IStartup
 	public void earlyStartup()
 	{
 		// wait for connect
-		Job job = new Job("Set alarm listener for tray popups") {
+		Job job = new Job("Load object tools on startup") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
@@ -52,7 +52,7 @@ public class Startup implements IStartup
 					{
 					}
 				}
-				AlarmNotifier.init();
+				ObjectToolsCache.init();
 				return Status.OK_STATUS;
 			}
 		};

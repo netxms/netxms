@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+         <dynamic
+               class="org.netxms.ui.eclipse.objecttools.ObjectToolsDynamicMenu"
+               id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu">
+         </dynamic>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="org.netxms.ui.eclipse.objecttools.Startup">
+      </startup>
+   </extension>
+
+</plugin>
