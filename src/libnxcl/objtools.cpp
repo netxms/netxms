@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: objtools.cpp
+** File: objtools.cpp
 **
 **/
 
@@ -100,10 +100,10 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TO
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeId,
-                                             DWORD dwToolId, NXC_TABLE_DATA **ppData)
+                                             DWORD dwToolId, Table **ppData)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwResult, dwRqId, dwId, dwNumRecords;
+   DWORD dwResult, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -124,25 +124,7 @@ DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeI
          dwResult = pResponse->GetVariableLong(VID_RCC);
          if (dwResult == RCC_SUCCESS)
          {
-            *ppData = (NXC_TABLE_DATA *)malloc(sizeof(NXC_TABLE_DATA));
-            (*ppData)->pszTitle = pResponse->GetVariableStr(VID_TABLE_TITLE);
-            (*ppData)->dwNumCols = pResponse->GetVariableLong(VID_NUM_COLUMNS);
-            (*ppData)->dwNumRows = pResponse->GetVariableLong(VID_NUM_ROWS);
-            (*ppData)->pnColFormat = (LONG *)malloc(sizeof(LONG) * (*ppData)->dwNumCols);
-            (*ppData)->ppszColNames = (TCHAR **)malloc(sizeof(TCHAR *) * (*ppData)->dwNumCols);
-            dwNumRecords = (*ppData)->dwNumCols * (*ppData)->dwNumRows;
-            (*ppData)->ppszData = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumRecords);
-
-            // Column information
-            for(i = 0; i < (*ppData)->dwNumCols; i++)
-            {
-               (*ppData)->ppszColNames[i] = pResponse->GetVariableStr(VID_COLUMN_NAME_BASE + i);
-               (*ppData)->pnColFormat[i] = pResponse->GetVariableLong(VID_COLUMN_FMT_BASE + i);
-            }
-
-            // Column data
-            for(i = 0, dwId = VID_ROW_DATA_BASE; i < dwNumRecords; i++, dwId++)
-               (*ppData)->ppszData[i] = pResponse->GetVariableStr(dwId);
+				*ppData = new Table(pResponse);
          }
          delete pResponse;
       }
@@ -153,30 +135,6 @@ DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeI
    }
 
    return dwResult;
-}
-
-
-//
-// Destroy received table data
-//
-
-void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData)
-{
-   DWORD i;
-
-   if (pData == NULL)
-      return;
-
-   for(i = 0; i < pData->dwNumCols; i++)
-      safe_free(pData->ppszColNames[i]);
-   safe_free(pData->ppszColNames);
-   safe_free(pData->pnColFormat);
-
-   for(i = 0; i < pData->dwNumCols * pData->dwNumRows; i++)
-      safe_free(pData->ppszData[i]);
-   safe_free(pData->ppszData);
-   safe_free(pData->pszTitle);
-   free(pData);
 }
 
 

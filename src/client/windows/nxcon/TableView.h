@@ -34,7 +34,7 @@ public:
 
 // Implementation
 protected:
-   NXC_TABLE_DATA *m_pData;
+   Table *m_pData;
 	int m_iSortMode;
 	int m_iSortDir;
 	CImageList m_imageList;

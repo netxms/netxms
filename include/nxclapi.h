@@ -1522,21 +1522,6 @@ typedef struct
 
 
 //
-// Results of table object tool execution
-//
-
-typedef struct
-{
-   DWORD dwNumCols;
-   DWORD dwNumRows;
-   TCHAR *pszTitle;        // Table's title
-   TCHAR **ppszColNames;
-   LONG *pnColFormat;
-   TCHAR **ppszData;
-} NXC_TABLE_DATA;
-
-
-//
 // Object tool column information
 //
 
@@ -2084,9 +2069,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSetServerConfigCLOB(NXC_SESSION hSession, const TCHA
 DWORD LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, DWORD *pdwNumTools,
                                            NXC_OBJECT_TOOL **ppToolList);
 void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TOOL *pList);
+#ifdef __cplusplus
 DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeId,
-                                             DWORD dwToolId, NXC_TABLE_DATA **ppData);
-void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData);
+                                             DWORD dwToolId, Table **ppData);
+#endif
 DWORD LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, DWORD dwToolId,
                                                  NXC_OBJECT_TOOL_DETAILS **ppData);
 void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pData);

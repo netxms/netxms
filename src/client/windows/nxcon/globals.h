@@ -345,8 +345,8 @@ TCHAR **CopyStringList(TCHAR **ppList, DWORD dwSize);
 void DestroyStringList(TCHAR **ppList, DWORD dwSize);
 HTREEITEM FindTreeCtrlItem(CTreeCtrl &ctrl, HTREEITEM hRoot, TCHAR *pszText);
 HTREEITEM FindTreeCtrlItemEx(CTreeCtrl &ctrl, HTREEITEM hRoot, DWORD dwData);
-void SaveListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix);
-void LoadListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix);
+void SaveListCtrlColumns(CListCtrl &wndListCtrl, const TCHAR *pszSection, const TCHAR *pszPrefix);
+void LoadListCtrlColumns(CListCtrl &wndListCtrl, const TCHAR *pszSection, const TCHAR *pszPrefix);
 HGLOBAL CopyGlobalMem(HGLOBAL hSrc);
 void UpdateGraphList(void);
 

@@ -384,6 +384,7 @@ private:
 	DECLARE_THREAD_STARTER(GetServerFile)
 	DECLARE_THREAD_STARTER(queryServerLog)
 	DECLARE_THREAD_STARTER(getServerLogQueryData)
+	DECLARE_THREAD_STARTER(executeAction)
 
    void ReadThread(void);
    void WriteThread(void);
@@ -463,7 +464,7 @@ private:
    void ChangeObjectIP(CSCPMessage *pRequest);
    void GetAgentConfig(CSCPMessage *pRequest);
    void UpdateAgentConfig(CSCPMessage *pRequest);
-   void ExecuteAction(CSCPMessage *pRequest);
+   void executeAction(CSCPMessage *pRequest);
    void sendObjectTools(DWORD dwRqId);
    void sendObjectToolDetails(CSCPMessage *pRequest);
    void updateObjectTool(CSCPMessage *pRequest);

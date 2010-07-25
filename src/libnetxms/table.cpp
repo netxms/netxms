@@ -34,6 +34,8 @@ Table::Table()
    m_nNumCols = 0;
    m_ppData = NULL;
    m_ppColNames = NULL;
+	m_colFormats = NULL;
+	m_title = NULL;
 }
 
 
@@ -48,10 +50,15 @@ Table::Table(CSCPMessage *msg)
 
 	m_nNumRows = msg->GetVariableLong(VID_TABLE_NUM_ROWS);
 	m_nNumCols = msg->GetVariableLong(VID_TABLE_NUM_COLS);
+	m_title = msg->GetVariableStr(VID_TABLE_TITLE);
 
 	m_ppColNames = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols);
-	for(i = 0, dwId = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, dwId += 9)
+	m_colFormats = (LONG *)malloc(sizeof(LONG) * m_nNumCols);
+	for(i = 0, dwId = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, dwId += 8)
+	{
 		m_ppColNames[i] = msg->GetVariableStr(dwId++);
+		m_colFormats[i] = (LONG)msg->GetVariableLong(dwId++);
+	}
 
 	m_ppData = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols * m_nNumRows);
 	for(i = 0, dwId = VID_TABLE_DATA_BASE; i < m_nNumCols * m_nNumRows; i++)
@@ -71,9 +78,13 @@ Table::~Table()
       safe_free(m_ppColNames[i]);
    safe_free(m_ppColNames);
 
+	safe_free(m_colFormats);
+
    for(i = 0; i < m_nNumRows * m_nNumCols; i++)
       safe_free(m_ppData[i]);
    safe_free(m_ppData);
+
+	safe_free(m_title);
 }
 
 
@@ -86,13 +97,18 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 	int i, row, col;
 	DWORD id;
 
+	msg.SetVariable(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
+
 	if (offset == 0)
 	{
 		msg.SetVariable(VID_TABLE_NUM_ROWS, (DWORD)m_nNumRows);
 		msg.SetVariable(VID_TABLE_NUM_COLS, (DWORD)m_nNumCols);
 
-		for(i = 0, id = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, id += 9)
+		for(i = 0, id = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, id += 8)
+		{
 			msg.SetVariable(id++, CHECK_NULL_EX(m_ppColNames[i]));
+			msg.SetVariable(id++, (DWORD)m_colFormats[i]);
+		}
 	}
 	msg.SetVariable(VID_TABLE_OFFSET, (DWORD)offset);
 
@@ -117,10 +133,13 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 // Add new column
 //
 
-int Table::addColumn(TCHAR *pszName)
+int Table::addColumn(const TCHAR *name, LONG format)
 {
    m_ppColNames = (TCHAR **)realloc(m_ppColNames, sizeof(TCHAR *) * (m_nNumCols + 1));
-   m_ppColNames[m_nNumCols] = _tcsdup(pszName);
+   m_ppColNames[m_nNumCols] = _tcsdup(name);
+
+	m_colFormats = (LONG *)realloc(m_colFormats, sizeof(LONG) * (m_nNumCols + 1));
+	m_colFormats[m_nNumCols] = format;
 
    if (m_nNumRows > 0)
    {
@@ -148,7 +167,7 @@ int Table::addColumn(TCHAR *pszName)
 // Add new row
 //
 
-int Table::addRow(void)
+int Table::addRow()
 {
    if (m_nNumCols > 0)
    {

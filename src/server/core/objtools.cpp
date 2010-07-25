@@ -50,12 +50,11 @@ struct TOOL_STARTUP_INFO
 struct SNMP_ENUM_ARGS
 {
    DWORD dwNumCols;
-   DWORD dwNumRows;
    TCHAR **ppszOidList;
    LONG *pnFormatList;
    DWORD dwFlags;
-   StringList *values;
    Node *pNode;
+	Table *table;
 };
 
 
@@ -137,11 +136,12 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
    CSCPMessage msg;
    TCHAR *pszEnum, *pszRegEx, *pszLine, szBuffer[4096];
    AgentConnection *pConn;
-   DWORD i, j, dwNumRows, dwNumCols, dwNumValidRows, dwResult, dwId, dwLen;
+   DWORD i, j, dwNumRows, dwNumCols, dwResult, dwLen;
    int *pnSubstrPos, nPos;
    regex_t preg;
    regmatch_t *pMatchList;
    DB_RESULT hResult;
+	Table table;
 
    // Prepare data message
    msg.SetCode(CMD_TABLE_DATA);
@@ -162,6 +162,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
          pszRegEx++;
       }
    }
+	table.setTitle(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
 
    if ((pszEnum != NULL) && (pszRegEx != NULL))
    {
@@ -179,8 +180,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
             {
                DBGetField(hResult, i, 0, szBuffer, 256);
                DecodeSQLString(szBuffer);
-               msg.SetVariable(VID_COLUMN_NAME_BASE + i, szBuffer);
-               msg.SetVariable(VID_COLUMN_FMT_BASE + i, DBGetFieldULong(hResult, i, 1));
+					table.addColumn(szBuffer, DBGetFieldULong(hResult, i, 1));
                pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
             }
 	         if (regcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
@@ -193,11 +193,13 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
                   {
                      dwNumRows = pConn->GetNumDataLines();
                      pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (dwNumCols + 1));
-                     for(i = 0, dwNumValidRows = 0, dwId = VID_ROW_DATA_BASE; i < dwNumRows; i++)
+                     for(i = 0; i < dwNumRows; i++)
                      {
                         pszLine = (TCHAR *)pConn->GetDataLine(i);
                         if (regexec(&preg, pszLine, dwNumCols + 1, pMatchList, 0) == 0)
                         {
+									table.addRow();
+
                            // Write data for current row into message
                            for(j = 0; j < dwNumCols; j++)
                            {
@@ -205,18 +207,14 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
                               dwLen = pMatchList[nPos].rm_eo - pMatchList[nPos].rm_so;
                               memcpy(szBuffer, &pszLine[pMatchList[nPos].rm_so], dwLen * sizeof(TCHAR));
                               szBuffer[dwLen] = 0;
-                              msg.SetVariable(dwId++, szBuffer);
+										table.set(j, szBuffer);
                            }
-                           dwNumValidRows++;
                         }
                      }
                      free(pMatchList);
 
-                     // Set remaining variables
-                     msg.SetVariable(VID_NUM_ROWS, dwNumValidRows);
-                     msg.SetVariable(VID_TABLE_TITLE, ((TOOL_STARTUP_INFO *)pArg)->pszToolData);
-                     msg.SetVariable(VID_NUM_COLUMNS, dwNumCols);
                      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+							table.fillMessage(msg, 0, -1);
                   }
                   else
                   {
@@ -265,7 +263,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 // Add SNMP variable value to results list
 //
 
-static void AddSNMPResult(StringList *values, SNMP_Variable *pVar,
+static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
                           LONG nFmt, Node *pNode)
 {
    TCHAR szBuffer[4096];
@@ -306,7 +304,7 @@ static void AddSNMPResult(StringList *values, SNMP_Variable *pVar,
    {
       szBuffer[0] = 0;
    }
-	values->add(szBuffer);
+	table->set(column, szBuffer);
 }
 
 
@@ -356,15 +354,15 @@ static DWORD TableHandler(DWORD dwVersion, SNMP_Variable *pVar,
       if ((pRespPDU->getNumVariables() > 0) &&
           (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
-         ((SNMP_ENUM_ARGS *)pArg)->dwNumRows++;
+			((SNMP_ENUM_ARGS *)pArg)->table->addRow();
 
          // Add first column to results
-         AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->values, pVar,
+         AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, 0, pVar,
                        ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0],
                        ((SNMP_ENUM_ARGS *)pArg)->pNode);
 
          for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
-            AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->values, 
+            AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, i,
                           pRespPDU->getVariable(i - 1), 
                           ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i],
                           ((SNMP_ENUM_ARGS *)pArg)->pNode);
@@ -384,8 +382,9 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    TCHAR szBuffer[256];
    DB_RESULT hResult;
    CSCPMessage msg;
-   DWORD i, dwId, dwNumCols;
+   DWORD i, dwNumCols;
    SNMP_ENUM_ARGS args;
+	Table table;
 
    // Prepare data message
    msg.SetCode(CMD_TABLE_DATA);
@@ -399,33 +398,28 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
       dwNumCols = DBGetNumRows(hResult);
       if (dwNumCols > 0)
       {
-         args.dwNumRows = 0;
          args.dwNumCols = dwNumCols;
          args.ppszOidList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumCols);
          args.pnFormatList = (LONG *)malloc(sizeof(LONG) * dwNumCols);
          args.dwFlags = ((TOOL_STARTUP_INFO *)pArg)->dwFlags;
-         args.values = new StringList;
          args.pNode = ((TOOL_STARTUP_INFO *)pArg)->pNode;
+			args.table = &table;
          for(i = 0; i < dwNumCols; i++)
          {
             DBGetField(hResult, i, 0, szBuffer, 256);
             DecodeSQLString(szBuffer);
-            msg.SetVariable(VID_COLUMN_NAME_BASE + i, szBuffer);
             args.ppszOidList[i] = DBGetField(hResult, i, 1, NULL, 0);
             args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
-            msg.SetVariable(VID_COLUMN_FMT_BASE + i, (DWORD)args.pnFormatList[i]);
+				table.addColumn(szBuffer, args.pnFormatList[i]);
          }
 
          // Enumerate
          if (((TOOL_STARTUP_INFO *)pArg)->pNode->CallSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
          {
             // Fill in message with results
-            msg.SetVariable(VID_TABLE_TITLE, ((TOOL_STARTUP_INFO *)pArg)->pszToolData);
-            msg.SetVariable(VID_NUM_COLUMNS, dwNumCols);
-            msg.SetVariable(VID_NUM_ROWS, args.dwNumRows);
-				for(i = 0, dwId = VID_ROW_DATA_BASE; (int)i < args.values->getSize(); i++)
-					msg.SetVariable(dwId++, args.values->getValue((int)i));
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				table.setTitle(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
+				table.fillMessage(msg, 0, -1);
          }
          else
          {
@@ -433,7 +427,6 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          }
 
          // Cleanup
-			delete args.values;
          for(i = 0; i < dwNumCols; i++)
             safe_free(args.ppszOidList[i]);
          free(args.ppszOidList);

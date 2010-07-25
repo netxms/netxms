@@ -153,6 +153,7 @@ DEFINE_THREAD_STARTER(CreateObject)
 DEFINE_THREAD_STARTER(GetServerFile)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(getServerLogQueryData)
+DEFINE_THREAD_STARTER(executeAction)
 
 
 //
@@ -943,7 +944,7 @@ void ClientSession::ProcessingThread()
             UpdateAgentConfig(pMsg);
             break;
          case CMD_EXECUTE_ACTION:
-            ExecuteAction(pMsg);
+            CALL_IN_NEW_THREAD(executeAction, pMsg);
             break;
          case CMD_GET_OBJECT_TOOLS:
             sendObjectTools(pMsg->GetId());
@@ -5787,7 +5788,7 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
 // Execute action on client
 //
 
-void ClientSession::ExecuteAction(CSCPMessage *pRequest)
+void ClientSession::executeAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;

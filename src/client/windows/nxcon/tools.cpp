@@ -795,7 +795,7 @@ HBITMAP LoadPicture(TCHAR *pszFile, int nScaleFactor)
 // Save dimensions of all list control columns into registry
 //
 
-void SaveListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix)
+void SaveListCtrlColumns(CListCtrl &wndListCtrl, const TCHAR *pszSection, const TCHAR *pszPrefix)
 {
    int i;
    LVCOLUMN lvc;
@@ -817,7 +817,7 @@ void SaveListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPr
 // Load and set dimensions of all list control columns
 //
 
-void LoadListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix)
+void LoadListCtrlColumns(CListCtrl &wndListCtrl, const TCHAR *pszSection, const TCHAR *pszPrefix)
 {
    int i, nCount;
    LVCOLUMN lvc;

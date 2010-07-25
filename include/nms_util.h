@@ -185,6 +185,8 @@ private:
    int m_nNumCols;
    TCHAR **m_ppData;
    TCHAR **m_ppColNames;
+	LONG *m_colFormats;
+	TCHAR *m_title;
 
 public:
    Table();
@@ -193,11 +195,16 @@ public:
 
 	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
 
-   int getNumRows(void) { return m_nNumRows; }
-   int getNumColumns(void) { return m_nNumCols; }
+   int getNumRows() { return m_nNumRows; }
+   int getNumColumns() { return m_nNumCols; }
+	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
 
-   int addColumn(TCHAR *pszName);
-   int addRow(void);
+	const TCHAR *getColumnName(int col) { return ((col >= 0) && (col < m_nNumCols)) ? m_ppColNames[col] : NULL; }
+	LONG getColumnFormat(int col) { return ((col >= 0) && (col < m_nNumCols)) ? m_colFormats[col] : 0; }
+
+	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = (title != NULL) ? _tcsdup(title) : NULL; }
+   int addColumn(const TCHAR *name, LONG format = 0);
+   int addRow();
 
    void setAt(int nRow, int nCol, LONG nData);
    void setAt(int nRow, int nCol, DWORD dwData);

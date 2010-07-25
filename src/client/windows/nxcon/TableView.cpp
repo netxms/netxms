@@ -49,8 +49,7 @@ CTableView::CTableView(DWORD dwNodeId, DWORD dwToolId)
 
 CTableView::~CTableView()
 {
-   if (m_pData != NULL)
-      NXCDestroyTableData(m_pData);
+	delete m_pData;
 }
 
 
@@ -87,19 +86,13 @@ void CTableView::RequestData()
    DWORD dwResult;
    HWND hWnd = m_hWnd;
 
-   if (m_pData != NULL)
-   {
-      NXCDestroyTableData(m_pData);
-      m_pData = NULL;
-   }
+   delete_and_null(m_pData);
    dwResult = NXCExecuteTableTool(g_hSession, m_dwNodeId, m_dwToolId, &m_pData);
    theApp.DebugPrintf(_T("CTableView::RequestData(): Execution result: %d (%s)"),
                       dwResult, NXCGetErrorText(dwResult));
    if (!::PostMessage(hWnd, NXCM_TABLE_DATA, dwResult, 0))
    {
       theApp.DebugPrintf(_T("CTableView::RequestData(): Failed to post message to window %08X"), hWnd);
-//      if (dwResult == RCC_SUCCESS)
-//         NXCDestroyTableData(pData);
    }
 }
 
@@ -166,7 +159,7 @@ void CTableView::OnViewRefresh()
    if (m_pData != NULL)
    {
       // Data was already shown once, save column info
-      SaveListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->pszTitle);
+      SaveListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->getTitle());
    }
 
    m_wndWaitView.ShowWindow(SW_SHOW);
@@ -216,8 +209,8 @@ void CTableView::OnSetFocus(CWnd* pOldWnd)
 
 LRESULT CTableView::OnTableData(WPARAM wParam, LPARAM lParam)
 {
-   DWORD i, j;
-   int iItem, nPos;
+   int i, j;
+   int iItem;
    TCHAR szBuffer[256];
    NXC_OBJECT *pNode;
    LVCOLUMN lvCol;
@@ -225,23 +218,23 @@ LRESULT CTableView::OnTableData(WPARAM wParam, LPARAM lParam)
    if (wParam == RCC_SUCCESS)
    {
       // Create columns
-      for(i = 0; i < m_pData->dwNumCols; i++)
-         m_wndListCtrl.InsertColumn(i + 1, m_pData->ppszColNames[i], LVCFMT_LEFT, 100);
-      LoadListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->pszTitle);
+      for(i = 0; i < m_pData->getNumColumns(); i++)
+         m_wndListCtrl.InsertColumn(i + 1, m_pData->getColumnName(i), LVCFMT_LEFT, 100);
+      LoadListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->getTitle());
 
       // Fill list control with data
-      for(i = 0, nPos = 0; i < m_pData->dwNumRows; i++)
+      for(i = 0; i < m_pData->getNumRows(); i++)
       {
-         iItem = m_wndListCtrl.InsertItem(i, m_pData->ppszData[nPos++], -1);
-         for(j = 1; j < m_pData->dwNumCols; j++)
-            m_wndListCtrl.SetItemText(iItem, j, m_pData->ppszData[nPos++]);
+         iItem = m_wndListCtrl.InsertItem(i, m_pData->getAsString(i, 0), -1);
+         for(j = 1; j < m_pData->getNumColumns(); j++)
+            m_wndListCtrl.SetItemText(iItem, j, m_pData->getAsString(i, j));
          m_wndListCtrl.SetItemData(iItem, i);
       }
 
       m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
 
       pNode = NXCFindObjectById(g_hSession, m_dwNodeId);
-      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s - [%s]"), m_pData->pszTitle, 
+      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s - [%s]"), m_pData->getTitle(), 
                    (pNode != NULL) ? pNode->szName : _T("<unknown>"));
       SetTitle(szBuffer); 
       OnUpdateFrameTitle(TRUE);
@@ -312,10 +305,11 @@ int CTableView::CompareItems(int nItem1, int nItem2)
 {
    LONG n1, n2;
    int nRet;
-   TCHAR *pstr1, *pstr2, *eptr1, *eptr2;
+   const TCHAR *pstr1, *pstr2;
+	TCHAR *eptr1, *eptr2;
 
-   pstr1 = m_pData->ppszData[nItem1 * m_pData->dwNumCols + m_iSortMode];
-   pstr2 = m_pData->ppszData[nItem2 * m_pData->dwNumCols + m_iSortMode];
+   pstr1 = m_pData->getAsString(nItem1, m_iSortMode);
+   pstr2 = m_pData->getAsString(nItem2, m_iSortMode);
 
    // First, try to compare as numbers
    n1 = _tcstol(pstr1, &eptr1, 10);
@@ -341,7 +335,7 @@ void CTableView::OnClose()
    if (m_pData != NULL)
    {
       // Data was shown, save column info
-      SaveListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->pszTitle);
+      SaveListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->getTitle());
    }
 	
 	CMDIChildWnd::OnClose();
