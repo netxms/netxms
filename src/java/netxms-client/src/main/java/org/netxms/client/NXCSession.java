@@ -3093,4 +3093,25 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+
+	/**
+	 * Execute object tool of "table" type against given node.
+	 * 
+	 * @param toolId Tool ID
+	 * @param nodeId Node object ID
+	 * @return Table with tool execution results
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Table executeTableTool(long toolId, long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXEC_TABLE_TOOL);
+		msg.setVariableInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		
+		waitForRCC(msg.getMessageId());
+		final NXCPMessage response = waitForMessage(NXCPCodes.CMD_TABLE_DATA, msg.getMessageId());
+		return new Table(response);
+	}
 }

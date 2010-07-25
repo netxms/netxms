@@ -30,7 +30,9 @@ import org.netxms.base.NXCPMessage;
  */
 public class Table
 {
-	private List<String> columns;
+	private String title;
+	private List<String> columnNames;
+	private List<Integer> columnFormats;
 	private List<List<String>> data;
 
 	/**
@@ -38,7 +40,8 @@ public class Table
 	 */
 	public Table()
 	{
-		columns = new ArrayList<String>(0);
+		columnNames = new ArrayList<String>(0);
+		columnFormats = new ArrayList<Integer>(0);
 		data = new ArrayList<List<String>>(0);
 	}
 
@@ -49,12 +52,16 @@ public class Table
 	 */
 	public Table(final NXCPMessage msg)
 	{
+		title = msg.getVariableAsString(NXCPCodes.VID_TABLE_TITLE);
+		
 		final int columnCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_COLS);
-		columns = new ArrayList<String>(columnCount);
+		columnNames = new ArrayList<String>(columnCount);
+		columnFormats = new ArrayList<Integer>(columnCount);
 		long varId = NXCPCodes.VID_TABLE_COLUMN_INFO_BASE;
-		for(int i = 0; i < columnCount; i++, varId += 9L)
+		for(int i = 0; i < columnCount; i++, varId += 8L)
 		{
-			columns.add(msg.getVariableAsString(varId++));
+			columnNames.add(msg.getVariableAsString(varId++));
+			columnFormats.add(msg.getVariableAsInteger(varId++));
 		}
 
 		final int totalRowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
@@ -83,9 +90,9 @@ public class Table
 		long varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{
-			final List<String> row = new ArrayList<String>(columns.size());
+			final List<String> row = new ArrayList<String>(columnNames.size());
          //noinspection ForLoopReplaceableByForEach
-         for(int j = 0; j < columns.size(); j++)
+         for(int j = 0; j < columnNames.size(); j++)
          {
              row.add(msg.getVariableAsString(varId++));
          }
@@ -100,7 +107,7 @@ public class Table
 	 */
 	public int getColumnCount()
 	{
-		return columns.size();
+		return columnNames.size();
 	}
 
 	/**
@@ -122,7 +129,19 @@ public class Table
 	 */
 	public String getColumnName(final int column) throws IndexOutOfBoundsException
 	{
-		return columns.get(column);
+		return columnNames.get(column);
+	}
+
+	/**
+	 * Get column format
+	 *
+	 * @param column Column index (zero-based)
+	 * @return Column format
+	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
+	 */
+	public int getColumnFormat(final int column) throws IndexOutOfBoundsException
+	{
+		return columnFormats.get(column);
 	}
 
 	/**
@@ -133,7 +152,7 @@ public class Table
 	 */
 	public int getColumnIndex(final String name)
 	{
-		return columns.indexOf(name);
+		return columnNames.indexOf(name);
 	}
 
 	/**
@@ -177,6 +196,22 @@ public class Table
 		return rows;
 	}
 
+	/**
+	 * @return the title
+	 */
+	public String getTitle()
+	{
+		return title;
+	}
+
+	/**
+	 * @param title the title to set
+	 */
+	public void setTitle(String title)
+	{
+		this.title = title;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -185,7 +220,7 @@ public class Table
 	{
 		final StringBuilder sb = new StringBuilder();
 		sb.append("Table");
-		sb.append("{columns=").append(columns);
+		sb.append("{columns=").append(columnNames);
 		sb.append(", data=").append(data);
 		sb.append('}');
 		return sb.toString();
