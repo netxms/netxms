@@ -145,12 +145,13 @@ static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                MPtr++;
             if (*MPtr == 0)
 	            return TRUE;
-            if (*MPtr == _T('?'))      // Handle "*?" case
+            while(*MPtr == _T('?'))      // Handle "*?" case
             {
                if (*SPtr != 0)
                   SPtr++;
                else
                   return FALSE;
+					MPtr++;
                break;
             }
             BPtr = MPtr;           // Text block begins here
@@ -165,7 +166,7 @@ static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                {
                   while((*SPtr != 0) && (*SPtr != *BPtr))
                      SPtr++;
-                  if (_tcslen(SPtr) < ((size_t)(MPtr - BPtr)) * sizeof(TCHAR))
+                  if (_tcslen(SPtr) < (size_t)(MPtr - BPtr))
                   {
                      if (EPtr == NULL)
                      {
