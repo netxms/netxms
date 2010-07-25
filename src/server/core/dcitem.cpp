@@ -2128,7 +2128,7 @@ BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
 	BOOL success = FALSE;
 	NXSL_Program *pScript;
 
-	pScript = NXSLCompile(script, buffer, bufSize);
+	pScript = NXSLCompile(script, buffer, (int)bufSize);
    if (pScript != NULL)
    {
       NXSL_Value *pValue;

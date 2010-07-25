@@ -67,7 +67,7 @@ static void SendSyslogRecord(const TCHAR *text)
 		addr.sin_addr.s_addr = m_auditServerAddr;
 		addr.sin_port = m_auditServerPort;
 
-		sendto(hSocket, message, strlen(message), 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
+		sendto(hSocket, message, (int)strlen(message), 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
 		shutdown(hSocket, SHUT_RDWR);
 		closesocket(hSocket);
 	}

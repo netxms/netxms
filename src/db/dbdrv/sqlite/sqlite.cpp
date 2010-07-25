@@ -345,7 +345,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iCo
    if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
        (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
        (iRow >= 0) && (iColumn >= 0))
-      return strlen(((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn]);
+      return (LONG)strlen(((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn]);
    return -1;
 }
 
@@ -476,7 +476,7 @@ extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT hResult)
 extern "C" LONG EXPORT DrvGetFieldLengthAsync(DBDRV_RESULT hResult, int iColumn)
 {
    if ((iColumn >= 0) && (iColumn < ((SQLITE_CONN *)hResult)->nNumCols))
-      return strlen((char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn));
+      return (LONG)strlen((char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn));
    return 0;
 }
 

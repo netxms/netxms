@@ -22,6 +22,7 @@
 **/
 
 #include "winnt_subagent.h"
+#include <winternl.h>
 
 
 //
@@ -167,29 +168,64 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
 
 static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
 {
-	DWORD dwAddressOfCommandLine;
 	SIZE_T dummy;
-	FARPROC pfnGetCommandLineA;
-	HANDLE hThread;
 	BOOL bRet = FALSE;
+#ifdef __64BIT__
+	const DWORD desiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
+#else
+	const DWORD desiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_WRITE | 
+	                            PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION;
+#endif
 
-	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_WRITE | 
-	                              PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION, FALSE, dwPId);
+	HANDLE hProcess = OpenProcess(desiredAccess, FALSE, dwPId);
 	if(hProcess == INVALID_HANDLE_VALUE)
 		return FALSE;
 
+#ifdef __64BIT__
+	PROCESS_BASIC_INFORMATION pbi;
+	PEB peb;
+	RTL_USER_PROCESS_PARAMETERS pp;
+	WCHAR *buffer;
+	NTSTATUS status;
+	ULONG size;
+	
+	status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &pbi, sizeof(PROCESS_BASIC_INFORMATION), &size);
+	if (status == 0)	// STATUS_SUCCESS
+	{
+		if (ReadProcessMemory(hProcess, pbi.PebBaseAddress, &peb, sizeof(PEB), &dummy))
+		{
+			if (ReadProcessMemory(hProcess, peb.ProcessParameters, &pp, sizeof(RTL_USER_PROCESS_PARAMETERS), &dummy))
+			{
+				size_t bufSize = (pp.CommandLine.Length + 1) * sizeof(WCHAR);
+				buffer = (WCHAR *)malloc(bufSize);
+				if (ReadProcessMemory(hProcess, pp.CommandLine.Buffer, buffer, bufSize, &dummy))
+				{
+					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, pp.CommandLine.Length, pszCmdLine, dwLen, NULL, NULL);
+					pszCmdLine[dwLen - 1] = 0;
+					bRet = TRUE;
+				}
+				free(buffer);
+			}
+		}
+	}
+
+#else
+	DWORD dwAddressOfCommandLine;
+	FARPROC pfnGetCommandLineA;
+	HANDLE hThread;
+
 	pfnGetCommandLineA = GetProcAddress(GetModuleHandle("KERNEL32.DLL"), "GetCommandLineA"); 
 
-	/* TODO: need different solution for 64bit Windows */
 	hThread = CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)pfnGetCommandLineA, 0, 0, 0);
 	if (hThread != INVALID_HANDLE_VALUE)
 	{
 		WaitForSingleObject(hThread, INFINITE);
 		GetExitCodeThread(hThread, &dwAddressOfCommandLine);
-		ReadProcessMemory(hProcess, (PVOID)dwAddressOfCommandLine, pszCmdLine, dwLen, &dummy);
+		bRet = ReadProcessMemory(hProcess, (PVOID)dwAddressOfCommandLine, pszCmdLine, dwLen, &dummy);
 		CloseHandle(hThread);
-		bRet = TRUE;
 	}
+#endif
+
 	CloseHandle(hProcess);
 	return bRet;
 }

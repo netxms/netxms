@@ -625,7 +625,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResul
 		                        temp, 0, &dataSize);
 			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 			{
-				nLen = dataSize;
+				nLen = (LONG)dataSize;
 			}
 		}
    }

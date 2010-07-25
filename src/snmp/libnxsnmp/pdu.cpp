@@ -1199,7 +1199,7 @@ DWORD SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_
 		// Don't send user and auth/priv parameters in engine id discovery message
 		if (securityContext->getAuthoritativeEngine().getIdLen() != 0)
 		{
-			bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getUser(), strlen(securityContext->getUser()), &securityParameters[bytes], 1024 - bytes);
+			bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getUser(), (DWORD)strlen(securityContext->getUser()), &securityParameters[bytes], 1024 - bytes);
 
 			// Authentication parameters
 			if (securityContext->needAuthentication())
@@ -1255,7 +1255,7 @@ DWORD SNMP_PDU::encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE 
 	DWORD bytes;
 
 	bytes = BER_Encode(ASN_OCTET_STRING, m_contextEngineId, (DWORD)m_contextEngineIdLen, spdu, spduLen);
-	bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)m_contextName, strlen(m_contextName), &spdu[bytes], spduLen - bytes);
+	bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)m_contextName, (DWORD)strlen(m_contextName), &spdu[bytes], spduLen - bytes);
 	bytes += BER_Encode(pduType, pdu, pduSize, &spdu[bytes], spduLen - bytes);
 	
 	// Wrap scoped PDU into SEQUENCE
@@ -1382,7 +1382,7 @@ void SNMP_PDU::setContextEngineId(BYTE *id, int len)
 
 void SNMP_PDU::setContextEngineId(const char *id)
 {
-	m_contextEngineIdLen = min(strlen(id), SNMP_MAX_ENGINEID_LEN);
+	m_contextEngineIdLen = min((int)strlen(id), SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_contextEngineId, id, m_contextEngineIdLen);
 }
 

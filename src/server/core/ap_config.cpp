@@ -69,7 +69,7 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 	if (success)
 	{
 		TCHAR *data = EncodeSQLString(CHECK_NULL_EX(m_fileContent));
-		int len = _tcslen(data) + MAX_POLICY_CONFIG_NAME + 256;
+		int len = (int)_tcslen(data) + MAX_POLICY_CONFIG_NAME + 256;
 		TCHAR *query = (TCHAR *)malloc(len * sizeof(TCHAR));
 
 		_sntprintf(query, len, _T("SELECT policy_id FROM ap_config_files WHERE policy_id=%d"), m_dwId);
@@ -195,7 +195,7 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 		return false;  // Policy cannot be deployed
 
 	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
-	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, _tcslen(m_fileContent) * sizeof(TCHAR));
+	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (DWORD)_tcslen(m_fileContent) * sizeof(TCHAR));
 	return true;
 }
 

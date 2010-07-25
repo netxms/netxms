@@ -123,8 +123,8 @@ LRESULT CSrvDepsPage::OnWizardNext()
    {
       if (ListView_GetCheckState(m_wndListCtrl.m_hWnd, i))
       {
-         dwIndex = m_wndListCtrl.GetItemData(i);
-         nLen = _tcslen(m_ppszServiceNames[dwIndex]);
+         dwIndex = (DWORD)m_wndListCtrl.GetItemData(i);
+         nLen = (int)_tcslen(m_ppszServiceNames[dwIndex]);
          pc->m_pszDependencyList = (TCHAR *)realloc(pc->m_pszDependencyList,
                                                     (pc->m_dwDependencyListSize + nLen + 1) * sizeof(TCHAR));
          _tcscpy(&pc->m_pszDependencyList[pc->m_dwDependencyListSize], m_ppszServiceNames[dwIndex]);

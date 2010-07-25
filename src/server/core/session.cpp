@@ -8459,7 +8459,7 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
       if (content != NULL)
       {
 			Config *config = new Config();
-         if (config->loadXmlConfigFromMemory(content, strlen(content), NULL, "configuration"))
+         if (config->loadXmlConfigFromMemory(content, (int)strlen(content), NULL, "configuration"))
          {
             // Lock all required components
             if (LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, szLockInfo))

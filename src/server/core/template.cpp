@@ -284,7 +284,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
 	pszEscScript = (m_applyFilterSource != NULL) ? EncodeSQLString(m_applyFilterSource) : _tcsdup(_T("#00"));
-	len = _tcslen(pszEscScript) + 256;
+	len = (DWORD)_tcslen(pszEscScript) + 256;
 	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * len);
    if (bNewObject)
       _sntprintf(pszQuery, len, _T("INSERT INTO templates (id,version,enable_auto_apply,apply_filter) VALUES (%d,%d,%d,'%s')"),
