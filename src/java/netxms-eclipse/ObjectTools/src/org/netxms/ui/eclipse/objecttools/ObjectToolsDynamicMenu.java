@@ -18,26 +18,45 @@
  */
 package org.netxms.ui.eclipse.objecttools;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.ContributionItem;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.ISources;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleConstants;
+import org.eclipse.ui.console.IConsoleView;
+import org.eclipse.ui.console.IOConsole;
+import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.menus.IWorkbenchContribution;
+import org.eclipse.ui.progress.UIJob;
 import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * Dynamic object tools menu creator
@@ -168,6 +187,19 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		switch(tool.getType())
 		{
 			case ObjectTool.TYPE_COMMAND:
+				String temp = tool.getData();
+				temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
+				temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
+				final String command = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+				final IOConsole console = new IOConsole(command, Activator.getImageDescriptor("icons/console.png"));
+				IViewPart consoleView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IConsoleConstants.ID_CONSOLE_VIEW);
+				System.out.println("Console view is " + consoleView);
+				ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
+				ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
+				//console.createPage((IConsoleView)consoleView);
+				//console.activate();
+				final IOConsoleOutputStream out = console.newOutputStream();
+				
 				new ConsoleJob("Execute external command", null, Activator.PLUGIN_ID, null) {
 					@Override
 					protected String getErrorMessage()
@@ -178,16 +210,52 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
-						String command = tool.getData();
-						command = command.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
-						command = command.replace("%OBJECT_NAME%", node.getObjectName());
-						command = command.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
-System.out.println("Executing command '"+command +"'");						
-						Runtime.getRuntime().exec(command);
+						Process proc = Runtime.getRuntime().exec(command);
+						BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+						try
+						{
+							while(true)
+							{
+								String line = in.readLine();
+								if (line == null)
+									break;
+								out.write(line);
+								out.write("\n");
+							}
+						}
+						catch(IOException e)
+						{
+							e.printStackTrace();
+						}
+						//console.setName("FINISHED: " + console.getName());
 					}
 				}.start();
 				break;
 			case ObjectTool.TYPE_ACTION:
+				new ConsoleJob("Execute action on node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
+					@Override
+					protected String getErrorMessage()
+					{
+						return "Cannot execute action on node " + node.getObjectName();
+					}
+
+					@Override
+					protected void runInternal(IProgressMonitor monitor) throws Exception
+					{
+						final NXCSession session = NXMCSharedData.getInstance().getSession();
+						session.executeAction(node.getObjectId(), tool.getData());
+						new UIJob("Notify user about action execution") {
+							@Override
+							public IStatus runInUIThread(IProgressMonitor monitor)
+							{
+								MessageDialog.openInformation(null, "Tool Execution", "Action " + tool.getData() + " executed successfully on node " + node.getObjectName());
+								return Status.OK_STATUS;
+							}
+						}.schedule();
+					}
+				}.start();
+				break;
+			case ObjectTool.TYPE_URL:
 				break;
 		}
 	}
