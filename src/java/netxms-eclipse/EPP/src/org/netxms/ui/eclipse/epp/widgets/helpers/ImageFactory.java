@@ -92,7 +92,10 @@ public class ImageFactory
 		}
 		cache.clear();
 		
-		wbLabelProvider.dispose();
-		wbLabelProvider = null;
+		if (wbLabelProvider != null)
+		{
+			wbLabelProvider.dispose();
+			wbLabelProvider = null;
+		}
 	}
 }

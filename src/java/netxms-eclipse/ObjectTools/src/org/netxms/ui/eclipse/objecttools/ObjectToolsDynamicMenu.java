@@ -23,10 +23,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.core.expressions.IEvaluationContext;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.ISources;
@@ -35,6 +37,7 @@ import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 /**
  * Dynamic object tools menu creator
@@ -92,7 +95,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		if ((((IStructuredSelection)selection).size() != 1) ||
 				!(((IStructuredSelection)selection).getFirstElement() instanceof Node))
 			return;
-		Node node = (Node)((IStructuredSelection)selection).getFirstElement();
+		final Node node = (Node)((IStructuredSelection)selection).getFirstElement();
 		
 		Menu toolsMenu = new Menu(menu);
 		
@@ -129,9 +132,16 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					rootMenu = currMenu;
 				}
 				
-				MenuItem item = new MenuItem(rootMenu, SWT.CHECK);
+				final MenuItem item = new MenuItem(rootMenu, SWT.CHECK);
 				item.setText(path[path.length - 1]);
 				item.setData(tools[i]);
+				item.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e)
+					{
+						executeObjectTool(node, (ObjectTool)item.getData());
+					}
+				});
 				
 				added++;
 			}
@@ -146,6 +156,39 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		else
 		{
 			toolsMenu.dispose();
+		}
+	}
+	
+	/**
+	 * Execute object tool
+	 * @param tool Object tool
+	 */
+	private void executeObjectTool(final Node node, final ObjectTool tool)
+	{
+		switch(tool.getType())
+		{
+			case ObjectTool.TYPE_COMMAND:
+				new ConsoleJob("Execute external command", null, Activator.PLUGIN_ID, null) {
+					@Override
+					protected String getErrorMessage()
+					{
+						return "Cannot execute external command";
+					}
+
+					@Override
+					protected void runInternal(IProgressMonitor monitor) throws Exception
+					{
+						String command = tool.getData();
+						command = command.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
+						command = command.replace("%OBJECT_NAME%", node.getObjectName());
+						command = command.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+System.out.println("Executing command '"+command +"'");						
+						Runtime.getRuntime().exec(command);
+					}
+				}.start();
+				break;
+			case ObjectTool.TYPE_ACTION:
+				break;
 		}
 	}
 }
