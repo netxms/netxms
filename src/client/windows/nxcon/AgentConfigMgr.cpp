@@ -346,8 +346,8 @@ static int CALLBACK ItemCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 	TCHAR item1[256], item2[256];
    int iResult;
 
-	pWnd->GetItemText(lParam1, pWnd->GetSortMode(), item1);
-	pWnd->GetItemText(lParam2, pWnd->GetSortMode(), item2);
+	pWnd->GetItemText((int)lParam1, pWnd->GetSortMode(), item1);
+	pWnd->GetItemText((int)lParam2, pWnd->GetSortMode(), item2);
 
 	switch(pWnd->GetSortMode())
 	{
@@ -443,8 +443,8 @@ void CAgentConfigMgr::SwapItems(int nItem1, int nItem2)
    TCHAR szBuffer[32], szBuf1[256], szBuf2[256];
    int nItem;
 
-   dwId1 = m_wndListCtrl.GetItemData(nItem1);
-   dwId2 = m_wndListCtrl.GetItemData(nItem2);
+   dwId1 = (DWORD)m_wndListCtrl.GetItemData(nItem1);
+   dwId2 = (DWORD)m_wndListCtrl.GetItemData(nItem2);
    dwResult = DoRequestArg3(NXCSwapAgentConfigs, g_hSession, (void *)dwId1,
                             (void *)dwId2, _T("Changing sequence of agent config..."));
    if (dwResult == RCC_SUCCESS)

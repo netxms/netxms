@@ -40,7 +40,7 @@ void CGraphStatusBar::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
    rect.bottom--;
    rect.right = rect.left + 
       (lpDrawItemStruct->rcItem.right - lpDrawItemStruct->rcItem.left - 1) * 
-         lpDrawItemStruct->itemData / m_dwMaxValue;
+         (LONG)lpDrawItemStruct->itemData / m_dwMaxValue;
    pdc->FillRect(&rect, &brush);
 }
 
@@ -323,7 +323,7 @@ void CGraphFrame::OnDestroy()
 // WM_TIMER message handler
 //
 
-void CGraphFrame::OnTimer(UINT nIDEvent) 
+void CGraphFrame::OnTimer(UINT_PTR nIDEvent) 
 {
    m_dwSeconds++;
    if (m_dwSeconds == m_dwRefreshInterval)
@@ -718,7 +718,7 @@ void CGraphFrame::OnFilePrint()
          {
             // Print header
             _sntprintf(szBuffer, 1024, _T("NetXMS History Graph - %s"), m_szSubTitle);
-            nLen = _tcslen(szBuffer);
+            nLen = (int)_tcslen(szBuffer);
             dc.DrawText(szBuffer, nLen, &rect,
                         DT_CENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_TOP);
             rect.top += ymargin / 2 + dc.GetTextExtent(szBuffer, nLen).cy;
@@ -903,7 +903,7 @@ LRESULT CGraphFrame::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
    }
    else
    {
-      theApp.ErrorBox(lParam, _T("Unable to retrieve collected data: %s"));
+      theApp.ErrorBox((DWORD)lParam, _T("Unable to retrieve collected data: %s"));
    }
 
 	m_nPendingUpdates--;

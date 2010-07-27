@@ -121,7 +121,7 @@ void CWaitView::OnSize(UINT nType, int cx, int cy)
 // WM_TIMER message handler
 //
 
-void CWaitView::OnTimer(UINT nIDEvent) 
+void CWaitView::OnTimer(UINT_PTR nIDEvent) 
 {
    m_nCurrPos++;
    m_wndProgressBar.SetPos(m_nCurrPos);

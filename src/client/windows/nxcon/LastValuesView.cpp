@@ -425,7 +425,7 @@ void CLastValuesView::OnItemGraph()
    {
       ppItemList[i] = (NXC_DCI *)malloc(sizeof(NXC_DCI));
       memset(ppItemList[i], 0, sizeof(NXC_DCI));
-      ppItemList[i]->dwId = m_wndListCtrl.GetItemData(iItem);
+      ppItemList[i]->dwId = (DWORD)m_wndListCtrl.GetItemData(iItem);
       dwIndex = FindItem(ppItemList[i]->dwId);
       if (dwIndex != INVALID_INDEX)
       {
@@ -469,10 +469,10 @@ void CLastValuesView::OnItemShowdata()
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    while(iItem != -1)
    {
-      dwItemId = m_wndListCtrl.GetItemData(iItem);
+      dwItemId = (DWORD)m_wndListCtrl.GetItemData(iItem);
       _sntprintf_s(szBuffer, 384, _TRUNCATE, _T("%s - "), pObject->szName); 
       m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
-                                384 - _tcslen(szBuffer));
+                                384 - (int)_tcslen(szBuffer));
       theApp.ShowDCIData(m_dwNodeId, dwItemId, szBuffer);
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
@@ -581,7 +581,7 @@ void CLastValuesView::OnLastvaluesProperties()
 // WM_TIMER message handler
 //
 
-void CLastValuesView::OnTimer(UINT nIDEvent) 
+void CLastValuesView::OnTimer(UINT_PTR nIDEvent) 
 {
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
 }
@@ -609,7 +609,7 @@ void CLastValuesView::OnItemExportdata()
    CDataExportDlg dlg;
    DWORD dwItemId, dwTimeFrom, dwTimeTo;
 
-   dwItemId = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+   dwItemId = (DWORD)m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
    if (dlg.DoModal() == IDOK)
    {
       dlg.SaveLastSelection();
@@ -654,8 +654,8 @@ int CLastValuesView::CompareListItems(LPARAM lParam1, LPARAM lParam2)
    TCHAR szText1[16], szText2[16];
    LVFINDINFO lvfi;
 
-   dwIndex1 = GetDCIIndex(lParam1);
-   dwIndex2 = GetDCIIndex(lParam2);
+   dwIndex1 = GetDCIIndex((DWORD)lParam1);
+   dwIndex2 = GetDCIIndex((DWORD)lParam2);
    if ((dwIndex1 == INVALID_INDEX) || (dwIndex2 == INVALID_INDEX))
       return 0;   // Sanity check
 
@@ -756,7 +756,7 @@ void CLastValuesView::OnItemCleardata()
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    for(i = 0; (iItem != -1) && (i < dwItemCount); i++)
    {
-      pdwItemList[i] = m_wndListCtrl.GetItemData(iItem);
+      pdwItemList[i] = (DWORD)m_wndListCtrl.GetItemData(iItem);
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
 

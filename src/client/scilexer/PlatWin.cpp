@@ -1182,7 +1182,7 @@ public:
 };
 
 char *LineToItem::AllocWord(const char *text) {
-	int chars = strlen(text) + 1;
+	int chars = (int)strlen(text) + 1;
 	int newCount = wordsCount + chars;
 	if (newCount > wordsSize) {
 		wordsSize = _ROUND2(newCount * 2, 8192);
@@ -1380,7 +1380,7 @@ PRectangle ListBoxX::GetDesiredRect() {
 	HDC hdc = ::GetDC(lb);
 	HFONT oldFont = SelectFont(hdc, fontCopy);
 	SIZE textSize = {0, 0};
-	int len = widestItem ? strlen(widestItem) : 0;
+	int len = widestItem ? (int)strlen(widestItem) : 0;
 	if (unicodeMode) {
 		const TextWide tbuf(widestItem, len, unicodeMode);
 		::GetTextExtentPoint32W(hdc, tbuf.buffer, tbuf.tlen, &textSize);
@@ -1493,7 +1493,7 @@ void ListBoxX::Draw(DRAWITEMSTRUCT *pDrawItem) {
 		ListItemData item = lti.Get(pDrawItem->itemID);
 		int pixId = item.pixId;
 		const char *text = item.text;
-		int len = strlen(text);
+		int len = (int)strlen(text);
 
 		RECT rcText = rcBox;
 		::InsetRect(&rcText, TextInset.x, TextInset.y);
@@ -1553,7 +1553,7 @@ void ListBoxX::SetList(const char *list, char separator, char typesep) {
 	// the listbox is not visible.
 	SetRedraw(false);
 	Clear();
-	int size = strlen(list) + 1;
+	int size = (int)strlen(list) + 1;
 	char *words = new char[size];
 	if (words) {
 		lti.SetWords(words);

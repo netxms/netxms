@@ -447,7 +447,7 @@ void CAgentCfgEditor::WriteStatusMsg(TCHAR *pszMsg)
 // WM_TIMER message handler
 //
 
-void CAgentCfgEditor::OnTimer(UINT nIDEvent) 
+void CAgentCfgEditor::OnTimer(UINT_PTR nIDEvent) 
 {
    m_iMsgTimer++;
    if (m_iMsgTimer == 60)

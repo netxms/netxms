@@ -327,7 +327,7 @@ void CTrapEditor::OnTrapDelete()
       iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
       for(i = 0; (i < dwNumItems) && (iItem != -1); i++)
       {
-         pdwDeleteList[i] = m_wndListCtrl.GetItemData(iItem);
+         pdwDeleteList[i] = (DWORD)m_wndListCtrl.GetItemData(iItem);
          iItem = m_wndListCtrl.GetNextItem(iItem, LVIS_SELECTED);
       }
 
@@ -355,7 +355,7 @@ void CTrapEditor::EditTrap(BOOL bNewTrap)
       iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
       if (iItem != -1)
       {
-         dwTrapId = m_wndListCtrl.GetItemData(iItem);
+         dwTrapId = (DWORD)m_wndListCtrl.GetItemData(iItem);
          for(dwIndex = 0; dwIndex < m_dwNumTraps; dwIndex++)
             if (m_pTrapList[dwIndex].dwId == dwTrapId)
                break;
@@ -470,8 +470,8 @@ static int CALLBACK TrapCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
    TCHAR szEvent1[MAX_EVENT_NAME], szEvent2[MAX_EVENT_NAME];
    int iResult;
    
-   pTrap1 = pWnd->GetTrapById(lParam1);
-   pTrap2 = pWnd->GetTrapById(lParam2);
+   pTrap1 = pWnd->GetTrapById((DWORD)lParam1);
+   pTrap2 = pWnd->GetTrapById((DWORD)lParam2);
    
    switch(pWnd->GetSortMode())
    {

@@ -294,7 +294,7 @@ void CVPNCPropsGeneral::RemoveNetworks(DWORD *pdwNumNets, IP_NETWORK **ppNetList
       iItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
       if (iItem == -1)
          break;
-      dwIpAddr = pListCtrl->GetItemData(iItem);
+      dwIpAddr = (DWORD)pListCtrl->GetItemData(iItem);
       for(i = 0; i < *pdwNumNets; i++)
          if ((*ppNetList)[i].dwAddr == dwIpAddr)
             break;

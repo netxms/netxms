@@ -78,7 +78,7 @@ protected:
 	TCHAR m_szSubTitle[MAX_DB_STRING];
 	DWORD m_dwSeconds;
 	CGraphStatusBar m_wndStatusBar;
-	UINT m_hTimer;
+	UINT_PTR m_hTimer;
 
 	// Generated message map functions
 	//{{AFX_MSG(CGraphFrame)
@@ -88,7 +88,7 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnGraphProperties();
 	afx_msg void OnDestroy();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnGraphPresetsLasthour();
 	afx_msg void OnGraphPresetsLast2hours();

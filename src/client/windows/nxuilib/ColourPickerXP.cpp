@@ -576,24 +576,24 @@ END_MESSAGE_MAP()
 // Method:	CColourPickerXP::OnSelEndOK()
 // Notes:	None.
 //***********************************************************************
-LONG CColourPickerXP::OnSelEndOK(UINT lParam, LONG /*wParam*/)
+LRESULT CColourPickerXP::OnSelEndOK(WPARAM wParam, LPARAM lParam)
 {
 	m_bPopupActive = FALSE;
 
     COLORREF OldColor = m_Color;
 	
-	Color = (COLORREF)lParam;
+	Color = (COLORREF)wParam;
 
     CWnd *pParent = GetParent();
 
     if (pParent) 
 	{
-        pParent->SendMessage(CPN_CLOSEUP, lParam, (WPARAM) GetDlgCtrlID());
-        pParent->SendMessage(CPN_SELENDOK, lParam, (WPARAM) GetDlgCtrlID());
+        pParent->SendMessage(CPN_CLOSEUP, wParam, (LPARAM) GetDlgCtrlID());
+        pParent->SendMessage(CPN_SELENDOK, wParam, (LPARAM) GetDlgCtrlID());
     }
 
     if (OldColor != m_Color)
-        if (pParent) pParent->SendMessage(CPN_SELCHANGE, m_Color, (WPARAM) GetDlgCtrlID());
+        if (pParent) pParent->SendMessage(CPN_SELCHANGE, m_Color, (LPARAM) GetDlgCtrlID());
 
     return TRUE;
 }
@@ -603,21 +603,19 @@ LONG CColourPickerXP::OnSelEndOK(UINT lParam, LONG /*wParam*/)
 // Method:	CColourPickerXP::OnSelEndCancel()
 // Notes:	None.
 //***********************************************************************
-LONG CColourPickerXP::OnSelEndCancel(UINT lParam, LONG /*wParam*/)
+LRESULT CColourPickerXP::OnSelEndCancel(WPARAM wParam, LPARAM lParam)
 {
 	m_bPopupActive = FALSE;
-	
-	Color = (COLORREF)lParam;
+	Color = (COLORREF)wParam;
+	CWnd *pParent = GetParent();
 
-    CWnd *pParent = GetParent();
-
-    if (pParent) 
+	if (pParent) 
 	{
-        pParent->SendMessage(CPN_CLOSEUP, lParam, (WPARAM) GetDlgCtrlID());
-        pParent->SendMessage(CPN_SELENDCANCEL, lParam, (WPARAM) GetDlgCtrlID());
-    }
+		pParent->SendMessage(CPN_CLOSEUP, wParam, (LPARAM) GetDlgCtrlID());
+		pParent->SendMessage(CPN_SELENDCANCEL, wParam, (LPARAM) GetDlgCtrlID());
+	}
 
-    return TRUE;
+	return TRUE;
 }
 
 
@@ -625,14 +623,15 @@ LONG CColourPickerXP::OnSelEndCancel(UINT lParam, LONG /*wParam*/)
 // Method:	CColourPickerXP::OnSelChange()
 // Notes:	None.
 //***********************************************************************
-LONG CColourPickerXP::OnSelChange(UINT lParam, LONG /*wParam*/)
+LRESULT CColourPickerXP::OnSelChange(WPARAM wParam, LPARAM lParam)
 {
     if (m_bTrackSelection) 
-		Color = (COLORREF)lParam;
+		Color = (COLORREF)wParam;
 
     CWnd *pParent = GetParent();
 
-    if (pParent) pParent->SendMessage(CPN_SELCHANGE, lParam, (WPARAM) GetDlgCtrlID());
+    if (pParent) 
+		 pParent->SendMessage(CPN_SELCHANGE, wParam, (LPARAM) GetDlgCtrlID());
 
     return TRUE;
 }

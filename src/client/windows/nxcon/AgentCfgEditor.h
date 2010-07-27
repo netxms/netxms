@@ -32,7 +32,7 @@ public:
 
 // Implementation
 protected:
-	DWORD m_dwTimer;
+	UINT_PTR m_dwTimer;
 	int m_iMsgTimer;
 	void WriteStatusMsg(TCHAR *pszMsg);
 	int m_iStatusBarHeight;
@@ -63,7 +63,7 @@ protected:
 	afx_msg void OnConfigSave();
 	afx_msg void OnConfigSaveandapply();
 	afx_msg void OnClose();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnDestroy();
 	afx_msg void OnEditRedo();
 	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);

@@ -80,7 +80,7 @@ int CTaskBarPopupWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 // WM_TIMER message handler
 //
 
-void CTaskBarPopupWnd::OnTimer(UINT nIDEvent) 
+void CTaskBarPopupWnd::OnTimer(UINT_PTR nIDEvent) 
 {
    int nWidth, nHeight;
 

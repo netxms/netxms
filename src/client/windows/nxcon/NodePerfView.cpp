@@ -293,7 +293,7 @@ void CNodePerfView::CreateCustomGraph(NXC_PERFTAB_DCI *dci, RECT &rect)
 #else
 	xml = strdup(dci->pszSettings);
 #endif
-	if (!config.loadXmlConfigFromMemory(xml, strlen(xml)))
+	if (!config.loadXmlConfigFromMemory(xml, (int)strlen(xml)))
 	{
 		free(xml);
 		return;
@@ -360,11 +360,11 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 			NULL
 		};
 		for(i = 0; cpuUsageDciNames[i] != NULL; i++)
-			if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, cpuUsageDciNames[i], _T("CPU Utilization"), rect, FALSE))
+			if (CreateGraph((NXC_PERFTAB_DCI *)lParam, (DWORD)wParam, cpuUsageDciNames[i], _T("CPU Utilization"), rect, FALSE))
 				break;
 
 		// CPU load average
-		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, _T("@system.load_avg"), _T("CPU Load Average"), rect, FALSE))
+		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, (DWORD)wParam, _T("@system.load_avg"), _T("CPU Load Average"), rect, FALSE))
 		{
 /*			m_pGraphList[m_dwNumGraphs - 1].dwItemId[1] = FindItemByName((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.load_avg5"));
 			m_pGraphList[m_dwNumGraphs - 1].dwItemId[2] = FindItemByName((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.load_avg15"));
@@ -373,15 +373,15 @@ LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 		}
 
 		// Physical memory
-		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, _T("@system.usedmem"), _T("Physical Memory"), rect, TRUE))
+		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, (DWORD)wParam, _T("@system.usedmem"), _T("Physical Memory"), rect, TRUE))
 		{
-			m_pGraphList[m_dwNumGraphs - 1].dwItemId[1] = FindItemByName((NXC_PERFTAB_DCI *)lParam, wParam, _T("@system.totalmem"));
+			m_pGraphList[m_dwNumGraphs - 1].dwItemId[1] = FindItemByName((NXC_PERFTAB_DCI *)lParam, (DWORD)wParam, _T("@system.totalmem"));
 			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[0].rgbColor = RGB(210, 180, 140);
 			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[1].rgbColor = RGB(192, 0, 0);
 		}
 
 		// Disk queue
-		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, wParam, _T("@system.disk_queue"), _T("Disk Queue"), rect, FALSE))
+		if (CreateGraph((NXC_PERFTAB_DCI *)lParam, (DWORD)wParam, _T("@system.disk_queue"), _T("Disk Queue"), rect, FALSE))
 		{
 			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[0].rgbColor = RGB(0, 0, 192);
 		}
@@ -483,7 +483,7 @@ void CNodePerfView::OnDestroy()
 // WM_TIMER message handler
 //
 
-void CNodePerfView::OnTimer(UINT nIDEvent) 
+void CNodePerfView::OnTimer(UINT_PTR nIDEvent) 
 {
 	if (m_nState == STATE_IDLE)
 		UpdateAllGraphs();

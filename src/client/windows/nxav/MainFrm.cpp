@@ -357,7 +357,7 @@ void CMainFrame::OnDestroy()
 // WM_TIMER message handler
 //
 
-void CMainFrame::OnTimer(UINT nIDEvent) 
+void CMainFrame::OnTimer(UINT_PTR nIDEvent) 
 {
    DWORD i;
    time_t now;

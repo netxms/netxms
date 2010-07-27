@@ -321,7 +321,7 @@ void CActionEditor::OnActionProperties()
 
          LockActions();
 
-         pAction = FindActionById(m_wndListCtrl.GetItemData(iItem));
+         pAction = FindActionById((DWORD)m_wndListCtrl.GetItemData(iItem));
          if (pAction != NULL)
          {
             CEditActionDlg dlg;

@@ -259,7 +259,7 @@ LRESULT CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 	TCHAR szBuffer[128];
 
 	safe_free(m_pItemList);
-	m_dwNumItems = wParam;
+	m_dwNumItems = (DWORD)wParam;
 	m_pItemList = (NXC_DCI_VALUE *)lParam;
 	m_wndListCtrl.DeleteAllItems();
 	for(i = 0; i < m_dwNumItems; i++)
@@ -469,7 +469,7 @@ void CNodeLastValuesView::OnItemGraph()
    {
       ppItemList[i] = (NXC_DCI *)malloc(sizeof(NXC_DCI));
       memset(ppItemList[i], 0, sizeof(NXC_DCI));
-		dwIndex = m_wndListCtrl.GetItemData(iItem);
+		dwIndex = (DWORD)m_wndListCtrl.GetItemData(iItem);
       ppItemList[i]->dwId = m_pItemList[dwIndex].dwId;
       _tcscpy(ppItemList[i]->szName, m_pItemList[dwIndex].szName);
       _tcscpy(ppItemList[i]->szDescription, m_pItemList[dwIndex].szDescription);
@@ -545,7 +545,7 @@ void CNodeLastValuesView::OnItemShowdata()
       dwItemId = m_pItemList[m_wndListCtrl.GetItemData(iItem)].dwId;
       _sntprintf_s(szBuffer, 384, _TRUNCATE, _T("%s - "), m_pObject->szName); 
       m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
-                                384 - _tcslen(szBuffer));
+                                384 - (int)_tcslen(szBuffer));
       theApp.ShowDCIData(m_pObject->dwId, dwItemId, szBuffer);
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
@@ -556,7 +556,7 @@ void CNodeLastValuesView::OnItemShowdata()
 // WM_TIMER message handler
 //
 
-void CNodeLastValuesView::OnTimer(UINT nIDEvent) 
+void CNodeLastValuesView::OnTimer(UINT_PTR nIDEvent) 
 {
 	m_workerQueue.Put((void *)m_pObject->dwId);
 }

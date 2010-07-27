@@ -96,9 +96,9 @@ BOOL NXUILIB_EXPORTABLE SaveAlarmSoundCfg(ALARM_SOUND_CFG *pCfg, TCHAR *pszKey)
    dwTemp = pCfg->nFlags;
    RegSetValueEx(hKey, _T("Flags"), 0, REG_DWORD, (BYTE *)&dwTemp, sizeof(DWORD));
    RegSetValueEx(hKey, _T("Sound1"), 0, REG_EXPAND_SZ, (BYTE *)pCfg->szSound1,
-                 _tcslen(pCfg->szSound1) * sizeof(TCHAR) + sizeof(TCHAR));
+                 (DWORD)_tcslen(pCfg->szSound1) * sizeof(TCHAR) + sizeof(TCHAR));
    RegSetValueEx(hKey, _T("Sound2"), 0, REG_EXPAND_SZ, (BYTE *)pCfg->szSound2,
-                 _tcslen(pCfg->szSound2) * sizeof(TCHAR) + sizeof(TCHAR));
+                 (DWORD)_tcslen(pCfg->szSound2) * sizeof(TCHAR) + sizeof(TCHAR));
 
    RegCloseKey(hKey);
    return TRUE;

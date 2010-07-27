@@ -24,7 +24,7 @@ protected:
 	int m_iStatusBarHeight;
 	CStatusBarCtrl m_wndStatusBar;
 	int m_iMsgTimer;
-	DWORD m_dwTimer;
+	UINT_PTR m_dwTimer;
 
 public:
 
@@ -48,7 +48,7 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnEditSelectAll();
 	afx_msg void OnEditCopy();
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);

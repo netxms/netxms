@@ -286,7 +286,7 @@ void CLoginDialog::SaveServerHistory()
 		{
 			_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("HistorySrv_%d"), i);
 			RegSetValueEx(hKey, szBuffer, 0, REG_SZ, (BYTE *)m_pszServerHistory[i],
-			              (_tcslen(m_pszServerHistory[i]) + 1) * sizeof(TCHAR));
+			              ((DWORD)_tcslen(m_pszServerHistory[i]) + 1) * sizeof(TCHAR));
 		}
 	}
 

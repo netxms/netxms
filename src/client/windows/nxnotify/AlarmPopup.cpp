@@ -79,7 +79,7 @@ void CAlarmPopup::DrawContent(CDC &dc)
       rect.right = m_rcClient.right - 5;
       rect.bottom = rect.top + 16;
       pOldFont = dc.SelectObject(&m_fontBold);
-      dc.DrawText(pObject->szName, _tcslen(pObject->szName), &rect,
+      dc.DrawText(pObject->szName, (int)_tcslen(pObject->szName), &rect,
                   DT_LEFT | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
       dc.SelectObject(pOldFont);
    }
@@ -94,7 +94,7 @@ void CAlarmPopup::DrawContent(CDC &dc)
    rect.top = 31;
    rect.bottom = m_rcClient.bottom - 5;
    pOldFont = dc.SelectObject(&m_fontNormal);
-   dc.DrawText(m_pAlarm->szMessage, _tcslen(m_pAlarm->szMessage), &rect,
+   dc.DrawText(m_pAlarm->szMessage, (int)_tcslen(m_pAlarm->szMessage), &rect,
                DT_LEFT | DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK);
    dc.SelectObject(pOldFont);
 }
@@ -172,7 +172,7 @@ void CAlarmPopup::PopupAction(int nAction)
 // WM_TIMER message handler
 //
 
-void CAlarmPopup::OnTimer(UINT nIDEvent) 
+void CAlarmPopup::OnTimer(UINT_PTR nIDEvent) 
 {
    if (nIDEvent == 1)
    {

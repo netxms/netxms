@@ -159,7 +159,7 @@ void CInfoLine::OnDestroy()
 // WM_TIMER message handler
 //
 
-void CInfoLine::OnTimer(UINT nIDEvent) 
+void CInfoLine::OnTimer(UINT_PTR nIDEvent) 
 {
    time_t now;
    struct tm tmbuf;

@@ -1,0 +1,5 @@
+EXPORTS
+  GetLexerCount
+  GetLexerName=
+  Lex=
+  Fold=

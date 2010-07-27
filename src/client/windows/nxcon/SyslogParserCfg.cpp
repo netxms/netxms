@@ -211,7 +211,7 @@ void CSyslogParserCfg::WriteStatusMsg(const TCHAR *pszMsg)
 // WM_TIMER message handler
 //
 
-void CSyslogParserCfg::OnTimer(UINT nIDEvent) 
+void CSyslogParserCfg::OnTimer(UINT_PTR nIDEvent) 
 {
    m_iMsgTimer++;
    if (m_iMsgTimer == 60)

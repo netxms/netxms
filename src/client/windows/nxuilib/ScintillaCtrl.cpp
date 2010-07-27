@@ -63,7 +63,7 @@ void CScintillaCtrl::SetText(LPCTSTR lpszText)
       char *pBuffer;
       int nSize;
 
-      nSize = wcslen(lpszText) * 4 + 1;
+      nSize = (int)wcslen(lpszText) * 4 + 1;
       pBuffer = (char *)malloc(nSize);
       WideCharToMultiByte(CP_UTF8, 0, lpszText, -1, pBuffer, nSize, NULL, NULL);
       SendMessage(SCI_SETTEXT, 0, (LPARAM)pBuffer);
@@ -88,7 +88,7 @@ void CScintillaCtrl::AppendText(LPCTSTR text, BOOL scrollDown)
       char *buffer;
       int size;
 
-      size = wcslen(text) * 4 + 1;
+      size = (int)wcslen(text) * 4 + 1;
       buffer = (char *)malloc(size);
       WideCharToMultiByte(CP_UTF8, 0, text, -1, buffer, size, NULL, NULL);
       SendMessage(SCI_APPENDTEXT, strlen(buffer), (LPARAM)buffer);
@@ -99,7 +99,7 @@ void CScintillaCtrl::AppendText(LPCTSTR text, BOOL scrollDown)
    }
 	if (scrollDown)
 	{
-		GotoPosition(SendMessage(SCI_GETTEXTLENGTH, 0, 0));
+		GotoPosition((LONG)SendMessage(SCI_GETTEXTLENGTH, 0, 0));
 	}
 }
 
@@ -116,7 +116,7 @@ void CScintillaCtrl::GetText(CString &strText)
    WCHAR *pszUniText;
 #endif
 
-   nLen = SendMessage(SCI_GETLENGTH, 0, 0) + 1;
+   nLen = (LONG)SendMessage(SCI_GETLENGTH, 0, 0) + 1;
    if (nLen > 0)
    {
       pszText = (char *)malloc(nLen);
@@ -268,7 +268,7 @@ BOOL CScintillaCtrl::SetLexer(char *pszLexerName)
 {
    int nLexer;
 
-   nLexer = SendMessage(SCI_GETLEXER, 0, 0);
+   nLexer = (int)SendMessage(SCI_GETLEXER, 0, 0);
    SendMessage(SCI_SETLEXERLANGUAGE, 0, (LPARAM)pszLexerName);
    return (nLexer != SendMessage(SCI_GETLEXER, 0, 0));
 }
@@ -288,9 +288,9 @@ void CScintillaCtrl::Refresh(void)
 // Get modification flag
 //
 
-BOOL CScintillaCtrl::GetModify(void)
+BOOL CScintillaCtrl::GetModify()
 {
-   return SendMessage(SCI_GETMODIFY, 0, 0);
+	return SendMessage(SCI_GETMODIFY, 0, 0) ? TRUE : FALSE;
 }
 
 

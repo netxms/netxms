@@ -1016,7 +1016,7 @@ DWORD LIBNXCL_EXPORTABLE NXCTestDCITransformation(NXC_SESSION hSession, DWORD dw
       if (dwResult == RCC_SUCCESS)
       {
 			*execStatus = pResponse->GetVariableShort(VID_EXECUTION_STATUS);
-			pResponse->GetVariableStr(VID_EXECUTION_RESULT, execResult, resultBufSize);
+			pResponse->GetVariableStr(VID_EXECUTION_RESULT, execResult, (DWORD)resultBufSize);
       }
       delete pResponse;
    }

@@ -158,7 +158,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    nTemp = theApp.GetProfileInt(_T("ObjectView"), _T("ActiveTab"), 0);
    if ((nTemp < 0) || (nTemp >= m_wndTabCtrl.GetItemCount()))
       nTemp = 0;
-   m_wndTabCtrl.SetCurSel(nTemp);
+   m_wndTabCtrl.SetCurSel((int)nTemp);
    OnTabChange(NULL, &nTemp);
 
    ReleaseDC(pdc);

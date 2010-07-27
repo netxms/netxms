@@ -1330,8 +1330,8 @@ void ScintillaWin::InsertPasteText(const char *text, int len, int selStart, bool
 			// add the newline if necessary
 			if ((len > 0) && (text[len-1] != '\n' && text[len-1] != '\r')) {
 				const char *endline = StringFromEOLMode(pdoc->eolMode);
-				pdoc->InsertString(insertPos + len, endline, strlen(endline));
-				len += strlen(endline);
+				pdoc->InsertString(insertPos + len, endline, (int)strlen(endline));
+				len += (int)strlen(endline);
 			}
 			if (currentPos == insertPos) {
 				SetEmptySelection(currentPos + len);

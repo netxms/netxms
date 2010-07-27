@@ -58,7 +58,7 @@ protected:
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
 	void UpdateAllGraphs(void);
-	UINT m_nTimer;
+	UINT_PTR m_nTimer;
 	Queue m_workerQueue;
 	THREAD m_hWorkerThread;
 	DWORD m_dwNumGraphs;
@@ -69,7 +69,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnPaint();
 	afx_msg void OnDestroy();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);

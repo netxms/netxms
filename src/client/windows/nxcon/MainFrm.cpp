@@ -271,7 +271,7 @@ LRESULT CMainFrame::OnUpdateObjectTools(WPARAM wParam, LPARAM lParam)
    DoRequest(LoadObjectTools, _T("Reloading object tools information..."));
 	CObjectToolsEditor *pWnd = theApp.GetObjectToolsEditor();
 	if (pWnd != NULL)
-		pWnd->OnObjectToolsUpdate(lParam, wParam == NX_NOTIFY_OBJTOOL_DELETED);
+		pWnd->OnObjectToolsUpdate((DWORD)lParam, wParam == NX_NOTIFY_OBJTOOL_DELETED);
 	return 0;
 }
 
@@ -308,10 +308,10 @@ LRESULT CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 
    pWnd = theApp.GetAlarmBrowser();
    if (pWnd != NULL)
-      ((CAlarmBrowser *)pWnd)->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
+      ((CAlarmBrowser *)pWnd)->OnAlarmUpdate((DWORD)wParam, (NXC_ALARM *)lParam);
    pWnd = theApp.GetObjectBrowser();
    if (pWnd != NULL)
-      ((CObjectBrowser *)pWnd)->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
+      ((CObjectBrowser *)pWnd)->OnAlarmUpdate((DWORD)wParam, (NXC_ALARM *)lParam);
    free((void *)lParam);
 	return 0;
 }
@@ -327,7 +327,7 @@ LRESULT CMainFrame::OnActionUpdate(WPARAM wParam, LPARAM lParam)
 
 	pWnd = theApp.GetActionEditor();
    if (pWnd != NULL)
-      pWnd->OnActionUpdate(wParam, (NXC_ACTION *)lParam);
+      pWnd->OnActionUpdate((DWORD)wParam, (NXC_ACTION *)lParam);
    free((void *)lParam);
 	return 0;
 }
@@ -343,7 +343,7 @@ LRESULT CMainFrame::OnEventDBUpdate(WPARAM wParam, LPARAM lParam)
 
 	pWnd = theApp.GetEventEditor();
    if (pWnd != NULL)
-      pWnd->OnEventDBUpdate(wParam, (NXC_EVENT_TEMPLATE *)lParam);
+      pWnd->OnEventDBUpdate((DWORD)wParam, (NXC_EVENT_TEMPLATE *)lParam);
    free((void *)lParam);
 	return 0;
 }
@@ -413,7 +413,7 @@ static DWORD SaveDesktop(TCHAR *pszDesktopName, DWORD dwWindowCount, WINDOW_SAVE
    TCHAR szVar[MAX_VARIABLE_NAME], szBuffer[MAX_DB_STRING];
 
    _sntprintf(szVar, MAX_VARIABLE_NAME - 32, _T("/Win32Console/Desktop/%s/"), pszDesktopName);
-   dwLastChar = _tcslen(szVar);
+   dwLastChar = (DWORD)_tcslen(szVar);
 
    // Set window count
    _tcscpy(&szVar[dwLastChar], _T("WindowCount"));
@@ -537,7 +537,7 @@ static DWORD LoadDesktop(TCHAR *pszName, DWORD *pdwWindowCount, WINDOW_SAVE_INFO
    TCHAR szBuffer[256], szVar[MAX_VARIABLE_NAME];
 
    _sntprintf_s(szVar, MAX_VARIABLE_NAME - 32, _TRUNCATE, _T("/Win32Console/Desktop/%s/"), pszName);
-   dwLastChar = _tcslen(szVar);
+   dwLastChar = (DWORD)_tcslen(szVar);
 
    // Set window count
    _tcscpy(&szVar[dwLastChar], _T("WindowCount"));

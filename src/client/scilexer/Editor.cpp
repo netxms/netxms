@@ -1434,7 +1434,7 @@ void Editor::LinesSplit(int pixelWidth) {
 				unsigned int posLineStart = pdoc->LineStart(line);
 				LayoutLine(line, surface, vs, ll, pixelWidth);
 				for (int subLine = 1; subLine < ll->lines; subLine++) {
-					pdoc->InsertCString(posLineStart + (subLine - 1) * strlen(eol) +
+					pdoc->InsertCString(posLineStart + (subLine - 1) * (int)strlen(eol) +
 					        ll->LineStart(subLine), eol);
 					targetEnd += static_cast<int>(strlen(eol));
 				}
@@ -4940,7 +4940,7 @@ void Editor::CopySelectionFromRange(SelectionText *ss, bool allowLineCopy, int s
 		end = pdoc->LineEnd(currentLine);
 
 		char *text = CopyRange(start, end);
-		int textLen = text ? strlen(text) : 0;
+		int textLen = text ? (int)strlen(text) : 0;
 		// include room for \r\n\0
 		textLen += 3;
 		char *textWithEndl = new char[textLen];
@@ -4951,7 +4951,7 @@ void Editor::CopySelectionFromRange(SelectionText *ss, bool allowLineCopy, int s
 			strncat(textWithEndl, "\r", textLen);
 		if (pdoc->eolMode != SC_EOL_CR)
 			strncat(textWithEndl, "\n", textLen);
-		ss->Set(textWithEndl, strlen(textWithEndl),
+		ss->Set(textWithEndl, (int)strlen(textWithEndl),
 			pdoc->dbcsCodePage, vs.styles[STYLE_DEFAULT].characterSet, false, true);
 		delete []text;
 	} else {
@@ -5846,15 +5846,15 @@ void Editor::AddStyledText(char *buffer, int appendLength) {
 		for (i = 0;i < textLength;i++) {
 			text[i] = buffer[i*2];
 		}
-		pdoc->InsertString(CurrentPosition(), text, textLength);
+		pdoc->InsertString(CurrentPosition(), text, (int)textLength);
 		for (i = 0;i < textLength;i++) {
 			text[i] = buffer[i*2+1];
 		}
 		pdoc->StartStyling(CurrentPosition(), static_cast<char>(0xff));
-		pdoc->SetStyles(textLength, text);
+		pdoc->SetStyles((int)textLength, text);
 		delete []text;
 	}
-	SetEmptySelection(currentPos + textLength);
+	SetEmptySelection(currentPos + (int)textLength);
 }
 
 static bool ValidMargin(unsigned long wParam) {

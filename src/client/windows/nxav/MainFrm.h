@@ -41,7 +41,7 @@ public:
 
 // Generated message map functions
 protected:
-	int m_nTimer;
+	UINT_PTR m_nTimer;
 	void SortAlarms(void);
 	int m_iNumAlarms[5];
 	DWORD m_dwNumAlarms;
@@ -57,7 +57,7 @@ protected:
 	afx_msg void OnViewRefresh();
 	afx_msg void OnCmdExit();
 	afx_msg void OnDestroy();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	//}}AFX_MSG
    afx_msg LRESULT OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnDisableAlarmSound(WPARAM wParam, LPARAM lParam);

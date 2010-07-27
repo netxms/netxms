@@ -43,7 +43,7 @@ protected:
 	DWORD m_dwNumItems;
 	Queue m_workerQueue;
 	THREAD m_hWorkerThread;
-	int m_nTimer;
+	UINT_PTR m_nTimer;
 	NXC_OBJECT * m_pObject;
 	int m_iSortImageBase;
 	int m_iSortDir;
@@ -59,7 +59,7 @@ protected:
 	afx_msg void OnItemGraph();
 	afx_msg void OnItemExportdata();
 	afx_msg void OnItemShowdata();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnLatstvaluesUsemultipliers();
 	afx_msg void OnItemCleardata();
 	//}}AFX_MSG

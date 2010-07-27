@@ -51,7 +51,7 @@ protected:
 	DWORD GetDCIIndex(DWORD dwId);
 	int m_iSortMode;
 	int m_iSortDir;
-	UINT m_nTimer;
+	UINT_PTR m_nTimer;
 	DWORD m_dwSeconds;
 	DWORD m_dwFlags;
 	DWORD FindItem(DWORD dwId);
@@ -76,7 +76,7 @@ protected:
 	afx_msg void OnUpdateItemShowdata(CCmdUI* pCmdUI);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnLastvaluesProperties();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnDestroy();
 	afx_msg void OnUpdateItemExportdata(CCmdUI* pCmdUI);
 	afx_msg void OnItemExportdata();

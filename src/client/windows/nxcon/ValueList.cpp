@@ -97,7 +97,7 @@ void CValueList::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
                rgbOldColor = dc.SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
             }
          }
-         dc.DrawText(szBuffer, _tcslen(szBuffer), &rcItem,
+         dc.DrawText(szBuffer, (int)_tcslen(szBuffer), &rcItem,
                      DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS);
          dc.SetTextColor(rgbOldColor);
       }

@@ -89,7 +89,7 @@ CInPlaceCombo* CComboListCtrl::ShowInPlaceList(int iRowIndex, int iColumnIndex, 
 	obCellRect.DeflateRect(0, -4);
 
 	int iHeight = obCellRect.Height();  
-	int iCount = rComboItemsList.GetCount();
+	int iCount = (int)rComboItemsList.GetCount();
 
 	iCount = (iCount < MAX_DROP_DOWN_ITEM_COUNT) ? 
 		iCount + MAX_DROP_DOWN_ITEM_COUNT : (MAX_DROP_DOWN_ITEM_COUNT + 1); 

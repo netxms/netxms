@@ -219,7 +219,7 @@ BOOL CConsoleApp::SetupWorkDir()
          AfxMessageBox(IDS_WORKDIR_CREATION_FAILED, MB_OK | MB_ICONSTOP);
          return FALSE;
       }
-   iLastChar = _tcslen(g_szWorkDir);
+   iLastChar = (int)_tcslen(g_szWorkDir);
 
    // Create MIB cache directory
    _tcscpy(&g_szWorkDir[iLastChar], WORKDIR_MIBCACHE);
@@ -2965,32 +2965,32 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
                   strcpy(szBuffer, "<internal error>");
                   break;
             }
-            _write(hFile, szBuffer, strlen(szBuffer));
+            _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
             _write(hFile, &separator[iSeparator], 1);
             switch(pData->wDataType)
             {
                case DCI_DT_STRING:
-                  _write(hFile, pRow->value.szString, _tcslen(pRow->value.szString));
+                  _write(hFile, pRow->value.szString, (unsigned int)_tcslen(pRow->value.szString));
                   break;
                case DCI_DT_INT:
                   _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%d", pRow->value.dwInt32);
-                  _write(hFile, szBuffer, strlen(szBuffer));
+                  _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                case DCI_DT_UINT:
                   _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%u", pRow->value.dwInt32);
-                  _write(hFile, szBuffer, strlen(szBuffer));
+                  _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                case DCI_DT_INT64:
                   _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%I64d", pRow->value.qwInt64);
-                  _write(hFile, szBuffer, strlen(szBuffer));
+                  _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                case DCI_DT_UINT64:
                   _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%I64u", pRow->value.qwInt64);
-                  _write(hFile, szBuffer, strlen(szBuffer));
+                  _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                case DCI_DT_FLOAT:
                   _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%f", pRow->value.dFloat);
-                  _write(hFile, szBuffer, strlen(szBuffer));
+                  _write(hFile, szBuffer, (unsigned int)strlen(szBuffer));
                   break;
                default:
                   break;
@@ -3525,10 +3525,10 @@ void CConsoleApp::OnToolsCreatemp()
          char *pszText;
          int nLen;
 
-         nLen = wcslen(pszContent);
+         nLen = (int)wcslen(pszContent);
          pszText = (char *)malloc(nLen * 2 + 1);
          WideCharToMultiByte(CP_UTF8, 0, pszContent, -1, pszText, nLen * 2 + 1, NULL, NULL);
-         WriteFile(hFile, pszText, strlen(pszText), &dwResult, NULL);
+         WriteFile(hFile, pszText, (DWORD)strlen(pszText), &dwResult, NULL);
          free(pszText);
 #else
          WriteFile(hFile, pszContent, _tcslen(pszContent), &dwResult, NULL);
@@ -3589,7 +3589,7 @@ void CConsoleApp::WriteProfileGMem(TCHAR *pszSection, TCHAR *pszKey, HGLOBAL hMe
    void *p;
 
    p = GlobalLock(hMem);
-   WriteProfileBinary(pszSection, pszKey, (BYTE *)p, GlobalSize(hMem));
+   WriteProfileBinary(pszSection, pszKey, (BYTE *)p, (UINT)GlobalSize(hMem));
    GlobalUnlock(hMem);
 }
 
@@ -3818,7 +3818,7 @@ static void CreateGraphSubmenu(CMenu *pMenu, TCHAR *pszCurrPath, DWORD *pdwStart
       memset(szPath, 0, sizeof(TCHAR) * MAX_DB_STRING);
       if (_tcsstr(g_pGraphList[i].pszName, _T("->")) != NULL)
       {
-         for(j = _tcslen(g_pGraphList[i].pszName) - 1; j > 0; j--)
+         for(j = (DWORD)_tcslen(g_pGraphList[i].pszName) - 1; j > 0; j--)
             if ((g_pGraphList[i].pszName[j] == _T('>')) &&
                 (g_pGraphList[i].pszName[j - 1] == _T('-')))
             {
@@ -3841,7 +3841,7 @@ static void CreateGraphSubmenu(CMenu *pMenu, TCHAR *pszCurrPath, DWORD *pdwStart
       }
       else
       {
-         for(j = _tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
+         for(j = (DWORD)_tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
          if ((*pszCurrPath == 0) ||
              ((!_memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
               (szPath[j] == _T('-')) && (szPath[j + 1] == _T('>'))))
