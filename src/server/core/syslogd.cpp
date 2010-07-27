@@ -246,23 +246,28 @@ static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
    else
    {
       dwIpAddr = ResolveHostName(pRec->szHostName);
+		if ((dwIpAddr == INADDR_NONE) || (dwIpAddr == INADDR_ANY))
+		{
+			pNode = (Node *)FindObjectByName(pRec->szHostName, OBJECT_NODE);
+			if (pNode == NULL)
+				dwIpAddr = dwSourceIP;
+		}
    }
 
    // Match source IP to NetXMS object
-   if (dwIpAddr != INADDR_NONE)
-   {
+   if ((dwIpAddr != INADDR_NONE) && (pNode == NULL))
       pNode = FindNodeByIP(dwIpAddr);
-      if (pNode != NULL)
-      {
-         pRec->dwSourceObject = pNode->Id();
-         if (pRec->szHostName[0] == 0)
-            nx_strncpy(pRec->szHostName, pNode->Name(), MAX_SYSLOG_HOSTNAME_LEN);
-      }
-      else
-      {
-         if (pRec->szHostName[0] == 0)
-            IpToStr(dwSourceIP, pRec->szHostName);
-      }
+
+	if (pNode != NULL)
+   {
+      pRec->dwSourceObject = pNode->Id();
+      if (pRec->szHostName[0] == 0)
+         nx_strncpy(pRec->szHostName, pNode->Name(), MAX_SYSLOG_HOSTNAME_LEN);
+   }
+   else
+   {
+      if (pRec->szHostName[0] == 0)
+         IpToStr(dwSourceIP, pRec->szHostName);
    }
 }
 
