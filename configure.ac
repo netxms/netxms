@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.1.0-rc5], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [1.1.0], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -61,6 +61,7 @@ ORACLE_LIBS=""
 PGSQL_LIBS=""
 MYSQL_LIBS=""
 ODBC_LIBS=""
+FORCE_INTERNAL_EXPAT="no"
 
 
 #--------------------------------------------------------------------
@@ -113,6 +114,12 @@ AC_ARG_WITH(mdebug,
 [AS_HELP_STRING(--with-mdebug,use debug version of memory allocation functions)],
 [
 	CPPFLAGS="$CPPFLAGS -DNETXMS_MEMORY_DEBUG"
+])
+
+AC_ARG_WITH(internal-libexpat,
+[AS_HELP_STRING(--with-internal-libexpat,force use of bundled libexpat)],
+[
+	FORCE_INTERNAL_EXPAT="yes"
 ])
 
 AC_ARG_WITH(sqlite,
@@ -799,9 +806,13 @@ if test "x$NEED_ZLIB" = "xyes"; then
 	AC_CHECK_LIB(z, deflate)
 fi
 
-HAVE_LIBEXPAT=yes
-AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
-AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
+if test "x$FORCE_INTERNAL_EXPAT" = "xyes"; then
+	HAVE_LIBEXPAT=no
+else
+	HAVE_LIBEXPAT=yes
+	AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
+	AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
+fi
 if test "x$HAVE_LIBEXPAT" = "xno"; then
 	MODULES="libexpat $MODULES"
 	CPPFLAGS="$CPPFLAGS "
