@@ -364,6 +364,7 @@ public:
    CActionEditor *GetActionEditor() { return m_viewState[VIEW_ACTION_EDITOR].bActive ? (CActionEditor *)m_viewState[VIEW_ACTION_EDITOR].pWnd : NULL; }
    CEventEditor *GetEventEditor() { return m_viewState[VIEW_EVENT_EDITOR].bActive ? (CEventEditor *)m_viewState[VIEW_EVENT_EDITOR].pWnd : NULL; }
 	CObjectToolsEditor *GetObjectToolsEditor() { return m_viewState[VIEW_OBJECT_TOOLS].bActive ? (CObjectToolsEditor *)m_viewState[VIEW_OBJECT_TOOLS].pWnd : NULL; }
+   CTrapEditor *GetTrapEditor() { return m_viewState[VIEW_TRAP_EDITOR].bActive ? (CTrapEditor *)m_viewState[VIEW_TRAP_EDITOR].pWnd : NULL; }
 
    HGLOBAL GetDevMode() { return m_hDevMode; }
    HGLOBAL GetDevNames() { return m_hDevNames; }

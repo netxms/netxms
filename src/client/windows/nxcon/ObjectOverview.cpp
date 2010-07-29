@@ -147,7 +147,7 @@ void CObjectOverview::OnPaint()
          rect.bottom = h;
          rect.left += 2;
          rect.right -= 2;
-         dc.DrawText(m_pObject->pszComments, _tcslen(m_pObject->pszComments), &rect,
+         dc.DrawText(m_pObject->pszComments, (int)_tcslen(m_pObject->pszComments), &rect,
                      DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK | DT_EXPANDTABS);
       }
    }

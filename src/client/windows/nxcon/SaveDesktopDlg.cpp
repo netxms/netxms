@@ -55,8 +55,8 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
    // lParamSort contains a pointer to the list view control.
    // The lParam of an item is just its index.
    CListCtrl* pListCtrl = (CListCtrl*)lParamSort;
-   CString    strItem1 = pListCtrl->GetItemText(lParam1, 0);
-   CString    strItem2 = pListCtrl->GetItemText(lParam2, 0);
+   CString    strItem1 = pListCtrl->GetItemText((int)lParam1, 0);
+   CString    strItem2 = pListCtrl->GetItemText((int)lParam2, 0);
 
    return _tcsicmp(strItem1, strItem2);
 }

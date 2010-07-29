@@ -60,8 +60,8 @@ BOOL CControlPanel::PreCreateWindow(CREATESTRUCT& cs)
 static int CALLBACK CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
    CListCtrl *pListCtrl = (CListCtrl *)lParamSort;
-   CString strItem1 = pListCtrl->GetItemText(lParam1, 0);
-   CString strItem2 = pListCtrl->GetItemText(lParam2, 0);
+   CString strItem1 = pListCtrl->GetItemText((int)lParam1, 0);
+   CString strItem2 = pListCtrl->GetItemText((int)lParam2, 0);
    return _tcscmp(strItem2, strItem1);
 }
 

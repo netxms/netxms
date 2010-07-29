@@ -262,7 +262,7 @@ void CObjectPropsSecurity::OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResul
       {
          if ((pNMListView->uNewState & LVIS_FOCUSED) && (pNMListView->uNewState & LVIS_SELECTED))
          {
-            pUser = NXCFindUserById(g_hSession, m_wndUserList.GetItemData(pNMListView->iItem));
+            pUser = NXCFindUserById(g_hSession, (DWORD)m_wndUserList.GetItemData(pNMListView->iItem));
             if (pUser != NULL)   // It should't be NULL
             {
                // Find user in ACL

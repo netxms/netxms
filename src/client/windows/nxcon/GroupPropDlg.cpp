@@ -228,7 +228,7 @@ void CGroupPropDlg::OnButtonDelete()
    nItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
    while(nItem != -1)
    {
-      dwUserId = m_wndListCtrl.GetItemData(nItem);
+      dwUserId = (DWORD)m_wndListCtrl.GetItemData(nItem);
       for(i = 0; i < m_dwNumMembers; i++)
       {
          if (m_pdwMembers[i] == dwUserId)

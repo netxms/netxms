@@ -135,7 +135,7 @@ void CClusterPropsGeneral::OnOK()
 			m_pNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * m_pUpdate->dwNumSyncNets);
 			for(i = 0; i < m_pUpdate->dwNumSyncNets; i++)
 			{
-				m_pNetList[i].dwAddr = m_wndListCtrl.GetItemData(i);
+				m_pNetList[i].dwAddr = (DWORD)m_wndListCtrl.GetItemData(i);
 				m_wndListCtrl.GetItemText(i, 1, szBuffer, 32);
 				m_pNetList[i].dwMask = ntohl(_t_inet_addr(szBuffer));
 			}

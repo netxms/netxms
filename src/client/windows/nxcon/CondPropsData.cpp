@@ -203,7 +203,7 @@ void CCondPropsData::OnButtonDelete()
 
    while((iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED)) != -1)
    {
-      nIndex = m_wndListCtrl.GetItemData(iItem);
+      nIndex = (int)m_wndListCtrl.GetItemData(iItem);
       m_dwNumDCI--;
       memmove(&m_pDCIList[nIndex], &m_pDCIList[nIndex + 1], sizeof(INPUT_DCI) * (m_dwNumDCI - nIndex));
       m_wndListCtrl.DeleteItem(iItem);
@@ -248,7 +248,7 @@ void CCondPropsData::OnButtonEdit()
    iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
    if (iItem != -1)
    {
-      nIndex = m_wndListCtrl.GetItemData(iItem);
+      nIndex = (int)m_wndListCtrl.GetItemData(iItem);
       dlg.m_nFunction = m_pDCIList[nIndex].nFunction;
       dlg.m_nPolls = m_pDCIList[nIndex].nPolls;
       dlg.m_strNode = m_wndListCtrl.GetItemText(iItem, 2);

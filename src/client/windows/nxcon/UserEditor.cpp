@@ -368,7 +368,7 @@ void CUserEditor::OnUserProperties()
       DWORD dwId;
       NXC_USER *pUser;
 
-      dwId = m_wndListCtrl.GetItemData(iItem);
+      dwId = (DWORD)m_wndListCtrl.GetItemData(iItem);
       pUser = NXCFindUserById(g_hSession, dwId);
       if (pUser != NULL)
       {
@@ -527,7 +527,7 @@ void CUserEditor::OnUserDelete()
    {
       DWORD dwId;
 
-      dwId = m_wndListCtrl.GetItemData(iItem);
+      dwId = (DWORD)m_wndListCtrl.GetItemData(iItem);
       if (dwId == 0)
       {
          MessageBox(_T("System administrator account cannot be deleted"),
@@ -592,7 +592,7 @@ void CUserEditor::OnListViewItemChange(NMHDR *pNMHDR, LRESULT *pResult)
       {
          if (((LPNMLISTVIEW)pNMHDR)->uNewState & LVIS_FOCUSED)
          {
-            m_dwCurrentUser = m_wndListCtrl.GetItemData(((LPNMLISTVIEW)pNMHDR)->iItem);
+            m_dwCurrentUser = (DWORD)m_wndListCtrl.GetItemData(((LPNMLISTVIEW)pNMHDR)->iItem);
          }
          else
          {
@@ -616,7 +616,7 @@ void CUserEditor::OnUserSetpassword()
       DWORD dwId;
       NXC_USER *pUser;
 
-      dwId = m_wndListCtrl.GetItemData(iItem);
+      dwId = (DWORD)m_wndListCtrl.GetItemData(iItem);
 
       pUser = NXCFindUserById(g_hSession, dwId);
       if (pUser != NULL)
@@ -676,8 +676,8 @@ static int CALLBACK UserCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 	TCHAR guid1[64], guid2[64];
    int iResult;
    
-   pUser1 = NXCFindUserById(g_hSession, lParam1);
-   pUser2 = NXCFindUserById(g_hSession, lParam2);
+   pUser1 = NXCFindUserById(g_hSession, (DWORD)lParam1);
+   pUser2 = NXCFindUserById(g_hSession, (DWORD)lParam2);
 
 	if ((pUser1 == NULL) || (pUser2 == NULL))
 	{

@@ -327,7 +327,7 @@ void CCertManager::OnCertificateEditcomments()
 	dlg.m_strHeader = _T("Comments:");
 	if (dlg.DoModal() == IDOK)
 	{
-		dwIndex = m_wndListCtrl.GetItemData(nItem);
+		dwIndex = (DWORD)m_wndListCtrl.GetItemData(nItem);
 		dwResult = DoRequestArg3(NXCUpdateCertificateComments, g_hSession,
 		                         (void *)m_pCertList->pElements[dwIndex].dwId,
 										 (void *)((LPCTSTR)dlg.m_strText), _T("Updating certificate comments..."));

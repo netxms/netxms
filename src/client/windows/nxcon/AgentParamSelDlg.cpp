@@ -104,7 +104,7 @@ void CAgentParamSelDlg::OnOK()
    }
 	else
    {
-      m_dwSelectionIndex = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+      m_dwSelectionIndex = (DWORD)m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
 	   CDialog::OnOK();
    }
 }
@@ -124,12 +124,12 @@ void CAgentParamSelDlg::OnButtonGet()
       BOOL bStart = TRUE;
 
       // Detect (*) at the end of parameter's name
-      dwIndex = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+      dwIndex = (DWORD)m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
       dlg.m_dwObjectId = m_pNode->dwId;
       dlg.m_strNode = (LPCTSTR)m_pNode->szName;
       dlg.m_iOrigin = DS_NATIVE_AGENT;
 
-      iLen = _tcslen(m_pParamList[dwIndex].szName);
+      iLen = (int)_tcslen(m_pParamList[dwIndex].szName);
       if (iLen > 3)
       {
          if (!_tcscmp(&m_pParamList[dwIndex].szName[iLen - 3], _T("(*)")))

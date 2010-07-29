@@ -801,12 +801,12 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 						object = NXCFindObjectById(g_hSession, m_ppItems[i]->m_dwNodeId);
 						_sntprintf_s(temp, 1024, _TRUNCATE, _T("%s - %s"), (object != NULL) ? object->szName : _T("(null)"),
 						             m_ppItems[i]->m_pszDescription);
-						size = dc.GetTextExtent(temp, _tcslen(temp));
+						size = dc.GetTextExtent(temp, (int)_tcslen(temp));
 					}
 					else
 					{
 						size = dc.GetTextExtent(m_ppItems[i]->m_pszDescription,
-														_tcslen(m_ppItems[i]->m_pszDescription));
+														(int)_tcslen(m_ppItems[i]->m_pszDescription));
 					}
                if (size.cx > nColSize)
                   nColSize = size.cx;
@@ -843,7 +843,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 		rcTitle.top += iTopMargin;
 		rcTitle.right -= iRightMargin;
 		rcTitle.bottom = rcTitle.top + textSize.cy;
-		dc.DrawText(m_szTitle, _tcslen(m_szTitle), &rcTitle, DT_CENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+		dc.DrawText(m_szTitle, (int)_tcslen(m_szTitle), &rcTitle, DT_CENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 		iTopMargin += textSize.cy + 7;
 	}
 
@@ -1146,12 +1146,12 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 							object = NXCFindObjectById(g_hSession, m_ppItems[i]->m_dwNodeId);
 							_sntprintf_s(temp, 1024, _TRUNCATE, _T("%s - %s"), (object != NULL) ? object->szName : _T("(null)"),
 										 m_ppItems[i]->m_pszDescription);
-							dc.TextOut(x + 14, y, temp, _tcslen(temp));
+							dc.TextOut(x + 14, y, temp, (int)_tcslen(temp));
 						}
 						else
 						{
 							dc.TextOut(x + 14, y, m_ppItems[i]->m_pszDescription,
-										  _tcslen(m_ppItems[i]->m_pszDescription));
+										  (int)_tcslen(m_ppItems[i]->m_pszDescription));
 						}
                   nCurrCol++;
                   if (nCurrCol == nCols)

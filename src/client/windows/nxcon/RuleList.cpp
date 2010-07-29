@@ -197,7 +197,7 @@ void RL_Cell::SetText(TCHAR *pszText)
 
    ASSERT(pszText != NULL);
    safe_free(m_pszText);
-   iLen = _tcslen(pszText);
+   iLen = (int)_tcslen(pszText);
    m_pszText = (TCHAR *)malloc((iLen + 3) * sizeof(TCHAR));
    _tcscpy(m_pszText, pszText);
 
@@ -230,7 +230,7 @@ int RL_Cell::CalculateHeight(int iTextHeight, int iWidth, BOOL bIsTextBox, CFont
 
       pDC = theApp.m_pMainWnd->GetDC();
       pOldFont = pDC->SelectObject(pFont);
-      pDC->DrawText(m_pszText, _tcslen(m_pszText), &rect, DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
+      pDC->DrawText(m_pszText, (int)_tcslen(m_pszText), &rect, DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
       pDC->SelectObject(pOldFont);
       theApp.m_pMainWnd->ReleaseDC(pDC);
       iHeight = rect.bottom;
@@ -448,7 +448,7 @@ void CRuleList::OnPaint()
                rcText.right -= CELL_TEXT_X_MARGIN;
 
                dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszText,
-                           _tcslen(m_ppRowList[i]->m_ppCellList[j]->m_pszText),
+                           (int)_tcslen(m_ppRowList[i]->m_ppCellList[j]->m_pszText),
                            &rcText, DT_WORDBREAK | DT_NOPREFIX | (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
             }
             else  // Multiline cell
@@ -483,7 +483,7 @@ void CRuleList::OnPaint()
                      m_imgListInternal.Draw(&dc, 0, CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
                      
                   dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine],
-                              _tcslen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
+                              (int)_tcslen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
                               &rcText, DT_SINGLELINE | DT_NOPREFIX | DT_VCENTER | 
                                           (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
                

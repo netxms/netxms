@@ -68,7 +68,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_SAVE_EPP"),
       _T("CMD_EPP_RECORD"),
       _T("CMD_EVENT_DB_UPDATE"),
-      _T("0x0019"), // was: CMD_UNLOCK_EVENT_DB
+      _T("CMD_TRAP_CFG_UPDATE"),
       _T("CMD_SET_EVENT_INFO"),
       _T("CMD_EVENT_DB_RECORD"),
       _T("CMD_LOAD_EVENT_DB"),
@@ -138,8 +138,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_WAKEUP_NODE"),
       _T("CMD_DELETE_EVENT_TEMPLATE"),
       _T("CMD_GENERATE_EVENT_CODE"),
-      _T("CMD_LOCK_TRAP_CFG"),
-      _T("CMD_UNLOCK_TRAP_CFG"),
+      _T("0x5F"),	// was: CMD_LOCK_TRAP_CFG
+      _T("0x60"),	// was: CMD_UNLOCK_TRAP_CFG
       _T("CMD_CREATE_TRAP"),
       _T("CMD_MODIFY_TRAP"),
       _T("CMD_DELETE_TRAP"),

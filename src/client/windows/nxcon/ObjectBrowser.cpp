@@ -444,8 +444,8 @@ static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
    TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
 	NXC_OBJECT *obj1, *obj2;
 
-	obj1 = NXCFindObjectById(g_hSession, lParam1);
-	obj2 = NXCFindObjectById(g_hSession, lParam2);
+	obj1 = NXCFindObjectById(g_hSession, (DWORD)lParam1);
+	obj2 = NXCFindObjectById(g_hSession, (DWORD)lParam2);
 	if (lParamSort & PLACE_CONTAINERS_FIRST)
 	{
 		int notContainer1, notContainer2, nResult;
@@ -557,7 +557,7 @@ DWORD CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
 
 LRESULT CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
-   UpdateObjectTree(wParam, (NXC_OBJECT *)lParam);
+   UpdateObjectTree((DWORD)wParam, (NXC_OBJECT *)lParam);
 	m_wndObjectTree.UpdateStatusBar();
 	return 0;
 }
@@ -608,7 +608,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
             hItem = m_wndTreeCtrl.GetParentItem(m_pTreeHash[dwIndex].phTreeItemList[i]);
             if (hItem != NULL)
             {
-               pParent = NXCFindObjectById(g_hSession, m_wndTreeCtrl.GetItemData(hItem));
+               pParent = NXCFindObjectById(g_hSession, (DWORD)m_wndTreeCtrl.GetItemData(hItem));
                for(j = 0; j < pObject->dwNumParents; j++)
                   if (pObject->pdwParentList[j] == pParent->dwId)
                   {
@@ -724,7 +724,7 @@ void CObjectBrowser::DeleteObjectTreeItem(HTREEITEM hRootItem)
    }
 
    // Find hash record for current item
-   dwIndex = FindObjectInTree(m_wndTreeCtrl.GetItemData(hRootItem));
+   dwIndex = FindObjectInTree((DWORD)m_wndTreeCtrl.GetItemData(hRootItem));
    if (dwIndex != INVALID_INDEX)
    {
       for(i = 0; i < m_pTreeHash[dwIndex].dwNumEntries; i++)
@@ -839,7 +839,7 @@ DWORD CObjectBrowser::GetSelectedObject(void)
    HTREEITEM hItem;
 
    hItem = m_wndTreeCtrl.GetSelectedItem();
-   return (hItem != NULL) ? m_wndTreeCtrl.GetItemData(hItem) : 0;
+   return (hItem != NULL) ? (DWORD)m_wndTreeCtrl.GetItemData(hItem) : 0;
 }
 
 
@@ -1171,7 +1171,7 @@ void CObjectBrowser::OnObjectMove()
       hItem = m_wndTreeCtrl.GetParentItem(m_wndTreeCtrl.GetSelectedItem());
       if (hItem != NULL)
       {
-         theApp.MoveObject(m_pCurrentObject->dwId, m_wndTreeCtrl.GetItemData(hItem));
+         theApp.MoveObject(m_pCurrentObject->dwId, (DWORD)m_wndTreeCtrl.GetItemData(hItem));
       }
    }
 }
@@ -1189,7 +1189,7 @@ void CObjectBrowser::OnUpdateObjectMove(CCmdUI* pCmdUI)
       {
          NXC_OBJECT *pObject;
 
-         pObject = NXCFindObjectById(g_hSession, m_wndTreeCtrl.GetItemData(hItem));
+         pObject = NXCFindObjectById(g_hSession, (DWORD)m_wndTreeCtrl.GetItemData(hItem));
          if (pObject != NULL)
          {
             if ((pObject->iClass == OBJECT_CONTAINER) ||

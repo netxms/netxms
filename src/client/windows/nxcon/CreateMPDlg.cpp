@@ -316,7 +316,7 @@ void CCreateMPDlg::CreateList(HTREEITEM hRoot, DWORD *pdwCount, DWORD **ppdwList
       hItem = m_wndTreeCtrl.GetChildItem(hRoot);
       for(i = 0; (hItem != NULL) && (i < *pdwCount); i++)
       {
-         (*ppdwList)[i] = m_wndTreeCtrl.GetItemData(hItem);
+         (*ppdwList)[i] = (DWORD)m_wndTreeCtrl.GetItemData(hItem);
          hItem = m_wndTreeCtrl.GetNextItem(hItem, TVGN_NEXT);
       }
    }

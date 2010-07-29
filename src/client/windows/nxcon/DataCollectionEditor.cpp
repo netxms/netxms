@@ -29,8 +29,8 @@ static int CALLBACK ItemCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
    NXC_DCI *pItem1, *pItem2;
    NXC_OBJECT *pObject1, *pObject2;
 
-   pItem1 = ((CDataCollectionEditor *)lParamSort)->GetItem(lParam1);
-   pItem2 = ((CDataCollectionEditor *)lParamSort)->GetItem(lParam2);
+   pItem1 = ((CDataCollectionEditor *)lParamSort)->GetItem((DWORD)lParam1);
+   pItem2 = ((CDataCollectionEditor *)lParamSort)->GetItem((DWORD)lParam2);
    if ((pItem1 == NULL) || (pItem2 == NULL))
       return 0;   // Shouldn't happen
 
@@ -680,7 +680,7 @@ void CDataCollectionEditor::OnItemDelete()
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    while(iItem != -1)
    {
-      dwItemId = m_wndListCtrl.GetItemData(iItem);
+      dwItemId = (DWORD)m_wndListCtrl.GetItemData(iItem);
       dwResult = DoRequestArg3(NXCDeleteDCI, g_hSession, m_pItemList, (void *)dwItemId,
                                _T("Deleting data collection item..."));
       if (dwResult != RCC_SUCCESS)
@@ -718,7 +718,7 @@ void CDataCollectionEditor::OnItemShowdata()
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    while(iItem != -1)
    {
-      dwItemId = m_wndListCtrl.GetItemData(iItem);
+      dwItemId = (DWORD)m_wndListCtrl.GetItemData(iItem);
       dwIndex = NXCItemIndex(m_pItemList, dwItemId);
       pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
       _sntprintf_s(szBuffer, 384, _TRUNCATE, _T("%s - %s"), pObject->szName, 
@@ -751,7 +751,7 @@ void CDataCollectionEditor::OnItemGraph()
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    for(i = 0; (iItem != -1) && (i < dwNumItems); i++)
    {
-      dwIndex = NXCItemIndex(m_pItemList, m_wndListCtrl.GetItemData(iItem));
+      dwIndex = NXCItemIndex(m_pItemList, (DWORD)m_wndListCtrl.GetItemData(iItem));
       if (dwIndex != INVALID_INDEX)
       {
          ppItemList[i] = &m_pItemList->pItems[dwIndex];
@@ -946,7 +946,7 @@ void CDataCollectionEditor::ChangeItemsStatus(int iStatus)
          iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
          while(iItem != -1)
          {
-            dwIndex = NXCItemIndex(m_pItemList, m_wndListCtrl.GetItemData(iItem));
+            dwIndex = NXCItemIndex(m_pItemList, (DWORD)m_wndListCtrl.GetItemData(iItem));
             m_pItemList->pItems[dwIndex].iStatus = iStatus;
             UpdateListItem(iItem, &m_pItemList->pItems[dwIndex]);
             iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
@@ -1008,7 +1008,7 @@ void CDataCollectionEditor::OnItemExportdata()
    CDataExportDlg dlg;
    DWORD dwItemId, dwTimeFrom, dwTimeTo;
 
-   dwItemId = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+   dwItemId = (DWORD)m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
    if (dlg.DoModal() == IDOK)
    {
       dlg.SaveLastSelection();

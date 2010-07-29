@@ -94,7 +94,7 @@ BOOL CDCIPerfTabPage::OnInitDialog()
 #else
 		xml = strdup(m_strConfig);
 #endif
-		if (config.loadXmlConfigFromMemory(xml, strlen(xml)))
+		if (config.loadXmlConfigFromMemory(xml, (int)strlen(xml)))
 		{
 			m_showOnPerfTab = config.getValueBoolean(_T("/enabled"), false);
 			m_graphTitle = config.getValue(_T("/title"), _T(""));

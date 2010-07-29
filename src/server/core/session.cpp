@@ -868,12 +868,6 @@ void ClientSession::ProcessingThread()
          case CMD_WAKEUP_NODE:
             OnWakeUpNode(pMsg);
             break;
-         case CMD_LOCK_TRAP_CFG:
-            LockTrapCfg(pMsg->GetId(), TRUE);
-            break;
-         case CMD_UNLOCK_TRAP_CFG:
-            LockTrapCfg(pMsg->GetId(), FALSE);
-            break;
          case CMD_CREATE_TRAP:
             EditTrap(TRAP_CREATE, pMsg);
             break;
@@ -4530,82 +4524,26 @@ void ClientSession::EditTrap(int iOperation, CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Check access rights
-   if (m_dwSystemAccess & SYSTEM_ACCESS_CONFIGURE_TRAPS)
+   if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
-      if (m_dwFlags & CSF_TRAP_CFG_LOCKED)
+      switch(iOperation)
       {
-         switch(iOperation)
-         {
-            case TRAP_CREATE:
-               dwResult = CreateNewTrap(&dwTrapId);
-               msg.SetVariable(VID_RCC, dwResult);
-               if (dwResult == RCC_SUCCESS)
-                  msg.SetVariable(VID_TRAP_ID, dwTrapId);   // Send id of new trap to client
-               break;
-            case TRAP_UPDATE:
-               msg.SetVariable(VID_RCC, UpdateTrapFromMsg(pRequest));
-               break;
-            case TRAP_DELETE:
-               dwTrapId = pRequest->GetVariableLong(VID_TRAP_ID);
-               msg.SetVariable(VID_RCC, DeleteTrap(dwTrapId));
-               break;
-            default:
-               msg.SetVariable(VID_RCC, RCC_SYSTEM_FAILURE);
-               break;
-         }
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      }
-   }
-   else
-   {
-      // Current user has no rights for trap management
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   // Send response
-   sendMessage(&msg);
-}
-
-
-//
-// Lock/unlock trap configuration
-//
-
-void ClientSession::LockTrapCfg(DWORD dwRqId, BOOL bLock)
-{
-   CSCPMessage msg;
-   char szBuffer[256];
-
-   // Prepare response message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
-
-   if (m_dwSystemAccess & SYSTEM_ACCESS_CONFIGURE_TRAPS)
-   {
-      if (bLock)
-      {
-         if (!LockComponent(CID_TRAP_CFG, m_dwIndex, m_szUserName, NULL, szBuffer))
-         {
-            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-            msg.SetVariable(VID_LOCKED_BY, szBuffer);
-         }
-         else
-         {
-            m_dwFlags |= CSF_TRAP_CFG_LOCKED;
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         }
-      }
-      else
-      {
-         if (m_dwFlags & CSF_TRAP_CFG_LOCKED)
-         {
-            UnlockComponent(CID_TRAP_CFG);
-            m_dwFlags &= ~CSF_TRAP_CFG_LOCKED;
-         }
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         case TRAP_CREATE:
+            dwResult = CreateNewTrap(&dwTrapId);
+            msg.SetVariable(VID_RCC, dwResult);
+            if (dwResult == RCC_SUCCESS)
+               msg.SetVariable(VID_TRAP_ID, dwTrapId);   // Send id of new trap to client
+            break;
+         case TRAP_UPDATE:
+            msg.SetVariable(VID_RCC, UpdateTrapFromMsg(pRequest));
+            break;
+         case TRAP_DELETE:
+            dwTrapId = pRequest->GetVariableLong(VID_TRAP_ID);
+            msg.SetVariable(VID_RCC, DeleteTrap(dwTrapId));
+            break;
+         default:
+				msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+            break;
       }
    }
    else
@@ -4632,19 +4570,12 @@ void ClientSession::SendAllTraps(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_CONFIGURE_TRAPS)
+	if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
-      if (m_dwFlags & CSF_TRAP_CFG_LOCKED)
-      {
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         sendMessage(&msg);
-         bSuccess = TRUE;
-         SendTrapsToClient(this, dwRqId);
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      }
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      sendMessage(&msg);
+      bSuccess = TRUE;
+      SendTrapsToClient(this, dwRqId);
    }
    else
    {
@@ -4671,7 +4602,7 @@ void ClientSession::SendAllTraps2(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_CONFIGURE_TRAPS)
+	if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       CreateTrapCfgMessage(msg);
@@ -8466,32 +8397,20 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
             if (LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, szLockInfo))
             {
                m_dwFlags |= CSF_EPP_LOCKED;
-               if (LockComponent(CID_TRAP_CFG, m_dwIndex, m_szUserName, NULL, szLockInfo))
+
+               // Validate and import configuration
+               dwFlags = pRequest->GetVariableLong(VID_FLAGS);
+               if (ValidateConfig(config, dwFlags, szError, 1024))
                {
-                  m_dwFlags |= CSF_TRAP_CFG_LOCKED;
-
-                  // Validate and import configuration
-                  dwFlags = pRequest->GetVariableLong(VID_FLAGS);
-                  if (ValidateConfig(config, dwFlags, szError, 1024))
-                  {
-                     msg.SetVariable(VID_RCC, ImportConfig(config, dwFlags));
-                  }
-                  else
-                  {
-                     msg.SetVariable(VID_RCC, RCC_CONFIG_VALIDATION_ERROR);
-                     msg.SetVariable(VID_ERROR_TEXT, szError);
-                  }
-
-                  UnlockComponent(CID_TRAP_CFG);
-                  m_dwFlags &= ~CSF_TRAP_CFG_LOCKED;
+                  msg.SetVariable(VID_RCC, ImportConfig(config, dwFlags));
                }
                else
                {
-                  msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-                  msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_TRAPCFG);
-                  msg.SetVariable(VID_LOCKED_BY, szLockInfo);
+                  msg.SetVariable(VID_RCC, RCC_CONFIG_VALIDATION_ERROR);
+                  msg.SetVariable(VID_ERROR_TEXT, szError);
                }
-               UnlockComponent(CID_EPP);
+
+					UnlockComponent(CID_EPP);
                m_dwFlags &= ~CSF_EPP_LOCKED;
             }
             else

@@ -121,7 +121,7 @@ void CTrapSelDlg::OnOK()
 			nItem = m_wndListCtrl.GetNextItem(nItem, LVIS_SELECTED);
 			if (nItem != -1)
 			{
-				dwIndex = m_wndListCtrl.GetItemData(nItem);
+				dwIndex = (DWORD)m_wndListCtrl.GetItemData(nItem);
 				m_pdwTrapList[i] = m_pTrapCfg[dwIndex].dwId;
 				m_pdwEventList[i] = m_pTrapCfg[dwIndex].dwEventCode;
 				m_ppszNames[i] = m_pTrapCfg[dwIndex].szDescription;

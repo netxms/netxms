@@ -35,7 +35,7 @@
 #define CID_USER_DB           1
 //deprecated: #define CID_EVENT_DB          2
 //deprecated: #define CID_ACTION_DB         3
-#define CID_TRAP_CFG          4
+//deprecated: #define CID_TRAP_CFG          4
 #define CID_PACKAGE_DB        5
 //deprecated: #define CID_OBJECT_TOOLS      6
 

@@ -112,7 +112,7 @@ void BuildOIDString(SNMP_MIBObject *pNode, TCHAR *pszBuffer)
       while(dwPos > 0)
       {
          _stprintf(&pszBuffer[iBufPos], _T(".%u"), dwSubIdList[--dwPos]);
-         iBufPos = _tcslen(pszBuffer);
+         iBufPos = (int)_tcslen(pszBuffer);
       }
    }
 }
@@ -140,7 +140,7 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance)
       for(dwPos = 0, dwSize = 0, pCurr = pNode; pCurr->Parent() != NULL; pCurr = pCurr->Parent())
       {
          pszSubIdList[dwPos] = CHECK_NULL(pCurr->Name());
-         dwSize += _tcslen(pszSubIdList[dwPos]) + 1;
+         dwSize += (DWORD)_tcslen(pszSubIdList[dwPos]) + 1;
          dwPos++;
       }
       pszBuffer = (TCHAR *)malloc((dwSize + 16) * sizeof(TCHAR));
@@ -578,7 +578,7 @@ CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwSta
          memset(szPath, 0, sizeof(TCHAR) * MAX_DB_STRING);
          if (_tcsstr(g_pObjectToolList[i].szName, _T("->")) != NULL)
          {
-            for(j = _tcslen(g_pObjectToolList[i].szName) - 1; j > 0; j--)
+            for(j = (int)_tcslen(g_pObjectToolList[i].szName) - 1; j > 0; j--)
                if ((g_pObjectToolList[i].szName[j] == _T('>')) &&
                    (g_pObjectToolList[i].szName[j - 1] == _T('-')))
                {
@@ -601,7 +601,7 @@ CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwSta
          }
          else
          {
-            for(j = _tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
+            for(j = (int)_tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
             if ((*pszCurrPath == 0) ||
                 ((!_memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
                  (szPath[j] == _T('-')) && (szPath[j + 1] == _T('>'))))
@@ -853,7 +853,7 @@ void DrawHeading(CDC &dc, TCHAR *pszText, CFont *pFont, RECT *pRect,
    rect.left += 2;
    rect.right -= 2;
    pOldFont = dc.SelectObject(pFont);
-   dc.DrawText(pszText, _tcslen(pszText), &rect, DT_LEFT | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE);
+   dc.DrawText(pszText, (int)_tcslen(pszText), &rect, DT_LEFT | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE);
    dc.SelectObject(pOldFont);
 
    vtx[0].x = pRect->left;
@@ -961,7 +961,7 @@ HGLOBAL CopyGlobalMem(HGLOBAL hSrc)
    if (hSrc == NULL)
       return NULL;
 
-   dwLen = GlobalSize(hSrc);
+   dwLen = (DWORD)GlobalSize(hSrc);
    hDst = GlobalAlloc(GMEM_MOVEABLE, dwLen);
    if(hDst != NULL)
    {

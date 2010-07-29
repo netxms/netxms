@@ -25,8 +25,8 @@ static int CALLBACK ToolCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
    int iResult;
    NXC_OBJECT_TOOL *pItem1, *pItem2;
 
-   pItem1 = ((CObjectToolsEditor *)lParamSort)->GetToolById(lParam1);
-   pItem2 = ((CObjectToolsEditor *)lParamSort)->GetToolById(lParam2);
+   pItem1 = ((CObjectToolsEditor *)lParamSort)->GetToolById((DWORD)lParam1);
+   pItem2 = ((CObjectToolsEditor *)lParamSort)->GetToolById((DWORD)lParam2);
    if ((pItem1 == NULL) || (pItem2 == NULL))
       return 0;   // Just a paranoid check, shouldn't happen
 

@@ -82,7 +82,7 @@ BOOL CRequestProcessingDlg::OnInitDialog()
 
 LRESULT CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
-   EndDialog(lParam);
+   EndDialog((int)lParam);
 	return 0;
 }
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,26 +22,6 @@
 **/
 
 #include "libnxcl.h"
-
-
-//
-// Client interface: lock trap configuration database
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_TRAP_CFG);
-}
-
-
-//
-// Client interface: unlock trap configuration database
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCUnlockTrapCfg(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_TRAP_CFG);
-}
 
 
 //
@@ -75,6 +55,81 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
       }
       pMsg->GetVariableStr(dwId3, pTrap->pMaps[i].szDescription, MAX_DB_STRING);
    }
+}
+
+
+//
+// Process CMD_TRAP_CFG_UPDATE message
+//
+
+void ProcessTrapCfgUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
+{
+   NXC_TRAP_CFG_ENTRY trapCfg;
+   DWORD dwCode;
+
+	memset(&trapCfg, 0, sizeof(NXC_TRAP_CFG_ENTRY));
+
+   dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
+   trapCfg.dwId = pMsg->GetVariableLong(VID_TRAP_ID);
+   if (dwCode != NX_NOTIFY_TRAPCFG_DELETED)
+      TrapCfgFromMsg(pMsg, &trapCfg);
+
+   pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &trapCfg);
+   
+	for(DWORD i = 0; i < trapCfg.dwNumMaps; i++)
+      safe_free(trapCfg.pMaps[i].pdwObjectId);
+   safe_free(trapCfg.pMaps);
+   safe_free(trapCfg.pdwObjectId);
+}
+
+
+//
+// Copy NXC_TRAP_CFG_ENTRY
+//
+
+void LIBNXCL_EXPORTABLE NXCCopyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *dst, NXC_TRAP_CFG_ENTRY *src)
+{
+	memcpy(dst, src, sizeof(NXC_TRAP_CFG_ENTRY));
+	if (src->pdwObjectId != NULL)
+		dst->pdwObjectId = (DWORD *)nx_memdup(src->pdwObjectId, sizeof(DWORD) * src->dwOidLen);
+	if (src->pMaps != NULL)
+	{
+		dst->pMaps = (NXC_OID_MAP *)nx_memdup(src->pMaps, sizeof(NXC_OID_MAP) * src->dwNumMaps);
+		for(DWORD i = 0; i < src->dwNumMaps; i++)
+		{
+			if (src->pMaps[i].pdwObjectId != NULL)
+				dst->pMaps[i].pdwObjectId = (DWORD *)nx_memdup(src->pMaps[i].pdwObjectId, sizeof(DWORD) * src->pMaps[i].dwOidLen);
+		}
+	}
+}
+
+
+//
+// Duplicate NXC_TRAP_CFG_ENTRY
+//
+
+NXC_TRAP_CFG_ENTRY LIBNXCL_EXPORTABLE *NXCDuplicateTrapCfgEntry(NXC_TRAP_CFG_ENTRY *src)
+{
+	NXC_TRAP_CFG_ENTRY *dst = (NXC_TRAP_CFG_ENTRY *)malloc(sizeof(NXC_TRAP_CFG_ENTRY));
+	NXCCopyTrapCfgEntry(dst, src);
+	return dst;
+}
+
+
+//
+// Destroy NXC_TRAP_CFG_ENTRY
+//
+
+void LIBNXCL_EXPORTABLE NXCDestroyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *e)
+{
+	if (e == NULL)
+		return;
+
+	for(DWORD i = 0; i < e->dwNumMaps; i++)
+      safe_free(e->pMaps[i].pdwObjectId);
+   safe_free(e->pMaps);
+   safe_free(e->pdwObjectId);
+	free(e);
 }
 
 

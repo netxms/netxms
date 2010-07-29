@@ -264,7 +264,7 @@ void CDesktopManager::OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult)
    {
       if (item.iImage == 3)
       {
-         m_dwCurrUser = item.lParam;
+         m_dwCurrUser = (DWORD)item.lParam;
       }
       else
       {

@@ -265,7 +265,7 @@ LRESULT CDeploymentView::OnDeploymentFinished(WPARAM wParam, LPARAM lParam)
    }
    else
    {
-      theApp.ErrorBox(lParam, _T("Deployment job failed: %s"));
+      theApp.ErrorBox((DWORD)lParam, _T("Deployment job failed: %s"));
    }
 	return 0;
 }

@@ -137,7 +137,7 @@ static BOOL LoadTrapCfg()
 // Initialize trap handling
 //
 
-void InitTraps(void)
+void InitTraps()
 {
    DB_RESULT hResult;
 
@@ -447,12 +447,38 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
 
 //
+// Fill NXCP message with trap configuration data
+//
+
+static void FillTrapConfigDataMsg(CSCPMessage &msg, NXC_TRAP_CFG_ENTRY *trap)
+{
+   DWORD i, dwId1, dwId2, dwId3;
+
+	msg.SetVariable(VID_TRAP_ID, trap->dwId);
+   msg.SetVariable(VID_TRAP_OID_LEN, trap->dwOidLen); 
+   msg.SetVariableToInt32Array(VID_TRAP_OID, trap->dwOidLen, trap->pdwObjectId);
+   msg.SetVariable(VID_EVENT_CODE, trap->dwEventCode);
+   msg.SetVariable(VID_DESCRIPTION, trap->szDescription);
+   msg.SetVariable(VID_USER_TAG, trap->szUserTag);
+   msg.SetVariable(VID_TRAP_NUM_MAPS, trap->dwNumMaps);
+   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
+       i < trap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++)
+   {
+      msg.SetVariable(dwId1, trap->pMaps[i].dwOidLen);
+      if ((trap->pMaps[i].dwOidLen & 0x80000000) == 0)
+         msg.SetVariableToInt32Array(dwId2, trap->pMaps[i].dwOidLen, trap->pMaps[i].pdwObjectId);
+      msg.SetVariable(dwId3, trap->pMaps[i].szDescription);
+   }
+}
+
+
+//
 // Send all trap configuration records to client
 //
 
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
 {
-   DWORD i, j, dwId1, dwId2, dwId3;
+   DWORD i;
    CSCPMessage msg;
 
    // Prepare message
@@ -462,21 +488,7 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
    MutexLock(m_mutexTrapCfgAccess, INFINITE);
    for(i = 0; i < m_dwNumTraps; i++)
    {
-      msg.SetVariable(VID_TRAP_ID, m_pTrapCfg[i].dwId);
-      msg.SetVariable(VID_TRAP_OID_LEN, m_pTrapCfg[i].dwOidLen); 
-      msg.SetVariableToInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
-      msg.SetVariable(VID_EVENT_CODE, m_pTrapCfg[i].dwEventCode);
-      msg.SetVariable(VID_DESCRIPTION, m_pTrapCfg[i].szDescription);
-      msg.SetVariable(VID_USER_TAG, m_pTrapCfg[i].szUserTag);
-      msg.SetVariable(VID_TRAP_NUM_MAPS, m_pTrapCfg[i].dwNumMaps);
-      for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
-          j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++, dwId3++)
-      {
-         msg.SetVariable(dwId1, m_pTrapCfg[i].pMaps[j].dwOidLen);
-         if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
-            msg.SetVariableToInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, m_pTrapCfg[i].pMaps[j].pdwObjectId);
-         msg.SetVariable(dwId3, m_pTrapCfg[i].pMaps[j].szDescription);
-      }
+		FillTrapConfigDataMsg(msg, &m_pTrapCfg[i]);
       pSession->sendMessage(&msg);
       msg.DeleteAllVariables();
    }
@@ -506,6 +518,37 @@ void CreateTrapCfgMessage(CSCPMessage &msg)
       msg.SetVariable(dwId++, m_pTrapCfg[i].szDescription);
    }
    MutexUnlock(m_mutexTrapCfgAccess);
+}
+
+
+//
+// Notify clients about trap configuration change
+//
+
+static void NotifyOnTrapCfgChangeCB(ClientSession *session, void *arg)
+{
+	if (session->isAuthenticated())
+		session->sendMessage((CSCPMessage *)arg);
+}
+
+static void NotifyOnTrapCfgChange(DWORD code, NXC_TRAP_CFG_ENTRY *trap)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_TRAP_CFG_UPDATE);
+	msg.SetVariable(VID_NOTIFICATION_CODE, code);
+	FillTrapConfigDataMsg(msg, trap);
+	EnumerateClientSessions(NotifyOnTrapCfgChangeCB, &msg);
+}
+
+static void NotifyOnTrapCfgDelete(DWORD id)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_TRAP_CFG_UPDATE);
+	msg.SetVariable(VID_NOTIFICATION_CODE, (DWORD)NX_NOTIFY_TRAPCFG_DELETED);
+	msg.SetVariable(VID_TRAP_ID, id);
+	EnumerateClientSessions(NotifyOnTrapCfgChangeCB, &msg);
 }
 
 
@@ -540,6 +583,8 @@ DWORD DeleteTrap(DWORD dwId)
          _stprintf(szQuery, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), dwId);
          QueueSQLRequest(szQuery);
          dwResult = RCC_SUCCESS;
+
+			NotifyOnTrapCfgDelete(dwId);
          break;
       }
    }
@@ -605,8 +650,10 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
    memset(&m_pTrapCfg[m_dwNumTraps], 0, sizeof(NXC_TRAP_CFG_ENTRY));
    m_pTrapCfg[m_dwNumTraps].dwId = *pdwTrapId;
    m_pTrapCfg[m_dwNumTraps].dwEventCode = EVENT_SNMP_UNMATCHED_TRAP;
-   m_dwNumTraps++;
 
+	NotifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED, &m_pTrapCfg[m_dwNumTraps]);
+
+	m_dwNumTraps++;
    MutexUnlock(m_mutexTrapCfgAccess);
 
    _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
@@ -666,6 +713,9 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
    {
       dwResult = RCC_DB_FAILURE;
    }
+
+	if (dwResult == RCC_SUCCESS)
+		NotifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED, &m_pTrapCfg[m_dwNumTraps]);
 
    m_dwNumTraps++;
    MutexUnlock(m_mutexTrapCfgAccess);
@@ -748,6 +798,10 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          {
             dwResult = RCC_DB_FAILURE;
          }
+
+			if (dwResult == RCC_SUCCESS)
+				NotifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_MODIFIED, &m_pTrapCfg[i]);
+
          break;
       }
    }

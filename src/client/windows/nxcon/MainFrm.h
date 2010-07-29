@@ -69,6 +69,7 @@ protected:
    afx_msg LRESULT OnUpdateObjectTools(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnSituationChange(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnShowFatalError(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnTrapCfgUpdate(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

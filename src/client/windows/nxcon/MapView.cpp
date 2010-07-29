@@ -376,12 +376,12 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
 					//	dy = dy < 0 ? (-20 - MAP_OBJECT_SIZE_Y): (20 + MAP_OBJECT_SIZE_Y);
 
 					pszText = m_pSubmap->GetLinkByIndex(i)->szPort1;
-					nLen = _tcslen(pszText);
+					nLen = (int)_tcslen(pszText);
 					te = dc.GetTextExtent(pszText, nLen);
 					dc.TextOut(ptLinkStart.x + dx - te.cx / 2, ptLinkStart.y + dy - te.cy / 2, pszText, nLen);
 
 					pszText = m_pSubmap->GetLinkByIndex(i)->szPort2;
-					nLen = _tcslen(pszText);
+					nLen = (int)_tcslen(pszText);
 					te = dc.GetTextExtent(pszText, nLen);
 					dc.TextOut(ptLinkEnd.x - dx - te.cx / 2, ptLinkEnd.y - dy - te.cy / 2, pszText, nLen);
 				}

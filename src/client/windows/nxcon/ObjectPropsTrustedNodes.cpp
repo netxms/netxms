@@ -109,7 +109,7 @@ void CObjectPropsTrustedNodes::OnOK()
 		m_pUpdate->pdwTrustedNodes = (DWORD *)malloc(sizeof(DWORD) * m_pUpdate->dwNumTrustedNodes);
 		for(i = 0; i < m_pUpdate->dwNumTrustedNodes; i++)
 		{
-			m_pUpdate->pdwTrustedNodes[i] = m_wndListCtrl.GetItemData(i);
+			m_pUpdate->pdwTrustedNodes[i] = (DWORD)m_wndListCtrl.GetItemData(i);
 		}
 	}
 }

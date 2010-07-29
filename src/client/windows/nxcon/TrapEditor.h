@@ -29,8 +29,10 @@ public:
 // Operations
 public:
 	NXC_TRAP_CFG_ENTRY *GetTrapById(DWORD dwId);
-   int GetSortMode(void) { return m_iSortMode; }
-   int GetSortDir(void) { return m_iSortDir; }
+   int GetSortMode() { return m_iSortMode; }
+   int GetSortDir() { return m_iSortDir; }
+
+	void OnTrapCfgUpdate(DWORD code, NXC_TRAP_CFG_ENTRY *trap);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

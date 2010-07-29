@@ -13,6 +13,7 @@
 #include "ObjectBrowser.h"
 #include "FatalErrorDlg.h"
 #include "ObjectToolsEditor.h"
+#include "TrapEditor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -49,6 +50,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
    ON_MESSAGE(NXCM_UPDATE_EVENT_LIST, OnUpdateEventList)
    ON_MESSAGE(NXCM_UPDATE_OBJECT_TOOLS, OnUpdateObjectTools)
 	ON_MESSAGE(NXCM_SHOW_FATAL_ERROR, OnShowFatalError)
+   ON_MESSAGE(NXCM_TRAPCFG_UPDATE, OnTrapCfgUpdate)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -329,6 +331,22 @@ LRESULT CMainFrame::OnActionUpdate(WPARAM wParam, LPARAM lParam)
    if (pWnd != NULL)
       pWnd->OnActionUpdate((DWORD)wParam, (NXC_ACTION *)lParam);
    free((void *)lParam);
+	return 0;
+}
+
+
+//
+// NXCM_TRAPCFG_UPDATE message handler
+//
+
+LRESULT CMainFrame::OnTrapCfgUpdate(WPARAM wParam, LPARAM lParam)
+{
+   CTrapEditor *pWnd;
+
+	pWnd = theApp.GetTrapEditor();
+   if (pWnd != NULL)
+      pWnd->OnTrapCfgUpdate((DWORD)wParam, (NXC_TRAP_CFG_ENTRY *)lParam);
+   NXCDestroyTrapCfgEntry((NXC_TRAP_CFG_ENTRY *)lParam);
 	return 0;
 }
 

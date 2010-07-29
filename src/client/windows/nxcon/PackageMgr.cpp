@@ -327,7 +327,7 @@ void CPackageMgr::OnPackageRemove()
       iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
       for(i = 0; (i < dwNumItems) && (iItem != -1); i++)
       {
-         pdwDeleteList[i] = m_wndListCtrl.GetItemData(iItem);
+         pdwDeleteList[i] = (DWORD)m_wndListCtrl.GetItemData(iItem);
          iItem = m_wndListCtrl.GetNextItem(iItem, LVIS_SELECTED);
       }
 
@@ -357,7 +357,7 @@ void CPackageMgr::OnPackageDeploy()
       dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_NETWORK | SCL_SERVICEROOT;
       if (dlg.DoModal() == IDOK)
       {
-         theApp.DeployPackage(m_wndListCtrl.GetItemData(iItem), dlg.m_dwNumObjects,
+         theApp.DeployPackage((DWORD)m_wndListCtrl.GetItemData(iItem), dlg.m_dwNumObjects,
                               dlg.m_pdwObjectList);
       }
    }

@@ -245,8 +245,8 @@ void CObjToolPropColumns::OnButtonMovedown()
       {
          DWORD dwIndex1, dwIndex2;
 
-         dwIndex1 = m_wndListCtrl.GetItemData(iItem);
-         dwIndex2 = m_wndListCtrl.GetItemData(iItem + 1);
+         dwIndex1 = (DWORD)m_wndListCtrl.GetItemData(iItem);
+         dwIndex2 = (DWORD)m_wndListCtrl.GetItemData(iItem + 1);
          SwapColumns(dwIndex1, dwIndex2);
          UpdateListEntry(iItem + 1, dwIndex2);
          UpdateListEntry(iItem, dwIndex1);
@@ -332,7 +332,7 @@ void CObjToolPropColumns::OnButtonModify()
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
    if (iItem != -1)
    {
-      dwIndex = m_wndListCtrl.GetItemData(iItem);
+      dwIndex = (DWORD)m_wndListCtrl.GetItemData(iItem);
       if (ModifyColumn(&m_pColumnList[dwIndex]))
       {
          UpdateListEntry(iItem, dwIndex);
@@ -353,7 +353,7 @@ void CObjToolPropColumns::OnButtonDelete()
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    while(iItem != -1)
    {
-      dwIndex = m_wndListCtrl.GetItemData(iItem);
+      dwIndex = (DWORD)m_wndListCtrl.GetItemData(iItem);
 		m_dwNumColumns--;
 		memmove(&m_pColumnList[dwIndex], &m_pColumnList[dwIndex + 1], sizeof(NXC_OBJECT_TOOL_COLUMN) * (m_dwNumColumns - dwIndex));
       m_wndListCtrl.DeleteItem(iItem);

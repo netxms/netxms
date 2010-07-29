@@ -116,7 +116,7 @@ void CToolBox::OnNcPaint()
                      19, TOOLBOX_TITLE_COLOR);
    dc->SetTextColor(RGB(255, 255, 255));
    dc->SetBkColor(TOOLBOX_TITLE_COLOR);
-   dc->TextOut(5, 3, m_szTitle, _tcslen(m_szTitle));
+   dc->TextOut(5, 3, m_szTitle, (int)_tcslen(m_szTitle));
 
    // Cleanup
    ReleaseDC(dc);

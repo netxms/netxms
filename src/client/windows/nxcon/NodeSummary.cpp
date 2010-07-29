@@ -126,7 +126,7 @@ void CNodeSummary::OnPaint()
       dc.Draw3dRect(x, y, iLineHeight, iLineHeight, RGB(0, 0, 0), RGB(0, 0, 0));
       dc.SetBkColor(RGB(255, 255, 255));
       _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s:\t%d"), g_szStatusTextSmall[i], m_dwNodeStats[i]);
-      dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, _tcslen(szBuffer), 1, 
+      dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, (int)_tcslen(szBuffer), 1, 
                        &iTabStop, x + iLineHeight + 5);
    }
    iChartBottom = y;
@@ -136,7 +136,7 @@ void CNodeSummary::OnPaint()
    dc.LineTo(x + iLineHeight + iTabStop + 30, y);
    y += 5;
    _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("Total:\t%d"), m_dwTotalNodes);
-   dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, _tcslen(szBuffer), 1, 
+   dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, (int)_tcslen(szBuffer), 1, 
                     &iTabStop, x + iLineHeight + 5);
 
    // Pie chart

@@ -190,7 +190,7 @@ void CObjectSelDlg::OnOK()
       iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
       for(i = 0; iItem != -1; i++)
       {
-         m_pdwObjectList[i] = m_wndListCtrl.GetItemData(iItem);
+         m_pdwObjectList[i] = (DWORD)m_wndListCtrl.GetItemData(iItem);
          iItem = m_wndListCtrl.GetNextItem(iItem, LVIS_SELECTED);
       }
 	   CDialog::OnOK();

@@ -201,7 +201,7 @@ void CGraphStylePage::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 		DeleteObject(hPen);
 		rcSubItem.left += 24;
 	}
-	DrawText(lpDrawItemStruct->hDC, szBuffer, _tcslen(szBuffer), &rcSubItem, DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+	DrawText(lpDrawItemStruct->hDC, szBuffer, (int)_tcslen(szBuffer), &rcSubItem, DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 }
 
 
@@ -217,7 +217,7 @@ void CGraphStylePage::DrawTextCell(int nSubItem, LPDRAWITEMSTRUCT lpDrawItemStru
 	m_wndListCtrl.GetSubItemRect(lpDrawItemStruct->itemID, nSubItem, LVIR_BOUNDS, rcSubItem);
 	InflateRect(&rcSubItem, -4, 0);
 	m_wndListCtrl.GetItemText(lpDrawItemStruct->itemID, nSubItem, szBuffer, 256);
-	DrawText(lpDrawItemStruct->hDC, szBuffer, _tcslen(szBuffer), &rcSubItem, DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+	DrawText(lpDrawItemStruct->hDC, szBuffer, (int)_tcslen(szBuffer), &rcSubItem, DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 }
 
 

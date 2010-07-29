@@ -272,6 +272,7 @@ void ProcessEventDBUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
+void ProcessTrapCfgUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessUserDBUpdate(CSCPMessage *pMsg);

@@ -1176,6 +1176,12 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                m_pMainWnd->PostMessage(NXCM_ACTION_UPDATE, dwCode, 
                                        (LPARAM)nx_memdup(pArg, sizeof(NXC_ACTION)));
                break;
+            case NX_NOTIFY_TRAPCFG_CREATED:
+            case NX_NOTIFY_TRAPCFG_MODIFIED:
+            case NX_NOTIFY_TRAPCFG_DELETED:
+               m_pMainWnd->PostMessage(NXCM_TRAPCFG_UPDATE, dwCode, 
+                                       (LPARAM)NXCDuplicateTrapCfgEntry((NXC_TRAP_CFG_ENTRY *)pArg));
+               break;
             case NX_NOTIFY_ETMPL_CHANGED:
             case NX_NOTIFY_ETMPL_DELETED:
                m_pMainWnd->PostMessage(NXCM_EVENTDB_UPDATE, dwCode, 
@@ -2227,18 +2233,8 @@ void CConsoleApp::OnControlpanelSnmptraps()
    }
    else
    {
-      DWORD dwResult;
-
-      dwResult = DoRequestArg1(NXCLockTrapCfg, g_hSession, _T("Locking SNMP trap configuration database..."));
-      if (dwResult == RCC_SUCCESS)
-      {
-	      pFrame->CreateNewChild(RUNTIME_CLASS(CTrapEditor), IDR_TRAP_EDITOR,
-                                m_hTrapEditorMenu, m_hTrapEditorAccel);
-      }
-      else
-      {
-         ErrorBox(dwResult, _T("Unable to lock SNMP trap configuration database:\n%s"));
-      }
+      pFrame->CreateNewChild(RUNTIME_CLASS(CTrapEditor), IDR_TRAP_EDITOR,
+                             m_hTrapEditorMenu, m_hTrapEditorAccel);
    }
 }
 

@@ -464,7 +464,7 @@ void CMapFrame::OnMapHome()
 
 LRESULT CMapFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
-   m_wndMapView.OnObjectChange(wParam, (NXC_OBJECT *)lParam);
+   m_wndMapView.OnObjectChange((DWORD)wParam, (NXC_OBJECT *)lParam);
 	return 0;
 }
 

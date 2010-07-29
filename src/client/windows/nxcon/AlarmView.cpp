@@ -23,8 +23,8 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
    TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
    int iResult;
 
-   pAlarm1 = ((CAlarmView *)lParamSort)->FindAlarmInList(lParam1);
-   pAlarm2 = ((CAlarmView *)lParamSort)->FindAlarmInList(lParam2);
+   pAlarm1 = ((CAlarmView *)lParamSort)->FindAlarmInList((DWORD)lParam1);
+   pAlarm2 = ((CAlarmView *)lParamSort)->FindAlarmInList((DWORD)lParam2);
    if ((pAlarm1 == NULL) || (pAlarm2 == NULL))
       return 0;
 
@@ -658,7 +658,7 @@ void CAlarmView::OnObjectTool(UINT nID)
    nItem = m_wndListCtrl.GetNextItem(-1, LVIS_FOCUSED);
    if (nItem != -1)
    {
-      pAlarm = FindAlarmInList(m_wndListCtrl.GetItemData(nItem));
+      pAlarm = FindAlarmInList((DWORD)m_wndListCtrl.GetItemData(nItem));
       if (pAlarm != NULL)
       {
          pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);

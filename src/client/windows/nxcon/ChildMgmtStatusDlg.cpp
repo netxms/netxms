@@ -147,7 +147,7 @@ void CChildMgmtStatusDlg::OnOK()
 		pList = (MGMT_STATUS *)malloc(sizeof(MGMT_STATUS) * nItems);
 		for(i = 0; i < nItems; i++)
 		{
-			pList[i].dwObjectId = m_wndListCtrl.GetItemData(i);
+			pList[i].dwObjectId = (DWORD)m_wndListCtrl.GetItemData(i);
 			m_wndListCtrl.GetItemText(i, 1, szBuffer, 32);
 			pList[i].isManaged = !_tcsicmp(szBuffer, _T("Yes"));
 		}

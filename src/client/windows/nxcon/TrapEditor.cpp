@@ -156,7 +156,6 @@ void CTrapEditor::OnSize(UINT nType, int cx, int cy)
 
 void CTrapEditor::OnClose() 
 {
-   DoRequestArg1(NXCUnlockTrapCfg, g_hSession, _T("Unlocking SNMP trap configuration database..."));
 	CMDIChildWnd::OnClose();
 }
 
@@ -288,24 +287,12 @@ void CTrapEditor::OnTrapNew()
 static DWORD DeleteTraps(DWORD dwNumTraps, DWORD *pdwDeleteList, CListCtrl *pList)
 {
    DWORD i, dwResult = RCC_SUCCESS;
-   LVFINDINFO lvfi;
-   int iItem;
 
-   lvfi.flags = LVFI_PARAM;
    for(i = 0; i < dwNumTraps; i++)
    {
       dwResult = NXCDeleteTrap(g_hSession, pdwDeleteList[i]);
-      if (dwResult == RCC_SUCCESS)
-      {
-         lvfi.lParam = pdwDeleteList[i];
-         iItem = pList->FindItem(&lvfi);
-         if (iItem != -1)
-            pList->DeleteItem(iItem);
-      }
-      else
-      {
+      if (dwResult != RCC_SUCCESS)
          break;
-      }
    }
    return dwResult;
 }
@@ -362,22 +349,7 @@ void CTrapEditor::EditTrap(BOOL bNewTrap)
          if (dwIndex < m_dwNumTraps)
          {
             // Copy existing record to dialog object for editing
-            memcpy(&dlg.m_trap, &m_pTrapList[dwIndex], sizeof(NXC_TRAP_CFG_ENTRY));
-            dlg.m_trap.pdwObjectId = 
-               (DWORD *)nx_memdup(m_pTrapList[dwIndex].pdwObjectId, 
-                                  sizeof(DWORD) * m_pTrapList[dwIndex].dwOidLen);
-            dlg.m_trap.pMaps = 
-               (NXC_OID_MAP *)nx_memdup(m_pTrapList[dwIndex].pMaps, 
-                                        sizeof(NXC_OID_MAP) * m_pTrapList[dwIndex].dwNumMaps);
-            for(i = 0; i < m_pTrapList[dwIndex].dwNumMaps; i++)
-            {
-               if ((m_pTrapList[dwIndex].pMaps[i].dwOidLen & 0x80000000) == 0)
-                  dlg.m_trap.pMaps[i].pdwObjectId = 
-                     (DWORD *)nx_memdup(m_pTrapList[dwIndex].pMaps[i].pdwObjectId, 
-                                        sizeof(DWORD) * m_pTrapList[dwIndex].pMaps[i].dwOidLen);
-               else
-                  dlg.m_trap.pMaps[i].pdwObjectId = NULL;
-            }
+				NXCCopyTrapCfgEntry(&dlg.m_trap, &m_pTrapList[dwIndex]);
 
             // Run dialog and update record list on success
             if (dlg.DoModal() == IDOK)
@@ -559,4 +531,63 @@ void CTrapEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
    SortList();
    
    *pResult = 0;
+}
+
+
+//
+// Handler for trap configuration update notifications
+//
+
+void CTrapEditor::OnTrapCfgUpdate(DWORD code, NXC_TRAP_CFG_ENTRY *trap)
+{
+   LVFINDINFO lvfi;
+   int item, index = -1;
+
+   lvfi.flags = LVFI_PARAM;
+   lvfi.lParam = trap->dwId;
+   item = m_wndListCtrl.FindItem(&lvfi);
+
+	for(DWORD i = 0; i < m_dwNumTraps; i++)
+		if (m_pTrapList[i].dwId == trap->dwId)
+		{
+			index = (int)i;
+			break;
+		}
+
+	switch(code)
+	{
+		case NX_NOTIFY_TRAPCFG_CREATED:
+		case NX_NOTIFY_TRAPCFG_MODIFIED:
+			if (index == -1)
+			{
+				m_pTrapList = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapList, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
+				NXCCopyTrapCfgEntry(&m_pTrapList[m_dwNumTraps], trap);
+				index = (int)m_dwNumTraps;
+				m_dwNumTraps++;
+			}
+			else
+			{
+				for(DWORD i = 0; i < m_pTrapList[index].dwNumMaps; i++)
+					safe_free(m_pTrapList[index].pMaps[i].pdwObjectId);
+				safe_free(m_pTrapList[index].pMaps);
+				safe_free(m_pTrapList[index].pdwObjectId);
+				NXCCopyTrapCfgEntry(&m_pTrapList[index], trap);
+			}
+			if (item == -1)
+			{
+				AddItem(index);
+			}
+			else
+			{
+				UpdateItem(item, index);
+			}
+		   m_wndListCtrl.SortItems(TrapCompareProc, (LPARAM)this);
+			break;
+		case NX_NOTIFY_TRAPCFG_DELETED:
+         if (item != -1)
+            m_wndListCtrl.DeleteItem(item);
+			break;
+		default:
+			break;
+	}
 }

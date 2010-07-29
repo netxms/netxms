@@ -120,7 +120,7 @@ void CInternalItemSelDlg::OnOK()
    {
       DWORD dwIndex;
 
-      dwIndex = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+      dwIndex = (DWORD)m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
       nx_strncpy(m_szItemName, m_itemList[dwIndex].pszName, MAX_DB_STRING);
       nx_strncpy(m_szItemDescription, m_itemList[dwIndex].pszDescription, MAX_DB_STRING);
       m_iDataType = m_itemList[dwIndex].iDataType;
@@ -140,7 +140,7 @@ void CInternalItemSelDlg::OnButtonGet()
       CDataQueryDlg dlg;
       DWORD dwIndex;
 
-      dwIndex = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+      dwIndex = (DWORD)m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
       dlg.m_dwObjectId = m_pNode->dwId;
       dlg.m_strNode = (LPCTSTR)m_pNode->szName;
       dlg.m_strParameter = (LPCTSTR)m_itemList[dwIndex].pszName;

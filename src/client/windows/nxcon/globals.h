@@ -142,6 +142,7 @@ extern CConsoleApp theApp;
 #define NXCM_ACTION_UPDATE         (WM_USER + 134)
 #define NXCM_EVENTDB_UPDATE        (WM_USER + 135)
 #define NXMC_UPDATE_OBJTOOL_LIST   (WM_USER + 136)
+#define NXCM_TRAPCFG_UPDATE        (WM_USER + 137)
 
 
 //

@@ -94,5 +94,5 @@ void CMapToolbox::OnSize(UINT nType, int cx, int cy)
 
 BOOL CMapToolbox::OnCommand(WPARAM wParam, LPARAM lParam) 
 {
-   return GetParent()->SendMessage(WM_COMMAND, wParam, lParam);
+	return GetParent()->SendMessage(WM_COMMAND, wParam, lParam) ? TRUE : FALSE;
 }

@@ -58,7 +58,7 @@ END_MESSAGE_MAP()
 
 static int CALLBACK CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-   return ((CEventEditor *)lParamSort)->CompareListItems(lParam1, lParam2);
+   return ((CEventEditor *)lParamSort)->CompareListItems((DWORD)lParam1, (DWORD)lParam2);
 }
 
 
@@ -182,7 +182,7 @@ BOOL CEventEditor::EditEvent(int iItem)
    CEditEventDlg dlgEditEvent;
    BOOL bResult = FALSE;
 
-   dwId = m_wndListCtrl.GetItemData(iItem);
+   dwId = (DWORD)m_wndListCtrl.GetItemData(iItem);
    for(dwIndex = 0; dwIndex < m_dwNumTemplates; dwIndex++)
       if (m_ppEventTemplates[dwIndex]->dwCode == dwId)
          break;
@@ -413,7 +413,7 @@ void CEventEditor::OnEventDelete()
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
       if (iItem == -1)
          break;   // Shouldn't be
-      pdwEventList[i] = m_wndListCtrl.GetItemData(iItem);
+      pdwEventList[i] = (DWORD)m_wndListCtrl.GetItemData(iItem);
    }
 
    dwResult = DoRequestArg3(StartDeleteEvents, this, (void *)dwNumEvents,

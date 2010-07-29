@@ -93,7 +93,7 @@ void CNodePoller::OnPollRestart()
 
 LRESULT CNodePoller::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
-   m_dwResult = lParam;
+   m_dwResult = (DWORD)lParam;
    m_bPollingStopped = TRUE;
    if (m_dwResult == RCC_SUCCESS)
    {

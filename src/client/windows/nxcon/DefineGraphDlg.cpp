@@ -167,7 +167,7 @@ void CDefineGraphDlg::OnButtonDelete()
 
 	while((nItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED)) != -1)
 	{
-		dwUserId = m_wndListCtrl.GetItemData(nItem);
+		dwUserId = (DWORD)m_wndListCtrl.GetItemData(nItem);
 		for(i = 0; i < m_dwACLSize; i++)
 		{
 			if (m_pACL[i].dwUserId == dwUserId)
@@ -199,7 +199,7 @@ void CDefineGraphDlg::OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResult)
          if ((pNMListView->uNewState & LVIS_FOCUSED) && (pNMListView->uNewState & LVIS_SELECTED) &&
 				 (m_wndListCtrl.GetSelectedCount() == 1))
          {
-            pUser = NXCFindUserById(g_hSession, m_wndListCtrl.GetItemData(pNMListView->iItem));
+            pUser = NXCFindUserById(g_hSession, (DWORD)m_wndListCtrl.GetItemData(pNMListView->iItem));
             if (pUser != NULL)   // It should't be NULL
             {
                // Find user in ACL
