@@ -305,6 +305,10 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/Template.java -te
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectTool.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolDetails.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolTableColumn.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpObjectId.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpObjectIdFormatException.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpTrap.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpTrapParameterMapping.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/AlarmTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ConnectionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/DataCollectionTest.java -text
@@ -316,6 +320,7 @@ src/java/netxms-client/src/test/java/org/netxms/client/ObjectTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ObjectToolsTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ServerConfigTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/SessionTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/SnmpTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/UserTest.java -text
 src/java/netxms-eclipse/ActionManager/.classpath -text
 src/java/netxms-eclipse/ActionManager/.project -text

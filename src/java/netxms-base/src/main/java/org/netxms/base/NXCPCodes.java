@@ -52,7 +52,7 @@ public final class NXCPCodes
 	public static final int CMD_SAVE_EPP                = 0x0016;
 	public static final int CMD_EPP_RECORD              = 0x0017;
 	public static final int CMD_EVENT_DB_UPDATE         = 0x0018;
-	//public static final int CMD_UNLOCK_EVENT_DB         = 0x0019;
+	public static final int CMD_TRAP_CFG_UPDATE         = 0x0019;
 	public static final int CMD_SET_EVENT_INFO          = 0x001A;
 	public static final int CMD_EVENT_DB_RECORD         = 0x001B;
 	public static final int CMD_LOAD_EVENT_DB           = 0x001C;
@@ -122,8 +122,8 @@ public final class NXCPCodes
 	public static final int CMD_WAKEUP_NODE             = 0x005C;
 	public static final int CMD_DELETE_EVENT_TEMPLATE   = 0x005D;
 	public static final int CMD_GENERATE_EVENT_CODE     = 0x005E;
-	public static final int CMD_LOCK_TRAP_CFG           = 0x005F;
-	public static final int CMD_UNLOCK_TRAP_CFG         = 0x0060;
+	//public static final int CMD_LOCK_TRAP_CFG           = 0x005F;
+	//public static final int CMD_UNLOCK_TRAP_CFG         = 0x0060;
 	public static final int CMD_CREATE_TRAP             = 0x0061;
 	public static final int CMD_MODIFY_TRAP             = 0x0062;
 	public static final int CMD_DELETE_TRAP             = 0x0063;
