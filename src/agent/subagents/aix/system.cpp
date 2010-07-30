@@ -136,7 +136,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 
 	if (vmgetinfo(&vmi, VMINFO, sizeof(struct vminfo)) == 0)
 	{
-		switch((int)pArg)
+		switch(CAST_FROM_POINTER(pArg, int))
 		{
 			case MEMINFO_PHYSICAL_FREE:
 				ret_uint64(pValue, vmi.numfrb * getpagesize());
@@ -180,7 +180,7 @@ LONG H_LoadAvg(const char *param, const char *arg, char *value)
 {
 	int kmem;
 	LONG rc = SYSINFO_RC_ERROR;
-	struct nlist nl[] = { "avenrun" }; 
+	struct nlist nl[] = { (char *)"avenrun" }; 
 	long avenrun[3];
 
 	kmem = open("/dev/kmem", O_RDONLY);

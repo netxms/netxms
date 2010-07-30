@@ -554,6 +554,46 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CH
 	return count;
 }
 
+#else   /* __DISABLE_ICONV */
+
+
+//
+// Convert UCS-2 to UCS-4
+//
+
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCHAR *dst, size_t dstLen)
+{
+	int i, len;
+
+	len = (int)((srcLen == -1) ? ucs2_strlen(src) : srcLen);
+	if (len > (int)dstLen - 1)
+		len = (int)dstLen - 1;
+	for(i = 0; i < len; i++)
+		dst[i] = (WCHAR)src[i];
+	dst[i] = 0;
+	return len;
+}
+
+
+//
+// Convert UCS-4 to UCS-2
+//
+
+size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen)
+{
+	int i, len;
+
+	len = (int)((srcLen == -1) ? wcslen(src) : srcLen);
+	if (len > (int)dstLen - 1)
+		len = (int)dstLen - 1;
+	for(i = 0; i < len; i++)
+		dst[i] = (UCS2CHAR)src[i];
+	dst[i] = 0;
+	return len;
+}
+
+#endif 	/* __DISABLE_ICONV */
+
 
 //
 // Convert UCS-4 string to UCS-2 string allocating UCS-2 string dynamically
@@ -585,8 +625,6 @@ WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString)
    ucs2_to_ucs4(pszString, -1, pwszOut, nLen);
    return pwszOut;
 }
-
-#endif 	/* __DISABLE_ICONV */
 
 
 //

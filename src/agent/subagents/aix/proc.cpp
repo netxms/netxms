@@ -212,7 +212,7 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 	int i, nProcCount, nType, nCount;
 	PROCENTRY *pList;
 	QWORD qwValue, qwCurrVal;
-	static char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
+	static const char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
 	// Get parameter type arguments
 	AgentGetParameterArg(pszParam, 2, szBuffer, sizeof(szBuffer));
@@ -237,7 +237,7 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 		{
 			if (!strcmp(pList[i].pi_comm, szBuffer))
 			{
-				switch((int)pArg)
+				switch(CAST_FROM_POINTER(pArg, int))
 				{
 //					case PROCINFO_IO_READ_B:
 					case PROCINFO_IO_READ_OP:

@@ -588,6 +588,8 @@ if test "x$CC" = "xgcc" ; then
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-maix32 $LDFLAGS"
+					OBJECT_MODE=32
+					AC_SUBST(OBJECT_MODE)
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 
@@ -601,6 +603,8 @@ if test "x$CC" = "xgcc" ; then
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-maix64 $LDFLAGS"
+					OBJECT_MODE=64
+					AC_SUBST(OBJECT_MODE)
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 
