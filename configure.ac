@@ -62,6 +62,7 @@ PGSQL_LIBS=""
 MYSQL_LIBS=""
 ODBC_LIBS=""
 FORCE_INTERNAL_EXPAT="no"
+FORCE_32BIT_BUILD="no"
 
 
 #--------------------------------------------------------------------
@@ -244,6 +245,12 @@ AC_ARG_ENABLE(debug,
 [AS_HELP_STRING(--enable-debug,enable additional debugging functionality)],
 [
 	ENABLE_DEBUG="yes"
+])
+
+AC_ARG_ENABLE(64bit,
+[AS_HELP_STRING(--disable-64bit,disable 64bit build (force 32bit build event on 64bit machine))],
+[
+	FORCE_32BIT_BUILD="yes"
 ])
 
 AC_ARG_WITH(dist,
@@ -512,10 +519,9 @@ esac
 
 #--------------------------------------------------------------------
 # C++ compiler tuning:
-#  * Disable C++ exceptions
-#  * Disable compiling string constants as "const char *"
-#  * Disable some GCC warnings
+#  * Disable C++ exceptions and RTTI
 #  * Turn on 64bit mode on HP-UX/Itanium
+#  * Turn on 64bit mode on AIX
 #--------------------------------------------------------------------
 
 if test "x$CC" = "xgcc" ; then
@@ -542,31 +548,66 @@ if test "x$CC" = "xgcc" ; then
 			AC_MSG_RESULT(no)
 		])
 
-	AC_MSG_CHECKING(whether C++ compiler accepts -Wno-deprecated)
-	OLD_CXXFLGAS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-		])
-
 	AC_LANG_POP([C++])
 
 	if test "x$PLATFORM" = "xHP-UX"; then
-		AC_MSG_CHECKING(whether C compiler accepts -mlp64)
-		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS -mlp64"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-			[ 
-				LDFLAGS="-mlp64 -L/usr/lib/hpux64 -L/usr/local/lib/hpux64 $LDFLAGS"
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
-				CPPFLAGS="$OLD_CPPFLAGS"
-				AC_MSG_RESULT(no)
-			])
+		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+			AC_MSG_CHECKING(whether C compiler accepts -milp32)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -milp32"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="-milp32 $LDFLAGS"
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		else
+			AC_MSG_CHECKING(whether C compiler accepts -mlp64)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -mlp64"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="-mlp64 -L/usr/lib/hpux64 -L/usr/local/lib/hpux64 $LDFLAGS"
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		fi
+	fi
+
+	if test "x$PLATFORM" = "xAIX"; then
+		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+			AC_MSG_CHECKING(whether C compiler accepts -maix32)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -maix32"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="-maix32 $LDFLAGS"
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		else
+			AC_MSG_CHECKING(whether C compiler accepts -maix64)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -maix64"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="-maix64 $LDFLAGS"
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		fi
 	fi
 
 	if test "x$ENABLE_DEBUG" = "xyes"; then
@@ -1805,6 +1846,11 @@ if test "x${HAVE_LIBEXPAT}" = "xno"; then
 	echo "Use internal libexpat   : YES"
 else
 	echo "Use internal libexpat   : NO"
+fi
+if test "x${FORCE_32BIT_BUILD}" = "xyes"; then
+	echo "Force 32bit build       : YES"
+else
+	echo "Force 32bit build       : NO"
 fi
 
 echo "CPPFLAGS                : ${CPPFLAGS}"
