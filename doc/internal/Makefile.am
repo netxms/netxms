@@ -10,10 +10,10 @@
 
 EXTRA_DIST = \
 	coding_style.txt \
+	dci_perftab.txt \
 	db_format_change.txt \
 	event_code_ranges.txt \
 	ipso.txt \
 	netxms_architecture.vsd \
 	nxcp_command_ranges.txt \
-	svn_perftab.txt \
 	unicode.txt

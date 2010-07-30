@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libnsm_sms.la
 libnsm_sms_la_SOURCES = main.cpp sender.cpp
 libnsm_sms_la_LDFLAGS = ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = sms.h sms.dsw sms.vcproj
+EXTRA_DIST = sms.h sms.vcproj
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then \

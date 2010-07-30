@@ -8,7 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = netxms.iss files.txt \
-	     nxav.exe.manifest nxcon.exe.manifest \
-	     nxmc.exe.manifest nxnotify.exe.manifest \
-	     nxconfig.exe.manifest
+EXTRA_DIST = netxms.iss files.txt
