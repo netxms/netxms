@@ -75,6 +75,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.snmp.SnmpTrap;
 
 /**
  * @author victor
@@ -3113,5 +3114,59 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 		final NXCPMessage response = waitForMessage(NXCPCodes.CMD_TABLE_DATA, msg.getMessageId());
 		return new Table(response);
+	}
+	
+	/**
+	 * Get list of configured SNMP traps
+	 * 
+	 * @return List of configured SNMP traps.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<SnmpTrap> getSnmpTrapsConfiguration() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_LOAD_TRAP_CFG);
+		sendMessage(msg);
+		
+		waitForRCC(msg.getMessageId());
+		List<SnmpTrap> traps = new ArrayList<SnmpTrap>();
+		while(true)
+		{
+			final NXCPMessage response = waitForMessage(NXCPCodes.CMD_TRAP_CFG_RECORD, msg.getMessageId());
+			if (response.getVariableAsInt64(NXCPCodes.VID_TRAP_ID) == 0)
+				break;	// end of list
+			traps.add(new SnmpTrap(response));
+		}
+		return traps;
+	}
+	
+	/**
+	 * Create new trap configuration record.
+	 * 
+	 * @return ID of new record
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long createSnmpTrapConfiguration() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_TRAP);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_TRAP_ID);
+	}
+
+	/**
+	 * Delete SNMP trap configuration record from server.
+	 * 
+	 * @param trapId Trap configuration record ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteSnmpTrapConfiguration(long trapId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_TRAP);
+		msg.setVariableInt32(NXCPCodes.VID_TRAP_ID, (int)trapId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }
