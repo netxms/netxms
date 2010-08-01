@@ -18,6 +18,9 @@
  */
 package org.netxms.client.snmp;
 
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
+
 /**
  * SNMP trap parameter mapping
  *
@@ -52,6 +55,25 @@ public class SnmpTrapParameterMapping
 	{
 		type = BY_OBJECT_ID;
 		objectId = oid;
+	}
+
+	/**
+	 * Fill NXCP message with parameter mapping's data
+	 * 
+	 * @param index mapping index
+	 */
+	public void fillMessage(NXCPMessage msg, int index)
+	{
+		msg.setVariable(NXCPCodes.VID_TRAP_PDESCR_BASE + index, description);
+		if (type == BY_POSITION)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, position | 0x80000000);
+		}
+		else
+		{
+			msg.setVariableInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, objectId.getLength());
+			objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_PNAME_BASE);
+		}
 	}
 
 	/**

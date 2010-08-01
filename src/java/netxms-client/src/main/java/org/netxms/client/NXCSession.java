@@ -3169,4 +3169,19 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Modify SNMP trap configuration record.
+	 * 
+	 * @param trap Modified trap configuration record
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifySnmpTrapConfiguration(SnmpTrap trap) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_TRAP);
+		trap.fillMessage(msg);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 }

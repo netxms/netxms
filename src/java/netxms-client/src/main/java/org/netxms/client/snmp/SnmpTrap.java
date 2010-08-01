@@ -78,6 +78,26 @@ public class SnmpTrap
 			parameterMapping.add(pm);
 		}
 	}
+	
+	/**
+	 * Fill NXCP message with trap configuration data.
+	 * 
+	 * @param msg NXCP message
+	 */
+	public void fillMessage(NXCPMessage msg)
+	{
+		msg.setVariableInt32(NXCPCodes.VID_TRAP_ID, (int)id);
+		msg.setVariableInt32(NXCPCodes.VID_EVENT_CODE, eventCode);
+		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
+		msg.setVariable(NXCPCodes.VID_USER_TAG, userTag);
+		msg.setVariableInt32(NXCPCodes.VID_TRAP_OID_LEN, objectId.getLength());
+		objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_OID);
+		msg.setVariableInt32(NXCPCodes.VID_TRAP_NUM_MAPS, parameterMapping.size());
+		for(int i = 0; i < parameterMapping.size(); i++)
+		{
+			parameterMapping.get(i).fillMessage(msg, i);
+		}
+	}
 
 	/**
 	 * @return the id

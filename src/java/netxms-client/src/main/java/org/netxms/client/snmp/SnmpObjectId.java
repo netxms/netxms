@@ -20,6 +20,8 @@ package org.netxms.client.snmp;
 
 import java.util.Arrays;
 
+import org.netxms.base.NXCPMessage;
+
 /**
  * This class represents SNMP Object Id (OID)
  *
@@ -73,6 +75,27 @@ public class SnmpObjectId
 			}
 		}
 		return new SnmpObjectId(value);
+	}
+	
+	/**
+	 * Get object identifier length.
+	 * 
+	 * @return OID length
+	 */
+	public int getLength()
+	{
+		return value.length;
+	}
+	
+	/**
+	 * Set NXCP variable to OID's value
+	 *  
+	 * @param msg NXCP message
+	 * @param varId Variable ID
+	 */
+	public void setNXCPVariable(NXCPMessage msg, long varId)
+	{
+		msg.setVariable(varId, value);
 	}
 	
 	/* (non-Javadoc)
