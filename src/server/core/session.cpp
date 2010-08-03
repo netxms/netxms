@@ -3537,6 +3537,7 @@ void ClientSession::SendMIBTimestamp(DWORD dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       msg.SetVariable(VID_TIMESTAMP, dwTimeStamp);
+		msg.SetVariable(VID_FILE_SIZE, FileSize(szBuffer));
    }
    else
    {

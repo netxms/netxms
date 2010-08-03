@@ -18,6 +18,9 @@
  */
 package org.netxms.client;
 
+import java.io.File;
+import java.util.Date;
+
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 
@@ -56,5 +59,18 @@ public class SnmpTest extends SessionTest
 		{
 			System.out.println("Bad OID format: " + e.getMessage());
 		}
+	}
+	
+	public void testMibFileDownload() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		Date ts = session.getMibFileTimestamp();
+		System.out.println("MIB file timestamp: " + ts.toString());
+		
+		File f = session.downloadMibFile();
+		System.out.println("MIB file downloaded to: " + f.getPath());
+		
+		session.disconnect();
 	}
 }

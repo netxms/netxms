@@ -819,6 +819,7 @@ typedef struct
 #define VID_DISABLED_UNTIL          ((DWORD)353)
 #define VID_AUTH_FAILURES           ((DWORD)354)
 #define VID_RUNTIME_FLAGS           ((DWORD)355)
+#define VID_FILE_SIZE               ((DWORD)356)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

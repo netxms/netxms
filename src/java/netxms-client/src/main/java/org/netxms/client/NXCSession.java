@@ -78,7 +78,7 @@ import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.snmp.SnmpTrap;
 
 /**
- * @author victor
+ * Communication session with NetXMS server.
  */
 public class NXCSession
 {
@@ -513,7 +513,10 @@ public class NXCSession
 					{
 						NXCReceivedFile file = it.next();
 						if (file.getTimestamp() + RECEIVED_FILE_TTL < currTime)
+						{
+							file.getFile().delete();
 							it.remove();
+						}
 					}
 				}
 			}
@@ -3183,5 +3186,65 @@ public class NXCSession
 		trap.fillMessage(msg);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get timestamp of server's MIB file.
+	 * 
+	 * @return Timestamp of server's MIB file
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Date getMibFileTimestamp() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_MIB_TIMESTAMP);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return new Date(response.getVariableAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000L);
+	}
+	
+	/**
+	 * Download MIB file from server.
+	 * 
+	 * @return file handle for temporary file on local file system
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public File downloadMibFile() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_MIB);
+		sendMessage(msg);
+
+		int ttw = 120;
+		NXCReceivedFile file;
+		do
+		{
+			synchronized(receivedFiles)
+			{
+				file = receivedFiles.get(msg.getMessageId());
+				if ((file != null) && (file.getStatus() != NXCReceivedFile.OPEN))
+				{
+					receivedFiles.remove(file.getId());
+					break;
+				}
+				
+				try
+				{
+					receivedFiles.wait(10000);
+				}
+				catch(InterruptedException e)
+				{
+				}
+			}
+			ttw--;
+		} while(ttw > 0);
+		
+		if (ttw == 0)
+			throw new NXCException(RCC.TIMEOUT);
+		
+		if (file.getStatus() == NXCReceivedFile.FAILED)
+			throw file.getException();
+		
+		return file.getFile();
 	}
 }
