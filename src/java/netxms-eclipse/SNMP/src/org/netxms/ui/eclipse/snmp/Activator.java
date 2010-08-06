@@ -16,10 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectview;
+package org.netxms.ui.eclipse.snmp;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.netxms.client.snmp.MibTree;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -27,12 +28,13 @@ import org.osgi.framework.BundleContext;
  */
 public class Activator extends AbstractUIPlugin
 {
-
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.objectview";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.snmp";
 
 	// The shared instance
 	private static Activator plugin;
+	
+	private static MibTree mibTree = new MibTree();
 
 	/**
 	 * The constructor
@@ -88,5 +90,21 @@ public class Activator extends AbstractUIPlugin
 	public static ImageDescriptor getImageDescriptor(String path)
 	{
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
+	}
+
+	/**
+	 * @return the mibTree
+	 */
+	public static MibTree getMibTree()
+	{
+		return mibTree;
+	}
+
+	/**
+	 * @param mibTree the mibTree to set
+	 */
+	public static void setMibTree(MibTree mibTree)
+	{
+		Activator.mibTree = mibTree;
 	}
 }

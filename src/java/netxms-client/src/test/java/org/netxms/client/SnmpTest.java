@@ -21,6 +21,8 @@ package org.netxms.client;
 import java.io.File;
 import java.util.Date;
 
+import org.netxms.client.snmp.MibObject;
+import org.netxms.client.snmp.MibTree;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 
@@ -72,5 +74,25 @@ public class SnmpTest extends SessionTest
 		System.out.println("MIB file downloaded to: " + f.getPath());
 		
 		session.disconnect();
+		
+		MibTree tree = new MibTree(f);
+		assertNotNull(tree.getRootObject());
+		MibObject[] objects = tree.getRootObject().getChildObjects();
+		assertNotNull(objects);
+		assertTrue(objects.length > 0);
+		
+		for(int i = 0; i < objects.length; i++)
+			System.out.println(objects[i].getObjectId().toString() + " " + objects[i].getName());
+		
+		MibObject o = tree.findObject(SnmpObjectId.parseSnmpObjectId(".1.3.6.1.2.1.1.1"), true);
+		assertNotNull(o);
+		System.out.println("Found: " + o.getObjectId().toString() + " " + o.getName());
+
+		o = tree.findObject(SnmpObjectId.parseSnmpObjectId(".1.3.6.1.100.100.100"), false);
+		assertNotNull(o);
+		System.out.println("Found: " + o.getObjectId().toString() + " " + o.getName());
+
+		o = tree.findObject(SnmpObjectId.parseSnmpObjectId(".1.3.6.1.100.100.100"), true);
+		assertNull(o);
 	}
 }

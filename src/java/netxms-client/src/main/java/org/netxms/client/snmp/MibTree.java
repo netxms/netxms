@@ -23,10 +23,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.zip.InflaterInputStream;
 import org.netxms.base.NXCPDataInputStream;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
+import com.jcraft.jzlib.ZInputStream;
 
 /**
  * This class represents MIB tree.
@@ -78,14 +78,14 @@ public class MibTree
 				in = null;
 				BufferedInputStream bufferedInput = new BufferedInputStream(new FileInputStream(file));
 				bufferedInput.skip(headerSize);
-				in = new NXCPDataInputStream(new InflaterInputStream(bufferedInput));
+				in = new NXCPDataInputStream(new ZInputStream(bufferedInput));
 			}
 			else
 			{
 				in.skipBytes(headerSize - 10);
 			}
 			
-			byte tag = in.readByte();
+			int tag = in.readUnsignedByte();
 			if (tag == MibObject.MIB_TAG_OBJECT)
 			{
 				root = new MibObject(in, null);
@@ -110,5 +110,26 @@ public class MibTree
 	public MibObject getRootObject()
 	{
 		return root;
+	}
+	
+	/**
+	 * Find matching object in tree. If exactMatch set to true, method will search for object with
+	 * ID equal to given. If exactMatch set to false, and object with given id cannot be found, closest upper level
+	 * object will be returned (i.e., if object .1.3.6.1.5 does not exist in the tree, but .1.3.6.1 does, .1.3.6.1 will
+	 * be returned in search for .1.3.6.1.5).
+	 * 
+	 * @param oid object id to find
+	 * @param exactMatch set to true if exact match required
+	 * @return MIB object or null if matching object not found
+	 */
+	public MibObject findObject(SnmpObjectId oid, boolean exactMatch)
+	{
+		MibObject result = root.findChildObject(oid);
+		if ((result != null) && exactMatch)
+		{
+			if (!oid.equals(result.getObjectId()))
+				return null;
+		}
+		return result;
 	}
 }

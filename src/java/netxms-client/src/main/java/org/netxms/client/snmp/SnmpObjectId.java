@@ -110,6 +110,34 @@ public class SnmpObjectId
 		msg.setVariable(varId, value);
 	}
 	
+	/**
+	 * Check if this object id starts with given object id.
+	 * 
+	 * @param oid Object id to check
+	 * @return true if this object id starts with given object id
+	 */
+	public boolean startsWith(SnmpObjectId oid)
+	{
+		if (oid.value.length > value.length)
+			return false;
+		
+		for(int i = 0; i < oid.value.length; i++)
+			if (oid.value[i] != value[i])
+				return false;
+		return true;
+	}
+	
+	/**
+	 * Get part of object ID from given position.
+	 * 
+	 * @param pos position
+	 * @return part of object id from given position or -1 if position is invalid
+	 */
+	public long getIdFromPos(int pos)
+	{
+		return ((pos >= 0) && (pos < value.length)) ? value[pos] : -1;
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */

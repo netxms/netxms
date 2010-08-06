@@ -80,16 +80,16 @@ public class MibObject
 	public static final int MIB_TYPE_OBJGROUP           = 33;
 	public static final int MIB_TYPE_NOTIFGROUP         = 34;
 	
-	protected static final byte MIB_TAG_OBJECT      = 0x01;
-	protected static final byte MIB_TAG_NAME        = 0x02;
-	protected static final byte MIB_TAG_DESCRIPTION = 0x03;
-	protected static final byte MIB_TAG_ACCESS      = 0x04;
-	protected static final byte MIB_TAG_STATUS      = 0x05;
-	protected static final byte MIB_TAG_TYPE        = 0x06;
-	protected static final byte MIB_TAG_BYTE_OID    = 0x07;   /* Used if OID < 256 */
-	protected static final byte MIB_TAG_WORD_OID    = 0x08;   /* Used if OID < 65536 */
-	protected static final byte MIB_TAG_DWORD_OID   = 0x09;
-	protected static final byte MIB_END_OF_TAG      = (byte)0x80;
+	protected static final int MIB_TAG_OBJECT      = 0x01;
+	protected static final int MIB_TAG_NAME        = 0x02;
+	protected static final int MIB_TAG_DESCRIPTION = 0x03;
+	protected static final int MIB_TAG_ACCESS      = 0x04;
+	protected static final int MIB_TAG_STATUS      = 0x05;
+	protected static final int MIB_TAG_TYPE        = 0x06;
+	protected static final int MIB_TAG_BYTE_OID    = 0x07;   /* Used if OID < 256 */
+	protected static final int MIB_TAG_WORD_OID    = 0x08;   /* Used if OID < 65536 */
+	protected static final int MIB_TAG_DWORD_OID   = 0x09;
+	protected static final int MIB_END_OF_TAG      = 0x80;
 
 	private long id;
 	private String name;
@@ -125,13 +125,13 @@ public class MibObject
 	protected MibObject(NXCPDataInputStream in, MibObject parent) throws IOException, NXCException
 	{
 		this.parent = parent;
-		name = "<noname>";
+		name = null;
 		description = "";
 		
 		boolean stop = false;
 		while(!stop)
 		{
-			byte tag = in.readByte();
+			int tag = in.readUnsignedByte();
 			switch(tag)
 			{
 				case (MIB_TAG_OBJECT | MIB_END_OF_TAG):
@@ -172,13 +172,24 @@ public class MibObject
 			// Check closing tag for all tags except OBJECT tags (both opening and closing)
 			if ((tag & ~MIB_END_OF_TAG) != MIB_TAG_OBJECT)
 			{
-				byte closeTag = in.readByte();
+				int closeTag = in.readUnsignedByte();
 				if (((closeTag & MIB_END_OF_TAG) == 0) || ((closeTag & ~MIB_END_OF_TAG) != tag))
 	         	throw new NXCException(RCC.BAD_MIB_FILE_DATA);
 			}
 		}
 		
-		objectId = (parent != null) ? new SnmpObjectId(parent.getObjectId(), id) : null;
+		if (parent == null)
+		{
+			name = "[root]";
+			
+			// Set correct full OIDs for all objects in the tree 
+			for(MibObject o : childObjects.values())
+				o.setObjectIdFromParent(null);
+		}
+		else if ((name == null) || name.isEmpty())
+		{
+			name = "#" + Long.toString(id);
+		}
 	}
 
 	/**
@@ -196,6 +207,17 @@ public class MibObject
 		byte[] buffer = new byte[len];
 		in.read(buffer);
 		return new String(buffer);
+	}
+	
+	/**
+	 * Set OID based on parent's OID
+	 * @param oid Parent's OID
+	 */
+	private void setObjectIdFromParent(SnmpObjectId oid)
+	{
+		objectId = new SnmpObjectId(oid, id);
+		for(MibObject o : childObjects.values())
+			o.setObjectIdFromParent(objectId);
 	}
 
 	/**
@@ -270,5 +292,34 @@ public class MibObject
 	public SnmpObjectId getObjectId()
 	{
 		return objectId;
+	}
+
+	/**
+	 * Check if object has child objects.
+	 * 
+	 * @return true if object has child objects
+	 */
+	public boolean hasChildren()
+	{
+		return childObjects.size() > 0;
+	}
+	
+	/**
+	 * Find child object with given ID
+	 * @param oid
+	 * @return
+	 */
+	protected MibObject findChildObject(SnmpObjectId oid)
+	{
+		long nextId = oid.getIdFromPos((objectId != null) ? objectId.getLength() : 0); 
+		for(MibObject o : childObjects.values())
+		{
+			if (o.getId() == nextId)
+			{
+				MibObject result = o.findChildObject(oid);
+				return (result != null) ? result : o;
+			}
+		}
+		return null;
 	}
 }

@@ -49,10 +49,13 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -363,6 +366,18 @@ public class General extends PropertyPage
 				break;
 			case DataCollectionItem.AGENT:
 				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId());
+				break;
+			case DataCollectionItem.SNMP:
+				SnmpObjectId oid;
+				try
+				{
+					oid = SnmpObjectId.parseSnmpObjectId(parameter.getText());
+				}
+				catch(SnmpObjectIdFormatException e)
+				{
+					oid = null;
+				}
+				dlg = new SelectSnmpParamDlg(getShell(), oid);
 				break;
 			default:
 				dlg = null;
