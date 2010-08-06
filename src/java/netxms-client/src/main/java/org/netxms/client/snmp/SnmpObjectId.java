@@ -19,7 +19,6 @@
 package org.netxms.client.snmp;
 
 import java.util.Arrays;
-
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -47,6 +46,19 @@ public class SnmpObjectId
 		this.value = Arrays.copyOf(value, value.length);
 	}
 	
+	/**
+	 * Create child OID - add given value at the end of parent OID.
+	 * @param value parent OID
+	 */
+	public SnmpObjectId(SnmpObjectId parent, long id)
+	{
+		if (parent != null)
+			value = Arrays.copyOf(parent.value, parent.value.length + 1);
+		else
+			value = new long[1];
+		value[value.length - 1] = id;
+	}
+
 	/**
 	 * Parse string argument as SNMP OID. Expected to be ion format .n.n.n.n.n
 	 * @param s string to parse

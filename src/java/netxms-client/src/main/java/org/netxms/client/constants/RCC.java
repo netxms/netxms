@@ -113,4 +113,8 @@ public final class RCC
 	public static final int INVALID_POLICY_ID = 84;
 	public static final int UNKNOWN_LOG_NAME = 85;
 	public static final int INVALID_LOG_HANDLE = 86;
+	
+	// SNMP-specific, has no corresponding RCC_xxx constants in C library
+	public static final int BAD_MIB_FILE_HEADER = 1001;
+	public static final int BAD_MIB_FILE_DATA = 1002;
 }
