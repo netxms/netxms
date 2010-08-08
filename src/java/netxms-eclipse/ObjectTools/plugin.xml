@@ -8,6 +8,16 @@
          <dynamic
                class="org.netxms.ui.eclipse.objecttools.ObjectToolsDynamicMenu"
                id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate
+                     ifEmpty="false"
+                     operator="or">
+                  <instanceof
+                        value="org.netxms.client.objects.Node">
+                  </instanceof>
+               </iterate>
+            </visibleWhen>
          </dynamic>
       </menuContribution>
    </extension>

@@ -16,12 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.actionmanager.views;
+package org.netxms.ui.eclipse.snmp.views;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -33,12 +32,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -52,40 +46,38 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.INXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ServerAction;
-import org.netxms.ui.eclipse.actionmanager.Activator;
-import org.netxms.ui.eclipse.actionmanager.dialogs.EditActionDlg;
-import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionComparator;
-import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionLabelProvider;
+import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapComparator;
+import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapLabelProvider;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Action configuration view
+ * SNMP trap configuration editor
  *
  */
-public class ActionManager extends ViewPart implements INXCListener
+public class SnmpTrapEditor extends ViewPart implements INXCListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.actionmanager.views.ActionManager";
+	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor";
 	
-	private static final String TABLE_CONFIG_PREFIX = "ActionList";
+	public static final int COLUMN_ID = 0;
+	public static final int COLUMN_TRAP_OID = 1;
+	public static final int COLUMN_EVENT = 2;
+	public static final int COLUMN_DESCRIPTION = 3;
 	
-	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_TYPE = 1;
-	public static final int COLUMN_RCPT = 2;
-	public static final int COLUMN_SUBJ = 3;
-	public static final int COLUMN_DATA = 4;
+	private static final String TABLE_CONFIG_PREFIX = "SnmpTrapEditor";
 	
 	private SortableTableViewer viewer;
 	private NXCSession session;
-	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
-	private Action actionRefresh;
+	private RefreshAction actionRefresh;
 	private Action actionNew;
 	private Action actionEdit;
 	private Action actionDelete;
+	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -97,33 +89,13 @@ public class ActionManager extends ViewPart implements INXCListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { "Name", "Type", "Recipient", "Subject", "Data" };
-		final int[] columnWidths = { 150, 90, 100, 120, 200 };
-		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		final String[] columnNames = { "ID", "SNMP Trap OID", "Event", "Description" };
+		final int[] columnWidths = { 70, 200, 100, 200 };
+		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new ActionLabelProvider());
-		viewer.setComparator(new ActionComparator());
-		viewer.addSelectionChangedListener(new ISelectionChangedListener()
-		{
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
-			{
-				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-				if (selection != null)
-				{
-					actionEdit.setEnabled(selection.size() == 1);
-					actionDelete.setEnabled(selection.size() > 0);
-				}
-			}
-		});
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				actionEdit.run();
-			}
-		});
+		viewer.setLabelProvider(new SnmpTrapLabelProvider());
+		viewer.setComparator(new SnmpTrapComparator());
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -132,62 +104,12 @@ public class ActionManager extends ViewPart implements INXCListener
 			}
 		});
 		
-		makeActions();
+		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 		
 		session.addListener(this);
-		
-		refreshActionList();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
-	@Override
-	public void setFocus()
-	{
-		viewer.getTable().setFocus();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		session.removeListener(this);
-		super.dispose();
-	}
-	
-	/**
-	 * Refresh action list
-	 */
-	private void refreshActionList()
-	{
-		new ConsoleJob("Load actions configuration", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot load actions configuration from server";
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				List<ServerAction> actions = session.getActions();
-				synchronized(ActionManager.this.actions)
-				{
-					ActionManager.this.actions.clear();
-					for(ServerAction a : actions)
-					{
-						ActionManager.this.actions.put(a.getId(), a);
-					}
-				}
-				
-				updateActionsList();
-			}
-		}.start();
+		refreshTrapList();
 	}
 
 	/**
@@ -233,7 +155,7 @@ public class ActionManager extends ViewPart implements INXCListener
 	/**
 	 * Create actions
 	 */
-	private void makeActions()
+	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
 			/* (non-Javadoc)
@@ -242,7 +164,7 @@ public class ActionManager extends ViewPart implements INXCListener
 			@Override
 			public void run()
 			{
-				refreshActionList();
+				refreshTrapList();
 			}
 		};
 		
@@ -253,10 +175,10 @@ public class ActionManager extends ViewPart implements INXCListener
 			@Override
 			public void run()
 			{
-				createAction();
+				createTrap();
 			}
 		};
-		actionNew.setText("&New action...");
+		actionNew.setText("&New trap mapping...");
 		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png"));
 		
 		actionEdit = new Action() {
@@ -266,7 +188,7 @@ public class ActionManager extends ViewPart implements INXCListener
 			@Override
 			public void run()
 			{
-				editAction();
+				editTrap();
 			}
 		};
 		actionEdit.setText("&Properties...");
@@ -279,7 +201,7 @@ public class ActionManager extends ViewPart implements INXCListener
 			@Override
 			public void run()
 			{
-				deleteActions();
+				deleteTraps();
 			}
 		};
 		actionDelete.setText("&Delete");
@@ -324,104 +246,14 @@ public class ActionManager extends ViewPart implements INXCListener
 		mgr.add(new Separator());
 		mgr.add(actionEdit);
 	}
-	
-	/**
-	 * Create new action
-	 */
-	private void createAction()
-	{
-		final ServerAction action = new ServerAction(0);
-		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, true);
-		if (dlg.open() == Window.OK)
-		{
-			new ConsoleJob("Create new action", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot create action";
-				}
 
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					long id = session.createAction(action.getName());
-					action.setId(id);
-					session.modifyAction(action);
-				}
-			}.start();
-		}
-	}
-	
-	/**
-	 * Edit currently selected action
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
-	private void editAction()
+	@Override
+	public void setFocus()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if (selection.size() != 1)
-			return;
-		
-		final ServerAction action = (ServerAction)selection.getFirstElement();
-		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
-		if (dlg.open() == Window.OK)
-		{
-			new ConsoleJob("Update action", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot update action";
-				}
-
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					session.modifyAction(action);
-				}
-			}.start();
-		}
-	}
-	
-	/**
-	 * Delete selected actions
-	 */
-	private void deleteActions()
-	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		final Object[] objects = selection.toArray();
-		new ConsoleJob("Delete actions", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot delete action";
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				for(int i = 0; i < objects.length; i++)
-				{
-					session.deleteAction(((ServerAction)objects[i]).getId());
-				}
-			}
-		}.start();
-	}
-
-	/**
-	 * Update actions list 
-	 */
-	private void updateActionsList()
-	{
-		new UIJob("Update actions list") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
-			{
-				synchronized(ActionManager.this.actions)
-				{
-					viewer.setInput(ActionManager.this.actions.values().toArray());
-				}
-				return Status.OK_STATUS;
-			}
-		}.schedule();
+		viewer.getTable().setFocus();
 	}
 
 	/* (non-Javadoc)
@@ -432,21 +264,121 @@ public class ActionManager extends ViewPart implements INXCListener
 	{
 		switch(n.getCode())
 		{
-			case NXCNotification.ACTION_CREATED:
-			case NXCNotification.ACTION_MODIFIED:
-				synchronized(actions)
+			case NXCNotification.TRAP_CONFIGURATION_CREATED:
+			case NXCNotification.TRAP_CONFIGURATION_MODIFIED:
+				synchronized(traps)
 				{
-					actions.put(n.getSubCode(), (ServerAction)n.getObject());
+					traps.put(n.getSubCode(), (SnmpTrap)n.getObject());
 				}
-				updateActionsList();
+				updateTrapList();
 				break;
-			case NXCNotification.ACTION_DELETED:
-				synchronized(actions)
+			case NXCNotification.TRAP_CONFIGURATION_DELETED:
+				synchronized(traps)
 				{
-					actions.remove(n.getSubCode());
+					traps.remove(n.getSubCode());
 				}
-				updateActionsList();
+				updateTrapList();
 				break;
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		session.removeListener(this);
+		super.dispose();
+	}
+
+	/**
+	 * Refresh trap list
+	 */
+	private void refreshTrapList()
+	{
+		new ConsoleJob("Load SNMP traps configuration", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot load SNMP traps configuration from server";
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				List<SnmpTrap> list = session.getSnmpTrapsConfiguration();
+				synchronized(traps)
+				{
+					traps.clear();
+					for(SnmpTrap t : list)
+					{
+						traps.put(t.getId(), t);
+					}
+				}
+				updateTrapList();
+			}	
+		}.start();
+	}
+
+	/**
+	 * Update trap list
+	 */
+	private void updateTrapList()
+	{
+		new UIJob("Update SNMP trap list") {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor)
+			{
+				synchronized(traps)
+				{
+					viewer.setInput(traps.values().toArray());
+				}
+				return Status.OK_STATUS;
+			}
+		}.schedule();
+	}
+
+	/**
+	 * Delete selected traps
+	 */
+	protected void deleteTraps()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		final Object[] objects = selection.toArray();
+		new ConsoleJob("Delete SNMP trap configuration records", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot delete SNMP trap configuration record";
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				for(int i = 0; i < objects.length; i++)
+				{
+					session.deleteSnmpTrapConfiguration(((SnmpTrap)objects[i]).getId());
+				}
+			}
+		}.start();
+	}
+
+	/**
+	 * Edit selected trap
+	 */
+	protected void editTrap()
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * Create new trap
+	 */
+	protected void createTrap()
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

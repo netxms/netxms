@@ -51,6 +51,9 @@ public class NXCNotification
 	public static final int EVENT_TEMPLATE_MODIFIED = 1013;
 	public static final int EVENT_TEMPLATE_DELETED = 1014;
 	public static final int OBJECT_TOOL_DELETED = 1015;
+	public static final int TRAP_CONFIGURATION_CREATED = 1016;
+	public static final int TRAP_CONFIGURATION_MODIFIED = 1017;
+	public static final int TRAP_CONFIGURATION_DELETED = 1018;
 	
 	public static final int CUSTOM_MESSAGE = 2000;
 	

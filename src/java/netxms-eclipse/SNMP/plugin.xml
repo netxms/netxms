@@ -7,5 +7,42 @@
             class="org.netxms.ui.eclipse.snmp.Startup">
       </startup>
    </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"
+            icon="icons/trapeditor.png"
+            id="org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"
+            name="SNMP Trap Configuration"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open SNMP traps configuration"
+            id="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_editor"
+            name="SNMP Traps Configuration">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.snmp.action_set"
+            label="SNMP Traps Configuration"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.snmp.actions.OpenTrapEditor"
+               definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_editor"
+               icon="icons/trapeditor.png"
+               id="org.netxms.ui.eclipse.snmp.actions.open"
+               label="SNMP Traps Configuration"
+               menubarPath="config/additions"
+               style="push"
+               tooltip="Open SNMP traps configuration">
+         </action>
+      </actionSet>
+   </extension>
 
 </plugin>

@@ -128,6 +128,23 @@ public class SnmpObjectId
 	}
 	
 	/**
+	 * Compare two object identifiers. The return value is -1 if this object identifier is
+	 * less than given object identifier, 0 if they are equal, and 1 if this object identifier is greater
+	 * then given object identifier.
+	 *  
+	 * @param oid object identifier to compare with
+	 * @return -1, 0, or 1 (see above for details)
+	 */
+	public int compareTo(final SnmpObjectId oid)
+	{
+		int maxLen = Math.min(value.length, oid.value.length);
+		for(int i = 0; i < maxLen; i++)
+			if (value[i] != oid.value[i])
+				return Long.signum(value[i] - oid.value[i]);
+		return Integer.signum(value.length - oid.value.length);
+	}
+	
+	/**
 	 * Get part of object ID from given position.
 	 * 
 	 * @param pos position

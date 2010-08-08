@@ -93,7 +93,6 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 	@Override
 	public Class[] getAdapterList()
 	{
-		// TODO Auto-generated method stub
 		return supportedClasses;
 	}
 }

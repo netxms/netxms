@@ -16,22 +16,35 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.actionmanager.views.helpers;
+package org.netxms.ui.eclipse.snmp.views.helpers;
 
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.ServerAction;
-import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.events.EventTemplate;
+import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor;
 
 /**
- * @author victor
+ * Comparator for SNMP trap configuration editor
  *
  */
-public class ActionComparator extends ViewerComparator
+public class SnmpTrapComparator extends ViewerComparator
 {
+	private NXCSession session;
+	
+	/**
+	 * The constructor
+	 */
+	public SnmpTrapComparator()
+	{
+		session = NXMCSharedData.getInstance().getSession();
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -43,22 +56,25 @@ public class ActionComparator extends ViewerComparator
 			return 0;
 		
 		int rc;
+		SnmpTrap trap1 = (SnmpTrap)e1;
+		SnmpTrap trap2 = (SnmpTrap)e2;
 		switch((Integer)sortColumn.getData("ID"))
 		{
-			case ActionManager.COLUMN_NAME:
-				rc = ((ServerAction)e1).getName().compareToIgnoreCase(((ServerAction)e2).getName());
+			case SnmpTrapEditor.COLUMN_ID:
+				rc = Long.signum(trap1.getId() - trap2.getId());
 				break;
-			case ActionManager.COLUMN_TYPE:
-				rc = ((ServerAction)e1).getType() - ((ServerAction)e2).getType();
+			case SnmpTrapEditor.COLUMN_TRAP_OID:
+				rc = trap1.getObjectId().compareTo(trap2.getObjectId());
 				break;
-			case ActionManager.COLUMN_RCPT:
-				rc = ((ServerAction)e1).getRecipientAddress().compareToIgnoreCase(((ServerAction)e2).getRecipientAddress());
+			case SnmpTrapEditor.COLUMN_EVENT:
+				EventTemplate evt1 = session.findEventTemplateByCode(trap1.getEventCode());
+				EventTemplate evt2 = session.findEventTemplateByCode(trap2.getEventCode());
+				String name1 = (evt1 != null) ? evt1.getName() : "<unknown>";
+				String name2 = (evt2 != null) ? evt2.getName() : "<unknown>";
+				rc = name1.compareToIgnoreCase(name2);
 				break;
-			case ActionManager.COLUMN_SUBJ:
-				rc = ((ServerAction)e1).getEmailSubject().compareToIgnoreCase(((ServerAction)e2).getEmailSubject());
-				break;
-			case ActionManager.COLUMN_DATA:
-				rc = ((ServerAction)e1).getData().compareToIgnoreCase(((ServerAction)e2).getData());
+			case SnmpTrapEditor.COLUMN_DESCRIPTION:
+				rc = trap1.getDescription().compareToIgnoreCase(trap2.getDescription());
 				break;
 			default:
 				rc = 0;

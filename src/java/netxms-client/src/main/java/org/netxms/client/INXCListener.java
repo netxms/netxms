@@ -19,9 +19,10 @@
 package org.netxms.client;
 
 /**
- * NetXMS client library notification listener
+ * Interface for NetXMS client library notifications
  *
  */
-abstract public class NXCListener implements INXCListener
+public interface INXCListener
 {
+	abstract public void notificationHandler(NXCNotification n);
 }

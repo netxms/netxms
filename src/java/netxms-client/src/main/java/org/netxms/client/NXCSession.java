@@ -149,7 +149,7 @@ public class NXCSession
 	private int commandTimeout = 30000; // Default is 30 sec
 
 	// Notification listeners
-	private HashSet<NXCListener> listeners = new HashSet<NXCListener>(0);
+	private HashSet<INXCListener> listeners = new HashSet<INXCListener>(0);
 
 	// Received files
 	private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
@@ -327,6 +327,9 @@ public class NXCSession
 						case NXCPCodes.CMD_EVENT_DB_UPDATE:
 							processEventConfigChange(msg);
 							break;
+						case NXCPCodes.CMD_TRAP_CFG_UPDATE:
+							processTrapConfigChange(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -445,6 +448,24 @@ public class NXCSession
 				sendNotification(new NXCNotification(NXCNotification.USER_DB_CHANGED, code, object));
 		}
 		
+		/**
+		 * Process server notification on SNMP trap configuration change
+		 * 
+		 * @param msg notification message
+		 */
+		private void processTrapConfigChange(final NXCPMessage msg)
+		{
+			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
+			long id = msg.getVariableAsInt64(NXCPCodes.VID_TRAP_ID);
+			SnmpTrap trap = (code != NXCNotification.TRAP_CONFIGURATION_DELETED) ? new SnmpTrap(msg) : null;
+			sendNotification(new NXCNotification(code, id, trap));
+		}
+		
+		/**
+		 * Process server notification on action configuration change
+		 * 
+		 * @param msg notification message
+		 */
 		private void processActionConfigChange(final NXCPMessage msg)
 		{
 			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
@@ -453,6 +474,11 @@ public class NXCSession
 			sendNotification(new NXCNotification(code, id, action));
 		}
 
+		/**
+		 * Process server notification on event configuration change
+		 * 
+		 * @param msg notification message
+		 */
 		private void processEventConfigChange(final NXCPMessage msg)
 		{
 			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
@@ -643,7 +669,7 @@ public class NXCSession
 	 * 
 	 * @param lst Listener to add
 	 */
-	public void addListener(NXCListener lst)
+	public void addListener(INXCListener lst)
 	{
 		listeners.add(lst);
 	}
@@ -653,7 +679,7 @@ public class NXCSession
 	 * 
 	 * @param lst Listener to remove
 	 */
-	public void removeListener(NXCListener lst)
+	public void removeListener(INXCListener lst)
 	{
 		listeners.remove(lst);
 	}
@@ -665,7 +691,7 @@ public class NXCSession
 	 */
 	protected synchronized void sendNotification(NXCNotification n)
 	{
-		Iterator<NXCListener> it = listeners.iterator();
+		Iterator<INXCListener> it = listeners.iterator();
 		while(it.hasNext())
 		{
 			it.next().notificationHandler(n);

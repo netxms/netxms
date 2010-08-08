@@ -263,6 +263,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -t
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/Glob.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/INXCListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -text
@@ -669,10 +670,18 @@ src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/pr
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SNMP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SNMP/build.properties -text
+src/java/netxms-eclipse/SNMP/icons/delete.png -text
+src/java/netxms-eclipse/SNMP/icons/edit.png -text
+src/java/netxms-eclipse/SNMP/icons/new.png -text
+src/java/netxms-eclipse/SNMP/icons/trapeditor.png -text
 src/java/netxms-eclipse/SNMP/plugin.xml -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/Activator.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/Startup.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/actions/OpenTrapEditor.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/dialogs/MibSelectionDialog.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/SnmpTrapEditor.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapComparator.java -text
+src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/views/helpers/SnmpTrapLabelProvider.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/MibBrowser.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/helpers/MibTreeContentProvider.java -text
 src/java/netxms-eclipse/SNMP/src/org/netxms/ui/eclipse/snmp/widgets/helpers/MibTreeLabelProvider.java -text
