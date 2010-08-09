@@ -1,7 +1,6 @@
 * text=auto !eol
 contrib/backgrounds/.keep -text
 contrib/logo.jpg -text
-contrib/mibs/NETWORK-APPLIANCE-MIB.mib.txt -text
 doc/comparison_netxms_nnm.doc -text
 doc/internal/build.w64 -text
 doc/internal/dci_perftab.txt -text
