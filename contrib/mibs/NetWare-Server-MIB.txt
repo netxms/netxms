@@ -1,0 +1,2591 @@
+       NetWare-Server-MIB DEFINITIONS ::= BEGIN
+
+       --
+       -- This MIB document is 'WORK IN PROGRESS' of Novell, Inc.
+       -- As such, it is subject to change, without notice, until
+       -- such time as it is formally released and this disclaimer
+       -- removed.
+       --
+       --
+       -- Last Updated: February 21, 1995
+       --
+
+       IMPORTS
+          enterprises, Counter, TimeTicks
+             FROM RFC1155-SMI
+
+          InternationalDisplayString, DateAndTime, KBytes
+             FROM HOST-RESOURCES-MIB
+
+          OBJECT-TYPE
+             FROM RFC-1212;
+
+       novell         OBJECT IDENTIFIER ::= { enterprises 23 }
+
+       mibDoc         OBJECT IDENTIFIER ::= { novell 2 }
+       nwServer       OBJECT IDENTIFIER ::= { mibDoc 28 }
+
+       nwSystem       OBJECT IDENTIFIER ::= { nwServer 1 }
+       nwFileSystem   OBJECT IDENTIFIER ::= { nwServer 2 }
+       nwUsers        OBJECT IDENTIFIER ::= { nwServer 3 }
+       nwQueue        OBJECT IDENTIFIER ::= { nwServer 4 }
+       nwOdi          OBJECT IDENTIFIER ::= { nwServer 5 }
+       nwSft3         OBJECT IDENTIFIER ::= { nwServer 6 }
+       nwNCP          OBJECT IDENTIFIER ::= { nwServer 7 }
+       nwWatchdog     OBJECT IDENTIFIER ::= { nwServer 8 }
+       nwNLM          OBJECT IDENTIFIER ::= { nwServer 9 }
+       nwSetParams    OBJECT IDENTIFIER ::= { nwServer 10 }
+       nwUserAccounts OBJECT IDENTIFIER ::= { nwServer 11 }
+
+       --
+       -- textual conventions
+       --
+
+       -- A time interval, in units of seconds
+       --
+       Seconds        ::= INTEGER(0..2147483647)
+
+
+       -- An IPX network number in network  byte order.
+       --
+       IPXNetNumber   ::= OCTET STRING (SIZE(4))
+
+
+       -- Identifies a transport protocol.
+       --
+       TransportDomain ::= INTEGER {
+                 noAddress(1),
+                 ipx(2),
+                 ip(3),
+                 appleTalkDDP(4)
+            }
+
+
+       -- A representation of a transport address in the domain
+       -- specified by a paired object of type TransportDomain.
+       --
+       TransportAddress    ::= OCTET STRING
+       --
+       --
+       -- for noAddress the length should be zero (0).
+
+       -- for ipx the length will be (10 | 12) depending whether
+       -- the socket number is present.  Node numbers shorter than
+       -- six octets will be left-filled with zeros.
+       --
+       -- octets       contents                encoding
+       --  1-4         network-number          network-byte order
+       --  5-10        node number             network-byte order
+       -- 11-12        socket-number           network-byte order
+       --
+       --
+       -- for ip the length will be (4 | 6 ) depending whether
+       -- the port number is present.
+       --
+       -- octets      contents                 encoding
+       --  1-4        IP-address               network-byte order
+       --  5-6        UDP-port                 network-byte order
+       --
+       --
+       -- for appleTalk DDP addresses the length will be (3 | 4)
+       -- depending whether the socket number is present.
+       --
+       -- octets      contents                 encoding
+       --  1-2        network-number           network-byte order
+       --   3         node-number
+       --   4         socket-number
+       --
+
+
+       -- Identifies an element of an SFT-III server
+       --
+       EngineType      ::= INTEGER {
+                 msEngine(1),
+                 ioEnginePrimary(2),
+                 ioEngineSecondary(3)
+            }
+
+
+       -- Identifies the convention followed to set the Daylight Savings
+       -- Time
+       --
+       DSTType         ::= OCTET STRING (SIZE(7))
+       --
+       --
+       -- This textual convention is intended to provide a consistent
+       -- method of reporting  the local date and time when the switch
+       -- to/from Daylight Savings Time should occur on the server.
+       --
+       --        field          octets    contents       range
+       --        ____           ______    ________       _____
+       --          1               1      rule type      1..5
+       --          2               2      year           0..99
+       --                                 (as an offset from year 1980 )
+       --          3               3      month          1..12
+       --          4               4      day            1..31
+       --                                 (if day-of-month, 1..31
+       --                                 if day-of-week,1(Mon)..7(Sun))
+       --          5               5      hour           0..23
+       --          6               6      minutes        0..59
+       --          7               7      seconds        0..59
+       --
+       --
+       -- the rule type identifies the rule followed by the NetWare
+       -- Operating System in setting the start or finish of the
+       -- Daylight Savings Time.
+       --
+       --
+       -- A rule type (1) implies that the start/finish of the Daylight
+       -- Savings Time is in standard date and time format, with the
+       -- year information being represented as an offset from the year
+       -- 1980. The start/finish time is valid only for the year
+       -- specified in the year field.
+       --
+       --
+       -- A rule type (2) implies that the start/finish is in
+       -- Month/Day/Hour:Minutes:Seconds format. The start/finish time
+       -- is valid for all years and hence the year field is to be
+       -- ignored in this case.
+       --
+       --
+       -- A rule type (3) implies that the start/finish is in
+       -- Month/Day_of_week format. The rule itself is of the form:
+       -- ( Month Day-of-week Ordinal Hr:mn:Se)
+       --
+       -- The year field in this case holds the ordinal information as
+       -- follows:
+       -- 0 = last
+       -- 1 = first
+       -- 2 = second
+       -- 3 = third
+       -- 4 = fourth
+       --
+       -- For example, "last Sunday of April, 2:00AM" is represented as
+       -- follows:
+       -- rule type =3
+       -- year      =0
+       -- month     =4
+       -- day       =7
+       -- hour      =2
+       -- minutes   =0
+       -- seconds   =0
+       --
+       --
+       -- A rule type (4) implies that the start/finish is in
+       -- Month/Day_of_week format with the condition information
+       -- appearing in the year field. The rule itself is of
+       -- the form:(Month Day-of-week <=  N  Hr:Mn:Se). The year field
+       -- holds the value "N" where "N" is any day-of-month.
+       --
+       -- For example, "last Sunday of April, 2:00AM, provided it is on
+       -- or before the 6th. of April" is represented as follows:
+       -- rule type =4
+       -- year      =6
+       -- month     =4
+       -- day       =7
+       -- hour      =2
+       -- minutes   =0
+       -- seconds   =0
+       --
+       --
+       -- A rule type (5) implies that  the start/finish  is in
+       -- Month/Day_of_week format with the condition information
+       -- appearing in the year field. The rule itself is of the
+       -- form: (Month Day-of-week  >=  N  Hr:Mn:Se). The year field
+       -- holds the value "N" where "N" is any day-of-month.
+       --
+       -- For example, "last Sunday of April, 2:00AM, provided it is on
+       -- or after the 6th of April" is represented as follows:
+       -- rule type =5
+       -- year      =6
+       -- month     =4
+       -- day       =7
+       -- hour      =2
+       -- minutes   =0
+       -- seconds   =0
+       --
+       -- The NetWare System Group
+       --
+
+       nwSysServerName OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..48))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The physical name of this NetWare server."
+          ::= { nwSystem 1 }
+
+       nwSysSerialNumber OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The serial number of the instance of the NetWare
+                 Operating System running on this server."
+          ::= { nwSystem 2 }
+
+       nwSysInternalNetNum OBJECT-TYPE
+          SYNTAX IPXNetNumber
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The internal IPX network number of this server."
+          ::= { nwSystem 3 }
+
+       nwSysServerUpTime OBJECT-TYPE
+          SYNTAX TimeTicks
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The time (in hundredths of a second) since this server
+                 was last restarted."
+          ::= { nwSystem 4 }
+
+       nwSysOSSFTLevel OBJECT-TYPE
+          SYNTAX INTEGER {
+                      other(1),
+                      sftI(2),
+                      sftII(3),
+                      sftIII(4)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The System Fault Tolerance Level of the NetWare
+                 Operating System running on this server."
+          ::= { nwSystem 5 }
+
+       nwSysOSMajorVer OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The major version number of the NetWare Operating
+                 System running on this server."
+          ::= { nwSystem 6 }
+
+       nwSysOSMinorVer OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The minor version number of the NetWare Operating
+                 System running on this server."
+          ::= { nwSystem 7 }
+
+       nwSysOSReleaseDate OBJECT-TYPE
+          SYNTAX DateAndTime
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The release date of the NetWare Operating System
+                 running on this server."
+          ::= { nwSystem 8 }
+
+       nwSysOSDescription OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..100))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A textual description of the NetWare Operating System
+                 running on this server."
+          ::= { nwSystem 9 }
+
+       nwSysOSCopyright OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The copyright string for the NetWare Operating System
+                 running on this server."
+          ::= { nwSystem 10 }
+
+       nwSysTime OBJECT-TYPE
+          SYNTAX DateAndTime
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The date and time kept by this server."
+          ::= { nwSystem 11 }
+
+       nwSysTimeZone OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..80))
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The time zone in which this server resides.  The
+                 string is in the same format as in the NetWare 'SET
+                 TIMEZONE' command."
+          ::= { nwSystem 12 }
+
+       nwSysLoginState OBJECT-TYPE
+          SYNTAX INTEGER {
+                      notApplicable(1),
+                      enabled(2),
+                      disabled(3)
+                 }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The current login state of this Server."
+          ::= { nwSystem 13 }
+
+       nwSysLanguageID OBJECT-TYPE
+
+          SYNTAX INTEGER {
+                      other(1),
+                      canadianFrench(2),
+                      chinese(3),
+                      danish(4),
+                      dutch(5),
+                      english(6),
+                      finnish(7),
+                      french(8),
+                      german(9),
+                      italian(10),
+                      japanese(11),
+                      portuguese(14),
+                      russian(15),
+                      spanish(16),
+                      swedish(17)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The national language in use on this server."
+          ::= { nwSystem 14 }
+
+
+       nwSysNMASerialNumber OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The serial number of the instance of the NetWare
+                 Management Agent running on this server.
+
+                 Or, a zero-length string if not applicable."
+          ::= { nwSystem 15 }
+
+       nwSysNMACopiesAllowed OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The maximum number of instances of the NMA with this
+                 serial number allowed by the license agreement.  A
+                 value of 0 implies no limit."
+          ::= { nwSystem 16 }
+
+       nwSysDirectoryTree OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of the NetWare directory services tree
+                 containing this server.
+
+                 Or, a zero-length string if not applicable."
+          ::= { nwSystem 17 }
+
+       nwSysBinderyContext OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The container object(s) where the bindery services
+                 context(s) is set.
+
+                 Or, a zero-length string if not applicable."
+          ::= { nwSystem 18 }
+
+       nwSysServerDSName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The Directory Services full distinguished name of this
+                 NetWare server, or the zero-length string if not
+                 applicable."
+          ::= { nwSystem 19 }
+
+       nwSysDaylightSavingsStart OBJECT-TYPE
+          SYNTAX DSTType
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "Start of daylight savings time. A language independent
+                 representation of the local date and time when the
+                 switch to Daylight Savings Time occurs on the server."
+          ::= { nwSystem 20 }
+
+       nwSysDaylightSavingsEnd OBJECT-TYPE
+          SYNTAX DSTType
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "End of daylight savings time. A language independent
+                 representation of the local date and time when the
+                 switch from Daylight Savings Time occurs on the
+                 server."
+           ::= { nwSystem 21 }
+
+       nwSysDaylightSavingsOffset OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The offset applied in time calculations when daylight
+                 savings is in effect.  This is a signed quantity, and
+                 the units are seconds."
+          ::= { nwSystem 22 }
+
+       nwSysDaylightSavingsStatus OBJECT-TYPE
+          SYNTAX INTEGER {
+                      enabled(1),
+                      disabled(2)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "Indicates whether daylight savings time is applicable
+                 or not."
+          ::= { nwSystem 23 }
+       --
+       -- The NetWare File System Group
+       --
+
+       nwFSReads OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total number of file reads the file system has
+                 made since this server was started. This value provides
+                 a relative measure of server activity."
+          ::= { nwFileSystem 1 }
+
+       nwFSWrites OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total number of file writes the file system has
+                 made since this server was started. This value provides
+                 a relative measure of server activity."
+          ::= { nwFileSystem 2 }
+
+       nwFSReadKBytes OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total number of KBytes read by the file system.
+                 This value provides a measure of server activity."
+          ::= { nwFileSystem 3 }
+
+       nwFSWrittenKBytes OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total number of KBytes written by the file system.
+                 This value provides a measure of server activity."
+          ::= { nwFileSystem 4 }
+
+       nwFSCacheChecks OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total number of checks that have been made against
+                 the file cache."
+          ::= { nwFileSystem 5 }
+
+       nwFSCacheHits OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total number of times a file cache check has
+                 resulted in a hit."
+          ::= { nwFileSystem 6 }
+
+       nwFSOpenFiles OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of open files in the file system."
+          ::= { nwFileSystem 7 }
+
+       nwFSMaxOpenFiles OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The maximum number of open files allowed in the file
+                 system."
+          ::= { nwFileSystem 8 }
+
+       nwFSRecordLocks OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The current number of record locks."
+          ::= { nwFileSystem 9 }
+
+       nwFSMaxRecordLocks OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The maximum number of record locks allowed."
+          ::= { nwFileSystem 10 }
+
+       nwFSMaxSubdirectoryTreeDepth OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of levels of subdirectories the OS
+                 supports."
+          ::= { nwFileSystem 11 }
+
+       nwFSMaxPercentOfVolumeUsedByDir OBJECT-TYPE
+          SYNTAX INTEGER (0..100)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The percentage of a volume that may be used as
+                 directory space."
+          ::= { nwFileSystem 12 }
+
+
+       --
+       -- NetWare Volume Table
+       --
+
+       nwFSVolCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of volumes listed in the volume table"
+          ::= { nwFileSystem 13 }
+
+       nwFSVolTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwFSVolEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The volume table lists all the NetWare volumes,
+                 whether mounted or not ( see nwVolMounted for more
+                 details)."
+          ::= { nwFileSystem 14 }
+
+       nwFSVolEntry OBJECT-TYPE
+          SYNTAX NwFSVolEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the volume table describing a single
+                 NetWare Volume"
+          INDEX  { nwVolID }
+          ::= { nwFSVolTable 1 }
+
+       NwFSVolEntry ::= SEQUENCE {
+            nwVolID                     INTEGER,
+            nwVolPhysicalName           InternationalDisplayString,
+            nwVolSize                   KBytes,
+            nwVolFree                   KBytes,
+            nwVolFreeable               KBytes,
+            nwVolNonFreeable            KBytes,
+            nwVolBlockSize              INTEGER,
+            nwVolMounted                INTEGER,
+            nwVolAttributes             INTEGER,
+            nwVolNameSpaces             INTEGER,
+            nwVolTotalDirEntries        INTEGER,
+            nwVolUsedDirEntries         INTEGER,
+            nwVolSegmentCount           INTEGER,
+            nwVolDSName                 InternationalDisplayString,
+            nwVolFileSystemID           INTEGER,
+            nwVolFileSystemName         InternationalDisplayString
+          }
+
+       nwVolID OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A unique value for each NetWare volume on the server.
+                 The value for each volume must remain constant at least
+                 from one re-initialization of the agent to the next re-
+                 initialization."
+          ::= { nwFSVolEntry 1 }
+
+       nwVolPhysicalName OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..64))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of the physical volume (as opposed to any
+                 Directory Services (DS) name."
+          ::= { nwFSVolEntry 2 }
+
+       nwVolSize OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The size of the volume in KBytes."
+          ::= { nwFSVolEntry 3 }
+
+       nwVolFree OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The free space on the volume in KBytes.  As this
+                 number approaches zero, the volume is running out of
+                 space for new or expanding files."
+          ::= { nwFSVolEntry 4 }
+
+       nwVolFreeable OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The amount of freeable space (in KBytes) being used by
+                 previously deleted files on this volume. The freeable
+                 space can be reclaimed as free space by purging deleted
+                 files."
+          ::= { nwFSVolEntry 5 }
+
+       nwVolNonFreeable OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The non-freeable space (in KBytes) on the volume.
+                 This is the space being used by deleted files that
+                 cannot be purged.  Non-freeable space can be reclaimed
+                 as free space when the deleted files become eligible to
+                 be purged."
+          ::= { nwFSVolEntry 6 }
+
+       nwVolBlockSize OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The block size on the volume in bytes."
+          ::= { nwFSVolEntry 7 }
+
+       nwVolMounted OBJECT-TYPE
+          SYNTAX INTEGER {
+                      mounted(1),
+                      dismounted(2)
+                 }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The mount state of the volume.  Note that if the
+                 volume is not mounted, all the other values in the
+                 table, except nwVolName, are invalid.
+
+                 Writing a value of mounted(1) to this object will cause
+                 the volume to be mounted if it is currently dismounted.
+
+                 Writing a value of dismounted(2) to this object will
+                 cause the volume to be dismounted if the volume is
+                 currently mounted."
+          ::= { nwFSVolEntry 8 }
+
+       nwVolAttributes OBJECT-TYPE
+          SYNTAX INTEGER (0..31)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A value that represents the attributes of the volume.
+
+                 The value is a sum.  This value initially takes the
+                 value zero, then for each attribute that is enabled on
+                 the volume, 2 raised to a power is added to the sum.
+                 The powers are according to the following table:
+
+                      Attribute           Power
+                      Block Suballocation 0
+                      File Compression    1
+                      Data Migration      2
+                      Auditing            3
+                      Read Only           4
+
+                 For example, a read-only volume with suballocation
+                 enabled would have a value of 17 (2**4 + 2**0)."
+          ::= { nwFSVolEntry 9 }
+
+       nwVolNameSpaces OBJECT-TYPE
+          SYNTAX INTEGER (0..63)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A value representing all the name spaces supported by
+                 this volume.
+
+                 The value is a sum.  This value initially takes the
+                 value zero, then for each name space that is supported
+                 by the volume, 2 raised to a power is added to the sum.
+                 The powers are according to the following table:
+
+                      Name Space     Power
+                      DOS            0
+                      MAC            1
+                      NFS            2
+                      FTAM           3
+                      OS/2           4
+                      NT             5
+
+                 For example, a volume supporting both the DOS and MAC
+                 name spaces would have a value of 3 (2**0 + 2**1)."
+          ::= { nwFSVolEntry 10 }
+
+       nwVolTotalDirEntries OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total number of directory table entries available
+                 on this volume."
+          ::= { nwFSVolEntry 11 }
+
+       nwVolUsedDirEntries OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of directory table entries that are
+                 currently being used on this volume."
+          ::= { nwFSVolEntry 12 }
+
+       nwVolSegmentCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of segments comprising this volume."
+          ::= { nwFSVolEntry 13 }
+
+       nwVolDSName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The full Directory Services  distinguished name for
+                 the volume, or the zero-length string if not
+                 applicable."
+          ::= { nwFSVolEntry 14 }
+
+       nwVolFileSystemID OBJECT-TYPE
+          SYNTAX INTEGER {
+                      other(1),
+                      unknown(2),
+                      netWareVolume(3),
+                      nfsVolume(4)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The type of the file system on the volume."
+          ::= { nwFSVolEntry 15 }
+
+       nwVolFileSystemName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "If remote, the remote mount point; e.g. va:/usr/x
+                 If local, the zero length string."
+          ::= { nwFSVolEntry 16 }
+
+
+       --
+       --  NetWare Open File Table
+       --
+
+       nwFSOpenFileTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwFSOpenFileEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "A table of all open files on the server.  If a file is
+                 opened by more than one connection, multiple entries
+                 for the same file will appear in the table."
+          ::= { nwFileSystem 15 }
+
+       nwFSOpenFileEntry OBJECT-TYPE
+          SYNTAX NwFSOpenFileEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the Open File table providing information
+                 about a single open file."
+          INDEX  { nwOfileVolID, nwOfileDirectoryNumber,
+                 nwOfileConnection }
+          ::= { nwFSOpenFileTable 1 }
+
+       NwFSOpenFileEntry ::= SEQUENCE {
+            nwOfileVolID                INTEGER,
+            nwOfileDirectoryNumber      INTEGER,
+            nwOfileConnection           INTEGER,
+            nwOfileVolumeName           InternationalDisplayString,
+            nwOfileName                 InternationalDisplayString,
+            nwOfileLoginName            InternationalDisplayString
+          }
+
+       nwOfileVolID OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a NetWare volume.
+                 The value of this object for a particular volume has
+                 the same value as the nwVolID object for the same
+                 volume."
+          ::= { nwFSOpenFileEntry 1 }
+
+       nwOfileDirectoryNumber OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies an open file within
+                 a NetWare volume."
+          ::= { nwFSOpenFileEntry 2 }
+
+       nwOfileConnection OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of the connection that opened the file."
+          ::= {nwFSOpenFileEntry 3 }
+
+       nwOfileVolumeName OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..64))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The physical name of the NetWare volume containing the
+                 open file."
+          ::= { nwFSOpenFileEntry 4 }
+
+       nwOfileName OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..254))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of the open file including the directory
+                 path."
+          ::= { nwFSOpenFileEntry 5 }
+
+       nwOfileLoginName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of the user (if any) who opened the file.  If
+                 the file was opened by the system or by an NLM, etc.,
+                 nwOfileLoginName will be the zero-length string."
+          ::= { nwFSOpenFileEntry 6 }
+       --
+       -- The NetWare Users Group
+       --
+
+       nwUserCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of entries in the User Account Table."
+          ::= { nwUsers 1 }
+
+       nwLoginCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of licensed connections (logins) in this
+                 file server."
+          ::= { nwUsers 2 }
+
+       nwMaxLogins OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The maximum number of licensed connections (logins)
+                 supported by this file server.  Zero if unlimited."
+          ::= { nwUsers 3 }
+
+       nwConnectionCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of entries in the Connection Table.  The
+                 current number of connections to this file
+                 server(including connection 0 (zero), the system
+                 connection)."
+          ::= { nwUsers 4 }
+
+       nwPeakRemoteConnections OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The peak number of remote stations that have
+                 simultaneously connected to this server.  Note that
+                 this number does not include connections made by the
+                 server itself, nor NLMs running on the server."
+          ::= { nwUsers 5 }
+
+       nwMaxConnections OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The maximum number of connections supported by this
+                 file server.  Zero if unlimited."
+          ::= { nwUsers 6 }
+
+       nwNLMConnections OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The current number of logged in connections used by
+                 the system."
+          ::= { nwUsers 7 }
+
+
+       --
+       -- Connection Table
+       --
+
+       nwConnectionTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwConnectionEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The Connection Table lists all connections used;
+                 including those by Workstations, NLMs, and Attachments.
+                 Connection 0 (zero) is used by the system."
+          ::= { nwUsers 8 }
+
+       nwConnectionEntry OBJECT-TYPE
+          SYNTAX NwConnectionEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the connections table provides information
+                 about a single connection"
+          INDEX  { nwConnectionNumber }
+          ::= { nwConnectionTable 1 }
+
+       NwConnectionEntry ::= SEQUENCE {
+            nwConnectionNumber            INTEGER,
+            nwConnectionLoginName         InternationalDisplayString,
+            nwConnectionTransportDomain   TransportDomain,
+            nwConnectionTransportAddress  TransportAddress,
+            nwConnectionTime              DateAndTime,
+            nwConnectionReadKBytes        Counter,
+            nwConnectionWrittenKBytes     Counter,
+            nwConnectionNcpRequests       Counter,
+            nwConnectionFilesOpen         INTEGER,
+            nwConnectionRecordsLocked     INTEGER,
+            nwConnectionPrivilege         INTEGER,
+            nwConnectionStatus            INTEGER
+          }
+
+       nwConnectionNumber OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The connection number.  Connection 0 (zero) is used by
+                 the system."
+          ::= { nwConnectionEntry 1 }
+
+       nwConnectionLoginName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The login name (Directory Services full distinguished
+                 name where appropriate).  Zero-length string if not
+                 applicable."
+          ::= { nwConnectionEntry 2 }
+
+       nwConnectionTransportDomain OBJECT-TYPE
+          SYNTAX TransportDomain
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 " The transport domain of the connection."
+          ::= { nwConnectionEntry 3 }
+
+       nwConnectionTransportAddress OBJECT-TYPE
+          SYNTAX TransportAddress
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 " The transport address of the connection."
+          ::= { nwConnectionEntry 4 }
+
+       nwConnectionTime OBJECT-TYPE
+          SYNTAX DateAndTime
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The date and time the connection was established."
+          ::= { nwConnectionEntry 5 }
+
+       nwConnectionReadKBytes OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of KBytes the connection has read since it
+                 was established."
+          ::= { nwConnectionEntry 6 }
+
+       nwConnectionWrittenKBytes OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of KBytes the connection has written since
+                 it was established."
+          ::= { nwConnectionEntry 7 }
+
+       nwConnectionNcpRequests OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of NCP Requests the connection has made
+                 since it was established."
+          ::= { nwConnectionEntry 8 }
+
+       nwConnectionFilesOpen OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of files that are currently opened by the
+                 connection."
+          ::= { nwConnectionEntry 9 }
+
+       nwConnectionRecordsLocked OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of file records that are currently locked
+                 by the connection."
+          ::= { nwConnectionEntry 10 }
+
+       nwConnectionPrivilege OBJECT-TYPE
+          SYNTAX INTEGER (0..63)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A value that represents the connection's login
+                 privileges.
+
+                 The value is a sum.  This value initially takes the
+                 value zero, then for each privilege that the connection
+                 has, 2 raised to a power is added to the sum.  The
+                 powers are according to the following table:
+
+                      Privilege                Power
+                      Supervisor               0
+                      Operator                 1
+                      Auditor                  2
+                      High_Privilege           3
+                      Second_Authentication    4
+                      Second_High_Privilege    5
+
+                 For example, a user with both Supervisor and Auditor
+                 privileges would have a value of 5 (2**0 + 2**2) "
+          ::= { nwConnectionEntry 11 }
+
+       nwConnectionStatus OBJECT-TYPE
+          SYNTAX INTEGER (0..1023)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A value that represents the login status of the user.
+
+                 The value is a sum.  This value initially takes the
+                 value zero, then for each status that the user has, 2
+                 raised to a power is added to the sum.  The powers are
+                 according to the following table:
+
+                      Status                        Power
+                      Not logged in                 0
+                      Logged in                     1
+                      Need security change          2
+                      MacStation                    3
+                      Connection abort              4
+                      Audited                       5
+                      Authenticated temporary       6
+                      Audit connection recorded     7
+                      DS audit connection recorded  8
+                      Logout in progress            9
+
+                 For example a logged in user who needs a security
+                 change would have a value of 6 (2**1 + 2**2)."
+          ::= { nwConnectionEntry 12 }
+       --
+       -- NetWare Queue Services Group
+       --
+
+       nwQueueCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of active queues on this server."
+          ::= { nwQueue 1 }
+
+
+       --
+       -- NetWare Queue Table
+       --
+       nwQueueTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwQueueEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The Queue table lists all the active NetWare queues
+                 including: print, job and archive queues on this
+                 server. "
+          ::= { nwQueue 2 }
+
+       nwQueueEntry OBJECT-TYPE
+          SYNTAX NwQueueEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the Queue table provides information about
+                 a single NetWare queue."
+          INDEX  { nwQID }
+          ::= { nwQueueTable 1 }
+
+       NwQueueEntry ::= SEQUENCE {
+            nwQID                       INTEGER,
+            nwQName                     InternationalDisplayString,
+            nwQType                     INTEGER,
+            nwQAddJobState              INTEGER,
+            nwQAttachState              INTEGER,
+            nwQServiceJobState          INTEGER,
+            nwQDirVolName               InternationalDisplayString,
+            nwQNumJobEntries            INTEGER,
+            nwQNumAssignedServers       INTEGER
+          }
+
+       nwQID OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A unique value for each NetWare queue on the server.
+                 The value for each queue must remain constant at least
+                 from one re-initialization of the agent to the next re-
+                 initialization."
+          ::= { nwQueueEntry 1 }
+
+       nwQName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The queue name (Directory Services full distinguished
+                 name where appropriate).  Zero-length string if not
+                 applicable."
+          ::= { nwQueueEntry 2 }
+
+       nwQType OBJECT-TYPE
+          SYNTAX INTEGER {
+                      other(1),
+                      printQueue(2),
+                      archiveQueue(3),
+                      jobQueue(4)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The type of the queue."
+          ::= { nwQueueEntry 3 }
+
+       nwQAddJobState OBJECT-TYPE
+          SYNTAX INTEGER {
+                      canAddJobs(1),
+                      cannotAddJobs(2)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "This value indicates whether more jobs can be added to
+                 this queue.  A value of canAddJobs(1) indicates more
+                 jobs can be added.  A value of cannotAddJobs(2)
+                 indicates more jobs cannot be added."
+          ::= { nwQueueEntry 4 }
+
+       nwQAttachState OBJECT-TYPE
+          SYNTAX INTEGER {
+                      canAttach(1),
+                      cannotAttach(2)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "This value indicates whether queue servers can attach
+                 to this queue. A value of canAttach(1) indicates a
+                 queue server can attach.  A value of cannotAttach(2)
+                 indicates a queue server cannot attach."
+          ::= { nwQueueEntry 5 }
+
+       nwQServiceJobState OBJECT-TYPE
+          SYNTAX INTEGER {
+                      canService(1),
+                      cannotService(2)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "This value indicates whether the queue can service
+                 jobs.  A value of canService(1) indicates that the
+                 queue can service jobs.  A value of cannotService(2)
+                 indicates the queue cannot service jobs."
+          ::= { nwQueueEntry 6 }
+
+       nwQDirVolName OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..64))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The physical name of the volume, where the directory
+                 created for this queue resides."
+          ::= { nwQueueEntry 7 }
+
+       nwQNumJobEntries OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of job entries in the queue."
+          ::= { nwQueueEntry 8 }
+
+       nwQNumAssignedServers OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of servers assigned to the queue."
+          ::= { nwQueueEntry 9 }
+
+
+       --
+       -- NetWare Queue Job Table
+       --
+
+       nwQueueJobTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwQueueJobEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The Queue Job table lists all the jobs for all the
+                 active queues defined on this server
+
+                 QMS creates a file for each job. The name of that file
+                 will be Q$XXXX.NNN where XXXX is the last 4 digits of
+                 nwQJobQID and NNN is the job number.  Therefore the Q
+                 Job File name can be calculated and will not be in the
+                 table."
+          ::= { nwQueue 3 }
+
+       nwQueueJobEntry OBJECT-TYPE
+          SYNTAX NwQueueJobEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the Queue Job table provides information
+                 about a particular job in a particular queue."
+          INDEX  { nwQJobQID, nwQJobNumber }
+          ::= { nwQueueJobTable 1 }
+
+       NwQueueJobEntry ::= SEQUENCE {
+            nwQJobQID                   INTEGER,
+            nwQJobNumber                INTEGER,
+            nwQJobDescription           InternationalDisplayString,
+            nwQJobEntryDateTime         DateAndTime,
+            nwQJobPosition              INTEGER,
+            nwQJobSize                  INTEGER,
+            nwQJobControlFlags          INTEGER,
+            nwQJobUserName              InternationalDisplayString,
+            nwQJobTargetServerName      InternationalDisplayString,
+            nwQJobTargetDateTime        DateAndTime,
+            nwQJobServerName            InternationalDisplayString
+          }
+
+       nwQJobQID OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a NetWare queue.
+                 The value of this object for a particular queue has the
+                 same value as the nwQID object for the same queue."
+          ::= { nwQueueJobEntry 1 }
+
+
+       nwQJobNumber OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The job number."
+          ::= { nwQueueJobEntry 2 }
+
+       nwQJobDescription OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..50))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The description of the queue job."
+          ::= { nwQueueJobEntry 3 }
+
+       nwQJobEntryDateTime OBJECT-TYPE
+          SYNTAX DateAndTime
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The entry date and time."
+          ::= { nwQueueJobEntry 4 }
+
+       nwQJobPosition OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The order in the queue."
+          ::= { nwQueueJobEntry 5 }
+
+       nwQJobSize OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The size of the job file in bytes."
+          ::= { nwQueueJobEntry 6 }
+
+       nwQJobControlFlags OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A value representing the job control flags.
+
+                 The value is a sum.  This value initially takes the
+                 value zero, then for each job control flag that is set,
+                 2 raised to a power is added to the sum.  The powers
+                 are according to the following table:
+
+                        8h Service Auto-Start
+                       10h Execute
+                       20h Entry Open
+                       40h User Hold
+                       80h Operator Hold"
+          ::= { nwQueueJobEntry 7 }
+       nwQJobUserName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of the user who submitted the job (Directory
+                 Services full distinguished name where appropriate).
+                 Zero-length string if not applicable."
+          ::= { nwQueueJobEntry 8 }
+
+       nwQJobTargetServerName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The target server name (Directory Services full
+                 distinguished name where appropriate)..  The zero
+                 length string will be returned for 'Any Server'."
+          ::= { nwQueueJobEntry 9 }
+
+       nwQJobTargetDateTime OBJECT-TYPE
+          SYNTAX DateAndTime
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The target date and time. When the job is to be
+                 printed.  A job may be first in queue but may not print
+                 because this is set to some other time."
+          ::= { nwQueueJobEntry 10 }
+
+       nwQJobServerName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The server currently processing the job (Directory
+                 Services full distinguished name where appropriate)..
+                 If the job is not being handled currently, this field
+                 will be a zero-length string."
+          ::= { nwQueueJobEntry 11 }
+
+
+       --
+       -- NetWare Queue Server Table
+       --
+
+       nwQueueServerTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwQueueServerEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The Queue Server Table lists all the assigned servers
+                 for all the active NetWare queues on this instrumented
+                 server.  For each active queue on the server, zero or
+                 more entries will exist, one for each server assigned
+                 to service that particular queue."
+          ::= { nwQueue 4 }
+
+       nwQueueServerEntry OBJECT-TYPE
+          SYNTAX NwQueueServerEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the Queue Server table provides
+                 information about the assignment of a particular server
+                 to a particular queue."
+          INDEX  { nwQServerQID, nwQServerID }
+          ::= { nwQueueServerTable 1 }
+
+       NwQueueServerEntry ::= SEQUENCE {
+            nwQServerQID                INTEGER,
+            nwQServerID                 INTEGER,
+            nwQServerName               InternationalDisplayString,
+            nwQServerStatus             INTEGER
+          }
+
+       nwQServerQID OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a NetWare queue.
+                 The value of this object for a particular queue has the
+                 same value as the nwQID object for the same queue."
+          ::= { nwQueueServerEntry 1 }
+
+       nwQServerID OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A unique value for each server servicing this queue.
+                 The value for each server must remain constant at least
+                 from one re-initialization of the agent to the next re-
+                 initialization."
+          ::= { nwQueueServerEntry 2 }
+
+       nwQServerName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of a queue server servicing this queue
+                 (Directory Services full distinguished name where
+                 appropriate).  Zero-length string if not applicable.."
+          ::= { nwQueueServerEntry 3 }
+
+       nwQServerStatus OBJECT-TYPE
+          SYNTAX INTEGER {
+                      unknown(1),
+                      active(2),
+                      inactive(3)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The status of the Queue Server."
+          ::= { nwQueueServerEntry 4 }
+       --
+       -- The Odi Group
+       --
+       -- ODI objects common to all implementations are in the
+       -- Host Resources Extensions MIB.  These, objects are unique
+       -- to a NetWare server.
+       --
+       -- Network information and statistics are available in
+       -- MIB-II, and the various transmission and protocol MIBs.
+       --
+
+       nwOdiLslEnqSendCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The Link Support Layer's Enqueued Send Count, this is
+                 the current number of send packets that have been
+                 placed in a send queue."
+          ::= { nwOdi 1 }
+
+       nwOdiOsPktRcvBuffer OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The current number of packet receive buffers being
+                 used by the operating system."
+          ::= { nwOdi 2 }
+
+       nwOdiOsMaxPktRcvBuffers OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The maximum number of packet receive buffers that the
+                 operating system can allocate. This object is settable
+                 and can also be set through the nwSetParamTable."
+          ::= { nwOdi 3 }
+
+       nwOdiOsMinPktRcvBuffers OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The minimum number of packet receive buffers that the
+                 operating system can allocate.  This value can only be
+                 changed at startup time from STARTUP.NCF; therefore it
+                 is settable only through the nwSetParamTable."
+          ::= { nwOdi 4 }
+       --
+       -- The SFT-III group
+       --
+       -- This group is only implemented in SFT-III servers.
+       -- It is implemented in both the msEngine and the ioEngines
+       --
+       nwSft3Engine OBJECT-TYPE
+          SYNTAX EngineType
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The type of the this engine."
+          ::= { nwSft3 1 }
+
+       nwSft3EngineState OBJECT-TYPE
+          SYNTAX INTEGER {
+                      unknown(1),
+                      synchronizing(2),
+                      mirrored(3),
+                      noSecondary(4),
+                      down(5)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The state of this engine.  Note the msEngine does not
+                 know its state and thus will always be unknown(1)."
+          ::= { nwSft3 2 }
+
+       nwSft3EngineTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwSft3EngineEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "Information about each engine which comprises an SFT-
+                 III server."
+          ::= { nwSft3 3 }
+
+       nwSft3EngineEntry OBJECT-TYPE
+          SYNTAX NwSft3EngineEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "Information about a particular engine in an SFT-III
+                 server."
+          INDEX  {nwSft3EngineType }
+          ::= { nwSft3EngineTable 1 }
+
+       NwSft3EngineEntry ::= SEQUENCE {
+            nwSft3EngineType            EngineType,
+            nwSft3EngineName            InternationalDisplayString,
+            nwSft3EngineInternalNetNum  IPXNetNumber
+          }
+
+       nwSft3EngineType OBJECT-TYPE
+          SYNTAX EngineType
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The type of the engine."
+          ::= { nwSft3EngineEntry 1 }
+
+       nwSft3EngineName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of this engine."
+          ::= { nwSft3EngineEntry 2 }
+
+       nwSft3EngineInternalNetNum OBJECT-TYPE
+          SYNTAX IPXNetNumber
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The internal IPX network number of this server."
+          ::= { nwSft3EngineEntry 3 }
+       --
+       -- The NCP Services Group
+       --
+
+       nwNCPIPXChecksums OBJECT-TYPE
+          SYNTAX INTEGER {
+                      noChecksums(1),
+                      checksumIfEnabledAtClient(2),
+                      requireChecksums(3)
+                 }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "Controls NCP IPX checksumming."
+          ::= { nwNCP 1 }
+
+       nwNCPPacketSignatures OBJECT-TYPE
+          SYNTAX INTEGER {
+                      serverNeverSigns(1),
+                      serverSignsOnClientRequest(2),
+                      serverSignsIfClientCapable(3),
+                      serverMandatesSigning(4)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The security level currently in force on this server."
+          ::= { nwNCP 2 }
+
+       nwNCPNumNCPReqs OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "Number of NCP Requests."
+          ::= { nwNCP 3 }
+
+       nwNCPUseCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "NCP station in use count."
+          ::= { nwNCP 4 }
+
+       nwNCPPeakUseCount OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "NCP peak station in use count."
+          ::= { nwNCP 5 }
+
+       nwNCPForgedPkts OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The count of NCP requests that were forged packets."
+          ::= { nwNCP 6 }
+
+       nwNCPBeingProcesseds OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The count of NCP requests that were already being
+                 processed."
+          ::= { nwNCP 7 }
+
+       nwNCPNoAvailConns OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The count of NCP requests that were not processed
+                 because there were no available connections."
+          ::= { nwNCP 8 }
+
+       nwNCPIPXChecksumErrs OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "NCP IPX checksum error count."
+          ::= { nwNCP 9 }
+
+       nwNCPInvalidPacketSigs OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "NCP invalid packet signature error count."
+          ::= { nwNCP 10 }
+
+       nwNCPExtNumReg OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "Number of NCP extensions Registered."
+          ::= { nwNCP 11 }
+
+       nwNCPExtInvalidReqs OBJECT-TYPE
+          SYNTAX Counter
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "Invalid NCP Extensions Requests."
+          ::= { nwNCP 12 }
+       --
+       -- The Watchdog group
+       --
+
+       nwWDTimeBeforeFirstPkt OBJECT-TYPE
+          SYNTAX Seconds
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The time before the first Watchdog Packet in seconds."
+          ::= { nwWatchdog 1 }
+
+       nwWDTimeBetweenPkts OBJECT-TYPE
+          SYNTAX Seconds
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The time between Watchdog Packets in seconds."
+          ::= { nwWatchdog 2 }
+
+       nwWDNumPktsToSend OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of Watchdog Packets to Send."
+          ::= { nwWatchdog 3 }
+
+       nwWDCurrentState OBJECT-TYPE
+          SYNTAX INTEGER {
+                      unknown(1),
+                      waiting(2),
+                      sendingPackets(3),
+                      clearingStations(4)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The current Watchdog State.
+                 Note: this is only available in 4.0, will be unknown in
+                 3.11"
+          ::= { nwWatchdog 4 }
+
+       nwWDNotifyConsoleFlag OBJECT-TYPE
+          SYNTAX INTEGER {
+                      doNotNotify(1),
+                      notify(2)
+                 }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The Watchdog Notify Console Flag."
+          ::= { nwWatchdog 5 }
+       --
+       -- NetWare Loadable Module (NLM) Group
+       --
+
+       nwNLMTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwNLMEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The nwNLMTable augments the hrSWRunTable in the Host
+                 Resources MIB to provide additional NetWare specific
+                 information."
+          ::= { nwNLM 1 }
+
+       nwNLMEntry OBJECT-TYPE
+          SYNTAX NwNLMEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the NLM table provides additional
+                 information about a particular NLM."
+          INDEX { nwNLMIndex }
+          ::= { nwNLMTable 1 }
+
+       NwNLMEntry ::= SEQUENCE {
+            nwNLMIndex                  INTEGER,
+            nwNLMName                   InternationalDisplayString,
+            nwNLMDescription            InternationalDisplayString,
+            nwNLMTotalMemory            INTEGER,
+            nwNLMCopyright              InternationalDisplayString,
+            nwNLMProtectionDomain       INTEGER,
+            nwNLMMajorVer               INTEGER,
+            nwNLMMinorVer               INTEGER,
+            nwNLMRevision               INTEGER,
+            nwNLMReleaseDate            DateAndTime
+          }
+       nwNLMIndex OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies an NLM.  The value
+                 of this object for a particular NLM has the same value
+                 as the hrSWRunIndex object, defined in the HOST-
+                 RESOURCES-MIB, for the same NLM."
+          ::= { nwNLMEntry 1 }
+
+       nwNLMName OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..48))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of the NLM."
+          ::= { nwNLMEntry 2 }
+
+       nwNLMDescription OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..100))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A text string that describes this NLM."
+          ::= { nwNLMEntry 3 }
+
+       nwNLMTotalMemory OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total memory, in bytes, used by this NLM.  This is
+                 a composite total of Short Term Memory, Semi-Permanent
+                 Memory, and Non-movable Cache Memory allocated by the
+                 NLM, plus the sizes of the code and data sections of
+                 this instance of an NLM."
+          ::= { nwNLMEntry 4 }
+
+       nwNLMCopyright OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The copyright string for this NLM."
+          ::= { nwNLMEntry 5 }
+
+       nwNLMProtectionDomain OBJECT-TYPE
+          SYNTAX INTEGER {
+                      osDomain(1),
+                      protectedDomain(2)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The protection level at which this NLM is executing."
+          ::= { nwNLMEntry 6 }
+
+       nwNLMMajorVer OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The major version number of this NLM."
+          ::= { nwNLMEntry 7 }
+
+       nwNLMMinorVer OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The minor version number of this NLM."
+          ::= { nwNLMEntry 8 }
+
+       nwNLMRevision OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The revision level of this NLM."
+          ::= { nwNLMEntry 9 }
+
+       nwNLMReleaseDate OBJECT-TYPE
+          SYNTAX DateAndTime
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The date and time this NLM was released"
+          ::= {nwNLMEntry 10 }
+       --
+       -- Settable Parameters Group
+       --
+
+       --
+       -- Set Parameters Category Table
+       --
+
+       nwSetCategoryTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwSetCategoryEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "A table of NetWare SET parameter categories"
+          ::= { nwSetParams 1 }
+
+       nwSetCategoryEntry OBJECT-TYPE
+          SYNTAX NwSetCategoryEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "A NetWare SET parameter category"
+          INDEX  { nwSetCategoryIndex }
+          ::= { nwSetCategoryTable 1 }
+
+       NwSetCategoryEntry ::= SEQUENCE {
+            nwSetCategoryIndex          INTEGER,
+            nwSetCategoryName           InternationalDisplayString
+          }
+
+       nwSetCategoryIndex OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A unique value for each category of SET commands"
+          ::= { nwSetCategoryEntry 1 }
+
+       nwSetCategoryName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A descriptive name of this category of SET commands"
+          ::= { nwSetCategoryEntry 2 }
+
+       --
+       -- Set Parameters Table
+       --
+
+
+       nwSetParamTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwSetParamEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "A table of the NetWare SET parameters.  This table
+                 emulates the NetWare SET command.
+
+                 Note that some of the parameters can also be set
+                 through other MIB objects"
+          ::= { nwSetParams 2 }
+
+       nwSetParamEntry OBJECT-TYPE
+          SYNTAX NwSetParamEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the SET parameter table provides
+                 information about a particular parameter."
+          INDEX  { nwSetParamCategoryIndex, nwSetParamIndex }
+          ::= { nwSetParamTable 1 }
+
+       NwSetParamEntry ::= SEQUENCE {
+            nwSetParamCategoryIndex     INTEGER,
+            nwSetParamIndex             INTEGER,
+            nwSetParamName              InternationalDisplayString,
+            nwSetParamType              INTEGER,
+            nwSetParamValueInteger      INTEGER,
+            nwSetParamValueString       InternationalDisplayString,
+            nwSetParamLowerLimit        INTEGER,
+            nwSetParamUpperLimit        INTEGER,
+            nwSetParamDescrLength       INTEGER,
+            nwSetParamMode              INTEGER
+          }
+
+       nwSetParamCategoryIndex OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a Set parameter
+                 category.  The value of this object for a particular
+                 category has the same value as the nwSetCategoryIndex
+                 object for the same category."
+          ::= { nwSetParamEntry 1 }
+
+       nwSetParamIndex OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "An index which uniquely identifies this set parameter
+                 within the category"
+          ::= { nwSetParamEntry 2 }
+
+       nwSetParamName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The name of the settable parameter"
+          ::= { nwSetParamEntry 3 }
+
+       nwSetParamType OBJECT-TYPE
+          SYNTAX INTEGER {
+                      number(1),
+                      boolean(2),
+                      ticks(3),
+                      blockShift(4),
+                      timeOffset(5),
+                      string(6),
+                      trigger(7)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The type of the parameter.  All types are integer-
+                 valued except 'string', which is string-valued.
+
+                 number:     integer
+                 boolean:    0 == FALSE, non-zero == TRUE
+                 ticks:      1 tick == 3600/65535 == approx 55 millisecs
+                 blockShift: integer
+                 timeOffset: [+|-]hh:mm:ss converted to seconds
+                 string:     character string
+                 trigger:    integer"
+          ::= { nwSetParamEntry 4 }
+
+       nwSetParamValueInteger OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The current value of the parameter if integer-valued.
+                 Zero otherwise."
+          ::= { nwSetParamEntry 5 }
+
+       nwSetParamValueString OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "The current value of the parameter if string-valued.
+                 The zero-length string otherwise."
+          ::= { nwSetParamEntry 6 }
+
+       nwSetParamLowerLimit OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The lower limit of the parameter if integer-valued."
+          ::= { nwSetParamEntry 7 }
+
+       nwSetParamUpperLimit OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The upper limit of the parameter if integer-valued.
+                 The maximum length of the string if string-valued."
+          ::= { nwSetParamEntry 8 }
+
+       nwSetParamDescrLength OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The total length (in octets) of the parameter
+                 description string, which can be retrieved in segments
+                 from the nwSetDescrTable."
+          ::= { nwSetParamEntry 9 }
+
+       nwSetParamMode OBJECT-TYPE
+          SYNTAX INTEGER (0..7)
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                 "A value defining how and when the command takes
+                 effect.
+
+                 The value is a sum.  This value initially takes the
+                 value zero, then for each place the parameter can be
+                 set from, 2 raised to a power is added to the sum.  The
+                 powers are according to the following table:
+
+                      Set From       Power
+                      Console        0
+                      AUTOEXEC.NCF   1
+                      STARTUP.NCF    2
+
+                 For example, a parameter that can be set from either
+                 the console or AUTOEXEC would have a value of 3 (2**0 +
+                 2**1).
+
+                 On a read, a bit will be set for each place the
+                 parameter can be set from.  On a write, bits should be
+                 set to specify where the set command should be placed.
+                 If nwSetParamValue is written without nwSetParam also
+                 being set in the same PDU, the parameter will be set as
+                 if at the console; unless it is a parameter which can
+                 only be set in STARTUP.NCF in which case an error will
+                 be returned"
+          ::= { nwSetParamEntry 10 }
+
+
+       --
+       -- Set Parameters Descriptions Table
+       --
+
+       nwSetDescrTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwSetDescrEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "A table of description string segments for each
+                 NetWare SET parameter.  This table allows for long
+                 description strings to be retrieved in segments.
+
+                 A complete description string can be reconstituted by
+                 concatenating the ordered set of string segments.  The
+                 length of the complete string is available through the
+                 nwSetParamTable."
+          ::= { nwSetParams 3 }
+
+       nwSetDescrEntry OBJECT-TYPE
+          SYNTAX NwSetDescrEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the SET description table contains one
+                 segment of a NetWare SET parameter description string.
+
+                 The complete description string can be reconstituted by
+                 concatenating the ordered set of string segments.  The
+                 length of the complete string is available through the
+                 nwSetParamTable."
+          INDEX  { nwSetDescrCategoryIndex, nwSetDescrParamIndex,
+                 nwSetDescrIndex }
+          ::= { nwSetDescrTable 1 }
+
+       NwSetDescrEntry ::= SEQUENCE {
+            nwSetDescrCategoryIndex     INTEGER,
+            nwSetDescrParamIndex        INTEGER,
+            nwSetDescrIndex             INTEGER,
+            nwSetDescription            InternationalDisplayString
+          }
+
+       nwSetDescrCategoryIndex OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a Set parameter
+                 category.  The value of this object for a particular
+                 category has the same value as the nwSetCategoryIndex
+                 object for the same category."
+          ::= { nwSetDescrEntry 1 }
+
+       nwSetDescrParamIndex OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a Set parameter.
+                 The value of this object for a particular parameter has
+                 the same value as the nwSetParamIndex object for the
+                 same parameter."
+          ::= { nwSetDescrEntry 2 }
+
+       nwSetDescrIndex OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "An ordinal that indicates this segment's relative
+                 position in the complete description string for this
+                 NetWare SET Parameter."
+          ::= { nwSetDescrEntry 3 }
+
+       nwSetDescription OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A segment of the description string for this NetWare
+                 SET parameter."
+          ::= { nwSetDescrEntry 4 }
+       --
+       -- The User Accounts Group
+       --
+
+       --
+       -- User Account Table
+       --
+
+       nwUserAcctTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwUserAcctEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The User Account Table lists all user accounts in this
+                 file server.  Users in the table may or may not be
+                 logged in currently.
+
+                 The information in this table is applicable only to
+                 NetWare 3.11 and 3.12 servers, or NetWare 4.10 servers
+                 with Bindery Services enabled.  In the case of Bindery
+                 Services, data is only available for those users in
+                 the Bindery context(s) of the server.
+
+                 In a 4.10 server without Bindery Services enabled, this
+                 table will be empty "
+          ::= { nwUserAccounts 1 }
+
+       nwUserAcctEntry OBJECT-TYPE
+          SYNTAX NwUserAcctEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the User Account table provides
+                 information on a single user account.
+
+                 The information in this table is applicable only to
+                 NetWare 3.11 and 3.12 servers, or NetWare 4.10 servers
+                 with Bindery Services enabled.  In the case of Bindery
+                 Services, data is only available for those users in
+                 the Bindery context(s) of the server.
+
+                 In a 4.x server without Bindery Services enabled, this
+                 table will be empty "
+          INDEX  { nwUserID }
+          ::= { nwUserAcctTable 1 }
+
+       NwUserAcctEntry ::= SEQUENCE {
+            nwUserID                    INTEGER,
+            nwUserName                  InternationalDisplayString,
+            nwUserDiskUsage             KBytes,
+            nwUserLastLoginTime         DateAndTime,
+            nwUserAccountStatus         INTEGER,
+            nwUserPasswordStatus        INTEGER,
+            nwUserBadLoginTransport     TransportDomain,
+            nwUserBadLoginAddress       TransportAddress,
+            nwUserBadLoginAttempts      INTEGER,
+            nwUserFullName              InternationalDisplayString
+          }
+
+       nwUserID OBJECT-TYPE
+          SYNTAX INTEGER (0..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A unique value for each NetWare user with an account
+                 on the server.  The value for each user must remain
+                 constant at least from one re-initialization of the
+                 agent to the next re-initialization."
+          ::= { nwUserAcctEntry 1 }
+
+       nwUserName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The user's login name (Directory Services full
+                 distinguished name where appropriate).  Zero-length
+                 string if not applicable."
+          ::= { nwUserAcctEntry 2 }
+
+       nwUserDiskUsage OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The amount of disk space, in KBytes, this user is
+                 occupying across all volumes on this server."
+          ::= { nwUserAcctEntry 3 }
+
+       nwUserLastLoginTime OBJECT-TYPE
+          SYNTAX DateAndTime
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The time the user last logged in to this server."
+          ::= { nwUserAcctEntry 4 }
+
+       nwUserAccountStatus OBJECT-TYPE
+          SYNTAX INTEGER {
+                      valid(1),
+                      expired(2)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The status of this user's account"
+          ::= { nwUserAcctEntry 5 }
+
+       nwUserPasswordStatus OBJECT-TYPE
+          SYNTAX INTEGER {
+                      valid(1),
+                      expired(2)
+                 }
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The status of this user's password."
+          ::= { nwUserAcctEntry 6 }
+
+       nwUserBadLoginTransport OBJECT-TYPE
+          SYNTAX TransportDomain
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The transport domain (protocol) the user used to log
+                 in with bad password last time, valid only if the
+                 variable nwUserBadLoginAttempt is larger than zero."
+          ::= { nwUserAcctEntry 7 }
+
+       nwUserBadLoginAddress OBJECT-TYPE
+          SYNTAX TransportAddress
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 " The address the user used to log in with bad password
+                 last time, valid only if the variable
+                 nwUserBadLoginAttempt is larger than zero."
+          ::= { nwUserAcctEntry 8 }
+
+       nwUserBadLoginAttempts OBJECT-TYPE
+          SYNTAX INTEGER
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The number of times the user attempted to log in with
+                 a bad password since the server started. The number
+                 would be 0xFFFF if the number of bad login attempts has
+                 exceeded the bad login threshold and the account has
+                 been locked."
+          ::= { nwUserAcctEntry 9 }
+
+       nwUserFullName OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The user's full name."
+          ::= { nwUserAcctEntry 10 }
+
+
+       --
+       -- User Volume Usage Table
+       --
+
+       nwUserVolUsageTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwUserVolUsageEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The User Volume Usage Table lists the amount of volume
+                 space used by each user.  It is indexed so you can
+                 easily find out how much space a particular user is
+                 using on each volume."
+          ::= { nwUserAccounts 2 }
+
+       nwUserVolUsageEntry OBJECT-TYPE
+          SYNTAX      NwUserVolUsageEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the User Volume Usage table provides
+                 information about the amount of space a particular user
+                 is using on a particular volume."
+          INDEX  { nwUserVolUserID, nwUserVolVolID }
+          ::= { nwUserVolUsageTable 1 }
+
+       NwUserVolUsageEntry ::= SEQUENCE {
+            nwUserVolUserID             INTEGER,
+            nwUserVolVolID              INTEGER,
+            nwUserVolUsageUser          InternationalDisplayString,
+            nwUserVolUsageVolume        InternationalDisplayString,
+            nwUserVolUsageSpaceUsed     KBytes,
+            nwUserVolUsageLimit         KBytes
+          }
+
+       nwUserVolUserID OBJECT-TYPE
+          SYNTAX INTEGER (0..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a user.  The value
+                 of this object for a particular user has the same value
+                 as the nwUserID object for the same user."
+          ::= { nwUserVolUsageEntry 1 }
+
+       nwUserVolVolID OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a NetWare volume.
+                 The value of this object for a particular volume has
+                 the same value as the nwVolID object for the same
+                 volume."
+          ::= { nwUserVolUsageEntry 2 }
+
+       nwUserVolUsageUser OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The user's login name (Directory Services full
+                 distinguished name where appropriate).  Zero-length
+                 string if not applicable."
+          ::= { nwUserVolUsageEntry 3 }
+
+       nwUserVolUsageVolume OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..64))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 " The physical volume name."
+          ::= { nwUserVolUsageEntry 4 }
+
+       nwUserVolUsageSpaceUsed OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 " The amount of volume space, in KBytes, this user is
+                 occupying."
+          ::= { nwUserVolUsageEntry 5 }
+
+       nwUserVolUsageLimit OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 " The amount of volume space, in KBytes,
+                 to which this user is limited.  2147483647 if no
+                 limit."
+          ::= { nwUserVolUsageEntry 6 }
+
+       --
+       -- NetWare Volume Usage Table
+       --
+       --
+       nwVolUsageTable OBJECT-TYPE
+          SYNTAX SEQUENCE OF NwVolUsageEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "The Volume Usage Table lists the amount of space on
+                 each volume used by each user.  It is indexed so that
+                 you can easily find all the users who are occupying
+                 space on a particular volume."
+          ::= { nwUserAccounts 3 }
+
+       nwVolUsageEntry OBJECT-TYPE
+          SYNTAX NwVolUsageEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                 "An entry in the Volume Usage Table provides
+                 information about how much space a particular user is
+                 using on a particular volume."
+          INDEX  { nwVolUsageVolID, nwVolUsageUserID }
+          ::= { nwVolUsageTable 1 }
+
+       NwVolUsageEntry ::= SEQUENCE {
+            nwVolUsageVolID             INTEGER,
+            nwVolUsageUserID            INTEGER,
+            nwVolUsageVolume            InternationalDisplayString,
+            nwVolUsageUser              InternationalDisplayString,
+            nwVolUsageSpaceUsed         KBytes,
+            nwVolUsageLimit             KBytes
+          }
+
+       nwVolUsageVolID OBJECT-TYPE
+          SYNTAX INTEGER (1..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a NetWare volume.
+                 The value of this object for a particular volume has
+                 the same value as the nwVolID object for the same
+                 volume."
+          ::= { nwVolUsageEntry 1 }
+
+       nwVolUsageUserID OBJECT-TYPE
+          SYNTAX INTEGER (0..2147483647)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "A number that uniquely identifies a user.  The value
+                 of this object for a particular user has the same value
+                 as the nwUserID object for the same user."
+          ::= { nwVolUsageEntry 2 }
+
+       nwVolUsageVolume OBJECT-TYPE
+          SYNTAX InternationalDisplayString (SIZE(0..64))
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The volume name."
+          ::= { nwVolUsageEntry 3 }
+
+       nwVolUsageUser OBJECT-TYPE
+          SYNTAX InternationalDisplayString
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The user name."
+          ::= { nwVolUsageEntry 4 }
+
+       nwVolUsageSpaceUsed OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 "The volume space, in KBytes, in use by user."
+          ::= { nwVolUsageEntry 5 }
+
+       nwVolUsageLimit OBJECT-TYPE
+          SYNTAX KBytes
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                 " The amount of volume space, in KBytes,
+                 to which this user is limited.  2147483647 if no
+                 limit."
+          ::= { nwVolUsageEntry 6 }
+
+          END
+
+

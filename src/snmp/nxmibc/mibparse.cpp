@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -201,6 +201,7 @@ static void ResolveImports(DynArray *pModuleList, MP_MODULE *pModule)
                   }
                }
             } while(pObject == NULL);
+				pImportModule = pImport->pModule;	// Restore current import module if it was changed in lookup cycle
          }
       }
       else
