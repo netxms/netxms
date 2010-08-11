@@ -32,7 +32,12 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -50,6 +55,7 @@ import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.dialogs.TrapConfigurationDialog;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapComparator;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapLabelProvider;
 import org.netxms.ui.eclipse.tools.RefreshAction;
@@ -96,6 +102,26 @@ public class SnmpTrapEditor extends ViewPart implements INXCListener
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpTrapLabelProvider());
 		viewer.setComparator(new SnmpTrapComparator());
+		viewer.addSelectionChangedListener(new ISelectionChangedListener()
+		{
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				if (selection != null)
+				{
+					actionEdit.setEnabled(selection.size() == 1);
+					actionDelete.setEnabled(selection.size() > 0);
+				}
+			}
+		});
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				actionEdit.run();
+			}
+		});
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -369,8 +395,16 @@ public class SnmpTrapEditor extends ViewPart implements INXCListener
 	 */
 	protected void editTrap()
 	{
-		// TODO Auto-generated method stub
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
 		
+		SnmpTrap trap = (SnmpTrap)selection.getFirstElement();
+		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
+		if (dlg.open() == Window.OK)
+		{
+			
+		}
 	}
 
 	/**

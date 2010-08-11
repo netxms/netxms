@@ -66,6 +66,13 @@ FORCE_32BIT_BUILD="no"
 
 
 #--------------------------------------------------------------------
+# Common compilation flags
+#--------------------------------------------------------------------
+
+CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE"
+
+
+#--------------------------------------------------------------------
 # Parse command line parameters
 #--------------------------------------------------------------------
 
@@ -585,7 +592,7 @@ if test "x$CC" = "xgcc" ; then
 			AC_MSG_CHECKING(whether C compiler accepts -maix32)
 			OLD_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="$CPPFLAGS -maix32"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-maix32 $LDFLAGS"
 					OBJECT_MODE=32
@@ -600,7 +607,7 @@ if test "x$CC" = "xgcc" ; then
 			AC_MSG_CHECKING(whether C compiler accepts -maix64)
 			OLD_CPPFLAGS="$CPPFLAGS"
 			CPPFLAGS="$CPPFLAGS -maix64"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-maix64 $LDFLAGS"
 					OBJECT_MODE=64
@@ -672,7 +679,7 @@ else
 				yes
 			#endif
 			], AC_MSG_RESULT(yes)
-			CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
+			PTHREAD_LIBS="-pthread",
 			AC_MSG_RESULT(no))
 		if test "x$PTHREAD_LIBS" = "xerror"; then
 			AC_CHECK_LIB(pthread, pthread_attr_init,
@@ -1596,7 +1603,7 @@ fi
 # Other settings
 #--------------------------------------------------------------------
 
-CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
+CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 AM_CONDITIONAL([BUILD_UNICODE_LIBS], [test "x$BUILD_UNICODE" = "xyes"])
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])

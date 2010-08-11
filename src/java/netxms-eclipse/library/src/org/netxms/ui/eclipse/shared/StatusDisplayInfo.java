@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.shared;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.library.Activator;
@@ -31,7 +32,8 @@ import org.netxms.ui.eclipse.library.Activator;
 public final class StatusDisplayInfo
 {
 	private static String[] statusText = new String[9];
-	private static ImageDescriptor[] statusImage = new ImageDescriptor[9];
+	private static ImageDescriptor[] statusImageDesc = new ImageDescriptor[9];
+	private static Image[] statusImage = new Image[9];
 	private static Color[] statusColor = new Color[9];
 	
 	/**
@@ -49,15 +51,18 @@ public final class StatusDisplayInfo
 		statusText[Severity.DISABLED] = "Disabled";
 		statusText[Severity.TESTING] = "Testing";
 
-		statusImage[Severity.NORMAL] = Activator.getImageDescriptor("icons/status/normal.png");
-		statusImage[Severity.WARNING] = Activator.getImageDescriptor("icons/status/warning.png");
-		statusImage[Severity.MINOR] = Activator.getImageDescriptor("icons/status/minor.png");
-		statusImage[Severity.MAJOR] = Activator.getImageDescriptor("icons/status/major.png");
-		statusImage[Severity.CRITICAL] = Activator.getImageDescriptor("icons/status/critical.png");
-		statusImage[Severity.UNKNOWN] = Activator.getImageDescriptor("icons/status/unknown.png");
-		statusImage[Severity.UNMANAGED] = Activator.getImageDescriptor("icons/status/unmanaged.png");
-		statusImage[Severity.DISABLED] = Activator.getImageDescriptor("icons/status/disabled.png");
-		statusImage[Severity.TESTING] = Activator.getImageDescriptor("icons/status/testing.png");
+		statusImageDesc[Severity.NORMAL] = Activator.getImageDescriptor("icons/status/normal.png");
+		statusImageDesc[Severity.WARNING] = Activator.getImageDescriptor("icons/status/warning.png");
+		statusImageDesc[Severity.MINOR] = Activator.getImageDescriptor("icons/status/minor.png");
+		statusImageDesc[Severity.MAJOR] = Activator.getImageDescriptor("icons/status/major.png");
+		statusImageDesc[Severity.CRITICAL] = Activator.getImageDescriptor("icons/status/critical.png");
+		statusImageDesc[Severity.UNKNOWN] = Activator.getImageDescriptor("icons/status/unknown.png");
+		statusImageDesc[Severity.UNMANAGED] = Activator.getImageDescriptor("icons/status/unmanaged.png");
+		statusImageDesc[Severity.DISABLED] = Activator.getImageDescriptor("icons/status/disabled.png");
+		statusImageDesc[Severity.TESTING] = Activator.getImageDescriptor("icons/status/testing.png");
+		
+		for(int i = 0; i < statusImageDesc.length; i++)
+			statusImage[i] = statusImageDesc[i].createImage();
 
 		Display display = Display.getDefault();
 		statusColor[Severity.NORMAL] = new Color(display, 0, 192, 0);
@@ -96,6 +101,25 @@ public final class StatusDisplayInfo
 	 * @return Image descriptor for given code
 	 */
 	public static ImageDescriptor getStatusImageDescriptor(int severity)
+	{
+		try
+		{
+			return statusImageDesc[severity];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return null;
+		}
+	}
+	
+	/**
+	 * Get image for given status/severity code. Image is owned by library
+	 * and should not be disposed by caller.
+	 * 
+	 * @param severity Status or severity code
+	 * @return Image descriptor for given code
+	 */
+	public static Image getStatusImage(int severity)
 	{
 		try
 		{

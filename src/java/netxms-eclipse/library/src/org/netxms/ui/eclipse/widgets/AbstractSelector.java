@@ -18,15 +18,25 @@
  */
 package org.netxms.ui.eclipse.widgets;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Menu;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -36,8 +46,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class AbstractSelector extends Composite
 {
 	private Label label;
-	private Text text;
+	private CLabel text;
 	private Button button;
+	private Action actionCopy; 
 	
 	/**
 	 * Create abstract selector.
@@ -65,7 +76,7 @@ public class AbstractSelector extends Composite
 		gd.horizontalSpan = 2;
 		label.setLayoutData(gd);
 		
-		text = new Text(this, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY);
+		text = new CLabel(this, SWT.BORDER);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -77,6 +88,7 @@ public class AbstractSelector extends Composite
 		gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 		button.setLayoutData(gd);
 		button.setText("...");
+		button.setToolTipText(getButtonToolTip());
 		button.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -90,6 +102,62 @@ public class AbstractSelector extends Composite
 				selectionButtonHandler();
 			}
 		});
+		
+		createActions();
+		createContextMenu();
+		
+		text.setToolTipText("DEMO TEXT");
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionCopy = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				final Clipboard cb = new Clipboard(getDisplay());
+				cb.setContents(new Object[] { text.getText() }, new Transfer[] { TextTransfer.getInstance() });
+			}
+		};
+		actionCopy.setText("&Copy to clipboard");
+	}
+	
+	/**
+	 * Create context menu for text area 
+	 */
+	private void createContextMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(text);
+		text.setMenu(menu);
+	}
+	
+	/**
+	 * Fill context menu. Can be overridden by subclasses to add
+	 * and/or override context menu items.
+	 * 
+	 * @param mgr menu manager
+	 */
+	protected void fillContextMenu(IMenuManager mgr)
+	{
+		mgr.add(actionCopy);
 	}
 	
 	/**
@@ -98,6 +166,15 @@ public class AbstractSelector extends Composite
 	 */
 	protected void selectionButtonHandler()
 	{
+	}
+	
+	/**
+	 * Returns tooltip text for selection button. Can be overridden by subclasses.
+	 * @return tooltip text for selection button
+	 */
+	protected String getButtonToolTip()
+	{
+		return "Select...";
 	}
 
 	/**
@@ -140,6 +217,26 @@ public class AbstractSelector extends Composite
 		return text.getText();
 	}
 
+	/**
+	 * Set selector's image
+	 * 
+	 * @param newText
+	 */
+	public void setImage(final Image image)
+	{
+		text.setImage(image);
+	}
+
+	/**
+	 * Get selector's text
+	 * 
+	 * @return Selector's text
+	 */
+	public Image getImage()
+	{
+		return text.getImage();
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
 	 */
@@ -149,5 +246,14 @@ public class AbstractSelector extends Composite
 		text.setEnabled(enabled);
 		button.setEnabled(enabled);
 		super.setEnabled(enabled);
+	}
+	
+	/**
+	 * Get text control
+	 * @return text control
+	 */
+	protected Control getTextControl()
+	{
+		return text;
 	}
 }
