@@ -895,3 +895,104 @@ int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
 	*ppResult = new NXSL_Value();
 	return 0;
 }
+
+
+//
+// Common implementation for index and rindex functions
+//
+
+static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program, bool reverse)
+{
+	if ((argc != 2) && (argc != 3))
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isString() || !argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	DWORD strLength, substrLength;
+	const TCHAR *str = argv[0]->getValueAsString(&strLength);
+	const TCHAR *substr = argv[1]->getValueAsString(&substrLength);
+
+	int start;
+	if (argc == 3)
+	{
+		if (!argv[2]->isInteger())
+			return NXSL_ERR_NOT_INTEGER;
+
+		start = argv[2]->getValueAsInt32();
+		if (start > 0)
+		{
+			start--;
+			if (reverse && (start > (int)strLength - (int)substrLength))
+				start = (int)strLength - (int)substrLength;
+		}
+		else
+		{
+			start = reverse ? (int)strLength - (int)substrLength : 0;
+		}
+	}
+	else
+	{
+		start = reverse ? (int)strLength - (int)substrLength : 0;
+	}
+
+	int index = 0;	// 0 = not found
+	if ((substrLength < strLength) && (substrLength > 0))
+	{
+		if (reverse)
+		{
+			for(int i = start; i >= 0; i--)
+			{
+				if (!memcmp(&str[i], substr, substrLength * sizeof(TCHAR)))
+				{
+					index = i + 1;
+					break;
+				}
+			}
+		}
+		else
+		{
+			for(int i = start; i < (int)(strLength - substrLength); i++)
+			{
+				if (!memcmp(&str[i], substr, substrLength * sizeof(TCHAR)))
+				{
+					index = i + 1;
+					break;
+				}
+			}
+		}
+	}
+	else if ((substrLength == strLength) && (substrLength > 0))
+	{
+		index = !memcmp(str, substr, substrLength * sizeof(TCHAR)) ? 1 : 0;
+	}
+
+	*ppResult = new NXSL_Value((LONG)index);
+	return 0;
+}
+
+
+//
+// index(string, substring, [position])
+// Returns the position of the first occurrence of SUBSTRING in STRING at or after POSITION.
+// If you don't specify POSITION, the search starts at the beginning of STRING. If SUBSTRING
+// is not found, returns 0.
+//
+
+int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return F_index_rindex(argc, argv, ppResult, program, false);
+}
+
+
+//
+// rindex(string, substring, [position])
+// Returns the position of the last occurrence of SUBSTRING in STRING at or before POSITION.
+// If you don't specify POSITION, the search starts at the end of STRING. If SUBSTRING
+// is not found, returns 0.
+//
+
+int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return F_index_rindex(argc, argv, ppResult, program, true);
+}
