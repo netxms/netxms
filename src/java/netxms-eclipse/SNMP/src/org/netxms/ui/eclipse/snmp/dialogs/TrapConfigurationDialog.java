@@ -18,9 +18,20 @@
  */
 package org.netxms.ui.eclipse.snmp.dialogs;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -30,10 +41,17 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.client.snmp.SnmpTrapParameterMapping;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.shared.IUIConstants;
+import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.dialogs.helpers.ParamMappingLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -42,7 +60,10 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class TrapConfigurationDialog extends Dialog
 {
+	private static final String PARAMLIST_TABLE_SETTINGS = "TrapConfigurationDialog.ParamList";
+	
 	private SnmpTrap trap;
+	private List<SnmpTrapParameterMapping> pmap;
 	private Text description;
 	private Text oid;
 	private EventSelector event;
@@ -125,6 +146,7 @@ public class TrapConfigurationDialog extends Dialog
 		gd.grabExcessVerticalSpace = true;
 		gd.widthHint = 300;
 		paramList.getTable().setLayoutData(gd);
+		setupParameterList();
 		
 		Composite buttonArea = new Composite(paramArea, SWT.NONE);
 		RowLayout btnLayout = new RowLayout();
@@ -140,12 +162,51 @@ public class TrapConfigurationDialog extends Dialog
 		buttonAdd = new Button(buttonArea, SWT.PUSH);
 		buttonAdd.setText("&Add...");
 		buttonAdd.setLayoutData(new RowData(WidgetHelper.BUTTON_WIDTH_HINT, SWT.DEFAULT));
+		buttonAdd.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				addParameter();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 		
 		buttonEdit = new Button(buttonArea, SWT.PUSH);
 		buttonEdit.setText("&Edit...");
+		buttonEdit.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				editParameter();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 		
 		buttonDelete = new Button(buttonArea, SWT.PUSH);
 		buttonDelete.setText("&Delete");
+		buttonDelete.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				deleteParameters();
+			}
+		});
 		
 		buttonUp = new Button(buttonArea, SWT.PUSH);
 		buttonUp.setText("Move &up");
@@ -154,5 +215,123 @@ public class TrapConfigurationDialog extends Dialog
 		buttonDown.setText("Move &down");
 		
 		return dialogArea;
+	}
+
+	/**
+	 * Add new parameter mapping
+	 */
+	private void addParameter()
+	{
+		SnmpTrapParameterMapping pm = new SnmpTrapParameterMapping(new SnmpObjectId());
+		ParamMappingEditDialog dlg = new ParamMappingEditDialog(getShell(), pm);
+		if (dlg.open() == Window.OK)
+		{
+			pmap.add(pm);
+			paramList.setInput(pmap.toArray());
+			paramList.setSelection(new StructuredSelection(pm));
+		}
+	}
+	
+	/**
+	 * Edit currently selected parameter mapping
+	 */
+	private void editParameter()
+	{
+		IStructuredSelection selection = (IStructuredSelection)paramList.getSelection();
+		if (selection.size() != 0)
+			return;
+		
+		SnmpTrapParameterMapping pm = (SnmpTrapParameterMapping)selection.getFirstElement();
+		ParamMappingEditDialog dlg = new ParamMappingEditDialog(getShell(), pm);
+		if (dlg.open() == Window.OK)
+		{
+			paramList.update(pm, null);
+		}
+	}
+
+	/**
+	 * Delete selected parameters
+	 */
+	@SuppressWarnings("unchecked")
+	private void deleteParameters()
+	{
+		IStructuredSelection selection = (IStructuredSelection)paramList.getSelection();
+		if (selection.isEmpty())
+			return;
+		
+		Iterator<SnmpTrapParameterMapping> it = selection.iterator();
+		while(it.hasNext())
+			pmap.remove(it.next());
+		
+		paramList.setInput(pmap.toArray());
+	}
+
+	/**
+	 * Setup parameter mapping list
+	 */
+	private void setupParameterList()
+	{
+		Table table = paramList.getTable();
+		table.setHeaderVisible(true);
+		
+		TableColumn tc = new TableColumn(table, SWT.LEFT);
+		tc.setText("Number");
+		tc.setWidth(90);
+		
+		tc = new TableColumn(table, SWT.LEFT);
+		tc.setText("Parameter");
+		tc.setWidth(200);
+		
+		pmap = new ArrayList<SnmpTrapParameterMapping>(trap.getParameterMapping());
+		
+		paramList.setContentProvider(new ArrayContentProvider());
+		paramList.setLabelProvider(new ParamMappingLabelProvider(pmap));
+		paramList.setInput(pmap.toArray());
+		
+		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), PARAMLIST_TABLE_SETTINGS);
+	}
+	
+	/**
+	 * Save dialog settings
+	 */
+	private void saveSettings()
+	{
+		WidgetHelper.saveColumnSettings(paramList.getTable(), Activator.getDefault().getDialogSettings(), PARAMLIST_TABLE_SETTINGS);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+	 */
+	@Override
+	protected void cancelPressed()
+	{
+		saveSettings();
+		super.cancelPressed();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 */
+	@Override
+	protected void okPressed()
+	{
+		try
+		{
+			trap.setObjectId(SnmpObjectId.parseSnmpObjectId(oid.getText()));
+		}
+		catch(SnmpObjectIdFormatException e)
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "SNMP OID you have entered is invalid. Please enter correct SNMP OID.");
+			return;
+		}
+
+		trap.setDescription(description.getText());
+		trap.setEventCode((int)event.getEventCode());
+		trap.setUserTag(eventTag.getText());
+		trap.getParameterMapping().clear();
+		trap.getParameterMapping().addAll(pmap);
+		
+		saveSettings();
+		super.okPressed();
 	}
 }
