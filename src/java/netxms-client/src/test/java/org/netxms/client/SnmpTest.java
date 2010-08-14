@@ -61,6 +61,15 @@ public class SnmpTest extends SessionTest
 		{
 			System.out.println("Bad OID format: " + e.getMessage());
 		}
+		try
+		{
+			SnmpObjectId.parseSnmpObjectId(".");
+			assertFalse(true);
+		}
+		catch(SnmpObjectIdFormatException e)
+		{
+			System.out.println("Bad OID format: " + e.getMessage());
+		}
 	}
 	
 	public void testMibFileDownload() throws Exception

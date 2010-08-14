@@ -399,11 +399,23 @@ public class SnmpTrapEditor extends ViewPart implements INXCListener
 		if (selection.size() != 1)
 			return;
 		
-		SnmpTrap trap = (SnmpTrap)selection.getFirstElement();
+		final SnmpTrap trap = (SnmpTrap)selection.getFirstElement();
 		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
 		if (dlg.open() == Window.OK)
 		{
-			
+			new ConsoleJob("Modify SNMP trap configuration", this, Activator.PLUGIN_ID, null) {
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot modify SNMP trap configuration";
+				}
+
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					session.modifySnmpTrapConfiguration(trap);
+				}
+			}.start();
 		}
 	}
 
@@ -412,7 +424,25 @@ public class SnmpTrapEditor extends ViewPart implements INXCListener
 	 */
 	protected void createTrap()
 	{
-		// TODO Auto-generated method stub
-		
+		final SnmpTrap trap = new SnmpTrap();
+		trap.setEventCode(500);		// SYS_UNMATCHED_SNMP_TRAP
+		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
+		if (dlg.open() == Window.OK)
+		{
+			new ConsoleJob("Create SNMP trap configuration record", this, Activator.PLUGIN_ID, null) {
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot modify SNMP trap configuration";
+				}
+
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					trap.setId(session.createSnmpTrapConfiguration());
+					session.modifySnmpTrapConfiguration(trap);
+				}
+			}.start();
+		}
 	}
 }

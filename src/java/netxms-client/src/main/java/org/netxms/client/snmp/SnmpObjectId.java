@@ -67,10 +67,17 @@ public class SnmpObjectId
 	 */
 	public static SnmpObjectId parseSnmpObjectId(String s) throws SnmpObjectIdFormatException
 	{
-		if (s.trim().charAt(0) != '.')
+		String st = s.trim();
+		if (st.isEmpty())
+			return new SnmpObjectId();	// OID with length 0
+		
+		if (st.charAt(0) != '.')
 			throw new SnmpObjectIdFormatException("OID shoud start with . character");
 			
-		String[] parts = s.split("\\.");
+		String[] parts = st.split("\\.");
+		if (parts.length == 0)
+			throw new SnmpObjectIdFormatException("Empty OID element");
+		
 		long[] value = new long[parts.length - 1];
 		for(int i = 1; i < parts.length; i++)
 		{

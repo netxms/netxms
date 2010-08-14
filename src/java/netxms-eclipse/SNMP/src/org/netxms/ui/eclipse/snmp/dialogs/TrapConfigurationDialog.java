@@ -25,6 +25,8 @@ import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -74,6 +76,7 @@ public class TrapConfigurationDialog extends Dialog
 	private Button buttonDelete;
 	private Button buttonUp;
 	private Button buttonDown;
+	private Button buttonSelect;
 
 	/**
 	 * Creates trap configuration dialog
@@ -112,12 +115,46 @@ public class TrapConfigurationDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		description = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, "Description", trap.getDescription(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, "Trap OID", trap.getObjectId().toString(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+		
+		Composite oidSelection = new Composite(dialogArea, SWT.NONE);
+		layout = new GridLayout();
+		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.numColumns = 2;
+		oidSelection.setLayout(layout);
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		oidSelection.setLayoutData(gd);
+		
+		oid = WidgetHelper.createLabeledText(oidSelection, SWT.BORDER, 300, "Trap OID", 
+				(trap.getObjectId() != null) ? trap.getObjectId().toString() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+		buttonSelect = new Button(oidSelection, SWT.PUSH);
+		buttonSelect.setText("Select...");
+		gd = new GridData();
+		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+		gd.verticalAlignment = SWT.BOTTOM;
+		buttonSelect.setLayoutData(gd);
+		buttonSelect.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				selectObjectId();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 		
 		event = new EventSelector(dialogArea, SWT.NONE);
 		event.setLabel("Event");
 		event.setEventCode(trap.getEventCode());
-		GridData gd = new GridData();
+		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		event.setLayoutData(gd);
@@ -218,6 +255,28 @@ public class TrapConfigurationDialog extends Dialog
 	}
 
 	/**
+	 * Select OID using MIB selection dialog
+	 */
+	private void selectObjectId()
+	{
+		SnmpObjectId id;
+		try
+		{
+			id = SnmpObjectId.parseSnmpObjectId(oid.getText());
+		}
+		catch(SnmpObjectIdFormatException e)
+		{
+			id = null;
+		}
+		MibSelectionDialog dlg = new MibSelectionDialog(getShell(), id);
+		if (dlg.open() == Window.OK)
+		{
+			oid.setText(dlg.getSelectedObject().getObjectId().toString());
+			oid.setFocus();
+		}
+	}
+
+	/**
 	 * Add new parameter mapping
 	 */
 	private void addParameter()
@@ -238,7 +297,7 @@ public class TrapConfigurationDialog extends Dialog
 	private void editParameter()
 	{
 		IStructuredSelection selection = (IStructuredSelection)paramList.getSelection();
-		if (selection.size() != 0)
+		if (selection.size() != 1)
 			return;
 		
 		SnmpTrapParameterMapping pm = (SnmpTrapParameterMapping)selection.getFirstElement();
@@ -289,6 +348,14 @@ public class TrapConfigurationDialog extends Dialog
 		paramList.setInput(pmap.toArray());
 		
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), PARAMLIST_TABLE_SETTINGS);
+		
+		paramList.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				editParameter();
+			}
+		});
 	}
 	
 	/**
