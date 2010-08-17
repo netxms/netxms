@@ -1672,6 +1672,7 @@ AC_CONFIG_FILES([
 	Makefile
 	contrib/Makefile
 	contrib/startup/Makefile
+	contrib/startup/debian/Makefile
 	contrib/startup/gentoo/Makefile
 	contrib/startup/redhat/Makefile
 	contrib/startup/suse/Makefile

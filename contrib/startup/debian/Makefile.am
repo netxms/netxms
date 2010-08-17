@@ -1,4 +1,4 @@
-# Copyright (C) 2004 NetXMS Team <bugs@netxms.org>
+# Copyright (C) 2004-2009 NetXMS Team <bugs@netxms.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -8,5 +8,21 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+EXTRA_DIST = netxmsd.in nxagentd.in nxhttpd.in
 
-SUBDIRS = debian gentoo redhat suse ubuntu
+REPLACE_CMD = sed "s,~BINDIR~,$(bindir),g" < $@.in | \
+	sed "s,~LIBDIR~,$(libdir),g" > $@
+
+all: netxmsd nxagentd nxhttpd
+
+netxmsd: netxmsd.in
+	$(REPLACE_CMD)
+
+nxagentd: nxagentd.in
+	$(REPLACE_CMD)
+
+nxhttpd: nxhttpd.in
+	$(REPLACE_CMD)
+
+clean:
+	rm -f netxmsd nxagentd nxhttpd
