@@ -1,0 +1,42 @@
+#include "libipfix.h"
+
+
+//
+// Mutex wrappers
+//
+
+LIBIPFIX_MUTEX mutex_create()
+{
+	return MutexCreate();
+}
+
+void mutex_destroy(LIBIPFIX_MUTEX mutex)
+{
+	MutexDestroy(mutex);
+}
+
+BOOL mutex_lock(LIBIPFIX_MUTEX mutex)
+{
+	return MutexLock(mutex, INFINITE);
+}
+
+void mutex_unlock(LIBIPFIX_MUTEX mutex)
+{
+	MutexUnlock(mutex);
+}
+
+
+//
+// DLL entry point
+//
+
+#ifdef _WIN32
+
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
+}
+
+#endif   /* _WIN32 */

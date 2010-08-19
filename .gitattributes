@@ -235,6 +235,8 @@ src/db/libnxdb/libnxdb.h -text
 src/db/libnxdb/libnxdb.vcproj -text
 src/db/libnxdb/main.cpp -text
 src/db/libnxdb/session.cpp -text
+src/flow_analyzer/libipfix/libipfix.vcproj -text
+src/flow_analyzer/nxflowd/nxflowd.vcproj -text
 src/java/eclipse_addons.txt -text
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPCodes.java -text
