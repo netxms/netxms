@@ -15,6 +15,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define ITEM_FLAG_SHOW_AVERAGE      0x0001
+#define ITEM_FLAG_SHOW_THRESHOLDS   0x0002
+#define ITEM_FLAG_SHOW_TREND        0x0004
+
 
 //
 // Static data
@@ -359,7 +363,20 @@ void CGraphFrame::GetConfiguration(TCHAR *config)
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
-      _sntprintf(szBuffer, 512, _T("\x7F") _T("C%d:%lu"), i, m_wndGraph.m_graphItemStyles[i].rgbColor);
+		DWORD flags = 0;
+		if (m_wndGraph.m_graphItemStyles[i].bShowAverage)
+			flags |= ITEM_FLAG_SHOW_AVERAGE;
+		if (m_wndGraph.m_graphItemStyles[i].bShowThresholds)
+			flags |= ITEM_FLAG_SHOW_THRESHOLDS;
+		if (m_wndGraph.m_graphItemStyles[i].bShowTrend)
+			flags |= ITEM_FLAG_SHOW_TREND;
+
+		_sntprintf(szBuffer, 512, _T("\x7F") _T("C%d:%lu\x7FW%d:%d\x7FT%d:%d\x7F") _T("FL%d:%u"),
+		           i, m_wndGraph.m_graphItemStyles[i].rgbColor,
+		           i, m_wndGraph.m_graphItemStyles[i].nLineWidth,
+					  i, m_wndGraph.m_graphItemStyles[i].nType,
+		           i, flags);
+
       if (_tcslen(config) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
          _tcscat(config, szBuffer);
    }
@@ -430,6 +447,20 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
       _sntprintf(szBuffer, 32, _T("C%d"), i);
       m_wndGraph.m_graphItemStyles[i].rgbColor = 
          ExtractWindowParamULong(pszParams, szBuffer, m_wndGraph.m_graphItemStyles[i].rgbColor);
+
+		_sntprintf(szBuffer, 32, _T("T%d"), i);
+		m_wndGraph.m_graphItemStyles[i].nType = 
+         ExtractWindowParamLong(pszParams, szBuffer, m_wndGraph.m_graphItemStyles[i].nType);
+
+		_sntprintf(szBuffer, 32, _T("W%d"), i);
+		m_wndGraph.m_graphItemStyles[i].nLineWidth = 
+			ExtractWindowParamLong(pszParams, szBuffer, m_wndGraph.m_graphItemStyles[i].nLineWidth);
+
+		_sntprintf(szBuffer, 32, _T("FL%d"), i);
+		DWORD flags = ExtractWindowParamULong(pszParams, szBuffer, 0);
+		m_wndGraph.m_graphItemStyles[i].bShowAverage = (flags & ITEM_FLAG_SHOW_AVERAGE) ? TRUE : FALSE;
+		m_wndGraph.m_graphItemStyles[i].bShowThresholds = (flags & ITEM_FLAG_SHOW_THRESHOLDS) ? TRUE : FALSE;
+		m_wndGraph.m_graphItemStyles[i].bShowTrend = (flags & ITEM_FLAG_SHOW_TREND) ? TRUE : FALSE;
    }
 
    for(i = 0; i < m_dwNumItems; i++)
@@ -971,6 +1002,15 @@ void CGraphFrame::SaveCurrentSettings(const TCHAR *pszName)
 
 		_sntprintf_s(option, 64, _TRUNCATE, _T("ItemLineWidth_%d"), i);
 		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
+
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ShowAverage_%d"), i);
+		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].bShowAverage);
+
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ShowThresholds_%d"), i);
+		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].bShowThresholds);
+
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ShowTrend_%d"), i);
+		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].bShowTrend);
 	}
 }
 
@@ -1016,6 +1056,15 @@ void CGraphFrame::LoadSettings(const TCHAR *pszName)
 
 		_sntprintf_s(option, 64, _TRUNCATE, _T("ItemLineWidth_%d"), i);
 		m_wndGraph.m_graphItemStyles[i].nLineWidth = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
+
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ShowAverage_%d"), i);
+		m_wndGraph.m_graphItemStyles[i].bShowAverage = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
+
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ShowThresholds_%d"), i);
+		m_wndGraph.m_graphItemStyles[i].bShowThresholds = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
+
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ShowTrend_%d"), i);
+		m_wndGraph.m_graphItemStyles[i].bShowTrend = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
 	}
 
    if (m_iTimeFrameType == 0)
