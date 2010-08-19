@@ -12,6 +12,7 @@ mibsdir=$(pkgdatadir)/mibs
 
 mibs_DATA = \
 	ARCADA-MIB.txt \
+	ASTERISK-MIB.txt \
 	BGP4-MIB.txt \
 	BN-IF-EXTENSIONS-MIB.txt \
 	BRIDGE-MIB.txt \
@@ -33,6 +34,7 @@ mibs_DATA = \
 	COSINE-GLOBAL-REG.txt \
 	COSINE-InVision-MIB.txt \
 	COSINE-ORION-MIB.txt \
+	DIGIUM-MIB.txt \
 	DS1-MIB.txt \
 	DS3-MIB.txt \
 	ENTITY-MIB.txt \
