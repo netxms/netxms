@@ -8601,7 +8601,7 @@ void ClientSession::SendGraphList(DWORD dwRqId)
 				dwOwner = DBGetFieldULong(hResult, i, 1);
 				if ((m_dwUserId == 0) ||
 				    (m_dwUserId == dwOwner) ||
-				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, FALSE))
+				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_READ))
 				{
 					msg.SetVariable(dwId++, dwGraphId);
 					msg.SetVariable(dwId++, dwOwner);
