@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@ public class HistoryGraph extends ViewPart
 		
 		chart.getAxisSet().getYAxis(0).enableLogScale(useLogScale);
 		
-		makeActions();
+		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 		
@@ -245,7 +245,7 @@ public class HistoryGraph extends ViewPart
 	/**
 	 * Create actions
 	 */
-	private void makeActions()
+	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
 			/* (non-Javadoc)

@@ -1,0 +1,200 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.charts.views;
+
+import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.progress.UIJob;
+import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.charts.views.helpers.GraphTreeContentProvider;
+import org.netxms.ui.eclipse.charts.views.helpers.GraphTreeLabelProvider;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.tools.RefreshAction;
+
+/**
+ * Navigation view for predefined graphs
+ *
+ */
+public class PredefinedGraphTree extends ViewPart
+{
+	public static final String ID = "org.netxms.ui.eclipse.charts.views.PredefinedGraphTree";
+	
+	private TreeViewer viewer;
+	private NXCSession session;
+	private RefreshAction actionRefresh;
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	public void createPartControl(Composite parent)
+	{
+		session = NXMCSharedData.getInstance().getSession();
+		
+		parent.setLayout(new FillLayout());
+		
+		viewer = new TreeViewer(parent, SWT.NONE);
+		viewer.setContentProvider(new GraphTreeContentProvider());
+		viewer.setLabelProvider(new GraphTreeLabelProvider());
+
+		createActions();
+		contributeToActionBars();
+		createPopupMenu();
+		
+		reloadGraphList();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 */
+	@Override
+	public void setFocus()
+	{
+		viewer.getTree().setFocus();
+	}
+
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionRefresh = new RefreshAction() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				reloadGraphList();
+			}
+		};
+	}
+	
+	/**
+	 * Create pop-up menu for user list
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+
+		// Register menu for extension.
+		getSite().registerContextMenu(menuMgr, viewer);
+	}
+
+	/**
+	 * Fill context menu
+	 * 
+	 * @param mgr Menu manager
+	 */
+	protected void fillContextMenu(final IMenuManager mgr)
+	{
+		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+	}
+
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionRefresh);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionRefresh);
+	}
+	
+	/**
+	 * Reload graph list from server
+	 */
+	private void reloadGraphList()
+	{
+		new ConsoleJob("Load list of predefined graphs", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get list of predefined graphs";
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final List<GraphSettings> list = session.getPredefinedGraphs();
+				new UIJob("Upfate graph list") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						viewer.setInput(list);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		}.start();
+	}
+}

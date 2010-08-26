@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objecttools;
+package org.netxms.ui.eclipse.serviceview;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -28,7 +28,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin
 {
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.objecttools";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.serviceview";
 
 	// The shared instance
 	private static Activator plugin;
@@ -77,10 +77,11 @@ public class Activator extends AbstractUIPlugin
 	}
 
 	/**
-	 * Returns an image descriptor for the image file at the given
-	 * plug-in relative path
-	 *
-	 * @param path the path
+	 * Returns an image descriptor for the image file at the given plug-in
+	 * relative path
+	 * 
+	 * @param path
+	 *           the path
 	 * @return the image descriptor
 	 */
 	public static ImageDescriptor getImageDescriptor(String path)

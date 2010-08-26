@@ -11,6 +11,14 @@
             class="org.netxms.ui.eclipse.charts.views.HistoryGraph"
             id="org.netxms.ui.eclipse.charts.view.history_graph">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.charts.views.PredefinedGraphTree"
+            icon="icons/graph_tree.png"
+            id="org.netxms.ui.eclipse.charts.views.PredefinedGraphTree"
+            name="Graphs"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -62,6 +70,32 @@
             </instanceof>
          </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open predefined graphs navigation view"
+            id="org.netxms.ui.eclipse.charts.commands.open_predef_graph_tree"
+            name="Predefined Graphs">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.charts.action_set"
+            label="Graphs"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.OpenPredefinedGraphsTree"
+               definitionId="org.netxms.ui.eclipse.charts.commands.open_predef_graph_tree"
+               icon="icons/graph_tree.png"
+               id="org.netxms.ui.eclipse.charts.action.open_predef_graph_tree"
+               label="Predefined Graphs"
+               menubarPath="view/primary"
+               style="push"
+               toolbarPath="view/additions">
+         </action>
+      </actionSet>
    </extension>
 
 </plugin>

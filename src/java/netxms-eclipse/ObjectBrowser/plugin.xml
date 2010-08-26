@@ -8,7 +8,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Object Browser"
+            name="Objects"
             allowMultiple="false"
             icon="icons/object_browser.png"
             class="org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser"

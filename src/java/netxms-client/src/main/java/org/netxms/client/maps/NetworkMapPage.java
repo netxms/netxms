@@ -168,7 +168,7 @@ public class NetworkMapPage
 				if (object != null)
 					result.add(object);
 			}
-			else if (link.getObject1() == root)
+			else if (link.getObject2() == root)
 			{
 				long id = link.getObject1();
 				GenericObject object = session.findObjectById(id);

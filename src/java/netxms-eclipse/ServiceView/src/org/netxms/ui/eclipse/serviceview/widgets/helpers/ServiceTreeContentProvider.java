@@ -16,61 +16,48 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.networkmaps.views.helpers;
+package org.netxms.ui.eclipse.serviceview.widgets.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
-import org.netxms.client.NXCSession;
-import org.netxms.client.maps.NetworkMapPage;
-import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
- * Content provider for map
- * 
+ * Content provider for service tree
+ *
  */
-public class MapContentProvider implements IGraphEntityContentProvider
+public class ServiceTreeContentProvider implements IGraphEntityContentProvider
 {
-	private NetworkMapPage page;
-	private NXCSession session;
-	
-	/**
-	 * Create map content provider object
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.IGraphEntityContentProvider#getConnectedTo(java.lang.Object)
 	 */
-	public MapContentProvider()
-	{
-		session = NXMCSharedData.getInstance().getSession();
-	}
-	
-	@Override
-	public Object[] getElements(Object inputElement)
-	{
-		if (!(inputElement instanceof NetworkMapPage))
-			return null;
-		
-		return ((NetworkMapPage)inputElement).getResolvedObjects(session);
-	}
-
 	@Override
 	public Object[] getConnectedTo(Object entity)
 	{
-		if (!(entity instanceof GenericObject) || (page == null))
-			return null;
-		
-		return page.getConnectedObjects(((GenericObject)entity).getObjectId(), session);
+		return ((ServiceTreeElement)entity).getConnections();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.IGraphEntityContentProvider#getElements(java.lang.Object)
+	 */
+	@Override
+	public Object[] getElements(Object inputElement)
+	{
+		return ((ServiceTreeModel)inputElement).getVisibleElements();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
+	 */
 	@Override
 	public void dispose()
 	{
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+	 */
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
-		if (newInput instanceof NetworkMapPage)
-			page = (NetworkMapPage)newInput;
-		else
-			page = null;
 	}
 }

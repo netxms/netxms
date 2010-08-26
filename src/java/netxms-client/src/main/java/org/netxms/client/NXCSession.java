@@ -49,6 +49,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Event;
@@ -3272,5 +3273,28 @@ public class NXCSession
 			throw file.getException();
 		
 		return file.getFile();
+	}
+
+	/**
+	 * Get list of predefined graphs.
+	 * 
+	 * @return list of predefined graphs
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<GraphSettings> getPredefinedGraphs() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH_LIST);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_GRAPHS);
+		List<GraphSettings> list = new ArrayList<GraphSettings>(count);
+		long varId = NXCPCodes.VID_GRAPH_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(new GraphSettings(response, varId));
+			varId += 10;
+		}
+		return list;
 	}
 }

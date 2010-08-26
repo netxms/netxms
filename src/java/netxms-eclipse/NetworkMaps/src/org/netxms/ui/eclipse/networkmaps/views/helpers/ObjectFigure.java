@@ -33,7 +33,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 
 /**
- * @author victor
+ * Figure representing NetXMS object
  *
  */
 public class ObjectFigure extends Figure

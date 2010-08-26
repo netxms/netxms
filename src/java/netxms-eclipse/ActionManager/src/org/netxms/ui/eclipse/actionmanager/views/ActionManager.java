@@ -132,7 +132,7 @@ public class ActionManager extends ViewPart implements INXCListener
 			}
 		});
 		
-		makeActions();
+		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 		
@@ -233,7 +233,7 @@ public class ActionManager extends ViewPart implements INXCListener
 	/**
 	 * Create actions
 	 */
-	private void makeActions()
+	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
 			/* (non-Javadoc)
@@ -302,7 +302,7 @@ public class ActionManager extends ViewPart implements INXCListener
 			}
 		});
 
-		// Create menu.
+		// Create menu
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
 
