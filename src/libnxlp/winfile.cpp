@@ -77,7 +77,7 @@ static void ParseNewRecords(LogParser *parser, HANDLE hFile, void (*logger)(int,
 // Monitor file changes and parse line by line
 //
 
-bool LogParser::monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...))
+bool LogParser::monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos)
 {
    HANDLE hFile, hChange, handles[2];
    LARGE_INTEGER fp, fsnew;
@@ -101,6 +101,12 @@ bool LogParser::monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
                       NULL, OPEN_EXISTING, 0, NULL);
    if (hFile != INVALID_HANDLE_VALUE)
    {
+		if (!readFromCurrPos)
+		{
+			if (logger != NULL)
+				logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parsing existing records in file \"%s\""), m_fileName);
+			ParseNewRecords(this, hFile, logger);
+		}
       GetFileSizeEx(hFile, &fp);
       CloseHandle(hFile);
 

@@ -100,7 +100,7 @@ static void ParseNewRecords(LogParser *parser, int fh)
 // File parser thread
 //
 
-bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logger)(int, const TCHAR *, ...))
+bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos)
 {
 	char fname[MAX_PATH], temp[MAX_PATH];
 	struct stat st;
@@ -109,7 +109,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 #endif
 	size_t size;
 	int err, fh;
-	bool readFromStart = false;
+	bool readFromStart = !readFromCurrPos;
 
 	if ((m_fileName == NULL) || (stopFlag == NULL))
 		return false;
@@ -126,9 +126,14 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 			fh = open(fname, O_RDONLY);
 			if (fh != -1)
 			{
+				if (logger != NULL)
+					logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file \"%s\" successfully opened"), m_fileName);
+
 				size = st.st_size;
 				if (readFromStart)
 				{
+					if (logger != NULL)
+						logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parsing existing records in file \"%s\""), m_fileName);
 					ParseNewRecords(this, fh);
 					readFromStart = false;
 				}
@@ -136,9 +141,6 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logg
 				{
 					lseek(fh, 0, SEEK_END);
 				}
-
-				if (logger != NULL)
-					logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file \"%s\" successfully opened"), m_fileName);
 
 				while(!(*stopFlag))
 				{
