@@ -291,6 +291,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollec
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciDataRow.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciValue.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphItemStyle.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphSettings.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/PerfTabDci.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
