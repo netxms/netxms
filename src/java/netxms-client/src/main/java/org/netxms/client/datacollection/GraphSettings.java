@@ -65,6 +65,7 @@ public class GraphSettings
 	private int textColor;
 	private int rulerColor;
 	private GraphItemStyle[] itemStyles = new GraphItemStyle[MAX_GRAPH_ITEM_COUNT];
+	private GraphItem[] items;
 	private List<AccessListElement> accessList;
 	
 	/**
@@ -214,6 +215,24 @@ public class GraphSettings
 				int item = safeParseInt(name.substring(1), -1);
 				if ((item >= 0) && (item < MAX_GRAPH_ITEM_COUNT))
 					itemStyles[item].setColor(safeParseInt(value, 0));
+			}
+			else if (name.charAt(0) == 'W')	// Item line width
+			{
+				int item = safeParseInt(name.substring(1), -1);
+				if ((item >= 0) && (item < MAX_GRAPH_ITEM_COUNT))
+					itemStyles[item].setLineWidth(safeParseInt(value, 0));
+			}
+			else if ((name.charAt(0) == 'F') && (name.charAt(1) == 'L'))	// Item flags
+			{
+				int item = safeParseInt(name.substring(2), -1);
+				if ((item >= 0) && (item < MAX_GRAPH_ITEM_COUNT))
+					itemStyles[item].setFlags(safeParseInt(value, 0));
+			}
+			else if (name.charAt(0) == 'N')	// Node ID
+			{
+				int item = safeParseInt(name.substring(1), -1);
+				if ((item >= 0) && (item < dciCount))
+					dciInfo[item].setLineWidth(safeParseInt(value, 0));
 			}
 		}
 	}
