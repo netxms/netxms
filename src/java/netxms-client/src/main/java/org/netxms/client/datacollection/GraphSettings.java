@@ -64,6 +64,7 @@ public class GraphSettings
 	private int selectionColor;
 	private int textColor;
 	private int rulerColor;
+	private String title;
 	private GraphItemStyle[] itemStyles = new GraphItemStyle[MAX_GRAPH_ITEM_COUNT];
 	private GraphItem[] items;
 	private List<AccessListElement> accessList;
@@ -129,6 +130,9 @@ public class GraphSettings
 			else if (name.equals("N"))
 			{
 				dciCount = safeParseInt(value, 0);
+				items = new GraphItem[dciCount];
+				for(int j = 0; j < dciCount; j++)
+					items[j] = new GraphItem();
 			}
 			else if (name.equals("TFT"))
 			{
@@ -149,6 +153,10 @@ public class GraphSettings
 			else if (name.equals("TF"))
 			{
 				timeTo = new Date((long)safeParseInt(value, 0) * 1000L);
+			}
+			else if (name.equals("T"))
+			{
+				title = value;
 			}
 			else if (name.equals("S"))
 			{
@@ -232,7 +240,40 @@ public class GraphSettings
 			{
 				int item = safeParseInt(name.substring(1), -1);
 				if ((item >= 0) && (item < dciCount))
-					dciInfo[item].setLineWidth(safeParseInt(value, 0));
+					items[item].setNodeId(safeParseLong(value, 0));
+			}
+			else if (name.charAt(0) == 'I')	// DCI information
+			{
+				if (name.charAt(1) == 'D')	// description
+				{
+					int item = safeParseInt(name.substring(2), -1);
+					if ((item >= 0) && (item < dciCount))
+						items[item].setDescription(value);
+				}
+				else if (name.charAt(1) == 'N')	// name
+				{
+					int item = safeParseInt(name.substring(2), -1);
+					if ((item >= 0) && (item < dciCount))
+						items[item].setName(value);
+				}
+				else if (name.charAt(1) == 'S')	// source
+				{
+					int item = safeParseInt(name.substring(2), -1);
+					if ((item >= 0) && (item < dciCount))
+						items[item].setSource(safeParseInt(value, 0));
+				}
+				else if (name.charAt(1) == 'T')	// data type
+				{
+					int item = safeParseInt(name.substring(2), -1);
+					if ((item >= 0) && (item < dciCount))
+						items[item].setDataType(safeParseInt(value, 0));
+				}
+				else	// assume DCI ID - Ixxx
+				{
+					int item = safeParseInt(name.substring(1), -1);
+					if ((item >= 0) && (item < dciCount))
+						items[item].setDciId(safeParseLong(value, 0));
+				}
 			}
 		}
 	}
@@ -253,6 +294,84 @@ public class GraphSettings
 		{
 		}
 		return defVal;
+	}
+
+	/**
+	 * Parse long without throwing exception
+	 * @param text text to parse
+	 * @param defVal default value to be used in case of parse error
+	 * @return parsed value
+	 */
+	static private long safeParseLong(String text, long defVal)
+	{
+		try
+		{
+			return Long.parseLong(text);
+		}
+		catch(NumberFormatException e)
+		{
+		}
+		return defVal;
+	}
+	
+	/**
+	 * Get logarithmic scale mode
+	 * 
+	 * @return true if logarithmic scale mode is on
+	 */
+	public boolean isLogScale()
+	{
+		return (flags & GF_LOG_SCALE) != 0;
+	}
+	
+	/**
+	 * Get auto refresh mode
+	 * 
+	 * @return true if auto refresh is on
+	 */
+	public boolean isAutoRefresh()
+	{
+		return (flags & GF_AUTO_UPDATE) != 0;
+	}
+
+	/**
+	 * Get grid display mode
+	 * 
+	 * @return true if grid should be shown
+	 */
+	public boolean isGridVisible()
+	{
+		return (flags & GF_SHOW_GRID) != 0;
+	}
+
+	/**
+	 * Get host name display mode
+	 * 
+	 * @return true if host names should be shown
+	 */
+	public boolean isHostNamesVisible()
+	{
+		return (flags & GF_SHOW_HOST_NAMES) != 0;
+	}
+
+	/**
+	 * Get legend show mode
+	 * 
+	 * @return true if legend should be shown
+	 */
+	public boolean isLegendVisible()
+	{
+		return (flags & GF_SHOW_LEGEND) != 0;
+	}
+
+	/**
+	 * Get auto scale mode
+	 * 
+	 * @return true if auto scale is on
+	 */
+	public boolean isAutoScale()
+	{
+		return (flags & GF_AUTO_SCALE) != 0;
 	}
 
 	/**
@@ -293,5 +412,133 @@ public class GraphSettings
 	public String getShortName()
 	{
 		return shortName;
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
+	}
+
+	/**
+	 * @return the timeFrameType
+	 */
+	public int getTimeFrameType()
+	{
+		return timeFrameType;
+	}
+
+	/**
+	 * @return the timeUnit
+	 */
+	public int getTimeUnit()
+	{
+		return timeUnit;
+	}
+
+	/**
+	 * @return the timeFrame
+	 */
+	public int getTimeFrame()
+	{
+		return timeFrame;
+	}
+
+	/**
+	 * @return the timeFrom
+	 */
+	public Date getTimeFrom()
+	{
+		return timeFrom;
+	}
+
+	/**
+	 * @return the timeTo
+	 */
+	public Date getTimeTo()
+	{
+		return timeTo;
+	}
+
+	/**
+	 * @return the autoRefreshInterval
+	 */
+	public int getAutoRefreshInterval()
+	{
+		return autoRefreshInterval;
+	}
+
+	/**
+	 * @return the axisColor
+	 */
+	public int getAxisColor()
+	{
+		return axisColor;
+	}
+
+	/**
+	 * @return the backgroundColor
+	 */
+	public int getBackgroundColor()
+	{
+		return backgroundColor;
+	}
+
+	/**
+	 * @return the gridColor
+	 */
+	public int getGridColor()
+	{
+		return gridColor;
+	}
+
+	/**
+	 * @return the selectionColor
+	 */
+	public int getSelectionColor()
+	{
+		return selectionColor;
+	}
+
+	/**
+	 * @return the textColor
+	 */
+	public int getTextColor()
+	{
+		return textColor;
+	}
+
+	/**
+	 * @return the rulerColor
+	 */
+	public int getRulerColor()
+	{
+		return rulerColor;
+	}
+
+	/**
+	 * @return the title
+	 */
+	public String getTitle()
+	{
+		return title;
+	}
+
+	/**
+	 * @return the itemStyles
+	 */
+	public GraphItemStyle[] getItemStyles()
+	{
+		return itemStyles;
+	}
+
+	/**
+	 * @return the items
+	 */
+	public GraphItem[] getItems()
+	{
+		return items;
 	}
 }

@@ -18,7 +18,10 @@
  */
 package org.netxms.ui.eclipse.charts.views;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -30,7 +33,11 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -45,20 +52,25 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphItemStyle;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.Activator;
-import org.netxms.ui.eclipse.charts.views.helpers.DCIInfo;
 import org.netxms.ui.eclipse.charts.widgets.HistoricDataChart;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.swtchart.IAxis;
+import org.swtchart.ILineSeries;
+import org.swtchart.LineStyle;
 
 /**
- * @author Victor
+ * History graph view
  *
  */
 public class HistoryGraph extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.charts.view.history_graph";
+	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
 	public static final String JOB_FAMILY = "HistoryGraphJob";
 	
 	private static final int[] presetRanges = { 10, 30, 60, 120, 240, 1440, 10080, 44640, 525600 };
@@ -66,7 +78,8 @@ public class HistoryGraph extends ViewPart
 	                                              "day", "week", "month", "year" };
 	
 	private NXCSession session;
-	private ArrayList<DCIInfo> items = new ArrayList<DCIInfo>(1);
+	private ArrayList<GraphItem> items = new ArrayList<GraphItem>(1);
+	private ArrayList<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(GraphSettings.MAX_GRAPH_ITEM_COUNT);
 	private HistoricDataChart chart;
 	private boolean updateInProgress = false;
 	private Runnable refreshTimer;
@@ -87,6 +100,17 @@ public class HistoryGraph extends ViewPart
 	private Action actionAdjustBoth;
 	private Action actionLogScale;
 	private Action[] presetActions;
+	
+	/**
+	 * Default constructor
+	 */
+	public HistoryGraph()
+	{
+		// Create default item styles
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		for(int i = 0; i < GraphSettings.MAX_GRAPH_ITEM_COUNT; i++)
+			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, rgbToInt(PreferenceConverter.getColor(preferenceStore, "Chart.Colors.Data." + i)), 0, 0));
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -110,25 +134,72 @@ public class HistoryGraph extends ViewPart
 		};
 		
 		session = NXMCSharedData.getInstance().getSession();
-		String id = site.getSecondaryId();
 		
 		timeFrom = new Date(System.currentTimeMillis() - timeRange);
 		timeTo = new Date(System.currentTimeMillis());
 		
 		// Extract DCI ids from view id
 		// (first field will be unique view id, so we skip it)
+		String id = site.getSecondaryId();
 		String[] fields = id.split("&");
-		for(int i = 1; i < fields.length; i++)
+		if (!fields[0].equals(PREDEFINED_GRAPH_SUBID))
 		{
-			String[] subfields = fields[i].split("\\@");
-			if (subfields.length == 3)
+			for(int i = 1; i < fields.length; i++)
 			{
-				items.add(new DCIInfo(
-						Long.parseLong(subfields[1], 10), 
-						Long.parseLong(subfields[0], 10),
-						subfields[2]));
+				String[] subfields = fields[i].split("\\@");
+				if (subfields.length == 6)
+				{
+					try
+					{
+						items.add(new GraphItem(
+								Long.parseLong(subfields[0], 10),	// Node ID 
+								Long.parseLong(subfields[1], 10),	// DCI ID
+								Integer.parseInt(subfields[2], 10),	// source
+								Integer.parseInt(subfields[3], 10),	// data type
+								URLDecoder.decode(subfields[4], "UTF-8"),   // name
+								URLDecoder.decode(subfields[5], "UTF-8"))); // description
+					}
+					catch(NumberFormatException e)
+					{
+						e.printStackTrace();
+					}
+					catch(UnsupportedEncodingException e)
+					{
+						e.printStackTrace();
+					}
+				}
 			}
 		}
+	}
+	
+	/**
+	 * Initialize this view with predefined graph settings
+	 * 
+	 * @param gs graph settings
+	 */
+	public void initPredefinedGraph(GraphSettings gs)
+	{
+		// General settings
+		setPartName(gs.getShortName());
+		chart.getTitle().setText(gs.getTitle());
+
+		// Chart visual settings
+		itemStyles.clear();
+		itemStyles.addAll(Arrays.asList(gs.getItemStyles()));
+		chart.getAxisSet().getYAxis(0).enableLogScale(gs.isLogScale());
+		setGridVisible(gs.isGridVisible());
+		
+		// Data
+		items.clear();
+		items.addAll(Arrays.asList(gs.getItems()));
+		
+		getDataFromServer();
+
+		// Automatic refresh
+		autoRefreshInterval = gs.getAutoRefreshInterval();
+		autoRefreshEnabled = gs.isAutoRefresh();
+		actionAutoRefresh.setChecked(autoRefreshEnabled);
+		HistoryGraph.this.getSite().getShell().getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
 	}
 
 	/* (non-Javadoc)
@@ -139,6 +210,7 @@ public class HistoryGraph extends ViewPart
 	{
 		chart = new HistoricDataChart(parent, SWT.NONE);
 		
+		setGridVisible(true);
 		chart.getAxisSet().getYAxis(0).enableLogScale(useLogScale);
 		
 		createActions();
@@ -193,8 +265,8 @@ public class HistoryGraph extends ViewPart
 				{
 					for(int i = 0; i < items.size(); i++)
 					{
-						DCIInfo info = items.get(i);
-						data[i] = session.getCollectedData(info.getNodeId(), info.getDciId(), timeFrom, timeTo, 0);
+						GraphItem item = items.get(i);
+						data[i] = session.getCollectedData(item.getNodeId(), item.getDciId(), timeFrom, timeTo, 0);
 					}
 					status = Status.OK_STATUS;
 	
@@ -463,7 +535,7 @@ public class HistoryGraph extends ViewPart
 	 * 
 	 * @param data DCI data
 	 */
-	private void addItemToChart(int index, final DCIInfo info, final DciData data)
+	private void addItemToChart(int index, final GraphItem item, final DciData data)
 	{
 		final DciDataRow[] values = data.getValues();
 		
@@ -476,7 +548,8 @@ public class HistoryGraph extends ViewPart
 			ySeries[i] = values[i].getValueAsDouble();
 		}
 		
-		chart.addLineSeries(index, info.getDescription(), xSeries, ySeries);
+		ILineSeries series = chart.addLineSeries(index, item.getDescription(), xSeries, ySeries);
+		applyItemStyle(index, series);
 	}
 	
 	/**
@@ -501,6 +574,57 @@ public class HistoryGraph extends ViewPart
 	{
 		timeRange = range;
 		updateChart();
+	}
+	
+	/**
+	 * Set chart grid visibility
+	 * 
+	 * @param visible true if grid must be visible
+	 */
+	protected void setGridVisible(boolean visible)
+	{
+		final LineStyle ls = visible ? LineStyle.DOT : LineStyle.NONE;
+		chart.getAxisSet().getXAxis(0).getGrid().setStyle(ls);
+		chart.getAxisSet().getYAxis(0).getGrid().setStyle(ls);
+	}
+	
+	/**
+	 * Apply graph item style
+	 * 
+	 * @param index item index
+	 * @param series added series
+	 */
+	private void applyItemStyle(int index, ILineSeries series)
+	{
+		if ((index < 0) || (index >= itemStyles.size()))
+			return;
+
+		GraphItemStyle style = itemStyles.get(index);
+		series.setLineColor(colorFromInt(style.getColor()));
+	}
+	
+	/**
+	 * Create Color object from integer RGB representation
+	 * @param rgb color's rgb representation
+	 * @return color object
+	 */
+	private Color colorFromInt(int rgb)
+	{
+		// All colors on server stored as BGR: red in less significant byte and blue in most significant byte
+		return new Color(getSite().getShell().getDisplay(), rgb & 0xFF, (rgb >> 8) & 0xFF, rgb >> 16);
+	}
+	
+	/**
+	 * Create integer value from Red/Green/Blue
+	 * 
+	 * @param r red
+	 * @param g green
+	 * @param b blue
+	 * @return
+	 */
+	private static int rgbToInt(RGB rgb)
+	{
+		return rgb.red | (rgb.green << 8) | (rgb.blue << 16);
 	}
 
 	/* (non-Javadoc)

@@ -18,15 +18,25 @@
  */
 package org.netxms.ui.eclipse.charts.views;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
@@ -34,6 +44,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
@@ -56,6 +69,7 @@ public class PredefinedGraphTree extends ViewPart
 	private TreeViewer viewer;
 	private NXCSession session;
 	private RefreshAction actionRefresh;
+	private Action actionOpen; 
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -70,6 +84,32 @@ public class PredefinedGraphTree extends ViewPart
 		viewer = new TreeViewer(parent, SWT.NONE);
 		viewer.setContentProvider(new GraphTreeContentProvider());
 		viewer.setLabelProvider(new GraphTreeLabelProvider());
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				actionOpen.run();
+			}
+		});
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				Iterator it = selection.iterator();
+				boolean enabled = false;
+				while(it.hasNext())
+				{
+					if (it.next() instanceof GraphSettings)
+					{
+						enabled = true;
+						break;
+					}
+				}
+				actionOpen.setEnabled(enabled);
+			}
+		});
 
 		createActions();
 		contributeToActionBars();
@@ -102,6 +142,28 @@ public class PredefinedGraphTree extends ViewPart
 				reloadGraphList();
 			}
 		};
+		
+		actionOpen = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@SuppressWarnings("unchecked")
+			@Override
+			public void run()
+			{
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				Iterator it = selection.iterator();
+				while(it.hasNext())
+				{
+					Object o = it.next();
+					if (o instanceof GraphSettings)
+					{
+						showPredefinedGraph((GraphSettings)o);
+					}
+				}
+			}
+		};
+		actionOpen.setText("&Open");
 	}
 	
 	/**
@@ -135,6 +197,7 @@ public class PredefinedGraphTree extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
+		mgr.add(actionOpen);
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
@@ -156,6 +219,7 @@ public class PredefinedGraphTree extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionOpen);
 		manager.add(actionRefresh);
 	}
 
@@ -196,5 +260,34 @@ public class PredefinedGraphTree extends ViewPart
 				}.schedule();
 			}
 		}.start();
+	}
+	
+	/**
+	 * Show predefined graph view
+	 * 
+	 * @param gs graph settings
+	 */
+	private void showPredefinedGraph(GraphSettings gs)
+	{
+		String encodedName;
+		try
+		{
+			encodedName = URLEncoder.encode(gs.getName(), "UTF-8");
+		}
+		catch(UnsupportedEncodingException e1)
+		{
+			encodedName = "___ERROR___";
+		}
+		String id = HistoryGraph.PREDEFINED_GRAPH_SUBID + "&" + encodedName;
+		try
+		{
+			HistoryGraph g = (HistoryGraph)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistoryGraph.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+			if (g != null)
+				g.initPredefinedGraph(gs);
+		}
+		catch(PartInitException e)
+		{
+			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Error opening graph view: " + e.getMessage());
+		}
 	}
 }

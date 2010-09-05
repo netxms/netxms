@@ -50,7 +50,8 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 			for(int i = 0; i < currentSelection.length; i++)
 			{
 				long dciId = 0, nodeId = 0;
-				String description = null;
+				int source = 0, dataType = 0;
+				String name = null, description = null;
 				
 				try
 				{
@@ -58,12 +59,18 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 					{
 						dciId = ((DciValue)currentSelection[i]).getId(); 
 						nodeId = ((DciValue)currentSelection[i]).getNodeId();
+						source = ((DciValue)currentSelection[i]).getSource();
+						dataType = ((DciValue)currentSelection[i]).getDataType();
+						name = URLEncoder.encode(((DciValue)currentSelection[i]).getName(), "UTF-8");
 						description = URLEncoder.encode(((DciValue)currentSelection[i]).getDescription(), "UTF-8");
 					}
 					else if (currentSelection[i] instanceof DataCollectionItem)
 					{
 						dciId = ((DataCollectionItem)currentSelection[i]).getId(); 
 						nodeId = ((DataCollectionItem)currentSelection[i]).getNodeId();
+						source = ((DataCollectionItem)currentSelection[i]).getOrigin();
+						dataType = ((DataCollectionItem)currentSelection[i]).getDataType();
+						name = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getName(), "UTF-8");
 						description = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getDescription(), "UTF-8");
 					}
 				}
@@ -72,7 +79,8 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 					description = "<description unavailable>";
 				}
 				
-				id += "&" + Long.toString(dciId) + "@" + Long.toString(nodeId) + "@" + description;
+				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + 
+					Integer.toString(source) + "@" + Integer.toString(dataType) + "@" + name + "@" + description;
 			}
 			
 			try
