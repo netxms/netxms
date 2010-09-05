@@ -35,7 +35,7 @@ public class GraphTreeLabelProvider extends LabelProvider
 	public GraphTreeLabelProvider()
 	{
 		imgFolder = Activator.getImageDescriptor("icons/folder.png").createImage();
-		imgGraph = Activator.getImageDescriptor("icons/graph.png").createImage();
+		imgGraph = Activator.getImageDescriptor("icons/chart_line.png").createImage();
 	}
 	
 	/* (non-Javadoc)

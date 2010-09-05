@@ -392,9 +392,17 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widget
 src/java/netxms-eclipse/Charts/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Charts/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/Charts/build.properties -text
+src/java/netxms-eclipse/Charts/icons/adjust.png -text
+src/java/netxms-eclipse/Charts/icons/adjust_x.png -text
+src/java/netxms-eclipse/Charts/icons/adjust_y.png -text
+src/java/netxms-eclipse/Charts/icons/chart_bar.png -text
+src/java/netxms-eclipse/Charts/icons/chart_line.png -text
+src/java/netxms-eclipse/Charts/icons/chart_pie.png -text
 src/java/netxms-eclipse/Charts/icons/folder.png -text
 src/java/netxms-eclipse/Charts/icons/graph.png -text
 src/java/netxms-eclipse/Charts/icons/graph_tree.png -text
+src/java/netxms-eclipse/Charts/icons/zoom_in.png -text
+src/java/netxms-eclipse/Charts/icons/zoom_out.png -text
 src/java/netxms-eclipse/Charts/plugin.xml -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/PerfTabGraphSettings.java -text

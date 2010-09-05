@@ -55,6 +55,7 @@ import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.widgets.HistoricDataChart;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -169,6 +170,18 @@ public class HistoryGraph extends ViewPart
 					}
 				}
 			}
+			
+			// Set view title to "host name: dci description" if
+			// we have only one DCI
+			if (items.size() == 1)
+			{
+				GraphItem item = items.get(0);
+				GenericObject object = session.findObjectById(item.getNodeId());
+				if (object != null)
+				{
+					setPartName(object.getObjectName() + ": " + item.getDescription());
+				}
+			}
 		}
 	}
 	
@@ -180,7 +193,7 @@ public class HistoryGraph extends ViewPart
 	public void initPredefinedGraph(GraphSettings gs)
 	{
 		// General settings
-		setPartName(gs.getShortName());
+		setPartName(gs.getTitle());
 		chart.getTitle().setText(gs.getTitle());
 
 		// Chart visual settings
@@ -367,6 +380,7 @@ public class HistoryGraph extends ViewPart
 			}
 		};
 		actionZoomIn.setText("Zoom &in");
+		actionZoomIn.setImageDescriptor(Activator.getImageDescriptor("icons/zoom_in.png"));
 
 		actionZoomOut = new Action() {
 			/* (non-Javadoc)
@@ -380,6 +394,7 @@ public class HistoryGraph extends ViewPart
 			}
 		};
 		actionZoomOut.setText("Zoom &out");
+		actionZoomOut.setImageDescriptor(Activator.getImageDescriptor("icons/zoom_out.png"));
 
 		actionAdjustX = new Action() {
 			/* (non-Javadoc)
@@ -396,6 +411,7 @@ public class HistoryGraph extends ViewPart
 			}
 		};
 		actionAdjustX.setText("Adjust &X axis");
+		actionAdjustX.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png"));
 
 		actionAdjustY = new Action() {
 			/* (non-Javadoc)
@@ -412,6 +428,7 @@ public class HistoryGraph extends ViewPart
 			}
 		};
 		actionAdjustY.setText("Adjust &Y axis");
+		actionAdjustY.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png"));
 
 		actionAdjustBoth = new Action() {
 			/* (non-Javadoc)
@@ -428,6 +445,7 @@ public class HistoryGraph extends ViewPart
 			}
 		};
 		actionAdjustBoth.setText("&Adjust");
+		actionAdjustBoth.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png"));
 
 		presetActions = new Action[presetRanges.length];
 		for(int i = 0; i < presetRanges.length; i++)
@@ -513,6 +531,13 @@ public class HistoryGraph extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionAdjustBoth);
+		manager.add(actionAdjustX);
+		manager.add(actionAdjustY);
+		manager.add(new Separator());
+		manager.add(actionZoomIn);
+		manager.add(actionZoomOut);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
