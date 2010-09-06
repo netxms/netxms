@@ -331,7 +331,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	   DebugPrintf(INVALID_INDEX, 4, "H_ExternalParameter/POpenWorker: worker thread pipe read result: %d", nRet);
 		if (nRet > 0)
 		{
-			data->value[MAX_RESULT_LENGTH - 1] = 0;
+			data->value[min(nRet, MAX_RESULT_LENGTH - 1)] = 0;
 			if ((pTmp = strchr(data->value, '\n')) != NULL)
 			{
 				*pTmp = 0;
