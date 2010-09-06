@@ -377,7 +377,7 @@ BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
 // Writing thread
 //
 
-void CommSession::writeThread(void)
+void CommSession::writeThread()
 {
    CSCP_MESSAGE *pMsg;
 
@@ -398,7 +398,7 @@ void CommSession::writeThread(void)
 // Message processing thread
 //
 
-void CommSession::processingThread(void)
+void CommSession::processingThread()
 {
    CSCPMessage *pMsg;
    char szBuffer[128];

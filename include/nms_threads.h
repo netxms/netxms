@@ -645,6 +645,8 @@ inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *)
 		id = INVALID_THREAD_HANDLE;
    } 
 
+	pthread_attr_destroy(&attr);
+
 	return id;
 }
 

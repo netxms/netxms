@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -376,7 +374,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
    DebugPrintf(INVALID_INDEX, 4, "H_ExternalParameter called for \"%s\" \"%s\"", pszCmd, pszArg);
 
    // Substitute $1 .. $9 with actual arguments
-   iSize = (int)strlen(pszArg);
+   iSize = (int)strlen(pszArg);  // we don't need strlen + 1 because loop starts from &pszArg[1]
    pszCmdLine = (char *)malloc(iSize);
    for(sptr = &pszArg[1], i = 0; *sptr != 0; sptr++)
       if (*sptr == '$')
