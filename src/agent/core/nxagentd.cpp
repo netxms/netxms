@@ -615,7 +615,7 @@ static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
 // Initialization routine
 //
 
-BOOL Initialize(void)
+BOOL Initialize()
 {
    char *pItem, *pEnd;
 #ifdef _NETWARE
@@ -961,6 +961,8 @@ BOOL Initialize(void)
 	// Start watchdog process
 	if (g_dwFlags & AF_ENABLE_WATCHDOG)
 		StartWatchdog();
+
+	delete g_config;
 
    return TRUE;
 }

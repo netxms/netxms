@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for GNU/Linux
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -375,7 +373,8 @@ static void CpuUsageCollector()
 {
 	FILE *hStat = fopen("/proc/stat", "r");
 
-	if (hStat == NULL) {
+	if (hStat == NULL)
+	{
 		// TODO: logging
 		return;
 	}
@@ -384,41 +383,42 @@ static void CpuUsageCollector()
 	uint64_t iowait = 0, irq = 0, softirq = 0; // 2.6
 	uint64_t steal = 0; // 2.6.11
 	uint64_t guest = 0; // 2.6.24
-	unsigned int cpu;
-	unsigned int maxCpu;
+	unsigned int cpu = 0;
+	unsigned int maxCpu = 0;
 	char buffer[1024];
 
 	MutexLock(m_cpuUsageMutex, INFINITE);
-	if (m_currentSlot == CPU_USAGE_SLOTS) {
+	if (m_currentSlot == CPU_USAGE_SLOTS)
+	{
 		m_currentSlot = 0;
 	}
 
 	// scan for all CPUs
-	while (1) {
-		if (fgets(buffer, sizeof(buffer), hStat) == NULL) {
+	while (1)
+	{
+		if (fgets(buffer, sizeof(buffer), hStat) == NULL)
 			break;
-		}
 
-		if (buffer[0] != 'c' || buffer[1] != 'p' || buffer[2] != 'u') {
+		if (buffer[0] != 'c' || buffer[1] != 'p' || buffer[2] != 'u')
 			continue;
-		}
 
 		int ret;
-		if (buffer[3] == ' ') {
+		if (buffer[3] == ' ')
+		{
 			// "cpu ..." - Overal
 			cpu = 0;
 			ret = sscanf(buffer, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
 					&user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
 		}
-		else {
+		else
+		{
 			ret = sscanf(buffer, "cpu%u %llu %llu %llu %llu %llu %llu %llu %llu %llu",
 					&cpu, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
 			cpu++;
 		}
 
-		if (ret < 4) {
+		if (ret < 4)
 			continue;
-		}
 
 		maxCpu = max(cpu, maxCpu);
 
@@ -440,7 +440,8 @@ static void CpuUsageCollector()
 		uint64_t totalDelta = userDelta + niceDelta + systemDelta + idleDelta + iowaitDelta + irqDelta + softirqDelta + stealDelta + guestDelta;
 
 		float onePercent = (float)totalDelta / 100.0; // 1% of total
-		if (onePercent == 0) {
+		if (onePercent == 0)
+		{
 			onePercent = 1; // TODO: why 1?
 		}
 			
@@ -461,10 +462,12 @@ static void CpuUsageCollector()
 		UPDATE(guestDelta, m_cpuUsageGuest);
 
 		/* update overal cpu usage */
-		if (totalDelta > 0) {
+		if (totalDelta > 0)
+		{
 			*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 100.0 - ((float)idleDelta / onePercent);
 		}
-		else {
+		else
+		{
 			*(m_cpuUsage + (cpu * CPU_USAGE_SLOTS) + m_currentSlot) = 0;
 		}
 
