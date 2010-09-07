@@ -76,6 +76,7 @@ fi
 # install new files
 mkdir $prefix 2>/dev/null
 if test "x$platform" = "xAIX"; then
+	slibclean
 	cp -f -R * $prefix/ 2>>$log
 else
 	cp -R * $prefix/ 2>>$log
