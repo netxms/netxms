@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,7 +91,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 
    // Load DCI and access list
    LoadACLFromDB();
-   LoadItemsFromDB();
+   loadItemsFromDB();
    for(i = 0; i < (int)m_dwNumItems; i++)
       if (!m_ppItems[i]->loadThresholdsFromDB())
          return FALSE;
@@ -233,8 +232,10 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    // Save data collection items
    if (bResult)
    {
+		lockDciAccess();
       for(i = 0; i < m_dwNumItems; i++)
          m_ppItems[i]->saveToDB(hdb);
+		unlockDciAccess();
 
 		// Save cluster members list
 		if (DBBegin(hdb))
@@ -531,7 +532,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 			 (m_pChildList[i]->Type() == OBJECT_NODE))
       {
          m_pChildList[i]->IncRefCount();
-			((Node *)m_pChildList[i])->LockForStatusPoll();
+			((Node *)m_pChildList[i])->lockForStatusPoll();
          ppPollList[dwPollListSize++] = m_pChildList[i];
       }
    UnlockChildList();
@@ -541,7 +542,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	for(i = 0, bAllDown = TRUE; i < dwPollListSize; i++)
 	{
 		((Node *)ppPollList[i])->StatusPoll(pSession, dwRqId, nPoller);
-		if (!((Node *)ppPollList[i])->IsDown())
+		if (!((Node *)ppPollList[i])->isDown())
 			bAllDown = FALSE;
 	}
 
@@ -565,7 +566,6 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	// Check for cluster resource movement
 	if (!bAllDown)
 	{
-		LockData();
 		pbResourceFound = (BYTE *)malloc(m_dwNumResources);
 		memset(pbResourceFound, 0, m_dwNumResources);
 
@@ -575,6 +575,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 			pIfList = ((Node *)ppPollList[i])->GetInterfaceList();
 			if (pIfList != NULL)
 			{
+				LockData();
 				for(j = 0; j < (DWORD)pIfList->iNumEntries; j++)
 				{
 					for(k = 0; k < m_dwNumResources; k++)
@@ -613,6 +614,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 						}
 					}
 				}
+				UnlockData();
 				DestroyInterfaceList(pIfList);
 			}
 			else
@@ -623,6 +625,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		}
 
 		// Check for missing virtual addresses
+		LockData();
 		for(i = 0; i < m_dwNumResources; i++)
 		{
 			if ((!pbResourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
@@ -638,9 +641,8 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 				bModified = TRUE;
 			}
 		}
-		safe_free(pbResourceFound);
-
 		UnlockData();
+		safe_free(pbResourceFound);
 	}
 
 	// Cleanup
@@ -665,7 +667,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 // Check if node is current owner of resource
 //
 
-BOOL Cluster::IsResourceOnNode(DWORD dwResource, DWORD dwNode)
+BOOL Cluster::isResourceOnNode(DWORD dwResource, DWORD dwNode)
 {
 	BOOL bRet = FALSE;
 	DWORD i;

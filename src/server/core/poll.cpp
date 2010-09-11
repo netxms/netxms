@@ -74,9 +74,9 @@ void CheckForMgmtNode(void)
          if ((pNode = FindNodeByIP(pIfList->pInterfaces[i].dwIpAddr)) != NULL)
          {
             // Check management node flag
-            if (!(pNode->Flags() & NF_IS_LOCAL_MGMT))
+            if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
             {
-               pNode->SetLocalMgmtFlag();
+               pNode->setLocalMgmtFlag();
                DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), pNode->Name(), pNode->Id());
             }
             g_dwMgmtNode = pNode->Id();   // Set local management node ID
@@ -96,25 +96,25 @@ void CheckForMgmtNode(void)
                PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
                
                // Add default data collection items
-               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", 
+               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", 
                                          DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
-               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
                                          "Server.AverageDCPollerQueueSize", 
                                          DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
                                          "Average length of data collection poller's request queue for last minute"));
-               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
                                          "Server.AverageDBWriterQueueSize", 
                                          DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
                                          "Average length of database writer's request queue for last minute"));
-               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
                                          "Server.AverageDCIQueuingTime", 
                                          DS_INTERNAL, DCI_DT_UINT, 60, 30, pNode,
                                          "Average time to queue DCI for polling for last minute"));
-               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
                                          "Server.AverageStatusPollerQueueSize", 
                                          DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
                                          "Average length of status poller queue for last minute"));
-               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
                                          "Server.AverageConfigurationPollerQueueSize", 
                                          DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
                                          "Average length of configuration poller queue for last minute"));
@@ -130,9 +130,9 @@ void CheckForMgmtNode(void)
    {
       if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
 		    (g_dwMgmtNode != g_pIndexById[i].dwKey) &&
-			 (((Node *)g_pIndexById[i].pObject)->IsLocalManagement()))
+			 (((Node *)g_pIndexById[i].pObject)->isLocalManagement()))
       {
-			((Node *)g_pIndexById[i].pObject)->ClearLocalMgmtFlag();
+			((Node *)g_pIndexById[i].pObject)->clearLocalMgmtFlag();
          DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
 			          ((Node *)g_pIndexById[i].pObject)->Name(), ((Node *)g_pIndexById[i].pObject)->Id());
       }
@@ -405,7 +405,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
                 pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
 
       // Retrieve and analize node's ARP cache
-      pArpCache = pNode->GetArpCache();
+      pArpCache = pNode->getArpCache();
       if (pArpCache != NULL)
       {
          for(i = 0; i < pArpCache->dwNumEntries; i++)
@@ -431,7 +431,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 
       DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
                 pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
-      pNode->SetDiscoveryPollTimeStamp();
+      pNode->setDiscoveryPollTimeStamp();
       pNode->DecRefCount();
    }
    g_nodePollerQueue.Clear();
@@ -659,28 +659,28 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 			{
 				case OBJECT_NODE:
 					pNode = (Node *)g_pIndexById[j].pObject;
-					if (pNode->ReadyForConfigurationPoll())
+					if (pNode->isReadyForConfigurationPoll())
 					{
 						pNode->IncRefCount();
-						pNode->LockForConfigurationPoll();
+						pNode->lockForConfigurationPoll();
 						g_configPollQueue.Put(pNode);
 					}
-					if (pNode->ReadyForStatusPoll())
+					if (pNode->isReadyForStatusPoll())
 					{
 						pNode->IncRefCount();
-						pNode->LockForStatusPoll();
+						pNode->lockForStatusPoll();
 						g_statusPollQueue.Put(pNode);
 					}
-					if (pNode->ReadyForRoutePoll())
+					if (pNode->isReadyForRoutePoll())
 					{
 						pNode->IncRefCount();
-						pNode->LockForRoutePoll();
+						pNode->lockForRoutePoll();
 						g_routePollQueue.Put(pNode);
 					}
-					if (pNode->ReadyForDiscoveryPoll())
+					if (pNode->isReadyForDiscoveryPoll())
 					{
 						pNode->IncRefCount();
-						pNode->LockForDiscoveryPoll();
+						pNode->lockForDiscoveryPoll();
 						g_discoveryPollQueue.Put(pNode);
 					}
 					break;
@@ -744,7 +744,7 @@ void ResetDiscoveryPoller(void)
    {
       if (pNode != INVALID_POINTER_VALUE)
       {
-         pNode->SetDiscoveryPollTimeStamp();
+         pNode->setDiscoveryPollTimeStamp();
          pNode->DecRefCount();
       }
    }

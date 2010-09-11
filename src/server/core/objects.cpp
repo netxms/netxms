@@ -336,7 +336,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          }
       }
    }
-   RWLockWriteLock(g_rwlockIdIndex, INFINITE);
+	RWLockPreemptiveWriteLock(g_rwlockIdIndex, 1000, 500);
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
    RWLockUnlock(g_rwlockIdIndex);
    if (!pObject->IsDeleted())
@@ -659,7 +659,7 @@ DWORD FindLocalMgmtNode(void)
 
    RWLockReadLock(g_rwlockNodeIndex, INFINITE);
    for(i = 0; i < g_dwNodeAddrIndexSize; i++)
-      if (((Node *)g_pNodeIndexByAddr[i].pObject)->Flags() & NF_IS_LOCAL_MGMT)
+      if (((Node *)g_pNodeIndexByAddr[i].pObject)->getFlags() & NF_IS_LOCAL_MGMT)
       {
          dwId = ((Node *)g_pNodeIndexByAddr[i].pObject)->Id();
          break;
@@ -1184,10 +1184,10 @@ void DumpObjects(CONSOLE_CTX pCtx)
       {
          case OBJECT_NODE:
             ConsolePrintf(pCtx, "   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n",
-                          ((Node *)pObject)->IsSNMPSupported(),
-                          ((Node *)pObject)->IsNativeAgent(),
-                          ((Node *)pObject)->IsLocalManagement(),
-                          ((Node *)pObject)->ObjectId());
+                          ((Node *)pObject)->isSNMPSupported(),
+                          ((Node *)pObject)->isNativeAgent(),
+                          ((Node *)pObject)->isLocalManagement(),
+                          ((Node *)pObject)->getObjectId());
             break;
          case OBJECT_SUBNET:
             ConsolePrintf(pCtx, "   Network mask: %s\n", 
@@ -1199,8 +1199,8 @@ void DumpObjects(CONSOLE_CTX pCtx)
             break;
          case OBJECT_TEMPLATE:
             ConsolePrintf(pCtx, "   Version: %d.%d\n", 
-                          ((Template *)(pObject))->VersionMajor(),
-                          ((Template *)(pObject))->VersionMinor());
+                          ((Template *)(pObject))->getVersionMajor(),
+                          ((Template *)(pObject))->getVersionMinor());
             break;
       }
    }

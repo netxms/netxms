@@ -92,7 +92,7 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 		conn.setCommandTimeout(m_dwTimeout);
 		//conn.SetEncryptionPolicy(iEncryptionPolicy);
 
-      if (conn.Connect())
+      if (conn.connect())
       {
 			TCHAR *argv[2];
 
@@ -100,7 +100,7 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 			argv[1] = pszText;
          if (conn.ExecAction("SMS.Send", 2, argv) == ERR_SUCCESS)
 				bSuccess = TRUE;
-			conn.Disconnect();
+			conn.disconnect();
 		}
 	}
 	return bSuccess;

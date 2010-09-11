@@ -59,51 +59,51 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!strcmp(pszAttr, "isAgent"))
    {
-      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_NATIVE_AGENT) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_NATIVE_AGENT) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isSNMP"))
    {
-      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_SNMP) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SNMP) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isBridge"))
    {
-      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_BRIDGE) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_BRIDGE) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isRouter"))
    {
-      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_ROUTER) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_ROUTER) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isPrinter"))
    {
-      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_PRINTER) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_PRINTER) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isCDP"))
    {
-      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_CDP) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_CDP) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isSONMP"))
    {
-      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_SONMP) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SONMP) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isLLDP"))
    {
-      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_LLDP) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_LLDP) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "snmpVersion"))
    {
-      pValue = new NXSL_Value((LONG)pNode->GetSNMPVersion());
+      pValue = new NXSL_Value((LONG)pNode->getSNMPVersion());
    }
    else if (!strcmp(pszAttr, "snmpOID"))
    {
-      pValue = new NXSL_Value(pNode->GetSNMPObjectId());
+      pValue = new NXSL_Value(pNode->getSNMPObjectId());
    }
    else if (!strcmp(pszAttr, "agentVersion"))
    {
-      pValue = new NXSL_Value(pNode->GetAgentVersion());
+      pValue = new NXSL_Value(pNode->getAgentVersion());
    }
    else if (!strcmp(pszAttr, "platformName"))
    {
-      pValue = new NXSL_Value(pNode->GetPlatformName());
+      pValue = new NXSL_Value(pNode->getPlatformName());
    }
 	else
 	{

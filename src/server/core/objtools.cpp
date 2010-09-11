@@ -191,11 +191,11 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
                   dwResult = pConn->GetList(pszEnum);
                   if (dwResult == ERR_SUCCESS)
                   {
-                     dwNumRows = pConn->GetNumDataLines();
+                     dwNumRows = pConn->getNumDataLines();
                      pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (dwNumCols + 1));
                      for(i = 0; i < dwNumRows; i++)
                      {
-                        pszLine = (TCHAR *)pConn->GetDataLine(i);
+                        pszLine = (TCHAR *)pConn->getDataLine(i);
                         if (regexec(&preg, pszLine, dwNumCols + 1, pMatchList, 0) == 0)
                         {
 									table.addRow();

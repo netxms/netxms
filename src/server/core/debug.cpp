@@ -112,7 +112,7 @@ void ShowServerStats(CONSOLE_CTX pCtx)
 
    RWLockReadLock(g_rwlockNodeIndex, INFINITE);
    for(i = 0, dwNumItems = 0; i < g_dwNodeAddrIndexSize; i++)
-      dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->GetItemCount();
+      dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->getItemCount();
    RWLockUnlock(g_rwlockNodeIndex);
 
    ConsolePrintf(pCtx, "Total number of objects:     %d\n"

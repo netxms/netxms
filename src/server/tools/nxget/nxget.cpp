@@ -89,9 +89,9 @@ static int List(AgentConnection *pConn, char *pszParam)
    dwError = pConn->GetList(pszParam);
    if (dwError == ERR_SUCCESS)
    {
-      dwNumLines = pConn->GetNumDataLines();
+      dwNumLines = pConn->getNumDataLines();
       for(i = 0; i < dwNumLines; i++)
-         printf("%s\n", pConn->GetDataLine(i));
+         printf("%s\n", pConn->getDataLine(i));
    }
    else
    {
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 #endif
    WORD wAgentPort = AGENT_LISTEN_PORT, wProxyPort = AGENT_LISTEN_PORT;
    WORD wServicePort = 0, wServiceProto = 0;
-   DWORD dwTimeout = 3000, dwServiceAddr = 0, dwError, dwAddr, dwProxyAddr;
+   DWORD dwTimeout = 5000, dwConnTimeout = 30000, dwServiceAddr = 0, dwError, dwAddr, dwProxyAddr;
    char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "";
    char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = "";
    char szProxy[MAX_OBJECT_NAME] = "", szProxySecret[MAX_SECRET_LENGTH] = "";
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:A:bCe:hi:IK:lnO:p:P:qr:R:s:S:t:vw:X:Z:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:bCe:hi:IK:lnO:p:P:qr:R:s:S:t:vw:W:X:Z:")) != -1)
    {
       switch(ch)
       {
@@ -256,7 +256,8 @@ int main(int argc, char *argv[])
 						 "                  Possible types are: custom, ssh, pop3, smtp, ftp, http, telnet.\n"
                    "   -T <proto>   : Protocol number to be used for service check.\n"
                    "   -v           : Display version and exit.\n"
-                   "   -w <seconds> : Specify command timeout (default is 3 seconds).\n"
+                   "   -w <seconds> : Set command timeout (default is 5 seconds).\n"
+                   "   -W <seconds> : Set connection timeout (default is 30 seconds).\n"
                    "   -X <addr>    : Use proxy agent at given address.\n"
                    "   -Z <secret>  : Shared secret for proxy agent authentication.\n"
                    "\n", wAgentPort, wAgentPort);
@@ -416,6 +417,18 @@ int main(int argc, char *argv[])
                dwTimeout = (DWORD)i * 1000;  // Convert to milliseconds
             }
             break;
+         case 'W':   // Connection timeout
+            i = strtol(optarg, &eptr, 0);
+            if ((*eptr != 0) || (i < 1) || (i > 120))
+            {
+               printf("Invalid timeout \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               dwConnTimeout = (DWORD)i * 1000;  // Convert to milliseconds
+            }
+            break;
 #ifdef _WITH_ENCRYPTION
          case 'e':
             iEncryptionPolicy = atoi(optarg);
@@ -511,11 +524,12 @@ int main(int argc, char *argv[])
          {
             AgentConnection conn(dwAddr, wAgentPort, iAuthMethod, szSecret);
 
+				conn.setConnectionTimeout(dwConnTimeout);
             conn.setCommandTimeout(dwTimeout);
-            conn.SetEncryptionPolicy(iEncryptionPolicy);
+            conn.setEncryptionPolicy(iEncryptionPolicy);
             if (bUseProxy)
-               conn.SetProxy(dwProxyAddr, wProxyPort, iProxyAuth, szProxySecret);
-            if (conn.Connect(pServerKey, m_bVerbose, &dwError))
+               conn.setProxy(dwProxyAddr, wProxyPort, iProxyAuth, szProxySecret);
+            if (conn.connect(pServerKey, m_bVerbose, &dwError))
             {
                do
                {
@@ -547,7 +561,7 @@ int main(int argc, char *argv[])
                   ThreadSleep(iInterval);
                }
                while(iInterval > 0);
-               conn.Disconnect();
+               conn.disconnect();
             }
             else
             {

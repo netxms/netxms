@@ -44,7 +44,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
    dwError = conn.StartUpgrade(pszPkgName);
    if (dwError == ERR_SUCCESS)
    {
-      conn.Disconnect();
+      conn.disconnect();
 
       if (bVerbose)
       {
@@ -58,7 +58,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
             fflush(stdout);
             if ((i % 20 == 0) && (i > 30))
             {
-               if (conn.Connect(pServerKey, FALSE))
+               if (conn.connect(pServerKey, FALSE))
                {
                   bConnected = TRUE;
                   break;   // Connected successfully
@@ -73,7 +73,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
          for(i = 20; i < 120; i += 20)
          {
             ThreadSleep(20);
-            if (conn.Connect(pServerKey, FALSE))
+            if (conn.connect(pServerKey, FALSE))
             {
                bConnected = TRUE;
                break;   // Connected successfully
@@ -83,7 +83,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
 
       // Last attempt to reconnect
       if (!bConnected)
-         bConnected = conn.Connect(pServerKey, FALSE);
+         bConnected = conn.connect(pServerKey, FALSE);
 
       if (bConnected && bVerbose)
       {
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
    int iEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
    WORD wPort = AGENT_LISTEN_PORT;
-   DWORD dwAddr, dwTimeout = 3000, dwError;
+   DWORD dwAddr, dwTimeout = 5000, dwConnTimeout = 30000, dwError;
    INT64 nElapsedTime;
    char szSecret[MAX_SECRET_LENGTH] = "";
    char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:e:hK:p:qs:uvw:")) != -1)
+	while((ch = getopt(argc, argv, "a:e:hK:p:qs:uvw:W:")) != -1)
    {
       switch(ch)
       {
@@ -169,7 +169,8 @@ int main(int argc, char *argv[])
                    "   -s <secret>  : Specify shared secret for authentication.\n"
                    "   -u           : Start agent upgrade from uploaded package.\n"
                    "   -v           : Display version and exit.\n"
-                   "   -w <seconds> : Specify command timeout (default is 3 seconds)\n"
+                   "   -w <seconds> : Set command timeout (default is 5 seconds)\n"
+                   "   -W <seconds> : Set connection timeout (default is 30 seconds)\n"
                    "\n", wPort);
             bStart = FALSE;
             break;
@@ -223,6 +224,18 @@ int main(int argc, char *argv[])
             else
             {
                dwTimeout = (DWORD)i * 1000;  // Convert to milliseconds
+            }
+            break;
+         case 'W':   // Connection timeout
+            i = strtol(optarg, &eptr, 0);
+            if ((*eptr != 0) || (i < 1) || (i > 120))
+            {
+               printf("Invalid timeout \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               dwConnTimeout = (DWORD)i * 1000;  // Convert to milliseconds
             }
             break;
 #ifdef _WITH_ENCRYPTION
@@ -325,9 +338,10 @@ int main(int argc, char *argv[])
          {
             AgentConnection conn(dwAddr, wPort, iAuthMethod, szSecret);
 
+				conn.setConnectionTimeout(dwConnTimeout);
             conn.setCommandTimeout(dwTimeout);
-            conn.SetEncryptionPolicy(iEncryptionPolicy);
-            if (conn.Connect(pServerKey, bVerbose, &dwError))
+            conn.setEncryptionPolicy(iEncryptionPolicy);
+            if (conn.connect(pServerKey, bVerbose, &dwError))
             {
                DWORD dwError;
 
@@ -370,7 +384,7 @@ int main(int argc, char *argv[])
                {
                   iExitCode = (dwError == ERR_SUCCESS) ? 0 : 1;
                }
-               conn.Disconnect();
+               conn.disconnect();
             }
             else
             {

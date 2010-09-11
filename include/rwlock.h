@@ -251,12 +251,18 @@ struct __rwlock_data
 
 typedef struct __rwlock_data * RWLOCK;
 
-RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate(void);
+RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate();
 void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock);
 BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut);
 BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut);
 void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock);
 
 #endif
+
+inline void RWLockPreemptiveWriteLock(RWLOCK hLock, DWORD dwTimeout, DWORD dwSleep)
+{
+	while(!RWLockWriteLock(hLock, dwTimeout))
+		ThreadSleepMs(dwSleep);
+}
 
 #endif

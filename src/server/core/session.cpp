@@ -2751,7 +2751,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      pItem = new DCItem(CreateUniqueId(IDG_ITEM), "no name", DS_INTERNAL, 
                                         DCI_DT_INT, 60, 30, (Node *)pObject);
                      pItem->setStatus(ITEM_STATUS_DISABLED, false);
-                     if ((bSuccess = ((Template *)pObject)->AddItem(pItem)))
+                     if ((bSuccess = ((Template *)pObject)->addItem(pItem)))
                      {
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
                         // Return new item id to client
@@ -2765,7 +2765,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      break;
                   case CMD_MODIFY_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Template *)pObject)->UpdateItem(dwItemId, pRequest, &dwNumMaps,
+                     bSuccess = ((Template *)pObject)->updateItem(dwItemId, pRequest, &dwNumMaps,
                                                                   &pdwMapIndex, &pdwMapId);
                      if (bSuccess)
                      {
@@ -2790,7 +2790,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      break;
                   case CMD_DELETE_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Template *)pObject)->DeleteItem(dwItemId, TRUE);
+                     bSuccess = ((Template *)pObject)->deleteItem(dwItemId, TRUE);
                      msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                      break;
                }
@@ -2854,7 +2854,7 @@ void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
                dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
                pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
                pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
-               if (((Template *)pObject)->SetItemStatus(dwNumItems, pdwItemList, iStatus))
+               if (((Template *)pObject)->setItemStatus(dwNumItems, pdwItemList, iStatus))
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                else
                   msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
@@ -2910,7 +2910,7 @@ void ClientSession::ClearDCIData(CSCPMessage *pRequest)
          {
 				dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
 				DebugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, pObject->Id()); 
-            dci = ((Template *)pObject)->GetItemById(dwItemId);
+            dci = ((Template *)pObject)->getItemById(dwItemId);
 				if (dci != NULL)
 				{
 					msg.SetVariable(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
@@ -2990,19 +2990,19 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                   // Copy items
                   for(i = 0; i < dwNumItems; i++)
                   {
-                     pSrcItem = ((Template *)pSource)->GetItemById(pdwItemList[i]);
+                     pSrcItem = ((Template *)pSource)->getItemById(pdwItemList[i]);
                      if (pSrcItem != NULL)
                      {
                         pDstItem = new DCItem(pSrcItem);
 								pDstItem->setTemplateId(0, 0);
                         pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
                                                 (Template *)pDestination, FALSE);
-                        if (((Template *)pDestination)->AddItem(pDstItem))
+                        if (((Template *)pDestination)->addItem(pDstItem))
                         {
                            if (bMove)
                            {
                               // Delete original item
-                              if (!((Template *)pSource)->DeleteItem(pdwItemList[i], TRUE))
+                              if (!((Template *)pSource)->deleteItem(pdwItemList[i], TRUE))
                               {
                                  iErrors++;
                               }
@@ -3082,7 +3082,7 @@ void ClientSession::sendDCIThresholds(CSCPMessage *request)
       {
 			if (object->Type() == OBJECT_NODE)
 			{
-				DCItem *dci = ((Node *)object)->GetItemById(request->GetVariableLong(VID_DCI_ID));
+				DCItem *dci = ((Node *)object)->getItemById(request->GetVariableLong(VID_DCI_ID));
 				if (dci != NULL)
 				{
 					dci->fillMessageWithThresholds(&msg);
@@ -3156,7 +3156,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
             dwTimeFrom = pRequest->GetVariableLong(VID_TIME_FROM);
             dwTimeTo = pRequest->GetVariableLong(VID_TIME_TO);
 
-				dci = ((Node *)pObject)->GetItemById(dwItemId);
+				dci = ((Node *)pObject)->getItemById(dwItemId);
 				if (dci != NULL)
 				{
 					if ((dwMaxRows == 0) || (dwMaxRows > MAX_DCI_DATA_RECORDS))
@@ -3310,7 +3310,7 @@ void ClientSession::SendLastValues(CSCPMessage *pRequest)
       {
          if (pObject->Type() == OBJECT_NODE)
          {
-            msg.SetVariable(VID_RCC, ((Node *)pObject)->GetLastValues(&msg));
+            msg.SetVariable(VID_RCC, ((Node *)pObject)->getLastValues(&msg));
          }
          else
          {
@@ -4435,9 +4435,9 @@ void ClientSession::OnWakeUpNode(CSCPMessage *pRequest)
             DWORD dwResult;
 
             if (pObject->Type() == OBJECT_NODE)
-               dwResult = ((Node *)pObject)->WakeUp();
+               dwResult = ((Node *)pObject)->wakeUp();
             else
-               dwResult = ((Interface *)pObject)->WakeUp();
+               dwResult = ((Interface *)pObject)->wakeUp();
             msg.SetVariable(VID_RCC, dwResult);
          }
          else
@@ -6212,7 +6212,7 @@ void ClientSession::SendServerStats(DWORD dwRqId)
    // Number of objects and DCIs
    RWLockReadLock(g_rwlockNodeIndex, INFINITE);
    for(i = 0, dwNumItems = 0; i < g_dwNodeAddrIndexSize; i++)
-      dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->GetItemCount();
+      dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->getItemCount();
    RWLockUnlock(g_rwlockNodeIndex);
    msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
    msg.SetVariable(VID_NUM_OBJECTS, g_dwIdIndexSize);
@@ -7379,7 +7379,7 @@ DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
 		{
 			if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 			{
-				pItem = ((Template *)pObject)->GetItemById(dwItem);
+				pItem = ((Template *)pObject)->getItemById(dwItem);
 				if (pItem != NULL)
 				{
 					*ppszName = (TCHAR *)pItem->getDescription();
@@ -7991,12 +7991,12 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
                   dwItemId = pRequest->GetVariableLong(dwId++);
                   if (dwItemId != 0)
                   {
-                     pItem = ppNodeList[i]->GetItemById(dwItemId);
+                     pItem = ppNodeList[i]->getItemById(dwItemId);
                   }
                   else
                   {
                      pRequest->GetVariableStr(dwId++, szName, 256);
-                     pItem = ppNodeList[i]->GetItemByName(szName);
+                     pItem = ppNodeList[i]->getItemByName(szName);
                   }
 
                   if (pItem != NULL)
@@ -8226,7 +8226,7 @@ void ClientSession::sendDCIEventList(CSCPMessage *request)
              (pObject->Type() == OBJECT_CLUSTER) ||
              (pObject->Type() == OBJECT_TEMPLATE))
          {
-            pdwEventList = ((Template *)pObject)->GetDCIEventsList(&dwCount);
+            pdwEventList = ((Template *)pObject)->getDCIEventsList(&dwCount);
             if (pdwEventList != NULL)
             {
                msg.SetVariable(VID_NUM_EVENTS, dwCount);
@@ -8464,7 +8464,7 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
              (pObject->Type() == OBJECT_CLUSTER) ||
              (pObject->Type() == OBJECT_TEMPLATE))
          {
-				pItem = ((Template *)pObject)->GetItemById(pRequest->GetVariableLong(VID_DCI_ID));
+				pItem = ((Template *)pObject)->getItemById(pRequest->GetVariableLong(VID_DCI_ID));
 				if (pItem != NULL)
 				{
 					msg.SetVariable(VID_TEMPLATE_ID, pItem->getTemplateId());
@@ -9189,7 +9189,7 @@ void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
 		{
 			if (pObject->Type() == OBJECT_NODE)
 			{
-				if (((Node *)pObject)->IsBridge())
+				if (((Node *)pObject)->isBridge())
 				{
 					nxmap_ObjList *pTopology;
 
@@ -9772,7 +9772,7 @@ void ClientSession::RegisterAgent(CSCPMessage *pRequest)
 			{
 				// Node already exist, force configuration poll
 				node->SetRecheckCapsFlag();
-				node->ForceConfigurationPoll();
+				node->forceConfigurationPoll();
 			}
 			else
 			{
@@ -9877,7 +9877,7 @@ void ClientSession::TestDCITransformation(CSCPMessage *pRequest)
          {
 				DCItem *dci;
 
-				dci = ((Node *)pObject)->GetItemById(pRequest->GetVariableLong(VID_DCI_ID));
+				dci = ((Node *)pObject)->getItemById(pRequest->GetVariableLong(VID_DCI_ID));
 				if (dci != NULL)
 				{
 					BOOL success;
@@ -9977,7 +9977,7 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 			if (target->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL) &&
 			    policy->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 			{
-				if (((Node *)target)->IsNativeAgent())
+				if (((Node *)target)->isNativeAgent())
 				{
 					ServerJob *job;
 					if (uninstallFlag)

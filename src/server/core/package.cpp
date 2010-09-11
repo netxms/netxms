@@ -172,7 +172,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       msg.SetVariable(VID_OBJECT_ID, pNode->Id());
 
       // Check if node is a management server itself
-      if (!(pNode->Flags() & NF_IS_LOCAL_MGMT))
+      if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
       {
          // Change deployment status to "Initializing"
          msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
@@ -223,7 +223,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                      DWORD i;
 
                      // Disconnect from agent
-                     pAgentConn->Disconnect();
+                     pAgentConn->disconnect();
 
                      // Change deployment status to "Package installation"
                      msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
@@ -234,7 +234,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                      for(i = 20; i < dwMaxWait; i += 20)
                      {
                         ThreadSleep(20);
-                        if (pAgentConn->Connect(g_pServerKey))
+                        if (pAgentConn->connect(g_pServerKey))
                         {
                            bConnected = TRUE;
                            break;   // Connected successfully
@@ -243,7 +243,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 
                      // Last attempt to reconnect
                      if (!bConnected)
-                        bConnected = pAgentConn->Connect(g_pServerKey);
+                        bConnected = pAgentConn->connect(g_pServerKey);
 
                      if (bConnected)
                      {

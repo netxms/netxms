@@ -184,7 +184,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
 
    // Add default DCIs
-   pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
    return pNode;
 }
 
@@ -244,7 +244,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 	DbgPrintf(4, "AcceptNewNode(%s): checking NetXMS agent", szIpAddr);
    pAgentConn = new AgentConnection(htonl(dwIpAddr), AGENT_LISTEN_PORT,
                                     AUTH_NONE, "");
-   if (pAgentConn->Connect(g_pServerKey))
+   if (pAgentConn->connect(g_pServerKey))
    {
       data.dwFlags |= NNF_IS_AGENT;
       pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, data.szAgentVersion);

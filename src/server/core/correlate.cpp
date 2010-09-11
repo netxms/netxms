@@ -64,7 +64,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
             {
                if (pTrace->pHopList[i].pObject->Type() == OBJECT_NODE)
                {
-                  if (((Node *)pTrace->pHopList[i].pObject)->IsDown())
+                  if (((Node *)pTrace->pHopList[i].pObject)->isDown())
                   {
                      pEvent->setRootId(((Node *)pTrace->pHopList[i].pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
                   }
@@ -127,7 +127,7 @@ void CorrelateEvent(Event *pEvent)
          case EVENT_SERVICE_DOWN:
          case EVENT_SNMP_FAIL:
          case EVENT_AGENT_FAIL:
-            if (((Node *)pObject)->RuntimeFlags() & NDF_UNREACHABLE)
+            if (((Node *)pObject)->getRuntimeFlags() & NDF_UNREACHABLE)
             {
                pEvent->setRootId(((Node *)pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
             }

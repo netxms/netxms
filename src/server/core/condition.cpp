@@ -344,7 +344,7 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
             {
                if (pObject->Type() == OBJECT_NODE)
                {
-                  pItem = ((Node *)pObject)->GetItemById(m_pDCIList[i].dwId);
+                  pItem = ((Node *)pObject)->getItemById(m_pDCIList[i].dwId);
                   if (pItem != NULL)
                   {
                      pItem->updateCacheSize(m_dwId);
@@ -416,7 +416,7 @@ void Condition::Check(void)
       {
          if (pObject->Type() == OBJECT_NODE)
          {
-            pItem = ((Node *)pObject)->GetItemById(m_pDCIList[i].dwId);
+            pItem = ((Node *)pObject)->getItemById(m_pDCIList[i].dwId);
             if (pItem != NULL)
             {
                ppValueList[i] = pItem->getValueForNXSL(m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);

@@ -48,6 +48,7 @@ public class PolicyEditor extends Composite
 	private List<Rule> rules;
 	private ScrolledComposite rulesArea;
 	private Composite ruleList;
+	private TableHeader header;
 	private boolean modified;
 	
 	public PolicyEditor(Composite parent, int style, CellFactory cellFactory)
@@ -62,6 +63,9 @@ public class PolicyEditor extends Composite
 			columnWidths[i] = cellFactory.getDefaultColumnWidth(i);
 		
 		setLayout(new FillLayout());
+		
+		//header = new TableHeader(this, SWT.NONE);
+		//header.setColumnWidths(columnWidths);
 		
 		rulesArea = new ScrolledComposite(this, SWT.H_SCROLL | SWT.V_SCROLL);
 		ruleList = new Composite(rulesArea, SWT.NONE);

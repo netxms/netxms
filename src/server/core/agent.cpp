@@ -44,8 +44,8 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
    TCHAR *pszArgList[32], szBuffer[32];
    TCHAR szFormat[] = "ssssssssssssssssssssssssssssssss";
 
-   DbgPrintf(3, _T("Received trap message from agent at %s"), IpToStr(GetIpAddr(), szBuffer));
-   pNode = FindNodeByIP(GetIpAddr());
+   DbgPrintf(3, _T("Received trap message from agent at %s"), IpToStr(getIpAddr(), szBuffer));
+   pNode = FindNodeByIP(getIpAddr());
    if (pNode != NULL)
    {
       dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
@@ -75,7 +75,7 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
    }
    else
    {
-      DbgPrintf(3, _T("Cannot find node for IP address %s"), IpToStr(GetIpAddr(), szBuffer));
+      DbgPrintf(3, _T("Cannot find node for IP address %s"), IpToStr(getIpAddr(), szBuffer));
    }
 }
 
@@ -91,11 +91,11 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 	msg->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
 	msg->GetVariableStr(VID_VALUE, value, MAX_RESULT_LENGTH);
 
-	Node *node = FindNodeByIP(GetIpAddr());
+	Node *node = FindNodeByIP(getIpAddr());
 	if (node != NULL)
 	{
 		DbgPrintf(5, _T("%s: agent data push: %s=%s"), node->Name(), name, value);
-		DCItem *dci = node->GetItemByName(name);
+		DCItem *dci = node->getItemByName(name);
 		if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT))
 		{
 			DbgPrintf(5, _T("%s: agent data push: found DCI %d"), node->Name(), dci->getId());
@@ -123,9 +123,9 @@ DWORD AgentConnectionEx::deployPolicy(AgentPolicy *policy)
 	msg.SetCode(CMD_DEPLOY_AGENT_POLICY);
 	if (policy->createDeploymentMessage(&msg))
 	{
-		if (SendMessage(&msg))
+		if (sendMessage(&msg))
 		{
-			rcc = WaitForRCC(rqId, getCommandTimeout());
+			rcc = waitForRCC(rqId, getCommandTimeout());
 		}
 		else
 		{
@@ -154,9 +154,9 @@ DWORD AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
 	msg.SetCode(CMD_UNINSTALL_AGENT_POLICY);
 	if (policy->createUninstallMessage(&msg))
 	{
-		if (SendMessage(&msg))
+		if (sendMessage(&msg))
 		{
-			rcc = WaitForRCC(rqId, getCommandTimeout());
+			rcc = waitForRCC(rqId, getCommandTimeout());
 		}
 		else
 		{

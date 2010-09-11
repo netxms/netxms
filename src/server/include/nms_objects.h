@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -210,10 +210,10 @@ protected:
 	
 	StringMap m_customAttributes;
 
-   void LockData(void) { MutexLock(m_mutexData, INFINITE); }
-   void UnlockData(void) { MutexUnlock(m_mutexData); }
-   void LockACL(void) { MutexLock(m_mutexACL, INFINITE); }
-   void UnlockACL(void) { MutexUnlock(m_mutexACL); }
+   void LockData() { MutexLock(m_mutexData, INFINITE); }
+   void UnlockData() { MutexUnlock(m_mutexData); }
+   void LockACL() { MutexLock(m_mutexACL, INFINITE); }
+   void UnlockACL() { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite) 
    { 
       if (bWrite) 
@@ -365,11 +365,15 @@ protected:
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	TCHAR *m_applyFilterSource;
 	NXSL_Program *m_applyFilter;
+	MUTEX m_mutexDciAccess;
 
    virtual void PrepareForDeletion(void);
 
-   void LoadItemsFromDB(void);
-   void DestroyItems(void);
+   void loadItemsFromDB();
+   void destroyItems();
+
+	void lockDciAccess() { MutexLock(m_mutexDciAccess, INFINITE); }
+	void unlockDciAccess() { MutexUnlock(m_mutexDciAccess); }
 
 public:
    Template();
@@ -388,26 +392,26 @@ public:
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   int VersionMajor(void) { return m_dwVersion >> 16; }
-   int VersionMinor(void) { return m_dwVersion & 0xFFFF; }
+   int getVersionMajor() { return m_dwVersion >> 16; }
+   int getVersionMinor() { return m_dwVersion & 0xFFFF; }
 
-   DWORD GetItemCount(void) { return m_dwNumItems; }
-   BOOL AddItem(DCItem *pItem, BOOL bLocked = FALSE);
-   BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
+   DWORD getItemCount() { return m_dwNumItems; }
+   bool addItem(DCItem *pItem, bool alreadyLocked = false);
+   bool updateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
                    DWORD **ppdwMapIndex, DWORD **ppdwMapId);
-   BOOL DeleteItem(DWORD dwItemId, BOOL bNeedLock);
-   BOOL SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
-   int GetItemType(DWORD dwItemId);
-   DCItem *GetItemById(DWORD dwItemId);
-   DCItem *GetItemByIndex(DWORD dwIndex);
-   DCItem *GetItemByName(const TCHAR *pszName);
-   DCItem *GetItemByDescription(const TCHAR *pszDescription);
+   bool deleteItem(DWORD dwItemId, bool needLock);
+   bool setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
+   int getItemType(DWORD dwItemId);
+   DCItem *getItemById(DWORD dwItemId);
+   DCItem *getItemByIndex(DWORD dwIndex);
+   DCItem *getItemByName(const TCHAR *pszName);
+   DCItem *getItemByDescription(const TCHAR *pszDescription);
    BOOL LockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
    BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
-   DWORD *GetDCIEventsList(DWORD *pdwCount);
+   DWORD *getDCIEventsList(DWORD *pdwCount);
 	void ValidateSystemTemplate(void);
 	void ValidateDCIList(DCI_CFG *cfg);
 
@@ -415,13 +419,13 @@ public:
 	BOOL isApplicable(Node *node);
 	BOOL isAutoApplyEnabled() { return m_applyFilter != NULL; }
 	void setAutoApplyFilter(const TCHAR *filter);
-   void queueUpdate(void);
+   void queueUpdate();
    void queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
 
    void CreateNXMPRecord(String &str);
 	
 	BOOL EnumDCI(BOOL (* pfCallback)(DCItem *, DWORD, void *), void *pArg);
-	void AssociateItems(void);
+	void associateItems();
 };
 
 
@@ -457,7 +461,7 @@ public:
 
 	BOOL IsSyncAddr(DWORD dwAddr);
 	BOOL IsVirtualAddr(DWORD dwAddr);
-	BOOL IsResourceOnNode(DWORD dwResource, DWORD dwNode);
+	BOOL isResourceOnNode(DWORD dwResource, DWORD dwNode);
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void LockForStatusPoll(void) { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
@@ -524,7 +528,7 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   DWORD WakeUp(void);
+   DWORD wakeUp();
 };
 
 
@@ -652,21 +656,21 @@ protected:
 	time_t m_tLastTopologyPoll;
 	ServerJobQueue *m_jobQueue;
 
-   void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
-   void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
+   void pollerLock() { MutexLock(m_hPollerMutex, INFINITE); }
+   void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
-   void AgentLock(void) { MutexLock(m_hAgentAccessMutex, INFINITE); }
-   void AgentUnlock(void) { MutexUnlock(m_hAgentAccessMutex); }
+   void agentLock() { MutexLock(m_hAgentAccessMutex, INFINITE); }
+   void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }
 
-   void RTLock(void) { MutexLock(m_mutexRTAccess, INFINITE); }
-   void RTUnlock(void) { MutexUnlock(m_mutexRTAccess); }
+   void routingTableLock() { MutexLock(m_mutexRTAccess, INFINITE); }
+   void routingTableUnlock() { MutexUnlock(m_mutexRTAccess); }
 
    BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const char *pszOID, int nValue);
    void CheckOSPFSupport(SNMP_Transport *pTransport);
 	BOOL ResolveName(BOOL useOnlyDNS);
-   void SetAgentProxy(AgentConnection *pConn);
+   void setAgentProxy(AgentConnection *pConn);
 
-   DWORD GetInterfaceCount(Interface **ppInterface);
+   DWORD getInterfaceCount(Interface **ppInterface);
 
    void CheckInterfaceNames(INTERFACE_LIST *pIfList);
 	void CheckSubnetBinding(INTERFACE_LIST *pIfList);
@@ -674,7 +678,7 @@ protected:
 	void ApplySystemTemplates();
 	void ApplyUserTemplates();
 
-	void UpdateContainerMembership();
+	void updateContainerMembership();
 
    virtual void PrepareForDeletion(void);
    virtual void OnObjectDelete(DWORD dwObjectId);
@@ -690,28 +694,28 @@ public:
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
-	Cluster *GetMyCluster(void);
+	Cluster *getMyCluster();
 
-   DWORD Flags(void) { return m_dwFlags; }
-   DWORD RuntimeFlags(void) { return m_dwDynamicFlags; }
-   DWORD ZoneGUID(void) { return m_dwZoneGUID; }
-   void SetLocalMgmtFlag(void) { m_dwFlags |= NF_IS_LOCAL_MGMT; }
-   void ClearLocalMgmtFlag(void) { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
+   DWORD getFlags() { return m_dwFlags; }
+   DWORD getRuntimeFlags() { return m_dwDynamicFlags; }
+   DWORD getZoneGUID() { return m_dwZoneGUID; }
+   void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
+   void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
-   BOOL IsSNMPSupported(void) { return m_dwFlags & NF_IS_SNMP ? TRUE : FALSE; }
-   BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }
-   BOOL IsBridge(void) { return m_dwFlags & NF_IS_BRIDGE ? TRUE : FALSE; }
-   BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
-   BOOL IsLocalManagement(void) { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
+   BOOL isSNMPSupported() { return m_dwFlags & NF_IS_SNMP ? TRUE : FALSE; }
+   BOOL isNativeAgent() { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }
+   BOOL isBridge() { return m_dwFlags & NF_IS_BRIDGE ? TRUE : FALSE; }
+   BOOL isRouter() { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
+   BOOL isLocalManagement() { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
 
-	LONG GetSNMPVersion() { return m_snmpVersion; }
-	const TCHAR *GetSNMPObjectId() { return m_szObjectId; }
-	const TCHAR *GetAgentVersion() { return m_szAgentVersion; }
-	const TCHAR *GetPlatformName() { return m_szPlatformName; }
+	LONG getSNMPVersion() { return m_snmpVersion; }
+	const TCHAR *getSNMPObjectId() { return m_szObjectId; }
+	const TCHAR *getAgentVersion() { return m_szAgentVersion; }
+	const TCHAR *getPlatformName() { return m_szPlatformName; }
 
-   BOOL IsDown(void) { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
+   BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
 
-   const char *ObjectId(void) { return m_szObjectId; }
+   const char *getObjectId() { return m_szObjectId; }
 
    void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    void CreateNewInterface(DWORD dwAddr, DWORD dwNetMask, char *szName = NULL, 
@@ -720,7 +724,7 @@ public:
 
    void ChangeIPAddress(DWORD dwIpAddr);
 
-   ARP_CACHE *GetArpCache(void);
+   ARP_CACHE *getArpCache();
    INTERFACE_LIST *GetInterfaceList(void);
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
 	BOOL IsMyIP(DWORD dwIpAddr);
@@ -732,32 +736,32 @@ public:
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 
 	void SetRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
-   void SetDiscoveryPollTimeStamp();
+   void setDiscoveryPollTimeStamp();
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
 	void UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId);
    void UpdateRoutingTable();
-   BOOL ReadyForStatusPoll();
-   BOOL ReadyForConfigurationPoll();
-   BOOL ReadyForDiscoveryPoll();
-   BOOL ReadyForRoutePoll();
-   void LockForStatusPoll();
-   void LockForConfigurationPoll();
-   void LockForDiscoveryPoll();
-   void LockForRoutePoll();
-	void ForceConfigurationPoll() { m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL; }
+   bool isReadyForStatusPoll();
+   bool isReadyForConfigurationPoll();
+   bool isReadyForDiscoveryPoll();
+   bool isReadyForRoutePoll();
+   void lockForStatusPoll();
+   void lockForConfigurationPoll();
+   void lockForDiscoveryPoll();
+   void lockForRoutePoll();
+	void forceConfigurationPoll() { m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL; }
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   BOOL ConnectToAgent(void);
+   BOOL connectToAgent();
    DWORD GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer);
-   void QueueItemsForPolling(Queue *pPollerQueue);
+   void queueItemsForPolling(Queue *pPollerQueue);
    DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
-   DWORD GetLastValues(CSCPMessage *pMsg);
-   void CleanDCIData(void);
+   DWORD getLastValues(CSCPMessage *pMsg);
+   void cleanDCIData();
    BOOL ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem);
    void CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
    void UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
@@ -775,7 +779,7 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
    void WriteParamListToMessage(CSCPMessage *pMsg);
 
-   DWORD WakeUp(void);
+   DWORD wakeUp();
 
    void AddService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0,
@@ -798,96 +802,92 @@ public:
 // Inline functions for Node class
 //
 
-inline void Node::SetDiscoveryPollTimeStamp(void)
+inline void Node::setDiscoveryPollTimeStamp()
 {
    m_tLastDiscoveryPoll = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
 }
 
-inline BOOL Node::ReadyForStatusPoll(void) 
+inline bool Node::isReadyForStatusPoll() 
 {
 	if (m_bIsDeleted)
-		return FALSE;
+		return false;
 	//if (GetMyCluster() != NULL)
 	//	return FALSE;	// Cluster nodes should be polled from cluster status poll
    if (m_dwDynamicFlags & NDF_FORCE_STATUS_POLL)
    {
       m_dwDynamicFlags &= ~NDF_FORCE_STATUS_POLL;
-      return TRUE;
+      return true;
    }
-   return ((m_iStatus != STATUS_UNMANAGED) &&
-	        (!(m_dwFlags & NF_DISABLE_STATUS_POLL)) &&
-           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
-           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
-			  (GetMyCluster() == NULL) &&
-           ((DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval))
-               ? TRUE : FALSE;
+   return (m_iStatus != STATUS_UNMANAGED) &&
+	       (!(m_dwFlags & NF_DISABLE_STATUS_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+			 (getMyCluster() == NULL) &&
+          ((DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval);
 }
 
-inline BOOL Node::ReadyForConfigurationPoll(void) 
+inline bool Node::isReadyForConfigurationPoll() 
 { 
 	if (m_bIsDeleted)
-		return FALSE;
+		return false;
    if (m_dwDynamicFlags & NDF_FORCE_CONFIGURATION_POLL)
    {
       m_dwDynamicFlags &= ~NDF_FORCE_CONFIGURATION_POLL;
-      return TRUE;
+      return true;
    }
-   return ((m_iStatus != STATUS_UNMANAGED) &&
-	        (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
-           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
-           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
-           ((DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval))
-               ? TRUE : FALSE;
+   return (m_iStatus != STATUS_UNMANAGED) &&
+	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+          ((DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval);
 }
 
-inline BOOL Node::ReadyForDiscoveryPoll(void) 
+inline bool Node::isReadyForDiscoveryPoll() 
 { 
 	if (m_bIsDeleted)
-		return FALSE;
-   return ((g_dwFlags & AF_ENABLE_NETWORK_DISCOVERY) &&
-           (m_iStatus != STATUS_UNMANAGED) &&
-           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
-           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
-           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-           ((DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval))
-               ? TRUE : FALSE; 
+		return false;
+   return (g_dwFlags & AF_ENABLE_NETWORK_DISCOVERY) &&
+          (m_iStatus != STATUS_UNMANAGED) &&
+          (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+          (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
+          ((DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval);
 }
 
-inline BOOL Node::ReadyForRoutePoll(void) 
+inline bool Node::isReadyForRoutePoll() 
 { 
 	if (m_bIsDeleted)
-		return FALSE;
-   return ((m_iStatus != STATUS_UNMANAGED) &&
-	        (!(m_dwFlags & NF_DISABLE_ROUTE_POLL)) &&
-           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
-           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
-           ((DWORD)time(NULL) - (DWORD)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval))
-               ? TRUE : FALSE; 
+		return false;
+   return (m_iStatus != STATUS_UNMANAGED) &&
+	       (!(m_dwFlags & NF_DISABLE_ROUTE_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+          ((DWORD)time(NULL) - (DWORD)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval);
 }
 
-inline void Node::LockForStatusPoll(void)
+inline void Node::lockForStatusPoll()
 { 
    LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_STATUS_POLL; 
    UnlockData(); 
 }
 
-inline void Node::LockForConfigurationPoll(void) 
+inline void Node::lockForConfigurationPoll() 
 { 
    LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL; 
    UnlockData(); 
 }
 
-inline void Node::LockForDiscoveryPoll(void) 
+inline void Node::lockForDiscoveryPoll() 
 { 
    LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL; 
    UnlockData(); 
 }
 
-inline void Node::LockForRoutePoll(void) 
+inline void Node::lockForRoutePoll() 
 { 
    LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_ROUTE_POLL; 

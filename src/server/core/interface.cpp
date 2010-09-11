@@ -274,8 +274,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    // Poll interface using different methods
    if (m_dwIfType != IFTYPE_NETXMS_NAT_ADAPTER)
    {
-      if ((pNode->Flags() & NF_IS_NATIVE_AGENT) &&
-          (!(pNode->Flags() & NF_DISABLE_NXCP)) && (!(pNode->RuntimeFlags() & NDF_AGENT_UNREACHABLE)))
+      if ((pNode->getFlags() & NF_IS_NATIVE_AGENT) &&
+          (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getRuntimeFlags() & NDF_AGENT_UNREACHABLE)))
       {
          SendPollerMsg(dwRqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
          newStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
@@ -291,8 +291,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			}
       }
    
-      if (bNeedPoll && (pNode->Flags() & NF_IS_SNMP) &&
-          (!(pNode->Flags() & NF_DISABLE_SNMP)) && (!(pNode->RuntimeFlags() & NDF_SNMP_UNREACHABLE)) &&
+      if (bNeedPoll && (pNode->getFlags() & NF_IS_SNMP) &&
+          (!(pNode->getFlags() & NF_DISABLE_SNMP)) && (!(pNode->getRuntimeFlags() & NDF_SNMP_UNREACHABLE)) &&
 			 (pTransport != NULL))
       {
          SendPollerMsg(dwRqId, _T("      Retrieving interface status from SNMP agent\r\n"));
@@ -313,7 +313,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    if (bNeedPoll)
    {
 		// Pings cannot be used for cluster sync interfaces
-      if ((pNode->Flags() & NF_DISABLE_ICMP) || bClusterSync)
+      if ((pNode->getFlags() & NF_DISABLE_ICMP) || bClusterSync)
       {
          newStatus = STATUS_UNKNOWN;
       }
@@ -321,7 +321,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       {
          // Use ICMP ping as a last option
          if ((m_dwIpAddr != 0) && 
-              ((!(pNode->Flags() & NF_BEHIND_NAT)) || 
+              ((!(pNode->getFlags() & NF_BEHIND_NAT)) || 
                (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER)))
          {
             SendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
@@ -428,7 +428,7 @@ DWORD Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 // Wake up node bound to this interface by sending magic packet
 //
 
-DWORD Interface::WakeUp(void)
+DWORD Interface::wakeUp()
 {
    DWORD dwAddr, dwResult = RCC_NO_MAC_ADDRESS;
 

@@ -179,7 +179,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       // Remove expired DCI data
       RWLockReadLock(g_rwlockNodeIndex, INFINITE);
       for(i = 0; i < g_dwNodeAddrIndexSize; i++)
-         ((Node *)g_pNodeIndexByAddr[i].pObject)->CleanDCIData();
+         ((Node *)g_pNodeIndexByAddr[i].pObject)->cleanDCIData();
       RWLockUnlock(g_rwlockNodeIndex);
 
       // Run DB-specific maintenance tasks

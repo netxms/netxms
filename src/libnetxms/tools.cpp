@@ -709,6 +709,71 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 
 
 //
+// Connect with given timeout
+// Sets socket to non-blocking mode
+//
+
+int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWORD timeout)
+{
+	SetSocketNonBlocking(s);
+	int rc = connect(s, addr, len);
+	if (rc == -1)
+	{
+		if ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS))
+		{
+#ifndef _WIN32
+			QWORD qwStartTime;
+			DWORD dwElapsed;
+#endif
+
+#if HAVE_POLL
+		   struct pollfd fds;
+
+			fds.fd = s;
+			fds.events = POLLOUT;
+			fds.revents = POLLOUT;
+			do
+			{
+				qwStartTime = GetCurrentTimeMs();
+				rc = poll(&fds, 1, dwTimeout);
+				if ((rc != -1) || (errno != EINTR))
+					break;
+				dwElapsed = GetCurrentTimeMs() - qwStartTime;
+				timeout -= min(timeout, dwElapsed);
+			} while(timeout > 0);
+#else
+			struct timeval tv;
+			fd_set wrfs;
+
+			FD_ZERO(&wrfs);
+			FD_SET(s, &wrfs);
+#ifdef _WIN32
+			tv.tv_sec = timeout / 1000;
+			tv.tv_usec = (timeout % 1000) * 1000;
+			rc = select(SELECT_NFDS(s + 1), NULL, &wrfs, NULL, &tv);
+#else
+			do
+			{
+				tv.tv_sec = timeout / 1000;
+				tv.tv_usec = (timeout % 1000) * 1000;
+				qwStartTime = GetCurrentTimeMs();
+				rc = select(SELECT_NFDS(s + 1), NULL, &wrfs, NULL, &tv);
+				if ((rc != -1) || (errno != EINTR))
+					break;
+				dwElapsed = GetCurrentTimeMs() - qwStartTime;
+				timeout -= min(timeout, dwElapsed);
+			} while(timeout > 0);
+#endif
+#endif
+			if (rc == 0)	// timeout, return error
+				rc = -1;
+		}
+	}
+	return rc;
+}
+
+
+//
 // Resolve host name to IP address
 //
 

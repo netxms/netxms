@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ void SaveObjects(DB_HANDLE hdb)
    NetObj *pObject;
 
    // Delete objects marked for deletion
-   RWLockWriteLock(g_rwlockIdIndex, INFINITE);
+	RWLockPreemptiveWriteLock(g_rwlockIdIndex, 1000, 1000);
 delete_loop_start:;
    for(i = 0; i < g_dwIdIndexSize; i++)
    {

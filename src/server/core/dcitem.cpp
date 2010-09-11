@@ -47,7 +47,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	node = (Node *)object->getData();
-	dci = node->GetItemById(argv[1]->getValueAsUInt32());
+	dci = node->getItemById(argv[1]->getValueAsUInt32());
 	if (dci != NULL)
 	{
 		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
@@ -84,7 +84,7 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 		return NXSL_ERR_BAD_CLASS;
 
 	node = (Node *)object->getData();
-	dci = node->GetItemById(argv[1]->getValueAsUInt32());
+	dci = node->getItemById(argv[1]->getValueAsUInt32());
 	if (dci != NULL)
 	{
 		*ppResult = dci->getValueForNXSL(F_LAST, 1);
@@ -119,7 +119,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 		return NXSL_ERR_BAD_CLASS;
 
 	node = (Node *)object->getData();
-	dci = node->GetItemByName(argv[1]->getValueAsCString());
+	dci = node->getItemByName(argv[1]->getValueAsCString());
 	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
 	return 0;
 }
@@ -146,7 +146,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 		return NXSL_ERR_BAD_CLASS;
 
 	node = (Node *)object->getData();
-	dci = node->GetItemByDescription(argv[1]->getValueAsCString());
+	dci = node->getItemByDescription(argv[1]->getValueAsCString());
 	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
 	return 0;
 }
@@ -1664,18 +1664,18 @@ static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
 // DCI has no resource association
 //
 
-BOOL DCItem::matchClusterResource(void)
+BOOL DCItem::matchClusterResource()
 {
 	Cluster *pCluster;
 
 	if (m_dwResourceId == 0)
 		return TRUE;
 
-	pCluster = ((Node *)m_pNode)->GetMyCluster();
+	pCluster = ((Node *)m_pNode)->getMyCluster();
 	if (pCluster == NULL)
 		return FALSE;	// Has association, but cluster object cannot be found
 
-	return pCluster->IsResourceOnNode(m_dwResourceId, m_pNode->Id());
+	return pCluster->isResourceOnNode(m_dwResourceId, m_pNode->Id());
 }
 
 

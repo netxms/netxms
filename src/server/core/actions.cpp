@@ -228,7 +228,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    {
       // Target node is not in our database, try default communication settings
       pConn = new AgentConnection(dwAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
-      if (!pConn->Connect(g_pServerKey))
+      if (!pConn->connect(g_pServerKey))
       {
          delete pConn;
          return FALSE;
@@ -271,7 +271,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 	pCmd[nCount] = NULL;
 
    dwError = pConn->ExecAction(pCmd[0], nCount - 1, &pCmd[1]);
-   pConn->Disconnect();
+   pConn->disconnect();
    delete pConn;
    free(pTmp);
    return dwError == ERR_SUCCESS;

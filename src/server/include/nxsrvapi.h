@@ -239,6 +239,7 @@ private:
    DWORD m_dwNumDataLines;
    DWORD m_dwRequestId;
    DWORD m_dwCommandTimeout;
+	DWORD m_connectionTimeout;
    DWORD m_dwRecvTimeout;
    TCHAR **m_ppDataLines;
    MsgWaitQueue *m_pMsgWaitQueue;
@@ -267,15 +268,15 @@ private:
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
 
 protected:
-   void DestroyResultData(void);
-   BOOL SendMessage(CSCPMessage *pMsg);
-   CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut) { return m_pMsgWaitQueue->WaitForMessage(wCode, dwId, dwTimeOut); }
-   DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut);
-   DWORD SetupEncryption(RSA *pServerKey);
-   DWORD Authenticate(BOOL bProxyData);
-   DWORD SetupProxyConnection(void);
-   DWORD GetIpAddr(void) { return ntohl(m_dwAddr); }
-	DWORD PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
+   void destroyResultData();
+   BOOL sendMessage(CSCPMessage *pMsg);
+   CSCPMessage *waitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut) { return m_pMsgWaitQueue->WaitForMessage(wCode, dwId, dwTimeOut); }
+   DWORD waitForRCC(DWORD dwRqId, DWORD dwTimeOut);
+   DWORD setupEncryption(RSA *pServerKey);
+   DWORD authenticate(BOOL bProxyData);
+   DWORD setupProxyConnection();
+   DWORD getIpAddr() { return ntohl(m_dwAddr); }
+	DWORD prepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
 
    virtual void PrintMsg(const TCHAR *pszFormat, ...);
    virtual void onTrap(CSCPMessage *pMsg);
@@ -290,19 +291,19 @@ public:
                    int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    virtual ~AgentConnection();
 
-   BOOL Connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL);
-   void Disconnect(void);
-   BOOL IsConnected(void) { return m_bIsConnected; }
-	int getProtocolVersion(void) { return m_nProtocolVersion; }
+   BOOL connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL);
+   void disconnect();
+   BOOL isConnected() { return m_bIsConnected; }
+	int getProtocolVersion() { return m_nProtocolVersion; }
 
 	SOCKET getSocket() { return m_hSocket; }
 
    ARP_CACHE *GetArpCache(void);
-   INTERFACE_LIST *GetInterfaceList(void);
-   ROUTING_TABLE *GetRoutingTable(void);
+   INTERFACE_LIST *GetInterfaceList();
+   ROUTING_TABLE *GetRoutingTable();
    DWORD GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
    DWORD GetList(const TCHAR *pszParam);
-   DWORD nop(void);
+   DWORD nop();
    DWORD ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv);
    DWORD UploadFile(const TCHAR *pszFile, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    DWORD StartUpgrade(const TCHAR *pszPkgName);
@@ -311,23 +312,25 @@ public:
    DWORD GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD updateConfigFile(const TCHAR *pszConfig);
-   DWORD enableTraps(void);
+   DWORD enableTraps();
 
 	DWORD generateRequestId() { return m_dwRequestId++; }
 	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool appendFile = false,
 	                           void (*downloadProgressCallback)(size_t, void *) = NULL, void *cbArg = NULL);
 
-   DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
-   const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
+   DWORD getNumDataLines() { return m_dwNumDataLines; }
+   const TCHAR *getDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
 
+   void setConnectionTimeout(DWORD dwTimeout) { m_connectionTimeout = max(dwTimeout, 1000); }
+	DWORD getConnectionTimeout() { return m_connectionTimeout; }
    void setCommandTimeout(DWORD dwTimeout) { m_dwCommandTimeout = max(dwTimeout, 500); }
 	DWORD getCommandTimeout() { return m_dwCommandTimeout; }
-   void SetRecvTimeout(DWORD dwTimeout) { m_dwRecvTimeout = max(dwTimeout, 10000); }
-   void SetEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
-   void SetProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
+   void setRecvTimeout(DWORD dwTimeout) { m_dwRecvTimeout = max(dwTimeout, 10000); }
+   void setEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
+   void setProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
-   void SetPort(WORD wPort) { m_wPort = wPort; }
-   void SetAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; nx_strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
+   void setPort(WORD wPort) { m_wPort = wPort; }
+   void setAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; nx_strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
 	void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
 };
 

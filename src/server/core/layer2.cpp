@@ -135,12 +135,12 @@ DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent, int n
 	Node *pNode;
 
 	pList = new PeerList;
-	if (pRoot->Flags() & NF_IS_SONMP)
+	if (pRoot->getFlags() & NF_IS_SONMP)
 	{
 		if (pRoot->CallSnmpEnumerate(".1.3.6.1.4.1.45.1.6.13.2.1.1.3", SONMPTopoHandler, pList) != SNMP_ERR_SUCCESS)
 			goto cleanup;
 	}
-	else if (pRoot->Flags() & NF_IS_CDP)
+	else if (pRoot->getFlags() & NF_IS_CDP)
 	{
 		if (pRoot->CallSnmpEnumerate(".1.3.6.1.4.1.9.9.23.1.2.1.1.4", CDPTopoHandler, pList) != SNMP_ERR_SUCCESS)
 			goto cleanup;
@@ -166,7 +166,7 @@ DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent, int n
 				topology.AddObject(pNode->Id());
 
 				// If we use CDP, szIfName member contains remote port name, not a local port name
-				if (pRoot->Flags() & NF_IS_CDP)
+				if (pRoot->getFlags() & NF_IS_CDP)
 				{
 					topology.LinkObjectsEx(pRoot->Id(), pNode->Id(), szPeerIfName, pList->m_pPeerList[i].szIfName);
 				}

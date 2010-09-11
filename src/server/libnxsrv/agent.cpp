@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -103,6 +103,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
    m_ppDataLines = NULL;
    m_pMsgWaitQueue = new MsgWaitQueue;
    m_dwRequestId = 1;
+	m_connectionTimeout = 30000;	// 30 seconds
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
    m_bIsConnected = FALSE;
    m_mutexDataLock = MutexCreate();
@@ -126,7 +127,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
 AgentConnection::~AgentConnection()
 {
    // Disconnect from peer
-   Disconnect();
+   disconnect();
 
    // Wait for receiver thread termination
    ThreadJoin(m_hReceiverThread);
@@ -141,7 +142,7 @@ AgentConnection::~AgentConnection()
 	Unlock();
 
    Lock();
-   DestroyResultData();
+   destroyResultData();
    Unlock();
 
    delete m_pMsgWaitQueue;
@@ -251,7 +252,7 @@ void AgentConnection::ReceiverThread(void)
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
          DbgPrintf(6, "Received raw message %s from agent at %s",
-			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(GetIpAddr(), szIpAddr));
+			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(getIpAddr(), szIpAddr));
 
 			if ((pRawMsg->wCode == CMD_FILE_DATA) &&
 				 (m_hCurrFile != -1) && (pRawMsg->dwId == m_dwDownloadRequestId))
@@ -334,7 +335,7 @@ void AgentConnection::ReceiverThread(void)
 // Connect to agent
 //
 
-BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
+BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
@@ -379,7 +380,7 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
    }
 
    // Connect to server
-   if (connect(m_hSocket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
+	if (ConnectEx(m_hSocket, (struct sockaddr *)&sa, sizeof(sa), m_connectionTimeout) == -1)
    {
       if (bVerbose)
          PrintMsg(_T("Cannot establish connection with agent %s"),
@@ -389,7 +390,7 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
    }
 
 	// Set non-blocking mode
-	SetSocketNonBlocking(m_hSocket);
+	//SetSocketNonBlocking(m_hSocket);
 	
    if (!NXCPGetPeerProtocolVersion(m_hSocket, &m_nProtocolVersion))
    {
@@ -408,7 +409,7 @@ setup_encryption:
    {
       if (pServerKey != NULL)
       {
-         dwError = SetupEncryption(pServerKey);
+         dwError = setupEncryption(pServerKey);
          if ((dwError != ERR_SUCCESS) &&
              ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || bForceEncryption))
             goto connect_cleanup;
@@ -424,7 +425,7 @@ setup_encryption:
    }
 
    // Authenticate itself to agent
-   if ((dwError = Authenticate(m_bUseProxy && !bSecondPass)) != ERR_SUCCESS)
+   if ((dwError = authenticate(m_bUseProxy && !bSecondPass)) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
@@ -453,7 +454,7 @@ setup_encryption:
 
    if (m_bUseProxy && !bSecondPass)
    {
-      dwError = SetupProxyConnection();
+      dwError = setupProxyConnection();
       if (dwError != ERR_SUCCESS)
          goto connect_cleanup;
       DestroyEncryptionContext(m_pCtx);
@@ -499,7 +500,7 @@ connect_cleanup:
 // Disconnect from agent
 //
 
-void AgentConnection::Disconnect(void)
+void AgentConnection::disconnect()
 {
    Lock();
 	if (m_hCurrFile != -1)
@@ -513,7 +514,7 @@ void AgentConnection::Disconnect(void)
    {
       shutdown(m_hSocket, SHUT_RDWR);
    }
-   DestroyResultData();
+   destroyResultData();
    m_bIsConnected = FALSE;
    Unlock();
 }
@@ -523,7 +524,7 @@ void AgentConnection::Disconnect(void)
 // Destroy command execuion results data
 //
 
-void AgentConnection::DestroyResultData(void)
+void AgentConnection::destroyResultData()
 {
    DWORD i;
 
@@ -618,7 +619,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
       }
 
       Lock();
-      DestroyResultData();
+      destroyResultData();
       Unlock();
    }
 
@@ -641,9 +642,9 @@ DWORD AgentConnection::GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHA
       msg.SetCode(CMD_GET_PARAMETER);
       msg.SetId(dwRqId);
       msg.SetVariable(VID_PARAMETER, pszParam);
-      if (SendMessage(&msg))
+      if (sendMessage(&msg))
       {
-         pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+         pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
          if (pResponse != NULL)
          {
             dwRetCode = pResponse->GetVariableLong(VID_RCC);
@@ -723,7 +724,7 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
       }
 
       Lock();
-      DestroyResultData();
+      destroyResultData();
       Unlock();
    }
    return pArpCache;
@@ -734,7 +735,7 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
 // Send dummy command to agent (can be used for keepalive)
 //
 
-DWORD AgentConnection::nop(void)
+DWORD AgentConnection::nop()
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
@@ -742,8 +743,8 @@ DWORD AgentConnection::nop(void)
    dwRqId = m_dwRequestId++;
    msg.SetCode(CMD_KEEPALIVE);
    msg.SetId(dwRqId);
-   if (SendMessage(&msg))
-      return WaitForRCC(dwRqId, m_dwCommandTimeout);
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, m_dwCommandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -753,7 +754,7 @@ DWORD AgentConnection::nop(void)
 // Wait for request completion code
 //
 
-DWORD AgentConnection::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
+DWORD AgentConnection::waitForRCC(DWORD dwRqId, DWORD dwTimeOut)
 {
    CSCPMessage *pMsg;
    DWORD dwRetCode;
@@ -776,7 +777,7 @@ DWORD AgentConnection::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
 // Send message to agent
 //
 
-BOOL AgentConnection::SendMessage(CSCPMessage *pMsg)
+BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
    CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -836,14 +837,14 @@ DWORD AgentConnection::GetList(const TCHAR *pszParam)
 
    if (m_bIsConnected)
    {
-      DestroyResultData();
+      destroyResultData();
       dwRqId = m_dwRequestId++;
       msg.SetCode(CMD_GET_LIST);
       msg.SetId(dwRqId);
       msg.SetVariable(VID_PARAMETER, pszParam);
-      if (SendMessage(&msg))
+      if (sendMessage(&msg))
       {
-         pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+         pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
          if (pResponse != NULL)
          {
             dwRetCode = pResponse->GetVariableLong(VID_RCC);
@@ -879,7 +880,7 @@ DWORD AgentConnection::GetList(const TCHAR *pszParam)
 // Authenticate to agent
 //
 
-DWORD AgentConnection::Authenticate(BOOL bProxyData)
+DWORD AgentConnection::authenticate(BOOL bProxyData)
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
@@ -918,8 +919,8 @@ DWORD AgentConnection::Authenticate(BOOL bProxyData)
       default:
          break;
    }
-   if (SendMessage(&msg))
-      return WaitForRCC(dwRqId, m_dwCommandTimeout);
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, m_dwCommandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -946,8 +947,8 @@ DWORD AgentConnection::ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv
    for(i = 0; i < argc; i++)
       msg.SetVariable(VID_ACTION_ARG_BASE + i, argv[i]);
 
-   if (SendMessage(&msg))
-      return WaitForRCC(dwRqId, m_dwCommandTimeout);
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, m_dwCommandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -974,9 +975,9 @@ DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback
        (i >= 0) && (pszFile[i] != '\\') && (pszFile[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &pszFile[i + 1]);
 
-   if (SendMessage(&msg))
+   if (sendMessage(&msg))
    {
-      dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
+      dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
    }
    else
    {
@@ -987,7 +988,7 @@ DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback
    {
 		m_fileUploadInProgress = true;
       if (SendFileOverNXCP(m_hSocket, dwRqId, pszFile, m_pCtx, 0, progressCallback, cbArg))
-         dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
+         dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
 		m_fileUploadInProgress = false;
@@ -1018,9 +1019,9 @@ DWORD AgentConnection::StartUpgrade(const TCHAR *pszPkgName)
        (i >= 0) && (pszPkgName[i] != '\\') && (pszPkgName[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &pszPkgName[i + 1]);
 
-   if (SendMessage(&msg))
+   if (sendMessage(&msg))
    {
-      dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
+      dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
    }
    else
    {
@@ -1060,10 +1061,10 @@ DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
    msg.SetVariable(VID_SERVICE_REQUEST, pszRequest);
    msg.SetVariable(VID_SERVICE_RESPONSE, pszResponse);
 
-   if (SendMessage(&msg))
+   if (sendMessage(&msg))
    {
       // Wait up to 90 seconds for results
-      pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 90000);
+      pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 90000);
       if (pResponse != NULL)
       {
          dwResult = pResponse->GetVariableLong(VID_RCC);
@@ -1107,9 +1108,9 @@ DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
    msg.SetCode(CMD_GET_PARAMETER_LIST);
    msg.SetId(dwRqId);
 
-   if (SendMessage(&msg))
+   if (sendMessage(&msg))
    {
-      pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
       if (pResponse != NULL)
       {
          dwResult = pResponse->GetVariableLong(VID_RCC);
@@ -1146,7 +1147,7 @@ DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
 // Setup encryption
 //
 
-DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
+DWORD AgentConnection::setupEncryption(RSA *pServerKey)
 {
 #ifdef _WITH_ENCRYPTION
    CSCPMessage msg(m_nProtocolVersion), *pResp;
@@ -1156,9 +1157,9 @@ DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
 
    PrepareKeyRequestMsg(&msg, pServerKey);
    msg.SetId(dwRqId);
-   if (SendMessage(&msg))
+   if (sendMessage(&msg))
    {
-      pResp = WaitForMessage(CMD_SESSION_KEY, dwRqId, m_dwCommandTimeout);
+      pResp = waitForMessage(CMD_SESSION_KEY, dwRqId, m_dwCommandTimeout);
       if (pResp != NULL)
       {
          dwResult = SetupEncryptionContext(pResp, &m_pCtx, NULL, pServerKey, m_nProtocolVersion);
@@ -1222,9 +1223,9 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
    msg.SetCode(CMD_GET_AGENT_CONFIG);
    msg.SetId(dwRqId);
 
-   if (SendMessage(&msg))
+   if (sendMessage(&msg))
    {
-      pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
       if (pResponse != NULL)
       {
          dwResult = pResponse->GetVariableLong(VID_RCC);
@@ -1297,9 +1298,9 @@ DWORD AgentConnection::updateConfigFile(const TCHAR *pszConfig)
    msg.SetVariable(VID_CONFIG_FILE, (BYTE *)pszConfig, (DWORD)strlen(pszConfig));
 #endif
 
-   if (SendMessage(&msg))
+   if (sendMessage(&msg))
    {
-      dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
+      dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
    }
    else
    {
@@ -1377,7 +1378,7 @@ ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
       }
 
       Lock();
-      DestroyResultData();
+      destroyResultData();
       Unlock();
    }
 
@@ -1389,7 +1390,7 @@ ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
 // Set proxy information
 //
 
-void AgentConnection::SetProxy(DWORD dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
+void AgentConnection::setProxy(DWORD dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
 {
    m_dwProxyAddr = dwAddr;
    m_wProxyPort = wPort;
@@ -1415,7 +1416,7 @@ void AgentConnection::SetProxy(DWORD dwAddr, WORD wPort, int iAuthMethod, const 
 // Setup proxy connection
 //
 
-DWORD AgentConnection::SetupProxyConnection(void)
+DWORD AgentConnection::setupProxyConnection()
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
@@ -1425,8 +1426,8 @@ DWORD AgentConnection::SetupProxyConnection(void)
    msg.SetId(dwRqId);
    msg.SetVariable(VID_IP_ADDRESS, (DWORD)ntohl(m_dwAddr));
    msg.SetVariable(VID_AGENT_PORT, m_wPort);
-   if (SendMessage(&msg))
-      return WaitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -1436,7 +1437,7 @@ DWORD AgentConnection::SetupProxyConnection(void)
 // Enable trap receiving on connection
 //
 
-DWORD AgentConnection::enableTraps(void)
+DWORD AgentConnection::enableTraps()
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
@@ -1444,8 +1445,8 @@ DWORD AgentConnection::enableTraps(void)
    dwRqId = m_dwRequestId++;
    msg.SetCode(CMD_ENABLE_AGENT_TRAPS);
    msg.SetId(dwRqId);
-   if (SendMessage(&msg))
-      return WaitForRCC(dwRqId, m_dwCommandTimeout);
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, m_dwCommandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -1465,7 +1466,7 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
    pRequest->SetId(dwRqId);
 	if (recvFile != NULL)
 	{
-		rcc = PrepareFileDownload(recvFile, dwRqId, appendFile, downloadProgressCallback, cbArg);
+		rcc = prepareFileDownload(recvFile, dwRqId, appendFile, downloadProgressCallback, cbArg);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
@@ -1478,9 +1479,9 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 
 	if (msg == NULL)
 	{
-		if (SendMessage(pRequest))
+		if (sendMessage(pRequest))
 		{
-			msg = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+			msg = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
 			if ((msg != NULL) && (recvFile != NULL))
 			{
 				if (msg->GetVariableLong(VID_RCC) == ERR_SUCCESS)
@@ -1517,7 +1518,7 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 // Prepare for file upload
 //
 
-DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append,
+DWORD AgentConnection::prepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append,
 														 void (*downloadProgressCallback)(size_t, void *), void *cbArg)
 {
 	if (m_hCurrFile != -1)

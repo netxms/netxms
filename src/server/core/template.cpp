@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,6 +47,7 @@ Template::Template()
 	m_applyFilter = NULL;
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
+	m_mutexDciAccess = MutexCreate();
 }
 
 
@@ -67,6 +67,7 @@ Template::Template(const TCHAR *pszName)
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
    m_bIsHidden = TRUE;
+	m_mutexDciAccess = MutexCreate();
 }
 
 
@@ -80,6 +81,7 @@ Template::Template(ConfigEntry *config)
    m_bIsHidden = TRUE;
    m_dwDCILockStatus = INVALID_INDEX;
    m_iStatus = STATUS_NORMAL;
+	m_mutexDciAccess = MutexCreate();
 
 	// Name and version
 	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
@@ -117,9 +119,10 @@ Template::Template(ConfigEntry *config)
 
 Template::~Template()
 {
-   DestroyItems();
+   destroyItems();
 	delete m_applyFilter;
 	safe_free(m_applyFilterSource);
+	MutexDestroy(m_mutexDciAccess);
 }
 
 
@@ -127,7 +130,7 @@ Template::~Template()
 // Destroy all related data collection items
 //
 
-void Template::DestroyItems(void)
+void Template::destroyItems()
 {
    DWORD i;
 
@@ -214,7 +217,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
 
    // Load DCI and access list
    LoadACLFromDB();
-   LoadItemsFromDB();
+   loadItemsFromDB();
    for(i = 0; i < (int)m_dwNumItems; i++)
       if (!m_ppItems[i]->loadThresholdsFromDB())
          bResult = FALSE;
@@ -307,16 +310,21 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    }
    UnlockChildList();
 
-   // Save data collection items
-   for(i = 0; i < m_dwNumItems; i++)
-      m_ppItems[i]->saveToDB(hdb);
-
    // Save access list
    SaveACLToDB(hdb);
 
-   // Clear modifications flag and unlock object
-   m_bIsModified = FALSE;
    UnlockData();
+
+   // Save data collection items
+	lockDciAccess();
+   for(i = 0; i < m_dwNumItems; i++)
+      m_ppItems[i]->saveToDB(hdb);
+	unlockDciAccess();
+
+   // Clear modifications flag
+	LockData();
+   m_bIsModified = FALSE;
+	UnlockData();
 
    return TRUE;
 }
@@ -359,7 +367,7 @@ BOOL Template::DeleteFromDB(void)
 // Load data collection items from database
 //
 
-void Template::LoadItemsFromDB(void)
+void Template::loadItemsFromDB()
 {
    TCHAR szQuery[512];
    DB_RESULT hResult;
@@ -393,13 +401,13 @@ void Template::LoadItemsFromDB(void)
 // Add item to node
 //
 
-BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
+bool Template::addItem(DCItem *pItem, bool alreadyLocked)
 {
    DWORD i;
-   BOOL bResult = FALSE;
+   bool success = false;
 
-   if (!bLocked)
-      LockData();
+   if (!alreadyLocked)
+      lockDciAccess();
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
@@ -415,13 +423,19 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
       if (m_ppItems[i]->getStatus() != ITEM_STATUS_DISABLED)
          m_ppItems[i]->setStatus(ITEM_STATUS_ACTIVE, false);
       m_ppItems[i]->setBusyFlag(FALSE);
-      Modify();
-      bResult = TRUE;
+      success = true;
    }
 
-   if (!bLocked)
-      UnlockData();
-   return bResult;
+   if (!alreadyLocked)
+      unlockDciAccess();
+
+	if (success)
+	{
+		LockData();
+      Modify();
+		UnlockData();
+	}
+   return success;
 }
 
 
@@ -429,13 +443,13 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
 // Delete item from node
 //
 
-BOOL Template::DeleteItem(DWORD dwItemId, BOOL bNeedLock)
+bool Template::deleteItem(DWORD dwItemId, bool needLock)
 {
    DWORD i;
-   BOOL bResult = FALSE;
+   bool success = false;
 
-	if (bNeedLock)
-		LockData();
+	if (needLock)
+		lockDciAccess();
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
@@ -448,14 +462,14 @@ BOOL Template::DeleteItem(DWORD dwItemId, BOOL bNeedLock)
          delete m_ppItems[i];
          m_dwNumItems--;
          memmove(&m_ppItems[i], &m_ppItems[i + 1], sizeof(DCItem *) * (m_dwNumItems - i));
-         bResult = TRUE;
+         success = true;
 			DbgPrintf(7, _T("Template::DeleteItem: DCI deleted from object %d"), m_dwId);
          break;
       }
 
-	if (bNeedLock)
-	   UnlockData();
-   return bResult;
+	if (needLock)
+	   unlockDciAccess();
+   return success;
 }
 
 
@@ -463,26 +477,26 @@ BOOL Template::DeleteItem(DWORD dwItemId, BOOL bNeedLock)
 // Modify data collection item from NXCP message
 //
 
-BOOL Template::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
+bool Template::updateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
                           DWORD **ppdwMapIndex, DWORD **ppdwMapId)
 {
    DWORD i;
-   BOOL bResult = FALSE;
+   bool success = false;
 
-   LockData();
+   lockDciAccess();
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->getId() == dwItemId)
       {
          m_ppItems[i]->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
-         bResult = TRUE;
+         success = true;
          m_bIsModified = TRUE;
          break;
       }
 
-   UnlockData();
-   return bResult;
+   unlockDciAccess();
+   return success;
 }
 
 
@@ -490,12 +504,12 @@ BOOL Template::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps,
 // Set status for group of DCIs
 //
 
-BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
+bool Template::setItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
 {
    DWORD i, j;
-   BOOL bResult = TRUE;
+   bool success = true;
 
-   LockData();
+   lockDciAccess();
    for(i = 0; i < dwNumItems; i++)
    {
       for(j = 0; j < m_dwNumItems; j++)
@@ -507,10 +521,10 @@ BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
          }
       }
       if (j == m_dwNumItems)
-         bResult = FALSE;     // Invalid DCI ID provided
+         success = false;     // Invalid DCI ID provided
    }
-   UnlockData();
-   return bResult;
+   unlockDciAccess();
+   return success;
 }
 
 
@@ -579,7 +593,7 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
    msg.SetId(dwRqId);
    msg.SetCode(CMD_NODE_DCI);
 
-   LockData();
+   lockDciAccess();
 
    // Walk through items list
    for(i = 0; i < m_dwNumItems; i++)
@@ -593,7 +607,7 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
 		}
    }
 
-   UnlockData();
+   unlockDciAccess();
 
    // Send end-of-list indicator
 	msg.SetEndOfSequence();
@@ -605,12 +619,12 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
 // Get DCI item's type
 //
 
-int Template::GetItemType(DWORD dwItemId)
+int Template::getItemType(DWORD dwItemId)
 {
    DWORD i;
    int iType = -1;
 
-   LockData();
+   lockDciAccess();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->getId() == dwItemId)
@@ -619,7 +633,7 @@ int Template::GetItemType(DWORD dwItemId)
          break;
       }
 
-   UnlockData();
+   unlockDciAccess();
    return iType;
 }
 
@@ -628,12 +642,12 @@ int Template::GetItemType(DWORD dwItemId)
 // Get item by it's id
 //
 
-DCItem *Template::GetItemById(DWORD dwItemId)
+DCItem *Template::getItemById(DWORD dwItemId)
 {
    DWORD i;
    DCItem *pItem = NULL;
 
-   LockData();
+   lockDciAccess();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->getId() == dwItemId)
@@ -642,7 +656,7 @@ DCItem *Template::GetItemById(DWORD dwItemId)
          break;
       }
 
-   UnlockData();
+   unlockDciAccess();
    return pItem;
 }
 
@@ -651,12 +665,12 @@ DCItem *Template::GetItemById(DWORD dwItemId)
 // Get item by it's name (case-insensetive)
 //
 
-DCItem *Template::GetItemByName(const TCHAR *pszName)
+DCItem *Template::getItemByName(const TCHAR *pszName)
 {
    DWORD i;
    DCItem *pItem = NULL;
 
-   LockData();
+   lockDciAccess();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (!_tcsicmp(m_ppItems[i]->getName(), pszName))
@@ -665,7 +679,7 @@ DCItem *Template::GetItemByName(const TCHAR *pszName)
          break;
       }
 
-   UnlockData();
+   unlockDciAccess();
    return pItem;
 }
 
@@ -674,12 +688,12 @@ DCItem *Template::GetItemByName(const TCHAR *pszName)
 // Get item by it's description (case-insensetive)
 //
 
-DCItem *Template::GetItemByDescription(const TCHAR *pszDescription)
+DCItem *Template::getItemByDescription(const TCHAR *pszDescription)
 {
    DWORD i;
    DCItem *pItem = NULL;
 
-   LockData();
+   lockDciAccess();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (!_tcsicmp(m_ppItems[i]->getDescription(), pszDescription))
@@ -688,7 +702,7 @@ DCItem *Template::GetItemByDescription(const TCHAR *pszDescription)
          break;
       }
 
-   UnlockData();
+   unlockDciAccess();
    return pItem;
 }
 
@@ -697,16 +711,16 @@ DCItem *Template::GetItemByDescription(const TCHAR *pszDescription)
 // Get item by it's index
 //
 
-DCItem *Template::GetItemByIndex(DWORD dwIndex)
+DCItem *Template::getItemByIndex(DWORD dwIndex)
 {
    DCItem *pItem = NULL;
 
-   LockData();
+   lockDciAccess();
 
    if (dwIndex < m_dwNumItems)
       pItem = m_ppItems[dwIndex];
 
-   UnlockData();
+   unlockDciAccess();
    return pItem;
 }
 
@@ -827,7 +841,7 @@ BOOL Template::ApplyToNode(Node *pNode)
 // Queue template update
 //
 
-void Template::queueUpdate(void)
+void Template::queueUpdate()
 {
    DWORD i;
    TEMPLATE_UPDATE_INFO *pInfo;
@@ -871,7 +885,7 @@ void Template::queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
 // Get list of events used by DCIs
 //
 
-DWORD *Template::GetDCIEventsList(DWORD *pdwCount)
+DWORD *Template::getDCIEventsList(DWORD *pdwCount)
 {
    DWORD i, j, *pdwList;
    DCItem *pItem = NULL;
@@ -879,12 +893,12 @@ DWORD *Template::GetDCIEventsList(DWORD *pdwCount)
    pdwList = NULL;
    *pdwCount = 0;
 
-   LockData();
+   lockDciAccess();
    for(i = 0; i < m_dwNumItems; i++)
    {
       m_ppItems[i]->getEventList(&pdwList, pdwCount);
    }
-   UnlockData();
+   unlockDciAccess();
 
    // Clean list from duplicates
    for(i = 0; i < *pdwCount; i++)
@@ -915,18 +929,20 @@ void Template::CreateNXMPRecord(String &str)
    str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<dataCollection>\n"),
 	                       m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName));
 
-   LockData();
+   lockDciAccess();
    for(i = 0; i < m_dwNumItems; i++)
       m_ppItems[i]->createNXMPRecord(str);
-   UnlockData();
+   unlockDciAccess();
 
    str += _T("\t\t\t</dataCollection>\n");
+	LockData();
 	if (m_applyFilterSource != NULL)
 	{
 		str += _T("\t\t\t<filter>");
 		str.addDynamicString(EscapeStringForXML(m_applyFilterSource, -1));
 		str += _T("</filter>\n");
 	}
+	UnlockData();
 	str += _T("\t\t</template>\n");
 }
 
@@ -939,7 +955,7 @@ void Template::ValidateDCIList(DCI_CFG *cfg)
 {
 	DWORD i, j, dwNumDeleted, *pdwDeleteList;
 
-	LockData();
+	lockDciAccess();
 
 	pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
 	dwNumDeleted = 0;
@@ -965,21 +981,21 @@ void Template::ValidateDCIList(DCI_CFG *cfg)
 
 	// Delete unneeded items
 	for(i = 0; i < dwNumDeleted; i++)
-		DeleteItem(pdwDeleteList[i], FALSE);
+		deleteItem(pdwDeleteList[i], false);
 
 	// Create missing items
 	for(i = 0; cfg[i].pszName != NULL; i++)
 	{
 		if (!cfg[i].nFound)
 		{
-			AddItem(new DCItem(CreateUniqueId(IDG_ITEM), cfg[i].pszParam,
+			addItem(new DCItem(CreateUniqueId(IDG_ITEM), cfg[i].pszParam,
 				                cfg[i].nOrigin, cfg[i].nDataType,
 									 cfg[i].nInterval, cfg[i].nRetention,
-									 this, cfg[i].pszName), TRUE);
+									 this, cfg[i].pszName), true);
 		}
 	}
 
-	UnlockData();
+	unlockDciAccess();
 }
 
 
@@ -1034,7 +1050,7 @@ BOOL Template::EnumDCI(BOOL (* pfCallback)(DCItem *, DWORD, void *), void *pArg)
 	DWORD i;
 	BOOL bRet = TRUE;
 
-	LockData();
+	lockDciAccess();
 	for(i = 0; i < m_dwNumItems; i++)
 	{
 		if (!pfCallback(m_ppItems[i], i, pArg))
@@ -1043,7 +1059,7 @@ BOOL Template::EnumDCI(BOOL (* pfCallback)(DCItem *, DWORD, void *), void *pArg)
 			break;
 		}
 	}
-	UnlockData();
+	unlockDciAccess();
 	return bRet;
 }
 
@@ -1052,14 +1068,14 @@ BOOL Template::EnumDCI(BOOL (* pfCallback)(DCItem *, DWORD, void *), void *pArg)
 // (Re)associate all DCIs
 //
 
-void Template::AssociateItems(void)
+void Template::associateItems()
 {
 	DWORD i;
 
-	LockData();
+	lockDciAccess();
 	for(i = 0; i < m_dwNumItems; i++)
 		m_ppItems[i]->changeBinding(0, this, FALSE);
-	UnlockData();
+	unlockDciAccess();
 }
 
 

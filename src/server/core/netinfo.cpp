@@ -406,10 +406,10 @@ ARP_CACHE *GetLocalArpCache(void)
    {
       AgentConnection conn(inet_addr("127.0.0.1"));
 
-      if (conn.Connect(g_pServerKey))
+      if (conn.connect(g_pServerKey))
       {
          pArpCache = conn.GetArpCache();
-         conn.Disconnect();
+         conn.disconnect();
       }
    }
 
@@ -433,10 +433,10 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
    {
       AgentConnection conn(inet_addr("127.0.0.1"));
 
-      if (conn.Connect(g_pServerKey))
+      if (conn.connect(g_pServerKey))
       {
          pIfList = conn.GetInterfaceList();
-         conn.Disconnect();
+         conn.disconnect();
       }
    }
 
