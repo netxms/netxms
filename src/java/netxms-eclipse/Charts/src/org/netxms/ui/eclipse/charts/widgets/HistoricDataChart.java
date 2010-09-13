@@ -175,6 +175,10 @@ public class HistoricDataChart extends Chart
 		}
 	}
 	
+	/**
+	 * Selection start handler
+	 * @param e
+	 */
 	private void startSelection(MouseEvent e)
 	{
 		if (zoomLevel >= MAX_ZOOM_LEVEL)
@@ -196,6 +200,9 @@ public class HistoricDataChart extends Chart
 		plotArea.addMouseMoveListener(moveListener);
 	}
 	
+	/**
+	 * Selection end handler
+	 */
 	private void endSelection()
 	{
 		if (!selectionActive)

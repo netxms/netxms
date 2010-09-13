@@ -231,8 +231,6 @@ public class NXCSession
 
 	/**
 	 * Receiver thread for NXCSession
-	 * 
-	 * @author victor
 	 */
 	private class ReceiverThread extends Thread
 	{

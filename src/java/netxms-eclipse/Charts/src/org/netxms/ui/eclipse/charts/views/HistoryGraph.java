@@ -70,7 +70,7 @@ import org.swtchart.LineStyle;
  */
 public class HistoryGraph extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.charts.view.history_graph";
+	public static final String ID = "org.netxms.ui.eclipse.charts.views.HistoryGraph";
 	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
 	public static final String JOB_FAMILY = "HistoryGraphJob";
 	

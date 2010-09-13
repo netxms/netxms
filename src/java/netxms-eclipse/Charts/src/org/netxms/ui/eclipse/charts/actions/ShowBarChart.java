@@ -32,13 +32,13 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.charts.views.HistoryGraph;
+import org.netxms.ui.eclipse.charts.views.BarChart;
 
 /**
  * Show line graph for selected DCI(s)
  *
  */
-public class ShowHistoryGraph implements IObjectActionDelegate
+public class ShowBarChart implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private Object[] currentSelection = null;
@@ -100,7 +100,7 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 			
 			try
 			{
-				window.getActivePage().showView(HistoryGraph.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(BarChart.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)
 			{

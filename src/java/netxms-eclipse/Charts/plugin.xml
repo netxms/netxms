@@ -9,7 +9,7 @@
             allowMultiple="true"
             icon="icons/graph.png"
             class="org.netxms.ui.eclipse.charts.views.HistoryGraph"
-            id="org.netxms.ui.eclipse.charts.view.history_graph">
+            id="org.netxms.ui.eclipse.charts.views.HistoryGraph">
       </view>
       <view
             allowMultiple="false"
@@ -17,6 +17,14 @@
             icon="icons/graph_tree.png"
             id="org.netxms.ui.eclipse.charts.views.PredefinedGraphTree"
             name="Graphs"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.charts.views.BarChart"
+            icon="icons/chart_bar.png"
+            id="org.netxms.ui.eclipse.charts.views.BarChart"
+            name="Bar Chart"
             restorable="true">
       </view>
    </extension>
@@ -30,7 +38,14 @@
                class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
                label="Graph"
-               icon="icons/graph.png"
+               icon="icons/chart_line.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowBarChart"
+               icon="icons/chart_bar.png"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowBarChart"
+               label="Bar Chart"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -41,7 +56,14 @@
                class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
                label="Graph"
-               icon="icons/graph.png"
+               icon="icons/chart_line.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowBarChart"
+               icon="icons/chart_bar.png"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowBarChart"
+               label="Bar Chart"
                menubarPath="additions">
          </action>
       </objectContribution>
