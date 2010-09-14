@@ -54,7 +54,7 @@ import org.swtchart.ISeries.SeriesType;
  * Line chart widget
  *
  */
-public class HistoricDataChart extends Chart
+public class LineChart extends Chart
 {
 	private static final int MAX_ZOOM_LEVEL = 16;
 	
@@ -72,7 +72,7 @@ public class HistoricDataChart extends Chart
 	 * @param parent
 	 * @param style
 	 */
-	public HistoricDataChart(Composite parent, int style)
+	public LineChart(Composite parent, int style)
 	{
 		super(parent, style);
 		

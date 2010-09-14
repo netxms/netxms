@@ -32,7 +32,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.charts.views.BarChart;
+import org.netxms.ui.eclipse.charts.views.LastValuesChart;
 
 /**
  * Show line graph for selected DCI(s)
@@ -100,7 +100,7 @@ public class ShowBarChart implements IObjectActionDelegate
 			
 			try
 			{
-				window.getActivePage().showView(BarChart.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(LastValuesChart.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)
 			{

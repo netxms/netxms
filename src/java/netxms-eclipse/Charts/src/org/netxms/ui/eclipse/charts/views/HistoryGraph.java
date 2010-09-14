@@ -57,7 +57,7 @@ import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.charts.Activator;
-import org.netxms.ui.eclipse.charts.widgets.HistoricDataChart;
+import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.swtchart.IAxis;
@@ -81,7 +81,7 @@ public class HistoryGraph extends ViewPart
 	private NXCSession session;
 	private ArrayList<GraphItem> items = new ArrayList<GraphItem>(1);
 	private ArrayList<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(GraphSettings.MAX_GRAPH_ITEM_COUNT);
-	private HistoricDataChart chart;
+	private LineChart chart;
 	private boolean updateInProgress = false;
 	private Runnable refreshTimer;
 	
@@ -221,7 +221,7 @@ public class HistoryGraph extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		chart = new HistoricDataChart(parent, SWT.NONE);
+		chart = new LineChart(parent, SWT.NONE);
 		
 		setGridVisible(true);
 		chart.getAxisSet().getYAxis(0).enableLogScale(useLogScale);

@@ -21,10 +21,10 @@
       </view>
       <view
             allowMultiple="true"
-            class="org.netxms.ui.eclipse.charts.views.BarChart"
+            class="org.netxms.ui.eclipse.charts.views.LastValuesChart"
             icon="icons/chart_bar.png"
-            id="org.netxms.ui.eclipse.charts.views.BarChart"
-            name="Bar Chart"
+            id="org.netxms.ui.eclipse.charts.views.LastValuesChart"
+            name="Last Values Chart"
             restorable="true">
       </view>
    </extension>

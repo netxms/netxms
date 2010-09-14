@@ -414,14 +414,14 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/objecttabs/inter
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/propertypages/PerfTab.java -text
-src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/BarChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoryGraph.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/LastValuesChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/PredefinedGraphTree.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphFolder.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphTreeContentProvider.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphTreeLabelProvider.java -text
-src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/DciBarChart.java -text
-src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/HistoricDataChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/BarChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/LineChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal/SelectionRectangle.java -text
 src/java/netxms-eclipse/Dashboard/.classpath -text
 src/java/netxms-eclipse/Dashboard/.project -text
