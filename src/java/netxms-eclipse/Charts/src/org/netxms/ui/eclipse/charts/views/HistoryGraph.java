@@ -72,7 +72,6 @@ public class HistoryGraph extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.charts.views.HistoryGraph";
 	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
-	public static final String JOB_FAMILY = "HistoryGraphJob";
 	
 	private static final int[] presetRanges = { 10, 30, 60, 120, 240, 1440, 10080, 44640, 525600 };
 	private static final String[] presetNames = { "10 minutes", "30 minutes", "hour", "2 hours", "4 hours",
@@ -310,7 +309,7 @@ public class HistoryGraph extends ViewPart
 			@Override
 			public boolean belongsTo(Object family)
 			{
-				return family == HistoryGraph.JOB_FAMILY;
+				return family == Activator.PLUGIN_ID;
 			}
 		};
 		IWorkbenchSiteProgressService siteService =

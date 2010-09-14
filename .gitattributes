@@ -395,6 +395,8 @@ src/java/netxms-eclipse/Charts/build.properties -text
 src/java/netxms-eclipse/Charts/icons/adjust.png -text
 src/java/netxms-eclipse/Charts/icons/adjust_x.png -text
 src/java/netxms-eclipse/Charts/icons/adjust_y.png -text
+src/java/netxms-eclipse/Charts/icons/bar_horizontal.png -text
+src/java/netxms-eclipse/Charts/icons/bar_vertical.png -text
 src/java/netxms-eclipse/Charts/icons/chart_bar.png -text
 src/java/netxms-eclipse/Charts/icons/chart_line.png -text
 src/java/netxms-eclipse/Charts/icons/chart_pie.png -text
@@ -500,6 +502,7 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/RuleHeader.jav
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/ScriptCell.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/SeverityCell.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/SituationCell.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/TableHeader.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/CellFactory.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/EPPCellFactory.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/ImageFactory.java -text

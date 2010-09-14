@@ -5,7 +5,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.progress.IProgressService;
-import org.netxms.ui.eclipse.charts.views.HistoryGraph;
 import org.osgi.framework.BundleContext;
 import org.swtchart.LineStyle;
 
@@ -41,7 +40,7 @@ public class Activator extends AbstractUIPlugin
 
 		// Register icon for our jobs
 		IProgressService service = PlatformUI.getWorkbench().getProgressService();
-	   service.registerIconForFamily(getImageDescriptor("icons/graph.png"), HistoryGraph.JOB_FAMILY);
+	   service.registerIconForFamily(getImageDescriptor("icons/graph.png"), Activator.PLUGIN_ID);
 	   
 	   // Set default values for preferences
 	   IPreferenceStore ps = getPreferenceStore();

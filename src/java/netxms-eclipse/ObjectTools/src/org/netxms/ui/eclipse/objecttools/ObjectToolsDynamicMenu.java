@@ -197,7 +197,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				//console.activate();
 				final IOConsoleOutputStream out = console.newOutputStream();
 				
-				new ConsoleJob("Execute external command", null, Activator.PLUGIN_ID, null) {
+				ConsoleJob job = new ConsoleJob("Execute external command", null, Activator.PLUGIN_ID, null) {
 					@Override
 					protected String getErrorMessage()
 					{
@@ -226,7 +226,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 						}
 						//console.setName("FINISHED: " + console.getName());
 					}
-				}.start();
+				};
+				job.setUser(false);
+				job.start();
 				break;
 			case ObjectTool.TYPE_ACTION:
 				new ConsoleJob("Execute action on node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
