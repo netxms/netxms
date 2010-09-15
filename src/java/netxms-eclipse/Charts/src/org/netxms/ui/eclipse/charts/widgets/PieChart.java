@@ -11,6 +11,7 @@ import org.eclipse.birt.chart.model.ChartWithoutAxes;
 import org.eclipse.birt.chart.model.attribute.Bounds;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
 import org.eclipse.birt.chart.model.attribute.Fill;
+import org.eclipse.birt.chart.model.attribute.Palette;
 import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.component.Series;
@@ -28,6 +29,7 @@ import org.eclipse.birt.chart.model.layout.Legend;
 import org.eclipse.birt.chart.model.type.PieSeries;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
 import org.eclipse.birt.core.framework.PlatformConfig;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
@@ -184,7 +186,9 @@ public class PieChart extends Chart implements ControlListener
 
 		SeriesDefinition seriesDefinitionLabel = SeriesDefinitionImpl.create();
 		birtChart.getSeriesDefinitions().add(seriesDefinitionLabel);
-		seriesDefinitionLabel.getSeriesPalette().shift(0);
+		final Palette seriesPalette = seriesDefinitionLabel.getSeriesPalette();
+		//alterPalette(seriesPalette);
+		//seriesPalette.shift(1);
 		seriesDefinitionLabel.getSeries().add(category);
 
 		Query queryValue = QueryImpl.create("Value");
@@ -196,9 +200,19 @@ public class PieChart extends Chart implements ControlListener
 		SeriesDefinition seriesDefinitionValue = SeriesDefinitionImpl.create();
 		seriesDefinitionLabel.getSeriesDefinitions().add(seriesDefinitionValue);
 		seriesDefinitionValue.getSeries().add(pieSeries);
-		
+
 		final Color color = getColorFromPreferences("Chart.Colors.PlotArea");
 		birtChart.getPlot().setBackground(ColorDefinitionImpl.create(color.getRed(), color.getGreen(), color.getBlue()));
+	}
+
+	private void alterPalette(final Palette seriesPalette)
+	{
+		// TODO: BROKEN
+		final EList<Fill> entries = seriesPalette.getEntries();
+		for (int i = 0; i < 8; i++) {
+			final Color color = getColorFromPreferences("Chart.Colors.Data." + i);
+			((ColorDefinitionImpl)entries.get(i)).set(color.getRed(), color.getGreen(), color.getBlue());
+		}
 	}
 
 	private void initBirtPlatform()
@@ -225,7 +239,7 @@ public class PieChart extends Chart implements ControlListener
 		ILegend legend = getLegend();
 		legend.setPosition(SWT.RIGHT);
 		legend.setVisible(true);
-		
+
 		// Setup X and Y axis
 		IAxisSet axisSet = getAxisSet();
 		final IAxis xAxis = axisSet.getXAxis(0);
