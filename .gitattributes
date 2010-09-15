@@ -427,6 +427,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/Gr
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphTreeContentProvider.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphTreeLabelProvider.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/BarChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericBirtChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/LineChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/PieChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal/SelectionRectangle.java -text

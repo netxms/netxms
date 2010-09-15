@@ -21,9 +21,17 @@
       </view>
       <view
             allowMultiple="true"
-            class="org.netxms.ui.eclipse.charts.views.LastValuesChart"
+            class="org.netxms.ui.eclipse.charts.views.LastValuesBarChart"
             icon="icons/chart_bar.png"
-            id="org.netxms.ui.eclipse.charts.views.LastValuesChart"
+            id="org.netxms.ui.eclipse.charts.views.LastValuesBarChart"
+            name="Last Values Chart"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.charts.views.LastValuesPieChart"
+            icon="icons/chart_pie.png"
+            id="org.netxms.ui.eclipse.charts.views.LastValuesPieChart"
             name="Last Values Chart"
             restorable="true">
       </view>
@@ -48,6 +56,13 @@
                label="Bar Chart"
                menubarPath="additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowPieChart"
+               icon="icons/chart_pie.png"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowPieChart"
+               label="Pie Chart"
+               menubarPath="additions">
+         </action>
       </objectContribution>
       <objectContribution
             id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph_DataCollectionItem"
@@ -64,6 +79,13 @@
                icon="icons/chart_bar.png"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowBarChart"
                label="Bar Chart"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowPieChart"
+               icon="icons/chart_pie.png"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowPieChart"
+               label="Pie Chart"
                menubarPath="additions">
          </action>
       </objectContribution>
