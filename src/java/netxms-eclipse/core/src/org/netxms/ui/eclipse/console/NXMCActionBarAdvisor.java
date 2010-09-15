@@ -2,6 +2,7 @@ package org.netxms.ui.eclipse.console;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IStatusLineManager;
@@ -19,6 +20,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
@@ -34,8 +36,21 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionExit;
 	private IWorkbenchAction actionAbout;
 	private IWorkbenchAction actionShowPreferences;
+	private IWorkbenchAction actionCustomizePerspective;
+	private IWorkbenchAction actionSavePerspective;
+	private IWorkbenchAction actionResetPerspective;
+	private IWorkbenchAction actionClosePerspective;
+	private IWorkbenchAction actionCloseAllPerspectives;
+	private IWorkbenchAction actionMinimize;
+	private IWorkbenchAction actionMaximize;
+	private IWorkbenchAction actionPrevView;
+	private IWorkbenchAction actionNextView;
+	private IWorkbenchAction actionQuickAccess;
+	private IWorkbenchAction actionShowViewMenu;
 	private Action actionOpenConsole;
 	private Action actionOpenProgressView;
+	private IContributionItem contribItemShowView;
+	private IContributionItem contribItemOpenPerspective;
 
 	/**
 	 * @param configurer
@@ -45,9 +60,15 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		super(configurer);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.ActionBarAdvisor#makeActions(org.eclipse.ui.IWorkbenchWindow)
+	 */
 	@Override
 	protected void makeActions(IWorkbenchWindow window)
 	{
+		contribItemShowView = ContributionItemFactory.VIEWS_SHORTLIST.create(window);
+		contribItemOpenPerspective = ContributionItemFactory.PERSPECTIVES_SHORTLIST.create(window);
+		
 		actionExit = ActionFactory.QUIT.create(window);
 		register(actionExit);
 
@@ -57,6 +78,39 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionShowPreferences = ActionFactory.PREFERENCES.create(window);
 		register(actionShowPreferences);
 
+		actionCustomizePerspective = ActionFactory.EDIT_ACTION_SETS.create(window);
+		register(actionCustomizePerspective);
+		
+		actionSavePerspective = ActionFactory.SAVE_PERSPECTIVE.create(window);
+		register(actionSavePerspective);
+		
+		actionResetPerspective = ActionFactory.RESET_PERSPECTIVE.create(window);
+		register(actionResetPerspective);
+		
+		actionClosePerspective = ActionFactory.CLOSE_PERSPECTIVE.create(window);
+		register(actionClosePerspective);
+		
+		actionCloseAllPerspectives = ActionFactory.CLOSE_ALL_PERSPECTIVES.create(window);
+		register(actionCloseAllPerspectives);
+		
+		actionMinimize = ActionFactory.MINIMIZE.create(window);
+		register(actionMinimize);
+		
+		actionMaximize = ActionFactory.MAXIMIZE.create(window);
+		register(actionMaximize);
+		
+		actionPrevView = ActionFactory.PREVIOUS_PART.create(window);
+		register(actionPrevView);
+		
+		actionNextView = ActionFactory.NEXT_PART.create(window);
+		register(actionNextView);
+		
+		actionQuickAccess = ActionFactory.SHOW_QUICK_ACCESS.create(window);
+		register(actionQuickAccess);
+		
+		actionShowViewMenu = ActionFactory.SHOW_VIEW_MENU.create(window);
+		register(actionShowViewMenu);
+		
 		actionOpenConsole = new Action()
 		{
 			/*
@@ -128,6 +182,9 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionOpenProgressView.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif")); //$NON-NLS-1$
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
+	 */
 	@Override
 	protected void fillMenuBar(IMenuManager menuBar)
 	{
@@ -136,6 +193,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		MenuManager viewMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_view"), IActionConstants.M_VIEW); //$NON-NLS-1$
 		MenuManager configMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_configuration"), IActionConstants.M_CONFIG); //$NON-NLS-1$
 		MenuManager toolsMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_tools"), IActionConstants.M_TOOLS); //$NON-NLS-1$
+		MenuManager windowMenu = new MenuManager("&Window", IWorkbenchActionConstants.M_WINDOW);
 		MenuManager helpMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_help"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_HELP);
 
@@ -146,6 +204,8 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 
 		// Add a group marker indicating where action set menus will appear.
 		menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		
+		menuBar.add(windowMenu);
 		menuBar.add(helpMenu);
 
 		// File
@@ -167,11 +227,42 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		
 		// Tools
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		
+		// Window
+		MenuManager openPerspectiveMenuMgr = new MenuManager("Open Perspective", "openPerspective");
+		openPerspectiveMenuMgr.add(contribItemOpenPerspective);
+		windowMenu.add(openPerspectiveMenuMgr);
+		
+		MenuManager showViewMenuMgr = new MenuManager("Show View", "showView");
+		showViewMenuMgr.add(contribItemShowView);
+		windowMenu.add(showViewMenuMgr);
+		
+		windowMenu.add(new Separator());
+		windowMenu.add(actionCustomizePerspective);
+		windowMenu.add(actionSavePerspective);
+		windowMenu.add(actionResetPerspective);
+		windowMenu.add(actionClosePerspective);
+		windowMenu.add(actionCloseAllPerspectives);
+		windowMenu.add(new Separator());
+		
+		MenuManager navMenu = new MenuManager("&Navigation", IWorkbenchActionConstants.M_NAVIGATE);
+		windowMenu.add(navMenu);
+		navMenu.add(actionQuickAccess);
+		navMenu.add(actionShowViewMenu);
+		navMenu.add(new Separator());
+		navMenu.add(actionMaximize);
+		navMenu.add(actionMinimize);
+		navMenu.add(new Separator());
+		navMenu.add(actionNextView);
+		navMenu.add(actionPrevView);
 
 		// Help
 		helpMenu.add(actionAbout);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.ActionBarAdvisor#fillCoolBar(org.eclipse.jface.action.ICoolBarManager)
+	 */
 	@Override
 	protected void fillCoolBar(ICoolBarManager coolBar)
 	{

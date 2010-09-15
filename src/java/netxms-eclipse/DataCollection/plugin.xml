@@ -5,11 +5,12 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Data Collection Configuration"
             allowMultiple="true"
-            icon="icons/dc_editor.png"
             class="org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor"
-            id="org.netxms.ui.eclipse.datacollection.view.data_collection_editor">
+            icon="icons/dc_editor.png"
+            id="org.netxms.ui.eclipse.datacollection.view.data_collection_editor"
+            name="Data Collection Configuration"
+            restorable="false">
       </view>
       <view
             name="Last Values"
