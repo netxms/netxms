@@ -10,7 +10,9 @@ import org.eclipse.birt.chart.factory.RunTimeContext;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
 import org.eclipse.birt.chart.model.attribute.Bounds;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
+import org.eclipse.birt.chart.model.attribute.Fill;
 import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
+import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.component.Series;
 import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
 import org.eclipse.birt.chart.model.data.BaseSampleData;
@@ -194,6 +196,9 @@ public class PieChart extends Chart implements ControlListener
 		SeriesDefinition seriesDefinitionValue = SeriesDefinitionImpl.create();
 		seriesDefinitionLabel.getSeriesDefinitions().add(seriesDefinitionValue);
 		seriesDefinitionValue.getSeries().add(pieSeries);
+		
+		final Color color = getColorFromPreferences("Chart.Colors.PlotArea");
+		birtChart.getPlot().setBackground(ColorDefinitionImpl.create(color.getRed(), color.getGreen(), color.getBlue()));
 	}
 
 	private void initBirtPlatform()
