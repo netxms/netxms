@@ -74,7 +74,7 @@ public class PieChart extends Chart implements ControlListener
 		setupBirtChart();
 
 		final Object[][] data = new Object[][] {
-				{ "Label 1", new Integer(1) }, { "Label 2", new Integer(4) }, { "Лейбел 3", new Integer(7) } };
+				{ "Label 1", new Double(1) }, { "Label 2", new Double(4) }, { "Лейбел 3", new Double(7) } };
 		bindData(new IDataRowExpressionEvaluator()
 		{
 			int idx = 0;
@@ -220,17 +220,20 @@ public class PieChart extends Chart implements ControlListener
 		ILegend legend = getLegend();
 		legend.setPosition(SWT.RIGHT);
 		legend.setVisible(true);
-
+		
 		// Setup X and Y axis
 		IAxisSet axisSet = getAxisSet();
 		final IAxis xAxis = axisSet.getXAxis(0);
 		xAxis.getTitle().setVisible(false);
 		IAxisTick xTick = xAxis.getTick();
 		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color"));
+		xTick.setVisible(false);
 
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
-		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+		final IAxisTick yTick = yAxis.getTick();
+		yTick.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+		yTick.setVisible(false);
 
 		// Setup plot area
 		setBackgroundInPlotArea(getColorFromPreferences("Chart.Colors.PlotArea"));
