@@ -222,6 +222,10 @@ src/client/windows/nxuilib/sounds/ring2.wav -text svneol=unset#unset
 src/client/windows/nxuilib/sounds/siren1.wav -text svneol=unset#unset
 src/client/windows/nxuilib/sounds/siren2.wav -text svneol=unset#unset
 src/db/Makefile.am -text
+src/db/dbdrv/db2/Makefile.am -text
+src/db/dbdrv/db2/db2.cpp -text
+src/db/dbdrv/db2/db2.vcproj -text
+src/db/dbdrv/db2/db2drv.h -text
 src/db/dbdrv/mssql/mssql.vcproj -text
 src/db/dbdrv/mysql/mysql.vcproj -text
 src/db/dbdrv/odbc/odbc.vcproj -text

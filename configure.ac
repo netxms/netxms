@@ -203,6 +203,32 @@ AC_ARG_WITH(pgsql,
 	DBDRIVER_SELECTED="yes"
 fi ])
 
+AC_ARG_WITH(db2,
+[AS_HELP_STRING(--with-db2,build DB2 database driver)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		if test `uname -m` = 'i386' || test `uname -m` = 'i686'; then
+			DB2_LIB_DIR=lib32
+		else
+			DB2_LIB_DIR=lib64
+		fi
+		if test -x "$withval/${DB2_LIB_DIR}" ; then
+			LD_RUN_PATH="${withval}/${DB2_LIB_DIR}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}/${DB2_LIB_DIR}"
+		else
+			LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}"
+		fi
+		if test -x "$withval/include" ; then
+			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		fi
+
+		unset DB2_LIB_DIR
+	fi
+	COMPONENTS="$COMPONENTS db2"
+	DBDRIVER_SELECTED="yes"
+fi ])
+
 AC_ARG_WITH(openssl,
 [AS_HELP_STRING(--with-openssl,specify OpenSSL location)],
 [
@@ -262,7 +288,7 @@ AC_ARG_ENABLE(64bit,
 
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
-	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
+	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2"
 	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
@@ -443,6 +469,11 @@ fi
 check_substr "$COMPONENTS" "oracle"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS oracle"
+fi
+
+check_substr "$COMPONENTS" "db2"
+if test $? = 0; then
+	DB_DRIVERS="$DB_DRIVERS db2"
 fi
 
 
@@ -1584,6 +1615,16 @@ if test $? = 0; then
 		[AC_MSG_ERROR(libclntsh is required for Oracle support)], [$NNZ_LIB])
 fi
 
+#--------------------------------------------------------------------
+# DB2
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "db2"
+if test $? = 0; then
+	AC_CHECK_HEADER(sql.h,,AC_MSG_ERROR([*** Cannot find sql.h - check your DB2 client installation ***]))
+	AC_CHECK_LIB(db2, SQLAllocHandle, [DB2_LIBS="-ldb2"],
+		[AC_MSG_ERROR(libdb2 is required for DB2 support)])
+fi
 
 #--------------------------------------------------------------------
 # nxhttpd
@@ -1629,6 +1670,7 @@ AC_SUBST(MYSQL_LIBS)
 AC_SUBST(PGSQL_LIBS)
 AC_SUBST(ORACLE_LIBS)
 AC_SUBST(ODBC_LIBS)
+AC_SUBST(DB2_LIBS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -1725,6 +1767,7 @@ AC_CONFIG_FILES([
 	src/db/dbdrv/pgsql/Makefile
 	src/db/dbdrv/sqlite/Makefile
 	src/db/dbdrv/oracle/Makefile
+	src/db/dbdrv/db2/Makefile
 	src/db/libnxdb/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
@@ -1882,4 +1925,6 @@ fi
 if test "x${ODBC_LIBS}" != "x"; then
 	echo "ODBC libs               : ${ODBC_LIBS}"
 fi
-
+if test "x${DB2_LIBS}" != "x"; then
+	echo "DB2 libs                : ${DB2_LIBS}"
+fi
