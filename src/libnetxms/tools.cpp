@@ -735,7 +735,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 			do
 			{
 				qwStartTime = GetCurrentTimeMs();
-				rc = poll(&fds, 1, dwTimeout);
+				rc = poll(&fds, 1, timeout);
 				if ((rc != -1) || (errno != EINTR))
 					break;
 				dwElapsed = GetCurrentTimeMs() - qwStartTime;
