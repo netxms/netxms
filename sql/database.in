@@ -42,6 +42,13 @@
 #define TABLE_TYPE
 //#define TABLE_TYPE	TYPE=InnoDB
 
+#elif defined(DB_DB2)
+
+#define DB_SYNTAX	'DB2'
+#define SQL_TEXT	LONG VARCHAR
+#define SQL_INT64	BIGINT
+#define TABLE_TYPE
+
 #else
 
 #error Database type should be defined
@@ -51,7 +58,7 @@
 // String concatenation for multi-line texts
 #if defined(DB_MSSQL)
 #define CONCAT +
-#elif defined(DB_ORACLE) || defined(DB_SQLITE)
+#elif defined(DB_ORACLE) || defined(DB_SQLITE) || defined(DB_DB2)
 #define CONCAT ||
 #else
 #define CONCAT

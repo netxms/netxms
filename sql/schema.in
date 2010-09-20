@@ -567,7 +567,7 @@ CREATE TABLE raw_dci_values
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
-#ifndef DB_ORACLE
+#if !defined(DB_ORACLE) && !defined(DB_DB2) && !defined(DB_POSTGRESQL)
 CREATE INDEX idx_raw_dci_values_item_id ON raw_dci_values(item_id);
 #endif
 

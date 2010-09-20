@@ -9,11 +9,13 @@ sql_DATA = dbinit_mysql.sql \
            dbinit_mssql.sql \
            dbinit_oracle.sql \
            dbinit_sqlite.sql \
+           dbinit_db2.sql \
            dbschema_mysql.sql \
            dbschema_pgsql.sql \
            dbschema_mssql.sql \
            dbschema_oracle.sql \
-           dbschema_sqlite.sql
+           dbschema_sqlite.sql \
+           dbschema_db2.sql
 
 ROOT_FILE = dbinit.in
 SOURCE = $(ROOT_FILE) database.in schema.in metadata.in setup.in events.in policy.in objtools.in scripts.in maps.in
@@ -38,6 +40,9 @@ dbinit_oracle.sql: $(SOURCE) $(HEADER_FILES)
 dbinit_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_SQLITE $(ROOT_FILE) | $(SQUEEZE) > $@
 
+dbinit_db2.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_DB2 $(ROOT_FILE) | $(SQUEEZE) > $@
+
 dbschema_mysql.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_MYSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
@@ -53,8 +58,11 @@ dbschema_oracle.sql: $(SOURCE) $(HEADER_FILES)
 dbschema_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_SQLITE -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
+dbschema_db2.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_DB2 -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
 clean:
-	rm -f dbinit_*.sql
+	rm -f dbinit_*.sql dbschema_*.sql
 
 EXTRA_DIST = \
 	$(sql_DATA) \
