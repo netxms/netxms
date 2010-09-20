@@ -51,12 +51,14 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, char *e
    nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, buffer, 16, &nChars);
    if (nRet == SQL_SUCCESS)
    {
-#ifdef _WIN32
+#if UNICODE_UCS2
       if ((!wcscmp(buffer, L"08003")) ||     // Connection does not exist
           (!wcscmp(buffer, L"08S01")) ||     // Communication link failure
           (!wcscmp(buffer, L"HYT00")) ||     // Timeout expired
           (!wcscmp(buffer, L"HYT01")))       // Connection timeout expired
 #else
+		char state[16];
+		ucs2_to_mb(buffer, -1, state, 16);
       if ((!strcmp(state, "08003")) ||     // Connection does not exist
           (!strcmp(state, "08S01")) ||     // Communication link failure
           (!strcmp(state, "HYT00")) ||     // Timeout expired
@@ -316,16 +318,16 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQ
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
 			for(i = 0; i < pResult->iNumCols; i++)
 			{
-				char name[256];
+				SQLWCHAR name[256];
 				SQLSMALLINT len;
 
-				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
+				iResult = SQLColAttributeW(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
 				                           SQL_DESC_NAME, name, 256, &len, NULL); 
 				if ((iResult == SQL_SUCCESS) || 
 					 (iResult == SQL_SUCCESS_WITH_INFO))
 				{
 					name[len] = 0;
-					pResult->columnNames[i] = strdup(name);
+					pResult->columnNames[i] = MBStringFromUCS2String(name);
 				}
 				else
 				{
@@ -482,7 +484,7 @@ extern "C" void EXPORT DrvFreeResult(DB2DRV_QUERY_RESULT *pResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-                                                 DWORD *pdwError, char *errorText)
+                                                    DWORD *pdwError, char *errorText)
 {
    DB2DRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;
@@ -516,16 +518,16 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_W
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
 			for(i = 0; i < pResult->iNumCols; i++)
 			{
-				char name[256];
+				SQLWCHAR name[256];
 				SQLSMALLINT len;
 
-				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
+				iResult = SQLColAttributeW(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
 				                           SQL_DESC_NAME, name, 256, &len, NULL); 
 				if ((iResult == SQL_SUCCESS) || 
 					 (iResult == SQL_SUCCESS_WITH_INFO))
 				{
 					name[len] = 0;
-					pResult->columnNames[i] = strdup(name);
+					pResult->columnNames[i] = MBStringFromUCS2String(name);
 				}
 				else
 				{
