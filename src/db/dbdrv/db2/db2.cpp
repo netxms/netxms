@@ -1,6 +1,6 @@
 /* 
 ** DB2 Database Driver
-** Copyright (C) 2010 Raden Solutions
+** Copyright (C) 2010 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ static BOOL m_useUnicode = TRUE;
 // Convert DB2 state to NetXMS database error code and get error text
 //
 
-static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_TCHAR *errorText)
+static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *errorText)
 {
    SQLRETURN nRet;
    SQLSMALLINT nChars;
@@ -98,16 +98,16 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" NETXMS_TCHAR EXPORT *DrvPrepareString(const NETXMS_TCHAR *str)
+extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 {
 	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	NETXMS_TCHAR *out = (NETXMS_TCHAR *)malloc(bufferSize * sizeof(NETXMS_TCHAR));
+	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
 	out[0] = _T('\'');
 
-	const NETXMS_TCHAR *src = str;
+	const TCHAR *src = str;
 	int outPos;
-	for(outPos = 1; *src != 0; src++)
+	for(outPos = 1; *src != NULL; src++)
 	{
 		if (*src == _T('\''))
 		{
@@ -115,7 +115,7 @@ extern "C" NETXMS_TCHAR EXPORT *DrvPrepareString(const NETXMS_TCHAR *str)
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (NETXMS_TCHAR *)realloc(out, bufferSize * sizeof(NETXMS_TCHAR));
+				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
 			}
 			out[outPos++] = _T('\'');
 			out[outPos++] = _T('\'');
@@ -161,10 +161,10 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
                                            char *pszPassword, char *pszDatabase)
 {
    long iResult;
-   DB2DRV_CONN *pConn;
+   DB2CDRV_CONN *pConn;
 
    // Allocate our connection structure
-   pConn = (DB2DRV_CONN *)malloc(sizeof(DB2DRV_CONN));
+   pConn = (DB2CDRV_CONN *)malloc(sizeof(DB2CDRV_CONN));
 
    // Allocate environment
    iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
@@ -212,7 +212,7 @@ connect_failure_0:
 // Disconnect from database
 //
 
-extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
+extern "C" void EXPORT DrvDisconnect(DB2CDRV_CONN *pConn)
 {
    MutexLock(pConn->mutexQuery, INFINITE);
    MutexUnlock(pConn->mutexQuery);
@@ -228,7 +228,7 @@ extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, TCHAR *errorText)
 {
    long iResult;
    DWORD dwResult;
@@ -282,7 +282,7 @@ extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NE
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
    long i, iResult, iCurrValue;
    DB2DRV_QUERY_RESULT *pResult = NULL;
@@ -333,8 +333,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQ
 				char name[256];
 				SQLSMALLINT len;
 
-				// FIXME: SQLColAttributeA was changed to SQLColAttributeW, add code to handle this
-				iResult = SQLColAttributeW(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
+				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
 				                           SQL_DESC_NAME, name, 256, &len, NULL); 
 				if ((iResult == SQL_SUCCESS) || 
 					 (iResult == SQL_SUCCESS_WITH_INFO))
@@ -504,8 +503,8 @@ extern "C" void EXPORT DrvFreeResult(DB2DRV_QUERY_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-                                                 DWORD *pdwError, NETXMS_TCHAR *errorText)
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
+                                                 DWORD *pdwError, TCHAR *errorText)
 {
    DB2DRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;
@@ -551,8 +550,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_W
 				char name[256];
 				SQLSMALLINT len;
 
-				// FIXME: SQLColAttributeA was changed to SQLColAttributeW, add code to handle this
-				iResult = SQLColAttributeW(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
+				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
 				                           SQL_DESC_NAME, name, 256, &len, NULL); 
 				if ((iResult == SQL_SUCCESS) || 
 					 (iResult == SQL_SUCCESS_WITH_INFO))
@@ -726,7 +724,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 // Begin transaction
 //
 
-extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
+extern "C" DWORD EXPORT DrvBegin(DB2CDRV_CONN *pConn)
 {
    SQLRETURN nRet;
    DWORD dwResult;
@@ -753,7 +751,7 @@ extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
 // Commit transaction
 //
 
-extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
+extern "C" DWORD EXPORT DrvCommit(DB2CDRV_CONN *pConn)
 {
    SQLRETURN nRet;
 
@@ -772,7 +770,7 @@ extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
 // Rollback transaction
 //
 
-extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
+extern "C" DWORD EXPORT DrvRollback(DB2CDRV_CONN *pConn)
 {
    SQLRETURN nRet;
 

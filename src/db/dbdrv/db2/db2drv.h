@@ -65,12 +65,14 @@
 
 #endif
 
-#define __BOOL
-
-#include <sql.h>
-#include <sqlcli.h>
+#define __BOOL // disable BOOL typedef
+#include <db2ApiDf.h>
 #include <sqlcli1.h>
-#include <sqlext.h>
+
+//#include <sql.h>
+//#include <sqlcli.h>
+//#include <sqlcli1.h>
+//#include <sqlext.h>
 
 
 //
