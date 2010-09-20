@@ -1,6 +1,6 @@
 /* 
 ** DB2 Database Driver
-** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2010 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,21 +39,14 @@
 #ifndef _WIN32
 
 #if HAVE_WCHAR_H
-
 #define NETXMS_WCHAR		wchar_t
-
 #else		/* HAVE_WCHAR_T */
-
 #define NETXMS_WCHAR		WCHAR
-
 #endif	/* HAVE_WCHAR_T */
-
 #undef WCHAR
 
 #else		/* _WIN32 */
-
 #define NETXMS_WCHAR		WCHAR
-
 #endif
 
 #define __BOOL // disable BOOL typedef

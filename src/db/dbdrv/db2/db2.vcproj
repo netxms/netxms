@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="dn2"
-	ProjectGUID="{AA515A35-366D-4EBF-A927-A017A841C48D}"
+	Name="db2"
+	ProjectGUID="{297D9A45-B928-4470-91B5-0E07A20C2405}"
 	RootNamespace="db2"
 	Keyword="Win32Proj"
 	>
@@ -348,6 +348,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\db2drv.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\include\dbdrv.h"
 				>
 			</File>
@@ -357,10 +361,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\include\nms_common.h"
-				>
-			</File>
-			<File
-				RelativePath=".\db2drv.h"
 				>
 			</File>
 		</Filter>
