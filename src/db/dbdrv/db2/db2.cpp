@@ -37,25 +37,18 @@ extern "C" const char EXPORT *drvName = "DB2";
 
 
 //
-// Static data
-//
-
-static BOOL m_useUnicode = TRUE;
-
-
-//
 // Convert DB2 state to NetXMS database error code and get error text
 //
 
-static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *errorText)
+static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
 {
    SQLRETURN nRet;
    SQLSMALLINT nChars;
    DWORD dwError;
-   char szState[16];
+   WCHAR szState[16];
 
 	// Get state information and convert it to NetXMS database error code
-   nRet = SQLGetDiagField(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
+   nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
    if (nRet == SQL_SUCCESS)
    {
       if ((!strcmp(szState, "08003")) ||     // Connection does not exist
@@ -78,10 +71,13 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *
 	// Get error message
 	if (errorText != NULL)
 	{
-		nRet = SQLGetDiagField(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
+		WCHAR buffer[DBDRV_MAX_ERROR_TEXT];
+
+		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, buffer, DBDRV_MAX_ERROR_TEXT, &nChars);
 		if (nRet == SQL_SUCCESS)
 		{
-			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
 			RemoveTrailingCRLF(errorText);
 		}
 		else
@@ -98,14 +94,14 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+extern "C" TCHAR EXPORT *DrvPrepareString(const char *str)
 {
 	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
+	char *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
 	out[0] = _T('\'');
 
-	const TCHAR *src = str;
+	const char *src = str;
 	int outPos;
 	for(outPos = 1; *src != NULL; src++)
 	{
@@ -138,7 +134,6 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 
 extern "C" BOOL EXPORT DrvInit(char *cmdLine)
 {
-	m_useUnicode = ExtractNamedOptionValueAsBool(cmdLine, _T("unicode"), TRUE);
    return TRUE;
 }
 
@@ -147,7 +142,7 @@ extern "C" BOOL EXPORT DrvInit(char *cmdLine)
 // Unload handler
 //
 
-extern "C" void EXPORT DrvUnload(void)
+extern "C" void EXPORT DrvUnload()
 {
 }
 
@@ -158,7 +153,7 @@ extern "C" void EXPORT DrvUnload(void)
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
-                                           char *pszPassword, char *pszDatabase)
+                                              char *pszPassword, char *pszDatabase)
 {
    long iResult;
    DB2CDRV_CONN *pConn;
@@ -228,7 +223,7 @@ extern "C" void EXPORT DrvDisconnect(DB2CDRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, char *errorText)
 {
    long iResult;
    DWORD dwResult;
@@ -282,7 +277,7 @@ extern "C" DWORD EXPORT DrvQuery(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, T
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, char *errorText)
 {
    long i, iResult, iCurrValue;
    DB2DRV_QUERY_RESULT *pResult = NULL;
@@ -504,7 +499,7 @@ extern "C" void EXPORT DrvFreeResult(DB2DRV_QUERY_RESULT *pResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2CDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-                                                 DWORD *pdwError, TCHAR *errorText)
+                                                 DWORD *pdwError, char *errorText)
 {
    DB2DRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;

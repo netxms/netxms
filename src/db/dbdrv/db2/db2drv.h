@@ -42,26 +42,17 @@
 
 #define NETXMS_WCHAR		wchar_t
 
-#ifdef UNICODE
-#define NETXMS_TCHAR		wchar_t
-#else
-#define NETXMS_TCHAR		char
-#endif
-
 #else		/* HAVE_WCHAR_T */
 
 #define NETXMS_WCHAR		WCHAR
-#define NETXMS_TCHAR		TCHAR
 
 #endif	/* HAVE_WCHAR_T */
 
-#undef TCHAR
 #undef WCHAR
 
 #else		/* _WIN32 */
 
 #define NETXMS_WCHAR		WCHAR
-#define NETXMS_TCHAR		TCHAR
 
 #endif
 
