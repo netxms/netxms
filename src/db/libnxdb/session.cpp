@@ -1116,6 +1116,10 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
    {
       syntax = DB_SYNTAX_SQLITE;
    }
+   else if (!_tcscmp(syntaxId, _T("DB2")))
+   {
+      syntax = DB_SYNTAX_DB2;
+   }
    else
    {
 		syntax = DB_SYNTAX_UNKNOWN;

@@ -65,6 +65,7 @@
 #define DB_SYNTAX_MSSQL    2
 #define DB_SYNTAX_ORACLE   3
 #define DB_SYNTAX_SQLITE   4
+#define DB_SYNTAX_DB2      4
 #define DB_SYNTAX_UNKNOWN	-1
 
 
