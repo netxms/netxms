@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ static BOOL m_useUnicode = TRUE;
 // Convert ODBC state to NetXMS database error code and get error text
 //
 
-static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *errorText)
+static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_TCHAR *errorText)
 {
    SQLRETURN nRet;
    SQLSMALLINT nChars;
@@ -57,7 +57,7 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *
    char szState[16];
 
 	// Get state information and convert it to NetXMS database error code
-   nRet = SQLGetDiagField(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
+   nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
    if (nRet == SQL_SUCCESS)
    {
       if ((!strcmp(szState, "08003")) ||     // Connection does not exist
@@ -80,7 +80,17 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *
 	// Get error message
 	if (errorText != NULL)
 	{
-		nRet = SQLGetDiagField(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
+#ifdef UNICODE
+#if UNICODE_UCS2
+		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
+#else
+		char buffer[DBDRV_MAX_ERROR_TEXT];
+		nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, buffer, DBDRV_MAX_ERROR_TEXT, &nChars);
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
+#endif
+#else
+		nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
+#endif
 		if (nRet == SQL_SUCCESS)
 		{
 			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
@@ -100,14 +110,14 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+extern "C" NETXMS_TCHAR EXPORT *DrvPrepareString(const NETXMS_TCHAR *str)
 {
 	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
+	NETXMS_TCHAR *out = (NETXMS_TCHAR *)malloc(bufferSize * sizeof(NETXMS_TCHAR));
 	out[0] = _T('\'');
 
-	const TCHAR *src = str;
+	const NETXMS_TCHAR *src = str;
 	int outPos;
 	for(outPos = 1; *src != NULL; src++)
 	{
@@ -117,7 +127,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (TCHAR *)realloc(out, bufferSize * sizeof(NETXMS_TCHAR));
 			}
 			out[outPos++] = _T('\'');
 			out[outPos++] = _T('\'');
@@ -230,7 +240,7 @@ extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_TCHAR *errorText)
 {
    long iResult;
    DWORD dwResult;
@@ -284,7 +294,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, T
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_TCHAR *errorText)
 {
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -506,7 +516,7 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-                                                 DWORD *pdwError, TCHAR *errorText)
+                                                 DWORD *pdwError, NETXMS_TCHAR *errorText)
 {
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;
