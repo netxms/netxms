@@ -1,0 +1,12 @@
+LGPL incompatible files
+
+libnetxms:
+
+base64.h	- GPL
+base64.cpp	- GPL
+ice.h 		- actual license unknown
+ice.c 		- actual license unknown
+netxms-regex.h	- GPL
+regex.c		- GPL
+netxms-getopt.h	- GPL
+getopt.c	- GPL
