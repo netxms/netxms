@@ -6,33 +6,48 @@ licensing. Detailed list of licensing per component is following:
 
 NetXMS components:
 
-libnetxms		LGPL
-libnxcl			LGPL
-libnxlp			LGPL
-libnxmap		LGPL
-libnxmb			GPL
-libnxsl			LGPL
-libnxsnmp		LGPL
-nxav			GPL
-nxcon			GPL
-nxcptest		GPL
-nxlptest		GPL
-nxmibc			GPL
-nxnotify		GPL
-nxscript		GPL
-nxsnmpget		GPL
-nxsnmpset		GPL
-nxsnmpwalk		GPL
-nxuilib			GPL
+libnetxms       LGPL
+libnxcl         LGPL
+libnxdb         LGPL
+libnxlp         LGPL
+libnxmap        LGPL
+libnxmb         GPL
+libnxsl         LGPL
+libnxsnmp       LGPL
+libnxsrv        LGPL
+nxagentd        GPL
+nxalarm         GPL
+nxav            GPL
+nxcon           GPL
+nxcptest        GPL
+nxevent         GPL
+nxflowd         GPL
+nxhttpd         GPL
+nxlexer         GPL
+nxlptest        GPL
+nxmibc          GPL
+nxnotify        GPL
+nxpush          GPL
+nxscript        GPL
+nxsms           GPL
+nxsnmpget       GPL
+nxsnmpset       GPL
+nxsnmpwalk      GPL
+nxuilib         GPL
+
+all subagents   GPL
+all DB drivers  GPL
+all SMS drivers GPL
 
 
 Third party components bundled with NetXMS:
 
-freetype		BSD-like
-libexpat		BSD-like
-libgd			BSD-like
-libipfix		LGPL
-libjpeg			BSD-like
-libpng			BSD-like
-sqlite			BSD-like
-zlib			BSD-like
+freetype        BSD-like
+libexpat        BSD-like
+libgd           BSD-like
+libipfix        LGPL
+libjpeg         BSD-like
+libpng          BSD-like
+scilexer        BSD-like
+sqlite          BSD-like
+zlib            BSD-like
