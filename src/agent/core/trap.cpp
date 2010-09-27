@@ -28,7 +28,10 @@
 // Static data
 //
 
-static Queue *m_pTrapQueue = NULL;
+static Queue *s_trapQueue = NULL;
+static QWORD s_genTrapCount = 0;	// Number of generated traps
+static QWORD s_sentTrapCount = 0;	// Number of sent traps
+static time_t s_lastTrapTime = 0;
 
 
 //
@@ -41,10 +44,10 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
    DWORD i;
    BOOL bTrapSent;
 
-   m_pTrapQueue = new Queue;
+   s_trapQueue = new Queue;
    while(1)
    {
-      pMsg = (CSCP_MESSAGE *)m_pTrapQueue->GetOrBlock();
+      pMsg = (CSCP_MESSAGE *)s_trapQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
@@ -63,15 +66,16 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
       if (bTrapSent)
 		{
 	      free(pMsg);
+			s_sentTrapCount++;
 		}
 		else
 		{
-         m_pTrapQueue->Insert(pMsg);	// Re-queue trap
+         s_trapQueue->Insert(pMsg);	// Re-queue trap
 			ThreadSleep(1);
 		}
    }
-   delete m_pTrapQueue;
-   m_pTrapQueue = NULL;
+   delete s_trapQueue;
+   s_trapQueue = NULL;
 	DebugPrintf(INVALID_INDEX, 1, _T("Trap sender thread terminated"));
    return THREAD_OK;
 }
@@ -83,7 +87,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 
 void ShutdownTrapSender()
 {
-	m_pTrapQueue->SetShutdownMode();
+	s_trapQueue->SetShutdownMode();
 }
 
 
@@ -108,8 +112,12 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
       msg.SetVariable(VID_EVENT_ARG_BASE + i, ppArgList[i]);
-   if (m_pTrapQueue != NULL)
-      m_pTrapQueue->Put(msg.CreateMessage());
+   if (s_trapQueue != NULL)
+	{
+		s_genTrapCount++;
+		s_lastTrapTime = time(NULL);
+      s_trapQueue->Put(msg.CreateMessage());
+	}
 }
 
 
@@ -197,4 +205,28 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, ...)
    va_start(args, pszFormat);
    SendTrap(dwEventCode, pszFormat, args);
    va_end(args);
+}
+
+
+//
+// Handler for trap statistic DCIs
+//
+
+LONG H_AgentTraps(const char *cmd, const char *arg, char *value)
+{
+	switch(arg[0])
+	{
+		case 'G':
+			ret_uint64(value, s_genTrapCount);
+			break;
+		case 'S':
+			ret_uint64(value, s_sentTrapCount);
+			break;
+		case 'T':
+			ret_uint64(value, (QWORD)s_lastTrapTime);
+			break;
+		default:
+			return SYSINFO_RC_UNSUPPORTED;
+	}
+	return SYSINFO_RC_SUCCESS;
 }

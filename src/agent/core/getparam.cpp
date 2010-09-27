@@ -29,6 +29,7 @@
 
 LONG H_ActiveConnections(const char *cmd, const char *arg, char *pValue);
 LONG H_AgentStats(const char *cmd, const char *arg, char *value);
+LONG H_AgentTraps(const char *cmd, const char *arg, char *value);
 LONG H_AgentUptime(const char *cmd, const char *arg, char *value);
 LONG H_CRC32(const char *cmd, const char *arg, char *value);
 LONG H_DirInfo(const char *cmd, const char *arg, char *value);
@@ -234,9 +235,12 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures, DCI_DT_UINT, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
    { "Agent.ConfigurationServer", H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
    { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests, DCI_DT_UINT, DCIDESC_AGENT_FAILEDREQUESTS },
+   { "Agent.GeneratedTraps", H_AgentTraps, "G", DCI_DT_UINT64, DCIDESC_AGENT_GENERATED_TRAPS },
+   { "Agent.LastTrapTime", H_AgentTraps, "T", DCI_DT_UINT64, DCIDESC_AGENT_LAST_TRAP_TIME },
    { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests, DCI_DT_UINT, DCIDESC_AGENT_PROCESSEDREQUESTS },
    { "Agent.Registrar", H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
    { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections, DCI_DT_UINT, DCIDESC_AGENT_REJECTEDCONNECTIONS },
+   { "Agent.SentTraps", H_AgentTraps, "S", DCI_DT_UINT64, DCIDESC_AGENT_SENT_TRAPS },
    { "Agent.SourcePackageSupport", H_StringConstant, "0", DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
    { "Agent.SupportedCiphers", H_SupportedCiphers, NULL, DCI_DT_STRING, DCIDESC_AGENT_SUPPORTEDCIPHERS },
    { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests, DCI_DT_UINT, DCIDESC_AGENT_TIMEDOUTREQUESTS },
