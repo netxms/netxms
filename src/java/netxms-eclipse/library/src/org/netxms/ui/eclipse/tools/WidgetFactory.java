@@ -16,33 +16,23 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.epp.widgets;
+package org.netxms.ui.eclipse.tools;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyledText;
-import org.netxms.client.events.EventProcessingPolicyRule;
-import org.netxms.ui.eclipse.nxsl.tools.NXSLLineStyleListener;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 
 /**
- * Cell for filtering script
+ * Simple widget factory to be used with WidgetHelper. 
  *
  */
-public class ScriptCell extends Cell
+public abstract class WidgetFactory
 {
-	private EventProcessingPolicyRule eppRule;
-	private StyledText text;
-	
-	public ScriptCell(Rule rule, Object data)
-	{
-		super(rule, data);
-		eppRule = (EventProcessingPolicyRule)data;
-		
-		text = new StyledText(this, SWT.MULTI);
-		text.setEditable(false);
-      final NXSLLineStyleListener listener = new NXSLLineStyleListener();
-      text.addLineStyleListener(listener);
-      text.addExtendedModifyListener(listener);
-		text.setText(eppRule.getScript());
-	}
-
+	/**
+	 * Create control with requested parent and style.
+	 * 
+	 * @param parent parent composite
+	 * @param style style
+	 * @return new widget
+	 */
+	public abstract Control createControl(Composite parent, int style);
 }

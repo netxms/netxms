@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -189,6 +190,52 @@ public class WidgetHelper
 		combo.setLayoutData(gridData);		
 		
 		return combo;
+	}
+	
+	/**
+	 * Create labeled control using factory.
+	 * 
+	 * @param parent parent composite
+	 * @param flags flags for control being created
+	 * @param factory control factory
+	 * @param labelText Label's text
+	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
+	 * @return created control
+	 */
+	public static Control createLabeledControl(Composite parent, int flags, WidgetFactory factory, String labelText, Object layoutData)
+	{
+		Composite group = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.verticalSpacing = INNER_SPACING;
+		layout.horizontalSpacing = 0;
+		layout.marginTop = 0;
+		layout.marginBottom = 0;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		group.setLayout(layout);
+
+		if (layoutData != DEFAULT_LAYOUT_DATA)
+		{
+			group.setLayoutData(layoutData);
+		}
+		else
+		{
+			GridData gridData = new GridData();
+			gridData.horizontalAlignment = GridData.FILL;
+			gridData.grabExcessHorizontalSpace = true;
+			group.setLayoutData(gridData);
+		}
+		
+		Label label = new Label(group, SWT.NONE);
+		label.setText(labelText);
+
+		final Control widget = factory.createControl(group, flags);
+		GridData gridData = new GridData();
+		gridData.horizontalAlignment = GridData.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		widget.setLayoutData(gridData);		
+
+		return widget;
 	}
 	
 	/**

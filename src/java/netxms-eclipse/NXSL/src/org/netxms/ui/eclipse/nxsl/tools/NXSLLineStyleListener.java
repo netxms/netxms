@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.tools;
+package org.netxms.ui.eclipse.nxsl.tools;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -356,7 +356,7 @@ public class NXSLLineStyleListener implements LineStyleListener, ExtendedModifyL
 	 * @param offset Offset
 	 * @return true if given offset is within multiline comment
 	 */
-	private boolean isOffsetWithinComment(int offset)
+	public boolean isOffsetWithinComment(int offset)
 	{
 		for(int i = 0; i < commentOffsets.size(); i++)
 		{
@@ -367,5 +367,13 @@ public class NXSLLineStyleListener implements LineStyleListener, ExtendedModifyL
 				return true;
 		}
 		return false;
+	}
+
+	/**
+	 * @return the systemconstants
+	 */
+	public static String[] getSystemconstants()
+	{
+		return systemConstants;
 	}
 }

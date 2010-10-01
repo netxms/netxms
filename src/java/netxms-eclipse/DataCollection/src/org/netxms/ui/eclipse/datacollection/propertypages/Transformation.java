@@ -23,8 +23,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -36,7 +34,8 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.tools.NXSLLineStyleListener;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
+import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -47,7 +46,7 @@ public class Transformation extends PropertyPage
 {
 	private DataCollectionItem dci;
 	private Combo deltaCalculation;
-	private StyledText transformationScript;
+	private ScriptEditor transformationScript;
 	private Button testScriptButton;
 	
 	/* (non-Javadoc)
@@ -80,21 +79,21 @@ public class Transformation extends PropertyPage
       gd.grabExcessVerticalSpace = true;
       gd.widthHint = 0;
       gd.heightHint = 0;
-      transformationScript = WidgetHelper.createLabeledStyledText(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL,
-                                                                  "Step 2 - transformation script", null, gd);
+      final WidgetFactory factory = new WidgetFactory() {
+			@Override
+			public Control createControl(Composite parent, int style)
+			{
+				return new ScriptEditor(parent, style);
+			}
+      };
+      transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL,
+                                                                             factory, "Step 2 - transformation script", gd);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       transformationScript.setLayoutData(gd);
-      
-      transformationScript.setFont(new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL));
-      transformationScript.setTabs(3);
-      transformationScript.setWordWrap(false);
-      final NXSLLineStyleListener listener = new NXSLLineStyleListener();
-      transformationScript.addLineStyleListener(listener);
-      transformationScript.addExtendedModifyListener(listener);
       transformationScript.setText(dci.getTransformationScript());
       
       testScriptButton = new Button(transformationScript.getParent(), SWT.PUSH);
