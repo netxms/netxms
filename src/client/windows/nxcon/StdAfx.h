@@ -54,6 +54,8 @@
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
 
+#define _CRT_NON_CONFORMING_SWPRINTFS
+
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 #define _WINSOCKAPI_    /* Prevent inclusion of winsock.h in windows.h */
 

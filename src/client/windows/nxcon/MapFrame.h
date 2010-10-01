@@ -28,6 +28,7 @@ public:
 
 // Operations
 public:
+	CMapFrame(const TCHAR *pszParams);	// Create by desktop loader
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -129,6 +130,7 @@ protected:
 	//}}AFX_MSG
    afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnSubmapChange(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
 	void SetScaleShift(int nShift);

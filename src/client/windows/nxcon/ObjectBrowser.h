@@ -156,6 +156,7 @@ protected:
 	afx_msg void OnUpdateObjectTool(CCmdUI *pCmdUI);
    afx_msg LRESULT OnFindObject(WPARAM wParam, LPARAM);
 	afx_msg LRESULT OnActivateObjectTree(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

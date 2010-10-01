@@ -330,6 +330,7 @@ public:
 	CMDIChildWnd *ShowTrapLogBrowser();
 	CMDIChildWnd *ShowAlarmBrowser(TCHAR *pszParams = NULL);
 	CMDIChildWnd *ShowNetworkSummary();
+	CMDIChildWnd *ShowMapFrame(TCHAR *pszParams = NULL);
 	void ApplyTemplate(NXC_OBJECT *pObject);
 	CMDIChildWnd *ShowLastValues(NXC_OBJECT *pObject, TCHAR *pszParams = NULL);
 	void DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObjectList);

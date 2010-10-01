@@ -39,7 +39,7 @@ CObjectBrowser::CObjectBrowser()
 
 CObjectBrowser::CObjectBrowser(TCHAR *pszParams)
 {
-   m_dwFlags = PLACE_CONTAINERS_FIRST;
+   m_dwFlags = ExtractWindowParamULong(pszParams, _T("F"), PLACE_CONTAINERS_FIRST);
    m_pCurrentObject = NULL;
    m_pImageList = NULL;
    m_dwTreeHashSize = 0;
@@ -123,6 +123,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
    ON_MESSAGE(NXCM_ACTIVATE_OBJECT_TREE, OnActivateObjectTree)
    ON_COMMAND_RANGE(OBJTOOL_OB_MENU_FIRST_ID, OBJTOOL_OB_MENU_LAST_ID, OnObjectTool)
    ON_UPDATE_COMMAND_UI_RANGE(OBJTOOL_OB_MENU_FIRST_ID, OBJTOOL_OB_MENU_LAST_ID, OnUpdateObjectTool)
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1595,4 +1596,18 @@ void CObjectBrowser::OnObjectPollInterfaceNames()
 void CObjectBrowser::OnUpdateObjectPollInterfaceNames(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(CurrObjectIsNode(FALSE));
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CObjectBrowser::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
+{
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
+   pInfo->iWndClass = WNDC_OBJECT_BROWSER;
+   GetWindowPlacement(&pInfo->placement);
+	_sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("F:%u"), m_dwFlags);
+   return 1;
 }

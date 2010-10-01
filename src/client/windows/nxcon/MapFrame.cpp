@@ -100,6 +100,15 @@ CMapFrame::CMapFrame()
 	m_nScaleShift = SCALE_SHIFT_NORMAL;
 }
 
+CMapFrame::CMapFrame(const TCHAR *pszParams)
+{
+	m_dwMapId = ExtractWindowParamULong(pszParams, _T("ID"), 0);
+   m_bShowToolBar = theApp.GetProfileInt(MAP_SECTION, _T("ShowToolBar"), TRUE);
+   m_bShowToolBox = theApp.GetProfileInt(MAP_SECTION, _T("ShowToolBox"), FALSE);
+   m_bShowStatusBar = theApp.GetProfileInt(MAP_SECTION, _T("ShowStatusBar"), TRUE);
+	m_nScaleShift = ExtractWindowParamLong(pszParams, _T("S"), SCALE_SHIFT_NORMAL);
+}
+
 CMapFrame::~CMapFrame()
 {
    theApp.WriteProfileInt(MAP_SECTION, _T("ShowToolBar"), m_bShowToolBar);
@@ -185,6 +194,7 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_SUBMAP_CHANGE, OnSubmapChange)
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -266,27 +276,28 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndMapView.m_bPositionOnChangedObject = theApp.GetProfileInt(MAP_SECTION, _T("EnsureChangeVisibility"), FALSE);
 
 	// Select map to open
-	CMapSelDlg dlg;
-
-	if (dlg.DoModal() == IDOK)
+	if (m_dwMapId == 0)
 	{
-		TCHAR section[128];
+		CMapSelDlg dlg;
 
-		m_dwMapId = dlg.m_dwMapId;
-		_sntprintf(section, 128, _T("Map_%d"), m_dwMapId);
-		m_nScaleShift = theApp.GetProfileInt(section, _T("ScaleShift"), SCALE_SHIFT_NORMAL);
-	   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
-
-		m_strTitle = _T("Network Map - [");
-		m_strTitle += dlg.m_strMapName;
-		m_strTitle += _T("]");
-	}
-	else
-	{
-	   PostMessage(WM_CLOSE, 0, 0);
+		if (dlg.DoModal() == IDOK)
+		{
+			m_dwMapId = dlg.m_dwMapId;
+		}
+		else
+		{
+			PostMessage(WM_CLOSE, 0, 0);
+			return 0;
+		}
 	}
 
-   return 0;
+	TCHAR section[128];
+
+	_sntprintf(section, 128, _T("Map_%d"), m_dwMapId);
+	m_nScaleShift = theApp.GetProfileInt(section, _T("ScaleShift"), m_nScaleShift);
+	PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+
+	return 0;
 }
 
 
@@ -358,6 +369,10 @@ void CMapFrame::OnViewRefresh()
       m_wndMapView.SetMap(pMap);
 		m_wndMapView.SetObjectScaleShift(m_nScaleShift);
       m_wndStatusBar.SetText(m_wndMapView.GetScaleText(), STATUS_PANE_SCALE, 0);
+
+		m_strTitle = _T("Network Map - [");
+		m_strTitle += pMap->Name();
+		m_strTitle += _T("]");
    }
    else
    {
@@ -1302,4 +1317,18 @@ void CMapFrame::OnUpdateObjectSetchildmgmt(CCmdUI* pCmdUI)
       pObject = GetFirstSelectedObject();
       pCmdUI->Enable(pObject->dwNumChilds > 0);
    }
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CMapFrame::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
+{
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
+	pInfo->iWndClass = WNDC_NETWORK_MAP;
+   GetWindowPlacement(&pInfo->placement);
+	_sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("ID:%u\x7FS:%d"), m_dwMapId, m_nScaleShift);
+   return 1;
 }

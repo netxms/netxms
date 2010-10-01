@@ -797,7 +797,7 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg)
 // Show event browser window
 //
 
-CMDIChildWnd *CConsoleApp::ShowEventBrowser(void)
+CMDIChildWnd *CConsoleApp::ShowEventBrowser()
 {
 	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
    CMDIChildWnd *pWnd;
@@ -821,7 +821,7 @@ CMDIChildWnd *CConsoleApp::ShowEventBrowser(void)
 // Show syslog browser window
 //
 
-CMDIChildWnd *CConsoleApp::ShowSyslogBrowser(void)
+CMDIChildWnd *CConsoleApp::ShowSyslogBrowser()
 {
 	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
    CMDIChildWnd *pWnd;
@@ -845,7 +845,7 @@ CMDIChildWnd *CConsoleApp::ShowSyslogBrowser(void)
 // Show syslog browser window
 //
 
-CMDIChildWnd *CConsoleApp::ShowTrapLogBrowser(void)
+CMDIChildWnd *CConsoleApp::ShowTrapLogBrowser()
 {
 	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
    CMDIChildWnd *pWnd;
@@ -901,10 +901,28 @@ void CConsoleApp::OnViewSnmptraplog()
 
 void CConsoleApp::OnViewMap() 
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+	ShowMapFrame();
+}
 
-	// create a new MDI child window
-	pFrame->CreateNewChild(RUNTIME_CLASS(CMapFrame), IDR_MAPFRAME, m_hMapMenu, m_hMapAccel);
+
+//
+// Show or create object browser window
+//
+
+CMDIChildWnd *CConsoleApp::ShowMapFrame(TCHAR *pszParams)
+{
+   CMDIChildWnd *pWnd;
+	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   if (pszParams == NULL)
+   {
+      pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CMapFrame), IDR_MAPFRAME, m_hMapMenu, m_hMapAccel);
+   }
+   else
+   {
+      pWnd = new CMapFrame(pszParams);
+      CreateChildFrameWithSubtitle(pWnd, IDR_MAPFRAME, NULL, m_hMapMenu, m_hMapAccel);
+   }
+   return pWnd;
 }
 
 

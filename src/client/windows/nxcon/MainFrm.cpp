@@ -654,6 +654,9 @@ void CMainFrame::OnDesktopRestore()
                case WNDC_CONTROL_PANEL:
                   pWnd = theApp.ShowControlPanel();
                   break;
+					case WNDC_NETWORK_MAP:
+                  pWnd = theApp.ShowMapFrame(pWndInfo[i].szParameters);
+                  break;
                default:
                   pWnd = NULL;
                   break;

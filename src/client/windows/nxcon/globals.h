@@ -73,6 +73,7 @@ extern CConsoleApp theApp;
 #define WNDC_SYSLOG_BROWSER   8
 #define WNDC_TRAP_LOG_BROWSER 9
 #define WNDC_CONTROL_PANEL    10
+#define WNDC_NETWORK_MAP      11
 
 
 //
@@ -338,9 +339,9 @@ void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 TCHAR *TranslateUNIXText(const TCHAR *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
 BOOL IsButtonChecked(CDialog *pWnd, int nCtrl);
-BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize);
-long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault);
-DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault);
+BOOL ExtractWindowParam(const TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize);
+long ExtractWindowParamLong(const TCHAR *pszStr, TCHAR *pszParam, long nDefault);
+DWORD ExtractWindowParamULong(const TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault);
 void CopyMenuItems(CMenu *pDst, CMenu *pSrc);
 TCHAR **CopyStringList(TCHAR **ppList, DWORD dwSize);
 void DestroyStringList(TCHAR **ppList, DWORD dwSize);

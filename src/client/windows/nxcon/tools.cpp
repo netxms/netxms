@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Windows Console
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -388,9 +388,10 @@ void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp)
 // Extract parameter from window parameters string
 //
 
-BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize)
+BOOL ExtractWindowParam(const TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize)
 {
-   TCHAR *pCurr, szName[32];
+   const TCHAR *pCurr;
+	TCHAR szName[32];
    int iState = 0, iPos;
    BOOL bResult = FALSE;
 
@@ -445,7 +446,7 @@ BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iS
 // Extract window parameter as DWORD
 //
 
-DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault)
+DWORD ExtractWindowParamULong(const TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault)
 {
    TCHAR szBuffer[32], *eptr;
    DWORD dwResult;
@@ -468,7 +469,7 @@ DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault)
 // Extract window parameter as long
 //
 
-long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault)
+long ExtractWindowParamLong(const TCHAR *pszStr, TCHAR *pszParam, long nDefault)
 {
    TCHAR szBuffer[32], *eptr;
    long nResult;
