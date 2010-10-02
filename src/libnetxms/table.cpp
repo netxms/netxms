@@ -206,7 +206,7 @@ void Table::setAt(int nRow, int nCol, LONG nData)
 {
    TCHAR szBuffer[32];
 
-   _sntprintf(szBuffer, 32, _T("%d"), nData);
+   _sntprintf(szBuffer, 32, _T("%d"), (int)nData);
    setAt(nRow, nCol, szBuffer);
 }
 
@@ -214,7 +214,7 @@ void Table::setAt(int nRow, int nCol, DWORD dwData)
 {
    TCHAR szBuffer[32];
 
-   _sntprintf(szBuffer, 32, _T("%u"), dwData);
+   _sntprintf(szBuffer, 32, _T("%u"), (unsigned int)dwData);
    setAt(nRow, nCol, szBuffer);
 }
 

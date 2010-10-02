@@ -250,7 +250,7 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LO
 {
 	TCHAR buffer[64];
 
-	_sntprintf(buffer, sizeof(buffer), _T("%d"), value);
+	_sntprintf(buffer, sizeof(buffer), _T("%d"), (int)value);
 	return AgentPushParameterData(parameter, buffer);
 }
 
@@ -258,7 +258,7 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, D
 {
 	TCHAR buffer[64];
 
-	_sntprintf(buffer, sizeof(buffer), _T("%u"), value);
+	_sntprintf(buffer, sizeof(buffer), _T("%u"), (unsigned int)value);
 	return AgentPushParameterData(parameter, buffer);
 }
 

@@ -735,7 +735,7 @@ else
 	if test "x$PTHREAD_LIBS" = "xerror"; then
 		AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
 	fi
-	LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
+	LIBS="$LIBS $PTHREAD_LIBS"
 
 	# Extensions to posix threads
 	AC_CHECK_HEADERS([pthread_np.h],,,[
@@ -1231,13 +1231,13 @@ AC_CHECK_FUNCS([wfopen wopen wstat wgetenv wrename wunlink])
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
 		[ ac_found_iconv=yes
-		  LDFLAGS="$LDFLAGS -liconv"
+		  LIBS="$LIBS -liconv"
 		  AC_CHECK_FUNCS(libiconv, ac_found_iconv=yes, ac_found_iconv=no)
 		],
 		[
 			AC_CHECK_LIB(iconv, iconv, 
 				[ ac_found_iconv=yes
-			          LDFLAGS="$LDFLAGS -liconv"
+			          LIBS="$LIBS -liconv"
 			])
 			AC_CHECK_FUNCS(iconv, ac_found_iconv=yes, ac_found_iconv=no)
 		])
@@ -1536,8 +1536,8 @@ if test $? = 0; then
 	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
 		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
 
-	OLD_LDFLAGS="$LDFLAGS"
-	LDFLAGS="$LDFLAGS $MYSQL_LIBS"
+	OLD_LIBS="$LIBS"
+	LIBS="$LIBS $MYSQL_LIBS"
 
 	AC_MSG_CHECKING(whether mysql clients can run)
 	AC_RUN_IFELSE([AC_LANG_SOURCE([[
@@ -1555,7 +1555,7 @@ int main(void)
 	AC_MSG_RESULT(yes)
 
 	AC_CHECK_FUNCS(mysql_real_escape_string)
-	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
 fi
 
 
@@ -1570,8 +1570,8 @@ if test $? = 0; then
 		[AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
 
 	AC_MSG_CHECKING(whether postgresql clients can run)
-	OLD_LDFLAGS="$LDFLAGS"
-	LDFLAGS="$LDFLAGS $PGSQL_LIBS"
+	OLD_LIBS="$LIBS"
+	LIBS="$LIBS $PGSQL_LIBS"
 	AC_RUN_IFELSE([AC_LANG_SOURCE([[
 			#include <stdio.h>
 			#include <libpq-fe.h>
@@ -1584,7 +1584,7 @@ if test $? = 0; then
 			AC_MSG_RESULT(no)
 			AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
 		],[])    
-	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
 	AC_CHECK_LIB(pq, PQfformat, [ AC_DEFINE(HAVE_PQFFORMAT, 1, PQfformat not exist in 7.3) ])
 fi
 
@@ -1912,6 +1912,7 @@ echo "CPPFLAGS                : ${CPPFLAGS}"
 echo "CXXFLAGS                : ${CXXFLAGS}"
 echo "CFLAGS                  : ${CFLAGS}"
 echo "LDFLAGS                 : ${LDFLAGS}"
+echo "LIBS                    : ${LIBS}"
 
 if test "x${MYSQL_LIBS}" != "x"; then
 	echo "MySQL libs              : ${MYSQL_LIBS}"

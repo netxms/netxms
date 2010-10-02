@@ -589,7 +589,8 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
    {
       // Read line from file
       buffer[0] = 0;
-      _fgetts(buffer, 4095, cfg);
+      if (_fgetts(buffer, 4095, cfg) == NULL)
+      	break;	// EOF or error
       sourceLine++;
       ptr = _tcschr(buffer, _T('\n'));
       if (ptr != NULL)
@@ -691,7 +692,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 
 				MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, MAX_PATH);
 				wname[MAX_PATH - 1] = 0;
-				_snwprintf(entryName, MAX_PATH, L"%s#%u", wname, id);
+				_snwprintf(entryName, MAX_PATH, L"%s#%u", wname, (unsigned int)id);
 			}
 			else
 			{
@@ -700,7 +701,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			}
 #else
 			if (id != 0)
-				snprintf(entryName, MAX_PATH, "%s#%u", name, id);
+				snprintf(entryName, MAX_PATH, "%s#%u", name, (unsigned int)id);
 			else
 				nx_strncpy(entryName, name, MAX_PATH);
 #endif

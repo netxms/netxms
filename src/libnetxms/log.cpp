@@ -297,7 +297,7 @@ static TCHAR *FormatMessageUX(DWORD dwMsgId, TCHAR **ppStrings)
    {
       // No message with this ID
       pMsg = (TCHAR *)malloc(64 * sizeof(TCHAR));
-      _sntprintf(pMsg, 64, _T("MSG 0x%08X - Unable to find message text\n"), dwMsgId);
+      _sntprintf(pMsg, 64, _T("MSG 0x%08X - Unable to find message text\n"), (unsigned int)dwMsgId);
    }
    else
    {
@@ -384,11 +384,11 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                break;
             case 'd':
                strings[numStrings] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               _sntprintf(strings[numStrings], 16, _T("%d"), va_arg(args, LONG));
+               _sntprintf(strings[numStrings], 16, _T("%d"), (int)(va_arg(args, LONG)));
                break;
             case 'x':
                strings[numStrings] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               _sntprintf(strings[numStrings], 16, _T("0x%08X"), va_arg(args, DWORD));
+               _sntprintf(strings[numStrings], 16, _T("0x%08X"), (unsigned int)(va_arg(args, DWORD)));
                break;
             case 'a':
                strings[numStrings] = (TCHAR *)malloc(20 * sizeof(TCHAR));
@@ -429,7 +429,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                break;
             default:
                strings[numStrings] = (TCHAR *)malloc(32 * sizeof(TCHAR));
-               _sntprintf(strings[numStrings], 32, _T("BAD FORMAT (0x%08X)"), va_arg(args, DWORD));
+               _sntprintf(strings[numStrings], 32, _T("BAD FORMAT (0x%08X)"), (unsigned int)(va_arg(args, DWORD)));
                break;
          }
       }

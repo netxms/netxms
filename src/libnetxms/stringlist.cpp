@@ -97,7 +97,7 @@ void StringList::add(LONG value)
 {
 	TCHAR buffer[32];
 
-	_sntprintf(buffer, 32, _T("%d"), value);
+	_sntprintf(buffer, 32, _T("%d"), (int)value);
 	add(buffer);
 }
 
@@ -110,7 +110,7 @@ void StringList::add(DWORD value)
 {
 	TCHAR buffer[32];
 
-	_sntprintf(buffer, 32, _T("%u"), value);
+	_sntprintf(buffer, 32, _T("%u"), (unsigned int)value);
 	add(buffer);
 }
 

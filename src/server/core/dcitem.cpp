@@ -1505,7 +1505,7 @@ void DCItem::deleteExpiredData(void)
    now = time(NULL);
    lock();
    _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE (item_id=%d) AND (idata_timestamp<%ld)"),
-              m_pNode->Id(), m_dwId, now - (time_t)m_iRetentionTime * 86400);
+              (int)m_pNode->Id(), (int)m_dwId, (long)(now - (time_t)m_iRetentionTime * 86400));
    unlock();
    QueueSQLRequest(szQuery);
 }
@@ -1688,7 +1688,7 @@ void DCItem::setStatus(int status, bool generateEvent)
 	if (generateEvent && (m_pNode != NULL) && (m_iStatus != (BYTE)status))
 	{
 		static DWORD eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-		static TCHAR *originName[5] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push") };
+		static const TCHAR *originName[5] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push") };
 
 		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription,
 		          m_iSource, originName[m_iSource]);
