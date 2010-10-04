@@ -3295,4 +3295,98 @@ public class NXCSession
 		}
 		return list;
 	}
+	
+	/**
+	 * Get list of all scripts in script library.
+	 * 
+	 * @return ID/name pairs for scripts in script library
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Map<Long, String> getScriptLibrary() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT_LIST);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_SCRIPTS);
+		Map<Long, String> scripts = new HashMap<Long, String>(count);
+		long varId = NXCPCodes.VID_SCRIPT_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			final Long id = response.getVariableAsInt64(varId++);
+			final String name = response.getVariableAsString(varId++);
+			scripts.put(id, name);
+		}
+		return scripts;
+	}
+
+	/**
+	 * Get script from library
+	 * 
+	 * @param scriptId script ID
+	 * @return script source code
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public String getScript(long scriptId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT);
+		msg.setVariableInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsString(NXCPCodes.VID_SCRIPT_CODE);
+	}
+	
+	/**
+	 * Modify script. If scriptId is 0, new script will be created in library.
+	 * 
+	 * @param scriptId script ID
+	 * @param name script name
+	 * @param source script source code
+	 * @return script ID (newly assigned if new script was created)
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long modifyScript(long scriptId, String name, String source) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SCRIPT);
+		msg.setVariableInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		msg.setVariable(NXCPCodes.VID_SCRIPT_CODE, source);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_SCRIPT_ID);
+	}
+	
+	/**
+	 * Rename script in script library.
+	 * 
+	 * @param scriptId script ID
+	 * @param name new script name
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void renameScript(long scriptId, String name) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT);
+		msg.setVariableInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Delete script from library
+	 * 
+	 * @param scriptId script ID
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteScript(long scriptId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_SCRIPT);
+		msg.setVariableInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 }
