@@ -6307,13 +6307,19 @@ void ClientSession::SendScript(CSCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       dwScriptId = pRequest->GetVariableLong(VID_SCRIPT_ID);
-      _sntprintf(szQuery, 256, _T("SELECT script_code FROM script_library WHERE script_id=%d"), dwScriptId);
+      _sntprintf(szQuery, 256, _T("SELECT script_name,script_code FROM script_library WHERE script_id=%d"), dwScriptId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            pszCode = DBGetField(hResult, 0, 0, NULL, 0);
+				TCHAR name[MAX_DB_STRING];
+
+            DBGetField(hResult, 0, 0, name, MAX_DB_STRING);
+            DecodeSQLString(name);
+            msg.SetVariable(VID_NAME, name);
+            
+				pszCode = DBGetField(hResult, 0, 1, NULL, 0);
             DecodeSQLString(pszCode);
             msg.SetVariable(VID_SCRIPT_CODE, pszCode);
             free(pszCode);
