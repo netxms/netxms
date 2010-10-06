@@ -3303,19 +3303,19 @@ public class NXCSession
 	 * @throws IOException if socket or file I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public Map<Long, String> getScriptLibrary() throws IOException, NXCException
+	public List<Script> getScriptLibrary() throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT_LIST);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_SCRIPTS);
-		Map<Long, String> scripts = new HashMap<Long, String>(count);
+		List<Script> scripts = new ArrayList<Script>(count);
 		long varId = NXCPCodes.VID_SCRIPT_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			final Long id = response.getVariableAsInt64(varId++);
+			final long id = response.getVariableAsInt64(varId++);
 			final String name = response.getVariableAsString(varId++);
-			scripts.put(id, name);
+			scripts.add(new Script(id, name, null));
 		}
 		return scripts;
 	}
@@ -3328,13 +3328,13 @@ public class NXCSession
 	 * @throws IOException if socket or file I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public String getScript(long scriptId) throws IOException, NXCException
+	public Script getScript(long scriptId) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT);
 		msg.setVariableInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
-		return response.getVariableAsString(NXCPCodes.VID_SCRIPT_CODE);
+		return new Script(scriptId, response.getVariableAsString(NXCPCodes.VID_NAME), response.getVariableAsString(NXCPCodes.VID_SCRIPT_CODE));
 	}
 	
 	/**

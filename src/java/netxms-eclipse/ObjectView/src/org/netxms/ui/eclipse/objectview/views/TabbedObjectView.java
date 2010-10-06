@@ -126,6 +126,17 @@ public class TabbedObjectView extends ViewPart
 				tab.hide();
 			}
 		}
+		
+		if (tabFolder.getSelection() == null)
+		{
+			try
+			{
+				tabFolder.setSelection(tabFolder.getItem(0));
+			}
+			catch(IllegalArgumentException e)
+			{
+			}
+		}
 	}
 
 	/* (non-Javadoc)

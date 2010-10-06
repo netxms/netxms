@@ -68,23 +68,27 @@
 	   <actionSet id="org.netxms.ui.eclipse.serverconfig.action_sets.export_configuration"
 		   label="Export configuration..."
 		   visible="true">
-		   <action id="org.netxms.ui.eclipse.serverconfig.actions.export_configuration"
-			   menubarPath="tools/additions"
-			   label="Export configuration..."
-			   tooltip="Export configuration"
-			   class="org.netxms.ui.eclipse.serverconfig.actions.ExportConfiguration"
-			   definitionId="org.netxms.ui.eclipse.serverconfig.commands.export_configuration">
+		   <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.ExportConfiguration"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.export_configuration"
+           icon="icons/export.gif"
+           id="org.netxms.ui.eclipse.serverconfig.actions.export_configuration"
+           label="Export configuration..."
+           menubarPath="tools/additions"
+           tooltip="Export configuration">
 		   </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.serverconfig.action_sets.import_configuration"
 		   label="Import configuration..."
 		   visible="true">
-		   <action id="org.netxms.ui.eclipse.serverconfig.actions.import_configuration"
-			   menubarPath="tools/additions"
-			   label="Import configuration..."
-			   tooltip="Import configuration"
-			   class="org.netxms.ui.eclipse.serverconfig.actions.ImportConfiguration"
-			   definitionId="org.netxms.ui.eclipse.serverconfig.commands.import_configuration">
+		   <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.ImportConfiguration"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.import_configuration"
+           icon="icons/import.gif"
+           id="org.netxms.ui.eclipse.serverconfig.actions.import_configuration"
+           label="Import configuration..."
+           menubarPath="tools/additions"
+           tooltip="Import configuration">
 		   </action>
 	   </actionSet>
    </extension>

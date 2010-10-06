@@ -392,7 +392,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 					nPos = 0;
 					while(1)
 					{
-						nStatus = OCIStmtFetch(handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+						nStatus = OCIStmtFetch2(handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, 0, OCI_DEFAULT);
 						if (nStatus == OCI_NO_DATA)
 						{
 							*pdwError = DBERR_SUCCESS;	// EOF
@@ -428,6 +428,9 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 							nPos++;
 						}
 					}
+					
+					// Cancel cursor
+					OCIStmtFetch2(handleStmt, pConn->handleError, 0, OCI_FETCH_NEXT, 0, OCI_DEFAULT);
 				}
 
 				// Cleanup
@@ -676,7 +679,7 @@ extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
 	if (pConn == NULL)
 		return FALSE;
 
-	sword rc = OCIStmtFetch(pConn->handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+	sword rc = OCIStmtFetch2(pConn->handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, 0, OCI_DEFAULT);
 	if ((rc == OCI_SUCCESS) || (rc == OCI_SUCCESS_WITH_INFO))
 	{
 		success = TRUE;

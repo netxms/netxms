@@ -23,6 +23,8 @@ import org.eclipse.jface.bindings.keys.ParseException;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -37,6 +39,7 @@ import org.netxms.ui.eclipse.nxsl.widgets.internal.StyledTextContentAdapter;
 public class ScriptEditor extends StyledText
 {
 	private Font editorFont;
+	private boolean modified;
 
 	/**
 	 * @param parent
@@ -55,6 +58,13 @@ public class ScriptEditor extends StyledText
       final NXSLLineStyleListener listener = new NXSLLineStyleListener();
       addLineStyleListener(listener);
       addExtendedModifyListener(listener);
+      addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				modified = true;
+			}
+      });
       
       try
 		{
@@ -71,7 +81,6 @@ public class ScriptEditor extends StyledText
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	/* (non-Javadoc)
@@ -82,5 +91,21 @@ public class ScriptEditor extends StyledText
 	{
 		editorFont.dispose();
 		super.dispose();
+	}
+
+	/**
+	 * @return the modified
+	 */
+	public boolean isModified()
+	{
+		return modified;
+	}
+
+	/**
+	 * @param modified the modified to set
+	 */
+	public void setModified(boolean modified)
+	{
+		this.modified = modified;
 	}
 }
