@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
-** Copyright (C) 2006 Alex Kirhenshtein
+** Copyright (C) 2006-2010 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -193,9 +191,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	//
 	// Parse
-	//
 	if (optind < argc)
 	{
 		while (optind < argc)

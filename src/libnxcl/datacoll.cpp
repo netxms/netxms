@@ -393,7 +393,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, DWORD dwNodeId, D
             DCI_DATA_ROW *pSrc;
             NXC_DCI_ROW *pDst;
             DWORD dwPrevRowCount, dwRecvRows;
-            static WORD m_wRowSize[] = { 8, 8, 12, 12, 260, 12 };
+				int netRowSize;
+            static WORD s_wNetRowSize[] = { 8, 8, 12, 12, 516, 12 };
+            static WORD s_wClientRowSize[] = { 8, 8, 12, 12, sizeof(TCHAR) * 256 + 4, 12 };
 
             pHdr = (DCI_DATA_HEADER *)pRawMsg->df;
             dwRecvRows = ntohl(pHdr->dwNumRows);
@@ -404,7 +406,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, DWORD dwNodeId, D
             (*ppData)->wDataType = (WORD)ntohl(pHdr->dwDataType);
 				if ((*ppData)->wDataType > 5)
 					(*ppData)->wDataType = 0;
-            (*ppData)->wRowSize = m_wRowSize[(*ppData)->wDataType];
+            (*ppData)->wRowSize = s_wClientRowSize[(*ppData)->wDataType];
+				netRowSize = (int)s_wNetRowSize[(*ppData)->wDataType];
             if (dwRecvRows > 0)
                (*ppData)->pRows = (NXC_DCI_ROW *)realloc((*ppData)->pRows, (*ppData)->dwNumRows * (*ppData)->wRowSize);
 
@@ -441,7 +444,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, DWORD dwNodeId, D
                      break;
                }
 
-               pSrc = (DCI_DATA_ROW *)(((char *)pSrc) + (*ppData)->wRowSize);
+               pSrc = (DCI_DATA_ROW *)(((char *)pSrc) + netRowSize);
                pDst = (NXC_DCI_ROW *)(((char *)pDst) + (*ppData)->wRowSize);
             }
 

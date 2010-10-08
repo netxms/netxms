@@ -3123,7 +3123,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    DWORD dwObjectId;
    NetObj *pObject;
    BOOL bSuccess = FALSE;
-   static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 260, 12 };
+   static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 516, 12 };
 #if !defined(UNICODE) || defined(UNICODE_UCS4)
    TCHAR szBuffer[MAX_DCI_STRING_VALUE];
 #endif
@@ -8047,6 +8047,8 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          time(&t);
          for(i = 0; i < dwNumItems; i++)
          {
+				if (_tcslen(ppValueList[i]) >= MAX_DCI_STRING_VALUE)
+					ppValueList[i][MAX_DCI_STRING_VALUE - 1] = 0;
             ppItemList[i]->processNewValue(t, ppValueList[i]);
 				ppItemList[i]->setLastPollTime(t);
          }
