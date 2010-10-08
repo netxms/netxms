@@ -428,9 +428,6 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 							nPos++;
 						}
 					}
-					
-					// Cancel cursor
-					OCIStmtFetch2(handleStmt, pConn->handleError, 0, OCI_FETCH_NEXT, 0, OCI_DEFAULT);
 				}
 
 				// Cleanup
