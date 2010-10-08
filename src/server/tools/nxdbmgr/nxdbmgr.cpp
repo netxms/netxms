@@ -38,7 +38,7 @@ BOOL g_bTrace = FALSE;
 bool g_isGuiMode = false;
 int g_iSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
-const TCHAR *g_pszSqlType[5][2] = 
+const TCHAR *g_pszSqlType[6][3] = 
 {
    { _T("text"), _T("text"), _T("bigint") },                 // MySQL
    { _T("text"), _T("varchar(4000)"), _T("bigint") },        // PostgreSQL
@@ -267,6 +267,7 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 
    pszBuffer = _tcsdup(pszBatch);
    TranslateStr(pszBuffer, _T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   TranslateStr(pszBuffer, _T("$SQL:TEXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
    TranslateStr(pszBuffer, _T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
 
    pszQuery = pszBuffer;

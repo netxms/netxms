@@ -78,7 +78,7 @@ extern BOOL g_bTrace;
 extern bool g_isGuiMode;
 extern int g_iSyntax;
 extern const TCHAR *g_pszTableSuffix;
-extern const TCHAR *g_pszSqlType[][2];
+extern const TCHAR *g_pszSqlType[6][3];
 
 
 #endif
