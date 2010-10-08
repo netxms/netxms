@@ -6315,12 +6315,9 @@ void ClientSession::SendScript(CSCPMessage *pRequest)
          {
 				TCHAR name[MAX_DB_STRING];
 
-            DBGetField(hResult, 0, 0, name, MAX_DB_STRING);
-            DecodeSQLString(name);
-            msg.SetVariable(VID_NAME, name);
+            msg.SetVariable(VID_NAME, DBGetField(hResult, 0, 0, name, MAX_DB_STRING));
             
 				pszCode = DBGetField(hResult, 0, 1, NULL, 0);
-            DecodeSQLString(pszCode);
             msg.SetVariable(VID_SCRIPT_CODE, pszCode);
             free(pszCode);
          }
@@ -6350,7 +6347,7 @@ void ClientSession::SendScript(CSCPMessage *pRequest)
 void ClientSession::UpdateScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR *pszCode, *pszEscCode, *pszQuery, szName[MAX_DB_STRING];
+   TCHAR *pszCode, *pszQuery, szName[MAX_DB_STRING];
    DWORD dwScriptId;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -6364,22 +6361,21 @@ void ClientSession::UpdateScript(CSCPMessage *pRequest)
          pszCode = pRequest->GetVariableStr(VID_SCRIPT_CODE);
          if (pszCode != NULL)
          {
-            pszEscCode = EncodeSQLString(pszCode);
-            free(pszCode);
-            pszQuery = (TCHAR *)malloc((_tcslen(pszEscCode) + MAX_DB_STRING + 256) * sizeof(TCHAR));
+            pszQuery = (TCHAR *)malloc((_tcslen(pszCode) + MAX_DB_STRING + 256) * sizeof(TCHAR));
             if (dwScriptId == 0)
             {
                // New script
                dwScriptId = CreateUniqueId(IDG_SCRIPT);
-               _stprintf(pszQuery, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (%d,'%s','%s')"),
-                         dwScriptId, szName, pszEscCode);
+               _stprintf(pszQuery, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (%d,%s,%s)"),
+                         dwScriptId, (const TCHAR *)DBPrepareString(g_hCoreDB, szName),
+								 (const TCHAR *)DBPrepareString(g_hCoreDB, pszCode));
             }
             else
             {
-               _stprintf(pszQuery, _T("UPDATE script_library SET script_name='%s',script_code='%s' WHERE script_id=%d"),
-                         szName, pszEscCode, dwScriptId);
+               _stprintf(pszQuery, _T("UPDATE script_library SET script_name=%s,script_code=%s WHERE script_id=%d"),
+                         (const TCHAR *)DBPrepareString(g_hCoreDB, szName),
+								 (const TCHAR *)DBPrepareString(g_hCoreDB, pszCode), dwScriptId);
             }
-            free(pszEscCode);
             if (DBQuery(g_hCoreDB, pszQuery))
             {
                ReloadScript(dwScriptId);
@@ -6391,6 +6387,7 @@ void ClientSession::UpdateScript(CSCPMessage *pRequest)
                msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
             }
             free(pszQuery);
+            free(pszCode);
          }
          else
          {
@@ -6430,8 +6427,8 @@ void ClientSession::RenameScript(CSCPMessage *pRequest)
       {
          if (IsValidScriptId(dwScriptId))
          {
-            _stprintf(szQuery, _T("UPDATE script_library SET script_name='%s' WHERE script_id=%d"),
-                      szName, dwScriptId);
+            _stprintf(szQuery, _T("UPDATE script_library SET script_name=%s WHERE script_id=%d"),
+                      (const TCHAR *)DBPrepareString(g_hCoreDB, szName), dwScriptId);
             if (DBQuery(g_hCoreDB, szQuery))
             {
                ReloadScript(dwScriptId);

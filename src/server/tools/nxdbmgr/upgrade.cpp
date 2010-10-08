@@ -245,6 +245,76 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V213 to V214
+//
+
+static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
+{
+	CHK_EXEC(SetColumnNullable(_T("script_library"), _T("script_code"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(ConvertStrings(_T("script_library"), _T("script_id"), _T("script_code")));
+
+	CHK_EXEC(SetColumnNullable(_T("raw_dci_values"), _T("raw_value"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("raw_dci_values"), _T("item_id"), _T("raw_value")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
+
+	DB_RESULT hResult = SQLSelect(_T("SELECT id FROM nodes"));
+	if (hResult != NULL)
+	{
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; i < count; i++)
+		{
+			TCHAR table[32];
+
+			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
+			_sntprintf(table, 32, _T("idata_%d"), nodeId);
+			CHK_EXEC(SetColumnNullable(table, _T("idata_value"), _T("varchar(255)")));
+		}
+		DBFreeResult(hResult);
+	}
+
+	// Convert values for string DCIs from # encoded to normal form
+	hResult = SQLSelect(_T("SELECT node_id,item_id FROM items WHERE datatype=4"));
+	if (hResult != NULL)
+	{
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; i < count; i++)
+		{
+			TCHAR query[512];
+
+			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
+			DWORD dciId = DBGetFieldULong(hResult, i, 1);
+
+			_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d"), nodeId, dciId);
+			DB_RESULT hData = SQLSelect(query);
+			if (hData != NULL)
+			{
+				int valueCount = DBGetNumRows(hData);
+				for(int j = 0; j < valueCount; j++)
+				{
+					TCHAR buffer[MAX_DB_STRING];
+
+					LONG ts = DBGetFieldLong(hData, j, 0);
+					DBGetField(hData, j, 1, buffer, MAX_DB_STRING);
+					DecodeSQLString(buffer);
+
+					_sntprintf(query, 512, _T("UPDATE idata_%d SET idata_value=%s WHERE item_id=%d AND idata_timestamp=%ld"),
+					           nodeId, (const TCHAR *)DBPrepareString(g_hCoreDB, buffer), dciId, (long)ts);
+					CHK_EXEC(SQLQuery(query));
+				}
+				DBFreeResult(hData);
+			}
+		}
+		DBFreeResult(hResult);
+	}
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='214' WHERE var_name='SchemaVersion'")));
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V212 to V213
 //
 
@@ -766,22 +836,24 @@ static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
 
 
 //
-// Upgrade from V100 to V211
-//      or from V101 to V211
-//      or from V102 to V212
-//      or from V103 to V213
+// Upgrade from V100 to V214
+//      or from V101 to V214
+//      or from V102 to V214
+//      or from V103 to V214
+//      or from V104 to V214
 //
 
 static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 {
-	if (!H_UpgradeFromV9x(currVersion, newVersion))
+	if (!H_UpgradeFromV9x(currVersion, 207))
 		return FALSE;
 
 	// Now database at V207 level
-	// V100 already has changes V209 -> V210, but missing V207 -> V209 and V210 -> V213 changes
-	// V101 already has changes V209 -> V211, but missing V207 -> V209 and V211 -> V213 changes
-	// V102 already has changes V209 -> V212, but missing V207 -> V209 and V212 -> V213 changes
-	// V103 already has changes V209 -> V213, but missing V207 -> V209 changes
+	// V100 already has changes V209 -> V210, but missing V207 -> V209 and V210 -> V214 changes
+	// V101 already has changes V209 -> V211, but missing V207 -> V209 and V211 -> V214 changes
+	// V102 already has changes V209 -> V212, but missing V207 -> V209 and V212 -> V214 changes
+	// V103 already has changes V209 -> V213, but missing V207 -> V209 and V213 -> V214 changes
+	// V104 already has changes V209 -> V214, but missing V207 -> V209 changes
 
 	if (!H_UpgradeFromV207(207, 208))
 		return FALSE;
@@ -790,15 +862,22 @@ static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 		return FALSE;
 
 	if (currVersion == 100)
-		H_UpgradeFromV210(210, 211);
+		if (!H_UpgradeFromV210(210, 211))
+			return FALSE;
 
 	if (currVersion < 102)
-		H_UpgradeFromV211(211, 212);
+		if (!H_UpgradeFromV211(211, 212))
+			return FALSE;
 
 	if (currVersion < 103)
-		H_UpgradeFromV212(212, 213);
+		if (!H_UpgradeFromV212(212, 213))
+			return FALSE;
 
-	if (!SQLQuery(_T("UPDATE metadata SET var_value='213' WHERE var_name='SchemaVersion'")))
+	if (currVersion < 104)
+		if (!H_UpgradeFromV213(213, 214))
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='214' WHERE var_name='SchemaVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -4720,6 +4799,7 @@ static struct
 	{ 101, 212, H_UpgradeFromV10x },
 	{ 102, 212, H_UpgradeFromV10x },
 	{ 103, 213, H_UpgradeFromV10x },
+	{ 104, 214, H_UpgradeFromV10x },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
@@ -4733,6 +4813,7 @@ static struct
 	{ 210, 211, H_UpgradeFromV210 },
 	{ 211, 212, H_UpgradeFromV211 },
 	{ 212, 213, H_UpgradeFromV212 },
+	{ 213, 214, H_UpgradeFromV213 },
    { 0, NULL }
 };
 

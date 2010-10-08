@@ -516,10 +516,10 @@ public:
    QWORD GetLastDownEventId(void) { return m_qwLastDownEventId; }
    void SetLastDownEventId(QWORD qwId) { m_qwLastDownEventId = qwId; }
 
-   BOOL IsFake(void) { return (m_dwIfIndex == 1) && 
-                              (m_dwIfType == IFTYPE_OTHER) &&
-                              (!_tcscmp(m_szName, _T("lan0"))) &&
-                              (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
+   BOOL IsFake() { return (m_dwIfIndex == 1) && 
+                          (m_dwIfType == IFTYPE_OTHER) &&
+                          (!_tcscmp(m_szName, _T("lan0")) || !_tcscmp(m_szName, _T("unknown"))) &&
+                          (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
    void SetIpAddr(DWORD dwNewAddr);
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue,

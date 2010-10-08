@@ -48,7 +48,7 @@ Interface::Interface()
 Interface::Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask)
           : NetObj()
 {
-   strcpy(m_szName, "lan0");
+   strcpy(m_szName, "unknown");
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
    m_dwIfIndex = 1;

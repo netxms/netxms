@@ -562,7 +562,7 @@ CREATE TABLE dci_schedules
 CREATE TABLE raw_dci_values
 (
 	item_id integer not null,
-	raw_value varchar(255) not null,
+	raw_value varchar(255) null,
 	last_poll_time integer not null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
@@ -951,7 +951,7 @@ CREATE TABLE script_library
 (
 	script_id integer not null,
 	script_name varchar(255) not null,
-	script_code SQL_TEXT not null,
+	script_code SQL_TEXT null,
 	PRIMARY KEY(script_id)
 ) TABLE_TYPE;
 

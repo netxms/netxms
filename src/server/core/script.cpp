@@ -89,7 +89,6 @@ void LoadScripts()
       for(i = 0; i < nRows; i++)
       {
          pszCode = DBGetField(hResult, i, 2, NULL, 0);
-         DecodeSQLString(pszCode);
          pScript = (NXSL_Program *)NXSLCompile(pszCode, szError, 1024);
          free(pszCode);
          if (pScript != NULL)
@@ -129,7 +128,6 @@ void ReloadScript(DWORD dwScriptId)
       if (DBGetNumRows(hResult) > 0)
       {
          pszCode = DBGetField(hResult, 0, 1, NULL, 0);
-         DecodeSQLString(pszCode);
          pScript = (NXSL_Program *)NXSLCompile(pszCode, szError, 1024);
          free(pszCode);
          if (pScript != NULL)

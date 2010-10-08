@@ -36,7 +36,8 @@
 //
 
 #define SQL_TYPE_TEXT      0
-#define SQL_TYPE_INT64     1
+#define SQL_TYPE_TEXT4K    1
+#define SQL_TYPE_INT64     2
 
 
 //

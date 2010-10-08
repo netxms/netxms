@@ -709,13 +709,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    {
       if (DBGetNumRows(hResult) == 0)
       {
-         char *pszEscValue;
-
-         pszEscValue = EncodeSQLString(m_prevRawValue.String());
-         sprintf(pszQuery, "INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time)"
-                           " VALUES (%d,'%s',%ld)",
-                 m_dwId, pszEscValue, m_tPrevValueTimeStamp);
-         free(pszEscValue);
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (%d,%s,%ld)"),
+                 m_dwId, (const TCHAR *)DBPrepareString(hdb, m_prevRawValue.String()), (long)m_tPrevValueTimeStamp);
          DBQuery(hdb, pszQuery);
       }
       DBFreeResult(hResult);
@@ -996,7 +991,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 
 void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 {
-   TCHAR *pszEscValue, szQuery[MAX_LINE_SIZE + 128];
+   TCHAR szQuery[MAX_LINE_SIZE + 128];
    ItemValue rawValue, *pValue;
 
    lock();
@@ -1011,11 +1006,8 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
    m_dwErrorCount = 0;
 
    // Save raw value into database
-   pszEscValue = EncodeSQLString(pszOriginalValue);
-   _stprintf(szQuery, _T("UPDATE raw_dci_values SET raw_value='%s',last_poll_time=")
-                      TIME_T_FMT _T(" WHERE item_id=%d"),
-             pszEscValue, tmTimeStamp, m_dwId);
-   free(pszEscValue);
+   _sntprintf(szQuery, MAX_LINE_SIZE + 128, _T("UPDATE raw_dci_values SET raw_value=%s,last_poll_time=%ld WHERE item_id=%d"),
+              (const TCHAR *)DBPrepareString(g_hCoreDB, pszOriginalValue), (long)tmTimeStamp, m_dwId);
    QueueSQLRequest(szQuery);
 
    // Create new ItemValue object and transform it as needed
@@ -1028,11 +1020,8 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
    m_tPrevValueTimeStamp = tmTimeStamp;
 
    // Save transformed value to database
-   pszEscValue = EncodeSQLString(pValue->String());
-   _stprintf(szQuery, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value)")
-                      _T(" VALUES (%d,") TIME_T_FMT _T(",'%s')"), m_pNode->Id(),
-                      m_dwId, tmTimeStamp, pszEscValue);
-   free(pszEscValue);
+   _sntprintf(szQuery, MAX_LINE_SIZE + 128, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (%d,%ld,%s)"),
+	           m_pNode->Id(), m_dwId, (long)tmTimeStamp, (const TCHAR *)DBPrepareString(g_hCoreDB, pValue->String()));
    QueueSQLRequest(szQuery);
 
    // Check thresholds and add value to cache
@@ -1369,9 +1358,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
                if (bHasData)
                {
                   DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING);
-                  DecodeSQLString(szBuffer);
-                  m_ppValueCache[i] = 
-                     new ItemValue(szBuffer, DBGetFieldAsyncULong(hResult, 1));
+                  m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldAsyncULong(hResult, 1));
                }
                else
                {
@@ -1497,7 +1484,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
 // Clean expired data
 //
 
-void DCItem::deleteExpiredData(void)
+void DCItem::deleteExpiredData()
 {
    TCHAR szQuery[256];
    time_t now;
@@ -1515,7 +1502,7 @@ void DCItem::deleteExpiredData(void)
 // Delete all collected data
 //
 
-BOOL DCItem::deleteAllData(void)
+BOOL DCItem::deleteAllData()
 {
    TCHAR szQuery[256];
 	BOOL success;
