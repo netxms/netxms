@@ -8,63 +8,66 @@
 // and database syntax type
 #if defined(DB_MSSQL)
 
-#define DB_SYNTAX	'MSSQL'
-#define SQL_TEXT	text
-#define SQL_TEXT4K	varchar(4000)
-#define SQL_INT64	bigint
+#define DB_SYNTAX       'MSSQL'
+#define SQL_TEXT        text
+#define SQL_TEXT4K      varchar(4000)
+#define SQL_INT64       bigint
 #define TABLE_TYPE
+#define CRLF            chr(13)+chr(10)
+#define CONCAT          +
 
 #elif defined(DB_POSTGRESQL)
 
-#define DB_SYNTAX	'PGSQL'
-#define SQL_TEXT	text
-#define SQL_TEXT4K	varchar(4000)
-#define SQL_INT64	bigint
+#define DB_SYNTAX       'PGSQL'
+#define SQL_TEXT        text
+#define SQL_TEXT4K      varchar(4000)
+#define SQL_INT64       bigint
 #define TABLE_TYPE
+#define CRLF            '\015\012'
+#define CONCAT          ||
 
 #elif defined(DB_ORACLE)
 
-#define DB_SYNTAX	'ORACLE'
-#define SQL_TEXT	clob
-#define SQL_TEXT4K	varchar(4000)
-#define SQL_INT64	number(20)
+#define DB_SYNTAX       'ORACLE'
+#define SQL_TEXT        clob
+#define SQL_TEXT4K      varchar(4000)
+#define SQL_INT64       number(20)
 #define TABLE_TYPE
+#define CRLF            chr(13)||chr(10)
+#define CONCAT          ||
 
 #elif defined(DB_SQLITE)
 
-#define DB_SYNTAX	'SQLITE'
-#define SQL_TEXT	varchar
-#define SQL_TEXT4K	varchar(4000)
-#define SQL_INT64	number(20)
+#define DB_SYNTAX       'SQLITE'
+#define SQL_TEXT        varchar
+#define SQL_TEXT4K      varchar(4000)
+#define SQL_INT64       number(20)
 #define TABLE_TYPE
+#define CRLF            x'0D'||x'0A'
+#define CONCAT          ||
 
 #elif defined(DB_MYSQL)
 
-#define DB_SYNTAX	'MYSQL'
-#define SQL_TEXT	text
-#define SQL_TEXT4K	text
-#define SQL_INT64	bigint
+#define DB_SYNTAX       'MYSQL'
+#define SQL_TEXT        text
+#define SQL_TEXT4K      text
+#define SQL_INT64       bigint
 #define TABLE_TYPE
+#define CRLF            '\r\n'
+#define CONCAT
 
 #elif defined(DB_DB2)
 
-#define DB_SYNTAX	'DB2'
-#define SQL_TEXT	LONG VARCHAR
-#define SQL_TEXT4K	varchar(4000)
-#define SQL_INT64	BIGINT
+#define DB_SYNTAX       'DB2'
+#define SQL_TEXT        LONG VARCHAR
+#define SQL_TEXT4K      varchar(4000)
+#define SQL_INT64       BIGINT
 #define TABLE_TYPE
+#define CRLF            chr(13)||chr(10)
+#define CONCAT          ||
 
 #else
 
 #error Database type should be defined
 
-#endif
-
-// String concatenation for multi-line texts
-#if defined(DB_MSSQL)
-#define CONCAT +
-#elif defined(DB_ORACLE) || defined(DB_SQLITE) || defined(DB_DB2)
-#define CONCAT ||
-#else
-#define CONCAT
 #endif
