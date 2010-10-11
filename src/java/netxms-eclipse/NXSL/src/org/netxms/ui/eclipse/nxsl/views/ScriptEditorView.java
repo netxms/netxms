@@ -26,6 +26,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -52,6 +54,7 @@ public class ScriptEditorView extends ViewPart
 	private NXCSession session;
 	private ScriptEditor editor;
 	private long scriptId;
+	private String scriptName;
 	private RefreshAction actionRefresh;
 	private Action actionSave;
 	
@@ -76,6 +79,13 @@ public class ScriptEditorView extends ViewPart
 		parent.setLayout(new FillLayout());
 		
 		editor = new ScriptEditor(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		editor.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				actionSave.setEnabled(true);
+			}
+		});
 
 		createActions();
 		contributeToActionBars();
@@ -184,7 +194,7 @@ public class ScriptEditorView extends ViewPart
 						setPartName("Edit Script - " + script.getName());
 						editor.setText(script.getSource());
 						editor.setModified(false);
-						//actionSave.setEnabled(false);
+						actionSave.setEnabled(false);
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -197,6 +207,30 @@ public class ScriptEditorView extends ViewPart
 	 */
 	private void saveScript()
 	{
-		
+		final String source = editor.getText();
+		editor.setEditable(false);
+		new ConsoleJob("Saving script to library", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot save script to database";
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				session.modifyScript(scriptId, scriptName, source);
+				new UIJob("Update script editor") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						editor.setModified(false);
+						editor.setEditable(true);
+						actionSave.setEnabled(false);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		}.start();
 	}
 }
