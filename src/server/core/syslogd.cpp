@@ -191,13 +191,14 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
    if (ParseTimeStamp(&pCurr, nMsgLen, &nPos, &pRec->tmTimeStamp))
    {
       // Hostname
-      for(i = 0; (*pCurr >= 33) && (*pCurr <= 126) && (i < MAX_SYSLOG_HOSTNAME_LEN) && (nPos < nMsgLen); i++, nPos++, pCurr++)
+      for(i = 0; (*pCurr >= 33) && (*pCurr <= 126) && (i < MAX_SYSLOG_HOSTNAME_LEN - 1) && (nPos < nMsgLen); i++, nPos++, pCurr++)
          pRec->szHostName[i] = *pCurr;
       if ((nPos >= nMsgLen) || (*pCurr != ' '))
       {
          // Not a valid hostname, assuming to be a part of message
          pCurr -= i;
          nPos -= i;
+			pRec->szHostName[0] = 0;
       }
       else
       {

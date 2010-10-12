@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -270,7 +270,7 @@ static void CheckNodes(void)
 						if ((DBGetFieldIPAddr(hResult, i, 1) == 0) || (!FindSubnetForNode(dwId, szName)))
 						{
 							m_iNumErrors++;
-							if (GetYesNo(_T("\rUnlinked node object %d (\"%s\"). Delete?"), dwId, szName))
+							if (GetYesNo(_T("\rUnlinked node object %d (\"%s\"). Delete it?"), dwId, szName))
 							{
 								_sntprintf(szQuery, 1024, _T("DELETE FROM nodes WHERE id=%d"), dwId);
 								bResult = SQLQuery(szQuery);
@@ -381,7 +381,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
             {
                m_iNumErrors++;
                dwId = DBGetFieldULong(hResult, i, 0);
-               if (GetYesNo(_T("\rUnlinked %s object %d (\"%s\"). Delete?"), pszDisplayName, dwId, szName))
+               if (GetYesNo(_T("\rUnlinked %s object %d (\"%s\"). Delete it?"), pszDisplayName, dwId, szName))
                {
                   _sntprintf(szQuery, 256, _T("DELETE FROM %s WHERE id=%d"), pszTable, dwId);
                   if (SQLQuery(szQuery))
@@ -424,7 +424,7 @@ static void CheckObjectProperties(void)
          if (DBGetFieldULong(hResult, i, 2) == 0)
          {
             m_iNumErrors++;
-            if (GetYesNo(_T("\rObject %d [%s] has invalid timestamp. Correct?"),
+            if (GetYesNo(_T("\rObject %d [%s] has invalid timestamp. Fix it?"),
 				             dwObjectId, DBGetField(hResult, i, 1, szQuery, 1024)))
             {
                _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=%ld WHERE object_id=%d"),
@@ -523,7 +523,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            if (GetYesNo(_T("\rInvalid object ID %d used. Correct?"), dwId))
+            if (GetYesNo(_T("\rInvalid object ID %d used in policy. Delete it from policy?"), dwId))
             {
                _stprintf(szQuery, _T("DELETE FROM policy_source_list WHERE object_id=%d"), dwId);
                if (SQLQuery(szQuery))
@@ -549,7 +549,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            if (GetYesNo(_T("\rInvalid event%s ID 0x%08X used. Correct?"), (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId))
+            if (GetYesNo(_T("\rInvalid event%s ID 0x%08X referenced in policy. Delete this reference?"), (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId))
             {
                _stprintf(szQuery, _T("DELETE FROM policy_event_list WHERE event_code=%d"), dwId);
                if (SQLQuery(szQuery))
@@ -572,7 +572,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            if (GetYesNo(_T("\rInvalid action ID %d used. Correct?"), dwId))
+            if (GetYesNo(_T("\rInvalid action ID %d referenced in policy. Delete this reference?"), dwId))
             {
                _stprintf(szQuery, _T("DELETE FROM policy_action_list WHERE action_id=%d"), dwId);
                if (SQLQuery(szQuery))
@@ -647,7 +647,7 @@ static void CheckIData(void)
 				if (DBGetFieldLong(hResult, 0, 0) > 0)
 				{
 					m_iNumErrors++;
-					if (GetYesNo(_T("\rFound collected data for node [%d] with timestamp in the future. Correct?"), nodeId))
+					if (GetYesNo(_T("\rFound collected data for node [%d] with timestamp in the future. Delete them?"), nodeId))
 					{
 						_sntprintf(query, 1024, _T("DELETE FROM idata_%d WHERE idata_timestamp>") TIME_T_FMT, nodeId, TIME_T_FCAST(now));
 						if (SQLQuery(query))
@@ -659,7 +659,7 @@ static void CheckIData(void)
 			else
 			{
 /*				m_iNumErrors++;
-				_tprintf(_T("\rData collection table for node [%d] not found. Correct? (Y/N) "), nodeId);
+				_tprintf(_T("\rData collection table for node [%d] not found. Create? (Y/N) "), nodeId);
 				if (GetYesNo())
 				{
 					if (CreateIDataTable(nodeId))
@@ -677,7 +677,7 @@ static void CheckIData(void)
 		if (DBGetFieldLong(hResult, 0, 0) > 0)
 		{
 			m_iNumErrors++;
-			if (GetYesNo(_T("\rFound DCIs with last poll timestamp in the future. Correct?")))
+			if (GetYesNo(_T("\rFound DCIs with last poll timestamp in the future. Fix it?")))
 			{
 				_sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=") TIME_T_FMT _T(" WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now), TIME_T_FCAST(now));
 				if (SQLQuery(query))
@@ -716,7 +716,7 @@ static void CheckTemplateNodeMapping(void)
          {
             m_iNumErrors++;
 				GetObjectName(dwTemplateId, name);
-            if (GetYesNo(_T("\rTemplate %d [%s] mapped to non-existent node %d. Correct?"), dwTemplateId, name, dwNodeId))
+            if (GetYesNo(_T("\rTemplate %d [%s] mapped to non-existent node %d. Delete this mapping?"), dwTemplateId, name, dwNodeId))
             {
                _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d AND node_id=%d"),
                           dwTemplateId, dwNodeId);
