@@ -19,11 +19,14 @@
 package org.netxms.ui.eclipse.nxsl.widgets.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
 import org.netxms.ui.eclipse.nxsl.tools.NXSLLineStyleListener;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 
 /**
  * Content proposal provider for NXSL editor
@@ -32,14 +35,21 @@ import org.netxms.ui.eclipse.nxsl.tools.NXSLLineStyleListener;
 public class NXSLContentProposalProvider implements IContentProposalProvider
 {
 	private static final String[] BUILTIN_SYSTEM_VARIABLES = { "$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9" };
+	private static final String[] BUILTIN_FUNCTIONS = { "abs", "classof", "d2x", "exit", "exp", "gmtime",
+		"index", "left", "length", "localtime", "log", "log10", "lower", "ltrim", "max", "min", "pow",
+		"right", "rindex", "rtrim", "strftime", "substr", "time", "trace", "trim", "typeof", "upper",
+		"AddrInRange", "AddrInSubnet", "SecondsToUptime" };
+	private static final String[] BUILTIN_CONSTANTS = { "null", "true", "false" };
 	
+	private ScriptEditor editor;
 	private NXSLLineStyleListener lineStyleListener;
 		
 	/**
 	 * @param lineStyleListener
 	 */
-	public NXSLContentProposalProvider(NXSLLineStyleListener lineStyleListener)
+	public NXSLContentProposalProvider(ScriptEditor editor, NXSLLineStyleListener lineStyleListener)
 	{
+		this.editor = editor;
 		this.lineStyleListener = lineStyleListener;
 	}
 
@@ -63,54 +73,36 @@ public class NXSLContentProposalProvider implements IContentProposalProvider
 			sb.insert(0, ch);
 		}
 		String prefix = sb.toString();
-		
-		if (prefix.isEmpty())
-		{
-			addProposals(props, BUILTIN_SYSTEM_VARIABLES);
-		}
-		else if (prefix.equals("$"))
-		{
-			// System variables
-			addProposals(props, BUILTIN_SYSTEM_VARIABLES);
-		}
-		else
-		{
-			
-		}
+
+		addProposals(props, prefix, NXSLContentProposal.GLOBAL_VARIABLE, BUILTIN_SYSTEM_VARIABLES);
+		addProposals(props, prefix, NXSLContentProposal.FUNCTION, BUILTIN_FUNCTIONS);
+		addProposals(props, prefix, NXSLContentProposal.CONSTANT, BUILTIN_CONSTANTS);
+		addProposals(props, prefix, NXSLContentProposal.FUNCTION, editor.getFunctions().toArray(new String[editor.getFunctions().size()]));
+		addProposals(props, prefix, NXSLContentProposal.GLOBAL_VARIABLE, editor.getVariables().toArray(new String[editor.getVariables().size()]));
+		Collections.sort(props, new Comparator<IContentProposal>() {
+			@Override
+			public int compare(IContentProposal arg0, IContentProposal arg1)
+			{
+				return arg0.getLabel().compareToIgnoreCase(arg1.getLabel());
+			}
+		});
 		
 		return props.toArray(new IContentProposal[props.size()]);
 	}
-	
-	private void addProposals(List<IContentProposal> props, String[] texts)
+
+	/**
+	 * Add list of proposals
+	 * 
+	 * @param props proposals list to be populated
+	 * @param type proposals type
+	 * @param texts proposals texts
+	 */
+	private void addProposals(List<IContentProposal> props, String prefix, int type, String[] texts)
 	{
 		for(final String s : texts)
 		{
-			IContentProposal p = new IContentProposal() {
-				@Override
-				public String getContent()
-				{
-					return s;
-				}
-
-				@Override
-				public int getCursorPosition()
-				{
-					return s.length();
-				}
-
-				@Override
-				public String getDescription()
-				{
-					return null;
-				}
-
-				@Override
-				public String getLabel()
-				{
-					return s;
-				}
-			};
-			props.add(p);
+			if (s.startsWith(prefix))
+				props.add(new NXSLContentProposal(type, s, prefix.length()));
 		}
 	}
 }

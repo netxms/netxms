@@ -79,7 +79,7 @@ public class ScriptEditorView extends ViewPart
 		parent.setLayout(new FillLayout());
 		
 		editor = new ScriptEditor(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		editor.addModifyListener(new ModifyListener() {
+		editor.getTextWidget().addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
@@ -208,7 +208,7 @@ public class ScriptEditorView extends ViewPart
 	private void saveScript()
 	{
 		final String source = editor.getText();
-		editor.setEditable(false);
+		editor.getTextWidget().setEditable(false);
 		new ConsoleJob("Saving script to library", this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
@@ -225,7 +225,7 @@ public class ScriptEditorView extends ViewPart
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
 						editor.setModified(false);
-						editor.setEditable(true);
+						editor.getTextWidget().setEditable(true);
 						actionSave.setEnabled(false);
 						return Status.OK_STATUS;
 					}

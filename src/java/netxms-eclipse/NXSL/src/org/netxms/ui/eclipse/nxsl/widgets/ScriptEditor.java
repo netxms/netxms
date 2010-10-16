@@ -18,9 +18,13 @@
  */
 package org.netxms.ui.eclipse.nxsl.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.bindings.keys.ParseException;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
+import org.eclipse.jface.text.source.SourceViewer;
+import org.eclipse.jface.text.source.VerticalRuler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyEvent;
@@ -30,16 +34,23 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.nxsl.tools.NXSLLineStyleListener;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLContentProposalProvider;
+import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLDocument;
+import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLLabelProvider;
+import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLSourceViewerConfiguration;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.StyledTextContentAdapter;
 
 /**
  * NXSL script editor
  *
  */
-public class ScriptEditor extends StyledText
+public class ScriptEditor extends Composite
 {
+	private SourceViewer editor;
 	private Font editorFont;
 	private boolean modified;
+	private List<String> functions = new ArrayList<String>(0);
+	private List<String> variables = new ArrayList<String>(0);
+	private NXSLLabelProvider contentProposalLabelProvider;
 
 	/**
 	 * @param parent
@@ -52,10 +63,15 @@ public class ScriptEditor extends StyledText
 		editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
 		
 		setLayout(new FillLayout());
-		setFont(editorFont);
-		setTabs(3);
-		setWordWrap(false);
-      final NXSLLineStyleListener listener = new NXSLLineStyleListener();
+		editor = new SourceViewer(this, new VerticalRuler(10), SWT.NONE);
+		editor.configure(new NXSLSourceViewerConfiguration());
+
+		StyledText control = editor.getTextWidget();
+		control.setFont(editorFont);
+		control.setWordWrap(false);
+      
+		/*
+		final NXSLLineStyleListener listener = new NXSLLineStyleListener();
       addLineStyleListener(listener);
       addExtendedModifyListener(listener);
       addModifyListener(new ModifyListener() {
@@ -66,21 +82,24 @@ public class ScriptEditor extends StyledText
 			}
       });
       
+      contentProposalLabelProvider = new NXSLLabelProvider();
       try
 		{
 			ContentProposalAdapter adapter = new ContentProposalAdapter(this,
 					new StyledTextContentAdapter(),
-					new NXSLContentProposalProvider(listener),
+					new NXSLContentProposalProvider(this, listener),
 					KeyStroke.getInstance("Ctrl+Space"), new char[] { '$' });
 			adapter.setEnabled(true);
-			adapter.setFilterStyle(ContentProposalAdapter.FILTER_CHARACTER);
+			adapter.setFilterStyle(ContentProposalAdapter.FILTER_NONE);
 			adapter.setPropagateKeys(false);
+			adapter.setLabelProvider(contentProposalLabelProvider);
 		}
 		catch(ParseException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 	}
 
 	/* (non-Javadoc)
@@ -90,7 +109,32 @@ public class ScriptEditor extends StyledText
 	public void dispose()
 	{
 		editorFont.dispose();
+		contentProposalLabelProvider.dispose();
 		super.dispose();
+	}
+	
+	/**
+	 * Get underlying text widget
+	 * @return text widget
+	 */
+	public StyledText getTextWidget()
+	{
+		return editor.getTextWidget();
+	}
+	
+	public void setText(String text)
+	{
+		try{
+		editor.setDocument(new NXSLDocument(text));
+		} catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public String getText()
+	{
+		return editor.getDocument().get();
 	}
 
 	/**
@@ -107,5 +151,37 @@ public class ScriptEditor extends StyledText
 	public void setModified(boolean modified)
 	{
 		this.modified = modified;
+	}
+
+	/**
+	 * @return the functions
+	 */
+	public List<String> getFunctions()
+	{
+		return functions;
+	}
+
+	/**
+	 * @param functions the functions to set
+	 */
+	public void setFunctions(List<String> functions)
+	{
+		this.functions = functions;
+	}
+
+	/**
+	 * @return the variables
+	 */
+	public List<String> getVariables()
+	{
+		return variables;
+	}
+
+	/**
+	 * @param variables the variables to set
+	 */
+	public void setVariables(List<String> variables)
+	{
+		this.variables = variables;
 	}
 }
