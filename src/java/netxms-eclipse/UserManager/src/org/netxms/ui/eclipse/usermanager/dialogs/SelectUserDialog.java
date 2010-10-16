@@ -37,9 +37,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCUser;
-import org.netxms.client.NXCUserDBObject;
 import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
@@ -54,7 +54,7 @@ public class SelectUserDialog extends Dialog
 	private TableViewer userList;
 	private NXCSession session;
 	private boolean showGroups;
-	private NXCUserDBObject[] selection;
+	private AbstractUserObject[] selection;
 	
 	/**
 	 * @param parentShell
@@ -109,7 +109,7 @@ public class SelectUserDialog extends Dialog
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element)
 			{
-				return showGroups || (element instanceof NXCUser);
+				return showGroups || (element instanceof User);
 			}
       });
       userList.setInput(session.getUserDatabaseObjects());
@@ -138,8 +138,8 @@ public class SelectUserDialog extends Dialog
 			MessageDialog.openWarning(getShell(), "Warning", "You must select at least one user from list and then press OK.");
 			return;
 		}
-		selection = new NXCUserDBObject[sel.size()];
-		Iterator<NXCUserDBObject> it = sel.iterator();
+		selection = new AbstractUserObject[sel.size()];
+		Iterator<AbstractUserObject> it = sel.iterator();
 		for(int i = 0; it.hasNext(); i++)
 		{
 			selection[i] = it.next();
@@ -150,7 +150,7 @@ public class SelectUserDialog extends Dialog
 	/**
 	 * @return the selection
 	 */
-	public NXCUserDBObject[] getSelection()
+	public AbstractUserObject[] getSelection()
 	{
 		return selection;
 	}

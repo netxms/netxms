@@ -63,17 +63,6 @@ public class ScriptEditor extends Composite
 		control.setWordWrap(false);
       
 		/*
-		final NXSLLineStyleListener listener = new NXSLLineStyleListener();
-      addLineStyleListener(listener);
-      addExtendedModifyListener(listener);
-      addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				modified = true;
-			}
-      });
-      
       contentProposalLabelProvider = new NXSLLabelProvider();
       try
 		{
@@ -114,16 +103,19 @@ public class ScriptEditor extends Composite
 		return editor.getTextWidget();
 	}
 	
+	/**
+	 * Set text for editing
+	 * @param text
+	 */
 	public void setText(String text)
 	{
-		try{
 		editor.setDocument(new NXSLDocument(text));
-		} catch(Exception e)
-		{
-			e.printStackTrace();
-		}
 	}
 	
+	/**
+	 * Get editor's content
+	 * @return
+	 */
 	public String getText()
 	{
 		return editor.getDocument().get();

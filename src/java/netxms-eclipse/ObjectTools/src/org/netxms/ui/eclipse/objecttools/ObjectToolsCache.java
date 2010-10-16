@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -53,7 +54,7 @@ public class ObjectToolsCache
 		
 		session.addListener(new NXCListener() {
 			@Override
-			public void notificationHandler(NXCNotification n)
+			public void notificationHandler(ISessionNotification n)
 			{
 				switch(n.getCode())
 				{

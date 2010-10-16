@@ -21,8 +21,8 @@ package org.netxms.ui.eclipse.usermanager;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.NXCUser;
-import org.netxms.client.NXCUserDBObject;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.ui.eclipse.usermanager.views.UserManager;
 
 /**
@@ -51,13 +51,13 @@ public class UserLabelProvider extends WorkbenchLabelProvider implements ITableL
 			case UserManager.COLUMN_NAME:
 				return getText(element);
 			case UserManager.COLUMN_TYPE:
-				return (element instanceof NXCUser) ? "User" : "Group";
+				return (element instanceof User) ? "User" : "Group";
 			case UserManager.COLUMN_FULLNAME:
-				return (element instanceof NXCUser) ? ((NXCUser) element).getFullName() : null;
+				return (element instanceof User) ? ((User) element).getFullName() : null;
 			case UserManager.COLUMN_DESCRIPTION:
-				return ((NXCUserDBObject) element).getDescription();
+				return ((AbstractUserObject)element).getDescription();
 			case UserManager.COLUMN_GUID:
-				return ((NXCUserDBObject) element).getGuid().toString();
+				return ((AbstractUserObject)element).getGuid().toString();
 		}
 		return null;
 	}

@@ -32,6 +32,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -82,7 +83,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 		
 		sessionListener = new NXCListener() {
 			@Override
-			public void notificationHandler(NXCNotification n)
+			public void notificationHandler(ISessionNotification n)
 			{
 				processSessionNotification(n);
 			}
@@ -142,7 +143,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 	 * 
 	 * @param n notification
 	 */
-	private void processSessionNotification(NXCNotification n)
+	private void processSessionNotification(ISessionNotification n)
 	{
 		switch(n.getCode())
 		{

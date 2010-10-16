@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.usermanager.propertypages;
 
@@ -14,16 +29,16 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCUser;
-import org.netxms.client.NXCUserDBObject;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
+ * User's "general" property page
  *
  */
 public class General extends PropertyPage
@@ -34,7 +49,7 @@ public class General extends PropertyPage
 	private String initialName;
 	private String initialFullName;
 	private String initialDescription;
-	private NXCUserDBObject object;
+	private AbstractUserObject object;
 	private NXCSession session;
 	
 	/**
@@ -54,7 +69,7 @@ public class General extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (NXCUserDBObject)getElement().getAdapter(NXCUserDBObject.class);
+		object = (AbstractUserObject)getElement().getAdapter(AbstractUserObject.class);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -70,9 +85,9 @@ public class General extends PropertyPage
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Full name
-      if (object instanceof NXCUser)
+      if (object instanceof User)
       {
-	      initialFullName = new String(((NXCUser)object).getFullName());
+	      initialFullName = new String(((User)object).getFullName());
 	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Full name",
 	      		                                        initialFullName, WidgetHelper.DEFAULT_LAYOUT_DATA);
       }
@@ -99,7 +114,7 @@ public class General extends PropertyPage
 	{
 		final String newName = new String(textName.getText());
 		final String newDescription = new String(textDescription.getText());
-		final String newFullName = (object instanceof NXCUser) ? new String(textFullName.getText()) : "";
+		final String newFullName = (object instanceof User) ? new String(textFullName.getText()) : "";
 		
 		if (newName.equals(initialName) && 
 		    newDescription.equals(initialDescription) &&
@@ -124,9 +139,9 @@ public class General extends PropertyPage
 					int fields = NXCSession.USER_MODIFY_LOGIN_NAME | NXCSession.USER_MODIFY_DESCRIPTION;
 					object.setName(newName);
 					object.setDescription(newDescription);
-					if (object instanceof NXCUser)
+					if (object instanceof User)
 					{
-						((NXCUser)object).setFullName(newFullName);
+						((User)object).setFullName(newFullName);
 						fields |= NXCSession.USER_MODIFY_FULL_NAME;
 					}
 					session.modifyUserDBObject(object, fields);

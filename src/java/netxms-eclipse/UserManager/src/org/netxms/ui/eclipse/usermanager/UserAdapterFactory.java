@@ -21,11 +21,11 @@ package org.netxms.ui.eclipse.usermanager;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
+import org.netxms.api.client.users.UserGroup;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCUser;
-import org.netxms.client.NXCUserDBObject;
-import org.netxms.client.NXCUserGroup;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -60,7 +60,7 @@ public class UserAdapterFactory implements IAdapterFactory
 		if (adapterType == IWorkbenchAdapter.class)
 		{
 			// NXCUser
-			if (adaptableObject instanceof NXCUser)
+			if (adaptableObject instanceof User)
 			{
 				return new IWorkbenchAdapter() {
 					@Override
@@ -78,7 +78,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public String getLabel(Object o)
 					{
-						return ((NXCUser)o).getName();
+						return ((User)o).getName();
 					}
 
 					@Override
@@ -90,14 +90,14 @@ public class UserAdapterFactory implements IAdapterFactory
 			}
 
 			// NXCUserGroup
-			if (adaptableObject instanceof NXCUserGroup)
+			if (adaptableObject instanceof UserGroup)
 			{
 				return new IWorkbenchAdapter() {
 					@Override
 					public Object[] getChildren(Object o)
 					{
-						long[] members = ((NXCUserGroup)o).getMembers();
-						NXCUserDBObject[] childrens = new NXCUser[members.length];
+						long[] members = ((UserGroup)o).getMembers();
+						AbstractUserObject[] childrens = new User[members.length];
 						for(int i = 0; i < members.length; i++)
 							childrens[i] = NXMCSharedData.getInstance().getSession().findUserDBObjectById(members[i]);
 						return childrens;
@@ -112,7 +112,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public String getLabel(Object o)
 					{
-						return ((NXCUserGroup)o).getName();
+						return ((UserGroup)o).getName();
 					}
 
 					@Override
@@ -145,7 +145,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					{
 						long userId = ((AccessListElement)object).getUserId();
 						NXCSession session = NXMCSharedData.getInstance().getSession();
-						NXCUserDBObject dbo = session.findUserDBObjectById(userId);
+						AbstractUserObject dbo = session.findUserDBObjectById(userId);
 						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}");
 					}
 

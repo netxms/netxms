@@ -17,8 +17,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.jface.action.*;
 import org.eclipse.ui.*;
 import org.eclipse.swt.SWT;
+import org.netxms.api.client.servermanager.ServerVariable;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCServerVariable;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
@@ -36,7 +36,7 @@ public class ServerConfigurationEditor extends ViewPart
 		
 	private TableViewer viewer;
 	private NXCSession session;
-	private HashMap<String, NXCServerVariable> varList;
+	private HashMap<String, ServerVariable> varList;
 	
 	private Action actionAddVariable;
 	private RefreshAction actionRefresh;
@@ -63,11 +63,11 @@ public class ServerConfigurationEditor extends ViewPart
 			switch(index)
 			{
 				case COLUMN_NAME:
-					return ((NXCServerVariable)obj).getName();
+					return ((ServerVariable)obj).getName();
 				case COLUMN_VALUE:
-					return ((NXCServerVariable)obj).getValue();
+					return ((ServerVariable)obj).getValue();
 				case COLUMN_NEED_RESTART:
-					return ((NXCServerVariable)obj).isServerRestartNeeded() ? "Yes" : "No";
+					return ((ServerVariable)obj).isServerRestartNeeded() ? "Yes" : "No";
 			}
 			return "";
 		}
@@ -81,7 +81,6 @@ public class ServerConfigurationEditor extends ViewPart
 		@Override
 		public Image getColumnImage(Object element, int columnIndex)
 		{
-			// TODO Auto-generated method stub
 			return null;
 		}
 	}
@@ -113,13 +112,13 @@ public class ServerConfigurationEditor extends ViewPart
 			switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
 			{
 				case COLUMN_NAME:
-					result = ((NXCServerVariable)e1).getName().compareToIgnoreCase(((NXCServerVariable)e2).getName());
+					result = ((ServerVariable)e1).getName().compareToIgnoreCase(((ServerVariable)e2).getName());
 					break;
 				case COLUMN_VALUE:
-					result = ((NXCServerVariable)e1).getValue().compareToIgnoreCase(((NXCServerVariable)e2).getValue());
+					result = ((ServerVariable)e1).getValue().compareToIgnoreCase(((ServerVariable)e2).getValue());
 					break;
 				case COLUMN_NEED_RESTART:
-					result = compareBooleans(((NXCServerVariable)e1).isServerRestartNeeded(), ((NXCServerVariable)e2).isServerRestartNeeded());
+					result = compareBooleans(((ServerVariable)e1).isServerRestartNeeded(), ((ServerVariable)e2).isServerRestartNeeded());
 					break;
 				default:
 					result = 0;
@@ -212,7 +211,7 @@ public class ServerConfigurationEditor extends ViewPart
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				if ((selection != null) && (selection.size() == 1))
 				{
-					NXCServerVariable var = (NXCServerVariable)selection.getFirstElement();
+					ServerVariable var = (ServerVariable)selection.getFirstElement();
 					if (var != null)
 					{
 						editVariable(var);
@@ -389,7 +388,7 @@ public class ServerConfigurationEditor extends ViewPart
 	 * Edit currently selected variable
 	 * @param var
 	 */
-	public void editVariable(NXCServerVariable var)
+	public void editVariable(ServerVariable var)
 	{
 		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), var.getName(), var.getValue());
 		if (dlg.open() == Window.OK)

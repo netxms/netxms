@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -50,7 +51,7 @@ public class AlarmNotifier
 	{
 		listener = new NXCListener() {
 			@Override
-			public void notificationHandler(NXCNotification n)
+			public void notificationHandler(ISessionNotification n)
 			{
 				if ((n.getCode() == NXCNotification.NEW_ALARM) ||
 				    (n.getCode() == NXCNotification.ALARM_CHANGED))

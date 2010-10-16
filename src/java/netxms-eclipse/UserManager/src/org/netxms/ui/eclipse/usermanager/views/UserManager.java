@@ -51,12 +51,13 @@ import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCUser;
-import org.netxms.client.NXCUserDBObject;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
@@ -118,7 +119,7 @@ public class UserManager extends ViewPart
 				if (selection != null)
 				{
 					actionEditUser.setEnabled(selection.size() == 1);
-					actionChangePassword.setEnabled((selection.size() == 1) && (selection.getFirstElement() instanceof NXCUser));
+					actionChangePassword.setEnabled((selection.size() == 1) && (selection.getFirstElement() instanceof User));
 					actionDeleteUser.setEnabled(selection.size() > 0);
 				}
 			}
@@ -136,10 +137,9 @@ public class UserManager extends ViewPart
 		createPopupMenu();
 
 		// Listener for server's notifications
-		sessionListener = new NXCListener()
-		{
+		sessionListener = new NXCListener() {
 			@Override
-			public void notificationHandler(final NXCNotification n)
+			public void notificationHandler(final ISessionNotification n)
 			{
 				if (n.getCode() == NXCNotification.USER_DB_CHANGED)
 				{
@@ -324,9 +324,9 @@ public class UserManager extends ViewPart
 				final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 
 				final Object firstElement = selection.getFirstElement();
-				if (firstElement instanceof NXCUser)
+				if (firstElement instanceof User)
 				{
-					NXCUser user = (NXCUser) firstElement;
+					User user = (User)firstElement;
 					final ChangePasswordDialog dialog = new ChangePasswordDialog(getSite().getShell(), user.getId() == session.getUserId());
 					if (dialog.open() == Window.OK)
 					{
@@ -383,7 +383,7 @@ public class UserManager extends ViewPart
 
 		final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 		final Object firstElement = selection.getFirstElement();
-		if (firstElement instanceof NXCUser)
+		if (firstElement instanceof User)
 		{
 			mgr.add(actionChangePassword);
 		}
@@ -557,9 +557,9 @@ public class UserManager extends ViewPart
 					while(it.hasNext())
 					{
 						Object object = it.next();
-						if (object instanceof NXCUserDBObject)
+						if (object instanceof AbstractUserObject)
 						{
-							session.deleteUserDBObject(((NXCUserDBObject) object).getId());
+							session.deleteUserDBObject(((AbstractUserObject)object).getId());
 						}
 						else
 						{

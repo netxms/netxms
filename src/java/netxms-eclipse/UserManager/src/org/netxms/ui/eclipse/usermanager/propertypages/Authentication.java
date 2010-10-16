@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.usermanager.propertypages;
 
@@ -19,22 +34,22 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCUser;
-import org.netxms.client.NXCUserDBObject;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 
 /**
- * @author Victor
+ * User's "authentication" property page
  *
  */
 public class Authentication extends PropertyPage
 {
 	private NXCSession session;
-	private NXCUser object;
+	private User object;
 	private Button checkDisabled;
 	private Button checkChangePassword;
 	private Button checkFixedPassword;
@@ -58,7 +73,7 @@ public class Authentication extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		object = (NXCUser)getElement().getAdapter(NXCUserDBObject.class);
+		object = (User)getElement().getAdapter(AbstractUserObject.class);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -138,11 +153,11 @@ public class Authentication extends PropertyPage
 		// Account flags
 		int flags = 0;
 		if (checkDisabled.getSelection())
-			flags |= NXCUserDBObject.DISABLED;
+			flags |= AbstractUserObject.DISABLED;
 		if (checkChangePassword.getSelection())
-			flags |= NXCUserDBObject.CHANGE_PASSWORD;
+			flags |= AbstractUserObject.CHANGE_PASSWORD;
 		if (checkFixedPassword.getSelection())
-			flags |= NXCUserDBObject.CANNOT_CHANGE_PASSWORD;
+			flags |= AbstractUserObject.CANNOT_CHANGE_PASSWORD;
 		object.setFlags(flags);
 		
 		// Authentication

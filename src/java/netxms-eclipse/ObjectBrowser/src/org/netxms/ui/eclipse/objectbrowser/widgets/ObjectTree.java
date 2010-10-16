@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -203,7 +204,7 @@ public class ObjectTree extends Composite
 		// Add client library listener
 		sessionListener = new NXCListener() {
 			@Override
-			public void notificationHandler(NXCNotification n)
+			public void notificationHandler(ISessionNotification n)
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{

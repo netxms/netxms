@@ -29,6 +29,11 @@
 	</build>
 	
 	<dependencies>
+		<dependency>
+			<groupId>org.netxms</groupId>
+			<artifactId>netxms-base</artifactId>
+			<version>${projectversion}</version>
+		</dependency>
 	</dependencies>
 
 	<reporting>

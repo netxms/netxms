@@ -28,8 +28,8 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCUserDBObject;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
@@ -99,7 +99,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					long id = Long.parseLong(value);
-					NXCUserDBObject user = session.findUserDBObjectById(id);
+					AbstractUserObject user = session.findUserDBObjectById(id);
 					return (user != null) ? wbLabelProvider.getImage(user) : null;
 				}
 				catch(NumberFormatException e)
@@ -159,7 +159,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					long id = Long.parseLong(value);
-					NXCUserDBObject user = session.findUserDBObjectById(id);
+					AbstractUserObject user = session.findUserDBObjectById(id);
 					return (user != null) ? wbLabelProvider.getText(user) : null;
 				}
 				catch(NumberFormatException e)

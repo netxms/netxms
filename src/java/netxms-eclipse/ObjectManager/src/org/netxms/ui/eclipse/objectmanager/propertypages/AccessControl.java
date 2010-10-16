@@ -29,10 +29,11 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
-import org.netxms.client.NXCUserDBObject;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectmanager.AccessListComparator;
 import org.netxms.ui.eclipse.objectmanager.AccessListLabelProvider;
@@ -129,8 +130,8 @@ public class AccessControl extends PropertyPage
 				SelectUserDialog dlg = new SelectUserDialog(AccessControl.this.getShell(), true);
 				if (dlg.open() == Window.OK)
 				{
-					NXCUserDBObject[] selection = dlg.getSelection();
-					for(NXCUserDBObject user : selection)
+					AbstractUserObject[] selection = dlg.getSelection();
+					for(AbstractUserObject user : selection)
 						acl.put(user.getId(), new AccessListElement(user.getId(), 0));
 					userList.setInput(acl.values().toArray());
 				}
@@ -171,17 +172,17 @@ public class AccessControl extends PropertyPage
       gd.verticalAlignment = SWT.FILL;
       rights.setLayoutData(gd);
       
-      createAccessCheck(rights, "&Read", NXCUserDBObject.OBJECT_ACCESS_READ);
-      createAccessCheck(rights, "&Modify", NXCUserDBObject.OBJECT_ACCESS_MODIFY);
-      createAccessCheck(rights, "&Create child objects", NXCUserDBObject.OBJECT_ACCESS_CREATE);
-      createAccessCheck(rights, "&Delete", NXCUserDBObject.OBJECT_ACCESS_DELETE);
-      createAccessCheck(rights, "C&ontrol", NXCUserDBObject.OBJECT_ACCESS_CONTROL);
-      createAccessCheck(rights, "Send &events", NXCUserDBObject.OBJECT_ACCESS_SEND_EVENTS);
-      createAccessCheck(rights, "&View alarms", NXCUserDBObject.OBJECT_ACCESS_READ_ALARMS);
-      createAccessCheck(rights, "Ac&knowledge alarms", NXCUserDBObject.OBJECT_ACCESS_ACK_ALARMS);
-      createAccessCheck(rights, "&Terminate alarms", NXCUserDBObject.OBJECT_ACCESS_TERM_ALARMS);
-      createAccessCheck(rights, "&Push data", NXCUserDBObject.OBJECT_ACCESS_PUSH_DATA);
-      createAccessCheck(rights, "&Access control", NXCUserDBObject.OBJECT_ACCESS_ACL);
+      createAccessCheck(rights, "&Read", UserAccessRights.OBJECT_ACCESS_READ);
+      createAccessCheck(rights, "&Modify", UserAccessRights.OBJECT_ACCESS_MODIFY);
+      createAccessCheck(rights, "&Create child objects", UserAccessRights.OBJECT_ACCESS_CREATE);
+      createAccessCheck(rights, "&Delete", UserAccessRights.OBJECT_ACCESS_DELETE);
+      createAccessCheck(rights, "C&ontrol", UserAccessRights.OBJECT_ACCESS_CONTROL);
+      createAccessCheck(rights, "Send &events", UserAccessRights.OBJECT_ACCESS_SEND_EVENTS);
+      createAccessCheck(rights, "&View alarms", UserAccessRights.OBJECT_ACCESS_READ_ALARMS);
+      createAccessCheck(rights, "Ac&knowledge alarms", UserAccessRights.OBJECT_ACCESS_ACK_ALARMS);
+      createAccessCheck(rights, "&Terminate alarms", UserAccessRights.OBJECT_ACCESS_TERM_ALARMS);
+      createAccessCheck(rights, "&Push data", UserAccessRights.OBJECT_ACCESS_PUSH_DATA);
+      createAccessCheck(rights, "&Access control", UserAccessRights.OBJECT_ACCESS_ACL);
       
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override

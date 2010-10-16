@@ -21,9 +21,9 @@ package org.netxms.ui.eclipse.usermanager;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.NXCUser;
-import org.netxms.client.NXCUserDBObject;
-import org.netxms.client.NXCUserGroup;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
+import org.netxms.api.client.users.UserGroup;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.usermanager.views.UserManager;
 
@@ -38,8 +38,8 @@ public class UserComparator extends ViewerComparator
 	 */
 	private int compareTypes(Object o1, Object o2)
 	{
-		int type1 = (o1 instanceof NXCUserGroup) ? 1 : 0;
-		int type2 = (o2 instanceof NXCUserGroup) ? 1 : 0;
+		int type1 = (o1 instanceof UserGroup) ? 1 : 0;
+		int type2 = (o2 instanceof UserGroup) ? 1 : 0;
 		return type1 - type2;
 	}
 
@@ -48,8 +48,8 @@ public class UserComparator extends ViewerComparator
 	 */
 	private String getFullName(Object object)
 	{
-		if (object instanceof NXCUser)
-			return ((NXCUser) object).getFullName();
+		if (object instanceof User)
+			return ((User) object).getFullName();
 		return "";
 	}
 
@@ -64,7 +64,7 @@ public class UserComparator extends ViewerComparator
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
 		{
 			case UserManager.COLUMN_NAME:
-				result = ((NXCUserDBObject) e1).getName().compareToIgnoreCase(((NXCUserDBObject) e2).getName());
+				result = ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject) e2).getName());
 				break;
 			case UserManager.COLUMN_TYPE:
 				result = compareTypes(e1, e2);
@@ -73,12 +73,10 @@ public class UserComparator extends ViewerComparator
 				result = getFullName(e1).compareToIgnoreCase(getFullName(e2));
 				break;
 			case UserManager.COLUMN_DESCRIPTION:
-				result = ((NXCUserDBObject) e1).getDescription().compareToIgnoreCase(
-						((NXCUserDBObject) e2).getDescription());
+				result = ((AbstractUserObject)e1).getDescription().compareToIgnoreCase(((AbstractUserObject)e2).getDescription());
 				break;
 			case UserManager.COLUMN_GUID:
-				result = ((NXCUserDBObject) e1).getGuid().toString().compareTo(
-						((NXCUserDBObject) e2).getGuid().toString());
+				result = ((AbstractUserObject)e1).getGuid().toString().compareTo(((AbstractUserObject)e2).getGuid().toString());
 				break;
 			default:
 				result = 0;

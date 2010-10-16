@@ -48,7 +48,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.INXCListener;
+import org.netxms.api.client.ISessionListener;
+import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.SnmpTrap;
@@ -66,7 +67,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  * SNMP trap configuration editor
  *
  */
-public class SnmpTrapEditor extends ViewPart implements INXCListener
+public class SnmpTrapEditor extends ViewPart implements ISessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor";
 	
@@ -283,10 +284,10 @@ public class SnmpTrapEditor extends ViewPart implements INXCListener
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.INXCListener#notificationHandler(org.netxms.client.NXCNotification)
+	 * @see org.netxms.api.client.ISessionListener#notificationHandler(org.netxms.api.client.ISessionNotification)
 	 */
 	@Override
-	public void notificationHandler(NXCNotification n)
+	public void notificationHandler(ISessionNotification n)
 	{
 		switch(n.getCode())
 		{

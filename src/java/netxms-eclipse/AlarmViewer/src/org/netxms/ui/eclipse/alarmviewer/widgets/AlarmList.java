@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -130,7 +131,7 @@ public class AlarmList extends Composite
 		// Add client library listener
 		clientListener = new NXCListener() {
 			@Override
-			public void notificationHandler(NXCNotification n)
+			public void notificationHandler(ISessionNotification n)
 			{
 				switch(n.getCode())
 				{

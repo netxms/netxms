@@ -24,10 +24,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.UserGroup;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCUserDBObject;
-import org.netxms.client.NXCUserGroup;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -39,8 +39,8 @@ public class Members extends PropertyPage
 {
 	private SortableTableViewer userList;
 	private NXCSession session;
-	private NXCUserGroup object;
-	private HashMap<Long, NXCUserDBObject> members = new HashMap<Long, NXCUserDBObject>(0);
+	private UserGroup object;
+	private HashMap<Long, AbstractUserObject> members = new HashMap<Long, AbstractUserObject>(0);
 
 	public Members()
 	{
@@ -51,7 +51,7 @@ public class Members extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		object = (NXCUserGroup)getElement().getAdapter(NXCUserGroup.class);
+		object = (UserGroup)getElement().getAdapter(UserGroup.class);
 
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = 0;
@@ -97,10 +97,10 @@ public class Members extends PropertyPage
 				SelectUserDialog dlg = new SelectUserDialog(Members.this.getShell(), false);
 				if (dlg.open() == Window.OK)
 				{
-					NXCUserDBObject[] selection = dlg.getSelection();
-					for(NXCUserDBObject user : selection)
+					AbstractUserObject[] selection = dlg.getSelection();
+					for(AbstractUserObject user : selection)
 						members.put(user.getId(), user);
-					userList.setInput(members.values().toArray(new NXCUserDBObject[members.size()]));
+					userList.setInput(members.values().toArray(new AbstractUserObject[members.size()]));
 				}
 			}
       });
@@ -120,10 +120,10 @@ public class Members extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
-				Iterator<NXCUserDBObject> it = sel.iterator();
+				Iterator<AbstractUserObject> it = sel.iterator();
 				while(it.hasNext())
 				{
-					NXCUserDBObject element = it.next();
+					AbstractUserObject element = it.next();
 					members.remove(element.getId());
 				}
 				userList.setInput(members.values().toArray());
@@ -141,7 +141,7 @@ public class Members extends PropertyPage
       // Initial data
 		for(long userId : object.getMembers())
 		{
-			final NXCUserDBObject user = session.findUserDBObjectById(userId);
+			final AbstractUserObject user = session.findUserDBObjectById(userId);
 			if (user != null)
 			{
 				members.put(user.getId(), user);

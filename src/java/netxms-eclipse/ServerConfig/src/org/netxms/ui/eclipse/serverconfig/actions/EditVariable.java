@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.serverconfig.actions;
 
@@ -14,15 +29,15 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
+import org.netxms.api.client.servermanager.ServerVariable;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCServerVariable;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
- * @author victor
+ * Action for editing server's variable
  *
  */
 public class EditVariable implements IObjectActionDelegate
@@ -41,7 +56,7 @@ public class EditVariable implements IObjectActionDelegate
 	{
 		if (currentSelection.length == 1)
 		{
-			NXCServerVariable var = (NXCServerVariable)currentSelection[0];
+			ServerVariable var = (ServerVariable)currentSelection[0];
 			final VariableEditDialog dlg = new VariableEditDialog(wbPart.getSite().getShell(), var.getName(), var.getValue());
 			if (dlg.open() == Window.OK)
 			{

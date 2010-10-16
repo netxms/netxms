@@ -54,6 +54,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -95,8 +96,6 @@ public class ServerJobManager extends ViewPart
 	/**
 	 * Label provider for server job list
 	 * 
-	 * @author Victor
-	 *
 	 */
 	private class ViewLabelProvider extends LabelProvider implements ITableLabelProvider
 	{
@@ -333,7 +332,7 @@ public class ServerJobManager extends ViewPart
 		// Create listener for notifications received from server via client library
 		clientListener = new NXCListener() {
 			@Override
-			public void notificationHandler(NXCNotification n)
+			public void notificationHandler(ISessionNotification n)
 			{
 				if (n.getCode() != NXCNotification.JOB_CHANGE)
 					return;

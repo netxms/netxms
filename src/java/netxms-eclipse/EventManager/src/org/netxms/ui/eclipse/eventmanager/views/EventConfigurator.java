@@ -51,7 +51,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCListener;
+import org.netxms.api.client.ISessionListener;
+import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
@@ -69,7 +70,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  * Event configuration view
  * 
  */
-public class EventConfigurator extends ViewPart
+public class EventConfigurator extends ViewPart implements ISessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.eventmanager.view.event_configurator";
 	public static final String JOB_FAMILY = "EventConfiguratorJob";
@@ -91,7 +92,6 @@ public class EventConfigurator extends ViewPart
 	private Action actionDelete;
 	private RefreshAction actionRefresh;
 	private NXCSession session;
-	private NXCListener sessionListener;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -141,15 +141,7 @@ public class EventConfigurator extends ViewPart
 		createPopupMenu();
 
 		refreshView();
-		
-		sessionListener = new NXCListener() {
-			@Override
-			public void notificationHandler(NXCNotification n)
-			{
-				processSessionNotifications(n);
-			}
-		};
-		session.addListener(sessionListener);
+		session.addListener(this);
 	}
 
 	/**
@@ -189,7 +181,8 @@ public class EventConfigurator extends ViewPart
 	/**
 	 * Process client session notifications
 	 */
-	void processSessionNotifications(final NXCNotification n)
+	@Override
+	public void notificationHandler(final ISessionNotification n)
 	{
 		switch(n.getCode())
 		{
@@ -489,8 +482,7 @@ public class EventConfigurator extends ViewPart
 	@Override
 	public void dispose()
 	{
-		if (sessionListener != null)
-			session.removeListener(sessionListener);
+		session.removeListener(this);
 		super.dispose();
 	}
 }
