@@ -9,10 +9,10 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.netxms</groupId>
-	<artifactId>netxms-client</artifactId>
+	<artifactId>netxms-client-api</artifactId>
 	<packaging>jar</packaging>
 	<version>${projectversion}</version>
-	<name>NetXMS Client Library</name>
+	<name>NetXMS Client Library Interfaces</name>
 	<url>http://www.netxms.org</url>
 	
 	<build>
@@ -29,22 +29,6 @@
 	</build>
 	
 	<dependencies>
-		<dependency>
-			<groupId>org.netxms</groupId>
-			<artifactId>netxms-base</artifactId>
-			<version>${projectversion}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.netxms</groupId>
-			<artifactId>netxms-client-api</artifactId>
-			<version>${projectversion}</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
 	<reporting>

@@ -17,6 +17,7 @@
 
   <modules>
     <module>netxms-base</module>
+    <module>netxms-client-api</module>
     <module>netxms-client</module>
   </modules>
 </project>
