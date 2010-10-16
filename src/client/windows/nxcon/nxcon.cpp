@@ -331,7 +331,7 @@ BOOL CConsoleApp::InitInstance()
 	CreateObjectImageList();
 
 	// Time zone information
-	m_nTimeZoneType = GetProfileInt(_T("General"), _T("TimeZoneType"), 0);
+	m_nTimeZoneType = GetProfileInt(_T("General"), _T("TimeZoneType"), TZ_TYPE_LOCAL);
 	m_strCustomTimeZone = GetProfileString(_T("General"), _T("TimeZone"), _T("UTC"));
 	if (m_nTimeZoneType == TZ_TYPE_CUSTOM)
 	{
