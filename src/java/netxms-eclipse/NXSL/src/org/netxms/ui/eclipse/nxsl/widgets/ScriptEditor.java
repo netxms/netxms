@@ -20,24 +20,16 @@ package org.netxms.ui.eclipse.nxsl.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.jface.bindings.keys.KeyStroke;
-import org.eclipse.jface.bindings.keys.ParseException;
-import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.text.source.VerticalRuler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.ui.eclipse.nxsl.tools.NXSLLineStyleListener;
-import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLContentProposalProvider;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLDocument;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLLabelProvider;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLSourceViewerConfiguration;
-import org.netxms.ui.eclipse.nxsl.widgets.internal.StyledTextContentAdapter;
 
 /**
  * NXSL script editor

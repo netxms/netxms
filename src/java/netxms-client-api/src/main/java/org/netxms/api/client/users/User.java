@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.api.client.users;
 
 
 import org.netxms.base.NXCPCodes;
@@ -13,7 +13,7 @@ import org.netxms.base.NXCPMessage;
  * @author Victor
  *
  */
-public class NXCUser extends NXCUserDBObject
+public class User extends AbstractUserObject
 {
 	// Certificate mapping methods
 	public static final int MAP_CERT_BY_SUBJECT		= 0;
@@ -27,7 +27,7 @@ public class NXCUser extends NXCUserDBObject
 	/**
 	 * Default constructor
 	 */
-	public NXCUser(final String name)
+	public User(final String name)
 	{
 		super(name);
 		fullName = "";
@@ -36,7 +36,7 @@ public class NXCUser extends NXCUserDBObject
 	/**
 	 * Copy constructor
 	 */
-	public NXCUser(final NXCUser src)
+	public User(final User src)
 	{
 		super(src);
 		
@@ -49,7 +49,7 @@ public class NXCUser extends NXCUserDBObject
 	/**
 	 * Create user object from NXCP message
 	 */
-	protected NXCUser(final NXCPMessage msg)
+	public User(final NXCPMessage msg)
 	{
 		super(msg);
 		authMethod = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_METHOD);
@@ -140,6 +140,6 @@ public class NXCUser extends NXCUserDBObject
 	@Override
 	public Object clone() throws CloneNotSupportedException
 	{
-		return new NXCUser(this);
+		return new User(this);
 	}
 }

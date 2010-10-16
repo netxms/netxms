@@ -36,6 +36,16 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.netxms.api.client.ISessionListener;
+import org.netxms.api.client.ISession;
+import org.netxms.api.client.scripts.IScriptLibraryManager;
+import org.netxms.api.client.scripts.Script;
+import org.netxms.api.client.servermanager.IServerManager;
+import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.api.client.users.IUserManager;
+import org.netxms.api.client.users.User;
+import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.UserGroup;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPDataInputStream;
 import org.netxms.base.NXCPException;
@@ -81,7 +91,7 @@ import org.netxms.client.snmp.SnmpTrap;
 /**
  * Communication session with NetXMS server.
  */
-public class NXCSession
+public class NXCSession implements ISession, IScriptLibraryManager, IUserManager, IServerManager
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
@@ -100,16 +110,6 @@ public class NXCSession
 	public static final int CHANNEL_AUDIT_LOG = 0x0020;
 	public static final int CHANNEL_SITUATIONS = 0x0040;
 
-	// User object fields
-	public static final int USER_MODIFY_LOGIN_NAME = 0x00000001;
-	public static final int USER_MODIFY_DESCRIPTION = 0x00000002;
-	public static final int USER_MODIFY_FULL_NAME = 0x00000004;
-	public static final int USER_MODIFY_FLAGS = 0x00000008;
-	public static final int USER_MODIFY_ACCESS_RIGHTS = 0x00000010;
-	public static final int USER_MODIFY_MEMBERS = 0x00000020;
-	public static final int USER_MODIFY_CERT_MAPPING = 0x00000040;
-	public static final int USER_MODIFY_AUTH_METHOD = 0x00000080;
-	
 	// Configuration import options
 	public static final int CFG_IMPORT_REPLACE_EVENT_BY_CODE = 0x0001;
 	public static final int CFG_IMPORT_REPLACE_EVENT_BY_NAME = 0x0002;
@@ -150,7 +150,7 @@ public class NXCSession
 	private int commandTimeout = 30000; // Default is 30 sec
 
 	// Notification listeners
-	private HashSet<INXCListener> listeners = new HashSet<INXCListener>(0);
+	private HashSet<ISessionListener> listeners = new HashSet<ISessionListener>(0);
 
 	// Received files
 	private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
@@ -165,7 +165,7 @@ public class NXCSession
 	private Map<Long, GenericObject> objectList = new HashMap<Long, GenericObject>();
 
 	// Users
-	private Map<Long, NXCUserDBObject> userDB = new HashMap<Long, NXCUserDBObject>();
+	private Map<Long, AbstractUserObject> userDB = new HashMap<Long, AbstractUserObject>();
 	
 	// Event templates
 	private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
@@ -279,7 +279,7 @@ public class NXCSession
 							completeSync(syncObjects);
 							break;
 						case NXCPCodes.CMD_USER_DATA:
-							final NXCUser user = new NXCUser(msg);
+							final User user = new User(msg);
 							synchronized(userDB)
 							{
 								if (user.isDeleted())
@@ -289,7 +289,7 @@ public class NXCSession
 							}
 							break;
 						case NXCPCodes.CMD_GROUP_DATA:
-							final NXCUserGroup group = new NXCUserGroup(msg);
+							final UserGroup group = new UserGroup(msg);
 							synchronized(userDB)
 							{
 								if (group.isDeleted())
@@ -418,12 +418,12 @@ public class NXCSession
 			final int code = msg.getVariableAsInteger(NXCPCodes.VID_UPDATE_TYPE);
 			final long id = msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 
-			NXCUserDBObject object = null;
+			AbstractUserObject object = null;
 			switch(code)
 			{
 				case NXCNotification.USER_DB_OBJECT_CREATED:
 				case NXCNotification.USER_DB_OBJECT_MODIFIED:
-					object = ((id & 0x80000000) != 0) ? new NXCUserGroup(msg) : new NXCUser(msg);
+					object = ((id & 0x80000000) != 0) ? new UserGroup(msg) : new User(msg);
 					synchronized(userDB)
 					{
 						userDB.put(id, object);
@@ -663,22 +663,18 @@ public class NXCSession
 		syncObject.release();
 	}
 
-	/**
-	 * Add notification listener
-	 * 
-	 * @param lst Listener to add
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#addListener(org.netxms.api.client.INXCListener)
 	 */
-	public void addListener(INXCListener lst)
+	public void addListener(ISessionListener lst)
 	{
 		listeners.add(lst);
 	}
 
-	/**
-	 * Remove notification listener
-	 * 
-	 * @param lst Listener to remove
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#removeListener(org.netxms.api.client.INXCListener)
 	 */
-	public void removeListener(INXCListener lst)
+	public void removeListener(ISessionListener lst)
 	{
 		listeners.remove(lst);
 	}
@@ -690,7 +686,7 @@ public class NXCSession
 	 */
 	protected synchronized void sendNotification(NXCNotification n)
 	{
-		Iterator<INXCListener> it = listeners.iterator();
+		Iterator<ISessionListener> it = listeners.iterator();
 		while(it.hasNext())
 		{
 			it.next().notificationHandler(n);
@@ -716,18 +712,8 @@ public class NXCSession
 		outputStream.write(message);
 	}
 
-	/**
-	 * Wait for message with specific code and id.
-	 * 
-	 * @param code
-	 *           Message code
-	 * @param id
-	 *           Message id
-	 * @param timeout
-	 *           Wait timeout in milliseconds
-	 * @return Message object
-	 * @throws NXCException
-	 *            if message was not arrived within timeout interval
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#waitForMessage(int, long, int)
 	 */
 	public NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
 	{
@@ -737,16 +723,8 @@ public class NXCSession
 		return msg;
 	}
 
-	/**
-	 * Wait for message with specific code and id.
-	 * 
-	 * @param code
-	 *           Message code
-	 * @param id
-	 *           Message id
-	 * @return Message object
-	 * @throws NXCException
-	 *            if message was not arrived within timeout interval
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#waitForMessage(int, long)
 	 */
 	public NXCPMessage waitForMessage(final int code, final long id) throws NXCException
 	{
@@ -756,14 +734,8 @@ public class NXCSession
 		return msg;
 	}
 
-	/**
-	 * Wait for CMD_REQUEST_COMPLETED message with given id
-	 * 
-	 * @param id
-	 *           Message id
-	 * @return received message
-	 * @throws NXCException
-	 *            if message was not arrived within timeout interval or contains RCC other than RCC.SUCCESS
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#waitForRCC(long)
 	 */
 	public NXCPMessage waitForRCC(final long id) throws NXCException
 	{
@@ -787,12 +759,8 @@ public class NXCSession
 		return msg;
 	}
 
-	/**
-	 * Create new NXCP message with unique id
-	 * 
-	 * @param code
-	 *           Message code
-	 * @return New message object
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#newMessage(int)
 	 */
 	public final synchronized NXCPMessage newMessage(int code)
 	{
@@ -942,9 +910,8 @@ public class NXCSession
 		}
 	}
 
-	/**
-	 * Disconnect from server.
-	 * 
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#disconnect()
 	 */
 	public void disconnect()
 	{
@@ -1001,70 +968,56 @@ public class NXCSession
 		isConnected = false;
 	}
 
-	/**
-	 * Get receiver buffer size.
-	 * 
-	 * @return Current receiver buffer size in bytes.
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getRecvBufferSize()
 	 */
 	public int getRecvBufferSize()
 	{
 		return recvBufferSize;
 	}
 
-	/**
-	 * Set receiver buffer size. This method should be called before connect(). It will not have any effect after
-	 * connect().
-	 * 
-	 * @param recvBufferSize
-	 *           Size of receiver buffer in bytes.
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#setRecvBufferSize(int)
 	 */
 	public void setRecvBufferSize(int recvBufferSize)
 	{
 		this.recvBufferSize = recvBufferSize;
 	}
 
-	/**
-	 * Get server address
-	 * 
-	 * @return Server address
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getServerAddress()
 	 */
 	public String getServerAddress()
 	{
 		return connAddress;
 	}
 
-	/**
-	 * Get login name of currently logged in user
-	 * 
-	 * @return login name of currently logged in user
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getUserName()
 	 */
 	public String getUserName()
 	{
 		return connLoginName;
 	}
 	
-	/**
-	 * Get NetXMS server version.
-	 * 
-	 * @return Server version
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getServerVersion()
 	 */
 	public String getServerVersion()
 	{
 		return serverVersion;
 	}
 
-	/**
-	 * Get NetXMS server UID.
-	 * 
-	 * @return Server UID
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getServerId()
 	 */
 	public byte[] getServerId()
 	{
 		return serverId;
 	}
 
-	/**
-	 * @return the serverTimeZone
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getServerTimeZone()
 	 */
 	public String getServerTimeZone()
 	{
@@ -1079,48 +1032,40 @@ public class NXCSession
 		return serverChallenge;
 	}
 
-	/**
-	 * @return the connClientInfo
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getConnClientInfo()
 	 */
 	public String getConnClientInfo()
 	{
 		return connClientInfo;
 	}
 
-	/**
-	 * @param connClientInfo
-	 *           the connClientInfo to set
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#setConnClientInfo(java.lang.String)
 	 */
 	public void setConnClientInfo(final String connClientInfo)
 	{
 		this.connClientInfo = connClientInfo;
 	}
 
-	/**
-	 * Set command execution timeout.
-	 * 
-	 * @param commandTimeout
-	 *           New command timeout
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#setCommandTimeout(int)
 	 */
 	public void setCommandTimeout(final int commandTimeout)
 	{
 		this.commandTimeout = commandTimeout;
 	}
 
-	/**
-	 * Get identifier of logged in user.
-	 * 
-	 * @return Identifier of logged in user
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getUserId()
 	 */
 	public int getUserId()
 	{
 		return userId;
 	}
 
-	/**
-	 * Get system-wide rights of currently logged in user.
-	 * 
-	 * @return System-wide rights of currently logged in user
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getUserSystemRights()
 	 */
 
 	public int getUserSystemRights()
@@ -1128,8 +1073,8 @@ public class NXCSession
 		return userSystemRights;
 	}
 
-	/**
-	 * @return the passwordExpired
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#isPasswordExpired()
 	 */
 	public boolean isPasswordExpired()
 	{
@@ -1403,16 +1348,10 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 
-	/**
-	 * Get server configuration variables.
-	 * 
-	 * @return Hash map containing server configuration variables
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IServerManager#getServerVariables()
 	 */
-	public HashMap<String, NXCServerVariable> getServerVariables() throws IOException, NXCException
+	public HashMap<String, ServerVariable> getServerVariables() throws IOException, NXCException
 	{
 		NXCPMessage request = newMessage(NXCPCodes.CMD_GET_CONFIG_VARLIST);
 		sendMessage(request);
@@ -1421,28 +1360,19 @@ public class NXCSession
 
 		long id;
 		int i, count = response.getVariableAsInteger(NXCPCodes.VID_NUM_VARIABLES);
-		final HashMap<String, NXCServerVariable> varList = new HashMap<String, NXCServerVariable>(count);
+		final HashMap<String, ServerVariable> varList = new HashMap<String, ServerVariable>(count);
 		for(i = 0, id = NXCPCodes.VID_VARLIST_BASE; i < count; i++, id += 3)
 		{
 			String name = response.getVariableAsString(id);
-			varList.put(name, new NXCServerVariable(name, response.getVariableAsString(id + 1), response
+			varList.put(name, new ServerVariable(name, response.getVariableAsString(id + 1), response
 					.getVariableAsBoolean(id + 2)));
 		}
 
 		return varList;
 	}
 
-	/**
-	 * Set server configuration variable.
-	 * 
-	 * @param name
-	 *           variable's name
-	 * @param value
-	 *           new variable's value
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IServerManager#setServerVariable(java.lang.String, java.lang.String)
 	 */
 	public void setServerVariable(final String name, final String value) throws IOException, NXCException
 	{
@@ -1511,13 +1441,8 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 	
-	/**
-	 * Synchronize user database
-	 * 
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#syncUserDatabase()
 	 */
 	public void syncUserDatabase() throws IOException, NXCException
 	{
@@ -1528,14 +1453,12 @@ public class NXCSession
 		waitForSync(syncUserDB, commandTimeout * 10);
 	}
 
-	/**
-	 * Find user by ID
-	 * 
-	 * @return User object with given ID or null if such user does not exist
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#findUserDBObjectById(long)
 	 */
-	public NXCUserDBObject findUserDBObjectById(final long id)
+	public AbstractUserObject findUserDBObjectById(final long id)
 	{
-		NXCUserDBObject object;
+		AbstractUserObject object;
 
 		synchronized(userDB)
 		{
@@ -1544,19 +1467,17 @@ public class NXCSession
 		return object;
 	}
 
-	/**
-	 * Get list of all user database objects
-	 * 
-	 * @return List of all user database objects
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#getUserDatabaseObjects()
 	 */
-	public NXCUserDBObject[] getUserDatabaseObjects()
+	public AbstractUserObject[] getUserDatabaseObjects()
 	{
-		NXCUserDBObject[] list;
+		AbstractUserObject[] list;
 
 		synchronized(userDB)
 		{
-			Collection<NXCUserDBObject> values = userDB.values();
-			list = values.toArray(new NXCUserDBObject[values.size()]);
+			Collection<AbstractUserObject> values = userDB.values();
+			list = values.toArray(new AbstractUserObject[values.size()]);
 		}
 		return list;
 	}
@@ -1583,47 +1504,24 @@ public class NXCSession
 		return response.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 	}
 
-	/**
-	 * Create user on server
-	 * 
-	 * @param name
-	 *           Login name for new user
-	 * @return ID assigned to newly created user
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#createUser(java.lang.String)
 	 */
 	public long createUser(final String name) throws IOException, NXCException
 	{
 		return createUserDBObject(name, false);
 	}
 
-	/**
-	 * Create user group on server
-	 * 
-	 * @param name
-	 *           Name for new user group
-	 * @return ID assigned to newly created user group
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#createUserGroup(java.lang.String)
 	 */
 	public long createUserGroup(final String name) throws IOException, NXCException
 	{
 		return createUserDBObject(name, true);
 	}
 
-	/**
-	 * Delete user or group on server
-	 * 
-	 * @param id
-	 *           User or group ID
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#deleteUserDBObject(long)
 	 */
 	public void deleteUserDBObject(final long id) throws IOException, NXCException
 	{
@@ -1633,14 +1531,8 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 
-	/**
-	 * Set password for user
-	 * 
-	 * @param id User ID
-	 * @param newPassword New password
-	 * @param oldPassword Old password
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#setUserPassword(long, java.lang.String, java.lang.String)
 	 */
 	public void setUserPassword(final long id, final String newPassword, final String oldPassword) throws IOException, NXCException
 	{
@@ -1653,17 +1545,10 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 
-	/**
-	 * Modify user database object
-	 * 
-	 * @param user
-	 *           User data
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#modifyUserDBObject(org.netxms.api.client.users.AbstractUserObject, int)
 	 */
-	public void modifyUserDBObject(final NXCUserDBObject object, final int fields) throws IOException, NXCException
+	public void modifyUserDBObject(final AbstractUserObject object, final int fields) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_USER);
 		msg.setVariableInt32(NXCPCodes.VID_FIELDS, fields);
@@ -1672,28 +1557,16 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 
-	/**
-	 * Modify user database object
-	 * 
-	 * @param user
-	 *           User data
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#modifyUserDBObject(org.netxms.api.client.users.AbstractUserObject)
 	 */
-	public void modifyUserDBObject(final NXCUserDBObject object) throws IOException, NXCException
+	public void modifyUserDBObject(final AbstractUserObject object) throws IOException, NXCException
 	{
 		modifyUserDBObject(object, 0x7FFFFFFF);
 	}
 
-	/**
-	 * Lock user database
-	 * 
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#lockUserDatabase()
 	 */
 	public void lockUserDatabase() throws IOException, NXCException
 	{
@@ -1702,11 +1575,8 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 
-	/**
-	 * Unlock user database
-	 * 
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IUserManager#unlockUserDatabase()
 	 */
 	public void unlockUserDatabase() throws IOException, NXCException
 	{
@@ -1715,14 +1585,8 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 
-	/**
-	 * Set custom attribute for currently logged in user. Server will allow to change
-	 * only attributes whose name starts with dot.
-	 * 
-	 * @param name Attribute's name
-	 * @param value New attribute's value
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#setAttributeForCurrentUser(java.lang.String, java.lang.String)
 	 */
 	public void setAttributeForCurrentUser(final String name, final String value) throws IOException, NXCException
 	{
@@ -1733,14 +1597,8 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 	
-	/**
-	 * Get custom attribute for currently logged in user. If attribute is not set, empty string will
-	 * be returned.
-	 * 
-	 * @param name Attribute's name
-	 * @return Attribute's value
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.ISession#getAttributeForCurrentUser(java.lang.String)
 	 */
 	public String getAttributeForCurrentUser(final String name) throws IOException, NXCException
 	{
@@ -3296,12 +3154,8 @@ public class NXCSession
 		return list;
 	}
 	
-	/**
-	 * Get list of all scripts in script library.
-	 * 
-	 * @return ID/name pairs for scripts in script library
-	 * @throws IOException if socket or file I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IScriptLibraryManager#getScriptLibrary()
 	 */
 	public List<Script> getScriptLibrary() throws IOException, NXCException
 	{
@@ -3320,13 +3174,8 @@ public class NXCSession
 		return scripts;
 	}
 
-	/**
-	 * Get script from library
-	 * 
-	 * @param scriptId script ID
-	 * @return script source code
-	 * @throws IOException if socket or file I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IScriptLibraryManager#getScript(long)
 	 */
 	public Script getScript(long scriptId) throws IOException, NXCException
 	{
@@ -3337,15 +3186,8 @@ public class NXCSession
 		return new Script(scriptId, response.getVariableAsString(NXCPCodes.VID_NAME), response.getVariableAsString(NXCPCodes.VID_SCRIPT_CODE));
 	}
 	
-	/**
-	 * Modify script. If scriptId is 0, new script will be created in library.
-	 * 
-	 * @param scriptId script ID
-	 * @param name script name
-	 * @param source script source code
-	 * @return script ID (newly assigned if new script was created)
-	 * @throws IOException if socket or file I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IScriptLibraryManager#modifyScript(long, java.lang.String, java.lang.String)
 	 */
 	public long modifyScript(long scriptId, String name, String source) throws IOException, NXCException
 	{
@@ -3358,13 +3200,8 @@ public class NXCSession
 		return response.getVariableAsInt64(NXCPCodes.VID_SCRIPT_ID);
 	}
 	
-	/**
-	 * Rename script in script library.
-	 * 
-	 * @param scriptId script ID
-	 * @param name new script name
-	 * @throws IOException if socket or file I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IScriptLibraryManager#renameScript(long, java.lang.String)
 	 */
 	public void renameScript(long scriptId, String name) throws IOException, NXCException
 	{
@@ -3375,12 +3212,8 @@ public class NXCSession
 		waitForRCC(msg.getMessageId());
 	}
 
-	/**
-	 * Delete script from library
-	 * 
-	 * @param scriptId script ID
-	 * @throws IOException if socket or file I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.client.IScriptLibraryManager#deleteScript(long)
 	 */
 	public void deleteScript(long scriptId) throws IOException, NXCException
 	{

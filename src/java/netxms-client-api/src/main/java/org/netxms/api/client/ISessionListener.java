@@ -16,13 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.api.client;
 
 /**
- * Interface for NetXMS client library notifications
+ * Interface for NetXMS client library notification listeners
  *
  */
-public interface INXCListener
+public interface ISessionListener
 {
-	abstract public void notificationHandler(NXCNotification n);
+	abstract public void notificationHandler(ISessionNotification n);
 }

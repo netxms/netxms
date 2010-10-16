@@ -1,4 +1,4 @@
-package org.netxms.client;
+package org.netxms.api.client.users;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,41 +9,8 @@ import java.util.Map.Entry;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
-public abstract class NXCUserDBObject
+public abstract class AbstractUserObject
 {
-	// System-wide rights
-	public static final int SYSTEM_ACCESS_MANAGE_USERS = 0x00000001;
-	public static final int SYSTEM_ACCESS_SERVER_CONFIG = 0x00000002;
-	public static final int SYSTEM_ACCESS_CONFIGURE_TRAPS = 0x00000004;
-	public static final int SYSTEM_ACCESS_MANAGE_SESSIONS = 0x00000008;
-	public static final int SYSTEM_ACCESS_VIEW_EVENT_DB = 0x00000010;
-	public static final int SYSTEM_ACCESS_EDIT_EVENT_DB = 0x00000020;
-	public static final int SYSTEM_ACCESS_EPP = 0x00000040;
-	public static final int SYSTEM_ACCESS_MANAGE_ACTIONS = 0x00000080;
-	public static final int SYSTEM_ACCESS_DELETE_ALARMS = 0x00000100;
-	public static final int SYSTEM_ACCESS_MANAGE_PACKAGES = 0x00000200;
-	public static final int SYSTEM_ACCESS_MANAGE_TOOLS = 0x00000800;
-	public static final int SYSTEM_ACCESS_MANAGE_SCRIPTS = 0x00001000;
-	public static final int SYSTEM_ACCESS_VIEW_TRAP_LOG = 0x00002000;
-	public static final int SYSTEM_ACCESS_MANAGE_AGENT_CFG = 0x00008000;
-	public static final int SYSTEM_ACCESS_MANAGE_SITUATIONS = 0x00010000;
-	public static final int SYSTEM_ACCESS_SEND_SMS = 0x00020000;
-	public static final int SYSTEM_ACCESS_MANAGE_MAPS = 0x00040000;
-	public static final int SYSTEM_ACCESS_REGISTER_AGENTS = 0x00080000;
-	public static final int SYSTEM_ACCESS_READ_FILES = 0x00100000;
-	
-	public static final int OBJECT_ACCESS_READ          = 0x00000001;
-	public static final int OBJECT_ACCESS_MODIFY        = 0x00000002;
-	public static final int OBJECT_ACCESS_CREATE        = 0x00000004;
-	public static final int OBJECT_ACCESS_DELETE        = 0x00000008;
-	public static final int OBJECT_ACCESS_READ_ALARMS   = 0x00000010;
-	public static final int OBJECT_ACCESS_ACL           = 0x00000020;
-	public static final int OBJECT_ACCESS_ACK_ALARMS    = 0x00000040;
-	public static final int OBJECT_ACCESS_SEND_EVENTS   = 0x00000080;
-	public static final int OBJECT_ACCESS_CONTROL       = 0x00000100;
-	public static final int OBJECT_ACCESS_TERM_ALARMS   = 0x00000200;
-	public static final int OBJECT_ACCESS_PUSH_DATA     = 0x00000400;
-	
 	// Object flags
 	public static final int MODIFIED = 0x0001;
 	public static final int DELETED = 0x0002;
@@ -63,7 +30,7 @@ public abstract class NXCUserDBObject
 	/**
 	 * Default constructor
 	 */
-	public NXCUserDBObject(final String name)
+	public AbstractUserObject(final String name)
 	{
 		this.name = name;
 		description = "";
@@ -73,7 +40,7 @@ public abstract class NXCUserDBObject
 	/**
 	 * Copy constructor
 	 */
-	public NXCUserDBObject(final NXCUserDBObject src)
+	public AbstractUserObject(final AbstractUserObject src)
 	{
 		this.id = src.id;
 		this.name = new String(src.name);
@@ -94,7 +61,7 @@ public abstract class NXCUserDBObject
 	 * Create object from NXCP message
 	 * @param msg Message containing object's data
 	 */
-	protected NXCUserDBObject(final NXCPMessage msg)
+	public AbstractUserObject(final NXCPMessage msg)
 	{
 		id = msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 		name = msg.getVariableAsString(NXCPCodes.VID_USER_NAME);

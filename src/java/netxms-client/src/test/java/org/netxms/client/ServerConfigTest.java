@@ -20,6 +20,8 @@ package org.netxms.client;
 
 import java.util.HashMap;
 
+import org.netxms.api.client.servermanager.ServerVariable;
+
 /**
  * Test functionality related to server configuration cariables
  *
@@ -34,11 +36,11 @@ public class ServerConfigTest extends SessionTest
 		session.setServerVariable("TestVariable", "TestValue");
 		
 		// Get full list
-		HashMap<String, NXCServerVariable> varList = session.getServerVariables();
+		HashMap<String, ServerVariable> varList = session.getServerVariables();
 		assertEquals(true, varList.size() > 0);	// Normally server should have at least one variable
 		
 		// Get variable TestVariable
-		NXCServerVariable var = varList.get("TestVariable");
+		ServerVariable var = varList.get("TestVariable");
 		assertEquals(true, var != null);
 		assertEquals("TestValue", var.getValue());
 

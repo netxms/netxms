@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.api.client.users;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -10,14 +10,14 @@ import org.netxms.base.NXCPMessage;
  * @author Victor
  *
  */
-public class NXCUserGroup extends NXCUserDBObject
+public class UserGroup extends AbstractUserObject
 {
 	private long[] members;
 	
 	/**
 	 * Default constructor
 	 */
-	public NXCUserGroup(final String name)
+	public UserGroup(final String name)
 	{
 		super(name);
 		members = new long[0];
@@ -26,7 +26,7 @@ public class NXCUserGroup extends NXCUserDBObject
 	/**
 	 * Copy constructor
 	 */
-	public NXCUserGroup(final NXCUserGroup src)
+	public UserGroup(final UserGroup src)
 	{
 		super(src);
 		this.members = new long[src.members.length];
@@ -36,7 +36,7 @@ public class NXCUserGroup extends NXCUserDBObject
 	/**
 	 * Create group from NXCP message
 	 */
-	protected NXCUserGroup(final NXCPMessage msg)
+	public UserGroup(final NXCPMessage msg)
 	{
 		super(msg);
 
@@ -81,6 +81,6 @@ public class NXCUserGroup extends NXCUserDBObject
 	@Override
 	public Object clone() throws CloneNotSupportedException
 	{
-		return new NXCUserGroup(this);
+		return new UserGroup(this);
 	}
 }

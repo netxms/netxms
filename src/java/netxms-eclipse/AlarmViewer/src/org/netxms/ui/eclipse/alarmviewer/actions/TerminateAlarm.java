@@ -28,7 +28,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
-import org.netxms.client.NXCException;
+import org.netxms.api.client.NXCException;
 import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;

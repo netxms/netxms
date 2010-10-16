@@ -18,6 +18,8 @@
  */
 package org.netxms.client;
 
+import org.netxms.client.constants.UserAccessRights;
+
 public final class AccessListElement
 {
 	private long userId;
@@ -75,7 +77,7 @@ public final class AccessListElement
 	 */
 	public boolean hasRead()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_READ) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_READ) != 0;
 	}
 	
 	/**
@@ -83,7 +85,7 @@ public final class AccessListElement
 	 */
 	public boolean hasModify()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_MODIFY) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_MODIFY) != 0;
 	}
 	
 	/**
@@ -91,7 +93,7 @@ public final class AccessListElement
 	 */
 	public boolean hasDelete()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_DELETE) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_DELETE) != 0;
 	}
 	
 	/**
@@ -99,7 +101,7 @@ public final class AccessListElement
 	 */
 	public boolean hasCreate()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_CREATE) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_CREATE) != 0;
 	}
 	
 	/**
@@ -107,7 +109,7 @@ public final class AccessListElement
 	 */
 	public boolean hasReadAlarms()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_READ_ALARMS) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_READ_ALARMS) != 0;
 	}
 	
 	/**
@@ -115,7 +117,7 @@ public final class AccessListElement
 	 */
 	public boolean hasAckAlarms()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_ACK_ALARMS) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_ACK_ALARMS) != 0;
 	}
 	
 	/**
@@ -123,7 +125,7 @@ public final class AccessListElement
 	 */
 	public boolean hasTerminateAlarms()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_TERM_ALARMS) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_TERM_ALARMS) != 0;
 	}
 	
 	/**
@@ -131,7 +133,7 @@ public final class AccessListElement
 	 */
 	public boolean hasControl()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_CONTROL) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_CONTROL) != 0;
 	}
 	
 	/**
@@ -139,7 +141,7 @@ public final class AccessListElement
 	 */
 	public boolean hasSendEvents()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_SEND_EVENTS) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_SEND_EVENTS) != 0;
 	}
 	
 	/**
@@ -147,7 +149,7 @@ public final class AccessListElement
 	 */
 	public boolean hasAccessControl()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_ACL) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_ACL) != 0;
 	}
 	
 	/**
@@ -155,7 +157,7 @@ public final class AccessListElement
 	 */
 	public boolean hasPushData()
 	{
-		return (accessRights & NXCUserDBObject.OBJECT_ACCESS_PUSH_DATA) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_PUSH_DATA) != 0;
 	}
 	
 	@Override

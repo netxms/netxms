@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+
 import org.netxms.base.NXCPDataInputStream;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;

@@ -1,6 +1,7 @@
 @echo off
 
 del /q /s /f netxms-base\target\*
+del /q /s /f netxms-client-api\target\*
 del /q /s /f netxms-client\target\*
 
 call mvn -Dmaven.test.skip=true package %*
@@ -11,4 +12,5 @@ for /f "tokens=2 delims=>< " %%a in ('findstr projectversion pom.xml') do @set v
 rem cd W:\netxms\netxms\trunk\src\java\
 
 copy netxms-base\target\netxms-base-%version%.jar netxms-eclipse\library\jar\
+copy netxms-client-api\target\netxms-client-api-%version%.jar netxms-eclipse\library\jar\
 copy netxms-client\target\netxms-client-%version%.jar netxms-eclipse\library\jar\

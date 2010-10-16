@@ -18,11 +18,13 @@
  */
 package org.netxms.client;
 
+import org.netxms.api.client.SessionNotification;
+
 /**
  * Client library notification
  *
  */
-public class NXCNotification
+public class NXCNotification extends SessionNotification
 {
 	// Notification codes
 	public static final int CONNECTION_BROKEN = 1;
@@ -62,21 +64,14 @@ public class NXCNotification
 	public static final int USER_DB_OBJECT_DELETED = 1;
 	public static final int USER_DB_OBJECT_MODIFIED = 2;
 	
-	// Notification object data
-	private int code;
-	private long subCode;
-	private Object object;
-
-	
 	/**
 	 * @param code
+	 * @param subCode
 	 * @param object
 	 */
-	public NXCNotification(int code, Object object)
+	public NXCNotification(int code, long subCode, Object object)
 	{
-		this.code = code;
-		this.subCode = 0;
-		this.object = object;
+		super(code, subCode, object);
 	}
 
 	/**
@@ -85,21 +80,16 @@ public class NXCNotification
 	 */
 	public NXCNotification(int code, long subCode)
 	{
-		this.code = code;
-		this.subCode = subCode;
-		this.object = null;
+		super(code, subCode);
 	}
 
 	/**
 	 * @param code
-	 * @param subCode
 	 * @param object
 	 */
-	public NXCNotification(int code, long subCode, Object object)
+	public NXCNotification(int code, Object object)
 	{
-		this.code = code;
-		this.subCode = subCode;
-		this.object = object;
+		super(code, object);
 	}
 
 	/**
@@ -107,32 +97,6 @@ public class NXCNotification
 	 */
 	public NXCNotification(int code)
 	{
-		this.code = code;
-		this.subCode = 0;
-		this.object = null;
-	}
-
-	/**
-	 * @return Notification's code
-	 */
-	public final int getCode()
-	{
-		return code;
-	}
-
-	/**
-	 * @return Notification's subcode
-	 */
-	public final long getSubCode()
-	{
-		return subCode;
-	}
-
-	/**
-	 * @return Object associated with notification
-	 */
-	public final Object getObject()
-	{
-		return object;
+		super(code);
 	}
 }

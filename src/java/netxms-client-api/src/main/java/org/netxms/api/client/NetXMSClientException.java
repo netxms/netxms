@@ -16,14 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
-
-import org.netxms.api.client.ISessionListener;
+package org.netxms.api.client;
 
 /**
- * NetXMS client library notification listener
+ * Generic NetXMS client exception. Intended to be subclassed by concrete client implementation.
  *
  */
-abstract public class NXCListener implements ISessionListener
+public class NetXMSClientException extends Exception
 {
+	private static final long serialVersionUID = 1453981595988661913L;
 }

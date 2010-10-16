@@ -20,7 +20,6 @@ package org.netxms.client.datacollection;
 
 import java.io.IOException;
 import java.util.HashMap;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCException;

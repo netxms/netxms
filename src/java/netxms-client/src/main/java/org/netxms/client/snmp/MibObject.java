@@ -21,6 +21,7 @@ package org.netxms.client.snmp;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.netxms.base.NXCPDataInputStream;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
