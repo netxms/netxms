@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.nxsl.widgets.internal;
 
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
@@ -74,7 +75,13 @@ public class NXSLSourceViewerConfiguration extends SourceViewerConfiguration
 	@Override
 	public IContentAssistant getContentAssistant(ISourceViewer sourceViewer)
 	{
-		return super.getContentAssistant(sourceViewer);
+		NXSLProposalProcessor processor = new NXSLProposalProcessor();
+		
+		ContentAssistant ca = new ContentAssistant();
+		ca.enableAutoActivation(true);
+		ca.setContentAssistProcessor(processor, IDocument.DEFAULT_CONTENT_TYPE);
+		ca.setInformationControlCreator(getInformationControlCreator(sourceViewer));
+		return ca;
 	}
 
 	/* (non-Javadoc)

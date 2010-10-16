@@ -20,15 +20,18 @@ package org.netxms.ui.eclipse.nxsl.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.text.source.VerticalRuler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.VerifyKeyListener;
+import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLDocument;
-import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLLabelProvider;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLSourceViewerConfiguration;
 
 /**
@@ -42,7 +45,6 @@ public class ScriptEditor extends Composite
 	private boolean modified;
 	private List<String> functions = new ArrayList<String>(0);
 	private List<String> variables = new ArrayList<String>(0);
-	private NXSLLabelProvider contentProposalLabelProvider;
 
 	/**
 	 * @param parent
@@ -57,30 +59,21 @@ public class ScriptEditor extends Composite
 		setLayout(new FillLayout());
 		editor = new SourceViewer(this, new VerticalRuler(10), SWT.NONE);
 		editor.configure(new NXSLSourceViewerConfiguration());
+		editor.prependVerifyKeyListener(new VerifyKeyListener() {
+			@Override
+			public void verifyKey(VerifyEvent event)
+			{
+				if (event.doit && (event.stateMask == SWT.MOD1) && event.character == ' ')
+				{
+					editor.doOperation(ISourceViewer.CONTENTASSIST_PROPOSALS);
+					event.doit = false;
+				}
+			}
+		});
 
 		StyledText control = editor.getTextWidget();
 		control.setFont(editorFont);
 		control.setWordWrap(false);
-      
-		/*
-      contentProposalLabelProvider = new NXSLLabelProvider();
-      try
-		{
-			ContentProposalAdapter adapter = new ContentProposalAdapter(this,
-					new StyledTextContentAdapter(),
-					new NXSLContentProposalProvider(this, listener),
-					KeyStroke.getInstance("Ctrl+Space"), new char[] { '$' });
-			adapter.setEnabled(true);
-			adapter.setFilterStyle(ContentProposalAdapter.FILTER_NONE);
-			adapter.setPropagateKeys(false);
-			adapter.setLabelProvider(contentProposalLabelProvider);
-		}
-		catch(ParseException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 	}
 
 	/* (non-Javadoc)
@@ -90,7 +83,6 @@ public class ScriptEditor extends Composite
 	public void dispose()
 	{
 		editorFont.dispose();
-		contentProposalLabelProvider.dispose();
 		super.dispose();
 	}
 	

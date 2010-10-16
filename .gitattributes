@@ -623,10 +623,8 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/Script
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptEditor.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/CodePatternRule.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/KeywordRule.java -text
-src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/NXSLContentProposal.java -text
-src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/NXSLContentProposalProvider.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/NXSLDocument.java -text
-src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/NXSLLabelProvider.java -text
+src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/NXSLProposalProcessor.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/NXSLSourceViewerConfiguration.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/NXSLTextAttributeProvider.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/SingleTokenScanner.java -text
