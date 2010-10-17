@@ -18,12 +18,12 @@
  */
 package org.netxms.client;
 
-import org.netxms.api.client.ISessionListener;
+import org.netxms.api.client.SessionListener;
 
 /**
  * NetXMS client library notification listener
  *
  */
-abstract public class NXCListener implements ISessionListener
+abstract public class NXCListener implements SessionListener
 {
 }

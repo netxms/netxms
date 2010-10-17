@@ -19,10 +19,10 @@
 package org.netxms.api.client;
 
 /**
- * Interface for client library notifications
+ * Generic client library notifications
  *
  */
-public class SessionNotification implements ISessionNotification
+public class SessionNotification
 {
 	protected int code;
 	protected long subCode;
@@ -72,24 +72,24 @@ public class SessionNotification implements ISessionNotification
 		this.object = null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.ISessionNotification#getCode()
+	/**
+	 * @return Notification's code
 	 */
 	public final int getCode()
 	{
 		return code;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.ISessionNotification#getSubCode()
+	/**
+	 * @return Notification's subcode
 	 */
 	public final long getSubCode()
 	{
 		return subCode;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.ISessionNotification#getObject()
+	/**
+	 * @return Object associated with notification
 	 */
 	public final Object getObject()
 	{

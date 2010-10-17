@@ -22,7 +22,7 @@ package org.netxms.api.client;
  * Interface for NetXMS client library notification listeners
  *
  */
-public interface ISessionListener
+public interface SessionListener
 {
-	abstract public void notificationHandler(ISessionNotification n);
+	abstract public void notificationHandler(SessionNotification n);
 }

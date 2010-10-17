@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.events.Alarm;
 
 /**
@@ -60,7 +60,7 @@ public class AlarmTest extends SessionTest
 			final boolean[] success = new boolean[1];
 			success[0] = false;
 			session.addListener(new NXCListener() {
-				public void notificationHandler(ISessionNotification n)
+				public void notificationHandler(SessionNotification n)
 				{
 					assertEquals(NXCNotification.ALARM_TERMINATED, n.getCode());
 					assertEquals(alarmId.longValue(), ((Alarm)n.getObject()).getId());

@@ -120,42 +120,29 @@ public class NXCException extends NetXMSClientException
 		"Password was used before"
 	};
 
-	private int errorCode;
-	private String errorText;
-	
 	public NXCException(int errorCode)
 	{
-		super();
-		this.errorCode = errorCode;
-		this.errorText = null;
+		super(errorCode);
 	}
 
-	public NXCException(int errorCode, String errorText)
+	public NXCException(int errorCode, String additionalInfo)
 	{
-		super();
-		this.errorCode = errorCode;
-		this.errorText = errorText;
-	}
-
-	/**
-	 * @return the errorCode
-	 */
-	public int getErrorCode()
-	{
-		return errorCode;
+		super(errorCode, additionalInfo);
 	}
 
 	/* (non-Javadoc)
-	 * @see java.lang.Throwable#getMessage()
+	 * @see org.netxms.api.client.NetXMSClientException#getErrorMessage(int)
 	 */
 	@Override
-	public String getMessage()
+	protected String getErrorMessage(int code)
 	{
-		String msg = ((errorCode >= 0) && (errorCode < errorTexts.length)) ? errorTexts[errorCode] : "Error " + errorCode;
-		if (errorText != null)
+		try
 		{
-			msg += " (" + errorText + ")";
+			return errorTexts[code];
 		}
-		return msg;
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return "Error " + Integer.toString(code);
+		}
 	}
 }

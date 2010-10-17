@@ -36,13 +36,13 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.netxms.api.client.ISessionListener;
-import org.netxms.api.client.ISession;
-import org.netxms.api.client.scripts.IScriptLibraryManager;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.Session;
+import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.api.client.scripts.Script;
-import org.netxms.api.client.servermanager.IServerManager;
+import org.netxms.api.client.servermanager.ServerManager;
 import org.netxms.api.client.servermanager.ServerVariable;
-import org.netxms.api.client.users.IUserManager;
+import org.netxms.api.client.users.UserManager;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.UserGroup;
@@ -91,7 +91,7 @@ import org.netxms.client.snmp.SnmpTrap;
 /**
  * Communication session with NetXMS server.
  */
-public class NXCSession implements ISession, IScriptLibraryManager, IUserManager, IServerManager
+public class NXCSession implements Session, ScriptLibraryManager, UserManager, ServerManager
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
@@ -150,7 +150,7 @@ public class NXCSession implements ISession, IScriptLibraryManager, IUserManager
 	private int commandTimeout = 30000; // Default is 30 sec
 
 	// Notification listeners
-	private HashSet<ISessionListener> listeners = new HashSet<ISessionListener>(0);
+	private HashSet<SessionListener> listeners = new HashSet<SessionListener>(0);
 
 	// Received files
 	private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
@@ -666,7 +666,7 @@ public class NXCSession implements ISession, IScriptLibraryManager, IUserManager
 	/* (non-Javadoc)
 	 * @see org.netxms.client.ISession#addListener(org.netxms.api.client.INXCListener)
 	 */
-	public void addListener(ISessionListener lst)
+	public void addListener(SessionListener lst)
 	{
 		listeners.add(lst);
 	}
@@ -674,7 +674,7 @@ public class NXCSession implements ISession, IScriptLibraryManager, IUserManager
 	/* (non-Javadoc)
 	 * @see org.netxms.client.ISession#removeListener(org.netxms.api.client.INXCListener)
 	 */
-	public void removeListener(ISessionListener lst)
+	public void removeListener(SessionListener lst)
 	{
 		listeners.remove(lst);
 	}
@@ -686,7 +686,7 @@ public class NXCSession implements ISession, IScriptLibraryManager, IUserManager
 	 */
 	protected synchronized void sendNotification(NXCNotification n)
 	{
-		Iterator<ISessionListener> it = listeners.iterator();
+		Iterator<SessionListener> it = listeners.iterator();
 		while(it.hasNext())
 		{
 			it.next().notificationHandler(n);

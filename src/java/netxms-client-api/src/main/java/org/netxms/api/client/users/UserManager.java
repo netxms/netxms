@@ -25,7 +25,7 @@ import org.netxms.api.client.NetXMSClientException;
  * Interface for user management.
  *
  */
-public interface IUserManager
+public interface UserManager
 {
 	// User object fields
 	public static final int USER_MODIFY_LOGIN_NAME = 0x00000001;

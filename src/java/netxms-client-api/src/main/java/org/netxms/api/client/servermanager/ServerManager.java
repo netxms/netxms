@@ -27,7 +27,7 @@ import org.netxms.api.client.NetXMSClientException;
  * Interface for server management.
  *
  */
-public interface IServerManager
+public interface ServerManager
 {
 
 	/**

@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import org.netxms.api.client.NetXMSClientException;
 
-public interface IScriptLibraryManager
+public interface ScriptLibraryManager
 {
 	/**
 	 * Get list of all scripts in script library.

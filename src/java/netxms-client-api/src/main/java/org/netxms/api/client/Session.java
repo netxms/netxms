@@ -26,21 +26,21 @@ import org.netxms.base.NXCPMessage;
  * Base client session interface. All client APIs for NetXMS based products expected to provide this interface.
  *
  */
-public interface ISession
+public interface Session
 {
 	/**
 	 * Add notification listener
 	 * 
 	 * @param lst Listener to add
 	 */
-	public abstract void addListener(ISessionListener lst);
+	public abstract void addListener(SessionListener lst);
 
 	/**
 	 * Remove notification listener
 	 * 
 	 * @param lst Listener to remove
 	 */
-	public abstract void removeListener(ISessionListener lst);
+	public abstract void removeListener(SessionListener lst);
 
 	/**
 	 * Wait for message with specific code and id.
