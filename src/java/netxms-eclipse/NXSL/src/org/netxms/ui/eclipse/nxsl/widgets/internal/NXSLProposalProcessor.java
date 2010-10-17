@@ -27,6 +27,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 
 /**
  * NXSL proposal processor
@@ -45,6 +46,19 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 		"right", "rindex", "rtrim", "strftime", "substr", "time", "trace", "trim", "typeof", "upper",
 		"AddrInRange", "AddrInSubnet", "SecondsToUptime" };
 	private static final String[] BUILTIN_CONSTANTS = { "null", "true", "false" };
+	
+	private ScriptEditor scriptEditor;
+	
+	/**
+	 * Create proposal processor for NXSL
+	 * 
+	 * @param scriptEditor script editor this proposal processor associated with
+	 */
+	public NXSLProposalProcessor(ScriptEditor scriptEditor)
+	{
+		super();
+		this.scriptEditor = scriptEditor;
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeCompletionProposals(org.eclipse.jface.text.ITextViewer, int)
@@ -67,6 +81,8 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 		addProposals(list, prefix, offset, GLOBAL_VARIABLE, BUILTIN_SYSTEM_VARIABLES);
 		addProposals(list, prefix, offset, FUNCTION, BUILTIN_FUNCTIONS);
 		addProposals(list, prefix, offset, CONSTANT, BUILTIN_CONSTANTS);
+		addProposals(list, prefix, offset, GLOBAL_VARIABLE, scriptEditor.getVariables());
+		addProposals(list, prefix, offset, FUNCTION, scriptEditor.getFunctions());
 		
 		return list.toArray(new ICompletionProposal[list.size()]);
 	}
@@ -83,7 +99,8 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 		for(final String s : texts)
 		{
 			if (s.startsWith(prefix))
-				props.add(new CompletionProposal(s, offset - prefix.length(), prefix.length(), s.length()));
+				props.add(new CompletionProposal(s, offset - prefix.length(), prefix.length(),
+						s.length(), scriptEditor.getProposalIcon(type), s, null, null));
 		}
 	}
 	

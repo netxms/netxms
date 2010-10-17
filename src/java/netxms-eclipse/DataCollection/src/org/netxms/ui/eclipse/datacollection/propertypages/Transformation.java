@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
+import java.util.Arrays;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -44,6 +46,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Transformation extends PropertyPage
 {
+	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue" };
+	private static final String[] DCI_VARIABLES = { "$node" };
+	
 	private DataCollectionItem dci;
 	private Combo deltaCalculation;
 	private ScriptEditor transformationScript;
@@ -88,6 +93,8 @@ public class Transformation extends PropertyPage
       };
       transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL,
                                                                              factory, "Step 2 - transformation script", gd);
+      transformationScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
+      transformationScript.addVariables(Arrays.asList(DCI_VARIABLES));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;

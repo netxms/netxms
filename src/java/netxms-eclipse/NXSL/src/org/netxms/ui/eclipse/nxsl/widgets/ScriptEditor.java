@@ -18,8 +18,9 @@
  */
 package org.netxms.ui.eclipse.nxsl.widgets;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewer;
@@ -29,8 +30,10 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLDocument;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLSourceViewerConfiguration;
 
@@ -43,8 +46,11 @@ public class ScriptEditor extends Composite
 	private SourceViewer editor;
 	private Font editorFont;
 	private boolean modified;
-	private List<String> functions = new ArrayList<String>(0);
-	private List<String> variables = new ArrayList<String>(0);
+	private Set<String> functions = new HashSet<String>(0);
+	private Set<String> variables = new HashSet<String>(0);
+	private String[] functionsCache = new String[0];
+	private String[] variablesCache = new String[0];
+	private Image[] proposalIcons = new Image[4];
 
 	/**
 	 * @param parent
@@ -56,9 +62,14 @@ public class ScriptEditor extends Composite
 		
 		editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
 		
+		proposalIcons[0] = Activator.getImageDescriptor("icons/function.gif").createImage();
+		proposalIcons[1] = Activator.getImageDescriptor("icons/var_global.gif").createImage();
+		proposalIcons[2] = Activator.getImageDescriptor("icons/var_local.gif").createImage();
+		proposalIcons[3] = Activator.getImageDescriptor("icons/constant.gif").createImage();
+		
 		setLayout(new FillLayout());
-		editor = new SourceViewer(this, new VerticalRuler(10), SWT.NONE);
-		editor.configure(new NXSLSourceViewerConfiguration());
+		editor = new SourceViewer(this, new VerticalRuler(20), SWT.NONE);
+		editor.configure(new NXSLSourceViewerConfiguration(this));
 		editor.prependVerifyKeyListener(new VerifyKeyListener() {
 			@Override
 			public void verifyKey(VerifyEvent event)
@@ -82,6 +93,8 @@ public class ScriptEditor extends Composite
 	@Override
 	public void dispose()
 	{
+		for(int i = 0; i < proposalIcons.length; i++)
+			proposalIcons[i].dispose();
 		editorFont.dispose();
 		super.dispose();
 	}
@@ -130,34 +143,76 @@ public class ScriptEditor extends Composite
 	}
 
 	/**
-	 * @return the functions
-	 */
-	public List<String> getFunctions()
-	{
-		return functions;
-	}
-
-	/**
 	 * @param functions the functions to set
 	 */
-	public void setFunctions(List<String> functions)
+	public void setFunctions(Set<String> functions)
 	{
 		this.functions = functions;
+		functionsCache = functions.toArray(new String[functions.size()]);
 	}
-
+	
 	/**
-	 * @return the variables
+	 * Add functions
+	 * 
+	 * @param fc
 	 */
-	public List<String> getVariables()
+	public void addFunctions(Collection<String> fc)
 	{
-		return variables;
+		functions.addAll(fc);
+		functionsCache = functions.toArray(new String[functions.size()]);
 	}
 
 	/**
 	 * @param variables the variables to set
 	 */
-	public void setVariables(List<String> variables)
+	public void setVariables(Set<String> variables)
 	{
 		this.variables = variables;
+		variablesCache = variables.toArray(new String[variables.size()]);
+	}
+
+	/**
+	 * Add variables
+	 * 
+	 * @param vc
+	 */
+	public void addVariables(Collection<String> vc)
+	{
+		variables.addAll(vc);
+		variablesCache = variables.toArray(new String[variables.size()]);
+	}
+
+	/**
+	 * @return the functionsCache
+	 */
+	public String[] getFunctions()
+	{
+		return functionsCache;
+	}
+
+	/**
+	 * @return the variablesCache
+	 */
+	public String[] getVariables()
+	{
+		return variablesCache;
+	}
+
+	/**
+	 * Get icon for given autocompletion proposal type. Proposal types defined in NXSLProposalProcessor.
+	 * 
+	 * @param type proposal type
+	 * @return image for given proposal type or null
+	 */
+	public Image getProposalIcon(int type)
+	{
+		try
+		{
+			return proposalIcons[type];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return null;
+		}
 	}
 }

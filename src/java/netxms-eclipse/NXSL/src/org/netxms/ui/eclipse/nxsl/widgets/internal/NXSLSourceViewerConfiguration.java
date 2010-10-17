@@ -30,6 +30,7 @@ import org.eclipse.jface.text.rules.PatternRule;
 import org.eclipse.jface.text.rules.RuleBasedScanner;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 
 /**
  * Source viewer configuration for NXSL
@@ -37,6 +38,8 @@ import org.eclipse.jface.text.source.SourceViewerConfiguration;
  */
 public class NXSLSourceViewerConfiguration extends SourceViewerConfiguration
 {
+	private ScriptEditor scriptEditor;
+	
 	private static final IWordDetector nxslWordDetector = new IWordDetector() {
 		@Override
 		public boolean isWordPart(char c)
@@ -64,9 +67,10 @@ public class NXSLSourceViewerConfiguration extends SourceViewerConfiguration
 	/**
 	 * Creates source viewer configuration for NXSL
 	 */
-	public NXSLSourceViewerConfiguration()
+	public NXSLSourceViewerConfiguration(ScriptEditor scriptEditor)
 	{
 		super();
+		this.scriptEditor = scriptEditor;
 	}
 
 	/* (non-Javadoc)
@@ -75,7 +79,7 @@ public class NXSLSourceViewerConfiguration extends SourceViewerConfiguration
 	@Override
 	public IContentAssistant getContentAssistant(ISourceViewer sourceViewer)
 	{
-		NXSLProposalProcessor processor = new NXSLProposalProcessor();
+		NXSLProposalProcessor processor = new NXSLProposalProcessor(scriptEditor);
 		
 		ContentAssistant ca = new ContentAssistant();
 		ca.enableAutoActivation(true);
