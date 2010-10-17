@@ -27,10 +27,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.ui.eclipse.shared.IUIConstants;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
+ * User database object creation dialog
  * 
  */
 public class CreateObjectDialog extends Dialog
@@ -57,8 +57,8 @@ public class CreateObjectDialog extends Dialog
 
 		FillLayout layout = new FillLayout();
 		layout.type = SWT.VERTICAL;
-		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		dialogArea.setLayout(layout);
 
 		Label label = new Label(dialogArea, SWT.NONE);

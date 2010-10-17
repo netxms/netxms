@@ -8,7 +8,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author victor

@@ -17,7 +17,7 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -87,7 +87,7 @@ public class General extends PropertyPage
 				try
 				{
 					if (object != null)
-						NXMCSharedData.getInstance().getSession().setObjectName(object.getObjectId(), newName);
+						ConsoleSharedData.getInstance().getSession().setObjectName(object.getObjectId(), newName);
 					initialName = newName;
 					status = Status.OK_STATUS;
 				}

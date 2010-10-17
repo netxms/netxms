@@ -25,7 +25,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.objects.Container;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.IUIConstants;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -141,7 +141,7 @@ public class AutoBind extends PropertyPage
 						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 						md.setAutoBindEnabled(isAutoBindEnabled);
 						md.setAutoBindFilter(newAutoBindFilter);
-						NXMCSharedData.getInstance().getSession().modifyObject(md);
+						ConsoleSharedData.getInstance().getSession().modifyObject(md);
 					}
 					initialAutoBindFlag = isAutoBindEnabled;
 					initialAutoBindFilter = newAutoBindFilter;

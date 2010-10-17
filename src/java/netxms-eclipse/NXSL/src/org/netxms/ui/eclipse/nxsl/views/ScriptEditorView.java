@@ -37,11 +37,11 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Script editor view
@@ -66,7 +66,7 @@ public class ScriptEditorView extends ViewPart
 	{
 		super.init(site);
 		
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		scriptId = Long.parseLong(site.getSecondaryId());
 	}
 

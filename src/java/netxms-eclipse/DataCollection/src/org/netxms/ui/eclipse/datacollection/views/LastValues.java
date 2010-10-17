@@ -30,10 +30,10 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author Victor
+ * Last values view
  *
  */
 public class LastValues extends ViewPart
@@ -52,7 +52,7 @@ public class LastValues extends ViewPart
 	{
 		super.init(site);
 		
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
 		setPartName("Last Values - " + ((node != null) ? node.getObjectName() : "<error>"));

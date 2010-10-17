@@ -13,4 +13,4 @@ rem cd W:\netxms\netxms\trunk\src\java\
 
 copy netxms-base\target\netxms-base-%version%.jar netxms-eclipse\library\jar\
 copy netxms-client-api\target\netxms-client-api-%version%.jar netxms-eclipse\library\jar\
-copy netxms-client\target\netxms-client-%version%.jar netxms-eclipse\library\jar\
+copy netxms-client\target\netxms-client-%version%.jar netxms-eclipse\core\jar\

@@ -48,14 +48,14 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptComparator;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptLabelProvider;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Script library view
@@ -84,7 +84,7 @@ public class ScriptLibrary extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		
 		parent.setLayout(new FillLayout());
 		

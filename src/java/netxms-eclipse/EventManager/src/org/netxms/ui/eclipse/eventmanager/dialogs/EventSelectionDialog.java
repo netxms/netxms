@@ -43,9 +43,9 @@ import org.netxms.ui.eclipse.eventmanager.EventTemplateComparator;
 import org.netxms.ui.eclipse.eventmanager.EventTemplateLabelProvider;
 import org.netxms.ui.eclipse.eventmanager.dialogs.helpers.EventListFilter;
 import org.netxms.ui.eclipse.shared.IUIConstants;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Event selection dialog
@@ -125,7 +125,7 @@ public class EventSelectionDialog extends Dialog
 		if (filterString != null)
 			filter.setFilterString(filterString);
 		eventList.addFilter(filter);
-		eventList.setInput(NXMCSharedData.getInstance().getSession().getCachedEventTemplates());
+		eventList.setInput(ConsoleSharedData.getInstance().getSession().getCachedEventTemplates());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

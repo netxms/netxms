@@ -56,7 +56,7 @@ import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeFilter;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author victor
@@ -89,7 +89,7 @@ public class ObjectTree extends Composite
 	{
 		super(parent, style);
 		
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);

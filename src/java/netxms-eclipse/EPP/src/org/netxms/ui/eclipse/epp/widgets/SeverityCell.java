@@ -21,8 +21,8 @@ package org.netxms.ui.eclipse.epp.widgets;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 
 /**
  * Cell for severity filter

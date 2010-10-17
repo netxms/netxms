@@ -24,8 +24,8 @@ import org.eclipse.swt.SWT;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
-import org.netxms.ui.eclipse.usermanager.views.UserManager;
+import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Comparator for user objects
@@ -63,19 +63,19 @@ public class UserComparator extends ViewerComparator
 
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
 		{
-			case UserManager.COLUMN_NAME:
+			case UserManagementView.COLUMN_NAME:
 				result = ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject) e2).getName());
 				break;
-			case UserManager.COLUMN_TYPE:
+			case UserManagementView.COLUMN_TYPE:
 				result = compareTypes(e1, e2);
 				break;
-			case UserManager.COLUMN_FULLNAME:
+			case UserManagementView.COLUMN_FULLNAME:
 				result = getFullName(e1).compareToIgnoreCase(getFullName(e2));
 				break;
-			case UserManager.COLUMN_DESCRIPTION:
+			case UserManagementView.COLUMN_DESCRIPTION:
 				result = ((AbstractUserObject)e1).getDescription().compareToIgnoreCase(((AbstractUserObject)e2).getDescription());
 				break;
-			case UserManager.COLUMN_GUID:
+			case UserManagementView.COLUMN_GUID:
 				result = ((AbstractUserObject)e1).getGuid().toString().compareTo(((AbstractUserObject)e2).getGuid().toString());
 				break;
 			default:

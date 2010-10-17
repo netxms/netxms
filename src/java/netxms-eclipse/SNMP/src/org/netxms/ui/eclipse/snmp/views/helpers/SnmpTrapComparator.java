@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.snmp.SnmpTrap;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor;
 
 /**
@@ -42,7 +42,7 @@ public class SnmpTrapComparator extends ViewerComparator
 	 */
 	public SnmpTrapComparator()
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 	}
 	
 	/* (non-Javadoc)

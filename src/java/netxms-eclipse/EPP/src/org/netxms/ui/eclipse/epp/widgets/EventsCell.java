@@ -26,9 +26,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Cell containing events
@@ -43,7 +43,7 @@ public class EventsCell extends ListCell
 	{
 		super(rule, data);
 		eppRule = (EventProcessingPolicyRule)data;
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		
 		List<Long> eventCodes = eppRule.getEvents();
 		List<EventTemplate> events = session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()]));

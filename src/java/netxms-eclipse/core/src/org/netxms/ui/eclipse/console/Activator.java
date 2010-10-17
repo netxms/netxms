@@ -25,7 +25,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -57,6 +59,8 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
+		StatusDisplayInfo.init();
+		DataCollectionDisplayInfo.init();
 	}
 
 	/*
@@ -112,7 +116,7 @@ public class Activator extends AbstractUIPlugin
 	 */
 	public static void showTrayIcon()
 	{
-		if (NXMCSharedData.getInstance().getTrayIcon() != null)
+		if (ConsoleSharedData.getTrayIcon() != null)
 			return;	// Tray icon already exist
 		
 		Tray tray = Display.getDefault().getSystemTray();
@@ -121,7 +125,7 @@ public class Activator extends AbstractUIPlugin
 			TrayItem item = new TrayItem(tray, SWT.NONE);
 			item.setToolTipText("NetXMS Management Console");
 			item.setImage(getImageDescriptor("icons/alt_window_16.gif").createImage());
-			NXMCSharedData.getInstance().setTrayIcon(item);
+			ConsoleSharedData.setTrayIcon(item);
 		}
 	}
 	
@@ -130,11 +134,11 @@ public class Activator extends AbstractUIPlugin
 	 */
 	public static void hideTrayIcon()
 	{
-		TrayItem item = NXMCSharedData.getInstance().getTrayIcon();
+		TrayItem item = ConsoleSharedData.getTrayIcon();
 		if (item == null)
 			return;	// No tray icon
 		
-		NXMCSharedData.getInstance().setTrayIcon(null);
+		ConsoleSharedData.setTrayIcon(null);
 		item.dispose();
 	}
 }

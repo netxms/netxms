@@ -26,15 +26,16 @@ import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.Session;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Alarm notifier
@@ -51,14 +52,14 @@ public class AlarmNotifier
 	{
 		listener = new NXCListener() {
 			@Override
-			public void notificationHandler(ISessionNotification n)
+			public void notificationHandler(SessionNotification n)
 			{
 				if ((n.getCode() == NXCNotification.NEW_ALARM) ||
 				    (n.getCode() == NXCNotification.ALARM_CHANGED))
 					processNewAlarm((Alarm)n.getObject());
 			}
 		};
-		NXCSession session = NXMCSharedData.getInstance().getSession();
+		Session session = ConsoleSharedData.getSession();
 		if (session != null)
 			session.addListener(listener);
 	}
@@ -68,7 +69,7 @@ public class AlarmNotifier
 	 */
 	public static void stop()
 	{
-		NXCSession session = NXMCSharedData.getInstance().getSession();
+		Session session = ConsoleSharedData.getSession();
 		if ((session != null) && (listener != null))
 			session.removeListener(listener);
 	}
@@ -81,14 +82,14 @@ public class AlarmNotifier
 		if (alarm.getState() != Alarm.STATE_OUTSTANDING)
 			return;
 		
-		final TrayItem trayIcon = NXMCSharedData.getInstance().getTrayIcon();
+		final TrayItem trayIcon = ConsoleSharedData.getTrayIcon();
 		if (trayIcon != null)
 		{
 			new UIJob("Create alarm popup") {
 				@Override
 				public IStatus runInUIThread(IProgressMonitor monitor)
 				{
-					final NXCSession session = NXMCSharedData.getInstance().getSession();
+					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					final GenericObject object = session.findObjectById(alarm.getSourceObjectId());
 					
 					int severityFlag;

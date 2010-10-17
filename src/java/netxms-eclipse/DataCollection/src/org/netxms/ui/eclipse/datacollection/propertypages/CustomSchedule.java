@@ -50,9 +50,9 @@ import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author Victor

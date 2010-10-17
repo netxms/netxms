@@ -39,7 +39,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author Victor
@@ -203,7 +203,7 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new ArrayList<GenericObject>(0);
 
-		return NXMCSharedData.getInstance().getSession().findMultipleObjects(selectedObjects);
+		return ConsoleSharedData.getInstance().getSession().findMultipleObjects(selectedObjects);
 	}
 
 	/**
@@ -217,7 +217,7 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new GenericObject[0];
 
-		final NXCSession session = NXMCSharedData.getInstance().getSession();
+		final NXCSession session = ConsoleSharedData.getInstance().getSession();
 		final Set<GenericObject> resultSet = new HashSet<GenericObject>(selectedObjects.length);
 		for(int i = 0; i < selectedObjects.length; i++)
 		{

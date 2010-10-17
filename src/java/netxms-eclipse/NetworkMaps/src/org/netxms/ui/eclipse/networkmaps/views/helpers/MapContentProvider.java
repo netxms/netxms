@@ -23,7 +23,7 @@ import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Content provider for map
@@ -39,7 +39,7 @@ public class MapContentProvider implements IGraphEntityContentProvider
 	 */
 	public MapContentProvider()
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 	}
 	
 	@Override

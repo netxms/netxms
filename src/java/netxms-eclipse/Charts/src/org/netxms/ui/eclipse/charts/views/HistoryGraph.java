@@ -56,10 +56,10 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.swtchart.IAxis;
 import org.swtchart.ILineSeries;
 import org.swtchart.LineStyle;
@@ -133,7 +133,7 @@ public class HistoryGraph extends ViewPart
 			}
 		};
 		
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		timeFrom = new Date(System.currentTimeMillis() - timeRange);
 		timeTo = new Date(System.currentTimeMillis());

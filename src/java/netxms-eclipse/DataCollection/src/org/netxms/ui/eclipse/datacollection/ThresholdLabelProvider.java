@@ -26,7 +26,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.datacollection.propertypages.Thresholds;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author Victor
@@ -38,7 +38,7 @@ public class ThresholdLabelProvider implements ITableLabelProvider
 	private static final String[] operations = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" };
 	
 	private WorkbenchLabelProvider eventLabelProvider = new WorkbenchLabelProvider();
-	private NXCSession session = NXMCSharedData.getInstance().getSession();
+	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

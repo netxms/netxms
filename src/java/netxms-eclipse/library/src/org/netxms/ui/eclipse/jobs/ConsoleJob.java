@@ -24,11 +24,11 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
-import org.netxms.client.NXCException;
+import org.netxms.api.client.NetXMSClientException;
 import org.netxms.ui.eclipse.library.Activator;
 
 /**
- * @author Victor
+ * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.
  *
  */
 public abstract class ConsoleJob extends Job
@@ -70,7 +70,7 @@ public abstract class ConsoleJob extends Job
 		catch(Exception e)
 		{
 			status = new Status(Status.ERROR, pluginId, 
-                  (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+                  (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
                   getErrorMessage() + ": " + e.getMessage(), null);
 			jobFailureHandler();
 		}

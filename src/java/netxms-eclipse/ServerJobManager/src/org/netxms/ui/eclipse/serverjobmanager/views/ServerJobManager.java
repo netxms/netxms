@@ -62,10 +62,10 @@ import org.netxms.client.NXCServerJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 
 /**
@@ -315,7 +315,7 @@ public class ServerJobManager extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override

@@ -7,9 +7,9 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.AgentParameter;
+import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg;
-import org.netxms.ui.eclipse.shared.DataCollectionDisplayInfo;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author victor

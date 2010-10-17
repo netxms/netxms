@@ -37,9 +37,9 @@ import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.AttrListLabelProvider;
 import org.netxms.ui.eclipse.objectmanager.AttrViewerComparator;
 import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author Victor
@@ -226,7 +226,7 @@ public class CustomAttributes extends PropertyPage
 					{
 						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 						md.setCustomAttributes(attributes);
-						NXMCSharedData.getInstance().getSession().modifyObject(md);
+						ConsoleSharedData.getInstance().getSession().modifyObject(md);
 					}
 					isModified = false;
 					status = Status.OK_STATUS;

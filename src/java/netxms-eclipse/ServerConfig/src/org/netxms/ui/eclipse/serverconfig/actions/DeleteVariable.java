@@ -33,7 +33,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author victor
@@ -61,7 +61,7 @@ public class DeleteVariable implements IObjectActionDelegate
 				
 				try
 				{
-					NXCSession session = NXMCSharedData.getInstance().getSession();
+					NXCSession session = ConsoleSharedData.getInstance().getSession();
 					for(int i = 0; i < currentSelection.length; i++)
 					{
 						session.deleteServerVariable(((ServerVariable)currentSelection[i]).getName());

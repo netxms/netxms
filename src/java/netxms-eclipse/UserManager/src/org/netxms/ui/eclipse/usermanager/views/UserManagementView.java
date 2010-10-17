@@ -51,28 +51,30 @@ import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.Session;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
+import org.netxms.api.client.users.UserManager;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
-import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
 import org.netxms.ui.eclipse.usermanager.UserLabelProvider;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author Victor
  * 
  */
-public class UserManager extends ViewPart
+public class UserManagementView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.usermanager.view.user_manager";
 	public static final String JOB_FAMILY = "UserManagerJob";
@@ -85,8 +87,9 @@ public class UserManager extends ViewPart
 	public static final int COLUMN_GUID = 4;
 
 	private TableViewer viewer;
-	private NXCSession session;
-	private NXCListener sessionListener;
+	private Session session;
+	private UserManager userManager;
+	private SessionListener sessionListener;
 	private boolean databaseLocked = false;
 	private boolean editNewUser = false;
 	private Action actionAddUser;
@@ -102,7 +105,8 @@ public class UserManager extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getSession();
+		userManager = (UserManager)ConsoleSharedData.getSession();
 
 		final String[] names = { "Name", "Type", "Full Name", "Description", "GUID" };
 		final int[] widths = { 100, 80, 180, 250, 250 };
@@ -137,9 +141,9 @@ public class UserManager extends ViewPart
 		createPopupMenu();
 
 		// Listener for server's notifications
-		sessionListener = new NXCListener() {
+		sessionListener = new SessionListener() {
 			@Override
-			public void notificationHandler(final ISessionNotification n)
+			public void notificationHandler(final SessionNotification n)
 			{
 				if (n.getCode() == NXCNotification.USER_DB_CHANGED)
 				{
@@ -148,7 +152,7 @@ public class UserManager extends ViewPart
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							viewer.setInput(session.getUserDatabaseObjects());
+							viewer.setInput(userManager.getUserDatabaseObjects());
 							if (editNewUser && (n.getSubCode() == NXCNotification.USER_DB_OBJECT_CREATED))
 							{
 								editNewUser = false;
@@ -172,14 +176,14 @@ public class UserManager extends ViewPart
 
 				try
 				{
-					session.lockUserDatabase();
+					userManager.lockUserDatabase();
 					databaseLocked = true;
 					new UIJob("Update user list")
 					{
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							viewer.setInput(session.getUserDatabaseObjects());
+							viewer.setInput(userManager.getUserDatabaseObjects());
 							return Status.OK_STATUS;
 						}
 					}.schedule();
@@ -188,14 +192,14 @@ public class UserManager extends ViewPart
 				}
 				catch(Exception e)
 				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, (e instanceof NXCException) ? ((NXCException) e)
+					status = new Status(Status.ERROR, Activator.PLUGIN_ID, (e instanceof NetXMSClientException) ? ((NetXMSClientException) e)
 							.getErrorCode() : 0, "Cannot lock user database: " + e.getMessage(), null);
 					new UIJob("Close user manager")
 					{
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							UserManager.this.getViewSite().getPage().hideView(UserManager.this);
+							UserManagementView.this.getViewSite().getPage().hideView(UserManagementView.this);
 							return Status.OK_STATUS;
 						}
 					}.schedule();
@@ -264,7 +268,7 @@ public class UserManager extends ViewPart
 			@Override
 			public void run()
 			{
-				viewer.setInput(session.getUserDatabaseObjects());
+				viewer.setInput(userManager.getUserDatabaseObjects());
 			}
 		};
 
@@ -332,7 +336,7 @@ public class UserManager extends ViewPart
 					{
 						try
 						{
-							session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
+							userManager.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
 						}
 						catch(Exception e)
 						{
@@ -423,13 +427,13 @@ public class UserManager extends ViewPart
 
 					try
 					{
-						session.unlockUserDatabase();
+						userManager.unlockUserDatabase();
 						status = Status.OK_STATUS;
 					}
 					catch(Exception e)
 					{
 						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+								(e instanceof NetXMSClientException) ? ((NetXMSClientException) e).getErrorCode() : 0,
 								"Cannot unlock user database: " + e.getMessage(), null);
 					}
 					return status;
@@ -457,13 +461,13 @@ public class UserManager extends ViewPart
 					try
 					{
 						editNewUser = dlg.isEditAfterCreate();
-						session.createUser(dlg.getLoginName());
+						userManager.createUser(dlg.getLoginName());
 						status = Status.OK_STATUS;
 					}
 					catch(Exception e)
 					{
 						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+								(e instanceof NetXMSClientException) ? ((NetXMSClientException) e).getErrorCode() : 0,
 								"Cannot create user: " + e.getMessage(), null);
 					}
 					return status;
@@ -475,7 +479,7 @@ public class UserManager extends ViewPart
 				@Override
 				public boolean belongsTo(Object family)
 				{
-					return family == UserManager.JOB_FAMILY;
+					return family == UserManagementView.JOB_FAMILY;
 				}
 			};
 			IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
@@ -502,13 +506,13 @@ public class UserManager extends ViewPart
 					try
 					{
 						editNewUser = dlg.isEditAfterCreate();
-						session.createUserGroup(dlg.getLoginName());
+						userManager.createUserGroup(dlg.getLoginName());
 						status = Status.OK_STATUS;
 					}
 					catch(Exception e)
 					{
 						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+								(e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
 								"Cannot create group: " + e.getMessage(), null);
 					}
 					return status;
@@ -520,7 +524,7 @@ public class UserManager extends ViewPart
 				@Override
 				public boolean belongsTo(Object family)
 				{
-					return family == UserManager.JOB_FAMILY;
+					return family == UserManagementView.JOB_FAMILY;
 				}
 			};
 			IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
@@ -559,7 +563,7 @@ public class UserManager extends ViewPart
 						Object object = it.next();
 						if (object instanceof AbstractUserObject)
 						{
-							session.deleteUserDBObject(((AbstractUserObject)object).getId());
+							userManager.deleteUserDBObject(((AbstractUserObject)object).getId());
 						}
 						else
 						{
@@ -571,7 +575,7 @@ public class UserManager extends ViewPart
 				catch(Exception e)
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-							(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+							(e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
 							"Cannot delete user database object: " + e.getMessage(), null);
 				}
 				return status;
@@ -583,7 +587,7 @@ public class UserManager extends ViewPart
 			@Override
 			public boolean belongsTo(Object family)
 			{
-				return family == UserManager.JOB_FAMILY;
+				return family == UserManagementView.JOB_FAMILY;
 			}
 		};
 		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(

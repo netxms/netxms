@@ -22,10 +22,10 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.swtchart.Chart;
 
 public abstract class LastValuesChart extends ViewPart
@@ -184,7 +184,7 @@ public abstract class LastValuesChart extends ViewPart
 			}
 		};
 
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 
 		// Extract DCI ids from view id
 		// (first field will be unique view id, so we skip it)

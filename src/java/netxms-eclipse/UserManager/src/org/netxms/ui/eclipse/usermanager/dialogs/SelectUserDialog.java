@@ -37,22 +37,23 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.api.client.Session;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.shared.IUIConstants;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.api.client.users.UserManager;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
+ * User selection dialog
  *
  */
 public class SelectUserDialog extends Dialog
 {
 	private TableViewer userList;
-	private NXCSession session;
+	private Session session;
 	private boolean showGroups;
 	private AbstractUserObject[] selection;
 	
@@ -81,12 +82,12 @@ public class SelectUserDialog extends Dialog
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
-		session  = NXMCSharedData.getInstance().getSession();
+		session  = ConsoleSharedData.getSession();
 		
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		GridLayout layout = new GridLayout();
-      layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-      layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
 		new Label(dialogArea, SWT.NONE).setText("Available users");
@@ -112,7 +113,7 @@ public class SelectUserDialog extends Dialog
 				return showGroups || (element instanceof User);
 			}
       });
-      userList.setInput(session.getUserDatabaseObjects());
+      userList.setInput(((UserManager)session).getUserDatabaseObjects());
       
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

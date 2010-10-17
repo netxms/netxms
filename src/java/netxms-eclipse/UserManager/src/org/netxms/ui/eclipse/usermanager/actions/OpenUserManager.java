@@ -24,7 +24,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.usermanager.views.UserManager;
+import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
 
 public class OpenUserManager implements IWorkbenchWindowActionDelegate
 {
@@ -59,7 +59,7 @@ public class OpenUserManager implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(UserManager.ID);
+				window.getActivePage().showView(UserManagementView.ID);
 			} 
 			catch (PartInitException e) 
 			{

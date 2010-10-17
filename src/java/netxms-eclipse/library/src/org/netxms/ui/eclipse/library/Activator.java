@@ -20,9 +20,7 @@ package org.netxms.ui.eclipse.library;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.ui.eclipse.shared.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.shared.SharedIcons;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -51,8 +49,6 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
-		StatusDisplayInfo.init();
-		DataCollectionDisplayInfo.init();
 		SharedIcons.init();
 	}
 

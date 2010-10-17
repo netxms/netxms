@@ -28,7 +28,7 @@ import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.ui.IStartup;
 import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.MibTree;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Early startup class
@@ -47,7 +47,7 @@ public class Startup implements IStartup
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				while(NXMCSharedData.getInstance().getSession() == null)
+				while(ConsoleSharedData.getInstance().getSession() == null)
 				{
 					try
 					{
@@ -59,7 +59,7 @@ public class Startup implements IStartup
 				}
 				try
 				{
-					NXCSession session = NXMCSharedData.getInstance().getSession();
+					NXCSession session = ConsoleSharedData.getInstance().getSession();
 					Location loc = Platform.getInstanceLocation();
 					if (loc != null)
 					{

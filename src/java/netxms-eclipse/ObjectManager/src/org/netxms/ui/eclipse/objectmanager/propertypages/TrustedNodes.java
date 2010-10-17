@@ -47,9 +47,9 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.TrustedNodesComparator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author Victor
@@ -198,7 +198,7 @@ public class TrustedNodes extends PropertyPage
 						for(long id : idList)
 							nodes[i++] = id;
 						md.setTrustedNodes(nodes);
-						NXMCSharedData.getInstance().getSession().modifyObject(md);
+						ConsoleSharedData.getInstance().getSession().modifyObject(md);
 					}
 					isModified = false;
 					status = Status.OK_STATUS;

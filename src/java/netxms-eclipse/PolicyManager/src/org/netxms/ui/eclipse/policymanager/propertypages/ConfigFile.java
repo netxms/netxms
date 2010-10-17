@@ -20,7 +20,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.ui.eclipse.policymanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -108,7 +108,7 @@ public class ConfigFile extends PropertyPage
 						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 						md.setConfigFileName(newName);
 						md.setConfigFileContent(newContent);
-						NXMCSharedData.getInstance().getSession().modifyObject(md);
+						ConsoleSharedData.getInstance().getSession().modifyObject(md);
 					}
 					initialName = newName;
 					initialContent = newContent;

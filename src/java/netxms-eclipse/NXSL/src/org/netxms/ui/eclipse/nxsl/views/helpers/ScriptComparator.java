@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.ui.eclipse.nxsl.views.ScriptLibrary;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Comparator for script list

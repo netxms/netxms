@@ -34,8 +34,8 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author Victor
@@ -52,7 +52,7 @@ public class LogLabelProvider implements ITableLabelProvider
 	{
 		Collection<LogColumn> c = logHandle.getColumns();
 		columns = c.toArray(new LogColumn[c.size()]);
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		
 		statusImages = new Image[9];
 		for(int i = 0; i < 9; i++)

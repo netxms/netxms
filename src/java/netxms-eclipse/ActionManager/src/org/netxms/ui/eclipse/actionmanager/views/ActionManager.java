@@ -49,8 +49,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionListener;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
@@ -58,17 +58,17 @@ import org.netxms.ui.eclipse.actionmanager.Activator;
 import org.netxms.ui.eclipse.actionmanager.dialogs.EditActionDlg;
 import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionComparator;
 import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionLabelProvider;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Action configuration view
  *
  */
-public class ActionManager extends ViewPart implements ISessionListener
+public class ActionManager extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.actionmanager.views.ActionManager";
 	
@@ -94,7 +94,7 @@ public class ActionManager extends ViewPart implements ISessionListener
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		parent.setLayout(new FillLayout());
 		
@@ -426,10 +426,10 @@ public class ActionManager extends ViewPart implements ISessionListener
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.api.client.ISessionListener#notificationHandler(org.netxms.api.client.ISessionNotification)
+	 * @see org.netxms.api.client.ISessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
 	 */
 	@Override
-	public void notificationHandler(ISessionNotification n)
+	public void notificationHandler(SessionNotification n)
 	{
 		switch(n.getCode())
 		{

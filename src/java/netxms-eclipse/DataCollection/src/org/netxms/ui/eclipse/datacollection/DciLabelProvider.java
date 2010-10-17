@@ -27,7 +27,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for user manager
@@ -48,7 +48,7 @@ public class DciLabelProvider implements ITableLabelProvider
 	 */
 	public DciLabelProvider()
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		statusImages = new Image[3];
 		statusImages[DataCollectionItem.ACTIVE] = Activator.getImageDescriptor("icons/active.gif").createImage();

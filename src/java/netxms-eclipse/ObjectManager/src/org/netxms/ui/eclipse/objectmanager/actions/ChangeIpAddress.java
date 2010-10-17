@@ -18,7 +18,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.dialogs.EnterIpAddressDialog;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ChangeIpAddress implements IObjectActionDelegate
 {
@@ -43,7 +43,7 @@ public class ChangeIpAddress implements IObjectActionDelegate
 			protected IStatus run(IProgressMonitor monitor)
 			{
 				IStatus status;
-				final NXCSession session = NXMCSharedData.getInstance().getSession();
+				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				try
 				{
 					session.changeNodeIpAddress(node.getObjectId(), dlg.getIpAddress());

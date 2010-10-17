@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.datacollection.views;
 
@@ -43,15 +58,15 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Template;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.DciComparator;
 import org.netxms.ui.eclipse.datacollection.DciLabelProvider;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
+ * Data collection configuration view
  * 
  */
 public class DataCollectionEditor extends ViewPart
@@ -93,7 +108,7 @@ public class DataCollectionEditor extends ViewPart
 	{
 		super.init(site);
 		
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		GenericObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		object = ((obj != null) && ((obj instanceof Node) || (obj instanceof Template))) ? obj : null;
 		setPartName("Data Collection Configuration - " + ((object != null) ? object.getObjectName() : "<error>"));

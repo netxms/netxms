@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
@@ -33,18 +48,19 @@ import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectmanager.AccessListComparator;
 import org.netxms.ui.eclipse.objectmanager.AccessListLabelProvider;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
+ * Object's "access control" property page
  *
  */
 public class AccessControl extends PropertyPage
@@ -290,7 +306,7 @@ public class AccessControl extends PropertyPage
 					NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 					md.setACL(acl.values().toArray(new AccessListElement[acl.size()]));
 					md.setInheritAccessRights(inheritAccessRights);
-					NXMCSharedData.getInstance().getSession().modifyObject(md);
+					((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)

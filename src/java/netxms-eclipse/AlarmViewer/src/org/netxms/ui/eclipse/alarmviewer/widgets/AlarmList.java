@@ -37,7 +37,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -47,8 +47,8 @@ import org.netxms.ui.eclipse.alarmviewer.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author victor
@@ -77,7 +77,7 @@ public class AlarmList extends Composite
 	public AlarmList(ViewPart viewPart, Composite parent, int style)
 	{
 		super(parent, style);
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
 		
 		// Setup table columns
@@ -131,7 +131,7 @@ public class AlarmList extends Composite
 		// Add client library listener
 		clientListener = new NXCListener() {
 			@Override
-			public void notificationHandler(ISessionNotification n)
+			public void notificationHandler(SessionNotification n)
 			{
 				switch(n.getCode())
 				{

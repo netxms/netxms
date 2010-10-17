@@ -21,7 +21,7 @@ import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author Victor
@@ -58,7 +58,7 @@ public class CreatePolicyGroup implements IObjectActionDelegate
 					try
 					{
 						NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_POLICYGROUP, dlg.getObjectName(), currentObject.getObjectId());
-						NXMCSharedData.getInstance().getSession().createObject(cd);
+						ConsoleSharedData.getInstance().getSession().createObject(cd);
 						status = Status.OK_STATUS;
 					}
 					catch(Exception e)

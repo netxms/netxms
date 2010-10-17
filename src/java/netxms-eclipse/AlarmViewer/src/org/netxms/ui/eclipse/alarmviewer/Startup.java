@@ -23,7 +23,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.IStartup;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Early startup class
@@ -42,7 +42,7 @@ public class Startup implements IStartup
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				while(NXMCSharedData.getInstance().getSession() == null)
+				while(ConsoleSharedData.getSession() == null)
 				{
 					try
 					{

@@ -12,7 +12,7 @@
             name="User Manager"
             icon="icons/user_manager.png"
             category="org.netxms.ui.eclipse.config"
-            class="org.netxms.ui.eclipse.usermanager.views.UserManager"
+            class="org.netxms.ui.eclipse.usermanager.views.UserManagementView"
             id="org.netxms.ui.eclipse.usermanager.view.user_manager">
       </view>
    </extension>
@@ -80,7 +80,7 @@
 	       class="org.netxms.ui.eclipse.usermanager.propertypages.General">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCUserDBObject">
+                  value="org.netxms.api.client.users.AbstractUserObject">
              </instanceof>
           </enabledWhen>
         </page>
@@ -90,7 +90,7 @@
 	       class="org.netxms.ui.eclipse.usermanager.propertypages.Authentication">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.client.NXCUser">
+                  value="org.netxms.api.client.users.User">
              </instanceof>
           </enabledWhen>
         </page>
@@ -100,7 +100,7 @@
               name="Members">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.client.NXCUserGroup">
+                    value="org.netxms.api.client.users.UserGroup">
               </instanceof>
            </enabledWhen>
         </page>
@@ -110,7 +110,7 @@
      point="org.eclipse.core.runtime.adapters">
         <factory 
            class="org.netxms.ui.eclipse.usermanager.UserAdapterFactory" 
-           adaptableType="org.netxms.client.NXCUserDBObject">
+           adaptableType="org.netxms.api.client.users.AbstractUserObject">
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
         </factory>
         <factory 

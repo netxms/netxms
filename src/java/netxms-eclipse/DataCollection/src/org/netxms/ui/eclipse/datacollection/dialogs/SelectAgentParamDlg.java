@@ -26,7 +26,7 @@ import org.netxms.client.AgentParameter;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author victor
@@ -46,7 +46,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	 */
 	void fillParameterList()
 	{
-		final NXCSession session = NXMCSharedData.getInstance().getSession();
+		final NXCSession session = ConsoleSharedData.getInstance().getSession();
 		
 		ConsoleJob job = new ConsoleJob("Get list of supported parameters for " + object.getObjectName(),
 				                          null, Activator.PLUGIN_ID, null) {

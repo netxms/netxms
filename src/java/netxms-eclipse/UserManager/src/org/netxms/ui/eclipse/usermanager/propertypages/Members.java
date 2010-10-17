@@ -24,27 +24,27 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.UserGroup;
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.api.client.users.UserManager;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 public class Members extends PropertyPage
 {
 	private SortableTableViewer userList;
-	private NXCSession session;
+	private UserManager userManager;
 	private UserGroup object;
 	private HashMap<Long, AbstractUserObject> members = new HashMap<Long, AbstractUserObject>(0);
 
 	public Members()
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		userManager = (UserManager)ConsoleSharedData.getSession();
 	}
 
 	@Override
@@ -141,7 +141,7 @@ public class Members extends PropertyPage
       // Initial data
 		for(long userId : object.getMembers())
 		{
-			final AbstractUserObject user = session.findUserDBObjectById(userId);
+			final AbstractUserObject user = userManager.findUserDBObjectById(userId);
 			if (user != null)
 			{
 				members.put(user.getId(), user);
@@ -176,13 +176,13 @@ public class Members extends PropertyPage
 				
 				try
 				{
-					session.modifyUserDBObject(object, NXCSession.USER_MODIFY_MEMBERS);
+					userManager.modifyUserDBObject(object, UserManager.USER_MODIFY_MEMBERS);
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+					                    (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
 					                    "Cannot update user account: " + e.getMessage(), null);
 				}
 

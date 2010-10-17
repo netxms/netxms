@@ -56,15 +56,15 @@ import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.EventTemplateComparator;
 import org.netxms.ui.eclipse.eventmanager.EventTemplateLabelProvider;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventTemplateDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Event configuration view
@@ -99,7 +99,7 @@ public class EventConfigurator extends ViewPart implements ISessionListener
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		
 		final String[] names = { "Code", "Name", "Severity", "Flags", "Message", "Description" };
 		final int[] widths = { 70, 200, 90, 50, 400, 400 };

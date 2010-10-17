@@ -29,12 +29,13 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.Session;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
+import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.usermanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -50,7 +51,7 @@ public class General extends PropertyPage
 	private String initialFullName;
 	private String initialDescription;
 	private AbstractUserObject object;
-	private NXCSession session;
+	private Session session;
 	
 	/**
 	 * Default constructor
@@ -58,7 +59,7 @@ public class General extends PropertyPage
 	public General()
 	{
 		super();
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getSession();
 	}
 
 	/* (non-Javadoc)
@@ -104,7 +105,6 @@ public class General extends PropertyPage
 		return dialogArea;
 	}
 	
-	
 	/**
 	 * Apply changes
 	 * 
@@ -136,22 +136,22 @@ public class General extends PropertyPage
 					initialFullName = newFullName;
 					initialDescription = newDescription;
 					
-					int fields = NXCSession.USER_MODIFY_LOGIN_NAME | NXCSession.USER_MODIFY_DESCRIPTION;
+					int fields = UserManager.USER_MODIFY_LOGIN_NAME | UserManager.USER_MODIFY_DESCRIPTION;
 					object.setName(newName);
 					object.setDescription(newDescription);
 					if (object instanceof User)
 					{
 						((User)object).setFullName(newFullName);
-						fields |= NXCSession.USER_MODIFY_FULL_NAME;
+						fields |= UserManager.USER_MODIFY_FULL_NAME;
 					}
-					session.modifyUserDBObject(object, fields);
+					((UserManager)session).modifyUserDBObject(object, fields);
 					
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+					                    (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
 					                    "Cannot change object name: " + e.getMessage(), e);
 				}
 
@@ -172,7 +172,6 @@ public class General extends PropertyPage
 		}.schedule();
 	}
 
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
@@ -182,7 +181,6 @@ public class General extends PropertyPage
 		applyChanges(false);
 		return true;
 	}
-
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()

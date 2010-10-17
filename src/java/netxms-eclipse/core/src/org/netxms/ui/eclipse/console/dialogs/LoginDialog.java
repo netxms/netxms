@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.console.dialogs;
 
@@ -29,10 +44,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.shared.IUIConstants;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
+ * Login dialog
  *
  */
 public class LoginDialog extends Dialog
@@ -79,8 +94,8 @@ public class LoginDialog extends Dialog
       
       RowLayout rowLayout = new RowLayout();
       rowLayout.type = SWT.VERTICAL;
-      rowLayout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-      rowLayout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+      rowLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      rowLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       rowLayout.fill = true;
       dialogArea.setLayout(rowLayout);
       
@@ -99,15 +114,15 @@ public class LoginDialog extends Dialog
       
       Composite fields = new Composite(dialogArea, SWT.NONE);
       FormLayout formLayout = new FormLayout();
-      formLayout.spacing = IUIConstants.DIALOG_SPACING;
+      formLayout.spacing = WidgetHelper.DIALOG_SPACING;
       fields.setLayout(formLayout);
       
       // Connection
       Group groupConn = new Group(fields, SWT.SHADOW_ETCHED_IN);
       groupConn.setText(Messages.getString("LoginDialog.connection")); //$NON-NLS-1$
       GridLayout gridLayout = new GridLayout(2, false);
-      gridLayout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-      gridLayout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+      gridLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      gridLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       groupConn.setLayout(gridLayout);
 
       label = new Label(groupConn, SWT.NONE);

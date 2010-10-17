@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * Adapter factory for NXCUserDBObject and derived classes

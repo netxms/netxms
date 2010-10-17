@@ -7,8 +7,8 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.eventmanager.views.EventConfigurator;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 
 /**
  * @author Victor

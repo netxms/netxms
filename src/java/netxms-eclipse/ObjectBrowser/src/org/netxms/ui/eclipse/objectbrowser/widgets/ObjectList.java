@@ -46,7 +46,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Object list widget
@@ -75,7 +75,7 @@ public class ObjectList extends Composite
 	{
 		super(parent, style);
 
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
@@ -130,7 +130,7 @@ public class ObjectList extends Composite
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							objectList.setInput(NXMCSharedData.getInstance().getSession().getAllObjects());
+							objectList.setInput(ConsoleSharedData.getInstance().getSession().getAllObjects());
 							objectList.refresh();
 							return Status.OK_STATUS;
 						}

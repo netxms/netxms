@@ -27,7 +27,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -308,7 +308,7 @@ public class Communication extends PropertyPage
 				
 				try
 				{
-					NXMCSharedData.getInstance().getSession().modifyObject(md);
+					ConsoleSharedData.getInstance().getSession().modifyObject(md);
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)

@@ -36,7 +36,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.IActionConstants;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 
 /**
@@ -143,7 +143,7 @@ public class ObjectBrowser extends ViewPart
 		
 		// Read custom root objects
 		long[] rootObjects = null;
-		Object value = NXMCSharedData.getInstance().getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
+		Object value = ConsoleSharedData.getInstance().getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
 		if ((value != null) && (value instanceof long[]))
 		{
 			rootObjects = (long[])value;

@@ -17,7 +17,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public abstract class MultipleObjectAction implements IObjectActionDelegate
 {
@@ -86,7 +86,7 @@ public abstract class MultipleObjectAction implements IObjectActionDelegate
 				protected IStatus run(IProgressMonitor monitor)
 				{
 					IStatus status;
-					final NXCSession session = NXMCSharedData.getInstance().getSession();
+					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					try
 					{
 						runObjectAction(session, object);

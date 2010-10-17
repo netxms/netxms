@@ -20,11 +20,11 @@ import org.eclipse.swt.SWT;
 import org.netxms.api.client.servermanager.ServerVariable;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  */
@@ -226,7 +226,7 @@ public class ServerConfigurationEditor extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 
 		Job job = new RefreshJob();
 		IWorkbenchSiteProgressService siteService =
@@ -347,7 +347,7 @@ public class ServerConfigurationEditor extends ViewPart
 					
 					try
 					{
-						NXMCSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+						ConsoleSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
 						actionRefresh.run();
 						status = Status.OK_STATUS;
 					}
@@ -401,7 +401,7 @@ public class ServerConfigurationEditor extends ViewPart
 					
 					try
 					{
-						NXMCSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+						ConsoleSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
 						refreshVariablesList();
 						status = Status.OK_STATUS;
 					}

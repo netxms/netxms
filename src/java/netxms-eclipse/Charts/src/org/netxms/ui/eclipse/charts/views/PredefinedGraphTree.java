@@ -51,12 +51,12 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.charts.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Navigation view for predefined graphs
@@ -77,7 +77,7 @@ public class PredefinedGraphTree extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		parent.setLayout(new FillLayout());
 		

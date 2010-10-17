@@ -7,8 +7,8 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.AgentParameter;
+import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg;
-import org.netxms.ui.eclipse.shared.DataCollectionDisplayInfo;
 
 /**
  * Label provider for AgentParameter class

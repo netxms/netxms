@@ -34,7 +34,7 @@ import org.netxms.client.NXCException;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Action for editing server's variable
@@ -68,7 +68,7 @@ public class EditVariable implements IObjectActionDelegate
 						
 						try
 						{
-							NXMCSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+							ConsoleSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
 							if (wbPart instanceof ServerConfigurationEditor)
 								((ServerConfigurationEditor)wbPart).refreshVariablesList();
 							status = Status.OK_STATUS;

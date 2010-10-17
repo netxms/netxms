@@ -33,10 +33,11 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
@@ -76,7 +77,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		
 		window.getShell().setMaximized(true);
 		
-		NXCSession session = NXMCSharedData.getInstance().getSession();
+		Session session = ConsoleSharedData.getSession();
 		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON"))
@@ -124,7 +125,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		if (success)
 		{
 			// Suggest user to change password if it is expired
-			final NXCSession session = NXMCSharedData.getInstance().getSession();
+			final Session session = ConsoleSharedData.getSession();
 			if (session.isPasswordExpired())
 			{
 				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(shell);
@@ -137,7 +138,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 						{
 							try
 							{
-								NXCSession session = NXMCSharedData.getInstance().getSession();
+								NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
 							}
 							catch(Exception e)

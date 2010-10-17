@@ -25,7 +25,7 @@ import org.eclipse.draw2d.text.FlowPage;
 import org.eclipse.draw2d.text.TextFlow;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * @author victor

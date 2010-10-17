@@ -16,18 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.tools;
+package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.ui.eclipse.widgets.helpers.TableSortingListener;
 
 /**
  * Implementation of TableViewer with column sorting support
- * 
- * @author victor
  *
  */
 public class SortableTableViewer extends TableViewer

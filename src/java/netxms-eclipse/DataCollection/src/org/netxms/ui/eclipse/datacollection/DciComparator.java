@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author Victor

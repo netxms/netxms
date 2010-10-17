@@ -9,7 +9,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.serviceview.widgets.ServiceTree;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Service tree view
@@ -28,7 +28,7 @@ public class ServiceTreeView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		
 		parent.setLayout(new FillLayout());
 		serviceTree = new ServiceTree(parent, SWT.NONE, session.findObjectById(2));

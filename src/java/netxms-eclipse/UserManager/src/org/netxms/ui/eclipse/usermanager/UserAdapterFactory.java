@@ -24,9 +24,9 @@ import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
+import org.netxms.api.client.users.UserManager;
 import org.netxms.client.AccessListElement;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Adapter factory for NXCUserDBObject and derived classes
@@ -99,7 +99,7 @@ public class UserAdapterFactory implements IAdapterFactory
 						long[] members = ((UserGroup)o).getMembers();
 						AbstractUserObject[] childrens = new User[members.length];
 						for(int i = 0; i < members.length; i++)
-							childrens[i] = NXMCSharedData.getInstance().getSession().findUserDBObjectById(members[i]);
+							childrens[i] = ((UserManager)ConsoleSharedData.getSession()).findUserDBObjectById(members[i]);
 						return childrens;
 					}
 
@@ -144,8 +144,8 @@ public class UserAdapterFactory implements IAdapterFactory
 					public String getLabel(Object object)
 					{
 						long userId = ((AccessListElement)object).getUserId();
-						NXCSession session = NXMCSharedData.getInstance().getSession();
-						AbstractUserObject dbo = session.findUserDBObjectById(userId);
+						UserManager umgr = (UserManager)ConsoleSharedData.getSession();
+						AbstractUserObject dbo = umgr.findUserDBObjectById(userId);
 						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}");
 					}
 

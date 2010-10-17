@@ -52,7 +52,7 @@ import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
 import org.netxms.ui.eclipse.shared.IUIConstants;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -108,7 +108,7 @@ public class ChildObjectListDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
-		GenericObject object = NXMCSharedData.getInstance().getSession().findObjectById(parentObject);
+		GenericObject object = ConsoleSharedData.getInstance().getSession().findObjectById(parentObject);
 		GenericObject[] sourceObjects = object.getChildsAsArray();
 		
 		GridLayout layout = new GridLayout();

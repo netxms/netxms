@@ -18,7 +18,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.policymanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -85,7 +85,7 @@ public class Policy extends PropertyPage
 					{
 						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 						md.setDescription(newDescription);
-						NXMCSharedData.getInstance().getSession().modifyObject(md);
+						ConsoleSharedData.getInstance().getSession().modifyObject(md);
 					}
 					initialDescription = newDescription;
 					status = Status.OK_STATUS;

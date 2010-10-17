@@ -32,7 +32,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Action: deploy policy on agent
@@ -60,7 +60,7 @@ public class DeployPolicy implements IObjectActionDelegate
 	{
 		// Read custom root objects
 		long[] rootObjects = null;
-		Object value = NXMCSharedData.getInstance().getProperty("PolicyManager.rootObjects");
+		Object value = ConsoleSharedData.getInstance().getProperty("PolicyManager.rootObjects");
 		if ((value != null) && (value instanceof long[]))
 		{
 			rootObjects = (long[])value;
@@ -73,7 +73,7 @@ public class DeployPolicy implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					NXCSession session = NXMCSharedData.getInstance().getSession();
+					NXCSession session = ConsoleSharedData.getInstance().getSession();
 					GenericObject[] nodeList = dlg.getSelectedObjects(GenericObject.OBJECT_NODE);
 					for(int i = 0; i < nodeList.length; i++)
 						session.deployAgentPolicy(currentObject.getObjectId(), nodeList[i].getObjectId());

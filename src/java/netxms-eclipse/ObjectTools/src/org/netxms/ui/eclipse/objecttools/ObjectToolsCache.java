@@ -31,7 +31,7 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Cache for object tools
@@ -48,7 +48,7 @@ public class ObjectToolsCache
 	 */
 	public static void init()
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		
 		reload();
 		

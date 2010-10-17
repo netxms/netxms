@@ -26,7 +26,7 @@ import java.util.Set;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Filter for object tree
@@ -109,7 +109,7 @@ public class ObjectTreeFilter extends ViewerFilter
 		{
 			if (doFullSearch)
 			{
-				GenericObject[] fullList = NXMCSharedData.getInstance().getSession().getAllObjects();
+				GenericObject[] fullList = ConsoleSharedData.getInstance().getSession().getAllObjects();
 				objectList = new HashMap<Long, GenericObject>();
 				for(int i = 0; i < fullList.length; i++)
 					if ((fullList[i].getObjectName().toLowerCase().startsWith(filterString)) &&

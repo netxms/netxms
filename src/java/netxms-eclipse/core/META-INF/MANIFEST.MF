@@ -12,4 +12,15 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.console;bundle-version="3.4.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: .
+Bundle-ClassPath: .,
+ jar/netxms-client-1.1.0.jar
+Export-Package: org.netxms.client,
+ org.netxms.client.constants,
+ org.netxms.client.datacollection,
+ org.netxms.client.events,
+ org.netxms.client.log,
+ org.netxms.client.maps,
+ org.netxms.client.objects,
+ org.netxms.client.objecttools,
+ org.netxms.client.snmp,
+ org.netxms.ui.eclipse.console.resources

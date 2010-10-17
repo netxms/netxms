@@ -35,7 +35,7 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class BindObject implements IObjectActionDelegate
 {
@@ -61,7 +61,7 @@ public class BindObject implements IObjectActionDelegate
 		dlg.open();
 		if (dlg.getReturnCode() == Window.OK)
 		{
-			final NXCSession session = NXMCSharedData.getInstance().getSession();
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob("Bind object", viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()

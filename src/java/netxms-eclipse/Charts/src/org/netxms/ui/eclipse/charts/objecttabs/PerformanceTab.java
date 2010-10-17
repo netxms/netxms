@@ -29,7 +29,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Performance tab
@@ -58,7 +58,7 @@ public class PerformanceTab extends ObjectTab
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				final NXCSession session = NXMCSharedData.getInstance().getSession();
+				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				try
 				{
 					final PerfTabDci[] items = session.getPerfTabItems(object.getObjectId());

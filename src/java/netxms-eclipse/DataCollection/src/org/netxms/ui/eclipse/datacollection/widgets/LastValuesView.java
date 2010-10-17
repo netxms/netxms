@@ -42,8 +42,8 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author victor
@@ -67,7 +67,7 @@ public class LastValuesView extends Composite
 	public LastValuesView(ViewPart viewPart, Composite parent, int style, Node _node)
 	{
 		super(parent, style);
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		this.viewPart = viewPart;		
 		this.node = _node;
 		

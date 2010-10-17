@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeElement;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeLabelProvider;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeModel;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.SparseTree;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Service tree widget
@@ -59,7 +59,7 @@ public class ServiceTree extends Composite implements IServiceFigureListener
 		// Initiate loading of object manager plugin if it was not loaded before
 		try
 		{
-			Platform.getAdapterManager().loadAdapter(NXMCSharedData.getInstance().getSession().getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(ConsoleSharedData.getInstance().getSession().getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
 		}
 		catch(Exception e)
 		{

@@ -49,14 +49,14 @@ import org.netxms.client.Table;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.log.LogFilter;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.dialogs.QueryBuilder;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
 import org.netxms.ui.eclipse.logviewer.widgets.FilterBuilder;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.RefreshAction;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author Victor
@@ -97,7 +97,7 @@ public class LogViewer extends ViewPart
 	{
 		super.init(site);
 		
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		logName = site.getSecondaryId();
 		setPartName(Messages.getString("LogViewer_" + logName));
 		final ImageDescriptor img = Activator.getImageDescriptor("icons/" + logName + ".png");

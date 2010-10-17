@@ -30,7 +30,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * Figure representing NetXMS object

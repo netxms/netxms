@@ -53,7 +53,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Dynamic object tools menu creator
@@ -241,7 +241,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
-						final NXCSession session = NXMCSharedData.getInstance().getSession();
+						final NXCSession session = ConsoleSharedData.getInstance().getSession();
 						session.executeAction(node.getObjectId(), tool.getData());
 						new UIJob("Notify user about action execution") {
 							@Override

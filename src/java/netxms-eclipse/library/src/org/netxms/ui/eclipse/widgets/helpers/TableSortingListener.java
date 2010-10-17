@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.tools;
+package org.netxms.ui.eclipse.widgets.helpers;
 
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;

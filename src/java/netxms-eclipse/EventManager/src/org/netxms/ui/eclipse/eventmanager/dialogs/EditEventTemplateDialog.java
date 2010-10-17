@@ -29,8 +29,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.IUIConstants;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 

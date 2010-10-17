@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2009 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.console.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -14,9 +32,12 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
+/**
+ * "Password expired" dialog
+ *
+ */
 public class PasswordExpiredDialog extends Dialog
 {
 	private Text textPassword1;
@@ -35,8 +56,8 @@ public class PasswordExpiredDialog extends Dialog
 
 		final GridLayout layout = new GridLayout();
 
-		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		

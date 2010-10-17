@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * @author Victor
@@ -38,13 +39,15 @@ import org.eclipse.swt.widgets.Text;
  */
 public class WidgetHelper
 {
-	public static int INNER_SPACING = 2;
-	public static int OUTER_SPACING = 4;
-	public static int BUTTON_WIDTH_HINT = 90;
-	public static int WIDE_BUTTON_WIDTH_HINT = 120;
-	public static String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data";
-	
-	
+	public static final int INNER_SPACING = 2;
+	public static final int OUTER_SPACING = 4;
+	public static final int DIALOG_WIDTH_MARGIN = 10;
+	public static final int DIALOG_HEIGHT_MARGIN = 10;
+	public static final int DIALOG_SPACING = 4;
+	public static final int BUTTON_WIDTH_HINT = 90;
+	public static final int WIDE_BUTTON_WIDTH_HINT = 120;
+	public static final String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data";
+		
 	/**
     * Create pair of label and input field, with label above
 	 * 

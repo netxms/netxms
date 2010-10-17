@@ -32,7 +32,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -45,10 +45,10 @@ import org.netxms.ui.eclipse.epp.widgets.PolicyEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.EPPCellFactory;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author Victor
+ * Event processing policy editor
  *
  */
 public class EventProcessingPolicyEditor extends ViewPart
@@ -69,7 +69,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 
 		// Initiate loading of event manager and object manager plugins if it was not loaded before
 		try
@@ -83,7 +83,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 		
 		sessionListener = new NXCListener() {
 			@Override
-			public void notificationHandler(ISessionNotification n)
+			public void notificationHandler(SessionNotification n)
 			{
 				processSessionNotification(n);
 			}
@@ -143,7 +143,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 	 * 
 	 * @param n notification
 	 */
-	private void processSessionNotification(ISessionNotification n)
+	private void processSessionNotification(SessionNotification n)
 	{
 		switch(n.getCode())
 		{

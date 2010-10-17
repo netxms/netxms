@@ -14,7 +14,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.charts.views.LastValuesBarChart;
 
 public abstract class ShowLastValuesGraph implements IObjectActionDelegate
 {

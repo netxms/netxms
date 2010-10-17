@@ -41,7 +41,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public abstract class NetworkMap extends ViewPart
 {
@@ -58,7 +58,7 @@ public abstract class NetworkMap extends ViewPart
 	{
 		super.init(site);
 
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		rootObject = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 	
 		buildMapPage();

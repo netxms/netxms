@@ -28,8 +28,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.networkmaps.Activator;
-import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 
 /**
  * Label provider for map

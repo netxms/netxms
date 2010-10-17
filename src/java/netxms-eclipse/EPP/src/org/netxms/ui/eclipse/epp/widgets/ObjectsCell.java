@@ -27,7 +27,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Cell with source objects list
@@ -42,7 +42,7 @@ public class ObjectsCell extends ListCell
 	{
 		super(rule, data);
 		eppRule = (EventProcessingPolicyRule)data;
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		
 		List<Long> objectIds = eppRule.getSources();
 		if (objectIds.size() > 0)

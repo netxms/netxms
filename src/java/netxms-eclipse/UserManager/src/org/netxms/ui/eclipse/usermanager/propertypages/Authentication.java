@@ -34,11 +34,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.Session;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.api.client.users.UserManager;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 
@@ -48,7 +49,7 @@ import org.netxms.ui.eclipse.usermanager.Activator;
  */
 public class Authentication extends PropertyPage
 {
-	private NXCSession session;
+	private Session session;
 	private User object;
 	private Button checkDisabled;
 	private Button checkChangePassword;
@@ -63,7 +64,7 @@ public class Authentication extends PropertyPage
 	public Authentication()
 	{
 		super();
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getSession();
 	}
 
 	/* (non-Javadoc)
@@ -176,13 +177,13 @@ public class Authentication extends PropertyPage
 				
 				try
 				{
-					session.modifyUserDBObject(object, NXCSession.USER_MODIFY_FLAGS | NXCSession.USER_MODIFY_AUTH_METHOD | NXCSession.USER_MODIFY_CERT_MAPPING);
+					((UserManager)session).modifyUserDBObject(object, UserManager.USER_MODIFY_FLAGS | UserManager.USER_MODIFY_AUTH_METHOD | UserManager.USER_MODIFY_CERT_MAPPING);
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+					                    (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
 					                    "Cannot update user account: " + e.getMessage(), null);
 				}
 

@@ -31,7 +31,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 
@@ -67,8 +66,8 @@ public class ChangePasswordDialog extends Dialog
 
 		final GridLayout layout = new GridLayout();
 
-		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		

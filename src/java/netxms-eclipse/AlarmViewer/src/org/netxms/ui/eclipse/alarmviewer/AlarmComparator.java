@@ -8,10 +8,11 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * @author victor
@@ -56,8 +57,8 @@ public class AlarmComparator extends ViewerComparator
 				rc = compareNumbers(((Alarm)e1).getState(), ((Alarm)e2).getState());
 				break;
 			case AlarmList.COLUMN_SOURCE:
-				GenericObject obj1 = NXMCSharedData.getInstance().getSession().findObjectById(((Alarm)e1).getSourceObjectId());
-				GenericObject obj2 = NXMCSharedData.getInstance().getSession().findObjectById(((Alarm)e2).getSourceObjectId());
+				GenericObject obj1 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)e1).getSourceObjectId());
+				GenericObject obj2 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)e2).getSourceObjectId());
 				String name1 = (obj1 != null) ? obj1.getObjectName() : "<unknown>";
 				String name2 = (obj2 != null) ? obj2.getObjectName() : "<unknown>";
 				rc = name1.compareToIgnoreCase(name2);

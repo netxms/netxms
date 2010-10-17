@@ -53,15 +53,15 @@ import org.netxms.api.client.ISessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.dialogs.TrapConfigurationDialog;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapComparator;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapLabelProvider;
-import org.netxms.ui.eclipse.tools.RefreshAction;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * SNMP trap configuration editor
@@ -92,7 +92,7 @@ public class SnmpTrapEditor extends ViewPart implements ISessionListener
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = NXMCSharedData.getInstance().getSession();
+		session = ConsoleSharedData.getInstance().getSession();
 		
 		parent.setLayout(new FillLayout());
 		

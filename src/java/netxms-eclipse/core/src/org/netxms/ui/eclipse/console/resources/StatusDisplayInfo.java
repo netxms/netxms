@@ -16,14 +16,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.shared;
+package org.netxms.ui.eclipse.console.resources;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.Severity;
-import org.netxms.ui.eclipse.library.Activator;
+import org.netxms.ui.eclipse.console.Activator;
 
 /**
  * Status display information

@@ -25,7 +25,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Adapter factory for NetXMS objects
@@ -137,7 +137,7 @@ public class ObjectAdapterFactory implements IAdapterFactory
 					@Override
 					public Object getParent(Object o)
 					{
-						NXCSession session = NXMCSharedData.getInstance().getSession();
+						NXCSession session = ConsoleSharedData.getInstance().getSession();
 						if (session != null)
 						{
 							Iterator<Long> it = ((GenericObject)o).getParents();

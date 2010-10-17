@@ -23,7 +23,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
-import org.netxms.ui.eclipse.usermanager.views.UserManager;
+import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
 
 /**
  * Label provider for user manager
@@ -48,15 +48,15 @@ public class UserLabelProvider extends WorkbenchLabelProvider implements ITableL
 	{
 		switch(columnIndex)
 		{
-			case UserManager.COLUMN_NAME:
+			case UserManagementView.COLUMN_NAME:
 				return getText(element);
-			case UserManager.COLUMN_TYPE:
+			case UserManagementView.COLUMN_TYPE:
 				return (element instanceof User) ? "User" : "Group";
-			case UserManager.COLUMN_FULLNAME:
+			case UserManagementView.COLUMN_FULLNAME:
 				return (element instanceof User) ? ((User) element).getFullName() : null;
-			case UserManager.COLUMN_DESCRIPTION:
+			case UserManagementView.COLUMN_DESCRIPTION:
 				return ((AbstractUserObject)element).getDescription();
-			case UserManager.COLUMN_GUID:
+			case UserManagementView.COLUMN_GUID:
 				return ((AbstractUserObject)element).getGuid().toString();
 		}
 		return null;

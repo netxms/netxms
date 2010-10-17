@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
@@ -89,7 +89,7 @@ public class ObjectSelector extends AbstractSelector
 		}
 		else
 		{
-			final GenericObject object = NXMCSharedData.getInstance().getSession().findObjectById(objectId);
+			final GenericObject object = ConsoleSharedData.getInstance().getSession().findObjectById(objectId);
 			setText((object != null) ? object.getObjectName() : Messages.getString("ObjectSelector.unknown")); //$NON-NLS-1$
 		}
 	}

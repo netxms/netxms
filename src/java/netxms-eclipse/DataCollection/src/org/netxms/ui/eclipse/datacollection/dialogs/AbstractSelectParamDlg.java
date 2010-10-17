@@ -36,9 +36,9 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterComparator;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterLabelProvider;
 import org.netxms.ui.eclipse.shared.IUIConstants;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
-import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 public abstract class AbstractSelectParamDlg extends Dialog implements IParameterSelectionDialog
 {
@@ -53,7 +53,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	public AbstractSelectParamDlg(Shell parentShell, long nodeId)
 	{
 		super(parentShell);
-		object = NXMCSharedData.getInstance().getSession().findObjectById(nodeId);
+		object = ConsoleSharedData.getInstance().getSession().findObjectById(nodeId);
 	}
 
 	/* (non-Javadoc)
