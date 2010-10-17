@@ -47,7 +47,7 @@ public class Startup implements IStartup
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				while(ConsoleSharedData.getInstance().getSession() == null)
+				while(ConsoleSharedData.getSession() == null)
 				{
 					try
 					{
@@ -59,7 +59,7 @@ public class Startup implements IStartup
 				}
 				try
 				{
-					NXCSession session = ConsoleSharedData.getInstance().getSession();
+					NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					Location loc = Platform.getInstanceLocation();
 					if (loc != null)
 					{
@@ -78,7 +78,7 @@ public class Startup implements IStartup
 				}
 				catch(Exception e)
 				{
-					e.printStackTrace();
+					/* TODO: add logging and/or user notification */
 				}
 				return Status.OK_STATUS;
 			}

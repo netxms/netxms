@@ -54,7 +54,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -67,11 +67,9 @@ import org.netxms.ui.eclipse.serverjobmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
-
 /**
  * Server job manager - provides view to manage server-side jobs
  */
-
 public class ServerJobManager extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.serverjobmanager.view.server_job_manager";
@@ -315,7 +313,7 @@ public class ServerJobManager extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -332,7 +330,7 @@ public class ServerJobManager extends ViewPart
 		// Create listener for notifications received from server via client library
 		clientListener = new NXCListener() {
 			@Override
-			public void notificationHandler(ISessionNotification n)
+			public void notificationHandler(SessionNotification n)
 			{
 				if (n.getCode() != NXCNotification.JOB_CHANGE)
 					return;

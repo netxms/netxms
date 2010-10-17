@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
-import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -110,8 +109,8 @@ public class MibSelectionDialog extends Dialog
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
-		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
+		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		
 		oid = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 500, "Object identifier (OID)", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -160,7 +159,7 @@ public class MibSelectionDialog extends Dialog
 		/* MIB object information: status, type, etc. */
 		Composite infoGroup = new Composite(dialogArea, SWT.NONE);
 		layout = new GridLayout();
-		layout.horizontalSpacing = IUIConstants.DIALOG_SPACING;
+		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		layout.numColumns = 3;

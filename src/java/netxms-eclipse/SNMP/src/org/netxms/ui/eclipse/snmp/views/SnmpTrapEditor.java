@@ -48,8 +48,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionListener;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.SnmpTrap;
@@ -67,7 +67,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  * SNMP trap configuration editor
  *
  */
-public class SnmpTrapEditor extends ViewPart implements ISessionListener
+public class SnmpTrapEditor extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor";
 	
@@ -92,7 +92,7 @@ public class SnmpTrapEditor extends ViewPart implements ISessionListener
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		parent.setLayout(new FillLayout());
 		
@@ -284,10 +284,10 @@ public class SnmpTrapEditor extends ViewPart implements ISessionListener
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.api.client.ISessionListener#notificationHandler(org.netxms.api.client.ISessionNotification)
+	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
 	 */
 	@Override
-	public void notificationHandler(ISessionNotification n)
+	public void notificationHandler(SessionNotification n)
 	{
 		switch(n.getCode())
 		{

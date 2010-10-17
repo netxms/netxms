@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author Victor
+ * Label provider for log viewer
  *
  */
 public class LogLabelProvider implements ITableLabelProvider
@@ -52,7 +52,7 @@ public class LogLabelProvider implements ITableLabelProvider
 	{
 		Collection<LogColumn> c = logHandle.getColumns();
 		columns = c.toArray(new LogColumn[c.size()]);
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		statusImages = new Image[9];
 		for(int i = 0; i < 9; i++)

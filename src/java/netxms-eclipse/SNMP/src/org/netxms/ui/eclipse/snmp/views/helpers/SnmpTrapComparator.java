@@ -42,7 +42,7 @@ public class SnmpTrapComparator extends ViewerComparator
 	 */
 	public SnmpTrapComparator()
 	{
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 	
 	/* (non-Javadoc)

@@ -51,7 +51,6 @@ import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpTrapParameterMapping;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
-import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.dialogs.helpers.ParamMappingLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -109,8 +108,8 @@ public class TrapConfigurationDialog extends Dialog
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
-      layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-      layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		dialogArea.setLayout(layout);
 		

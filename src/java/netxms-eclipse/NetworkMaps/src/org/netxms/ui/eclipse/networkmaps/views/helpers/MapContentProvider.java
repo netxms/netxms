@@ -39,7 +39,7 @@ public class MapContentProvider implements IGraphEntityContentProvider
 	 */
 	public MapContentProvider()
 	{
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 	
 	@Override

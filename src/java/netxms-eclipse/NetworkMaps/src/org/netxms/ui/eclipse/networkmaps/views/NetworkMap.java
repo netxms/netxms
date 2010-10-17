@@ -58,7 +58,7 @@ public abstract class NetworkMap extends ViewPart
 	{
 		super.init(site);
 
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		rootObject = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 	
 		buildMapPage();

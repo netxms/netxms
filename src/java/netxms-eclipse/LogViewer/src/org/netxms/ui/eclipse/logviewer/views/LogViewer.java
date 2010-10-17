@@ -59,7 +59,7 @@ import org.netxms.ui.eclipse.logviewer.widgets.FilterBuilder;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author Victor
+ * Universal log viewer
  *
  */
 public class LogViewer extends ViewPart
@@ -97,7 +97,7 @@ public class LogViewer extends ViewPart
 	{
 		super.init(site);
 		
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		logName = site.getSecondaryId();
 		setPartName(Messages.getString("LogViewer_" + logName));
 		final ImageDescriptor img = Activator.getImageDescriptor("icons/" + logName + ".png");

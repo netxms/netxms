@@ -60,7 +60,7 @@ public class DeployPolicy implements IObjectActionDelegate
 	{
 		// Read custom root objects
 		long[] rootObjects = null;
-		Object value = ConsoleSharedData.getInstance().getProperty("PolicyManager.rootObjects");
+		Object value = ConsoleSharedData.getProperty("PolicyManager.rootObjects");
 		if ((value != null) && (value instanceof long[]))
 		{
 			rootObjects = (long[])value;
@@ -73,7 +73,7 @@ public class DeployPolicy implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					NXCSession session = ConsoleSharedData.getInstance().getSession();
+					NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					GenericObject[] nodeList = dlg.getSelectedObjects(GenericObject.OBJECT_NODE);
 					for(int i = 0; i < nodeList.length; i++)
 						session.deployAgentPolicy(currentObject.getObjectId(), nodeList[i].getObjectId());

@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogColumn;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.shared.IUIConstants;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * @author Victor
@@ -73,9 +73,9 @@ public class AddConditionDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		GridLayout layout = new GridLayout();
-		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
-		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-		layout.verticalSpacing = IUIConstants.DIALOG_SPACING;
+		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 		
 		GridData gd;

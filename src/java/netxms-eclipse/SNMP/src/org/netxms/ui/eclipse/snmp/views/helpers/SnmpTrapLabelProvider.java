@@ -40,7 +40,7 @@ public class SnmpTrapLabelProvider implements ITableLabelProvider
 	 */
 	public SnmpTrapLabelProvider()
 	{
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 	
 	/* (non-Javadoc)
