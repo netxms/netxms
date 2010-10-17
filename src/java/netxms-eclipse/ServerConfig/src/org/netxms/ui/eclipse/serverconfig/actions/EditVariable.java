@@ -29,6 +29,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
+import org.netxms.api.client.servermanager.ServerManager;
 import org.netxms.api.client.servermanager.ServerVariable;
 import org.netxms.client.NXCException;
 import org.netxms.ui.eclipse.serverconfig.Activator;
@@ -45,12 +46,18 @@ public class EditVariable implements IObjectActionDelegate
 	private IWorkbenchPart wbPart;
 	private Object[] currentSelection;
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+	 */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
 		wbPart = targetPart;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+	 */
 	@Override
 	public void run(IAction action)
 	{
@@ -68,9 +75,9 @@ public class EditVariable implements IObjectActionDelegate
 						
 						try
 						{
-							ConsoleSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+							((ServerManager)ConsoleSharedData.getSession()).setServerVariable(dlg.getVarName(), dlg.getVarValue());
 							if (wbPart instanceof ServerConfigurationEditor)
-								((ServerConfigurationEditor)wbPart).refreshVariablesList();
+								((ServerConfigurationEditor)wbPart).refreshViewer();
 							status = Status.OK_STATUS;
 						}
 						catch(Exception e)
@@ -99,6 +106,9 @@ public class EditVariable implements IObjectActionDelegate
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+	 */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{

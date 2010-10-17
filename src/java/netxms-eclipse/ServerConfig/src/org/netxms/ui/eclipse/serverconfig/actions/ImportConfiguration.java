@@ -87,7 +87,7 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 					file.close();
 					
 					String content = new String(data, "UTF-8");
-					final NXCSession session = ConsoleSharedData.getInstance().getSession();
+					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 					session.importConfiguration(content, dlg.getFlags());
 					
 					new UIJob("Notify about configuration import completion") {

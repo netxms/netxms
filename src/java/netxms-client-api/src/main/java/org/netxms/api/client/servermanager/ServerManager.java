@@ -55,4 +55,15 @@ public interface ServerManager
 	 */
 	public abstract void setServerVariable(final String name, final String value) throws IOException, NetXMSClientException;
 
+	/**
+	 * Delete server configuration variable.
+	 * 
+	 * @param name
+	 *           variable's name
+	 * @throws IOException
+	 *            if socket I/O error occurs
+	 * @throws NetXMSClientException
+	 *            if NetXMS server returns an error or operation was timed out
+	 */
+	public abstract void deleteServerVariable(final String name) throws IOException, NetXMSClientException;
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,14 +32,18 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterComparator;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.AgentParameterLabelProvider;
-import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
+/**
+ * Abstract base class for metric selection dialogs.
+ *
+ */
 public abstract class AbstractSelectParamDlg extends Dialog implements IParameterSelectionDialog
 {
 	public static final int COLUMN_NAME = 0;
@@ -53,7 +57,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	public AbstractSelectParamDlg(Shell parentShell, long nodeId)
 	{
 		super(parentShell);
-		object = ConsoleSharedData.getInstance().getSession().findObjectById(nodeId);
+		object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
 	}
 
 	/* (non-Javadoc)
@@ -75,8 +79,8 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 	
 		GridLayout layout = new GridLayout();
-	   layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-	   layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+	   layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+	   layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 	   layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 	   dialogArea.setLayout(layout);
 	   

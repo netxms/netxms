@@ -47,11 +47,11 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
-import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -108,12 +108,12 @@ public class ChildObjectListDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
-		GenericObject object = ConsoleSharedData.getInstance().getSession().findObjectById(parentObject);
+		GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(parentObject);
 		GenericObject[] sourceObjects = object.getChildsAsArray();
 		
 		GridLayout layout = new GridLayout();
-		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
-		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
+		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		dialogArea.setLayout(layout);
 		

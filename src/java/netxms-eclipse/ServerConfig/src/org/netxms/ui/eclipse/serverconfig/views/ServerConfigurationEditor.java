@@ -1,34 +1,61 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.serverconfig.views;
 
 import java.util.HashMap;
-
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.part.*;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.jface.action.*;
-import org.eclipse.ui.*;
 import org.eclipse.swt.SWT;
 import org.netxms.api.client.servermanager.ServerVariable;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.ServerVariableComparator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.ViewLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
+ * Editor for server configuration variables
  */
-
 public class ServerConfigurationEditor extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.serverconfig.view.server_config";
@@ -42,158 +69,12 @@ public class ServerConfigurationEditor extends ViewPart
 	private RefreshAction actionRefresh;
 	
 	// Columns
-	private static final int COLUMN_NAME = 0;
-	private static final int COLUMN_VALUE = 1;
-	private static final int COLUMN_NEED_RESTART = 2;
+	public static final int COLUMN_NAME = 0;
+	public static final int COLUMN_VALUE = 1;
+	public static final int COLUMN_NEED_RESTART = 2;
 
-	/**
-	 * Label provider for server configuration variables
-	 * 
-	 * @author Victor
-	 *
-	 */
-	private class ViewLabelProvider extends LabelProvider implements ITableLabelProvider
-	{
-		/**
-		 * Returns text for given column 
-		 */
-		@Override
-		public String getColumnText(Object obj, int index)
-		{
-			switch(index)
-			{
-				case COLUMN_NAME:
-					return ((ServerVariable)obj).getName();
-				case COLUMN_VALUE:
-					return ((ServerVariable)obj).getValue();
-				case COLUMN_NEED_RESTART:
-					return ((ServerVariable)obj).isServerRestartNeeded() ? "Yes" : "No";
-			}
-			return "";
-		}
-
-		@Override
-		public Image getImage(Object obj)
-		{
-			return null;
-		}
-
-		@Override
-		public Image getColumnImage(Object element, int columnIndex)
-		{
-			return null;
-		}
-	}
-
-	/**
-	 * Comparator for server configuration variables
-	 * @author Victor
-	 *
-	 */
-	private class VarComparator extends ViewerComparator
-	{
-		/**
-		 * Compare two booleans and return -1, 0, or 1
-		 */
-		private int compareBooleans(boolean b1, boolean b2)
-		{
-			return (!b1 && b2) ? -1 : ((b1 && !b2) ? 1 : 0);
-		}
-		
-		
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-		 */
-		@Override
-		public int compare(Viewer viewer, Object e1, Object e2)
-		{
-			int result;
-			
-			switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
-			{
-				case COLUMN_NAME:
-					result = ((ServerVariable)e1).getName().compareToIgnoreCase(((ServerVariable)e2).getName());
-					break;
-				case COLUMN_VALUE:
-					result = ((ServerVariable)e1).getValue().compareToIgnoreCase(((ServerVariable)e2).getValue());
-					break;
-				case COLUMN_NEED_RESTART:
-					result = compareBooleans(((ServerVariable)e1).isServerRestartNeeded(), ((ServerVariable)e2).isServerRestartNeeded());
-					break;
-				default:
-					result = 0;
-					break;
-			}
-			return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
-		}
-	}
-
-	
-	/**
-	 * Refresh job
-	 * 
-	 * @author victor
-	 */
-	private class RefreshJob extends Job
-	{
-
-		public RefreshJob()
-		{
-			super("Get server configuration variables");
-		}
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor)
-		{
-			IStatus status;
-			
-			try
-			{
-				varList = session.getServerVariables();
-				status = Status.OK_STATUS;
-
-				new UIJob("Initialize server configuration editor") {
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						synchronized(varList)
-						{
-							viewer.setInput(varList.values().toArray());
-						}
-						return Status.OK_STATUS;
-					}
-				}.schedule();
-			}
-			catch(Exception e)
-			{
-				status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-                    "Cannot get server configuration variables: " + e.getMessage(), e);
-			}
-			return status;
-		}
-
-		/* (non-Javadoc)
-		 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-		 */
-		@Override
-		public boolean belongsTo(Object family)
-		{
-			return family == ServerConfigurationEditor.JOB_FAMILY;
-		}
-	};
-	
-	
-	/**
-	 * The constructor.
-	 */
-	public ServerConfigurationEditor()
-	{
-	}
-
-	/**
-	 * This is a callback that will allow us to create the viewer and initialize
-	 * it.
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	public void createPartControl(Composite parent)
 	{
@@ -202,8 +83,7 @@ public class ServerConfigurationEditor extends ViewPart
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
-		viewer.setComparator(new VarComparator());
-		
+		viewer.setComparator(new ServerVariableComparator());
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -226,12 +106,39 @@ public class ServerConfigurationEditor extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
+		refreshViewer();
+	}
+	
+	/**
+	 * Refresh viewer
+	 */
+	public void refreshViewer()
+	{
+		new ConsoleJob("Load server configuration variables", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot load server configuration variables";
+			}
 
-		Job job = new RefreshJob();
-		IWorkbenchSiteProgressService siteService =
-	      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				varList = session.getServerVariables();
+				new UIJob("Initialize server configuration editor") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						synchronized(varList)
+						{
+							viewer.setInput(varList.values().toArray());
+						}
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		}.start();
 	}
 
 	/**
@@ -265,10 +172,7 @@ public class ServerConfigurationEditor extends ViewPart
 			@Override
 			public void run()
 			{
-				Job job = new RefreshJob();
-				IWorkbenchSiteProgressService siteService =
-			      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
-				siteService.schedule(job, 0, true);
+				refreshViewer();
 			}
 		};
 		
@@ -286,7 +190,6 @@ public class ServerConfigurationEditor extends ViewPart
 		actionAddVariable.setImageDescriptor(Activator.getImageDescriptor("icons/add_variable.png"));
 	}
 
-	
 	/**
 	 * Create pop-up menu for variable list
 	 */
@@ -310,7 +213,6 @@ public class ServerConfigurationEditor extends ViewPart
 		// Register menu for extension.
 		getSite().registerContextMenu(menuMgr, viewer);
 	}
-	
 
 	/**
 	 * Fill context menu
@@ -321,7 +223,6 @@ public class ServerConfigurationEditor extends ViewPart
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
-	
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
@@ -329,7 +230,6 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 		viewer.getControl().setFocus();
 	}
-	
 	
 	/**
 	 * Add new variable
@@ -339,49 +239,21 @@ public class ServerConfigurationEditor extends ViewPart
 		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), null, null);
 		if (dlg.open() == Window.OK)
 		{
-			Job job = new Job("Create configuration variable") {
+			new ConsoleJob("Create configuration variable", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected String getErrorMessage()
 				{
-					IStatus status;
-					
-					try
-					{
-						ConsoleSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
-						actionRefresh.run();
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-						                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-						                    "Cannot create configuration variable: " + e.getMessage(), e);
-					}
-					return status;
+					return "Cannot create configuration variable";
 				}
 
-				
-				/* (non-Javadoc)
-				 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-				 */
 				@Override
-				public boolean belongsTo(Object family)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					return family == ServerConfigurationEditor.JOB_FAMILY;
+					session.setServerVariable(dlg.getVarName(), dlg.getVarValue());
+					refreshViewer();
 				}
-			};
-			IWorkbenchSiteProgressService siteService =
-		      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
-			siteService.schedule(job, 0, true);
+			}.start();
 		}
-	}
-	
-	/**
-	 * Refresh list
-	 */
-	public void refreshVariablesList()
-	{
-		actionRefresh.run();
 	}
 	
 	/**
@@ -393,39 +265,20 @@ public class ServerConfigurationEditor extends ViewPart
 		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), var.getName(), var.getValue());
 		if (dlg.open() == Window.OK)
 		{
-			Job job = new Job("Modify configuration variable") {
+			new ConsoleJob("Modify configuration variable", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected String getErrorMessage()
 				{
-					IStatus status;
-					
-					try
-					{
-						ConsoleSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
-						refreshVariablesList();
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-						                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-						                    "Cannot modify configuration variable: " + e.getMessage(), e);
-					}
-					return status;
+					return "Cannot create configuration variable";
 				}
-				
-				/* (non-Javadoc)
-				 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-				 */
+
 				@Override
-				public boolean belongsTo(Object family)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					return family == ServerConfigurationEditor.JOB_FAMILY;
+					session.setServerVariable(dlg.getVarName(), dlg.getVarValue());
+					refreshViewer();
 				}
-			};
-			IWorkbenchSiteProgressService siteService =
-		      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
-			siteService.schedule(job, 0, true);
+			}.start();
 		}
 	}
 }

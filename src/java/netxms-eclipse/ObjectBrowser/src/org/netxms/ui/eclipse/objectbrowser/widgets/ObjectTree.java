@@ -47,7 +47,7 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -89,7 +89,7 @@ public class ObjectTree extends Composite
 	{
 		super(parent, style);
 		
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
@@ -204,7 +204,7 @@ public class ObjectTree extends Composite
 		// Add client library listener
 		sessionListener = new NXCListener() {
 			@Override
-			public void notificationHandler(ISessionNotification n)
+			public void notificationHandler(SessionNotification n)
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{

@@ -241,7 +241,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
-						final NXCSession session = ConsoleSharedData.getInstance().getSession();
+						final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 						session.executeAction(node.getObjectId(), tool.getData());
 						new UIJob("Notify user about action execution") {
 							@Override

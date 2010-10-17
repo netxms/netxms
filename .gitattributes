@@ -787,6 +787,8 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/acti
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/ConfigurationImportDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/VariableEditDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/ServerConfigurationEditor.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/ServerVariableComparator.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/ViewLabelProvider.java -text
 src/java/netxms-eclipse/ServerJobManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ServerJobManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ServerJobManager/build.properties -text

@@ -1383,15 +1383,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		waitForRCC(msg.getMessageId());
 	}
 
-	/**
-	 * Delete server configuration variable.
-	 * 
-	 * @param name
-	 *           variable's name
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.servermanager.ServerManager#deleteServerVariable(java.lang.String)
 	 */
 	public void deleteServerVariable(final String name) throws IOException, NXCException
 	{

@@ -43,6 +43,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -52,7 +53,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
+ *"Trusted nodes" property page for NetXMS objects
  *
  */
 public class TrustedNodes extends PropertyPage
@@ -198,7 +199,7 @@ public class TrustedNodes extends PropertyPage
 						for(long id : idList)
 							nodes[i++] = id;
 						md.setTrustedNodes(nodes);
-						ConsoleSharedData.getInstance().getSession().modifyObject(md);
+						((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
 					}
 					isModified = false;
 					status = Status.OK_STATUS;

@@ -42,7 +42,7 @@ public class ObjectsCell extends ListCell
 	{
 		super(rule, data);
 		eppRule = (EventProcessingPolicyRule)data;
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		List<Long> objectIds = eppRule.getSources();
 		if (objectIds.size() > 0)

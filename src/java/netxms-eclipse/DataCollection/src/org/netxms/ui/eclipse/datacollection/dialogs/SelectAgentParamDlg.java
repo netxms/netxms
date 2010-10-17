@@ -46,7 +46,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	 */
 	void fillParameterList()
 	{
-		final NXCSession session = ConsoleSharedData.getInstance().getSession();
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
 		ConsoleJob job = new ConsoleJob("Get list of supported parameters for " + object.getObjectName(),
 				                          null, Activator.PLUGIN_ID, null) {

@@ -28,6 +28,7 @@ import org.eclipse.zest.layouts.LayoutAlgorithm;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.IServiceFigureListener;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeContentProvider;
@@ -59,7 +60,7 @@ public class ServiceTree extends Composite implements IServiceFigureListener
 		// Initiate loading of object manager plugin if it was not loaded before
 		try
 		{
-			Platform.getAdapterManager().loadAdapter(ConsoleSharedData.getInstance().getSession().getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(((NXCSession)ConsoleSharedData.getSession()).getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
 		}
 		catch(Exception e)
 		{

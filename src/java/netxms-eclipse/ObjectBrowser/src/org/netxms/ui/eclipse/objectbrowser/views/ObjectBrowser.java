@@ -143,7 +143,7 @@ public class ObjectBrowser extends ViewPart
 		
 		// Read custom root objects
 		long[] rootObjects = null;
-		Object value = ConsoleSharedData.getInstance().getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
+		Object value = ConsoleSharedData.getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
 		if ((value != null) && (value instanceof long[]))
 		{
 			rootObjects = (long[])value;

@@ -47,7 +47,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.scripts.Script;
-import org.netxms.client.NXCSession;
+import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
@@ -71,7 +71,7 @@ public class ScriptLibrary extends ViewPart
 
 	private static final String TABLE_CONFIG_PREFIX = "ScriptLibrary";
 	
-	private NXCSession session;
+	private ScriptLibraryManager scriptLibraryManager;
 	private SortableTableViewer viewer;
 	private RefreshAction actionRefresh;
 	private Action actionNew;
@@ -84,7 +84,7 @@ public class ScriptLibrary extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = ConsoleSharedData.getInstance().getSession();
+		scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
 		
 		parent.setLayout(new FillLayout());
 		
@@ -286,7 +286,7 @@ public class ScriptLibrary extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<Script> library = session.getScriptLibrary();
+				final List<Script> library = scriptLibraryManager.getScriptLibrary();
 				new UIJob("Update script list") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)

@@ -137,7 +137,7 @@ public class ObjectAdapterFactory implements IAdapterFactory
 					@Override
 					public Object getParent(Object o)
 					{
-						NXCSession session = ConsoleSharedData.getInstance().getSession();
+						NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 						if (session != null)
 						{
 							Iterator<Long> it = ((GenericObject)o).getParents();

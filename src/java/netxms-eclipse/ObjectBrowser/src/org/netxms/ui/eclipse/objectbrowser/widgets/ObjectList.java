@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -75,7 +75,7 @@ public class ObjectList extends Composite
 	{
 		super(parent, style);
 
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
@@ -122,7 +122,7 @@ public class ObjectList extends Composite
 		// Add client library listener
 		sessionListener = new NXCListener() {
 			@Override
-			public void notificationHandler(ISessionNotification n)
+			public void notificationHandler(SessionNotification n)
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
@@ -130,7 +130,7 @@ public class ObjectList extends Composite
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							objectList.setInput(ConsoleSharedData.getInstance().getSession().getAllObjects());
+							objectList.setInput(session.getAllObjects());
 							objectList.refresh();
 							return Status.OK_STATUS;
 						}

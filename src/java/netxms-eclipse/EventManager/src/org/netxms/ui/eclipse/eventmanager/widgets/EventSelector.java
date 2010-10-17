@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.eventmanager.widgets;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
@@ -92,7 +93,7 @@ public class EventSelector extends AbstractSelector
 		this.eventCode = eventCode;
 		if (eventCode != 0)
 		{
-			EventTemplate event = ConsoleSharedData.getInstance().getSession().findEventTemplateByCode(eventCode);
+			EventTemplate event = ((NXCSession)ConsoleSharedData.getSession()).findEventTemplateByCode(eventCode);
 			if (event != null)
 			{
 				setText(event.getName());

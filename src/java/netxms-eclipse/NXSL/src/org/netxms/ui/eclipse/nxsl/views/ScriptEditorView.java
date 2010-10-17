@@ -36,7 +36,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.scripts.Script;
-import org.netxms.client.NXCSession;
+import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
@@ -51,7 +51,7 @@ public class ScriptEditorView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView";
 	
-	private NXCSession session;
+	private ScriptLibraryManager scriptLibraryManager;
 	private ScriptEditor editor;
 	private long scriptId;
 	private String scriptName;
@@ -66,7 +66,7 @@ public class ScriptEditorView extends ViewPart
 	{
 		super.init(site);
 		
-		session = ConsoleSharedData.getInstance().getSession();
+		scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
 		scriptId = Long.parseLong(site.getSecondaryId());
 	}
 
@@ -186,7 +186,7 @@ public class ScriptEditorView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Script script = session.getScript(scriptId);
+				final Script script = scriptLibraryManager.getScript(scriptId);
 				new UIJob("Update script editor") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
@@ -219,7 +219,7 @@ public class ScriptEditorView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.modifyScript(scriptId, scriptName, source);
+				scriptLibraryManager.modifyScript(scriptId, scriptName, source);
 				new UIJob("Update script editor") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)

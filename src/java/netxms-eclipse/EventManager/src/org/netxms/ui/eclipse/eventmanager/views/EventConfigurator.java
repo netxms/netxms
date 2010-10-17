@@ -51,8 +51,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.ISessionListener;
-import org.netxms.api.client.ISessionNotification;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
@@ -70,7 +70,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  * Event configuration view
  * 
  */
-public class EventConfigurator extends ViewPart implements ISessionListener
+public class EventConfigurator extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.eventmanager.view.event_configurator";
 	public static final String JOB_FAMILY = "EventConfiguratorJob";
@@ -99,7 +99,7 @@ public class EventConfigurator extends ViewPart implements ISessionListener
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		final String[] names = { "Code", "Name", "Severity", "Flags", "Message", "Description" };
 		final int[] widths = { 70, 200, 90, 50, 400, 400 };
@@ -182,7 +182,7 @@ public class EventConfigurator extends ViewPart implements ISessionListener
 	 * Process client session notifications
 	 */
 	@Override
-	public void notificationHandler(final ISessionNotification n)
+	public void notificationHandler(final SessionNotification n)
 	{
 		switch(n.getCode())
 		{

@@ -22,9 +22,9 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -92,7 +92,7 @@ public class AutoApply extends PropertyPage
       label.setText("Filtering script");
 
       GridData gd = new GridData();
-      gd.verticalIndent = IUIConstants.DIALOG_SPACING;
+      gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
 		label.setLayoutData(gd);
       
       filterSource = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
@@ -141,7 +141,7 @@ public class AutoApply extends PropertyPage
 						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 						md.setAutoApplyEnabled(isAutoApplyEnabled);
 						md.setAutoApplyFilter(newApplyFilter);
-						ConsoleSharedData.getInstance().getSession().modifyObject(md);
+						((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
 					}
 					initialApplyFlag = isAutoApplyEnabled;
 					initialApplyFilter = newApplyFilter;

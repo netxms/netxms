@@ -43,7 +43,7 @@ public class EventsCell extends ListCell
 	{
 		super(rule, data);
 		eppRule = (EventProcessingPolicyRule)data;
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		List<Long> eventCodes = eppRule.getEvents();
 		List<EventTemplate> events = session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()]));

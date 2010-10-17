@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author Victor
+ * Object selection dialog
  * 
  */
 public class ObjectSelectionDialog extends Dialog
@@ -203,7 +203,7 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new ArrayList<GenericObject>(0);
 
-		return ConsoleSharedData.getInstance().getSession().findMultipleObjects(selectedObjects);
+		return ((NXCSession)ConsoleSharedData.getSession()).findMultipleObjects(selectedObjects);
 	}
 
 	/**
@@ -217,7 +217,7 @@ public class ObjectSelectionDialog extends Dialog
 		if (selectedObjects == null)
 			return new GenericObject[0];
 
-		final NXCSession session = ConsoleSharedData.getInstance().getSession();
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Set<GenericObject> resultSet = new HashSet<GenericObject>(selectedObjects.length);
 		for(int i = 0; i < selectedObjects.length; i++)
 		{

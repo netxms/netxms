@@ -42,7 +42,7 @@ public class Startup implements IStartup
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				while(ConsoleSharedData.getInstance().getSession() == null)
+				while(ConsoleSharedData.getSession() == null)
 				{
 					try
 					{

@@ -30,7 +30,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.shared.IUIConstants;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -70,8 +69,8 @@ public class EditEventTemplateDialog extends Dialog
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 
 		GridLayout layout = new GridLayout();
-      layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-      layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.numColumns = 2;
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING * 2;
       dialogArea.setLayout(layout);

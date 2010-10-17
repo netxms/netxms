@@ -97,7 +97,7 @@
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.serverconfig.actions.popup.delete_variable"
-            objectClass="org.netxms.client.NXCServerVariable">
+            objectClass="org.netxms.api.client.servermanager.ServerVariable">
          <menu
                id="org.netxms.ui.eclipse.serverconfig.menu.variables"
                label="Delete"
@@ -112,13 +112,9 @@
                enablesFor="+">
          </action>
       </objectContribution>
-   </extension>
-
-   <extension
-         point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.serverconfig.actions.popup.edit_variable"
-            objectClass="org.netxms.client.NXCServerVariable">
+            objectClass="org.netxms.api.client.servermanager.ServerVariable">
          <menu
                id="org.netxms.ui.eclipse.serverconfig.menu.variables"
                label="Edit..."

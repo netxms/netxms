@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author victor
+ * Viewer for last values of given object
  *
  */
 public class LastValuesView extends Composite
@@ -67,7 +67,7 @@ public class LastValuesView extends Composite
 	public LastValuesView(ViewPart viewPart, Composite parent, int style, Node _node)
 	{
 		super(parent, style);
-		session = ConsoleSharedData.getInstance().getSession();
+		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
 		this.node = _node;
 		

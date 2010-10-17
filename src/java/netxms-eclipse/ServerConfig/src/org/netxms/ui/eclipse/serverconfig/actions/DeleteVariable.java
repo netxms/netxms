@@ -28,15 +28,15 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
+import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.servermanager.ServerManager;
 import org.netxms.api.client.servermanager.ServerVariable;
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author victor
+ * Action for deleting server configuration variable
  *
  */
 public class DeleteVariable implements IObjectActionDelegate
@@ -61,19 +61,19 @@ public class DeleteVariable implements IObjectActionDelegate
 				
 				try
 				{
-					NXCSession session = ConsoleSharedData.getInstance().getSession();
+					ServerManager session = (ServerManager)ConsoleSharedData.getSession();
 					for(int i = 0; i < currentSelection.length; i++)
 					{
 						session.deleteServerVariable(((ServerVariable)currentSelection[i]).getName());
 					}
 					if (wbPart instanceof ServerConfigurationEditor)
-						((ServerConfigurationEditor)wbPart).refreshVariablesList();
+						((ServerConfigurationEditor)wbPart).refreshViewer();
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+					                    (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
 					                    "Cannot delete configuration variable: " + e.getMessage(), e);
 				}
 				return status;
