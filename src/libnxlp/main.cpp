@@ -31,11 +31,20 @@
 
 const TCHAR *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize)
 {
+	time_t t;
+	struct tm *ltm;
+#if HAVE_LOCALTIME_R
+	struct tm tmBuff;
+#endif
 	TCHAR temp[8192], command[1024];
 	size_t outpos = 0;
 
-	time_t t = time(NULL);
-	struct tm *ltm = localtime(&t);
+	t = time(NULL);
+#if HAVE_LOCALTIME_R
+	ltm = localtime_r(&t, &tmBuff);
+#else
+	ltm = localtime(&t);
+#endif
 	_tcsftime(temp, 8192, name, ltm);
 
 	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)

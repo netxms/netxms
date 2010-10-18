@@ -5,7 +5,7 @@
 
 include ../../netware/Makefile.inc
 
-OBJECTS  = main.o parser.o rule.o unixfile.o
+OBJECTS  = file.o main.o parser.o rule.o
 EXEC     = libnxlp.nlm
 DEF      = libnxlp.def
 OBJTMP   = libnxlp_r.o

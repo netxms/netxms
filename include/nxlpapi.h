@@ -198,11 +198,7 @@ public:
 	void setTraceLevel(int level) { m_traceLevel = level; }
 	void setTraceCallback(void (*cb)(const TCHAR *, va_list)) { m_traceCallback = cb; }
 
-#ifdef _WIN32
 	bool monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos = true);
-#else
-	bool monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos = true);
-#endif
 };
 
 #endif

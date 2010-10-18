@@ -3,7 +3,7 @@ if USE_INTERNAL_EXPAT
 INCLUDES += -I@top_srcdir@/src/libexpat/libexpat
 endif
 
-SOURCES = main.cpp parser.cpp rule.cpp unixfile.cpp
+SOURCES = file.cpp main.cpp parser.cpp rule.cpp
 
 lib_LTLIBRARIES = libnxlp.la
 
@@ -17,5 +17,4 @@ endif
 EXTRA_DIST = \
 	libnxlp.vcproj \
 	libnxlp.h \
-	winfile.cpp \
 	libnxlp.def Makefile.nw
