@@ -19,6 +19,7 @@
 package org.netxms.api.client;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 import org.netxms.base.NXCPMessage;
 
@@ -89,6 +90,12 @@ public interface Session
 	 * @return New message object
 	 */
 	public abstract NXCPMessage newMessage(int code);
+
+	/**
+	 * Connect to the server.
+	 * 
+	 */
+	public abstract void connect() throws IOException, UnknownHostException, NetXMSClientException;
 
 	/**
 	 * Disconnect from server.

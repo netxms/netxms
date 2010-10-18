@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
@@ -854,8 +855,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 *            if NetXMS server returns an error, protocol negotiation with the server was failed, or operation was
 	 *            timed out
 	 */
-
-	public void connect() throws IOException, UnknownHostException, NXCException
+	@Override
+	public void connect() throws IOException, UnknownHostException, NetXMSClientException
 	{
 		try
 		{
