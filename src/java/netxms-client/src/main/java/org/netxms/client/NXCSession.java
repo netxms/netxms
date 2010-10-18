@@ -92,6 +92,10 @@ import org.netxms.client.snmp.SnmpTrap;
 /**
  * Communication session with NetXMS server.
  */
+/**
+ * @author Victor
+ *
+ */
 public class NXCSession implements Session, ScriptLibraryManager, UserManager, ServerManager
 {
 	// Various public constants
@@ -665,16 +669,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#addListener(org.netxms.api.client.INXCListener)
+	 * @see org.netxms.api.client.Session#addListener(org.netxms.api.client.SessionListener)
 	 */
+	@Override
 	public void addListener(SessionListener lst)
 	{
 		listeners.add(lst);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#removeListener(org.netxms.api.client.INXCListener)
+	 * @see org.netxms.api.client.Session#removeListener(org.netxms.api.client.SessionListener)
 	 */
+	@Override
 	public void removeListener(SessionListener lst)
 	{
 		listeners.remove(lst);
@@ -714,8 +720,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#waitForMessage(int, long, int)
+	 * @see org.netxms.api.client.Session#waitForMessage(int, long, int)
 	 */
+	@Override
 	public NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
 	{
 		final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
@@ -725,8 +732,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#waitForMessage(int, long)
+	 * @see org.netxms.api.client.Session#waitForMessage(int, long)
 	 */
+	@Override
 	public NXCPMessage waitForMessage(final int code, final long id) throws NXCException
 	{
 		final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
@@ -736,8 +744,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#waitForRCC(long)
+	 * @see org.netxms.api.client.Session#waitForRCC(long)
 	 */
+	@Override
 	public NXCPMessage waitForRCC(final long id) throws NXCException
 	{
 		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id);
@@ -761,8 +770,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#newMessage(int)
+	 * @see org.netxms.api.client.Session#newMessage(int)
 	 */
+	@Override
 	public final synchronized NXCPMessage newMessage(int code)
 	{
 		return new NXCPMessage(code, requestId++);
@@ -844,16 +854,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return table;
 	}
 
-	/**
-	 * Connect to server using previously set credentials.
-	 * 
-	 * @throws IOException
-	 *            to indicate socket I/O error
-	 * @throws UnknownHostException
-	 *            if given host name cannot be resolved
-	 * @throws NXCException
-	 *            if NetXMS server returns an error, protocol negotiation with the server was failed, or operation was
-	 *            timed out
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#connect()
 	 */
 	@Override
 	public void connect() throws IOException, UnknownHostException, NetXMSClientException
@@ -912,8 +914,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#disconnect()
+	 * @see org.netxms.client.Session#disconnect()
 	 */
+	@Override
 	public void disconnect()
 	{
 		if (connSocket != null)
@@ -970,56 +973,63 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getRecvBufferSize()
+	 * @see org.netxms.api.client.Session#getRecvBufferSize()
 	 */
+	@Override
 	public int getRecvBufferSize()
 	{
 		return recvBufferSize;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#setRecvBufferSize(int)
+	 * @see org.netxms.api.client.Session#setRecvBufferSize(int)
 	 */
+	@Override
 	public void setRecvBufferSize(int recvBufferSize)
 	{
 		this.recvBufferSize = recvBufferSize;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getServerAddress()
+	 * @see org.netxms.api.client.Session#getServerAddress()
 	 */
+	@Override
 	public String getServerAddress()
 	{
 		return connAddress;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getUserName()
+	 * @see org.netxms.api.client.Session#getUserName()
 	 */
+	@Override
 	public String getUserName()
 	{
 		return connLoginName;
 	}
-	
+
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getServerVersion()
+	 * @see org.netxms.api.client.Session#getServerVersion()
 	 */
+	@Override
 	public String getServerVersion()
 	{
 		return serverVersion;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getServerId()
+	 * @see org.netxms.api.client.Session#getServerId()
 	 */
+	@Override
 	public byte[] getServerId()
 	{
 		return serverId;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getServerTimeZone()
+	 * @see org.netxms.api.client.Session#getServerTimeZone()
 	 */
+	@Override
 	public String getServerTimeZone()
 	{
 		return serverTimeZone;
@@ -1034,49 +1044,54 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getConnClientInfo()
+	 * @see org.netxms.api.client.Session#getConnClientInfo()
 	 */
+	@Override
 	public String getConnClientInfo()
 	{
 		return connClientInfo;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#setConnClientInfo(java.lang.String)
+	 * @see org.netxms.api.client.Session#setConnClientInfo(java.lang.String)
 	 */
+	@Override
 	public void setConnClientInfo(final String connClientInfo)
 	{
 		this.connClientInfo = connClientInfo;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#setCommandTimeout(int)
+	 * @see org.netxms.api.client.Session#setCommandTimeout(int)
 	 */
+	@Override
 	public void setCommandTimeout(final int commandTimeout)
 	{
 		this.commandTimeout = commandTimeout;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getUserId()
+	 * @see org.netxms.api.client.Session#getUserId()
 	 */
+	@Override
 	public int getUserId()
 	{
 		return userId;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getUserSystemRights()
+	 * @see org.netxms.api.client.Session#getUserSystemRights()
 	 */
-
+	@Override
 	public int getUserSystemRights()
 	{
 		return userSystemRights;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#isPasswordExpired()
+	 * @see org.netxms.api.client.Session#isPasswordExpired()
 	 */
+	@Override
 	public boolean isPasswordExpired()
 	{
 		return passwordExpired;
@@ -1091,7 +1106,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws NXCException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-
 	public synchronized void syncObjects() throws IOException, NXCException
 	{
 		syncObjects.acquireUninterruptibly();
@@ -1350,8 +1364,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IServerManager#getServerVariables()
+	 * @see org.netxms.api.client.servermanager.ServerManager#getServerVariables()
 	 */
+	@Override
 	public HashMap<String, ServerVariable> getServerVariables() throws IOException, NXCException
 	{
 		NXCPMessage request = newMessage(NXCPCodes.CMD_GET_CONFIG_VARLIST);
@@ -1373,8 +1388,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IServerManager#setServerVariable(java.lang.String, java.lang.String)
+	 * @see org.netxms.api.client.servermanager.ServerManager#setServerVariable(java.lang.String, java.lang.String)
 	 */
+	@Override
 	public void setServerVariable(final String name, final String value) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CONFIG_VARIABLE);
@@ -1387,6 +1403,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/* (non-Javadoc)
 	 * @see org.netxms.api.client.servermanager.ServerManager#deleteServerVariable(java.lang.String)
 	 */
+	@Override
 	public void deleteServerVariable(final String name) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_CONFIG_VARIABLE);
@@ -1434,10 +1451,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
-	
+
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#syncUserDatabase()
+	 * @see org.netxms.api.client.users.UserManager#syncUserDatabase()
 	 */
+	@Override
 	public void syncUserDatabase() throws IOException, NXCException
 	{
 		syncUserDB.acquireUninterruptibly();
@@ -1448,8 +1466,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#findUserDBObjectById(long)
+	 * @see org.netxms.api.client.users.UserManager#findUserDBObjectById(long)
 	 */
+	@Override
 	public AbstractUserObject findUserDBObjectById(final long id)
 	{
 		AbstractUserObject object;
@@ -1462,8 +1481,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#getUserDatabaseObjects()
+	 * @see org.netxms.api.client.users.UserManager#getUserDatabaseObjects()
 	 */
+	@Override
 	public AbstractUserObject[] getUserDatabaseObjects()
 	{
 		AbstractUserObject[] list;
@@ -1499,24 +1519,27 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#createUser(java.lang.String)
+	 * @see org.netxms.api.client.users.UserManager#createUser(java.lang.String)
 	 */
+	@Override
 	public long createUser(final String name) throws IOException, NXCException
 	{
 		return createUserDBObject(name, false);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#createUserGroup(java.lang.String)
+	 * @see org.netxms.api.client.users.UserManager#createUserGroup(java.lang.String)
 	 */
+	@Override
 	public long createUserGroup(final String name) throws IOException, NXCException
 	{
 		return createUserDBObject(name, true);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#deleteUserDBObject(long)
+	 * @see org.netxms.api.client.users.UserManager#deleteUserDBObject(long)
 	 */
+	@Override
 	public void deleteUserDBObject(final long id) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_USER);
@@ -1526,8 +1549,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#setUserPassword(long, java.lang.String, java.lang.String)
+	 * @see org.netxms.api.client.users.UserManager#setUserPassword(long, java.lang.String, java.lang.String)
 	 */
+	@Override
 	public void setUserPassword(final long id, final String newPassword, final String oldPassword) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_PASSWORD);
@@ -1540,8 +1564,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#modifyUserDBObject(org.netxms.api.client.users.AbstractUserObject, int)
+	 * @see org.netxms.api.client.users.UserManager#modifyUserDBObject(org.netxms.api.client.users.AbstractUserObject, int)
 	 */
+	@Override
 	public void modifyUserDBObject(final AbstractUserObject object, final int fields) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_USER);
@@ -1552,16 +1577,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#modifyUserDBObject(org.netxms.api.client.users.AbstractUserObject)
+	 * @see org.netxms.api.client.users.UserManager#modifyUserDBObject(org.netxms.api.client.users.AbstractUserObject)
 	 */
+	@Override
 	public void modifyUserDBObject(final AbstractUserObject object) throws IOException, NXCException
 	{
 		modifyUserDBObject(object, 0x7FFFFFFF);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#lockUserDatabase()
+	 * @see org.netxms.api.client.users.UserManager#lockUserDatabase()
 	 */
+	@Override
 	public void lockUserDatabase() throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_LOCK_USER_DB);
@@ -1570,8 +1597,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.IUserManager#unlockUserDatabase()
+	 * @see org.netxms.api.client.users.UserManager#unlockUserDatabase()
 	 */
+	@Override
 	public void unlockUserDatabase() throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLOCK_USER_DB);
@@ -1580,8 +1608,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#setAttributeForCurrentUser(java.lang.String, java.lang.String)
+	 * @see org.netxms.api.client.Session#setAttributeForCurrentUser(java.lang.String, java.lang.String)
 	 */
+	@Override
 	public void setAttributeForCurrentUser(final String name, final String value) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CURRENT_USER_ATTR);
@@ -1590,10 +1619,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
-	
+
 	/* (non-Javadoc)
-	 * @see org.netxms.client.ISession#getAttributeForCurrentUser(java.lang.String)
+	 * @see org.netxms.api.client.Session#getAttributeForCurrentUser(java.lang.String)
 	 */
+	@Override
 	public String getAttributeForCurrentUser(final String name) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CURRENT_USER_ATTR);
@@ -3151,6 +3181,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/* (non-Javadoc)
 	 * @see org.netxms.client.IScriptLibraryManager#getScriptLibrary()
 	 */
+	@Override
 	public List<Script> getScriptLibrary() throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT_LIST);
@@ -3171,6 +3202,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/* (non-Javadoc)
 	 * @see org.netxms.client.IScriptLibraryManager#getScript(long)
 	 */
+	@Override
 	public Script getScript(long scriptId) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT);
@@ -3183,6 +3215,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/* (non-Javadoc)
 	 * @see org.netxms.client.IScriptLibraryManager#modifyScript(long, java.lang.String, java.lang.String)
 	 */
+	@Override
 	public long modifyScript(long scriptId, String name, String source) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SCRIPT);
@@ -3197,6 +3230,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/* (non-Javadoc)
 	 * @see org.netxms.client.IScriptLibraryManager#renameScript(long, java.lang.String)
 	 */
+	@Override
 	public void renameScript(long scriptId, String name) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT);
@@ -3209,6 +3243,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/* (non-Javadoc)
 	 * @see org.netxms.client.IScriptLibraryManager#deleteScript(long)
 	 */
+	@Override
 	public void deleteScript(long scriptId) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_SCRIPT);
