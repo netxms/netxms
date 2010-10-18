@@ -28,5 +28,7 @@
 #include <nms_util.h>
 #include <nxlpapi.h>
 
+const TCHAR *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize);
+
 #endif
 

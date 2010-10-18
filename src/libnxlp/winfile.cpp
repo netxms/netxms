@@ -88,14 +88,12 @@ bool LogParser::monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
 	if ((m_fileName == NULL) || (stopEvent == NULL))
 		return FALSE;
 
-   nx_strncpy(path, m_fileName, MAX_PATH);
+	ExpandFileName(m_fileName, fname, MAX_PATH);
+
+   nx_strncpy(path, fname, MAX_PATH);
    pch = _tcsrchr(path, _T('\\'));
    if (pch != NULL)
       *pch = 0;
-
-	t = time(NULL);
-	ltm = localtime(&t);
-	_tcsftime(fname, MAX_PATH, m_fileName, ltm);
 
    hFile = CreateFile(fname, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
                       NULL, OPEN_EXISTING, 0, NULL);
@@ -104,7 +102,7 @@ bool LogParser::monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
 		if (!readFromCurrPos)
 		{
 			if (logger != NULL)
-				logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parsing existing records in file \"%s\""), m_fileName);
+				logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parsing existing records in file \"%s\""), fname);
 			ParseNewRecords(this, hFile, logger);
 		}
       GetFileSizeEx(hFile, &fp);
@@ -113,7 +111,7 @@ bool LogParser::monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
       hChange = FindFirstChangeNotification(path, FALSE, FILE_NOTIFY_CHANGE_SIZE);
       if (hChange != INVALID_HANDLE_VALUE)
       {
-			LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: start tracking log file %s"), m_fileName);
+			LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: start tracking log file %s"), fname);
 			handles[0] = hChange;
 			handles[1] = stopEvent;
          while(1)
@@ -121,9 +119,7 @@ bool LogParser::monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
             if (WaitForMultipleObjects(2, handles, FALSE, INFINITE) == WAIT_OBJECT_0 + 1)
 					break;
 
-				t = time(NULL);
-				ltm = localtime(&t);
-				_tcsftime(fname, MAX_PATH, m_fileName, ltm);
+				ExpandFileName(m_fileName, fname, MAX_PATH);
 
 				LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: new data in file %s"), fname);
             hFile = CreateFile(fname, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,

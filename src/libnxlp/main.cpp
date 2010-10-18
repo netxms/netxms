@@ -24,6 +24,67 @@
 #include "libnxlp.h"
 
 
+//
+// Expand file name
+//   Can be used strftime placeholders and external commands enclosed in ``
+//
+
+const TCHAR *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize)
+{
+	TCHAR temp[8192], command[1024];
+	size_t outpos = 0;
+
+	time_t t = time(NULL);
+	struct tm *ltm = localtime(&t);
+	_tcsftime(temp, 8192, name, ltm);
+
+	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)
+	{
+		if (temp[i] == '`')
+		{
+			int j = ++i;
+			while((temp[j] != '`') && (temp[j] != 0))
+				j++;
+			int len = min(j - i, 1023);
+			memcpy(command, &temp[i], len * sizeof(TCHAR));
+			command[len] = 0;
+
+			FILE *p = popen(command, "r");
+			if (p != NULL)
+			{
+				char result[1024];
+
+				int rc = (int)fread(result, 1, 1023, p);
+				pclose(p);
+
+				if (rc > 0)
+				{
+					result[rc] = 0;
+					char *lf = strchr(result, '\n');
+					if (lf != NULL)
+						*lf = 0;
+
+					len = min(strlen(result), bufSize - outpos - 1);
+#ifdef UNICODE
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, result, len, &buffer[outpos], len);
+#else
+					memcpy(&buffer[outpos], result, len);
+#endif
+					outpos += len;
+				}
+			}
+
+			i = j;
+		}
+		else
+		{
+			buffer[outpos++] = temp[i];
+		}
+	}
+
+	buffer[outpos] = 0;
+	return buffer;
+}
 
 
 //
