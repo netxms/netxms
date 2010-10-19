@@ -28,9 +28,11 @@
 #endif
 
 #ifdef _WIN32
-#define open _open
+#include <share.h>
+
 #define read _read
 #define close _close
+
 #endif
 
 
@@ -106,7 +108,11 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 		ExpandFileName(getFileName(), fname, MAX_PATH);
 		if (stat(fname, &st) == 0)
 		{
+#ifdef _WIN32
+			fh = _sopen(fname, O_RDONLY, _SH_DENYNO);
+#else
 			fh = open(fname, O_RDONLY);
+#endif
 			if (fh != -1)
 			{
 				if (logger != NULL)
