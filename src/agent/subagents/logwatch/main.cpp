@@ -39,7 +39,6 @@ bool InitEventLogParsersV6();
 //
 
 CONDITION g_hCondShutdown = INVALID_CONDITION_HANDLE;
-bool g_shutdownFlag = false;
 
 
 //
@@ -59,11 +58,7 @@ static LogParser **m_parserList = NULL;
 
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
-#ifdef _WIN32
 	((LogParser *)arg)->monitorFile(g_hCondShutdown, AgentWriteLog);
-#else
-	((LogParser *)arg)->monitorFile(g_hCondShutdown, &g_shutdownFlag, AgentWriteLog);
-#endif
 	return THREAD_OK;
 }
 
@@ -96,7 +91,6 @@ static void SubagentShutdown(void)
 {
 	DWORD i;
 
-	g_shutdownFlag = true;
 	if (g_hCondShutdown != INVALID_CONDITION_HANDLE)
 		ConditionSet(g_hCondShutdown);
 

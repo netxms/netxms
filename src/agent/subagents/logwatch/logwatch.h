@@ -44,7 +44,6 @@ void CleanupEventLogParsers();
 //
 
 extern CONDITION g_hCondShutdown;
-extern bool g_shutdownFlag;
 
 
 #endif
