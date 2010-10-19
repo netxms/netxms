@@ -263,6 +263,7 @@ src/java/netxms-client-api/src/main/java/org/netxms/api/client/scripts/Script.ja
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/scripts/ScriptLibraryManager.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/servermanager/ServerManager.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/servermanager/ServerVariable.java -text
+src/java/netxms-client-api/src/main/java/org/netxms/api/client/users/AbstractAccessListElement.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/users/AbstractUserObject.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/users/User.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/users/UserGroup.java -text

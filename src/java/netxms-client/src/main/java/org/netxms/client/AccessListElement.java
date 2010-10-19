@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,15 @@
  */
 package org.netxms.client;
 
+import org.netxms.api.client.users.AbstractAccessListElement;
 import org.netxms.client.constants.UserAccessRights;
 
-public final class AccessListElement
+/**
+ * Access list element for NetXMS objects
+ *
+ */
+public final class AccessListElement extends AbstractAccessListElement
 {
-	private long userId;
-	private int accessRights;
-
 	/**
 	 * Create new ACL element with given user ID and rights
 	 * 
@@ -33,8 +35,7 @@ public final class AccessListElement
 	 */
 	public AccessListElement(long userId, int accessRights)
 	{
-		this.userId = userId;
-		this.accessRights = accessRights;
+		super(userId, accessRights);
 	}
 	
 	/**
@@ -44,34 +45,9 @@ public final class AccessListElement
 	 */
 	public AccessListElement(AccessListElement src)
 	{
-		this.userId = src.userId;
-		this.accessRights = src.accessRights;
+		super(src);
 	}
 
-	/**
-	 * @return the userId
-	 */
-	public long getUserId()
-	{
-		return userId;
-	}
-
-	/**
-	 * @param accessRights the accessRights to set
-	 */
-	public void setAccessRights(int accessRights)
-	{
-		this.accessRights = accessRights;
-	}
-
-	/**
-	 * @return the accessRights
-	 */
-	public int getAccessRights()
-	{
-		return accessRights;
-	}
-	
 	/**
 	 * @return true if READ access granted
 	 */
@@ -158,24 +134,5 @@ public final class AccessListElement
 	public boolean hasPushData()
 	{
 		return (accessRights & UserAccessRights.OBJECT_ACCESS_PUSH_DATA) != 0;
-	}
-	
-	@Override
-	public boolean equals(Object aThat)
-	{
-		if (this == aThat)
-			return true;
-		
-		if (!(aThat instanceof AccessListElement))
-			return false;
-		
-		return (this.userId == ((AccessListElement)aThat).userId) &&
-		       (this.accessRights == ((AccessListElement)aThat).accessRights);
-	}
-	
-	@Override
-	public int hashCode()
-	{
-		return (int)((accessRights << 16) & userId);
 	}
 }
