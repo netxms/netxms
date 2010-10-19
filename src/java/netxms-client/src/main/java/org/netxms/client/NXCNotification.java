@@ -27,9 +27,7 @@ import org.netxms.api.client.SessionNotification;
 public class NXCNotification extends SessionNotification
 {
 	// Notification codes
-	public static final int CONNECTION_BROKEN = 1;
 	public static final int NEW_EVENTLOG_RECORD = 2;
-	public static final int USER_DB_CHANGED = 3;
 	public static final int OBJECT_CHANGED = 4;
 	public static final int DEPLOYMENT_STATUS = 6;
 	public static final int NEW_SYSLOG_RECORD = 7;
@@ -37,8 +35,6 @@ public class NXCNotification extends SessionNotification
 	public static final int SITUATION_UPDATE = 9;
 	public static final int JOB_CHANGE = 10;
 	
-	public static final int NOTIFY_BASE = 1000;	// Base value for notifications used as subcode for NXC_EVENT_NOTIFICATION in C library
-	public static final int SERVER_SHUTDOWN = 1001;
 	public static final int EVENT_DB_CHANGED = 1002;
 	public static final int ALARM_DELETED = 1003;
 	public static final int NEW_ALARM = 1004;
@@ -47,7 +43,6 @@ public class NXCNotification extends SessionNotification
 	public static final int ACTION_MODIFIED = 1007;
 	public static final int ACTION_DELETED = 1008;
 	public static final int OBJECT_TOOLS_CHANGED = 1009;
-	public static final int DBCON_STATUS_CHANGED = 1010;
 	public static final int ALARM_TERMINATED = 1011;
 	public static final int PREDEFINED_GRAPHS_CHANGED = 1012;
 	public static final int EVENT_TEMPLATE_MODIFIED = 1013;
@@ -56,13 +51,6 @@ public class NXCNotification extends SessionNotification
 	public static final int TRAP_CONFIGURATION_CREATED = 1016;
 	public static final int TRAP_CONFIGURATION_MODIFIED = 1017;
 	public static final int TRAP_CONFIGURATION_DELETED = 1018;
-	
-	public static final int CUSTOM_MESSAGE = 2000;
-	
-	// Subcodes for user database changes
-	public static final int USER_DB_OBJECT_CREATED = 0;
-	public static final int USER_DB_OBJECT_DELETED = 1;
-	public static final int USER_DB_OBJECT_MODIFIED = 2;
 	
 	/**
 	 * @param code

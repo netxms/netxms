@@ -25,7 +25,7 @@ import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
-import org.netxms.client.AccessListElement;
+import org.netxms.api.client.users.AbstractAccessListElement;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -124,7 +124,7 @@ public class UserAdapterFactory implements IAdapterFactory
 			}
 
 			// AccessListElement
-			if (adaptableObject instanceof AccessListElement)
+			if (adaptableObject instanceof AbstractAccessListElement)
 			{
 				return new IWorkbenchAdapter() {
 					@Override
@@ -136,14 +136,14 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
-						long userId = ((AccessListElement)object).getUserId();
+						long userId = ((AbstractAccessListElement)object).getUserId();
 						return Activator.getImageDescriptor((userId < 0x80000000L) ? "icons/user.png" : "icons/group.png");
 					}
 
 					@Override
 					public String getLabel(Object object)
 					{
-						long userId = ((AccessListElement)object).getUserId();
+						long userId = ((AbstractAccessListElement)object).getUserId();
 						UserManager umgr = (UserManager)ConsoleSharedData.getSession();
 						AbstractUserObject dbo = umgr.findUserDBObjectById(userId);
 						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}");

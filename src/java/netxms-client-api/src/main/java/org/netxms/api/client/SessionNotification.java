@@ -24,6 +24,21 @@ package org.netxms.api.client;
  */
 public class SessionNotification
 {
+	// Common notification codes
+	public static final int CONNECTION_BROKEN = 1;
+	public static final int USER_DB_CHANGED = 3;
+
+	public static final int NOTIFY_BASE = 1000;	// Base value for notifications used as subcode for NXC_EVENT_NOTIFICATION in C library
+	public static final int SERVER_SHUTDOWN = 1001;
+	public static final int DBCON_STATUS_CHANGED = 1010;
+
+	public static final int CUSTOM_MESSAGE = 2000;
+	
+	// Subcodes for user database changes
+	public static final int USER_DB_OBJECT_CREATED = 0;
+	public static final int USER_DB_OBJECT_DELETED = 1;
+	public static final int USER_DB_OBJECT_MODIFIED = 2;
+
 	protected int code;
 	protected long subCode;
 	protected Object object;

@@ -115,7 +115,7 @@
         </factory>
         <factory 
            class="org.netxms.ui.eclipse.usermanager.UserAdapterFactory" 
-           adaptableType="org.netxms.client.AccessListElement">
+           adaptableType="org.netxms.api.client.users.AbstractAccessListElement">
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
         </factory>
   </extension>

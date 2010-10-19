@@ -55,12 +55,10 @@ import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.api.client.constants.CommonRCC;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCNotification;
-import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.usermanager.Activator;
@@ -71,7 +69,7 @@ import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
+ * User management view
  * 
  */
 public class UserManagementView extends ViewPart
@@ -145,7 +143,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			public void notificationHandler(final SessionNotification n)
 			{
-				if (n.getCode() == NXCNotification.USER_DB_CHANGED)
+				if (n.getCode() == SessionNotification.USER_DB_CHANGED)
 				{
 					new UIJob("Update user list")
 					{
@@ -153,7 +151,7 @@ public class UserManagementView extends ViewPart
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
 							viewer.setInput(userManager.getUserDatabaseObjects());
-							if (editNewUser && (n.getSubCode() == NXCNotification.USER_DB_OBJECT_CREATED))
+							if (editNewUser && (n.getSubCode() == SessionNotification.USER_DB_OBJECT_CREATED))
 							{
 								editNewUser = false;
 								viewer.setSelection(new StructuredSelection(n.getObject()), true);
@@ -567,7 +565,15 @@ public class UserManagementView extends ViewPart
 						}
 						else
 						{
-							throw new NXCException(RCC.INTERNAL_ERROR);
+							throw new NetXMSClientException(CommonRCC.INTERNAL_ERROR) {
+								private static final long serialVersionUID = -5171658794925752611L;
+
+								@Override
+								protected String getErrorMessage(int code)
+								{
+									return (code == CommonRCC.INTERNAL_ERROR) ? "Internal error" : null;
+								}
+							};
 						}
 					}
 					status = Status.OK_STATUS;
