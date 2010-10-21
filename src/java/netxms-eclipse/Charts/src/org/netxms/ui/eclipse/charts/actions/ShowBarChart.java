@@ -13,7 +13,7 @@
  */
 package org.netxms.ui.eclipse.charts.actions;
 
-import org.netxms.ui.eclipse.charts.views.LastValuesBarChart;
+import org.netxms.ui.eclipse.charts.views.DataComparisionView;
 
 /**
  * Show line graph for selected DCI(s)
@@ -21,11 +21,9 @@ import org.netxms.ui.eclipse.charts.views.LastValuesBarChart;
  */
 public class ShowBarChart extends ShowLastValuesGraph
 {
-
 	@Override
 	protected String getViewId()
 	{
-		return LastValuesBarChart.ID;
+		return DataComparisionView.ID;
 	}
-
 }
