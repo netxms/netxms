@@ -32,7 +32,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -47,7 +46,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.DataComparisionChart;
-import org.netxms.ui.eclipse.charts.widgets.DataComparisionBirtChart;
+import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.charts.widgets.GenericChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -56,7 +55,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  * View for comparing DCI values visually using charts
  *
  */
-public class DataComparisionView extends ViewPart
+public class DataComparisonView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.charts.views.DataComparisionView";
 	
@@ -69,9 +68,12 @@ public class DataComparisionView extends ViewPart
 	private boolean autoRefreshEnabled = true;
 	private boolean useLogScale = false;
 	private int autoRefreshInterval = 30000;	// 30 seconds
+	private int chartType = DataComparisionChart.BAR_CHART;
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
+	private Action actionShowBarChart;
+	private Action actionShowPieChart;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -83,13 +85,23 @@ public class DataComparisionView extends ViewPart
 
 		session = (NXCSession)ConsoleSharedData.getSession();
 
-		// Extract DCI ids from view id
-		// (first field will be unique view id, so we skip it)
+		// Extract information from view id
+		//   first field is unique ID
+		//   second is initial chart type
+		//   third is DCI list
 		String id = site.getSecondaryId();
 		String[] fields = id.split("&");
 		if (!fields[0].equals(HistoryGraph.PREDEFINED_GRAPH_SUBID))
 		{
-			for(int i = 1; i < fields.length; i++)
+			try
+			{
+				chartType = Integer.parseInt(fields[1]);
+			}
+			catch(NumberFormatException e)
+			{
+				chartType = DataComparisionChart.BAR_CHART;
+			}
+			for(int i = 2; i < fields.length; i++)
 			{
 				String[] subfields = fields[i].split("\\@");
 				if (subfields.length == 6)
@@ -122,7 +134,7 @@ public class DataComparisionView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		chart = new DataComparisionBirtChart(parent, SWT.NONE, DataComparisionChart.BAR_CHART);
+		chart = new DataComparisonBirtChart(parent, SWT.NONE, chartType);
 		chartWidget = (GenericChart)chart;
 		
 		for(GraphItem item : items)
@@ -200,7 +212,7 @@ public class DataComparisionView extends ViewPart
 			}
 		};
 		
-		actionAutoRefresh = new Action() {
+		actionAutoRefresh = new Action("Refresh &automatically") {
 			@Override
 			public void run()
 			{
@@ -209,8 +221,27 @@ public class DataComparisionView extends ViewPart
 				getSite().getShell().getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
 			}
 		};
-		actionAutoRefresh.setText("Refresh &automatically");
 		actionAutoRefresh.setChecked(autoRefreshEnabled);
+		
+		actionShowBarChart = new Action("&Bar chart", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				chart.setChartType(DataComparisionChart.BAR_CHART);
+			}
+		};
+		actionShowBarChart.setChecked(chart.getChartType() == DataComparisionChart.BAR_CHART);
+		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png"));
+		
+		actionShowPieChart = new Action("&Pie chart", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				chart.setChartType(DataComparisionChart.PIE_CHART);
+			}
+		};
+		actionShowPieChart.setChecked(chart.getChartType() == DataComparisionChart.PIE_CHART);
+		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png"));
 	}
 	
 	/**
@@ -229,6 +260,9 @@ public class DataComparisionView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionShowBarChart);
+		manager.add(actionShowPieChart);
+		manager.add(new Separator());
 		manager.add(actionAutoRefresh);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -240,6 +274,9 @@ public class DataComparisionView extends ViewPart
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
+		manager.add(actionShowBarChart);
+		manager.add(actionShowPieChart);
+		manager.add(new Separator());
 		manager.add(actionAutoRefresh);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -251,6 +288,9 @@ public class DataComparisionView extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionShowBarChart);
+		manager.add(actionShowPieChart);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 

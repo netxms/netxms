@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.ChartWithAxes;
+import org.eclipse.birt.chart.model.ChartWithoutAxes;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
 import org.eclipse.birt.chart.model.attribute.LegendItemType;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
+import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.Text;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
@@ -40,8 +42,10 @@ import org.eclipse.birt.chart.model.data.impl.SeriesDefinitionImpl;
 import org.eclipse.birt.chart.model.data.impl.TextDataSetImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithAxesImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithoutAxesImpl;
+import org.eclipse.birt.chart.model.type.PieSeries;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.BubbleSeriesImpl;
+import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.charts.api.DataComparisionChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisionElement;
@@ -50,18 +54,19 @@ import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisionElement;
  * BIRT-based data comparision chart
  *
  */
-public class DataComparisionBirtChart extends GenericBirtChart implements DataComparisionChart
+public class DataComparisonBirtChart extends GenericBirtChart implements DataComparisionChart
 {
 	private int chartType = BAR_CHART;
 	private List<DataComparisionElement> parameters = new ArrayList<DataComparisionElement>(MAX_CHART_ITEMS);
 	private Axis xAxis = null;
 	private Axis yAxis = null;
+	private Series valueSeries = null;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public DataComparisionBirtChart(Composite parent, int style, int chartType)
+	public DataComparisonBirtChart(Composite parent, int style, int chartType)
 	{
 		super(parent, style);
 		this.chartType = chartType;
@@ -80,6 +85,9 @@ public class DataComparisionBirtChart extends GenericBirtChart implements DataCo
 			case BAR_CHART:
 			case BUBBLE_CHART:
 				chart = createChartWithAxes();
+				break;
+			case PIE_CHART:
+				chart = createChartWithoutAxes();
 				break;
 			default:
 				chart = ChartWithoutAxesImpl.create();	// Create empty chart
@@ -131,11 +139,51 @@ public class DataComparisionBirtChart extends GenericBirtChart implements DataCo
       
       // Values
       NumberDataSet valuesDataSet = NumberDataSetImpl.create(getElementValues());
-      Series seValues = createSeriesImplementation();
-      seValues.setDataSet(valuesDataSet);
+      valueSeries = createSeriesImplementation();
+      valueSeries.setDataSet(valuesDataSet);
       SeriesDefinition sdY = SeriesDefinitionImpl.create();
       yAxis.getSeriesDefinitions().add(sdY);
-      sdY.getSeries().add(seValues);
+      sdY.getSeries().add(valueSeries);
+		
+		return chart;
+	}
+	
+	/**
+	 * Create chart without axes: pie, dial, etc.
+	 * 
+	 * @return
+	 */
+	private Chart createChartWithoutAxes()
+	{
+		ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
+		chart.setDimension(is3DModeEnabled() ? ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL : ChartDimension.TWO_DIMENSIONAL_LITERAL);
+
+		// Title
+		Text tc = chart.getTitle().getLabel().getCaption();
+		tc.setValue(getTitle());
+		tc.getFont().setSize(11);
+		tc.getFont().setName("Verdana");
+		chart.getTitle().setVisible(isTitleVisible());
+		
+		// Legend
+		chart.getLegend().setItemType(LegendItemType.CATEGORIES_LITERAL);
+		chart.getLegend().setVisible(isLegendVisible());
+		
+		// Categories
+      SeriesDefinition sdCategory = SeriesDefinitionImpl.create();
+      sdCategory.setSeriesPalette(getBirtPalette());
+      Series seCategory = SeriesImpl.create();
+      seCategory.setDataSet(TextDataSetImpl.create(getElementNames()));
+      sdCategory.getSeries().add(seCategory);
+      chart.getSeriesDefinitions().add(sdCategory);
+      
+      // Values
+      SeriesDefinition sdValues = SeriesDefinitionImpl.create();
+      NumberDataSet valuesDataSet = NumberDataSetImpl.create(getElementValues());
+      valueSeries = createSeriesImplementation();
+      valueSeries.setDataSet(valuesDataSet);
+      sdValues.getSeries().add(valueSeries);
+      sdCategory.getSeriesDefinitions().add(sdValues);
 		
 		return chart;
 	}
@@ -152,6 +200,15 @@ public class DataComparisionBirtChart extends GenericBirtChart implements DataCo
 				return BarSeriesImpl.create();
 			case BUBBLE_CHART:
 				return BubbleSeriesImpl.create();
+			case PIE_CHART:
+				PieSeries series = (PieSeries)PieSeriesImpl.create();
+				series.setExplosion(5);
+				series.setRatio(0.4);
+				series.setTranslucent(true);
+				series.setLabelPosition(Position.INSIDE_LITERAL);
+				series.getLeaderLineAttributes().setVisible(false);
+				series.getLeaderLineAttributes().setThickness(3);
+				return series;
 			default:
 				return null;
 		}
@@ -241,11 +298,10 @@ public class DataComparisionBirtChart extends GenericBirtChart implements DataCo
 	@Override
 	public void refresh()
 	{
-		if (yAxis == null)
+		if (valueSeries == null)
 			return;
 
-		yAxis.getSeriesDefinitions().get(0).getSeries().get(0).setDataSet(NumberDataSetImpl.create(getElementValues()));
-		
+		valueSeries.setDataSet(NumberDataSetImpl.create(getElementValues()));
 		super.refresh();
 	}
 }

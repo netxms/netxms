@@ -30,6 +30,7 @@ import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.PaletteImpl;
 import org.eclipse.birt.core.framework.PlatformConfig;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -48,7 +49,6 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 {
 	private Chart chart = null;
 	private boolean fullRepaint = true;
-	private Bounds bounds;
 	private IDeviceRenderer deviceRenderer = null;
 	private GC gcImage = null;
 	private GeneratedChartState generatedChartState = null;
@@ -63,7 +63,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	 */
 	public GenericBirtChart(Composite parent, int style)
 	{
-		super(parent, style);
+		super(parent, style | SWT.NO_BACKGROUND);
 		
 		try
 		{
@@ -177,17 +177,16 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			imgChart = new Image(getDisplay(), clientArea);
 			gcImage = new GC(imgChart);
 			deviceRenderer.setProperty(IDeviceRenderer.GRAPHICS_CONTEXT, gcImage);
-			bounds = BoundsImpl.create(0, 0, clientArea.width, clientArea.height);
+			final Bounds bounds = BoundsImpl.create(0, 0, clientArea.width, clientArea.height);
 			bounds.scale(72d / deviceRenderer.getDisplayServer().getDpiResolution());
 
 			try
 			{
 				generatedChartState = generator.build(deviceRenderer.getDisplayServer(), chart, bounds, null, null, null);
+				generator.render(deviceRenderer, generatedChartState);
 			}
 			catch(ChartException e)
 			{
-				generatedChartState = null;
-				
 				/* TODO: add logging and/or user notification */
 				e.printStackTrace();
 			}
@@ -195,19 +194,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			fullRepaint = false;
 		}
 
-		if (generatedChartState != null)
-		{
-			try
-			{
-				generator.render(deviceRenderer, generatedChartState);
-				event.gc.drawImage(imgChart, clientArea.x, clientArea.y);
-			}
-			catch(ChartException e)
-			{
-				/* TODO: add logging and/or user notification */
-				e.printStackTrace();
-			}
-		}
+		event.gc.drawImage(imgChart, clientArea.x, clientArea.y);
 	}
 	
 	/* (non-Javadoc)
@@ -216,22 +203,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	@Override
 	public void refresh()
 	{
-		if (generatedChartState != null)
-		{
-			try
-			{
-				generator.refresh(generatedChartState);
-			}
-			catch(ChartException e)
-			{
-				/* TODO: add logging and/or user notification */
-				e.printStackTrace();
-			}
-		}
-		else
-		{
-			fullRepaint = true;	// cause rebuild if we don't have saved state
-		}
+		fullRepaint = true;
 		redraw();
 	}	
 

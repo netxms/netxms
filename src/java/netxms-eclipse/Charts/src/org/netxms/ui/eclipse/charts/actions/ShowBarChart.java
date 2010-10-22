@@ -13,17 +13,20 @@
  */
 package org.netxms.ui.eclipse.charts.actions;
 
-import org.netxms.ui.eclipse.charts.views.DataComparisionView;
+import org.netxms.ui.eclipse.charts.api.DataComparisionChart;
 
 /**
- * Show line graph for selected DCI(s)
+ * Show bar chart for selected DCIs
  * 
  */
-public class ShowBarChart extends ShowLastValuesGraph
+public class ShowBarChart extends ShowDataComparisonChart
 {
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.actions.ShowDataComparisonChart#getChartType()
+	 */
 	@Override
-	protected String getViewId()
+	protected int getChartType()
 	{
-		return DataComparisionView.ID;
+		return DataComparisionChart.BAR_CHART;
 	}
 }
