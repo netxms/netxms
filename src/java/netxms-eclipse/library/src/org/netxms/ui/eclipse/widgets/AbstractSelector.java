@@ -106,7 +106,7 @@ public class AbstractSelector extends Composite
 		createActions();
 		createContextMenu();
 		
-		text.setToolTipText("DEMO TEXT");
+		text.setToolTipText(getTextToolTip());
 	}
 	
 	/**
@@ -175,6 +175,15 @@ public class AbstractSelector extends Composite
 	protected String getButtonToolTip()
 	{
 		return "Select...";
+	}
+
+	/**
+	 * Returns tooltip text for text area. Can be overridden by subclasses.
+	 * @return tooltip text for selection button
+	 */
+	protected String getTextToolTip()
+	{
+		return null;
 	}
 
 	/**

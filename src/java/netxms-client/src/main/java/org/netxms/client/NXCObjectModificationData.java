@@ -18,6 +18,7 @@
  */
 package org.netxms.client;
 
+import java.net.InetAddress;
 import java.util.Map;
 
 /**
@@ -45,6 +46,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_SNMP_PROXY        = 0x00002000L;
 	public static final long MODIFY_TRUSTED_NODES     = 0x00004000L;
 	public static final long MODIFY_GEOLOCATION       = 0x00008000L;
+	public static final long MODIFY_PRIMARY_IP        = 0x00010000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -73,6 +75,7 @@ public class NXCObjectModificationData
 	private long snmpProxy;
 	private long[] trustedNodes;
 	private GeoLocation geolocation;
+	private InetAddress primaryIpAddress;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -524,5 +527,22 @@ public class NXCObjectModificationData
 	{
 		this.geolocation = geolocation;
 		flags |= MODIFY_GEOLOCATION;
+	}
+
+	/**
+	 * @return the primaryIpAddress
+	 */
+	public InetAddress getPrimaryIpAddress()
+	{
+		return primaryIpAddress;
+	}
+
+	/**
+	 * @param primaryIpAddress the primaryIpAddress to set
+	 */
+	public void setPrimaryIpAddress(InetAddress primaryIpAddress)
+	{
+		this.primaryIpAddress = primaryIpAddress;
+		flags |= MODIFY_PRIMARY_IP;
 	}
 }

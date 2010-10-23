@@ -1928,6 +1928,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		// Object name
 		if ((flags & NXCObjectModificationData.MODIFY_NAME) != 0)
 			msg.setVariable(NXCPCodes.VID_OBJECT_NAME, data.getName());
+		
+		// Primary IP
+		if ((flags & NXCObjectModificationData.MODIFY_PRIMARY_IP) != 0)
+			msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getPrimaryIpAddress());
 
 		// Access control list
 		if ((flags & NXCObjectModificationData.MODIFY_ACL) != 0)

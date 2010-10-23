@@ -34,6 +34,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -137,6 +138,9 @@ public class TrustedNodes extends PropertyPage
 				}
 			}
       });
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      addButton.setLayoutData(rd);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("Delete");
@@ -165,6 +169,9 @@ public class TrustedNodes extends PropertyPage
 				}
 			}
       });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      deleteButton.setLayoutData(rd);
       
 		return dialogArea;
 	}

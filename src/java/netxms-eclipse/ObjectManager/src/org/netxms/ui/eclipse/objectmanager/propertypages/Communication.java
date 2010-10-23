@@ -41,6 +41,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.objectbrowser.widgets.IPAddressSelector;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -54,6 +55,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class Communication extends PropertyPage
 {
 	private Node node;
+	private IPAddressSelector primaryIpAddress;
 	private LabeledText agentPort;
 	private LabeledText agentSharedSecret;
 	private Combo agentAuthMethod;
@@ -81,10 +83,28 @@ public class Communication extends PropertyPage
 		dialogLayout.marginHeight = 0;
 		dialogArea.setLayout(dialogLayout);
 		
+		// General
+		Group generalGroup = new Group(dialogArea, SWT.NONE);
+		generalGroup.setText("General");
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		generalGroup.setLayoutData(gd);
+		GridLayout generalGroupLayout = new GridLayout();
+		generalGroup.setLayout(generalGroupLayout);
+		
+		primaryIpAddress = new IPAddressSelector(generalGroup, SWT.NONE);
+		primaryIpAddress.setLabel("Primary IP address");
+		primaryIpAddress.setNode(node);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		primaryIpAddress.setLayoutData(gd);
+		
 		// Agent
 		Group agentGroup = new Group(dialogArea, SWT.NONE);
 		agentGroup.setText("NetXMS Agent");
-		GridData gd = new GridData();
+		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		agentGroup.setLayoutData(gd);
@@ -302,6 +322,8 @@ public class Communication extends PropertyPage
 			setValid(false);
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
+		
+		md.setPrimaryIpAddress(primaryIpAddress.getAddress());
 		
 		md.setAgentPort(Integer.parseInt(agentPort.getText(), 10));
 		md.setAgentProxy(agentProxy.getObjectId());
