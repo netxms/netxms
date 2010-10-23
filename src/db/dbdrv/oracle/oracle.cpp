@@ -419,7 +419,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 								int length = pBuffers[i].nLength / sizeof(UCS2CHAR);
 								pResult->pData[nPos] = (WCHAR *)malloc((length + 1) * sizeof(WCHAR));
 #if UNICODE_UCS4
-								ucs2_to_ucs4(pBuffers[i].pData, length, pResult->pData[nPos], length);
+								ucs2_to_ucs4(pBuffers[i].pData, length, pResult->pData[nPos], length + 1);
 #else
 								memcpy(pResult->pData[nPos], pBuffers[i].pData, pBuffers[i].nLength);
 #endif
@@ -730,7 +730,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 	}
 	else
 	{
-		nLen = min(nBufSize - 1, (int)(pConn->pBuffers[nColumn].nLength / sizeof(UCS2CHAR)));
+		nLen = min(nBufSize, ((int)(pConn->pBuffers[nColumn].nLength / sizeof(UCS2CHAR))) + 1);
 #if UNICODE_UCS4
 		ucs2_to_ucs4(pConn->pBuffers[nColumn].pData, nLen, pBuffer, nLen);
 #else
