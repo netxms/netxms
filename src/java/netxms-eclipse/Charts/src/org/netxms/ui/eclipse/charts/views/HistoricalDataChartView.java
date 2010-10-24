@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.charts.views;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -31,13 +32,11 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
@@ -47,22 +46,23 @@ import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
-import org.netxms.ui.eclipse.charts.api.DataChart;
 import org.netxms.ui.eclipse.charts.api.DataComparisionChart;
+import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.charts.widgets.GenericChart;
+import org.netxms.ui.eclipse.charts.widgets.HistoricalDataBirtChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * View for comparing DCI values visually using charts.
+ * View for historical data charts
  *
  */
-public class DataComparisonView extends ViewPart
+public class HistoricalDataChartView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.charts.views.DataComparisionView";
+	public static final String ID = "org.netxms.ui.eclipse.charts.views.HistoricalDataChartView";
 	
-	private DataComparisionChart chart;
+	private HistoricalDataChart chart;
 	private GenericChart chartWidget;
 	protected NXCSession session;
 	private boolean updateInProgress = false;
@@ -70,27 +70,13 @@ public class DataComparisonView extends ViewPart
 	private Runnable refreshTimer;
 	private boolean autoRefreshEnabled = true;
 	private boolean useLogScale = false;
-	private boolean showIn3D = true;
+	private boolean showIn3D = false;
 	private int autoRefreshInterval = 30000;	// 30 seconds
-	private int chartType = DataComparisionChart.BAR_CHART;
-	private boolean transposed = false;
-	private boolean showLegend = true;
-	private int legendLocation = DataChart.POSITION_RIGHT;
-	private Image[] titleImages = new Image[2];
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
-	private Action actionShowBarChart;
-	private Action actionShowPieChart;
 	private Action actionShowIn3D;
 	private Action actionUseLogScale;
-	private Action actionHorizontal;
-	private Action actionVertical;
-	private Action actionShowLegend;
-	private Action actionLegendLeft;
-	private Action actionLegendRight;
-	private Action actionLegendTop;
-	private Action actionLegendBottom;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -101,27 +87,15 @@ public class DataComparisonView extends ViewPart
 		super.init(site);
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		
-		titleImages[0] = Activator.getImageDescriptor("icons/chart_bar.png").createImage();
-		titleImages[1] = Activator.getImageDescriptor("icons/chart_pie.png").createImage();
 
 		// Extract information from view id
 		//   first field is unique ID
-		//   second is initial chart type
-		//   third is DCI list
+		//   second is DCI list
 		String id = site.getSecondaryId();
 		String[] fields = id.split("&");
 		if (!fields[0].equals(HistoryGraph.PREDEFINED_GRAPH_SUBID))
 		{
-			try
-			{
-				chartType = Integer.parseInt(fields[1]);
-			}
-			catch(NumberFormatException e)
-			{
-				chartType = DataComparisionChart.BAR_CHART;
-			}
-			for(int i = 2; i < fields.length; i++)
+			for(int i = 1; i < fields.length; i++)
 			{
 				String[] subfields = fields[i].split("\\@");
 				if (subfields.length == 6)
@@ -146,14 +120,6 @@ public class DataComparisonView extends ViewPart
 				}
 			}
 		}
-		
-		try
-		{
-			setTitleImage(titleImages[chartType]);
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-		}
 	}
 
 	/* (non-Javadoc)
@@ -162,16 +128,11 @@ public class DataComparisonView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		chart = new DataComparisonBirtChart(parent, SWT.NONE, chartType);
+		chart = new HistoricalDataBirtChart(parent, SWT.NONE);
 		chartWidget = (GenericChart)chart;
 		
-		chart.setLegendPosition(legendLocation);
-		chart.setLegendVisible(showLegend);
-		chart.set3DModeEnabled(showIn3D);
-		chart.setTransposed(transposed);
-		
 		for(GraphItem item : items)
-			chart.addParameter(item.getDescription(), 0);
+			chart.addParameter(item);
 		
 		chart.initializationComplete();
 		
@@ -267,7 +228,7 @@ public class DataComparisonView extends ViewPart
 		};
 		actionUseLogScale.setChecked(useLogScale);
 		
-		actionShowIn3D = new Action("&3D view") {
+		actionShowIn3D = new Action("Show in &3D") {
 			@Override
 			public void run()
 			{
@@ -277,102 +238,7 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		actionShowIn3D.setChecked(showIn3D);
-		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
-		
-		actionShowLegend = new Action("&Show legend") {
-			@Override
-			public void run()
-			{
-				showLegend = !showLegend;
-				setChecked(showLegend);
-				chart.setLegendVisible(showLegend);
-			}
-		};
-		actionShowLegend.setChecked(showLegend);
-		
-		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				legendLocation = DataChart.POSITION_LEFT;
-				chart.setLegendPosition(legendLocation);
-			}
-		};
-		actionLegendLeft.setChecked(legendLocation == DataChart.POSITION_LEFT);
-		
-		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				legendLocation = DataChart.POSITION_RIGHT;
-				chart.setLegendPosition(legendLocation);
-			}
-		};
-		actionLegendRight.setChecked(legendLocation == DataChart.POSITION_RIGHT);
-		
-		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				legendLocation = DataChart.POSITION_TOP;
-				chart.setLegendPosition(legendLocation);
-			}
-		};
-		actionLegendTop.setChecked(legendLocation == DataChart.POSITION_LEFT);
-		
-		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				legendLocation = DataChart.POSITION_BOTTOM;
-				chart.setLegendPosition(legendLocation);
-			}
-		};
-		actionLegendBottom.setChecked(legendLocation == DataChart.POSITION_LEFT);
-		
-		actionShowBarChart = new Action("&Bar chart", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				setChartType(DataComparisionChart.BAR_CHART);
-			}
-		};
-		actionShowBarChart.setChecked(chart.getChartType() == DataComparisionChart.BAR_CHART);
-		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png"));
-		
-		actionShowPieChart = new Action("&Pie chart", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				setChartType(DataComparisionChart.PIE_CHART);
-			}
-		};
-		actionShowPieChart.setChecked(chart.getChartType() == DataComparisionChart.PIE_CHART);
-		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png"));
-
-		actionHorizontal = new Action("Show &horizontally", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				transposed = true;
-				chart.setTransposed(true);
-			}
-		};
-		actionHorizontal.setChecked(transposed);
-		actionHorizontal.setEnabled(chart.hasAxes());
-		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/bar_horizontal.png"));
-		
-		actionVertical = new Action("Show &vertically", Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				transposed = false;
-				chart.setTransposed(false);
-			}
-		};
-		actionVertical.setChecked(!transposed);
-		actionVertical.setEnabled(chart.hasAxes());
-		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/bar_vertical.png"));
+		actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
 	}
 	
 	/**
@@ -391,24 +257,9 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		MenuManager legend = new MenuManager("&Legend");
-		legend.add(actionShowLegend);
-		legend.add(new Separator());
-		legend.add(actionLegendLeft);
-		legend.add(actionLegendRight);
-		legend.add(actionLegendTop);
-		legend.add(actionLegendBottom);
-		
-		manager.add(actionShowBarChart);
-		manager.add(actionShowPieChart);
-		manager.add(new Separator());
-		manager.add(actionVertical);
-		manager.add(actionHorizontal);
-		manager.add(new Separator());
 		manager.add(actionShowIn3D);
 		manager.add(actionUseLogScale);
 		manager.add(actionAutoRefresh);
-		manager.add(legend);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -419,24 +270,9 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
-		MenuManager legend = new MenuManager("&Legend");
-		legend.add(actionShowLegend);
-		legend.add(new Separator());
-		legend.add(actionLegendLeft);
-		legend.add(actionLegendRight);
-		legend.add(actionLegendTop);
-		legend.add(actionLegendBottom);
-		
-		manager.add(actionShowBarChart);
-		manager.add(actionShowPieChart);
-		manager.add(new Separator());
-		manager.add(actionVertical);
-		manager.add(actionHorizontal);
-		manager.add(new Separator());
 		manager.add(actionShowIn3D);
 		manager.add(actionUseLogScale);
 		manager.add(actionAutoRefresh);
-		manager.add(legend);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -447,35 +283,9 @@ public class DataComparisonView extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionShowBarChart);
-		manager.add(actionShowPieChart);
-		manager.add(new Separator());
-		manager.add(actionVertical);
-		manager.add(actionHorizontal);
-		//manager.add(new Separator());
-		//manager.add(actionShowIn3D);
+		manager.add(actionShowIn3D);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
-	}
-	
-	/**
-	 * Set new chart type
-	 * @param newType
-	 */
-	private void setChartType(int newType)
-	{
-		chartType = newType;
-		chart.setChartType(newType);
-		actionHorizontal.setEnabled(chart.hasAxes());
-		actionVertical.setEnabled(chart.hasAxes());
-		try
-		{
-			setTitleImage(titleImages[chartType]);
-			firePropertyChange(IWorkbenchPart.PROP_TITLE);
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-		}
 	}
 
 	/**
@@ -498,13 +308,11 @@ public class DataComparisonView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final double[] values = new double[items.size()];
+				final DciData[] values = new DciData[items.size()];
 				for(int i = 0; i < items.size(); i++)
 				{
 					GraphItem item = items.get(i);
-					DciData data = session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1);
-					DciDataRow value = data.getLastValue();
-					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
+					DciData data = session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 100);
 				}
 
 				new UIJob("Update chart")
@@ -528,7 +336,7 @@ public class DataComparisonView extends ViewPart
 	 * 
 	 * @param values new values
 	 */
-	private void setChartData(double[] values)
+	private void setChartData(DciData[] values)
 	{
 		for(int i = 0; i < values.length; i++)
 			chart.updateParameter(i, values[i], false);

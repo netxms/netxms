@@ -20,15 +20,16 @@ package org.netxms.ui.eclipse.charts.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
+import org.eclipse.birt.chart.model.attribute.AxisType;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
 import org.eclipse.birt.chart.model.attribute.LegendItemType;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
 import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.Text;
-import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
 import org.eclipse.birt.chart.model.component.Axis;
 import org.eclipse.birt.chart.model.component.Series;
@@ -42,9 +43,9 @@ import org.eclipse.birt.chart.model.data.impl.SeriesDefinitionImpl;
 import org.eclipse.birt.chart.model.data.impl.TextDataSetImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithAxesImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithoutAxesImpl;
+import org.eclipse.birt.chart.model.type.BarSeries;
 import org.eclipse.birt.chart.model.type.PieSeries;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
-import org.eclipse.birt.chart.model.type.impl.BubbleSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.charts.api.DataComparisionChart;
@@ -56,11 +57,15 @@ import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisionElement;
  */
 public class DataComparisonBirtChart extends GenericBirtChart implements DataComparisionChart
 {
+	private static final String CHART_FONT_NAME = "Verdana";
+	private static final int CHART_FONT_SIZE = 9;
+	
 	private int chartType = BAR_CHART;
 	private List<DataComparisionElement> parameters = new ArrayList<DataComparisionElement>(MAX_CHART_ITEMS);
 	private Axis xAxis = null;
 	private Axis yAxis = null;
 	private Series valueSeries = null;
+	private boolean transposed = false;
 	
 	/**
 	 * @param parent
@@ -83,7 +88,6 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		switch(chartType)
 		{
 			case BAR_CHART:
-			case BUBBLE_CHART:
 				chart = createChartWithAxes();
 				break;
 			case PIE_CHART:
@@ -106,27 +110,40 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		ChartWithAxes chart = ChartWithAxesImpl.create();
 		chart.setDimension(is3DModeEnabled() ? ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL : ChartDimension.TWO_DIMENSIONAL_LITERAL);
+		chart.setTransposed(transposed);
+		chart.getPlot().setOutline(LineAttributesImpl.create(getColorFromPreferences("Chart.Colors.Background"), LineStyle.SOLID_LITERAL, 5));
+		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
 
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
 		tc.setValue(getTitle());
 		tc.getFont().setSize(11);
-		tc.getFont().setName("Verdana");
+		tc.getFont().setName(CHART_FONT_NAME);
 		chart.getTitle().setVisible(isTitleVisible());
 		
 		// Legend
 		chart.getLegend().setItemType(LegendItemType.CATEGORIES_LITERAL);
 		chart.getLegend().setVisible(isLegendVisible());
+		chart.getLegend().setPosition(positionFromInt(legendPosition));
+		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getLegend().setOutline(LineAttributesImpl.create(getColorFromPreferences("Chart.Colors.Background"), LineStyle.SOLID_LITERAL, 5));
+		chart.getLegend().getText().getFont().setName(CHART_FONT_NAME);
+		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE);
 		
 		// X axis
 		xAxis = chart.getPrimaryBaseAxes()[0];
 		xAxis.getTitle().setVisible(false);
+		xAxis.getLabel().setVisible(false);
 		
 		// Y axis
 		yAxis = chart.getPrimaryOrthogonalAxis(xAxis);
 		yAxis.getTitle().setVisible(false);
 		yAxis.getScale().setMin(NumberDataElementImpl.create(0));
-		yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl.create(0, 0, 0), LineStyle.DOTTED_LITERAL, 0));
+		yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Grid.Y.Color"), LineStyle.DOTTED_LITERAL, 0));
+		yAxis.setType(useLogScale ? AxisType.LOGARITHMIC_LITERAL : AxisType.LINEAR_LITERAL);
+		yAxis.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
+		yAxis.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE);
 		
 		// Categories
 		TextDataSet categoryValues = TextDataSetImpl.create(getElementNames());
@@ -157,17 +174,25 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
 		chart.setDimension(is3DModeEnabled() ? ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL : ChartDimension.TWO_DIMENSIONAL_LITERAL);
+		chart.getPlot().setOutline(LineAttributesImpl.create(getColorFromPreferences("Chart.Colors.Background"), LineStyle.SOLID_LITERAL, 5));
+		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
 
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
 		tc.setValue(getTitle());
 		tc.getFont().setSize(11);
-		tc.getFont().setName("Verdana");
+		tc.getFont().setName(CHART_FONT_NAME);
 		chart.getTitle().setVisible(isTitleVisible());
 		
 		// Legend
 		chart.getLegend().setItemType(LegendItemType.CATEGORIES_LITERAL);
 		chart.getLegend().setVisible(isLegendVisible());
+		chart.getLegend().setPosition(positionFromInt(legendPosition));
+		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getLegend().setOutline(LineAttributesImpl.create(getColorFromPreferences("Chart.Colors.Background"), LineStyle.SOLID_LITERAL, 5));
+		chart.getLegend().getText().getFont().setName(CHART_FONT_NAME);
+		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE);
 		
 		// Categories
       SeriesDefinition sdCategory = SeriesDefinitionImpl.create();
@@ -197,18 +222,34 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		switch(chartType)
 		{
 			case BAR_CHART:
-				return BarSeriesImpl.create();
-			case BUBBLE_CHART:
-				return BubbleSeriesImpl.create();
+				BarSeries bs = (BarSeries)BarSeriesImpl.create();
+				if (is3DModeEnabled())
+				{
+					bs.setTranslucent(true);
+				}
+				else
+				{
+					bs.setTranslucent(false);
+				}
+				bs.setLabelPosition(Position.ABOVE_LITERAL);
+				return bs;
 			case PIE_CHART:
-				PieSeries series = (PieSeries)PieSeriesImpl.create();
-				series.setExplosion(5);
-				series.setRatio(0.4);
-				series.setTranslucent(true);
-				series.setLabelPosition(Position.INSIDE_LITERAL);
-				series.getLeaderLineAttributes().setVisible(false);
-				series.getLeaderLineAttributes().setThickness(3);
-				return series;
+				PieSeries ps = (PieSeries)PieSeriesImpl.create();
+				if (is3DModeEnabled())
+				{
+					ps.setExplosion(5);
+					ps.setRatio(0.4);
+					ps.setTranslucent(true);
+				}
+				else
+				{
+					ps.setExplosion(0);
+					ps.setRatio(1);
+					ps.setTranslucent(false);
+				}
+				ps.setLabelPosition(Position.INSIDE_LITERAL);
+				ps.getLeaderLineAttributes().setVisible(false);
+				return ps;
 			default:
 				return null;
 		}
@@ -303,5 +344,34 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 
 		valueSeries.setDataSet(NumberDataSetImpl.create(getElementValues()));
 		super.refresh();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisionChart#setTransposed(boolean)
+	 */
+	@Override
+	public void setTransposed(boolean transposed)
+	{
+		this.transposed = transposed;
+		if (getChart() != null)
+			recreateChart();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisionChart#isTransposed()
+	 */
+	@Override
+	public boolean isTransposed()
+	{
+		return transposed;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#hasAxes()
+	 */
+	@Override
+	public boolean hasAxes()
+	{
+		return chartType == BAR_CHART;
 	}
 }

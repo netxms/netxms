@@ -26,6 +26,11 @@ public interface DataChart
 {
 	public static final int MAX_CHART_ITEMS = 16;
 	
+	public static final int POSITION_LEFT = 0;
+	public static final int POSITION_RIGHT = 1;
+	public static final int POSITION_TOP = 2;
+	public static final int POSITION_BOTTOM = 3;
+	
 	/**
 	 * Marks end of initialization stage and causes first render of a chart.
 	 */
@@ -74,6 +79,19 @@ public interface DataChart
 	public abstract boolean isLegendVisible();
 	
 	/**
+	 * Set legend position
+	 * 
+	 * @param position
+	 */
+	public abstract void setLegendPosition(int position);
+	
+	/**
+	 * Get legend position
+	 * @return
+	 */
+	public abstract int getLegendPosition();
+	
+	/**
 	 * Set palette.
 	 * 
 	 * @param colors colors for series
@@ -103,7 +121,28 @@ public interface DataChart
 	public abstract boolean is3DModeEnabled();
 
 	/**
+	 * Set logarithmic scale mode
+	 * 
+	 * @param enabled true to enable logarithmic scale mode
+	 */
+	public abstract void setLogScaleEnabled(boolean enabled);
+	
+	/**
+	 * Get logarithmic scale mode state.
+	 * 
+	 * @return true if logarithmic scale mode enabled
+	 */
+	public abstract boolean isLogScaleEnabled();
+
+	/**
 	 * Refresh (repaint) chart using current data and settings
 	 */
 	public abstract void refresh();
+	
+	/**
+	 * Returns true if chart has axes.
+	 * 
+	 * @return true if chart has axes
+	 */
+	public abstract boolean hasAxes();
 }

@@ -13,8 +13,10 @@ public abstract class GenericChart extends Canvas implements DataChart
 	protected boolean titleVisible = false;
 	protected boolean legendVisible = true;
 	protected boolean displayIn3D = true;
+	protected boolean useLogScale = false;
 	protected ChartColor[] palette = null;
 	protected IPreferenceStore preferenceStore;
+	protected int legendPosition;
 
 	/**
 	 * Generic constructor.
@@ -90,6 +92,15 @@ public abstract class GenericChart extends Canvas implements DataChart
 		return displayIn3D;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isLogScaleEnabled()
+	 */
+	@Override
+	public boolean isLogScaleEnabled()
+	{
+		return useLogScale;
+	}
+
 	/**
 	 * Create default palette from preferences
 	 */
@@ -100,5 +111,23 @@ public abstract class GenericChart extends Canvas implements DataChart
 		{
 			palette[i] = ChartColor.createFromPreferences(preferenceStore, "Chart.Colors.Data." + i);
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendPosition(int)
+	 */
+	@Override
+	public void setLegendPosition(int position)
+	{
+		legendPosition = position;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getLegendPosition()
+	 */
+	@Override
+	public int getLegendPosition()
+	{
+		return legendPosition;
 	}
 }

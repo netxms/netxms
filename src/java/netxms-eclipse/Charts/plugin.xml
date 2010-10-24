@@ -7,7 +7,7 @@
       <view
             name="History Graph"
             allowMultiple="true"
-            icon="icons/graph.png"
+            icon="icons/chart_line.png"
             class="org.netxms.ui.eclipse.charts.views.HistoryGraph"
             id="org.netxms.ui.eclipse.charts.views.HistoryGraph">
       </view>
@@ -27,6 +27,14 @@
             name="Last Values Chart"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.charts.views.HistoricalDataChartView"
+            icon="icons/chart_line.png"
+            id="org.netxms.ui.eclipse.charts.views.HistoricalDataChartView"
+            name="Historical Data"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -35,17 +43,17 @@
             id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph_DciValue"
             objectClass="org.netxms.client.datacollection.DciValue">
          <action
-               class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
-               id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
-               label="Graph"
-               icon="icons/chart_line.png"
-               menubarPath="additions">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.charts.actions.ShowBarChart"
                icon="icons/chart_bar.png"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowBarChart"
                label="Bar Chart"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
+               label="Line Chart"
+               icon="icons/chart_line.png"
                menubarPath="additions">
          </action>
          <action
@@ -60,17 +68,17 @@
             id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph_DataCollectionItem"
             objectClass="org.netxms.client.datacollection.DataCollectionItem">
          <action
-               class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
-               id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
-               label="Graph"
-               icon="icons/chart_line.png"
-               menubarPath="additions">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.charts.actions.ShowBarChart"
                icon="icons/chart_bar.png"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowBarChart"
                label="Bar Chart"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
+               label="Line Chart"
+               icon="icons/chart_line.png"
                menubarPath="additions">
          </action>
          <action

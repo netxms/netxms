@@ -415,9 +415,12 @@ src/java/netxms-eclipse/Charts/icons/bar_vertical.png -text
 src/java/netxms-eclipse/Charts/icons/chart_bar.png -text
 src/java/netxms-eclipse/Charts/icons/chart_line.png -text
 src/java/netxms-eclipse/Charts/icons/chart_pie.png -text
+src/java/netxms-eclipse/Charts/icons/chart_scatter.gif -text
+src/java/netxms-eclipse/Charts/icons/chart_tube.png -text
 src/java/netxms-eclipse/Charts/icons/folder.png -text
 src/java/netxms-eclipse/Charts/icons/graph.png -text
 src/java/netxms-eclipse/Charts/icons/graph_tree.png -text
+src/java/netxms-eclipse/Charts/icons/view3d.png -text
 src/java/netxms-eclipse/Charts/icons/zoom_in.png -text
 src/java/netxms-eclipse/Charts/icons/zoom_out.png -text
 src/java/netxms-eclipse/Charts/plugin.xml -text
@@ -431,14 +434,15 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowPieC
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/ChartColor.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DataChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DataComparisionChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/HistoricalDataChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/objecttabs/PerformanceTab.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/objecttabs/internal/PerfTabGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/ChartColors.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/preferencepages/GeneralChartPrefs.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/propertypages/PerfTab.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/DataComparisonView.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoricalDataChartView.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoryGraph.java -text
-src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/LastValuesChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/PredefinedGraphTree.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphFolder.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphTreeContentProvider.java -text
@@ -446,6 +450,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/Gr
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/DataComparisonBirtChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericBirtChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/GenericChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/HistoricalDataBirtChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/LineChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal/DataComparisionElement.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/internal/SelectionRectangle.java -text

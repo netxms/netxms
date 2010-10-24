@@ -26,8 +26,7 @@ public interface DataComparisionChart extends DataChart
 {
 	public static final int BAR_CHART = 0;
 	public static final int PIE_CHART = 1;
-	public static final int BUBBLE_CHART = 2;
-	public static final int SCATTER_CHART = 3;
+	public static final int RADAR_CHART = 2;
 
 	/**
 	 * Add parameter
@@ -46,7 +45,7 @@ public interface DataComparisionChart extends DataChart
 	 * @param updateChart if tru, chart will be updated (repainted)
 	 */
 	public abstract void updateParameter(int index, double value, boolean updateChart);
-	
+
 	/**
 	 * Set chart type
 	 * 
@@ -60,4 +59,18 @@ public interface DataComparisionChart extends DataChart
 	 * @return curently selected chart type
 	 */
 	public abstract int getChartType();
+	
+	/**
+	 * Set chart transposed (swapping of axes).
+	 * 
+	 * @param transposed true for transposed chart
+	 */
+	public abstract void setTransposed(boolean transposed);
+	
+	/**
+	 * Get "transposed" flag
+	 * 
+	 * @return "transposed" flag
+	 */
+	public abstract boolean isTransposed();
 }

@@ -32,6 +32,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.charts.views.HistoricalDataChartView;
 import org.netxms.ui.eclipse.charts.views.HistoryGraph;
 
 /**
@@ -100,6 +101,7 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 			
 			try
 			{
+				//window.getActivePage().showView(HistoricalDataChartView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 				window.getActivePage().showView(HistoryGraph.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)

@@ -25,11 +25,14 @@ import org.eclipse.birt.chart.factory.GeneratedChartState;
 import org.eclipse.birt.chart.factory.IGenerator;
 import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.attribute.Bounds;
+import org.eclipse.birt.chart.model.attribute.ColorDefinition;
 import org.eclipse.birt.chart.model.attribute.Palette;
+import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.PaletteImpl;
 import org.eclipse.birt.core.framework.PlatformConfig;
+import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
@@ -37,6 +40,7 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -215,7 +219,10 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	{
 		this.title = title;
 		if (chart != null)
+		{
 			chart.getTitle().getLabel().getCaption().setValue(title);
+			refresh();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -226,7 +233,10 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	{
 		legendVisible = visible;
 		if (chart != null)
+		{
 			chart.getLegend().setVisible(visible);
+			refresh();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -261,5 +271,63 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		for(ChartColor c : palette)
 			birtPalette.getEntries().add(ColorDefinitionImpl.create(c.red, c.green, c.blue, c.alpha));
 		return birtPalette;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLogScaleEnabled(boolean)
+	 */
+	@Override
+	public void setLogScaleEnabled(boolean enabled)
+	{
+		if (useLogScale != enabled)
+		{
+			useLogScale = enabled;
+			if (chart != null)
+				recreateChart();
+		}
+	}
+
+	/**
+	 * Create BIRT color definition object from preference string
+	 *  
+	 * @param name Preference name
+	 * @return color definition object
+	 */
+	protected ColorDefinition getColorFromPreferences(final String name)
+	{
+		RGB rgb = PreferenceConverter.getColor(preferenceStore, name);
+		return ColorDefinitionImpl.create(rgb.red, rgb.green, rgb.blue);
+	}
+	
+	/**
+	 * Get Position object from int constant
+	 * @param value
+	 * @return
+	 */
+	protected Position positionFromInt(int value)
+	{
+		switch(value)
+		{
+			case POSITION_LEFT:
+				return Position.LEFT_LITERAL;
+			case POSITION_RIGHT:
+				return Position.RIGHT_LITERAL;
+			case POSITION_TOP:
+				return Position.ABOVE_LITERAL;
+			case POSITION_BOTTOM:
+				return Position.BELOW_LITERAL;
+		}
+		return Position.RIGHT_LITERAL;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.widgets.GenericChart#setLegendPosition(int)
+	 */
+	@Override
+	public void setLegendPosition(int position)
+	{
+		super.setLegendPosition(position);
+		if (chart != null)
+			recreateChart();
 	}
 }

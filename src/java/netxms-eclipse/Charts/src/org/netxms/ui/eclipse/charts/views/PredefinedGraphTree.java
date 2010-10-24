@@ -92,7 +92,7 @@ public class PredefinedGraphTree extends ViewPart
 			}
 		});
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("rawtypes")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
@@ -147,7 +147,7 @@ public class PredefinedGraphTree extends ViewPart
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
 			 */
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("rawtypes")
 			@Override
 			public void run()
 			{
