@@ -28,6 +28,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1367,7 +1368,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @see org.netxms.api.client.servermanager.ServerManager#getServerVariables()
 	 */
 	@Override
-	public HashMap<String, ServerVariable> getServerVariables() throws IOException, NXCException
+	public Map<String, ServerVariable> getServerVariables() throws IOException, NXCException
 	{
 		NXCPMessage request = newMessage(NXCPCodes.CMD_GET_CONFIG_VARLIST);
 		sendMessage(request);
@@ -3254,5 +3255,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+	
+	/** {@inheritDoc} */
+	@Override
+	public boolean isConnected()
+	{
+		return isConnected;
 	}
 }

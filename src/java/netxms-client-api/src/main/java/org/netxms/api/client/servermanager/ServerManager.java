@@ -19,7 +19,7 @@
 package org.netxms.api.client.servermanager;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.netxms.api.client.NetXMSClientException;
 
@@ -33,13 +33,13 @@ public interface ServerManager
 	/**
 	 * Get server configuration variables.
 	 * 
-	 * @return Hash map containing server configuration variables
+	 * @return Map containing server configuration variables
 	 * @throws IOException
 	 *            if socket I/O error occurs
 	 * @throws NetXMSClientException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-	public abstract HashMap<String, ServerVariable> getServerVariables() throws IOException, NetXMSClientException;
+	public abstract Map<String, ServerVariable> getServerVariables() throws IOException, NetXMSClientException;
 
 	/**
 	 * Set server configuration variable.

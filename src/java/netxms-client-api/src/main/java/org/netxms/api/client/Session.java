@@ -212,4 +212,10 @@ public interface Session
 	 * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
 	 */
 	public abstract String getAttributeForCurrentUser(final String name) throws IOException, NetXMSClientException;
+	
+	/**
+	 * Get connection state
+	 * @return connection state
+	 */
+	public abstract boolean isConnected();
 }
