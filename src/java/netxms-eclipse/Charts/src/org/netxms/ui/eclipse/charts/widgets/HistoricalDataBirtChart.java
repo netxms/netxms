@@ -121,7 +121,7 @@ public class HistoricalDataBirtChart extends GenericBirtChart implements Histori
 
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
-		tc.setValue(getTitle());
+		tc.setValue(getChartTitle());
 		tc.getFont().setSize(11);
 		tc.getFont().setName("Verdana");
 		chart.getTitle().setVisible(isTitleVisible());

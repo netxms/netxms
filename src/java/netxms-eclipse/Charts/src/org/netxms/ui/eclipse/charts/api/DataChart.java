@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.charts.api;
 
+import org.eclipse.swt.SWT;
+
 /**
  * Generic data chart interface
  *
@@ -26,10 +28,10 @@ public interface DataChart
 {
 	public static final int MAX_CHART_ITEMS = 16;
 	
-	public static final int POSITION_LEFT = 0;
-	public static final int POSITION_RIGHT = 1;
-	public static final int POSITION_TOP = 2;
-	public static final int POSITION_BOTTOM = 3;
+	public static final int POSITION_LEFT = SWT.LEFT;
+	public static final int POSITION_RIGHT = SWT.RIGHT;
+	public static final int POSITION_TOP = SWT.TOP;
+	public static final int POSITION_BOTTOM = SWT.BOTTOM;
 	
 	/**
 	 * Marks end of initialization stage and causes first render of a chart.
@@ -41,14 +43,14 @@ public interface DataChart
 	 * 
 	 * @param title new title
 	 */
-	public abstract void setTitle(String title);
+	public abstract void setChartTitle(String title);
 	
 	/**
 	 * Get chart's title
 	 * 
 	 * @return chart's title
 	 */
-	public abstract String getTitle();
+	public abstract String getChartTitle();
 	
 	/**
 	 * Show or hide chart's title

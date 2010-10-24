@@ -26,9 +26,11 @@ import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
 import org.eclipse.birt.chart.model.attribute.AxisType;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
+import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
 import org.eclipse.birt.chart.model.attribute.LegendItemType;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
 import org.eclipse.birt.chart.model.attribute.Position;
+import org.eclipse.birt.chart.model.attribute.RiserType;
 import org.eclipse.birt.chart.model.attribute.Text;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
 import org.eclipse.birt.chart.model.component.Axis;
@@ -88,6 +90,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		switch(chartType)
 		{
 			case BAR_CHART:
+			case TUBE_CHART:
 				chart = createChartWithAxes();
 				break;
 			case PIE_CHART:
@@ -117,7 +120,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
-		tc.setValue(getTitle());
+		tc.setValue(getChartTitle());
 		tc.getFont().setSize(11);
 		tc.getFont().setName(CHART_FONT_NAME);
 		chart.getTitle().setVisible(isTitleVisible());
@@ -176,11 +179,12 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.setDimension(is3DModeEnabled() ? ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL : ChartDimension.TWO_DIMENSIONAL_LITERAL);
 		chart.getPlot().setOutline(LineAttributesImpl.create(getColorFromPreferences("Chart.Colors.Background"), LineStyle.SOLID_LITERAL, 5));
 		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background"));
-		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+		// For chart without axes, we wish to paint plot area with same background color as other chart parts
+		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
-		tc.setValue(getTitle());
+		tc.setValue(getChartTitle());
 		tc.getFont().setSize(11);
 		tc.getFont().setName(CHART_FONT_NAME);
 		chart.getTitle().setVisible(isTitleVisible());
@@ -222,9 +226,11 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		switch(chartType)
 		{
 			case BAR_CHART:
+			case TUBE_CHART:
 				BarSeries bs = (BarSeries)BarSeriesImpl.create();
 				bs.setTranslucent(translucent);
-				bs.setLabelPosition(Position.ABOVE_LITERAL);
+				if (chartType == TUBE_CHART)
+					bs.setRiser(RiserType.TUBE_LITERAL);
 				return bs;
 			case PIE_CHART:
 				PieSeries ps = (PieSeries)PieSeriesImpl.create();
@@ -239,8 +245,9 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 					ps.setRatio(1);
 				}
 				ps.setTranslucent(translucent);
-				ps.setLabelPosition(Position.INSIDE_LITERAL);
-				ps.getLeaderLineAttributes().setVisible(false);
+				ps.setLabelPosition(Position.OUTSIDE_LITERAL);
+				ps.setLeaderLineStyle(LeaderLineStyle.FIXED_LENGTH_LITERAL);
+				ps.getLeaderLineAttributes().setVisible(true);
 				return ps;
 			default:
 				return null;

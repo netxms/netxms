@@ -34,7 +34,11 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
@@ -54,7 +58,7 @@ import org.swtchart.ISeries.SeriesType;
  * Line chart widget
  *
  */
-public class LineChart extends Chart
+public class LineChart extends Chart implements HistoricalDataChart
 {
 	private static final int MAX_ZOOM_LEVEL = 16;
 	
@@ -300,16 +304,191 @@ public class LineChart extends Chart
 		return series;
 	}
 	
-	/**
-	 * Set time range for chart
-	 * 
-	 * @param from Chart's "from" time
-	 * @param to Chart's "to" time
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setTimeRange(java.util.Date, java.util.Date)
 	 */
+	@Override
 	public void setTimeRange(final Date from, final Date to)
 	{
 		timeFrom = from.getTime();
 		timeTo = to.getTime();
 		getAxisSet().getXAxis(0).setRange(new Range(timeFrom, timeTo));
+	}
+
+	@Override
+	public void initializationComplete()
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTitle(java.lang.String)
+	 */
+	@Override
+	public void setChartTitle(String title)
+	{
+		getTitle().setText(title);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTitleVisible(boolean)
+	 */
+	@Override
+	public void setTitleVisible(boolean visible)
+	{
+		getTitle().setVisible(visible);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isTitleVisible()
+	 */
+	@Override
+	public boolean isTitleVisible()
+	{
+		return getTitle().isVisible();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getChartTitle()
+	 */
+	@Override
+	public String getChartTitle()
+	{
+		return getTitle().getText();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendVisible(boolean)
+	 */
+	@Override
+	public void setLegendVisible(boolean visible)
+	{
+		getLegend().setVisible(visible);
+		redraw();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isLegendVisible()
+	 */
+	@Override
+	public boolean isLegendVisible()
+	{
+		return getLegend().isVisible();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendPosition(int)
+	 */
+	@Override
+	public void setLegendPosition(int position)
+	{
+		getLegend().setPosition(position);
+		redraw();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getLegendPosition()
+	 */
+	@Override
+	public int getLegendPosition()
+	{
+		return getLegend().getPosition();
+	}
+
+	@Override
+	public void setPalette(ChartColor[] colors)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setPaletteEntry(int index, ChartColor color)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#set3DModeEnabled(boolean)
+	 */
+	@Override
+	public void set3DModeEnabled(boolean enabled)
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#is3DModeEnabled()
+	 */
+	@Override
+	public boolean is3DModeEnabled()
+	{
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLogScaleEnabled(boolean)
+	 */
+	@Override
+	public void setLogScaleEnabled(boolean enabled)
+	{
+		getAxisSet().getYAxis(0).enableLogScale(enabled);
+		redraw();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isLogScaleEnabled()
+	 */
+	@Override
+	public boolean isLogScaleEnabled()
+	{
+		return getAxisSet().getYAxis(0).isLogScaleEnabled();
+	}
+
+	@Override
+	public void setTranslucent(boolean translucent)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isTranslucent()
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#refresh()
+	 */
+	@Override
+	public void refresh()
+	{
+		redraw();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#hasAxes()
+	 */
+	@Override
+	public boolean hasAxes()
+	{
+		return true;
+	}
+
+	@Override
+	public int addParameter(GraphItem item)
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void updateParameter(int index, DciData data, boolean updateChart)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

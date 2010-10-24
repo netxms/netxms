@@ -27,6 +27,7 @@ public interface DataComparisionChart extends DataChart
 	public static final int BAR_CHART = 0;
 	public static final int PIE_CHART = 1;
 	public static final int RADAR_CHART = 2;
+	public static final int TUBE_CHART = 3;
 
 	/**
 	 * Add parameter

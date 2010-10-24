@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
@@ -58,6 +59,7 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.charts.api.DataChart;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.swtchart.IAxis;
@@ -76,6 +78,12 @@ public class HistoryGraph extends ViewPart
 	private static final int[] presetRanges = { 10, 30, 60, 120, 240, 1440, 10080, 44640, 525600 };
 	private static final String[] presetNames = { "10 minutes", "30 minutes", "hour", "2 hours", "4 hours",
 	                                              "day", "week", "month", "year" };
+
+	private static final String KEY_AUTO_REFRESH = "autoRefresh";
+	private static final String KEY_REFRESH_INTERVAL = "refreshInterval";
+	private static final String KEY_LOG_SCALE = "logScale";
+	private static final String KEY_SHOW_LEGEND = "showLegend";
+	private static final String KEY_LEGEND_POSITION = "legendPosition";
 	
 	private NXCSession session;
 	private ArrayList<GraphItem> items = new ArrayList<GraphItem>(1);
@@ -90,6 +98,8 @@ public class HistoryGraph extends ViewPart
 	private boolean autoRefreshEnabled = true;
 	private boolean useLogScale = false;
 	private int autoRefreshInterval = 30000;	// 30 seconds
+	private boolean showLegend = true;
+	private int legendPosition = DataChart.POSITION_BOTTOM;
 	
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
@@ -99,6 +109,11 @@ public class HistoryGraph extends ViewPart
 	private Action actionAdjustY;
 	private Action actionAdjustBoth;
 	private Action actionLogScale;
+	private Action actionShowLegend;
+	private Action actionLegendLeft;
+	private Action actionLegendRight;
+	private Action actionLegendTop;
+	private Action actionLegendBottom;
 	private Action[] presetActions;
 	
 	/**
@@ -184,6 +199,47 @@ public class HistoryGraph extends ViewPart
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void init(IViewSite site, IMemento memento) throws PartInitException
+	{
+		init(site);
+		
+		if (memento != null)
+		{
+			autoRefreshEnabled = safeCast(memento.getBoolean(KEY_AUTO_REFRESH), autoRefreshEnabled);
+			autoRefreshInterval = safeCast(memento.getInteger(KEY_REFRESH_INTERVAL), autoRefreshInterval);
+			showLegend = safeCast(memento.getBoolean(KEY_SHOW_LEGEND), showLegend);
+			legendPosition = safeCast(memento.getInteger(KEY_LEGEND_POSITION), legendPosition);
+			useLogScale = safeCast(memento.getBoolean(KEY_LOG_SCALE), useLogScale);
+		}
+	}
+
+	private static int safeCast(Integer i, int defval)
+	{
+		return (i != null) ? i : defval;
+	}
+	
+	private static boolean safeCast(Boolean b, boolean defval)
+	{
+		return (b != null) ? b : defval;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void saveState(IMemento memento)
+	{
+		memento.putBoolean(KEY_AUTO_REFRESH, autoRefreshEnabled);
+		memento.putInteger(KEY_REFRESH_INTERVAL, autoRefreshInterval);
+		memento.putBoolean(KEY_SHOW_LEGEND, showLegend);
+		memento.putInteger(KEY_LEGEND_POSITION, legendPosition);
+		memento.putBoolean(KEY_LOG_SCALE, useLogScale);
+	}
+	
 	/**
 	 * Initialize this view with predefined graph settings
 	 * 
@@ -193,13 +249,14 @@ public class HistoryGraph extends ViewPart
 	{
 		// General settings
 		setPartName(gs.getTitle());
-		chart.getTitle().setText(gs.getTitle());
+		chart.setChartTitle(gs.getTitle());
 
 		// Chart visual settings
 		itemStyles.clear();
 		itemStyles.addAll(Arrays.asList(gs.getItemStyles()));
-		chart.getAxisSet().getYAxis(0).enableLogScale(gs.isLogScale());
+		chart.setLogScaleEnabled(gs.isLogScale());
 		setGridVisible(gs.isGridVisible());
+		chart.setLegendVisible(gs.isLegendVisible());
 		
 		// Data
 		items.clear();
@@ -223,7 +280,9 @@ public class HistoryGraph extends ViewPart
 		chart = new LineChart(parent, SWT.NONE);
 		
 		setGridVisible(true);
-		chart.getAxisSet().getYAxis(0).enableLogScale(useLogScale);
+		chart.setLogScaleEnabled(useLogScale);
+		chart.setLegendVisible(showLegend);
+		chart.setLegendPosition(legendPosition);
 		
 		createActions();
 		contributeToActionBars();
@@ -360,7 +419,7 @@ public class HistoryGraph extends ViewPart
 			{
 				useLogScale = !useLogScale;
 				setChecked(useLogScale);
-				chart.getAxisSet().getYAxis(0).enableLogScale(useLogScale);
+				chart.setLogScaleEnabled(useLogScale);
 				chart.redraw();
 			}
 		};
@@ -446,6 +505,57 @@ public class HistoryGraph extends ViewPart
 		actionAdjustBoth.setText("&Adjust");
 		actionAdjustBoth.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png"));
 
+		actionShowLegend = new Action("&Show legend") {
+			@Override
+			public void run()
+			{
+				showLegend = !showLegend;
+				setChecked(showLegend);
+				chart.setLegendVisible(showLegend);
+			}
+		};
+		actionShowLegend.setChecked(showLegend);
+		
+		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				legendPosition = DataChart.POSITION_LEFT;
+				chart.setLegendPosition(legendPosition);
+			}
+		};
+		actionLegendLeft.setChecked(legendPosition == DataChart.POSITION_LEFT);
+		
+		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				legendPosition = DataChart.POSITION_RIGHT;
+				chart.setLegendPosition(legendPosition);
+			}
+		};
+		actionLegendRight.setChecked(legendPosition == DataChart.POSITION_RIGHT);
+		
+		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				legendPosition = DataChart.POSITION_TOP;
+				chart.setLegendPosition(legendPosition);
+			}
+		};
+		actionLegendTop.setChecked(legendPosition == DataChart.POSITION_LEFT);
+		
+		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				legendPosition = DataChart.POSITION_BOTTOM;
+				chart.setLegendPosition(legendPosition);
+			}
+		};
+		actionLegendBottom.setChecked(legendPosition == DataChart.POSITION_LEFT);
+
 		presetActions = new Action[presetRanges.length];
 		for(int i = 0; i < presetRanges.length; i++)
 		{
@@ -484,6 +594,14 @@ public class HistoryGraph extends ViewPart
 		for(int i = 0; i < presetActions.length; i++)
 			presets.add(presetActions[i]);
 		
+		MenuManager legend = new MenuManager("&Legend");
+		legend.add(actionShowLegend);
+		legend.add(new Separator());
+		legend.add(actionLegendLeft);
+		legend.add(actionLegendRight);
+		legend.add(actionLegendTop);
+		legend.add(actionLegendBottom);		
+		
 		manager.add(presets);
 		manager.add(new Separator());
 		manager.add(actionAdjustBoth);
@@ -495,6 +613,7 @@ public class HistoryGraph extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionLogScale);
 		manager.add(actionAutoRefresh);
+		manager.add(legend);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -508,6 +627,14 @@ public class HistoryGraph extends ViewPart
 		MenuManager presets = new MenuManager("&Presets");
 		for(int i = 0; i < presetActions.length; i++)
 			presets.add(presetActions[i]);
+
+		MenuManager legend = new MenuManager("&Legend");
+		legend.add(actionShowLegend);
+		legend.add(new Separator());
+		legend.add(actionLegendLeft);
+		legend.add(actionLegendRight);
+		legend.add(actionLegendTop);
+		legend.add(actionLegendBottom);
 		
 		manager.add(presets);
 		manager.add(new Separator());
@@ -520,6 +647,7 @@ public class HistoryGraph extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionLogScale);
 		manager.add(actionAutoRefresh);
+		manager.add(legend);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

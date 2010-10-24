@@ -18,7 +18,8 @@
  */
 package org.netxms.ui.eclipse.serverconfig.views;
 
-import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -63,7 +64,7 @@ public class ServerConfigurationEditor extends ViewPart
 		
 	private TableViewer viewer;
 	private NXCSession session;
-	private HashMap<String, ServerVariable> varList;
+	private Map<String, ServerVariable> varList;
 	
 	private Action actionAddVariable;
 	private RefreshAction actionRefresh;

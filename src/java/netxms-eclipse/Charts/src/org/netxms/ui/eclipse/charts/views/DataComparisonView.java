@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
@@ -62,6 +63,16 @@ public class DataComparisonView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.charts.views.DataComparisionView";
 	
+	private static final String KEY_CHART_TYPE = "chartType";
+	private static final String KEY_AUTO_REFRESH = "autoRefresh";
+	private static final String KEY_REFRESH_INTERVAL = "refreshInterval";
+	private static final String KEY_LOG_SCALE = "logScale";
+	private static final String KEY_3D_VIEW = "enable3DView";
+	private static final String KEY_TRANSPOSED = "isTransposed";
+	private static final String KEY_TRANSLUCENT = "isTRanslucent";
+	private static final String KEY_SHOW_LEGEND = "showLegend";
+	private static final String KEY_LEGEND_POSITION = "legendPosition";
+	
 	private DataComparisionChart chart;
 	private GenericChart chartWidget;
 	protected NXCSession session;
@@ -75,14 +86,15 @@ public class DataComparisonView extends ViewPart
 	private int chartType = DataComparisionChart.BAR_CHART;
 	private boolean transposed = false;
 	private boolean showLegend = true;
-	private int legendLocation = DataChart.POSITION_RIGHT;
+	private int legendPosition = DataChart.POSITION_RIGHT;
 	private boolean translucent = false;
-	private Image[] titleImages = new Image[2];
+	private Image[] titleImages = new Image[4];
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
 	private Action actionShowBarChart;
 	private Action actionShowPieChart;
+	private Action actionShowTubeChart;
 	private Action actionShowIn3D;
 	private Action actionShowTranslucent;
 	private Action actionUseLogScale;
@@ -106,6 +118,8 @@ public class DataComparisonView extends ViewPart
 		
 		titleImages[0] = Activator.getImageDescriptor("icons/chart_bar.png").createImage();
 		titleImages[1] = Activator.getImageDescriptor("icons/chart_pie.png").createImage();
+		titleImages[2] = Activator.getImageDescriptor("icons/graph.png").createImage(); // TODO: add radar icon
+		titleImages[3] = Activator.getImageDescriptor("icons/chart_tube.png").createImage();
 
 		// Extract information from view id
 		//   first field is unique ID
@@ -159,6 +173,63 @@ public class DataComparisonView extends ViewPart
 	}
 
 	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void init(IViewSite site, IMemento memento) throws PartInitException
+	{
+		init(site);
+		
+		if (memento != null)
+		{
+			chartType = safeCast(memento.getInteger(KEY_CHART_TYPE), chartType);
+			autoRefreshEnabled = safeCast(memento.getBoolean(KEY_AUTO_REFRESH), autoRefreshEnabled);
+			autoRefreshInterval = safeCast(memento.getInteger(KEY_REFRESH_INTERVAL), autoRefreshInterval);
+			translucent = safeCast(memento.getBoolean(KEY_TRANSLUCENT), translucent);
+			transposed = safeCast(memento.getBoolean(KEY_TRANSPOSED), transposed);
+			showLegend = safeCast(memento.getBoolean(KEY_SHOW_LEGEND), showLegend);
+			legendPosition = safeCast(memento.getInteger(KEY_LEGEND_POSITION), legendPosition);
+			useLogScale = safeCast(memento.getBoolean(KEY_LOG_SCALE), useLogScale);
+			showIn3D = safeCast(memento.getBoolean(KEY_3D_VIEW), showIn3D);
+			
+			try
+			{
+				setTitleImage(titleImages[chartType]);
+			}
+			catch(ArrayIndexOutOfBoundsException e)
+			{
+			}
+		}
+	}
+	
+	private static int safeCast(Integer i, int defval)
+	{
+		return (i != null) ? i : defval;
+	}
+	
+	private static boolean safeCast(Boolean b, boolean defval)
+	{
+		return (b != null) ? b : defval;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void saveState(IMemento memento)
+	{
+		memento.putInteger(KEY_CHART_TYPE, chartType);
+		memento.putBoolean(KEY_AUTO_REFRESH, autoRefreshEnabled);
+		memento.putInteger(KEY_REFRESH_INTERVAL, autoRefreshInterval);
+		memento.putBoolean(KEY_TRANSLUCENT, translucent);
+		memento.putBoolean(KEY_TRANSPOSED, transposed);
+		memento.putBoolean(KEY_SHOW_LEGEND, showLegend);
+		memento.putInteger(KEY_LEGEND_POSITION, legendPosition);
+		memento.putBoolean(KEY_LOG_SCALE, useLogScale);
+		memento.putBoolean(KEY_3D_VIEW, showIn3D);
+	}
+
+	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -167,7 +238,7 @@ public class DataComparisonView extends ViewPart
 		chart = new DataComparisonBirtChart(parent, SWT.NONE, chartType);
 		chartWidget = (GenericChart)chart;
 		
-		chart.setLegendPosition(legendLocation);
+		chart.setLegendPosition(legendPosition);
 		chart.setLegendVisible(showLegend);
 		chart.set3DModeEnabled(showIn3D);
 		chart.setTransposed(transposed);
@@ -282,7 +353,7 @@ public class DataComparisonView extends ViewPart
 		actionShowIn3D.setChecked(showIn3D);
 		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
 		
-		actionShowTranslucent = new Action("&Translucent") {
+		actionShowTranslucent = new Action("T&ranslucent") {
 			@Override
 			public void run()
 			{
@@ -308,41 +379,41 @@ public class DataComparisonView extends ViewPart
 			@Override
 			public void run()
 			{
-				legendLocation = DataChart.POSITION_LEFT;
-				chart.setLegendPosition(legendLocation);
+				legendPosition = DataChart.POSITION_LEFT;
+				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendLeft.setChecked(legendLocation == DataChart.POSITION_LEFT);
+		actionLegendLeft.setChecked(legendPosition == DataChart.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendLocation = DataChart.POSITION_RIGHT;
-				chart.setLegendPosition(legendLocation);
+				legendPosition = DataChart.POSITION_RIGHT;
+				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendRight.setChecked(legendLocation == DataChart.POSITION_RIGHT);
+		actionLegendRight.setChecked(legendPosition == DataChart.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendLocation = DataChart.POSITION_TOP;
-				chart.setLegendPosition(legendLocation);
+				legendPosition = DataChart.POSITION_TOP;
+				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendTop.setChecked(legendLocation == DataChart.POSITION_LEFT);
+		actionLegendTop.setChecked(legendPosition == DataChart.POSITION_LEFT);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendLocation = DataChart.POSITION_BOTTOM;
-				chart.setLegendPosition(legendLocation);
+				legendPosition = DataChart.POSITION_BOTTOM;
+				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendBottom.setChecked(legendLocation == DataChart.POSITION_LEFT);
+		actionLegendBottom.setChecked(legendPosition == DataChart.POSITION_LEFT);
 		
 		actionShowBarChart = new Action("&Bar chart", Action.AS_RADIO_BUTTON) {
 			@Override
@@ -353,6 +424,16 @@ public class DataComparisonView extends ViewPart
 		};
 		actionShowBarChart.setChecked(chart.getChartType() == DataComparisionChart.BAR_CHART);
 		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png"));
+		
+		actionShowTubeChart = new Action("&Tube chart", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				setChartType(DataComparisionChart.TUBE_CHART);
+			}
+		};
+		actionShowTubeChart.setChecked(chart.getChartType() == DataComparisionChart.TUBE_CHART);
+		actionShowTubeChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_tube.png"));
 		
 		actionShowPieChart = new Action("&Pie chart", Action.AS_RADIO_BUTTON) {
 			@Override
@@ -414,6 +495,7 @@ public class DataComparisonView extends ViewPart
 		legend.add(actionLegendBottom);
 		
 		manager.add(actionShowBarChart);
+		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
@@ -443,6 +525,7 @@ public class DataComparisonView extends ViewPart
 		legend.add(actionLegendBottom);
 		
 		manager.add(actionShowBarChart);
+		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
@@ -464,6 +547,7 @@ public class DataComparisonView extends ViewPart
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionShowBarChart);
+		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);

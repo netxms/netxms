@@ -37,7 +37,7 @@ public abstract class GenericChart extends Canvas implements DataChart
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getTitle()
 	 */
 	@Override
-	public String getTitle()
+	public String getChartTitle()
 	{
 		return title;
 	}
