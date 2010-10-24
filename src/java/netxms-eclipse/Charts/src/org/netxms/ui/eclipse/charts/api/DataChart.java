@@ -133,6 +133,20 @@ public interface DataChart
 	 * @return true if logarithmic scale mode enabled
 	 */
 	public abstract boolean isLogScaleEnabled();
+	
+	/**
+	 * Set chart data translucent. May not be supported by all chart types.
+	 * 
+	 * @param translucent tru to set chart data translucent
+	 */
+	public abstract void setTranslucent(boolean translucent);
+	
+	/**
+	 * Get translucent mode.
+	 * 
+	 * @return true if chart data is translucent
+	 */
+	public abstract boolean isTranslucent();
 
 	/**
 	 * Refresh (repaint) chart using current data and settings

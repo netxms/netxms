@@ -223,14 +223,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		{
 			case BAR_CHART:
 				BarSeries bs = (BarSeries)BarSeriesImpl.create();
-				if (is3DModeEnabled())
-				{
-					bs.setTranslucent(true);
-				}
-				else
-				{
-					bs.setTranslucent(false);
-				}
+				bs.setTranslucent(translucent);
 				bs.setLabelPosition(Position.ABOVE_LITERAL);
 				return bs;
 			case PIE_CHART:
@@ -239,14 +232,13 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 				{
 					ps.setExplosion(5);
 					ps.setRatio(0.4);
-					ps.setTranslucent(true);
 				}
 				else
 				{
 					ps.setExplosion(0);
 					ps.setRatio(1);
-					ps.setTranslucent(false);
 				}
+				ps.setTranslucent(translucent);
 				ps.setLabelPosition(Position.INSIDE_LITERAL);
 				ps.getLeaderLineAttributes().setVisible(false);
 				return ps;

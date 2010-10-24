@@ -14,6 +14,7 @@ public abstract class GenericChart extends Canvas implements DataChart
 	protected boolean legendVisible = true;
 	protected boolean displayIn3D = true;
 	protected boolean useLogScale = false;
+	protected boolean translucent = false;
 	protected ChartColor[] palette = null;
 	protected IPreferenceStore preferenceStore;
 	protected int legendPosition;
@@ -129,5 +130,23 @@ public abstract class GenericChart extends Canvas implements DataChart
 	public int getLegendPosition()
 	{
 		return legendPosition;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isTranslucent()
+	 */
+	@Override
+	public boolean isTranslucent()
+	{
+		return translucent;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTranslucent(boolean)
+	 */
+	@Override
+	public void setTranslucent(boolean translucent)
+	{
+		this.translucent = translucent;
 	}
 }

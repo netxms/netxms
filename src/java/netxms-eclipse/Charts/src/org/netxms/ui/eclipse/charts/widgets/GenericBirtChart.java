@@ -330,4 +330,15 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 		if (chart != null)
 			recreateChart();
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.widgets.GenericChart#setTranslucent(boolean)
+	 */
+	@Override
+	public void setTranslucent(boolean translucent)
+	{
+		super.setTranslucent(translucent);
+		if (chart != null)
+			recreateChart();
+	}
 }

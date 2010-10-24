@@ -76,6 +76,7 @@ public class DataComparisonView extends ViewPart
 	private boolean transposed = false;
 	private boolean showLegend = true;
 	private int legendLocation = DataChart.POSITION_RIGHT;
+	private boolean translucent = false;
 	private Image[] titleImages = new Image[2];
 
 	private RefreshAction actionRefresh;
@@ -83,6 +84,7 @@ public class DataComparisonView extends ViewPart
 	private Action actionShowBarChart;
 	private Action actionShowPieChart;
 	private Action actionShowIn3D;
+	private Action actionShowTranslucent;
 	private Action actionUseLogScale;
 	private Action actionHorizontal;
 	private Action actionVertical;
@@ -169,6 +171,7 @@ public class DataComparisonView extends ViewPart
 		chart.setLegendVisible(showLegend);
 		chart.set3DModeEnabled(showIn3D);
 		chart.setTransposed(transposed);
+		chart.setTranslucent(translucent);
 		
 		for(GraphItem item : items)
 			chart.addParameter(item.getDescription(), 0);
@@ -278,6 +281,17 @@ public class DataComparisonView extends ViewPart
 		};
 		actionShowIn3D.setChecked(showIn3D);
 		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
+		
+		actionShowTranslucent = new Action("&Translucent") {
+			@Override
+			public void run()
+			{
+				translucent = !translucent;
+				setChecked(translucent);
+				chart.setTranslucent(translucent);
+			}
+		};
+		actionShowTranslucent.setChecked(translucent);
 		
 		actionShowLegend = new Action("&Show legend") {
 			@Override
@@ -406,6 +420,7 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionHorizontal);
 		manager.add(new Separator());
 		manager.add(actionShowIn3D);
+		manager.add(actionShowTranslucent);
 		manager.add(actionUseLogScale);
 		manager.add(actionAutoRefresh);
 		manager.add(legend);
@@ -434,6 +449,7 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionHorizontal);
 		manager.add(new Separator());
 		manager.add(actionShowIn3D);
+		manager.add(actionShowTranslucent);
 		manager.add(actionUseLogScale);
 		manager.add(actionAutoRefresh);
 		manager.add(legend);
