@@ -29,7 +29,6 @@ import org.netxms.api.client.NetXMSClientException;
  */
 public interface ServerManager
 {
-
 	/**
 	 * Get server configuration variables.
 	 * 
