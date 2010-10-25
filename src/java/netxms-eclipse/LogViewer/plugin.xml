@@ -63,7 +63,7 @@
       <key
             commandId="org.netxms.ui.eclipse.logviewer.commands.openEventLog"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="Ctrl+F8">
+            sequence="Ctrl+Alt+F8">
       </key>
    </extension>
 

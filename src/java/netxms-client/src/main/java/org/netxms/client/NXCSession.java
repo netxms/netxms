@@ -28,7 +28,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -92,10 +91,6 @@ import org.netxms.client.snmp.SnmpTrap;
 
 /**
  * Communication session with NetXMS server.
- */
-/**
- * @author Victor
- *
  */
 public class NXCSession implements Session, ScriptLibraryManager, UserManager, ServerManager
 {

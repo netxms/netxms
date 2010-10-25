@@ -46,10 +46,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.DataChart;
-import org.netxms.ui.eclipse.charts.api.DataComparisionChart;
+import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.charts.widgets.GenericChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -73,7 +74,7 @@ public class DataComparisonView extends ViewPart
 	private static final String KEY_SHOW_LEGEND = "showLegend";
 	private static final String KEY_LEGEND_POSITION = "legendPosition";
 	
-	private DataComparisionChart chart;
+	private DataComparisonChart chart;
 	private GenericChart chartWidget;
 	protected NXCSession session;
 	private boolean updateInProgress = false;
@@ -83,18 +84,19 @@ public class DataComparisonView extends ViewPart
 	private boolean useLogScale = false;
 	private boolean showIn3D = true;
 	private int autoRefreshInterval = 30000;	// 30 seconds
-	private int chartType = DataComparisionChart.BAR_CHART;
+	private int chartType = DataComparisonChart.BAR_CHART;
 	private boolean transposed = false;
 	private boolean showLegend = true;
 	private int legendPosition = DataChart.POSITION_RIGHT;
 	private boolean translucent = false;
-	private Image[] titleImages = new Image[4];
+	private Image[] titleImages = new Image[5];
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
 	private Action actionShowBarChart;
-	private Action actionShowPieChart;
 	private Action actionShowTubeChart;
+	private Action actionShowPieChart;
+	private Action actionShowDialChart;
 	private Action actionShowIn3D;
 	private Action actionShowTranslucent;
 	private Action actionUseLogScale;
@@ -120,6 +122,7 @@ public class DataComparisonView extends ViewPart
 		titleImages[1] = Activator.getImageDescriptor("icons/chart_pie.png").createImage();
 		titleImages[2] = Activator.getImageDescriptor("icons/graph.png").createImage(); // TODO: add radar icon
 		titleImages[3] = Activator.getImageDescriptor("icons/chart_tube.png").createImage();
+		titleImages[4] = Activator.getImageDescriptor("icons/chart_dial.gif").createImage();
 
 		// Extract information from view id
 		//   first field is unique ID
@@ -135,7 +138,7 @@ public class DataComparisonView extends ViewPart
 			}
 			catch(NumberFormatException e)
 			{
-				chartType = DataComparisionChart.BAR_CHART;
+				chartType = DataComparisonChart.BAR_CHART;
 			}
 			for(int i = 2; i < fields.length; i++)
 			{
@@ -245,7 +248,7 @@ public class DataComparisonView extends ViewPart
 		chart.setTranslucent(translucent);
 		
 		for(GraphItem item : items)
-			chart.addParameter(item.getDescription(), 0);
+			chart.addParameter(item, 0);
 		
 		chart.initializationComplete();
 		
@@ -419,31 +422,41 @@ public class DataComparisonView extends ViewPart
 			@Override
 			public void run()
 			{
-				setChartType(DataComparisionChart.BAR_CHART);
+				setChartType(DataComparisonChart.BAR_CHART);
 			}
 		};
-		actionShowBarChart.setChecked(chart.getChartType() == DataComparisionChart.BAR_CHART);
+		actionShowBarChart.setChecked(chart.getChartType() == DataComparisonChart.BAR_CHART);
 		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png"));
 		
 		actionShowTubeChart = new Action("&Tube chart", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				setChartType(DataComparisionChart.TUBE_CHART);
+				setChartType(DataComparisonChart.TUBE_CHART);
 			}
 		};
-		actionShowTubeChart.setChecked(chart.getChartType() == DataComparisionChart.TUBE_CHART);
+		actionShowTubeChart.setChecked(chart.getChartType() == DataComparisonChart.TUBE_CHART);
 		actionShowTubeChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_tube.png"));
 		
 		actionShowPieChart = new Action("&Pie chart", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				setChartType(DataComparisionChart.PIE_CHART);
+				setChartType(DataComparisonChart.PIE_CHART);
 			}
 		};
-		actionShowPieChart.setChecked(chart.getChartType() == DataComparisionChart.PIE_CHART);
+		actionShowPieChart.setChecked(chart.getChartType() == DataComparisonChart.PIE_CHART);
 		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png"));
+
+		actionShowDialChart = new Action("&Dial chart", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				setChartType(DataComparisonChart.DIAL_CHART);
+			}
+		};
+		actionShowDialChart.setChecked(chart.getChartType() == DataComparisonChart.DIAL_CHART);
+		actionShowDialChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_dial.gif"));
 
 		actionHorizontal = new Action("Show &horizontally", Action.AS_RADIO_BUTTON) {
 			@Override
@@ -497,6 +510,7 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionShowBarChart);
 		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
+		manager.add(actionShowDialChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
@@ -527,6 +541,7 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionShowBarChart);
 		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
+		manager.add(actionShowDialChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
@@ -549,6 +564,7 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionShowBarChart);
 		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
+		manager.add(actionShowDialChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
@@ -606,12 +622,25 @@ public class DataComparisonView extends ViewPart
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
 				}
+				
+				final Threshold[][] thresholds = new Threshold[items.size()][];
+				if (chartType == DataComparisonChart.DIAL_CHART)
+				{
+					for(int i = 0; i < items.size(); i++)
+					{
+						GraphItem item = items.get(i);
+						thresholds[i] = session.getThresholds(item.getNodeId(), item.getDciId());
+					}
+				}
 
 				new UIJob("Update chart")
 				{
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
+						if (chartType == DataComparisonChart.DIAL_CHART)
+							for(int i = 0; i < thresholds.length; i++)
+								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);
 						updateInProgress = false;
 						return Status.OK_STATUS;

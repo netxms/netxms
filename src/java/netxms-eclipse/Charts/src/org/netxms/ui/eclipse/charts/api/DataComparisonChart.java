@@ -18,25 +18,29 @@
  */
 package org.netxms.ui.eclipse.charts.api;
 
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.Threshold;
+
 /**
  * Interface for data comparision chart
  *
  */
-public interface DataComparisionChart extends DataChart
+public interface DataComparisonChart extends DataChart
 {
 	public static final int BAR_CHART = 0;
 	public static final int PIE_CHART = 1;
 	public static final int RADAR_CHART = 2;
 	public static final int TUBE_CHART = 3;
+	public static final int DIAL_CHART = 4;
 
 	/**
 	 * Add parameter
 	 * 
-	 * @param name parameter's name
+	 * @param parameter DCI information
 	 * @param value parameter's initial value
 	 * @return parameter's index (0 .. MAX_CHART_ITEMS-1)
 	 */
-	public abstract int addParameter(String name, double value);
+	public abstract int addParameter(GraphItem parameter, double value);
 	
 	/**
 	 * Update value for parameter
@@ -46,6 +50,14 @@ public interface DataComparisionChart extends DataChart
 	 * @param updateChart if tru, chart will be updated (repainted)
 	 */
 	public abstract void updateParameter(int index, double value, boolean updateChart);
+	
+	/**
+	 * Update thresholds for parameter
+	 * 
+	 * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)
+	 * @param thresholds new thresholds
+	 */
+	public abstract void updateParameterThresholds(int index, Threshold[] thresholds);
 
 	/**
 	 * Set chart type

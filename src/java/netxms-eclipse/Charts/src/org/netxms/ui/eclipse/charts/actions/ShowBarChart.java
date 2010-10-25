@@ -13,7 +13,7 @@
  */
 package org.netxms.ui.eclipse.charts.actions;
 
-import org.netxms.ui.eclipse.charts.api.DataComparisionChart;
+import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 
 /**
  * Show bar chart for selected DCIs
@@ -27,6 +27,6 @@ public class ShowBarChart extends ShowDataComparisonChart
 	@Override
 	protected int getChartType()
 	{
-		return DataComparisionChart.BAR_CHART;
+		return DataComparisonChart.BAR_CHART;
 	}
 }

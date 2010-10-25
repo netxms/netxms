@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.charts.actions;
 
-import org.netxms.ui.eclipse.charts.api.DataComparisionChart;
+import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 
 public class ShowPieChart extends ShowDataComparisonChart
 {
@@ -28,6 +28,6 @@ public class ShowPieChart extends ShowDataComparisonChart
 	@Override
 	protected int getChartType()
 	{
-		return DataComparisionChart.PIE_CHART;
+		return DataComparisonChart.PIE_CHART;
 	}
 }
