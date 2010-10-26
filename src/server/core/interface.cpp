@@ -278,7 +278,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
           (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getRuntimeFlags() & NDF_AGENT_UNREACHABLE)))
       {
          SendPollerMsg(dwRqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
-         newStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
+         newStatus = pNode->getInterfaceStatusFromAgent(m_dwIfIndex);
 			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from NetXMS agent %d"), m_dwId, m_szName, newStatus);
          if (newStatus != STATUS_UNKNOWN)
 			{
@@ -296,7 +296,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			 (pTransport != NULL))
       {
          SendPollerMsg(dwRqId, _T("      Retrieving interface status from SNMP agent\r\n"));
-         newStatus = pNode->GetInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
+         newStatus = pNode->getInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
 			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from SNMP %d"), m_dwId, m_szName, newStatus);
          if (newStatus != STATUS_UNKNOWN)
 			{

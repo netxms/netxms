@@ -241,7 +241,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.getBlock().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		// For chart without axes, we wish to paint plot area with same background color as other chart parts
-		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+		//chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		chart.setSeriesThickness(25);
 		chart.setDialSuperimposition(false);
 		

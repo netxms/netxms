@@ -435,7 +435,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 			{
 				// We should do configuration poll before taking new node from the queue
 				// to prevent possible node duplication
-				node->ConfigurationPoll(NULL, 0, -1, pInfo->dwNetMask);
+				node->configurationPoll(NULL, 0, -1, pInfo->dwNetMask);
 			}
 		}
       free(pInfo);

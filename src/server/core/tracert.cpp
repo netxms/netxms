@@ -39,7 +39,7 @@ NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest)
    
    for(pCurr = pSrc, dwHopCount = 0; (pCurr != pDest) && (pCurr != NULL) && (dwHopCount < 30); pCurr = pNext, dwHopCount++)
    {
-      if (pCurr->GetNextHop(pSrc->IpAddr(), pDest->IpAddr(), &dwNextHop, &dwIfIndex, &bIsVPN))
+      if (pCurr->getNextHop(pSrc->IpAddr(), pDest->IpAddr(), &dwNextHop, &dwIfIndex, &bIsVPN))
       {
          pNext = FindNodeByIP(dwNextHop);
          pTrace->pHopList = (HOP_INFO *)realloc(pTrace->pHopList, sizeof(HOP_INFO) * (pTrace->iNumHops + 1));

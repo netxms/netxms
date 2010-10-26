@@ -85,7 +85,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                      }
                      else
                      {
-                        pInterface = ((Node *)pTrace->pHopList[i].pObject)->FindInterface(pTrace->pHopList[i].dwIfIndex, INADDR_ANY);
+                        pInterface = ((Node *)pTrace->pHopList[i].pObject)->findInterface(pTrace->pHopList[i].dwIfIndex, INADDR_ANY);
                         if (pInterface != NULL)
                         {
                            if (pInterface->Status() == STATUS_CRITICAL)
@@ -119,7 +119,7 @@ void CorrelateEvent(Event *pEvent)
       switch(pEvent->getCode())
       {
          case EVENT_INTERFACE_DOWN:
-            pInterface = ((Node *)pObject)->FindInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
+            pInterface = ((Node *)pObject)->findInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
             if (pInterface != NULL)
             {
                pInterface->SetLastDownEventId(pEvent->getId());

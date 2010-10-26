@@ -459,7 +459,7 @@ ARP_CACHE *Node::getArpCache()
 // Get list of interfaces from node
 //
 
-INTERFACE_LIST *Node::GetInterfaceList(void)
+INTERFACE_LIST *Node::getInterfaceList()
 {
    INTERFACE_LIST *pIfList = NULL;
 
@@ -511,7 +511,7 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
 // Returns pointer to interface object or NULL if appropriate interface couldn't be found
 //
 
-Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
+Interface *Node::findInterface(DWORD dwIndex, DWORD dwHostAddr)
 {
    DWORD i;
    Interface *pInterface;
@@ -541,7 +541,7 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
 // Check if given IP address is one of node's interfaces
 //
 
-BOOL Node::IsMyIP(DWORD dwIpAddr)
+BOOL Node::isMyIP(DWORD dwIpAddr)
 {
    DWORD i;
 
@@ -579,7 +579,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
    if (dwIpAddr != 0)
    {
 		pCluster = getMyCluster();
-		bAddToSubnet = (pCluster != NULL) ? !pCluster->IsSyncAddr(dwIpAddr) : TRUE;
+		bAddToSubnet = (pCluster != NULL) ? !pCluster->isSyncAddr(dwIpAddr) : TRUE;
 		DbgPrintf(5, _T("Node::CreateNewInterface: node=%s [%d] cluster=%s [%d] add=%d"),
 		          m_szName, m_dwId, (pCluster != NULL) ? pCluster->Name() : _T("(null)"),
 					 (pCluster != NULL) ? pCluster->Id() : 0, bAddToSubnet);
@@ -722,7 +722,7 @@ void Node::CalculateCompoundStatus(BOOL bForcedRecalc)
 // Perform status poll on node
 //
 
-void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
+void Node::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
    DWORD i, dwPollListSize, dwOldFlags = m_dwFlags;
    NetObj *pPollerNode = NULL, **ppPollList;
@@ -898,7 +898,7 @@ skip_snmp_check:
          case OBJECT_INTERFACE:
 			   DbgPrintf(7, "StatusPoll(%s): polling interface %d [%s]", m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
             ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId, pQueue,
-					(pCluster != NULL) ? pCluster->IsSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
+					(pCluster != NULL) ? pCluster->isSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
 					pTransport);
             break;
          case OBJECT_NETWORKSERVICE:
@@ -1007,7 +1007,7 @@ skip_snmp_check:
 // Perform configuration poll on node
 //
 
-void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
+void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                              int nPoller, DWORD dwNetMask)
 {
    DWORD i, dwOldFlags = m_dwFlags, dwAddr, rcc, dwNumParams;
@@ -1354,7 +1354,7 @@ skip_snmp_checks:
       SetPollerInfo(nPoller, "interface check");
       SendPollerMsg(dwRqId, _T("Capability check finished\r\n"));
       SendPollerMsg(dwRqId, _T("Checking interface configuration...\r\n"));
-      pIfList = GetInterfaceList();
+      pIfList = getInterfaceList();
       if (pIfList != NULL)
       {
 			// Remove cluster virtual interfaces from list
@@ -1362,7 +1362,7 @@ skip_snmp_checks:
 			{
 				for(i = 0; i < (DWORD)pIfList->iNumEntries; i++)
 				{
-					if (pCluster->IsVirtualAddr(pIfList->pInterfaces[i].dwIpAddr))
+					if (pCluster->isVirtualAddr(pIfList->pInterfaces[i].dwIpAddr))
 					{
 						pIfList->iNumEntries--;
 						memmove(&pIfList->pInterfaces[i], &pIfList->pInterfaces[i + 1],
@@ -1600,7 +1600,7 @@ skip_snmp_checks:
 		if ((g_dwFlags & AF_RESOLVE_NODE_NAMES) &&
 			 (dwAddr != INADDR_NONE) && 
 			 (dwAddr != INADDR_ANY) &&
-			 IsMyIP(dwAddr))
+			 isMyIP(dwAddr))
 		{
 			SendPollerMsg(dwRqId, _T("Node name is an IP address and need to be resolved\r\n"));
 	      SetPollerInfo(nPoller, "resolving name");
@@ -2369,7 +2369,7 @@ DWORD Node::wakeUp()
 // Get status of interface with given index from SNMP agent
 //
 
-int Node::GetInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex)
+int Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex)
 {
    return SnmpGetInterfaceStatus(m_snmpVersion, pTransport, dwIndex);
 }
@@ -2379,7 +2379,7 @@ int Node::GetInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex)
 // Get status of interface with given index from native agent
 //
 
-int Node::GetInterfaceStatusFromAgent(DWORD dwIndex)
+int Node::getInterfaceStatusFromAgent(DWORD dwIndex)
 {
    char szParam[128], szBuffer[32];
    DWORD dwAdminStatus, dwLinkState;
@@ -2737,7 +2737,7 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 // Change node's IP address
 //
 
-void Node::ChangeIPAddress(DWORD dwIpAddr)
+void Node::changeIPAddress(DWORD dwIpAddr)
 {
    DWORD i;
 
@@ -2814,7 +2814,7 @@ void Node::UpdateDCICache(void)
 // Get routing table from node
 //
 
-ROUTING_TABLE *Node::GetRoutingTable(void)
+ROUTING_TABLE *Node::getRoutingTable()
 {
    ROUTING_TABLE *pRT = NULL;
 
@@ -2851,7 +2851,7 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
 // Get next hop for given destination address
 //
 
-BOOL Node::GetNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
+BOOL Node::getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                       DWORD *pdwIfIndex, BOOL *pbIsVPN)
 {
    DWORD i;
@@ -2901,11 +2901,11 @@ BOOL Node::GetNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
 // Update cached routing table
 //
 
-void Node::UpdateRoutingTable(void)
+void Node::updateRoutingTable()
 {
    ROUTING_TABLE *pRT;
 
-   pRT = GetRoutingTable();
+   pRT = getRoutingTable();
    if (pRT != NULL)
    {
       routingTableLock();
@@ -3351,7 +3351,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 	{
 		if (pIfList->pInterfaces[i].dwIpAddr != 0)
 		{
-			pInterface = FindInterface(pIfList->pInterfaces[i].dwIndex, pIfList->pInterfaces[i].dwIpAddr);
+			pInterface = findInterface(pIfList->pInterfaces[i].dwIndex, pIfList->pInterfaces[i].dwIpAddr);
 			if (pInterface == NULL)
 			{
 				nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
@@ -3359,7 +3359,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			}
 
 			// Is cluster interconnect interface?
-			isSync = (pCluster != NULL) ? pCluster->IsSyncAddr(pInterface->IpAddr()) : FALSE;
+			isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : FALSE;
 
 			pSubnet = FindSubnetForNode(pIfList->pInterfaces[i].dwIpAddr);
 			if (pSubnet != NULL)
@@ -3417,7 +3417,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 					{
 						if (pCluster != NULL)
 						{
-							if (pCluster->IsSyncAddr(m_pChildList[j]->IpAddr()))
+							if (pCluster->isSyncAddr(m_pChildList[j]->IpAddr()))
 							{
 								j = (int)m_dwChildCount;	// Cause to unbind from this subnet
 							}
@@ -3451,7 +3451,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 // Update interface names
 //
 
-void Node::UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
+void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
 {
 	INTERFACE_LIST *pIfList;
 	DWORD i;
@@ -3463,7 +3463,7 @@ void Node::UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
    DbgPrintf(4, "Starting interface names poll for node %s (ID: %d)", m_szName, m_dwId);
 
    // Retrieve interface list
-   pIfList = GetInterfaceList();
+   pIfList = getInterfaceList();
    if (pIfList != NULL)
    {
       // Check names of existing interfaces

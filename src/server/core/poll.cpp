@@ -90,7 +90,7 @@ void CheckForMgmtNode(void)
             {
                pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
                NetObjInsert(pNode, TRUE);
-               pNode->ConfigurationPoll(NULL, 0, -1, pIfList->pInterfaces[i].dwIpNetMask);
+               pNode->configurationPoll(NULL, 0, -1, pIfList->pInterfaces[i].dwIpNetMask);
                pNode->Unhide();
                g_dwMgmtNode = pNode->Id();   // Set local management node ID
                PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
@@ -221,9 +221,9 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
                pObject->Name(), pObject->Id());
       SetPollerState((long)arg, szBuffer);
 		if (pObject->Type() == OBJECT_NODE)
-			((Node *)pObject)->StatusPoll(NULL, 0, (long)arg);
+			((Node *)pObject)->statusPoll(NULL, 0, (long)arg);
 		else if (pObject->Type() == OBJECT_CLUSTER)
-			((Cluster *)pObject)->StatusPoll(NULL, 0, (long)arg);
+			((Cluster *)pObject)->statusPoll(NULL, 0, (long)arg);
       pObject->DecRefCount();
    }
    SetPollerState((long)arg, "finished");
@@ -258,7 +258,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
-      pNode->ConfigurationPoll(NULL, 0, (long)arg, 0);
+      pNode->configurationPoll(NULL, 0, (long)arg, 0);
       pNode->DecRefCount();
    }
    SetPollerState((long)arg, "finished");
@@ -293,7 +293,7 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
-      pNode->UpdateRoutingTable();
+      pNode->updateRoutingTable();
       pNode->DecRefCount();
    }
    SetPollerState((long)arg, "finished");
@@ -313,7 +313,7 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) &&
        (FindNodeByIP(ipAddr) == NULL))
    {
-      Interface *pInterface = node->FindInterface(ifIndex, ipAddr);
+      Interface *pInterface = node->findInterface(ifIndex, ipAddr);
       if (pInterface != NULL)
 		{
          if ((ipAddr < 0xE0000000) && !IsBroadcastAddress(ipAddr, pInterface->IpNetMask()))
@@ -358,7 +358,7 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 	Interface *iface;
 
 	DbgPrintf(6, _T("DiscoveryPoller(): checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
-	iface = node->FindInterface(route->dwIfIndex, route->dwDestAddr);
+	iface = node->findInterface(route->dwIfIndex, route->dwDestAddr);
 	if (iface != NULL)
 	{
 		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex);
@@ -417,7 +417,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 		// Retrieve and analize node's routing table
       DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
                 pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
-		rt = pNode->GetRoutingTable();
+		rt = pNode->getRoutingTable();
 		if (rt != NULL)
 		{
 			for(i = 0; i < (DWORD)rt->iNumEntries; i++)
@@ -694,10 +694,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 					break;
 				case OBJECT_CLUSTER:
 					pCluster = (Cluster *)g_pIndexById[j].pObject;
-					if (pCluster->ReadyForStatusPoll())
+					if (pCluster->isReadyForStatusPoll())
 					{
 						pCluster->IncRefCount();
-						pCluster->LockForStatusPoll();
+						pCluster->lockForStatusPoll();
 						g_statusPollQueue.Put(pCluster);
 					}
 					break;

@@ -1056,7 +1056,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 						int i;
 
 						ConsolePrintf(pCtx, "Routing table for node %s:\n\n", pObject->Name());
-						pRT = ((Node *)pObject)->GetCachedRoutingTable();
+						pRT = ((Node *)pObject)->getCachedRoutingTable();
 						if (pRT != NULL)
 						{
 							for(i = 0; i < pRT->iNumEntries; i++)

@@ -3760,10 +3760,11 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
       {
          // Parent object should be container or service root,
 			// or template group/root for templates
-         // For unbind, it can also be template
+         // For unbind, it can also be template or cluster
          if ((pParent->Type() == OBJECT_CONTAINER) ||
              (pParent->Type() == OBJECT_SERVICEROOT) ||
              ((pParent->Type() == OBJECT_TEMPLATE) && (!bBind)) ||
+             ((pParent->Type() == OBJECT_CLUSTER) && (!bBind)) ||
 				 ((pParent->Type() == OBJECT_TEMPLATEGROUP) && (pChild->Type() == OBJECT_TEMPLATE)) ||
 				 ((pParent->Type() == OBJECT_TEMPLATEROOT) && (pChild->Type() == OBJECT_TEMPLATE)))
          {
@@ -3789,8 +3790,14 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                if ((pParent->Type() == OBJECT_TEMPLATE) &&
                    (pChild->Type() == OBJECT_NODE))
                {
-                  ((Template *)pParent)->queueRemoveFromNode(pChild->Id(), 
-                                                pRequest->GetVariableShort(VID_REMOVE_DCI));
+                  ((Template *)pParent)->queueRemoveFromNode(pChild->Id(), pRequest->GetVariableShort(VID_REMOVE_DCI));
+               }
+               else if ((pParent->Type() == OBJECT_CLUSTER) &&
+                        (pChild->Type() == OBJECT_NODE))
+               {
+                  ((Cluster *)pParent)->queueRemoveFromNode(pChild->Id(), TRUE);
+						((Node *)pChild)->setRecheckCapsFlag();
+						((Node *)pChild)->forceConfigurationPoll();
                }
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
             }
@@ -4319,14 +4326,14 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
    switch(iPollType)
    {
       case POLL_STATUS:
-         pNode->StatusPoll(this, dwRqId, -1);
+         pNode->statusPoll(this, dwRqId, -1);
          break;
       case POLL_CONFIGURATION:
-			pNode->SetRecheckCapsFlag();
-         pNode->ConfigurationPoll(this, dwRqId, -1, 0);
+			pNode->setRecheckCapsFlag();
+         pNode->configurationPoll(this, dwRqId, -1, 0);
          break;
       case POLL_INTERFACE_NAMES:
-         pNode->UpdateInterfaceNames(this, dwRqId);
+         pNode->updateInterfaceNames(this, dwRqId);
          break;
       default:
          sendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));
@@ -5498,7 +5505,7 @@ void ClientSession::ChangeObjectIP(CSCPMessage *pRequest)
             if ((FindNodeByIP(dwIpAddr) == NULL) &&
                 (FindSubnetByIP(dwIpAddr) == NULL))
             {
-               ((Node *)pObject)->ChangeIPAddress(dwIpAddr);
+               ((Node *)pObject)->changeIPAddress(dwIpAddr);
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
             }
             else
@@ -9776,7 +9783,7 @@ void ClientSession::RegisterAgent(CSCPMessage *pRequest)
 			if (node != NULL)
 			{
 				// Node already exist, force configuration poll
-				node->SetRecheckCapsFlag();
+				node->setRecheckCapsFlag();
 				node->forceConfigurationPoll();
 			}
 			else

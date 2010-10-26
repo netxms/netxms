@@ -87,7 +87,7 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
-	Interface *ifc = node->FindInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
+	Interface *ifc = node->findInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
 	if (ifc != NULL)
 	{
 		*ppResult = new NXSL_Value(ifc->Name());

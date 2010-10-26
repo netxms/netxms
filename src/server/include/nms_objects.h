@@ -459,13 +459,13 @@ public:
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-	BOOL IsSyncAddr(DWORD dwAddr);
-	BOOL IsVirtualAddr(DWORD dwAddr);
+	BOOL isSyncAddr(DWORD dwAddr);
+	BOOL isVirtualAddr(DWORD dwAddr);
 	BOOL isResourceOnNode(DWORD dwResource, DWORD dwNode);
 
-   void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
-   void LockForStatusPoll(void) { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
-   BOOL ReadyForStatusPoll(void) 
+   void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+   void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
+   BOOL isReadyForStatusPoll() 
    {
       return ((m_iStatus != STATUS_UNMANAGED) && (!m_bIsDeleted) &&
               (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
@@ -722,25 +722,25 @@ public:
                            DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL);
    void DeleteInterface(Interface *pInterface);
 
-   void ChangeIPAddress(DWORD dwIpAddr);
+   void changeIPAddress(DWORD dwIpAddr);
 
    ARP_CACHE *getArpCache();
-   INTERFACE_LIST *GetInterfaceList(void);
-   Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
-	BOOL IsMyIP(DWORD dwIpAddr);
-   int GetInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex);
-   int GetInterfaceStatusFromAgent(DWORD dwIndex);
-   ROUTING_TABLE *GetRoutingTable(void);
-   ROUTING_TABLE *GetCachedRoutingTable(void) { return m_pRoutingTable; }
-   BOOL GetNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
+   INTERFACE_LIST *getInterfaceList();
+   Interface *findInterface(DWORD dwIndex, DWORD dwHostAddr);
+	BOOL isMyIP(DWORD dwIpAddr);
+   int getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex);
+   int getInterfaceStatusFromAgent(DWORD dwIndex);
+   ROUTING_TABLE *getRoutingTable();
+   ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
+   BOOL getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 
-	void SetRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
+	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
-   void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
-   void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
-	void UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId);
-   void UpdateRoutingTable();
+   void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+   void configurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
+	void updateInterfaceNames(ClientSession *pSession, DWORD dwRqId);
+   void updateRoutingTable();
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();
    bool isReadyForDiscoveryPoll();

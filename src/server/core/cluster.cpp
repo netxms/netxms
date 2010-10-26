@@ -470,7 +470,7 @@ void Cluster::CalculateCompoundStatus(BOOL bForcedRecalc)
 // Check if given address is within sync network
 //
 
-BOOL Cluster::IsSyncAddr(DWORD dwAddr)
+BOOL Cluster::isSyncAddr(DWORD dwAddr)
 {
 	DWORD i;
 	BOOL bRet = FALSE;
@@ -493,7 +493,7 @@ BOOL Cluster::IsSyncAddr(DWORD dwAddr)
 // Check if given address is a resource address
 //
 
-BOOL Cluster::IsVirtualAddr(DWORD dwAddr)
+BOOL Cluster::isVirtualAddr(DWORD dwAddr)
 {
 	DWORD i;
 	BOOL bRet = FALSE;
@@ -516,7 +516,7 @@ BOOL Cluster::IsVirtualAddr(DWORD dwAddr)
 // Status poll
 //
 
-void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
+void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
 	DWORD i, j, k, dwPollListSize;
 	INTERFACE_LIST *pIfList;
@@ -541,7 +541,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_szName);
 	for(i = 0, bAllDown = TRUE; i < dwPollListSize; i++)
 	{
-		((Node *)ppPollList[i])->StatusPoll(pSession, dwRqId, nPoller);
+		((Node *)ppPollList[i])->statusPoll(pSession, dwRqId, nPoller);
 		if (!((Node *)ppPollList[i])->isDown())
 			bAllDown = FALSE;
 	}
@@ -572,7 +572,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_szName);
 		for(i = 0; i < dwPollListSize; i++)
 		{
-			pIfList = ((Node *)ppPollList[i])->GetInterfaceList();
+			pIfList = ((Node *)ppPollList[i])->getInterfaceList();
 			if (pIfList != NULL)
 			{
 				LockData();
