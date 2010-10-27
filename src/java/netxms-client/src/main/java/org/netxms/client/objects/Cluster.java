@@ -117,4 +117,13 @@ public class Cluster extends GenericObject
 	{
 		return resources;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+		return "Cluster";
+	}
 }

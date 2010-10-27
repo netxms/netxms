@@ -2212,6 +2212,36 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 	
 	/**
+	 * Add node to cluster.
+	 * 
+	 * @param clusterId cluster object ID
+	 * @param nodeId node object ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void addClusterNode(final long clusterId, final long nodeId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_CLUSTER_NODE);
+		msg.setVariableInt32(NXCPCodes.VID_PARENT_ID, (int)clusterId);
+		msg.setVariableInt32(NXCPCodes.VID_CHILD_ID, (int)nodeId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Remove node from cluster.
+	 * 
+	 * @param clusterId cluster object ID
+	 * @param nodeId node object ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void removeClusterNode(final long clusterId, final long nodeId) throws IOException, NXCException
+	{
+		changeObjectBinding(clusterId, nodeId, false, true);
+	}
+	
+	/**
 	 * Query layer 2 topology for node
 	 * 
 	 * @throws IOException

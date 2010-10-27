@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -67,6 +68,33 @@ public class ChildObjectListDialog extends Dialog
 	private Text filterText;
 	private TableViewer objectList;
 	private List<GenericObject> selectedObjects;
+	
+	/**
+	 * Create class filter from array of allowed classes.
+	 * 
+	 * @param classes
+	 * @return
+	 */
+	public static Set<Integer> createClassFilter(int[] classes)
+	{
+		Set<Integer> filter = new HashSet<Integer>(classes.length);
+		for(int i = 0; i < classes.length; i++)
+			filter.add(classes[i]);
+		return filter;
+	}
+
+	/**
+	 * Create class filter with single allowed class
+	 * 
+	 * @param c allowed class
+	 * @return
+	 */
+	public static Set<Integer> createClassFilter(int c)
+	{
+		Set<Integer> filter = new HashSet<Integer>(1);
+		filter.add(c);
+		return filter;
+	}
 	
 	/**
 	 * @param parentShell
@@ -203,7 +231,7 @@ public class ChildObjectListDialog extends Dialog
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	protected void okPressed()
 	{

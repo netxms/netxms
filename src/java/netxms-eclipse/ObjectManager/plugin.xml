@@ -191,6 +191,30 @@
                menubarPath="objectmgmt">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.removeClusterNode"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.RemoveClusterNode"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.removeClusterNode"
+               label="&amp;Remove node..."
+               menubarPath="objectbinding">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.addClusterNode"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.AddClusterNode"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.addClusterNode"
+               label="&amp;Add node..."
+               menubarPath="objectbinding">
+         </action>
+      </objectContribution>
    </extension>
 
 </plugin>
