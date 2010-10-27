@@ -1879,6 +1879,7 @@ DWORD LIBNXCL_EXPORTABLE NXCChangeNodeIP(NXC_SESSION hSession, DWORD dwNodeId, D
 DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession, NXC_OBJECT_CREATE_INFO *pCreateInfo, DWORD *pdwObjectId);
 DWORD LIBNXCL_EXPORTABLE NXCBindObject(NXC_SESSION hSession, DWORD dwParentObject, DWORD dwChildObject);
 DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(NXC_SESSION hSession, DWORD dwParentObject, DWORD dwChildObject);
+DWORD LIBNXCL_EXPORTABLE NXCAddClusterNode(NXC_SESSION hSession, DWORD clusterId, DWORD nodeId);
 DWORD LIBNXCL_EXPORTABLE NXCRemoveTemplate(NXC_SESSION hSession, DWORD dwTemplateId,
                                            DWORD dwNodeId, BOOL bRemoveDCI);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, DWORD dwObject);

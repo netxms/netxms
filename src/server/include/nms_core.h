@@ -379,8 +379,8 @@ private:
 	DECLARE_THREAD_STARTER(QueryL2Topology)
 	DECLARE_THREAD_STARTER(SendEventLog)
 	DECLARE_THREAD_STARTER(SendSyslog)
-	DECLARE_THREAD_STARTER(CreateObject)
-	DECLARE_THREAD_STARTER(GetServerFile)
+	DECLARE_THREAD_STARTER(createObject)
+	DECLARE_THREAD_STARTER(getServerFile)
 	DECLARE_THREAD_STARTER(queryServerLog)
 	DECLARE_THREAD_STARTER(getServerLogQueryData)
 	DECLARE_THREAD_STARTER(executeAction)
@@ -414,7 +414,7 @@ private:
    void deleteEventTemplate(CSCPMessage *pRequest);
    void generateEventCode(DWORD dwRqId);
    void ModifyObject(CSCPMessage *pRequest);
-   void ChangeObjectMgmtStatus(CSCPMessage *pRequest);
+   void changeObjectMgmtStatus(CSCPMessage *pRequest);
    void OpenNodeDCIList(CSCPMessage *pRequest);
    void CloseNodeDCIList(CSCPMessage *pRequest);
    void ModifyNodeDCI(CSCPMessage *pRequest);
@@ -430,8 +430,8 @@ private:
    void ProcessEPPRecord(CSCPMessage *pRequest);
    void SendMIBTimestamp(DWORD dwRqId);
    void SendMIB(DWORD dwRqId);
-   void CreateObject(CSCPMessage *pRequest);
-   void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
+   void createObject(CSCPMessage *pRequest);
+   void changeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
    void deleteObject(CSCPMessage *pRequest);
    void AcknowledgeAlarm(CSCPMessage *pRequest);
    void TerminateAlarm(CSCPMessage *pRequest);
@@ -527,17 +527,17 @@ private:
 	void UpdateSituation(CSCPMessage *pRequest);
 	void DeleteSituation(CSCPMessage *pRequest);
 	void DeleteSituationInstance(CSCPMessage *pRequest);
-	void SetConfigCLOB(CSCPMessage *pRequest);
-	void GetConfigCLOB(CSCPMessage *pRequest);
+	void setConfigCLOB(CSCPMessage *pRequest);
+	void getConfigCLOB(CSCPMessage *pRequest);
 	void WebMapAdd(CSCPMessage *pRequest);
 	void WebMapUpdateData(CSCPMessage *pRequest);
 	void WebMapUpdateProps(CSCPMessage *pRequest);
 	void WebMapDelete(CSCPMessage *pRequest);
 	void WebMapGetData(CSCPMessage *pRequest);
 	void WebMapGetList(DWORD dwRqId);
-	void RegisterAgent(CSCPMessage *pRequest);
-	void GetServerFile(CSCPMessage *pRequest);
-	void TestDCITransformation(CSCPMessage *pRequest);
+	void registerAgent(CSCPMessage *pRequest);
+	void getServerFile(CSCPMessage *pRequest);
+	void testDCITransformation(CSCPMessage *pRequest);
 	void sendJobList(DWORD dwRqId);
 	void cancelJob(CSCPMessage *pRequest);
 	void deployAgentPolicy(CSCPMessage *pRequest, bool uninstallFlag);
@@ -550,6 +550,7 @@ private:
 	void sendUsmCredentials(DWORD dwRqId);
 	void updateUsmCredentials(CSCPMessage *pRequest);
 	void sendDCIThresholds(CSCPMessage *request);
+	void addClusterNode(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -149,8 +149,8 @@ DEFINE_THREAD_STARTER(ClearDCIData)
 DEFINE_THREAD_STARTER(QueryL2Topology)
 DEFINE_THREAD_STARTER(SendEventLog)
 DEFINE_THREAD_STARTER(SendSyslog)
-DEFINE_THREAD_STARTER(CreateObject)
-DEFINE_THREAD_STARTER(GetServerFile)
+DEFINE_THREAD_STARTER(createObject)
+DEFINE_THREAD_STARTER(getServerFile)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(getServerLogQueryData)
 DEFINE_THREAD_STARTER(executeAction)
@@ -730,10 +730,10 @@ void ClientSession::ProcessingThread()
             DeleteConfigVariable(pMsg);
             break;
 			case CMD_CONFIG_GET_CLOB:
-				GetConfigCLOB(pMsg);
+				getConfigCLOB(pMsg);
 				break;
 			case CMD_CONFIG_SET_CLOB:
-				SetConfigCLOB(pMsg);
+				setConfigCLOB(pMsg);
 				break;
          case CMD_LOAD_EVENT_DB:
             sendEventDB(pMsg->GetId());
@@ -751,7 +751,7 @@ void ClientSession::ProcessingThread()
             ModifyObject(pMsg);
             break;
          case CMD_SET_OBJECT_MGMT_STATUS:
-            ChangeObjectMgmtStatus(pMsg);
+            changeObjectMgmtStatus(pMsg);
             break;
          case CMD_LOAD_USER_DB:
             SendUserDB(pMsg->GetId());
@@ -819,13 +819,16 @@ void ClientSession::ProcessingThread()
             SendMIB(pMsg->GetId());
             break;
          case CMD_CREATE_OBJECT:
-            CALL_IN_NEW_THREAD(CreateObject, pMsg);
+            CALL_IN_NEW_THREAD(createObject, pMsg);
             break;
          case CMD_BIND_OBJECT:
-            ChangeObjectBinding(pMsg, TRUE);
+            changeObjectBinding(pMsg, TRUE);
             break;
          case CMD_UNBIND_OBJECT:
-            ChangeObjectBinding(pMsg, FALSE);
+            changeObjectBinding(pMsg, FALSE);
+            break;
+         case CMD_ADD_CLUSTER_NODE:
+            addClusterNode(pMsg);
             break;
          case CMD_GET_ALL_ALARMS:
             SendAllAlarms(pMsg->GetId(), pMsg->GetVariableShort(VID_IS_ACK));
@@ -1151,13 +1154,13 @@ void ClientSession::ProcessingThread()
 				WebMapGetList(pMsg->GetId());
 				break;
 			case CMD_REGISTER_AGENT:
-				RegisterAgent(pMsg);
+				registerAgent(pMsg);
 				break;
 			case CMD_GET_SERVER_FILE:
-				CALL_IN_NEW_THREAD(GetServerFile, pMsg);
+				CALL_IN_NEW_THREAD(getServerFile, pMsg);
 				break;
 			case CMD_TEST_DCI_TRANSFORMATION:
-				TestDCITransformation(pMsg);
+				testDCITransformation(pMsg);
 				break;
 			case CMD_GET_JOB_LIST:
 				sendJobList(pMsg->GetId());
@@ -2026,7 +2029,7 @@ void ClientSession::DeleteConfigVariable(CSCPMessage *pRequest)
 // Set configuration clob
 //
 
-void ClientSession::SetConfigCLOB(CSCPMessage *pRequest)
+void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR name[MAX_OBJECT_NAME], *value;
@@ -2070,7 +2073,7 @@ void ClientSession::SetConfigCLOB(CSCPMessage *pRequest)
 // Get value of configuration clob
 //
 
-void ClientSession::GetConfigCLOB(CSCPMessage *pRequest)
+void ClientSession::getConfigCLOB(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR name[MAX_OBJECT_NAME], *value;
@@ -2106,7 +2109,7 @@ void ClientSession::GetConfigCLOB(CSCPMessage *pRequest)
 // Close session forcibly
 //
 
-void ClientSession::kill(void)
+void ClientSession::kill()
 {
    // We shutdown socket connection, which will cause
    // read thread to stop, and other threads will follow
@@ -2486,7 +2489,7 @@ void ClientSession::onUserDBUpdate(int code, DWORD id, UserDatabaseObject *objec
 // Change management status for the object
 //
 
-void ClientSession::ChangeObjectMgmtStatus(CSCPMessage *pRequest)
+void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwObjectId;
@@ -3564,7 +3567,7 @@ void ClientSession::SendMIBTimestamp(DWORD dwRqId)
 // Create new object
 //
 
-void ClientSession::CreateObject(CSCPMessage *pRequest)
+void ClientSession::createObject(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject, *pParent;
@@ -3735,10 +3738,63 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
 
 
 //
+// Add cluster node
+//
+
+void ClientSession::addClusterNode(CSCPMessage *request)
+{
+   CSCPMessage msg;
+	NetObj *cluster, *node;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+   cluster = FindObjectById(request->GetVariableLong(VID_PARENT_ID));
+   node = FindObjectById(request->GetVariableLong(VID_CHILD_ID));
+	if ((cluster != NULL) && (node != NULL))
+	{
+		if ((cluster->Type() == OBJECT_CLUSTER) && (node->Type() == OBJECT_NODE))
+		{
+			if (cluster->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
+			    node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+			{
+				((Cluster *)cluster)->ApplyToNode((Node *)node);
+				((Node *)node)->setRecheckCapsFlag();
+				((Node *)node)->forceConfigurationPoll();
+
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, cluster->Id(),
+				              _T("Node %s [%d] added to cluster %s [%d]"), 
+				              node->Name(), node->Id(), cluster->Name(), cluster->Id());
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+				WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, cluster->Id(),
+				              _T("Access denied on adding node %s [%d] to cluster %s [%d]"), 
+				              node->Name(), node->Id(), cluster->Name(), cluster->Id());
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
 // Bind/unbind object
 //
 
-void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
+void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
 {
    CSCPMessage msg;
    NetObj *pParent, *pChild;
@@ -9767,7 +9823,7 @@ void ClientSession::WebMapGetList(DWORD dwRqId)
 // Register agent
 //
 
-void ClientSession::RegisterAgent(CSCPMessage *pRequest)
+void ClientSession::registerAgent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	Node *node;
@@ -9816,7 +9872,7 @@ void ClientSession::RegisterAgent(CSCPMessage *pRequest)
 // Get file from server
 //
 
-void ClientSession::GetServerFile(CSCPMessage *pRequest)
+void ClientSession::getServerFile(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	TCHAR name[MAX_PATH], fname[MAX_PATH];
@@ -9870,7 +9926,7 @@ void ClientSession::GetServerFile(CSCPMessage *pRequest)
 // Test DCI transformation script
 //
 
-void ClientSession::TestDCITransformation(CSCPMessage *pRequest)
+void ClientSession::testDCITransformation(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;

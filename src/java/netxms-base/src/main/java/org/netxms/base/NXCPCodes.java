@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package org.netxms.base;
 
 /**
- * @author Victor
+ * NXCP codes
  *
  */
 public final class NXCPCodes
@@ -103,7 +103,7 @@ public final class NXCPCodes
 	public static final int CMD_ALARM_UPDATE            = 0x0049;
 	public static final int CMD_ALARM_DATA              = 0x004A;
 	public static final int CMD_DELETE_ALARM            = 0x004B;
-	//public static final int CMD_LOCK_ACTION_DB          = 0x004C;
+	public static final int CMD_ADD_CLUSTER_NODE        = 0x004C;
 	//public static final int CMD_UNLOCK_ACTION_DB        = 0x004D;
 	public static final int CMD_LOAD_ACTIONS            = 0x004E;
 	public static final int CMD_ACTION_DB_UPDATE        = 0x004F;

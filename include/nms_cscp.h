@@ -295,7 +295,7 @@ typedef struct
 #define CMD_ALARM_UPDATE            0x0049
 #define CMD_ALARM_DATA              0x004A
 #define CMD_DELETE_ALARM            0x004B
-//#define CMD_LOCK_ACTION_DB          0x004C
+#define CMD_ADD_CLUSTER_NODE        0x004C
 //#define CMD_UNLOCK_ACTION_DB        0x004D
 #define CMD_LOAD_ACTIONS            0x004E
 #define CMD_ACTION_DB_UPDATE        0x004F

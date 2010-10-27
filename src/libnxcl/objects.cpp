@@ -1166,6 +1166,31 @@ DWORD LIBNXCL_EXPORTABLE NXCRemoveTemplate(NXC_SESSION hSession, DWORD dwTemplat
 
 
 //
+// Add cluster node
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCAddClusterNode(NXC_SESSION hSession, DWORD clusterId, DWORD nodeId)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   // Build request message
+	msg.SetCode(CMD_ADD_CLUSTER_NODE);
+   msg.SetId(dwRqId);
+	msg.SetVariable(VID_PARENT_ID, clusterId);
+	msg.SetVariable(VID_CHILD_ID, nodeId);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   // Wait for reply
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
 // Delete object
 //
 

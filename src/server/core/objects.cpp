@@ -650,7 +650,7 @@ Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID)
 // Find local management node ID
 //
 
-DWORD FindLocalMgmtNode(void)
+DWORD FindLocalMgmtNode()
 {
    DWORD i, dwId = 0;
 
