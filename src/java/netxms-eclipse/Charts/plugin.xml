@@ -35,6 +35,14 @@
             name="Historical Data"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.charts.views.YesNoView"
+            icon="icons/chart_line.png"
+            id="org.netxms.ui.eclipse.charts.views.YesNoView"
+            name="Interface Status"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
