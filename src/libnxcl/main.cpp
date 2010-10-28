@@ -402,9 +402,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Invalid log handle"),
 		_T("New password is too weak"),
 		_T("Password was used before"),
-		_T("Invalid session handle")
+		_T("Invalid session handle"),
+		_T("Node already is a member of a cluster")
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_SESSION_HANDLE)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_CLUSTER_MEMBER_ALREADY)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

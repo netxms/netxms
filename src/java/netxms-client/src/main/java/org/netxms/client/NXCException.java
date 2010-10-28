@@ -117,7 +117,9 @@ public class NXCException extends NetXMSClientException
 		"Unknown log name",
 		"Invalid log handle",
 		"New password is too weak",
-		"Password was used before"
+		"Password was used before",
+		"Invalid session handle",
+		"Node already is a member of a cluster"
 	};
 
 	public NXCException(int errorCode)

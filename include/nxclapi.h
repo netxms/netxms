@@ -440,6 +440,7 @@ enum
 #define RCC_WEAK_PASSWORD           ((DWORD)87)
 #define RCC_REUSED_PASSWORD         ((DWORD)88)
 #define RCC_INVALID_SESSION_HANDLE  ((DWORD)89)
+#define RCC_CLUSTER_MEMBER_ALREADY  ((DWORD)90)
 
 
 //

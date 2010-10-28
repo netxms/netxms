@@ -52,4 +52,6 @@ public class CommonRCC
 	public static final int UNSUPPORTED_AUTH_TYPE = 72;
 	public static final int BAD_CERTIFICATE = 73;
 	public static final int INVALID_CERT_ID = 74;
+	public static final int WEAK_PASSWORD = 87;
+	public static final int REUSED_PASSWORD = 88;
 }

@@ -3755,24 +3755,31 @@ void ClientSession::addClusterNode(CSCPMessage *request)
 	{
 		if ((cluster->Type() == OBJECT_CLUSTER) && (node->Type() == OBJECT_NODE))
 		{
-			if (cluster->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
-			    node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+			if (((Node *)node)->getMyCluster() != NULL)
 			{
-				((Cluster *)cluster)->ApplyToNode((Node *)node);
-				((Node *)node)->setRecheckCapsFlag();
-				((Node *)node)->forceConfigurationPoll();
+				if (cluster->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
+					 node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+				{
+					((Cluster *)cluster)->ApplyToNode((Node *)node);
+					((Node *)node)->setRecheckCapsFlag();
+					((Node *)node)->forceConfigurationPoll();
 
-				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, cluster->Id(),
-				              _T("Node %s [%d] added to cluster %s [%d]"), 
-				              node->Name(), node->Id(), cluster->Name(), cluster->Id());
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, cluster->Id(),
+									  _T("Node %s [%d] added to cluster %s [%d]"), 
+									  node->Name(), node->Id(), cluster->Name(), cluster->Id());
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+					WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, cluster->Id(),
+									  _T("Access denied on adding node %s [%d] to cluster %s [%d]"), 
+									  node->Name(), node->Id(), cluster->Name(), cluster->Id());
+				}
 			}
 			else
 			{
-				msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-				WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, cluster->Id(),
-				              _T("Access denied on adding node %s [%d] to cluster %s [%d]"), 
-				              node->Name(), node->Id(), cluster->Name(), cluster->Id());
+				msg.SetVariable(VID_RCC, RCC_CLUSTER_MEMBER_ALREADY);
 			}
 		}
 		else
