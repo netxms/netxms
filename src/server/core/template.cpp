@@ -407,7 +407,7 @@ bool Template::addItem(DCItem *pItem, bool alreadyLocked)
    bool success = false;
 
    if (!alreadyLocked)
-      lockDciAccess();
+      lockDciAccess(); // write lock
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
@@ -449,7 +449,7 @@ bool Template::deleteItem(DWORD dwItemId, bool needLock)
    bool success = false;
 
 	if (needLock)
-		lockDciAccess();
+		lockDciAccess();  // write lock
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
@@ -816,7 +816,7 @@ BOOL Template::ApplyToNode(Node *pNode)
       if (m_ppItems[i] != NULL)
       {
          pdwItemList[i] = m_ppItems[i]->getId();
-         if (!pNode->ApplyTemplateItem(m_dwId, m_ppItems[i]))
+         if (!pNode->applyTemplateItem(m_dwId, m_ppItems[i]))
          {
             bErrors = TRUE;
          }
@@ -828,7 +828,7 @@ BOOL Template::ApplyToNode(Node *pNode)
    }
 
    // Clean items deleted from template
-   pNode->CleanDeletedTemplateItems(m_dwId, m_dwNumItems, pdwItemList);
+   pNode->cleanDeletedTemplateItems(m_dwId, m_dwNumItems, pdwItemList);
 
    // Cleanup
    free(pdwItemList);
@@ -955,7 +955,7 @@ void Template::ValidateDCIList(DCI_CFG *cfg)
 {
 	DWORD i, j, dwNumDeleted, *pdwDeleteList;
 
-	lockDciAccess();
+	lockDciAccess(); // write lock
 
 	pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
 	dwNumDeleted = 0;

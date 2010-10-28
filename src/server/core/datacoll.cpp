@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -132,7 +132,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
             case DCE_SUCCESS:
 					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
 	               pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-					pItem->processNewValue(currTime, pBuffer);
+					((Node *)pItem->getRelatedNode())->processNewDciValue(pItem, currTime, pBuffer);
                break;
             case DCE_COMM_ERROR:
                pItem->processNewError();

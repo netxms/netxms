@@ -179,7 +179,7 @@ void AgentConnection::PrintMsg(const TCHAR *pszFormat, ...)
 // Receiver thread
 //
 
-void AgentConnection::ReceiverThread(void)
+void AgentConnection::ReceiverThread()
 {
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
@@ -209,7 +209,8 @@ void AgentConnection::ReceiverThread(void)
       if ((error = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                   &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
 		{
-			DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), error, WSAGetLastError());
+			if (WSAGetLastError() != WSAESHUTDOWN)
+				DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), error, WSAGetLastError());
          break;
 		}
 

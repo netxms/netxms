@@ -1045,7 +1045,7 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 // Process new data collection error
 //
 
-void DCItem::processNewError(void)
+void DCItem::processNewError()
 {
    DWORD i, iResult;
 

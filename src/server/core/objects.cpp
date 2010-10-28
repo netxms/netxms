@@ -124,7 +124,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
                case REMOVE_TEMPLATE:
                   if (((Node *)pNode)->LockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL))
                   {
-                     ((Node *)pNode)->UnbindFromTemplate(pInfo->pTemplate->Id(), pInfo->bRemoveDCI);
+                     ((Node *)pNode)->unbindFromTemplate(pInfo->pTemplate->Id(), pInfo->bRemoveDCI);
                      ((Node *)pNode)->UnlockDCIList(0x7FFFFFFF);
                      bSuccess = TRUE;
                   }
@@ -169,7 +169,7 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 		{
 			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
 			{
-				((Node *)g_pIndexById[i].pObject)->UpdateDCICache();
+				((Node *)g_pIndexById[i].pObject)->updateDciCache();
 		      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
 			}
 		}

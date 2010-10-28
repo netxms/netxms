@@ -761,11 +761,12 @@ public:
    void queueItemsForPolling(Queue *pPollerQueue);
    DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
    DWORD getLastValues(CSCPMessage *pMsg);
+	void processNewDciValue(DCItem *item, time_t currTime, const TCHAR *value);
    void cleanDCIData();
-   BOOL ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem);
-   void CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
-   void UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
-   void UpdateDCICache(void);
+   BOOL applyTemplateItem(DWORD dwTemplateId, DCItem *pItem);
+   void cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
+   void unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
+   void updateDciCache();
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
 
    void OpenParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);

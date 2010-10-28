@@ -2612,13 +2612,13 @@ void Node::cleanDCIData()
 // pItem passed to this method should be a template's DCI
 //
 
-BOOL Node::ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem)
+BOOL Node::applyTemplateItem(DWORD dwTemplateId, DCItem *pItem)
 {
    BOOL bResult = TRUE;
    DWORD i;
    DCItem *pNewItem;
 
-   lockDciAccess();
+   lockDciAccess();	// write lock
 
    DbgPrintf(5, "Applying item \"%s\" to node \"%s\"", pItem->getName(), m_szName);
 
@@ -2660,11 +2660,11 @@ BOOL Node::ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem)
 // all items related to given template and not presented in list should be deleted.
 //
 
-void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList)
+void Node::cleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList)
 {
    DWORD i, j, dwNumDeleted, *pdwDeleteList;
 
-   lockDciAccess();
+   lockDciAccess();  // write lock
 
    pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
    dwNumDeleted = 0;
@@ -2694,7 +2694,7 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
 // or remove these DCIs at all
 //
 
-void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
+void Node::unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 {
    DWORD i;
 
@@ -2703,7 +2703,7 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 		DWORD *pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
 		DWORD dwNumDeleted = 0;
 
-      lockDciAccess();
+      lockDciAccess();  // write lock
 
       for(i = 0; i < m_dwNumItems; i++)
          if (m_ppItems[i]->getTemplateId() == dwTemplateId)
@@ -2800,13 +2800,14 @@ DWORD Node::getInterfaceCount(Interface **ppInterface)
 // Update cache for all DCI's
 //
 
-void Node::UpdateDCICache(void)
+void Node::updateDciCache()
 {
    DWORD i;
 
-   /* LOCK? */
+	lockDciAccess();
    for(i = 0; i < m_dwNumItems; i++)
       m_ppItems[i]->updateCacheSize();
+	unlockDciAccess();
 }
 
 
@@ -3502,4 +3503,16 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
 	SendPollerMsg(dwRqId, _T("Finished interface names poll for node %s\r\n"), m_szName);
    pollerUnlock();
    DbgPrintf(4, "Finished interface names poll for node %s (ID: %d)", m_szName, m_dwId);
+}
+
+
+//
+// Process new DCI value
+//
+
+void Node::processNewDciValue(DCItem *item, time_t currTime, const TCHAR *value)
+{
+	lockDciAccess();
+	item->processNewValue(currTime, value);
+	unlockDciAccess();
 }
