@@ -147,6 +147,8 @@ protected:
 	afx_msg void OnUpdateObjectCreateIfDci(CCmdUI* pCmdUI);
 	afx_msg void OnObjectPollInterfaceNames();
 	afx_msg void OnUpdateObjectPollInterfaceNames(CCmdUI* pCmdUI);
+	afx_msg void OnObjectAddtocluster();
+	afx_msg void OnUpdateObjectAddtocluster(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewGetDispInfo(NMHDR *lpdi, LRESULT *pResult);

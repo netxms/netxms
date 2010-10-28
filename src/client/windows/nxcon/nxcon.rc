@@ -287,6 +287,7 @@ BEGIN
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM "M&ove to another container...", ID_OBJECT_MOVE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
+        MENUITEM "Add to cluster...",           ID_OBJECT_ADDTOCLUSTER
         MENUITEM SEPARATOR
         MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
         MENUITEM SEPARATOR
@@ -425,6 +426,7 @@ BEGIN
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM "M&ove to another container...", ID_OBJECT_MOVE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
+        MENUITEM "Add to cluster...",           ID_OBJECT_ADDTOCLUSTER
         MENUITEM SEPARATOR
         MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
         MENUITEM SEPARATOR
@@ -688,6 +690,7 @@ BEGIN
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM "M&ove to another container...", ID_OBJECT_MOVE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
+        MENUITEM "Add to cluster...",           ID_OBJECT_ADDTOCLUSTER
         MENUITEM SEPARATOR
         MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
         MENUITEM SEPARATOR

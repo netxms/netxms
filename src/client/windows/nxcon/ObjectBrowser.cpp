@@ -114,6 +114,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_CREATE_IF_DCI, OnUpdateObjectCreateIfDci)
 	ON_COMMAND(ID_OBJECT_POLL_INTERFACE_NAMES, OnObjectPollInterfaceNames)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_INTERFACE_NAMES, OnUpdateObjectPollInterfaceNames)
+	ON_COMMAND(ID_OBJECT_ADDTOCLUSTER, OnObjectAddtocluster)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_ADDTOCLUSTER, OnUpdateObjectAddtocluster)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, ID_TREE_CTRL, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, ID_TREE_CTRL, OnTreeViewGetDispInfo)
@@ -1257,7 +1259,8 @@ void CObjectBrowser::OnUpdateObjectUnbind(CCmdUI* pCmdUI)
    {
       pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
                      (m_pCurrentObject->iClass == OBJECT_SERVICEROOT) ||
-                     (m_pCurrentObject->iClass == OBJECT_TEMPLATE));
+                     (m_pCurrentObject->iClass == OBJECT_TEMPLATE) ||
+							(m_pCurrentObject->iClass == OBJECT_CLUSTER));
    }
 }
 
@@ -1610,4 +1613,27 @@ LRESULT CObjectBrowser::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
    GetWindowPlacement(&pInfo->placement);
 	_sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("F:%u"), m_dwFlags);
    return 1;
+}
+
+
+//
+// Handlers for "Add to cluster" command
+//
+
+void CObjectBrowser::OnObjectAddtocluster() 
+{
+   if ((m_pCurrentObject != NULL) && (m_pCurrentObject->iClass == OBJECT_NODE))
+      theApp.AddNodeToCluster(m_pCurrentObject);
+}
+
+void CObjectBrowser::OnUpdateObjectAddtocluster(CCmdUI* pCmdUI) 
+{
+   if (m_pCurrentObject == NULL)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
+   }
 }

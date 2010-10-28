@@ -4604,3 +4604,25 @@ void CConsoleApp::OnControlpanelSyslogparser()
 									  m_hSyslogParserCfgMenu, m_hSyslogParserCfgAccel);
    }
 }
+
+
+//
+// Add node to cluster
+//
+
+void CConsoleApp::AddNodeToCluster(NXC_OBJECT *node)
+{
+   CObjectSelDlg dlg;
+   DWORD dwResult;
+
+   dlg.m_dwAllowedClasses = SCL_CLUSTER;
+	dlg.m_bSingleSelection = TRUE;
+	dlg.m_bAllowEmptySelection = FALSE;
+   if (dlg.DoModal() == IDOK)
+   {
+      dwResult = DoRequestArg3(NXCAddClusterNode, g_hSession, (void *)dlg.m_pdwObjectList[0],
+		                         (void *)node->dwId, _T("Adding cluster node..."));
+      if (dwResult != RCC_SUCCESS)
+         ErrorBox(dwResult, _T("Cannot add node to cluster: %s"));
+   }
+}

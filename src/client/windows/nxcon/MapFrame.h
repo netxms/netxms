@@ -127,6 +127,8 @@ protected:
 	afx_msg void OnUpdateObjectPollStatus(CCmdUI* pCmdUI);
 	afx_msg void OnObjectSetchildmgmt();
 	afx_msg void OnUpdateObjectSetchildmgmt(CCmdUI* pCmdUI);
+	afx_msg void OnObjectAddtocluster();
+	afx_msg void OnUpdateObjectAddtocluster(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnSubmapChange(WPARAM wParam, LPARAM lParam);

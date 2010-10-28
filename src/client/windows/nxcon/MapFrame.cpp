@@ -191,6 +191,8 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_STATUS, OnUpdateObjectPollStatus)
 	ON_COMMAND(ID_OBJECT_SETCHILDMGMT, OnObjectSetchildmgmt)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_SETCHILDMGMT, OnUpdateObjectSetchildmgmt)
+	ON_COMMAND(ID_OBJECT_ADDTOCLUSTER, OnObjectAddtocluster)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_ADDTOCLUSTER, OnUpdateObjectAddtocluster)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_SUBMAP_CHANGE, OnSubmapChange)
@@ -850,7 +852,8 @@ void CMapFrame::OnUpdateObjectUnbind(CCmdUI* pCmdUI)
 
       pObject = GetFirstSelectedObject();
       pCmdUI->Enable((pObject->iClass == OBJECT_CONTAINER) ||
-                     (pObject->iClass == OBJECT_SERVICEROOT));
+                     (pObject->iClass == OBJECT_SERVICEROOT) ||
+                     (pObject->iClass == OBJECT_CLUSTER));
    }
 }
 
@@ -1331,4 +1334,33 @@ LRESULT CMapFrame::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
    GetWindowPlacement(&pInfo->placement);
 	_sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("ID:%u\x7FS:%d"), m_dwMapId, m_nScaleShift);
    return 1;
+}
+
+
+//
+// Handlers for "Add to cluster" menu
+//
+
+void CMapFrame::OnObjectAddtocluster() 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+   if ((pObject != NULL) && (pObject->iClass == OBJECT_NODE))
+      theApp.AddNodeToCluster(pObject);
+}
+
+void CMapFrame::OnUpdateObjectAddtocluster(CCmdUI* pCmdUI) 
+{
+   if (m_wndMapView.GetSelectionCount() != 1)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = GetFirstSelectedObject();
+      pCmdUI->Enable(pObject->iClass == OBJECT_NODE);
+   }
 }

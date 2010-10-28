@@ -300,6 +300,7 @@ private:
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	void AddNodeToCluster(NXC_OBJECT *node);
 	TCHAR *GetSituationName(DWORD id, TCHAR *buffer);
 	void UnlockSituationList();
 	NXC_SITUATION_LIST * GetSituationList();

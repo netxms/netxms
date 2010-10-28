@@ -3755,7 +3755,7 @@ void ClientSession::addClusterNode(CSCPMessage *request)
 	{
 		if ((cluster->Type() == OBJECT_CLUSTER) && (node->Type() == OBJECT_NODE))
 		{
-			if (((Node *)node)->getMyCluster() != NULL)
+			if (((Node *)node)->getMyCluster() == NULL)
 			{
 				if (cluster->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
 					 node->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
