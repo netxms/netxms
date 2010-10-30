@@ -149,10 +149,13 @@ protected:
 	afx_msg void OnUpdateObjectPollInterfaceNames(CCmdUI* pCmdUI);
 	afx_msg void OnObjectAddtocluster();
 	afx_msg void OnUpdateObjectAddtocluster(CCmdUI* pCmdUI);
+	afx_msg void OnObjectRename();
+	afx_msg void OnUpdateObjectRename(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewGetDispInfo(NMHDR *lpdi, LRESULT *pResult);
    afx_msg void OnTreeViewItemExpanding(NMHDR *lpnmt, LRESULT *pResult);
+   afx_msg void OnTreeViewEndLabelEdit(NMHDR *pNMHDR, LRESULT *pResult);
    afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnObjectTool(UINT nID);
 	afx_msg void OnUpdateObjectTool(CCmdUI *pCmdUI);

@@ -116,10 +116,13 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_INTERFACE_NAMES, OnUpdateObjectPollInterfaceNames)
 	ON_COMMAND(ID_OBJECT_ADDTOCLUSTER, OnObjectAddtocluster)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_ADDTOCLUSTER, OnUpdateObjectAddtocluster)
+	ON_COMMAND(ID_OBJECT_RENAME, OnObjectRename)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_RENAME, OnUpdateObjectRename)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, ID_TREE_CTRL, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, ID_TREE_CTRL, OnTreeViewGetDispInfo)
    ON_NOTIFY(TVN_ITEMEXPANDING, ID_TREE_CTRL, OnTreeViewItemExpanding)
+   ON_NOTIFY(TVN_ENDLABELEDIT, ID_TREE_CTRL, OnTreeViewEndLabelEdit)
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_FIND_OBJECT, OnFindObject)
    ON_MESSAGE(NXCM_ACTIVATE_OBJECT_TREE, OnActivateObjectTree)
@@ -159,7 +162,7 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    // Create object tree control with standard tree view control inside
 	m_wndObjectTree.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 0));
-   m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
+   m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_EDITLABELS,
                         rect, &m_wndObjectTree, ID_TREE_CTRL);
 	m_wndObjectTree.SetTreeCtrl(&m_wndTreeCtrl);
 
@@ -1636,4 +1639,46 @@ void CObjectBrowser::OnUpdateObjectAddtocluster(CCmdUI* pCmdUI)
    {
       pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
    }
+}
+
+
+//
+// Handlers for "Rename" menu
+//
+
+void CObjectBrowser::OnObjectRename() 
+{
+	HTREEITEM item = m_wndTreeCtrl.GetSelectedItem();
+	if (item != NULL)
+	{
+		m_wndTreeCtrl.EditLabel(item);
+	}
+}
+
+void CObjectBrowser::OnUpdateObjectRename(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_pCurrentObject != NULL);
+}
+
+void CObjectBrowser::OnTreeViewEndLabelEdit(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	TV_DISPINFO *info = (TV_DISPINFO*)pNMHDR;
+	if (info->item.pszText != NULL)
+	{
+		NXC_OBJECT_UPDATE upd;
+		DWORD rcc;
+
+		m_wndTreeCtrl.SetItemText(info->item.hItem, info->item.pszText);
+
+		upd.dwObjectId = m_pCurrentObject->dwId;
+		upd.qwFlags = OBJ_UPDATE_NAME;
+		upd.pszName = info->item.pszText;
+		rcc = DoRequestArg2(NXCModifyObject, g_hSession, &upd, _T("Renaming object..."));
+		if (rcc != RCC_SUCCESS)
+		{
+			theApp.ErrorBox(rcc, _T("Cannot rename object: %s"));
+			m_wndTreeCtrl.SetItemText(info->item.hItem, m_pCurrentObject->szName);
+		}
+	}
+   *pResult = 0;
 }
