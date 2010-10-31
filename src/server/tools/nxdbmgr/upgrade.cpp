@@ -246,6 +246,32 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V214 to V215
+//
+
+static BOOL H_UpgradeFromV214(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE network_maps (")
+		                  _T("id integer not null,")
+						      _T("map_type integer not null,")
+						      _T("layout integer not null,")
+						      _T("seed integer not null,")
+						      _T("background integer not null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE network_map_elements (")
+		                  _T("map_id integer not null,")
+		                  _T("element_id integer not null,")
+						      _T("element_type integer not null,")
+								_T("element_data $SQL:TEXT not null,")
+	                     _T("PRIMARY KEY(map_id,element_id))")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='215' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V213 to V214
 //
 
@@ -310,7 +336,6 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 	}
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='214' WHERE var_name='SchemaVersion'")));
-
    return TRUE;
 }
 
@@ -4815,6 +4840,7 @@ static struct
 	{ 211, 212, H_UpgradeFromV211 },
 	{ 212, 213, H_UpgradeFromV212 },
 	{ 213, 214, H_UpgradeFromV213 },
+	{ 214, 215, H_UpgradeFromV214 },
    { 0, NULL }
 };
 

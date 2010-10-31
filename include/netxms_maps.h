@@ -33,6 +33,8 @@
 #define LIBNXMAP_EXPORTABLE
 #endif
 
+#include <nxconfig.h>
+
 
 //
 // Constants
@@ -345,5 +347,88 @@ public:
    void CreateMessage(CSCPMessage *pMsg);
    void ModifyFromMessage(CSCPMessage *pMsg);
 };
+
+
+/********** 1.1.x Map API ********/
+
+
+//
+// Map element types
+//
+
+#define MAP_ELEMENT_GENERIC      0
+#define MAP_ELEMENT_OBJECT       1
+#define MAP_ELEMENT_DECORATION   2
+
+
+//
+// Generic map element
+//
+
+class LIBNXMAP_EXPORTABLE NetworkMapElement
+{
+protected:
+	LONG m_type;
+	LONG m_posX;
+	LONG m_posY;
+
+public:
+	NetworkMapElement();
+	NetworkMapElement(Config *config);
+	virtual ~NetworkMapElement();
+
+	virtual void updateConfig(Config *config);
+
+	LONG getType() { return m_type; }
+	LONG getPosX() { return m_posX; }
+	LONG getPosY() { return m_posY; }
+
+	void setPosition(LONG x, LONG y);
+};
+
+
+//
+// Object map element
+//
+
+class LIBNXMAP_EXPORTABLE NetworkMapObject : public NetworkMapElement
+{
+protected:
+	DWORD m_objectId;
+
+public:
+	NetworkMapObject(DWORD objectId);
+	NetworkMapObject(Config *config);
+	virtual ~NetworkMapObject();
+
+	virtual void updateConfig(Config *config);
+
+	DWORD getObjectId() { return m_objectId; }
+};
+
+
+//
+// Decoration map element
+//
+
+class LIBNXMAP_EXPORTABLE NetworkMapDecoration : public NetworkMapElement
+{
+protected:
+	LONG m_decorationType;
+	DWORD m_color;
+	TCHAR *m_title;
+
+public:
+	NetworkMapDecoration(LONG decorationType);
+	NetworkMapDecoration(Config *config);
+	virtual ~NetworkMapDecoration();
+
+	virtual void updateConfig(Config *config);
+
+	LONG getDecorationType() { return m_decorationType; }
+	DWORD getColor() { return m_color; }
+	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
+};
+
 
 #endif

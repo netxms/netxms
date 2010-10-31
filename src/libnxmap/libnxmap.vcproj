@@ -334,6 +334,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\element.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\graph.cpp"
 				>
 			</File>
@@ -397,6 +401,10 @@
 			</File>
 			<File
 				RelativePath="..\..\include\nms_util.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\nxconfig.h"
 				>
 			</File>
 			<File

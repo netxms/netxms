@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ Network NXCORE_EXPORTABLE *g_pEntireNet = NULL;
 ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot = NULL;
 TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot = NULL;
 PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
+NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
 
 DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 INDEX NXCORE_EXPORTABLE *g_pIndexById = NULL;
@@ -65,7 +66,8 @@ const char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
                               "Template", "TemplateGroup", "TemplateRoot",
                               "NetworkService", "VPNConnector", "Condition",
                               "Cluster", "PolicyGroup", "PolicyRoot",
-                              "AgentPolicy", "AgentPolicyConfig" };
+                              "AgentPolicy", "AgentPolicyConfig", "NetworkMapRoot",
+                              "NetworkMapGroup", "NetworkMap" };
 
 
 //
@@ -357,6 +359,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_POLICYROOT:
 			case OBJECT_AGENTPOLICY:
 			case OBJECT_AGENTPOLICY_CONFIG:
+			case OBJECT_NETWORKMAPROOT:
+			case OBJECT_NETWORKMAPGROUP:
+			case OBJECT_NETWORKMAP:
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -427,6 +432,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_POLICYROOT:
 		case OBJECT_AGENTPOLICY:
 		case OBJECT_AGENTPOLICY_CONFIG:
+		case OBJECT_NETWORKMAPROOT:
+		case OBJECT_NETWORKMAPGROUP:
+		case OBJECT_NETWORKMAP:
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -1000,6 +1008,29 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+   // Load agent policies
+   DbgPrintf(2, "Loading network maps...");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM network_maps");
+   if (hResult != NULL)
+   {
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         NetworkMap *map = new NetworkMap;
+         if (map->CreateFromDB(dwId))
+         {
+            NetObjInsert(map, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete map;
+            nxlog_write(MSG_NETMAP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load container objects
    DbgPrintf(2, "Loading containers...");
    sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_CONTAINER);
@@ -1078,18 +1109,46 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+   // Load map group objects
+   DbgPrintf(2, "Loading map groups...");
+   sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_NETWORKMAPGROUP);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+      NetworkMapGroup *pGroup;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pGroup = new NetworkMapGroup;
+         if (pGroup->CreateFromDB(dwId))
+         {
+            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pGroup;
+            nxlog_write(MSG_MG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Link childs to container and template group objects
    DbgPrintf(2, "Linking objects...");
    for(i = 0; i < g_dwIdIndexSize; i++)
       if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CONTAINER) ||
           (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATEGROUP) ||
-          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_POLICYGROUP))
+          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_POLICYGROUP) ||
+          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NETWORKMAPGROUP))
          ((Container *)g_pIndexById[i].pObject)->LinkChildObjects();
 
    // Link childs to "Service Root" and "Template Root" objects
    g_pServiceRoot->LinkChildObjects();
    g_pTemplateRoot->LinkChildObjects();
    g_pPolicyRoot->LinkChildObjects();
+   g_pMapRoot->LinkChildObjects();
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;
@@ -1098,6 +1157,8 @@ BOOL LoadObjects()
    g_pEntireNet->CalculateCompoundStatus();
    g_pServiceRoot->CalculateCompoundStatus();
    g_pTemplateRoot->CalculateCompoundStatus();
+   g_pPolicyRoot->CalculateCompoundStatus();
+   g_pMapRoot->CalculateCompoundStatus();
 
    // Recalculate status for zone objects
    if (g_dwFlags & AF_ENABLE_ZONING)

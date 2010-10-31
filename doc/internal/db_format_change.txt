@@ -1,4 +1,29 @@
 ***************
+* 214 ==> 215 *
+***************
+
+- New tables added:
+	CREATE TABLE network_maps
+	(
+		id integer not null,
+		map_type integer not null,
+		layout integer not null,
+		seed integer not null,
+		background integer not null,
+		PRIMARY KEY(id)
+	) TABLE_TYPE;
+
+	CREATE TABLE network_map_elements
+	(
+		map_id integer not null,
+		element_id integer not null,
+		element_type integer not null,
+		element_data SQL_TEXT not null,
+		PRIMARY KEY(map_id,element_id)
+	) TABLE_TYPE;
+
+
+***************
 * 208 ==> 209 *
 ***************
 

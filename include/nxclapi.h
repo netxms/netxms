@@ -151,6 +151,9 @@ typedef void * NXC_SESSION;
 #define OBJECT_POLICYROOT           16
 #define OBJECT_AGENTPOLICY          17
 #define OBJECT_AGENTPOLICY_CONFIG   18
+#define OBJECT_NETWORKMAPROOT       19
+#define OBJECT_NETWORKMAPGROUP      20
+#define OBJECT_NETWORKMAP           21
 
 
 //
@@ -693,6 +696,23 @@ enum
 #define ACTION_SEND_EMAIL     2
 #define ACTION_SEND_SMS       3
 #define ACTION_FORWARD_EVENT  4
+
+
+//
+// Network map types
+//
+
+#define NETMAP_USER_DEFINED   0
+#define NETMAP_IP_TOPOLOGY    1
+#define NETMAP_L2_TOPOLOGY    2
+
+
+//
+// Network map layouts
+//
+
+#define MAP_LAYOUT_MANUAL     0
+#define MAP_LAYOUT_RADIAL     1
 
 
 //

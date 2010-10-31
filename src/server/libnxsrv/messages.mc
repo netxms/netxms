@@ -758,4 +758,16 @@ Language=English
 Inconsistent database: agent policy object %1 has reference to child object %2 which is not a node object
 .
 
+MessageId=
+SymbolicName=MSG_MG_LOAD_FAILED
+Language=English
+Failed to load network map group object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_NETMAP_LOAD_FAILED
+Language=English
+Failed to load network map object with id %1 from database
+.
+
 ;#endif

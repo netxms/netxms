@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: uniroot.cpp
+** File: uniroot.cpp
 **
 **/
 
@@ -47,7 +47,7 @@ UniversalRoot::~UniversalRoot()
 // This method is expected to be called only at startup, so we don't lock
 //
 
-void UniversalRoot::LinkChildObjects(void)
+void UniversalRoot::LinkChildObjects()
 {
    DWORD i, dwNumChilds, dwObjectId;
    NetObj *pObject;
@@ -113,7 +113,7 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
 // Load properties from database
 //
 
-void UniversalRoot::LoadFromDB(void)
+void UniversalRoot::LoadFromDB()
 {
    LoadCommonProperties();
    LoadACLFromDB();

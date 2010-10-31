@@ -1156,10 +1156,10 @@ public:
    AgentPolicy(const TCHAR *name, int type);
    virtual ~AgentPolicy();
 
-   virtual int Type(void) { return OBJECT_AGENTPOLICY; }
+   virtual int Type() { return OBJECT_AGENTPOLICY; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1188,7 +1188,7 @@ public:
    AgentPolicyConfig(const TCHAR *name);
    virtual ~AgentPolicyConfig();
 
-   virtual int Type(void) { return OBJECT_AGENTPOLICY_CONFIG; }
+   virtual int Type() { return OBJECT_AGENTPOLICY_CONFIG; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
@@ -1235,6 +1235,68 @@ public:
 
 
 //
+// Network map root
+//
+
+class NXCORE_EXPORTABLE NetworkMapRoot : public UniversalRoot
+{
+public:
+   NetworkMapRoot();
+   virtual ~NetworkMapRoot();
+
+   virtual int Type() { return OBJECT_NETWORKMAPROOT; }
+   virtual const char *DefaultName() { return "Network Maps"; }
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+};
+
+
+//
+// Network map group object
+//
+
+class NXCORE_EXPORTABLE NetworkMapGroup : public Container
+{
+public:
+   NetworkMapGroup() : Container() { }
+   NetworkMapGroup(TCHAR *pszName) : Container(pszName, 0) { }
+   virtual ~NetworkMapGroup() { }
+
+   virtual int Type() { return OBJECT_NETWORKMAPGROUP; }
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+};
+
+
+//
+// Network map object
+//
+
+class NXCORE_EXPORTABLE NetworkMap : public NetObj
+{
+protected:
+	int m_mapType;
+	DWORD m_seedObject;
+	int m_layout;
+	int m_background;
+	int m_numElements;
+	NetworkMapElement **m_elements;
+
+public:
+   NetworkMap();
+   virtual ~NetworkMap();
+
+   virtual int Type() { return OBJECT_NETWORKMAP; }
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB();
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+};
+
+
+//
 // Object index structure
 //
 
@@ -1262,7 +1324,7 @@ struct CONTAINER_CATEGORY
 // Functions
 //
 
-void ObjectsInit(void);
+void ObjectsInit();
 
 void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
@@ -1281,7 +1343,7 @@ DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID);
 
-BOOL LoadObjects(void);
+BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx);
 
 void DeleteUserFromAllObjects(DWORD dwUserId);

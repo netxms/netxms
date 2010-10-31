@@ -1217,11 +1217,9 @@ CREATE TABLE ap_config_files
 	PRIMARY KEY(policy_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Default SNMP v3 USM credentials
 */
-
 CREATE TABLE usm_credentials
 (
 	id integer not null,
@@ -1231,4 +1229,30 @@ CREATE TABLE usm_credentials
 	auth_password varchar(255),
 	priv_password varchar(255),
 	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/*
+** Network maps
+*/
+CREATE TABLE network_maps
+(
+	id integer not null,
+	map_type integer not null,
+	layout integer not null,
+	seed integer not null,
+	background integer not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/*
+** Elements of network maps
+*/
+
+CREATE TABLE network_map_elements
+(
+	map_id integer not null,
+	element_id integer not null,
+	element_type integer not null,
+	element_data SQL_TEXT not null,
+	PRIMARY KEY(map_id,element_id)
 ) TABLE_TYPE;

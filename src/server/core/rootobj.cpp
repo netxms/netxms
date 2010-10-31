@@ -104,3 +104,34 @@ void PolicyRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
+
+
+//
+// Network maps root class default constructor
+//
+
+NetworkMapRoot::NetworkMapRoot()
+               :UniversalRoot()
+{
+   m_dwId = BUILTIN_OID_NETWORKMAPROOT;
+   strcpy(m_szName, "Network Maps");
+}
+
+
+//
+// Network maps root class destructor
+//
+
+NetworkMapRoot::~NetworkMapRoot()
+{
+}
+
+
+//
+// Redefined status calculation for network maps root
+//
+
+void NetworkMapRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
+{
+   m_iStatus = STATUS_NORMAL;
+}
