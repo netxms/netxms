@@ -221,6 +221,10 @@ void ObjectsInit()
    g_pPolicyRoot = new PolicyRoot;
    NetObjInsert(g_pPolicyRoot, FALSE);
    
+	// Create "Network Maps Root" object
+   g_pMapRoot = new NetworkMapRoot;
+   NetObjInsert(g_pMapRoot, FALSE);
+   
 	DbgPrintf(1, "Built-in objects created");
 
    // Start template update applying thread
@@ -716,6 +720,7 @@ BOOL LoadObjects()
    g_pServiceRoot->LoadFromDB();
    g_pTemplateRoot->LoadFromDB();
 	g_pPolicyRoot->LoadFromDB();
+	g_pMapRoot->LoadFromDB();
 
    // Load zones
    if (g_dwFlags & AF_ENABLE_ZONING)

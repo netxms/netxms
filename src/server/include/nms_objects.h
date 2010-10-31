@@ -78,6 +78,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define BUILTIN_OID_TEMPLATEROOT    3
 #define BUILTIN_OID_ZONE0           4
 #define BUILTIN_OID_POLICYROOT      5
+#define BUILTIN_OID_NETWORKMAPROOT  6
 
 
 //

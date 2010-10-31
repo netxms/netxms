@@ -24,8 +24,6 @@ import org.netxms.client.NXCSession;
 /**
  * This class represents NetXMS NODE objects.
  * 
- * @author Victor
- *
  */
 public class Node extends GenericObject
 {
@@ -251,7 +249,7 @@ public class Node extends GenericObject
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()

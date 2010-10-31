@@ -49,6 +49,18 @@ NetworkMapElement::NetworkMapElement(Config *config)
 
 
 //
+// Generic element NXCP constructor
+//
+
+NetworkMapElement::NetworkMapElement(CSCPMessage *msg, DWORD baseId)
+{
+	m_type = (LONG)msg->GetVariableShort(baseId);
+	m_posX = (LONG)msg->GetVariableLong(baseId + 1);
+	m_posY = (LONG)msg->GetVariableLong(baseId + 2);
+}
+
+
+//
 // Generic element destructor
 //
 
@@ -66,6 +78,18 @@ void NetworkMapElement::updateConfig(Config *config)
 	config->setValue(_T("/type"), m_type);
 	config->setValue(_T("/posX"), m_posX);
 	config->setValue(_T("/posY"), m_posY);
+}
+
+
+//
+// Fill NXCP message with element's data
+//
+
+void NetworkMapElement::fillMessage(CSCPMessage *msg, DWORD baseId)
+{
+	msg->SetVariable(baseId, (WORD)m_type);
+	msg->SetVariable(baseId + 1, (DWORD)m_posX);
+	msg->SetVariable(baseId + 2, (DWORD)m_posY);
 }
 
 
@@ -102,6 +126,16 @@ NetworkMapObject::NetworkMapObject(Config *config) : NetworkMapElement(config)
 
 
 //
+// Object element NXCP constructor
+//
+
+NetworkMapObject::NetworkMapObject(CSCPMessage *msg, DWORD baseId) : NetworkMapElement(msg, baseId)
+{
+	m_objectId = msg->GetVariableLong(baseId + 10);
+}
+
+
+//
 // Object element destructor
 //
 
@@ -118,6 +152,17 @@ void NetworkMapObject::updateConfig(Config *config)
 {
 	NetworkMapElement::updateConfig(config);
 	config->setValue(_T("/objectId"), m_objectId);
+}
+
+
+//
+// Fill NXCP message with element's data
+//
+
+void NetworkMapObject::fillMessage(CSCPMessage *msg, DWORD baseId)
+{
+	NetworkMapElement::fillMessage(msg, baseId);
+	msg->SetVariable(baseId + 10, m_objectId);
 }
 
 
@@ -141,8 +186,20 @@ NetworkMapDecoration::NetworkMapDecoration(LONG decorationType) : NetworkMapElem
 NetworkMapDecoration::NetworkMapDecoration(Config *config) : NetworkMapElement(config)
 {
 	m_decorationType = config->getValueInt(_T("/decorationType"), 0);
-	m_color = config->getValueInt(_T("/color"), 0);
+	m_color = config->getValueUInt(_T("/color"), 0);
 	m_title = _tcsdup(config->getValue(_T("/title"), _T("")));
+}
+
+
+//
+// Decoration element NXCP constructor
+//
+
+NetworkMapDecoration::NetworkMapDecoration(CSCPMessage *msg, DWORD baseId) : NetworkMapElement(msg, baseId)
+{
+	m_decorationType = (LONG)msg->GetVariableLong(baseId + 10);
+	m_color = msg->GetVariableLong(baseId + 11);
+	m_title = msg->GetVariableStr(baseId + 12);
 }
 
 
@@ -166,4 +223,17 @@ void NetworkMapDecoration::updateConfig(Config *config)
 	config->setValue(_T("/decorationType"), m_decorationType);
 	config->setValue(_T("/color"), m_color);
 	config->setValue(_T("/title"), CHECK_NULL_EX(m_title));
+}
+
+
+//
+// Fill NXCP message with element's data
+//
+
+void NetworkMapDecoration::fillMessage(CSCPMessage *msg, DWORD baseId)
+{
+	NetworkMapElement::fillMessage(msg, baseId);
+	msg->SetVariable(baseId + 10, (DWORD)m_decorationType);
+	msg->SetVariable(baseId + 11, m_color);
+	msg->SetVariable(baseId + 12, CHECK_NULL_EX(m_title));
 }

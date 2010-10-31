@@ -16,32 +16,54 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.objects;
+package org.netxms.client.maps;
 
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.NXCSession;
 
 /**
- * Agent policy subtree root object
+ * Network map element.
  *
  */
-public class PolicyRoot extends GenericObject
+public class NetworkMapElement
 {
+	private int type;
+	private int x;
+	private int y;
+	
 	/**
-	 * @param msg Message to create object from
-	 * @param session Associated client session
+	 * Create element from NXCP message.
+	 * 
+	 * @param msg NXCP message
+	 * @param baseId base variable ID
 	 */
-	public PolicyRoot(NXCPMessage msg, NXCSession session)
+	public NetworkMapElement(NXCPMessage msg, long baseId)
 	{
-		super(msg, session);
+		type = msg.getVariableAsInteger(baseId);
+		x = msg.getVariableAsInteger(baseId + 1);
+		y = msg.getVariableAsInteger(baseId + 2);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	/**
+	 * @return the type
 	 */
-	@Override
-	public String getObjectClassName()
+	public int getType()
 	{
-		return "PolicyRoot";
+		return type;
+	}
+
+	/**
+	 * @return the x
+	 */
+	public int getX()
+	{
+		return x;
+	}
+
+	/**
+	 * @return the y
+	 */
+	public int getY()
+	{
+		return y;
 	}
 }

@@ -375,9 +375,11 @@ protected:
 public:
 	NetworkMapElement();
 	NetworkMapElement(Config *config);
+	NetworkMapElement(CSCPMessage *msg, DWORD baseId);
 	virtual ~NetworkMapElement();
 
 	virtual void updateConfig(Config *config);
+	virtual void fillMessage(CSCPMessage *msg, DWORD baseId);
 
 	LONG getType() { return m_type; }
 	LONG getPosX() { return m_posX; }
@@ -399,9 +401,11 @@ protected:
 public:
 	NetworkMapObject(DWORD objectId);
 	NetworkMapObject(Config *config);
+	NetworkMapObject(CSCPMessage *msg, DWORD baseId);
 	virtual ~NetworkMapObject();
 
 	virtual void updateConfig(Config *config);
+	virtual void fillMessage(CSCPMessage *msg, DWORD baseId);
 
 	DWORD getObjectId() { return m_objectId; }
 };
@@ -421,9 +425,11 @@ protected:
 public:
 	NetworkMapDecoration(LONG decorationType);
 	NetworkMapDecoration(Config *config);
+	NetworkMapDecoration(CSCPMessage *msg, DWORD baseId);
 	virtual ~NetworkMapDecoration();
 
 	virtual void updateConfig(Config *config);
+	virtual void fillMessage(CSCPMessage *msg, DWORD baseId);
 
 	LONG getDecorationType() { return m_decorationType; }
 	DWORD getColor() { return m_color; }

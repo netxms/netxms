@@ -219,3 +219,85 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 
 	return TRUE;
 }
+
+
+//
+// Fill NXCP message with object's data
+//
+
+void NetworkMap::CreateMessage(CSCPMessage *msg)
+{
+	NetObj::CreateMessage(msg);
+
+	msg->SetVariable(VID_MAP_TYPE, (WORD)m_mapType);
+	msg->SetVariable(VID_LAYOUT, (WORD)m_layout);
+	msg->SetVariable(VID_SEED_OBJECT, m_seedObject);
+	msg->SetVariable(VID_BACKGROUND, (DWORD)m_background);
+
+	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_numElements);
+	DWORD varId = VID_ELEMENT_LIST_BASE;
+	for(int i = 0; i < m_numElements; i++)
+	{
+		m_elements[i]->fillMessage(msg, varId);
+		varId += 100;
+	}
+}
+
+
+//
+// Update network map object from NXCP message
+//
+
+DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
+{
+	if (!bAlreadyLocked)
+		LockData();
+
+	if (request->IsVariableExist(VID_MAP_TYPE))
+		m_mapType = (int)request->GetVariableShort(VID_MAP_TYPE);
+
+	if (request->IsVariableExist(VID_LAYOUT))
+		m_layout = (int)request->GetVariableShort(VID_LAYOUT);
+
+	if (request->IsVariableExist(VID_SEED_OBJECT))
+		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
+
+	if (request->IsVariableExist(VID_BACKGROUND))
+		m_background = (int)request->GetVariableLong(VID_BACKGROUND);
+
+	if (request->IsVariableExist(VID_NUM_ELEMENTS))
+	{
+		for(int i = 0; i < m_numElements; i++)
+			delete m_elements[i];
+
+		m_numElements = request->GetVariableLong(VID_NUM_ELEMENTS);
+		if (m_numElements > 0)
+		{
+			m_elements = (NetworkMapElement **)realloc(m_elements, sizeof(NetworkMapElement *) * m_numElements);
+			DWORD varId = VID_ELEMENT_LIST_BASE;
+			for(int i = 0; i < m_numElements; i++)
+			{
+				int type = (int)request->GetVariableShort(varId);
+				switch(type)
+				{
+					case MAP_ELEMENT_OBJECT:
+						m_elements[i] = new NetworkMapObject(request, varId);
+						break;
+					case MAP_ELEMENT_DECORATION:
+						m_elements[i] = new NetworkMapDecoration(request, varId);
+						break;
+					default:		// Unknown type, create generic element
+						m_elements[i] = new NetworkMapElement(request, varId);
+						break;
+				}
+				varId += 100;
+			}
+		}
+		else
+		{
+			safe_free_and_null(m_elements);
+		}
+	}
+
+	return NetObj::ModifyFromMessage(request, TRUE);
+}

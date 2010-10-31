@@ -623,6 +623,12 @@ public final class NXCPCodes
 	public static final long VID_DISABLED_UNTIL          = 353;
 	public static final long VID_AUTH_FAILURES           = 354;
 	public static final long VID_RUNTIME_FLAGS           = 355;
+	public static final long VID_FILE_SIZE               = 356;
+	public static final long VID_MAP_TYPE                = 357;
+	public static final long VID_LAYOUT                  = 358;
+	public static final long VID_SEED_OBJECT             = 359;
+	public static final long VID_BACKGROUND              = 360;
+	public static final long VID_NUM_ELEMENTS            = 361;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -692,4 +698,5 @@ public final class NXCPCodes
 	public static final long VID_COLUMN_FILTERS_BASE      = 0x10000000L;
 	public static final long VID_ORDERING_COLUMNS_BASE    = 0x40000000L;
 	public static final long VID_USM_CRED_LIST_BASE       = 0x10000000L;
+	public static final long VID_ELEMENT_LIST_BASE        = 0x10000000L;
 }

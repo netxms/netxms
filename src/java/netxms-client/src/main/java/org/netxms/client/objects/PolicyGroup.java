@@ -22,7 +22,7 @@ public class PolicyGroup extends GenericObject
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()

@@ -321,6 +321,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/log/Log.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogColumn.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogFilter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/OrderingColumn.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectLink.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapPage.java -text
@@ -333,6 +334,9 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/Container.java -t
 src/java/netxms-client/src/main/java/org/netxms/client/objects/EntireNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/GenericObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Interface.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkMap.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkMapGroup.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkMapRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Node.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/PolicyGroup.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/PolicyRoot.java -text

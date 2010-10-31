@@ -820,6 +820,14 @@ typedef struct
 #define VID_AUTH_FAILURES           ((DWORD)354)
 #define VID_RUNTIME_FLAGS           ((DWORD)355)
 #define VID_FILE_SIZE               ((DWORD)356)
+#define VID_MAP_TYPE                ((DWORD)357)
+#define VID_LAYOUT                  ((DWORD)358)
+#define VID_SEED_OBJECT             ((DWORD)359)
+#define VID_BACKGROUND              ((DWORD)360)
+#define VID_NUM_ELEMENTS            ((DWORD)361)
+
+// Map elements list base
+#define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

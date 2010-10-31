@@ -22,26 +22,28 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 
 /**
- * Agent policy subtree root object
+ * Network map subtree root object
  *
  */
-public class PolicyRoot extends GenericObject
+public class NetworkMapRoot extends GenericObject
 {
 	/**
-	 * @param msg Message to create object from
-	 * @param session Associated client session
+	 * Create object from NXCP message.
+	 * 
+	 * @param msg NXCP message
+	 * @param session associated session
 	 */
-	public PolicyRoot(NXCPMessage msg, NXCSession session)
+	public NetworkMapRoot(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()
 	{
-		return "PolicyRoot";
+		return "NetworkMapRoot";
 	}
 }
