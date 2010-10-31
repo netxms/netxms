@@ -77,6 +77,8 @@ public:
 	const TCHAR *getFile() { return m_file; }
 	int getLine() { return m_line; }
 
+	void setName(const TCHAR *name);
+
 	void addValue(const TCHAR *value);
 	void setValue(const TCHAR*value);
 
@@ -85,6 +87,7 @@ public:
 	ConfigEntryList *getOrderedSubEntries(const TCHAR *mask);
 
 	void print(FILE *file, int level);
+	void createXml(String &xml, int level = 0);
 };
 
 
@@ -123,10 +126,13 @@ protected:
 	virtual void onError(const TCHAR *errorMessage);
 	
 	void error(const TCHAR *format, ...);
+	ConfigEntry *createEntry(const TCHAR *path);
 
 public:
 	Config();
 	~Config();
+
+	void setTopLevelTag(const TCHAR *topLevelTag) { m_root->setName(topLevelTag); }
 
 	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL);
 	bool loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name = NULL, const char *topLevelTag = NULL);
@@ -145,11 +151,19 @@ public:
 	ConfigEntryList *getSubEntries(const TCHAR *path, const TCHAR *mask);
 	ConfigEntryList *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
 
+	bool setValue(const TCHAR *path, const TCHAR *value);
+	bool setValue(const TCHAR *path, LONG value);
+	bool setValue(const TCHAR *path, DWORD value);
+	bool setValue(const TCHAR *path, INT64 value);
+	bool setValue(const TCHAR *path, QWORD value);
+	bool setValue(const TCHAR *path, double value);
+
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 
 	int getErrorCount() { return m_errorCount; }
 
 	void print(FILE *file);
+	String createXml();
 };
 
 

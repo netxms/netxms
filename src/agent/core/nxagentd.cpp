@@ -1156,6 +1156,7 @@ static int CreateConfig(TCHAR *pszServer, TCHAR *pszLogFile, TCHAR *pszFileStore
 static void InitConfig()
 {
 	g_config = new Config();
+	g_config->setTopLevelTag(_T("config"));
 }
 
 

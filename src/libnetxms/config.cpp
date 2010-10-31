@@ -68,6 +68,17 @@ ConfigEntry::~ConfigEntry()
 
 
 //
+// Set entry's name
+//
+
+void ConfigEntry::setName(const TCHAR *name)
+{
+	safe_free(m_name);
+	m_name = _tcsdup(CHECK_NULL(name));
+}
+
+
+//
 // Find entry by name
 //
 
@@ -274,6 +285,48 @@ void ConfigEntry::print(FILE *file, int level)
 
 	for(int i = 0, len = 0; i < m_valueCount; i++)
 		_tprintf(_T("%*svalue: %s\n"), level * 4 + 2, _T(""), m_values[i]);
+}
+
+
+//
+// Create XML element(s) from config entry
+//
+
+void ConfigEntry::createXml(String &xml, int level)
+{
+	TCHAR *name = _tcsdup(m_name);
+	TCHAR *ptr = _tcschr(name, _T('#'));
+	if (ptr != NULL)
+		*ptr = 0;
+
+	if (m_id == 0)
+		xml.addFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
+	else
+		xml.addFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
+
+	if (m_childs != NULL)
+	{
+		xml += _T("\n");
+		for(ConfigEntry *e = m_childs; e != NULL; e = e->getNext())
+			e->createXml(xml, level + 1);
+		xml.addFormattedString(_T("%*s"), level * 4, _T(""));
+	}
+
+	if (m_valueCount > 0)
+		xml.addDynamicString(EscapeStringForXML(m_values[0], -1));
+	xml.addFormattedString(_T("</%s>\n"), name);
+
+	for(int i = 1, len = 0; i < m_valueCount; i++)
+	{
+		if (m_id == 0)
+			xml.addFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
+		else
+			xml.addFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
+		xml.addDynamicString(EscapeStringForXML(m_values[i], -1));
+		xml.addFormattedString(_T("</%s>\n"), name);
+	}
+
+	free(name);
 }
 
 
@@ -533,6 +586,101 @@ ConfigEntry *Config::getEntry(const TCHAR *path)
 		}
 	}
 	return NULL;
+}
+
+
+//
+// Create entry if does not exist, or return existing
+// Will return NULL on error
+//
+
+ConfigEntry *Config::createEntry(const TCHAR *path)
+{
+	const TCHAR *curr, *end;
+	TCHAR name[256];
+	ConfigEntry *entry, *parent;
+
+	if ((path == NULL) || (*path != _T('/')))
+		return NULL;
+
+	if (!_tcscmp(path, _T("/")))
+		return m_root;
+
+	curr = path + 1;
+	parent = m_root;
+	do
+	{
+		end = _tcschr(curr, _T('/'));
+		if (end != NULL)
+		{
+			int len = min((int)(end - curr), 255);
+			_tcsncpy(name, curr, len);
+			name[len] = 0;
+			entry = parent->findEntry(name);
+			curr = end + 1;
+			if (entry == NULL)
+				entry = new ConfigEntry(name, parent, _T("<memory>"), 0, 0);
+			parent = entry;
+		}
+		else
+		{
+			entry = parent->findEntry(curr);
+			if (entry == NULL)
+				entry = new ConfigEntry(curr, parent, _T("<memory>"), 0, 0);
+		}
+	}
+	while(end != NULL);
+	return entry;
+}
+
+
+//
+// Set value
+// Returns false on error (usually caused by incorrect path)
+//
+
+bool Config::setValue(const TCHAR *path, const TCHAR *value)
+{
+	ConfigEntry *entry = createEntry(path);
+	if (entry == NULL)
+		return false;
+	entry->setValue(value);
+	return true;
+}
+
+bool Config::setValue(const TCHAR *path, LONG value)
+{
+	TCHAR buffer[32];
+	_sntprintf(buffer, 32, _T("%ld"), (long)value);
+	return setValue(path, buffer);
+}
+
+bool Config::setValue(const TCHAR *path, DWORD value)
+{
+	TCHAR buffer[32];
+	_sntprintf(buffer, 32, _T("%lu"), (unsigned long)value);
+	return setValue(path, buffer);
+}
+
+bool Config::setValue(const TCHAR *path, INT64 value)
+{
+	TCHAR buffer[32];
+	_sntprintf(buffer, 32, INT64_FMT, value);
+	return setValue(path, buffer);
+}
+
+bool Config::setValue(const TCHAR *path, QWORD value)
+{
+	TCHAR buffer[32];
+	_sntprintf(buffer, 32, UINT64_FMT, value);
+	return setValue(path, buffer);
+}
+
+bool Config::setValue(const TCHAR *path, double value)
+{
+	TCHAR buffer[32];
+	_sntprintf(buffer, 32, _T("%f"), value);
+	return setValue(path, buffer);
 }
 
 
@@ -884,4 +1032,16 @@ void Config::print(FILE *file)
 {
 	if (m_root != NULL)
 		m_root->print(file, 0);
+}
+
+
+//
+// Create XML from config
+//
+
+String Config::createXml()
+{
+	String xml;
+	m_root->createXml(xml);
+	return xml;
 }
