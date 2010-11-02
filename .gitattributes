@@ -633,6 +633,7 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/actions/OpenScriptLi
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/tools/NXSLLineStyleListener.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptEditorView.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptLibrary.java -text
+src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptToolbox.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptComparator.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/helpers/ScriptLabelProvider.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/ScriptEditor.java -text

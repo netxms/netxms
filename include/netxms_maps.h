@@ -437,4 +437,26 @@ public:
 };
 
 
+//
+// Link on map
+//
+
+class LIBNXMAP_EXPORTABLE NetworkMapLink
+{
+protected:
+	NetworkMapElement m_element1;
+	NetworkMapElement m_element2;
+	int m_type;
+	TCHAR *m_name;
+	TCHAR *m_connectorName1;
+	TCHAR *m_connectorName2;
+
+public:
+	NetworkMapLink(NetworkMapElement *e1, NetworkMapElement *e2);
+	virtual ~NetworkMapLink();
+
+
+};
+
+
 #endif

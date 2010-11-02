@@ -266,6 +266,16 @@ static BOOL H_UpgradeFromV214(int currVersion, int newVersion)
 								_T("element_data $SQL:TEXT not null,")
 	                     _T("PRIMARY KEY(map_id,element_id))")));
 
+	CHK_EXEC(CreateTable(_T("CREATE TABLE network_map_links (")
+		                  _T("map_id integer not null,")
+		                  _T("element1 integer not null,")
+		                  _T("element2 integer not null,")
+						      _T("link_type integer not null,")
+								_T("link_name varchar(255) null,")
+								_T("connector_name1 varchar(255) null,")
+								_T("connector_name2 varchar(255) null,")
+	                     _T("PRIMARY KEY(map_id,element1,element2))")));
+
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='215' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
