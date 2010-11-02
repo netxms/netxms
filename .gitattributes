@@ -630,6 +630,7 @@ src/java/netxms-eclipse/NXSL/icons/var_local.gif -text
 src/java/netxms-eclipse/NXSL/plugin.xml -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/Activator.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/actions/OpenScriptLibrary.java -text
+src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/CreateScriptDialog.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/tools/NXSLLineStyleListener.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptEditorView.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/views/ScriptLibrary.java -text

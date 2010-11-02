@@ -86,7 +86,7 @@ public class ScriptEditorView extends ViewPart
 				actionSave.setEnabled(true);
 			}
 		});
-
+		
 		createActions();
 		contributeToActionBars();
 		//createPopupMenu();
@@ -191,7 +191,8 @@ public class ScriptEditorView extends ViewPart
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						setPartName("Edit Script - " + script.getName());
+						scriptName = script.getName();
+						setPartName("Edit Script - " + scriptName);
 						editor.setText(script.getSource());
 						editor.setModified(false);
 						actionSave.setEnabled(false);

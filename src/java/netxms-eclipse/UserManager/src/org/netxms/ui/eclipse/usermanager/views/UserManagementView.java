@@ -547,7 +547,7 @@ public class UserManagementView extends ViewPart
 
 		Job job = new Job("Delete user database objects")
 		{
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("rawtypes")
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{

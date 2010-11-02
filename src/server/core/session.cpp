@@ -971,19 +971,19 @@ void ClientSession::ProcessingThread()
             SendServerStats(pMsg->GetId());
             break;
          case CMD_GET_SCRIPT_LIST:
-            SendScriptList(pMsg->GetId());
+            sendScriptList(pMsg->GetId());
             break;
          case CMD_GET_SCRIPT:
-            SendScript(pMsg);
+            sendScript(pMsg);
             break;
          case CMD_UPDATE_SCRIPT:
-            UpdateScript(pMsg);
+            updateScript(pMsg);
             break;
          case CMD_RENAME_SCRIPT:
-            RenameScript(pMsg);
+            renameScript(pMsg);
             break;
          case CMD_DELETE_SCRIPT:
-            DeleteScript(pMsg);
+            deleteScript(pMsg);
             break;
          case CMD_GET_SESSION_LIST:
             SendSessionList(pMsg->GetId());
@@ -6324,7 +6324,7 @@ void ClientSession::SendServerStats(DWORD dwRqId)
 // Send script list
 //
 
-void ClientSession::SendScriptList(DWORD dwRqId)
+void ClientSession::sendScriptList(DWORD dwRqId)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
@@ -6365,7 +6365,7 @@ void ClientSession::SendScriptList(DWORD dwRqId)
 // Send script
 //
 
-void ClientSession::SendScript(CSCPMessage *pRequest)
+void ClientSession::sendScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
@@ -6414,7 +6414,7 @@ void ClientSession::SendScript(CSCPMessage *pRequest)
 // Update script
 //
 
-void ClientSession::UpdateScript(CSCPMessage *pRequest)
+void ClientSession::updateScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR *pszCode, *pszQuery, szName[MAX_DB_STRING];
@@ -6481,7 +6481,7 @@ void ClientSession::UpdateScript(CSCPMessage *pRequest)
 // Rename script
 //
 
-void ClientSession::RenameScript(CSCPMessage *pRequest)
+void ClientSession::renameScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szQuery[4096], szName[MAX_DB_STRING];
@@ -6531,7 +6531,7 @@ void ClientSession::RenameScript(CSCPMessage *pRequest)
 // Delete script
 //
 
-void ClientSession::DeleteScript(CSCPMessage *pRequest)
+void ClientSession::deleteScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szQuery[256];

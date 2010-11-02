@@ -473,11 +473,11 @@ private:
    void ChangeSubscription(CSCPMessage *pRequest);
    void SendSyslog(CSCPMessage *pRequest);
    void SendServerStats(DWORD dwRqId);
-   void SendScriptList(DWORD dwRqId);
-   void SendScript(CSCPMessage *pRequest);
-   void UpdateScript(CSCPMessage *pRequest);
-   void RenameScript(CSCPMessage *pRequest);
-   void DeleteScript(CSCPMessage *pRequest);
+   void sendScriptList(DWORD dwRqId);
+   void sendScript(CSCPMessage *pRequest);
+   void updateScript(CSCPMessage *pRequest);
+   void renameScript(CSCPMessage *pRequest);
+   void deleteScript(CSCPMessage *pRequest);
    void SendSessionList(DWORD dwRqId);
    void KillSession(CSCPMessage *pRequest);
    void SendTrapLog(CSCPMessage *pRequest);

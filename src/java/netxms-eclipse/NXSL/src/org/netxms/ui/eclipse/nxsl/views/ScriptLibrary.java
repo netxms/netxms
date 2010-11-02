@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.nxsl.views;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -35,6 +37,8 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -51,6 +55,7 @@ import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
+import org.netxms.ui.eclipse.nxsl.dialogs.CreateScriptDialog;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptComparator;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -304,7 +309,39 @@ public class ScriptLibrary extends ViewPart
 	 */
 	private void createNewScript()
 	{
-		
+		final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell());
+		if (dlg.open() == Window.OK)
+		{
+			new ConsoleJob("Create new script", this, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					final long id = scriptLibraryManager.modifyScript(0, dlg.getName(), "");
+					new UIJob("Update script list") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							Object[] input = (Object[])viewer.getInput();
+							List<Script> list = new ArrayList<Script>(input.length);
+							for(Object o : input)
+								list.add((Script)o);
+							final Script script = new Script(id, dlg.getName(), "");
+							list.add(script);
+							viewer.setInput(list.toArray());
+							viewer.setSelection(new StructuredSelection(script));
+							actionEdit.run();
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				}
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot create script";
+				}
+			}.start();
+		}
 	}
 	
 	/**
@@ -327,8 +364,40 @@ public class ScriptLibrary extends ViewPart
 	/**
 	 * Delete selected script(s)
 	 */
+	@SuppressWarnings("rawtypes")
 	private void deleteScript()
 	{
+		if (!MessageDialog.openQuestion(getSite().getShell(), "Confirmation", "Do you really want to delete selected scripts?"))
+			return;
 		
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		
+		new ConsoleJob("Delete scripts from library", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				Iterator it = selection.iterator();
+				while(it.hasNext())
+				{
+					Script script = (Script)it.next();
+					scriptLibraryManager.deleteScript(script.getId());
+				}
+			}
+
+			/* (non-Javadoc)
+			 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
+			 */
+			@Override
+			protected void jobFinalize()
+			{
+				refreshScriptList();
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot delete script";
+			}
+		}.start();
 	}
 }

@@ -74,6 +74,10 @@ public abstract class ConsoleJob extends Job
                   getErrorMessage() + ": " + e.getMessage(), null);
 			jobFailureHandler();
 		}
+		finally
+		{
+			jobFinalize();
+		}
 		return status;
 	}
 
