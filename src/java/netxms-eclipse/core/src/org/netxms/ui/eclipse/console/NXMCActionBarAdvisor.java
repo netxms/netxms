@@ -30,9 +30,6 @@ import org.netxms.ui.eclipse.shared.IActionConstants;
 
 public class NXMCActionBarAdvisor extends ActionBarAdvisor
 {
-	// Actions - important to allocate these only in makeActions, and then use them
-	// in the fill methods. This ensures that the actions aren't recreated
-	// when fillActionBars is called with FILL_PROXY.
 	private IWorkbenchAction actionExit;
 	private IWorkbenchAction actionAbout;
 	private IWorkbenchAction actionShowPreferences;

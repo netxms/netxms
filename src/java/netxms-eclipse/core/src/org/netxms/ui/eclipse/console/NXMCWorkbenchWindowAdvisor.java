@@ -52,6 +52,9 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		return new NXMCActionBarAdvisor(configurer);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
+	 */
 	@Override
 	public void preWindowOpen()
 	{
