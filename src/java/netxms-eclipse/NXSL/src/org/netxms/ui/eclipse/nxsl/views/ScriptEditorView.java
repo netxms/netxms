@@ -18,6 +18,10 @@
  */
 package org.netxms.ui.eclipse.nxsl.views;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -25,6 +29,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -33,8 +38,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.commands.ActionHandler;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -57,6 +65,7 @@ public class ScriptEditorView extends ViewPart
 	private String scriptName;
 	private RefreshAction actionRefresh;
 	private Action actionSave;
+	private FindReplaceAction actionFindReplace;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -102,12 +111,45 @@ public class ScriptEditorView extends ViewPart
 	{
 		editor.setFocus();
 	}
+	
+	/**
+	 * Get resource bundle
+	 * @return
+	 * @throws IOException
+	 */
+	private ResourceBundle getResourceBundle() throws IOException
+	{
+		InputStream in = null;
+		String resource = "resource.properties";
+		ClassLoader loader = this.getClass().getClassLoader();
+		if (loader != null)
+		{
+			in = loader.getResourceAsStream(resource);
+		}
+		else
+		{
+			in = ClassLoader.getSystemResourceAsStream(resource);
+		}
+		
+		return new PropertyResourceBundle(in);
+	}
 
 	/**
 	 * Create actions
 	 */
 	private void createActions()
 	{
+		try
+		{
+			actionFindReplace = new FindReplaceAction(getResourceBundle(), "actions.find_and_replace.", this);
+			IHandlerService hs = (IHandlerService)getSite().getService(IHandlerService.class);
+			hs.activateHandler("org.eclipse.ui.edit.findReplace", new ActionHandler(actionFindReplace)); 		
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		
 		actionRefresh = new RefreshAction()
 		{
 			/* (non-Javadoc)
@@ -153,6 +195,7 @@ public class ScriptEditorView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionFindReplace);
 		manager.add(actionSave);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -196,6 +239,7 @@ public class ScriptEditorView extends ViewPart
 						editor.setText(script.getSource());
 						editor.setModified(false);
 						actionSave.setEnabled(false);
+						actionFindReplace.update();
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -233,5 +277,24 @@ public class ScriptEditorView extends ViewPart
 				}.schedule();
 			}
 		}.start();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#getAdapter(java.lang.Class)
+	 */
+	@SuppressWarnings("rawtypes")
+	@Override
+	public Object getAdapter(Class adapter)
+	{
+		Object object = super.getAdapter(adapter);
+		if (object != null)
+		{
+			return object;
+		}
+		if (adapter.equals(IFindReplaceTarget.class))
+		{
+			return editor.getFindReplaceTarget();
+		}
+		return null;
 	}
 }

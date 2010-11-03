@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.jface.text.IFindReplaceTarget;
+import org.eclipse.jface.text.ITextOperationTarget;
+import org.eclipse.jface.text.TextViewerUndoManager;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.text.source.VerticalRuler;
@@ -70,14 +73,59 @@ public class ScriptEditor extends Composite
 		setLayout(new FillLayout());
 		editor = new SourceViewer(this, new VerticalRuler(20), SWT.NONE);
 		editor.configure(new NXSLSourceViewerConfiguration(this));
+
+		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);
+		editor.setUndoManager(undoManager);
+		undoManager.connect(editor);
+		
+		editor.getFindReplaceTarget();
+
 		editor.prependVerifyKeyListener(new VerifyKeyListener() {
 			@Override
 			public void verifyKey(VerifyEvent event)
 			{
-				if (event.doit && (event.stateMask == SWT.MOD1) && event.character == ' ')
+				if (!event.doit)
+					return;
+				
+				if (event.stateMask == SWT.MOD1)
 				{
-					editor.doOperation(ISourceViewer.CONTENTASSIST_PROPOSALS);
-					event.doit = false;
+					switch(event.character)
+					{
+						case ' ':
+							editor.doOperation(ISourceViewer.CONTENTASSIST_PROPOSALS);
+							event.doit = false;
+							break;
+						case 0x19:	// Ctrl+Y
+							undoManager.redo();
+							event.doit = false;
+							break;
+						case 0x1A:	// Ctrl+Z
+							undoManager.undo();
+							event.doit = false;
+							break;
+					}
+				}
+				else if (event.stateMask == SWT.NONE)
+				{
+					if (event.character == 0x09)
+					{
+						if (editor.getSelectedRange().y > 0)
+						{
+							editor.doOperation(ITextOperationTarget.SHIFT_RIGHT);
+							event.doit = false;
+						}
+					}
+				}
+				else if (event.stateMask == SWT.SHIFT)
+				{
+					if (event.character == 0x09)
+					{
+						if (editor.getSelectedRange().y > 0)
+						{
+							editor.doOperation(ITextOperationTarget.SHIFT_LEFT);
+							event.doit = false;
+						}
+					}
 				}
 			}
 		});
@@ -214,5 +262,14 @@ public class ScriptEditor extends Composite
 		{
 			return null;
 		}
+	}
+
+	/**
+	 * Returns the find/replace target of underlying source viewer
+	 * @return the find/replace target of underlying source viewer
+	 */
+	public IFindReplaceTarget getFindReplaceTarget()
+	{
+		return editor.getFindReplaceTarget();
 	}
 }
