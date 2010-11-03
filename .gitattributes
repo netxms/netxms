@@ -301,6 +301,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/Table.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/RCC.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/Severity.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/UserAccessRights.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/ConditionDciInfo.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionConfiguration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionItem.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciData.java -text
@@ -330,6 +331,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicyConfig
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Cluster.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ClusterResource.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ClusterSyncNetwork.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/Condition.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Container.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/EntireNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/GenericObject.java -text

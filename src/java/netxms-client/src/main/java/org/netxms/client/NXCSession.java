@@ -75,6 +75,7 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Interface;
@@ -194,6 +195,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_CONTAINER:
 				object = new Container(msg, this);
+				break;
+			case GenericObject.OBJECT_CONDITION:
+				object = new Condition(msg, this);
 				break;
 			case GenericObject.OBJECT_NODE:
 				object = new Node(msg, this);
