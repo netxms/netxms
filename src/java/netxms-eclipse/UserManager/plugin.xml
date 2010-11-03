@@ -4,14 +4,10 @@
 
    <extension
          point="org.eclipse.ui.views">
-      <category
-            name="Config"
-            id="org.netxms.ui.eclipse.config">
-      </category>
       <view
             name="User Manager"
             icon="icons/user_manager.png"
-            category="org.netxms.ui.eclipse.config"
+            category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.usermanager.views.UserManagementView"
             id="org.netxms.ui.eclipse.usermanager.view.user_manager">
       </view>
@@ -23,27 +19,24 @@
             name="Views"
             id="org.netxms.ui.eclipse.console.category.views">
       </category>
+      <category
+            id="org.netxms.ui.eclipse.console.category.tools"
+            name="Tools">
+      </category>
       <command
             name="User Manager"
             description="Open user manager"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.usermanager.commands.open_user_manager">
       </command>
-   </extension>
-
-   <extension
-         point="org.eclipse.ui.commands">
-      <category
-            name="Tools"
-            id="org.netxms.ui.eclipse.console.category.tools">
-      </category>
       <command
-            name="Change password..."
-            description="Change password for current user"
             categoryId="org.netxms.ui.eclipse.console.category.tools"
-            id="org.netxms.ui.eclipse.usermanager.commands.change_password">
+            description="Change password for current user"
+            id="org.netxms.ui.eclipse.usermanager.commands.change_password"
+            name="Change password...">
       </command>
    </extension>
+
 
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.usermanager.action_sets.open"

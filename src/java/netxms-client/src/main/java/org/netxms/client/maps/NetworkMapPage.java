@@ -168,13 +168,13 @@ public class NetworkMapPage
 				if (object != null)
 					result.add(object);
 			}
-			else if (link.getObject2() == root)
+/*			else if (link.getObject2() == root)
 			{
 				long id = link.getObject1();
 				GenericObject object = session.findObjectById(id);
 				if (object != null)
 					result.add(object);
-			}
+			}*/
 		}
 		return result.toArray(new GenericObject[result.size()]);
 	}

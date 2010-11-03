@@ -10,7 +10,7 @@
       <view
             name="Objects"
             allowMultiple="false"
-            icon="icons/object_browser.png"
+            icon="icons/object_browser.gif"
             class="org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser"
             id="org.netxms.ui.eclipse.view.navigation.objectbrowser">
       </view>
@@ -35,7 +35,7 @@
 			   toolbarPath="view/additions"
 			   label="Object Browser"
 			   tooltip="Open Object Browser"
-			   icon="icons/object_browser.png"
+			   icon="icons/object_browser.gif"
 			   class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectBrowser"
 			   definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
 		   </action>

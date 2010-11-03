@@ -33,6 +33,14 @@
             class="org.eclipse.ui.ExtensionFactory:progressView"
             id="org.eclipse.ui.views.ProgressView">
       </view>
+      <category
+            id="org.netxms.ui.eclipse.viewcategory.config"
+            name="Configuration">
+      </category>
+      <category
+            id="org.netxms.ui.eclipse.viewcategory.tools"
+            name="Tools">
+      </category>
    </extension>
 
    <extension

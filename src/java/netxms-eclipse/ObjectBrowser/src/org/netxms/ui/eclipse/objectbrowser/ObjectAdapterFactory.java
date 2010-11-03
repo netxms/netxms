@@ -97,7 +97,7 @@ public class ObjectAdapterFactory implements IAdapterFactory
 							case GenericObject.OBJECT_INTERFACE:
 								return Activator.getImageDescriptor("icons/interface.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_CONDITION:
-								return Activator.getImageDescriptor("icons/condition.png"); //$NON-NLS-1$
+								return Activator.getImageDescriptor("icons/condition.gif"); //$NON-NLS-1$
 							case GenericObject.OBJECT_TEMPLATEROOT:
 								return Activator.getImageDescriptor("icons/template_root.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_TEMPLATEGROUP:

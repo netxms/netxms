@@ -30,12 +30,12 @@ import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.IServiceFigureListener;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeContentProvider;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeElement;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeLabelProvider;
 import org.netxms.ui.eclipse.serviceview.widgets.helpers.ServiceTreeModel;
-import org.netxms.ui.eclipse.serviceview.widgets.helpers.SparseTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**

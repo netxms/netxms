@@ -14,16 +14,24 @@
       <view
             name="Service Dependency"
             allowMultiple="true"
-            icon="icons/quickmap.png"
+            icon="icons/service_deps.gif"
             class="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"
-            id="org.netxms.ui.eclipse.networkmaps.view.service_dependency">
+            id="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"
+            icon="icons/service_components.gif"
+            id="org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"
+            name="Service Components"
+            restorable="true">
       </view>
    </extension>
 
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.ip_neighbors"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.Node"
             objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPNeighbors"
@@ -33,40 +41,56 @@
                icon="icons/quickmap.png"
                menubarPath="additions">
          </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.service_dependency#node"
-            objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
                enablesFor="1"
+               icon="icons/service_deps.gif"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#node"
                label="Service Dependency"
-               icon="icons/quickmap.png"
                menubarPath="additions">
          </action>
       </objectContribution>
       <objectContribution
-            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.service_dependency#cluster"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.Cluster"
             objectClass="org.netxms.client.objects.Cluster">
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#cluster"
                label="Service Dependency"
-               icon="icons/quickmap.png"
+               icon="icons/service_deps.gif"
                menubarPath="additions">
          </action>
       </objectContribution>
       <objectContribution
-            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.service_dependency#container"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.Container"
             objectClass="org.netxms.client.objects.Container">
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#container"
                label="Service Dependency"
-               icon="icons/quickmap.png"
+               icon="icons/service_deps.gif"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceComponents"
+               enablesFor="1"
+               icon="icons/service_components.gif"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceComponents#container"
+               label="Service Components"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.ServiceRoot"
+            objectClass="org.netxms.client.objects.ServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceComponents"
+               enablesFor="1"
+               icon="icons/service_components.gif"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceComponents#serviceroot"
+               label="Service Components"
                menubarPath="additions">
          </action>
       </objectContribution>

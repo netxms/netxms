@@ -25,6 +25,15 @@
 
 
 //
+// Map link destructor
+//
+
+NetworkMapLink::~NetworkMapLink()
+{
+}
+
+
+//
 // Generic element default constructor
 //
 

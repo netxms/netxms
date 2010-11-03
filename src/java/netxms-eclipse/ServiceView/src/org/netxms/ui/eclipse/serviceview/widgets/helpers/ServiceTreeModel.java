@@ -20,6 +20,9 @@ package org.netxms.ui.eclipse.serviceview.widgets.helpers;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
@@ -50,7 +53,7 @@ public class ServiceTreeModel
 		elements.add(element);
 		for(GenericObject o : object.getChildsAsArray())
 		{
-			if ((o instanceof Container) || (o instanceof Node))
+			if ((o instanceof Container) || (o instanceof Node) || (o instanceof Cluster) || (o instanceof Condition))
 			{
 				addToModel(element, o, level + 1);
 			}
@@ -80,5 +83,4 @@ public class ServiceTreeModel
 	{
 		return root;
 	}
-	
 }

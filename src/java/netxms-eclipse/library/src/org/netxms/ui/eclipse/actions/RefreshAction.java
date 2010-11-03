@@ -33,7 +33,7 @@ public class RefreshAction extends Action
 	 */
 	public RefreshAction()
 	{
-		super("Refresh", Activator.getImageDescriptor("icons/refresh.png"));
+		super("Refresh", Activator.getImageDescriptor("icons/refresh.gif"));
 		setAccelerator(SWT.F5);
 	}
 }

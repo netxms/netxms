@@ -3,14 +3,10 @@
 <plugin>
    <extension
          point="org.eclipse.ui.views">
-      <category
-            name="Config"
-            id="org.netxms.ui.eclipse.config">
-      </category>
       <view
             name="Event Processing Policy"
             icon="icons/epp.png"
-            category="org.netxms.ui.eclipse.config"
+            category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor"
             id="org.netxms.ui.eclipse.epp.view.policy_editor">
       </view>

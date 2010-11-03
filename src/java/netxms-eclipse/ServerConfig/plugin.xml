@@ -4,14 +4,10 @@
 
    <extension
          point="org.eclipse.ui.views">
-      <category
-            name="Config"
-            id="org.netxms.ui.eclipse.config">
-      </category>
       <view
             name="Server Configuration"
             icon="icons/server_config.png"
-            category="org.netxms.ui.eclipse.config"
+            category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor"
             id="org.netxms.ui.eclipse.serverconfig.view.server_config">
       </view>

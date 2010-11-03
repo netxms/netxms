@@ -11,6 +11,7 @@
          point="org.eclipse.ui.views">
       <view
             allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"
             icon="icons/trapeditor.png"
             id="org.netxms.ui.eclipse.snmp.views.SnmpTrapEditor"

@@ -5,6 +5,7 @@
          point="org.eclipse.ui.views">
       <view
             allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.actionmanager.views.ActionManager"
             icon="icons/actionmgr.png"
             id="org.netxms.ui.eclipse.actionmanager.views.ActionManager"
