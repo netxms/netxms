@@ -56,7 +56,7 @@ public class NXSLLineStyleListener implements LineStyleListener, ExtendedModifyL
 	                                           "use", "while" };
 	private static final String[] systemConstants = { "null", "NULL", "true", "TRUE", "false", "FALSE" };
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	private LinkedList commentOffsets = new LinkedList();
 	
 	/**

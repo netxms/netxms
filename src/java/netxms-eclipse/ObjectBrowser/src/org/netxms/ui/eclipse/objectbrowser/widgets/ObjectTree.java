@@ -353,7 +353,7 @@ public class ObjectTree extends Composite
 	 * 
 	 * @return ID of selected object or 0 if no objects selected
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public Long[] getSelectedObjects()
 	{
 		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();

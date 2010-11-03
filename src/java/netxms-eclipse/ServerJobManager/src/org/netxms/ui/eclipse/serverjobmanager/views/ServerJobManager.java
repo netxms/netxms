@@ -401,7 +401,7 @@ public class ServerJobManager extends ViewPart
 				final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				
 				Job job = new Job("Cancel server jobs") {
-					@SuppressWarnings("unchecked")
+					@SuppressWarnings("rawtypes")
 					@Override
 					protected IStatus run(IProgressMonitor monitor)
 					{

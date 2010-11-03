@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class UserAdapterFactory implements IAdapterFactory
 {
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	private static final Class[] supportedClasses = 
 	{
 		IWorkbenchAdapter.class
@@ -43,7 +43,7 @@ public class UserAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Class[] getAdapterList()
 	{
@@ -53,7 +53,7 @@ public class UserAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{

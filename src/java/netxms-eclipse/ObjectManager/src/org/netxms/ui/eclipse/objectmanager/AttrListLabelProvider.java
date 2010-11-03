@@ -65,7 +65,7 @@ public class AttrListLabelProvider implements ITableLabelProvider
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{

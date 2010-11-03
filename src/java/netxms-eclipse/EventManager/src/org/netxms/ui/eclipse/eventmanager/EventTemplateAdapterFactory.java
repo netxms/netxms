@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
  */
 public class EventTemplateAdapterFactory implements IAdapterFactory
 {
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	private static final Class[] supportedClasses = 
 	{
 		IWorkbenchAdapter.class
@@ -41,7 +41,7 @@ public class EventTemplateAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Class[] getAdapterList()
 	{
@@ -51,7 +51,7 @@ public class EventTemplateAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{

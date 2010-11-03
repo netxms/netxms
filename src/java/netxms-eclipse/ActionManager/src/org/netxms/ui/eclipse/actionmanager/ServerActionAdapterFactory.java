@@ -29,7 +29,7 @@ import org.netxms.client.ServerAction;
  */
 public class ServerActionAdapterFactory implements IAdapterFactory
 {
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	private static final Class[] supportedClasses = 
 	{
 		IWorkbenchAdapter.class
@@ -38,7 +38,7 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{
@@ -89,7 +89,7 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Class[] getAdapterList()
 	{

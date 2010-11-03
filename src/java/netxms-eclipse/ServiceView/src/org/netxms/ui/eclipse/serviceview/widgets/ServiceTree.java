@@ -51,7 +51,7 @@ public class ServiceTree extends Composite implements IServiceFigureListener
 	 * @param parent
 	 * @param style
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public ServiceTree(Composite parent, int style, GenericObject rootObject)
 	{
 		super(parent, style);
