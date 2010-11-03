@@ -93,6 +93,7 @@ public class ScriptEditorView extends ViewPart
 			public void modifyText(ModifyEvent e)
 			{
 				actionSave.setEnabled(true);
+				actionFindReplace.update();
 			}
 		});
 		
