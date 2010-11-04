@@ -37,6 +37,7 @@ public class NXCServerJob
 	public static final int CANCEL_PENDING = 6;
 	
 	private long id;
+	private long userId;
 	private long nodeId;
 	private String jobType;
 	private String description;
@@ -61,6 +62,7 @@ public class NXCServerJob
 		status = msg.getVariableAsInteger(var++);
 		progress = msg.getVariableAsInteger(var++);
 		failureMessage = msg.getVariableAsString(var++);
+		userId = msg.getVariableAsInt64(var++);
 	}
 	
 	/**
@@ -69,6 +71,7 @@ public class NXCServerJob
 	NXCServerJob(final NXCPMessage msg)
 	{
 		id = msg.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
+		userId = msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 		jobType = msg.getVariableAsString(NXCPCodes.VID_JOB_TYPE);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 		nodeId = msg.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
@@ -131,5 +134,13 @@ public class NXCServerJob
 	public String getFailureMessage()
 	{
 		return failureMessage;
+	}
+
+	/**
+	 * @return the userId
+	 */
+	public long getUserId()
+	{
+		return userId;
 	}
 }

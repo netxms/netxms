@@ -837,6 +837,8 @@ src/java/netxms-eclipse/ServerJobManager/plugin.xml -text
 src/java/netxms-eclipse/ServerJobManager/src/org/netxms/ui/eclipse/serverjobmanager/Activator.java -text
 src/java/netxms-eclipse/ServerJobManager/src/org/netxms/ui/eclipse/serverjobmanager/actions/OpenServerJobManager.java -text
 src/java/netxms-eclipse/ServerJobManager/src/org/netxms/ui/eclipse/serverjobmanager/views/ServerJobManager.java -text
+src/java/netxms-eclipse/ServerJobManager/src/org/netxms/ui/eclipse/serverjobmanager/views/helpers/ServerJobComparator.java -text
+src/java/netxms-eclipse/ServerJobManager/src/org/netxms/ui/eclipse/serverjobmanager/views/helpers/ServerJobLabelProvider.java -text
 src/java/netxms-eclipse/ServiceView/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ServiceView/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ServiceView/build.properties -text

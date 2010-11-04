@@ -27,8 +27,8 @@
 // Constructor
 //
 
-PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy)
-                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->Id())
+PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy, DWORD userId)
+                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->Id(), userId)
 {
 	m_node = node;
 	m_policy = policy;
@@ -86,8 +86,8 @@ bool PolicyDeploymentJob::run()
 // Constructor
 //
 
-PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy)
-                   : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->Id())
+PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, DWORD userId)
+                   : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->Id(), userId)
 {
 	m_node = node;
 	m_policy = policy;

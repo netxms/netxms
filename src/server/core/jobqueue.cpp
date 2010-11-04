@@ -225,7 +225,7 @@ DWORD ServerJobQueue::fillMessage(CSCPMessage *msg, DWORD *varIdBase)
 	int i;
 
 	MutexLock(m_accessMutex, INFINITE);
-	for(i = 0; i < m_jobCount; i++, id += 3)
+	for(i = 0; i < m_jobCount; i++, id += 2)
 	{
 		msg->SetVariable(id++, m_jobList[i]->getId());
 		msg->SetVariable(id++, m_jobList[i]->getType());
@@ -234,6 +234,7 @@ DWORD ServerJobQueue::fillMessage(CSCPMessage *msg, DWORD *varIdBase)
 		msg->SetVariable(id++, (WORD)m_jobList[i]->getStatus());
 		msg->SetVariable(id++, (WORD)m_jobList[i]->getProgress());
 		msg->SetVariable(id++, m_jobList[i]->getFailureMessage());
+		msg->SetVariable(id++, m_jobList[i]->getUserId());
 	}
 	MutexUnlock(m_accessMutex);
 	*varIdBase = id;

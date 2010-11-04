@@ -10056,9 +10056,9 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 				{
 					ServerJob *job;
 					if (uninstallFlag)
-						job = new PolicyUninstallJob((Node *)target, (AgentPolicy *)policy);
+						job = new PolicyUninstallJob((Node *)target, (AgentPolicy *)policy, m_dwUserId);
 					else
-						job = new PolicyDeploymentJob((Node *)target, (AgentPolicy *)policy);
+						job = new PolicyDeploymentJob((Node *)target, (AgentPolicy *)policy, m_dwUserId);
 					if (AddJob(job))
 					{
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);

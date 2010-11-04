@@ -51,6 +51,7 @@ class NXCORE_EXPORTABLE ServerJob
 {
 private:
 	DWORD m_id;
+	DWORD m_userId;
 	TCHAR *m_type;
 	DWORD m_remoteNode;
 	TCHAR *m_description;
@@ -83,7 +84,7 @@ protected:
 	void setDescription(const TCHAR *description);
 
 public:
-	ServerJob(const TCHAR *type, const TCHAR *description, DWORD node);
+	ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId);
 	virtual ~ServerJob();
 
 	void start();
@@ -96,6 +97,7 @@ public:
 	bool isBlockNextJobsOnFailure() { return m_blockNextJobsOnFailure; }
 
 	DWORD getId() { return m_id; }
+	DWORD getUserId() { return m_userId; }
 	const TCHAR *getType() { return m_type; }
 	const TCHAR *getDescription() { return m_description; }
 	ServerJobStatus getStatus() { return m_status; }
@@ -162,7 +164,7 @@ protected:
 	virtual bool run();
 
 public:
-	PolicyDeploymentJob(Node *node, AgentPolicy *policy);
+	PolicyDeploymentJob(Node *node, AgentPolicy *policy, DWORD userId);
 	virtual ~PolicyDeploymentJob();
 };
 
@@ -180,7 +182,7 @@ protected:
 	virtual bool run();
 
 public:
-	PolicyUninstallJob(Node *node, AgentPolicy *policy);
+	PolicyUninstallJob(Node *node, AgentPolicy *policy, DWORD userId);
 	virtual ~PolicyUninstallJob();
 };
 

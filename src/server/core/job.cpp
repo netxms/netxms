@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,9 +34,10 @@ DWORD ServerJob::s_freeId = 1;
 // Constructor
 //
 
-ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node)
+ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId)
 {
 	m_id = s_freeId++;
+	m_userId = userId;
 	m_type = _tcsdup(CHECK_NULL(type));
 	m_description = _tcsdup(CHECK_NULL(description));
 	m_status = JOB_PENDING;
@@ -250,6 +251,7 @@ void ServerJob::setDescription(const TCHAR *description)
 void ServerJob::fillMessage(CSCPMessage *msg)
 {
 	msg->SetVariable(VID_JOB_ID, m_id);
+	msg->SetVariable(VID_USER_ID, m_userId);
 	msg->SetVariable(VID_JOB_TYPE, m_type);
 	msg->SetVariable(VID_OBJECT_ID, m_remoteNode);
 	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
