@@ -427,6 +427,9 @@ src/java/netxms-eclipse/Charts/icons/chart_tube.png -text
 src/java/netxms-eclipse/Charts/icons/folder.png -text
 src/java/netxms-eclipse/Charts/icons/graph.png -text
 src/java/netxms-eclipse/Charts/icons/graph_tree.png -text
+src/java/netxms-eclipse/Charts/icons/light-green.png -text
+src/java/netxms-eclipse/Charts/icons/light-red.png -text
+src/java/netxms-eclipse/Charts/icons/light-yellow.png -text
 src/java/netxms-eclipse/Charts/icons/view3d.png -text
 src/java/netxms-eclipse/Charts/icons/zoom_in.png -text
 src/java/netxms-eclipse/Charts/icons/zoom_out.png -text
