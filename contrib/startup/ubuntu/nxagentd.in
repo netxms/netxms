@@ -15,7 +15,7 @@ NETXMS_LIBDIR="~LIBDIR~"
 
 NAME=nxagentd
 DAEMON=$NETXMS_BINDIR/nxagentd
-PIDFILE=/var/run/nxagentd.pid
+PIDFILE=/var/run/$NAME.pid
 
 test -x $DAEMON || exit 5
 
