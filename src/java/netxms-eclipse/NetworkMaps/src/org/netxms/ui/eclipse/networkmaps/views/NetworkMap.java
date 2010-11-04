@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views;
 
+import java.util.Set;
+
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -35,7 +37,11 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.NetworkMapObjectData;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
@@ -49,6 +55,7 @@ public abstract class NetworkMap extends ViewPart
 	protected GenericObject rootObject;
 	protected NetworkMapPage mapPage;
 	protected GraphViewer viewer;
+	protected SessionListener sessionListener;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -86,6 +93,16 @@ public abstract class NetworkMap extends ViewPart
 		viewer.setInput(mapPage);
 		
 		createPopupMenu();
+		
+		sessionListener = new SessionListener() {
+			@Override
+			public void notificationHandler(SessionNotification n)
+			{
+				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+					onObjectChange((GenericObject)n.getObject());
+			}
+		};
+		session.addListener(sessionListener);
 	}
 
 	/**
@@ -131,6 +148,34 @@ public abstract class NetworkMap extends ViewPart
 		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
 		mgr.add(new PropertyDialogAction(getSite(), viewer));
 	}
+	
+	/**
+	 * Returns true if given object is on current map
+	 * 
+	 * @param object
+	 * @return
+	 */
+	protected boolean isObjectOnMap(long objectId)
+	{
+		Set<NetworkMapObjectData> objects = mapPage.getObjects();
+		for(NetworkMapObjectData d : objects)
+		{
+			if (d.getObjectId() == objectId)
+				return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Called by session listener when NetXMS object was changed.
+	 * 
+	 * @param object cnaged NetXMS object
+	 */
+	protected void onObjectChange(GenericObject object)
+	{
+		if (isObjectOnMap(object.getObjectId()))
+			viewer.refresh(object, true);
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
@@ -139,5 +184,16 @@ public abstract class NetworkMap extends ViewPart
 	public void setFocus()
 	{
 		viewer.getControl().setFocus();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		if (sessionListener != null)
+			session.removeListener(sessionListener);
+		super.dispose();
 	}
 }
