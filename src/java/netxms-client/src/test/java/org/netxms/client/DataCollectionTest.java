@@ -61,7 +61,7 @@ public class DataCollectionTest extends SessionTest
 		
 		Threshold[] thresholds = session.getThresholds(nodeId, dciId);
 		assertNotNull(thresholds);
-		assertEquals(0, thresholds.length);
+		assertEquals(1, thresholds.length);
 
 		dc.deleteItem(dciId);
 		dc.close();

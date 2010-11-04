@@ -478,6 +478,7 @@ void Threshold::createMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(varId++, (DWORD)m_param2);
 	msg->SetVariable(varId++, (DWORD)m_repeatInterval);
 	msg->SetVariable(varId++, m_value.String());
+	msg->SetVariable(varId++, (WORD)m_isReached);
 }
 
 

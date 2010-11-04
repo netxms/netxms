@@ -37,6 +37,7 @@ public class Threshold
 	private int operation;
 	private int repeatInterval;
 	private String value;
+	private boolean active;
 	
 	/**
 	 * Create DCI threshold object from NXCP message
@@ -55,7 +56,8 @@ public class Threshold
 		arg1 = msg.getVariableAsInteger(varId++);
 		arg2 = msg.getVariableAsInteger(varId++);
 		repeatInterval = msg.getVariableAsInteger(varId++);
-		value = msg.getVariableAsString(varId);
+		value = msg.getVariableAsString(varId++);
+		active = msg.getVariableAsBoolean(varId);
 	}
 	
 	/**
@@ -228,5 +230,16 @@ public class Threshold
 	public long getId()
 	{
 		return id;
+	}
+
+	/**
+	 * Returns true if threshold is currently active (it's condition was evaluated to true at last poll).
+	 * This field cannot be set and is always false when threshold received as part of DCI configuration.
+	 * 
+	 * @return the active status
+	 */
+	public boolean isActive()
+	{
+		return active;
 	}
 }
