@@ -41,6 +41,10 @@ src/java/netxms-client/.classpath
 src/java/netxms-client/.project
 src/java/netxms-client/.settings
 src/java/netxms-eclipse/library/jar/*.jar
+src/libnxmap/.deps
+src/libnxmap/.libs
+src/libnxmap/Makefile
+src/libnxmap/Makefile.in
 src/libnxsl/lex.parser.cpp
 src/libnxsl/lex.yy.cpp
 src/libnxsl/parser.output
