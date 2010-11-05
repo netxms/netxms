@@ -51,6 +51,10 @@ src/libnxsl/parser.output
 src/libnxsl/parser.tab.cpp
 src/libnxsl/parser.tab.hpp
 src/private
+src/server/core/.deps
+src/server/core/.libs
+src/server/core/Makefile
+src/server/core/Makefile.in
 src/server/core/lex.nxmp_parser.cpp
 src/server/core/netxmsd
 src/server/core/nxmp_lex.yy.cpp
