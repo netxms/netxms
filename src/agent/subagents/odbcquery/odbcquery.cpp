@@ -55,13 +55,13 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 
 	if ((pQuery = (ODBC_QUERY *)pArg) == NULL)
 	{
-		AgentWriteLog(EL_ERROR, _T("ODBC Internal error: NULL passed to thread"));
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("ODBC Internal error: NULL passed to thread"));
 		goto thread_finish;
 	}
 
 	if ((pQuery->pSqlCtx = OdbcCtxAlloc()) == NULL)
 	{
-		AgentWriteLog(EL_ERROR, _T("Failed to allocate ODBC context"));
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("Failed to allocate ODBC context"));
 		goto thread_finish;
 	}
 
@@ -74,19 +74,19 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 			if (OdbcConnect(pQuery->pSqlCtx, pQuery->szOdbcSrc) < 0)
 			{
 				pQuery->dwCompletionCode = OdbcGetSqlErrorNumber(pQuery->pSqlCtx);
-				AgentWriteLog(EL_DEBUG, _T("ODBC connect error: %s (%s)"), 
-									 OdbcGetInfo(pQuery->pSqlCtx),
-									 OdbcGetSqlError(pQuery->pSqlCtx));
+				AgentWriteDebugLog(2, _T("ODBC connect error: %s (%s)"), 
+									    OdbcGetInfo(pQuery->pSqlCtx),
+									    OdbcGetSqlError(pQuery->pSqlCtx));
 			}
 			else
 			{
-				if (OdbcQuerySelect1(pQuery->pSqlCtx, pQuery->szSqlQuery, 
-											pQuery->szQueryResult, (size_t)MAX_DB_STRING) < 0)
+				if (OdbcQuerySelect(pQuery->pSqlCtx, pQuery->szSqlQuery, 
+										  pQuery->szQueryResult, (size_t)MAX_DB_STRING) < 0)
 				{
 					pQuery->dwCompletionCode = OdbcGetSqlErrorNumber(pQuery->pSqlCtx);
-					AgentWriteLog(EL_DEBUG, _T("ODBC query error: %s (%s)"), 
-										 OdbcGetInfo(pQuery->pSqlCtx),
-										 OdbcGetSqlError(pQuery->pSqlCtx));
+					AgentWriteDebugLog(2, _T("ODBC query error: %s (%s)"), 
+										    OdbcGetInfo(pQuery->pSqlCtx),
+										    OdbcGetSqlError(pQuery->pSqlCtx));
 				}
 				else
 				{
@@ -296,7 +296,7 @@ static BOOL SubAgentInit(Config *config)
 // Called by master agent at unload
 //
 
-static void SubAgentShutdown(void)
+static void SubAgentShutdown()
 {
    DWORD i;
 

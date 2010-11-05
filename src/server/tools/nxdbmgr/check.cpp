@@ -213,7 +213,7 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 // Check node objects
 //
 
-static void CheckNodes(void)
+static void CheckNodes()
 {
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
@@ -296,7 +296,7 @@ static void CheckNodes(void)
 // Check if node exists
 //
 
-static BOOL IsNodeExist(DWORD dwId)
+BOOL IsNodeExist(DWORD dwId)
 {
 	TCHAR szQuery[256];
 	DB_RESULT hResult;

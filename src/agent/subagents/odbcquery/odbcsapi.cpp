@@ -47,22 +47,23 @@
 #endif
 #define FAIL		(-1)
 
-#define 	MSG_OK			("OK")
-#define 	MSG_ECTX		 	("Invalid ODBC context")
-#define	MSG_EHENV	 	("Failed to allocate env handle")
-#define	MSG_ECONNH	 	("Failed to allocate connection handle")
-#define	MSG_EVERSION 	("Failed to set ODBC version")
-#define	MSG_ECONNECT 	("Failed to connect to database")
-#define	MSG_EHSTMT		("Failed to allocate statement handle")
-#define	MSG_LOGINTOUT 	("Failed to set login timeout")
-#define	MSG_CONNTOUT 	("Failed to set comms DB timeout")
-#define  MSG_EDISCONN	("Disconnect failed")
-#define	MSG_EBIND		("Error binding result column")
-#define  MSG_EFETCH		("Error fetching SQL result")
-#define  MSG_EEXECSQL	("Error executing SQL statement")
-#define  MSG_ENOTFOUND	("No data found")
+#define 	MSG_OK			_T("OK")
+#define 	MSG_ECTX		 	_T("Invalid ODBC context")
+#define	MSG_EHENV	 	_T("Failed to allocate env handle")
+#define	MSG_ECONNH	 	_T("Failed to allocate connection handle")
+#define	MSG_EVERSION 	_T("Failed to set ODBC version")
+#define	MSG_ECONNECT 	_T("Failed to connect to database")
+#define	MSG_EHSTMT		_T("Failed to allocate statement handle")
+#define	MSG_LOGINTOUT 	_T("Failed to set login timeout")
+#define	MSG_CONNTOUT 	_T("Failed to set comms DB timeout")
+#define  MSG_EDISCONN	_T("Disconnect failed")
+#define	MSG_EBIND		_T("Error binding result column")
+#define  MSG_EFETCH		_T("Error fetching SQL result")
+#define  MSG_EEXECSQL	_T("Error executing SQL statement")
+#define  MSG_ENOTFOUND	_T("No data found")
 
-typedef struct SqlCtx {
+typedef struct SqlCtx 
+{
 	TCHAR		szOdbcMsg[MAX_STR];	/* API error message */
 	SQLCHAR	szSqlErr[MAX_STR];	/* sql error message */
 	SQLCHAR	szSqlStat[10];	/* sql op status */
@@ -71,21 +72,19 @@ typedef struct SqlCtx {
 	SQLHENV		hEnv;			/* ODBC environment handle */
 	SQLHDBC		hDbc;			/* ODBC connection handle */
 	SQLHSTMT		hStmt;		/* ODBC current statement handle */
-	TCHAR		szSqlStmt[MAX_STMT];	/* last SQL statement */
 } SqlCtx;
 
 //
 // ODBC functions
 //
 
-void* OdbcCtxAlloc(void)
+void* OdbcCtxAlloc()
 {
-	SqlCtx* pSqlCtx;
+	SqlCtx *pSqlCtx;
 
 	if (pSqlCtx = (SqlCtx*)malloc(sizeof(SqlCtx)))
 	{
 		memset(pSqlCtx, 0, sizeof(SqlCtx));
-		pSqlCtx->szSqlStmt[0] = _T('\0');
 		if (SQLRET_FAIL(SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pSqlCtx->hEnv)))
 		{
 			free(pSqlCtx);
@@ -96,7 +95,7 @@ void* OdbcCtxAlloc(void)
 	return (void*)pSqlCtx;
 }
 
-void OdbcCtxFree(void* pvSqlCtx)
+void OdbcCtxFree(void *pvSqlCtx)
 {
 	SqlCtx* pSqlCtx = (SqlCtx*)pvSqlCtx;
 
@@ -169,8 +168,15 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 
 	if (nRet == SUCCESS)
 	{
-		nSqlRet = SQLConnect(pSqlCtx->hDbc, (SQLCHAR*)pszSrc, SQL_NTS, NULL,
-									SQL_NTS, NULL, SQL_NTS);
+		if (_tcschr(pszSrc, _T('=')) == NULL)
+		{
+			nSqlRet = SQLConnect(pSqlCtx->hDbc, (SQLCHAR*)pszSrc, SQL_NTS, NULL,	SQL_NTS, NULL, SQL_NTS);
+		}
+		else
+		{
+			SQLSMALLINT outLen;
+			nSqlRet = SQLDriverConnect(pSqlCtx->hDbc, NULL, (SQLCHAR*)pszSrc, SQL_NTS, NULL,	0, &outLen, SQL_DRIVER_NOPROMPT);
+		}
 		if (SQLRET_FAIL(nSqlRet))
 		{
 			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_ECONNECT));
@@ -223,48 +229,39 @@ int OdbcDisconnect(void* pvSqlCtx)
 	return nRet;
 }
 
-int OdbcQuerySelect1(void* pvSqlCtx, const TCHAR* pszQuery, 
-							TCHAR* pszResult, size_t nResSize)
+int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, size_t nResSize)
 {
 	int nRet = SUCCESS;
 	SQLRETURN nSqlRet;
 	SQLLEN nLen;
 	TCHAR	szBuf[MAX_STR];
 	SqlCtx* pSqlCtx = (SqlCtx*)pvSqlCtx;
-	BOOL bSame = TRUE, bCursorOpened = FALSE;
+	BOOL bCursorOpened = FALSE;
 
 	*pszResult = 0;
 
-	if (nRet == SUCCESS && _tcsncmp(pSqlCtx->szSqlStmt, pszQuery, MAX_STMT))
+	if (pSqlCtx->hStmt != NULL)
 	{
-		bSame = FALSE;
-		_tcsncpy(pSqlCtx->szSqlStmt, pszQuery, MAX_STMT);
-		pSqlCtx->szSqlStmt[MAX_STMT - 1] = _T('\0');
+		SQLFreeHandle(SQL_HANDLE_STMT, pSqlCtx->hStmt);
+		pSqlCtx->hStmt = NULL;
 	}
 
-	if (nRet == SUCCESS && !bSame)
+	nSqlRet = SQLAllocHandle(SQL_HANDLE_STMT, pSqlCtx->hDbc, &pSqlCtx->hStmt);
+	if (SQLRET_FAIL(nSqlRet))
 	{
-		if (pSqlCtx->hStmt != NULL)
-		{
-			SQLFreeHandle(SQL_HANDLE_STMT, pSqlCtx->hStmt);
-			pSqlCtx->hStmt = NULL;
-		}
-		nSqlRet = SQLAllocHandle(SQL_HANDLE_STMT, pSqlCtx->hDbc, &pSqlCtx->hStmt);
-		if (SQLRET_FAIL(nSqlRet))
-		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EHSTMT));
-			nRet = FAIL;
-		}
+		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EHSTMT));
+		nRet = FAIL;
 	}
 
 	if (nRet == SUCCESS)
 	{
-		nSqlRet = SQLBindCol(pSqlCtx->hStmt, 1, SQL_C_CHAR, szBuf, 
-									MAX_STR, &nLen);
-		pSqlCtx->nSqlErr = (SQLINTEGER)nLen;
+		nSqlRet = SQLBindCol(pSqlCtx->hStmt, 1, SQL_C_CHAR, szBuf, MAX_STR, &nLen);
 		if (SQLRET_FAIL(nSqlRet))
 		{
 			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EBIND));
+			SQLGetDiagRec(SQL_HANDLE_STMT, pSqlCtx->hStmt, 1, pSqlCtx->szSqlStat,
+							  &pSqlCtx->nSqlErr, pSqlCtx->szSqlErr, MAX_STR, 
+							  &pSqlCtx->nLen);
 			nRet = FAIL;
 		}
 	}

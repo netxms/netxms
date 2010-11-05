@@ -123,7 +123,7 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
 // Initialize service
 //
 
-void InitService(void)
+void InitService()
 {
    static SERVICE_TABLE_ENTRY serviceTable[2] = { { CORE_SERVICE_NAME, CoreServiceMain }, { NULL, NULL } };
 	TCHAR errorText[1024];

@@ -200,17 +200,20 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 	{
 		INT64 id = DBGetFieldInt64(hResult, i, 0);
 		TCHAR *value = DBGetField(hResult, i, 1, NULL, 0);
-		DecodeSQLString(value);
-		String newValue = DBPrepareString(g_hCoreDB, value);
-		if ((int)newValue.getSize() + 256 > queryLen)
+		if (_tcschr(value, _T('#')) != NULL)
 		{
-			queryLen = newValue.getSize() + 256;
-			query = (TCHAR *)realloc(query, queryLen);
+			DecodeSQLString(value);
+			String newValue = DBPrepareString(g_hCoreDB, value);
+			if ((int)newValue.getSize() + 256 > queryLen)
+			{
+				queryLen = newValue.getSize() + 256;
+				query = (TCHAR *)realloc(query, queryLen);
+			}
+			_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
+						  (const TCHAR *)newValue, idColumn, id);
+			if (!SQLQuery(query))
+				goto cleanup;
 		}
-		_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
-		           (const TCHAR *)newValue, idColumn, id);
-		if (!SQLQuery(query))
-			goto cleanup;
 	}
 	success = TRUE;
 
@@ -322,24 +325,30 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
 			DWORD dciId = DBGetFieldULong(hResult, i, 1);
 
-			_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d"), nodeId, dciId);
-			DB_RESULT hData = SQLSelect(query);
-			if (hData != NULL)
+			if (IsNodeExist(nodeId))
 			{
-				int valueCount = DBGetNumRows(hData);
-				for(int j = 0; j < valueCount; j++)
+				_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d"), nodeId, dciId);
+				DB_RESULT hData = SQLSelect(query);
+				if (hData != NULL)
 				{
-					TCHAR buffer[MAX_DB_STRING];
+					int valueCount = DBGetNumRows(hData);
+					for(int j = 0; j < valueCount; j++)
+					{
+						TCHAR buffer[MAX_DB_STRING];
 
-					LONG ts = DBGetFieldLong(hData, j, 0);
-					DBGetField(hData, j, 1, buffer, MAX_DB_STRING);
-					DecodeSQLString(buffer);
+						LONG ts = DBGetFieldLong(hData, j, 0);
+						DBGetField(hData, j, 1, buffer, MAX_DB_STRING);
+						if (_tcschr(buffer, _T('#')) != NULL)
+						{
+							DecodeSQLString(buffer);
 
-					_sntprintf(query, 512, _T("UPDATE idata_%d SET idata_value=%s WHERE item_id=%d AND idata_timestamp=%ld"),
-					           nodeId, (const TCHAR *)DBPrepareString(g_hCoreDB, buffer), dciId, (long)ts);
-					CHK_EXEC(SQLQuery(query));
+							_sntprintf(query, 512, _T("UPDATE idata_%d SET idata_value=%s WHERE item_id=%d AND idata_timestamp=%ld"),
+										  nodeId, (const TCHAR *)DBPrepareString(g_hCoreDB, buffer), dciId, (long)ts);
+							CHK_EXEC(SQLQuery(query));
+						}
+					}
+					DBFreeResult(hData);
 				}
-				DBFreeResult(hData);
 			}
 		}
 		DBFreeResult(hResult);

@@ -61,8 +61,7 @@ extern void* OdbcCtxAlloc(void);
 extern void OdbcCtxFree(void* pvSqlCtx);
 extern int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc);
 extern int OdbcDisconnect(void* pvSqlCtx);
-extern int OdbcQuerySelect1(void* pvSqlCtx, const TCHAR* pszQuery,
-									TCHAR* pszResult, size_t nResSize);
+extern int OdbcQuerySelect(void* pvSqlCtx, const TCHAR* pszQuery, TCHAR* pszResult, size_t nResSize);
 extern TCHAR* OdbcGetInfo(void* pvSqlCtx);
 extern TCHAR* OdbcGetSqlError(void* pvSqlCtx);
 extern int OdbcGetSqlErrorNumber(void* pvSqlCtx);

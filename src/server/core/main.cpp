@@ -684,7 +684,7 @@ retry_db_lock:
 // Server shutdown
 //
 
-void NXCORE_EXPORTABLE Shutdown(void)
+void NXCORE_EXPORTABLE Shutdown()
 {
 	DWORD i, dwNumThreads;
 
@@ -1377,7 +1377,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 // Initiate server shutdown
 //
 
-void InitiateShutdown(void)
+void InitiateShutdown()
 {
 #ifdef _WIN32
 	Shutdown();
