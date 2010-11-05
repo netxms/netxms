@@ -68,6 +68,34 @@ X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
 
 
 //
+// Check public key
+//
+
+static BOOL CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
+{
+	int pkeyLen;
+	unsigned char *ucBuf, *uctempBuf;
+	TCHAR *pkeyText;
+	BOOL valid;
+	
+	pkeyLen = i2d_PublicKey(key, NULL);
+	ucBuf = (unsigned char *)malloc(pkeyLen +1);
+	uctempBuf = ucBuf;
+	i2d_PublicKey(key, &uctempBuf);
+	
+	pkeyText = (TCHAR *)malloc((pkeyLen * 2 + 1) * sizeof(TCHAR));
+	BinToStr(ucBuf, pkeyLen, pkeyText);
+
+	valid = !_tcscmp(pkeyText, mappingData);
+
+	free(ucBuf);
+	free(pkeyText);
+
+	return valid;
+}
+
+
+//
 // Validate user's certificate
 //
 
@@ -78,12 +106,12 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 	BYTE hash[SHA1_DIGEST_SIZE];
 	BOOL bValid = FALSE;
 
-	DbgPrintf(3, "Validating certificate \"%s\" for user %s", CHECK_NULL(pCert->name), pszLogin);
+	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), CHECK_NULL(pCert->name), pszLogin);
 	MutexLock(m_mutexStoreAccess, INFINITE);
 
 	if (m_pTrustedCertStore == NULL)
 	{
-		DbgPrintf(3, "Cannot validate user certificate because certificate store is not initialized");
+		DbgPrintf(3, _T("Cannot validate user certificate because certificate store is not initialized"));
 		MutexUnlock(m_mutexStoreAccess);
 		return FALSE;
 	}
@@ -99,7 +127,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, pSignature, dwSigLen, pKey->pkey.rsa);
 				break;
 			default:
-				DbgPrintf(3, "Unknown key type %d in certificate \"%s\" for user %s", pKey->type, CHECK_NULL(pCert->name), pszLogin);
+				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), pKey->type, CHECK_NULL(pCert->name), pszLogin);
 				break;
 		}
 	}
@@ -115,14 +143,14 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 			X509_STORE_CTX_init(pStore, m_pTrustedCertStore, pCert, NULL);
 			bValid = X509_verify_cert(pStore);
 			X509_STORE_CTX_free(pStore);
-			DbgPrintf(3, "Certificate \"%s\" for user %s - validation %s",
-			          CHECK_NULL(pCert->name), pszLogin, bValid ? "successful" : "failed");
+			DbgPrintf(3, _T("Certificate \"%s\" for user %s - validation %s"),
+			          CHECK_NULL(pCert->name), pszLogin, bValid ? _T("successful") : _T("failed"));
 		}
 		else
 		{
 			char szBuffer[256];
 
-			DbgPrintf(3, "X509_STORE_CTX_new() failed: %s", ERR_error_string(ERR_get_error(), szBuffer));
+			DbgPrintf(3, _T("X509_STORE_CTX_new() failed: %s"), ERR_error_string(ERR_get_error(), szBuffer));
 			bValid = FALSE;
 		}
 	}
@@ -135,8 +163,11 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 			case USER_MAP_CERT_BY_SUBJECT:
 				bValid = !_tcsicmp(CHECK_NULL(pCert->name), CHECK_NULL_EX(pszMappingData));
 				break;
+			case USER_MAP_CERT_BY_PUBKEY:
+				bValid = CheckPublicKey(pKey, CHECK_NULL_EX(pszMappingData));
+				break;
 			default:
-				DbgPrintf(3, "Invalid certificate mapping method %d for user %s", nMappingMethod, pszLogin);
+				DbgPrintf(3, _T("Invalid certificate mapping method %d for user %s"), nMappingMethod, pszLogin);
 				bValid = FALSE;
 				break;
 		}
@@ -151,7 +182,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 // Reload certificates from database
 //
 
-void ReloadCertificates(void)
+void ReloadCertificates()
 {
 	BYTE *pBinCert;
 	OPENSSL_CONST BYTE *p;
@@ -215,8 +246,7 @@ void ReloadCertificates(void)
 	}
 	else
 	{
-		nxlog_write(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE,
-		         "s", _ERR_error_tstring(ERR_get_error(), szBuffer));
+		nxlog_write(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE, "s", _ERR_error_tstring(ERR_get_error(), szBuffer));
 	}
 
 	MutexUnlock(m_mutexStoreAccess);
@@ -227,7 +257,7 @@ void ReloadCertificates(void)
 // Certificate stuff initialization
 //
 
-void InitCertificates(void)
+void InitCertificates()
 {
 	m_mutexStoreAccess = MutexCreate();
 
@@ -248,7 +278,7 @@ void InitCertificates(void)
 // Stub for certificate initialization
 //
 
-void InitCertificates(void)
+void InitCertificates()
 {
 }
 
