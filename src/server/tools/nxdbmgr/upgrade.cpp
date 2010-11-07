@@ -257,6 +257,10 @@ static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("ap_common"), _T("description"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
 	CHK_EXEC(ConvertStrings(_T("ap_common"), _T("id"), _T("description")));
 
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_config_files DROP COLUMN file_name")));
+	CHK_EXEC(SetColumnNullable(_T("ap_config_files"), _T("file_content"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(ConvertStrings(_T("ap_config_files"), _T("policy_id"), _T("file_content")));
+
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD guid varchar(36)")));
 
 	// Generate GUIDs for all objects

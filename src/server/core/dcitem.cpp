@@ -1274,7 +1274,7 @@ void DCItem::updateCacheSize(DWORD dwCondId)
       RWLockReadLock(g_rwlockConditionIndex, INFINITE);
       for(i = 0; i < g_dwConditionIndexSize; i++)
       {
-         dwSize = ((Condition *)g_pConditionIndex[i].pObject)->GetCacheSizeForDCI(m_dwId, dwCondId == g_pConditionIndex[i].dwKey);
+         dwSize = ((Condition *)g_pConditionIndex[i].pObject)->getCacheSizeForDCI(m_dwId, dwCondId == g_pConditionIndex[i].dwKey);
          if (dwSize > dwRequiredSize)
             dwRequiredSize = dwSize;
       }

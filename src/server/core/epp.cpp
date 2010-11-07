@@ -414,7 +414,7 @@ void EPRule::GenerateAlarm(Event *pEvent)
 	{
 		pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
-			g_alarmMgr.TerminateByKey(pszAckKey, m_dwFlags & RF_TERMINATE_BY_REGEXP);
+			g_alarmMgr.TerminateByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false);
 		free(pszAckKey);
 	}
 	else	// Generate new alarm

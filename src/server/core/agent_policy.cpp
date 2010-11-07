@@ -76,7 +76,7 @@ AgentPolicy::~AgentPolicy()
 
 BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 {
-	TCHAR query[8192], guid[128];
+	TCHAR query[8192];
 
 	SaveCommonProperties(hdb);
 

@@ -3,6 +3,8 @@
 ***************
 
 - Column "description" in table ap_common converted from # encoded format
+- Column "file_content" in table ap_config_files converted from # encoded format
+- Column "file_name" removed from table "ap_config_files"
 - New field "guid" in table "object_properties"
 - GUIDs generated for all objects
 

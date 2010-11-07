@@ -465,7 +465,7 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pCond->Name(), pCond->Id());
       SetPollerState((long)arg, szBuffer);
-      pCond->Check();
+      pCond->check();
       pCond->EndPoll();
    }
    SetPollerState((long)arg, "finished");

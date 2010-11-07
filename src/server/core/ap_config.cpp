@@ -30,7 +30,6 @@
 AgentPolicyConfig::AgentPolicyConfig()
                   : AgentPolicy(AGENT_POLICY_CONFIG)
 {
-	m_fileName[0] = 0;
 	m_fileContent = NULL;
 }
 
@@ -42,7 +41,6 @@ AgentPolicyConfig::AgentPolicyConfig()
 AgentPolicyConfig::AgentPolicyConfig(const TCHAR *name)
                   : AgentPolicy(name, AGENT_POLICY_CONFIG)
 {
-	m_fileName[0] = 0;
 	m_fileContent = NULL;
 }
 
@@ -68,8 +66,8 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 	BOOL success = savePolicyCommonProperties(hdb);
 	if (success)
 	{
-		TCHAR *data = EncodeSQLString(CHECK_NULL_EX(m_fileContent));
-		int len = (int)_tcslen(data) + MAX_POLICY_CONFIG_NAME + 256;
+		String data = DBPrepareString(hdb, m_fileContent);
+		int len = (int)data.getSize() + 256;
 		TCHAR *query = (TCHAR *)malloc(len * sizeof(TCHAR));
 
 		_sntprintf(query, len, _T("SELECT policy_id FROM ap_config_files WHERE policy_id=%d"), m_dwId);
@@ -80,15 +78,14 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 			DBFreeResult(hResult);
 
 			if (isNew)
-				_sntprintf(query, len, _T("INSERT INTO ap_config_files (policy_id,file_name,file_content) VALUES (%d,'%s','%s')"),
-				           m_dwId, m_fileName, data);
+				_sntprintf(query, len, _T("INSERT INTO ap_config_files (policy_id,file_content) VALUES (%d,%s)"),
+				           m_dwId, (const TCHAR *)data);
 			else
-				_sntprintf(query, len, _T("UPDATE ap_config_files SET file_name='%s',file_content='%s' WHERE policy_id=%d"),
-				           m_fileName, data, m_dwId);
+				_sntprintf(query, len, _T("UPDATE ap_config_files SET file_content=%s WHERE policy_id=%d"),
+				           (const TCHAR *)data, m_dwId);
 			success = DBQuery(hdb, query);
 		}
 		free(query);
-		free(data);
 	}
 
 	// Clear modifications flag and unlock object
@@ -129,16 +126,13 @@ BOOL AgentPolicyConfig::CreateFromDB(DWORD dwId)
 	{
 		TCHAR query[256];
 
-		_sntprintf(query, 256, _T("SELECT file_name,file_content FROM ap_config_files WHERE policy_id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT file_content FROM ap_config_files WHERE policy_id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 		if (hResult != NULL)
 		{
 			if (DBGetNumRows(hResult) > 0)
 			{
-				DBGetField(hResult, 0, 0, m_fileName, MAX_POLICY_CONFIG_NAME);
-				m_fileContent = DBGetField(hResult, 0, 1, NULL, 0);
-				if (m_fileContent != NULL)
-					DecodeSQLString(m_fileContent);
+				m_fileContent = DBGetField(hResult, 0, 0, NULL, 0);
 				success = TRUE;
 			}
 			DBFreeResult(hResult);
@@ -155,7 +149,6 @@ BOOL AgentPolicyConfig::CreateFromDB(DWORD dwId)
 void AgentPolicyConfig::CreateMessage(CSCPMessage *msg)
 {
 	AgentPolicy::CreateMessage(msg);
-	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
 	msg->SetVariable(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
 }
 
@@ -168,9 +161,6 @@ DWORD AgentPolicyConfig::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyL
 {
    if (!bAlreadyLocked)
       LockData();
-
-	if (pRequest->IsVariableExist(VID_CONFIG_FILE_NAME))
-		pRequest->GetVariableStr(VID_CONFIG_FILE_NAME, m_fileName, MAX_POLICY_CONFIG_NAME);
 
 	if (pRequest->IsVariableExist(VID_CONFIG_FILE_DATA))
 	{

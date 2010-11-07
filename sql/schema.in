@@ -1213,8 +1213,7 @@ CREATE TABLE ap_bindings
 CREATE TABLE ap_config_files
 (
 	policy_id integer not null,
-	file_name varchar(63) not null,
-	file_content SQL_TEXT not null,
+	file_content SQL_TEXT null,
 	PRIMARY KEY(policy_id)
 ) TABLE_TYPE;
 
