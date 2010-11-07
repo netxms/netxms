@@ -99,7 +99,7 @@ static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg)
 // Initialize alarm manager at system startup
 //
 
-BOOL AlarmManager::Init(void)
+BOOL AlarmManager::Init()
 {
    DB_RESULT hResult;
    DWORD i;
@@ -336,7 +336,7 @@ DWORD AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
 // Terminate all alarms with given key
 //
 
-void AlarmManager::TerminateByKey(char *pszKey)
+void AlarmManager::TerminateByKey(char *pszKey, bool useRegexp)
 {
    DWORD i, j, dwNumObjects, *pdwObjectList, dwCurrTime;
 
@@ -345,7 +345,7 @@ void AlarmManager::TerminateByKey(char *pszKey)
    Lock();
    dwCurrTime = (DWORD)time(NULL);
    for(i = 0, dwNumObjects = 0; i < m_dwNumAlarms; i++)
-      if ((!strcmp(pszKey, m_pAlarmList[i].szKey)) &&
+		if ((useRegexp ? RegexpMatch(m_pAlarmList[i].szKey, pszKey, TRUE) : !_tcscmp(pszKey, m_pAlarmList[i].szKey)) &&
          (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_OPEN))
       {
          // Add alarm's source object to update list

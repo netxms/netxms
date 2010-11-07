@@ -39,8 +39,8 @@ private:
 	CONDITION m_condShutdown;
 	THREAD m_hWatchdogThread;
 
-   void Lock(void) { MutexLock(m_mutex, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_mutex); }
+   void Lock() { MutexLock(m_mutex, INFINITE); }
+   void Unlock() { MutexUnlock(m_mutex); }
 
    static void SendAlarmNotification(ClientSession *pSession, void *pArg);
 
@@ -52,14 +52,14 @@ public:
    AlarmManager();
    ~AlarmManager();
 
-	void WatchdogThread(void);
+	void WatchdogThread();
 
-   BOOL Init(void);
+   BOOL Init();
    void NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 	              int iSeverity, DWORD dwTimeout, DWORD dwTimeoutEvent, Event *pEvent);
    DWORD AckById(DWORD dwAlarmId, DWORD dwUserId);
    DWORD TerminateById(DWORD dwAlarmId, DWORD dwUserId);
-   void TerminateByKey(TCHAR *pszKey);
+   void TerminateByKey(TCHAR *key, bool useRegexp);
    void DeleteAlarm(DWORD dwAlarmId);
 
    void SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession);

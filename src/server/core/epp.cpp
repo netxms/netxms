@@ -414,7 +414,7 @@ void EPRule::GenerateAlarm(Event *pEvent)
 	{
 		pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
-			g_alarmMgr.TerminateByKey(pszAckKey);
+			g_alarmMgr.TerminateByKey(pszAckKey, m_dwFlags & RF_TERMINATE_BY_REGEXP);
 		free(pszAckKey);
 	}
 	else	// Generate new alarm
@@ -430,7 +430,7 @@ void EPRule::GenerateAlarm(Event *pEvent)
 // Load rule from database
 //
 
-BOOL EPRule::LoadFromDB(void)
+BOOL EPRule::LoadFromDB()
 {
    DB_RESULT hResult;
    char szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
@@ -514,7 +514,7 @@ BOOL EPRule::LoadFromDB(void)
 // Save rule to database
 //
 
-void EPRule::SaveToDB(void)
+void EPRule::SaveToDB()
 {
    TCHAR *pszComment, *pszEscKey, *pszEscMessage,
 	      *pszEscScript, *pszQuery, *pszEscSituationInstance,
