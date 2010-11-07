@@ -159,7 +159,7 @@ extern "C" BOOL EXPORT DrvInit(char *cmdLine)
 // Unload handler
 //
 
-extern "C" void EXPORT DrvUnload(void)
+extern "C" void EXPORT DrvUnload()
 {
 }
 
@@ -170,7 +170,7 @@ extern "C" void EXPORT DrvUnload(void)
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
-                                           char *pszPassword, char *pszDatabase)
+                                              char *pszPassword, char *pszDatabase)
 {
    long iResult;
    ODBCDRV_CONN *pConn;
@@ -195,9 +195,18 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER *)15, 0);
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
 
-	// Connect to the datasource 
-	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS,
-                        (SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
+	// Connect to the datasource
+	// If DSN name contains = character, assume that it's a connection string
+	if (strchr(pszHost, '=') != NULL)
+	{
+		SQLSMALLINT outLen;
+		iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR*)pszHost, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+	}
+	else
+	{
+		iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS,
+									(SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
+	}
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
       goto connect_failure_2;
 
