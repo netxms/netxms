@@ -952,6 +952,7 @@ void CEventPolicyEditor::EditAlarm(int iRow)
    else if (dlg.m_nMode == 1)
    {
       dlg.m_strAckKey = m_pEventPolicy->pRuleList[iRow].szAlarmKey;
+		dlg.m_useRegexp = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_TERMINATE_BY_REGEXP) ? TRUE : FALSE;
    }
    if (dlg.DoModal() == IDOK)
    {
@@ -970,6 +971,10 @@ void CEventPolicyEditor::EditAlarm(int iRow)
 			{
 				m_pEventPolicy->pRuleList[iRow].wAlarmSeverity = SEVERITY_TERMINATE;
 				nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmKey, (LPCTSTR)dlg.m_strAckKey, MAX_DB_STRING);
+				if (dlg.m_useRegexp)
+					m_pEventPolicy->pRuleList[iRow].dwFlags |= RF_TERMINATE_BY_REGEXP;
+				else
+					m_pEventPolicy->pRuleList[iRow].dwFlags &= ~RF_TERMINATE_BY_REGEXP;
 			}
       }
       else

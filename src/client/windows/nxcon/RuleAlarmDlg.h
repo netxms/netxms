@@ -25,6 +25,7 @@ public:
 	CString	m_strKey;
 	CString	m_strAckKey;
 	DWORD	m_dwTimeout;
+	BOOL	m_useRegexp;
 	//}}AFX_DATA
 	int m_nMode;
 

@@ -25,6 +25,7 @@ CRuleAlarmDlg::CRuleAlarmDlg(CWnd* pParent /*=NULL*/)
 	m_strKey = _T("");
 	m_strAckKey = _T("");
 	m_dwTimeout = 0;
+	m_useRegexp = FALSE;
 	//}}AFX_DATA_INIT
 	m_nMode = -1;
 	m_iSeverity = 0;
@@ -45,6 +46,7 @@ void CRuleAlarmDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_ACKKEY, m_strAckKey);
 	DDV_MaxChars(pDX, m_strAckKey, 255);
 	DDX_Text(pDX, IDC_EDIT_TIMEOUT, m_dwTimeout);
+	DDX_Check(pDX, IDC_CHECK_USE_REGEXP, m_useRegexp);
 	//}}AFX_DATA_MAP
 }
 
@@ -105,7 +107,7 @@ void CRuleAlarmDlg::EnableControls(int nMode)
 			IDC_SELECT_EVENT, -1
 		},
 		{
-			IDC_EDIT_ACKKEY, IDC_STATIC_ACKKEY, -1
+			IDC_EDIT_ACKKEY, IDC_STATIC_ACKKEY, IDC_CHECK_USE_REGEXP, -1
 		}
 	};
    int i, j;
