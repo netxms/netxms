@@ -172,6 +172,7 @@ class NXCORE_EXPORTABLE NetObj
 {
 protected:
    DWORD m_dwId;
+	uuid_t m_guid;
    DWORD m_dwTimeStamp;       // Last change time stamp
    DWORD m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
    TCHAR m_szName[MAX_OBJECT_NAME];
@@ -222,7 +223,7 @@ protected:
       else
          RWLockReadLock(m_rwlockParentList, INFINITE); 
    }
-   void UnlockParentList(void) { RWLockUnlock(m_rwlockParentList); }
+   void UnlockParentList() { RWLockUnlock(m_rwlockParentList); }
    void LockChildList(BOOL bWrite) 
    { 
       if (bWrite) 
@@ -230,46 +231,47 @@ protected:
       else
          RWLockReadLock(m_rwlockChildList, INFINITE); 
    }
-   void UnlockChildList(void) { RWLockUnlock(m_rwlockChildList); }
+   void UnlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
-   void Modify(void);                  // Used to mark object as modified
+   void Modify();                  // Used to mark object as modified
 
-   BOOL LoadACLFromDB(void);
+   BOOL LoadACLFromDB();
    BOOL SaveACLToDB(DB_HANDLE hdb);
-   BOOL LoadCommonProperties(void);
+   BOOL LoadCommonProperties();
    BOOL SaveCommonProperties(DB_HANDLE hdb);
-	BOOL LoadTrustedNodes(void);
+	BOOL LoadTrustedNodes();
 	BOOL SaveTrustedNodes(DB_HANDLE hdb);
 
    void SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...);
 
-   virtual void PrepareForDeletion(void);
+   virtual void PrepareForDeletion();
    virtual void OnObjectDelete(DWORD dwObjectId);
 
 public:
    NetObj();
    virtual ~NetObj();
 
-   virtual int Type(void) { return OBJECT_GENERIC; }
+   virtual int Type() { return OBJECT_GENERIC; }
    
-   DWORD IpAddr(void) { return m_dwIpAddr; }
-   DWORD Id(void) { return m_dwId; }
-   const TCHAR *Name(void) { return m_szName; }
-   int Status(void) { return m_iStatus; }
+   DWORD IpAddr() { return m_dwIpAddr; }
+   DWORD Id() { return m_dwId; }
+   const TCHAR *Name() { return m_szName; }
+   int Status() { return m_iStatus; }
    int PropagatedStatus(void);
-   DWORD TimeStamp(void) { return m_dwTimeStamp; }
+   DWORD TimeStamp() { return m_dwTimeStamp; }
+	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
 
    BOOL IsModified(void) { return m_bIsModified; }
    BOOL IsDeleted(void) { return m_bIsDeleted; }
    BOOL IsOrphaned(void) { return m_dwParentCount == 0 ? TRUE : FALSE; }
    BOOL IsEmpty(void) { return m_dwChildCount == 0 ? TRUE : FALSE; }
 	
-	BOOL IsSystem(void) { return m_bIsSystem; }
+	BOOL IsSystem() { return m_bIsSystem; }
 	void SetSystemFlag(BOOL bFlag) { m_bIsSystem = bFlag; }
 
-   DWORD RefCount(void);
-   void IncRefCount(void);
-   void DecRefCount(void);
+   DWORD RefCount();
+   void IncRefCount();
+   void DecRefCount();
 
    BOOL IsChild(DWORD dwObjectId);
 	BOOL IsTrustedNode(DWORD id);
@@ -291,6 +293,7 @@ public:
    virtual BOOL CreateFromDB(DWORD dwId);
 
    void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
+	void generateGuid() { uuid_generate(m_guid); }
    void SetMgmtStatus(BOOL bIsManaged);
    void SetName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
    void ResetStatus(void) { m_iStatus = STATUS_UNKNOWN; Modify(); }
@@ -1113,7 +1116,7 @@ public:
    Condition(BOOL bHidden);
    virtual ~Condition();
 
-   virtual int Type(void) { return OBJECT_CONDITION; }
+   virtual int Type() { return OBJECT_CONDITION; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
@@ -1122,7 +1125,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   void Check(void);
+   void check();
 
    void LockForPoll(void);
    void EndPoll(void);
@@ -1135,7 +1138,7 @@ public:
                   ? TRUE : FALSE;
    }
 
-   int GetCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock);
+   int getCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock);
 };
 
 
@@ -1150,7 +1153,7 @@ protected:
 	int m_policyType;
 	TCHAR *m_description;
 
-	BOOL SavePolicyCommonProperties(DB_HANDLE hdb);
+	BOOL savePolicyCommonProperties(DB_HANDLE hdb);
 
 public:
    AgentPolicy(int type);
@@ -1181,7 +1184,6 @@ public:
 class NXCORE_EXPORTABLE AgentPolicyConfig : public AgentPolicy
 {
 protected:
-	TCHAR m_fileName[MAX_POLICY_CONFIG_NAME];
 	TCHAR *m_fileContent;
 
 public:
@@ -1192,7 +1194,7 @@ public:
    virtual int Type() { return OBJECT_AGENTPOLICY_CONFIG; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1214,7 +1216,7 @@ public:
    PolicyGroup(TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~PolicyGroup() { }
 
-   virtual int Type(void) { return OBJECT_POLICYGROUP; }
+   virtual int Type() { return OBJECT_POLICYGROUP; }
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1229,7 +1231,7 @@ public:
    PolicyRoot();
    virtual ~PolicyRoot();
 
-   virtual int Type(void) { return OBJECT_POLICYROOT; }
+   virtual int Type() { return OBJECT_POLICYROOT; }
    virtual const char *DefaultName(void) { return "Policies"; }
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };

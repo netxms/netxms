@@ -392,7 +392,7 @@ void Condition::EndPoll(void)
 // Check condition
 //
 
-void Condition::Check(void)
+void Condition::check()
 {
    NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
@@ -527,7 +527,7 @@ void Condition::Check(void)
 // Determine DCI cache size required by condition object
 //
 
-int Condition::GetCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock)
+int Condition::getCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock)
 {
    DWORD i;
    int nSize = 0;

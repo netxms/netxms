@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -217,7 +217,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -295,7 +295,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"

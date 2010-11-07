@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: agent_policy.cpp
+** File: ap_config.cpp
 **
 **/
 
@@ -65,7 +65,7 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 {
 	LockData();
 
-	BOOL success = SavePolicyCommonProperties(hdb);
+	BOOL success = savePolicyCommonProperties(hdb);
 	if (success)
 	{
 		TCHAR *data = EncodeSQLString(CHECK_NULL_EX(m_fileContent));
@@ -191,10 +191,9 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 	if (!AgentPolicy::createDeploymentMessage(msg))
 		return false;
 
-	if ((m_fileName[0] == 0) || (m_fileContent == NULL))
+	if (m_fileContent == NULL)
 		return false;  // Policy cannot be deployed
 
-	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
 	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (DWORD)_tcslen(m_fileContent) * sizeof(TCHAR));
 	return true;
 }
@@ -206,12 +205,5 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 
 bool AgentPolicyConfig::createUninstallMessage(CSCPMessage *msg)
 {
-	if (!AgentPolicy::createDeploymentMessage(msg))
-		return false;
-
-	if (m_fileName[0] == 0)
-		return false;  // Policy cannot be uninstalled
-
-	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
-	return true;
+	return AgentPolicy::createDeploymentMessage(msg);
 }

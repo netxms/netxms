@@ -1,4 +1,13 @@
 ***************
+* 215 ==> 216 *
+***************
+
+- Column "description" in table ap_common converted from # encoded format
+- New field "guid" in table "object_properties"
+- GUIDs generated for all objects
+
+
+***************
 * 214 ==> 215 *
 ***************
 

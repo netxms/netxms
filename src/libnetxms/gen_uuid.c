@@ -303,7 +303,12 @@ static void uuid_generate_random(uuid_t out)
  */
 void LIBNETXMS_EXPORTABLE uuid_generate(uuid_t out)
 {
-#ifndef _WIN32
+#ifdef _WIN32
+	UUID uuid;
+
+	UuidCreate(&uuid);
+	memcpy(out, &uuid, UUID_LENGTH);
+#else
 	int fd;
 
 	fd = get_random_fd();
@@ -313,6 +318,8 @@ void LIBNETXMS_EXPORTABLE uuid_generate(uuid_t out)
 		uuid_generate_random(out);
 	}
 	else
-#endif
+	{
 		uuid_generate_time(out);
+	}
+#endif
 }

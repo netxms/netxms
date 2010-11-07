@@ -137,6 +137,7 @@ CREATE TABLE userdb_custom_attributes
 CREATE TABLE object_properties
 (
 	object_id integer not null,
+	guid varchar(36) not null,
 	name varchar(63) not null,
 	status integer not null,
 	is_deleted integer not null,
@@ -1188,7 +1189,7 @@ CREATE TABLE ap_common
 	id integer not null,
 	policy_type integer not null,
 	version integer not null,
-	description SQL_TEXT not null,
+	description SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

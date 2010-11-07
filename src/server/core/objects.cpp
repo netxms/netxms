@@ -319,6 +319,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    {
       // Assign unique ID to new object
       pObject->SetId(CreateUniqueId(IDG_NETWORK_OBJECT));
+		pObject->generateGuid();
 
       // Create table for storing data collection values
       if (pObject->Type() == OBJECT_NODE)

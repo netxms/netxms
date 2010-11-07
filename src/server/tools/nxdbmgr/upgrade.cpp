@@ -249,6 +249,40 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V215 to V216
+//
+
+static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
+{
+	CHK_EXEC(SetColumnNullable(_T("ap_common"), _T("description"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
+	CHK_EXEC(ConvertStrings(_T("ap_common"), _T("id"), _T("description")));
+
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD guid varchar(36)")));
+
+	// Generate GUIDs for all objects
+	DB_RESULT hResult = SQLSelect(_T("SELECT object_id FROM object_properties"));
+	if (hResult != NULL)
+	{
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; i < count; i++)
+		{
+			uuid_t guid;
+			TCHAR query[256], buffer[64];
+
+			uuid_generate(guid);
+			_sntprintf(query, 256, _T("UPDATE object_properties SET guid='%s' WHERE object_id=%d"),
+			           uuid_to_string(guid, buffer), DBGetFieldULong(hResult, i, 0));
+			CHK_EXEC(SQLQuery(query));
+		}
+		DBFreeResult(hResult);
+	}
+	
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='216' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V214 to V215
 //
 
@@ -327,7 +361,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 
 			if (IsNodeExist(nodeId))
 			{
-				_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d"), nodeId, dciId);
+				_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d AND idata_value LIKE '%%#%%'"), nodeId, dciId);
 				DB_RESULT hData = SQLSelect(query);
 				if (hData != NULL)
 				{
@@ -338,14 +372,11 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 
 						LONG ts = DBGetFieldLong(hData, j, 0);
 						DBGetField(hData, j, 1, buffer, MAX_DB_STRING);
-						if (_tcschr(buffer, _T('#')) != NULL)
-						{
-							DecodeSQLString(buffer);
+						DecodeSQLString(buffer);
 
-							_sntprintf(query, 512, _T("UPDATE idata_%d SET idata_value=%s WHERE item_id=%d AND idata_timestamp=%ld"),
-										  nodeId, (const TCHAR *)DBPrepareString(g_hCoreDB, buffer), dciId, (long)ts);
-							CHK_EXEC(SQLQuery(query));
-						}
+						_sntprintf(query, 512, _T("UPDATE idata_%d SET idata_value=%s WHERE item_id=%d AND idata_timestamp=%ld"),
+									  nodeId, (const TCHAR *)DBPrepareString(g_hCoreDB, buffer), dciId, (long)ts);
+						CHK_EXEC(SQLQuery(query));
 					}
 					DBFreeResult(hData);
 				}
@@ -4860,6 +4891,7 @@ static struct
 	{ 212, 213, H_UpgradeFromV212 },
 	{ 213, 214, H_UpgradeFromV213 },
 	{ 214, 215, H_UpgradeFromV214 },
+	{ 215, 216, H_UpgradeFromV215 },
    { 0, NULL }
 };
 

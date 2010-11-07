@@ -74,9 +74,9 @@ AgentPolicy::~AgentPolicy()
 // Save common policy properties to database
 //
 
-BOOL AgentPolicy::SavePolicyCommonProperties(DB_HANDLE hdb)
+BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 {
-	TCHAR query[8192], *description;
+	TCHAR query[8192], guid[128];
 
 	SaveCommonProperties(hdb);
 
@@ -90,16 +90,14 @@ BOOL AgentPolicy::SavePolicyCommonProperties(DB_HANDLE hdb)
          isNewObject = false;
       DBFreeResult(hResult);
    }
-	description = EncodeSQLString(CHECK_NULL_EX(m_description));
    if (isNewObject)
       _sntprintf(query, 8192,
-                 _T("INSERT INTO ap_common (id,policy_type,version,description) VALUES (%d,%d,%d,'%s')"),
-                 m_dwId, m_policyType, m_version, description);
+                 _T("INSERT INTO ap_common (id,policy_type,version,description) VALUES (%d,%d,%d,%s)"),
+                 m_dwId, m_policyType, m_version, (const TCHAR *)DBPrepareString(hdb, m_description));
    else
       _sntprintf(query, 8192,
-                 _T("UPDATE ap_common SET policy_type=%d,version=%d,description='%s' WHERE id=%d"),
-                 m_policyType, m_version, description, m_dwId);
-	free(description);
+                 _T("UPDATE ap_common SET policy_type=%d,version=%d,description=%s WHERE id=%d"),
+                 m_policyType, m_version, (const TCHAR *)DBPrepareString(hdb, m_description), m_dwId);
    BOOL success = DBQuery(hdb, query);
 
    // Save access list
@@ -128,7 +126,7 @@ BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
 {
 	LockData();
 
-	BOOL success = SavePolicyCommonProperties(hdb);
+	BOOL success = savePolicyCommonProperties(hdb);
 
 	// Clear modifications flag and unlock object
 	if (success)
@@ -175,14 +173,13 @@ BOOL AgentPolicy::CreateFromDB(DWORD dwId)
 
 	   LoadACLFromDB();
 
-		_sntprintf(query, 256, _T("SELECT version, description FROM ap_common WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT version,description FROM ap_common WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 		if (hResult == NULL)
 			return FALSE;
 
 		m_version = DBGetFieldULong(hResult, 0, 0);
 		m_description = DBGetField(hResult, 0, 1, NULL, 0);
-		DecodeSQLString(m_description);
 		DBFreeResult(hResult);
 
 	   // Load related nodes list
@@ -262,6 +259,7 @@ DWORD AgentPolicy::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 bool AgentPolicy::createDeploymentMessage(CSCPMessage *msg)
 {
 	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
+	msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
 	return true;
 }
 
@@ -273,5 +271,6 @@ bool AgentPolicy::createDeploymentMessage(CSCPMessage *msg)
 bool AgentPolicy::createUninstallMessage(CSCPMessage *msg)
 {
 	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
+	msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
 	return true;
 }
