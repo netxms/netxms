@@ -109,13 +109,12 @@ typedef __console_ctx * CONSOLE_CTX;
 // Common constants and macros
 //
 
-#define MAX_LINE_SIZE         4096
-
-#define GROUP_FLAG_BIT     ((DWORD)0x80000000)
+#define MAX_LINE_SIZE            4096
+#define GROUP_FLAG_BIT           ((DWORD)0x80000000)
+#define CHECKPOINT_SNMP_PORT     260
+#define DEFAULT_AFFINITY_MASK    0xFFFFFFFF
 
 typedef void * HSNMPSESSION;
-
-#define CHECKPOINT_SNMP_PORT  260
 
 
 //
@@ -769,6 +768,7 @@ extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
 extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
 #endif
 extern TCHAR g_szDataDir[];
+extern DWORD NXCORE_EXPORTABLE g_processAffinityMask;
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
 extern DWORD g_dwPingSize;

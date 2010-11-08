@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,10 +68,11 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "Module", CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList },
+   { "ProcessAffinityMask", CT_LONG, 0, 0, 0, 0, &g_processAffinityMask },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-BOOL NXCORE_EXPORTABLE LoadConfig(void)
+BOOL NXCORE_EXPORTABLE LoadConfig()
 {
    BOOL bSuccess = FALSE;
 	Config *config;

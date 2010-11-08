@@ -770,4 +770,10 @@ Language=English
 Failed to load network map object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_SET_PROCESS_AFFINITY_NOT_SUPPORTED
+Language=English
+Setting process CPU affinity is not supported on this operating system
+.
+
 ;#endif

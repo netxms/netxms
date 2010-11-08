@@ -118,6 +118,7 @@ DWORD g_dwPingSize;
 DWORD g_dwAuditFlags;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
 int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
+DWORD NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
 time_t g_tServerStartTime = 0;
@@ -160,7 +161,7 @@ BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds)
 // Disconnect from database (exportable function for startup module)
 //
 
-void NXCORE_EXPORTABLE ShutdownDB(void)
+void NXCORE_EXPORTABLE ShutdownDB()
 {
 	if (g_hCoreDB != NULL)
 		DBDisconnect(g_hCoreDB);
@@ -291,7 +292,7 @@ static void LoadGlobalConfig()
 // Initialize cryptografic functions
 //
 
-static BOOL InitCryptografy(void)
+static BOOL InitCryptografy()
 {
 #ifdef _WITH_ENCRYPTION
 	char szKeyFile[MAX_PATH];
@@ -449,6 +450,17 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	}
 #endif
 
+	// Set process affinity mask
+	if (g_processAffinityMask != DEFAULT_AFFINITY_MASK)
+	{
+#ifdef _WIN32
+		if (SetProcessAffinityMask(GetCurrentProcess(), g_processAffinityMask))
+			DbgPrintf(1, _T("Process affinity mask set to 0x%08X"), g_processAffinityMask);
+#else
+		nxlog_write(MSG_SET_PROCESS_AFFINITY_NOT_SUPPORTED, EVENTLOG_WARNING_TYPE, NULL);
+#endif
+	}
+
 #ifdef _WIN32
 	WSADATA wsaData;
 	WSAStartup(0x0002, &wsaData);
@@ -457,7 +469,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	InitLocalNetInfo();
 
 	// Create queue for delayed SQL queries
-	g_pLazyRequestQueue = new Queue(64, 16);
+	g_pLazyRequestQueue = new Queue(256, 64);
 
 	// Initialize database driver and connect to database
 	DBSetDebugPrintCallback(DbgPrintf2);
