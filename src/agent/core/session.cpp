@@ -34,8 +34,8 @@
 
 void UnregisterSession(DWORD dwIndex);
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse);
-DWORD DeployPolicy(DWORD session, CSCPMessage *request);
-DWORD UninstallPolicy(DWORD session, CSCPMessage *request);
+DWORD DeployPolicy(CommSession *session, CSCPMessage *request);
+DWORD UninstallPolicy(CommSession *session, CSCPMessage *request);
 
 
 //
@@ -494,7 +494,7 @@ void CommSession::processingThread()
 				case CMD_DEPLOY_AGENT_POLICY:
 					if (m_bMasterServer)
 					{
-						msg.SetVariable(VID_RCC, DeployPolicy(m_dwIndex, pMsg));
+						msg.SetVariable(VID_RCC, DeployPolicy(this, pMsg));
 					}
 					else
 					{
@@ -504,7 +504,7 @@ void CommSession::processingThread()
 				case CMD_UNINSTALL_AGENT_POLICY:
 					if (m_bMasterServer)
 					{
-						msg.SetVariable(VID_RCC, UninstallPolicy(m_dwIndex, pMsg));
+						msg.SetVariable(VID_RCC, UninstallPolicy(this, pMsg));
 					}
 					else
 					{

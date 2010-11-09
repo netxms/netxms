@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,27 +27,62 @@
 #define close _close
 #endif
 
+#define POLICY_REGISTRY_PATH _T("/policyRegistry")
+
+
+//
+// Register policy in persistent storage
+//
+
+static void RegisterPolicy(CommSession *session, DWORD type, uuid_t guid)
+{
+	TCHAR path[256], buffer[64];
+	int tail;
+
+	_sntprintf(path, 256, _T("/policyRegistry/%s/"), uuid_to_string(guid, buffer));
+	tail = _tcslen(path);
+
+	Config *registry = OpenRegistry();
+
+	_tcscpy(&path[tail], _T("type"));
+	registry->setValue(path, type);
+
+	_tcscpy(&path[tail], _T("server"));
+	registry->setValue(path, IpToStr(session->getServerAddress(), buffer));
+
+	CloseRegistry(true);
+}
+
+
+//
+// Register policy in persistent storage
+//
+
+static void UnregisterPolicy(DWORD type, uuid_t guid)
+{
+	TCHAR path[256], buffer[64];
+
+	_sntprintf(path, 256, _T("/policyRegistry/%s"), uuid_to_string(guid, buffer));
+	Config *registry = OpenRegistry();
+	registry->deleteEntry(path);
+	CloseRegistry(true);
+}
+
 
 //
 // Deploy configuration file
 //
 
-static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
+static DWORD DeployConfig(DWORD session, uuid_t guid, CSCPMessage *msg)
 {
-	TCHAR path[MAX_PATH], name[MAX_PATH], *fname, tail;
-	int i, fh;
+	TCHAR path[MAX_PATH], name[64], tail;
+	int fh;
 	DWORD rcc;
 
-	msg->GetVariableStr(VID_CONFIG_FILE_NAME, name, MAX_PATH);
-	DebugPrintf(session, 3, _T("DeployConfig(): original file name is %s"), name);
-	for(i = (int)_tcslen(name) - 1; i >= 0; i--)
-		if ((name[i] == '/') || (name[i] == '\\'))
-		{
-			break;
-		}
-	fname = &name[i + 1];
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
-	_sntprintf(path, MAX_PATH, _T("%s%s%s"), g_szConfigIncludeDir, ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""), fname);
+	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
+	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+				  uuid_to_string(guid, name));
 
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
@@ -88,21 +123,28 @@ static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
 // Deploy policy on agent
 //
 
-DWORD DeployPolicy(DWORD session, CSCPMessage *request)
+DWORD DeployPolicy(CommSession *session, CSCPMessage *request)
 {
 	DWORD type, rcc;
+	uuid_t guid;
 
 	type = request->GetVariableShort(VID_POLICY_TYPE);
+	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+
 	switch(type)
 	{
 		case AGENT_POLICY_CONFIG:
-			rcc = DeployConfig(session, request);
+			rcc = DeployConfig(session->getIndex(), guid, request);
 			break;
 		default:
 			rcc = ERR_BAD_ARGUMENTS;
 			break;
 	}
-	DebugPrintf(session, 3, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
+
+	if (rcc == RCC_SUCCESS)
+		RegisterPolicy(session, type, guid);
+
+	DebugPrintf(session->getIndex(), 3, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
 	return rcc;
 }
 
@@ -111,22 +153,16 @@ DWORD DeployPolicy(DWORD session, CSCPMessage *request)
 // Remove configuration file
 //
 
-static DWORD RemoveConfig(DWORD session, CSCPMessage *msg)
+static DWORD RemoveConfig(DWORD session, uuid_t guid,  CSCPMessage *msg)
 {
-	TCHAR path[MAX_PATH], name[MAX_PATH], *fname, tail;
-	int i;
+	TCHAR path[MAX_PATH], name[64], tail;
 	DWORD rcc;
 
-	msg->GetVariableStr(VID_CONFIG_FILE_NAME, name, MAX_PATH);
-	DebugPrintf(session, 3, _T("RemoveConfig(): original file name is %s"), name);
-	for(i = (int)_tcslen(name) - 1; i >= 0; i--)
-		if ((name[i] == '/') || (name[i] == '\\'))
-		{
-			break;
-		}
-	fname = &name[i + 1];
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
-	_sntprintf(path, MAX_PATH, _T("%s%s%s"), g_szConfigIncludeDir, ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""), fname);
+	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
+	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+				  uuid_to_string(guid, name));
+
 	if (_tremove(path) != 0)
 	{
 		rcc = (errno == ENOENT) ? ERR_SUCCESS : ERR_IO_FAILURE;
@@ -143,20 +179,27 @@ static DWORD RemoveConfig(DWORD session, CSCPMessage *msg)
 // Uninstall policy from agent
 //
 
-DWORD UninstallPolicy(DWORD session, CSCPMessage *request)
+DWORD UninstallPolicy(CommSession *session, CSCPMessage *request)
 {
 	DWORD type, rcc;
+	uuid_t guid;
 
 	type = request->GetVariableShort(VID_POLICY_TYPE);
+	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+
 	switch(type)
 	{
 		case AGENT_POLICY_CONFIG:
-			rcc = RemoveConfig(session, request);
+			rcc = RemoveConfig(session->getIndex(), guid, request);
 			break;
 		default:
 			rcc = ERR_BAD_ARGUMENTS;
 			break;
 	}
-	DebugPrintf(session, 3, _T("Policy uninstall: TYPE=%d RCC=%d"), type, rcc);
+
+	if (rcc == RCC_SUCCESS)
+		UnregisterPolicy(type, guid);
+
+	DebugPrintf(session->getIndex(), 3, _T("Policy uninstall: TYPE=%d RCC=%d"), type, rcc);
 	return rcc;
 }

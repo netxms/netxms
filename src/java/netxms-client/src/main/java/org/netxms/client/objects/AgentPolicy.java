@@ -23,7 +23,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 
 /**
- * @author Victor
+ * Generic agent policy object
  *
  */
 public class AgentPolicy extends GenericObject

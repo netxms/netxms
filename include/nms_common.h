@@ -673,7 +673,7 @@ typedef struct tagPOINT
 
 
 //
-// Event log severity codes (UNIX only)
+// Event log severity codes
 //
 
 #ifndef _WIN32
@@ -684,6 +684,11 @@ typedef struct tagPOINT
 #define EVENTLOG_AUDIT_SUCCESS          0x0008
 #define EVENTLOG_AUDIT_FAILURE          0x0010
 #endif   /* _WIN32 */
+
+#define NXLOG_DEBUG     EVENTLOG_DEBUG_TYPE
+#define NXLOG_INFO      EVENTLOG_INFORMATION_TYPE
+#define NXLOG_WARNING   EVENTLOG_WARNING_TYPE
+#define NXLOG_ERROR     EVENTLOG_ERROR_TYPE
 
 
 //

@@ -147,11 +147,12 @@ void uuid_unpack(uuid_t in, struct uuid *uu)
 // Parse UUID
 //
 
-int LIBNETXMS_EXPORTABLE uuid_parse(TCHAR *in, uuid_t uu)
+int LIBNETXMS_EXPORTABLE uuid_parse(const TCHAR *in, uuid_t uu)
 {
 	struct uuid uuid;
 	int i;
-	TCHAR *cp, buf[3];
+	const TCHAR *cp;
+	TCHAR buf[3];
 
 	if (_tcslen(in) != 36)
 		return -1;

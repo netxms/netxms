@@ -12,7 +12,7 @@
                   checkEnabled="false">
                <iterate
                      ifEmpty="false"
-                     operator="or">
+                     operator="and">
                   <instanceof
                         value="org.netxms.client.objects.Node">
                   </instanceof>

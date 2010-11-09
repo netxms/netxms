@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ void InitSessionList();
 BOOL PushData(const TCHAR *parameter, const TCHAR *value);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
-void InitStaticSubagents(void);
+void InitStaticSubagents();
 #endif
 
 #ifdef _WIN32
@@ -121,6 +121,7 @@ char g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
 char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 char g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
+char g_szDataDirectory[MAX_PATH] = AGENT_DEFAULT_DATA_DIR;
 char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
 char g_szConfigServer[MAX_DB_STRING] = "not_set";
 char g_szRegistrar[MAX_DB_STRING] = "not_set";
@@ -176,6 +177,7 @@ static char m_szProcessToWait[MAX_PATH] = "";
 static char m_szDumpDir[MAX_PATH] = "C:\\";
 static DWORD m_dwMaxLogSize = 16384 * 1024;
 static DWORD m_dwLogHistorySize = 4;
+static Config *s_registry = NULL;
 
 #if defined(_WIN32) || defined(_NETWARE)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -196,6 +198,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ActionShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
+	{ "DataDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory },
 	{ "DebugLevel", CT_LONG, 0, 0, 0, 0, &g_debugLevel },
    { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
@@ -273,13 +276,62 @@ static char m_szHelpText[] =
    "\n";
 
 
+//
+// Save registry
+//
+
+static void SaveRegistry()
+{
+	TCHAR regPath[MAX_PATH];
+	nx_strncpy(regPath, g_szDataDirectory, MAX_PATH - _tcslen(REGISTRY_FILE_NAME) - 1);
+	if (regPath[_tcslen(regPath) - 1] != FS_PATH_SEPARATOR_CHAR)
+		_tcscat(regPath, FS_PATH_SEPARATOR);
+	_tcscat(regPath, REGISTRY_FILE_NAME);
+
+	String xml = s_registry->createXml();
+	FILE *f = _tfopen(regPath, _T("w"));
+	if (f != NULL)
+	{
+		_fputts((const TCHAR *)xml, f);
+		fclose(f);
+	}
+	else
+	{
+		nxlog_write(MSG_REGISTRY_SAVE_FAILED, NXLOG_ERROR, "ss", regPath, strerror(errno));
+	}
+}
+
+
+//
+// Open registry
+//
+
+Config *OpenRegistry()
+{
+	s_registry->lock();
+	return s_registry;
+}
+
+
+//
+// Close registry
+//
+
+void CloseRegistry(bool modified)
+{
+	if (modified)
+		SaveRegistry();
+	s_registry->unlock();
+}
+
+
 #ifdef _WIN32
 
 //
 // Get our own console window handle (an alternative to Microsoft's GetConsoleWindow)
 //
 
-static HWND GetConsoleHWND(void)
+static HWND GetConsoleHWND()
 {
 	HWND hWnd;
 	DWORD wpid, cpid;
@@ -319,7 +371,7 @@ static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
 // Import symbols
 //
 
-static void ImportSymbols(void)
+static void ImportSymbols()
 {
    HMODULE hModule;
 
@@ -530,7 +582,7 @@ stop_handler:
 
 #ifdef _WIN32
 
-void LoadWindowsSubagent(void)
+void LoadWindowsSubagent()
 {
    OSVERSIONINFO ver;
 
@@ -557,7 +609,7 @@ void LoadWindowsSubagent(void)
 
 #else
 
-void LoadPlatformSubagent(void)
+void LoadPlatformSubagent()
 {
 #if defined(_NETWARE)
    LoadSubAgent("NETWARE.NSM");
@@ -618,6 +670,7 @@ static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
 BOOL Initialize()
 {
    char *pItem, *pEnd;
+	char regPath[MAX_PATH];
 #ifdef _NETWARE
    char szLoadPath[1024], szSearchPath[1024];
 #endif
@@ -642,8 +695,21 @@ BOOL Initialize()
 		fprintf(stderr, "FATAL ERROR: Cannot open log file\n");
 		return FALSE;
 	}
-	nxlog_write(MSG_USE_CONFIG_D, EVENTLOG_INFORMATION_TYPE, "s", g_szConfigIncludeDir);
-	nxlog_write(MSG_DEBUG_LEVEL, EVENTLOG_INFORMATION_TYPE, "d", g_debugLevel);
+	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
+	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", g_debugLevel);
+
+	// Initialize persistent storage
+	s_registry = new Config;
+	s_registry->setTopLevelTag(_T("registry"));
+	nx_strncpy(regPath, g_szDataDirectory, MAX_PATH - _tcslen(REGISTRY_FILE_NAME) - 1);
+	if (regPath[_tcslen(regPath) - 1] != FS_PATH_SEPARATOR_CHAR)
+		_tcscat(regPath, FS_PATH_SEPARATOR);
+	_tcscat(regPath, REGISTRY_FILE_NAME);
+	if (!s_registry->loadXmlConfig(regPath, "registry"))
+	{
+		nxlog_write(MSG_REGISTRY_LOAD_FAILED, NXLOG_ERROR, "s", regPath);
+		SaveRegistry();
+	}
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -651,7 +717,7 @@ BOOL Initialize()
 
    if (WSAStartup(2, &wsaData) != 0)
    {
-      nxlog_write(MSG_WSASTARTUP_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_WSASTARTUP_FAILED, NXLOG_ERROR, "e", WSAGetLastError());
       return FALSE;
    }
 

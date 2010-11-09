@@ -46,14 +46,15 @@ private:
 	int m_line;
 	int m_id;
 
-	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
 	void addEntry(ConfigEntry *entry) { entry->m_parent = this; entry->m_next = m_childs; m_childs = entry; }
+	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
 
 public:
 	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line, int id);
 	~ConfigEntry();
 
 	ConfigEntry *getNext() { return m_next; }
+	ConfigEntry *getParent() { return m_parent; }
 
 	const TCHAR *getName() { return m_name; }
 	int getId() { return m_id; }
@@ -66,6 +67,7 @@ public:
 	INT64 getValueInt64(int index = 0, INT64 defaultValue = 0);
 	QWORD getValueUInt64(int index = 0, QWORD defaultValue = 0);
 	bool getValueBoolean(int index = 0, bool defaultValue = false);
+	bool getValueUUID(int index, uuid_t uuid);
 
 	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = NULL);
 	LONG getSubEntryValueInt(const TCHAR *name, int index = 0, LONG defaultValue = 0);
@@ -73,6 +75,7 @@ public:
 	INT64 getSubEntryValueInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0);
 	QWORD getSubEntryValueUInt64(const TCHAR *name, int index = 0, QWORD defaultValue = 0);
 	bool getSubEntryValueBoolean(const TCHAR *name, int index = 0, bool defaultValue = false);
+	bool getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index = 0);
 
 	const TCHAR *getFile() { return m_file; }
 	int getLine() { return m_line; }
@@ -82,9 +85,11 @@ public:
 	void addValue(const TCHAR *value);
 	void setValue(const TCHAR*value);
 
+	ConfigEntry *createEntry(const TCHAR *name);
 	ConfigEntry *findEntry(const TCHAR *name);
 	ConfigEntryList *getSubEntries(const TCHAR *mask);
 	ConfigEntryList *getOrderedSubEntries(const TCHAR *mask);
+	void unlinkEntry(ConfigEntry *entry);
 
 	void print(FILE *file, int level);
 	void createXml(String &xml, int level = 0);
@@ -121,6 +126,7 @@ class LIBNETXMS_EXPORTABLE Config
 private:
 	ConfigEntry *m_root;
 	int m_errorCount;
+	MUTEX m_mutex;
 
 protected:
 	virtual void onError(const TCHAR *errorMessage);
@@ -132,6 +138,9 @@ public:
 	Config();
 	~Config();
 
+	void lock() { MutexLock(m_mutex, INFINITE); }
+	void unlock() { MutexUnlock(m_mutex); }
+
 	void setTopLevelTag(const TCHAR *topLevelTag) { m_root->setName(topLevelTag); }
 
 	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL);
@@ -141,6 +150,8 @@ public:
 
 	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection);
 
+	void deleteEntry(const TCHAR *path);
+
 	ConfigEntry *getEntry(const TCHAR *path);
 	const TCHAR *getValue(const TCHAR *path, const TCHAR *defaultValue = NULL);
 	LONG getValueInt(const TCHAR *path, LONG defaultValue);
@@ -148,6 +159,7 @@ public:
 	INT64 getValueInt64(const TCHAR *path, INT64 defaultValue);
 	QWORD getValueUInt64(const TCHAR *path, QWORD defaultValue);
 	bool getValueBoolean(const TCHAR *path, bool defaultValue);
+	bool getValueUUID(const TCHAR *path, uuid_t uuid);
 	ConfigEntryList *getSubEntries(const TCHAR *path, const TCHAR *mask);
 	ConfigEntryList *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
 
@@ -157,6 +169,7 @@ public:
 	bool setValue(const TCHAR *path, INT64 value);
 	bool setValue(const TCHAR *path, QWORD value);
 	bool setValue(const TCHAR *path, double value);
+	bool setValue(const TCHAR *path, uuid_t value);
 
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 

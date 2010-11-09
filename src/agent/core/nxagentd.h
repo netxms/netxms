@@ -63,22 +63,28 @@
 #define AGENT_DEFAULT_CONFIG_D   "C:\\nxagentd.conf.d"
 #define AGENT_DEFAULT_LOG        "C:\\nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "C:\\"
+#define AGENT_DEFAULT_DATA_DIR   "C:\\"
 #elif defined(_NETWARE)
 #define AGENT_DEFAULT_CONFIG     "SYS:ETC/nxagentd.conf"
 #define AGENT_DEFAULT_CONFIG_D   "SYS:ETC/nxagentd.conf.d"
 #define AGENT_DEFAULT_LOG        "SYS:ETC/nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "SYS:\\"
+#define AGENT_DEFAULT_DATA_DIR   "SYS:ETC"
 #elif defined(_IPSO)
 #define AGENT_DEFAULT_CONFIG     "/opt/netxms/etc/nxagentd.conf"
 #define AGENT_DEFAULT_CONFIG_D   "/opt/netxms/etc/nxagentd.conf.d"
 #define AGENT_DEFAULT_LOG        "/opt/netxms/log/nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "/opt/netxms/store"
+#define AGENT_DEFAULT_DATA_DIR   "/opt/netxms/data"
 #else
 #define AGENT_DEFAULT_CONFIG     "{search}"
 #define AGENT_DEFAULT_CONFIG_D   "{search}"
 #define AGENT_DEFAULT_LOG        "/var/log/nxagentd"
 #define AGENT_DEFAULT_FILE_STORE "/tmp"
+#define AGENT_DEFAULT_DATA_DIR   "/var/opt/netxms/agent"
 #endif
+
+#define REGISTRY_FILE_NAME       "registry.dat"
 
 
 //
@@ -301,6 +307,8 @@ public:
    void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
 	bool sendFile(DWORD requestId, const TCHAR *file, long offset);
 
+	DWORD getServerAddress() { return m_dwHostAddr; }
+
    DWORD getIndex() { return m_dwIndex; }
    void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
 
@@ -315,9 +323,9 @@ public:
 // Functions
 //
 
-BOOL Initialize(void);
-void Shutdown(void);
-void Main(void);
+BOOL Initialize();
+void Shutdown();
+void Main();
 
 void ConsolePrintf(const char *pszFormat, ...);
 void DebugPrintf(DWORD dwSessionId, int level, const char *pszFormat, ...);
@@ -326,7 +334,7 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
 BOOL DownloadConfig(TCHAR *pszServer);
 
-BOOL InitParameterList(void);
+BOOL InitParameterList();
 void AddParameter(const char *szName, LONG (* fpHandler)(const char *, const char *, char *), const char *pArg,
                   int iDataType, const char *pszDescription);
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
@@ -337,7 +345,7 @@ DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, StringList *pValue);
 void GetParameterList(CSCPMessage *pMsg);
 
 BOOL LoadSubAgent(char *szModuleName);
-void UnloadAllSubAgents(void);
+void UnloadAllSubAgents();
 BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *),
                   TCHAR *pszEntryPoint);
@@ -360,16 +368,19 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList);
 void SendTrap(DWORD dwEventCode, const char *pszFormat, ...);
 void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args);
 
+Config *OpenRegistry();
+void CloseRegistry(bool modified);
+
 #ifdef _WIN32
 
-void InitService(void);
+void InitService();
 void InstallService(char *execName, char *confFile);
-void RemoveService(void);
-void StartAgentService(void);
-void StopAgentService(void);
+void RemoveService();
+void StartAgentService();
+void StopAgentService();
 BOOL WaitForService(DWORD dwDesiredState);
 void InstallEventSource(char *path);
-void RemoveEventSource(void);
+void RemoveEventSource();
 
 char *GetPdhErrorText(DWORD dwError, char *pszBuffer, int iBufSize);
 

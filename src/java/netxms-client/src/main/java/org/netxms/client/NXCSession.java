@@ -1991,7 +1991,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		// Configuration file
 		if ((flags & NXCObjectModificationData.MODIFY_POLICY_CONFIG) != 0)
 		{
-			msg.setVariable(NXCPCodes.VID_CONFIG_FILE_NAME, data.getConfigFileName());
 			msg.setVariable(NXCPCodes.VID_CONFIG_FILE_DATA, data.getConfigFileContent());
 		}
 

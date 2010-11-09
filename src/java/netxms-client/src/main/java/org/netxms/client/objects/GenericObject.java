@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.UUID;
 import java.net.InetAddress;
 import org.netxms.base.*;
 import org.netxms.client.GeoLocation;
@@ -55,6 +56,7 @@ public class GenericObject
 	
 	// Generic object attributes
 	private long objectId = 0;
+	private UUID guid;
 	private String objectName;
 	private int objectClass;	// NetXMS object class
 	private int status = STATUS_UNKNOWN;
@@ -85,6 +87,7 @@ public class GenericObject
 		this.session = session;
 		
 		objectId = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_ID);
+		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
 		objectName = msg.getVariableAsString(NXCPCodes.VID_OBJECT_NAME);
 		objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
 		primaryIP = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
@@ -413,5 +416,14 @@ public class GenericObject
 	public int hashCode()
 	{
 		return (int)objectId;
+	}
+
+
+	/**
+	 * @return the guid
+	 */
+	public UUID getGuid()
+	{
+		return guid;
 	}
 }

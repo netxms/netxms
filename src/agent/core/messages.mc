@@ -284,4 +284,16 @@ Language=English
 Debug level set to %1
 .
 
+MessageId=
+SymbolicName=MSG_REGISTRY_LOAD_FAILED
+Language=English
+Failed to load agent's registry from file %1
+.
+
+MessageId=
+SymbolicName=MSG_REGISTRY_SAVE_FAILED
+Language=English
+Failed to save agent's registry to file %1: %2
+.
+
 ;#endif

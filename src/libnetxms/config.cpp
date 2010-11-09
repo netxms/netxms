@@ -94,6 +94,49 @@ ConfigEntry *ConfigEntry::findEntry(const TCHAR *name)
 
 
 //
+// Create (or find existing) subentry
+//
+
+ConfigEntry *ConfigEntry::createEntry(const TCHAR *name)
+{
+	ConfigEntry *e;
+
+	for(e = m_childs; e != NULL; e = e->getNext())
+		if (!_tcsicmp(e->getName(), name))
+			return e;
+
+	return new ConfigEntry(name, this, _T("<memory>"), 0, 0);
+}
+
+
+//
+// Unlink subentry
+//
+
+void ConfigEntry::unlinkEntry(ConfigEntry *entry)
+{
+	ConfigEntry *curr, *prev;
+
+	for(curr = m_childs, prev = NULL; curr != NULL; curr = curr->m_next)
+	{
+		if (curr == entry)
+		{
+			if (prev != NULL)
+			{
+				prev->m_next = curr->m_next;
+			}
+			else
+			{
+				m_childs = curr->m_next;
+			}
+			break;
+		}
+		prev = curr;
+	}
+}
+
+
+//
 // Get all subentries with names matched to mask
 //
 
@@ -175,6 +218,16 @@ bool ConfigEntry::getValueBoolean(int index, bool defaultValue)
 	{
 		return defaultValue;
 	}
+}
+
+bool ConfigEntry::getValueUUID(int index, uuid_t uuid)
+{
+	const TCHAR *value = getValue(index);
+	if (value != NULL)
+	{
+		return uuid_parse(value, uuid) == 0;
+	}
+	return false;
 }
 
 
@@ -272,6 +325,19 @@ bool ConfigEntry::getSubEntryValueBoolean(const TCHAR *name, int index, bool def
 	}
 }
 
+bool ConfigEntry::getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index)
+{
+	const TCHAR *value = getSubEntryValue(name, index);
+	if (value != NULL)
+	{
+		return uuid_parse(value, uuid) == 0;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 //
 // Print config entry
@@ -355,6 +421,7 @@ Config::Config()
 {
 	m_root = new ConfigEntry(_T("[root]"), NULL, NULL, 0, 0);
 	m_errorCount = 0;
+	m_mutex = MutexCreate();
 }
 
 
@@ -365,6 +432,7 @@ Config::Config()
 Config::~Config()
 {
 	delete m_root;
+	MutexDestroy(m_mutex);
 }
 
 
@@ -529,6 +597,19 @@ bool Config::getValueBoolean(const TCHAR *path, bool defaultValue)
 	}
 }
 
+bool Config::getValueUUID(const TCHAR *path, uuid_t uuid)
+{
+	const TCHAR *value = getValue(path);
+	if (value != NULL)
+	{
+		return uuid_parse(value, uuid) == 0;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 //
 // Get subentries
@@ -635,6 +716,25 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
 
 
 //
+// Delete entry
+//
+
+void Config::deleteEntry(const TCHAR *path)
+{
+	ConfigEntry *entry = getEntry(path);
+	if (entry == NULL)
+		return;
+
+	ConfigEntry *parent = entry->getParent();
+	if (parent == NULL)	// root entry
+		return;
+
+	parent->unlinkEntry(entry);
+	delete entry;
+}
+
+
+//
 // Set value
 // Returns false on error (usually caused by incorrect path)
 //
@@ -680,6 +780,13 @@ bool Config::setValue(const TCHAR *path, double value)
 {
 	TCHAR buffer[32];
 	_sntprintf(buffer, 32, _T("%f"), value);
+	return setValue(path, buffer);
+}
+
+bool Config::setValue(const TCHAR *path, uuid_t value)
+{
+	TCHAR buffer[64];
+	uuid_to_string(value, buffer);
 	return setValue(path, buffer);
 }
 

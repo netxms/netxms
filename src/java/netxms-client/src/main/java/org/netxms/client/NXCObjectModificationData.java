@@ -58,7 +58,6 @@ public class NXCObjectModificationData
 	private String autoApplyFilter;
 	private boolean autoBindEnabled;
 	private String autoBindFilter;
-	private String configFileName;
 	private String configFileContent;
 	private int version;
 	private String description;
@@ -244,23 +243,6 @@ public class NXCObjectModificationData
 	{
 		this.autoBindFilter = autoBindFilter;
 		flags |= MODIFY_AUTO_BIND;
-	}
-
-	/**
-	 * @return the configFileName
-	 */
-	public String getConfigFileName()
-	{
-		return configFileName;
-	}
-
-	/**
-	 * @param configFileName the configFileName to set
-	 */
-	public void setConfigFileName(String configFileName)
-	{
-		this.configFileName = configFileName;
-		flags |= MODIFY_POLICY_CONFIG;
 	}
 
 	/**
