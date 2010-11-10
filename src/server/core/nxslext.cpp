@@ -150,6 +150,9 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 			{
 				// No access, return null
 				*ppResult = new NXSL_Value;
+				DbgPrintf(4, _T("NXSL::FindNodeObject(%s [%d], '%s'): access denied for node %s [%d]"),
+				          (currNode != NULL) ? currNode->Name() : _T("null"), (currNode != NULL) ? currNode->Id() : 0,
+							 argv[1]->getValueAsCString(), node->Name(), node->Id());
 			}
 		}
 		else

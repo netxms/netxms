@@ -45,6 +45,7 @@
 				Optimization="0"
 				PreprocessorDefinitions="SCILEXER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;SCI_LEXER"
 				MinimalRebuild="true"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -123,6 +124,7 @@
 				Optimization="0"
 				PreprocessorDefinitions="SCILEXER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;SCI_LEXER"
 				MinimalRebuild="true"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -199,6 +201,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="SCILEXER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;NDEBUG;SCI_LEXER"
+				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -277,6 +280,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="SCILEXER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;NDEBUG;SCI_LEXER"
+				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
