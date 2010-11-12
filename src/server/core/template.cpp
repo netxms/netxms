@@ -47,7 +47,7 @@ Template::Template()
 	m_applyFilter = NULL;
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
-	m_mutexDciAccess = MutexCreate();
+	m_mutexDciAccess = MutexCreateRecursive();
 }
 
 
@@ -67,7 +67,7 @@ Template::Template(const TCHAR *pszName)
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
    m_bIsHidden = TRUE;
-	m_mutexDciAccess = MutexCreate();
+	m_mutexDciAccess = MutexCreateRecursive();
 }
 
 
@@ -81,7 +81,7 @@ Template::Template(ConfigEntry *config)
    m_bIsHidden = TRUE;
    m_dwDCILockStatus = INVALID_INDEX;
    m_iStatus = STATUS_NORMAL;
-	m_mutexDciAccess = MutexCreate();
+	m_mutexDciAccess = MutexCreateRecursive();
 
 	// Name and version
 	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
