@@ -70,6 +70,37 @@ public class GraphSettings
 	private List<AccessListElement> accessList;
 	
 	/**
+	 * Create default settings
+	 */
+	public GraphSettings()
+	{
+		id = 0;
+		ownerId = 0;
+		name = "noname";
+		shortName = "noname";
+		flags = GF_AUTO_UPDATE | GF_SHOW_GRID | GF_SHOW_LEGEND;
+		timeFrameType = TIME_FRAME_BACK_FROM_NOW;
+		timeUnit = TIME_UNIT_MINUTE;
+		timeFrame = 60;
+		timeFrom = new Date();
+		timeTo = new Date();
+		autoRefreshInterval = 30;
+		axisColor = 0x161616;
+		backgroundColor = 0xF0F0F0;
+		gridColor = 0xE8E8E8;
+		selectionColor = 0x800000;
+		textColor = 0x000000;
+		rulerColor = 0x000000;
+		title = "";
+		items = new GraphItem[0];
+		accessList = new ArrayList<AccessListElement>(0);
+		
+		// Default item styles
+		for(int i = 0; i < itemStyles.length; i++)
+			itemStyles[i] = new GraphItemStyle(0); 
+	}
+	
+	/**
 	 * Create graph settings object from NXCP message
 	 * 
 	 * @param msg NXCP message
@@ -540,5 +571,149 @@ public class GraphSettings
 	public GraphItem[] getItems()
 	{
 		return items;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+
+	/**
+	 * @param shortName the shortName to set
+	 */
+	public void setShortName(String shortName)
+	{
+		this.shortName = shortName;
+	}
+
+	/**
+	 * @param flags the flags to set
+	 */
+	public void setFlags(int flags)
+	{
+		this.flags = flags;
+	}
+
+	/**
+	 * @param timeFrameType the timeFrameType to set
+	 */
+	public void setTimeFrameType(int timeFrameType)
+	{
+		this.timeFrameType = timeFrameType;
+	}
+
+	/**
+	 * @param timeUnit the timeUnit to set
+	 */
+	public void setTimeUnit(int timeUnit)
+	{
+		this.timeUnit = timeUnit;
+	}
+
+	/**
+	 * @param timeFrame the timeFrame to set
+	 */
+	public void setTimeFrame(int timeFrame)
+	{
+		this.timeFrame = timeFrame;
+	}
+
+	/**
+	 * @param timeFrom the timeFrom to set
+	 */
+	public void setTimeFrom(Date timeFrom)
+	{
+		this.timeFrom = timeFrom;
+	}
+
+	/**
+	 * @param timeTo the timeTo to set
+	 */
+	public void setTimeTo(Date timeTo)
+	{
+		this.timeTo = timeTo;
+	}
+
+	/**
+	 * @param autoRefreshInterval the autoRefreshInterval to set
+	 */
+	public void setAutoRefreshInterval(int autoRefreshInterval)
+	{
+		this.autoRefreshInterval = autoRefreshInterval;
+	}
+
+	/**
+	 * @param axisColor the axisColor to set
+	 */
+	public void setAxisColor(int axisColor)
+	{
+		this.axisColor = axisColor;
+	}
+
+	/**
+	 * @param backgroundColor the backgroundColor to set
+	 */
+	public void setBackgroundColor(int backgroundColor)
+	{
+		this.backgroundColor = backgroundColor;
+	}
+
+	/**
+	 * @param gridColor the gridColor to set
+	 */
+	public void setGridColor(int gridColor)
+	{
+		this.gridColor = gridColor;
+	}
+
+	/**
+	 * @param selectionColor the selectionColor to set
+	 */
+	public void setSelectionColor(int selectionColor)
+	{
+		this.selectionColor = selectionColor;
+	}
+
+	/**
+	 * @param textColor the textColor to set
+	 */
+	public void setTextColor(int textColor)
+	{
+		this.textColor = textColor;
+	}
+
+	/**
+	 * @param rulerColor the rulerColor to set
+	 */
+	public void setRulerColor(int rulerColor)
+	{
+		this.rulerColor = rulerColor;
+	}
+
+	/**
+	 * @param title the title to set
+	 */
+	public void setTitle(String title)
+	{
+		this.title = title;
+	}
+
+	/**
+	 * @param itemStyles the itemStyles to set
+	 */
+	public void setItemStyles(GraphItemStyle[] itemStyles)
+	{
+		this.itemStyles = itemStyles;
+	}
+
+	/**
+	 * @param items the items to set
+	 */
+	public void setItems(GraphItem[] items)
+	{
+		this.items = items;
 	}
 }

@@ -23,9 +23,7 @@
 
 #include "libnxlp.h"
 
-#if defined(_WIN32)
-#include <malloc.h>
-#elif HAVE_ALLOCA_H
+#if HAVE_ALLOCA_H
 #include <alloca.h>
 #endif
 

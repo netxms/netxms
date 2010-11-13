@@ -116,6 +116,29 @@ void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize)
 
 
 //
+// Copy string
+//
+
+#if defined(_WIN32) && defined(USE_WIN32_HEAP)
+
+char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
+{
+	char *newStr = (char *)malloc(strlen(src) + 1);
+	strcpy(newStr, src);
+	return newStr;
+}
+
+WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
+{
+	WCHAR *newStr = (WCHAR *)malloc((wcslen(src) + 1) * sizeof(WCHAR));
+	wcscpy(newStr, src);
+	return newStr;
+}
+
+#endif
+
+
+//
 // Match string against pattern with * and ? metasymbols
 //
 

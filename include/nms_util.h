@@ -109,6 +109,22 @@
 
 
 //
+// strdup() replacement
+//
+
+#if defined(_WIN32) && defined(USE_WIN32_HEAP)
+#ifdef __cplusplus
+extern "C" {
+#endif
+char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src);
+WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+
+//
 // Class for serial communications
 //
 

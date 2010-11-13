@@ -95,6 +95,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	private boolean updateInProgress = false;
 	private Runnable refreshTimer;
 	
+	private GraphSettings settings = new GraphSettings();
 	private Date timeFrom;
 	private Date timeTo;
 	private long timeRange = 3600000;	// 1 hour
@@ -250,26 +251,35 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	 */
 	public void initPredefinedGraph(GraphSettings gs)
 	{
+		settings = gs;
+		configureGraphFromSettings();
+	}
+	
+	/**
+	 * Configure graph from graph settings
+	 */
+	private void configureGraphFromSettings()
+	{
 		// General settings
-		setPartName(gs.getTitle());
-		chart.setChartTitle(gs.getTitle());
+		setPartName(settings.getTitle());
+		chart.setChartTitle(settings.getTitle());
 
 		// Chart visual settings
 		itemStyles.clear();
-		itemStyles.addAll(Arrays.asList(gs.getItemStyles()));
-		chart.setLogScaleEnabled(gs.isLogScale());
-		setGridVisible(gs.isGridVisible());
-		chart.setLegendVisible(gs.isLegendVisible());
+		itemStyles.addAll(Arrays.asList(settings.getItemStyles()));
+		chart.setLogScaleEnabled(settings.isLogScale());
+		setGridVisible(settings.isGridVisible());
+		chart.setLegendVisible(settings.isLegendVisible());
 		
 		// Data
 		items.clear();
-		items.addAll(Arrays.asList(gs.getItems()));
+		items.addAll(Arrays.asList(settings.getItems()));
 		
 		getDataFromServer();
 
 		// Automatic refresh
-		autoRefreshInterval = gs.getAutoRefreshInterval();
-		autoRefreshEnabled = gs.isAutoRefresh();
+		autoRefreshInterval = settings.getAutoRefreshInterval();
+		autoRefreshEnabled = settings.isAutoRefresh();
 		actionAutoRefresh.setChecked(autoRefreshEnabled);
 		HistoryGraph.this.getSite().getShell().getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
 	}

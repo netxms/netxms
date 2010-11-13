@@ -49,6 +49,18 @@ public class GraphItemStyle
 	}
 	
 	/**
+	 * Create style record for line item with given color
+	 * 
+	 */
+	public GraphItemStyle(int color)
+	{
+		type = LINE;
+		this.color = color;
+		lineWidth = 0;
+		flags = 0;
+	}
+	
+	/**
 	 * constructor
 	 * 
 	 * @param type

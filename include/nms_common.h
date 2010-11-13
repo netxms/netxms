@@ -199,8 +199,6 @@ typedef int bool;
 #define vscwprintf   _vscwprintf
 #define popen        _popen
 #define pclose       _pclose
-#define strdup       _strdup
-#define wcsdup       _wcsdup
 #define stricmp      _stricmp
 #define strnicmp     _strnicmp
 #define strupr(s)    _strupr(s)
@@ -264,6 +262,29 @@ typedef unsigned __int64 uint64_t;
 
 #if !defined(UNDER_CE)
 #define HAVE_LIBEXPAT 1
+#endif
+
+// Use Win32 API instead of msvcrt for memory allocation
+#ifdef USE_WIN32_HEAP
+
+#define malloc(n)       HeapAlloc(GetProcessHeap(), 0, n)
+#define realloc(p, n)   (((p) == NULL) ? HeapAlloc(GetProcessHeap(), 0, n) : HeapReAlloc(GetProcessHeap(), 0, p, n))
+#define free(p)         HeapFree(GetProcessHeap(), 0, p)
+#define strdup(s)       nx_strdup(s)
+#define wcsdup(s)       nx_wcsdup(s)
+
+#undef _tcsdup
+#ifdef UNICODE
+#define _tcsdup         nx_wcsdup
+#else
+#define _tcsdup         nx_strdup
+#endif
+
+#else
+
+#define strdup       _strdup
+#define wcsdup       _wcsdup
+
 #endif
 
 #elif defined(_NETWARE)

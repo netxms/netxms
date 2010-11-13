@@ -56,11 +56,6 @@
 
 #define YYINCLUDED_STDLIB_H		1
 
-#ifdef _WIN32
-#define strdup _strdup
-#define stricmp _stricmp
-#endif
-
 #ifdef YYTEXT_POINTER
 extern char *mptext;
 #else
