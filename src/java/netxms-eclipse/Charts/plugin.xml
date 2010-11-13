@@ -122,6 +122,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.charts.propertypages.General"
+            id="org.netxms.ui.eclipse.charts.propertypages.General"
+            name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.charts.widgets.GenericChart">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

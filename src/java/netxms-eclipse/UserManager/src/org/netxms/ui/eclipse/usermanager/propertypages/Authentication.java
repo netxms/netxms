@@ -117,6 +117,8 @@ public class Authentication extends PropertyPage
 		comboAuthMethod.add("NetXMS password");
 		comboAuthMethod.add("RADIUS");
 		comboAuthMethod.add("Certificate");
+		comboAuthMethod.add("Certificate or Password");
+		comboAuthMethod.add("Certificate or RADIUS");
 		comboAuthMethod.select(object.getAuthMethod());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;

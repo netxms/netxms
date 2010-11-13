@@ -35,6 +35,9 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
@@ -70,7 +73,7 @@ import org.swtchart.LineStyle;
  * History graph view
  *
  */
-public class HistoryGraph extends ViewPart
+public class HistoryGraph extends ViewPart implements ISelectionProvider
 {
 	public static final String ID = "org.netxms.ui.eclipse.charts.views.HistoryGraph";
 	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
@@ -650,6 +653,8 @@ public class HistoryGraph extends ViewPart
 		manager.add(legend);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -787,5 +792,45 @@ public class HistoryGraph extends ViewPart
 	{
 		getSite().getShell().getDisplay().timerExec(-1, refreshTimer);
 		super.dispose();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+	 */
+	@Override
+	public void addSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+	 */
+	@Override
+	public ISelection getSelection()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+	 */
+	@Override
+	public void removeSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+	 */
+	@Override
+	public void setSelection(ISelection selection)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }
