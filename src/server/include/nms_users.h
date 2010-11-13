@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,6 +38,8 @@
 #define AUTH_NETXMS_PASSWORD  0
 #define AUTH_RADIUS           1
 #define AUTH_CERTIFICATE      2
+#define AUTH_CERT_OR_PASSWD   3
+#define AUTH_CERT_OR_RADIUS   4
 
 
 //

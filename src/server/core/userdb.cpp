@@ -243,7 +243,22 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
       {
 			User *user = (User *)m_users[i];
 
-         switch(user->getAuthMethod())
+			// Determine authentication method to use
+			int method = user->getAuthMethod();
+			if ((method == AUTH_CERT_OR_PASSWD) || (method == AUTH_CERT_OR_RADIUS))
+			{
+				if (dwSigLen > 0)
+				{
+					// certificate auth
+					method = AUTH_CERTIFICATE;
+				}
+				else
+				{
+					method = (method == AUTH_CERT_OR_PASSWD) ? AUTH_NETXMS_PASSWORD : AUTH_RADIUS;
+				}
+			}
+
+         switch(method)
          {
             case AUTH_NETXMS_PASSWORD:
 					if (dwSigLen == 0)

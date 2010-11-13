@@ -194,7 +194,8 @@ TCHAR *g_szInterfaceTypes[] =
    _T("IEEE 802.12"),
    _T("FibreChannel")
 };
-TCHAR *g_szAuthMethod[] = { _T("NetXMS Password"), _T("RADIUS"), _T("Certificate"), NULL };
+TCHAR *g_szAuthMethod[] = { _T("NetXMS Password"), _T("RADIUS"), _T("Certificate"), 
+                            _T("Certificate or Password"), _T("Certificate or RADIUS"), NULL };
 TCHAR *g_szCertType[] = { _T("Trusted CA"), _T("User"), NULL };
 TCHAR *g_szCertMappingMethod[] = { _T("Subject"), _T("Public Key"), NULL };
 TCHAR *g_szGraphType[] = { _T("Line"), _T("Area"), _T("Stacked"), NULL };
