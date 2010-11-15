@@ -291,7 +291,7 @@ public:
                    int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    virtual ~AgentConnection();
 
-   BOOL connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL);
+   BOOL connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL, DWORD *pdwSocketError = NULL);
    void disconnect();
    BOOL isConnected() { return m_bIsConnected; }
 	int getProtocolVersion() { return m_nProtocolVersion; }

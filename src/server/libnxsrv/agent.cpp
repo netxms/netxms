@@ -336,7 +336,7 @@ void AgentConnection::ReceiverThread()
 // Connect to agent
 //
 
-BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
+BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError, DWORD *pdwSocketError)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
@@ -345,6 +345,9 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
 
    if (pdwError != NULL)
       *pdwError = ERR_INTERNAL_ERROR;
+
+   if (pdwSocketError != NULL)
+      *pdwSocketError = 0;
 
    // Check if already connected
    if (m_bIsConnected)
@@ -390,9 +393,6 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
       goto connect_cleanup;
    }
 
-	// Set non-blocking mode
-	//SetSocketNonBlocking(m_hSocket);
-	
    if (!NXCPGetPeerProtocolVersion(m_hSocket, &m_nProtocolVersion))
    {
       dwError = ERR_INTERNAL_ERROR;
@@ -471,6 +471,9 @@ setup_encryption:
 connect_cleanup:
    if (!bSuccess)
    {
+		if (pdwSocketError != NULL)
+			*pdwSocketError = (DWORD)WSAGetLastError();
+
       Lock();
       if (m_hSocket != -1)
          shutdown(m_hSocket, SHUT_RDWR);

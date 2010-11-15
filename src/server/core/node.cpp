@@ -808,7 +808,9 @@ skip_snmp_check:
       pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
                                        m_wAuthMethod, m_szSharedSecret);
       setAgentProxy(pAgentConn);
-      if (pAgentConn->connect(g_pServerKey))
+
+		DWORD error, socketError;
+      if (pAgentConn->connect(g_pServerKey, FALSE, &error, &socketError))
       {
          DbgPrintf(7, "StatusPoll(%s): connected to agent", m_szName);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
@@ -822,7 +824,7 @@ skip_snmp_check:
       }
       else
       {
-         DbgPrintf(7, "StatusPoll(%s): agent unreachable", m_szName);
+         DbgPrintf(6, "StatusPoll(%s): agent unreachable, error=%d, socketError=%d", m_szName, (int)error, (int)socketError);
          SendPollerMsg(dwRqId, POLLER_ERROR "NetXMS agent unreachable\r\n");
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
@@ -843,7 +845,6 @@ skip_snmp_check:
             m_tFailTimeAgent = tNow;
          }
       }
-      DbgPrintf(7, "StatusPoll(%s): deleting agent connection", m_szName);
       delete pAgentConn;
       DbgPrintf(7, "StatusPoll(%s): agent connection deleted", m_szName);
    }
