@@ -355,6 +355,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->ruleContext = XMLGetAttr(attrs, "context");
 		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", false);
 		ps->state = XML_STATE_RULE;
+		ps->numEventParams = 0;
 	}
 	else if (!strcmp(name, "match"))
 	{
