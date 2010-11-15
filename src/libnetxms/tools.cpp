@@ -739,6 +739,10 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWORD timeout)
 {
 	SetSocketNonBlocking(s);
+#ifdef _WIN32
+	SetSocketReuseFlag(s);
+#endif
+
 	int rc = connect(s, addr, len);
 	if (rc == -1)
 	{
@@ -766,21 +770,25 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 			} while(timeout > 0);
 #else
 			struct timeval tv;
-			fd_set wrfs;
+			fd_set wrfs, exfs;
 
 			FD_ZERO(&wrfs);
 			FD_SET(s, &wrfs);
+
+			FD_ZERO(&exfs);
+			FD_SET(s, &exfs);
+
 #ifdef _WIN32
 			tv.tv_sec = timeout / 1000;
 			tv.tv_usec = (timeout % 1000) * 1000;
-			rc = select(SELECT_NFDS(s + 1), NULL, &wrfs, NULL, &tv);
+			rc = select(SELECT_NFDS(s + 1), NULL, &wrfs, &exfs, &tv);
 #else
 			do
 			{
 				tv.tv_sec = timeout / 1000;
 				tv.tv_usec = (timeout % 1000) * 1000;
 				qwStartTime = GetCurrentTimeMs();
-				rc = select(SELECT_NFDS(s + 1), NULL, &wrfs, NULL, &tv);
+				rc = select(SELECT_NFDS(s + 1), NULL, &wrfs, &exfs, &tv);
 				if ((rc != -1) || (errno != EINTR))
 					break;
 				dwElapsed = GetCurrentTimeMs() - qwStartTime;
@@ -788,8 +796,14 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 			} while(timeout > 0);
 #endif
 #endif
-			if (rc == 0)	// timeout, return error
+			if (rc > 0)
+			{
+				rc = (FD_ISSET(s, &exfs) ? -1 : 0);
+			}
+			else if (rc == 0)	// timeout, return error
+			{
 				rc = -1;
+			}
 		}
 	}
 	return rc;

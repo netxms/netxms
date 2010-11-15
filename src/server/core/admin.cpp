@@ -116,6 +116,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
       return THREAD_OK;
    }
 
+	SetSocketExclusiveAddrUse(sock);
 	SetSocketReuseFlag(sock);
 
    // Fill in local address structure

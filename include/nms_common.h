@@ -173,6 +173,7 @@ typedef int bool;
 #include <winsock2.h>
 #include <windows.h>
 #include <stdlib.h>
+#include <malloc.h>
 
 #ifndef UNDER_CE
 #include <sys/stat.h>
@@ -240,7 +241,14 @@ typedef unsigned __int64 uint64_t;
 #define SHUT_WR      1
 #define SHUT_RDWR    2
 
-#define SetSocketReuseFlag(sd)
+#define SetSocketReuseFlag(s) { \
+	BOOL val = TRUE; \
+	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&val, sizeof(BOOL)); \
+}
+#define SetSocketExclusiveAddrUse(s) { \
+	BOOL val = TRUE; \
+	setsockopt(s, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char *)&val, sizeof(BOOL)); \
+}
 #define SELECT_NFDS(x)  ((int)(x))
 #define SetSocketNonBlocking(s) { \
 	u_long one = 1; \
@@ -364,6 +372,8 @@ typedef int SOCKET;
 	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
 			(socklen_t)sizeof(nVal)); \
 }
+
+#define SetSocketExclusiveAddrUse(s)
 
 #define SetSocketNonBlocking(s) { \
    int f = fcntl(s, F_GETFL); \
@@ -562,6 +572,8 @@ typedef int SOCKET;
 	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
 			(socklen_t)sizeof(nVal)); \
 }
+
+#define SetSocketExclusiveAddrUse(s)
 
 #define SetSocketNonBlocking(s) { \
    int f = fcntl(s, F_GETFL); \

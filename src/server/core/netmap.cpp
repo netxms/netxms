@@ -191,7 +191,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 					TCHAR *data = DBGetField(hResult, i, 1, NULL, 0);
 					if (data != NULL)
 					{
-						config->loadXmlConfigFromMemory(data, strlen(data), _T("<database>"), _T("element"));
+						config->loadXmlConfigFromMemory(data, (int)strlen(data), _T("<database>"), _T("element"));
 						free(data);
 						switch(DBGetFieldLong(hResult, i, 0))
 						{

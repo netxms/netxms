@@ -402,7 +402,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                                  FORMAT_MESSAGE_IGNORE_INSERTS,
                                  NULL, error,
                                  MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), // Default language
-                                 (LPTSTR)&pMsg,0,NULL)>0)
+                                 (LPTSTR)&pMsg, 0, NULL) > 0)
                {
                   pMsg[_tcscspn(pMsg, _T("\r\n"))] = 0;
                   strings[numStrings] = (TCHAR *)malloc(_tcslen(pMsg) + 1);

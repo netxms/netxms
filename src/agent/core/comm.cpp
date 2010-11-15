@@ -133,6 +133,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       exit(1);
    }
 
+	SetSocketExclusiveAddrUse(hSocket);
 	SetSocketReuseFlag(hSocket);
 #ifndef _WIN32
    fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);

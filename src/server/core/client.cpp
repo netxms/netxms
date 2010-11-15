@@ -132,6 +132,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
       return THREAD_OK;
    }
 
+	SetSocketExclusiveAddrUse(sock);
 	SetSocketReuseFlag(sock);
 
    // Create session list access rwlock

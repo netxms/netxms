@@ -400,6 +400,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       return THREAD_OK;
    }
 
+	SetSocketExclusiveAddrUse(hSocket);
 	SetSocketReuseFlag(hSocket);
 
    // Fill in local address structure

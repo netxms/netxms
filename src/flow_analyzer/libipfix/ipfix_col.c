@@ -1944,6 +1944,7 @@ int ipfix_listen( int *nfds, SOCKET **fds,
             continue;
         }
 
+        SetSocketExclusiveAddrUse(*s);
 		  SetSocketReuseFlag(*s);
 
 #ifdef INCR_RXTX_BUFSIZE
@@ -2026,6 +2027,7 @@ int ipfix_listen( int *nfds, SOCKET **fds,
         return -1;
     }
 
+    SetSocketExclusiveAddrUse(s);
 	 SetSocketReuseFlag(s);
 
 #ifdef INCR_RXTX_BUFSIZE

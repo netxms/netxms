@@ -191,6 +191,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
       exit(1);
    }
 
+	SetSocketExclusiveAddrUse(hSocket);
 	SetSocketReuseFlag(hSocket);
 
    // Fill in local address structure

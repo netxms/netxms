@@ -222,6 +222,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
       return THREAD_OK;
    }
 
+	SetSocketExclusiveAddrUse(sock);
 	SetSocketReuseFlag(sock);
 
    // Fill in local address structure

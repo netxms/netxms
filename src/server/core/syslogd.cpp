@@ -471,6 +471,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
       return THREAD_OK;
    }
 
+	SetSocketExclusiveAddrUse(hSocket);
 	SetSocketReuseFlag(hSocket);
 
    // Get listen port number

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 NetXMS Team
+** Copyright (C) 2003-2010 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -463,7 +463,12 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 #ifdef _WIN32
 	WSADATA wsaData;
-	WSAStartup(0x0002, &wsaData);
+	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (wrc != 0)
+	{
+		nxlog_write(MSG_WSASTARTUP_FAILED, EVENTLOG_ERROR_TYPE, "e", wrc);
+		return FALSE;
+	}
 #endif
 
 	InitLocalNetInfo();

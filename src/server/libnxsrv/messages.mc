@@ -776,4 +776,10 @@ Language=English
 Setting process CPU affinity is not supported on this operating system
 .
 
+MessageId=
+SymbolicName=MSG_WSASTARTUP_FAILED
+Language=English
+Unable to initialize Windows Sockets: %1
+.
+
 ;#endif

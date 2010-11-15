@@ -714,10 +714,10 @@ BOOL Initialize()
 #ifdef _WIN32
    WSADATA wsaData;
    OSVERSIONINFO ver;
-
-   if (WSAStartup(2, &wsaData) != 0)
+	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
+   if (wrc != 0)
    {
-      nxlog_write(MSG_WSASTARTUP_FAILED, NXLOG_ERROR, "e", WSAGetLastError());
+      nxlog_write(MSG_WSASTARTUP_FAILED, NXLOG_ERROR, "e", wrc);
       return FALSE;
    }
 
