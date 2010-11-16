@@ -175,35 +175,36 @@ private:
    TCHAR m_szDescription[MAX_DB_STRING];
    TCHAR m_szInstance[MAX_DB_STRING];
 	TCHAR m_systemTag[MAX_DB_STRING];
-   time_t m_tLastPoll;        // Last poll time
-   int m_iPollingInterval;    // Polling interval in seconds
-   int m_iRetentionTime;      // Retention time in seconds
-   BYTE m_iDeltaCalculation;  // Delta calculation method
-   BYTE m_iSource;            // SNMP or native agent?
-   BYTE m_iDataType;
-   BYTE m_iStatus;            // Item status: active, disabled or not supported
-   BYTE m_iBusy;              // 1 when item is queued for polling, 0 if not
-   BYTE m_iAdvSchedule;       // 1 if item has advanced schedule
-   BYTE m_iProcessAllThresholds; // 1 if all thresholds should be processed each time
-   DWORD m_dwTemplateId;      // Related template's id
-   DWORD m_dwTemplateItemId;  // Related template item's id
+   time_t m_tLastPoll;           // Last poll time
+   int m_iPollingInterval;       // Polling interval in seconds
+   int m_iRetentionTime;         // Retention time in seconds
+   BYTE m_deltaCalculation;      // Delta calculation method
+   BYTE m_source;                // SNMP or native agent?
+   BYTE m_dataType;
+   BYTE m_status;                // Item status: active, disabled or not supported
+   BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
+	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
+   BYTE m_advSchedule;           // 1 if item has advanced schedule
+   BYTE m_processAllThresholds;  // 1 if all thresholds should be processed each time
+   DWORD m_dwTemplateId;         // Related template's id
+   DWORD m_dwTemplateItemId;     // Related template item's id
    DWORD m_dwNumThresholds;
    Threshold **m_ppThresholdList;
    Template *m_pNode;             // Pointer to node or template object this item related to
-   TCHAR *m_pszScript;        // Transformation script
-   NXSL_Program *m_pScript;   // Compiled transformation script
+   TCHAR *m_pszScript;           // Transformation script
+   NXSL_Program *m_pScript;      // Compiled transformation script
    MUTEX m_hMutex;
-   DWORD m_dwCacheSize;       // Number of items in cache
+   DWORD m_dwCacheSize;          // Number of items in cache
    ItemValue **m_ppValueCache;
-   ItemValue m_prevRawValue;  // Previous raw value (used for delta calculation)
+   ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
    time_t m_tPrevValueTimeStamp;
    BOOL m_bCacheLoaded;
    DWORD m_dwNumSchedules;
    TCHAR **m_ppScheduleList;
-   time_t m_tLastCheck;       // Last schedule checking time
-   DWORD m_dwErrorCount;      // Consequtive collection error count
-	DWORD m_dwResourceId;		// Associated cluster resource ID
-	DWORD m_dwProxyNode;       // Proxy node ID or 0 to disable
+   time_t m_tLastCheck;          // Last schedule checking time
+   DWORD m_dwErrorCount;         // Consequtive collection error count
+	DWORD m_dwResourceId;	   	// Associated cluster resource ID
+	DWORD m_dwProxyNode;          // Proxy node ID or 0 to disable
 	int m_nBaseUnits;
 	int m_nMultiplier;
 	TCHAR *m_pszCustomUnitName;
@@ -230,7 +231,7 @@ public:
 	DCItem(ConfigEntry *config, Template *owner);
    ~DCItem();
 
-   void prepareForDeletion();
+   bool prepareForDeletion();
    void updateFromTemplate(DCItem *pItem);
 
    BOOL saveToDB(DB_HANDLE hdb);
@@ -240,9 +241,9 @@ public:
    void updateCacheSize(DWORD dwCondId = 0);
 
    DWORD getId() { return m_dwId; }
-   int getDataSource() { return m_iSource; }
-   int getDataType() { return m_iDataType; }
-   int getStatus() { return m_iStatus; }
+   int getDataSource() { return m_source; }
+   int getDataType() { return m_dataType; }
+   int getStatus() { return m_status; }
    const TCHAR *getName() { return m_szName; }
    const TCHAR *getDescription() { return m_szDescription; }
 	const TCHAR *getSystemTag() { return m_systemTag; }
@@ -255,10 +256,11 @@ public:
 	time_t getLastPollTime() { return m_tLastPoll; }
 	DWORD getErrorCount() { return m_dwErrorCount; }
 
-   BOOL isReadyForPolling(time_t currTime);
+   bool isReadyForPolling(time_t currTime);
+	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void setStatus(int status, bool generateEvent);
-   void setBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
+   void setBusyFlag(BOOL busy) { m_busy = (BYTE)busy; }
    void changeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
    void setTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
@@ -286,13 +288,13 @@ public:
 	void setName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
 	void setDescription(TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
 	void setInstance(TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }
-	void setOrigin(int nOrigin) { m_iSource = nOrigin; }
-	void setDataType(int nDataType) { m_iDataType = nDataType; }
+	void setOrigin(int origin) { m_source = origin; }
+	void setDataType(int dataType) { m_dataType = dataType; }
 	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
 	void setInterval(int nInt) { m_iPollingInterval = nInt; }
-	void setDeltaCalcMethod(int nMethod) { m_iDeltaCalculation = nMethod; }
-	void setAllThresholdsFlag(BOOL bFlag) { m_iProcessAllThresholds = bFlag ? 1 : 0; }
-	void setAdvScheduleFlag(BOOL bFlag) { m_iAdvSchedule = bFlag ? 1 : 0; }
+	void setDeltaCalcMethod(int method) { m_deltaCalculation = method; }
+	void setAllThresholdsFlag(BOOL bFlag) { m_processAllThresholds = bFlag ? 1 : 0; }
+	void setAdvScheduleFlag(BOOL bFlag) { m_advSchedule = bFlag ? 1 : 0; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
 	void addSchedule(const TCHAR *pszSchedule);
@@ -306,7 +308,7 @@ public:
 // Functions
 //
 
-BOOL InitDataCollector(void);
+BOOL InitDataCollector();
 void DeleteAllItemsForNode(DWORD dwNodeId);
 void WriteFullParamListToMessage(CSCPMessage *pMsg);
 

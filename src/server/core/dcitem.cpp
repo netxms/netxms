@@ -180,13 +180,14 @@ DCItem::DCItem()
    m_dwTemplateItemId = 0;
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
-   m_iBusy = 0;
-   m_iDataType = DCI_DT_INT;
+   m_busy = 0;
+	m_scheduledForDeletion = 0;
+   m_dataType = DCI_DT_INT;
    m_iPollingInterval = 3600;
    m_iRetentionTime = 0;
-   m_iDeltaCalculation = DCM_ORIGINAL_VALUE;
-   m_iSource = DS_INTERNAL;
-   m_iStatus = ITEM_STATUS_NOT_SUPPORTED;
+   m_deltaCalculation = DCM_ORIGINAL_VALUE;
+   m_source = DS_INTERNAL;
+   m_status = ITEM_STATUS_NOT_SUPPORTED;
    m_szName[0] = 0;
    m_szDescription[0] = 0;
    m_szInstance[0] = 0;
@@ -200,11 +201,11 @@ DCItem::DCItem()
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = FALSE;
-   m_iAdvSchedule = 0;
+   m_advSchedule = 0;
    m_dwNumSchedules = 0;
    m_ppScheduleList = NULL;
    m_tLastCheck = 0;
-   m_iProcessAllThresholds = 0;
+   m_processAllThresholds = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
 	m_dwProxyNode = 0;
@@ -226,13 +227,14 @@ DCItem::DCItem(const DCItem *pSrc)
    m_dwId = pSrc->m_dwId;
    m_dwTemplateId = pSrc->m_dwTemplateId;
    m_dwTemplateItemId = pSrc->m_dwTemplateItemId;
-   m_iBusy = 0;
-   m_iDataType = pSrc->m_iDataType;
+   m_busy = 0;
+	m_scheduledForDeletion = 0;
+   m_dataType = pSrc->m_dataType;
    m_iPollingInterval = pSrc->m_iPollingInterval;
    m_iRetentionTime = pSrc->m_iRetentionTime;
-   m_iDeltaCalculation = pSrc->m_iDeltaCalculation;
-   m_iSource = pSrc->m_iSource;
-   m_iStatus = pSrc->m_iStatus;
+   m_deltaCalculation = pSrc->m_deltaCalculation;
+   m_source = pSrc->m_source;
+   m_status = pSrc->m_status;
    m_tLastPoll = 0;
 	_tcscpy(m_szName, pSrc->m_szName);
 	_tcscpy(m_szDescription, pSrc->m_szDescription);
@@ -249,7 +251,7 @@ DCItem::DCItem(const DCItem *pSrc)
    m_bCacheLoaded = FALSE;
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
-   m_iAdvSchedule = pSrc->m_iAdvSchedule;
+   m_advSchedule = pSrc->m_advSchedule;
 	m_dwResourceId = pSrc->m_dwResourceId;
 	m_dwProxyNode = pSrc->m_dwProxyNode;
 	m_nBaseUnits = pSrc->m_nBaseUnits;
@@ -272,7 +274,7 @@ DCItem::DCItem(const DCItem *pSrc)
       m_ppThresholdList[i]->createId();
    }
 
-   m_iProcessAllThresholds = pSrc->m_iProcessAllThresholds;
+   m_processAllThresholds = pSrc->m_processAllThresholds;
 }
 
 
@@ -294,12 +296,12 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    DBGetField(hResult, iRow, 1, m_szName, MAX_ITEM_NAME);
    DecodeSQLString(m_szName);
-   m_iSource = (BYTE)DBGetFieldLong(hResult, iRow, 2);
-   m_iDataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
+   m_source = (BYTE)DBGetFieldLong(hResult, iRow, 2);
+   m_dataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_iPollingInterval = DBGetFieldLong(hResult, iRow, 4);
    m_iRetentionTime = DBGetFieldLong(hResult, iRow, 5);
-   m_iStatus = (BYTE)DBGetFieldLong(hResult, iRow, 6);
-   m_iDeltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
+   m_status = (BYTE)DBGetFieldLong(hResult, iRow, 6);
+   m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
    m_pszScript = NULL;
    m_pScript = NULL;
    pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
@@ -312,7 +314,8 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    DBGetField(hResult, iRow, 11, m_szInstance, MAX_DB_STRING);
    DecodeSQLString(m_szInstance);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
-   m_iBusy = 0;
+   m_busy = 0;
+	m_scheduledForDeletion = 0;
    m_tLastPoll = 0;
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
@@ -324,8 +327,8 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_bCacheLoaded = FALSE;
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
-   m_iAdvSchedule = (BYTE)DBGetFieldLong(hResult, iRow, 13);
-   m_iProcessAllThresholds = (BYTE)DBGetFieldLong(hResult, iRow, 14);
+   m_advSchedule = (BYTE)DBGetFieldLong(hResult, iRow, 13);
+   m_processAllThresholds = (BYTE)DBGetFieldLong(hResult, iRow, 14);
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 15);
 	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 16);
 	m_nBaseUnits = DBGetFieldLong(hResult, iRow, 17);
@@ -334,7 +337,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 20, NULL, 0);
 	DBGetField(hResult, iRow, 21, m_systemTag, MAX_DB_STRING);
 
-   if (m_iAdvSchedule)
+   if (m_advSchedule)
    {
       _sntprintf(szQuery, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_dwId);
       hTempResult = DBSelect(g_hCoreDB, szQuery);
@@ -395,14 +398,15 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
       strcpy(m_szDescription, m_szName);
    m_szInstance[0] = 0;
 	nx_strncpy(m_systemTag, CHECK_NULL_EX(systemTag), MAX_DB_STRING);
-   m_iSource = iSource;
-   m_iDataType = iDataType;
+   m_source = iSource;
+   m_dataType = iDataType;
    m_iPollingInterval = iPollingInterval;
    m_iRetentionTime = iRetentionTime;
-   m_iDeltaCalculation = DCM_ORIGINAL_VALUE;
-   m_iStatus = ITEM_STATUS_ACTIVE;
-   m_iBusy = 0;
-   m_iProcessAllThresholds = 0;
+   m_deltaCalculation = DCM_ORIGINAL_VALUE;
+   m_status = ITEM_STATUS_ACTIVE;
+   m_busy = 0;
+	m_scheduledForDeletion = 0;
+   m_processAllThresholds = 0;
    m_tLastPoll = 0;
    m_pszScript = NULL;
    m_pScript = NULL;
@@ -414,7 +418,7 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = FALSE;
-   m_iAdvSchedule = 0;
+   m_advSchedule = 0;
    m_dwNumSchedules = 0;
    m_ppScheduleList = NULL;
    m_tLastCheck = 0;
@@ -443,14 +447,15 @@ DCItem::DCItem(ConfigEntry *config, Template *owner)
    nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_szName), MAX_DB_STRING);
    nx_strncpy(m_szInstance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
 	nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
-	m_iSource = (BYTE)config->getSubEntryValueInt(_T("origin"));
-   m_iDataType = (BYTE)config->getSubEntryValueInt(_T("dataType"));
+	m_source = (BYTE)config->getSubEntryValueInt(_T("origin"));
+   m_dataType = (BYTE)config->getSubEntryValueInt(_T("dataType"));
    m_iPollingInterval = config->getSubEntryValueInt(_T("interval"));
    m_iRetentionTime = config->getSubEntryValueInt(_T("retention"));
-   m_iDeltaCalculation = (BYTE)config->getSubEntryValueInt(_T("delta"));
-   m_iStatus = ITEM_STATUS_ACTIVE;
-   m_iBusy = 0;
-   m_iProcessAllThresholds = (BYTE)config->getSubEntryValueInt(_T("allThresholds"));
+   m_deltaCalculation = (BYTE)config->getSubEntryValueInt(_T("delta"));
+   m_status = ITEM_STATUS_ACTIVE;
+   m_busy = 0;
+	m_scheduledForDeletion = 0;
+   m_processAllThresholds = (BYTE)config->getSubEntryValueInt(_T("allThresholds"));
    m_tLastPoll = 0;
    m_pNode = owner;
    m_hMutex = MutexCreateRecursive();
@@ -467,7 +472,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner)
 	m_pszCustomUnitName = NULL;
 	m_pszPerfTabSettings = NULL;
    
-	m_iAdvSchedule = (BYTE)config->getSubEntryValueInt(_T("advancedSchedule"));
+	m_advSchedule = (BYTE)config->getSubEntryValueInt(_T("advancedSchedule"));
 	ConfigEntry *schedules = config->findEntry(_T("schedules"));
 	if (schedules != NULL)
 		schedules = schedules->findEntry(_T("schedule"));
@@ -641,10 +646,10 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 								"custom_units_name,perftab_settings,system_tag) VALUES "
 						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,%d,%s,%s,%s)",
                         m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
-                        pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
-                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
+                        pszEscName, pszEscDescr, m_source, m_dataType, m_iPollingInterval,
+                        m_iRetentionTime, m_status, m_deltaCalculation,
                         pszEscScript, pszEscInstance, m_dwTemplateItemId,
-                        m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
+                        m_advSchedule, m_processAllThresholds, m_dwResourceId,
 							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
 								(const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag));
    else
@@ -656,10 +661,10 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 								"unit_multiplier=%d,custom_units_name=%s,perftab_settings=%s,"
 	                     "system_tag=%s WHERE item_id=%d",
                         (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
-                        pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
-                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscScript,
+                        pszEscName, m_source, m_dataType, m_iPollingInterval,
+                        m_iRetentionTime, m_status, m_deltaCalculation, pszEscScript,
                         pszEscDescr, pszEscInstance, m_dwTemplateItemId,
-                        m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
+                        m_advSchedule, m_processAllThresholds, m_dwResourceId,
 							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
 								(const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), m_dwId);
    bResult = DBQuery(hdb, pszQuery);
@@ -718,7 +723,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    // Save schedules
    sprintf(pszQuery, "DELETE FROM dci_schedules WHERE item_id=%d", m_dwId);
    DBQuery(hdb, pszQuery);
-   if (m_iAdvSchedule)
+   if (m_advSchedule)
    {
       TCHAR *pszEscSchedule;
       DWORD i;
@@ -759,7 +764,7 @@ void DCItem::checkThresholds(ItemValue &value)
                       m_szDescription, m_ppThresholdList[i]->getStringValue(), 
                       (const char *)checkValue, m_dwId, m_szInstance, 0);
 				m_ppThresholdList[i]->setLastEventTimestamp();
-            if (!m_iProcessAllThresholds)
+            if (!m_processAllThresholds)
                i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
@@ -782,7 +787,7 @@ void DCItem::checkThresholds(ItemValue &value)
 						m_ppThresholdList[i]->setLastEventTimestamp();
 					}
 
-               if (!m_iProcessAllThresholds)
+               if (!m_processAllThresholds)
 					{
 						i = m_dwNumThresholds;  // Threshold condition still true, stop processing
 					}
@@ -810,12 +815,12 @@ void DCItem::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SYSTEM_TAG, m_systemTag);
    pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
    pMsg->SetVariable(VID_RETENTION_TIME, (DWORD)m_iRetentionTime);
-   pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_iSource);
-   pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_iDataType);
-   pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_iStatus);
-   pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_iDeltaCalculation);
+   pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_source);
+   pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_dataType);
+   pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_status);
+   pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
    pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszScript));
-   pMsg->SetVariable(VID_ALL_THRESHOLDS, (WORD)m_iProcessAllThresholds);
+   pMsg->SetVariable(VID_ALL_THRESHOLDS, (WORD)m_processAllThresholds);
 	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
 	pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
@@ -827,8 +832,8 @@ void DCItem::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId += 10)
       m_ppThresholdList[i]->createMessage(pMsg, dwId);
-   pMsg->SetVariable(VID_ADV_SCHEDULE, (WORD)m_iAdvSchedule);
-   if (m_iAdvSchedule)
+   pMsg->SetVariable(VID_ADV_SCHEDULE, (WORD)m_advSchedule);
+   if (m_advSchedule)
    {
       pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
       for(i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
@@ -842,7 +847,7 @@ void DCItem::createMessage(CSCPMessage *pMsg)
 // Delete item and collected data from database
 //
 
-void DCItem::deleteFromDB(void)
+void DCItem::deleteFromDB()
 {
    char szQuery[256];
 
@@ -874,13 +879,13 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_INSTANCE, m_szInstance, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
-   m_iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
-   m_iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
+   m_source = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
+   m_dataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
    m_iRetentionTime = pMsg->GetVariableLong(VID_RETENTION_TIME);
    setStatus(pMsg->GetVariableShort(VID_DCI_STATUS), true);
-   m_iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
-   m_iProcessAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
+   m_deltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
+   m_processAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
 	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
 	m_dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
    pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
@@ -896,8 +901,8 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    // Update schedules
    for(i = 0; i < m_dwNumSchedules; i++)
       free(m_ppScheduleList[i]);
-   m_iAdvSchedule = (BYTE)pMsg->GetVariableShort(VID_ADV_SCHEDULE);
-   if (m_iAdvSchedule)
+   m_advSchedule = (BYTE)pMsg->GetVariableShort(VID_ADV_SCHEDULE);
+   if (m_advSchedule)
    {
       m_dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
       m_ppScheduleList = (TCHAR **)realloc(m_ppScheduleList, sizeof(TCHAR *) * m_dwNumSchedules);
@@ -1068,7 +1073,7 @@ void DCItem::processNewError()
          case THRESHOLD_REACHED:
             PostEvent(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssis", m_szName,
                       m_szDescription, _T(""), _T(""), m_dwId, m_szInstance);
-            if (!m_iProcessAllThresholds)
+            if (!m_processAllThresholds)
                i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
@@ -1077,7 +1082,7 @@ void DCItem::processNewError()
             break;
          case NO_ACTION:
             if ((m_ppThresholdList[i]->isReached()) &&
-                (!m_iProcessAllThresholds))
+                (!m_processAllThresholds))
                i = m_dwNumThresholds;  // Threshold condition still true, stop processing
             break;
       }
@@ -1093,10 +1098,10 @@ void DCItem::processNewError()
 
 void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 {
-   switch(m_iDeltaCalculation)
+   switch(m_deltaCalculation)
    {
       case DCM_SIMPLE:
-         switch(m_iDataType)
+         switch(m_dataType)
          {
             case DCI_DT_INT:
                value = (LONG)value - (LONG)m_prevRawValue;
@@ -1128,7 +1133,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
          if (nElapsedTime == 0)
             nElapsedTime++;
 
-         switch(m_iDataType)
+         switch(m_dataType)
          {
             case DCI_DT_INT:
                value = ((LONG)value - (LONG)m_prevRawValue) / (LONG)nElapsedTime;
@@ -1174,7 +1179,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
          pValue = m_pScript->getResult();
          if (pValue != NULL)
          {
-            switch(m_iDataType)
+            switch(m_dataType)
             {
                case DCI_DT_INT:
                   value = pValue->getValueAsInt32();
@@ -1394,10 +1399,10 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
    pMsg->SetVariable(dwId++, m_dwId);
    pMsg->SetVariable(dwId++, m_szName);
    pMsg->SetVariable(dwId++, m_szDescription);
-   pMsg->SetVariable(dwId++, (WORD)m_iSource);
+   pMsg->SetVariable(dwId++, (WORD)m_source);
    if (m_dwCacheSize > 0)
    {
-      pMsg->SetVariable(dwId++, (WORD)m_iDataType);
+      pMsg->SetVariable(dwId++, (WORD)m_dataType);
       pMsg->SetVariable(dwId++, (TCHAR *)m_ppValueCache[0]->String());
       pMsg->SetVariable(dwId++, m_ppValueCache[0]->GetTimeStamp());
    }
@@ -1407,7 +1412,7 @@ void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
       pMsg->SetVariable(dwId++, _T(""));
       pMsg->SetVariable(dwId++, (DWORD)0);
    }
-   pMsg->SetVariable(dwId++, (WORD)m_iStatus);
+   pMsg->SetVariable(dwId++, (WORD)m_status);
 	unlock();
 }
 
@@ -1431,7 +1436,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          {
             ItemValue result;
 
-            CalculateItemValueDiff(result, m_iDataType, *m_ppValueCache[0], *m_ppValueCache[1]);
+            CalculateItemValueDiff(result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
             pValue = new NXSL_Value((TCHAR *)result.String());
          }
          else
@@ -1444,7 +1449,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          {
             ItemValue result;
 
-            CalculateItemValueAverage(result, m_iDataType,
+            CalculateItemValueAverage(result, m_dataType,
                                       min(m_dwCacheSize, (DWORD)nPolls), m_ppValueCache);
             pValue = new NXSL_Value((TCHAR *)result.String());
          }
@@ -1458,7 +1463,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          {
             ItemValue result;
 
-            CalculateItemValueMD(result, m_iDataType,
+            CalculateItemValueMD(result, m_dataType,
                                  min(m_dwCacheSize, (DWORD)nPolls), m_ppValueCache);
             pValue = new NXSL_Value((TCHAR *)result.String());
          }
@@ -1520,27 +1525,18 @@ BOOL DCItem::deleteAllData()
 // Prepare item for deletion
 //
 
-void DCItem::prepareForDeletion()
+bool DCItem::prepareForDeletion()
 {
 	DbgPrintf(9, _T("DCItem::prepareForDeletion for DCI %d"), m_dwId);
 
 	lock();
-
-   m_iStatus = ITEM_STATUS_DISABLED;   // Prevent future polls
-
-   // Wait until current poll ends, if any
-   // while() is not a very good solution, and probably need to be
-   // rewrited using conditions
-   while(m_iBusy)
-   {
-      unlock();
-		DbgPrintf(9, _T("DCItem::prepareForDeletion: DCI %d busy"), m_dwId);
-      ThreadSleepMs(100);
-      lock();
-   }
-
+   m_status = ITEM_STATUS_DISABLED;   // Prevent future polls
+	m_scheduledForDeletion = 1;
+	bool canDelete = (m_busy ? false : true);
    unlock();
 	DbgPrintf(9, _T("DCItem::prepareForDeletion: completed for DCI %d"), m_dwId);
+
+	return canDelete;
 }
 
 
@@ -1671,15 +1667,15 @@ BOOL DCItem::matchClusterResource()
 
 void DCItem::setStatus(int status, bool generateEvent)
 {
-	if (generateEvent && (m_pNode != NULL) && (m_iStatus != (BYTE)status))
+	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status))
 	{
 		static DWORD eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
 		static const TCHAR *originName[5] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push") };
 
 		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription,
-		          m_iSource, originName[m_iSource]);
+		          m_source, originName[m_source]);
 	}
-	m_iStatus = (BYTE)status;
+	m_status = (BYTE)status;
 }
 
 
@@ -1687,30 +1683,30 @@ void DCItem::setStatus(int status, bool generateEvent)
 // Check if DCI have to be polled
 //
 
-BOOL DCItem::isReadyForPolling(time_t currTime)
+bool DCItem::isReadyForPolling(time_t currTime)
 {
-   BOOL bResult;
+   bool result;
 
    lock();
-   if ((m_iStatus != ITEM_STATUS_DISABLED) && (!m_iBusy) && 
-       m_bCacheLoaded && (m_iSource != DS_PUSH_AGENT) &&
+   if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
+       m_bCacheLoaded && (m_source != DS_PUSH_AGENT) &&
 		 (matchClusterResource()))
    {
-      if (m_iAdvSchedule)
+      if (m_advSchedule)
       {
          DWORD i;
          struct tm tmCurrLocal, tmLastLocal;
 
          memcpy(&tmCurrLocal, localtime(&currTime), sizeof(struct tm));
          memcpy(&tmLastLocal, localtime(&m_tLastCheck), sizeof(struct tm));
-         for(i = 0, bResult = FALSE; i < m_dwNumSchedules; i++)
+         for(i = 0, result = false; i < m_dwNumSchedules; i++)
          {
             if (MatchSchedule(&tmCurrLocal, m_ppScheduleList[i]))
             {
                if ((currTime - m_tLastCheck >= 60) ||
                    (tmCurrLocal.tm_min != tmLastLocal.tm_min))
                {
-                  bResult = TRUE;
+                  result = true;
                   break;
                }
             }
@@ -1719,18 +1715,18 @@ BOOL DCItem::isReadyForPolling(time_t currTime)
       }
       else
       {
-			if (m_iStatus == ITEM_STATUS_NOT_SUPPORTED)
-		      bResult = (m_tLastPoll + m_iPollingInterval * 10 <= currTime);
+			if (m_status == ITEM_STATUS_NOT_SUPPORTED)
+		      result = (m_tLastPoll + m_iPollingInterval * 10 <= currTime);
 			else
-		      bResult = (m_tLastPoll + m_iPollingInterval <= currTime);
+		      result = (m_tLastPoll + m_iPollingInterval <= currTime);
       }
    }
    else
    {
-      bResult = FALSE;
+      result = false;
    }
    unlock();
-   return bResult;
+   return result;
 }
 
 
@@ -1744,16 +1740,16 @@ void DCItem::updateFromTemplate(DCItem *pItem)
 
    lock();
 
-   m_iDataType = pItem->m_iDataType;
+   m_dataType = pItem->m_dataType;
    m_iPollingInterval = pItem->m_iPollingInterval;
    m_iRetentionTime = pItem->m_iRetentionTime;
-   m_iDeltaCalculation = pItem->m_iDeltaCalculation;
-   m_iSource = pItem->m_iSource;
-   setStatus(pItem->m_iStatus, true);
-   m_iProcessAllThresholds = pItem->m_iProcessAllThresholds;
+   m_deltaCalculation = pItem->m_deltaCalculation;
+   m_source = pItem->m_source;
+   setStatus(pItem->m_status, true);
+   m_processAllThresholds = pItem->m_processAllThresholds;
 	m_dwProxyNode = pItem->m_dwProxyNode;
    setTransformationScript(pItem->m_pszScript);
-   m_iAdvSchedule = pItem->m_iAdvSchedule;
+   m_advSchedule = pItem->m_advSchedule;
 
 	safe_free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = (pItem->m_pszPerfTabSettings != NULL) ? _tcsdup(pItem->m_pszPerfTabSettings) : NULL;
@@ -1886,11 +1882,11 @@ void DCItem::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<allThresholds>%d</allThresholds>\n"),
 								  m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
-                          m_iDataType, m_iSource, m_iPollingInterval, m_iRetentionTime,
+                          m_dataType, m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_szInstance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  m_iDeltaCalculation, m_iAdvSchedule,
-                          m_iProcessAllThresholds);
+								  m_deltaCalculation, m_advSchedule,
+                          m_processAllThresholds);
 
 	if (m_pszScript != NULL)
 	{
@@ -1899,7 +1895,7 @@ void DCItem::createNXMPRecord(String &str)
 		str += _T("</transformation>\n");
 	}
 
-   if (m_iAdvSchedule)
+   if (m_advSchedule)
    {
       str += _T("\t\t\t\t\t<schedules>\n");
       for(i = 0; i < m_dwNumSchedules; i++)
@@ -1925,10 +1921,10 @@ void DCItem::createNXMPRecord(String &str)
 
 void DCItem::systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType)
 {
-   m_iDataType = nDataType;
+   m_dataType = nDataType;
    m_iPollingInterval = nInterval;
    m_iRetentionTime = nRetention;
-   m_iSource = nOrigin;
+   m_source = nOrigin;
 	nx_strncpy(m_szName, pszName, MAX_ITEM_NAME);
 }
 

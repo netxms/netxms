@@ -8116,7 +8116,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          {
 				if (_tcslen(ppValueList[i]) >= MAX_DCI_STRING_VALUE)
 					ppValueList[i][MAX_DCI_STRING_VALUE - 1] = 0;
-            ppItemList[i]->processNewValue(t, ppValueList[i]);
+				ppNodeList[i]->processNewDciValue(ppItemList[i], t, ppValueList[i]);
 				ppItemList[i]->setLastPollTime(t);
          }
          msg.SetVariable(VID_RCC, RCC_SUCCESS);

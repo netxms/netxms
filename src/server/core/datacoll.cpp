@@ -68,7 +68,17 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    {
       pItem = (DCItem *)g_pItemQueue->GetOrBlock();
 		pNode = (Node *)pItem->getRelatedNode();
-      DbgPrintf(8, "DataCollector(): processing DCI %d \"%s\" node=%d proxy=%d",
+
+		if (pItem->isScheduledForDeletion())
+		{
+	      DbgPrintf(7, _T("DataCollector(): about to destroy DCI %d \"%s\" node=%d"),
+			          pItem->getId(), pItem->getName(), (pNode != NULL) ? pNode->Id() : -1);
+			pItem->deleteFromDB();
+			delete pItem;
+			continue;
+		}
+
+      DbgPrintf(8, _T("DataCollector(): processing DCI %d \"%s\" node=%d proxy=%d"),
 		          pItem->getId(), pItem->getName(), (pNode != NULL) ? pNode->Id() : -1, pItem->getProxyNode());
 		if (pItem->getProxyNode() != 0)
 		{

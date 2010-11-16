@@ -457,9 +457,17 @@ bool Template::deleteItem(DWORD dwItemId, bool needLock)
       {
          // Destroy item
 			DbgPrintf(7, _T("Template::DeleteItem: deleting DCI %d from object %d"), m_ppItems[i]->getId(), m_dwId);
-         m_ppItems[i]->prepareForDeletion();
-         m_ppItems[i]->deleteFromDB();
-         delete m_ppItems[i];
+         if (m_ppItems[i]->prepareForDeletion())
+			{
+				// Physically delete DCI only if it is not busy
+				// Busy DCIs will be deleted by data collector
+				m_ppItems[i]->deleteFromDB();
+				delete m_ppItems[i];
+			}
+			else
+			{
+				DbgPrintf(7, _T("Template::DeleteItem: destruction of DCI %d delayed"), m_ppItems[i]->getId());
+			}
          m_dwNumItems--;
          memmove(&m_ppItems[i], &m_ppItems[i + 1], sizeof(DCItem *) * (m_dwNumItems - i));
          success = true;

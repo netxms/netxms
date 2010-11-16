@@ -96,10 +96,12 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 	{
 		DbgPrintf(5, _T("%s: agent data push: %s=%s"), node->Name(), name, value);
 		DCItem *dci = node->getItemByName(name);
-		if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT))
+		if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		{
 			DbgPrintf(5, _T("%s: agent data push: found DCI %d"), node->Name(), dci->getId());
-			dci->processNewValue(time(NULL), value);
+			time_t t = time(NULL);
+			node->processNewDciValue(dci, t, value);
+			dci->setLastPollTime(t);
 		}
 		else
 		{
