@@ -235,7 +235,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
 
 static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
 {
-   Node *pNode;
+   Node *pNode = NULL;
    DWORD dwIpAddr;
 
    // Determine IP address of a source
