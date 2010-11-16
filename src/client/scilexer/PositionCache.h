@@ -51,6 +51,7 @@ public:
 	// Wrapped line support
 	int widthLine;
 	int lines;
+	int wrapIndent; // In pixels
 
 	LineLayout(int maxLineLength_);
 	virtual ~LineLayout();
@@ -150,7 +151,7 @@ public:
 	~PositionCache();
 	void Clear();
 	void SetSize(size_t size_);
-	int GetSize() { return (int)size; }
+	int GetSize() { return size; }
 	void MeasureWidths(Surface *surface, ViewStyle &vstyle, unsigned int styleNumber,
 		const char *s, unsigned int len, int *positions);
 };

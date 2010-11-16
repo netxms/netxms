@@ -210,7 +210,7 @@ void ScintillaBase::AutoCompleteStart(int lenEntered, const char *list) {
 	if (ac.chooseSingle && (listType == 0)) {
 		if (list && !strchr(list, ac.GetSeparator())) {
 			const char *typeSep = strchr(list, ac.GetTypesep());
-			int lenInsert = (typeSep) ? (int)(typeSep-list) : (int)strlen(list);
+			size_t lenInsert = (typeSep) ? (typeSep-list) : strlen(list);
 			if (ac.ignoreCase) {
 				SetEmptySelection(currentPos - lenEntered);
 				pdoc->DeleteChars(currentPos, lenEntered);
@@ -329,6 +329,11 @@ void ScintillaBase::AutoCompleteCharacterDeleted() {
 	} else {
 		AutoCompleteMoveToCurrentWord();
 	}
+	SCNotification scn = {0};
+	scn.nmhdr.code = SCN_AUTOCCHARDELETED;
+	scn.wParam = 0;
+	scn.listType = 0;
+	NotifyParent(scn);
 }
 
 void ScintillaBase::AutoCompleteCompleted() {
@@ -381,6 +386,8 @@ void ScintillaBase::AutoCompleteCompleted() {
 }
 
 int ScintillaBase::AutoCompleteGetCurrent() {
+	if (!ac.Active())
+		return -1;
 	return ac.lb->GetSelection();
 }
 
@@ -700,7 +707,7 @@ sptr_t ScintillaBase::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lPara
 
 	case SCI_GETPROPERTY: {
 			SString val = props.Get(reinterpret_cast<const char *>(wParam));
-			const int n = (int)val.length();
+			const int n = val.length();
 			if (lParam != 0) {
 				char *ptr = reinterpret_cast<char *>(lParam);
 				memcpy(ptr, val.c_str(), n);
@@ -711,7 +718,7 @@ sptr_t ScintillaBase::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lPara
 
 	case SCI_GETPROPERTYEXPANDED: {
 			SString val = props.GetExpanded(reinterpret_cast<const char *>(wParam));
-			const int n = (int)val.length();
+			const int n = val.length();
 			if (lParam != 0) {
 				char *ptr = reinterpret_cast<char *>(lParam);
 				memcpy(ptr, val.c_str(), n);

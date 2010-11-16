@@ -70,7 +70,10 @@ src/client/nxevent/nxevent.vcproj -text
 src/client/nxlexer/nxlexer.vcproj -text
 src/client/nxpush/nxpush.vcproj -text
 src/client/nxsms/nxsms.vcproj -text
+src/client/scilexer/LexHTML.cpp -text
 src/client/scilexer/Margin.cur -text
+src/client/scilexer/PerLine.cpp -text
+src/client/scilexer/PerLine.h -text
 src/client/scilexer/scilexer.vcproj -text
 src/client/windows/nxav/nxav.vcproj -text
 src/client/windows/nxav/res/ack.png -text

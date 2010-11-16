@@ -45,7 +45,7 @@
 				Optimization="0"
 				PreprocessorDefinitions="SCILEXER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;SCI_LEXER"
 				MinimalRebuild="true"
-				ExceptionHandling="0"
+				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -124,7 +124,7 @@
 				Optimization="0"
 				PreprocessorDefinitions="SCILEXER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;SCI_LEXER"
 				MinimalRebuild="true"
-				ExceptionHandling="0"
+				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -201,7 +201,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="SCILEXER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;NDEBUG;SCI_LEXER"
-				ExceptionHandling="0"
+				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -280,7 +280,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="SCILEXER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;NDEBUG;SCI_LEXER"
-				ExceptionHandling="0"
+				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -402,11 +402,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\LexHTML.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\LexOthers.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\LineMarker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PerLine.cpp"
 				>
 			</File>
 			<File
@@ -533,6 +541,10 @@
 			</File>
 			<File
 				RelativePath=".\Partitioning.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PerLine.h"
 				>
 			</File>
 			<File
