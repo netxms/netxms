@@ -103,6 +103,16 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 Script:
 	Module
+{
+	char szErrorText[256];
+
+	// Add implicit main() function
+	if (!pScript->addFunction("$main", 0, szErrorText))
+	{
+		pCompiler->error(szErrorText);
+		pLexer->setErrorState();
+	}
+}
 |	Expression
 {
 	char szErrorText[256];
@@ -111,7 +121,7 @@ Script:
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_RETURN));
 
 	// Add implicit main() function
-	if (!pScript->addFunction("main", 0, szErrorText))
+	if (!pScript->addFunction("$main", 0, szErrorText))
 	{
 		pCompiler->error(szErrorText);
 		pLexer->setErrorState();
@@ -126,6 +136,7 @@ Module:
 
 ModuleComponent:
 	Function
+|	StatementOrBlock
 |	UseStatement
 ;
 
@@ -146,6 +157,8 @@ Function:
 	{
 		char szErrorText[256];
 
+		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+		
 		if (!pScript->addFunction($2, INVALID_ADDRESS, szErrorText))
 		{
 			pCompiler->error(szErrorText);
@@ -157,6 +170,7 @@ Function:
 	ParameterDeclaration Block
 	{
 		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_RET_NULL));
+		pScript->resolveLastJump(OPCODE_JMP);
 	}
 ;
 

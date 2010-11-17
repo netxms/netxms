@@ -453,6 +453,15 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
       for(i = 0; i < m_dwNumFunctions; i++)
          if (!strcmp(m_pFunctionList[i].m_szName, "main"))
             break;
+
+		// No explicit main(), search for implicit
+      if (i == m_dwNumFunctions)
+		{
+			for(i = 0; i < m_dwNumFunctions; i++)
+				if (!strcmp(m_pFunctionList[i].m_szName, "$main"))
+					break;
+		}
+
       if (i < m_dwNumFunctions)
       {
          m_dwCurrPos = m_pFunctionList[i].m_dwAddr;
@@ -1534,6 +1543,16 @@ DWORD NXSL_Program::getFinalJumpDestination(DWORD dwAddr)
 void NXSL_Program::optimize()
 {
 	DWORD i, j;
+
+	// Convert jumps to address beyond code end to NRETs
+	for(i = 0; i < m_dwCodeSize; i++)
+	{
+		if ((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) &&
+		    (m_ppInstructionSet[i]->m_operand.m_dwAddr >= m_dwCodeSize))
+		{
+			m_ppInstructionSet[i]->m_nOpCode = OPCODE_RET_NULL;
+		}
+	}
 
 	// Convert jump chains to single jump
 	for(i = 0; i < m_dwCodeSize; i++)
