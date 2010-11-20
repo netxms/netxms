@@ -54,7 +54,7 @@ static const char *m_szCommandMnemonic[] =
    "BITNOT", "CAST", "AGET", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",
    "IMATCH", "CASE", "ARRAY", "EGET",
-	"ESET", "ASET"
+	"ESET", "ASET", "NAME"
 };
 
 
@@ -349,6 +349,7 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_DECP:
          case OPCODE_GET_ATTRIBUTE:
          case OPCODE_SET_ATTRIBUTE:
+			case OPCODE_NAME:
             fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
@@ -740,6 +741,17 @@ void NXSL_Program::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
+		case OPCODE_NAME:
+         pValue = (NXSL_Value *)m_pDataStack->peek();
+         if (pValue != NULL)
+         {
+				pValue->setName(cp->m_operand.m_pszString);
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+			break;
       case OPCODE_POP:
          for(i = 0; i < cp->m_nStackItems; i++)
             delete (NXSL_Value *)m_pDataStack->pop();
@@ -1433,7 +1445,7 @@ void NXSL_Program::callFunction(int nArgCount)
 {
    int i;
    NXSL_Value *pValue;
-   char szBuffer[32];
+   char szBuffer[256];
 
    if (m_dwSubLevel < CONTROL_STACK_LIMIT)
    {
@@ -1451,6 +1463,13 @@ void NXSL_Program::callFunction(int nArgCount)
          {
             sprintf(szBuffer, "$%d", i);
             m_pLocals->create(szBuffer, pValue);
+				if (pValue->getName() != NULL)
+				{
+					// Named parameter
+					_sntprintf(szBuffer, 255, _T("$%s"), pValue->getName());
+					szBuffer[255] = 0;
+	            m_pLocals->create(szBuffer, new NXSL_Value(pValue));
+				}
          }
          else
          {

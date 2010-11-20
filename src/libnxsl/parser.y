@@ -661,8 +661,16 @@ FunctionCall:
 ;
 
 ParameterList:
-	Expression ',' ParameterList { $$ = $3 + 1; }
-|	Expression { $$ = 1; }
+	Parameter ',' ParameterList { $$ = $3 + 1; }
+|	Parameter { $$ = 1; }
+;
+
+Parameter:
+	Expression
+|	T_IDENTIFIER ':' Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NAME, $1));
+}
 ;
 
 FunctionName:

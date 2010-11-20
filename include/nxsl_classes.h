@@ -159,7 +159,8 @@ class LIBNXSL_EXPORTABLE NXSL_Value
 {
 protected:
    DWORD m_dwStrLen;
-   char *m_pszValStr;
+   TCHAR *m_pszValStr;
+	TCHAR *m_name;
    BYTE m_nDataType;
    BYTE m_bStringIsValid;
    union
@@ -198,6 +199,9 @@ public:
    ~NXSL_Value();
 
    void set(LONG nValue);
+
+	void setName(const TCHAR *name) { safe_free(m_name); m_name = _tcsdup(name); }
+	const TCHAR *getName() { return m_name; }
 
    bool convert(int nDataType);
    int getDataType() { return m_nDataType; }

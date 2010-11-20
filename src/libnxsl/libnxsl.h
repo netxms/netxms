@@ -105,6 +105,7 @@ typedef void *yyscan_t;
 #define OPCODE_GET_ELEMENT    49
 #define OPCODE_SET_ELEMENT    50
 #define OPCODE_SET_ATTRIBUTE  51
+#define OPCODE_NAME           52
 
 
 //

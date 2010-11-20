@@ -91,6 +91,7 @@ NXSL_Value::NXSL_Value()
 {
    m_nDataType = NXSL_DT_NULL;
    m_pszValStr = NULL;
+	m_name = NULL;
    m_bStringIsValid = FALSE;
 }
 
@@ -122,11 +123,13 @@ NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
       {
          m_pszValStr = NULL;
       }
+		m_name = (pValue->m_name != NULL) ? _tcsdup(pValue->m_name) : NULL;
    }
    else
    {
       m_nDataType = NXSL_DT_NULL;
       m_pszValStr = NULL;
+		m_name = NULL;
    }
 }
 
@@ -136,6 +139,7 @@ NXSL_Value::NXSL_Value(NXSL_Object *pObject)
    m_value.pObject = pObject;
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
+	m_name = NULL;
 }
 
 NXSL_Value::NXSL_Value(NXSL_Array *pArray)
@@ -145,6 +149,7 @@ NXSL_Value::NXSL_Value(NXSL_Array *pArray)
 	pArray->incRefCount();
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
+	m_name = NULL;
 }
 
 NXSL_Value::NXSL_Value(LONG nValue)
@@ -153,6 +158,7 @@ NXSL_Value::NXSL_Value(LONG nValue)
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
    m_value.nInt32 = nValue;
+	m_name = NULL;
 }
 
 NXSL_Value::NXSL_Value(DWORD uValue)
@@ -161,6 +167,7 @@ NXSL_Value::NXSL_Value(DWORD uValue)
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
    m_value.uInt32 = uValue;
+	m_name = NULL;
 }
 
 NXSL_Value::NXSL_Value(INT64 nValue)
@@ -169,6 +176,7 @@ NXSL_Value::NXSL_Value(INT64 nValue)
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
    m_value.nInt64 = nValue;
+	m_name = NULL;
 }
 
 NXSL_Value::NXSL_Value(QWORD uValue)
@@ -177,6 +185,7 @@ NXSL_Value::NXSL_Value(QWORD uValue)
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
    m_value.uInt64 = uValue;
+	m_name = NULL;
 }
 
 NXSL_Value::NXSL_Value(double dValue)
@@ -185,6 +194,7 @@ NXSL_Value::NXSL_Value(double dValue)
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
    m_value.dReal = dValue;
+	m_name = NULL;
 }
 
 NXSL_Value::NXSL_Value(const TCHAR *pszValue)
@@ -202,6 +212,7 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 	}
    m_bStringIsValid = TRUE;
    updateNumber();
+	m_name = NULL;
 }
 
 NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
@@ -220,6 +231,7 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 	}
    m_bStringIsValid = TRUE;
    updateNumber();
+	m_name = NULL;
 }
 
 
@@ -229,6 +241,7 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 
 NXSL_Value::~NXSL_Value()
 {
+	safe_free(m_name);
    safe_free(m_pszValStr);
    if (m_nDataType == NXSL_DT_OBJECT)
    {
