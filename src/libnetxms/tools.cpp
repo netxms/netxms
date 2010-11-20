@@ -768,6 +768,22 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 				dwElapsed = GetCurrentTimeMs() - qwStartTime;
 				timeout -= min(timeout, dwElapsed);
 			} while(timeout > 0);
+
+			if (rc > 0)
+			{
+            if (fds.revents == POLLOUT)
+            {
+               rc = 0;
+            }
+            else
+            {
+               rc = -1;
+            }
+			}
+			else if (rc == 0)	// timeout, return error
+			{
+				rc = -1;
+			}
 #else
 			struct timeval tv;
 			fd_set wrfs, exfs;
@@ -795,7 +811,6 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 				timeout -= min(timeout, dwElapsed);
 			} while(timeout > 0);
 #endif
-#endif
 			if (rc > 0)
 			{
 				rc = (FD_ISSET(s, &exfs) ? -1 : 0);
@@ -804,6 +819,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 			{
 				rc = -1;
 			}
+#endif
 		}
 	}
 	return rc;
