@@ -23,6 +23,8 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -38,6 +40,7 @@ import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
@@ -49,6 +52,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
@@ -78,7 +82,11 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	public static final String ID = "org.netxms.ui.eclipse.charts.views.HistoryGraph";
 	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
 	
-	private static final int[] presetRanges = { 10, 30, 60, 120, 240, 1440, 10080, 44640, 525600 };
+	private static final int[] presetUnits = { GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
+		GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
+		GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY
+	};
+	private static final int[] presetRanges = { 10, 30, 1, 2, 4, 1, 7, 31, 365 };
 	private static final String[] presetNames = { "10 minutes", "30 minutes", "hour", "2 hours", "4 hours",
 	                                              "day", "week", "month", "year" };
 
@@ -94,15 +102,9 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	private LineChart chart;
 	private boolean updateInProgress = false;
 	private Runnable refreshTimer;
+	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	
 	private GraphSettings settings = new GraphSettings();
-	private Date timeFrom;
-	private Date timeTo;
-	private long timeRange = 3600000;	// 1 hour
-	private boolean autoRefreshEnabled = true;
-	private boolean useLogScale = false;
-	private int autoRefreshInterval = 30000;	// 30 seconds
-	private boolean showLegend = true;
 	private int legendPosition = DataChart.POSITION_BOTTOM;
 	
 	private RefreshAction actionRefresh;
@@ -148,14 +150,14 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 					return;
 				
 				updateChart();
-				display.timerExec(autoRefreshInterval, this);
+				display.timerExec(settings.getAutoRefreshInterval(), this);
 			}
 		};
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		timeFrom = new Date(System.currentTimeMillis() - timeRange);
-		timeTo = new Date(System.currentTimeMillis());
+		settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
+		settings.setTimeTo(new Date(System.currentTimeMillis()));
 		
 		// Extract DCI ids from view id
 		// (first field will be unique view id, so we skip it)
@@ -213,11 +215,11 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		
 		if (memento != null)
 		{
-			autoRefreshEnabled = safeCast(memento.getBoolean(KEY_AUTO_REFRESH), autoRefreshEnabled);
-			autoRefreshInterval = safeCast(memento.getInteger(KEY_REFRESH_INTERVAL), autoRefreshInterval);
-			showLegend = safeCast(memento.getBoolean(KEY_SHOW_LEGEND), showLegend);
+			settings.setAutoRefresh(safeCast(memento.getBoolean(KEY_AUTO_REFRESH), settings.isAutoRefresh()));
+			settings.setAutoRefreshInterval(safeCast(memento.getInteger(KEY_REFRESH_INTERVAL), settings.getAutoRefreshInterval()));
+			settings.setLegendVisible(safeCast(memento.getBoolean(KEY_SHOW_LEGEND), settings.isLegendVisible()));
 			legendPosition = safeCast(memento.getInteger(KEY_LEGEND_POSITION), legendPosition);
-			useLogScale = safeCast(memento.getBoolean(KEY_LOG_SCALE), useLogScale);
+			settings.setLogScale(safeCast(memento.getBoolean(KEY_LOG_SCALE), settings.isLogScale()));
 		}
 	}
 
@@ -237,11 +239,11 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	@Override
 	public void saveState(IMemento memento)
 	{
-		memento.putBoolean(KEY_AUTO_REFRESH, autoRefreshEnabled);
-		memento.putInteger(KEY_REFRESH_INTERVAL, autoRefreshInterval);
-		memento.putBoolean(KEY_SHOW_LEGEND, showLegend);
+		memento.putBoolean(KEY_AUTO_REFRESH, settings.isAutoRefresh());
+		memento.putInteger(KEY_REFRESH_INTERVAL, settings.getAutoRefreshInterval());
+		memento.putBoolean(KEY_SHOW_LEGEND, settings.isLegendVisible());
 		memento.putInteger(KEY_LEGEND_POSITION, legendPosition);
-		memento.putBoolean(KEY_LOG_SCALE, useLogScale);
+		memento.putBoolean(KEY_LOG_SCALE, settings.isLogScale());
 	}
 	
 	/**
@@ -278,10 +280,8 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		getDataFromServer();
 
 		// Automatic refresh
-		autoRefreshInterval = settings.getAutoRefreshInterval();
-		autoRefreshEnabled = settings.isAutoRefresh();
-		actionAutoRefresh.setChecked(autoRefreshEnabled);
-		HistoryGraph.this.getSite().getShell().getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
+		actionAutoRefresh.setChecked(settings.isAutoRefresh());
+		HistoryGraph.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
 	}
 
 	/* (non-Javadoc)
@@ -293,8 +293,8 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		chart = new LineChart(parent, SWT.NONE);
 		
 		setGridVisible(true);
-		chart.setLogScaleEnabled(useLogScale);
-		chart.setLegendVisible(showLegend);
+		chart.setLogScaleEnabled(settings.isLogScale());
+		chart.setLegendVisible(settings.isLegendVisible());
 		chart.setLegendPosition(legendPosition);
 		
 		createActions();
@@ -302,8 +302,8 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		createPopupMenu();
 		
 		getDataFromServer();
-		if (autoRefreshEnabled)
-			getSite().getShell().getDisplay().timerExec(autoRefreshInterval, refreshTimer);
+		if (settings.isAutoRefresh())
+			getSite().getShell().getDisplay().timerExec(settings.getAutoRefreshInterval(), refreshTimer);
 	}
 
 	/**
@@ -350,7 +350,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 					for(int i = 0; i < items.size(); i++)
 					{
 						GraphItem item = items.get(i);
-						data[i] = session.getCollectedData(item.getNodeId(), item.getDciId(), timeFrom, timeTo, 0);
+						data[i] = session.getCollectedData(item.getNodeId(), item.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
 					}
 					status = Status.OK_STATUS;
 	
@@ -358,7 +358,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							chart.setTimeRange(timeFrom, timeTo);
+							chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
 							setChartData(data);
 							updateInProgress = false;
 							return Status.OK_STATUS;
@@ -418,26 +418,26 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 			@Override
 			public void run()
 			{
-				autoRefreshEnabled = !autoRefreshEnabled;
-				setChecked(autoRefreshEnabled);
-				HistoryGraph.this.getSite().getShell().getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
+				settings.setAutoRefresh(!settings.isAutoRefresh());
+				setChecked(settings.isAutoRefresh());
+				HistoryGraph.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
 			}
 		};
 		actionAutoRefresh.setText("Refresh &automatically");
-		actionAutoRefresh.setChecked(autoRefreshEnabled);
+		actionAutoRefresh.setChecked(settings.isAutoRefresh());
 		
 		actionLogScale = new Action() {
 			@Override
 			public void run()
 			{
-				useLogScale = !useLogScale;
-				setChecked(useLogScale);
-				chart.setLogScaleEnabled(useLogScale);
+				settings.setLogScale(!settings.isLogScale());
+				setChecked(settings.isLogScale());
+				chart.setLogScaleEnabled(settings.isLogScale());
 				chart.redraw();
 			}
 		};
 		actionLogScale.setText("&Logarithmic scale");
-		actionLogScale.setChecked(useLogScale);
+		actionLogScale.setChecked(settings.isLogScale());
 		
 		actionZoomIn = new Action() {
 			/* (non-Javadoc)
@@ -522,12 +522,12 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 			@Override
 			public void run()
 			{
-				showLegend = !showLegend;
-				setChecked(showLegend);
-				chart.setLegendVisible(showLegend);
+				settings.setLegendVisible(!settings.isLegendVisible());
+				setChecked(settings.isLegendVisible());
+				chart.setLegendVisible(settings.isLegendVisible());
 			}
 		};
-		actionShowLegend.setChecked(showLegend);
+		actionShowLegend.setChecked(settings.isLegendVisible());
 		
 		actionLegendLeft = new Action("Place on &left", Action.AS_RADIO_BUTTON) {
 			@Override
@@ -580,7 +580,8 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 				@Override
 				public void run()
 				{
-					setTimeRange((long)presetRanges[presetIndex] * 60000L);
+					settings.setTimeUnit(presetUnits[presetIndex]);
+					settings.setTimeFrame(presetRanges[presetIndex]);
 				}
 			};
 			presetActions[i].setText("Last " + presetNames[i]);
@@ -664,7 +665,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 		manager.add(new Separator());
-		manager.add(actionRefresh);
+		manager.add(new PropertyDialogAction(getSite(), this));
 	}
 
 	/**
@@ -728,21 +729,11 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 			return;
 		
 		updateInProgress = true;
-		timeFrom = new Date(System.currentTimeMillis() - timeRange);
-		timeTo = new Date(System.currentTimeMillis());
+		settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
+		settings.setTimeTo(new Date(System.currentTimeMillis()));
 		getDataFromServer();
 	}
 
-	/**
-	 * Set new time range
-	 * @param range Offset from "now" in milliseconds
-	 */
-	private void setTimeRange(long range)
-	{
-		timeRange = range;
-		updateChart();
-	}
-	
 	/**
 	 * Set chart grid visibility
 	 * 
@@ -810,8 +801,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	@Override
 	public void addSelectionChangedListener(ISelectionChangedListener listener)
 	{
-		// TODO Auto-generated method stub
-		
+		selectionListeners.add(listener);
 	}
 
 	/* (non-Javadoc)
@@ -820,8 +810,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	@Override
 	public ISelection getSelection()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new StructuredSelection(settings);
 	}
 
 	/* (non-Javadoc)
@@ -830,8 +819,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	@Override
 	public void removeSelectionChangedListener(ISelectionChangedListener listener)
 	{
-		// TODO Auto-generated method stub
-		
+		selectionListeners.remove(listener);
 	}
 
 	/* (non-Javadoc)
@@ -840,7 +828,5 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	@Override
 	public void setSelection(ISelection selection)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 }

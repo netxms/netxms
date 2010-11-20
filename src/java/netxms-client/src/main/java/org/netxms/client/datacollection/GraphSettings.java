@@ -356,6 +356,19 @@ public class GraphSettings
 	}
 	
 	/**
+	 * Enable or disable log scale usage flag
+	 * 
+	 * @param enable true to enable log scale
+	 */
+	public void setLogScale(boolean enable)
+	{
+		if (enable)
+			flags |= GF_LOG_SCALE;
+		else
+			flags &= ~GF_LOG_SCALE;
+	}
+	
+	/**
 	 * Get auto refresh mode
 	 * 
 	 * @return true if auto refresh is on
@@ -363,6 +376,19 @@ public class GraphSettings
 	public boolean isAutoRefresh()
 	{
 		return (flags & GF_AUTO_UPDATE) != 0;
+	}
+	
+	/**
+	 * Set or clear automatic refresh flag
+	 * 
+	 * @param enable true to enable automatic refresh
+	 */
+	public void setAutoRefresh(boolean enable)
+	{
+		if (enable)
+			flags |= GF_AUTO_UPDATE;
+		else
+			flags &= ~GF_AUTO_UPDATE;
 	}
 
 	/**
@@ -373,6 +399,19 @@ public class GraphSettings
 	public boolean isGridVisible()
 	{
 		return (flags & GF_SHOW_GRID) != 0;
+	}
+	
+	/**
+	 * Show or hide grid
+	 * 
+	 * @param enable true to show grid
+	 */
+	public void setGridVisible(boolean enable)
+	{
+		if (enable)
+			flags |= GF_SHOW_GRID;
+		else
+			flags &= ~GF_SHOW_GRID;
 	}
 
 	/**
@@ -386,6 +425,19 @@ public class GraphSettings
 	}
 
 	/**
+	 * Show or hide host names in legend
+	 * 
+	 * @param enable true to show host names in legend
+	 */
+	public void setHostNamesVisible(boolean enable)
+	{
+		if (enable)
+			flags |= GF_SHOW_HOST_NAMES;
+		else
+			flags &= ~GF_SHOW_HOST_NAMES;
+	}
+
+	/**
 	 * Get legend show mode
 	 * 
 	 * @return true if legend should be shown
@@ -393,6 +445,19 @@ public class GraphSettings
 	public boolean isLegendVisible()
 	{
 		return (flags & GF_SHOW_LEGEND) != 0;
+	}
+	
+	/**
+	 * Show or hide legend
+	 * 
+	 * @param enable true to show legend
+	 */
+	public void setLegendVisible(boolean enable)
+	{
+		if (enable)
+			flags |= GF_SHOW_LEGEND;
+		else
+			flags &= ~GF_SHOW_LEGEND;
 	}
 
 	/**
@@ -403,6 +468,19 @@ public class GraphSettings
 	public boolean isAutoScale()
 	{
 		return (flags & GF_AUTO_SCALE) != 0;
+	}
+	
+	/**
+	 * Enable or disable automatic scaling
+	 * 
+	 * @param enable true to enable automatic scaling
+	 */
+	public void setAutoScale(boolean enable)
+	{
+		if (enable)
+			flags |= GF_AUTO_SCALE;
+		else
+			flags &= ~GF_AUTO_SCALE;
 	}
 
 	/**
@@ -715,5 +793,24 @@ public class GraphSettings
 	public void setItems(GraphItem[] items)
 	{
 		this.items = items;
+	}
+	
+	/**
+	 * Get time range covered by graph in milliseconds
+	 * 
+	 * @return
+	 */
+	public long getTimeRangeMillis()
+	{
+		switch(timeUnit)
+		{
+			case TIME_UNIT_MINUTE:
+				return timeFrame * 60 * 1000;
+			case TIME_UNIT_HOUR:
+				return timeFrame * 60 * 60 * 1000;
+			case TIME_UNIT_DAY:
+				return timeFrame * 24 * 60 * 60 * 1000;
+		}
+		return 0;
 	}
 }

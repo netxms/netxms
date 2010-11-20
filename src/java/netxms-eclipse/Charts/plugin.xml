@@ -128,7 +128,7 @@
             name="General">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.ui.eclipse.charts.widgets.GenericChart">
+                  value="org.netxms.client.datacollection.GraphSettings">
             </instanceof>
          </enabledWhen>
       </page>
