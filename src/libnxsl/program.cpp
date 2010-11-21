@@ -33,7 +33,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         25
+#define MAX_ERROR_NUMBER         26
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -88,7 +88,8 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Variable already exist"),
 	_T("Array index is not an integer"),
 	_T("Attempt to use array element access operation on non-array"),
-	_T("Cannot assign to a variable that is constant")
+	_T("Cannot assign to a variable that is constant"),
+	_T("Named parameter required")
 };
 
 

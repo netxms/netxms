@@ -70,6 +70,7 @@
 #define NXSL_ERR_INDEX_NOT_INTEGER        23
 #define NXSL_ERR_NOT_ARRAY                24
 #define NXSL_ERR_ASSIGNMENT_TO_CONSTANT   25
+#define NXSL_ERR_NAMED_PARAM_REQUIERED    26
 
 
 //
