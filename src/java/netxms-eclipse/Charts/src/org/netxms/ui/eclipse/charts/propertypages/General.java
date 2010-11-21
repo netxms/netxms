@@ -19,11 +19,21 @@
 package org.netxms.ui.eclipse.charts.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Scale;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "General" property page for chart
@@ -31,20 +41,149 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class General extends PropertyPage
 {
+	private GraphSettings settings;
+	private LabeledText title;
+	private Button checkShowGrid;
+	private Button checkShowLegend;
+	private Button checkAutoScale;
+	private Button checkShowHostNames;
+	private Button checkShowRuler;
+	private Button checkEnableZoom;
+	private Button checkAutoRefresh;
+	private Button checkLogScale;
+	private Scale refreshIntervalScale;
+	private Spinner refreshIntervalSpinner;
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
+		settings = (GraphSettings)getElement().getAdapter(GraphSettings.class);
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-		layout.numColumns = 2;
       dialogArea.setLayout(layout);
+      
+      title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER);
+      title.setLabel("Title");
+      title.setText(settings.getTitle());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      title.setLayoutData(gd);
+      
+      Group optionsGroup = new Group(dialogArea, SWT.NONE);
+      optionsGroup.setText("Options");
+      layout = new GridLayout();
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = WidgetHelper.OUTER_SPACING;
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.makeColumnsEqualWidth = true;
+      layout.numColumns = 2;
+      optionsGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      optionsGroup.setLayoutData(gd);
+      
+      checkShowGrid = new Button(optionsGroup, SWT.CHECK);
+      checkShowGrid.setText("Show &grid lines");
+      checkShowGrid.setSelection(settings.isGridVisible());
+
+      checkAutoScale = new Button(optionsGroup, SWT.CHECK);
+      checkAutoScale.setText("&Autoscale");
+      checkAutoScale.setSelection(settings.isAutoScale());
+
+      checkShowLegend = new Button(optionsGroup, SWT.CHECK);
+      checkShowLegend.setText("Show &legend");
+      checkShowLegend.setSelection(settings.isLegendVisible());
+
+      checkShowRuler = new Button(optionsGroup, SWT.CHECK);
+      checkShowRuler.setText("Show &ruler");
+      checkShowRuler.setSelection(false);
+
+      checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
+      checkShowHostNames.setText("Show &host names");
+      checkShowHostNames.setSelection(settings.isHostNamesVisible());
+
+      checkEnableZoom = new Button(optionsGroup, SWT.CHECK);
+      checkEnableZoom.setText("Enable &zoom");
+      checkEnableZoom.setSelection(false);
+
+      checkAutoRefresh = new Button(optionsGroup, SWT.CHECK);
+      checkAutoRefresh.setText("&Refresh automatically");
+      checkAutoRefresh.setSelection(settings.isAutoRefresh());
+
+      checkLogScale = new Button(optionsGroup, SWT.CHECK);
+      checkLogScale.setText("L&ogaritmic scale");
+      checkLogScale.setSelection(settings.isLogScale());
+      
+      Composite refreshIntervalGroup = new Composite(optionsGroup, SWT.NONE);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginTop = WidgetHelper.OUTER_SPACING;
+      refreshIntervalGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      refreshIntervalGroup.setLayoutData(gd);
+      
+      Label label = new Label(refreshIntervalGroup, SWT.NONE);
+      label.setText("Refresh interval:");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      gd.horizontalSpan = 2;
+      label.setLayoutData(gd);
+      
+      refreshIntervalScale = new Scale(refreshIntervalGroup, SWT.HORIZONTAL);
+      refreshIntervalScale.setMinimum(1);
+      refreshIntervalScale.setMaximum(600);
+      refreshIntervalScale.setSelection(settings.getAutoRefreshInterval());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      refreshIntervalScale.setLayoutData(gd);
+      refreshIntervalScale.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				refreshIntervalSpinner.setSelection(refreshIntervalScale.getSelection());
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+      });
+      
+      refreshIntervalSpinner = new Spinner(refreshIntervalGroup, SWT.BORDER);
+      refreshIntervalSpinner.setMinimum(1);
+      refreshIntervalSpinner.setMaximum(600);
+      refreshIntervalSpinner.setSelection(settings.getAutoRefreshInterval());
+      refreshIntervalSpinner.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				refreshIntervalScale.setSelection(refreshIntervalSpinner.getSelection());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 
       return dialogArea;
 	}
