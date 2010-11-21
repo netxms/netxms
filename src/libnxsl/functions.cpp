@@ -29,7 +29,7 @@
 // Global data
 //
 
-const char *g_szTypeNames[] = { "null", "object", "string", "real", "int32",
+const char *g_szTypeNames[] = { "null", "object", "array", "string", "real", "int32",
                                 "int64", "uint32", "uint64" };
 
 
@@ -267,7 +267,7 @@ int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
       if (!argv[i]->isNumeric())
          return NXSL_ERR_NOT_NUMBER;
 
-      if (argv[i]->LT(pCurr))
+		if (argv[i]->getValueAsReal() < pCurr->getValueAsReal())
          pCurr = argv[i];
    }
    *ppResult = new NXSL_Value(pCurr);
@@ -293,7 +293,7 @@ int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
       if (!argv[i]->isNumeric())
          return NXSL_ERR_NOT_NUMBER;
 
-      if (argv[i]->GT(pCurr))
+		if (argv[i]->getValueAsReal() > pCurr->getValueAsReal())
          pCurr = argv[i];
    }
    *ppResult = new NXSL_Value(pCurr);
