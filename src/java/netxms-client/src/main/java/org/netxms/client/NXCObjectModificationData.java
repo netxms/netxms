@@ -47,6 +47,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_TRUSTED_NODES     = 0x00004000L;
 	public static final long MODIFY_GEOLOCATION       = 0x00008000L;
 	public static final long MODIFY_PRIMARY_IP        = 0x00010000L;
+	public static final long MODIFY_SNMP_PORT         = 0x00020000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -65,6 +66,7 @@ public class NXCObjectModificationData
 	private int agentAuthMethod;
 	private String agentSecret;
 	private long agentProxy;
+	private int snmpPort;
 	private int snmpVersion;
 	private int snmpAuthMethod;
 	private int snmpPrivMethod;
@@ -526,5 +528,22 @@ public class NXCObjectModificationData
 	{
 		this.primaryIpAddress = primaryIpAddress;
 		flags |= MODIFY_PRIMARY_IP;
+	}
+
+	/**
+	 * @return the snmpPort
+	 */
+	public int getSnmpPort()
+	{
+		return snmpPort;
+	}
+
+	/**
+	 * @param snmpPort the snmpPort to set
+	 */
+	public void setSnmpPort(int snmpPort)
+	{
+		this.snmpPort = snmpPort;
+		flags |= MODIFY_SNMP_PORT;
 	}
 }

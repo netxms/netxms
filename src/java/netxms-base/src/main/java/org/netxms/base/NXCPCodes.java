@@ -347,7 +347,7 @@ public final class NXCPCodes
 	public static final long VID_EVENT_NAME_TABLE        = 77;
 	public static final long VID_PARENT_ID               = 78;
 	public static final long VID_CHILD_ID                = 79;
-	//public static final long VID_CONFIG_FILE_NAME        = 80;
+	public static final long VID_SNMP_PORT               = 80;
 	public static final long VID_CONFIG_FILE_DATA        = 81;
 	public static final long VID_COMMENTS                = 82;
 	public static final long VID_POLICY_ID               = 83;

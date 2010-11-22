@@ -86,6 +86,7 @@ public class Node extends GenericObject
 	private int snmpPrivMethod;
 	private String snmpOID;
 	private int snmpVersion;
+	private int snmpPort;
 	private String systemDescription;
 	
 	/**
@@ -114,6 +115,7 @@ public class Node extends GenericObject
 		snmpAuthMethod = methods & 0xFF;
 		snmpPrivMethod = methods >> 8;
 		snmpOID = msg.getVariableAsString(NXCPCodes.VID_SNMP_OID);
+		snmpPort = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_PORT);
 		snmpVersion = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_VERSION);
 		systemDescription = msg.getVariableAsString(NXCPCodes.VID_SYS_DESCRIPTION);
 	}
@@ -322,5 +324,13 @@ public class Node extends GenericObject
 	public boolean isManagementServer()
 	{
 		return (flags & NF_IS_LOCAL_MGMT) != 0;
+	}
+
+	/**
+	 * @return the snmpPort
+	 */
+	public int getSnmpPort()
+	{
+		return snmpPort;
 	}
 }

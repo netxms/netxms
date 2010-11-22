@@ -97,7 +97,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 25;
+	public static final int CLIENT_PROTOCOL_VERSION = 26;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -2036,6 +2036,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxy());
 		}
 
+		if ((flags & NXCObjectModificationData.MODIFY_SNMP_PORT) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
+		}
+		
 		if ((flags & NXCObjectModificationData.MODIFY_GEOLOCATION) != 0)
 		{
 			final GeoLocation gl = data.getGeolocation();

@@ -80,6 +80,7 @@ public class DataCollectionItem
 	private int baseUnits;
 	private int multiplier;
 	private String customUnitName;
+	private int snmpPort;
 	private ArrayList<String> schedules;
 	private ArrayList<Threshold> thresholds;
 	
@@ -113,6 +114,7 @@ public class DataCollectionItem
 		multiplier = msg.getVariableAsInteger(NXCPCodes.VID_MULTIPLIER);
 		customUnitName = msg.getVariableAsString(NXCPCodes.VID_CUSTOM_UNITS_NAME);
 		perfTabSettings = msg.getVariableAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
+		snmpPort = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_PORT);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_SCHEDULES);
 		schedules = new ArrayList<String>(count);
@@ -161,6 +163,7 @@ public class DataCollectionItem
 		baseUnits = 0;
 		multiplier = 0;
 		customUnitName = null;
+		snmpPort = 0;
 		schedules = new ArrayList<String>(0);
 		thresholds = new ArrayList<Threshold>(0);
 	}
@@ -194,6 +197,7 @@ public class DataCollectionItem
 			msg.setVariable(NXCPCodes.VID_CUSTOM_UNITS_NAME, customUnitName);
 		if (perfTabSettings != null)
 			msg.setVariable(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
+		msg.setVariableInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
 		
 		if (useAdvancedSchedule)
 		{
@@ -597,5 +601,21 @@ public class DataCollectionItem
 	public void setPerfTabSettings(String perfTabSettings)
 	{
 		this.perfTabSettings = perfTabSettings;
+	}
+
+	/**
+	 * @return the snmpPort
+	 */
+	public int getSnmpPort()
+	{
+		return snmpPort;
+	}
+
+	/**
+	 * @param snmpPort the snmpPort to set
+	 */
+	public void setSnmpPort(int snmpPort)
+	{
+		this.snmpPort = snmpPort;
 	}
 }
