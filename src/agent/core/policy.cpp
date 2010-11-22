@@ -40,7 +40,7 @@ static void RegisterPolicy(CommSession *session, DWORD type, uuid_t guid)
 	int tail;
 
 	_sntprintf(path, 256, _T("/policyRegistry/%s/"), uuid_to_string(guid, buffer));
-	tail = _tcslen(path);
+	tail = (int)_tcslen(path);
 
 	Config *registry = OpenRegistry();
 
