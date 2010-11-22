@@ -300,6 +300,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 			pObject->node.wSnmpPrivMethod = methods >> 8;
          pObject->node.pszSnmpObjectId = pMsg->GetVariableStr(VID_SNMP_OID);
          pObject->node.nSNMPVersion = (BYTE)pMsg->GetVariableShort(VID_SNMP_VERSION);
+			pObject->node.wSnmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
          pMsg->GetVariableStr(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
          pMsg->GetVariableStr(VID_PLATFORM_NAME, pObject->node.szPlatformName, MAX_PLATFORM_NAME_LEN);
 			pObject->node.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
@@ -998,6 +999,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
 		msg.SetVariable(VID_LATITUDE, pUpdate->geolocation.latitude);
 		msg.SetVariable(VID_LONGITUDE, pUpdate->geolocation.longitude);
 	}
+   if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_PORT)
+      msg.SetVariable(VID_SNMP_PORT, pUpdate->wSnmpPort);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);

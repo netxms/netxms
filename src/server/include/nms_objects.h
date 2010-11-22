@@ -758,7 +758,7 @@ public:
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    BOOL connectToAgent();
-   DWORD GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetItemFromSNMP(WORD port, const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer);
@@ -777,7 +777,7 @@ public:
    void CloseParamList(void) { UnlockData(); }
 
    AgentConnectionEx *createAgentConnection();
-	SNMP_Transport *createSnmpTransport();
+	SNMP_Transport *createSnmpTransport(WORD port = 0);
 	SNMP_SecurityContext *getSnmpSecurityContext();
 
    virtual void CreateMessage(CSCPMessage *pMsg);

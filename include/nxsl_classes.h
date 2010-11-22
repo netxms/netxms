@@ -95,7 +95,7 @@ public:
 
 	virtual void onObjectDelete(NXSL_Object *object);
 
-   const TCHAR *getName(void) { return m_szName; }
+   const TCHAR *getName() { return m_szName; }
 };
 
 

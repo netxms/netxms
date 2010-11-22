@@ -249,6 +249,62 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V216 to V217
+//
+
+static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE nodes ADD snmp_port integer\n")
+		_T("UPDATE ndoes SET snmp_port=161\n")
+		_T("ALTER TABLE items ADD snmp_port integer\n")
+		_T("UPDATE items SET snmp_port=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("community"), _T("varchar(127)")));
+	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("community")));
+
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("usm_auth_password"), _T("varchar(127)")));
+	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_auth_password")));
+
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("usm_priv_password"), _T("varchar(127)")));
+	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_priv_password")));
+
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("snmp_oid"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("snmp_oid")));
+
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("secret"), _T("varchar(64)")));
+	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("secret")));
+
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("agent_version"), _T("varchar(63)")));
+	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("agent_version")));
+
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("platform_name"), _T("varchar(63)")));
+	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("platform_name")));
+
+	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("uname"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("uname")));
+
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("name"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("name")));
+
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("description"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("description")));
+
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("transformation"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT])));
+	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("transformation")));
+
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("instance"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("instance")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='217' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V215 to V216
 //
 
@@ -957,10 +1013,28 @@ static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 		if (!H_UpgradeFromV213(213, 214))
 			return FALSE;
 
-	if (!SQLQuery(_T("UPDATE metadata SET var_value='214' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='214' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
 
+
+//
+// Upgrade from V105 to V217
+//
+
+static BOOL H_UpgradeFromV105(int currVersion, int newVersion)
+{
+	if (!H_UpgradeFromV10x(currVersion, 214))
+		return FALSE;
+
+	// V105 already have V216 -> V217 changes, but missing V207 -> V209 and V214 -> V216 changes
+	if (!H_UpgradeFromV214(214, 215))
+		return FALSE;
+
+	if (!H_UpgradeFromV215(215, 216))
+		return FALSE;
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='217' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -4875,11 +4949,12 @@ static struct
 	{ 97, 205, H_UpgradeFromV9x },
 	{ 98, 206, H_UpgradeFromV9x },
 	{ 99, 207, H_UpgradeFromV9x },
-	{ 100, 212, H_UpgradeFromV10x },
-	{ 101, 212, H_UpgradeFromV10x },
-	{ 102, 212, H_UpgradeFromV10x },
-	{ 103, 213, H_UpgradeFromV10x },
+	{ 100, 214, H_UpgradeFromV10x },
+	{ 101, 214, H_UpgradeFromV10x },
+	{ 102, 214, H_UpgradeFromV10x },
+	{ 103, 214, H_UpgradeFromV10x },
 	{ 104, 214, H_UpgradeFromV10x },
+	{ 105, 217, H_UpgradeFromV105 },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
 	{ 202, 203, H_UpgradeFromV202 },
@@ -4896,6 +4971,7 @@ static struct
 	{ 213, 214, H_UpgradeFromV213 },
 	{ 214, 215, H_UpgradeFromV214 },
 	{ 215, 216, H_UpgradeFromV215 },
+	{ 216, 217, H_UpgradeFromV216 },
    { 0, NULL }
 };
 

@@ -209,6 +209,7 @@ private:
 	int m_nMultiplier;
 	TCHAR *m_pszCustomUnitName;
 	TCHAR *m_pszPerfTabSettings;
+	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 
    void lock() { MutexLock(m_hMutex, INFINITE); }
    void unlock() { MutexUnlock(m_hMutex); }
@@ -255,6 +256,7 @@ public:
 	DWORD getProxyNode() { return m_dwProxyNode; }
 	time_t getLastPollTime() { return m_tLastPoll; }
 	DWORD getErrorCount() { return m_dwErrorCount; }
+	WORD getSnmpPort() { return m_snmpPort; }
 
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
@@ -284,7 +286,6 @@ public:
 
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg);
 
-	void finishMPParsing();
 	void setName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
 	void setDescription(TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
 	void setInstance(TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }

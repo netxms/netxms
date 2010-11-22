@@ -543,7 +543,7 @@ typedef struct
 #define VID_EVENT_NAME_TABLE        ((DWORD)77)
 #define VID_PARENT_ID               ((DWORD)78)
 #define VID_CHILD_ID                ((DWORD)79)
-//#define VID_CONFIG_FILE_NAME        ((DWORD)80)
+#define VID_SNMP_PORT               ((DWORD)80)
 #define VID_CONFIG_FILE_DATA        ((DWORD)81)
 #define VID_COMMENTS                ((DWORD)82)
 #define VID_POLICY_ID               ((DWORD)83)

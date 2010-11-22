@@ -208,6 +208,7 @@ CREATE TABLE nodes
 	primary_ip varchar(15) not null,
 	node_flags integer not null,
 	snmp_version integer not null,
+	snmp_port integer not null,
 	community varchar(127) not null,
 	usm_auth_password varchar(127) not null,
 	usm_priv_password varchar(127) not null,
@@ -523,6 +524,7 @@ CREATE TABLE items
 	name varchar(255) not null,
 	description varchar(255) not null,
 	source integer not null,	// 0 for internal or 1 for native agent or 2 for SNMP
+	snmp_port integer not null,
 	datatype integer not null,
 	polling_interval integer not null,
 	retention_time integer not null,

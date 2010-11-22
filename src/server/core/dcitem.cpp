@@ -213,6 +213,7 @@ DCItem::DCItem()
 	m_nMultiplier = 1;
 	m_pszCustomUnitName = NULL;
 	m_pszPerfTabSettings = NULL;
+	m_snmpPort = 0;	// use default
 }
 
 
@@ -258,6 +259,7 @@ DCItem::DCItem(const DCItem *pSrc)
 	m_nMultiplier = pSrc->m_nMultiplier;
 	m_pszCustomUnitName = (pSrc->m_pszCustomUnitName != NULL) ? _tcsdup(pSrc->m_pszCustomUnitName) : NULL;
 	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
+	m_snmpPort = pSrc->m_snmpPort;
 
    // Copy schedules
    m_dwNumSchedules = pSrc->m_dwNumSchedules;
@@ -284,7 +286,8 @@ DCItem::DCItem(const DCItem *pSrc)
 // item_id,name,source,datatype,polling_interval,retention_time,status,
 // delta_calculation,transformation,template_id,description,instance,
 // template_item_id,adv_schedule,all_thresholds,resource_id,proxy_node,
-// base_units,unit_multiplier,custom_units_name,perftab_settings,system_tag
+// base_units,unit_multiplier,custom_units_name,perftab_settings,system_tag,
+// snmp_port
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
@@ -295,7 +298,6 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    DBGetField(hResult, iRow, 1, m_szName, MAX_ITEM_NAME);
-   DecodeSQLString(m_szName);
    m_source = (BYTE)DBGetFieldLong(hResult, iRow, 2);
    m_dataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_iPollingInterval = DBGetFieldLong(hResult, iRow, 4);
@@ -305,14 +307,11 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_pszScript = NULL;
    m_pScript = NULL;
    pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
-   DecodeSQLString(pszTmp);
    setTransformationScript(pszTmp);
    free(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 10, m_szDescription, MAX_DB_STRING);
-   DecodeSQLString(m_szDescription);
    DBGetField(hResult, iRow, 11, m_szInstance, MAX_DB_STRING);
-   DecodeSQLString(m_szInstance);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_busy = 0;
 	m_scheduledForDeletion = 0;
@@ -336,6 +335,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 	m_pszCustomUnitName = DBGetField(hResult, iRow, 19, NULL, 0);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 20, NULL, 0);
 	DBGetField(hResult, iRow, 21, m_systemTag, MAX_DB_STRING);
+	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 22);
 
    if (m_advSchedule)
    {
@@ -429,6 +429,7 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
 	m_nMultiplier = 1;
 	m_pszCustomUnitName = NULL;
 	m_pszPerfTabSettings = NULL;
+	m_snmpPort = 0;	// use default
 
    updateCacheSize();
 }
@@ -471,6 +472,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner)
 	m_nMultiplier = 1;
 	m_pszCustomUnitName = NULL;
 	m_pszPerfTabSettings = NULL;
+	m_snmpPort = (WORD)config->getSubEntryValueInt(_T("snmpPort"));
    
 	m_advSchedule = (BYTE)config->getSubEntryValueInt(_T("advancedSchedule"));
 	ConfigEntry *schedules = config->findEntry(_T("schedules"));
@@ -559,7 +561,7 @@ void DCItem::deleteAllThresholds()
 // Clear data cache
 //
 
-void DCItem::clearCache(void)
+void DCItem::clearCache()
 {
    DWORD i;
 
@@ -575,7 +577,7 @@ void DCItem::clearCache(void)
 // Load data collection items thresholds from database
 //
 
-BOOL DCItem::loadThresholdsFromDB(void)
+BOOL DCItem::loadThresholdsFromDB()
 {
    DWORD i;
    char szQuery[256];
@@ -612,23 +614,23 @@ BOOL DCItem::loadThresholdsFromDB(void)
 
 BOOL DCItem::saveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscName, *pszEscScript, *pszEscDescr, *pszEscInstance;
 	TCHAR *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
    lock();
 
-   pszEscName = EncodeSQLString(m_szName);
-   pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_pszScript));
-   pszEscDescr = EncodeSQLString(m_szDescription);
-   pszEscInstance = EncodeSQLString(m_szInstance);
+   String escName = DBPrepareString(g_hCoreDB, m_szName);
+   String escScript = DBPrepareString(g_hCoreDB, m_pszScript);
+   String escDescr = DBPrepareString(g_hCoreDB, m_szDescription);
+   String escInstance = DBPrepareString(g_hCoreDB, m_szInstance);
 	String escCustomUnitName = DBPrepareString(g_hCoreDB, m_pszCustomUnitName);
 	String escPerfTabSettings = DBPrepareString(g_hCoreDB, m_pszPerfTabSettings);
-	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscScript) + escPerfTabSettings.getSize() + 2048));
+	int qlen = escScript.getSize() + escPerfTabSettings.getSize() + 2048;
+	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
 
    // Check for object's existence in database
-   sprintf(pszQuery, "SELECT item_id FROM items WHERE item_id=%d", m_dwId);
+   _sntprintf(pszQuery, qlen, _T("SELECT item_id FROM items WHERE item_id=%d"), m_dwId);
    hResult = DBSelect(hdb, pszQuery);
    if (hResult != 0)
    {
@@ -638,40 +640,43 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    }
 
    // Prepare and execute query
-   if (bNewObject)
-      sprintf(pszQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
-                        "datatype,polling_interval,retention_time,status,delta_calculation,"
-                        "transformation,instance,template_item_id,adv_schedule,"
-                        "all_thresholds,resource_id,proxy_node,base_units,unit_multiplier,"
-								"custom_units_name,perftab_settings,system_tag) VALUES "
-						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,%d,%s,%s,%s)",
-                        m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
-                        pszEscName, pszEscDescr, m_source, m_dataType, m_iPollingInterval,
-                        m_iRetentionTime, m_status, m_deltaCalculation,
-                        pszEscScript, pszEscInstance, m_dwTemplateItemId,
-                        m_advSchedule, m_processAllThresholds, m_dwResourceId,
-							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
-								(const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag));
+	if (bNewObject)
+	{
+      _sntprintf(pszQuery, qlen, 
+		           _T("INSERT INTO items (item_id,node_id,template_id,name,description,source,")
+                 _T("datatype,polling_interval,retention_time,status,delta_calculation,")
+                 _T("transformation,instance,template_item_id,adv_schedule,")
+                 _T("all_thresholds,resource_id,proxy_node,base_units,unit_multiplier,")
+		           _T("custom_units_name,perftab_settings,system_tag,snmp_port) VALUES ")
+		           _T("(%d,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%d)"),
+                 m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
+                 (const TCHAR *)escName, (const TCHAR *)escDescr, m_source, m_dataType, m_iPollingInterval,
+                 m_iRetentionTime, m_status, m_deltaCalculation,
+                 (const TCHAR *)escScript, (const TCHAR *)escInstance, m_dwTemplateItemId,
+                 m_advSchedule, m_processAllThresholds, m_dwResourceId,
+					  m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
+		           (const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), m_snmpPort);
+	}
    else
-      sprintf(pszQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
-                        "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
-                        "delta_calculation=%d,transformation='%s',description='%s',"
-                        "instance='%s',template_item_id=%d,adv_schedule=%d,"
-                        "all_thresholds=%d,resource_id=%d,proxy_node=%d,base_units=%d,"
-								"unit_multiplier=%d,custom_units_name=%s,perftab_settings=%s,"
-	                     "system_tag=%s WHERE item_id=%d",
-                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
-                        pszEscName, m_source, m_dataType, m_iPollingInterval,
-                        m_iRetentionTime, m_status, m_deltaCalculation, pszEscScript,
-                        pszEscDescr, pszEscInstance, m_dwTemplateItemId,
-                        m_advSchedule, m_processAllThresholds, m_dwResourceId,
-							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
-								(const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag), m_dwId);
+	{
+      _sntprintf(pszQuery, qlen,
+		           _T("UPDATE items SET node_id=%d,template_id=%d,name=%s,source=%d,")
+                 _T("datatype=%d,polling_interval=%d,retention_time=%d,status=%d,")
+                 _T("delta_calculation=%d,transformation=%s,description=%s,")
+                 _T("instance=%s,template_item_id=%d,adv_schedule=%d,")
+                 _T("all_thresholds=%d,resource_id=%d,proxy_node=%d,base_units=%d,")
+		           _T("unit_multiplier=%d,custom_units_name=%s,perftab_settings=%s,")
+	              _T("system_tag=%s,snmp_port=%d WHERE item_id=%d"),
+                 (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
+                 (const TCHAR *)escName, m_source, m_dataType, m_iPollingInterval,
+                 m_iRetentionTime, m_status, m_deltaCalculation, (const TCHAR *)escScript,
+                 (const TCHAR *)escDescr, (const TCHAR *)escInstance, m_dwTemplateItemId,
+                 m_advSchedule, m_processAllThresholds, m_dwResourceId,
+					  m_dwProxyNode, m_nBaseUnits, m_nMultiplier, (const TCHAR *)escCustomUnitName,
+		           (const TCHAR *)escPerfTabSettings, (const TCHAR *)DBPrepareString(g_hCoreDB, m_systemTag),
+					  m_snmpPort, m_dwId);
+	}
    bResult = DBQuery(hdb, pszQuery);
-   free(pszEscName);
-   free(pszEscScript);
-   free(pszEscDescr);
-   free(pszEscInstance);
 
    // Save thresholds
    if (bResult)
@@ -683,7 +688,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    }
 
    // Delete non-existing thresholds
-   sprintf(pszQuery, "SELECT threshold_id FROM thresholds WHERE item_id=%d", m_dwId);
+   _sntprintf(pszQuery, qlen, _T("SELECT threshold_id FROM thresholds WHERE item_id=%d"), m_dwId);
    hResult = DBSelect(hdb, pszQuery);
    if (hResult != NULL)
    {
@@ -699,7 +704,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                break;
          if (j == m_dwNumThresholds)
          {
-            sprintf(pszQuery, "DELETE FROM thresholds WHERE threshold_id=%d", dwId);
+            _sntprintf(pszQuery, qlen, _T("DELETE FROM thresholds WHERE threshold_id=%d"), dwId);
             DBQuery(hdb, pszQuery);
          }
       }
@@ -707,13 +712,13 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    }
 
    // Create record in raw_dci_values if needed
-   sprintf(pszQuery, "SELECT item_id FROM raw_dci_values WHERE item_id=%d", m_dwId);
+   _sntprintf(pszQuery, qlen, _T("SELECT item_id FROM raw_dci_values WHERE item_id=%d"), m_dwId);
    hResult = DBSelect(hdb, pszQuery);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) == 0)
       {
-         _sntprintf(pszQuery, 1024, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (%d,%s,%ld)"),
+         _sntprintf(pszQuery, qlen, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (%d,%s,%ld)"),
                  m_dwId, (const TCHAR *)DBPrepareString(hdb, m_prevRawValue.String()), (long)m_tPrevValueTimeStamp);
          DBQuery(hdb, pszQuery);
       }
@@ -721,7 +726,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    }
 
    // Save schedules
-   sprintf(pszQuery, "DELETE FROM dci_schedules WHERE item_id=%d", m_dwId);
+   _sntprintf(pszQuery, qlen, _T("DELETE FROM dci_schedules WHERE item_id=%d"), m_dwId);
    DBQuery(hdb, pszQuery);
    if (m_advSchedule)
    {
@@ -731,8 +736,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
       for(i = 0; i < m_dwNumSchedules; i++)
       {
          pszEscSchedule = EncodeSQLString(m_ppScheduleList[i]);
-         sprintf(pszQuery, "INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,'%s')",
-                 m_dwId, i + 1, pszEscSchedule);
+         _sntprintf(pszQuery, qlen, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,'%s')"),
+                    m_dwId, i + 1, pszEscSchedule);
          free(pszEscSchedule);
          DBQuery(hdb, pszQuery);
       }
@@ -825,6 +830,7 @@ void DCItem::createMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
 	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
+	pMsg->SetVariable(VID_SNMP_PORT, m_snmpPort);
 	if (m_pszCustomUnitName != NULL)
 		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_pszCustomUnitName);
 	if (m_pszPerfTabSettings != NULL)
@@ -897,6 +903,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 	m_pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
 	safe_free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
+	m_snmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
 
    // Update schedules
    for(i = 0; i < m_dwNumSchedules; i++)
@@ -1879,14 +1886,15 @@ void DCItem::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<delta>%d</delta>\n")
                           _T("\t\t\t\t\t<advancedSchedule>%d</advancedSchedule>\n")
-                          _T("\t\t\t\t\t<allThresholds>%d</allThresholds>\n"),
+                          _T("\t\t\t\t\t<allThresholds>%d</allThresholds>\n")
+                          _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n"),
 								  m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           m_dataType, m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_szInstance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  m_deltaCalculation, m_advSchedule,
-                          m_processAllThresholds);
+                          m_processAllThresholds, m_snmpPort);
 
 	if (m_pszScript != NULL)
 	{
@@ -1926,26 +1934,6 @@ void DCItem::systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int
    m_iRetentionTime = nRetention;
    m_source = nOrigin;
 	nx_strncpy(m_szName, pszName, MAX_ITEM_NAME);
-}
-
-
-//
-// Finish DCI parsing from management pack:
-// 1. Generate unique ID for DCI
-// 2. Generate unique ID for thresholds
-// 3. Associate all thresholds
-//
-
-void DCItem::finishMPParsing(void)
-{
-	DWORD i;
-
-	m_dwId = CreateUniqueId(IDG_ITEM);
-	for(i = 0; i < m_dwNumThresholds; i++)
-	{
-		m_ppThresholdList[i]->createId();
-		m_ppThresholdList[i]->associate(this);
-	}
 }
 
 

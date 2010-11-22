@@ -1,4 +1,13 @@
 ***************
+* 216 ==> 217 *
+***************
+
+- New column "snmp_port" added to table "nodes"
+- New column "snmp_port" added to table "items"
+- All text columns in table "nodes" converted from # encoded format
+
+
+***************
 * 215 ==> 216 *
 ***************
 

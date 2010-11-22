@@ -499,6 +499,7 @@ enum
 #define OBJ_UPDATE_USE_IFXTABLE     ((QWORD)_ULL(0x0400000000))
 #define OBJ_UPDATE_AUTO_APPLY       ((QWORD)_ULL(0x0800000000))
 #define OBJ_UPDATE_AUTO_BIND        ((QWORD)_ULL(0x1000000000))
+#define OBJ_UPDATE_SNMP_PORT        ((QWORD)_ULL(0x2000000000))
 
 
 //
@@ -1058,6 +1059,7 @@ struct __nxc_object_node
    TCHAR *pszSnmpObjectId;
 	WORD wSnmpAuthMethod;
 	WORD wSnmpPrivMethod;
+	WORD wSnmpPort;
    WORD wAgentPort;     // Listening TCP port for native agent
    WORD wAuthMethod;    // Native agent's authentication method
    TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
@@ -1216,6 +1218,7 @@ typedef struct
    int iServiceType;
    WORD wProto;
    WORD wPort;
+	WORD wSnmpPort;
    DWORD dwPollerNode;
    const TCHAR *pszRequest;
    const TCHAR *pszResponse;
