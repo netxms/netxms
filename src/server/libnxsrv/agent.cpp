@@ -1559,3 +1559,64 @@ void AgentConnection::onFileDownload(BOOL success)
 	m_fileDownloadSucceeded = success;
 	ConditionSet(m_condFileDownload);
 }
+
+
+//
+// Enable trap receiving on connection
+//
+
+DWORD AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
+{
+   CSCPMessage msg(m_nProtocolVersion);
+   DWORD dwRqId, rcc;
+
+	*info = NULL;
+   dwRqId = m_dwRequestId++;
+   msg.SetCode(CMD_GET_POLICY_INVENTORY);
+   msg.SetId(dwRqId);
+   if (sendMessage(&msg))
+	{
+		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+		if (response != NULL)
+		{
+			rcc = response->GetVariableLong(VID_RCC);
+			if (rcc == ERR_SUCCESS)
+				*info = new AgentPolicyInfo(response);
+			delete response;
+		}
+		else
+		{
+	      rcc = ERR_REQUEST_TIMEOUT;
+		}
+	}
+   else
+	{
+      rcc = ERR_CONNECTION_BROKEN;
+	}
+	return rcc;
+}
+
+
+//
+// Uninstall policy by GUID
+//
+
+DWORD AgentConnection::uninstallPolicy(uuid_t guid)
+{
+	DWORD rqId, rcc;
+	CSCPMessage msg(m_nProtocolVersion);
+
+   rqId = generateRequestId();
+   msg.SetId(rqId);
+	msg.SetCode(CMD_UNINSTALL_AGENT_POLICY);
+	msg.SetVariable(VID_GUID, guid, UUID_LENGTH);
+	if (sendMessage(&msg))
+	{
+		rcc = waitForRCC(rqId, m_dwCommandTimeout);
+	}
+	else
+	{
+		rcc = ERR_CONNECTION_BROKEN;
+	}
+   return rcc;
+}

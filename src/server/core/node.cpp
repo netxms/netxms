@@ -992,6 +992,72 @@ skip_snmp_check:
 
 
 //
+// Check agent policy binding
+// Intended to be called only from configuration poller
+//
+
+void Node::checkAgentPolicyBinding(AgentConnection *conn)
+{
+	AgentPolicyInfo *ap;
+	DWORD rcc = conn->getPolicyInventory(&ap);
+	if (rcc == ERR_SUCCESS)
+	{
+		// Check for unbound but installed policies
+		for(int i = 0; i < ap->getSize(); i++)
+		{
+			uuid_t guid;
+			ap->getGuid(i, guid);
+			NetObj *object = FindObjectByGUID(guid, -1);
+			if ((object != NULL) && (!object->IsChild(m_dwId)))
+			{
+				object->AddChild(this);
+				AddParent(object);
+				DbgPrintf(5, _T("ConfPoll(%s): bound to policy object %s [%d]"), m_szName, object->Name(), object->Id());
+			}
+		}
+
+		// Check for bound but not installed policies
+		LockParentList(FALSE);
+		NetObj **unbindList = (NetObj **)malloc(sizeof(NetObj *) * m_dwParentCount);
+		int unbindListSize = 0;
+		for(DWORD i = 0; i < m_dwParentCount; i++)
+		{
+			if (IsAgentPolicyObject(m_pParentList[i]))
+			{
+				uuid_t guid1, guid2;
+				int j;
+
+				m_pParentList[i]->getGuid(guid1);
+				for(j = 0; j < ap->getSize(); j++)
+				{
+					ap->getGuid(j, guid2);
+					if (!uuid_compare(guid1, guid2))
+						break;
+				}
+				if (j == ap->getSize())
+					unbindList[unbindListSize++] = m_pParentList[i];
+			}
+		}
+		UnlockParentList();
+
+		for(int i = 0; i < unbindListSize; i++)
+		{
+			unbindList[i]->DeleteChild(this);
+			DeleteParent(unbindList[i]);
+			DbgPrintf(5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_szName, unbindList[i]->Name(), unbindList[i]->Id());
+		}
+		safe_free(unbindList);
+
+		delete ap;
+	}
+	else
+	{
+	   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getPolicyInventory() failed: rcc=%d"), m_szName, rcc);
+	}
+}
+
+
+//
 // Perform configuration poll on node
 //
 
@@ -1061,6 +1127,10 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
                SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
             }
+				else
+				{
+	            SendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
+				}
             UnlockData();
       
             if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
@@ -1126,8 +1196,9 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 				   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::GetSupportedParameters() failed: rcc=%d"), m_szName, rcc);
 				}
 
+				checkAgentPolicyBinding(pAgentConn);
+
             pAgentConn->disconnect();
-            SendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
          }
          delete pAgentConn;
          DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - finished", m_szName);

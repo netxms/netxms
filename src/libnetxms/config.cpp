@@ -146,7 +146,7 @@ ConfigEntryList *ConfigEntry::getSubEntries(const TCHAR *mask)
 	int count = 0, allocated = 0;
 
 	for(e = m_childs; e != NULL; e = e->getNext())
-		if (MatchString(mask, e->getName(), FALSE))
+		if ((mask == NULL) || MatchString(mask, e->getName(), FALSE))
 		{
 			if (count == allocated)
 			{

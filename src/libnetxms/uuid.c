@@ -40,7 +40,7 @@ void LIBNETXMS_EXPORTABLE uuid_clear(uuid_t uu)
 //
 // compare whether or not two UUID's are the same
 //
-// Returns 0 if the two UUID's are different, and 1 if they are the same.
+// Returns 1/-1 if the two UUID's are different, and 0 if they are the same.
 //
 
 int LIBNETXMS_EXPORTABLE uuid_compare(uuid_t uu1, uuid_t uu2)

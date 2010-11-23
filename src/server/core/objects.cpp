@@ -613,6 +613,34 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 
 
 //
+// Find object by GUID
+//
+
+NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
+{
+   DWORD i;
+	uuid_t temp;
+   NetObj *pObject = NULL;
+
+   if (g_pIndexById == NULL)
+      return NULL;
+
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+   {
+		((NetObj *)g_pIndexById[i].pObject)->getGuid(temp);
+		if (!uuid_compare(guid, temp) && ((objClass == -1) || (objClass == ((NetObj *)g_pIndexById[i].pObject)->Type())))
+      {
+         pObject = (NetObj *)g_pIndexById[i].pObject;
+         break;
+      }
+   }
+   RWLockUnlock(g_rwlockIdIndex);
+   return pObject;
+}
+
+
+//
 // Find template object by name
 //
 
@@ -1453,4 +1481,14 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
    *pnSingleThreshold = m_iStatusSingleThreshold;
    *ppnThresholds = m_iStatusThresholds;
    return m_iStatusCalcAlg;
+}
+
+
+//
+// Check if given object is an agent policy object
+//
+
+bool IsAgentPolicyObject(NetObj *object)
+{
+	return (object->Type() == OBJECT_AGENTPOLICY) || (object->Type() == OBJECT_AGENTPOLICY_CONFIG);
 }

@@ -678,6 +678,7 @@ protected:
 
    void CheckInterfaceNames(INTERFACE_LIST *pIfList);
 	void CheckSubnetBinding(INTERFACE_LIST *pIfList);
+	void checkAgentPolicyBinding(AgentConnection *conn);
 
 	void ApplySystemTemplates();
 	void ApplyUserTemplates();
@@ -1338,6 +1339,7 @@ void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
+NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
@@ -1352,6 +1354,7 @@ void DumpObjects(CONSOLE_CTX pCtx);
 void DeleteUserFromAllObjects(DWORD dwUserId);
 
 BOOL IsValidParentClass(int iChildClass, int iParentClass);
+bool IsAgentPolicyObject(NetObj *object);
 
 int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);

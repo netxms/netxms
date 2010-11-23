@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -67,13 +68,18 @@ public class Policy extends PropertyPage
       
 		// Object name
       initialDescription = new String(object.getDescription());
-      textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Description",
-      		                                    initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL,
+      		SWT.DEFAULT, "Description", initialDescription, gd);
+      textDescription.setLayoutData(gd);
 		
 		return dialogArea;
 	}
-	
-	
+		
 	/**
 	 * Apply changes
 	 * 

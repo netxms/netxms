@@ -39,7 +39,7 @@ static void RegisterPolicy(CommSession *session, DWORD type, uuid_t guid)
 	TCHAR path[256], buffer[64];
 	int tail;
 
-	_sntprintf(path, 256, _T("/policyRegistry/%s/"), uuid_to_string(guid, buffer));
+	_sntprintf(path, 256, _T("/policyRegistry/policy-%s/"), uuid_to_string(guid, buffer));
 	tail = (int)_tcslen(path);
 
 	Config *registry = OpenRegistry();
@@ -58,14 +58,31 @@ static void RegisterPolicy(CommSession *session, DWORD type, uuid_t guid)
 // Register policy in persistent storage
 //
 
-static void UnregisterPolicy(DWORD type, uuid_t guid)
+static void UnregisterPolicy(uuid_t guid)
 {
 	TCHAR path[256], buffer[64];
 
-	_sntprintf(path, 256, _T("/policyRegistry/%s"), uuid_to_string(guid, buffer));
+	_sntprintf(path, 256, _T("/policyRegistry/policy-%s"), uuid_to_string(guid, buffer));
 	Config *registry = OpenRegistry();
 	registry->deleteEntry(path);
 	CloseRegistry(true);
+}
+
+
+//
+// Get policy type by GUID
+//
+
+static int GetPolicyType(uuid_t guid)
+{
+	TCHAR path[256], buffer[64];
+	int type;
+
+	_sntprintf(path, 256, _T("/policyRegistry/policy-%s/type"), uuid_to_string(guid, buffer));
+	Config *registry = OpenRegistry();
+	type = registry->getValueInt(path, -1);
+	CloseRegistry(false);
+	return type;
 }
 
 
@@ -181,11 +198,13 @@ static DWORD RemoveConfig(DWORD session, uuid_t guid,  CSCPMessage *msg)
 
 DWORD UninstallPolicy(CommSession *session, CSCPMessage *request)
 {
-	DWORD type, rcc;
+	DWORD rcc;
+	int type;
 	uuid_t guid;
+	TCHAR buffer[64];
 
-	type = request->GetVariableShort(VID_POLICY_TYPE);
 	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+	type = GetPolicyType(guid);
 
 	switch(type)
 	{
@@ -198,8 +217,46 @@ DWORD UninstallPolicy(CommSession *session, CSCPMessage *request)
 	}
 
 	if (rcc == RCC_SUCCESS)
-		UnregisterPolicy(type, guid);
+		UnregisterPolicy(guid);
 
-	DebugPrintf(session->getIndex(), 3, _T("Policy uninstall: TYPE=%d RCC=%d"), type, rcc);
+	DebugPrintf(session->getIndex(), 3, _T("Policy uninstall: GUID=%s TYPE=%d RCC=%d"), uuid_to_string(guid, buffer), type, rcc);
 	return rcc;
+}
+
+
+//
+// Get policy inventory
+//
+
+DWORD GetPolicyInventory(CommSession *session, CSCPMessage *msg)
+{
+	Config *registry = OpenRegistry();
+
+	ConfigEntryList *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
+	if (list != NULL)
+	{
+		msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)list->getSize());
+		DWORD varId = VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < list->getSize(); i++, varId += 7)
+		{
+			ConfigEntry *e = list->getEntry(i);
+			uuid_t guid;
+
+			if (MatchString("policy-*", e->getName(), TRUE))
+			{
+				uuid_parse(&(e->getName()[7]), guid);
+				msg->SetVariable(varId++, guid, UUID_LENGTH);
+				msg->SetVariable(varId++, (WORD)e->getSubEntryValueInt(_T("type")));
+				msg->SetVariable(varId++, e->getSubEntryValue(_T("server")));
+			}
+		}
+		delete list;
+	}
+	else
+	{
+		msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)0);
+	}
+	
+	CloseRegistry(false);
+	return RCC_SUCCESS;
 }

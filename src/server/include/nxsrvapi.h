@@ -224,6 +224,29 @@ typedef struct
 
 
 //
+// Information about policies installed on agent
+//
+
+class LIBNXSRV_EXPORTABLE AgentPolicyInfo
+{
+private:
+	int m_size;
+	BYTE *m_guidList;
+	int *m_typeList;
+	TCHAR **m_serverList;
+
+public:
+	AgentPolicyInfo(CSCPMessage *msg);
+	~AgentPolicyInfo();
+
+	int getSize() { return m_size; }
+	bool getGuid(int index, uuid_t guid);
+	int getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : -1; }
+	const TCHAR *getServer(int index) { return ((index >= 0) && (index < m_size)) ? m_serverList[index] : NULL; }
+};
+
+
+//
 // Agent connection
 //
 
@@ -313,6 +336,8 @@ public:
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD updateConfigFile(const TCHAR *pszConfig);
    DWORD enableTraps();
+	DWORD getPolicyInventory(AgentPolicyInfo **info);
+	DWORD uninstallPolicy(uuid_t guid);
 
 	DWORD generateRequestId() { return m_dwRequestId++; }
 	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool appendFile = false,

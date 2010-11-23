@@ -357,6 +357,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\apinfo.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\isc.cpp"
 				>
 			</File>

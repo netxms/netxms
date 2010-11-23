@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ void UnregisterSession(DWORD dwIndex);
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse);
 DWORD DeployPolicy(CommSession *session, CSCPMessage *request);
 DWORD UninstallPolicy(CommSession *session, CSCPMessage *request);
+DWORD GetPolicyInventory(CommSession *session, CSCPMessage *msg);
 
 
 //
@@ -511,6 +512,16 @@ void CommSession::processingThread()
                   msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
+				case CMD_GET_POLICY_INVENTORY:
+					if (m_bMasterServer)
+					{
+						msg.SetVariable(VID_RCC, GetPolicyInventory(this, &msg));
+					}
+					else
+					{
+                  msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+					}
+					break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))
@@ -897,7 +908,7 @@ DWORD CommSession::setupProxyConnection(CSCPMessage *pRequest)
 // Proxy reading thread
 //
 
-void CommSession::proxyReadThread(void)
+void CommSession::proxyReadThread()
 {
    fd_set rdfs;
    struct timeval tv;

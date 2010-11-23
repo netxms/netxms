@@ -195,5 +195,5 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 
 bool AgentPolicyConfig::createUninstallMessage(CSCPMessage *msg)
 {
-	return AgentPolicy::createDeploymentMessage(msg);
+	return AgentPolicy::createUninstallMessage(msg);
 }

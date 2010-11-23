@@ -978,12 +978,15 @@ src/server/core/import.cpp -text
 src/server/core/isc.cpp -text
 src/server/core/nxcore.vcproj -text
 src/server/include/Makefile.am -text
+src/server/libnxsrv/apinfo.cpp -text
 src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/netxmsd/netxmsd.vcproj -text
 src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/nxagent/nxagent.vcproj -text
 src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/nxadm.vcproj -text
+src/server/tools/nxap/nxap.cpp -text
+src/server/tools/nxap/nxap.vcproj -text
 src/server/tools/nxconfig/nxconfig.vcproj -text
 src/server/tools/nxconfig/res/failed.ico -text
 src/server/tools/nxconfig/res/nxconfig.ico -text
