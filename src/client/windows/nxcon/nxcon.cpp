@@ -1430,6 +1430,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNodeConn.m_iAuthType = pObject->node.wAuthMethod;
             wndNodeConn.m_strSecret = pObject->node.szSharedSecret;
             wndNodeConn.m_iSNMPVersion = (int)pObject->node.nSNMPVersion;
+				wndNodeConn.m_snmpPort = (int)pObject->node.wSnmpPort;
 				wndNodeConn.m_iSnmpAuth = (int)pObject->node.wSnmpAuthMethod;
 				wndNodeConn.m_iSnmpPriv = (int)pObject->node.wSnmpPrivMethod;
             wndNodeConn.m_dwProxyNode = pObject->node.dwProxyNode;

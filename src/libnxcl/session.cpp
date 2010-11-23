@@ -415,6 +415,7 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
 		m_pItemList->pItems[i].nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
 		m_pItemList->pItems[i].pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
 		m_pItemList->pItems[i].pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
+		m_pItemList->pItems[i].nSnmpPort = (int)pMsg->GetVariableShort(VID_SNMP_PORT);
       m_pItemList->pItems[i].dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
       m_pItemList->pItems[i].ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_pItemList->pItems[i].dwNumSchedules);
       for(j = 0, dwId = VID_DCI_SCHEDULE_BASE; j < m_pItemList->pItems[i].dwNumSchedules; j++, dwId++)
@@ -491,7 +492,7 @@ DWORD NXCL_Session::OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
 // Load event configuration database
 //
 
-DWORD NXCL_Session::LoadEventDB(void)
+DWORD NXCL_Session::LoadEventDB()
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;

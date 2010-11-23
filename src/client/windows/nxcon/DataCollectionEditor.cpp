@@ -445,6 +445,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_pNode = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
 	pgCollection.m_dwResourceId = pItem->dwResourceId;
 	pgCollection.m_dwProxyNode = pItem->dwProxyNode;
+	pgCollection.m_snmpPort = pItem->nSnmpPort;
 
    // Setup schedule page
    if (pItem->iAdvSchedule)
@@ -502,6 +503,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
       pItem->iAdvSchedule = pgCollection.m_bAdvSchedule;
 		pItem->dwResourceId = pgCollection.m_dwResourceId;
 		pItem->dwProxyNode = pgCollection.m_dwProxyNode;
+		pItem->nSnmpPort = pgCollection.m_snmpPort;
       if (pItem->iAdvSchedule)
       {
          pItem->dwNumSchedules = pgSchedule.m_dwNumSchedules;

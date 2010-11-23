@@ -25,6 +25,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CDCIPropPage)
 	enum { IDD = IDD_DCI_COLLECTION };
+	CButton	m_wndCheckCustomPort;
 	CComboBox	m_wndComboResources;
 	CEdit	m_wndEditName;
 	CComboBox	m_wndOriginList;
@@ -38,6 +39,7 @@ public:
 	int		m_iStatus;
 	CString	m_strDescription;
 	BOOL	m_bAdvSchedule;
+	int		m_snmpPort;
 	//}}AFX_DATA
 
 

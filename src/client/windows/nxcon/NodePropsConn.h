@@ -38,6 +38,7 @@ public:
 	int		m_iAgentPort;
 	CString	m_strSecret;
 	BOOL	m_bForceEncryption;
+	int		m_snmpPort;
 	//}}AFX_DATA
 
 
@@ -68,6 +69,7 @@ protected:
 	afx_msg void OnSelchangeComboSnmpVersion();
 	afx_msg void OnSelchangeComboUsmAuth();
 	afx_msg void OnSelchangeComboUsmPriv();
+	afx_msg void OnChangeEditSnmpPort();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

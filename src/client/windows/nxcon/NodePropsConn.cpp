@@ -40,6 +40,7 @@ CNodePropsConn::CNodePropsConn() : CPropertyPage(CNodePropsConn::IDD)
 	m_iAgentPort = 0;
 	m_strSecret = _T("");
 	m_bForceEncryption = FALSE;
+	m_snmpPort = 0;
 	//}}AFX_DATA_INIT
 }
 
@@ -66,6 +67,8 @@ void CNodePropsConn::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SECRET, m_strSecret);
 	DDV_MaxChars(pDX, m_strSecret, 63);
 	DDX_Check(pDX, IDC_CHECK_ENCRYPTION, m_bForceEncryption);
+	DDX_Text(pDX, IDC_EDIT_SNMP_PORT, m_snmpPort);
+	DDV_MinMaxInt(pDX, m_snmpPort, 1, 65535);
 	//}}AFX_DATA_MAP
 }
 
@@ -84,6 +87,7 @@ BEGIN_MESSAGE_MAP(CNodePropsConn, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_COMBO_SNMP_VERSION, OnSelchangeComboSnmpVersion)
 	ON_CBN_SELCHANGE(IDC_COMBO_USM_AUTH, OnSelchangeComboUsmAuth)
 	ON_CBN_SELCHANGE(IDC_COMBO_USM_PRIV, OnSelchangeComboUsmPriv)
+	ON_EN_CHANGE(IDC_EDIT_SNMP_PORT, OnChangeEditSnmpPort)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -198,6 +202,7 @@ void CNodePropsConn::OnOK()
 	m_pUpdate->wSnmpPrivMethod = (WORD)m_iSnmpPriv;
    m_pUpdate->pszSecret = (TCHAR *)((LPCTSTR)m_strSecret);
    m_pUpdate->wSNMPVersion = (WORD)m_iSNMPVersion;
+	m_pUpdate->wSnmpPort = (WORD)m_snmpPort;
    m_pUpdate->dwProxyNode = m_dwProxyNode;
    m_pUpdate->dwSNMPProxy = m_dwSNMPProxy;
    if (m_bForceEncryption)
@@ -362,6 +367,12 @@ void CNodePropsConn::OnSelchangeComboAuth()
 void CNodePropsConn::OnChangeEditPort() 
 {
    m_pUpdate->qwFlags |= OBJ_UPDATE_AGENT_PORT;
+   SetModified();
+}
+
+void CNodePropsConn::OnChangeEditSnmpPort() 
+{
+   m_pUpdate->qwFlags |= OBJ_UPDATE_SNMP_PORT;
    SetModified();
 }
 

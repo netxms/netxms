@@ -162,6 +162,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
 	msg.SetVariable(VID_PROXY_NODE, pItem->dwProxyNode);
 	msg.SetVariable(VID_BASE_UNITS, (WORD)pItem->nBaseUnits);
 	msg.SetVariable(VID_MULTIPLIER, (DWORD)pItem->nMultiplier);
+	msg.SetVariable(VID_SNMP_PORT, (WORD)pItem->nSnmpPort);
 	if (pItem->pszCustomUnitName != NULL)
 		msg.SetVariable(VID_CUSTOM_UNITS_NAME, pItem->pszCustomUnitName);
 	if (pItem->pszPerfTabSettings)

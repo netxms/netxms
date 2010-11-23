@@ -1338,6 +1338,7 @@ typedef struct
 	int nMultiplier;
 	TCHAR *pszCustomUnitName;
 	TCHAR *pszPerfTabSettings;
+	int nSnmpPort;
 } NXC_DCI;
 
 

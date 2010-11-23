@@ -34,6 +34,7 @@ CDCIPropPage::CDCIPropPage()
 	m_iStatus = -1;
 	m_strDescription = _T("");
 	m_bAdvSchedule = FALSE;
+	m_snmpPort = 0;
 	//}}AFX_DATA_INIT
    
    m_pNode = NULL;
@@ -52,6 +53,7 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CDCIPropPage)
+	DDX_Control(pDX, IDC_CHECK_CUSTOM_PORT, m_wndCheckCustomPort);
 	DDX_Control(pDX, IDC_COMBO_RESOURCES, m_wndComboResources);
 	DDX_Control(pDX, IDC_EDIT_NAME, m_wndEditName);
 	DDX_Control(pDX, IDC_COMBO_ORIGIN, m_wndOriginList);
@@ -68,6 +70,8 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_DESCRIPTION, m_strDescription);
 	DDV_MaxChars(pDX, m_strDescription, 255);
 	DDX_Check(pDX, IDC_CHECK_SCHEDULE, m_bAdvSchedule);
+	DDX_Text(pDX, IDC_EDIT_SNMP_PORT, m_snmpPort);
+	DDV_MinMaxInt(pDX, m_snmpPort, 1, 65535);
 	//}}AFX_DATA_MAP
 
 	if (pDX->m_bSaveAndValidate)

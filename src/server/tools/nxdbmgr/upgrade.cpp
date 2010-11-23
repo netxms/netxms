@@ -256,7 +256,7 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
 		_T("ALTER TABLE nodes ADD snmp_port integer\n")
-		_T("UPDATE ndoes SET snmp_port=161\n")
+		_T("UPDATE nodes SET snmp_port=161\n")
 		_T("ALTER TABLE items ADD snmp_port integer\n")
 		_T("UPDATE items SET snmp_port=0\n")
 		_T("<END>");
@@ -293,7 +293,7 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("items"), _T("description"), _T("varchar(255)")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("description")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("transformation"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT])));
+	CHK_EXEC(SetColumnNullable(_T("items"), _T("transformation"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("transformation")));
 
 	CHK_EXEC(SetColumnNullable(_T("items"), _T("instance"), _T("varchar(255)")));
