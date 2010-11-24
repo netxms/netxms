@@ -1729,72 +1729,7 @@ AC_CONFIG_FILES([
 	include/Makefile
 	m4/Makefile
 	netware/Makefile
-	sql/Makefile
 	src/Makefile
-	src/sqlite/Makefile
-	src/libexpat/Makefile
-	src/libexpat/libexpat/Makefile
-	src/libnetxms/Makefile
-	src/libnxcl/Makefile
-	src/libnxlp/Makefile
-	src/libnxsl/Makefile
-	src/libnxmap/Makefile
-	src/install/Makefile
-	src/install/windows/Makefile
-	src/client/Makefile
-	src/client/install/Makefile
-	src/client/nxalarm/Makefile
-	src/client/nxevent/Makefile
-	src/client/nxpush/Makefile
-	src/client/nxsms/Makefile
-	src/client/windows/nxuilib/Makefile
-	src/client/windows/nxuilib/res/Makefile
-	src/client/windows/nxuilib/sounds/Makefile
-	src/client/nxlexer/Makefile
-	src/client/windows/nxcon/Makefile
-	src/client/windows/nxcon/icons/Makefile
-	src/client/windows/nxcon/res/Makefile
-	src/client/windows/nxav/Makefile
-	src/client/windows/nxav/res/Makefile
-	src/client/windows/nxnotify/Makefile
-	src/client/windows/nxnotify/res/Makefile
-	src/nxscript/Makefile
-	src/db/Makefile
-	src/db/dbdrv/Makefile
-	src/db/dbdrv/odbc/Makefile
-	src/db/dbdrv/mssql/Makefile
-	src/db/dbdrv/mysql/Makefile
-	src/db/dbdrv/pgsql/Makefile
-	src/db/dbdrv/sqlite/Makefile
-	src/db/dbdrv/oracle/Makefile
-	src/db/dbdrv/db2/Makefile
-	src/db/libnxdb/Makefile
-	src/server/Makefile
-	src/server/core/Makefile
-	src/server/include/Makefile
-	src/server/libnxsrv/Makefile
-	src/server/netxmsd/Makefile
-	src/server/smsdrv/Makefile
-	src/server/smsdrv/generic/Makefile
-	src/server/smsdrv/nxagent/Makefile
-	src/server/tools/Makefile
-	src/server/tools/nxget/Makefile
-	src/server/tools/nxaction/Makefile
-	src/server/tools/nxadm/Makefile
-	src/server/tools/nxconfig/Makefile
-	src/server/tools/nxconfig/res/Makefile
-	src/server/tools/nxdbmgr/Makefile
-	src/server/tools/nxencpasswd/Makefile
-	src/server/tools/nxupload/Makefile
-	src/snmp/Makefile
-	src/snmp/libnxsnmp/Makefile
-	src/snmp/nxmibc/Makefile
-	src/snmp/nxsnmpget/Makefile
-	src/snmp/nxsnmpset/Makefile
-	src/snmp/nxsnmpwalk/Makefile
-	src/tools/Makefile
-	src/tools/nxcptest/Makefile
-	src/tools/nxdevcfg/Makefile
 	src/agent/Makefile
 	src/agent/core/Makefile
 	src/agent/install/Makefile
@@ -1820,6 +1755,71 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
 	src/agent/subagents/logwatch/Makefile
+	src/client/Makefile
+	src/client/install/Makefile
+	src/client/nxalarm/Makefile
+	src/client/nxevent/Makefile
+	src/client/nxpush/Makefile
+	src/client/nxsms/Makefile
+	src/client/windows/nxuilib/Makefile
+	src/client/windows/nxuilib/res/Makefile
+	src/client/windows/nxuilib/sounds/Makefile
+	src/client/nxlexer/Makefile
+	src/client/windows/nxcon/Makefile
+	src/client/windows/nxcon/icons/Makefile
+	src/client/windows/nxcon/res/Makefile
+	src/client/windows/nxav/Makefile
+	src/client/windows/nxav/res/Makefile
+	src/client/windows/nxnotify/Makefile
+	src/client/windows/nxnotify/res/Makefile
+	src/db/Makefile
+	src/db/dbdrv/Makefile
+	src/db/dbdrv/odbc/Makefile
+	src/db/dbdrv/mssql/Makefile
+	src/db/dbdrv/mysql/Makefile
+	src/db/dbdrv/pgsql/Makefile
+	src/db/dbdrv/sqlite/Makefile
+	src/db/dbdrv/oracle/Makefile
+	src/db/dbdrv/db2/Makefile
+	src/db/libnxdb/Makefile
+	src/install/Makefile
+	src/install/windows/Makefile
+	src/libexpat/Makefile
+	src/libexpat/libexpat/Makefile
+	src/libnetxms/Makefile
+	src/libnxcl/Makefile
+	src/libnxlp/Makefile
+	src/libnxmap/Makefile
+	src/libnxsl/Makefile
+	src/nxscript/Makefile
+	src/server/Makefile
+	src/server/core/Makefile
+	src/server/include/Makefile
+	src/server/libnxsrv/Makefile
+	src/server/netxmsd/Makefile
+	src/server/smsdrv/Makefile
+	src/server/smsdrv/generic/Makefile
+	src/server/smsdrv/nxagent/Makefile
+	src/server/tools/Makefile
+	src/server/tools/nxaction/Makefile
+	src/server/tools/nxadm/Makefile
+	src/server/tools/nxap/Makefile
+	src/server/tools/nxconfig/Makefile
+	src/server/tools/nxconfig/res/Makefile
+	src/server/tools/nxdbmgr/Makefile
+	src/server/tools/nxencpasswd/Makefile
+	src/server/tools/nxget/Makefile
+	src/server/tools/nxupload/Makefile
+	src/snmp/Makefile
+	src/snmp/libnxsnmp/Makefile
+	src/snmp/nxmibc/Makefile
+	src/snmp/nxsnmpget/Makefile
+	src/snmp/nxsnmpset/Makefile
+	src/snmp/nxsnmpwalk/Makefile
+	src/sqlite/Makefile
+	src/tools/Makefile
+	src/tools/nxcptest/Makefile
+	src/tools/nxdevcfg/Makefile
 	src/webui/Makefile
 	src/webui/nxhttpd/Makefile
 	src/webui/nxhttpd/static/Makefile
@@ -1830,6 +1830,7 @@ AC_CONFIG_FILES([
 	src/webui/nxhttpd/static/images/ctrlpanel/Makefile
 	src/webui/nxhttpd/static/images/objects/Makefile
 	src/webui/nxhttpd/static/images/status/Makefile
+	sql/Makefile
 	tools/Makefile
 ])
 

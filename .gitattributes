@@ -985,6 +985,7 @@ src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/nxagent/nxagent.vcproj -text
 src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/nxadm.vcproj -text
+src/server/tools/nxap/Makefile.am -text
 src/server/tools/nxap/nxap.cpp -text
 src/server/tools/nxap/nxap.vcproj -text
 src/server/tools/nxconfig/nxconfig.vcproj -text
