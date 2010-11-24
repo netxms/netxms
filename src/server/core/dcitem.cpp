@@ -1757,6 +1757,7 @@ void DCItem::updateFromTemplate(DCItem *pItem)
 	m_dwProxyNode = pItem->m_dwProxyNode;
    setTransformationScript(pItem->m_pszScript);
    m_advSchedule = pItem->m_advSchedule;
+	m_dwResourceId = pItem->m_dwResourceId;
 
 	safe_free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = (pItem->m_pszPerfTabSettings != NULL) ? _tcsdup(pItem->m_pszPerfTabSettings) : NULL;

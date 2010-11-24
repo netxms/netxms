@@ -1909,7 +1909,7 @@ DWORD Node::GetItemFromSNMP(WORD port, const char *szParam, DWORD dwBufSize, cha
 {
    DWORD dwResult;
 
-   if ((m_dwDynamicFlags & NDF_SNMP_UNREACHABLE) ||
+   if ((((m_dwDynamicFlags & NDF_SNMP_UNREACHABLE) || !(m_dwFlags & NF_IS_SNMP)) && (port == 0)) ||
        (m_dwDynamicFlags & NDF_UNREACHABLE) ||
 		 (m_dwFlags & NF_DISABLE_SNMP))
    {
@@ -1977,7 +1977,9 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
    DWORD dwTries = 3;
 
    if ((m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
-       (m_dwDynamicFlags & NDF_UNREACHABLE))
+       (m_dwDynamicFlags & NDF_UNREACHABLE) ||
+		 (m_dwFlags & NF_DISABLE_NXCP) ||
+		 !(m_dwFlags & NF_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
 
    agentLock();
