@@ -71,6 +71,7 @@ protected:
 	afx_msg void OnSelchangeComboDt();
 	afx_msg void OnSelchangeComboResources();
 	afx_msg void OnButtonSelectProxy();
+	afx_msg void OnCheckCustomPort();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

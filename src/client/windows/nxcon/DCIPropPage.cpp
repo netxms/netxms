@@ -71,7 +71,6 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strDescription, 255);
 	DDX_Check(pDX, IDC_CHECK_SCHEDULE, m_bAdvSchedule);
 	DDX_Text(pDX, IDC_EDIT_SNMP_PORT, m_snmpPort);
-	DDV_MinMaxInt(pDX, m_snmpPort, 1, 65535);
 	//}}AFX_DATA_MAP
 
 	if (pDX->m_bSaveAndValidate)
@@ -81,9 +80,21 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 			MessageBox(_T("Polling interval must be in range 2 .. 100000"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
 			pDX->Fail();
 		}
+
+		if (m_wndCheckCustomPort.GetCheck() == BST_CHECKED)
+		{
+			if ((m_snmpPort < 1) || (m_snmpPort > 65535))
+			{
+				MessageBox(_T("SNMP port value must be in range 1 .. 65535"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+				pDX->Fail();
+			}
+		}
+		else
+		{
+			m_snmpPort = 0;
+		}
 	}
 }
-
 
 BEGIN_MESSAGE_MAP(CDCIPropPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CDCIPropPage)
@@ -93,6 +104,7 @@ BEGIN_MESSAGE_MAP(CDCIPropPage, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_COMBO_DT, OnSelchangeComboDt)
 	ON_CBN_SELCHANGE(IDC_COMBO_RESOURCES, OnSelchangeComboResources)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_PROXY, OnButtonSelectProxy)
+	ON_BN_CLICKED(IDC_CHECK_CUSTOM_PORT, OnCheckCustomPort)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -188,6 +200,11 @@ BOOL CDCIPropPage::OnInitDialog()
 	
    EnableDlgItem(this, IDC_BUTTON_SELECT, m_iOrigin != DS_PUSH_AGENT);
    EnableDlgItem(this, IDC_BUTTON_SELECT_PROXY, m_iOrigin != DS_PUSH_AGENT);
+
+	m_wndCheckCustomPort.SetCheck((m_snmpPort != 0) ? BST_CHECKED : BST_UNCHECKED);
+   EnableDlgItem(this, IDC_CHECK_CUSTOM_PORT, m_iOrigin == DS_SNMP_AGENT);
+   EnableDlgItem(this, IDC_EDIT_SNMP_PORT, (m_iOrigin == DS_SNMP_AGENT) && (m_wndCheckCustomPort.GetCheck() == BST_CHECKED));
+
 	return TRUE;
 }
 
@@ -232,6 +249,8 @@ void CDCIPropPage::OnSelchangeComboOrigin()
    EnableDlgItem(this, IDC_BUTTON_SELECT, m_iOrigin != DS_PUSH_AGENT);
    EnableDlgItem(this, IDC_EDIT_INTERVAL, m_iOrigin != DS_PUSH_AGENT);
    EnableDlgItem(this, IDC_CHECK_SCHEDULE, m_iOrigin != DS_PUSH_AGENT);
+   EnableDlgItem(this, IDC_CHECK_CUSTOM_PORT, m_iOrigin == DS_SNMP_AGENT);
+   EnableDlgItem(this, IDC_EDIT_SNMP_PORT, (m_iOrigin == DS_SNMP_AGENT) && (m_wndCheckCustomPort.GetCheck() == BST_CHECKED));
 }
 
 
@@ -488,4 +507,14 @@ void CDCIPropPage::OnButtonSelectProxy()
          SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
       }
    }
+}
+
+
+//
+// Selection handler for "custom SNMP port" checkbox
+//
+
+void CDCIPropPage::OnCheckCustomPort() 
+{
+	EnableDlgItem(this, IDC_EDIT_SNMP_PORT, m_wndCheckCustomPort.GetCheck() == BST_CHECKED);
 }
