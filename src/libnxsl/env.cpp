@@ -45,6 +45,7 @@ int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *pr
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
@@ -83,6 +84,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { "max", F_max, -1 },
    { "min", F_min, -1 },
    { "pow", F_pow, 2 },
+   { "random", F_random, 2 },
    { "right", F_right, -1 },
    { "rindex", F_rindex, -1 },
 	{ "rtrim", F_rtrim, 1 },

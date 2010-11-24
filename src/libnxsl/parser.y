@@ -112,6 +112,9 @@ Script:
 		pCompiler->error(szErrorText);
 		pLexer->setErrorState();
 	}
+	
+	// Implicit return
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_RET_NULL));
 }
 |	Expression
 {

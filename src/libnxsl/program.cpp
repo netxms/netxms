@@ -163,6 +163,8 @@ NXSL_Program::NXSL_Program()
    m_pModuleList = NULL;
    m_dwNumPreloads = 0;
    m_ppszPreloadList = NULL;
+
+	srand((unsigned int)time(NULL));
 }
 
 

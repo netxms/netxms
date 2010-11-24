@@ -5,6 +5,7 @@
 - New column "snmp_port" added to table "nodes"
 - New column "snmp_port" added to table "items"
 - All text columns in table "nodes" converted from # encoded format
+- All text columns in table "items" converted from # encoded format
 
 
 ***************

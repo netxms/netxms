@@ -996,3 +996,18 @@ int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
 {
 	return F_index_rindex(argc, argv, ppResult, program, true);
 }
+
+
+//
+// Generate random number in given range
+//
+
+int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isInteger() || !argv[1]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	int range = argv[1]->getValueAsInt32() - argv[0]->getValueAsInt32() + 1;
+	*ppResult = new NXSL_Value((rand() % range) + argv[0]->getValueAsInt32());
+	return 0;
+}
