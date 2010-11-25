@@ -4,14 +4,13 @@
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
-            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+            locationURI="popup:org.eclipse.ui.popup.any?after=objectmgmt">
          <dynamic
                class="org.netxms.ui.eclipse.objecttools.ObjectToolsDynamicMenu"
                id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu">
             <visibleWhen
                   checkEnabled="false">
                <iterate
-                     ifEmpty="false"
                      operator="and">
                   <instanceof
                         value="org.netxms.client.objects.Node">

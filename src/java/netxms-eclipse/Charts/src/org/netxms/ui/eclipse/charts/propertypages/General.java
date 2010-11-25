@@ -148,7 +148,7 @@ public class General extends PropertyPage
       refreshIntervalScale = new Scale(refreshIntervalGroup, SWT.HORIZONTAL);
       refreshIntervalScale.setMinimum(1);
       refreshIntervalScale.setMaximum(600);
-      refreshIntervalScale.setSelection(settings.getAutoRefreshInterval());
+      refreshIntervalScale.setSelection(settings.getAutoRefreshInterval() / 1000);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
