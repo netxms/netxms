@@ -84,7 +84,7 @@ public class GraphSettings
 		timeFrame = 60;
 		timeFrom = new Date();
 		timeTo = new Date();
-		autoRefreshInterval = 30;
+		autoRefreshInterval = 30000;
 		axisColor = 0x161616;
 		backgroundColor = 0xF0F0F0;
 		gridColor = 0xE8E8E8;
@@ -152,7 +152,7 @@ public class GraphSettings
 			
 			if (name.equals("A"))
 			{
-				autoRefreshInterval = safeParseInt(value, 30);
+				autoRefreshInterval = safeParseInt(value, 30) * 1000;	// convert to milliseconds
 			}
 			else if (name.equals("F"))
 			{
