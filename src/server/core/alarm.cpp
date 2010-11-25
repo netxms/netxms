@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -415,16 +415,19 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 
 void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
 {
-   char szQuery[1024];
+   char szQuery[2048];
 
-   sprintf(szQuery, "UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,"
-                    "last_change_time=%d,current_severity=%d,repeat_count=%d,"
-                    "hd_state=%d,hd_ref=%s,timeout=%d,timeout_event=%d WHERE alarm_id=%d",
-           pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
-           pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
-           pAlarm->dwRepeatCount, pAlarm->nHelpDeskState, 
-			  (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szHelpDeskRef),
-           pAlarm->dwTimeout, pAlarm->dwTimeoutEvent, pAlarm->dwAlarmId);
+   _sntprintf(szQuery, 2048, _T("UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,")
+                             _T("last_change_time=%d,current_severity=%d,repeat_count=%d,")
+                             _T("hd_state=%d,hd_ref=%s,timeout=%d,timeout_event=%d,")
+									  _T("message=%s WHERE alarm_id=%d"),
+              pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
+              pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
+              pAlarm->dwRepeatCount, pAlarm->nHelpDeskState, 
+			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szHelpDeskRef),
+              pAlarm->dwTimeout, pAlarm->dwTimeoutEvent,
+			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szMessage),
+			     pAlarm->dwAlarmId);
    QueueSQLRequest(szQuery);
 }
 
