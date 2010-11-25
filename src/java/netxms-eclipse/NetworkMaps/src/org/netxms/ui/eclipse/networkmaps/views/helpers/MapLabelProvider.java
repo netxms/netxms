@@ -41,8 +41,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	private Image imgNode;
 	private Image imgSubnet;
 	private Font font;
-	private boolean showStatusIcons = false;
-	private boolean showStatusBackground = true;
+	private boolean showStatusIcons = true;
+	private boolean showStatusBackground = false;
 	
 	/**
 	 * Create map label provider

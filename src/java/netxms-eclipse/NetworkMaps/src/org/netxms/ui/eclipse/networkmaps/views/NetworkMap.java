@@ -20,15 +20,18 @@ package org.netxms.ui.eclipse.networkmaps.views;
 
 import java.util.Set;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
@@ -56,6 +59,10 @@ public abstract class NetworkMap extends ViewPart
 	protected NetworkMapPage mapPage;
 	protected GraphViewer viewer;
 	protected SessionListener sessionListener;
+	protected MapLabelProvider labelProvider;
+	
+	protected Action actionShowStatusIcon;
+	protected Action actionShowStatusBackground;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -88,10 +95,13 @@ public abstract class NetworkMap extends ViewPart
 		
 		viewer = new GraphViewer(parent, SWT.NONE);
 		viewer.setContentProvider(new MapContentProvider());
-		viewer.setLabelProvider(new MapLabelProvider(viewer));
+		labelProvider = new MapLabelProvider(viewer);
+		viewer.setLabelProvider(labelProvider);
 		viewer.setLayoutAlgorithm(new SpringLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 		viewer.setInput(mapPage);
 		
+		createActions();
+		contributeToActionBars();
 		createPopupMenu();
 		
 		sessionListener = new SessionListener() {
@@ -105,6 +115,62 @@ public abstract class NetworkMap extends ViewPart
 		session.addListener(sessionListener);
 	}
 
+	/**
+	 * Create actions
+	 */
+	protected void createActions()
+	{
+		actionShowStatusBackground = new Action("Show status &background", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				labelProvider.setShowStatusBackground(!labelProvider.isShowStatusBackground());
+				setChecked(labelProvider.isShowStatusBackground());
+				viewer.refresh();
+			}
+		};
+		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
+	
+		actionShowStatusIcon = new Action("Show status &icon", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				labelProvider.setShowStatusIcons(!labelProvider.isShowStatusIcons());
+				setChecked(labelProvider.isShowStatusIcons());
+				viewer.refresh();
+			}
+		};
+		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
+	}
+	
+	/**
+	 * Fill action bars
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * @param manager
+	 */
+	protected void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionShowStatusBackground);
+		manager.add(actionShowStatusIcon);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * @param manager
+	 */
+	protected void fillLocalToolBar(IToolBarManager manager)
+	{	
+	}
+	
 	/**
 	 * Create popup menu for map
 	 */
