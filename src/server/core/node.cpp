@@ -321,7 +321,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("node_type,agent_version,platform_name,uname,")
                  _T("poller_node_id,zone_guid,snmp_proxy,required_polls,")
 		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods) VALUES ")
-		           _T("(%d,'%s',%d,%d,%s,%d,%d,%d,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d)"),
+		           _T("(%d,'%s',%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d)"),
                  m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (int)m_wSNMPPort, m_dwFlags,
                  m_snmpVersion, (const TCHAR *)DBPrepareString(hdb, m_snmpSecurity->getCommunity()),
 					  m_iStatusPollType, (int)m_wAgentPort, m_wAuthMethod, 

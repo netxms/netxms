@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 1.1.0-rc11
-AppVersion=1.1.0-rc11
+AppVerName=NetXMS 1.1.0
+AppVersion=1.1.0
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-1.1.0-rc11
+OutputBaseFilename=netxms-1.1.0
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -172,7 +172,6 @@ Source: "Files\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Compon
 Source: "Files\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
 Source: "Files\orannzsbb10.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
 Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "Files\dbghelp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 
 [Icons]
 Name: "{group}\Alarm Notifier"; Filename: "{app}\bin\nxnotify.exe"; Components: console

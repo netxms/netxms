@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Client
-AppVerName=NetXMS Client 1.0.0
-AppVersion=1.0.0
+AppVerName=NetXMS Client 1.1.0
+AppVersion=1.1.0
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\Program Files\NetXMS Client
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-client-1.0.0
+OutputBaseFilename=netxms-client-1.1.0
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -69,7 +69,7 @@ Source: "..\..\..\Release\libexpat.pdb"; DestDir: "{app}\bin"; Flags: ignorevers
 Source: "..\..\..\Release\scilexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\..\Release\scilexer.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
 Source: "..\..\install\windows\files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "..\..\install\windows\files\dbghelp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+;Source: "..\..\install\windows\files\dbghelp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\install\windows\files\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion; Components: base
 Source: "..\..\install\windows\files\Microsoft.VC80.MFC\*"; DestDir: "{app}\bin\Microsoft.VC80.MFC"; Flags: ignoreversion; Components: console
 
