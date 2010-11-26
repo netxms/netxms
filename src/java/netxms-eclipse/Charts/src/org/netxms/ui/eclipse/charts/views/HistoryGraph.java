@@ -55,6 +55,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
@@ -255,6 +256,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		// Data
 		items.clear();
 		items.addAll(Arrays.asList(settings.getItems()));
+		chart.setItemStyles(Arrays.asList(settings.getItemStyles()));
 		
 		getDataFromServer();
 
@@ -322,49 +324,17 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
 		{
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				IStatus status;
-				
-				final DciData[] data = new DciData[items.size()];
-				try
-				{
-					for(int i = 0; i < items.size(); i++)
-					{
-						GraphItem item = items.get(i);
-						data[i] = session.getCollectedData(item.getNodeId(), item.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
-					}
-					status = Status.OK_STATUS;
-	
-					new UIJob("Update chart") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
-							setChartData(data);
-							updateInProgress = false;
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-	                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-	                    "Cannot get DCI values for history graph: " + e.getMessage(), e);
-					updateInProgress = false;
-				}
-				return status;
-			}
-
-			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				monitor.beginTask(getName(), items.size());
 				final DciData[] data = new DciData[items.size()];
+				final Threshold[][] thresholds = new Threshold[items.size()][];
 				for(int i = 0; i < items.size(); i++)
 				{
 					GraphItem item = items.get(i);
 					data[i] = session.getCollectedData(item.getNodeId(), item.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
+					thresholds[i] = session.getThresholds(item.getNodeId(), item.getDciId());
+					monitor.worked(1);
 				}
 
 				new UIJob("Update chart") {

@@ -773,6 +773,7 @@ public:
    void unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
    void updateDciCache();
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
+	NXSL_Array *getParentsForNXSL();
 
    void OpenParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    void CloseParamList(void) { UnlockData(); }

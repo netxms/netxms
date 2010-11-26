@@ -3582,3 +3582,30 @@ void Node::processNewDciValue(DCItem *item, time_t currTime, const TCHAR *value)
 	item->processNewValue(currTime, value);
 	unlockDciAccess();
 }
+
+
+//
+// Get list of parent objects for NXSL script
+//
+
+NXSL_Array *Node::getParentsForNXSL()
+{
+	NXSL_Array *parents = new NXSL_Array;
+	int index = 0;
+
+	LockParentList(FALSE);
+	for(DWORD i = 0; i < m_dwParentCount; i++)
+	{
+		if (((m_pParentList[i]->Type() == OBJECT_CONTAINER) ||
+		     (m_pParentList[i]->Type() == OBJECT_CLUSTER) ||
+			  (m_pParentList[i]->Type() == OBJECT_SUBNET) ||
+			  (m_pParentList[i]->Type() == OBJECT_SERVICEROOT)) &&
+		    m_pParentList[i]->IsTrustedNode(m_dwId))
+		{
+			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pParentList[i])));
+		}
+	}
+	UnlockParentList();
+
+	return parents;
+}

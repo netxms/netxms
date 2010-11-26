@@ -171,6 +171,27 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 
 //
+// Get node object's parents
+// First argument: node object
+// Returns array of accessible parent objects
+//
+
+static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Node *node = (Node *)object->getData();
+	*ppResult = new NXSL_Value(node->getParentsForNXSL());
+	return 0;
+}
+
+
+//
 // Post event
 // Syntax:
 //    PostEvent(node, event, tag, ...)
@@ -239,6 +260,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
    { "GetCustomAttribute", F_GetCustomAttribute, 2 },
    { "GetInterfaceName", F_GetInterfaceName, 2 },
+   { "GetNodeParents", F_GetNodeParents, 1 },
 	{ "FindNodeObject", F_FindNodeObject, 2 },
 	{ "PostEvent", F_PostEvent, -1 }
 };

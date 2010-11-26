@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.Glob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -39,6 +40,7 @@ public class ObjectListFilter extends ViewerFilter
 	private GenericObject[] sourceObjects = null;
 	private Map<Long, GenericObject> objectList = null;
 	private GenericObject lastMatch = null;
+	private boolean usePatternMatching = false;
 
 	/**
 	 * Default constructor, creates object list filter without class filter
@@ -58,6 +60,20 @@ public class ObjectListFilter extends ViewerFilter
 		this.sourceObjects = sourceObjects;
 		this.classFilter = classFilter;
 	}
+
+	/**
+	 * Match given value to curtrent filter string
+	 * 
+	 * @param value value to match
+	 * @return true if value matched to current filter string
+	 */
+	private boolean matchFilterString(String value)
+	{
+		if (filterString == null)
+			return true;
+
+		return usePatternMatching ? Glob.matchIgnoreCase(filterString, value) : value.toLowerCase().startsWith(filterString);
+	}
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -71,10 +87,7 @@ public class ObjectListFilter extends ViewerFilter
 				return false;
 		}
 		
-		if (filterString == null)
-			return true;
-		
-		return ((GenericObject)element).getObjectName().toLowerCase().startsWith(filterString);
+		return matchFilterString(((GenericObject)element).getObjectName());
 	}
 		
 	/**
@@ -85,10 +98,27 @@ public class ObjectListFilter extends ViewerFilter
 	public void setFilterString(final String filterString)
 	{
 		boolean fullSearch = true;
-		if (this.filterString != null)
-			if (filterString.startsWith(this.filterString))
-				fullSearch = false;
-		this.filterString = ((filterString == null) || filterString.isEmpty()) ? null : filterString.toLowerCase();
+		if ((filterString != null) && !filterString.isEmpty())
+		{
+			usePatternMatching = filterString.contains("*") || filterString.contains("?");
+			if (usePatternMatching)
+			{
+				this.filterString = filterString.toLowerCase() + "*";
+			}
+			else
+			{
+				String newFilterString = filterString.toLowerCase();
+				if (this.filterString != null)
+					if (newFilterString.startsWith(this.filterString))
+						fullSearch = false;
+				this.filterString = newFilterString;
+			}
+		}
+		else
+		{
+			this.filterString = null;
+			usePatternMatching = false;
+		}
 		updateObjectList(fullSearch);
 	}
 	
@@ -104,7 +134,7 @@ public class ObjectListFilter extends ViewerFilter
 				GenericObject[] fullList = (sourceObjects != null) ? sourceObjects : ((NXCSession)ConsoleSharedData.getSession()).getAllObjects();
 				objectList = new HashMap<Long, GenericObject>();
 				for(int i = 0; i < fullList.length; i++)
-					if (fullList[i].getObjectName().toLowerCase().startsWith(filterString))
+					if (matchFilterString(fullList[i].getObjectName()))
 					{
 						objectList.put(fullList[i].getObjectId(), fullList[i]);
 						lastMatch = fullList[i];
@@ -117,7 +147,7 @@ public class ObjectListFilter extends ViewerFilter
 				while(it.hasNext())
 				{
 					GenericObject obj = it.next();
-					if (!obj.getObjectName().toLowerCase().startsWith(filterString))
+					if (!matchFilterString(obj.getObjectName()))
 						it.remove();
 					else
 						lastMatch = obj;
