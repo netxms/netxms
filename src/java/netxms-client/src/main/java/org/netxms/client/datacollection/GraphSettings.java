@@ -47,6 +47,11 @@ public class GraphSettings
 	public static final int GF_SHOW_HOST_NAMES = 0x001000;
 	public static final int GF_LOG_SCALE       = 0x002000;
 	
+	public static final int POSITION_LEFT = 1;
+	public static final int POSITION_RIGHT = 2;
+	public static final int POSITION_TOP = 4;
+	public static final int POSITION_BOTTOM = 8;
+	
 	private long id;
 	private long ownerId;
 	private String name;
@@ -64,6 +69,7 @@ public class GraphSettings
 	private int selectionColor;
 	private int textColor;
 	private int rulerColor;
+	private int legendPosition;
 	private String title;
 	private GraphItemStyle[] itemStyles = new GraphItemStyle[MAX_GRAPH_ITEM_COUNT];
 	private GraphItem[] items;
@@ -91,6 +97,7 @@ public class GraphSettings
 		selectionColor = 0x800000;
 		textColor = 0x000000;
 		rulerColor = 0x000000;
+		legendPosition = POSITION_BOTTOM;
 		title = "";
 		items = new GraphItem[0];
 		accessList = new ArrayList<AccessListElement>(0);
@@ -111,6 +118,7 @@ public class GraphSettings
 		id = msg.getVariableAsInt64(baseId);
 		ownerId = msg.getVariableAsInt64(baseId + 1);
 		name = msg.getVariableAsString(baseId + 2);
+		legendPosition = POSITION_BOTTOM;
 		
 		String[] parts = name.split("->");
 		shortName = (parts.length > 1) ? parts[parts.length - 1] : name;
@@ -812,5 +820,21 @@ public class GraphSettings
 				return timeFrame * 24 * 60 * 60 * 1000;
 		}
 		return 0;
+	}
+
+	/**
+	 * @return the legendPosition
+	 */
+	public int getLegendPosition()
+	{
+		return legendPosition;
+	}
+
+	/**
+	 * @param legendPosition the legendPosition to set
+	 */
+	public void setLegendPosition(int legendPosition)
+	{
+		this.legendPosition = legendPosition;
 	}
 }

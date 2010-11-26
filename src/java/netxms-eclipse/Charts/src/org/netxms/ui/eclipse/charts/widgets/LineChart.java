@@ -20,7 +20,9 @@ package org.netxms.ui.eclipse.charts.widgets;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
@@ -32,10 +34,16 @@ import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphItemStyle;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
@@ -44,8 +52,10 @@ import org.swtchart.Chart;
 import org.swtchart.IAxis;
 import org.swtchart.IAxisSet;
 import org.swtchart.IAxisTick;
+import org.swtchart.ICustomPaintListener;
 import org.swtchart.ILegend;
 import org.swtchart.ILineSeries;
+import org.swtchart.IPlotArea;
 import org.swtchart.ISeriesSet;
 import org.swtchart.ITitle;
 import org.swtchart.LineStyle;
@@ -62,6 +72,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 {
 	private static final int MAX_ZOOM_LEVEL = 16;
 	
+	private List<GraphItem> items = new ArrayList<GraphItem>();
+	private List<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(GraphSettings.MAX_GRAPH_ITEM_COUNT);
 	private long timeFrom;
 	private long timeTo;
 	private boolean showToolTips;
@@ -86,6 +98,11 @@ public class LineChart extends Chart implements HistoricalDataChart
 		setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		selection.setColor(getColorFromPreferences("Chart.Colors.Selection"));
 
+		// Create default item styles
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		for(int i = 0; i < GraphSettings.MAX_GRAPH_ITEM_COUNT; i++)
+			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, rgbToInt(PreferenceConverter.getColor(preferenceStore, "Chart.Colors.Data." + i)), 0, 0));
+		
 		// Setup title
 		ITitle title = getTitle();
 		title.setVisible(preferenceStore.getBoolean("Chart.ShowTitle"));
@@ -177,6 +194,20 @@ public class LineChart extends Chart implements HistoricalDataChart
 				}
 			});
 		}
+		
+		((IPlotArea)plotArea).addCustomPaintListener(new ICustomPaintListener() {
+			@Override
+			public void paintControl(PaintEvent e)
+			{
+				paintThresholds(e, yAxis);
+			}
+
+			@Override
+			public boolean drawBehindSeries()
+			{
+				return true;
+			}
+		});
 	}
 	
 	/**
@@ -216,22 +247,25 @@ public class LineChart extends Chart implements HistoricalDataChart
 		final Composite plotArea = getPlotArea();
 		plotArea.removeMouseMoveListener(moveListener);
 
-		for(IAxis axis : getAxisSet().getAxes())
+		if (selection.isUsableSize())
 		{
-			Point range = null;
-			if ((getOrientation() == SWT.HORIZONTAL && axis.getDirection() == Direction.X) ||
-			    (getOrientation() == SWT.VERTICAL && axis.getDirection() == Direction.Y))
+			for(IAxis axis : getAxisSet().getAxes())
 			{
-				range = selection.getHorizontalRange();
-			} 
-			else 
-			{
-				range = selection.getVerticalRange();
-			}
-
-			if (range != null && range.x != range.y)
-			{
-				setRange(range, axis);
+				Point range = null;
+				if ((getOrientation() == SWT.HORIZONTAL && axis.getDirection() == Direction.X) ||
+				    (getOrientation() == SWT.VERTICAL && axis.getDirection() == Direction.Y))
+				{
+					range = selection.getHorizontalRange();
+				} 
+				else 
+				{
+					range = selection.getVerticalRange();
+				}
+	
+				if (range != null && range.x != range.y)
+				{
+					setRange(range, axis);
+				}
 			}
 		}
       
@@ -288,7 +322,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 * @param xSeries X axis data
 	 * @param ySeries Y axis data
 	 */
-	public ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries)
+	private ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries)
 	{
 		ISeriesSet seriesSet = getSeriesSet();
 		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, description);
@@ -314,12 +348,34 @@ public class LineChart extends Chart implements HistoricalDataChart
 		timeTo = to.getTime();
 		getAxisSet().getXAxis(0).setRange(new Range(timeFrom, timeTo));
 	}
+	
+	/**
+	 * Paint DCI thresholds
+	 */
+	private void paintThresholds(PaintEvent e, IAxis axis)
+	{
+		GC gc = e.gc;
+		Rectangle clientArea = getPlotArea().getClientArea();
+		
+		for(GraphItemStyle style : itemStyles)
+		{
+			if (style.isShowThresholds())
+			{
+				int y = axis.getPixelCoordinate(10);
+				gc.setForeground(colorFromInt(style.getColor()));
+				gc.setLineStyle(SWT.LINE_DOT);
+				gc.setLineWidth(3);
+				gc.drawLine(0, y, clientArea.width, y);
+			}
+		}
+	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#initializationComplete()
+	 */
 	@Override
 	public void initializationComplete()
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -396,6 +452,9 @@ public class LineChart extends Chart implements HistoricalDataChart
 		return getLegend().getPosition();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setPalette(org.netxms.ui.eclipse.charts.api.ChartColor[])
+	 */
 	@Override
 	public void setPalette(ChartColor[] colors)
 	{
@@ -403,6 +462,9 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setPaletteEntry(int, org.netxms.ui.eclipse.charts.api.ChartColor)
+	 */
 	@Override
 	public void setPaletteEntry(int index, ChartColor color)
 	{
@@ -446,17 +508,20 @@ public class LineChart extends Chart implements HistoricalDataChart
 		return getAxisSet().getYAxis(0).isLogScaleEnabled();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTranslucent(boolean)
+	 */
 	@Override
 	public void setTranslucent(boolean translucent)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isTranslucent()
+	 */
 	@Override
 	public boolean isTranslucent()
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -466,6 +531,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void refresh()
 	{
+		getAxisSet().getYAxis(0).adjustRange();
 		redraw();
 	}
 
@@ -478,17 +544,99 @@ public class LineChart extends Chart implements HistoricalDataChart
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#addParameter(org.netxms.client.datacollection.GraphItem)
+	 */
 	@Override
 	public int addParameter(GraphItem item)
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		items.add(item);
+		return items.size();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#updateParameter(int, org.netxms.client.datacollection.DciData, boolean)
+	 */
 	@Override
 	public void updateParameter(int index, DciData data, boolean updateChart)
 	{
-		// TODO Auto-generated method stub
+		if ((index < 0) || (index >= items.size()))
+			return;
 		
+		final GraphItem item = items.get(index);
+		final DciDataRow[] values = data.getValues();
+		
+		// Create series
+		Date[] xSeries = new Date[values.length];
+		double[] ySeries = new double[values.length];
+		for(int i = 0; i < values.length; i++)
+		{
+			xSeries[i] = values[i].getTimestamp();
+			ySeries[i] = values[i].getValueAsDouble();
+		}
+		
+		ILineSeries series = addLineSeries(index, item.getDescription(), xSeries, ySeries);
+		applyItemStyle(index, series);
+		
+		if (updateChart)
+		{
+			getAxisSet().getYAxis(0).adjustRange();
+			redraw();
+		}
+	}
+
+	/**
+	 * Apply graph item style
+	 * 
+	 * @param index item index
+	 * @param series added series
+	 */
+	private void applyItemStyle(int index, ILineSeries series)
+	{
+		if ((index < 0) || (index >= itemStyles.size()))
+			return;
+
+		GraphItemStyle style = itemStyles.get(index);
+		series.setLineColor(colorFromInt(style.getColor()));
+	}
+
+	/**
+	 * Create integer value from Red/Green/Blue
+	 * 
+	 * @param r red
+	 * @param g green
+	 * @param b blue
+	 * @return
+	 */
+	private static int rgbToInt(RGB rgb)
+	{
+		return rgb.red | (rgb.green << 8) | (rgb.blue << 16);
+	}
+
+	/**
+	 * Create Color object from integer RGB representation
+	 * @param rgb color's rgb representation
+	 * @return color object
+	 */
+	private Color colorFromInt(int rgb)
+	{
+		// All colors on server stored as BGR: red in less significant byte and blue in most significant byte
+		return new Color(getDisplay(), rgb & 0xFF, (rgb >> 8) & 0xFF, rgb >> 16);
+	}
+
+	/**
+	 * @return the itemStyles
+	 */
+	public List<GraphItemStyle> getItemStyles()
+	{
+		return itemStyles;
+	}
+
+	/**
+	 * @param itemStyles the itemStyles to set
+	 */
+	public void setItemStyles(List<GraphItemStyle> itemStyles)
+	{
+		this.itemStyles = itemStyles;
 	}
 }

@@ -120,6 +120,15 @@ public class SelectionRectangle
 		startPoint = null;
 		endPoint = null;
 	}
+	
+	/**
+	 * Returns true if selection rectangle is of usable size
+	 * @return
+	 */
+	public boolean isUsableSize()
+	{
+		return (Math.abs(startPoint.x - endPoint.x) >= 10) && (Math.abs(startPoint.y - endPoint.y) >= 10);
+	}
 
 	/**
 	 * Draws the selection rectangle on chart panel.

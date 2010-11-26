@@ -139,4 +139,34 @@ public class GraphItemStyle
 	{
 		this.flags = flags;
 	}
+	
+	/**
+	 * Convenient method for checking SHOW_AVERAGE flag
+	 * 
+	 * @return true if SHOW_AVERAGE is set
+	 */
+	public boolean isShowAverage()
+	{
+		return (flags & SHOW_AVERAGE) != 0;
+	}
+	
+	/**
+	 * Convenient method for checking SHOW_THRESHOLDS flag
+	 * 
+	 * @return true if SHOW_THRESHOLDS is set
+	 */
+	public boolean isShowThresholds()
+	{
+		return (flags & SHOW_THRESHOLDS) != 0;
+	}
+	
+	/**
+	 * Convenient method for checking SHOW_TREND flag
+	 * 
+	 * @return true if SHOW_TREND is set
+	 */
+	public boolean isShowTrend()
+	{
+		return (flags & SHOW_TREND) != 0;
+	}
 }

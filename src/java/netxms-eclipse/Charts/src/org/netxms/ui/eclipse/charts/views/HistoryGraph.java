@@ -28,22 +28,17 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -54,23 +49,20 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.DataChart;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.swtchart.IAxis;
-import org.swtchart.ILineSeries;
 import org.swtchart.LineStyle;
 
 /**
@@ -98,7 +90,6 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	
 	private NXCSession session;
 	private ArrayList<GraphItem> items = new ArrayList<GraphItem>(1);
-	private ArrayList<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(GraphSettings.MAX_GRAPH_ITEM_COUNT);
 	private LineChart chart;
 	private boolean updateInProgress = false;
 	private Runnable refreshTimer;
@@ -122,17 +113,6 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	private Action actionLegendBottom;
 	private Action[] presetActions;
 	
-	/**
-	 * Default constructor
-	 */
-	public HistoryGraph()
-	{
-		// Create default item styles
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		for(int i = 0; i < GraphSettings.MAX_GRAPH_ITEM_COUNT; i++)
-			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, rgbToInt(PreferenceConverter.getColor(preferenceStore, "Chart.Colors.Data." + i)), 0, 0));
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
@@ -267,8 +247,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		chart.setChartTitle(settings.getTitle());
 
 		// Chart visual settings
-		itemStyles.clear();
-		itemStyles.addAll(Arrays.asList(settings.getItemStyles()));
+		chart.setItemStyles(Arrays.asList(settings.getItemStyles()));
 		chart.setLogScaleEnabled(settings.isLogScale());
 		setGridVisible(settings.isGridVisible());
 		chart.setLegendVisible(settings.isLegendVisible());
@@ -296,6 +275,9 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		chart.setLogScaleEnabled(settings.isLogScale());
 		chart.setLegendVisible(settings.isLegendVisible());
 		chart.setLegendPosition(legendPosition);
+		
+		for(GraphItem item : items)
+			chart.addParameter(item);
 		
 		createActions();
 		contributeToActionBars();
@@ -337,7 +319,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	private void getDataFromServer()
 	{
 		// Request data from server
-		Job job = new Job("Get DCI values for history graph")
+		new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
 		{
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
@@ -375,18 +357,41 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 				return status;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
 			@Override
-			public boolean belongsTo(Object family)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				return family == Activator.PLUGIN_ID;
+				final DciData[] data = new DciData[items.size()];
+				for(int i = 0; i < items.size(); i++)
+				{
+					GraphItem item = items.get(i);
+					data[i] = session.getCollectedData(item.getNodeId(), item.getDciId(), settings.getTimeFrom(), settings.getTimeTo(), 0);
+				}
+
+				new UIJob("Update chart") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
+						setChartData(data);
+						updateInProgress = false;
+						return Status.OK_STATUS;
+					}
+				}.schedule();
 			}
-		};
-		IWorkbenchSiteProgressService siteService =
-	      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
-		siteService.schedule(job, 0, true);
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get DCI values for history graph";
+			}
+
+			@Override
+			protected void jobFailureHandler()
+			{
+				updateInProgress = false;
+				super.jobFailureHandler();
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)
@@ -582,6 +587,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 				{
 					settings.setTimeUnit(presetUnits[presetIndex]);
 					settings.setTimeFrame(presetRanges[presetIndex]);
+					updateChart();
 				}
 			};
 			presetActions[i].setText("Last " + presetNames[i]);
@@ -692,32 +698,8 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 	private void setChartData(final DciData[] data)
 	{
 		for(int i = 0; i < data.length; i++)
-			addItemToChart(i, items.get(i), data[i]);
-		
-		chart.getAxisSet().getYAxis(0).adjustRange();
-		chart.redraw();
-	}
-	
-	/**
-	 * Add single DCI to chart
-	 * 
-	 * @param data DCI data
-	 */
-	private void addItemToChart(int index, final GraphItem item, final DciData data)
-	{
-		final DciDataRow[] values = data.getValues();
-		
-		// Create series
-		Date[] xSeries = new Date[values.length];
-		double[] ySeries = new double[values.length];
-		for(int i = 0; i < values.length; i++)
-		{
-			xSeries[i] = values[i].getTimestamp();
-			ySeries[i] = values[i].getValueAsDouble();
-		}
-		
-		ILineSeries series = chart.addLineSeries(index, item.getDescription(), xSeries, ySeries);
-		applyItemStyle(index, series);
+			chart.updateParameter(i, data[i], false);
+		chart.refresh();
 	}
 	
 	/**
@@ -746,45 +728,6 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 		chart.getAxisSet().getYAxis(0).getGrid().setStyle(ls);
 	}
 	
-	/**
-	 * Apply graph item style
-	 * 
-	 * @param index item index
-	 * @param series added series
-	 */
-	private void applyItemStyle(int index, ILineSeries series)
-	{
-		if ((index < 0) || (index >= itemStyles.size()))
-			return;
-
-		GraphItemStyle style = itemStyles.get(index);
-		series.setLineColor(colorFromInt(style.getColor()));
-	}
-	
-	/**
-	 * Create Color object from integer RGB representation
-	 * @param rgb color's rgb representation
-	 * @return color object
-	 */
-	private Color colorFromInt(int rgb)
-	{
-		// All colors on server stored as BGR: red in less significant byte and blue in most significant byte
-		return new Color(getSite().getShell().getDisplay(), rgb & 0xFF, (rgb >> 8) & 0xFF, rgb >> 16);
-	}
-	
-	/**
-	 * Create integer value from Red/Green/Blue
-	 * 
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return
-	 */
-	private static int rgbToInt(RGB rgb)
-	{
-		return rgb.red | (rgb.green << 8) | (rgb.blue << 16);
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
 	 */
