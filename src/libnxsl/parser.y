@@ -439,8 +439,7 @@ Operand:
 TypeCast:
 	BuiltinType '(' Expression ')'
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(),
-				OPCODE_CAST, (int)$1));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CAST, (int)$1));
 }
 ;
 
@@ -477,6 +476,7 @@ BuiltinStatement:
 |	IfStatement
 |	DoStatement
 |	WhileStatement
+|	ForStatement
 |	SwitchStatement
 |	ArrayStatement
 |	T_BREAK ';'
@@ -576,6 +576,35 @@ ElseStatement:
 	StatementOrBlock
 ;
 
+ForStatement:
+	T_FOR '(' Expression ';'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (int)1));
+	pCompiler->pushAddr(pScript->getCodeSize());
+}
+	Expression ';'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+	pCompiler->pushAddr(pScript->getCodeSize());
+}
+	Expression ')'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (int)1));
+	DWORD addrPart3 = pCompiler->popAddr();
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr()));
+	pCompiler->pushAddr(addrPart3);
+	pCompiler->newBreakLevel();
+	pScript->resolveLastJump(OPCODE_JMP);
+}	
+	StatementOrBlock
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr()));
+	pScript->resolveLastJump(OPCODE_JZ);
+	pCompiler->closeBreakLevel(pScript);
+}
+;
+
 WhileStatement:
 	T_WHILE
 {
@@ -588,8 +617,7 @@ WhileStatement:
 }
 	StatementOrBlock
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), 
-				OPCODE_JMP, pCompiler->popAddr()));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr()));
 	pScript->resolveLastJump(OPCODE_JZ);
 	pCompiler->closeBreakLevel(pScript);
 }
