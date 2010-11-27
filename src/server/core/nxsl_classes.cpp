@@ -24,13 +24,63 @@
 
 
 //
+// Implementation of "NetXMS object" class
+//
+
+NXSL_NetObjClass::NXSL_NetObjClass()
+                 :NXSL_Class()
+{
+   strcpy(m_szName, "NetObj");
+}
+
+NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+{
+   NetObj *object;
+   NXSL_Value *pValue = NULL;
+   char szBuffer[256];
+
+   object = (NetObj *)pObject->getData();
+   if (!strcmp(pszAttr, "name"))
+   {
+      pValue = new NXSL_Value(object->Name());
+   }
+   else if (!strcmp(pszAttr, "id"))
+   {
+      pValue = new NXSL_Value(object->Id());
+   }
+   else if (!strcmp(pszAttr, "status"))
+   {
+      pValue = new NXSL_Value((LONG)object->Status());
+   }
+   else if (!strcmp(pszAttr, "ipAddr"))
+   {
+      IpToStr(object->IpAddr(), szBuffer);
+      pValue = new NXSL_Value(szBuffer);
+   }
+   else if (!strcmp(pszAttr, "type"))
+   {
+      pValue = new NXSL_Value((LONG)object->Type());
+   }
+	else
+	{
+		const TCHAR *attrValue = object->GetCustomAttribute(pszAttr);
+		if (attrValue != NULL)
+		{
+			pValue = new NXSL_Value(attrValue);
+		}
+	}
+   return pValue;
+}
+
+
+//
 // Implementation of "NetXMS node" class
 //
 
 NXSL_NodeClass::NXSL_NodeClass()
                :NXSL_Class()
 {
-   strcpy(m_szName, "NetXMS_Node");
+   strcpy(m_szName, "Node");
 }
 
 NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -124,7 +174,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 NXSL_EventClass::NXSL_EventClass()
                 :NXSL_Class()
 {
-   strcpy(m_szName, "NetXMS_Event");
+   strcpy(m_szName, "Event");
 }
 
 NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -238,6 +288,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 // Class objects
 //
 
+NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_DciClass g_nxslDciClass;

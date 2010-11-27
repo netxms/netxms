@@ -3602,7 +3602,7 @@ NXSL_Array *Node::getParentsForNXSL()
 			  (m_pParentList[i]->Type() == OBJECT_SERVICEROOT)) &&
 		    m_pParentList[i]->IsTrustedNode(m_dwId))
 		{
-			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pParentList[i])));
+			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
 		}
 	}
 	UnlockParentList();

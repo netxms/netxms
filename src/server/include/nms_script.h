@@ -39,6 +39,19 @@ public:
 
 
 //
+// "NetXMS object" class
+//
+
+class NXSL_NetObjClass : public NXSL_Class
+{
+public:
+   NXSL_NetObjClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+};
+
+
+//
 // "NetXMS node" class
 //
 
@@ -104,6 +117,7 @@ BOOL IsValidScriptId(DWORD dwId);
 //
 
 extern NXSL_Library *g_pScriptLibrary;
+extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_DciClass g_nxslDciClass;
