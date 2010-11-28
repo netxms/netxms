@@ -787,17 +787,13 @@ skip_snmp_check:
    // Check native agent connectivity
    if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
    {
-      AgentConnection *pAgentConn;
-
       DbgPrintf(6, "StatusPoll(%s): checking agent", m_szName);
       SetPollerInfo(nPoller, "check agent");
       SendPollerMsg(dwRqId, "Checking NetXMS agent connectivity\r\n");
-      pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
-                                       m_wAuthMethod, m_szSharedSecret);
-      setAgentProxy(pAgentConn);
 
 		DWORD error, socketError;
-      if (pAgentConn->connect(g_pServerKey, FALSE, &error, &socketError))
+		agentLock();
+      if (connectToAgent(&error, &socketError))
       {
          DbgPrintf(7, "StatusPoll(%s): connected to agent", m_szName);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
@@ -806,8 +802,6 @@ skip_snmp_check:
             PostEventEx(pQueue, EVENT_AGENT_OK, m_dwId, NULL);
             SendPollerMsg(dwRqId, POLLER_INFO "Connectivity with NetXMS agent restored\r\n");
          }
-         pAgentConn->disconnect();
-         DbgPrintf(7, "StatusPoll(%s): disconnected from agent", m_szName);
       }
       else
       {
@@ -832,8 +826,8 @@ skip_snmp_check:
             m_tFailTimeAgent = tNow;
          }
       }
-      delete pAgentConn;
-      DbgPrintf(7, "StatusPoll(%s): agent connection deleted", m_szName);
+		agentUnlock();
+      DbgPrintf(7, "StatusPoll(%s): agent check finished", m_szName);
    }
 
    SetPollerInfo(nPoller, "prepare polling list");
@@ -1874,7 +1868,7 @@ void Node::updateContainerMembership()
 // Connect to native agent
 //
 
-BOOL Node::connectToAgent()
+BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
 {
    BOOL bRet;
 
@@ -1891,7 +1885,7 @@ BOOL Node::connectToAgent()
    m_pAgentConnection->setPort(m_wAgentPort);
    m_pAgentConnection->setAuthData(m_wAuthMethod, m_szSharedSecret);
    setAgentProxy(m_pAgentConnection);
-   bRet = m_pAgentConnection->connect(g_pServerKey);
+   bRet = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
    if (bRet)
 	{
 		m_pAgentConnection->setCommandTimeout(g_dwAgentCommandTimeout);

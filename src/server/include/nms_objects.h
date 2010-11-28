@@ -758,7 +758,7 @@ public:
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   BOOL connectToAgent();
+   BOOL connectToAgent(DWORD *error = NULL, DWORD *socketError = NULL);
    DWORD GetItemFromSNMP(WORD port, const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer);
