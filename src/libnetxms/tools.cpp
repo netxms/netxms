@@ -739,9 +739,6 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWORD timeout)
 {
 	SetSocketNonBlocking(s);
-#ifdef _WIN32
-	SetSocketReuseFlag(s);
-#endif
 
 	int rc = connect(s, addr, len);
 	if (rc == -1)
@@ -813,11 +810,26 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWO
 #endif
 			if (rc > 0)
 			{
-				rc = (FD_ISSET(s, &exfs) ? -1 : 0);
+				if (FD_ISSET(s, &exfs))
+				{
+#ifdef _WIN32
+					int err, len = sizeof(int);
+					if (getsockopt(s, SOL_SOCKET, SO_ERROR, (char *)&err, &len) == 0)
+						WSASetLastError(err);
+#endif
+					rc = -1;
+				}
+				else
+				{
+					rc = 0;
+				}
 			}
 			else if (rc == 0)	// timeout, return error
 			{
 				rc = -1;
+#ifdef _WIN32
+				WSASetLastError(WSAETIMEDOUT);
+#endif
 			}
 #endif
 		}
