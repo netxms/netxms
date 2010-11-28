@@ -16,54 +16,53 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.maps;
+package org.netxms.client.maps.elements;
 
 import org.netxms.base.NXCPMessage;
 
 /**
- * Network map element.
+ * Decoration element of network map
  *
  */
-public class NetworkMapElement
+public class NetworkMapDecoration extends NetworkMapElement
 {
-	private int type;
-	private int x;
-	private int y;
+	private int decorationType;
+	private int color;
+	private String title;
 	
 	/**
-	 * Create element from NXCP message.
-	 * 
-	 * @param msg NXCP message
-	 * @param baseId base variable ID
+	 * @param msg
+	 * @param baseId
 	 */
-	public NetworkMapElement(NXCPMessage msg, long baseId)
+	protected NetworkMapDecoration(NXCPMessage msg, long baseId)
 	{
-		type = msg.getVariableAsInteger(baseId);
-		x = msg.getVariableAsInteger(baseId + 1);
-		y = msg.getVariableAsInteger(baseId + 2);
+		super(msg, baseId);
+		decorationType = msg.getVariableAsInteger(baseId + 10);
+		color = msg.getVariableAsInteger(baseId + 11);
+		title = msg.getVariableAsString(baseId + 12);
 	}
 
 	/**
-	 * @return the type
+	 * @return the decorationType
 	 */
-	public int getType()
+	public int getDecorationType()
 	{
-		return type;
+		return decorationType;
 	}
 
 	/**
-	 * @return the x
+	 * @return the color
 	 */
-	public int getX()
+	public int getColor()
 	{
-		return x;
+		return color;
 	}
 
 	/**
-	 * @return the y
+	 * @return the title
 	 */
-	public int getY()
+	public String getTitle()
 	{
-		return y;
+		return title;
 	}
 }

@@ -326,10 +326,12 @@ src/java/netxms-client/src/main/java/org/netxms/client/log/Log.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogColumn.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogFilter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/OrderingColumn.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectLink.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapPage.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapDecoration.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapElement.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicyConfig.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Cluster.java -text
