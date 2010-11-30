@@ -25,9 +25,9 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
-import org.netxms.client.maps.NetworkMapObjectData;
-import org.netxms.client.maps.NetworkMapObjectLink;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapObject;
 
 /**
  * IP neighbors for given node
@@ -54,18 +54,20 @@ public class IPNeighbors extends NetworkMap
 	{
 		mapPage = new NetworkMapPage();
 
-		mapPage.addObject(new NetworkMapObjectData(rootObject.getObjectId()));
+		long rootElementId = mapPage.createElementId();
+		mapPage.addElement(new NetworkMapObject(rootElementId, rootObject.getObjectId()));
 		
 		Iterator<Long> it = rootObject.getParents();
 		while(it.hasNext())
 		{
-			long id = it.next();
-			GenericObject object = session.findObjectById(id);
+			long objectId = it.next();
+			GenericObject object = session.findObjectById(objectId);
 			if ((object != null) && (object instanceof Subnet))
 			{
-				mapPage.addObject(new NetworkMapObjectData(id));
-				mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, rootObject.getObjectId(), id));
-				addNodesFromSubnet((Subnet)object, rootObject.getObjectId());
+				long elementId = mapPage.createElementId();
+				mapPage.addElement(new NetworkMapObject(elementId, objectId));
+				mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, rootElementId, elementId));
+				addNodesFromSubnet((Subnet)object, elementId, rootObject.getObjectId());
 			}
 		}
 	}
@@ -75,19 +77,20 @@ public class IPNeighbors extends NetworkMap
 	 * @param subnet Subnet object
 	 * @param rootNodeId ID of map's root node (used to prevent recursion)
 	 */
-	private void addNodesFromSubnet(Subnet subnet, long rootNodeId)
+	private void addNodesFromSubnet(Subnet subnet, long subnetElementId, long rootNodeId)
 	{
 		Iterator<Long> it = subnet.getChilds();
 		while(it.hasNext())
 		{
-			long id = it.next();
-			if (id != rootNodeId)
+			long objectId = it.next();
+			if (objectId != rootNodeId)
 			{
-				GenericObject object = session.findObjectById(id);
+				GenericObject object = session.findObjectById(objectId);
 				if ((object != null) && (object instanceof Node))
 				{
-					mapPage.addObject(new NetworkMapObjectData(id));
-					mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, subnet.getObjectId(), id));
+					long elementId = mapPage.createElementId();
+					mapPage.addElement(new NetworkMapObject(elementId, objectId));
+					mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, subnetElementId, elementId));
 				}
 			}
 		}

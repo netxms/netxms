@@ -1287,8 +1287,6 @@ protected:
 	int m_numLinks;
 	NetworkMapLink **m_links;
 
-	int getElementIndex(NetworkMapElement *element);
-
 public:
    NetworkMap();
    virtual ~NetworkMap();

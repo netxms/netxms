@@ -69,9 +69,9 @@ import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.log.Log;
-import org.netxms.client.maps.NetworkMapObjectData;
-import org.netxms.client.maps.NetworkMapObjectLink;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.client.objects.Cluster;
@@ -97,7 +97,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 25;
+	public static final int CLIENT_PROTOCOL_VERSION = 26;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -2272,18 +2272,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 		NetworkMapPage page = new NetworkMapPage();
 		for(int i = 0; i < count; i++)
-			page.addObject(new NetworkMapObjectData(idList[i]));
+			page.addElement(new NetworkMapObject(page.createElementId(), idList[i]));
 
 		count = response.getVariableAsInteger(NXCPCodes.VID_NUM_LINKS);
 		long varId = NXCPCodes.VID_OBJECT_LINKS_BASE;
 		for(int i = 0; i < count; i++, varId += 5)
 		{
-			long obj1 = response.getVariableAsInt64(varId++);
-			long obj2 = response.getVariableAsInt64(varId++);
+			NetworkMapObject obj1 = page.findObjectElement(response.getVariableAsInt64(varId++));
+			NetworkMapObject obj2 = page.findObjectElement(response.getVariableAsInt64(varId++));
 			int type = response.getVariableAsInteger(varId++);
 			String port1 = response.getVariableAsString(varId++);
 			String port2 = response.getVariableAsString(varId++);
-			page.addLink(new NetworkMapObjectLink(type, obj1, obj2, port1, port2));
+			if ((obj1 != null) && (obj2 != null))
+				page.addLink(new NetworkMapLink("", type, obj1.getId(), obj2.getId(), port1, port2));
 		}
 		return page;
 	}

@@ -27,15 +27,20 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IFigureProvider;
+import org.netxms.client.NXCSession;
+import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for map
  */
 public class MapLabelProvider extends LabelProvider implements IFigureProvider
 {
+	private NXCSession session;
 	private GraphViewer viewer;
 	private Image[] statusImages;
 	private Image imgNode;
@@ -50,6 +55,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	public MapLabelProvider(GraphViewer viewer)
 	{
 		this.viewer = viewer;
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		statusImages = new Image[9];
 		for(int i = 0; i < statusImages.length; i++)
@@ -67,8 +73,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	@Override
 	public String getText(Object element)
 	{
-		if (element instanceof GenericObject)
-			return ((GenericObject)element).getObjectName();
+		if (element instanceof NetworkMapObject)
+		{
+			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+			return (object != null) ? object.getObjectName() : null;
+		}
 		return null;
 	}
 
@@ -78,8 +87,12 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	@Override
 	public Image getImage(Object element)
 	{
-		if (element instanceof GenericObject)
-			return ((GenericObject)element).getObjectClass() == GenericObject.OBJECT_NODE ? imgNode : imgSubnet;
+		if (element instanceof NetworkMapObject)
+		{
+			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+			if (object != null)
+				return object.getObjectClass() == GenericObject.OBJECT_NODE ? imgNode : imgSubnet;
+		}
 		return null;
 	}
 
@@ -89,11 +102,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	@Override
 	public IFigure getFigure(Object element)
 	{
-		return new ObjectFigure((GenericObject)element, this);
+		if (element instanceof NetworkMapObject)
+			return new ObjectFigure((NetworkMapObject)element, this);
+		return null;
 	}
 	
 	/**
-	 * Get status image for given object
+	 * Get status image for given NetXMS object
 	 * @param object
 	 * @return
 	 */
@@ -165,14 +180,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	}
 	
 	/**
-	 * Check if given object selected in the viewer
+	 * Check if given element selected in the viewer
 	 * 
 	 * @param object Object to test
 	 * @return true if given object is selected
 	 */
-	public boolean isObjectSelected(GenericObject object)
+	public boolean isElementSelected(NetworkMapElement element)
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		return (selection != null) ? selection.toList().contains(object) : false;
+		return (selection != null) ? selection.toList().contains(element) : false;
 	}
 }

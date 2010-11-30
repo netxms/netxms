@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,26 @@
  */
 package org.netxms.client.maps;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.client.maps.elements.NetworkMapObject;
 
 /**
- * Represents single map page (submap)
- * @author Victor
+ * Network map object representation used by visualisation tools
  *
  */
 public class NetworkMapPage
 {
 	private String name;
-	private Set<NetworkMapObjectData> objects = new HashSet<NetworkMapObjectData>(0);
-	private Set<NetworkMapObjectLink> links = new HashSet<NetworkMapObjectLink>(0);
+	private long nextElementId;
+	private Map<Long, NetworkMapElement> elements = new HashMap<Long, NetworkMapElement>(0);
+	private Set<NetworkMapLink> links = new HashSet<NetworkMapLink>(0);
 
 	/**
 	 * Create empty unnamed page
@@ -42,6 +45,7 @@ public class NetworkMapPage
 	public NetworkMapPage()
 	{
 		name = "";
+		nextElementId = 1;
 	}
 
 	/**
@@ -50,22 +54,45 @@ public class NetworkMapPage
 	public NetworkMapPage(final String name)
 	{
 		this.name = name;
+		nextElementId = 1;
 	}
 	
 	/**
-	 * Add object to map
+	 * Add element to map
 	 */
-	public void addObject(final NetworkMapObjectData object)
+	public void addElement(final NetworkMapElement element)
 	{
-		objects.add(object);
+		elements.put(element.getId(), element);
+		if (element.getId() >= nextElementId)
+			nextElementId = element.getId() + 1;
+	}
+	
+	/**
+	 * Add all elements from given collection
+	 * @param set
+	 */
+	public void addAllElements(Collection<NetworkMapElement> set)
+	{
+		for(NetworkMapElement e : set)
+			addElement(e);
 	}
 
 	/**
-	 * Add link between objects to map
+	 * Add link between elements to map
 	 */
-	public void addLink(final NetworkMapObjectLink link)
+	public void addLink(final NetworkMapLink link)
 	{
 		links.add(link);
+	}
+	
+	/**
+	 * Add all links from given collection
+	 * 
+	 * @param set
+	 */
+	public void addAllLinks(Collection<NetworkMapLink> set)
+	{
+		links.addAll(set);
 	}
 
 	/**
@@ -87,95 +114,80 @@ public class NetworkMapPage
 	/**
 	 * @return the objects
 	 */
-	public Set<NetworkMapObjectData> getObjects()
+	public Collection<NetworkMapElement> getElements()
 	{
-		return objects;
+		return elements.values();
 	}
 
 	/**
 	 * @return the links
 	 */
-	public Set<NetworkMapObjectLink> getLinks()
+	public Collection<NetworkMapLink> getLinks()
 	{
 		return links;
 	}
 	
 	/**
-	 * Get objects and links in one array - objects as NXCObject and subclasses,
-	 * links as NXCMapObjectLink
-	 * @param session Client session which should be used for object lookup
-	 * @return Objects and links in one array
+	 * Create new unique element ID
+	 * @return
 	 */
-	public Object[] getObjectsAndLinks(NXCSession session)
+	public long createElementId()
 	{
-		Object[] list = new Object[objects.size() + links.size()];
-		
-		Iterator<NetworkMapObjectData> oit = objects.iterator();
-		for(int i = 0; oit.hasNext(); i++)
-		{
-			NetworkMapObjectData data = oit.next();
-			long id = data.getObjectId();
-			list[i] = session.findObjectById(id);
-		}
-		
-		Iterator<NetworkMapObjectLink> lit = links.iterator();
-		for(int i = objects.size(); lit.hasNext(); i++)
-		{
-			list[i] = lit.next();
-		}
-
-		return list;
-	}
-
-	/**
-	 * Get objects as NXCObject and subclasses
-	 * @param session Client session which should be used for object lookup
-	 * @return NetXMS objects
-	 */
-	public GenericObject[] getResolvedObjects(NXCSession session)
-	{
-		GenericObject[] list = new GenericObject[objects.size()];
-		
-		Iterator<NetworkMapObjectData> it = objects.iterator();
-		for(int i = 0; it.hasNext(); i++)
-		{
-			NetworkMapObjectData data = it.next();
-			long id = data.getObjectId();
-			list[i] = session.findObjectById(id);
-		}
-
-		return list;
+		return nextElementId++;
 	}
 	
 	/**
-	 * Get all objects connected to given object
-	 * @param root Root object id
-	 * @param session Client session which should be used for object lookup
-	 * @return All objects connected to given object
+	 * Find object element by NeTXMS object ID.
+	 * 
+	 * @param objectId NetXMS object ID
+	 * @return object element or null
 	 */
-	public GenericObject[] getConnectedObjects(long root, NXCSession session)
+	public NetworkMapObject findObjectElement(long objectId)
 	{
-		Set<GenericObject> result = new HashSet<GenericObject>(0);
+		for(NetworkMapElement e : elements.values())
+			if ((e instanceof NetworkMapObject) && (((NetworkMapObject)e).getObjectId() == objectId))
+				return (NetworkMapObject)e;
+		return null;
+	}
+	
+	/**
+	 * Get objects and links in one array
+	 * @return Objects and links in one array
+	 */
+	public Object[] getElementsAndLinks()
+	{
+		Object[] list = new Object[elements.size() + links.size()];
+		int i = 0;
 		
-		Iterator<NetworkMapObjectLink> it = links.iterator();
+		for(NetworkMapElement e : elements.values())
+			list[i++] = e;
+		for(NetworkMapLink l : links)
+			list[i++] = l;
+
+		return list;
+	}
+
+	/**
+	 * Get all elements connected to given element
+	 * @param root Root element id
+	 * @return All elements connected to given element
+	 */
+	public NetworkMapElement[] getConnectedElements(long root)
+	{
+		Set<NetworkMapElement> result = new HashSet<NetworkMapElement>(0);
+		
+		Iterator<NetworkMapLink> it = links.iterator();
 		while(it.hasNext())
 		{
-			NetworkMapObjectLink link = it.next();
-			if (link.getObject1() == root)
+			NetworkMapLink link = it.next();
+			if (link.getElement1() == root)
 			{
-				long id = link.getObject2();
-				GenericObject object = session.findObjectById(id);
-				if (object != null)
-					result.add(object);
+				long id = link.getElement2();
+				NetworkMapElement e = elements.get(id);
+				if (e != null)
+					result.add(e);
 			}
-/*			else if (link.getObject2() == root)
-			{
-				long id = link.getObject1();
-				GenericObject object = session.findObjectById(id);
-				if (object != null)
-					result.add(object);
-			}*/
 		}
-		return result.toArray(new GenericObject[result.size()]);
+		return result.toArray(new NetworkMapElement[result.size()]);
 	}
 }

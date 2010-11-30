@@ -20,10 +20,8 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
-import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
-import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
  * Content provider for map
@@ -32,14 +30,12 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class MapContentProvider implements IGraphEntityContentProvider
 {
 	private NetworkMapPage page;
-	private NXCSession session;
 	
 	/**
 	 * Create map content provider object
 	 */
 	public MapContentProvider()
 	{
-		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 	
 	@Override
@@ -48,16 +44,16 @@ public class MapContentProvider implements IGraphEntityContentProvider
 		if (!(inputElement instanceof NetworkMapPage))
 			return null;
 		
-		return ((NetworkMapPage)inputElement).getResolvedObjects(session);
+		return ((NetworkMapPage)inputElement).getElements().toArray();
 	}
 
 	@Override
 	public Object[] getConnectedTo(Object entity)
 	{
-		if (!(entity instanceof GenericObject) || (page == null))
+		if (!(entity instanceof NetworkMapElement) || (page == null))
 			return null;
 		
-		return page.getConnectedObjects(((GenericObject)entity).getObjectId(), session);
+		return page.getConnectedElements(((NetworkMapElement)entity).getId());
 	}
 
 	@Override

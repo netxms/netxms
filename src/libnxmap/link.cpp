@@ -28,7 +28,7 @@
 // Constructor
 //
 
-NetworkMapLink::NetworkMapLink(NetworkMapElement *e1, NetworkMapElement *e2, int type)
+NetworkMapLink::NetworkMapLink(DWORD e1, DWORD e2, int type)
 {
 	m_element1 = e1;
 	m_element2 = e2;
@@ -36,6 +36,21 @@ NetworkMapLink::NetworkMapLink(NetworkMapElement *e1, NetworkMapElement *e2, int
 	m_name = NULL;
 	m_connectorName1 = NULL;
 	m_connectorName2 = NULL;
+}
+
+
+//
+// Constuctor: create link object from NXCP message
+//
+
+NetworkMapLink::NetworkMapLink(CSCPMessage *msg, DWORD baseId)
+{
+	m_type = msg->GetVariableShort(baseId);
+	m_name = msg->GetVariableStr(baseId + 1);
+	m_connectorName1 = msg->GetVariableStr(baseId + 2);
+	m_connectorName2 = msg->GetVariableStr(baseId + 3);
+	m_element1 = msg->GetVariableLong(baseId + 4);
+	m_element2 = msg->GetVariableLong(baseId + 5);
 }
 
 
@@ -94,6 +109,6 @@ void NetworkMapLink::fillMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(baseId + 1, getName());
 	msg->SetVariable(baseId + 2, getConnector1Name());
 	msg->SetVariable(baseId + 3, getConnector2Name());
-	msg->SetVariable(baseId + 4, m_element1->getId());
-	msg->SetVariable(baseId + 5, m_element2->getId());
+	msg->SetVariable(baseId + 4, m_element1);
+	msg->SetVariable(baseId + 5, m_element2);
 }

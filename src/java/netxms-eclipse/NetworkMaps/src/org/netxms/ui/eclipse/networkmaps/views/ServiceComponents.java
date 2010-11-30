@@ -28,9 +28,9 @@ import org.eclipse.zest.layouts.LayoutAlgorithm;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
-import org.netxms.client.maps.NetworkMapObjectData;
-import org.netxms.client.maps.NetworkMapObjectLink;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
@@ -63,8 +63,9 @@ public class ServiceComponents extends NetworkMap
 	protected void buildMapPage()
 	{
 		mapPage = new NetworkMapPage();
-		mapPage.addObject(new NetworkMapObjectData(rootObject.getObjectId()));
-		addServiceComponents(rootObject);
+		long elementId = mapPage.createElementId();
+		mapPage.addElement(new NetworkMapObject(elementId, rootObject.getObjectId()));
+		addServiceComponents(rootObject, elementId);
 	}
 
 	/**
@@ -72,22 +73,23 @@ public class ServiceComponents extends NetworkMap
 	 * 
 	 * @param object
 	 */
-	private void addServiceComponents(GenericObject object)
+	private void addServiceComponents(GenericObject object, long parentElementId)
 	{
 		Iterator<Long> it = object.getChilds();
 		while(it.hasNext())
 		{
-			long id = it.next();
-			GenericObject child = session.findObjectById(id);
+			long objectId = it.next();
+			GenericObject child = session.findObjectById(objectId);
 			if ((child != null) && 
 					((child instanceof Container) || 
 					 (child instanceof Cluster) || 
 					 (child instanceof Node) ||
 					 (child instanceof Condition)))
 			{
-				mapPage.addObject(new NetworkMapObjectData(id));
-				mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, object.getObjectId(), id));
-				addServiceComponents(child);
+				long elementId = mapPage.createElementId();
+				mapPage.addElement(new NetworkMapObject(elementId, objectId));
+				mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, parentElementId, elementId));
+				addServiceComponents(child, elementId);
 			}
 		}
 	}

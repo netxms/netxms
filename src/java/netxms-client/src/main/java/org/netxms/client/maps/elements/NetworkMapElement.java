@@ -30,6 +30,7 @@ public class NetworkMapElement
 	public static final int MAP_ELEMENT_OBJECT = 1;
 	public static final int MAP_ELEMENT_DECORATION = 2;
 	
+	protected long id;
 	protected int type;
 	protected int x;
 	protected int y;
@@ -63,9 +64,21 @@ public class NetworkMapElement
 	 */
 	protected NetworkMapElement(NXCPMessage msg, long baseId)
 	{
-		type = msg.getVariableAsInteger(baseId);
-		x = msg.getVariableAsInteger(baseId + 1);
-		y = msg.getVariableAsInteger(baseId + 2);
+		id = msg.getVariableAsInt64(baseId);
+		type = msg.getVariableAsInteger(baseId + 1);
+		x = msg.getVariableAsInteger(baseId + 2);
+		y = msg.getVariableAsInteger(baseId + 3);
+	}
+	
+	/**
+	 * Create new generic element
+	 */
+	public NetworkMapElement(long id)
+	{
+		this.id = id;
+		type = MAP_ELEMENT_GENERIC;
+		x = 0;
+		y = 0;
 	}
 
 	/**
@@ -90,5 +103,33 @@ public class NetworkMapElement
 	public int getY()
 	{
 		return y;
+	}
+
+	/**
+	 * @return the id
+	 */
+	public long getId()
+	{
+		return id;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (obj instanceof NetworkMapElement)
+			return ((NetworkMapElement)obj).id == id;
+		return super.equals(obj);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode()
+	{
+		return (int)id;
 	}
 }

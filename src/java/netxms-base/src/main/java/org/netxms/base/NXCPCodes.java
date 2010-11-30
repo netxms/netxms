@@ -699,4 +699,5 @@ public final class NXCPCodes
 	public static final long VID_ORDERING_COLUMNS_BASE    = 0x40000000L;
 	public static final long VID_USM_CRED_LIST_BASE       = 0x10000000L;
 	public static final long VID_ELEMENT_LIST_BASE        = 0x10000000L;
+	public static final long VID_LINK_LIST_BASE           = 0x40000000L;
 }

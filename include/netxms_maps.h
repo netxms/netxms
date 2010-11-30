@@ -446,22 +446,22 @@ public:
 class LIBNXMAP_EXPORTABLE NetworkMapLink
 {
 protected:
-	NetworkMapElement *m_element1;
-	NetworkMapElement *m_element2;
+	DWORD m_element1;
+	DWORD m_element2;
 	int m_type;
 	TCHAR *m_name;
 	TCHAR *m_connectorName1;
 	TCHAR *m_connectorName2;
 
 public:
-	NetworkMapLink(NetworkMapElement *e1, NetworkMapElement *e2, int type);
+	NetworkMapLink(DWORD e1, DWORD e2, int type);
 	NetworkMapLink(CSCPMessage *msg, DWORD baseId);
 	virtual ~NetworkMapLink();
 
 	void fillMessage(CSCPMessage *msg, DWORD baseId);
 
-	NetworkMapElement *getElement1() { return m_element1; }
-	NetworkMapElement *getElement2() { return m_element2; }
+	DWORD getElement1() { return m_element1; }
+	DWORD getElement2() { return m_element2; }
 
 	const TCHAR *getName() { return CHECK_NULL_EX(m_name); }
 	const TCHAR *getConnector1Name() { return CHECK_NULL_EX(m_connectorName1); }

@@ -29,8 +29,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.NXCSession;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Figure representing NetXMS object
@@ -47,6 +50,7 @@ public class ObjectFigure extends Figure
 	
 	private static final Color SELECTION_COLOR = new Color(Display.getDefault(), 255, 242, 0);
 	
+	private NetworkMapObject element;
 	private GenericObject object;
 	private MapLabelProvider labelProvider;
 	private Label label;
@@ -55,10 +59,13 @@ public class ObjectFigure extends Figure
 	 * Constructor
 	 * @param object Object represented by this figure
 	 */
-	public ObjectFigure(GenericObject object, MapLabelProvider labelProvider)
+	public ObjectFigure(NetworkMapObject element, MapLabelProvider labelProvider)
 	{
-		this.object = object;
+		this.element = element;
 		this.labelProvider = labelProvider;
+		
+		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		object = session.findObjectById(element.getObjectId());
 		
 		setLayoutManager(new BorderLayout());
 		
@@ -82,7 +89,7 @@ public class ObjectFigure extends Figure
 		Rectangle rect = new Rectangle(getBounds());
 		
 		// Selection mark
-		if (labelProvider.isObjectSelected(object))
+		if (labelProvider.isElementSelected(element))
 		{
 			gc.setBackgroundColor(SELECTION_COLOR);
 			gc.setAntialias(SWT.ON);
@@ -107,7 +114,7 @@ public class ObjectFigure extends Figure
 		}
 			
 		// Object image
-		Image image = labelProvider.getImage(object);
+		Image image = labelProvider.getImage(element);
 		if (image != null)
 		{
 			gc.drawImage(image, rect.x + IMAGE_MARGIN_X, rect.y + IMAGE_MARGIN_Y);

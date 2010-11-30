@@ -25,9 +25,9 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
-import org.netxms.client.maps.NetworkMapObjectData;
-import org.netxms.client.maps.NetworkMapObjectLink;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
@@ -57,9 +57,9 @@ public class ServiceDependency extends NetworkMap
 	protected void buildMapPage()
 	{
 		mapPage = new NetworkMapPage();
-
-		mapPage.addObject(new NetworkMapObjectData(rootObject.getObjectId()));
-		addParentServices(rootObject);
+		long elementId = mapPage.createElementId();
+		mapPage.addElement(new NetworkMapObject(elementId, rootObject.getObjectId()));
+		addParentServices(rootObject, elementId);
 	}
 
 	/**
@@ -67,18 +67,19 @@ public class ServiceDependency extends NetworkMap
 	 * 
 	 * @param object
 	 */
-	private void addParentServices(GenericObject object)
+	private void addParentServices(GenericObject object, long parentElementId)
 	{
 		Iterator<Long> it = object.getParents();
 		while(it.hasNext())
 		{
-			long id = it.next();
-			GenericObject parent = session.findObjectById(id);
+			long objectId = it.next();
+			GenericObject parent = session.findObjectById(objectId);
 			if ((parent != null) && ((parent instanceof Container) || (parent instanceof Cluster)))
 			{
-				mapPage.addObject(new NetworkMapObjectData(id));
-				mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, object.getObjectId(), id));
-				addParentServices(parent);
+				long elementId = mapPage.createElementId();
+				mapPage.addElement(new NetworkMapObject(elementId, objectId));
+				mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, parentElementId, elementId));
+				addParentServices(parent, elementId);
 			}
 		}
 	}

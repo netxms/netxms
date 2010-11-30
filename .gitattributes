@@ -326,8 +326,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/log/Log.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogColumn.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogFilter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/OrderingColumn.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectData.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapObjectLink.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapLink.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapPage.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapDecoration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapElement.java -text

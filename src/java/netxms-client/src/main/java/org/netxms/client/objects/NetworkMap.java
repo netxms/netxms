@@ -24,6 +24,8 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
@@ -37,6 +39,7 @@ public class NetworkMap extends GenericObject
 	private int background;
 	private long seedObjectId;
 	private List<NetworkMapElement> elements;
+	private List<NetworkMapLink> links;
 	
 	/**
 	 * @param msg
@@ -57,6 +60,15 @@ public class NetworkMap extends GenericObject
 		{
 			elements.add(NetworkMapElement.createMapElement(msg, varId));
 			varId += 100;
+		}
+		
+		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_LINKS);
+		links = new ArrayList<NetworkMapLink>(count);
+		varId = NXCPCodes.VID_LINK_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			links.add(new NetworkMapLink(msg, varId));
+			varId += 10;
 		}
 	}
 
@@ -99,5 +111,13 @@ public class NetworkMap extends GenericObject
 	public long getSeedObjectId()
 	{
 		return seedObjectId;
+	}
+	
+	public NetworkMapPage createMapPage()
+	{
+		NetworkMapPage page = new NetworkMapPage(getObjectName());
+		page.addAllElements(elements);
+		page.addAllLinks(links);
+		return page;
 	}
 }

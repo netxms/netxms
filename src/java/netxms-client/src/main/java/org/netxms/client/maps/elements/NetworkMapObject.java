@@ -37,6 +37,18 @@ public class NetworkMapObject extends NetworkMapElement
 		super(msg, baseId);
 		objectId = msg.getVariableAsInt64(baseId + 10);
 	}
+	
+	/**
+	 * Create new object element
+	 * 
+	 * @param id element ID
+	 * @param objectId NetXMS object ID
+	 */
+	public NetworkMapObject(long id, long objectId)
+	{
+		super(id);
+		this.objectId = objectId;
+	}
 
 	/**
 	 * @return the objectId

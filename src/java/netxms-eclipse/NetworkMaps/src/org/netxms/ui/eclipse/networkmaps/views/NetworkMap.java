@@ -18,6 +18,10 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jface.action.Action;
@@ -27,6 +31,12 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -44,15 +54,15 @@ import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.maps.NetworkMapObjectData;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
-public abstract class NetworkMap extends ViewPart
+public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 {
 	protected NXCSession session;
 	protected GenericObject rootObject;
@@ -63,6 +73,9 @@ public abstract class NetworkMap extends ViewPart
 	
 	protected Action actionShowStatusIcon;
 	protected Action actionShowStatusBackground;
+	
+	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
+	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -99,6 +112,23 @@ public abstract class NetworkMap extends ViewPart
 		viewer.setLabelProvider(labelProvider);
 		viewer.setLayoutAlgorithm(new SpringLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 		viewer.setInput(mapPage);
+		
+		getSite().setSelectionProvider(this);
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent e)
+			{
+				currentSelection = transformSelection(e.getSelection());
+				if (selectionListeners.isEmpty())
+					return;
+				
+				SelectionChangedEvent event = new SelectionChangedEvent(NetworkMap.this, currentSelection);
+				for(ISelectionChangedListener l : selectionListeners)
+				{
+					l.selectionChanged(event);
+				}
+			}
+		});
 		
 		createActions();
 		contributeToActionBars();
@@ -183,7 +213,8 @@ public abstract class NetworkMap extends ViewPart
 		{
 			public void menuAboutToShow(IMenuManager mgr)
 			{
-				fillContextMenu(mgr);
+				if (!currentSelection.isEmpty())
+					fillContextMenu(mgr);
 			}
 		});
 	
@@ -192,7 +223,7 @@ public abstract class NetworkMap extends ViewPart
 		viewer.getControl().setMenu(menu);
 	
 		// Register menu for extension.
-		getSite().registerContextMenu(menuMgr, viewer);
+		getSite().registerContextMenu(menuMgr, this);
 	}
 
 	/**
@@ -212,7 +243,7 @@ public abstract class NetworkMap extends ViewPart
 		mgr.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
-		mgr.add(new PropertyDialogAction(getSite(), viewer));
+		mgr.add(new PropertyDialogAction(getSite(), this));
 	}
 	
 	/**
@@ -223,13 +254,7 @@ public abstract class NetworkMap extends ViewPart
 	 */
 	protected boolean isObjectOnMap(long objectId)
 	{
-		Set<NetworkMapObjectData> objects = mapPage.getObjects();
-		for(NetworkMapObjectData d : objects)
-		{
-			if (d.getObjectId() == objectId)
-				return true;
-		}
-		return false;
+		return mapPage.findObjectElement(objectId) != null;
 	}
 	
 	/**
@@ -261,5 +286,71 @@ public abstract class NetworkMap extends ViewPart
 		if (sessionListener != null)
 			session.removeListener(sessionListener);
 		super.dispose();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+	 */
+	@Override
+	public void addSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		selectionListeners.add(listener);
+	}
+	
+	/**
+	 * Transform viewer's selection to form usable by another plugins by extracting
+	 * NetXMS objects from map elements.
+	 *  
+	 * @param viewerSelection viewer's selection
+	 * @return selection containing only NetXMS objects
+	 */
+	@SuppressWarnings("rawtypes")
+	private IStructuredSelection transformSelection(ISelection viewerSelection)
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewerSelection;
+		if (selection.isEmpty())
+			return selection;
+				
+		List<GenericObject> objects = new ArrayList<GenericObject>();
+		Iterator it = selection.iterator();
+		while(it.hasNext())
+		{
+			Object element = it.next();
+			if (element instanceof NetworkMapObject)
+			{
+				GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
+				if (object != null)
+					objects.add(object);
+			}
+		}
+
+		return new StructuredSelection(objects.toArray());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+	 */
+	@Override
+	public ISelection getSelection()
+	{
+		//return transformSelection((IStructuredSelection)viewer.getSelection());
+		return currentSelection;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+	 */
+	@Override
+	public void removeSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		selectionListeners.remove(listener);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+	 */
+	@Override
+	public void setSelection(ISelection selection)
+	{
 	}
 }
