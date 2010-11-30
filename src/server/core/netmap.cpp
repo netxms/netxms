@@ -76,7 +76,7 @@ void NetworkMap::CalculateCompoundStatus(BOOL bForcedRecalc)
 
 BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 {
-	TCHAR query[256];
+	TCHAR query[1024];
 
 	if (!SaveCommonProperties(hdb))
 		return FALSE;
@@ -115,7 +115,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 		Config *config = new Config();
 		config->setTopLevelTag(_T("element"));
 		m_elements[i]->updateConfig(config);
-		String data = EscapeStringForXML2(config->createXml());
+		String data = DBPrepareString(hdb, config->createXml());
 		delete config;
 		int len = data.getSize() + 256;
 		TCHAR *eq = (TCHAR *)malloc(len);
@@ -123,6 +123,20 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 		           m_dwId, i, m_elements[i]->getType(), (const TCHAR *)data);
       DBQuery(hdb, eq);
 		free(eq);
+   }
+
+	// Save links
+   _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d"), m_dwId);
+   if (!DBQuery(hdb, query))
+		return FALSE;
+   for(int i = 0; i < m_numLinks; i++)
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2) VALUES (%d,%d,%d,%d,%s,%s,%s)"),
+		           m_dwId, getElementIndex(m_links[i]->getElement1()), getElementIndex(m_links[i]->getElement2()),
+					  m_links[i]->getType(), (const TCHAR *)DBPrepareString(hdb, m_links[i]->getName(), 255), 
+					  (const TCHAR *)DBPrepareString(hdb, m_links[i]->getConnector1Name(), 63),
+					  (const TCHAR *)DBPrepareString(hdb, m_links[i]->getConnector2Name()), 63);
+      DBQuery(hdb, query);
    }
 
 	return TRUE;
@@ -140,6 +154,8 @@ BOOL NetworkMap::DeleteFromDB()
 	_sntprintf(query, 256, _T("DELETE FROM network_maps WHERE id=%d"), m_dwId);
 	QueueSQLRequest(query);
 	_sntprintf(query, 256, _T("DELETE FROM network_map_elements WHERE map_id=%d"), m_dwId);
+	QueueSQLRequest(query);
+	_sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d"), m_dwId);
 	QueueSQLRequest(query);
 	return TRUE;
 }
@@ -177,7 +193,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 		DBFreeResult(hResult);
 
 	   // Load elements
-      _sntprintf(query, 256, _T("SELECT element_type,element_data FROM network_map_elements WHERE map_id=%d"), m_dwId);
+      _sntprintf(query, 256, _T("SELECT element_type,element_data FROM network_map_elements WHERE map_id=%d ORDER BY element_id"), m_dwId);
       hResult = DBSelect(g_hCoreDB, query);
       if (hResult != NULL)
       {
@@ -215,6 +231,46 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 			}
          DBFreeResult(hResult);
       }
+
+		// Load links
+      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2 FROM network_map_elements WHERE map_id=%d"), m_dwId);
+      hResult = DBSelect(g_hCoreDB, query);
+      if (hResult != NULL)
+      {
+         m_numLinks = DBGetNumRows(hResult);
+			if (m_numLinks > 0)
+			{
+				m_links = (NetworkMapLink **)malloc(sizeof(NetworkMapLink *) * m_numLinks);
+				for(int i = 0; i < m_numLinks; i++)
+				{
+					int id1 = DBGetFieldLong(hResult, i, 0);
+					int id2 = DBGetFieldLong(hResult, i, 1);
+					if ((id1 >= 0) && (id1 < m_numElements) && (id2 >= 0) && (id2 < m_numElements))
+					{
+						TCHAR buffer[256];
+
+						m_links[i] = new NetworkMapLink(m_elements[id1], m_elements[id2], DBGetFieldLong(hResult, i, 2));
+						m_links[i]->setName(DBGetField(hResult, i, 3, buffer, 256));
+						m_links[i]->setConnector1Name(DBGetField(hResult, i, 4, buffer, 256));
+						m_links[i]->setConnector1Name(DBGetField(hResult, i, 5, buffer, 256));
+					}
+					else
+					{
+						m_links[i] = NULL;
+					}
+				}
+
+				// Remove NULLs
+				for(int i = 0; i < m_numLinks; i++)
+					if (m_links[i] == NULL)
+					{
+						m_numLinks--;
+						memmove(&m_links[i], &m_links[i + 1], sizeof(NetworkMapLink *) * (m_numLinks - i));
+						i--;
+					}
+			}
+         DBFreeResult(hResult);
+      }
 	}
 
 	return TRUE;
@@ -240,6 +296,13 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 	{
 		m_elements[i]->fillMessage(msg, varId);
 		varId += 100;
+	}
+
+	msg->SetVariable(VID_NUM_LINKS, (DWORD)m_numLinks);
+	varId = VID_LINK_LIST_BASE;
+	for(int i = 0; i < m_numLinks; i++)
+	{
+
 	}
 }
 
@@ -300,4 +363,17 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	}
 
 	return NetObj::ModifyFromMessage(request, TRUE);
+}
+
+
+//
+// Get index of given element
+//
+
+int NetworkMap::getElementIndex(NetworkMapElement *element)
+{
+	for(int i = 0; i < m_numElements; i++)
+		if (m_elements[i] == element)
+			return i;
+	return -1;
 }

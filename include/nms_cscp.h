@@ -828,6 +828,7 @@ typedef struct
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)
+#define VID_LINK_LIST_BASE          ((DWORD)0x40000000)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -25,20 +25,12 @@
 
 
 //
-// Map link destructor
-//
-
-NetworkMapLink::~NetworkMapLink()
-{
-}
-
-
-//
 // Generic element default constructor
 //
 
-NetworkMapElement::NetworkMapElement()
+NetworkMapElement::NetworkMapElement(DWORD id)
 {
+	m_id = id;
 	m_type = MAP_ELEMENT_GENERIC;
 	m_posX = 0;
 	m_posY = 0;
@@ -49,8 +41,9 @@ NetworkMapElement::NetworkMapElement()
 // Generic element config constructor
 //
 
-NetworkMapElement::NetworkMapElement(Config *config)
+NetworkMapElement::NetworkMapElement(DWORD id, Config *config)
 {
+	m_id = id;
 	m_type = config->getValueInt(_T("/type"), MAP_ELEMENT_GENERIC);
 	m_posX = config->getValueInt(_T("/posX"), 0);
 	m_posY = config->getValueInt(_T("/posY"), 0);
@@ -63,9 +56,10 @@ NetworkMapElement::NetworkMapElement(Config *config)
 
 NetworkMapElement::NetworkMapElement(CSCPMessage *msg, DWORD baseId)
 {
-	m_type = (LONG)msg->GetVariableShort(baseId);
-	m_posX = (LONG)msg->GetVariableLong(baseId + 1);
-	m_posY = (LONG)msg->GetVariableLong(baseId + 2);
+	m_id = msg->GetVariableLong(baseId);
+	m_type = (LONG)msg->GetVariableShort(baseId + 1);
+	m_posX = (LONG)msg->GetVariableLong(baseId + 2);
+	m_posY = (LONG)msg->GetVariableLong(baseId + 3);
 }
 
 
@@ -96,9 +90,10 @@ void NetworkMapElement::updateConfig(Config *config)
 
 void NetworkMapElement::fillMessage(CSCPMessage *msg, DWORD baseId)
 {
-	msg->SetVariable(baseId, (WORD)m_type);
-	msg->SetVariable(baseId + 1, (DWORD)m_posX);
-	msg->SetVariable(baseId + 2, (DWORD)m_posY);
+	msg->SetVariable(baseId, m_id);
+	msg->SetVariable(baseId + 1, (WORD)m_type);
+	msg->SetVariable(baseId + 2, (DWORD)m_posX);
+	msg->SetVariable(baseId + 3, (DWORD)m_posY);
 }
 
 
@@ -117,7 +112,7 @@ void NetworkMapElement::setPosition(LONG x, LONG y)
 // Object element default constructor
 //
 
-NetworkMapObject::NetworkMapObject(DWORD objectId) : NetworkMapElement()
+NetworkMapObject::NetworkMapObject(DWORD id, DWORD objectId) : NetworkMapElement(id)
 {
 	m_type = MAP_ELEMENT_OBJECT;
 	m_objectId = objectId;
@@ -128,7 +123,7 @@ NetworkMapObject::NetworkMapObject(DWORD objectId) : NetworkMapElement()
 // Object element config constructor
 //
 
-NetworkMapObject::NetworkMapObject(Config *config) : NetworkMapElement(config)
+NetworkMapObject::NetworkMapObject(DWORD id, Config *config) : NetworkMapElement(id, config)
 {
 	m_objectId = config->getValueUInt(_T("/objectId"), 0);
 }
@@ -179,7 +174,7 @@ void NetworkMapObject::fillMessage(CSCPMessage *msg, DWORD baseId)
 // Decoration element default constructor
 //
 
-NetworkMapDecoration::NetworkMapDecoration(LONG decorationType) : NetworkMapElement()
+NetworkMapDecoration::NetworkMapDecoration(DWORD id, LONG decorationType) : NetworkMapElement(id)
 {
 	m_type = MAP_ELEMENT_DECORATION;
 	m_decorationType = decorationType;
@@ -192,7 +187,7 @@ NetworkMapDecoration::NetworkMapDecoration(LONG decorationType) : NetworkMapElem
 // Decoration element config constructor
 //
 
-NetworkMapDecoration::NetworkMapDecoration(Config *config) : NetworkMapElement(config)
+NetworkMapDecoration::NetworkMapDecoration(DWORD id, Config *config) : NetworkMapElement(id, config)
 {
 	m_decorationType = config->getValueInt(_T("/decorationType"), 0);
 	m_color = config->getValueUInt(_T("/color"), 0);

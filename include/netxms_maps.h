@@ -368,19 +368,21 @@ public:
 class LIBNXMAP_EXPORTABLE NetworkMapElement
 {
 protected:
+	DWORD m_id;
 	LONG m_type;
 	LONG m_posX;
 	LONG m_posY;
 
 public:
-	NetworkMapElement();
-	NetworkMapElement(Config *config);
+	NetworkMapElement(DWORD id);
+	NetworkMapElement(DWORD id, Config *config);
 	NetworkMapElement(CSCPMessage *msg, DWORD baseId);
 	virtual ~NetworkMapElement();
 
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(CSCPMessage *msg, DWORD baseId);
 
+	DWORD getId() { return m_id; }
 	LONG getType() { return m_type; }
 	LONG getPosX() { return m_posX; }
 	LONG getPosY() { return m_posY; }
@@ -399,8 +401,8 @@ protected:
 	DWORD m_objectId;
 
 public:
-	NetworkMapObject(DWORD objectId);
-	NetworkMapObject(Config *config);
+	NetworkMapObject(DWORD id, DWORD objectId);
+	NetworkMapObject(DWORD id, Config *config);
 	NetworkMapObject(CSCPMessage *msg, DWORD baseId);
 	virtual ~NetworkMapObject();
 
@@ -423,8 +425,8 @@ protected:
 	TCHAR *m_title;
 
 public:
-	NetworkMapDecoration(LONG decorationType);
-	NetworkMapDecoration(Config *config);
+	NetworkMapDecoration(DWORD id, LONG decorationType);
+	NetworkMapDecoration(DWORD id, Config *config);
 	NetworkMapDecoration(CSCPMessage *msg, DWORD baseId);
 	virtual ~NetworkMapDecoration();
 
@@ -444,18 +446,31 @@ public:
 class LIBNXMAP_EXPORTABLE NetworkMapLink
 {
 protected:
-	NetworkMapElement m_element1;
-	NetworkMapElement m_element2;
+	NetworkMapElement *m_element1;
+	NetworkMapElement *m_element2;
 	int m_type;
 	TCHAR *m_name;
 	TCHAR *m_connectorName1;
 	TCHAR *m_connectorName2;
 
 public:
-	NetworkMapLink(NetworkMapElement *e1, NetworkMapElement *e2);
+	NetworkMapLink(NetworkMapElement *e1, NetworkMapElement *e2, int type);
+	NetworkMapLink(CSCPMessage *msg, DWORD baseId);
 	virtual ~NetworkMapLink();
 
+	void fillMessage(CSCPMessage *msg, DWORD baseId);
 
+	NetworkMapElement *getElement1() { return m_element1; }
+	NetworkMapElement *getElement2() { return m_element2; }
+
+	const TCHAR *getName() { return CHECK_NULL_EX(m_name); }
+	const TCHAR *getConnector1Name() { return CHECK_NULL_EX(m_connectorName1); }
+	const TCHAR *getConnector2Name() { return CHECK_NULL_EX(m_connectorName2); }
+	int getType() { return m_type; }
+
+	void setName(const TCHAR *name);
+	void setConnector1Name(const TCHAR *name);
+	void setConnector2Name(const TCHAR *name);
 };
 
 

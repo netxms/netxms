@@ -1284,6 +1284,10 @@ protected:
 	int m_background;
 	int m_numElements;
 	NetworkMapElement **m_elements;
+	int m_numLinks;
+	NetworkMapLink **m_links;
+
+	int getElementIndex(NetworkMapElement *element);
 
 public:
    NetworkMap();
