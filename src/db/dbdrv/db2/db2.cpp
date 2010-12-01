@@ -55,14 +55,16 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, char *e
       if ((!wcscmp(buffer, L"08003")) ||     // Connection does not exist
           (!wcscmp(buffer, L"08S01")) ||     // Communication link failure
           (!wcscmp(buffer, L"HYT00")) ||     // Timeout expired
-          (!wcscmp(buffer, L"HYT01")))       // Connection timeout expired
+          (!wcscmp(buffer, L"HYT01")) ||     // Connection timeout expired
+          (!wcscmp(buffer, L"08506")))       // SQL30108N: A connection failed but has been re-established.
 #else
 		char state[16];
 		ucs2_to_mb(buffer, -1, state, 16);
       if ((!strcmp(state, "08003")) ||     // Connection does not exist
           (!strcmp(state, "08S01")) ||     // Communication link failure
           (!strcmp(state, "HYT00")) ||     // Timeout expired
-          (!strcmp(state, "HYT01")))       // Connection timeout expired
+          (!strcmp(state, "HYT01")) ||     // Connection timeout expired
+          (!strcmp(state, "08506")))      // SQL30108N: A connection failed but has been re-established.
 #endif
       {
          dwError = DBERR_CONNECTION_LOST;
