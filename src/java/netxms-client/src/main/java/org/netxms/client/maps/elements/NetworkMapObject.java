@@ -57,4 +57,14 @@ public class NetworkMapObject extends NetworkMapElement
 	{
 		return objectId;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
+	 */
+	@Override
+	public void fillMessage(NXCPMessage msg, long baseId)
+	{
+		super.fillMessage(msg, baseId);
+		msg.setVariableInt32(baseId + 10, (int)objectId);
+	}
 }

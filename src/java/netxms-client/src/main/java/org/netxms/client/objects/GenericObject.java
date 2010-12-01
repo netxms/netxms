@@ -39,6 +39,9 @@ public class GenericObject
 	public static final int OBJECT_POLICYROOT         = 16;
 	public static final int OBJECT_AGENTPOLICY        = 17;
 	public static final int OBJECT_AGENTPOLICY_CONFIG = 18;
+	public static final int OBJECT_NETWORKMAPROOT     = 19;
+	public static final int OBJECT_NETWORKMAPGROUP    = 20;
+	public static final int OBJECT_NETWORKMAP         = 21;
 	
 	// Status codes
 	public static final int STATUS_NORMAL         = 0;

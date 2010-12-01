@@ -3670,6 +3670,16 @@ void ClientSession::createObject(CSCPMessage *pRequest)
                      pObject->SetName(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
+                  case OBJECT_NETWORKMAPGROUP:
+                     pObject = new NetworkMapGroup(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+                     break;
+						case OBJECT_NETWORKMAP:
+							pObject = new NetworkMap((int)pRequest->GetVariableShort(VID_MAP_TYPE), pRequest->GetVariableLong(VID_SEED_OBJECT));
+                     pObject->SetName(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+							break;
                   default:
                      break;
                }

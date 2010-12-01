@@ -215,6 +215,30 @@
                menubarPath="objectbinding">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createContainer_Container"
+            objectClass="org.netxms.client.objects.Container">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_Container"
+               label="Create &amp;container..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createContainer_ServiceRoot"
+            objectClass="org.netxms.client.objects.ServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_ServiceRoot"
+               label="Create &amp;container..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
    </extension>
 
 </plugin>

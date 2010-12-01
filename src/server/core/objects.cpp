@@ -1328,6 +1328,12 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
              (iChildClass == OBJECT_TEMPLATE))
             return TRUE;
          break;
+      case OBJECT_NETWORKMAPROOT:
+      case OBJECT_NETWORKMAPGROUP:
+         if ((iChildClass == OBJECT_NETWORKMAPGROUP) || 
+             (iChildClass == OBJECT_NETWORKMAP))
+            return TRUE;
+         break;
       case OBJECT_POLICYROOT:
       case OBJECT_POLICYGROUP:
          if ((iChildClass == OBJECT_POLICYGROUP) || 

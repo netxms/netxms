@@ -71,6 +71,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
@@ -1878,8 +1879,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
 				msg.setVariable(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
 				msg.setVariableInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
-				msg.setVariableInt32(NXCPCodes.VID_PROXY_NODE, (int) data.getAgentProxyId());
-				msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int) data.getSnmpProxyId());
+				msg.setVariableInt32(NXCPCodes.VID_PROXY_NODE, (int)data.getAgentProxyId());
+				msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
+				break;
+			case GenericObject.OBJECT_NETWORKMAP:
+				msg.setVariableInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
+				msg.setVariableInt32(NXCPCodes.VID_SEED_OBJECT, (int)data.getSeedObjectId());
 				break;
 		}
 
@@ -2049,6 +2054,35 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariable(NXCPCodes.VID_LONGITUDE, gl.getLongitude());
 		}
 
+		if ((flags & NXCObjectModificationData.MODIFY_MAP_LAYOUT) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_LAYOUT, data.getMapLayout());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_MAP_BACKGROUND) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_MAP_CONTENT) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getMapElements().size());
+			long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+			for(NetworkMapElement e : data.getMapElements())
+			{
+				e.fillMessage(msg, varId);
+				varId += 100;
+			}
+
+			msg.setVariableInt32(NXCPCodes.VID_NUM_LINKS, data.getMapLinks().size());
+			varId = NXCPCodes.VID_LINK_LIST_BASE;
+			for(NetworkMapLink l : data.getMapLinks())
+			{
+				l.fillMessage(msg, varId);
+				varId += 10;
+			}
+		}
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

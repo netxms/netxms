@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.ui.eclipse.library.Activator;
@@ -45,13 +45,13 @@ public abstract class ConsoleJob extends Job
 	 * @param pluginId Related plugin ID
 	 * @param jobFamily Job's family or null
 	 */
-	public ConsoleJob(String name, ViewPart viewPart, String pluginId, Object jobFamily)
+	public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, Object jobFamily)
 	{
 		super(name);
 		this.pluginId = (pluginId != null) ? pluginId : Activator.PLUGIN_ID;
 		this.jobFamily = jobFamily;
-		siteService = (viewPart != null) ? 
-					(IWorkbenchSiteProgressService)viewPart.getSite().getAdapter(IWorkbenchSiteProgressService.class) : null;
+		siteService = (wbPart != null) ? 
+					(IWorkbenchSiteProgressService)wbPart.getSite().getAdapter(IWorkbenchSiteProgressService.class) : null;
 		setUser(true);
 	}
 

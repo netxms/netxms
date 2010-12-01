@@ -19,7 +19,10 @@
 package org.netxms.client;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Map;
+import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
  * @author Victor
@@ -48,6 +51,9 @@ public class NXCObjectModificationData
 	public static final long MODIFY_GEOLOCATION       = 0x00008000L;
 	public static final long MODIFY_PRIMARY_IP        = 0x00010000L;
 	public static final long MODIFY_SNMP_PORT         = 0x00020000L;
+	public static final long MODIFY_MAP_LAYOUT        = 0x00040000L;
+	public static final long MODIFY_MAP_BACKGROUND    = 0x00080000L;
+	public static final long MODIFY_MAP_CONTENT       = 0x00100000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -77,6 +83,10 @@ public class NXCObjectModificationData
 	private long[] trustedNodes;
 	private GeoLocation geolocation;
 	private InetAddress primaryIpAddress;
+	private int mapLayout;
+	private int mapBackground;
+	private List<NetworkMapElement> mapElements;
+	private List<NetworkMapLink> mapLinks;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -545,5 +555,68 @@ public class NXCObjectModificationData
 	{
 		this.snmpPort = snmpPort;
 		flags |= MODIFY_SNMP_PORT;
+	}
+
+	/**
+	 * @return the mapLayout
+	 */
+	public int getMapLayout()
+	{
+		return mapLayout;
+	}
+
+	/**
+	 * @param mapLayout the mapLayout to set
+	 */
+	public void setMapLayout(int mapLayout)
+	{
+		this.mapLayout = mapLayout;
+		flags |= MODIFY_MAP_LAYOUT;
+	}
+
+	/**
+	 * @return the mapBackground
+	 */
+	public int getMapBackground()
+	{
+		return mapBackground;
+	}
+
+	/**
+	 * @param mapBackground the mapBackground to set
+	 */
+	public void setMapBackground(int mapBackground)
+	{
+		this.mapBackground = mapBackground;
+		flags |= MODIFY_MAP_BACKGROUND;
+	}
+
+	/**
+	 * @return the mapElements
+	 */
+	public List<NetworkMapElement> getMapElements()
+	{
+		return mapElements;
+	}
+
+	/**
+	 * @return the mapLinks
+	 */
+	public List<NetworkMapLink> getMapLinks()
+	{
+		return mapLinks;
+	}
+	
+	/**
+	 * Set map contents
+	 * 
+	 * @param elements
+	 * @param links
+	 */
+	public void setMapContent(List<NetworkMapElement> elements, List<NetworkMapLink> links)
+	{
+		mapElements = elements;
+		mapLinks = links;
+		flags |= MODIFY_MAP_CONTENT;
 	}
 }

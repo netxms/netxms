@@ -51,6 +51,23 @@ NetworkMap::NetworkMap() : NetObj()
 
 
 //
+// Create network map object from user session
+//
+
+NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
+{
+	m_mapType = type;
+	m_seedObject = seed;
+	m_layout = MAP_LAYOUT_RADIAL;
+	m_background = 0;
+	m_numElements = 0;
+	m_elements = NULL;
+	m_numLinks = 0;
+	m_links = NULL;
+}
+
+
+//
 // Network map object destructor
 //
 
@@ -329,7 +346,7 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 			DWORD varId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < m_numElements; i++)
 			{
-				int type = (int)request->GetVariableShort(varId);
+				int type = (int)request->GetVariableShort(varId + 1);
 				switch(type)
 				{
 					case MAP_ELEMENT_OBJECT:

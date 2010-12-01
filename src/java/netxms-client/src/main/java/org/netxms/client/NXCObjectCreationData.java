@@ -44,6 +44,8 @@ public class NXCObjectCreationData
 	private InetAddress ipNetMask;
 	private long agentProxyId;
 	private long snmpProxyId;
+	private int mapType;
+	private long seedObjectId;
 	
 	/**
 	 * Constructor.
@@ -211,5 +213,37 @@ public class NXCObjectCreationData
 	public void setSnmpProxyId(long snmpProxyId)
 	{
 		this.snmpProxyId = snmpProxyId;
+	}
+
+	/**
+	 * @return the mapType
+	 */
+	public int getMapType()
+	{
+		return mapType;
+	}
+
+	/**
+	 * @param mapType the mapType to set
+	 */
+	public void setMapType(int mapType)
+	{
+		this.mapType = mapType;
+	}
+
+	/**
+	 * @return the seedObjectId
+	 */
+	public long getSeedObjectId()
+	{
+		return seedObjectId;
+	}
+
+	/**
+	 * @param seedObjectId the seedObjectId to set
+	 */
+	public void setSeedObjectId(long seedObjectId)
+	{
+		this.seedObjectId = seedObjectId;
 	}
 }

@@ -26,21 +26,25 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.objectmanager.dialogs.EnterIpAddressDialog;
+import org.netxms.ui.eclipse.objectmanager.dialogs.CreateContainerDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Change IP address for node.
+ * Create container object
+ *
  */
-public class ChangeIpAddress implements IObjectActionDelegate
+public class CreateContainer implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private IWorkbenchPart part;
-	private Node node;
+	private long parentId = -1;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -58,21 +62,23 @@ public class ChangeIpAddress implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final EnterIpAddressDialog dlg = new EnterIpAddressDialog(window.getShell());
+		final CreateContainerDialog dlg = new CreateContainerDialog(window.getShell());
 		if (dlg.open() != Window.OK)
 			return;
-
-		new ConsoleJob("Change IP address for node " + node.getObjectName(), part, Activator.PLUGIN_ID, null) {
+		
+		new ConsoleJob("Create new container", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((NXCSession)ConsoleSharedData.getSession()).changeNodeIpAddress(node.getObjectId(), dlg.getIpAddress());
+				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_CONTAINER, dlg.getName(), parentId);
+				session.createObject(cd);
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot change IP address for node " + node.getObjectName();
+				return "Cannot create container object \"" + dlg.getName() + "\"";
 			}
 		}.start();
 	}
@@ -85,21 +91,21 @@ public class ChangeIpAddress implements IObjectActionDelegate
 	{
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
-			final Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof Node)
+			final Object object = ((IStructuredSelection)selection).getFirstElement();
+			if ((object instanceof Container) || (object instanceof ServiceRoot))
 			{
-				node = (Node)obj;
+				parentId = ((GenericObject)object).getObjectId();
 			}
 			else
 			{
-				node = null;
+				parentId = -1;
 			}
 		}
 		else
 		{
-			node = null;
+			parentId = -1;
 		}
 
-		action.setEnabled(node != null);
+		action.setEnabled(parentId != -1);
 	}
 }

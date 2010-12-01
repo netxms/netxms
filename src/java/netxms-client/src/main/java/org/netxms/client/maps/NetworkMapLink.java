@@ -86,6 +86,22 @@ public class NetworkMapLink
 		connectorName1 = msg.getVariableAsString(baseId + 2);
 		connectorName2 = msg.getVariableAsString(baseId + 3);
 	}
+	
+	/**
+	 * Fill NXCP message with link data
+	 * 
+	 * @param msg NXCP message
+	 * @param baseId base variable ID
+	 */
+	public void fillMessage(NXCPMessage msg, long baseId)
+	{
+		msg.setVariableInt16(baseId, type);
+		msg.setVariable(baseId + 1, name);
+		msg.setVariable(baseId + 2, connectorName1);
+		msg.setVariable(baseId + 3, connectorName2);
+		msg.setVariableInt32(baseId + 4, (int)element1);
+		msg.setVariableInt32(baseId + 5, (int)element2);
+	}
 
 	/**
 	 * @return the linkType

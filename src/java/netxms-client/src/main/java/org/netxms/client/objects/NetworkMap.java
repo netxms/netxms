@@ -113,6 +113,11 @@ public class NetworkMap extends GenericObject
 		return seedObjectId;
 	}
 	
+	/**
+	 * Create map page from map object's data
+	 * 
+	 * @return new map page
+	 */
 	public NetworkMapPage createMapPage()
 	{
 		NetworkMapPage page = new NetworkMapPage(getObjectName());

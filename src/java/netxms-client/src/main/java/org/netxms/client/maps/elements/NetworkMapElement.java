@@ -80,6 +80,20 @@ public class NetworkMapElement
 		x = 0;
 		y = 0;
 	}
+	
+	/**
+	 * Fill NXCP message with element data
+	 * 
+	 * @param msg NXCP message
+	 * @param baseId base variable ID
+	 */
+	public void fillMessage(NXCPMessage msg, long baseId)
+	{
+		msg.setVariableInt32(baseId, (int)id);
+		msg.setVariableInt16(baseId + 1, type);
+		msg.setVariableInt32(baseId + 2, x);
+		msg.setVariableInt32(baseId + 3, y);
+	}
 
 	/**
 	 * @return the type

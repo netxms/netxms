@@ -1289,6 +1289,7 @@ protected:
 
 public:
    NetworkMap();
+	NetworkMap(int type, DWORD seed);
    virtual ~NetworkMap();
 
    virtual int Type() { return OBJECT_NETWORKMAP; }

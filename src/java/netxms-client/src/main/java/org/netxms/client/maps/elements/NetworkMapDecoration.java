@@ -65,4 +65,16 @@ public class NetworkMapDecoration extends NetworkMapElement
 	{
 		return title;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
+	 */
+	@Override
+	public void fillMessage(NXCPMessage msg, long baseId)
+	{
+		super.fillMessage(msg, baseId);
+		msg.setVariableInt32(baseId + 10, decorationType);
+		msg.setVariableInt32(baseId + 11, color);
+		msg.setVariable(baseId + 12, title);
+	}
 }
