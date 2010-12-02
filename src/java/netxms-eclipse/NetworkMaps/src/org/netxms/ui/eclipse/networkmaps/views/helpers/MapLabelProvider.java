@@ -27,6 +27,9 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IFigureProvider;
+import org.eclipse.zest.core.viewers.ISelfStyleProvider;
+import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.GraphNode;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -38,7 +41,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Label provider for map
  */
-public class MapLabelProvider extends LabelProvider implements IFigureProvider
+public class MapLabelProvider extends LabelProvider implements IFigureProvider, ISelfStyleProvider
 {
 	private NXCSession session;
 	private GraphViewer viewer;
@@ -189,5 +192,29 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		return (selection != null) ? selection.toList().contains(element) : false;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java.lang.Object, org.eclipse.zest.core.widgets.GraphConnection)
+	 */
+	@Override
+	public void selfStyleConnection(Object element, GraphConnection connection)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang.Object, org.eclipse.zest.core.widgets.GraphNode)
+	 */
+	@Override
+	public void selfStyleNode(Object element, GraphNode node)
+	{
+		IFigure figure = node.getNodeFigure();
+		if ((figure != null) && (figure instanceof ObjectFigure))
+		{
+			((ObjectFigure)figure).update();
+			figure.repaint();
+		}
 	}
 }

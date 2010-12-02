@@ -96,7 +96,7 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.delete"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.GenericObject"
             objectClass="org.netxms.client.objects.GenericObject">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.DeleteObject"
@@ -106,58 +106,78 @@
                icon="icons/delete.png"
                menubarPath="objectmgmt">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.Unmanage"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
+               label="Unmanage"
+               menubarPath="objectmgmt">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.Manage"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
+               label="Manage"
+               menubarPath="objectmgmt">
+         </action>
       </objectContribution>
 
       <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.unbind_NXCContainer"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Container"
             objectClass="org.netxms.client.objects.Container">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.UnbindObject"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject_Container"
                label="Unbind..."
                menubarPath="objectbinding">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject_Container"
+               label="Bind..."
+               menubarPath="objectbinding">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_Container"
+               label="Create &amp;container..."
+               menubarPath="objectcreation">
          </action>
       </objectContribution>
 
       <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.unbind_NXCServiceRoot"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.ServiceRoot"
             objectClass="org.netxms.client.objects.ServiceRoot">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.UnbindObject"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.UnbindObject_ServiceRoot"
                label="Unbind..."
                menubarPath="objectbinding">
          </action>
-      </objectContribution>
-
-      <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind_NXCContainer"
-            objectClass="org.netxms.client.objects.Container">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject_ServiceRoot"
                label="Bind..."
                menubarPath="objectbinding">
          </action>
-      </objectContribution>
-
-      <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind_NXCServiceRoot"
-            objectClass="org.netxms.client.objects.ServiceRoot">
          <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject"
-               label="Bind..."
-               menubarPath="objectbinding">
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_ServiceRoot"
+               label="Create &amp;container..."
+               menubarPath="objectcreation">
          </action>
       </objectContribution>
 
+
+
       <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.changeIpAddress"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Node"
             objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeIpAddress"
@@ -168,32 +188,10 @@
          </action>
       </objectContribution>
 
-      <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.unmanage"
-            objectClass="org.netxms.client.objects.GenericObject">
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.Unmanage"
-               enablesFor="+"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
-               label="Unmanage"
-               menubarPath="objectmgmt">
-         </action>
-      </objectContribution>
 
       <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.manage"
-            objectClass="org.netxms.client.objects.GenericObject">
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.Manage"
-               enablesFor="+"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
-               label="Manage"
-               menubarPath="objectmgmt">
-         </action>
-      </objectContribution>
-      <objectContribution
             adaptable="false"
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.removeClusterNode"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Cluster"
             objectClass="org.netxms.client.objects.Cluster">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.RemoveClusterNode"
@@ -202,41 +200,12 @@
                label="&amp;Remove node..."
                menubarPath="objectbinding">
          </action>
-      </objectContribution>
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.addClusterNode"
-            objectClass="org.netxms.client.objects.Cluster">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.AddClusterNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.addClusterNode"
                label="&amp;Add node..."
                menubarPath="objectbinding">
-         </action>
-      </objectContribution>
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createContainer_Container"
-            objectClass="org.netxms.client.objects.Container">
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_Container"
-               label="Create &amp;container..."
-               menubarPath="objectcreation">
-         </action>
-      </objectContribution>
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createContainer_ServiceRoot"
-            objectClass="org.netxms.client.objects.ServiceRoot">
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_ServiceRoot"
-               label="Create &amp;container..."
-               menubarPath="objectcreation">
          </action>
       </objectContribution>
    </extension>

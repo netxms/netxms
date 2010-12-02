@@ -80,6 +80,9 @@ import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.objects.NetworkMapGroup;
+import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.PolicyGroup;
@@ -226,6 +229,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_AGENTPOLICY_CONFIG:
 				object = new AgentPolicyConfig(msg, this);
+				break;
+			case GenericObject.OBJECT_NETWORKMAPROOT:
+				object = new NetworkMapRoot(msg, this);
+				break;
+			case GenericObject.OBJECT_NETWORKMAPGROUP:
+				object = new NetworkMapGroup(msg, this);
+				break;
+			case GenericObject.OBJECT_NETWORKMAP:
+				object = new NetworkMap(msg, this);
 				break;
 			default:
 				object = new GenericObject(msg, this);

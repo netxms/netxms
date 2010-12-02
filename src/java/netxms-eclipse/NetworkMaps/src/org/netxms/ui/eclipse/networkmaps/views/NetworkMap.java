@@ -24,6 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -47,7 +50,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.zest.core.viewers.GraphViewer;
+import org.eclipse.ui.progress.UIJob;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.netxms.api.client.SessionListener;
@@ -57,6 +60,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
@@ -67,7 +71,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	protected NXCSession session;
 	protected GenericObject rootObject;
 	protected NetworkMapPage mapPage;
-	protected GraphViewer viewer;
+	protected ExtendedGraphViewer viewer;
 	protected SessionListener sessionListener;
 	protected MapLabelProvider labelProvider;
 	
@@ -106,7 +110,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 		FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
 		
-		viewer = new GraphViewer(parent, SWT.NONE);
+		viewer = new ExtendedGraphViewer(parent, SWT.NONE);
 		viewer.setContentProvider(new MapContentProvider());
 		labelProvider = new MapLabelProvider(viewer);
 		viewer.setLabelProvider(labelProvider);
@@ -247,25 +251,22 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	}
 	
 	/**
-	 * Returns true if given object is on current map
-	 * 
-	 * @param object
-	 * @return
-	 */
-	protected boolean isObjectOnMap(long objectId)
-	{
-		return mapPage.findObjectElement(objectId) != null;
-	}
-	
-	/**
 	 * Called by session listener when NetXMS object was changed.
 	 * 
 	 * @param object cnaged NetXMS object
 	 */
-	protected void onObjectChange(GenericObject object)
+	protected void onObjectChange(final GenericObject object)
 	{
-		if (isObjectOnMap(object.getObjectId()))
-			viewer.refresh(object, true);
+		new UIJob("Refresh map") {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor)
+			{
+				NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
+				if (element != null)
+					viewer.refresh(element, true);
+				return Status.OK_STATUS;
+			}
+		}.schedule();
 	}
 
 	/* (non-Javadoc)

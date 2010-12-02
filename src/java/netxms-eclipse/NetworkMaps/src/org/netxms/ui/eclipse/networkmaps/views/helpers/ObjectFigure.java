@@ -131,4 +131,17 @@ public class ObjectFigure extends Figure
 			}
 		}
 	}
+	
+	/**
+	 * Called by label provider to indicate object update
+	 * @param object updated object
+	 */
+	void update()
+	{
+		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		object = session.findObjectById(element.getObjectId());
+		label.setText(object.getObjectName());
+		setToolTip(new ObjectTooltip(object));
+		invalidateTree();
+	}
 }

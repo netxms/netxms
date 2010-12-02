@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -62,6 +63,7 @@ public class Communication extends PropertyPage
 	private Button agentForceEncryption;
 	private ObjectSelector agentProxy;
 	private Combo snmpVersion;
+	private LabeledText snmpPort;
 	private Combo snmpAuth;
 	private Combo snmpPriv;
 	private ObjectSelector snmpProxy;
@@ -208,6 +210,10 @@ public class Communication extends PropertyPage
 			}
 		});
 		
+		snmpPort = new LabeledText(snmpGroup, SWT.NONE);
+		snmpPort.setLabel("UDP Port");
+		snmpPort.setText(Integer.toString(node.getSnmpPort()));
+		
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(snmpVersion.getParent(), 0, SWT.BOTTOM);
@@ -265,6 +271,12 @@ public class Communication extends PropertyPage
 		fd.right = new FormAttachment(100, 0);
 		snmpPrivPassword.setLayoutData(fd);
 		snmpPrivPassword.getTextControl().setEnabled(node.getSnmpVersion() == Node.SNMP_VERSION_3);
+
+		fd = new FormData();
+		fd.left = new FormAttachment(snmpVersion.getParent(), 0, SWT.RIGHT);
+		fd.right = new FormAttachment(snmpAuthName, 0, SWT.LEFT);
+		fd.top = new FormAttachment(0, 0);
+		snmpPort.setLayoutData(fd);
 		
 		return dialogArea;
 	}
@@ -316,7 +328,7 @@ public class Communication extends PropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected void applyChanges(final boolean isApply)
+	protected boolean applyChanges(final boolean isApply)
 	{
 		if (isApply)
 			setValid(false);
@@ -325,12 +337,33 @@ public class Communication extends PropertyPage
 		
 		md.setPrimaryIpAddress(primaryIpAddress.getAddress());
 		
-		md.setAgentPort(Integer.parseInt(agentPort.getText(), 10));
+		try
+		{
+			md.setAgentPort(Integer.parseInt(agentPort.getText(), 10));
+		}
+		catch(NumberFormatException e)
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid agent port number");
+			if (isApply)
+				setValid(true);
+			return false;
+		}
 		md.setAgentProxy(agentProxy.getObjectId());
 		md.setAgentAuthMethod(agentAuthMethod.getSelectionIndex());
 		md.setAgentSecret(agentSharedSecret.getText());
 		
 		md.setSnmpVersion(snmpIndexToVersion(snmpVersion.getSelectionIndex()));
+		try
+		{
+			md.setSnmpPort(Integer.parseInt(snmpPort.getText(), 10));
+		}
+		catch(NumberFormatException e)
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid SNMP port number");
+			if (isApply)
+				setValid(true);
+			return false;
+		}
 		md.setSnmpProxy(snmpProxy.getObjectId());
 		md.setSnmpAuthMethod(snmpAuth.getSelectionIndex());
 		md.setSnmpPrivMethod(snmpPriv.getSelectionIndex());
@@ -371,6 +404,7 @@ public class Communication extends PropertyPage
 				return status;
 			}
 		}.schedule();
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -379,8 +413,7 @@ public class Communication extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		applyChanges(false);
-		return true;
+		return applyChanges(false);
 	}
 
 	/* (non-Javadoc)

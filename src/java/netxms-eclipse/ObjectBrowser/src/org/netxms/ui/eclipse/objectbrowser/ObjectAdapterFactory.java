@@ -105,12 +105,18 @@ public class ObjectAdapterFactory implements IAdapterFactory
 							case GenericObject.OBJECT_TEMPLATE:
 								return Activator.getImageDescriptor("icons/template.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_POLICYROOT:
-								return Activator.getImageDescriptor("icons/policy_root.png"); //$NON-NLS-1$
+								return Activator.getImageDescriptor("icons/policy_root.gif"); //$NON-NLS-1$
 							case GenericObject.OBJECT_POLICYGROUP:
 								return Activator.getImageDescriptor("icons/policy_group.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_AGENTPOLICY:
 							case GenericObject.OBJECT_AGENTPOLICY_CONFIG:
 								return Activator.getImageDescriptor("icons/policy.png"); //$NON-NLS-1$
+							case GenericObject.OBJECT_NETWORKMAP:
+								return Activator.getImageDescriptor("icons/netmap.png"); //$NON-NLS-1$
+							case GenericObject.OBJECT_NETWORKMAPGROUP:
+								return Activator.getImageDescriptor("icons/netmap_group.png"); //$NON-NLS-1$
+							case GenericObject.OBJECT_NETWORKMAPROOT:
+								return Activator.getImageDescriptor("icons/netmap_root.gif"); //$NON-NLS-1$
 							default:
 								return null;
 						}

@@ -94,6 +94,30 @@
                menubarPath="additions">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.NetworkMapRoot"
+            objectClass="org.netxms.client.objects.NetworkMapRoot">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapRoot"
+               label="Create network &amp;map..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.NetworkMapGroup"
+            objectClass="org.netxms.client.objects.NetworkMapGroup">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapGroup"
+               label="Create network &amp;map..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
    </extension>
 
 </plugin>

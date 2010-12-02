@@ -97,35 +97,38 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 		rootFolder = new GraphFolder("[root]", null);
 		
 		List<GraphSettings> gs = (List<GraphSettings>)newInput;
-		Collections.sort(gs, new Comparator<GraphSettings>() {
-			@Override
-			public int compare(GraphSettings arg0, GraphSettings arg1)
-			{
-				return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", ""));
-			}
-		});
-		
-		Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
-		for(int i = 0; i < gs.size(); i++)
+		if (gs != null)
 		{
-			String[] path = gs.get(i).getName().split("\\-\\>");
-		
-			GraphFolder root = rootFolder;
-			for(int j = 0; j < path.length - 1; j++)
-			{
-				String key = path[j].replace("&", "");
-				GraphFolder curr = folders.get(key);
-				if (curr == null)
+			Collections.sort(gs, new Comparator<GraphSettings>() {
+				@Override
+				public int compare(GraphSettings arg0, GraphSettings arg1)
 				{
-					curr = new GraphFolder(path[j], root);
-					folders.put(key, curr);
-					root.addFolder(curr);
+					return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", ""));
 				}
-				root = curr;
+			});
+		
+			Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
+			for(int i = 0; i < gs.size(); i++)
+			{
+				String[] path = gs.get(i).getName().split("\\-\\>");
+			
+				GraphFolder root = rootFolder;
+				for(int j = 0; j < path.length - 1; j++)
+				{
+					String key = path[j].replace("&", "");
+					GraphFolder curr = folders.get(key);
+					if (curr == null)
+					{
+						curr = new GraphFolder(path[j], root);
+						folders.put(key, curr);
+						root.addFolder(curr);
+					}
+					root = curr;
+				}
+	
+				root.addGraph(gs.get(i));
+				parentFolders.put(gs.get(i), root);
 			}
-
-			root.addGraph(gs.get(i));
-			parentFolders.put(gs.get(i), root);
 		}
 	}
 }

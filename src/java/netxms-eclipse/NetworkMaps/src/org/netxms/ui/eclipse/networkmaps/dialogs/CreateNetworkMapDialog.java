@@ -16,31 +16,38 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectmanager.dialogs;
+package org.netxms.ui.eclipse.networkmaps.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Dialog for creating new container object
  *
  */
-public class CreateContainerDialog extends Dialog
+public class CreateNetworkMapDialog extends Dialog
 {
 	private Text textName;
+	private Combo mapType;
+	private ObjectSelector seedObjectSelector;
 	private String name;
+	private int type;
+	private long seedObject;
 	
 	/**
 	 * @param parentShell
 	 */
-	public CreateContainerDialog(Shell parentShell)
+	public CreateNetworkMapDialog(Shell parentShell)
 	{
 		super(parentShell);
 	}
@@ -52,7 +59,7 @@ public class CreateContainerDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Container");
+		newShell.setText("Create Network Map");
 	}
 
 	/* (non-Javadoc)
@@ -72,6 +79,17 @@ public class CreateContainerDialog extends Dialog
                                                 WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
       
+      mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Map type", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      mapType.add("Custom");
+      mapType.add("IP Topology");
+      mapType.add("Layer 2 Topology");
+      mapType.select(0);
+      
+      seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+      seedObjectSelector.setLabel("Seed node");
+      seedObjectSelector.setObjectClass(GenericObject.OBJECT_NODE);
+      seedObjectSelector.setEnabled(false);
+      
 		return dialogArea;
 	}
 
@@ -87,6 +105,18 @@ public class CreateContainerDialog extends Dialog
 			MessageDialog.openWarning(getShell(), "Warning", "Please enter non-empty object name");
 			return;
 		}
+		
+		type = mapType.getSelectionIndex();
+		if (type > 0)
+		{
+			seedObject = seedObjectSelector.getObjectId();
+			if (seedObject == 0)
+			{
+				MessageDialog.openWarning(getShell(), "Warning", "Please select seed node");
+				return;
+			}
+		}
+
 		super.okPressed();
 	}
 
@@ -96,5 +126,21 @@ public class CreateContainerDialog extends Dialog
 	public String getName()
 	{
 		return name;
+	}
+
+	/**
+	 * @return the type
+	 */
+	public int getType()
+	{
+		return type;
+	}
+
+	/**
+	 * @return the seedObject
+	 */
+	public long getSeedObject()
+	{
+		return seedObject;
 	}
 }
