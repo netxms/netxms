@@ -22,16 +22,16 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 
 /**
- * Policy group
+ * Template group
  *
  */
-public class PolicyGroup extends GenericObject
+public class TemplateGroup extends GenericObject
 {
 	/**
-	 * @param msg Message to create object from
-	 * @param session Associated client session
+	 * @param msg
+	 * @param session
 	 */
-	public PolicyGroup(NXCPMessage msg, NXCSession session)
+	public TemplateGroup(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 	}
@@ -42,6 +42,6 @@ public class PolicyGroup extends GenericObject
 	@Override
 	public String getObjectClassName()
 	{
-		return "PolicyGroup";
+		return "TemplateGroup";
 	}
 }

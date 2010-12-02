@@ -32,8 +32,8 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.objectmanager.dialogs.CreateContainerDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -62,7 +62,7 @@ public class CreateContainer implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateContainerDialog dlg = new CreateContainerDialog(window.getShell());
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Container");
 		if (dlg.open() != Window.OK)
 			return;
 		
@@ -71,14 +71,14 @@ public class CreateContainer implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_CONTAINER, dlg.getName(), parentId);
+				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_CONTAINER, dlg.getObjectName(), parentId);
 				session.createObject(cd);
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create container object \"" + dlg.getName() + "\"";
+				return "Cannot create container object \"" + dlg.getObjectName() + "\"";
 			}
 		}.start();
 	}

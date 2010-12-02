@@ -19,11 +19,11 @@
 package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
@@ -68,17 +68,15 @@ public class CreateObjectDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
-		FillLayout layout = new FillLayout();
-      layout.type = SWT.VERTICAL;
+
+		GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.getString("CreateObjectDialog.object_name")); //$NON-NLS-1$
-      
-      textName = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
+      		Messages.getString("CreateObjectDialog.object_name"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textName.getShell().setMinimumSize(300, 0);
       textName.setTextLimit(63);
       textName.setFocus();
       
@@ -91,7 +89,12 @@ public class CreateObjectDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		objectName = textName.getText();
+		objectName = textName.getText().trim();
+		if (objectName.isEmpty())
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid object name");
+			return;
+		}
 		super.okPressed();
 	}
 

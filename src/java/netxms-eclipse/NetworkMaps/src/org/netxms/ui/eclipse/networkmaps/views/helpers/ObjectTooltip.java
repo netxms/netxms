@@ -28,7 +28,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
- * @author victor
+ * Tooltip for object on map
  *
  */
 public class ObjectTooltip extends Figure
@@ -48,7 +48,7 @@ public class ObjectTooltip extends Figure
 		if ((object instanceof Node) && !((Node)object).getPrimaryIP().isAnyLocalAddress())
 		{
 			sb.append("\nPrimary IP: ");
-			sb.append(((Node)object).getPrimaryIP().toString());
+			sb.append(((Node)object).getPrimaryIP().getHostAddress());
 		}
 		if (!object.getComments().isEmpty())
 		{

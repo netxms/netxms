@@ -48,6 +48,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image[] statusImages;
 	private Image imgNode;
 	private Image imgSubnet;
+	private Image imgService;
+	private Image imgOther;
 	private Font font;
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
@@ -66,6 +68,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		
 		imgNode = Activator.getImageDescriptor("icons/node.png").createImage();
 		imgSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
+		imgService = Activator.getImageDescriptor("icons/service.png").createImage();
+		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
 		
 		font = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
 	}
@@ -94,7 +98,19 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 			if (object != null)
-				return object.getObjectClass() == GenericObject.OBJECT_NODE ? imgNode : imgSubnet;
+			{
+				switch(object.getObjectClass())
+				{
+					case GenericObject.OBJECT_NODE:
+						return imgNode;
+					case GenericObject.OBJECT_SUBNET:
+						return imgSubnet;
+					case GenericObject.OBJECT_CONTAINER:
+						return imgService;
+					default:
+						return imgOther;
+				}
+			}
 		}
 		return null;
 	}

@@ -350,6 +350,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/PolicyRoot.java -
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ServiceRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Subnet.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Template.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/TemplateGroup.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/TemplateRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectTool.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolDetails.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objecttools/ObjectToolTableColumn.java -text
@@ -499,6 +501,8 @@ src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DciComparator.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/DciLabelProvider.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/ThresholdLabelProvider.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/CreateTemplate.java -text
+src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/CreateTemplateGroup.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/OpenEditor.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/actions/ShowLastValues.java -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/dialogs/AbstractSelectParamDlg.java -text
@@ -639,6 +643,7 @@ src/java/netxms-eclipse/NXSL/icons/script.png -text
 src/java/netxms-eclipse/NXSL/icons/var_global.gif -text
 src/java/netxms-eclipse/NXSL/icons/var_local.gif -text
 src/java/netxms-eclipse/NXSL/plugin.xml -text
+src/java/netxms-eclipse/NXSL/resource.properties -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/Activator.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/actions/OpenScriptLibrary.java -text
 src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/dialogs/CreateScriptDialog.java -text
@@ -660,7 +665,9 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/Sty
 src/java/netxms-eclipse/NetworkMaps/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/NetworkMaps/build.properties -text
 src/java/netxms-eclipse/NetworkMaps/icons/node.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/other.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/quickmap.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/service.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_components.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_deps.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/subnet.png -text
@@ -753,7 +760,6 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/UnbindObject.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/Unmanage.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/AttributeEditDialog.java -text
-src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateContainerDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/EnterIpAddressDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AccessControl.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoApply.java -text

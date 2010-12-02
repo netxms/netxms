@@ -24,39 +24,73 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.dceditor_NXCNode"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Node"
             objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Node"
                label="Data Collection Configuration"
                icon="icons/dc_editor.png"
                menubarPath="datacollection">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
+               enablesFor="1"
+               icon="icons/last_values.png"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues"
+               label="Last values"
+               menubarPath="datacollection">
+         </action>
       </objectContribution>
       <objectContribution
-            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.dceditor_NXCTemplate"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Template"
             objectClass="org.netxms.client.objects.Template">
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Template"
                label="Data Collection Configuration"
                icon="icons/dc_editor.png"
                menubarPath="datacollection">
          </action>
       </objectContribution>
       <objectContribution
-            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.lastvalues"
-            objectClass="org.netxms.client.objects.Node">
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.TemplateRoot"
+            objectClass="org.netxms.client.objects.TemplateRoot">
          <action
-               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplateGroup"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues"
-               label="Last values"
-               icon="icons/last_values.png"
-               menubarPath="datacollection">
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplateGroup#TemplateRoot"
+               label="Create template &amp;group..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplate#TemplateRoot"
+               label="Create &amp;template..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.TemplateGroup"
+            objectClass="org.netxms.client.objects.TemplateGroup">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplateGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplateGroup#TemplateGroup"
+               label="Create template &amp;group..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplate#TemplateGroup"
+               label="Create &amp;template..."
+               menubarPath="objectcreation">
          </action>
       </objectContribution>
    </extension>

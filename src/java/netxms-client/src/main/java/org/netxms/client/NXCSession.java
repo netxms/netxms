@@ -90,6 +90,8 @@ import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TemplateGroup;
+import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.snmp.SnmpTrap;
@@ -211,6 +213,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_TEMPLATE:
 				object = new Template(msg, this);
+				break;
+			case GenericObject.OBJECT_TEMPLATEROOT:
+				object = new TemplateRoot(msg, this);
+				break;
+			case GenericObject.OBJECT_TEMPLATEGROUP:
+				object = new TemplateGroup(msg, this);
 				break;
 			case GenericObject.OBJECT_NETWORK:
 				object = new EntireNetwork(msg, this);
