@@ -34,6 +34,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -47,6 +48,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private GraphViewer viewer;
 	private Image[] statusImages;
 	private Image imgNode;
+	private Image imgNodeSwitch;
+	private Image imgNodeRouter;
 	private Image imgSubnet;
 	private Image imgService;
 	private Image imgOther;
@@ -67,6 +70,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
 		
 		imgNode = Activator.getImageDescriptor("icons/node.png").createImage();
+		imgNodeSwitch = Activator.getImageDescriptor("icons/switch.png").createImage();
+		imgNodeRouter = Activator.getImageDescriptor("icons/router.png").createImage();
 		imgSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
 		imgService = Activator.getImageDescriptor("icons/service.png").createImage();
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
@@ -102,6 +107,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				switch(object.getObjectClass())
 				{
 					case GenericObject.OBJECT_NODE:
+						if ((((Node)object).getFlags() & Node.NF_IS_BRIDGE) != 0)
+							return imgNodeSwitch;
+						if ((((Node)object).getFlags() & Node.NF_IS_ROUTER) != 0)
+							return imgNodeRouter;
 						return imgNode;
 					case GenericObject.OBJECT_SUBNET:
 						return imgSubnet;
@@ -153,7 +162,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i].dispose();
 		imgNode.dispose();
+		imgNodeSwitch.dispose();
+		imgNodeRouter.dispose();
 		imgSubnet.dispose();
+		imgService.dispose();
+		imgOther.dispose();
 		font.dispose();
 		super.dispose();
 	}

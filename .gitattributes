@@ -667,10 +667,12 @@ src/java/netxms-eclipse/NetworkMaps/build.properties -text
 src/java/netxms-eclipse/NetworkMaps/icons/node.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/other.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/quickmap.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/router.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/service.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_components.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_deps.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/subnet.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/switch.png -text
 src/java/netxms-eclipse/NetworkMaps/plugin.xml -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/Activator.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/CreateMapGroup.java -text
