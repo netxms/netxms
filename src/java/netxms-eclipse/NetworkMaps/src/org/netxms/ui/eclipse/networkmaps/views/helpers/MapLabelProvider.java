@@ -56,6 +56,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Font font;
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
+	private boolean showStatusFrame = false;
 	
 	/**
 	 * Create map label provider
@@ -69,11 +70,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
 		
-		imgNode = Activator.getImageDescriptor("icons/node.png").createImage();
-		imgNodeSwitch = Activator.getImageDescriptor("icons/switch.png").createImage();
-		imgNodeRouter = Activator.getImageDescriptor("icons/router.png").createImage();
+		imgNode = Activator.getImageDescriptor("icons/objects/node.png").createImage();
+		imgNodeSwitch = Activator.getImageDescriptor("icons/objects/switch.png").createImage();
+		imgNodeRouter = Activator.getImageDescriptor("icons/objects/router.png").createImage();
 		imgSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
-		imgService = Activator.getImageDescriptor("icons/service.png").createImage();
+		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
 		
 		font = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
@@ -245,5 +246,21 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			((ObjectFigure)figure).update();
 			figure.repaint();
 		}
+	}
+
+	/**
+	 * @return the showStatusFrame
+	 */
+	public boolean isShowStatusFrame()
+	{
+		return showStatusFrame;
+	}
+
+	/**
+	 * @param showStatusFrame the showStatusFrame to set
+	 */
+	public void setShowStatusFrame(boolean showStatusFrame)
+	{
+		this.showStatusFrame = showStatusFrame;
 	}
 }

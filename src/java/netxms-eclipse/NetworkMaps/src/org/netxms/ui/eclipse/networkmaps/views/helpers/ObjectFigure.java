@@ -41,8 +41,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectFigure extends Figure
 {
-	private static final int IMAGE_SIZE_X = 32;
-	private static final int IMAGE_SIZE_Y = 32;
+	private static final int IMAGE_SIZE_X = 48;
+	private static final int IMAGE_SIZE_Y = 48;
 	private static final int IMAGE_MARGIN_X = 12;
 	private static final int IMAGE_MARGIN_Y = 4;
 	private static final int BACKGROUND_MARGIN_X = 4;
@@ -109,6 +109,22 @@ public class ObjectFigure extends Figure
 			gc.setAlpha(64);
 			gc.fillRoundRectangle(rect, 16, 16);
 			gc.setAlpha(255);
+
+			rect = new Rectangle(getBounds());
+		}
+			
+		// Status background
+		if (labelProvider.isShowStatusFrame())
+		{
+			rect.x += IMAGE_MARGIN_X - BACKGROUND_MARGIN_X;
+			rect.y += IMAGE_MARGIN_Y - BACKGROUND_MARGIN_Y + 1;
+			rect.width = IMAGE_SIZE_X + BACKGROUND_MARGIN_X * 2;
+			rect.height = IMAGE_SIZE_Y + BACKGROUND_MARGIN_Y * 2 - 1;
+			
+			gc.setForegroundColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
+			gc.setAntialias(SWT.ON);
+			gc.setLineWidth(3);
+			gc.drawRoundRectangle(rect, 16, 16);
 
 			rect = new Rectangle(getBounds());
 		}

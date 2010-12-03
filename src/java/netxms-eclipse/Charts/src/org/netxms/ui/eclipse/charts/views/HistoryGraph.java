@@ -50,7 +50,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
@@ -426,7 +425,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 			}
 		};
 		actionZoomIn.setText("Zoom &in");
-		actionZoomIn.setImageDescriptor(Activator.getImageDescriptor("icons/zoom_in.png"));
+		actionZoomIn.setImageDescriptor(ConsoleSharedData.getLibraryImageDescriptor(ConsoleSharedData.IMAGE_ZOOM_IN));
 
 		actionZoomOut = new Action() {
 			/* (non-Javadoc)
@@ -440,7 +439,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 			}
 		};
 		actionZoomOut.setText("Zoom &out");
-		actionZoomOut.setImageDescriptor(Activator.getImageDescriptor("icons/zoom_out.png"));
+		actionZoomOut.setImageDescriptor(ConsoleSharedData.getLibraryImageDescriptor(ConsoleSharedData.IMAGE_ZOOM_OUT));
 
 		actionAdjustX = new Action() {
 			/* (non-Javadoc)

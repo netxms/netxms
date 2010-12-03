@@ -51,6 +51,8 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.zest.core.viewers.AbstractZoomableViewer;
+import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.netxms.api.client.SessionListener;
@@ -60,13 +62,14 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
-public abstract class NetworkMap extends ViewPart implements ISelectionProvider
+public abstract class NetworkMap extends ViewPart implements ISelectionProvider, IZoomableWorkbenchPart
 {
 	protected NXCSession session;
 	protected GenericObject rootObject;
@@ -75,8 +78,13 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	protected SessionListener sessionListener;
 	protected MapLabelProvider labelProvider;
 	
-	protected Action actionShowStatusIcon;
-	protected Action actionShowStatusBackground;
+	private RefreshAction actionRefresh;
+	private Action actionShowStatusIcon;
+	private Action actionShowStatusBackground;
+	private Action actionShowStatusFrame;
+	private Action actionZoomIn;
+	private Action actionZoomOut;
+	private Action[] actionZoomTo;
 	
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -150,10 +158,27 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	}
 
 	/**
+	 * Do full map refresh
+	 */
+	private void refreshMap()
+	{
+		buildMapPage();
+		viewer.setInput(mapPage);
+	}
+	
+	/**
 	 * Create actions
 	 */
 	protected void createActions()
 	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				refreshMap();
+			}
+		};
+		
 		actionShowStatusBackground = new Action("Show status &background", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -175,6 +200,37 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 			}
 		};
 		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
+		
+		actionShowStatusFrame = new Action("Show status &frame", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				labelProvider.setShowStatusFrame(!labelProvider.isShowStatusFrame());
+				setChecked(labelProvider.isShowStatusFrame());
+				viewer.refresh();
+			}
+		};
+		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
+	
+		actionZoomIn = new Action("Zoom &in") {
+			@Override
+			public void run()
+			{
+				viewer.zoomIn();
+			}
+		};
+		actionZoomIn.setImageDescriptor(ConsoleSharedData.getLibraryImageDescriptor(ConsoleSharedData.IMAGE_ZOOM_IN));
+
+		actionZoomOut = new Action("Zoom &out") {
+			@Override
+			public void run()
+			{
+				viewer.zoomOut();
+			}
+		};
+		actionZoomOut.setImageDescriptor(ConsoleSharedData.getLibraryImageDescriptor(ConsoleSharedData.IMAGE_ZOOM_OUT));
+		
+		actionZoomTo = viewer.createZoomActions();
 	}
 	
 	/**
@@ -193,8 +249,17 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	 */
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
+		MenuManager zoom = new MenuManager("&Zoom");
+		for(int i = 0; i < actionZoomTo.length; i++)
+			zoom.add(actionZoomTo[i]);
+		
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
+		manager.add(actionShowStatusFrame);
+		manager.add(new Separator());
+		manager.add(zoom);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -203,6 +268,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	 */
 	protected void fillLocalToolBar(IToolBarManager manager)
 	{	
+		manager.add(actionZoomIn);
+		manager.add(actionZoomOut);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
 	}
 	
 	/**
@@ -217,8 +286,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 		{
 			public void menuAboutToShow(IMenuManager mgr)
 			{
-				if (!currentSelection.isEmpty())
-					fillContextMenu(mgr);
+				if (currentSelection.isEmpty())
+					fillMapContextMenu(mgr);
+				else
+					fillObjectContextMenu(mgr);
 			}
 		});
 	
@@ -231,10 +302,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	}
 
 	/**
-	 * Fill context menu
+	 * Fill context menu for map object
 	 * @param mgr Menu manager
 	 */
-	protected void fillContextMenu(IMenuManager mgr)
+	protected void fillObjectContextMenu(IMenuManager mgr)
 	{
 		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
 		mgr.add(new Separator());
@@ -251,9 +322,30 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	}
 	
 	/**
+	 * Fill context menu for map view
+	 * @param mgr Menu manager
+	 */
+	protected void fillMapContextMenu(IMenuManager manager)
+	{
+		MenuManager zoom = new MenuManager("&Zoom");
+		for(int i = 0; i < actionZoomTo.length; i++)
+			zoom.add(actionZoomTo[i]);
+		
+		manager.add(actionShowStatusBackground);
+		manager.add(actionShowStatusIcon);
+		manager.add(actionShowStatusFrame);
+		manager.add(new Separator());
+		manager.add(zoom);
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(actionRefresh);
+	}
+	
+	/**
 	 * Called by session listener when NetXMS object was changed.
 	 * 
-	 * @param object cnaged NetXMS object
+	 * @param object changed NetXMS object
 	 */
 	protected void onObjectChange(final GenericObject object)
 	{
@@ -353,5 +445,14 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider
 	@Override
 	public void setSelection(ISelection selection)
 	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.IZoomableWorkbenchPart#getZoomableViewer()
+	 */
+	@Override
+	public AbstractZoomableViewer getZoomableViewer()
+	{
+		return viewer;
 	}
 }

@@ -18,16 +18,21 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.core.viewers.GraphViewer;
+import org.eclipse.zest.core.viewers.internal.ZoomManager;
 
 /**
  * Workaround for bug #244496
  * (https://bugs.eclipse.org/bugs/show_bug.cgi?id=244496) 
  *
  */
+@SuppressWarnings("restriction")
 public class ExtendedGraphViewer extends GraphViewer
 {
+	private static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 4.00 }; 
+		
 	/**
 	 * @param composite
 	 * @param style
@@ -35,12 +40,12 @@ public class ExtendedGraphViewer extends GraphViewer
 	public ExtendedGraphViewer(Composite composite, int style)
 	{
 		super(composite, style);
+		getZoomManager().setZoomLevels(zoomLevels);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.StructuredViewer#internalRefresh(java.lang.Object, boolean)
 	 */
-	@SuppressWarnings("restriction")
 	@Override
 	protected void internalRefresh(Object element, boolean updateLabels)
 	{
@@ -56,5 +61,38 @@ public class ExtendedGraphViewer extends GraphViewer
 		{
 			getFactory().refresh(getGraphControl(), element, updateLabels);
 		}
+	}
+	
+	/**
+	 * Zoom to next level
+	 */
+	public void zoomIn()
+	{
+		getZoomManager().zoomIn();
+	}
+	
+	/**
+	 * Zoom to previous level
+	 */
+	public void zoomOut()
+	{
+		getZoomManager().zoomOut();
+	}
+	
+	/**
+	 * Create zoom actions
+	 * @return
+	 */
+	public Action[] createZoomActions()
+	{
+		final ZoomManager zoomManager = getZoomManager();
+		final Action[] actions = new Action[zoomLevels.length];
+		for(int i = 0; i < zoomLevels.length; i++)
+		{
+			actions[i] = new ZoomAction(zoomLevels[i], zoomManager);
+			if (zoomLevels[i] == 1.00)
+				actions[i].setChecked(true);
+		}
+		return actions;
 	}
 }

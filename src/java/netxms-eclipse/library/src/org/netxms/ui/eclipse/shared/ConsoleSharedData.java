@@ -21,8 +21,10 @@ package org.netxms.ui.eclipse.shared;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.api.client.Session;
+import org.netxms.ui.eclipse.library.Activator;
 
 /**
  * Shared data for NXMC extensions
@@ -30,6 +32,10 @@ import org.netxms.api.client.Session;
  */
 public class ConsoleSharedData
 {
+	public static final String IMAGE_REFRESH = "icons/refresh.gif";
+	public static final String IMAGE_ZOOM_IN = "icons/zoom_in.png";
+	public static final String IMAGE_ZOOM_OUT = "icons/zoom_out.png";
+	
 	private static Session session = null;
 	private static TrayItem trayIcon = null;
 	private static Map<String, Object> consoleProperties = new HashMap<String, Object>(0);
@@ -90,5 +96,18 @@ public class ConsoleSharedData
 	public static void setTrayIcon(TrayItem trayIcon)
 	{
 		ConsoleSharedData.trayIcon = trayIcon;
+	}
+	
+	/**
+	 * Get image from common library. ConsoleSharedData.IMAGE_xxx constants 
+	 * can be used as path parameter.
+	 * 
+	 * 
+	 * @param path path to image relative to library plugin
+	 * @return
+	 */
+	public static ImageDescriptor getLibraryImageDescriptor(String path)
+	{
+		return Activator.getImageDescriptor(path);
 	}
 }

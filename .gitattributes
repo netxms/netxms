@@ -438,8 +438,6 @@ src/java/netxms-eclipse/Charts/icons/light-green.png -text
 src/java/netxms-eclipse/Charts/icons/light-red.png -text
 src/java/netxms-eclipse/Charts/icons/light-yellow.png -text
 src/java/netxms-eclipse/Charts/icons/view3d.png -text
-src/java/netxms-eclipse/Charts/icons/zoom_in.png -text
-src/java/netxms-eclipse/Charts/icons/zoom_out.png -text
 src/java/netxms-eclipse/Charts/plugin.xml -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/PerfTabGraphSettings.java -text
@@ -665,6 +663,11 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/Sty
 src/java/netxms-eclipse/NetworkMaps/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/NetworkMaps/build.properties -text
 src/java/netxms-eclipse/NetworkMaps/icons/node.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/node.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/router.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/server.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/service.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/switch.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/other.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/quickmap.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/router.png -text
@@ -691,6 +694,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/MapLabelProvider.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectTooltip.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ZoomAction.java -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser/icons/cluster.png -text
@@ -949,6 +953,8 @@ src/java/netxms-eclipse/library/build.properties -text
 src/java/netxms-eclipse/library/icons/checkbox_off.png -text
 src/java/netxms-eclipse/library/icons/checkbox_on.png -text
 src/java/netxms-eclipse/library/icons/refresh.gif -text
+src/java/netxms-eclipse/library/icons/zoom_in.png -text
+src/java/netxms-eclipse/library/icons/zoom_out.png -text
 src/java/netxms-eclipse/library/jar/simple-xml-2.3.5.jar -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
