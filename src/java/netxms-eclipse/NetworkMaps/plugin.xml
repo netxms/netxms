@@ -99,6 +99,13 @@
             id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.NetworkMapRoot"
             objectClass="org.netxms.client.objects.NetworkMapRoot">
          <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CreateMapGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMapGroup#NetworkMapRoot"
+               label="Create network map &amp;group..."
+               menubarPath="objectcreation">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapRoot"
@@ -110,6 +117,13 @@
             adaptable="false"
             id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.NetworkMapGroup"
             objectClass="org.netxms.client.objects.NetworkMapGroup">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CreateMapGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMapGroup#NetworkMapGroup"
+               label="Create network map &amp;group..."
+               menubarPath="objectcreation">
+         </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
                enablesFor="1"
