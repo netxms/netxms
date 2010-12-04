@@ -151,6 +151,21 @@ public class NetworkMapPage
 	}
 	
 	/**
+	 * Find link from source to destination
+	 * 
+	 * @param source source element
+	 * @param destination destination element
+	 * @return link between source and destination or null if there are no such link 
+	 */
+	public NetworkMapLink findLink(NetworkMapElement source, NetworkMapElement destination)
+	{
+		for(NetworkMapLink l : links)
+			if ((l.getElement1() == source.getId()) && (l.getElement2() == destination.getId()))
+				return l;
+		return null;
+	}
+	
+	/**
 	 * Get objects and links in one array
 	 * @return Objects and links in one array
 	 */

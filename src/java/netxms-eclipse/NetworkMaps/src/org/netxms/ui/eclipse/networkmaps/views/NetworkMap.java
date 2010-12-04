@@ -167,6 +167,24 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	}
 	
 	/**
+	 * Replace current map page with new one
+	 * 
+	 * @param page new map page
+	 */
+	protected void replaceMapPage(final NetworkMapPage page)
+	{
+		new UIJob("Replace map page") {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor)
+			{
+				mapPage = page;
+				viewer.setInput(mapPage);
+				return Status.OK_STATUS;
+			}
+		}.schedule();
+	}
+
+	/**
 	 * Create actions
 	 */
 	protected void createActions()

@@ -5,27 +5,44 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="IP Neighbors"
             allowMultiple="true"
-            icon="icons/quickmap.png"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
             class="org.netxms.ui.eclipse.networkmaps.views.IPNeighbors"
-            id="org.netxms.ui.eclipse.networkmaps.view.ip_neighbors">
+            icon="icons/quickmap.png"
+            id="org.netxms.ui.eclipse.networkmaps.view.ip_neighbors"
+            name="IP Neighbors"
+            restorable="true">
       </view>
       <view
-            name="Service Dependency"
             allowMultiple="true"
-            icon="icons/service_deps.gif"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
             class="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"
-            id="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency">
+            icon="icons/service_deps.gif"
+            id="org.netxms.ui.eclipse.networkmaps.views.ServiceDependency"
+            name="Service Dependency">
       </view>
       <view
             allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
             class="org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"
             icon="icons/service_components.gif"
             id="org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"
             name="Service Components"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.Layer2Topology"
+            icon="icons/layer2.png"
+            id="org.netxms.ui.eclipse.networkmaps.views.Layer2Topology"
+            name="Layer 2 Topology"
+            restorable="true">
+      </view>
+      <category
+            id="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            name="Network Maps">
+      </category>
    </extension>
 
    <extension
@@ -39,6 +56,14 @@
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPNeighbors"
                label="IP Neighbors"
                icon="icons/quickmap.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowLayer2Topology"
+               enablesFor="1"
+               icon="icons/layer2.png"
+               id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowLayer2Topology"
+               label="Layer 2 Topology"
                menubarPath="additions">
          </action>
          <action

@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Label;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
@@ -230,8 +231,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
-		// TODO Auto-generated method stub
+		System.out.println("CONN: " + element.toString());
 		
+		connection.setText("aaaa");
+		connection.getConnectionFigure().add(new Label("xxxx"));
 	}
 
 	/* (non-Javadoc)

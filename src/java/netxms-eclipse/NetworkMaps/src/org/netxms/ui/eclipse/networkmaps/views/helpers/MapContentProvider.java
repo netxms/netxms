@@ -19,7 +19,8 @@
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
+import org.eclipse.zest.core.viewers.IGraphEntityRelationshipContentProvider;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
@@ -27,17 +28,13 @@ import org.netxms.client.maps.elements.NetworkMapElement;
  * Content provider for map
  * 
  */
-public class MapContentProvider implements IGraphEntityContentProvider
+public class MapContentProvider implements IGraphEntityRelationshipContentProvider
 {
 	private NetworkMapPage page;
 	
-	/**
-	 * Create map content provider object
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
 	 */
-	public MapContentProvider()
-	{
-	}
-	
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
@@ -47,20 +44,29 @@ public class MapContentProvider implements IGraphEntityContentProvider
 		return ((NetworkMapPage)inputElement).getElements().toArray();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.zest.core.viewers.IGraphEntityRelationshipContentProvider#getRelationships(java.lang.Object, java.lang.Object)
+	 */
 	@Override
-	public Object[] getConnectedTo(Object entity)
+	public Object[] getRelationships(Object source, Object dest)
 	{
-		if (!(entity instanceof NetworkMapElement) || (page == null))
-			return null;
-		
-		return page.getConnectedElements(((NetworkMapElement)entity).getId());
+		NetworkMapLink link = page.findLink((NetworkMapElement)source, (NetworkMapElement)dest);
+		if (link != null)
+			return new Object[] { link };
+		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
+	 */
 	@Override
 	public void dispose()
 	{
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+	 */
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
