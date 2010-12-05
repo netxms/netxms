@@ -18,16 +18,10 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views;
 
-import java.util.Comparator;
 import java.util.Iterator;
-
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.zest.layouts.LayoutAlgorithm;
-import org.eclipse.zest.layouts.LayoutStyles;
-import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
-import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -36,7 +30,6 @@ import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 
 /**
  * Service dependency for service object
@@ -97,22 +90,10 @@ public class ServiceComponents extends NetworkMap
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-
-		TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
-		mainLayoutAlgorithm.setComparator(new Comparator() {
-			@Override
-			public int compare(Object arg0, Object arg1)
-			{
-				return arg0.toString().compareToIgnoreCase(arg1.toString());
-			}
-		});
-		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
-				new LayoutAlgorithm[] { mainLayoutAlgorithm,
-				                        new SparseTree(LayoutStyles.NO_LAYOUT_NODE_RESIZING) }));
+		setLayoutAlgorithm(LAYOUT_SPARSE_VTREE);
 	}
 }

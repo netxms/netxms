@@ -21,6 +21,9 @@ package org.netxms.ui.eclipse.networkmaps.dialogs;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -84,11 +87,32 @@ public class CreateNetworkMapDialog extends Dialog
       mapType.add("IP Topology");
       mapType.add("Layer 2 Topology");
       mapType.select(0);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      mapType.getParent().setLayoutData(gd);
+      mapType.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+		      seedObjectSelector.setEnabled(mapType.getSelectionIndex() > 0);
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+      });
       
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE);
       seedObjectSelector.setLabel("Seed node");
       seedObjectSelector.setObjectClass(GenericObject.OBJECT_NODE);
       seedObjectSelector.setEnabled(false);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      seedObjectSelector.setLayoutData(gd);
       
 		return dialogArea;
 	}

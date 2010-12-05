@@ -48,6 +48,7 @@ public class NetworkMapObject extends NetworkMapElement
 	{
 		super(id);
 		this.objectId = objectId;
+		type = MAP_ELEMENT_OBJECT;
 	}
 
 	/**

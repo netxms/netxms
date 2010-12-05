@@ -44,7 +44,7 @@ public class NetworkMapElement
 	 */
 	public static NetworkMapElement createMapElement(NXCPMessage msg, long baseId)
 	{
-		int type = msg.getVariableAsInteger(baseId);
+		int type = msg.getVariableAsInteger(baseId + 1);
 		switch(type)
 		{
 			case MAP_ELEMENT_OBJECT:

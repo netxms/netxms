@@ -19,7 +19,7 @@
 package org.netxms.client;
 
 import java.net.InetAddress;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
@@ -85,8 +85,8 @@ public class NXCObjectModificationData
 	private InetAddress primaryIpAddress;
 	private int mapLayout;
 	private int mapBackground;
-	private List<NetworkMapElement> mapElements;
-	private List<NetworkMapLink> mapLinks;
+	private Collection<NetworkMapElement> mapElements;
+	private Collection<NetworkMapLink> mapLinks;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -594,7 +594,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the mapElements
 	 */
-	public List<NetworkMapElement> getMapElements()
+	public Collection<NetworkMapElement> getMapElements()
 	{
 		return mapElements;
 	}
@@ -602,7 +602,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the mapLinks
 	 */
-	public List<NetworkMapLink> getMapLinks()
+	public Collection<NetworkMapLink> getMapLinks()
 	{
 		return mapLinks;
 	}
@@ -613,7 +613,7 @@ public class NXCObjectModificationData
 	 * @param elements
 	 * @param links
 	 */
-	public void setMapContent(List<NetworkMapElement> elements, List<NetworkMapLink> links)
+	public void setMapContent(Collection<NetworkMapElement> elements, Collection<NetworkMapLink> links)
 	{
 		mapElements = elements;
 		mapLinks = links;

@@ -43,6 +43,15 @@
             id="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
             name="Network Maps">
       </category>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.PredefinedMap"
+            icon="icons/netmap.png"
+            id="org.netxms.ui.eclipse.networkmaps.views.PredefinedMap"
+            name="Network Map"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -155,6 +164,18 @@
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapGroup"
                label="Create network &amp;map..."
                menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.networkmaps.actions.popup.object.NetworkMap"
+            objectClass="org.netxms.client.objects.NetworkMap">
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.OpenMapObject"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.Open#NetworkMap"
+               label="&amp;Open map"
+               menubarPath="additions">
          </action>
       </objectContribution>
    </extension>

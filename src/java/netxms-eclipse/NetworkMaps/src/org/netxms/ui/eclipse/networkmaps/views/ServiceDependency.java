@@ -23,8 +23,6 @@ import java.util.Iterator;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.zest.layouts.LayoutStyles;
-import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -91,6 +89,6 @@ public class ServiceDependency extends NetworkMap
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		viewer.setLayoutAlgorithm(new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
+		setLayoutAlgorithm(LAYOUT_VTREE);
 	}
 }

@@ -18,17 +18,11 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
-import org.eclipse.draw2d.AnchorListener;
-import org.eclipse.draw2d.ConnectionAnchor;
-import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
