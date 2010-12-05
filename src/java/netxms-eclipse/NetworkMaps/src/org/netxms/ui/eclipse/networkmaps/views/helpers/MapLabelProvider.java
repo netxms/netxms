@@ -18,11 +18,17 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import org.eclipse.draw2d.AnchorListener;
+import org.eclipse.draw2d.ConnectionAnchor;
+import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -32,6 +38,7 @@ import org.eclipse.zest.core.viewers.ISelfStyleProvider;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
@@ -79,6 +86,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
 		
 		font = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
+		
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon");
+		showStatusFrame = store.getBoolean("NetMap.ShowStatusFrame");
+		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground");
 	}
 
 	/* (non-Javadoc)
@@ -91,6 +103,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 			return (object != null) ? object.getObjectName() : null;
+		}
+		if (element instanceof NetworkMapLink)
+		{
+			return ((NetworkMapLink)element).getLabel();
 		}
 		return null;
 	}
@@ -231,10 +247,6 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
-		System.out.println("CONN: " + element.toString());
-		
-		connection.setText("aaaa");
-		connection.getConnectionFigure().add(new Label("xxxx"));
 	}
 
 	/* (non-Javadoc)

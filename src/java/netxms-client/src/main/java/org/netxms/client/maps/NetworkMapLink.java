@@ -150,6 +150,50 @@ public class NetworkMapLink
 	{
 		return name;
 	}
+	
+	/**
+	 * Get label for display. If name is not null and not empty, label will have form
+	 * name (connector1 - connector2)
+	 * otherwise it will have form
+	 * connector1 - connector2
+	 * If any of connector names is null or empty, it will be replaced with string "<noname>".
+	 * 
+	 * @return display label or null for unnamed link 
+	 */
+	public String getLabel()
+	{
+		if (isUnnamed())
+			return null;
+		
+		StringBuilder sb = new StringBuilder();
+		if ((name != null) && !name.isEmpty())
+		{
+			sb.append(name);
+			sb.append(" (");
+		}
+		
+		sb.append(((connectorName1 != null) && !connectorName1.isEmpty()) ? connectorName1 : "<noname>");
+		sb.append(" - ");
+		sb.append(((connectorName2 != null) && !connectorName2.isEmpty()) ? connectorName2 : "<noname>");
+
+		if ((name != null) && !name.isEmpty())
+		{
+			sb.append(')');
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * Check if this link is unnamed.
+	 * 
+	 * @return true if all names (link and both connectors) are null or empty
+	 */
+	public boolean isUnnamed()
+	{
+		return ((name == null) || name.isEmpty()) &&
+		       ((connectorName1 == null) || connectorName1.isEmpty()) &&
+		       ((connectorName2 == null) || connectorName2.isEmpty());
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)

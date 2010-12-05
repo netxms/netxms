@@ -16,21 +16,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.charts.preferencepages;
+package org.netxms.ui.eclipse.networkmaps.preferencepages;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.netxms.ui.eclipse.charts.Activator;
-import org.swtchart.LineStyle;
+import org.netxms.ui.eclipse.networkmaps.Activator;
 
 /**
- * General charts preference page
+ * General preferences page for network maps
  *
  */
-public class GeneralChartPrefs extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
+public class GeneralMapPreferences extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
@@ -47,18 +45,8 @@ public class GeneralChartPrefs extends FieldEditorPreferencePage implements IWor
 	@Override
 	protected void createFieldEditors()
 	{
-		addField(new BooleanFieldEditor("Chart.ShowTitle", "Show chart title", getFieldEditorParent()));
-		addField(new BooleanFieldEditor("Chart.ShowToolTips", "Show tooltips when mouse hovers over plot area", getFieldEditorParent()));
-
-		final String[][] gridStyles =	new String[][] { 
-				{ "None", LineStyle.NONE.label },
-				{ "Solid", LineStyle.SOLID.label },
-				{ "Dash", LineStyle.DASH.label },
-				{ "Dot", LineStyle.DOT.label },
-				{ "Dash-Dot", LineStyle.DASHDOT.label },
-				{ "Dash-Dot-Dot", LineStyle.DASHDOTDOT.label },
-			};
-		addField(new RadioGroupFieldEditor("Chart.Grid.X.Style", "Style for X axis grid", 3, gridStyles, getFieldEditorParent(), true));
-		addField(new RadioGroupFieldEditor("Chart.Grid.Y.Style", "Style for Y axis grid", 3, gridStyles, getFieldEditorParent(), true));
+		addField(new BooleanFieldEditor("NetMap.ShowStatusIcon", "Show status icon on objects", getFieldEditorParent()));
+		addField(new BooleanFieldEditor("NetMap.ShowStatusFrame", "Show status frame around objects", getFieldEditorParent()));
+		addField(new BooleanFieldEditor("NetMap.ShowStatusBackground", "Show status background under objects", getFieldEditorParent()));
 	}
 }
