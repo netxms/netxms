@@ -314,6 +314,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciValue.j
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphItem.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphItemStyle.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphSettings.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/datacollection/GraphSettingsChangeListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/PerfTabDci.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/Alarm.java -text

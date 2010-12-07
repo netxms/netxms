@@ -54,6 +54,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphSettingsChangeListener;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -69,7 +70,7 @@ import org.swtchart.LineStyle;
  * History graph view
  *
  */
-public class HistoricalDataView extends ViewPart implements ISelectionProvider
+public class HistoricalDataView extends ViewPart implements ISelectionProvider, GraphSettingsChangeListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.charts.views.HistoryGraph";
 	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
@@ -87,6 +88,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 	private static final String KEY_LOG_SCALE = "logScale";
 	private static final String KEY_SHOW_LEGEND = "showLegend";
 	private static final String KEY_LEGEND_POSITION = "legendPosition";
+	private static final String KEY_TITLE = "title";
 	
 	private NXCSession session;
 	private ArrayList<GraphItem> items = new ArrayList<GraphItem>(1);
@@ -183,6 +185,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 				}
 			}
 		}
+		
+		settings.setTitle(getPartName());
+		settings.setItems(items.toArray(new GraphItem[items.size()]));
 	}
 	
 	/* (non-Javadoc)
@@ -200,6 +205,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 			settings.setLegendVisible(safeCast(memento.getBoolean(KEY_SHOW_LEGEND), settings.isLegendVisible()));
 			legendPosition = safeCast(memento.getInteger(KEY_LEGEND_POSITION), legendPosition);
 			settings.setLogScale(safeCast(memento.getBoolean(KEY_LOG_SCALE), settings.isLogScale()));
+			settings.setTitle(memento.getString(KEY_TITLE));
 		}
 	}
 
@@ -224,6 +230,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 		memento.putBoolean(KEY_SHOW_LEGEND, settings.isLegendVisible());
 		memento.putInteger(KEY_LEGEND_POSITION, legendPosition);
 		memento.putBoolean(KEY_LOG_SCALE, settings.isLogScale());
+		memento.putString(KEY_TITLE, settings.getTitle());
 	}
 	
 	/**
@@ -234,6 +241,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 	public void initPredefinedGraph(GraphSettings gs)
 	{
 		settings = gs;
+		settings.addChangeListener(this);
 		configureGraphFromSettings();
 	}
 	
@@ -255,8 +263,11 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 		// Data
 		items.clear();
 		items.addAll(Arrays.asList(settings.getItems()));
+
+		for(GraphItem item : items)
+			chart.addParameter(item);
 		chart.setItemStyles(Arrays.asList(settings.getItemStyles()));
-		
+
 		getDataFromServer();
 
 		// Automatic refresh
@@ -272,21 +283,12 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 	{
 		chart = new LineChart(parent, SWT.NONE);
 		
-		setGridVisible(true);
-		chart.setLogScaleEnabled(settings.isLogScale());
-		chart.setLegendVisible(settings.isLegendVisible());
-		chart.setLegendPosition(legendPosition);
-		
-		for(GraphItem item : items)
-			chart.addParameter(item);
-		
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 		
-		getDataFromServer();
-		if (settings.isAutoRefresh())
-			getSite().getShell().getDisplay().timerExec(settings.getAutoRefreshInterval(), refreshTimer);
+		configureGraphFromSettings();
+		settings.addChangeListener(this);
 	}
 
 	/**
@@ -340,8 +342,11 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
-						setChartData(data);
+						if (!chart.isDisposed())
+						{
+							chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
+							setChartData(data);
+						}
 						updateInProgress = false;
 						return Status.OK_STATUS;
 					}
@@ -740,5 +745,15 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider
 	@Override
 	public void setSelection(ISelection selection)
 	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.datacollection.GraphSettingsChangeListener#onGraphSettingsChange(org.netxms.client.datacollection.GraphSettings)
+	 */
+	@Override
+	public void onGraphSettingsChange(GraphSettings settings)
+	{
+		if (this.settings == settings)
+			configureGraphFromSettings();
 	}
 }

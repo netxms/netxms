@@ -20,7 +20,9 @@ package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.AccessListElement;
 
@@ -74,6 +76,7 @@ public class GraphSettings
 	private GraphItemStyle[] itemStyles = new GraphItemStyle[MAX_GRAPH_ITEM_COUNT];
 	private GraphItem[] items;
 	private List<AccessListElement> accessList;
+	private Set<GraphSettingsChangeListener> changeListeners = new HashSet<GraphSettingsChangeListener>(0);
 	
 	/**
 	 * Create default settings
@@ -836,5 +839,34 @@ public class GraphSettings
 	public void setLegendPosition(int legendPosition)
 	{
 		this.legendPosition = legendPosition;
+	}
+	
+	/**
+	 * Add change listener
+	 * 
+	 * @param listener change listener
+	 */
+	public void addChangeListener(GraphSettingsChangeListener listener)
+	{
+		changeListeners.add(listener);
+	}
+	
+	/**
+	 * Remove change listener
+	 * 
+	 * @param listener change listener to remove
+	 */
+	public void removeChangeListener(GraphSettingsChangeListener listener)
+	{
+		changeListeners.remove(listener);
+	}
+	
+	/**
+	 * Fire change notification
+	 */
+	public void fireChangeNotification()
+	{
+		for(GraphSettingsChangeListener l : changeListeners)
+			l.onGraphSettingsChange(this);
 	}
 }

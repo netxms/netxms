@@ -194,6 +194,8 @@ public class General extends PropertyPage
 	@Override
 	protected void performDefaults()
 	{
+		super.performDefaults();
+		
 		title.setText("");
 		checkShowGrid.setSelection(true);
 		checkShowLegend.setSelection(true);
@@ -206,18 +208,34 @@ public class General extends PropertyPage
 		
 		refreshIntervalScale.setSelection(30);
 		refreshIntervalSpinner.setSelection(30);
-		
-		super.performDefaults();
 	}
 
+	/**
+	 * Apply changes
+	 * 
+	 * @param isApply true if update operation caused by "Apply" button
+	 */
+	protected void applyChanges(final boolean isApply)
+	{
+		settings.setTitle(title.getText());
+		settings.setGridVisible(checkShowGrid.getSelection());
+		settings.setLegendVisible(checkShowLegend.getSelection());
+		settings.setAutoScale(checkAutoScale.getSelection());
+		settings.setHostNamesVisible(checkShowHostNames.getSelection());
+		settings.setAutoRefresh(checkAutoRefresh.getSelection());
+		settings.setLogScale(checkLogScale.getSelection());
+		settings.setAutoRefreshInterval(refreshIntervalSpinner.getSelection() * 1000);
+		
+		settings.fireChangeNotification();
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
 	protected void performApply()
 	{
-		// TODO Auto-generated method stub
-		super.performApply();
+		applyChanges(true);
 	}
 
 	/* (non-Javadoc)
@@ -226,7 +244,7 @@ public class General extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		// TODO Auto-generated method stub
-		return super.performOk();
+		applyChanges(false);
+		return true;
 	}
 }
