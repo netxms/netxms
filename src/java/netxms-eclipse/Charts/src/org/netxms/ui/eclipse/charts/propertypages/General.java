@@ -170,7 +170,7 @@ public class General extends PropertyPage
       refreshIntervalSpinner = new Spinner(refreshIntervalGroup, SWT.BORDER);
       refreshIntervalSpinner.setMinimum(1);
       refreshIntervalSpinner.setMaximum(600);
-      refreshIntervalSpinner.setSelection(settings.getAutoRefreshInterval());
+      refreshIntervalSpinner.setSelection(settings.getAutoRefreshInterval() / 1000);
       refreshIntervalSpinner.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -186,5 +186,47 @@ public class General extends PropertyPage
 		});
 
       return dialogArea;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+	 */
+	@Override
+	protected void performDefaults()
+	{
+		title.setText("");
+		checkShowGrid.setSelection(true);
+		checkShowLegend.setSelection(true);
+		checkAutoScale.setSelection(true);
+		checkShowHostNames.setSelection(false);
+		checkShowRuler.setSelection(false);
+		checkEnableZoom.setSelection(true);
+		checkAutoRefresh.setSelection(true);
+		checkLogScale.setSelection(false);
+		
+		refreshIntervalScale.setSelection(30);
+		refreshIntervalSpinner.setSelection(30);
+		
+		super.performDefaults();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
+	 */
+	@Override
+	protected void performApply()
+	{
+		// TODO Auto-generated method stub
+		super.performApply();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 */
+	@Override
+	public boolean performOk()
+	{
+		// TODO Auto-generated method stub
+		return super.performOk();
 	}
 }

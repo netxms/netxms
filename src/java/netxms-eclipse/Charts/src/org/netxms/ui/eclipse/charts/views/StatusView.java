@@ -15,7 +15,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
-public class YesNoView extends ViewPart {
+public class StatusView extends ViewPart {
 
    public static final String ID = "org.netxms.ui.eclipse.charts.views.YesNoView";
 

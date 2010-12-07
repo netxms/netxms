@@ -69,7 +69,7 @@ import org.swtchart.LineStyle;
  * History graph view
  *
  */
-public class HistoryGraph extends ViewPart implements ISelectionProvider
+public class HistoricalDataView extends ViewPart implements ISelectionProvider
 {
 	public static final String ID = "org.netxms.ui.eclipse.charts.views.HistoryGraph";
 	public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph";
@@ -261,7 +261,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 
 		// Automatic refresh
 		actionAutoRefresh.setChecked(settings.isAutoRefresh());
-		HistoryGraph.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
+		HistoricalDataView.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
 	}
 
 	/* (non-Javadoc)
@@ -394,7 +394,7 @@ public class HistoryGraph extends ViewPart implements ISelectionProvider
 			{
 				settings.setAutoRefresh(!settings.isAutoRefresh());
 				setChecked(settings.isAutoRefresh());
-				HistoryGraph.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
+				HistoricalDataView.this.getSite().getShell().getDisplay().timerExec(settings.isAutoRefresh() ? settings.getAutoRefreshInterval() : -1, refreshTimer);
 			}
 		};
 		actionAutoRefresh.setText("Refresh &automatically");

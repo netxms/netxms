@@ -5,10 +5,10 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="History Graph"
+            name="Historical Data Chart"
             allowMultiple="true"
             icon="icons/chart_line.png"
-            class="org.netxms.ui.eclipse.charts.views.HistoryGraph"
+            class="org.netxms.ui.eclipse.charts.views.HistoricalDataView"
             id="org.netxms.ui.eclipse.charts.views.HistoryGraph">
       </view>
       <view
@@ -29,18 +29,10 @@
       </view>
       <view
             allowMultiple="true"
-            class="org.netxms.ui.eclipse.charts.views.HistoricalDataChartView"
-            icon="icons/chart_line.png"
-            id="org.netxms.ui.eclipse.charts.views.HistoricalDataChartView"
-            name="Historical Data"
-            restorable="true">
-      </view>
-      <view
-            allowMultiple="true"
-            class="org.netxms.ui.eclipse.charts.views.YesNoView"
-            icon="icons/chart_line.png"
+            class="org.netxms.ui.eclipse.charts.views.StatusView"
+            icon="icons/status_view.png"
             id="org.netxms.ui.eclipse.charts.views.YesNoView"
-            name="Interface Status"
+            name="Status"
             restorable="true">
       </view>
    </extension>

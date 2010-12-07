@@ -130,7 +130,7 @@ public class DataComparisonView extends ViewPart
 		//   third is DCI list
 		String id = site.getSecondaryId();
 		String[] fields = id.split("&");
-		if (!fields[0].equals(HistoryGraph.PREDEFINED_GRAPH_SUBID))
+		if (!fields[0].equals(HistoricalDataView.PREDEFINED_GRAPH_SUBID))
 		{
 			try
 			{
