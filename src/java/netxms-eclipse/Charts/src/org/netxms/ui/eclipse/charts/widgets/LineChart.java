@@ -36,7 +36,6 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciData;
@@ -48,6 +47,7 @@ import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
 import org.swtchart.IAxisSet;
@@ -80,6 +80,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean enableZoom;
 	private boolean selectionActive = false;
 	private int zoomLevel = 0;
+	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	private MouseMoveListener moveListener;
 	private SelectionRectangle selection = new SelectionRectangle();
 	private IPreferenceStore preferenceStore;
@@ -101,7 +102,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		// Create default item styles
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		for(int i = 0; i < GraphSettings.MAX_GRAPH_ITEM_COUNT; i++)
-			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, rgbToInt(PreferenceConverter.getColor(preferenceStore, "Chart.Colors.Data." + i)), 0, 0));
+			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, ColorConverter.getColorFromPreferencesAsInt(preferenceStore, "Chart.Colors.Data." + i), 0, 0));
 		
 		// Setup title
 		ITitle title = getTitle();
@@ -110,7 +111,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		// Setup legend
 		ILegend legend = getLegend();
-		legend.setPosition(SWT.BOTTOM);
+		legend.setPosition(swtPositionFromInternal(legendPosition));
 		
 		// Default time range
 		timeTo = System.currentTimeMillis();
@@ -316,6 +317,27 @@ public class LineChart extends Chart implements HistoricalDataChart
 	}
 
 	/**
+	 * Convert GraphSettings position representation to SWT
+	 * @param value position representation in GraphSettings
+	 * @return position representation in SWT
+	 */
+	private int swtPositionFromInternal(int value)
+	{
+		switch(value)
+		{
+			case GraphSettings.POSITION_LEFT:
+				return SWT.LEFT;
+			case GraphSettings.POSITION_RIGHT:
+				return SWT.RIGHT;
+			case GraphSettings.POSITION_TOP:
+				return SWT.TOP;
+			case GraphSettings.POSITION_BOTTOM:
+				return SWT.BOTTOM;
+		}
+		return SWT.BOTTOM;
+	}
+
+	/**
 	 * Add line series to chart
 	 * 
 	 * @param description Description
@@ -362,7 +384,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 			if (style.isShowThresholds())
 			{
 				int y = axis.getPixelCoordinate(10);
-				gc.setForeground(colorFromInt(style.getColor()));
+				gc.setForeground(ColorConverter.colorFromInt(style.getColor()));
 				gc.setLineStyle(SWT.LINE_DOT);
 				gc.setLineWidth(3);
 				gc.drawLine(0, y, clientArea.width, y);
@@ -439,7 +461,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void setLegendPosition(int position)
 	{
-		getLegend().setPosition(position);
+		legendPosition = position;
+		getLegend().setPosition(swtPositionFromInternal(position));
 		redraw();
 	}
 
@@ -449,7 +472,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public int getLegendPosition()
 	{
-		return getLegend().getPosition();
+		return legendPosition;
 	}
 
 	/* (non-Javadoc)
@@ -597,31 +620,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 			return;
 
 		GraphItemStyle style = itemStyles.get(index);
-		series.setLineColor(colorFromInt(style.getColor()));
-	}
-
-	/**
-	 * Create integer value from Red/Green/Blue
-	 * 
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return
-	 */
-	private static int rgbToInt(RGB rgb)
-	{
-		return rgb.red | (rgb.green << 8) | (rgb.blue << 16);
-	}
-
-	/**
-	 * Create Color object from integer RGB representation
-	 * @param rgb color's rgb representation
-	 * @return color object
-	 */
-	private Color colorFromInt(int rgb)
-	{
-		// All colors on server stored as BGR: red in less significant byte and blue in most significant byte
-		return new Color(getDisplay(), rgb & 0xFF, (rgb >> 8) & 0xFF, rgb >> 16);
+		series.setLineColor(ColorConverter.colorFromInt(style.getColor()));
 	}
 
 	/**

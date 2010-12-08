@@ -463,6 +463,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/Historical
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/PredefinedGraphTree.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/StatusView.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphFolder.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphSettingsFactory.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphTreeContentProvider.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphTreeLabelProvider.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/widgets/DataComparisonBirtChart.java -text
@@ -969,6 +970,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/StringComparator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetFactory.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetHelper.java -text

@@ -33,9 +33,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
- * @param 
- *
+ * Utility class for simplified creation of widgets
  */
 public class WidgetHelper
 {

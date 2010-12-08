@@ -43,6 +43,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 
 /**
@@ -308,13 +309,13 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	{
 		switch(value)
 		{
-			case POSITION_LEFT:
+			case GraphSettings.POSITION_LEFT:
 				return Position.LEFT_LITERAL;
-			case POSITION_RIGHT:
+			case GraphSettings.POSITION_RIGHT:
 				return Position.RIGHT_LITERAL;
-			case POSITION_TOP:
+			case GraphSettings.POSITION_TOP:
 				return Position.ABOVE_LITERAL;
-			case POSITION_BOTTOM:
+			case GraphSettings.POSITION_BOTTOM:
 				return Position.BELOW_LITERAL;
 		}
 		return Position.RIGHT_LITERAL;

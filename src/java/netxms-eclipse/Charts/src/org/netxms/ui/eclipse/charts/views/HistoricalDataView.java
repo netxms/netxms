@@ -59,7 +59,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
-import org.netxms.ui.eclipse.charts.api.DataChart;
+import org.netxms.ui.eclipse.charts.views.helpers.GraphSettingsFactory;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -97,8 +97,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private Runnable refreshTimer;
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	
-	private GraphSettings settings = new GraphSettings();
-	private int legendPosition = DataChart.POSITION_BOTTOM;
+	private GraphSettings settings = GraphSettingsFactory.createDefault();
 	
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
@@ -203,7 +202,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			settings.setAutoRefresh(safeCast(memento.getBoolean(KEY_AUTO_REFRESH), settings.isAutoRefresh()));
 			settings.setAutoRefreshInterval(safeCast(memento.getInteger(KEY_REFRESH_INTERVAL), settings.getAutoRefreshInterval()));
 			settings.setLegendVisible(safeCast(memento.getBoolean(KEY_SHOW_LEGEND), settings.isLegendVisible()));
-			legendPosition = safeCast(memento.getInteger(KEY_LEGEND_POSITION), legendPosition);
+			settings.setLegendPosition(safeCast(memento.getInteger(KEY_LEGEND_POSITION), settings.getLegendPosition()));
 			settings.setLogScale(safeCast(memento.getBoolean(KEY_LOG_SCALE), settings.isLogScale()));
 			settings.setTitle(memento.getString(KEY_TITLE));
 		}
@@ -228,7 +227,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		memento.putBoolean(KEY_AUTO_REFRESH, settings.isAutoRefresh());
 		memento.putInteger(KEY_REFRESH_INTERVAL, settings.getAutoRefreshInterval());
 		memento.putBoolean(KEY_SHOW_LEGEND, settings.isLegendVisible());
-		memento.putInteger(KEY_LEGEND_POSITION, legendPosition);
+		memento.putInteger(KEY_LEGEND_POSITION, settings.getLegendPosition());
 		memento.putBoolean(KEY_LOG_SCALE, settings.isLogScale());
 		memento.putString(KEY_TITLE, settings.getTitle());
 	}
@@ -512,41 +511,41 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				legendPosition = DataChart.POSITION_LEFT;
-				chart.setLegendPosition(legendPosition);
+				settings.setLegendPosition(GraphSettings.POSITION_LEFT);
+				chart.setLegendPosition(settings.getLegendPosition());
 			}
 		};
-		actionLegendLeft.setChecked(legendPosition == DataChart.POSITION_LEFT);
+		actionLegendLeft.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = DataChart.POSITION_RIGHT;
-				chart.setLegendPosition(legendPosition);
+				settings.setLegendPosition(GraphSettings.POSITION_RIGHT);
+				chart.setLegendPosition(settings.getLegendPosition());
 			}
 		};
-		actionLegendRight.setChecked(legendPosition == DataChart.POSITION_RIGHT);
+		actionLegendRight.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = DataChart.POSITION_TOP;
-				chart.setLegendPosition(legendPosition);
+				settings.setLegendPosition(GraphSettings.POSITION_TOP);
+				chart.setLegendPosition(settings.getLegendPosition());
 			}
 		};
-		actionLegendTop.setChecked(legendPosition == DataChart.POSITION_LEFT);
+		actionLegendTop.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_TOP);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = DataChart.POSITION_BOTTOM;
-				chart.setLegendPosition(legendPosition);
+				settings.setLegendPosition(GraphSettings.POSITION_BOTTOM);
+				chart.setLegendPosition(settings.getLegendPosition());
 			}
 		};
-		actionLegendBottom.setChecked(legendPosition == DataChart.POSITION_LEFT);
+		actionLegendBottom.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
 
 		presetActions = new Action[presetRanges.length];
 		for(int i = 0; i < presetRanges.length; i++)

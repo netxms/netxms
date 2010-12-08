@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.charts.api;
 
-import org.eclipse.swt.SWT;
-
 /**
  * Generic data chart interface
  *
@@ -27,11 +25,6 @@ import org.eclipse.swt.SWT;
 public interface DataChart
 {
 	public static final int MAX_CHART_ITEMS = 16;
-	
-	public static final int POSITION_LEFT = SWT.LEFT;
-	public static final int POSITION_RIGHT = SWT.RIGHT;
-	public static final int POSITION_TOP = SWT.TOP;
-	public static final int POSITION_BOTTOM = SWT.BOTTOM;
 	
 	/**
 	 * Marks end of initialization stage and causes first render of a chart.

@@ -48,6 +48,8 @@ public class GraphSettings
 	public static final int GF_SHOW_RULER      = 0x000800;
 	public static final int GF_SHOW_HOST_NAMES = 0x001000;
 	public static final int GF_LOG_SCALE       = 0x002000;
+	public static final int GF_SHOW_TOOLTIPS   = 0x004000;
+	public static final int GF_ENABLE_ZOOM     = 0x008000;
 	
 	public static final int POSITION_LEFT = 1;
 	public static final int POSITION_RIGHT = 2;
@@ -87,7 +89,7 @@ public class GraphSettings
 		ownerId = 0;
 		name = "noname";
 		shortName = "noname";
-		flags = GF_AUTO_UPDATE | GF_SHOW_GRID | GF_SHOW_LEGEND;
+		flags = GF_AUTO_UPDATE | GF_SHOW_GRID | GF_SHOW_LEGEND | GF_SHOW_TOOLTIPS | GF_ENABLE_ZOOM;
 		timeFrameType = TIME_FRAME_BACK_FROM_NOW;
 		timeUnit = TIME_UNIT_MINUTE;
 		timeFrame = 60;
@@ -469,6 +471,52 @@ public class GraphSettings
 			flags |= GF_SHOW_LEGEND;
 		else
 			flags &= ~GF_SHOW_LEGEND;
+	}
+
+	/**
+	 * Get tooltips mode
+	 * 
+	 * @return true if tooltips should be shown
+	 */
+	public boolean isTooltipsEnabled()
+	{
+		return (flags & GF_SHOW_TOOLTIPS) != 0;
+	}
+	
+	/**
+	 * Enable or disable tooltips
+	 * 
+	 * @param enable true to show tooltips
+	 */
+	public void setTooltipsEnabled(boolean enable)
+	{
+		if (enable)
+			flags |= GF_SHOW_TOOLTIPS;
+		else
+			flags &= ~GF_SHOW_TOOLTIPS;
+	}
+
+	/**
+	 * Get zoom mode
+	 * 
+	 * @return true if zooming is enabled
+	 */
+	public boolean isZoomEnabled()
+	{
+		return (flags & GF_ENABLE_ZOOM) != 0;
+	}
+	
+	/**
+	 * Enable or disable zooming
+	 * 
+	 * @param enable true to enable zoom
+	 */
+	public void setZoomEnabled(boolean enable)
+	{
+		if (enable)
+			flags |= GF_ENABLE_ZOOM;
+		else
+			flags &= ~GF_ENABLE_ZOOM;
 	}
 
 	/**
