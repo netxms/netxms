@@ -253,20 +253,15 @@ BOOL Node::CreateFromDB(DWORD dwId)
          {
             pObject->AddChild(this);
             AddParent(pObject);
-            bResult = TRUE;
          }
       }
-
-		if ((iNumRows == 0) && (m_dwIpAddr == 0))
-		{
-			bResult = TRUE;	// It's OK to don't have parent subnets for node without IP
-		}
 
       DBFreeResult(hResult);
       loadItemsFromDB();
       LoadACLFromDB();
 
       // Walk through all items in the node and load appropriate thresholds
+		bResult = TRUE;
       for(i = 0; i < (int)m_dwNumItems; i++)
          if (!m_ppItems[i]->loadThresholdsFromDB())
          {

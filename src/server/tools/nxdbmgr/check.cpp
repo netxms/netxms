@@ -125,14 +125,14 @@ static TCHAR *GetObjectName(DWORD dwId, TCHAR *pszBuffer)
 
 
 //
-// Check that given node is inside at least one container
+// Check that given node is inside at least one container or cluster
 //
 
-static BOOL NodeInContainer(DWORD id)
+static bool NodeInContainer(DWORD id)
 {
 	TCHAR query[256];
 	DB_RESULT hResult;
-	BOOL result = FALSE;
+	bool result = false;
 
 	_sntprintf(query, 256, _T("SELECT container_id FROM container_members WHERE object_id=%d"), id);
 	hResult = SQLSelect(query);
@@ -141,6 +141,18 @@ static BOOL NodeInContainer(DWORD id)
 		result = (DBGetNumRows(hResult) > 0);
 		DBFreeResult(hResult);
 	}
+
+	if (!result)
+	{
+		_sntprintf(query, 256, _T("SELECT cluster_id FROM cluster_members WHERE node_id=%d"), id);
+		hResult = SQLSelect(query);
+		if (hResult != NULL)
+		{
+			result = (DBGetNumRows(hResult) > 0);
+			DBFreeResult(hResult);
+		}
+	}
+
 	return result;
 }
 

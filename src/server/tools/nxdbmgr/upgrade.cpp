@@ -313,7 +313,9 @@ static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("ap_common"), _T("description"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
 	CHK_EXEC(ConvertStrings(_T("ap_common"), _T("id"), _T("description")));
 
-	CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_config_files DROP COLUMN file_name")));
+	if (g_iSyntax != DB_SYNTAX_SQLITE)
+		CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_config_files DROP COLUMN file_name")));
+
 	CHK_EXEC(SetColumnNullable(_T("ap_config_files"), _T("file_content"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]));
 	CHK_EXEC(ConvertStrings(_T("ap_config_files"), _T("policy_id"), _T("file_content")));
 
@@ -994,7 +996,7 @@ static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 	if (!H_UpgradeFromV207(207, 208))
 		return FALSE;
 
-	if (!H_UpgradeFromV207(208, 209))
+	if (!H_UpgradeFromV208(208, 209))
 		return FALSE;
 
 	if (currVersion == 100)
