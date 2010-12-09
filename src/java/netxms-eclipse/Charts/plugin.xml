@@ -31,7 +31,7 @@
             allowMultiple="true"
             class="org.netxms.ui.eclipse.charts.views.StatusView"
             icon="icons/status_view.png"
-            id="org.netxms.ui.eclipse.charts.views.YesNoView"
+            id="org.netxms.ui.eclipse.charts.views.StatusIndicatorView"
             name="Status"
             restorable="true">
       </view>
@@ -61,6 +61,13 @@
                icon="icons/chart_pie.png"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowPieChart"
                label="Pie Chart"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowStatusIndicator"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowStatusIndicator"
+               label="Status Indicator"
+               icon="icons/chart_line.png"
                menubarPath="additions">
          </action>
       </objectContribution>

@@ -461,6 +461,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/propertypages/Pe
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/DataComparisonView.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoricalDataView.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/PredefinedGraphTree.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/StatusIndicatorView.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/StatusView.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphFolder.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/helpers/GraphSettingsFactory.java -text
