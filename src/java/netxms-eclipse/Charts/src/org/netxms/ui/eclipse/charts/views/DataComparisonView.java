@@ -46,10 +46,10 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.Activator;
-import org.netxms.ui.eclipse.charts.api.DataChart;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.charts.widgets.GenericChart;
@@ -87,7 +87,7 @@ public class DataComparisonView extends ViewPart
 	private int chartType = DataComparisonChart.BAR_CHART;
 	private boolean transposed = false;
 	private boolean showLegend = true;
-	private int legendPosition = DataChart.POSITION_RIGHT;
+	private int legendPosition = GraphSettings.POSITION_RIGHT;
 	private boolean translucent = false;
 	private Image[] titleImages = new Image[5];
 
@@ -382,41 +382,41 @@ public class DataComparisonView extends ViewPart
 			@Override
 			public void run()
 			{
-				legendPosition = DataChart.POSITION_LEFT;
+				legendPosition = GraphSettings.POSITION_LEFT;
 				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendLeft.setChecked(legendPosition == DataChart.POSITION_LEFT);
+		actionLegendLeft.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
 		actionLegendRight = new Action("Place on &right", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = DataChart.POSITION_RIGHT;
+				legendPosition = GraphSettings.POSITION_RIGHT;
 				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendRight.setChecked(legendPosition == DataChart.POSITION_RIGHT);
+		actionLegendRight.setChecked(legendPosition == GraphSettings.POSITION_RIGHT);
 		
 		actionLegendTop = new Action("Place on &top", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = DataChart.POSITION_TOP;
+				legendPosition = GraphSettings.POSITION_TOP;
 				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendTop.setChecked(legendPosition == DataChart.POSITION_LEFT);
+		actionLegendTop.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
 		actionLegendBottom = new Action("Place on &bottom", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = DataChart.POSITION_BOTTOM;
+				legendPosition = GraphSettings.POSITION_BOTTOM;
 				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendBottom.setChecked(legendPosition == DataChart.POSITION_LEFT);
+		actionLegendBottom.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
 		
 		actionShowBarChart = new Action("&Bar chart", Action.AS_RADIO_BUTTON) {
 			@Override
