@@ -414,8 +414,10 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
 {
    DWORD dwIndex, dwLength;
    CSCP_DF *pVar;
-#if !defined(UNICODE_UCS2) || !defined(UNICODE)
-   UCS2CHAR *pBuffer;
+#if defined(UNICODE_UCS2) && defined(UNICODE)
+#define __buffer pValue
+#else
+   UCS2CHAR *__buffer;
 #endif
 
    // Create CSCP_DF structure
@@ -438,23 +440,21 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
          pVar->df_real = *((const double *)pValue);
          break;
       case CSCP_DT_STRING:
-         dwLength = (DWORD)_tcslen((const TCHAR *)pValue);
-         pVar = (CSCP_DF *)malloc(12 + dwLength * 2);
-         pVar->df_string.dwLen = dwLength * 2;
 #ifdef UNICODE         
-#ifdef UNICODE_UCS2
-         memcpy(pVar->df_string.szValue, pValue, pVar->df_string.dwLen);
-#else		/* assume UNICODE_UCS4 */
-         pBuffer = (UCS2CHAR *)malloc(dwLength * 2 + 2);
-         ucs4_to_ucs2((WCHAR *)pValue, dwLength, pBuffer, dwLength + 1);
-         memcpy(pVar->df_string.szValue, pBuffer, pVar->df_string.dwLen);
-         free(pBuffer);
+         dwLength = (DWORD)_tcslen((const TCHAR *)pValue);
+#ifndef UNICODE_UCS2 /* assume UNICODE_UCS4 */
+         __buffer = (UCS2CHAR *)malloc(dwLength * 2 + 2);
+         ucs4_to_ucs2((WCHAR *)pValue, dwLength, __buffer, dwLength + 1);
 #endif         
 #else		/* not UNICODE */
-         pBuffer = (UCS2CHAR *)malloc(dwLength * 2 + 2);
-         mb_to_ucs2((const char *)pValue, dwLength, pBuffer, dwLength + 1);
-         memcpy(pVar->df_string.szValue, pBuffer, pVar->df_string.dwLen);
-         free(pBuffer);
+			__buffer = UCS2StringFromMBString((const char *)pValue);
+			dwLength = ucs2_strlen(__buffer);
+#endif
+         pVar = (CSCP_DF *)malloc(12 + dwLength * 2);
+         pVar->df_string.dwLen = dwLength * 2;
+         memcpy(pVar->df_string.szValue, __buffer, pVar->df_string.dwLen);
+#if !defined(UNICODE_UCS2) || !defined(UNICODE)
+         free(__buffer);
 #endif
          break;
       case CSCP_DT_BINARY:
@@ -484,6 +484,7 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
    }
 
    return (bType == CSCP_DT_INT16) ? ((void *)((BYTE *)pVar + 6)) : ((void *)((BYTE *)pVar + 8));
+#undef __buffer
 }
 
 
