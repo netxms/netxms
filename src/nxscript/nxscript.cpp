@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ static NXSL_TestClass *m_pTestClass;
 int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
 {
 	TCHAR *buffer = (TCHAR *)malloc(1024);
-	strcpy(buffer, "test value");
+	_tcscpy(buffer, _T("test value"));
    *ppResult = new NXSL_Value(new NXSL_Object(m_pTestClass, buffer));
    return 0;
 }
@@ -42,7 +42,7 @@ int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *prog
 
 int main(int argc, char *argv[])
 {
-   char *pszSource, szError[1024];
+   TCHAR *pszSource, szError[1024];
    DWORD dwSize;
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
@@ -53,12 +53,12 @@ int main(int argc, char *argv[])
 
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
-   strcpy(func.m_szName, "new");
+   _tcscpy(func.m_szName, _T("new"));
 
    m_pTestClass = new NXSL_TestClass;
 
-   printf("NetXMS Scripting Host  Version " NETXMS_VERSION_STRING "\n"
-          "Copyright (c) 2005-2009 Victor Kirhenshtein\n\n");
+   _tprintf(_T("NetXMS Scripting Host  Version ") NETXMS_VERSION_STRING _T("\n")
+            _T("Copyright (c) 2005-2010 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
@@ -89,7 +89,13 @@ int main(int argc, char *argv[])
       return 127;
    }
 
+#ifdef UNICODE
+	WCHAR *ucName = WideStringFromMBString(argv[optind]);
+   pszSource = NXSLLoadFile(ucName, &dwSize);
+	free(ucName);
+#else
    pszSource = NXSLLoadFile(argv[optind], &dwSize);
+#endif
 	if (pszSource != NULL)
 	{
 		pScript = NXSLCompile(pszSource, szError, 1024);
@@ -118,18 +124,18 @@ int main(int argc, char *argv[])
 			{
 				NXSL_Value *result = pScript->getResult();
 				if (printResult)
-					printf("Result = %s\n", (result != NULL) ? result->getValueAsCString() : "(null)");
+					_tprintf(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
 			}
 			else
 			{
-				printf("%s\n", pScript->getErrorText());
+				_tprintf(_T("%s\n"), pScript->getErrorText());
 			}
 			delete pScript;
 			safe_free(ppArgs);
 		}
 		else
 		{
-			printf("%s\n", szError);
+			_tprintf(_T("%s\n"), szError);
 		}
 	}
 	else

@@ -74,7 +74,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
+extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
 {
 	return TRUE;
 }
@@ -83,7 +83,7 @@ extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 // Unload handler
 //
 
-extern "C" void EXPORT DrvUnload(void)
+extern "C" void EXPORT DrvUnload()
 {
 	OCITerminate(OCI_DEFAULT);
 }
@@ -158,8 +158,7 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 // Connect to database
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
-                                           char *pszPassword, char *pszDatabase)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, char *pszPassword, char *pszDatabase)
 {
 	ORACLE_CONN *pConn;
 	UCS2CHAR *pwszStr;

@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ const TCHAR *g_pszSqlType[6][3] =
 // Static data
 //
 
-static TCHAR m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
+static TCHAR m_szCodePage[MAX_PATH] = _T("");
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
@@ -63,21 +63,21 @@ static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { "CodePage", CT_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
-   { "CreateCrashDumps", CT_IGNORE, 0, 0, 0, 0, NULL },
-   { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
-   { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
-   { "DBEncryptedPassword", CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
-   { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
-   { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
-   { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
-   { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
-   { "DataDirectory", CT_IGNORE, 0, 0, 0, 0, NULL },
-   { "DumpDirectory", CT_IGNORE, 0, 0, 0, 0, NULL },
-   { "LogFailedSQLQueries", CT_IGNORE, 0, 0, 0, 0, NULL },
-   { "LogFile", CT_IGNORE, 0, 0, 0, 0, NULL },
-   { "Module", CT_IGNORE, 0, 0, 0, 0, NULL },
-   { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("CodePage"), CT_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
+   { _T("CreateCrashDumps"), CT_IGNORE, 0, 0, 0, 0, NULL },
+   { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
+   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
+   { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
+   { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
+   { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
+   { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
+   { _T("DataDirectory"), CT_IGNORE, 0, 0, 0, 0, NULL },
+   { _T("DumpDirectory"), CT_IGNORE, 0, 0, 0, 0, NULL },
+   { _T("LogFailedSQLQueries"), CT_IGNORE, 0, 0, 0, 0, NULL },
+   { _T("LogFile"), CT_IGNORE, 0, 0, 0, 0, NULL },
+   { _T("Module"), CT_IGNORE, 0, 0, 0, 0, NULL },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 static BOOL m_bForce = FALSE;
 
@@ -92,7 +92,7 @@ void ShowQuery(const TCHAR *pszQuery)
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
       _tprintf(_T(">>> "));
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0A);
-      puts(pszQuery);
+      _putts(pszQuery);
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
 #else
       _tprintf(_T(">>> %s\n"), pszQuery);
@@ -418,9 +418,9 @@ BOOL ValidateDatabase()
    }
    else if (nVersion > DB_FORMAT_VERSION)
    {
-		_tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n"
-					 "You need to upgrade your server before using this database.\n"),
-				   nVersion, DB_FORMAT_VERSION);
+		printf("Your database has format version %d, this tool is compiled for version %d.\n"
+		       "You need to upgrade your server before using this database.\n",
+				 nVersion, DB_FORMAT_VERSION);
 		return FALSE;
    }
 
@@ -479,7 +479,7 @@ int main(int argc, char *argv[])
 
    InitThreadLibrary();
 
-   printf("NetXMS Database Manager Version " NETXMS_VERSION_STRING "\n\n");
+   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T("\n\n"));
 
    // Check for alternate config file location
 #ifdef _WIN32
@@ -503,36 +503,41 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxdbmgr [<options>] <command>\n"
-                   "Valid commands are:\n"
-						 "   batch <file>  : Run SQL batch file\n"
-                   "   check         : Check database for errors\n"
-                   "   export <file> : Export database to file\n"
-                   "   import <file> : Import database from file\n"
-                   "   init <file>   : Initialize database\n"
-				       "   reindex       : Reindex database\n"
-                   "   unlock        : Forced database unlock\n"
-                   "   upgrade       : Upgrade database to new version\n"
-                   "Valid options are:\n"
-                   "   -c <config> : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
-                   "   -f          : Force repair - do not ask for confirmation.\n"
+            _tprintf(_T("Usage: nxdbmgr [<options>] <command>\n")
+                     _T("Valid commands are:\n")
+						   _T("   batch <file>  : Run SQL batch file\n")
+                     _T("   check         : Check database for errors\n")
+                     _T("   export <file> : Export database to file\n")
+                     _T("   import <file> : Import database from file\n")
+                     _T("   init <file>   : Initialize database\n")
+				         _T("   reindex       : Reindex database\n")
+                     _T("   unlock        : Forced database unlock\n")
+                     _T("   upgrade       : Upgrade database to new version\n")
+                     _T("Valid options are:\n")
+                     _T("   -c <config> : Use alternate configuration file. Default is ") DEFAULT_CONFIG_FILE _T("\n")
+                     _T("   -f          : Force repair - do not ask for confirmation.\n")
 #ifdef _WIN32
-				       "   -G          : GUI mode.\n"
+				         _T("   -G          : GUI mode.\n")
 #endif
-                   "   -h          : Display help and exit.\n"
-                   "   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n"
-                   "   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n"
-                   "   -t          : Enable trace mode (show executed SQL queries).\n"
-                   "   -v          : Display version and exit.\n"
-                   "   -X          : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
-                   "\n");
+                     _T("   -h          : Display help and exit.\n")
+                     _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
+                     _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
+                     _T("   -t          : Enable trace mode (show executed SQL queries).\n")
+                     _T("   -v          : Display version and exit.\n")
+                     _T("   -X          : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n")
+                     _T("\n"));
             bStart = FALSE;
             break;
          case 'v':   // Print version and exit
             bStart = FALSE;
             break;
          case 'c':
+#ifdef UNICODE
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szConfigFile, MAX_PATH);
+				szConfigFile[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(szConfigFile, optarg, MAX_PATH);
+#endif
             break;
          case 'f':
             m_bForce = TRUE;
@@ -566,7 +571,7 @@ int main(int argc, char *argv[])
    // Check parameter correctness
    if (argc - optind == 0)
    {
-      _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
+      printf("Command missing. Type nxdbmgr -h for command line syntax.\n");
       return 1;
    }
    if (strcmp(argv[optind], "batch") && 
@@ -578,12 +583,12 @@ int main(int argc, char *argv[])
        strcmp(argv[optind], "unlock") &&
        strcmp(argv[optind], "init"))
    {
-      _tprintf(_T("Invalid command \"%s\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
+      printf("Invalid command \"%s\". Type nxdbmgr -h for command line syntax.\n", argv[optind]);
       return 1;
    }
    if ((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import")) && (argc - optind < 2))
    {
-      _tprintf("Required command argument missing\n");
+      printf("Required command argument missing\n");
       return 1;
    }
 
@@ -609,7 +614,7 @@ int main(int argc, char *argv[])
 	Config *config = new Config();
 	if (!config->loadIniConfig(szConfigFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
    {
-      _tprintf(_T("Error loading configuration file\n"));
+      printf("Error loading configuration file\n");
       return 2;
    }
 	delete config;
@@ -621,13 +626,14 @@ int main(int argc, char *argv[])
 	}
 
 #ifndef _WIN32
-	SetDefaultCodepage(m_szCodePage);
+	if (m_szCodePage[0] != 0)
+		SetDefaultCodepage(m_szCodePage);
 #endif
 
    // Connect to database
    if (!DBInit(0, 0))
    {
-      _tprintf(_T("Unable to initialize database library\n"));
+      printf("Unable to initialize database library\n");
       return 3;
    }
 

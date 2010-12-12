@@ -42,7 +42,7 @@ LogParserRule::LogParserRule(LogParser *parser,
 	m_parser = parser;
 	expandMacros(regexp, expandedRegexp);
 	m_regexp = _tcsdup(expandedRegexp);
-	m_isValid = (regcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
+	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_event = event;
 	m_numParams = numParams;
 	m_pmatch = (numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (numParams + 1)) : NULL;
@@ -89,7 +89,7 @@ bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId
 	if (m_isInverted)
 	{
 		m_parser->trace(6, _T("  negated matching against regexp %s"), m_regexp);
-		if (regexec(&m_preg, line, 0, NULL, 0) != 0)
+		if (_tregexec(&m_preg, line, 0, NULL, 0) != 0)
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && (m_event != 0))
@@ -100,7 +100,7 @@ bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId
 	else
 	{
 		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
-		if (regexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0)
+		if (_tregexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0)
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && (m_event != 0))

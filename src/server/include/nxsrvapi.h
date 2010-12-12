@@ -53,38 +53,38 @@
 
 # define DEFAULT_CONFIG_FILE   _T("C:\\netxmsd.conf")
 
-# define DEFAULT_SHELL         "cmd.exe"
-# define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
-# define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
-# define DEFAULT_DUMP_DIR      "C:\\"
+# define DEFAULT_SHELL         _T("cmd.exe")
+# define DEFAULT_LOG_FILE      _T("C:\\NetXMS.log")
+# define DEFAULT_DATA_DIR      _T("C:\\NetXMS\\var")
+# define DEFAULT_DUMP_DIR      _T("C:\\")
 
-# define DDIR_MIBS             "\\mibs"
-# define DDIR_PACKAGES         "\\packages"
-# define DDIR_BACKGROUNDS      "\\backgrounds"
-# define DDIR_SHARED_FILES     "\\shared"
-# define DFILE_KEYS            "\\server_key"
-# define DFILE_COMPILED_MIB    "\\mibs\\netxms.mib"
+# define DDIR_MIBS             _T("\\mibs")
+# define DDIR_PACKAGES         _T("\\packages")
+# define DDIR_BACKGROUNDS      _T("\\backgrounds")
+# define DDIR_SHARED_FILES     _T("\\shared")
+# define DFILE_KEYS            _T("\\server_key")
+# define DFILE_COMPILED_MIB    _T("\\mibs\\netxms.mib")
 
 #else    /* _WIN32 */
 
 # define DEFAULT_CONFIG_FILE   _T("{search}")
 
-# define DEFAULT_SHELL         "/bin/sh"
+# define DEFAULT_SHELL         _T("/bin/sh")
 
 # ifndef DATADIR
-#  define DATADIR              "/var/netxms"
+#  define DATADIR              _T("/var/netxms")
 # endif
 
-# define DEFAULT_LOG_FILE      DATADIR"/log/netxmsd.log"
+# define DEFAULT_LOG_FILE      DATADIR _T("/log/netxmsd.log")
 # define DEFAULT_DATA_DIR      DATADIR
-# define DEFAULT_DUMP_DIR      "/"
+# define DEFAULT_DUMP_DIR      _T("/")
 
-# define DDIR_MIBS             "/mibs"
-# define DDIR_PACKAGES         "/packages"
-# define DDIR_BACKGROUNDS      "/backgrounds"
-# define DDIR_SHARED_FILES     "/shared"
-# define DFILE_KEYS            "/.server_key"
-# define DFILE_COMPILED_MIB    "/mibs/netxms.mib"
+# define DDIR_MIBS             _T("/mibs")
+# define DDIR_PACKAGES         _T("/packages")
+# define DDIR_BACKGROUNDS      _T("/backgrounds")
+# define DDIR_SHARED_FILES     _T("/shared")
+# define DFILE_KEYS            _T("/.server_key")
+# define DFILE_COMPILED_MIB    _T("/mibs/netxms.mib")
 
 #endif   /* _WIN32 */
 
@@ -256,7 +256,7 @@ private:
    DWORD m_dwAddr;
    int m_nProtocolVersion;
    int m_iAuthMethod;
-   TCHAR m_szSecret[MAX_SECRET_LENGTH];
+   char m_szSecret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;
    SOCKET m_hSocket;
    DWORD m_dwNumDataLines;
@@ -276,7 +276,7 @@ private:
    WORD m_wPort;
    WORD m_wProxyPort;
    int m_iProxyAuth;
-   TCHAR m_szProxySecret[MAX_SECRET_LENGTH];
+   char m_szProxySecret[MAX_SECRET_LENGTH];
 	int m_hCurrFile;
 	TCHAR m_currentFileName[MAX_PATH];
 	DWORD m_dwDownloadRequestId;
@@ -355,7 +355,7 @@ public:
    void setProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void setPort(WORD wPort) { m_wPort = wPort; }
-   void setAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; nx_strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
+   void setAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); m_szSecret[MAX_SECRET_LENGTH - 1] = 0; }
 	void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
 };
 

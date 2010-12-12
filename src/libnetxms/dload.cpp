@@ -145,9 +145,7 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 // Get symbol address from library
 //
 
-void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
-										   const TCHAR *pszSymbol,
-										   TCHAR *pszErrorText)
+void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const TCHAR *pszSymbol, TCHAR *pszErrorText)
 {
    void *pAddr;
 

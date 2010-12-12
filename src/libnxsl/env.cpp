@@ -67,37 +67,37 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
 
 static NXSL_ExtFunction m_builtinFunctions[] =
 {
-	{ "_exit", F_exit, -1 },
-   { "abs", F_abs, 1 },
-   { "classof", F_classof, 1 },
-	{ "d2x", F_d2x, -1 },
-   { "exp", F_exp, 1 },
-   { "gmtime", F_gmtime, -1 },
-   { "index", F_index, -1 },
-   { "left", F_left, -1 },
-   { "length", F_length, 1 },
-   { "localtime", F_localtime, -1 },
-   { "log", F_log, 1 },
-   { "log10", F_log10, 1 },
-   { "lower", F_lower, 1 },
-	{ "ltrim", F_ltrim, 1 },
-   { "max", F_max, -1 },
-   { "min", F_min, -1 },
-   { "pow", F_pow, 2 },
-   { "random", F_random, 2 },
-   { "right", F_right, -1 },
-   { "rindex", F_rindex, -1 },
-	{ "rtrim", F_rtrim, 1 },
-	{ "strftime", F_strftime, -1 },
-	{ "substr", F_substr, -1 },
-	{ "time", F_time, 0 },
-   { "trace", F_trace, 2 },
-	{ "trim", F_trim, 1 },
-   { "typeof", F_typeof, 1 },
-   { "upper", F_upper, 1 },
-   { "AddrInRange", F_AddrInRange, 3 },
-   { "AddrInSubnet", F_AddrInSubnet, 3 },
-	{ "SecondsToUptime", F_SecondsToUptime, 1 }
+	{ _T("_exit"), F_exit, -1 },
+   { _T("abs"), F_abs, 1 },
+   { _T("classof"), F_classof, 1 },
+	{ _T("d2x"), F_d2x, -1 },
+   { _T("exp"), F_exp, 1 },
+   { _T("gmtime"), F_gmtime, -1 },
+   { _T("index"), F_index, -1 },
+   { _T("left"), F_left, -1 },
+   { _T("length"), F_length, 1 },
+   { _T("localtime"), F_localtime, -1 },
+   { _T("log"), F_log, 1 },
+   { _T("log10"), F_log10, 1 },
+   { _T("lower"), F_lower, 1 },
+	{ _T("ltrim"), F_ltrim, 1 },
+   { _T("max"), F_max, -1 },
+   { _T("min"), F_min, -1 },
+   { _T("pow"), F_pow, 2 },
+   { _T("random"), F_random, 2 },
+   { _T("right"), F_right, -1 },
+   { _T("rindex"), F_rindex, -1 },
+	{ _T("rtrim"), F_rtrim, 1 },
+	{ _T("strftime"), F_strftime, -1 },
+	{ _T("substr"), F_substr, -1 },
+	{ _T("time"), F_time, 0 },
+   { _T("trace"), F_trace, 2 },
+	{ _T("trim"), F_trim, 1 },
+   { _T("typeof"), F_typeof, 1 },
+   { _T("upper"), F_upper, 1 },
+   { _T("AddrInRange"), F_AddrInRange, 3 },
+   { _T("AddrInSubnet"), F_AddrInSubnet, 3 },
+	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 }
 };
 
 
@@ -129,12 +129,12 @@ NXSL_Environment::~NXSL_Environment()
 // Find function by name
 //
 
-NXSL_ExtFunction *NXSL_Environment::findFunction(char *pszName)
+NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *pszName)
 {
    DWORD i;
 
    for(i = 0; i < m_dwNumFunctions; i++)
-      if (!strcmp(m_pFunctionList[i].m_szName, pszName))
+      if (!_tcscmp(m_pFunctionList[i].m_szName, pszName))
          return &m_pFunctionList[i];
    return NULL;
 }
@@ -177,7 +177,7 @@ BOOL NXSL_Environment::useModule(NXSL_Program *pMain, const TCHAR *pszName)
    // If failed, try to load it from file
    if (!bRet)
    {
-      _sntprintf(szBuffer, MAX_PATH, "%s.nxsl", pszName);
+      _sntprintf(szBuffer, MAX_PATH, _T("%s.nxsl"), pszName);
       pData = NXSLLoadFile(szBuffer, &dwSize);
       if (pData != NULL)
       {

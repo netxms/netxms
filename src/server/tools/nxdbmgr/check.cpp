@@ -87,7 +87,7 @@ static void EndStage(void)
    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
    _puttc(_T(']'), stdout);
    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-   _tprintf("\n");
+   printf("\n");
 #else
    _tprintf(_T("  [%s]\n"), pszStatus[nCode]);
 #endif
@@ -103,7 +103,7 @@ static TCHAR *GetObjectName(DWORD dwId, TCHAR *pszBuffer)
 	TCHAR szQuery[256];
 	DB_RESULT hResult;
 
-	_stprintf(szQuery, _T("SELECT name FROM object_properties WHERE object_id=%d"), dwId);
+	_sntprintf(szQuery, 256, _T("SELECT name FROM object_properties WHERE object_id=%d"), dwId);
 	hResult = SQLSelect(szQuery);
 	if (hResult != NULL)
 	{
@@ -252,13 +252,13 @@ static void CheckNodes()
                if (GetYesNo(_T("\rMissing node object %d properties. Create?"), dwId))
                {
                   _sntprintf(szQuery, 1024, 
-                             _T("INSERT INTO object_properties (object_id,name,"
-                                "status,is_deleted,inherit_access_rights,"
-                                "last_modified,status_calc_alg,status_prop_alg,"
-                                "status_fixed_val,status_shift,status_translation,"
-                                "status_single_threshold,status_thresholds) VALUES "
-                                "(%d,'lost_node_%d',5,0,1,0,0,0,0,0,0,0,'00000000')"),
-                                dwId, dwId);
+                             _T("INSERT INTO object_properties (object_id,name,")
+                             _T("status,is_deleted,inherit_access_rights,")
+                             _T("last_modified,status_calc_alg,status_prop_alg,")
+                             _T("status_fixed_val,status_shift,status_translation,")
+                             _T("status_single_threshold,status_thresholds) VALUES ")
+                             _T("(%d,'lost_node_%d',5,0,1,0,0,0,0,0,0,0,'00000000')"),
+                             dwId, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -336,10 +336,10 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
    TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
    BOOL bIsDeleted;
 
-   _stprintf(szQuery, _T("Checking %s objects..."), pszDisplayName);
+   _sntprintf(szQuery, 1024, _T("Checking %s objects..."), pszDisplayName);
    StartStage(szQuery);
 
-   _stprintf(szQuery, _T("SELECT id,node_id FROM %s"), pszTable);
+   _sntprintf(szQuery, 1024, _T("SELECT id,node_id FROM %s"), pszTable);
    hResult = SQLSelect(szQuery);
    if (hResult != NULL)
    {
@@ -349,7 +349,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
          dwId = DBGetFieldULong(hResult, i, 0);
 
          // Check appropriate record in object_properties table
-         _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%d"), dwId);
+         _sntprintf(szQuery, 1024, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%d"), dwId);
          hResult2 = SQLSelect(szQuery);
          if (hResult2 != NULL)
          {
@@ -359,12 +359,12 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
                if (GetYesNo(_T("\rMissing %s object %d properties. Create?"), pszDisplayName, dwId))
                {
                   _sntprintf(szQuery, 1024, 
-                             _T("INSERT INTO object_properties (object_id,name,"
-                                "status,is_deleted,inherit_access_rights,"
-                                "last_modified,status_calc_alg,status_prop_alg,"
-                                "status_fixed_val,status_shift,status_translation,"
-                                "status_single_threshold,status_thresholds) VALUES "
-                                "(%d,'lost_%s_%d',5,0,1,0,0,0,0,0,0,0,'00000000')"),
+                             _T("INSERT INTO object_properties (object_id,name,")
+                             _T("status,is_deleted,inherit_access_rights,")
+                             _T("last_modified,status_calc_alg,status_prop_alg,")
+                             _T("status_fixed_val,status_shift,status_translation,")
+                             _T("status_single_threshold,status_thresholds) VALUES ")
+                             _T("(%d,'lost_%s_%d',5,0,1,0,0,0,0,0,0,0,'00000000')"),
                              dwId, pszDisplayName, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
@@ -531,13 +531,13 @@ static void CheckEPP(void)
       for(i = 0; i < iNumRows; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
-         _stprintf(szQuery, _T("SELECT object_id FROM object_properties WHERE object_id=%d"), dwId);
+         _sntprintf(szQuery, 1024, _T("SELECT object_id FROM object_properties WHERE object_id=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
             if (GetYesNo(_T("\rInvalid object ID %d used in policy. Delete it from policy?"), dwId))
             {
-               _stprintf(szQuery, _T("DELETE FROM policy_source_list WHERE object_id=%d"), dwId);
+               _sntprintf(szQuery, 1024, _T("DELETE FROM policy_source_list WHERE object_id=%d"), dwId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
             }
@@ -555,15 +555,15 @@ static void CheckEPP(void)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          if (dwId & GROUP_FLAG)
-            _stprintf(szQuery, _T("SELECT id FROM event_groups WHERE id=%d"), dwId);
+            _sntprintf(szQuery, 1024, _T("SELECT id FROM event_groups WHERE id=%d"), dwId);
          else
-            _stprintf(szQuery, _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), dwId);
+            _sntprintf(szQuery, 1024, _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
             if (GetYesNo(_T("\rInvalid event%s ID 0x%08X referenced in policy. Delete this reference?"), (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId))
             {
-               _stprintf(szQuery, _T("DELETE FROM policy_event_list WHERE event_code=%d"), dwId);
+               _sntprintf(szQuery, 1024, _T("DELETE FROM policy_event_list WHERE event_code=%d"), dwId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
             }
@@ -580,13 +580,13 @@ static void CheckEPP(void)
       for(i = 0; i < iNumRows; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
-         _stprintf(szQuery, _T("SELECT action_id FROM actions WHERE action_id=%d"), dwId);
+         _sntprintf(szQuery, 1024, _T("SELECT action_id FROM actions WHERE action_id=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
             if (GetYesNo(_T("\rInvalid action ID %d referenced in policy. Delete this reference?"), dwId))
             {
-               _stprintf(szQuery, _T("DELETE FROM policy_action_list WHERE action_id=%d"), dwId);
+               _sntprintf(szQuery, 1024, _T("DELETE FROM policy_action_list WHERE action_id=%d"), dwId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
             }
@@ -605,21 +605,21 @@ static void CheckEPP(void)
 
 static BOOL CreateIDataTable(DWORD nodeId)
 {
-   char szQuery[256], szQueryTemplate[256];
+   TCHAR szQuery[256], szQueryTemplate[256];
    DWORD i;
 
-   ConfigReadStr("IDataTableCreationCommand", szQueryTemplate, 255, "");
-   sprintf(szQuery, szQueryTemplate, nodeId);
+   ConfigReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
+   _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
    if (!SQLQuery(szQuery))
 		return FALSE;
 
    for(i = 0; i < 10; i++)
    {
-      sprintf(szQuery, "IDataIndexCreationCommand_%d", i);
-      ConfigReadStr(szQuery, szQueryTemplate, 255, "");
+      _sntprintf(szQuery, 256, _T("IDataIndexCreationCommand_%d"), i);
+      ConfigReadStr(szQuery, szQueryTemplate, 255, _T(""));
       if (szQueryTemplate[0] != 0)
       {
-         sprintf(szQuery, szQueryTemplate, nodeId, nodeId);
+         _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
          if (!SQLQuery(szQuery))
 				return FALSE;
       }
@@ -764,8 +764,8 @@ void CheckDatabase(void)
    }
    else if (iVersion > DB_FORMAT_VERSION)
    {
-       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n"
-                   "You need to upgrade your server before using this database.\n"),
+       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n")
+                _T("You need to upgrade your server before using this database.\n"),
                 iVersion, DB_FORMAT_VERSION);
 
    }

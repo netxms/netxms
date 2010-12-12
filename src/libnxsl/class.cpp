@@ -30,7 +30,7 @@
 
 NXSL_Class::NXSL_Class()
 {
-   strcpy(m_szName, "generic");
+   _tcscpy(m_szName, _T("generic"));
 }
 
 

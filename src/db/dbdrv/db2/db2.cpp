@@ -107,7 +107,7 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, char *e
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const char *str)
+extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 {
 	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -145,7 +145,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const char *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(char *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
 {
    return TRUE;
 }

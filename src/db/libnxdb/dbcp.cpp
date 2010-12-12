@@ -107,7 +107,7 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 
 	DBConnectionPoolPopulate();
 
-	__DBDbgPrintf(1, "Database Connection Pool initialized");
+	__DBDbgPrintf(1, _T("Database Connection Pool initialized"));
 
 	return true;
 }
@@ -128,7 +128,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 	delete m_dbHandlesInUseMarker;
 	delete m_dbHandleLastAccessTime;
 	
-	__DBDbgPrintf(1, "Database Connection Pool terminated");
+	__DBDbgPrintf(1, _T("Database Connection Pool terminated"));
 
 }
 

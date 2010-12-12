@@ -234,7 +234,7 @@ void ISC::ReceiverThread(void)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DbgPrintf(6, "ISC: Received raw message %s from peer at %s",
+         DbgPrintf(6, _T("ISC: Received raw message %s from peer at %s"),
 			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(m_addr, szIpAddr));
 		}
 		else

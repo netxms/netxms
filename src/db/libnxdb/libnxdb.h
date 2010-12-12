@@ -52,9 +52,9 @@ struct db_driver_t
 	void *m_userArg;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
-	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, WCHAR *, TCHAR *);
-	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, WCHAR *, DWORD *, TCHAR *);
-	DBDRV_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DBDRV_CONNECTION, WCHAR *, DWORD *, TCHAR *);
+	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, const WCHAR *, TCHAR *);
+	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, TCHAR *);
+	DBDRV_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, TCHAR *);
 	BOOL (* m_fpDrvFetch)(DBDRV_ASYNC_RESULT);
 	LONG (* m_fpDrvGetFieldLength)(DBDRV_RESULT, int, int);
 	LONG (* m_fpDrvGetFieldLengthAsync)(DBDRV_RESULT, int);
@@ -87,10 +87,10 @@ struct db_handle_t
 	bool m_dumpSql;
    MUTEX m_mutexTransLock;      // Transaction lock
    int m_transactionLevel;
-   TCHAR *m_server;
-   TCHAR *m_login;
-   TCHAR *m_password;
-   TCHAR *m_dbName;
+   char *m_server;
+   char *m_login;
+   char *m_password;
+   char *m_dbName;
 };
 
 

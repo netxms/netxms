@@ -35,7 +35,15 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *pszServer,
    DB_HANDLE hConn = NULL;
 
 	__DBDbgPrintf(8, _T("DBConnect: server=%s db=%s login=%s"), pszServer, pszDBName, pszLogin);
+#ifdef UNICODE
+	char *mbServer = (pszServer == NULL) ? NULL : MBStringFromWideString(pszServer);
+	char *mbDatabase = (pszDBName == NULL) ? NULL : MBStringFromWideString(pszDBName);
+	char *mbLogin = (pszLogin == NULL) ? NULL : MBStringFromWideString(pszLogin);
+	char *mbPassword = (pszPassword == NULL) ? NULL : MBStringFromWideString(pszPassword);
+   hDrvConn = driver->m_fpDrvConnect(mbServer, mbLogin, mbPassword, mbDatabase);
+#else
    hDrvConn = driver->m_fpDrvConnect(pszServer, pszLogin, pszPassword, pszDBName);
+#endif
    if (hDrvConn != NULL)
    {
       hConn = (DB_HANDLE)malloc(sizeof(struct db_handle_t));
@@ -46,10 +54,17 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *pszServer,
 			hConn->m_connection = hDrvConn;
          hConn->m_mutexTransLock = MutexCreateRecursive();
          hConn->m_transactionLevel = 0;
+#ifdef UNICODE
+         hConn->m_dbName = mbDatabase;
+         hConn->m_login = mbLogin;
+         hConn->m_password = mbPassword;
+         hConn->m_server = mbServer;
+#else
          hConn->m_dbName = (pszDBName == NULL) ? NULL : _tcsdup(pszDBName);
          hConn->m_login = (pszLogin == NULL) ? NULL : _tcsdup(pszLogin);
          hConn->m_password = (pszPassword == NULL) ? NULL : _tcsdup(pszPassword);
          hConn->m_server = (pszServer == NULL) ? NULL : _tcsdup(pszServer);
+#endif
 		   __DBDbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
       }
       else
@@ -57,6 +72,15 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *pszServer,
          driver->m_fpDrvDisconnect(hDrvConn);
       }
    }
+#ifdef UNICODE
+	if (hConn == NULL)
+	{
+		safe_free(mbServer);
+		safe_free(mbDatabase);
+		safe_free(mbLogin);
+		safe_free(mbPassword);
+	}
+#endif
    return hConn;
 }
 
@@ -325,7 +349,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
       else
       {
          nLen++;
-         pszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         pszTemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
          hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszTemp, nLen);
       }
       return pszTemp;
@@ -488,7 +512,7 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
    if (pszVal != NULL)
    {
       StrToBin(pszVal, (BYTE *)pbBytes, 128);
-      nLen = (int)strlen(pszVal) / 2;
+      nLen = (int)_tcslen(pszVal) / 2;
       for(i = 0; (i < nSize) && (i < nLen); i++)
          pnArray[i] = pbBytes[i];
       for(; i < nSize; i++)
@@ -660,7 +684,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
       else
       {
          nLen++;
-         pszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         pszTemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
          hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pszTemp, nLen);
       }
       return pszTemp;
@@ -796,8 +820,7 @@ DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iCol
 {
    TCHAR szBuffer[64];
    
-   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? INADDR_NONE : 
-      ntohl(inet_addr(szBuffer));
+   return (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL) ? INADDR_NONE : ntohl(_t_inet_addr(szBuffer));
 }
 
 
@@ -940,7 +963,7 @@ static TCHAR m_szSpecialChars[] = _T("\x01\x02\x03\x04\x05\x06\x07\x08")
 
 TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
 {
-   char *pszOut;
+   TCHAR *pszOut;
    int iPosIn, iPosOut, iStrSize;
 
    if ((pszIn != NULL) && (*pszIn != 0))
@@ -950,11 +973,11 @@ TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
       for(iPosIn = 0; pszIn[iPosIn] != 0; iPosIn++)
          if (_tcschr(m_szSpecialChars, pszIn[iPosIn])  != NULL)
             iStrSize += 2;
-      pszOut = (char *)malloc(iStrSize);
+      pszOut = (TCHAR *)malloc(iStrSize * sizeof(TCHAR));
 
       // Translate string
       for(iPosIn = 0, iPosOut = 0; pszIn[iPosIn] != 0; iPosIn++)
-         if (strchr(m_szSpecialChars, pszIn[iPosIn]) != NULL)
+         if (_tcschr(m_szSpecialChars, pszIn[iPosIn]) != NULL)
          {
             pszOut[iPosOut++] = _T('#');
             pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] >> 4);

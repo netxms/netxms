@@ -271,6 +271,8 @@ public:
    const String&  operator +=(const TCHAR *pszStr);
    operator const TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
 
+	char *getUTF8String();
+
 	void addString(const TCHAR *pStr, DWORD dwLen);
 	void addDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
 
@@ -520,6 +522,11 @@ extern "C"
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
    DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
+#ifdef UNICODE
+   DWORD LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName);
+#else
+#define ResolveHostNameA ResolveHostName
+#endif
 
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
    void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize);
@@ -544,7 +551,12 @@ extern "C"
    TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName);
    void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
 	BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize);
- 
+#ifdef UNICODE
+	BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, DWORD *pdwFileSize);
+#else
+#define LoadFileA LoadFile
+#endif
+
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, DWORD dwSize, DWORD dwCRC);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
 	void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash);

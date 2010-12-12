@@ -53,7 +53,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	SOCKET nSd;
 	regex_t preg;
 
-	if (regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
+	if (tre_regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
 	{
 		return PC_ERR_BAD_PARAMS;
 	}
@@ -111,7 +111,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 			if (buff != NULL && offset > 0) {
 				buff[offset] = 0;
 
-				if (regexec(&preg, buff, 0, NULL, 0) == 0)
+				if (tre_regexec(&preg, buff, 0, NULL, 0) == 0)
 				{
 					nRet = PC_ERR_NONE;
 				}

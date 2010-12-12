@@ -29,8 +29,8 @@
 // Global data
 //
 
-const char *g_szTypeNames[] = { "null", "object", "array", "string", "real", "int32",
-                                "int64", "uint32", "uint64" };
+const TCHAR *g_szTypeNames[] = { _T("null"), _T("object"), _T("array"), _T("string"), _T("real"), _T("int32"),
+                                 _T("int64"), _T("uint32"), _T("uint64") };
 
 
 
@@ -312,9 +312,9 @@ int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Progr
 
    if (argv[0]->isString() && argv[1]->isString() && argv[2]->isString())
    {
-      dwAddr = ntohl(inet_addr(argv[0]->getValueAsCString()));
-      dwStart = ntohl(inet_addr(argv[1]->getValueAsCString()));
-      dwEnd = ntohl(inet_addr(argv[2]->getValueAsCString()));
+      dwAddr = ntohl(_t_inet_addr(argv[0]->getValueAsCString()));
+      dwStart = ntohl(_t_inet_addr(argv[1]->getValueAsCString()));
+      dwEnd = ntohl(_t_inet_addr(argv[2]->getValueAsCString()));
       *ppResult = new NXSL_Value((LONG)(((dwAddr >= dwStart) && (dwAddr <= dwEnd)) ? 1 : 0));
       nRet = 0;
    }
@@ -337,9 +337,9 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Prog
 
    if (argv[0]->isString() && argv[1]->isString() && argv[2]->isString())
    {
-      dwAddr = ntohl(inet_addr(argv[0]->getValueAsCString()));
-      dwSubnet = ntohl(inet_addr(argv[1]->getValueAsCString()));
-      dwMask = ntohl(inet_addr(argv[2]->getValueAsCString()));
+      dwAddr = ntohl(_t_inet_addr(argv[0]->getValueAsCString()));
+      dwSubnet = ntohl(_t_inet_addr(argv[1]->getValueAsCString()));
+      dwMask = ntohl(_t_inet_addr(argv[2]->getValueAsCString()));
       *ppResult = new NXSL_Value((LONG)(((dwAddr & dwMask) == dwSubnet) ? 1 : 0));
       nRet = 0;
    }
@@ -423,12 +423,10 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_P
    if (arg > 0)
        n++;
 
-   char pResult[MAX_PATH];
-   pResult[0] = 0;
+   TCHAR result[128];
+   _sntprintf(result, 128, _T("%u days, %2u:%02u"), d, h, n);
 
-   snprintf(pResult, MAX_PATH, "%u days, %2u:%02u", d, h, n);
-
-   *ppResult = new NXSL_Value(pResult);
+   *ppResult = new NXSL_Value(result);
    return 0;
 }
 
@@ -465,7 +463,7 @@ public:
 NXSL_TimeClass::NXSL_TimeClass()
                :NXSL_Class()
 {
-   strcpy(m_szName, "TIME");
+   _tcscpy(m_szName, _T("TIME"));
 }
 
 NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -474,39 +472,39 @@ NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    NXSL_Value *value;
 
    st = (struct tm *)pObject->getData();
-   if (!strcmp(pszAttr, "sec") || !strcmp(pszAttr, "tm_sec"))
+   if (!_tcscmp(pszAttr, _T("sec")) || !_tcscmp(pszAttr, _T("tm_sec")))
    {
       value = new NXSL_Value((LONG)st->tm_sec);
    }
-   else if (!strcmp(pszAttr, "min") || !strcmp(pszAttr, "tm_min"))
+   else if (!_tcscmp(pszAttr, _T("min")) || !_tcscmp(pszAttr, _T("tm_min")))
    {
       value = new NXSL_Value((LONG)st->tm_min);
    }
-   else if (!strcmp(pszAttr, "hour") || !strcmp(pszAttr, "tm_hour"))
+   else if (!_tcscmp(pszAttr, _T("hour")) || !_tcscmp(pszAttr, _T("tm_hour")))
    {
       value = new NXSL_Value((LONG)st->tm_hour);
    }
-   else if (!strcmp(pszAttr, "mday") || !strcmp(pszAttr, "tm_mday"))
+   else if (!_tcscmp(pszAttr, _T("mday")) || !_tcscmp(pszAttr, _T("tm_mday")))
    {
       value = new NXSL_Value((LONG)st->tm_mday);
    }
-   else if (!strcmp(pszAttr, "mon") || !strcmp(pszAttr, "tm_mon"))
+   else if (!_tcscmp(pszAttr, _T("mon")) || !_tcscmp(pszAttr, _T("tm_mon")))
    {
       value = new NXSL_Value((LONG)st->tm_mon);
    }
-   else if (!strcmp(pszAttr, "year") || !strcmp(pszAttr, "tm_year"))
+   else if (!_tcscmp(pszAttr, _T("year")) || !_tcscmp(pszAttr, _T("tm_year")))
    {
       value = new NXSL_Value((LONG)(st->tm_year + 1900));
    }
-   else if (!strcmp(pszAttr, "yday") || !strcmp(pszAttr, "tm_yday"))
+   else if (!_tcscmp(pszAttr, _T("yday")) || !_tcscmp(pszAttr, _T("tm_yday")))
    {
       value = new NXSL_Value((LONG)st->tm_yday);
    }
-   else if (!strcmp(pszAttr, "wday") || !strcmp(pszAttr, "tm_wday"))
+   else if (!_tcscmp(pszAttr, _T("wday")) || !_tcscmp(pszAttr, _T("tm_wday")))
    {
       value = new NXSL_Value((LONG)st->tm_wday);
    }
-   else if (!strcmp(pszAttr, "isdst") || !strcmp(pszAttr, "tm_isdst"))
+   else if (!_tcscmp(pszAttr, _T("isdst")) || !_tcscmp(pszAttr, _T("tm_isdst")))
    {
       value = new NXSL_Value((LONG)st->tm_isdst);
    }
@@ -655,7 +653,7 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *p
 	}
 	else
 	{
-		*ppResult = new NXSL_Value("");
+		*ppResult = new NXSL_Value(_T(""));
 	}
 
 	return 0;

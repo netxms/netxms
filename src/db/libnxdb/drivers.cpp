@@ -48,7 +48,7 @@ static bool s_logSqlErrors = false;
 static void *DLGetSymbolAddrEx(HMODULE hModule, const TCHAR *pszSymbol)
 {
    void *pFunc;
-   char szErrorText[256];
+   TCHAR szErrorText[256];
 
    pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
    if ((pFunc == NULL) && s_writeLog)
@@ -87,9 +87,9 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 														void *userArg)
 {
    static DWORD dwVersionZero = 0;
-   BOOL (* fpDrvInit)(const char *);
+   BOOL (* fpDrvInit)(const TCHAR *);
    DWORD *pdwAPIVersion;
-   char szErrorText[256];
+   TCHAR szErrorText[256];
 	const char *driverName;
 	DB_DRIVER driver;
 	bool alreadyLoaded = false;
@@ -115,7 +115,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
 
    // Check API version supported by driver
-   pdwAPIVersion = (DWORD *)DLGetSymbolAddr(driver->m_handle, "drvAPIVersion", NULL);
+   pdwAPIVersion = (DWORD *)DLGetSymbolAddr(driver->m_handle, _T("drvAPIVersion"), NULL);
    if (pdwAPIVersion == NULL)
       pdwAPIVersion = &dwVersionZero;
    if (*pdwAPIVersion != DBDRV_API_VERSION)
@@ -127,7 +127,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
 
 	// Check name
-	driverName = (const char *)DLGetSymbolAddr(driver->m_handle, "drvName", NULL);
+	driverName = (const char *)DLGetSymbolAddr(driver->m_handle, _T("drvName"), NULL);
 	if (driverName == NULL)
 	{
 		if (s_writeLog)
@@ -162,29 +162,29 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	}
 
    // Import symbols
-   fpDrvInit = (BOOL (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, "DrvInit");
-   driver->m_fpDrvConnect = (DBDRV_CONNECTION (*)(const char *, const char *, const char *, const char *))DLGetSymbolAddrEx(driver->m_handle, "DrvConnect");
-   driver->m_fpDrvDisconnect = (void (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvDisconnect");
-   driver->m_fpDrvQuery = (DWORD (*)(DBDRV_CONNECTION, WCHAR *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvQuery");
-   driver->m_fpDrvSelect = (DBDRV_RESULT (*)(DBDRV_CONNECTION, WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvSelect");
-   driver->m_fpDrvAsyncSelect = (DBDRV_ASYNC_RESULT (*)(DBDRV_CONNECTION, WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvAsyncSelect");
-   driver->m_fpDrvFetch = (BOOL (*)(DBDRV_ASYNC_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvFetch");
-   driver->m_fpDrvGetFieldLength = (LONG (*)(DBDRV_RESULT, int, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldLength");
-   driver->m_fpDrvGetFieldLengthAsync = (LONG (*)(DBDRV_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldLengthAsync");
-   driver->m_fpDrvGetField = (WCHAR* (*)(DBDRV_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetField");
-   driver->m_fpDrvGetFieldAsync = (WCHAR* (*)(DBDRV_ASYNC_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldAsync");
-   driver->m_fpDrvGetNumRows = (int (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvGetNumRows");
-   driver->m_fpDrvGetColumnCount = (int (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnCount");
-   driver->m_fpDrvGetColumnName = (const char* (*)(DBDRV_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnName");
-   driver->m_fpDrvGetColumnCountAsync = (int (*)(DBDRV_ASYNC_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnCountAsync");
-   driver->m_fpDrvGetColumnNameAsync = (const char* (*)(DBDRV_ASYNC_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnNameAsync");
-   driver->m_fpDrvFreeResult = (void (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvFreeResult");
-   driver->m_fpDrvFreeAsyncResult = (void (*)(DBDRV_ASYNC_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvFreeAsyncResult");
-   driver->m_fpDrvBegin = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvBegin");
-   driver->m_fpDrvCommit = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvCommit");
-   driver->m_fpDrvRollback = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvRollback");
-   driver->m_fpDrvUnload = (void (*)(void))DLGetSymbolAddrEx(driver->m_handle, "DrvUnload");
-   driver->m_fpDrvPrepareString = (TCHAR* (*)(const TCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvPrepareString");
+   fpDrvInit = (BOOL (*)(const TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvInit"));
+   driver->m_fpDrvConnect = (DBDRV_CONNECTION (*)(const char *, const char *, const char *, const char *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvConnect"));
+   driver->m_fpDrvDisconnect = (void (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvDisconnect"));
+   driver->m_fpDrvQuery = (DWORD (*)(DBDRV_CONNECTION, const WCHAR *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvQuery"));
+   driver->m_fpDrvSelect = (DBDRV_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvSelect"));
+   driver->m_fpDrvAsyncSelect = (DBDRV_ASYNC_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvAsyncSelect"));
+   driver->m_fpDrvFetch = (BOOL (*)(DBDRV_ASYNC_RESULT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvFetch"));
+   driver->m_fpDrvGetFieldLength = (LONG (*)(DBDRV_RESULT, int, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetFieldLength"));
+   driver->m_fpDrvGetFieldLengthAsync = (LONG (*)(DBDRV_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetFieldLengthAsync"));
+   driver->m_fpDrvGetField = (WCHAR* (*)(DBDRV_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetField"));
+   driver->m_fpDrvGetFieldAsync = (WCHAR* (*)(DBDRV_ASYNC_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetFieldAsync"));
+   driver->m_fpDrvGetNumRows = (int (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetNumRows"));
+   driver->m_fpDrvGetColumnCount = (int (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetColumnCount"));
+   driver->m_fpDrvGetColumnName = (const char* (*)(DBDRV_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetColumnName"));
+   driver->m_fpDrvGetColumnCountAsync = (int (*)(DBDRV_ASYNC_RESULT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetColumnCountAsync"));
+   driver->m_fpDrvGetColumnNameAsync = (const char* (*)(DBDRV_ASYNC_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetColumnNameAsync"));
+   driver->m_fpDrvFreeResult = (void (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvFreeResult"));
+   driver->m_fpDrvFreeAsyncResult = (void (*)(DBDRV_ASYNC_RESULT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvFreeAsyncResult"));
+   driver->m_fpDrvBegin = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvBegin"));
+   driver->m_fpDrvCommit = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvCommit"));
+   driver->m_fpDrvRollback = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvRollback"));
+   driver->m_fpDrvUnload = (void (*)(void))DLGetSymbolAddrEx(driver->m_handle, _T("DrvUnload"));
+   driver->m_fpDrvPrepareString = (TCHAR* (*)(const TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepareString"));
    if ((fpDrvInit == NULL) || (driver->m_fpDrvConnect == NULL) || (driver->m_fpDrvDisconnect == NULL) ||
        (driver->m_fpDrvQuery == NULL) || (driver->m_fpDrvSelect == NULL) || (driver->m_fpDrvGetField == NULL) ||
        (driver->m_fpDrvGetNumRows == NULL) || (driver->m_fpDrvFreeResult == NULL) || 

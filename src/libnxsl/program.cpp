@@ -254,6 +254,7 @@ void NXSL_Program::createJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr)
 //
 // Add new function to defined functions list
 // Will use first free address if dwAddr == INVALID_ADDRESS
+// Name must be in UTF-8
 //
 
 BOOL NXSL_Program::addFunction(const char *pszName, DWORD dwAddr, char *pszError)
@@ -261,15 +262,30 @@ BOOL NXSL_Program::addFunction(const char *pszName, DWORD dwAddr, char *pszError
    DWORD i;
 
    // Check for duplicate function names
+#ifdef UNICODE
+	WCHAR *pwszName = WideStringFromUTF8String(pszName);
+#endif
    for(i = 0; i < m_dwNumFunctions; i++)
+#ifdef UNICODE
+      if (!wcscmp(m_pFunctionList[i].m_szName, pwszName))
+#else
       if (!strcmp(m_pFunctionList[i].m_szName, pszName))
+#endif
       {
          sprintf(pszError, "Duplicate function name: \"%s\"", pszName);
+#ifdef UNICODE
+			free(pwszName);
+#endif
          return FALSE;
       }
    m_dwNumFunctions++;
    m_pFunctionList = (NXSL_Function *)realloc(m_pFunctionList, sizeof(NXSL_Function) * m_dwNumFunctions);
+#ifdef UNICODE
+   nx_strncpy(m_pFunctionList[i].m_szName, pwszName, MAX_FUNCTION_NAME);
+	free(pwszName);
+#else
    nx_strncpy(m_pFunctionList[i].m_szName, pszName, MAX_FUNCTION_NAME);
+#endif
    m_pFunctionList[i].m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_dwCodeSize : dwAddr;
    return TRUE;
 }
@@ -281,8 +297,13 @@ BOOL NXSL_Program::addFunction(const char *pszName, DWORD dwAddr, char *pszError
 
 void NXSL_Program::addPreload(char *pszName)
 {
-   m_ppszPreloadList = (char **)realloc(m_ppszPreloadList, sizeof(char *) * (m_dwNumPreloads + 1));
+   m_ppszPreloadList = (TCHAR **)realloc(m_ppszPreloadList, sizeof(TCHAR *) * (m_dwNumPreloads + 1));
+#ifdef UNICODE
+	m_ppszPreloadList[m_dwNumPreloads] = WideStringFromUTF8String(pszName);
+	free(pszName);
+#else
    m_ppszPreloadList[m_dwNumPreloads] = pszName;
+#endif
    m_dwNumPreloads++;
 }
 
@@ -291,7 +312,7 @@ void NXSL_Program::addPreload(char *pszName)
 // resolve local functions
 //
 
-void NXSL_Program::resolveFunctions(void)
+void NXSL_Program::resolveFunctions()
 {
    DWORD i, j;
 
@@ -301,7 +322,7 @@ void NXSL_Program::resolveFunctions(void)
       {
          for(j = 0; j < m_dwNumFunctions; j++)
          {
-            if (!strcmp(m_pFunctionList[j].m_szName,
+            if (!_tcscmp(m_pFunctionList[j].m_szName,
                         m_ppInstructionSet[i]->m_operand.m_pszString))
             {
                free(m_ppInstructionSet[i]->m_operand.m_pszString);
@@ -330,12 +351,12 @@ void NXSL_Program::dump(FILE *pFile)
       switch(m_ppInstructionSet[i]->m_nOpCode)
       {
          case OPCODE_CALL_EXTERNAL:
-            fprintf(pFile, "%s, %d\n", m_ppInstructionSet[i]->m_operand.m_pszString,
-                    m_ppInstructionSet[i]->m_nStackItems);
+            _ftprintf(pFile, _T("%s, %d\n"), m_ppInstructionSet[i]->m_operand.m_pszString,
+                      m_ppInstructionSet[i]->m_nStackItems);
             break;
          case OPCODE_CALL:
-            fprintf(pFile, "%04X, %d\n", m_ppInstructionSet[i]->m_operand.m_dwAddr,
-                    m_ppInstructionSet[i]->m_nStackItems);
+            _ftprintf(pFile, _T("%04X, %d\n"), m_ppInstructionSet[i]->m_operand.m_dwAddr,
+                      m_ppInstructionSet[i]->m_nStackItems);
             break;
          case OPCODE_JMP:
          case OPCODE_JZ:
@@ -353,21 +374,20 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_GET_ATTRIBUTE:
          case OPCODE_SET_ATTRIBUTE:
 			case OPCODE_NAME:
-            fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
+            _ftprintf(pFile, _T("%s\n"), m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
 			case OPCODE_CASE:
             if (m_ppInstructionSet[i]->m_operand.m_pConstant->isNull())
                fprintf(pFile, "<null>\n");
             else
-               fprintf(pFile, "\"%s\"\n", 
-                       m_ppInstructionSet[i]->m_operand.m_pConstant->getValueAsCString());
+               _ftprintf(pFile, _T("\"%s\"\n"), m_ppInstructionSet[i]->m_operand.m_pConstant->getValueAsCString());
             break;
          case OPCODE_POP:
             fprintf(pFile, "%d\n", m_ppInstructionSet[i]->m_nStackItems);
             break;
          case OPCODE_CAST:
-            fprintf(pFile, "[%s]\n", g_szTypeNames[m_ppInstructionSet[i]->m_nStackItems]);
+            _ftprintf(pFile, _T("[%s]\n"), g_szTypeNames[m_ppInstructionSet[i]->m_nStackItems]);
             break;
          default:
             fprintf(pFile, "\n");
@@ -406,7 +426,7 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    DWORD i, dwOrigCodeSize, dwOrigNumFn;
    NXSL_VariableSystem *pSavedGlobals, *pSavedConstants = NULL;
    NXSL_Value *pValue;
-   char szBuffer[32];
+   TCHAR szBuffer[32];
 
    // Save original code size and number of functions
    dwOrigCodeSize = m_dwCodeSize;
@@ -429,7 +449,7 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    m_pLocals = (pUserLocals == NULL) ? new NXSL_VariableSystem : pUserLocals;
    for(i = 0; i < argc; i++)
    {
-      sprintf(szBuffer, "$%d", i + 1);
+      _sntprintf(szBuffer, 32, _T("$%d"), i + 1);
       m_pLocals->create(szBuffer, argv[i]);
    }
 
@@ -455,14 +475,14 @@ int NXSL_Program::run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    if (i == m_dwNumPreloads)
    {
       for(i = 0; i < m_dwNumFunctions; i++)
-         if (!strcmp(m_pFunctionList[i].m_szName, "main"))
+         if (!_tcscmp(m_pFunctionList[i].m_szName, _T("main")))
             break;
 
 		// No explicit main(), search for implicit
       if (i == m_dwNumFunctions)
 		{
 			for(i = 0; i < m_dwNumFunctions; i++)
-				if (!strcmp(m_pFunctionList[i].m_szName, "$main"))
+				if (!_tcscmp(m_pFunctionList[i].m_szName, _T("$main")))
 					break;
 		}
 
@@ -595,7 +615,7 @@ void NXSL_Program::execute()
    NXSL_Variable *pVar;
    NXSL_ExtFunction *pFunc;
    DWORD dwNext = m_dwCurrPos + 1;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
    int i, nRet;
 
    cp = m_ppInstructionSet[m_dwCurrPos];
@@ -859,7 +879,7 @@ void NXSL_Program::execute()
          }
          break;
       case OPCODE_BIND:
-         sprintf(szBuffer, "$%d", m_nBindPos++);
+         _sntprintf(szBuffer, 256, _T("$%d"), m_nBindPos++);
          pVar = m_pLocals->find(szBuffer);
          pValue = (pVar != NULL) ? new NXSL_Value(pVar->getValue()) : new NXSL_Value;
          pVar = m_pLocals->find(cp->m_operand.m_pszString);
@@ -879,9 +899,21 @@ void NXSL_Program::execute()
             {
                pszText = pValue->getValueAsString(&dwLen);
                if (pszText != NULL)
+					{
+#ifdef UNICODE
+						int reqLen = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, dwLen, NULL, 0, NULL, NULL);
+						char *mbText = (char *)malloc(reqLen);
+						WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, dwLen, mbText, reqLen, NULL, NULL);
+                  fwrite(mbText, reqLen, 1, m_pEnv->getStdOut());
+						free(mbText);
+#else
                   fwrite(pszText, dwLen, 1, m_pEnv->getStdOut());
+#endif
+					}
                else
+					{
                   fputs("(null)", m_pEnv->getStdOut());
+					}
             }
             delete pValue;
          }
@@ -1401,13 +1433,13 @@ void NXSL_Program::relocateCode(DWORD dwStart, DWORD dwLen, DWORD dwShift)
 // Use external module
 //
 
-void NXSL_Program::useModule(NXSL_Program *pModule, const char *pszName)
+void NXSL_Program::useModule(NXSL_Program *pModule, const TCHAR *pszName)
 {
    DWORD i, j, dwStart;
 
    // Check if module already loaded
    for(i = 0; i < m_dwNumModules; i++)
-      if (!stricmp(pszName, m_pModuleList[i].m_szName))
+      if (!_tcsicmp(pszName, m_pModuleList[i].m_szName))
          return;  // Already loaded
 
    // Add code from module
@@ -1429,7 +1461,7 @@ void NXSL_Program::useModule(NXSL_Program *pModule, const char *pszName)
 
    // Register module as loaded
    m_pModuleList = (NXSL_Module *)malloc(sizeof(NXSL_Module) * (m_dwNumModules + 1));
-   strncpy(m_pModuleList[m_dwNumModules].m_szName, pszName, MAX_PATH);
+   nx_strncpy(m_pModuleList[m_dwNumModules].m_szName, pszName, MAX_PATH);
    m_pModuleList[m_dwNumModules].m_dwCodeStart = dwStart;
    m_pModuleList[m_dwNumModules].m_dwCodeSize = pModule->m_dwCodeSize;
    m_pModuleList[m_dwNumModules].m_dwFunctionStart = m_dwNumFunctions;
@@ -1448,7 +1480,7 @@ void NXSL_Program::callFunction(int nArgCount)
 {
    int i;
    NXSL_Value *pValue;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
    if (m_dwSubLevel < CONTROL_STACK_LIMIT)
    {
@@ -1464,7 +1496,7 @@ void NXSL_Program::callFunction(int nArgCount)
          pValue = (NXSL_Value *)m_pDataStack->pop();
          if (pValue != NULL)
          {
-            sprintf(szBuffer, "$%d", i);
+            _sntprintf(szBuffer, 256, _T("$%d"), i);
             m_pLocals->create(szBuffer, pValue);
 				if (pValue->getName() != NULL)
 				{
@@ -1492,12 +1524,12 @@ void NXSL_Program::callFunction(int nArgCount)
 // Find function address by name
 //
 
-DWORD NXSL_Program::getFunctionAddress(char *pszName)
+DWORD NXSL_Program::getFunctionAddress(const TCHAR *pszName)
 {
    DWORD i;
 
    for(i = 0; i < m_dwNumFunctions; i++)
-      if (!strcmp(m_pFunctionList[i].m_szName, pszName))
+      if (!_tcscmp(m_pFunctionList[i].m_szName, pszName))
          return m_pFunctionList[i].m_dwAddr;
    return INVALID_ADDRESS;
 }
@@ -1507,25 +1539,27 @@ DWORD NXSL_Program::getFunctionAddress(char *pszName)
 // Match regular expression
 //
 
-NXSL_Value *NXSL_Program::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp,
-                                      BOOL bIgnoreCase)
+NXSL_Value *NXSL_Program::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase)
 {
    regex_t preg;
    regmatch_t fields[256];
    NXSL_Value *pResult;
    NXSL_Variable *pVar;
-   TCHAR szName[16];
+   const TCHAR *regExp, *value;
+	TCHAR szName[16];
+	DWORD regExpLen, valueLen;
    int i;
 
-   if (regcomp(&preg, pRegexp->getValueAsCString(),
-               bIgnoreCase ? REG_EXTENDED | REG_ICASE : REG_EXTENDED) == 0)
+	regExp = pRegexp->getValueAsString(&regExpLen);
+   if (_tregncomp(&preg, regExp, regExpLen, bIgnoreCase ? REG_EXTENDED | REG_ICASE : REG_EXTENDED) == 0)
    {
-      if (regexec(&preg, pValue->getValueAsCString(), 256, fields, 0) == 0)
+		value = pValue->getValueAsString(&valueLen);
+      if (_tregnexec(&preg, value, valueLen, 256, fields, 0) == 0)
       {
          pResult = new NXSL_Value((LONG)1);
          for(i = 1; (i < 256) && (fields[i].rm_so != -1); i++)
          {
-            _stprintf(szName, _T("$%d"), i);
+            _sntprintf(szName, 16, _T("$%d"), i);
             pVar = m_pLocals->find(szName);
             if (pVar == NULL)
                m_pLocals->create(szName, new NXSL_Value(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));

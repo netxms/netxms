@@ -45,7 +45,7 @@
 //
 
 void CheckDatabase();
-void InitDatabase(const TCHAR *pszInitFile);
+void InitDatabase(const char *pszInitFile);
 void ReindexDatabase();
 void ReindexIData();
 BOOL ClearDatabase();
@@ -59,7 +59,7 @@ BOOL SQLQuery(const TCHAR *pszQuery);
 BOOL SQLBatch(const TCHAR *pszBatch);
 bool GetYesNo(const TCHAR *format, ...);
 void ShowQuery(const TCHAR *pszQuery);
-BOOL ExecSQLBatch(const TCHAR *pszFile);
+BOOL ExecSQLBatch(const char *pszFile);
 BOOL ValidateDatabase();
 
 BOOL IsNodeExist(DWORD dwId);

@@ -32,14 +32,11 @@
 NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
 {
 #ifdef UNICODE
-   m_nSourceSize = wcslen(pszCode);
-   m_pszSourceCode = (char *)malloc(m_nSourceSize + 1);
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pszCode,
-                       -1, m_pszSourceCode, m_nSourceSize + 1, NULL, NULL);
+	m_pszSourceCode = UTF8StringFromWideString(pszCode);
 #else
    m_pszSourceCode = strdup(pszCode);
-   m_nSourceSize = (int)strlen(pszCode);
 #endif
+   m_nSourceSize = (int)strlen(m_pszSourceCode);
    m_nCurrLine = 1;
    m_nSourcePos = 0;
    m_pCompiler = pCompiler;

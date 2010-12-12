@@ -184,7 +184,7 @@ public:
 // Global variables
 //
 
-extern const char *g_szTypeNames[];
+extern const TCHAR *g_szTypeNames[];
 
 
 #endif

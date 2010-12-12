@@ -73,7 +73,7 @@ const TCHAR *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize)
 					if (lf != NULL)
 						*lf = 0;
 
-					len = min(strlen(result), bufSize - outpos - 1);
+					len = (int)min(strlen(result), bufSize - outpos - 1);
 #ifdef UNICODE
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, result, len, &buffer[outpos], len);
 #else

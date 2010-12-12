@@ -875,6 +875,31 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
    return dwAddr;
 }
 
+#ifdef UNICODE
+
+DWORD LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName)
+{
+   DWORD dwAddr;
+   struct hostent *hs;
+   dwAddr = inet_addr(pszName);
+   if ((dwAddr == INADDR_NONE) || (dwAddr == INADDR_ANY))
+   {
+      hs = gethostbyname(pszName);
+      if (hs != NULL)
+      {
+         memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
+      }
+      else
+      {
+         dwAddr = INADDR_NONE;
+      }
+   }
+
+   return dwAddr;
+}
+
+#endif
+
 
 #ifndef VER_PLATFORM_WIN32_WINDOWS
 #define VER_PLATFORM_WIN32_WINDOWS 1
@@ -1031,36 +1056,17 @@ int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch)
 
 BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase)
 {
-#ifdef UNICODE
-   regex_t preg;
-	char *mbStr, *mbExpr;
-   BOOL bResult = FALSE;
-
-	mbStr = MBStringFromWideString(pszStr);
-	mbExpr = MBStringFromWideString(pszExpr);
-	if (regcomp(&preg, mbExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
-	{
-		if (regexec(&preg, mbStr, 0, NULL, 0) == 0) // MATCH
-			bResult = TRUE;
-		regfree(&preg);
-	}
-	free(mbStr);
-	free(mbExpr);
-
-   return bResult;
-#else
    regex_t preg;
    BOOL bResult = FALSE;
 
-	if (regcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	if (_tregcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
 	{
-		if (regexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
+		if (_tregexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
 			bResult = TRUE;
 		regfree(&preg);
 	}
 
    return bResult;
-#endif
 }
 
 
@@ -1234,38 +1240,68 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 
 #ifndef UNDER_CE
 
-BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize)
+static BYTE *LoadFileContent(int fd, DWORD *pdwFileSize)
 {
-   int fd, iBufPos, iNumBytes, iBytesRead;
+   int iBufPos, iNumBytes, iBytesRead;
    BYTE *pBuffer = NULL;
    struct stat fs;
+
+   if (fstat(fd, &fs) != -1)
+   {
+      pBuffer = (BYTE *)malloc(fs.st_size + 1);
+      if (pBuffer != NULL)
+      {
+         *pdwFileSize = fs.st_size;
+         for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
+         {
+            iNumBytes = min(16384, fs.st_size - iBufPos);
+            if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
+            {
+               free(pBuffer);
+               pBuffer = NULL;
+               break;
+            }
+         }
+			pBuffer[fs.st_size] = 0;
+      }
+   }
+   close(fd);
+   return pBuffer;
+}
+
+BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize)
+{
+   int fd;
+   BYTE *pBuffer = NULL;
 
    fd = _topen(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
-      if (fstat(fd, &fs) != -1)
-      {
-         pBuffer = (BYTE *)malloc(fs.st_size + 1);
-         if (pBuffer != NULL)
-         {
-            *pdwFileSize = fs.st_size;
-            for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
-            {
-               iNumBytes = min(16384, fs.st_size - iBufPos);
-               if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
-               {
-                  free(pBuffer);
-                  pBuffer = NULL;
-                  break;
-               }
-            }
-				pBuffer[fs.st_size] = 0;
-         }
-      }
-      close(fd);
+		pBuffer = LoadFileContent(fd, pdwFileSize);
    }
    return pBuffer;
 }
+
+#ifdef UNICODE
+
+BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, DWORD *pdwFileSize)
+{
+   int fd;
+   BYTE *pBuffer = NULL;
+
+#ifdef _WIN32
+   fd = _open(pszFileName, O_RDONLY | O_BINARY);
+#else
+   fd = open(pszFileName, O_RDONLY | O_BINARY);
+#endif
+   if (fd != -1)
+   {
+		pBuffer = LoadFileContent(fd, pdwFileSize);
+   }
+   return pBuffer;
+}
+
+#endif
 
 #endif
 

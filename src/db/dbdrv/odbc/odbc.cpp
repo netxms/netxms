@@ -148,7 +148,7 @@ extern "C" NETXMS_TCHAR EXPORT *DrvPrepareString(const NETXMS_TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(char *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const NETXMS_TCHAR *cmdLine)
 {
 	m_useUnicode = ExtractNamedOptionValueAsBool(cmdLine, _T("unicode"), TRUE);
    return TRUE;
@@ -169,8 +169,7 @@ extern "C" void EXPORT DrvUnload()
 // pszHost should be set to ODBC source name, and pszDatabase is ignored
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
-                                              char *pszPassword, char *pszDatabase)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, char *pszPassword, char *pszDatabase)
 {
    long iResult;
    ODBCDRV_CONN *pConn;

@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,84 +30,84 @@
 
 const TCHAR *g_tables[] = 
 {
-	"config",
-	"config_clob",
-	"users",
-	"user_groups",
-	"user_group_members",
-	"user_profiles",
-	"userdb_custom_attributes",
-	"object_properties",
-	"object_custom_attributes",
-	"zones",
-	"zone_ip_addr_list",
-	"nodes",
-	"clusters",
-	"cluster_members",
-	"cluster_sync_subnets",
-	"cluster_resources",
-	"subnets",
-	"interfaces",
-	"network_services",
-	"vpn_connectors",
-	"vpn_connector_networks",
-	"containers",
-	"conditions",
-	"cond_dci_map",
-	"templates",
-	"dct_node_map",
-	"nsmap",
-	"container_members",
-	"container_categories",
-	"acl",
-	"trusted_nodes",
-	"items",
-	"dci_schedules",
-	"raw_dci_values",
-	"event_cfg",
-	"event_log",
-	"actions",
-	"event_groups",
-	"event_group_members",
-	"event_policy",
-	"policy_source_list",
-	"policy_event_list",
-	"policy_action_list",
-	"policy_time_range_list",
-	"policy_situation_attr_list",
-	"time_ranges",
-	"deleted_objects",
-	"thresholds",
-	"alarms",
-	"alarm_notes",
-	"oid_to_type",
-	"snmp_trap_cfg",
-	"snmp_trap_pmap",
-	"agent_pkg",
-	"object_tools",
-	"object_tools_acl",
-	"object_tools_table_columns",
-	"syslog",
-	"script_library",
-	"snmp_trap_log",
-	"maps",
-	"map_access_lists",
-	"submaps",
-	"submap_object_positions",
-	"submap_links",
-	"agent_configs",
-	"address_lists",
-	"graphs",
-	"graph_acl",
-	"certificates",
-	"audit_log",
-	"situations",
-	"snmp_communities",
-	"web_maps",
-	"ap_common",
-	"ap_bindings",
-	"ap_config_files",
-	"usm_credentials",
+	_T("config"),
+	_T("config_clob"),
+	_T("users"),
+	_T("user_groups"),
+	_T("user_group_members"),
+	_T("user_profiles"),
+	_T("userdb_custom_attributes"),
+	_T("object_properties"),
+	_T("object_custom_attributes"),
+	_T("zones"),
+	_T("zone_ip_addr_list"),
+	_T("nodes"),
+	_T("clusters"),
+	_T("cluster_members"),
+	_T("cluster_sync_subnets"),
+	_T("cluster_resources"),
+	_T("subnets"),
+	_T("interfaces"),
+	_T("network_services"),
+	_T("vpn_connectors"),
+	_T("vpn_connector_networks"),
+	_T("containers"),
+	_T("conditions"),
+	_T("cond_dci_map"),
+	_T("templates"),
+	_T("dct_node_map"),
+	_T("nsmap"),
+	_T("container_members"),
+	_T("container_categories"),
+	_T("acl"),
+	_T("trusted_nodes"),
+	_T("items"),
+	_T("dci_schedules"),
+	_T("raw_dci_values"),
+	_T("event_cfg"),
+	_T("event_log"),
+	_T("actions"),
+	_T("event_groups"),
+	_T("event_group_members"),
+	_T("event_policy"),
+	_T("policy_source_list"),
+	_T("policy_event_list"),
+	_T("policy_action_list"),
+	_T("policy_time_range_list"),
+	_T("policy_situation_attr_list"),
+	_T("time_ranges"),
+	_T("deleted_objects"),
+	_T("thresholds"),
+	_T("alarms"),
+	_T("alarm_notes"),
+	_T("oid_to_type"),
+	_T("snmp_trap_cfg"),
+	_T("snmp_trap_pmap"),
+	_T("agent_pkg"),
+	_T("object_tools"),
+	_T("object_tools_acl"),
+	_T("object_tools_table_columns"),
+	_T("syslog"),
+	_T("script_library"),
+	_T("snmp_trap_log"),
+	_T("maps"),
+	_T("map_access_lists"),
+	_T("submaps"),
+	_T("submap_object_positions"),
+	_T("submap_links"),
+	_T("agent_configs"),
+	_T("address_lists"),
+	_T("graphs"),
+	_T("graph_acl"),
+	_T("certificates"),
+	_T("audit_log"),
+	_T("situations"),
+	_T("snmp_communities"),
+	_T("web_maps"),
+	_T("ap_common"),
+	_T("ap_bindings"),
+	_T("ap_config_files"),
+	_T("usm_credentials"),
 	NULL
 };
 
@@ -163,7 +163,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 	int i, columnCount = 0;
 	BOOL success = TRUE;
 
-	printf("Exporting table %s\n", name);
+	_tprintf(_T("Exporting table %s\n"), name);
 
 	if (sqlite3_exec(db, "BEGIN", NULL, NULL, &errmsg) == SQLITE_OK)
 	{
@@ -174,19 +174,19 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 		{
 			while(DBFetch(hResult))
 			{
-				query = "";
+				query = _T("");
 
 				// Column names
 				columnCount = DBGetColumnCountAsync(hResult);
-				query.addFormattedString("INSERT INTO %s (", name);
+				query.addFormattedString(_T("INSERT INTO %s ("), name);
 				for(i = 0; i < columnCount; i++)
 				{
 					DBGetColumnNameAsync(hResult, i, buffer, 256);
 					query += buffer;
-					query += ",";
+					query += _T(",");
 				}
 				query.shrink();
-				query += ") VALUES (";
+				query += _T(") VALUES (");
 
 				// Data
 				TCHAR data[8192];
@@ -194,18 +194,21 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				{
 					TCHAR *escapedString = EscapeString(DBGetFieldAsync(hResult, i, data, 8192));
 					query.addDynamicString(escapedString);
-					query += ",";
+					query += _T(",");
 				}
 				query.shrink();
-				query += ")";
+				query += _T(")");
 
-				if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)
+				char *utf8query = query.getUTF8String();
+				if (sqlite3_exec(db, utf8query, NULL, NULL, &errmsg) != SQLITE_OK)
 				{
-					printf("ERROR: SQLite query failed: %s\n   Query: %s\n", errmsg, (const TCHAR *)query);
+					free(utf8query);
+					printf("ERROR: SQLite query failed: %s\n   Query: %s\n", errmsg, utf8query);
 					sqlite3_free(errmsg);
 					success = FALSE;
 					break;
 				}
+				free(utf8query);
 			}
 			DBFreeAsyncResult(g_hCoreDB, hResult);
 
@@ -279,6 +282,7 @@ void ExportDatabase(const char *file)
 {
 	sqlite3 *db;
 	char *errmsg, buffer[MAX_PATH], queryTemplate[MAX_DB_STRING], *data;
+	TCHAR idataTable[128];
 	DWORD size;
 	int i, rowCount, version = 0;
 	DB_RESULT hResult;
@@ -342,7 +346,7 @@ void ExportDatabase(const char *file)
 	strcpy(buffer, DATADIR "/sql/dbschema_sqlite.sql");
 #endif
 
-	data = (char *)LoadFile(buffer, &size);
+	data = (char *)LoadFileA(buffer, &size);
 	if (data == NULL)
 	{
 		printf("ERROR: cannot load schema file \"%s\"\n", buffer);
@@ -351,7 +355,7 @@ void ExportDatabase(const char *file)
 
 	if (sqlite3_exec(db, data, NULL, NULL, &errmsg) != SQLITE_OK)
 	{
-		_tprintf(_T("ERROR: unable to apply database schema: %s\n"), errmsg);
+		printf("ERROR: unable to apply database schema: %s\n", errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
@@ -403,8 +407,8 @@ void ExportDatabase(const char *file)
 			goto cleanup;
 		}
 
-		snprintf(buffer, MAX_PATH, "idata_%d", DBGetFieldLong(hResult, i, 0));
-		if (!ExportTable(db, buffer))
+		_sntprintf(idataTable, 128, _T("idata_%d"), DBGetFieldLong(hResult, i, 0));
+		if (!ExportTable(db, idataTable))
 		{
 			DBFreeResult(hResult);
 			goto cleanup;

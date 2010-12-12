@@ -73,10 +73,7 @@ void NXSL_Compiler::error(const char *pszMsg)
    {
       snprintf(szText, 1024, "Error in line %d: %s", m_pLexer->getCurrLine(), pszMsg);
 #ifdef UNICODE
-      nLen = strlen(szText) + 1;
-      m_pszErrorText = (WCHAR *)malloc(nLen * sizeof(WCHAR));
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szText,
-                          -1, m_pszErrorText, nLen, NULL, NULL);
+		m_pszErrorText = WideStringFromMBString(pszMsg);
 #else
       m_pszErrorText = strdup(szText);
 #endif

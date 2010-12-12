@@ -577,10 +577,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\regex.c"
-				>
-			</File>
-			<File
 				RelativePath=".\rwlock.cpp"
 				>
 			</File>

@@ -172,7 +172,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
 {
    BOOL bResult = FALSE;
 
@@ -189,7 +189,7 @@ extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 // Unload handler
 //
 
-extern "C" void EXPORT DrvUnload(void)
+extern "C" void EXPORT DrvUnload()
 {
 }
 

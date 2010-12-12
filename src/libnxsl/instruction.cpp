@@ -47,7 +47,12 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
+#ifdef UNICODE
+	m_operand.m_pszString = WideStringFromUTF8String(pszString);
+	free(pszString);
+#else
    m_operand.m_pszString = pszString;
+#endif
    m_nStackItems = 0;
 }
 
@@ -55,7 +60,12 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int 
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
+#ifdef UNICODE
+	m_operand.m_pszString = WideStringFromUTF8String(pszString);
+	free(pszString);
+#else
    m_operand.m_pszString = pszString;
+#endif
    m_nStackItems = nStackItems;
 }
 
@@ -95,7 +105,7 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
       case OPCODE_GET_ATTRIBUTE:
       case OPCODE_SET_ATTRIBUTE:
 		case OPCODE_NAME:
-         m_operand.m_pszString = strdup(pSrc->m_operand.m_pszString);
+         m_operand.m_pszString = _tcsdup(pSrc->m_operand.m_pszString);
          break;
       default:
          m_operand.m_dwAddr = pSrc->m_operand.m_dwAddr;

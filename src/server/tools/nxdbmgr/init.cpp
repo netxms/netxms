@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: init.cpp
+** File: init.cpp
 **
 **/
 
@@ -73,13 +73,13 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 // Execute SQL batch file
 //
 
-BOOL ExecSQLBatch(const TCHAR *pszFile)
+BOOL ExecSQLBatch(const char *pszFile)
 {
    BYTE *pBatch, *pQuery, *pNext;
    DWORD dwSize;
    BOOL bResult = FALSE;
 
-   pBatch = LoadFile(pszFile, &dwSize);
+   pBatch = LoadFileA(pszFile, &dwSize);
    if (pBatch != NULL)
    {
       for(pQuery = pBatch; pQuery < pBatch + dwSize; pQuery = pNext)
@@ -87,7 +87,13 @@ BOOL ExecSQLBatch(const TCHAR *pszFile)
          pNext = FindEndOfQuery(pQuery, pBatch + dwSize);
          if (!IsEmptyQuery((char *)pQuery))
          {
-            bResult = SQLQuery((char *)pQuery);
+#ifdef UNICODE
+				WCHAR *wcQuery = WideStringFromMBString((char *)pQuery);
+            bResult = SQLQuery(wcQuery);
+				free(wcQuery);
+#else
+            bResult = SQLQuery(pQuery);
+#endif
             if (!bResult)
                pNext = pBatch + dwSize;
          }
@@ -96,7 +102,7 @@ BOOL ExecSQLBatch(const TCHAR *pszFile)
    }
    else
    {
-      _tprintf(_T("ERROR: Cannot load SQL command file %s\n"), pszFile);
+      printf("ERROR: Cannot load SQL command file %s\n", pszFile);
    }
    return bResult;
 }
@@ -106,7 +112,7 @@ BOOL ExecSQLBatch(const TCHAR *pszFile)
 // Initialize database
 //
 
-void InitDatabase(const TCHAR *pszInitFile)
+void InitDatabase(const char *pszInitFile)
 {
    uuid_t guid;
    TCHAR szQuery[256], szGUID[64];

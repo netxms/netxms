@@ -196,6 +196,9 @@ public:
    NXSL_Value(double dValue);
    NXSL_Value(const TCHAR *pszValue);
    NXSL_Value(const TCHAR *pszValue, DWORD dwLen);
+#ifdef UNICODE
+   NXSL_Value(const char *pszValue);
+#endif
    ~NXSL_Value();
 
    void set(LONG nValue);
@@ -259,7 +262,7 @@ public:
 
 struct NXSL_Function
 {
-   char m_szName[MAX_FUNCTION_NAME];
+   TCHAR m_szName[MAX_FUNCTION_NAME];
    DWORD m_dwAddr;
 };
 
@@ -272,7 +275,7 @@ class NXSL_Program;
 
 struct NXSL_ExtFunction
 {
-   char m_szName[MAX_FUNCTION_NAME];
+   TCHAR m_szName[MAX_FUNCTION_NAME];
    int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
    int m_iNumArgs;   // Number of arguments or -1 for variable number
 };
@@ -307,7 +310,7 @@ public:
 
    void setLibrary(NXSL_Library *pLib) { m_pLibrary = pLib; }
 
-   NXSL_ExtFunction *findFunction(char *pszName);
+   NXSL_ExtFunction *findFunction(const TCHAR *pszName);
    void registerFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList);
 
    BOOL useModule(NXSL_Program *main, const TCHAR *name);
@@ -374,7 +377,7 @@ protected:
    union
    {
       NXSL_Value *m_pConstant;
-      char *m_pszString;
+      TCHAR *m_pszString;
       DWORD m_dwAddr;
    } m_operand;
    int m_nStackItems;
@@ -398,7 +401,7 @@ public:
 
 struct NXSL_Module
 {
-   char m_szName[MAX_PATH];
+   TCHAR m_szName[MAX_PATH];
    DWORD m_dwCodeStart;
    DWORD m_dwCodeSize;
    DWORD m_dwFunctionStart;
@@ -420,7 +423,7 @@ protected:
    DWORD m_dwCurrPos;
 
    DWORD m_dwNumPreloads;
-   char **m_ppszPreloadList;
+   TCHAR **m_ppszPreloadList;
 
    DWORD m_dwSubLevel;
    NXSL_Stack *m_pDataStack;
@@ -451,7 +454,7 @@ protected:
    NXSL_Variable *findOrCreateVariable(TCHAR *pszName);
 	NXSL_Variable *createVariable(TCHAR *pszName);
 
-   DWORD getFunctionAddress(char *pszName);
+   DWORD getFunctionAddress(const TCHAR *pszName);
    void relocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);
 	DWORD getFinalJumpDestination(DWORD dwAddr);
 
@@ -465,7 +468,7 @@ public:
    void resolveLastJump(int nOpCode);
 	void createJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr);
    void addPreload(char *pszName);
-   void useModule(NXSL_Program *pModule, const char *pszName);
+   void useModule(NXSL_Program *pModule, const TCHAR *pszName);
 	void optimize();
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
@@ -493,7 +496,7 @@ class LIBNXSL_EXPORTABLE NXSL_Library
 private:
    DWORD m_dwNumScripts;
    NXSL_Program **m_ppScriptList;
-   char **m_ppszNames;
+   TCHAR **m_ppszNames;
    DWORD *m_pdwIdList;
    MUTEX m_mutex;
 

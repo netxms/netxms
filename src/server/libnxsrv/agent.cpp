@@ -87,8 +87,8 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
    if (pszSecret != NULL)
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
-                          pszSecret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
+		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pszSecret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
+		m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
       nx_strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH);
 #endif
@@ -252,7 +252,7 @@ void AgentConnection::ReceiverThread()
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DbgPrintf(6, "Received raw message %s from agent at %s",
+         DbgPrintf(6, _T("Received raw message %s from agent at %s"),
 			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(getIpAddr(), szIpAddr));
 
 			if ((pRawMsg->wCode == CMD_FILE_DATA) &&
@@ -890,7 +890,7 @@ DWORD AgentConnection::authenticate(BOOL bProxyData)
    DWORD dwRqId;
    BYTE hash[32];
    int iAuthMethod = bProxyData ? m_iProxyAuth : m_iAuthMethod;
-   char *pszSecret = bProxyData ? m_szProxySecret : m_szSecret;
+   const char *pszSecret = bProxyData ? m_szProxySecret : m_szSecret;
 #ifdef UNICODE
    WCHAR szBuffer[MAX_SECRET_LENGTH];
 #endif
@@ -1240,7 +1240,7 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 #ifdef UNICODE
             pBuffer = (BYTE *)malloc(*pdwSize + 1);
             pResponse->GetVariableBinary(VID_CONFIG_FILE, pBuffer, *pdwSize);
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pBuffer, *pdwSize, *ppszConfig, *pdwSize);
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pBuffer, *pdwSize, *ppszConfig, *pdwSize);
             free(pBuffer);
 #else
             pResponse->GetVariableBinary(VID_CONFIG_FILE, (BYTE *)(*ppszConfig), *pdwSize);
@@ -1295,7 +1295,7 @@ DWORD AgentConnection::updateConfigFile(const TCHAR *pszConfig)
    nChars = _tcslen(pszConfig);
    pBuffer = (BYTE *)malloc(nChars + 1);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                       pszConfig, nChars, pBuffer, nChars + 1, NULL, NULL);
+                       pszConfig, nChars, (char *)pBuffer, nChars + 1, NULL, NULL);
    msg.SetVariable(VID_CONFIG_FILE, pBuffer, nChars);
    free(pBuffer);
 #else
@@ -1496,7 +1496,7 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 						{
 							msg->SetVariable(VID_RCC, ERR_IO_FAILURE);
 							if (m_deleteFileOnDownloadFailure)
-								remove(recvFile);
+								_tremove(recvFile);
 						}
 					}
 					else
@@ -1508,7 +1508,7 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 				{
 					close(m_hCurrFile);
 					m_hCurrFile = -1;
-					remove(recvFile);
+					_tremove(recvFile);
 				}
 			}
 		}
@@ -1530,7 +1530,7 @@ DWORD AgentConnection::prepareFileDownload(const TCHAR *fileName, DWORD rqId, bo
 
 	nx_strncpy(m_currentFileName, fileName, MAX_PATH);
 	ConditionReset(m_condFileDownload);
-	m_hCurrFile = open(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
+	m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
 	if (m_hCurrFile == -1)
 	{
 		DbgPrintf(4, _T("AgentConnection::PrepareFileDownload(): cannot open file %s (%s); append=%d rqId=%d"),

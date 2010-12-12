@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,22 +40,28 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	String query;
 	int i;
 
-	query.addFormattedString("INSERT INTO %s (", arg);
+	query.addFormattedString(_T("INSERT INTO %s ("), arg);
 	for(i = 0; i < cols; i++)
 	{
-		query += names[i];
-		query += ",";
+		query.addMultiByteString(names[i], strlen(names[i]), CP_UTF8);
+		query += _T(",");
 	}
 	query.shrink();
-	query += ") VALUES (";
+	query += _T(") VALUES (");
 	for(i = 0; i < cols; i++)
 	{
+#ifdef UNICODE
+		WCHAR *wcData = WideStringFromUTF8String(data[i]);
+		String prepData = DBPrepareString(g_hCoreDB, wcData);
+		free(wcData);
+#else
 		String prepData = DBPrepareString(g_hCoreDB, data[i]);
+#endif
 		query += (const TCHAR *)prepData;
-		query += ",";
+		query += _T(",");
 	}
 	query.shrink();
-	query += ")";
+	query += _T(")");
 
 	return SQLQuery(query) ? 0 : 1;
 }
@@ -65,16 +71,22 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 // Import single database table
 //
 
-static BOOL ImportTable(sqlite3 *db, const char *table)
+static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 {
 	char query[256], *errmsg;
 	int rc;
 
-	printf("Importing table %s\n", table);
+	_tprintf(_T("Importing table %s\n"), table);
 
 	if (DBBegin(g_hCoreDB))
 	{
+#ifdef UNICODE
+		char *mbTable = MBStringFromWideString(table);
+		snprintf(query, 256, "SELECT * FROM %s", mbTable);
+		free(mbTable);
+#else
 		snprintf(query, 256, "SELECT * FROM %s", table);
+#endif
 		rc = sqlite3_exec(db, query, ImportTableCB, (void *)table, &errmsg);
 		if (rc == SQLITE_OK)
 		{

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: class.cpp
+** File: class.cpp
 **
 **/
 
@@ -27,29 +27,29 @@
 NXSL_TestClass::NXSL_TestClass()
                :NXSL_Class()
 {
-   strcpy(m_szName, "TEST");
+   _tcscpy(m_szName, _T("TEST"));
 }
 
 NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    NXSL_Value *pValue = NULL;
 
-   if (!strcmp(pszAttr, "name"))
+   if (!_tcscmp(pszAttr, _T("name")))
    {
-      pValue = new NXSL_Value("Demo Object");
+      pValue = new NXSL_Value(_T("Demo Object"));
    }
-   else if (!strcmp(pszAttr, "value"))
+   else if (!_tcscmp(pszAttr, _T("value")))
    {
-		pValue = new NXSL_Value((char *)pObject->getData());
+		pValue = new NXSL_Value((TCHAR *)pObject->getData());
    }
    return pValue;
 }
 
 BOOL NXSL_TestClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
 {
-   if (!strcmp(pszAttr, "value"))
+   if (!_tcscmp(pszAttr, _T("value")))
    {
-		_tcscpy((char *)pObject->getData(), CHECK_NULL(pValue->getValueAsCString()));
+		_tcscpy((TCHAR *)pObject->getData(), CHECK_NULL(pValue->getValueAsCString()));
 		return TRUE;
    }
    return FALSE;

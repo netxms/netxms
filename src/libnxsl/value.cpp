@@ -117,7 +117,7 @@ NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
       if (m_bStringIsValid)
       {
          m_dwStrLen = pValue->m_dwStrLen;
-         m_pszValStr = (char *)nx_memdup(pValue->m_pszValStr, m_dwStrLen + 1);
+         m_pszValStr = (TCHAR *)nx_memdup(pValue->m_pszValStr, (m_dwStrLen + 1) * sizeof(TCHAR));
       }
       else
       {
@@ -215,6 +215,28 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 	m_name = NULL;
 }
 
+#ifdef UNICODE
+
+NXSL_Value::NXSL_Value(const char *pszValue)
+{
+   m_nDataType = NXSL_DT_STRING;
+	if (pszValue != NULL)
+	{
+		m_pszValStr = WideStringFromUTF8String(pszValue);
+		m_dwStrLen = (DWORD)_tcslen(m_pszValStr);
+	}
+	else
+	{
+		m_dwStrLen = 0;
+		m_pszValStr = _tcsdup(_T(""));
+	}
+   m_bStringIsValid = TRUE;
+   updateNumber();
+	m_name = NULL;
+}
+
+#endif
+
 NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 {
    m_nDataType = NXSL_DT_STRING;
@@ -276,11 +298,11 @@ void NXSL_Value::set(LONG nValue)
 
 void NXSL_Value::updateNumber()
 {
-   char *eptr;
+   TCHAR *eptr;
    INT64 nVal;
    double dVal;
 
-   nVal = strtoll(m_pszValStr, &eptr, 0);
+   nVal = _tcstoll(m_pszValStr, &eptr, 0);
    if ((*eptr == 0) && ((DWORD)(eptr - m_pszValStr) == m_dwStrLen))
    {
       if (nVal > 0x7FFFFFFF)
@@ -296,7 +318,7 @@ void NXSL_Value::updateNumber()
    }
    else
    {
-      dVal = strtod(m_pszValStr, &eptr);
+      dVal = _tcstod(m_pszValStr, &eptr);
       if ((*eptr == 0) && ((DWORD)(eptr - m_pszValStr) == m_dwStrLen))
       {
          m_nDataType = NXSL_DT_REAL;
@@ -312,32 +334,32 @@ void NXSL_Value::updateNumber()
 
 void NXSL_Value::updateString()
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
    safe_free(m_pszValStr);
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         sprintf(szBuffer, "%d", m_value.nInt32);
+         _sntprintf(szBuffer, 64, _T("%d"), m_value.nInt32);
          break;
       case NXSL_DT_UINT32:
-         sprintf(szBuffer, "%u", m_value.uInt32);
+         _sntprintf(szBuffer, 64, _T("%u"), m_value.uInt32);
          break;
       case NXSL_DT_INT64:
-         sprintf(szBuffer, INT64_FMT, m_value.nInt64);
+         _sntprintf(szBuffer, 64, INT64_FMT, m_value.nInt64);
          break;
       case NXSL_DT_UINT64:
-         sprintf(szBuffer, UINT64_FMT, m_value.uInt64);
+         _sntprintf(szBuffer, 64, UINT64_FMT, m_value.uInt64);
          break;
       case NXSL_DT_REAL:
-         sprintf(szBuffer, "%f", m_value.dReal);
+         _sntprintf(szBuffer, 64, _T("%f"), m_value.dReal);
          break;
       default:
          szBuffer[0] = 0;
          break;
    }
-   m_dwStrLen = (DWORD)strlen(szBuffer);
-   m_pszValStr = strdup(szBuffer);
+   m_dwStrLen = (DWORD)_tcslen(szBuffer);
+   m_pszValStr = _tcsdup(szBuffer);
    m_bStringIsValid = TRUE;
 }
 
@@ -541,8 +563,8 @@ void NXSL_Value::concatenate(const TCHAR *pszString, DWORD dwLen)
 {
    if (!m_bStringIsValid)
       updateString();
-   m_pszValStr = (char *)realloc(m_pszValStr, m_dwStrLen + dwLen + 1);
-   memcpy(&m_pszValStr[m_dwStrLen], pszString, dwLen);
+   m_pszValStr = (TCHAR *)realloc(m_pszValStr, (m_dwStrLen + dwLen + 1) * sizeof(TCHAR));
+   memcpy(&m_pszValStr[m_dwStrLen], pszString, dwLen * sizeof(TCHAR));
    m_dwStrLen += dwLen;
    m_pszValStr[m_dwStrLen] = 0;
    updateNumber();

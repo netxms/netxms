@@ -41,10 +41,10 @@
 
 //
 // Interface to compiler
+// Source must be in UTF-8
 //
 
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource,
-                                             TCHAR *pszError, int nBufSize)
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize)
 {
    NXSL_Compiler compiler;
    NXSL_Program *pResult;
@@ -66,7 +66,7 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource,
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize)
 {
    int fd, iBufPos, iNumBytes, iBytesRead;
-   TCHAR *pBuffer = NULL;
+   char *pBuffer = NULL;
    struct stat fs;
 
    fd = _topen(pszFileName, O_RDONLY | O_BINARY);
@@ -74,7 +74,7 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, DWORD *pdwFileS
    {
       if (fstat(fd, &fs) != -1)
       {
-         pBuffer = (TCHAR *)malloc(fs.st_size + 1);
+         pBuffer = (char *)malloc(fs.st_size + 1);
          if (pBuffer != NULL)
          {
             *pdwFileSize = fs.st_size;
@@ -99,7 +99,17 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, DWORD *pdwFileS
       }
       close(fd);
    }
+
+#ifdef UNICODE
+	if (pBuffer == NULL)
+		return NULL;
+
+	WCHAR *ucBuffer = WideStringFromUTF8String(pBuffer);
+	free(pBuffer);
+	return ucBuffer;
+#else
    return pBuffer;
+#endif
 }
 
 

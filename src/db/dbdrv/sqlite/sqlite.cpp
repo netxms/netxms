@@ -222,7 +222,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
+extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
 {
    return sqlite3_threadsafe() &&	// Fail if SQLite compiled without threading support
 		    (sqlite3_initialize() == SQLITE_OK);
@@ -233,7 +233,7 @@ extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 // Unload handler
 //
 
-extern "C" void EXPORT DrvUnload(void)
+extern "C" void EXPORT DrvUnload()
 {
 	sqlite3_shutdown();
 }

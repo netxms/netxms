@@ -201,8 +201,7 @@ void String::addMultiByteString(const char *pStr, DWORD dwSize, int nCodePage)
 {
 #ifdef UNICODE
    m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
-	MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, pStr, dwSize, &m_pszBuffer[m_dwBufSize - 1], dwSize);
-   m_dwBufSize += dwSize;
+	m_dwBufSize += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, pStr, dwSize, &m_pszBuffer[m_dwBufSize - 1], dwSize);
 	m_pszBuffer[m_dwBufSize - 1] = 0;
 #else
 	addString(pStr, dwSize);
@@ -392,4 +391,18 @@ void String::shrink(int chars)
 		if (m_pszBuffer != NULL)
 			m_pszBuffer[m_dwBufSize - 1] = 0;
 	}
+}
+
+
+//
+// Get content as dynamically allocated UTF-8 string
+//
+
+char *String::getUTF8String()
+{
+#ifdef UNICODE
+	return UTF8StringFromWideString(m_pszBuffer);
+#else
+	return strdup(m_pszBuffer);
+#endif
 }

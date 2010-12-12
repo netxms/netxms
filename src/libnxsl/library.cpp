@@ -67,15 +67,15 @@ BOOL NXSL_Library::addScript(DWORD dwId, const TCHAR *pszName, NXSL_Program *pSc
    DWORD i;
 
    for(i = 0; i < m_dwNumScripts; i++)
-      if (!stricmp(m_ppszNames[i], pszName))
+      if (!_tcsicmp(m_ppszNames[i], pszName))
          return FALSE;
 
    m_dwNumScripts++;
    m_ppScriptList = (NXSL_Program **)realloc(m_ppScriptList, sizeof(NXSL_Program *) * m_dwNumScripts);
-   m_ppszNames = (char **)realloc(m_ppszNames, sizeof(char *) * m_dwNumScripts);
+   m_ppszNames = (TCHAR **)realloc(m_ppszNames, sizeof(char *) * m_dwNumScripts);
    m_pdwIdList = (DWORD *)realloc(m_pdwIdList, sizeof(DWORD) * m_dwNumScripts);
    m_ppScriptList[i] = pScript;
-   m_ppszNames[i] = strdup(pszName);
+   m_ppszNames[i] = _tcsdup(pszName);
    m_pdwIdList[i] = dwId;
    return TRUE;
 }
@@ -103,7 +103,7 @@ void NXSL_Library::deleteScript(const TCHAR *pszName)
    DWORD i;
 
    for(i = 0; i < m_dwNumScripts; i++)
-      if (!stricmp(m_ppszNames[i], pszName))
+      if (!_tcsicmp(m_ppszNames[i], pszName))
       {
          deleteInternal(i);
          break;
@@ -132,7 +132,7 @@ NXSL_Program *NXSL_Library::findScript(const TCHAR *pszName)
    DWORD i;
 
    for(i = 0; i < m_dwNumScripts; i++)
-      if (!stricmp(m_ppszNames[i], pszName))
+      if (!_tcsicmp(m_ppszNames[i], pszName))
       {
          return m_ppScriptList[i];
       }

@@ -56,22 +56,22 @@ static BOOL m_bVerbose = TRUE;
 // Get single parameter
 //
 
-static int Get(AgentConnection *pConn, char *pszParam, BOOL bShowName)
+static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
 {
    DWORD dwError;
-   char szBuffer[1024];
+   TCHAR szBuffer[1024];
 
    dwError = pConn->GetParameter(pszParam, 1024, szBuffer);
    if (dwError == ERR_SUCCESS)
    {
       if (bShowName)
-         printf("%s = %s\n", pszParam, szBuffer);
+         _tprintf(_T("%s = %s\n"), pszParam, szBuffer);
       else
-         printf("%s\n", szBuffer);
+         _tprintf(_T("%s\n"), szBuffer);
    }
    else
    {
-      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    fflush(stdout);
    return (dwError == ERR_SUCCESS) ? 0 : 1;
@@ -82,7 +82,7 @@ static int Get(AgentConnection *pConn, char *pszParam, BOOL bShowName)
 // Get list of values for enum parameters
 //
 
-static int List(AgentConnection *pConn, char *pszParam)
+static int List(AgentConnection *pConn, const TCHAR *pszParam)
 {
    DWORD i, dwNumLines, dwError;
 
@@ -91,11 +91,11 @@ static int List(AgentConnection *pConn, char *pszParam)
    {
       dwNumLines = pConn->getNumDataLines();
       for(i = 0; i < dwNumLines; i++)
-         printf("%s\n", pConn->getDataLine(i));
+         _tprintf(_T("%s\n"), pConn->getDataLine(i));
    }
    else
    {
-      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -106,7 +106,7 @@ static int List(AgentConnection *pConn, char *pszParam)
 //
 
 static int CheckService(AgentConnection *pConn, int iServiceType, DWORD dwServiceAddr,
-                        WORD wProto, WORD wPort, char *pszRequest, char *pszResponse)
+                        WORD wProto, WORD wPort, const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
    DWORD dwStatus, dwError;
 
@@ -118,7 +118,7 @@ static int CheckService(AgentConnection *pConn, int iServiceType, DWORD dwServic
    }
    else
    {
-      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -132,14 +132,14 @@ static int ListParameters(AgentConnection *pConn)
 {
    DWORD i, dwNumParams, dwError;
    NXC_AGENT_PARAM *pParamList;
-   static const char *pszDataType[] = { "INT", "UINT", "INT64", "UINT64", "STRING", "FLOAT", "UNKNOWN" };
+   static const TCHAR *pszDataType[] = { _T("INT"), _T("UINT"), _T("INT64"), _T("UINT64"), _T("STRING"), _T("FLOAT"), _T("UNKNOWN") };
 
    dwError = pConn->GetSupportedParameters(&dwNumParams, &pParamList);
    if (dwError == ERR_SUCCESS)
    {
       for(i = 0; i < dwNumParams; i++)
       {
-         printf("%s %s \"%s\"\n", pParamList[i].szName,
+         _tprintf(_T("%s %s \"%s\"\n"), pParamList[i].szName,
             pszDataType[(pParamList[i].iDataType < 6) && (pParamList[i].iDataType >= 0) ? pParamList[i].iDataType : 6],
             pParamList[i].szDescription);
       }
@@ -147,7 +147,7 @@ static int ListParameters(AgentConnection *pConn)
    }
    else
    {
-      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -165,11 +165,11 @@ static int GetConfig(AgentConnection *pConn)
    dwError = pConn->GetConfigFile(&pszFile, &dwSize);
    if (dwError == ERR_SUCCESS)
    {
-      TranslateStr(pszFile, "\r\n", "\n");
-      fputs(pszFile, stdout);
+      TranslateStr(pszFile, _T("\r\n"), _T("\n"));
+      _fputts(pszFile, stdout);
       if (dwSize > 0)
       {
-         if (pszFile[dwSize - 1] != '\n')
+         if (pszFile[dwSize - 1] != _T('\n'))
             fputc('\n', stdout);
       }
       else
@@ -179,7 +179,7 @@ static int GetConfig(AgentConnection *pConn)
    }
    else
    {
-      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -203,14 +203,18 @@ int main(int argc, char *argv[])
    WORD wAgentPort = AGENT_LISTEN_PORT, wProxyPort = AGENT_LISTEN_PORT;
    WORD wServicePort = 0, wServiceProto = 0;
    DWORD dwTimeout = 5000, dwConnTimeout = 30000, dwServiceAddr = 0, dwError, dwAddr, dwProxyAddr;
-   char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "";
-   char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = "";
-   char szProxy[MAX_OBJECT_NAME] = "", szProxySecret[MAX_SECRET_LENGTH] = "";
+   TCHAR szSecret[MAX_SECRET_LENGTH] = _T(""), szRequest[MAX_DB_STRING] = _T("");
+   TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = _T("");
+   char szProxy[MAX_OBJECT_NAME] = "";
+	TCHAR szProxySecret[MAX_SECRET_LENGTH] = _T("");
    RSA *pServerKey = NULL;
+#ifdef UNICODE
+	WCHAR *wcValue;
+#endif
 
    InitThreadLibrary();
 #ifdef _WIN32
-	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, "nxget", 0, FALSE, FALSE);
+	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, _T("nxget"), 0, FALSE, FALSE);
 #endif
 
    // Parse command line
@@ -220,47 +224,47 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n"
-                   "Valid options are:\n"
-                   "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
-                   "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
-                   "   -A <auth>    : Authentication method for proxy agent.\n"
-                   "   -b           : Batch mode - get all parameters listed on command line.\n"
-                   "   -C           : Get agent's configuration file\n"
+            _tprintf(_T("Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n")
+                     _T("Valid options are:\n")
+                     _T("   -a <auth>    : Authentication method. Valid methods are \"none\",\n")
+                     _T("                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n")
+                     _T("   -A <auth>    : Authentication method for proxy agent.\n")
+                     _T("   -b           : Batch mode - get all parameters listed on command line.\n")
+                     _T("   -C           : Get agent's configuration file\n")
 #ifdef _WITH_ENCRYPTION
-                   "   -e <policy>  : Set encryption policy. Possible values are:\n"
-                   "                    0 = Encryption disabled;\n"
-                   "                    1 = Encrypt connection only if agent requires encryption;\n"
-                   "                    2 = Encrypt connection if agent supports encryption;\n"
-                   "                    3 = Force encrypted connection;\n"
-                   "                  Default value is 1.\n"
+                     _T("   -e <policy>  : Set encryption policy. Possible values are:\n")
+                     _T("                    0 = Encryption disabled;\n")
+                     _T("                    1 = Encrypt connection only if agent requires encryption;\n")
+                     _T("                    2 = Encrypt connection if agent supports encryption;\n")
+                     _T("                    3 = Force encrypted connection;\n")
+                     _T("                  Default value is 1.\n")
 #endif
-                   "   -h           : Display help and exit.\n"
-                   "   -i <seconds> : Get specified parameter(s) continously with given interval.\n"
-                   "   -I           : Get list of supported parameters.\n"
+                     _T("   -h           : Display help and exit.\n")
+                     _T("   -i <seconds> : Get specified parameter(s) continously with given interval.\n")
+                     _T("   -I           : Get list of supported parameters.\n")
 #ifdef _WITH_ENCRYPTION
-                   "   -K <file>    : Specify server's key file\n"
-                   "                  (default is " DEFAULT_DATA_DIR DFILE_KEYS ").\n"
+                     _T("   -K <file>    : Specify server's key file\n")
+                     _T("                  (default is ") DEFAULT_DATA_DIR DFILE_KEYS _T(").\n")
 #endif
-                   "   -l           : Get list of values for enum parameter.\n"
-                   "   -n           : Show parameter's name in result.\n"
-                   "   -O <port>    : Proxy agent's port number. Default is %d.\n"
-                   "   -p <port>    : Agent's port number. Default is %d.\n"
-                   "   -P <port>    : Network service port (to be used wth -S option).\n"
-                   "   -q           : Quiet mode.\n"
-                   "   -r <string>  : Service check request string.\n"
-                   "   -R <string>  : Service check expected response string.\n"
-                   "   -s <secret>  : Shared secret for authentication.\n"
-                   "   -S <addr>    : Check state of network service at given address.\n"
-                   "   -t <type>    : Set type of service to be checked.\n"
-						 "                  Possible types are: custom, ssh, pop3, smtp, ftp, http, telnet.\n"
-                   "   -T <proto>   : Protocol number to be used for service check.\n"
-                   "   -v           : Display version and exit.\n"
-                   "   -w <seconds> : Set command timeout (default is 5 seconds).\n"
-                   "   -W <seconds> : Set connection timeout (default is 30 seconds).\n"
-                   "   -X <addr>    : Use proxy agent at given address.\n"
-                   "   -Z <secret>  : Shared secret for proxy agent authentication.\n"
-                   "\n", wAgentPort, wAgentPort);
+                     _T("   -l           : Get list of values for enum parameter.\n")
+                     _T("   -n           : Show parameter's name in result.\n")
+                     _T("   -O <port>    : Proxy agent's port number. Default is %d.\n")
+                     _T("   -p <port>    : Agent's port number. Default is %d.\n")
+                     _T("   -P <port>    : Network service port (to be used wth -S option).\n")
+                     _T("   -q           : Quiet mode.\n")
+                     _T("   -r <string>  : Service check request string.\n")
+                     _T("   -R <string>  : Service check expected response string.\n")
+                     _T("   -s <secret>  : Shared secret for authentication.\n")
+                     _T("   -S <addr>    : Check state of network service at given address.\n")
+                     _T("   -t <type>    : Set type of service to be checked.\n")
+				         _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, telnet.\n")
+                     _T("   -T <proto>   : Protocol number to be used for service check.\n")
+                     _T("   -v           : Display version and exit.\n")
+                     _T("   -w <seconds> : Set command timeout (default is 5 seconds).\n")
+                     _T("   -W <seconds> : Set connection timeout (default is 30 seconds).\n")
+                     _T("   -X <addr>    : Use proxy agent at given address.\n")
+                     _T("   -Z <secret>  : Shared secret for proxy agent authentication.\n")
+                     _T("\n"), wAgentPort, wAgentPort);
             bStart = FALSE;
             break;
          case 'a':   // Auth method
@@ -333,13 +337,28 @@ int main(int argc, char *argv[])
             m_bVerbose = FALSE;
             break;
          case 'r':   // Service check request string
+#ifdef UNICODE
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szRequest, MAX_DB_STRING);
+				szRequest[MAX_DB_STRING - 1] = 0;
+#else
             nx_strncpy(szRequest, optarg, MAX_DB_STRING);
+#endif
             break;
          case 'R':   // Service check response string
+#ifdef UNICODE
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szResponse, MAX_DB_STRING);
+				szResponse[MAX_DB_STRING - 1] = 0;
+#else
             nx_strncpy(szResponse, optarg, MAX_DB_STRING);
+#endif
             break;
          case 's':   // Shared secret
+#ifdef UNICODE
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szSecret, MAX_SECRET_LENGTH);
+				szSecret[MAX_SECRET_LENGTH - 1] = 0;
+#else
             nx_strncpy(szSecret, optarg, MAX_SECRET_LENGTH);
+#endif
             break;
          case 'S':   // Check service
             iCommand = CMD_CHECK_SERVICE;
@@ -402,7 +421,7 @@ int main(int argc, char *argv[])
             }
             break;
          case 'v':   // Print version and exit
-            printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "\n");
+            _tprintf(_T("NetXMS GET command-line utility Version ") NETXMS_VERSION_STRING _T("\n"));
             bStart = FALSE;
             break;
          case 'w':   // Command timeout
@@ -440,7 +459,12 @@ int main(int argc, char *argv[])
             }
             break;
          case 'K':
+#ifdef UNICODE
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szKeyFile, MAX_PATH);
+				szKeyFile[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(szKeyFile, optarg, MAX_PATH);
+#endif
             break;
 #else
          case 'e':
@@ -451,10 +475,16 @@ int main(int argc, char *argv[])
 #endif
          case 'X':   // Use proxy
             strncpy(szProxy, optarg, MAX_OBJECT_NAME);
+				szProxy[MAX_OBJECT_NAME - 1] = 0;
             bUseProxy = TRUE;
             break;
          case 'Z':   // Shared secret for proxy agent
+#ifdef UNICODE
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szProxySecret, MAX_SECRET_LENGTH);
+				szProxySecret[MAX_SECRET_LENGTH - 1] = 0;
+#else
             nx_strncpy(szProxySecret, optarg, MAX_SECRET_LENGTH);
+#endif
             break;
          case '?':
             bStart = FALSE;
@@ -487,7 +517,7 @@ int main(int argc, char *argv[])
             pServerKey = LoadRSAKeys(szKeyFile);
             if (pServerKey == NULL)
             {
-               printf("Error loading RSA keys from \"%s\"\n", szKeyFile);
+               _tprintf(_T("Error loading RSA keys from \"%s\"\n"), szKeyFile);
                if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
                   bStart = FALSE;
             }
@@ -509,9 +539,9 @@ int main(int argc, char *argv[])
          WSADATA wsaData;
          WSAStartup(2, &wsaData);
 #endif
-         dwAddr = ResolveHostName(argv[optind]);
+         dwAddr = ResolveHostNameA(argv[optind]);
          if (bUseProxy)
-            dwProxyAddr = ResolveHostName(szProxy);
+            dwProxyAddr = ResolveHostNameA(szProxy);
          if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
          {
             fprintf(stderr, "Invalid host name or address \"%s\"\n", argv[optind]);
@@ -539,11 +569,23 @@ int main(int argc, char *argv[])
                         iPos = optind + 1;
                         do
                         {
+#ifdef UNICODE
+									wcValue = WideStringFromMBString(argv[iPos++]);
+                           iExitCode = Get(&conn, wcValue, bShowNames);
+									free(wcValue);
+#else
                            iExitCode = Get(&conn, argv[iPos++], bShowNames);
+#endif
                         } while((iExitCode == 0) && (bBatchMode) && (iPos < argc));
                         break;
                      case CMD_LIST:
+#ifdef UNICODE
+								wcValue = WideStringFromMBString(argv[optind + 1]);
+                        iExitCode = List(&conn, wcValue);
+								free(wcValue);
+#else
                         iExitCode = List(&conn, argv[optind + 1]);
+#endif
                         break;
                      case CMD_CHECK_SERVICE:
                         iExitCode = CheckService(&conn, iServiceType, dwServiceAddr,
@@ -565,7 +607,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+               _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
          }
