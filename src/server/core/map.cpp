@@ -489,7 +489,7 @@ void LoadMaps(void)
    DB_RESULT hResult;
    DWORD i;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT map_id,map_name,description,root_object_id FROM maps");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT map_id,map_name,description,root_object_id FROM maps"));
    if (hResult != NULL)
    {
       m_dwNumMaps = DBGetNumRows(hResult);

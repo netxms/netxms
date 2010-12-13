@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003 - 2008 Victor Kirhenshtein and Alex Kirhenshtein
+** Copyright (C) 2003 - 2010 Victor Kirhenshtein and Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,64 +39,119 @@ extern "C" const char EXPORT *drvName = "PGSQL";
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
-	out[0] = _T('\'');
+	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
+	out[0] = L'\'';
 
-	const TCHAR *src = str;
+	const WCHAR *src = str;
 	int outPos;
 	for(outPos = 1; *src != NULL; src++)
 	{
-#ifdef UNICODE
 		long chval = *src;
-#else
-		long chval = (long)(*((unsigned char *)src));
-#endif
 		if (chval < 32)
 		{
-			TCHAR buffer[8];
+			WCHAR buffer[8];
 
-			_sntprintf(buffer, 8, _T("\\%03o"), chval);
+			snwprintf(buffer, 8, L"\\%03o", chval);
 			len += 4;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
 			}
-			memcpy(&out[outPos], buffer, 4 * sizeof(TCHAR));
+			memcpy(&out[outPos], buffer, 4 * sizeof(WCHAR));
 			outPos += 4;
 		}
-		else if (*src == _T('\''))
+		else if (*src == L'\'')
 		{
 			len++;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
 			}
-			out[outPos++] = _T('\'');
-			out[outPos++] = _T('\'');
+			out[outPos++] = L'\'';
+			out[outPos++] = L'\'';
 		}
-		else if (*src == _T('\\'))
+		else if (*src == L'\\')
 		{
 			len++;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
 			}
-			out[outPos++] = _T('\\');
-			out[outPos++] = _T('\\');
+			out[outPos++] = L'\\';
+			out[outPos++] = L'\\';
 		}
 		else
 		{
 			out[outPos++] = *src;
 		}
 	}
-	out[outPos++] = _T('\'');
+	out[outPos++] = L'\'';
+	out[outPos++] = 0;
+
+	return out;
+}
+
+extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+{
+	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	char *out = (char *)malloc(bufferSize);
+	out[0] = '\'';
+
+	const char *src = str;
+	int outPos;
+	for(outPos = 1; *src != NULL; src++)
+	{
+		long chval = (long)(*((unsigned char *)src));
+		if (chval < 32)
+		{
+			TCHAR buffer[8];
+
+			snprintf(buffer, 8, "\\%03o", chval);
+			len += 4;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (char *)realloc(out, bufferSize);
+			}
+			memcpy(&out[outPos], buffer, 4);
+			outPos += 4;
+		}
+		else if (*src == '\'')
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (char *)realloc(out, bufferSize);
+			}
+			out[outPos++] = '\'';
+			out[outPos++] = '\'';
+		}
+		else if (*src == '\\')
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (char *)realloc(out, bufferSize);
+			}
+			out[outPos++] = '\\';
+			out[outPos++] = '\\';
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = '\'';
 	out[outPos++] = 0;
 
 	return out;
@@ -108,7 +162,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
 	return TRUE;
 }
@@ -191,7 +245,7 @@ extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
 // Perform non-SELECT query
 //
 
-static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
+static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, WCHAR *errorText)
 {
 	PGresult	*pResult;
 
@@ -200,7 +254,7 @@ static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
 	if (pResult == NULL)
 	{
 		if (errorText != NULL)
-			nx_strncpy(errorText, _T("Internal error (pResult is NULL in UnsafeDrvQuery)"), DBDRV_MAX_ERROR_TEXT);
+			wcsncpy(errorText, L"Internal error (pResult is NULL in UnsafeDrvQuery)", DBDRV_MAX_ERROR_TEXT);
 		return FALSE;
 	}
 
@@ -208,8 +262,9 @@ static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
 	{
 		if (errorText != NULL)
 		{
-			nx_strncpy(errorText, PQerrorMessage(pConn->pHandle), DBDRV_MAX_ERROR_TEXT);
-			RemoveTrailingCRLF(errorText);
+			MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->pHandle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			RemoveTrailingCRLFW(errorText);
 		}
 		PQclear(pResult);
 		return FALSE;
@@ -221,7 +276,7 @@ static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
    return TRUE;
 }
 
-extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
    char *pszQueryUTF8;
@@ -250,7 +305,7 @@ extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorT
 // Perform SELECT query
 //
 
-static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
+static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, WCHAR *errorText)
 {
 	PGresult	*pResult;
 
@@ -259,7 +314,7 @@ static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorT
 	if (pResult == NULL)
 	{
 		if (errorText != NULL)
-			nx_strncpy(errorText, _T("Internal error (pResult is NULL in UnsafeDrvSelect)"), DBDRV_MAX_ERROR_TEXT);
+			wcsncpy(errorText, L"Internal error (pResult is NULL in UnsafeDrvSelect)", DBDRV_MAX_ERROR_TEXT);
 		return NULL;
 	}
 
@@ -269,8 +324,9 @@ static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorT
 		
 		if (errorText != NULL)
 		{
-			nx_strncpy(errorText, PQerrorMessage(pConn->pHandle), DBDRV_MAX_ERROR_TEXT);
-			RemoveTrailingCRLF(errorText);
+			MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->pHandle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			RemoveTrailingCRLFW(errorText);
 		}
 		PQclear(pResult);
 		return NULL;
@@ -281,7 +337,7 @@ static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorT
    return (DBDRV_RESULT)pResult;
 }
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	DBDRV_RESULT pResult;
    char *pszQueryUTF8;
@@ -390,8 +446,7 @@ extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	BOOL bSuccess = FALSE;
    char *pszReq, *pszQueryUTF8;

@@ -43,15 +43,15 @@ NXSL_Value *NXSL_NetXMSObjectClass::getAttr(NXSL_Object *pObject, const TCHAR *p
    pSysObj = (NetObj *)pObject->getData();
    if (pSysObj != NULL)
    {
-      if (!strcmp(pszAttr, "id"))
+      if (!_tcscmp(pszAttr, "id"))
       {
          pValue = new NXSL_Value(pSysObj->Id());
       }
-      else if (!strcmp(pszAttr, "name"))
+      else if (!_tcscmp(pszAttr, "name"))
       {
          pValue = new NXSL_Value((char *)pSysObj->Name());
       }
-      else if (!strcmp(pszAttr, "ipAddr"))
+      else if (!_tcscmp(pszAttr, "ipAddr"))
       {
          pValue = new NXSL_Value(IpToStr(pSysObj->IpAddr(), szBuffer));
       }
@@ -121,7 +121,7 @@ void ReloadScript(DWORD dwScriptId)
    g_pScriptLibrary->lock();
    g_pScriptLibrary->deleteScript(dwScriptId);
    
-   _stprintf(szQuery, _T("SELECT script_name,script_code FROM script_library WHERE script_id=%d"), dwScriptId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT script_name,script_code FROM script_library WHERE script_id=%d"), dwScriptId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {

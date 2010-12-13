@@ -61,13 +61,13 @@ CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 
 Queue *g_pTemplateUpdateQueue = NULL;
 
-const char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
-                              "Network", "Container", "Zone", "ServiceRoot",
-                              "Template", "TemplateGroup", "TemplateRoot",
-                              "NetworkService", "VPNConnector", "Condition",
-                              "Cluster", "PolicyGroup", "PolicyRoot",
-                              "AgentPolicy", "AgentPolicyConfig", "NetworkMapRoot",
-                              "NetworkMapGroup", "NetworkMap" };
+const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
+                               _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
+                               _T("Template"), _T("TemplateGroup"), _T("TemplateRoot"),
+                               _T("NetworkService"), _T("VPNConnector"), _T("Condition"),
+                               _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
+                               _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
+                               _T("NetworkMapGroup"), _T("NetworkMap") };
 
 
 //
@@ -188,13 +188,13 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 void ObjectsInit()
 {
    // Load default status calculation info
-   m_iStatusCalcAlg = ConfigReadInt("StatusCalculationAlgorithm", SA_CALCULATE_MOST_CRITICAL);
-   m_iStatusPropAlg = ConfigReadInt("StatusPropagationAlgorithm", SA_PROPAGATE_UNCHANGED);
-   m_iFixedStatus = ConfigReadInt("FixedStatusValue", STATUS_NORMAL);
-   m_iStatusShift = ConfigReadInt("StatusShift", 0);
-   ConfigReadByteArray("StatusTranslation", m_iStatusTranslation, 4, STATUS_WARNING);
-   m_iStatusSingleThreshold = ConfigReadInt("StatusSingleThreshold", 75);
-   ConfigReadByteArray("StatusThresholds", m_iStatusThresholds, 4, 50);
+   m_iStatusCalcAlg = ConfigReadInt(_T("StatusCalculationAlgorithm"), SA_CALCULATE_MOST_CRITICAL);
+   m_iStatusPropAlg = ConfigReadInt(_T("StatusPropagationAlgorithm"), SA_PROPAGATE_UNCHANGED);
+   m_iFixedStatus = ConfigReadInt(_T("FixedStatusValue"), STATUS_NORMAL);
+   m_iStatusShift = ConfigReadInt(_T("StatusShift"), 0);
+   ConfigReadByteArray(_T("StatusTranslation"), m_iStatusTranslation, 4, STATUS_WARNING);
+   m_iStatusSingleThreshold = ConfigReadInt(_T("StatusSingleThreshold"), 75);
+   ConfigReadByteArray(_T("StatusThresholds"), m_iStatusThresholds, 4, 50);
 
    g_pTemplateUpdateQueue = new Queue;
 
@@ -205,27 +205,27 @@ void ObjectsInit()
    g_rwlockZoneIndex = RWLockCreate();
    g_rwlockConditionIndex = RWLockCreate();
 
-   // Create "Entire Network" object
+   // Create _T("Entire Network") object
    g_pEntireNet = new Network;
    NetObjInsert(g_pEntireNet, FALSE);
 
-   // Create "Service Root" object
+   // Create _T("Service Root") object
    g_pServiceRoot = new ServiceRoot;
    NetObjInsert(g_pServiceRoot, FALSE);
 
-   // Create "Template Root" object
+   // Create _T("Template Root") object
    g_pTemplateRoot = new TemplateRoot;
    NetObjInsert(g_pTemplateRoot, FALSE);
 
-	// Create "Policy Root" object
+	// Create _T("Policy Root") object
    g_pPolicyRoot = new PolicyRoot;
    NetObjInsert(g_pPolicyRoot, FALSE);
    
-	// Create "Network Maps Root" object
+	// Create _T("Network Maps Root") object
    g_pMapRoot = new NetworkMapRoot;
    NetObjInsert(g_pMapRoot, FALSE);
    
-	DbgPrintf(1, "Built-in objects created");
+	DbgPrintf(1, _T("Built-in objects created"));
 
    // Start template update applying thread
    ThreadCreate(ApplyTemplateThread, 0, NULL);
@@ -324,20 +324,20 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
       // Create table for storing data collection values
       if (pObject->Type() == OBJECT_NODE)
       {
-         char szQuery[256], szQueryTemplate[256];
+         TCHAR szQuery[256], szQueryTemplate[256];
          DWORD i;
 
-         MetaDataReadStr("IDataTableCreationCommand", szQueryTemplate, 255, "");
-         sprintf(szQuery, szQueryTemplate, pObject->Id());
+         MetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id());
          DBQuery(g_hCoreDB, szQuery);
 
          for(i = 0; i < 10; i++)
          {
-            sprintf(szQuery, "IDataIndexCreationCommand_%d", i);
-            MetaDataReadStr(szQuery, szQueryTemplate, 255, "");
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("IDataIndexCreationCommand_%d"), i);
+            MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
             if (szQueryTemplate[0] != 0)
             {
-               sprintf(szQuery, szQueryTemplate, pObject->Id(), pObject->Id());
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id(), pObject->Id());
                DBQuery(g_hCoreDB, szQuery);
             }
          }
@@ -720,14 +720,14 @@ BOOL LoadObjects()
    DWORD i, dwNumRows;
    DWORD dwId;
    Template *pTemplate;
-   char szQuery[256];
+   TCHAR szQuery[256];
 
    // Prevent objects to change it's modification flag
    g_bModificationsLocked = TRUE;
 
    // Load container categories
-   DbgPrintf(2, "Loading container categories...");
-   hResult = DBSelect(g_hCoreDB, "SELECT category,name,image_id,description FROM container_categories");
+   DbgPrintf(2, _T("Loading container categories..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT category,name,image_id,description FROM container_categories"));
    if (hResult != NULL)
    {
       g_dwNumCategories = DBGetNumRows(hResult);
@@ -744,7 +744,7 @@ BOOL LoadObjects()
    }
 
    // Load built-in object properties
-   DbgPrintf(2, "Loading built-in object properties...");
+   DbgPrintf(2, _T("Loading built-in object properties..."));
    g_pEntireNet->LoadFromDB();
    g_pServiceRoot->LoadFromDB();
    g_pTemplateRoot->LoadFromDB();
@@ -756,7 +756,7 @@ BOOL LoadObjects()
    {
       Zone *pZone;
 
-      DbgPrintf(2, "Loading zones...");
+      DbgPrintf(2, _T("Loading zones..."));
 
       // Load (or create) default zone
       pZone = new Zone;
@@ -764,7 +764,7 @@ BOOL LoadObjects()
       NetObjInsert(pZone, FALSE);
       g_pEntireNet->AddZone(pZone);
 
-      hResult = DBSelect(g_hCoreDB, "SELECT id FROM zones WHERE id<>4");
+      hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM zones WHERE id<>4"));
       if (hResult != 0)
       {
          dwNumRows = DBGetNumRows(hResult);
@@ -791,8 +791,8 @@ BOOL LoadObjects()
    // Load conditions
    // We should load conditions before nodes because
    // DCI cache size calculation uses information from condition objects
-   DbgPrintf(2, "Loading conditions...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM conditions");
+   DbgPrintf(2, _T("Loading conditions..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM conditions"));
    if (hResult != NULL)
    {
       Condition *pCondition;
@@ -816,8 +816,8 @@ BOOL LoadObjects()
    }
 
    // Load subnets
-   DbgPrintf(2, "Loading subnets...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets");
+   DbgPrintf(2, _T("Loading subnets..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM subnets"));
    if (hResult != 0)
    {
       Subnet *pSubnet;
@@ -856,8 +856,8 @@ BOOL LoadObjects()
    }
 
    // Load nodes
-   DbgPrintf(2, "Loading nodes...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM nodes");
+   DbgPrintf(2, _T("Loading nodes..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM nodes"));
    if (hResult != 0)
    {
       Node *pNode;
@@ -884,8 +884,8 @@ BOOL LoadObjects()
    }
 
    // Load interfaces
-   DbgPrintf(2, "Loading interfaces...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM interfaces");
+   DbgPrintf(2, _T("Loading interfaces..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM interfaces"));
    if (hResult != 0)
    {
       Interface *pInterface;
@@ -909,8 +909,8 @@ BOOL LoadObjects()
    }
 
    // Load network services
-   DbgPrintf(2, "Loading network services...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM network_services");
+   DbgPrintf(2, _T("Loading network services..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM network_services"));
    if (hResult != 0)
    {
       NetworkService *pService;
@@ -934,8 +934,8 @@ BOOL LoadObjects()
    }
 
    // Load VPN connectors
-   DbgPrintf(2, "Loading VPN connectors...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM vpn_connectors");
+   DbgPrintf(2, _T("Loading VPN connectors..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM vpn_connectors"));
    if (hResult != NULL)
    {
       VPNConnector *pConnector;
@@ -959,8 +959,8 @@ BOOL LoadObjects()
    }
 
    // Load clusters
-   DbgPrintf(2, "Loading clusters...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM clusters");
+   DbgPrintf(2, _T("Loading clusters..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM clusters"));
    if (hResult != NULL)
    {
       Cluster *pCluster;
@@ -984,8 +984,8 @@ BOOL LoadObjects()
    }
 
    // Load templates
-   DbgPrintf(2, "Loading templates...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");
+   DbgPrintf(2, _T("Loading templates..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM templates"));
    if (hResult != NULL)
    {
       dwNumRows = DBGetNumRows(hResult);
@@ -1008,8 +1008,8 @@ BOOL LoadObjects()
    }
 
    // Load agent policies
-   DbgPrintf(2, "Loading agent policies...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id,policy_type FROM ap_common");
+   DbgPrintf(2, _T("Loading agent policies..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id,policy_type FROM ap_common"));
    if (hResult != NULL)
    {
       dwNumRows = DBGetNumRows(hResult);
@@ -1043,8 +1043,8 @@ BOOL LoadObjects()
    }
 
    // Load agent policies
-   DbgPrintf(2, "Loading network maps...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM network_maps");
+   DbgPrintf(2, _T("Loading network maps..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM network_maps"));
    if (hResult != NULL)
    {
       dwNumRows = DBGetNumRows(hResult);
@@ -1066,8 +1066,8 @@ BOOL LoadObjects()
    }
 
    // Load container objects
-   DbgPrintf(2, "Loading containers...");
-   sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_CONTAINER);
+   DbgPrintf(2, _T("Loading containers..."));
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_CONTAINER);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
@@ -1092,8 +1092,8 @@ BOOL LoadObjects()
    }
 
    // Load template group objects
-   DbgPrintf(2, "Loading template groups...");
-   sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_TEMPLATEGROUP);
+   DbgPrintf(2, _T("Loading template groups..."));
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), "SELECT id FROM containers WHERE object_class=%d", OBJECT_TEMPLATEGROUP);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
@@ -1118,8 +1118,8 @@ BOOL LoadObjects()
    }
 
    // Load policy group objects
-   DbgPrintf(2, "Loading policy groups...");
-   sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_POLICYGROUP);
+   DbgPrintf(2, _T("Loading policy groups..."));
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_POLICYGROUP);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
@@ -1144,8 +1144,8 @@ BOOL LoadObjects()
    }
 
    // Load map group objects
-   DbgPrintf(2, "Loading map groups...");
-   sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_NETWORKMAPGROUP);
+   DbgPrintf(2, _T("Loading map groups..."));
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_NETWORKMAPGROUP);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
@@ -1170,7 +1170,7 @@ BOOL LoadObjects()
    }
 
    // Link childs to container and template group objects
-   DbgPrintf(2, "Linking objects...");
+   DbgPrintf(2, _T("Linking objects..."));
    for(i = 0; i < g_dwIdIndexSize; i++)
       if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CONTAINER) ||
           (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATEGROUP) ||
@@ -1178,7 +1178,7 @@ BOOL LoadObjects()
           (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NETWORKMAPGROUP))
          ((Container *)g_pIndexById[i].pObject)->LinkChildObjects();
 
-   // Link childs to "Service Root" and "Template Root" objects
+   // Link childs to _T("Service Root" and "Template Root") objects
    g_pServiceRoot->LinkChildObjects();
    g_pTemplateRoot->LinkChildObjects();
    g_pPolicyRoot->LinkChildObjects();
@@ -1202,7 +1202,7 @@ BOOL LoadObjects()
    }
 
 	// Validate system templates and create when needed
-   DbgPrintf(2, "Validating system templates...");
+   DbgPrintf(2, _T("Validating system templates..."));
 
 	pTemplate = FindTemplateByName(_T("@System.Agent"));
 	if (pTemplate == NULL)
@@ -1257,43 +1257,43 @@ void DeleteUserFromAllObjects(DWORD dwUserId)
 void DumpObjects(CONSOLE_CTX pCtx)
 {
    DWORD i;
-   char *pBuffer;
+   TCHAR *pBuffer;
    CONTAINER_CATEGORY *pCat;
    NetObj *pObject;
 
-   pBuffer = (char *)malloc(128000);
+   pBuffer = (TCHAR *)malloc(128000 * sizeof(TCHAR));
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
    	pObject = (NetObj *)g_pIndexById[i].pObject;
-      ConsolePrintf(pCtx, "Object ID %d \"%s\"\n"
-                          "   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n",
+      ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
+                          _T("   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
                     pObject->Id(), pObject->Name(), g_szClassName[pObject->Type()],
                     IpToStr(pObject->IpAddr(), pBuffer),
                     g_szStatusTextSmall[pObject->Status()],
                     pObject->IsModified(), pObject->IsDeleted());
-      ConsolePrintf(pCtx, "   Parents: <%s>\n   Childs: <%s>\n", 
+      ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
                     pObject->ParentList(pBuffer), pObject->ChildList(&pBuffer[4096]));
-      ConsolePrintf(pCtx, "   Last change: %s", pObject->TimeStampAsText());
+      ConsolePrintf(pCtx, _T("   Last change: %s"), pObject->TimeStampAsText());
       switch(pObject->Type())
       {
          case OBJECT_NODE:
-            ConsolePrintf(pCtx, "   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n",
+            ConsolePrintf(pCtx, _T("   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n"),
                           ((Node *)pObject)->isSNMPSupported(),
                           ((Node *)pObject)->isNativeAgent(),
                           ((Node *)pObject)->isLocalManagement(),
                           ((Node *)pObject)->getObjectId());
             break;
          case OBJECT_SUBNET:
-            ConsolePrintf(pCtx, "   Network mask: %s\n", 
+            ConsolePrintf(pCtx, _T("   Network mask: %s\n"), 
                           IpToStr(((Subnet *)pObject)->IpNetMask(), pBuffer));
             break;
          case OBJECT_CONTAINER:
             pCat = FindContainerCategory(((Container *)pObject)->Category());
-            ConsolePrintf(pCtx, "   Category: %s\n", pCat ? pCat->szName : "<unknown>");
+            ConsolePrintf(pCtx, _T("   Category: %s\n"), pCat ? pCat->szName : MAX_CONNECTOR_NAME"<unknown>"));
             break;
          case OBJECT_TEMPLATE:
-            ConsolePrintf(pCtx, "   Version: %d.%d\n", 
+            ConsolePrintf(pCtx, _T("   Version: %d.%d\n"), 
                           ((Template *)(pObject))->getVersionMajor(),
                           ((Template *)(pObject))->getVersionMinor());
             break;
@@ -1372,7 +1372,7 @@ void NetObjDelete(NetObj *pObject)
 
    // Write object to deleted objects table
    _sntprintf(szQuery, 256, _T("INSERT INTO deleted_objects (object_id,object_class,name,"
-                               "ip_addr,ip_netmask) VALUES (%d,%d,'%s','%s','%s')"),
+                               _T("ip_addr,ip_netmask) VALUES (%d,%d,'%s','%s','%s')")),
               pObject->Id(), pObject->Type(), pObject->Name(), 
               IpToStr(pObject->IpAddr(), szIpAddr),
               IpToStr(GetObjectNetmask(pObject), szNetMask));

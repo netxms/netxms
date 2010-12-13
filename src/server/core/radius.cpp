@@ -211,7 +211,7 @@ static int rad_pwencode(const char *pwd_in, char *pwd_out, const char *secret, c
 	{
 		secretlen = 256 - AUTH_VECTOR_LEN;
 	}
-	nx_strncpy(md5buf, secret, sizeof(md5buf));
+	strncpy(md5buf, secret, sizeof(md5buf));
 	memcpy(md5buf + secretlen, vector, AUTH_VECTOR_LEN);
 	CalculateMD5Hash((BYTE *)md5buf, secretlen + AUTH_VECTOR_LEN, (BYTE *)pwd_out);
 
@@ -573,7 +573,7 @@ static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE
 	int totallen, secretlen;
 	char reply_digest[AUTH_VECTOR_LEN];
 	char calc_digest[AUTH_VECTOR_LEN];
-	char szHostName[32];
+	TCHAR szHostName[32];
 
 	auth = (AUTH_HDR *)buffer;
 	totallen = ntohs(auth->length);
@@ -607,7 +607,7 @@ static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE
 // Authenticate user via RADIUS using primary or secondary server
 //
 
-static int DoRadiusAuth(const TCHAR *cLogin, const TCHAR *cPasswd, bool useSecondaryServer, TCHAR *serverName)
+static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSecondaryServer, TCHAR *serverName)
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
@@ -625,11 +625,11 @@ static int DoRadiusAuth(const TCHAR *cLogin, const TCHAR *cPasswd, bool useSecon
 	BYTE vector[AUTH_VECTOR_LEN];
 	char szSecret[256];
 
-	ConfigReadStr(useSecondaryServer ? "RADIUSSecondaryServer" : "RADIUSServer", serverName, 256, "none");
-	ConfigReadStr(useSecondaryServer ? "RADIUSSecondarySecret": "RADIUSSecret", szSecret, 256, "netxms");
-	port = ConfigReadInt(useSecondaryServer ? "RADIUSSecondaryPort" : "RADIUSPort", PW_AUTH_UDP_PORT);
-	nRetries = ConfigReadInt("RADIUSNumRetries", 5);
-	nTimeout = ConfigReadInt("RADIUSTimeout", 3);
+	ConfigReadStr(useSecondaryServer ? _T("RADIUSSecondaryServer") : _T("RADIUSServer"), serverName, 256, _T("none"));
+	ConfigReadStrA(useSecondaryServer ? _T("RADIUSSecondarySecret"): _T("RADIUSSecret"), szSecret, 256, "netxms");
+	port = ConfigReadInt(useSecondaryServer ? _T("RADIUSSecondaryPort") : _T("RADIUSPort"), PW_AUTH_UDP_PORT);
+	nRetries = ConfigReadInt(_T("RADIUSNumRetries"), 5);
+	nTimeout = ConfigReadInt(_T("RADIUSTimeout"), 3);
 
 	if (!_tcscmp(serverName, _T("none")))
 	{
@@ -662,7 +662,7 @@ static int DoRadiusAuth(const TCHAR *cLogin, const TCHAR *cPasswd, bool useSecon
 	server_ip = ResolveHostName(serverName);
 	if ((server_ip == INADDR_NONE) || (server_ip == INADDR_ANY))
 	{
-		DbgPrintf(3, "RADIUS: cannot resolve server name \"%s\"", serverName);
+		DbgPrintf(3, _T("RADIUS: cannot resolve server name \"%s\""), serverName);
 		pairfree(req);
 		return 3;
 	}
@@ -671,7 +671,7 @@ static int DoRadiusAuth(const TCHAR *cLogin, const TCHAR *cPasswd, bool useSecon
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0)
 	{
-		DbgPrintf(3, "RADIUS: Cannot create socket");
+		DbgPrintf(3, _T("RADIUS: Cannot create socket"));
 		pairfree(req);
 		return 5;
 	}
@@ -693,7 +693,7 @@ static int DoRadiusAuth(const TCHAR *cLogin, const TCHAR *cPasswd, bool useSecon
 	{
 		if (i > 0)
 		{
-			DbgPrintf(3, "RADIUS: Re-sending request...");
+			DbgPrintf(3, _T("RADIUS: Re-sending request..."));
 		}
 		sendto(sockfd, (char *)auth, length, 0, &saremote, sizeof(struct sockaddr_in));
 
@@ -741,14 +741,31 @@ bool RadiusAuth(const TCHAR *login, const TCHAR *passwd)
 	static bool useSecondary = false;
 
 	TCHAR server[256];
+#ifdef UNICODE
+	char mbLogin[256], mbPasswd[256];
+	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, login, -1, mbLogin, 256, NULL, NULL);
+	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, passwd, -1, mbPasswd, 256, NULL, NULL);
+	mbLogin[255] = 0;
+	mbPasswd[255] = 0;
+	int result = DoRadiusAuth(mbLogin, mbPasswd, useSecondary, server);
+#else
 	int result = DoRadiusAuth(login, passwd, useSecondary, server);
+#endif
 	if ((result == 3) || (result == 7) || (result == 10))	// Bad server name, timeout, comm. error, or server not configured
 	{
 		useSecondary = !useSecondary;
 		DbgPrintf(3, _T("RADIUS: unable to use %s server, switching to %s"), useSecondary ? _T("primary") : _T("secondary"), useSecondary ? _T("secondary") : _T("primary"));
+#ifdef UNICODE
+		result = DoRadiusAuth(mbLogin, mbPasswd, useSecondary, server);
+#else
 		result = DoRadiusAuth(login, passwd, useSecondary, server);
+#endif
 	}
 	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED,
-			EVENTLOG_INFORMATION_TYPE, "ss", login, server);
+#ifdef UNICODE
+			NXLOG_INFO, "ss", mbLogin, server);
+#else
+			NXLOG_INFO, "ss", login, server);
+#endif
 	return result == 0;
 }

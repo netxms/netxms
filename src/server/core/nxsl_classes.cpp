@@ -30,34 +30,34 @@
 NXSL_NetObjClass::NXSL_NetObjClass()
                  :NXSL_Class()
 {
-   strcpy(m_szName, "NetObj");
+   _tcscpy(m_szName, _T("NetObj"));
 }
 
 NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    NetObj *object;
    NXSL_Value *pValue = NULL;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
    object = (NetObj *)pObject->getData();
-   if (!strcmp(pszAttr, "name"))
+   if (!_tcscmp(pszAttr, _T("name")))
    {
       pValue = new NXSL_Value(object->Name());
    }
-   else if (!strcmp(pszAttr, "id"))
+   else if (!_tcscmp(pszAttr, _T("id")))
    {
       pValue = new NXSL_Value(object->Id());
    }
-   else if (!strcmp(pszAttr, "status"))
+   else if (!_tcscmp(pszAttr, _T("status")))
    {
       pValue = new NXSL_Value((LONG)object->Status());
    }
-   else if (!strcmp(pszAttr, "ipAddr"))
+   else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
       IpToStr(object->IpAddr(), szBuffer);
       pValue = new NXSL_Value(szBuffer);
    }
-   else if (!strcmp(pszAttr, "type"))
+   else if (!_tcscmp(pszAttr, _T("type")))
    {
       pValue = new NXSL_Value((LONG)object->Type());
    }
@@ -80,78 +80,78 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
 NXSL_NodeClass::NXSL_NodeClass()
                :NXSL_Class()
 {
-   strcpy(m_szName, "Node");
+   _tcscpy(m_szName, _T("Node"));
 }
 
 NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    Node *pNode;
    NXSL_Value *pValue = NULL;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
    pNode = (Node *)pObject->getData();
-   if (!strcmp(pszAttr, "name"))
+   if (!_tcscmp(pszAttr, _T("name")))
    {
       pValue = new NXSL_Value(pNode->Name());
    }
-   else if (!strcmp(pszAttr, "id"))
+   else if (!_tcscmp(pszAttr, _T("id")))
    {
       pValue = new NXSL_Value(pNode->Id());
    }
-   else if (!strcmp(pszAttr, "status"))
+   else if (!_tcscmp(pszAttr, _T("status")))
    {
       pValue = new NXSL_Value((LONG)pNode->Status());
    }
-   else if (!strcmp(pszAttr, "ipAddr"))
+   else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
       IpToStr(pNode->IpAddr(), szBuffer);
       pValue = new NXSL_Value(szBuffer);
    }
-   else if (!strcmp(pszAttr, "isAgent"))
+   else if (!_tcscmp(pszAttr, _T("isAgent")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_NATIVE_AGENT) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isSNMP"))
+   else if (!_tcscmp(pszAttr, _T("isSNMP")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SNMP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isBridge"))
+   else if (!_tcscmp(pszAttr, _T("isBridge")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_BRIDGE) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isRouter"))
+   else if (!_tcscmp(pszAttr, _T("isRouter")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_ROUTER) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isPrinter"))
+   else if (!_tcscmp(pszAttr, _T("isPrinter")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_PRINTER) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isCDP"))
+   else if (!_tcscmp(pszAttr, _T("isCDP")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_CDP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isSONMP"))
+   else if (!_tcscmp(pszAttr, _T("isSONMP")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SONMP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isLLDP"))
+   else if (!_tcscmp(pszAttr, _T("isLLDP")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_LLDP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "snmpVersion"))
+   else if (!_tcscmp(pszAttr, _T("snmpVersion")))
    {
       pValue = new NXSL_Value((LONG)pNode->getSNMPVersion());
    }
-   else if (!strcmp(pszAttr, "snmpOID"))
+   else if (!_tcscmp(pszAttr, _T("snmpOID")))
    {
       pValue = new NXSL_Value(pNode->getSNMPObjectId());
    }
-   else if (!strcmp(pszAttr, "agentVersion"))
+   else if (!_tcscmp(pszAttr, _T("agentVersion")))
    {
       pValue = new NXSL_Value(pNode->getAgentVersion());
    }
-   else if (!strcmp(pszAttr, "platformName"))
+   else if (!_tcscmp(pszAttr, _T("platformName")))
    {
       pValue = new NXSL_Value(pNode->getPlatformName());
    }
@@ -174,7 +174,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 NXSL_EventClass::NXSL_EventClass()
                 :NXSL_Class()
 {
-   strcpy(m_szName, "Event");
+   _tcscpy(m_szName, _T("Event"));
 }
 
 NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -183,39 +183,39 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    NXSL_Value *value = NULL;
 
    event = (Event *)pObject->getData();
-   if (!strcmp(pszAttr, "code"))
+   if (!_tcscmp(pszAttr, _T("code")))
    {
       value = new NXSL_Value(event->getCode());
    }
-   else if (!strcmp(pszAttr, "name"))
+   else if (!_tcscmp(pszAttr, _T("name")))
    {
 		value = new NXSL_Value(event->getName());
    }
-   else if (!strcmp(pszAttr, "id"))
+   else if (!_tcscmp(pszAttr, _T("id")))
    {
       value = new NXSL_Value(event->getId());
    }
-   else if (!strcmp(pszAttr, "severity"))
+   else if (!_tcscmp(pszAttr, _T("severity")))
    {
       value = new NXSL_Value(event->getSeverity());
    }
-   else if (!strcmp(pszAttr, "timestamp"))
+   else if (!_tcscmp(pszAttr, _T("timestamp")))
    {
       value = new NXSL_Value((INT64)event->getTimeStamp());
    }
-   else if (!strcmp(pszAttr, "message"))
+   else if (!_tcscmp(pszAttr, _T("message")))
    {
       value = new NXSL_Value(event->getMessage());
    }
-   else if (!strcmp(pszAttr, "customMessage"))
+   else if (!_tcscmp(pszAttr, _T("customMessage")))
    {
 		value = new NXSL_Value(event->getCustomMessage());
    }
-   else if (!strcmp(pszAttr, "userTag"))
+   else if (!_tcscmp(pszAttr, _T("userTag")))
    {
       value = new NXSL_Value(event->getUserTag());
    }
-   else if (!strcmp(pszAttr, "parameters"))
+   else if (!_tcscmp(pszAttr, _T("parameters")))
    {
 		NXSL_Array *array = new NXSL_Array;
 		DWORD i;
@@ -235,7 +235,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 NXSL_DciClass::NXSL_DciClass()
               :NXSL_Class()
 {
-   strcpy(m_szName, "DCI");
+   _tcscpy(m_szName, _T("DCI"));
 }
 
 NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
@@ -244,39 +244,39 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    NXSL_Value *value = NULL;
 
    dci = (DCItem *)object->getData();
-   if (!strcmp(attr, "id"))
+   if (!_tcscmp(attr, _T("id")))
    {
 		value = new NXSL_Value(dci->getId());
    }
-   else if (!strcmp(attr, "name"))
+   else if (!_tcscmp(attr, _T("name")))
    {
 		value = new NXSL_Value(dci->getName());
    }
-   else if (!strcmp(attr, "description"))
+   else if (!_tcscmp(attr, _T("description")))
    {
 		value = new NXSL_Value(dci->getDescription());
    }
-   else if (!strcmp(attr, "origin"))
+   else if (!_tcscmp(attr, _T("origin")))
    {
 		value = new NXSL_Value((LONG)dci->getDataSource());
    }
-   else if (!strcmp(attr, "dataType"))
+   else if (!_tcscmp(attr, _T("dataType")))
    {
 		value = new NXSL_Value((LONG)dci->getDataType());
    }
-   else if (!strcmp(attr, "status"))
+   else if (!_tcscmp(attr, _T("status")))
    {
 		value = new NXSL_Value((LONG)dci->getStatus());
    }
-   else if (!strcmp(attr, "errorCount"))
+   else if (!_tcscmp(attr, _T("errorCount")))
    {
 		value = new NXSL_Value(dci->getErrorCount());
    }
-   else if (!strcmp(attr, "lastPollTime"))
+   else if (!_tcscmp(attr, _T("lastPollTime")))
    {
 		value = new NXSL_Value((INT64)dci->getLastPollTime());
    }
-   else if (!strcmp(attr, "systemTag"))
+   else if (!_tcscmp(attr, _T("systemTag")))
    {
 		value = new NXSL_Value(dci->getSystemTag());
    }

@@ -528,7 +528,7 @@ public:
 NXSL_SituationClass::NXSL_SituationClass()
                     :NXSL_Class()
 {
-   strcpy(m_szName, "Situation");
+   _tcscpy(m_szName, _T("Situation"));
 }
 
 NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -538,15 +538,15 @@ NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 	const TCHAR *attrValue;
 
    instance = (SituationInstance *)pObject->getData();
-   if (!strcmp(pszAttr, "name"))
+   if (!_tcscmp(pszAttr, _T("name")))
    {
       value = new NXSL_Value(instance->GetParent()->GetName());
    }
-   else if (!strcmp(pszAttr, "id"))
+   else if (!_tcscmp(pszAttr, _T("id")))
    {
       value = new NXSL_Value(instance->GetParent()->GetId());
    }
-   else if (!strcmp(pszAttr, "instance"))
+   else if (!_tcscmp(pszAttr, _T("instance")))
    {
       value = new NXSL_Value(instance->GetName());
    }
@@ -628,7 +628,7 @@ static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 		return NXSL_ERR_NOT_STRING;
 
 	object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), "Situation"))
+	if (_tcscmp(object->getClass()->getName(), m_nxslSituationClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	attrValue = ((SituationInstance *)object->getData())->GetAttribute(argv[1]->getValueAsCString());
@@ -643,7 +643,7 @@ static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 
 NXSL_ExtFunction g_nxslSituationFunctions[] =
 {
-   { "FindSituation", F_FindSituation, 2 },
-   { "GetSituationAttribute", F_GetSituationAttribute, 2 }
+   { _T("FindSituation"), F_FindSituation, 2 },
+   { _T("GetSituationAttribute"), F_GetSituationAttribute, 2 }
 };
 DWORD g_nxslNumSituationFunctions = sizeof(g_nxslSituationFunctions) / sizeof(NXSL_ExtFunction);

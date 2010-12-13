@@ -278,7 +278,7 @@ typedef unsigned __int64 uint64_t;
 #define malloc(n)       HeapAlloc(GetProcessHeap(), 0, n)
 #define realloc(p, n)   (((p) == NULL) ? HeapAlloc(GetProcessHeap(), 0, n) : HeapReAlloc(GetProcessHeap(), 0, p, n))
 #define free(p)         HeapFree(GetProcessHeap(), 0, p)
-#define strdup(s)       nx_strdup(s)
+#define _tcsdup(s)       nx__tcsdup(s)
 #define wcsdup(s)       nx_wcsdup(s)
 
 #undef _tcsdup
@@ -891,7 +891,7 @@ typedef struct tagICMPHDR
 
 
 //
-// Define stricmp() for non-windows
+// Define _tcsicmp() for non-windows
 //
 
 #ifndef _WIN32

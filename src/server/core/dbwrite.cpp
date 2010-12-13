@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -106,7 +106,7 @@ void StartDBWriter()
 
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
-      m_iNumWriters = ConfigReadInt("NumberOfDatabaseWriters", 1);
+      m_iNumWriters = ConfigReadInt(_T("NumberOfDatabaseWriters"), 1);
       if (m_iNumWriters < 1)
          m_iNumWriters = 1;
       if (m_iNumWriters > MAX_DB_WRITERS)

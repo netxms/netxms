@@ -42,11 +42,11 @@ Subnet::Subnet()
 
 Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, BOOL bSyntheticMask)
 {
-   char szBuffer[32];
+   TCHAR szBuffer[32];
 
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
-   _stprintf(m_szName, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
+   _sntprintf(m_szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
    m_dwZoneGUID = dwZone;
 	m_bSyntheticMask = bSyntheticMask;
 }
@@ -67,7 +67,7 @@ Subnet::~Subnet()
 
 BOOL Subnet::CreateFromDB(DWORD dwId)
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    DB_RESULT hResult;
 
    m_dwId = dwId;
@@ -75,7 +75,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   sprintf(szQuery, "SELECT ip_addr,ip_netmask,zone_guid,synthetic_mask FROM subnets WHERE id=%d", dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT ip_addr,ip_netmask,zone_guid,synthetic_mask FROM subnets WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -106,7 +106,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
 
 BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 {
-   char szQuery[1024], szIpAddr[16], szNetMask[16];
+   TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
    DB_RESULT hResult;
    DWORD i;
    BOOL bNewObject = TRUE;
@@ -117,7 +117,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM subnets WHERE id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM subnets WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -128,25 +128,24 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) "
-                       "VALUES (%d,'%s','%s',%d,%d)",
-              m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
-              IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_bSyntheticMask);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+		           _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s','%s',%d,%d)"),
+                 m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
+                 IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_bSyntheticMask);
    else
-      sprintf(szQuery, "UPDATE subnets SET ip_addr='%s',"
-                       "ip_netmask='%s',zone_guid=%d,"
-							  "synthetic_mask=%d WHERE id=%d",
-              IpToStr(m_dwIpAddr, szIpAddr),
-              IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_bSyntheticMask, m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+		           _T("UPDATE subnets SET ip_addr='%s',ip_netmask='%s',zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
+                 IpToStr(m_dwIpAddr, szIpAddr),
+                 IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_bSyntheticMask, m_dwId);
    DBQuery(hdb, szQuery);
 
    // Update node to subnet mapping
-   sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_dwId);
    DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      sprintf(szQuery, "INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)", m_dwId, m_pChildList[i]->Id());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();
@@ -168,15 +167,15 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 
 BOOL Subnet::DeleteFromDB(void)
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    BOOL bSuccess;
 
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      sprintf(szQuery, "DELETE FROM subnets WHERE id=%d", m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM subnets WHERE id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%d", m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -207,11 +206,11 @@ void Subnet::SetCorrectMask(DWORD dwAddr, DWORD dwMask)
 	LockData();
 	
 	// Check if name is default
-	_stprintf(szName, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
+	_sntprintf(szName, 128, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
 	if (!_tcsicmp(szName, m_szName))
 	{
 		// Change name
-		_stprintf(m_szName, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
+		_sntprintf(m_szName, 128, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
 	}
 	
 	m_dwIpAddr = dwAddr;

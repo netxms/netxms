@@ -29,8 +29,8 @@
 
 typedef struct
 {
-   char szRcpt[MAX_RCPT_ADDR_LEN];
-   char szText[160];
+   TCHAR szRcpt[MAX_RCPT_ADDR_LEN];
+   TCHAR szText[160];
 } SMS;
 
 
@@ -140,7 +140,7 @@ void ShutdownSMSSender(void)
 // Post SMS to queue
 //
 
-void NXCORE_EXPORTABLE PostSMS(TCHAR *pszRcpt, TCHAR *pszText)
+void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText)
 {
    SMS *pMsg;
 

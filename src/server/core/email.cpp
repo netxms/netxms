@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ typedef struct
 // Static data
 //
 
-static char m_szSmtpServer[MAX_PATH] = "localhost";
+static TCHAR m_szSmtpServer[MAX_PATH] = _T("localhost");
 static WORD m_wSmtpPort = 25;
 static char m_szFromAddr[MAX_PATH] = "netxms@localhost";
 static char m_szFromName[MAX_PATH] = "NetXMS Server";
@@ -154,7 +154,6 @@ static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
 static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 {
    SOCKET hSocket;
-   struct hostent *hs;
    struct sockaddr_in sa;
    char szBuffer[SMTP_BUFFER_SIZE];
    int iResp, iState = STATE_INITIAL, nBufPos = 0;
@@ -162,7 +161,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 	char szEncoding[128];
 
 	// get mail encoding from DB
-	ConfigReadStr("MailEncoding", szEncoding, sizeof(szEncoding), "iso-8859-1");
+	ConfigReadStrA(_T("MailEncoding"), szEncoding, sizeof(szEncoding) / sizeof(TCHAR), "iso-8859-1");
 
    // Fill in address structure
    memset(&sa, 0, sizeof(sa));
@@ -170,16 +169,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
    sa.sin_port = htons(m_wSmtpPort);
 
    // Resolve hostname
-   hs = gethostbyname(m_szSmtpServer);
-   if (hs != NULL)
-   {
-      memcpy(&sa.sin_addr.s_addr, hs->h_addr, sizeof(DWORD));
-   }
-   else
-   {
-      sa.sin_addr.s_addr = inet_addr(m_szSmtpServer);
-   }
-
+	sa.sin_addr.s_addr = ResolveHostName(m_szSmtpServer);
    if ((sa.sin_addr.s_addr == INADDR_ANY) || (sa.sin_addr.s_addr == INADDR_NONE))
       return SMTP_ERR_BAD_SERVER_NAME;
 
@@ -361,12 +351,12 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 {
    MAIL_ENVELOPE *pEnvelope;
    DWORD dwResult;
-   static const char *m_szErrorText[] =
+   static const TCHAR *m_szErrorText[] =
    {
-      "Sent successfully",
-      "Unable to resolve SMTP server name",
-      "Communication failure",
-      "SMTP conversation failure"
+      _T("Sent successfully"),
+      _T("Unable to resolve SMTP server name"),
+      _T("Communication failure"),
+      _T("SMTP conversation failure")
    };
 
    while(1)
@@ -375,10 +365,10 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
       if (pEnvelope == INVALID_POINTER_VALUE)
          break;
 
-      ConfigReadStr("SMTPServer", m_szSmtpServer, MAX_PATH, "localhost");
-      ConfigReadStr("SMTPFromAddr", m_szFromAddr, MAX_PATH, "netxms@localhost");
-      ConfigReadStr("SMTPFromName", m_szFromName, MAX_PATH, "NetXMS Server");
-      m_wSmtpPort = (WORD)ConfigReadInt("SMTPPort", 25);
+      ConfigReadStr(_T("SMTPServer"), m_szSmtpServer, MAX_PATH, _T("localhost"));
+      ConfigReadStrA(_T("SMTPFromAddr"), m_szFromAddr, MAX_PATH, "netxms@localhost");
+      ConfigReadStrA(_T("SMTPFromName"), m_szFromName, MAX_PATH, "NetXMS Server");
+      m_wSmtpPort = (WORD)ConfigReadInt(_T("SMTPPort"), 25);
 
       dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
       if (dwResult != SMTP_ERR_SUCCESS)
@@ -436,14 +426,22 @@ void ShutdownMailer(void)
 // Post e-mail to queue
 //
 
-void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText)
+void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText)
 {
    MAIL_ENVELOPE *pEnvelope;
 
    pEnvelope = (MAIL_ENVELOPE *)malloc(sizeof(MAIL_ENVELOPE));
+#ifdef UNICODE
+	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszRcpt, -1, pEnvelope->szRcptAddr, MAX_RCPT_ADDR_LEN, NULL, NULL);
+	pEnvelope->szRcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
+	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszSubject, -1, pEnvelope->szSubject, MAX_EMAIL_SUBJECT_LEN, NULL, NULL);
+	pEnvelope->szSubject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
+	pEnvelope->pszText = MBStringFromWideString(pszText);
+#else
    nx_strncpy(pEnvelope->szRcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
    nx_strncpy(pEnvelope->szSubject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
-   pEnvelope->pszText = strdup(pszText);
+   pEnvelope->pszText = _tcsdup(pszText);
+#endif
 	pEnvelope->nRetryCount = ConfigReadInt(_T("SMTPRetryCount"), 1);
    m_pMailerQueue->Put(pEnvelope);
 }

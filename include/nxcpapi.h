@@ -92,6 +92,11 @@ public:
    void SetVariable(DWORD dwVarId, double dValue) { Set(dwVarId, CSCP_DT_FLOAT, &dValue); }
    void SetVariable(DWORD dwVarId, const TCHAR *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
    void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
+#ifdef UNICODE
+   void SetVariableFromMBString(DWORD dwVarId, const char *pszValue);
+#else
+   void SetVariableFromMBString(DWORD dwVarId, const char *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
+#endif
    void SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwData);
    BOOL SetVariableFromFile(DWORD dwVarId, const TCHAR *pszFileName);
 
@@ -101,6 +106,8 @@ public:
    LONG GetVariableShortAsInt32(DWORD dwVarId);
    double GetVariableDouble(DWORD dwVarId);
    TCHAR *GetVariableStr(DWORD dwVarId, TCHAR *szBuffer = NULL, DWORD dwBufSize = 0);
+	char *GetVariableStrA(DWORD dwVarId, char *pszBuffer = NULL, DWORD dwBufSize = 0);
+	char *GetVariableStrUTF8(DWORD dwVarId, char *pszBuffer = NULL, DWORD dwBufSize = 0);
    DWORD GetVariableBinary(DWORD dwVarId, BYTE *pBuffer, DWORD dwBufSize);
    DWORD GetVariableInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwBuffer);
 

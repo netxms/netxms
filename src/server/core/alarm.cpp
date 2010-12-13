@@ -105,13 +105,13 @@ BOOL AlarmManager::Init()
    DWORD i;
 
    // Load unacknowledged alarms into memory
-   hResult = DBSelect(g_hCoreDB, "SELECT alarm_id,source_object_id,"
-                                 "source_event_code,source_event_id,message,"
-                                 "original_severity,current_severity,"
-                                 "alarm_key,creation_time,last_change_time,"
-                                 "hd_state,hd_ref,ack_by,repeat_count,"
-                                 "alarm_state,timeout,timeout_event "
-                                 "FROM alarms WHERE alarm_state<2");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT alarm_id,source_object_id,")
+                                 _T("source_event_code,source_event_id,message,")
+                                 _T("original_severity,current_severity,")
+                                 _T("alarm_key,creation_time,last_change_time,")
+                                 _T("hd_state,hd_ref,ack_by,repeat_count,")
+                                 _T("alarm_state,timeout,timeout_event ")
+                                 _T("FROM alarms WHERE alarm_state<2"));
    if (hResult == NULL)
       return FALSE;
 
@@ -227,11 +227,12 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       }
 
       // Save alarm to database
-      sprintf(szQuery, "INSERT INTO alarms (alarm_id,creation_time,last_change_time,"
-                       "source_object_id,source_event_code,message,original_severity,"
-                       "current_severity,alarm_key,alarm_state,ack_by,hd_state,"
-                       "hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id) VALUES "
-                       "(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%s,%d,%d,%d,%d," UINT64_FMT ")",
+      _sntprintf(szQuery, 2048, 
+			        _T("INSERT INTO alarms (alarm_id,creation_time,last_change_time,")
+                 _T("source_object_id,source_event_code,message,original_severity,")
+                 _T("current_severity,alarm_key,alarm_state,ack_by,hd_state,")
+                 _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id) VALUES ")
+                 _T("(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%s,%d,%d,%d,%d,") UINT64_FMT _T(")"),
               alarm.dwAlarmId, alarm.dwCreationTime, alarm.dwLastChangeTime,
 				  alarm.dwSourceObject, alarm.dwSourceEventCode,
 				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm.szMessage),
@@ -336,7 +337,7 @@ DWORD AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
 // Terminate all alarms with given key
 //
 
-void AlarmManager::TerminateByKey(char *pszKey, bool useRegexp)
+void AlarmManager::TerminateByKey(const TCHAR *pszKey, bool useRegexp)
 {
    DWORD i, j, dwNumObjects, *pdwObjectList, dwCurrTime;
 
@@ -385,7 +386,7 @@ void AlarmManager::TerminateByKey(char *pszKey, bool useRegexp)
 void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 {
    DWORD i, dwObject;
-   char szQuery[256];
+   TCHAR szQuery[256];
 
    // Delete alarm from in-memory list
    Lock();
@@ -401,8 +402,7 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
    Unlock();
 
    // Delete from database
-   sprintf(szQuery, "DELETE FROM alarms WHERE alarm_id=%d", dwAlarmId);
-   //DBQuery(g_hCoreDB, szQuery);
+   _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), dwAlarmId);
    QueueSQLRequest(szQuery);
 
    UpdateObjectStatus(dwObject);
@@ -415,7 +415,7 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 
 void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
 {
-   char szQuery[2048];
+   TCHAR szQuery[2048];
 
    _sntprintf(szQuery, 2048, _T("UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,")
                              _T("last_change_time=%d,current_severity=%d,repeat_count=%d,")
@@ -511,7 +511,7 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
 NetObj *AlarmManager::GetAlarmSourceObject(DWORD dwAlarmId)
 {
    DWORD i, dwObjectId = 0;
-   char szQuery[256];
+   TCHAR szQuery[256];
    DB_RESULT hResult;
 
    // First, look at our in-memory list
@@ -527,7 +527,7 @@ NetObj *AlarmManager::GetAlarmSourceObject(DWORD dwAlarmId)
    // If not found, search database
    if (i == m_dwNumAlarms)
    {
-      sprintf(szQuery, "SELECT source_object_id FROM alarms WHERE alarm_id=%d", dwAlarmId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT source_object_id FROM alarms WHERE alarm_id=%d"), dwAlarmId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {

@@ -193,7 +193,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 
 	if (!LoadCommonProperties())
    {
-      DbgPrintf(2, "Cannot load common properties for network map object %d", dwId);
+      DbgPrintf(2, _T("Cannot load common properties for network map object %d"), dwId);
       return FALSE;
    }
 
@@ -230,7 +230,13 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 					TCHAR *data = DBGetField(hResult, i, 2, NULL, 0);
 					if (data != NULL)
 					{
-						config->loadXmlConfigFromMemory(data, (int)strlen(data), _T("<database>"), _T("element"));
+#ifdef UNICODE
+						char *utf8data = UTF8StringFromWideString(data);
+						config->loadXmlConfigFromMemory(utf8data, (int)strlen(utf8data), _T("<database>"), "element");
+						free(utf8data);
+#else
+						config->loadXmlConfigFromMemory(data, (int)strlen(data), _T("<database>"), "element");
+#endif
 						free(data);
 						switch(DBGetFieldLong(hResult, i, 1))
 						{

@@ -157,10 +157,10 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 
 static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
-   { "FindDCIByName", F_FindDCIByName, 2 },
-   { "FindDCIByDescription", F_FindDCIByDescription, 2 },
-   { "GetDCIObject", F_GetDCIObject, 2 },
-   { "GetDCIValue", F_GetDCIValue, 2 }
+   { _T("FindDCIByName"), F_FindDCIByName, 2 },
+   { _T("FindDCIByDescription"), F_FindDCIByDescription, 2 },
+   { _T("GetDCIObject"), F_GetDCIObject, 2 },
+   { _T("GetDCIValue"), F_GetDCIValue, 2 }
 };
 
 void RegisterDCIFunctions(NXSL_Environment *pEnv)
@@ -395,7 +395,7 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
    if (pszDescription != NULL)
       nx_strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
    else
-      strcpy(m_szDescription, m_szName);
+      _tcscpy(m_szDescription, m_szName);
    m_szInstance[0] = 0;
 	nx_strncpy(m_systemTag, CHECK_NULL_EX(systemTag), MAX_DB_STRING);
    m_source = iSource;
@@ -580,14 +580,15 @@ void DCItem::clearCache()
 BOOL DCItem::loadThresholdsFromDB()
 {
    DWORD i;
-   char szQuery[256];
+   TCHAR szQuery[256];
    DB_RESULT hResult;
    BOOL bResult = FALSE;
 
-   sprintf(szQuery, "SELECT threshold_id,fire_value,rearm_value,check_function,"
-                    "check_operation,parameter_1,parameter_2,event_code,current_state,"
-                    "rearm_event_code,repeat_interval FROM thresholds WHERE item_id=%d "
-                    "ORDER BY sequence_number", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
+              _T("check_operation,parameter_1,parameter_2,event_code,current_state,")
+              _T("rearm_event_code,repeat_interval FROM thresholds WHERE item_id=%d ")
+              _T("ORDER BY sequence_number"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -767,7 +768,7 @@ void DCItem::checkThresholds(ItemValue &value)
          case THRESHOLD_REACHED:
             PostEvent(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd", m_szName,
                       m_szDescription, m_ppThresholdList[i]->getStringValue(), 
-                      (const char *)checkValue, m_dwId, m_szInstance, 0);
+                      (const TCHAR *)checkValue, m_dwId, m_szInstance, 0);
 				m_ppThresholdList[i]->setLastEventTimestamp();
             if (!m_processAllThresholds)
                i = m_dwNumThresholds;  // Stop processing
@@ -788,7 +789,7 @@ void DCItem::checkThresholds(ItemValue &value)
 					{
 						PostEvent(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd", m_szName,
 									 m_szDescription, m_ppThresholdList[i]->getStringValue(), 
-									 (const char *)checkValue, m_dwId, m_szInstance, 1);
+									 (const TCHAR *)checkValue, m_dwId, m_szInstance, 1);
 						m_ppThresholdList[i]->setLastEventTimestamp();
 					}
 
@@ -855,15 +856,15 @@ void DCItem::createMessage(CSCPMessage *pMsg)
 
 void DCItem::deleteFromDB()
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
 
-   sprintf(szQuery, "DELETE FROM items WHERE item_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM items WHERE item_id=%d"), m_dwId);
    QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DELETE FROM idata_%d WHERE item_id=%d", m_pNode->Id(), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->Id(), m_dwId);
    QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DELETE FROM thresholds WHERE item_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%d"), m_dwId);
    QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DELETE FROM dci_schedules WHERE item_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dci_schedules WHERE item_id=%d"), m_dwId);
    QueueSQLRequest(szQuery);
 }
 
@@ -1158,10 +1159,10 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
                value = ((double)value - (double)m_prevRawValue) / (double)nElapsedTime;
                break;
             case DCI_DT_STRING:
-               // I don't see any meaning in "average delta per second (minute)" for string
+               // I don't see any meaning in _T("average delta per second (minute)") for string
                // values, so result will be 0 if there are no difference between
                // current and previous values, and 1 otherwise
-               value = (LONG)((strcmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               value = (LONG)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
@@ -1177,7 +1178,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
       NXSL_Value *pValue;
       NXSL_ServerEnv *pEnv;
 
-      pValue = new NXSL_Value((char *)((const char *)value));
+      pValue = new NXSL_Value((const TCHAR *)value);
       pEnv = new NXSL_ServerEnv;
       m_pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 	
@@ -1217,7 +1218,7 @@ void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
          _sntprintf(szBuffer, 1024, _T("DCI::%s::%d"),
                     (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szBuffer,
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
                    m_pScript->getErrorText(), m_dwId);
       }
    }
@@ -1327,31 +1328,31 @@ void DCItem::updateCacheSize(DWORD dwCondId)
       if (m_pNode != NULL)
       {
          DB_ASYNC_RESULT hResult;
-         char szBuffer[MAX_DB_STRING];
+         TCHAR szBuffer[MAX_DB_STRING];
          BOOL bHasData;
 
          switch(g_nDBSyntax)
          {
             case DB_SYNTAX_MSSQL:
-               sprintf(szBuffer, "SELECT TOP %d idata_value,idata_timestamp FROM idata_%d "
-                                 "WHERE item_id=%d ORDER BY idata_timestamp DESC",
+               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")
+                                 _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
                        dwRequiredSize, m_pNode->Id(), m_dwId);
                break;
             case DB_SYNTAX_ORACLE:
-               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%d "
-                                 "WHERE item_id=%d AND ROWNUM <= %d ORDER BY idata_timestamp DESC",
+               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+                                 _T("WHERE item_id=%d AND ROWNUM <= %d ORDER BY idata_timestamp DESC"),
                        m_pNode->Id(), m_dwId, dwRequiredSize);
                break;
             case DB_SYNTAX_MYSQL:
             case DB_SYNTAX_PGSQL:
             case DB_SYNTAX_SQLITE:
-               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%d "
-                                 "WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d",
+               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+                                 _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
                        m_pNode->Id(), m_dwId, dwRequiredSize);
                break;
             default:
-               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%d "
-                                 "WHERE item_id=%d ORDER BY idata_timestamp DESC",
+               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+                                 _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
                        m_pNode->Id(), m_dwId);
                break;
          }
@@ -1564,7 +1565,7 @@ static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue)
    {
       *ptr = 0;
       ptr++;
-      nStep = atoi(ptr);
+      nStep = _tcstol(ptr, NULL, 10);
    }
    else
    {
@@ -1584,13 +1585,13 @@ static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue)
                return FALSE;  // Form like 1-2-3 is invalid
             bRange = TRUE;
             *ptr = 0;
-            nPrev = atoi(curr);
+            nPrev = _tcstol(curr, NULL, 10);
             break;
          case 0:
             bRun = FALSE;
          case ',':
             *ptr = 0;
-            nCurr = atoi(curr);
+            nCurr = _tcstol(curr, NULL, 10);
             if (bRange)
             {
                if ((nValue >= nPrev) && (nValue <= nCurr))
@@ -1619,7 +1620,8 @@ check_step:
 
 static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
 {
-   TCHAR *pszCurr, szValue[256];
+   const TCHAR *pszCurr;
+	TCHAR szValue[256];
 
    // Minute
    pszCurr = ExtractWord(pszSchedule, szValue);
@@ -2063,19 +2065,19 @@ void DCItem::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 					NXSL_Value *result = script->getResult();
 					if (result != NULL)
 						temp += CHECK_NULL_EX(result->getValueAsCString());
-		         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully", m_dwId, src, &macro[7]);
+		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_dwId, src, &macro[7]);
 				}
 				else
 				{
-		         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s",
+		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
 					          m_dwId, src, &macro[7], script->getErrorText());
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), &macro[7],
+					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7],
 								 script->getErrorText(), m_dwId);
 				}
 			}
 			else
 			{
-	         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Cannot find script %s", m_dwId, src, &macro[7]);
+	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_dwId, src, &macro[7]);
 			}
 	      g_pScriptLibrary->unlock();
 		}

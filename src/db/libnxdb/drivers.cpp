@@ -83,11 +83,11 @@ bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode)
 //
 
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
-														bool dumpSQL, void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *, void *),
+														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, void *),
 														void *userArg)
 {
    static DWORD dwVersionZero = 0;
-   BOOL (* fpDrvInit)(const TCHAR *);
+   BOOL (* fpDrvInit)(const char *);
    DWORD *pdwAPIVersion;
    TCHAR szErrorText[256];
 	const char *driverName;
@@ -162,12 +162,12 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	}
 
    // Import symbols
-   fpDrvInit = (BOOL (*)(const TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvInit"));
+   fpDrvInit = (BOOL (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvInit"));
    driver->m_fpDrvConnect = (DBDRV_CONNECTION (*)(const char *, const char *, const char *, const char *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvConnect"));
    driver->m_fpDrvDisconnect = (void (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvDisconnect"));
-   driver->m_fpDrvQuery = (DWORD (*)(DBDRV_CONNECTION, const WCHAR *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvQuery"));
-   driver->m_fpDrvSelect = (DBDRV_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvSelect"));
-   driver->m_fpDrvAsyncSelect = (DBDRV_ASYNC_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvAsyncSelect"));
+   driver->m_fpDrvQuery = (DWORD (*)(DBDRV_CONNECTION, const WCHAR *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvQuery"));
+   driver->m_fpDrvSelect = (DBDRV_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvSelect"));
+   driver->m_fpDrvAsyncSelect = (DBDRV_ASYNC_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvAsyncSelect"));
    driver->m_fpDrvFetch = (BOOL (*)(DBDRV_ASYNC_RESULT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvFetch"));
    driver->m_fpDrvGetFieldLength = (LONG (*)(DBDRV_RESULT, int, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetFieldLength"));
    driver->m_fpDrvGetFieldLengthAsync = (LONG (*)(DBDRV_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetFieldLengthAsync"));
@@ -184,7 +184,8 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    driver->m_fpDrvCommit = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvCommit"));
    driver->m_fpDrvRollback = (DWORD (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvRollback"));
    driver->m_fpDrvUnload = (void (*)(void))DLGetSymbolAddrEx(driver->m_handle, _T("DrvUnload"));
-   driver->m_fpDrvPrepareString = (TCHAR* (*)(const TCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepareString"));
+   driver->m_fpDrvPrepareStringA = (char* (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepareStringA"));
+   driver->m_fpDrvPrepareStringW = (WCHAR* (*)(const WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepareStringW"));
    if ((fpDrvInit == NULL) || (driver->m_fpDrvConnect == NULL) || (driver->m_fpDrvDisconnect == NULL) ||
        (driver->m_fpDrvQuery == NULL) || (driver->m_fpDrvSelect == NULL) || (driver->m_fpDrvGetField == NULL) ||
        (driver->m_fpDrvGetNumRows == NULL) || (driver->m_fpDrvFreeResult == NULL) || 
@@ -194,7 +195,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 		 (driver->m_fpDrvGetColumnCount == NULL) || (driver->m_fpDrvGetColumnName == NULL) ||
 		 (driver->m_fpDrvGetColumnCountAsync == NULL) || (driver->m_fpDrvGetColumnNameAsync == NULL) ||
        (driver->m_fpDrvGetFieldLength == NULL) || (driver->m_fpDrvGetFieldLengthAsync == NULL) ||
-		 (driver->m_fpDrvPrepareString == NULL))
+		 (driver->m_fpDrvPrepareStringA == NULL) || (driver->m_fpDrvPrepareStringW == NULL))
    {
       if (s_writeLog)
          __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to find all required entry points in database driver \"%s\""), module);
@@ -202,7 +203,14 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
 
    // Initialize driver
+#ifdef UNICODE
+	char mbInitParameters[1024];
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, initParameters, -1, mbInitParameters, 1024, NULL, NULL);
+	mbInitParameters[1023] = 0;
+   if (!fpDrvInit(mbInitParameters))
+#else
    if (!fpDrvInit(initParameters))
+#endif
    {
       if (s_writeLog)
          __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Database driver \"%s\" initialization failed"), module);

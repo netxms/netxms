@@ -59,7 +59,7 @@ public:
 	              int iSeverity, DWORD dwTimeout, DWORD dwTimeoutEvent, Event *pEvent);
    DWORD AckById(DWORD dwAlarmId, DWORD dwUserId);
    DWORD TerminateById(DWORD dwAlarmId, DWORD dwUserId);
-   void TerminateByKey(TCHAR *key, bool useRegexp);
+   void TerminateByKey(const TCHAR *key, bool useRegexp);
    void DeleteAlarm(DWORD dwAlarmId);
 
    void SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession);

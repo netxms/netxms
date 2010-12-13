@@ -355,10 +355,10 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
                       &(((INTERFACE_LIST *)pArg)->pInterfaces[i]), sizeof(INTERFACE_INFO));
                if (strlen(((INTERFACE_LIST *)pArg)->pInterfaces[i].szName) < MAX_OBJECT_NAME - 6)
                {
-                  char szBuffer[8];
+                  TCHAR szBuffer[8];
 
-                  sprintf(szBuffer,":%d", ((INTERFACE_LIST *)pArg)->pInterfaces[i].iNumSecondary++);
-                  strcat(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1].szName, szBuffer);
+                  sprintf(szBuffer,_T(":%d"), ((INTERFACE_LIST *)pArg)->pInterfaces[i].iNumSecondary++);
+                  _tcscat(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1].szName, szBuffer);
                }
                i = ((INTERFACE_LIST *)pArg)->iNumEntries - 1;
             }
@@ -379,13 +379,13 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
                                      DWORD dwNodeType, BOOL useIfXTable)
 {
    LONG i, iNumIf;
-   char szOid[128], szBuffer[256];
+   TCHAR szOid[128], szBuffer[256];
    INTERFACE_LIST *pIfList = NULL;
    int useAliases;
    BOOL bSuccess = FALSE;
 
    // Get number of interfaces
-   if (SnmpGet(dwVersion, pTransport, ".1.3.6.1.2.1.2.1.0", NULL, 0,
+   if (SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0,
                 &iNumIf, sizeof(LONG), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return NULL;
       
@@ -400,7 +400,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
    memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
 
    // Gather interface indexes
-   if (SnmpEnumerate(dwVersion, pTransport, ".1.3.6.1.2.1.2.2.1.1",
+   if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.2.2.1.1"),
                      HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
    {
       // Some devices can report incorrect total number of interfaces
@@ -417,7 +417,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          // Get interface alias if needed
          if (useAliases > 0)
          {
-		      sprintf(szOid, ".1.3.6.1.2.1.31.1.1.1.18.%d", pIfList->pInterfaces[i].dwIndex);
+		      sprintf(szOid, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), pIfList->pInterfaces[i].dwIndex);
 		      if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
 		                   pIfList->pInterfaces[i].szName, MAX_DB_STRING,
 		                   FALSE, FALSE) != SNMP_ERR_SUCCESS)
@@ -431,12 +431,12 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          }
 
 			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifTable
-         sprintf(szOid, ".1.3.6.1.2.1.31.1.1.1.1.%d", pIfList->pInterfaces[i].dwIndex);
+         sprintf(szOid, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), pIfList->pInterfaces[i].dwIndex);
          if (!useIfXTable ||
 				 (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
                       szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS))
          {
-		      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
+		      sprintf(szOid, _T(".1.3.6.1.2.1.2.2.1.2.%d"), pIfList->pInterfaces[i].dwIndex);
 		      if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
 		                  szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS)
 		         break;
@@ -485,7 +485,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          }
 
          // Interface type
-         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", pIfList->pInterfaces[i].dwIndex);
+         sprintf(szOid, _T(".1.3.6.1.2.1.2.2.1.3.%d"), pIfList->pInterfaces[i].dwIndex);
          if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
                       &pIfList->pInterfaces[i].dwType, sizeof(DWORD),
                       FALSE, FALSE) != SNMP_ERR_SUCCESS)
@@ -494,7 +494,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 			}
 
          // MAC address
-         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.6.%d", pIfList->pInterfaces[i].dwIndex);
+         sprintf(szOid, _T(".1.3.6.1.2.1.2.2.1.6.%d"), pIfList->pInterfaces[i].dwIndex);
          memset(szBuffer, 0, MAC_ADDR_LENGTH);
          if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
                       szBuffer, 256, FALSE, TRUE) == SNMP_ERR_SUCCESS)
@@ -511,7 +511,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
       if (i == iNumIf)
       {
          // Interface IP address'es and netmasks
-         if (SnmpEnumerate(dwVersion, pTransport, ".1.3.6.1.2.1.4.20.1.1",
+         if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.20.1.1"),
                            HandlerIpAddr, pIfList, FALSE) == SNMP_ERR_SUCCESS)
          {
             // Handle special cases
@@ -586,7 +586,7 @@ ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport)
    pArpCache->dwNumEntries = 0;
    pArpCache->pEntries = NULL;
 
-   if (SnmpEnumerate(dwVersion, pTransport, ".1.3.6.1.2.1.4.22.1.3", 
+   if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.22.1.3"), 
                      HandlerArp, pArpCache, FALSE) != SNMP_ERR_SUCCESS)
    {
       DestroyArpCache(pArpCache);
@@ -605,12 +605,11 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dw
 {
    DWORD dwAdminStatus = 0, dwOperStatus = 0;
    int iStatus;
-   char szOid[256];
+   TCHAR szOid[256];
 
    // Interface administrative status
-   sprintf(szOid, ".1.3.6.1.2.1.2.2.1.7.%d", dwIfIndex);
-   SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
-           &dwAdminStatus, sizeof(DWORD), FALSE, FALSE);
+   _sntprintf(szOid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), dwIfIndex);
+   SnmpGet(dwVersion, pTransport, szOid, NULL, 0, &dwAdminStatus, sizeof(DWORD), FALSE, FALSE);
 
    switch(dwAdminStatus)
    {
@@ -622,9 +621,8 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dw
          break;
       case 1:     // Interface administratively up, check operational status
          // Get interface operational status
-         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.8.%d", dwIfIndex);
-         SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
-                 &dwOperStatus, sizeof(DWORD), FALSE, FALSE);
+         _sntprintf(szOid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), dwIfIndex);
+         SnmpGet(dwVersion, pTransport, szOid, NULL, 0, &dwOperStatus, sizeof(DWORD), FALSE, FALSE);
          switch(dwOperStatus)
          {
             case 3:
@@ -653,8 +651,7 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dw
 // Handler for route enumeration
 //
 
-static DWORD HandlerRoute(DWORD dwVersion, SNMP_Variable *pVar,
-                          SNMP_Transport *pTransport, void *pArg)
+static DWORD HandlerRoute(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen, dwResult;
    ROUTE route;
@@ -711,7 +708,7 @@ ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport)
    pRT->iNumEntries = 0;
    pRT->pRoutes = NULL;
 
-   if (SnmpEnumerate(dwVersion, pTransport, ".1.3.6.1.2.1.4.21.1.1", 
+   if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), 
                      HandlerRoute, pRT, FALSE) != SNMP_ERR_SUCCESS)
    {
       DestroyRoutingTable(pRT);
@@ -735,7 +732,7 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 		DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %s/%d:%d"), originalContext->getUser(),
 		          originalContext->getAuthMethod(), originalContext->getPrivMethod());
 		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
-		if (SnmpGet(SNMP_VERSION_3, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
+		if (SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
 						0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 		{
 			DbgPrintf(5, _T("SnmpCheckV3CommSettings: success"));
@@ -760,7 +757,7 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 			                               DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
 			pTransport->setSecurityContext(ctx);
 			DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %s/%d:%d"), ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
-			if (SnmpGet(SNMP_VERSION_3, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
+			if (SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
 							0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 			{
 				DbgPrintf(5, _T("SnmpCheckV3CommSettings: success"));
@@ -810,7 +807,7 @@ restart_check:
 	{
 		DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, originalContext->getCommunity());
 		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
-		if (SnmpGet(snmpVer, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
+		if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
 						0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 		{
 			*version = snmpVer;
@@ -821,7 +818,7 @@ restart_check:
 	// Check default community
 	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, defCommunity);
 	pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
-	if (SnmpGet(snmpVer, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
+	if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
 		         0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 	{
 		*version = snmpVer;
@@ -839,7 +836,7 @@ restart_check:
 			DecodeSQLString(temp);
 			DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, temp);
 			pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
-			if (SnmpGet(snmpVer, pTransport, ".1.3.6.1.2.1.1.2.0", NULL,
+			if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
 							0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 			{
 				*version = snmpVer;

@@ -48,7 +48,7 @@ Interface::Interface()
 Interface::Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask)
           : NetObj()
 {
-   strcpy(m_szName, "unknown");
+   _tcscpy(m_szName, _T("unknown"));
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
    m_dwIfIndex = 1;
@@ -67,7 +67,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask)
 // Constructor for normal interface object
 //
 
-Interface::Interface(const char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType)
+Interface::Interface(const TCHAR *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType)
           : NetObj()
 {
    nx_strncpy(m_szName, szName, MAX_OBJECT_NAME);
@@ -111,8 +111,8 @@ BOOL Interface::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,"
-                               "mac_addr,synthetic_mask,required_polls FROM interfaces WHERE id=%d"), dwId);
+   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,")
+                            _T("mac_addr,synthetic_mask,required_polls FROM interfaces WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -168,7 +168,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 
 BOOL Interface::SaveToDB(DB_HANDLE hdb)
 {
-   char szQuery[1024], szMacStr[16], szIpAddr[16], szNetMask[16];
+   TCHAR szQuery[1024], szMacStr[16], szIpAddr[16], szNetMask[16];
    BOOL bNewObject = TRUE;
    Node *pNode;
    DWORD dwNodeId;
@@ -234,7 +234,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 
 BOOL Interface::DeleteFromDB(void)
 {
-   char szQuery[128];
+   TCHAR szQuery[128];
    BOOL bSuccess;
 
    bSuccess = NetObj::DeleteFromDB();
@@ -353,9 +353,9 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 	}
 
 	int requiredPolls = (m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls;
-	SendPollerMsg(dwRqId, "      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n",
-	              g_szStatusText[newStatus], m_iPollCount, (m_iPollCount == 1) ? "" : "s",
-	              requiredPolls, (requiredPolls == 1) ? "" : "s");
+	SendPollerMsg(dwRqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
+	              g_szStatusText[newStatus], m_iPollCount, (m_iPollCount == 1) ? _T("") : _T("s"),
+	              requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
 	DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d requiredPolls=%d"),
 	          m_dwId, m_szName, newStatus, oldStatus, m_iPollCount, requiredPolls);
 
@@ -377,7 +377,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_dwId, m_szName, m_iStatus, newStatus);
 		m_iStatus = newStatus;
 		m_iPendingStatus = -1;	// Invalidate pending status
-		SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusText[m_iStatus]);
+		SendPollerMsg(dwRqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
 		PostEventEx(pEventQueue, 
 						statusToEvent[m_iStatus],
 						pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,

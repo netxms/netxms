@@ -342,6 +342,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\link.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

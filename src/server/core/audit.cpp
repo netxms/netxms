@@ -53,8 +53,15 @@ static void SendSyslogRecord(const TCHAR *text)
 	time_t ts = time(NULL);
 	struct tm *now = localtime(&ts);
 
+#ifdef UNICODE
+	char *mbText = MBStringFromWideString(text);
+	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (m_auditFacility << 3) + m_auditSeverity, month[now->tm_mon],
+	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, m_localHostName, m_auditTag, mbText);
+	free(mbText);
+#else
 	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (m_auditFacility << 3) + m_auditSeverity, month[now->tm_mon],
 	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, m_localHostName, m_auditTag, text);
+#endif
 	message[1024] = 0;
 
    SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -99,7 +106,7 @@ void InitAuditLog()
 		m_auditServerPort = htons((WORD)ConfigReadInt(_T("ExternalAuditPort"), 514));
 		m_auditFacility = ConfigReadInt(_T("ExternalAuditFacility"), 13);  // default is log audit facility
 		m_auditSeverity = ConfigReadInt(_T("ExternalAuditSeverity"), SYSLOG_SEVERITY_NOTICE);
-		ConfigReadStr(_T("ExternalAuditTag"), m_auditTag, MAX_SYSLOG_TAG_LEN, _T("netxmsd-audit"));
+		ConfigReadStrA(_T("ExternalAuditTag"), m_auditTag, MAX_SYSLOG_TAG_LEN, "netxmsd-audit");
 
 		// Get local host name
 #ifdef _WIN32

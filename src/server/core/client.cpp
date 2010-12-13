@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
    CSCPMessage msg;
 
    // Read configuration
-   iSleepTime = ConfigReadInt("KeepAliveInterval", 60);
+   iSleepTime = ConfigReadInt(_T("KeepAliveInterval"), 60);
 
    // Prepare keepalive message
    msg.SetCode(CMD_KEEPALIVE);
@@ -123,12 +123,12 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
    ClientSession *pSession;
 
    // Read configuration
-   wListenPort = (WORD)ConfigReadInt("ClientListenerPort", SERVER_LISTEN_PORT);
+   wListenPort = (WORD)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT);
 
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "ClientListener");
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListener"));
       return THREAD_OK;
    }
 
@@ -147,7 +147,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, "ClientListener", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("ClientListener"), WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown procedure here */
       return THREAD_OK;
@@ -215,12 +215,12 @@ void DumpSessions(CONSOLE_CTX pCtx)
    static const TCHAR *pszStateName[] = { _T("init"), _T("idle"), _T("processing") };
    static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES") };
 
-   ConsolePrintf(pCtx, "ID  STATE                    CIPHER   USER [CLIENT]\n");
+   ConsolePrintf(pCtx, _T("ID  STATE                    CIPHER   USER [CLIENT]\n"));
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
       {
-         ConsolePrintf(pCtx, "%-3d %-24s %-8s %s [%s]\n", i, 
+         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %s [%s]\n"), i, 
                        (m_pSessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
                          pszStateName[m_pSessionList[i]->getState()] :
                          NXCPMessageCodeName(m_pSessionList[i]->getCurrentCmd(), szBuffer),
@@ -230,7 +230,7 @@ void DumpSessions(CONSOLE_CTX pCtx)
          iCount++;
       }
    RWLockUnlock(m_rwlockSessionListAccess);
-   ConsolePrintf(pCtx, "\n%d active session%s\n\n", iCount, iCount == 1 ? "" : "s");
+   ConsolePrintf(pCtx, _T("\n%d active session%s\n\n"), iCount, iCount == 1 ? "" : "s");
 }
 
 

@@ -106,13 +106,22 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 	BYTE hash[SHA1_DIGEST_SIZE];
 	BOOL bValid = FALSE;
 
-	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), CHECK_NULL(pCert->name), pszLogin);
+#ifdef UNICODE
+	WCHAR *certSubject = WideStringFromMBString(CHECK_NULL_A(pCert->name));
+#else
+#define certSubject (CHECK_NULL(pCert->name))
+#endif
+
+	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), certSubject, pszLogin);
 	MutexLock(m_mutexStoreAccess, INFINITE);
 
 	if (m_pTrustedCertStore == NULL)
 	{
 		DbgPrintf(3, _T("Cannot validate user certificate because certificate store is not initialized"));
 		MutexUnlock(m_mutexStoreAccess);
+#ifdef UNICODE
+		free(certSubject);
+#endif
 		return FALSE;
 	}
 
@@ -127,7 +136,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, pSignature, dwSigLen, pKey->pkey.rsa);
 				break;
 			default:
-				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), pKey->type, CHECK_NULL(pCert->name), pszLogin);
+				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), pKey->type, certSubject, pszLogin);
 				break;
 		}
 	}
@@ -144,13 +153,13 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 			bValid = X509_verify_cert(pStore);
 			X509_STORE_CTX_free(pStore);
 			DbgPrintf(3, _T("Certificate \"%s\" for user %s - validation %s"),
-			          CHECK_NULL(pCert->name), pszLogin, bValid ? _T("successful") : _T("failed"));
+			          certSubject, pszLogin, bValid ? _T("successful") : _T("failed"));
 		}
 		else
 		{
-			char szBuffer[256];
+			TCHAR szBuffer[256];
 
-			DbgPrintf(3, _T("X509_STORE_CTX_new() failed: %s"), ERR_error_string(ERR_get_error(), szBuffer));
+			DbgPrintf(3, _T("X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), szBuffer));
 			bValid = FALSE;
 		}
 	}
@@ -161,7 +170,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 		switch(nMappingMethod)
 		{
 			case USER_MAP_CERT_BY_SUBJECT:
-				bValid = !_tcsicmp(CHECK_NULL(pCert->name), CHECK_NULL_EX(pszMappingData));
+				bValid = !_tcsicmp(certSubject, CHECK_NULL_EX(pszMappingData));
 				break;
 			case USER_MAP_CERT_BY_PUBKEY:
 				bValid = CheckPublicKey(pKey, CHECK_NULL_EX(pszMappingData));
@@ -174,7 +183,13 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 	}
 
 	MutexUnlock(m_mutexStoreAccess);
+
+#ifdef UNICODE
+	free(certSubject);
+#endif
+
 	return bValid;
+#undef certSubject
 }
 
 
@@ -200,7 +215,7 @@ void ReloadCertificates()
 	m_pTrustedCertStore = X509_STORE_new();
 	if (m_pTrustedCertStore != NULL)
 	{
-		_stprintf(szBuffer, _T("SELECT cert_data,subject FROM certificates WHERE cert_type=%d"), CERT_TYPE_TRUSTED_CA);
+		_sntprintf(szBuffer, 256, _T("SELECT cert_data,subject FROM certificates WHERE cert_type=%d"), CERT_TYPE_TRUSTED_CA);
 		hResult = DBSelect(g_hCoreDB, szBuffer);
 		if (hResult != NULL)
 		{

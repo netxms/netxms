@@ -109,14 +109,14 @@
 
 
 //
-// strdup() replacement
+// _tcsdup() replacement
 //
 
 #if defined(_WIN32) && defined(USE_WIN32_HEAP)
 #ifdef __cplusplus
 extern "C" {
 #endif
-char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src);
+char LIBNETXMS_EXPORTABLE *nx__tcsdup(const char *src);
 WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
 #ifdef __cplusplus
 }
@@ -539,10 +539,17 @@ extern "C"
    void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
 	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
-   TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
+   const TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(const TCHAR *line, TCHAR *buffer);
 	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
    int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch);
-	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLF(TCHAR *str);
+	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str);
+	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str);
+#ifdef UNICODE
+#define RemoveTrailingCRLF RemoveTrailingCRLFW
+#else
+#define RemoveTrailingCRLF RemoveTrailingCRLFA
+#endif
+
 #ifdef __cplusplus
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
 #endif
@@ -633,7 +640,7 @@ extern "C"
 	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen);
 #endif
 #if !defined(UNICODE_UCS2) || !HAVE_WCSDUP
-	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *pStr);
+	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2__tcsdup(const UCS2CHAR *pStr);
 #endif
 
 #ifndef UNICODE

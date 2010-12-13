@@ -37,7 +37,7 @@
 
 static struct
 {
-   char szName[MAX_THREAD_NAME];
+   TCHAR szName[MAX_THREAD_NAME];
    time_t tNotifyInterval;
    time_t tLastCheck;
    BOOL bNotResponding;
@@ -55,7 +55,7 @@ DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval)
    DWORD dwId;
 
    MutexLock(m_mutexWatchdogAccess, INFINITE);
-   strcpy(m_threadInfo[m_dwNumThreads].szName, szName);
+   _tcscpy(m_threadInfo[m_dwNumThreads].szName, szName);
    m_threadInfo[m_dwNumThreads].tNotifyInterval = tNotifyInterval;
    m_threadInfo[m_dwNumThreads].tLastCheck = time(NULL);
    m_threadInfo[m_dwNumThreads].bNotResponding = FALSE;
@@ -105,11 +105,11 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx)
 {
    DWORD i;
 
-   ConsolePrintf(pCtx, "%-48s Interval Status\n----------------------------------------------------------------------------\n", "Thread");
+   ConsolePrintf(pCtx, _T("%-48s Interval Status\n----------------------------------------------------------------------------\n"), _T("Thread"));
    MutexLock(m_mutexWatchdogAccess, INFINITE);
    for(i = 0; i < m_dwNumThreads; i++)
-      ConsolePrintf(pCtx, "%-48s %-8ld %s\n", m_threadInfo[i].szName, m_threadInfo[i].tNotifyInterval,
-                    m_threadInfo[i].bNotResponding ? "Not responding" : "Running");
+      ConsolePrintf(pCtx, _T("%-48s %-8ld %s\n"), m_threadInfo[i].szName, m_threadInfo[i].tNotifyInterval,
+                    m_threadInfo[i].bNotResponding ? _T("Not responding") : _T("Running"));
    MutexUnlock(m_mutexWatchdogAccess);
 }
 
@@ -144,6 +144,6 @@ THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 
    MutexDestroy(m_mutexWatchdogAccess);
    m_mutexWatchdogAccess = NULL;
-   DbgPrintf(1, "Watchdog thread terminated");
+   DbgPrintf(1, _T("Watchdog thread terminated"));
    return THREAD_OK;
 }

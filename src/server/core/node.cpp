@@ -41,9 +41,8 @@ Node::Node()
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
    m_wSNMPPort = SNMP_DEFAULT_PORT;
-	TCHAR community[MAX_COMMUNITY_LENGTH];
-   ConfigReadStr("DefaultCommunityString", community,
-                 MAX_COMMUNITY_LENGTH, "public");
+	char community[MAX_COMMUNITY_LENGTH];
+   ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
 	m_snmpSecurity = new SNMP_SecurityContext(community);
    m_szObjectId[0] = 0;
    m_tLastDiscoveryPoll = 0;
@@ -96,9 +95,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
    m_wSNMPPort = SNMP_DEFAULT_PORT;
-	TCHAR community[MAX_COMMUNITY_LENGTH];
-   ConfigReadStr("DefaultCommunityString", community,
-                 MAX_COMMUNITY_LENGTH, "public");
+	char community[MAX_COMMUNITY_LENGTH];
+   ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
 	m_snmpSecurity = new SNMP_SecurityContext(community);
    IpToStr(dwAddr, m_szName);    // Make default name from IP address
    m_szObjectId[0] = 0;
@@ -170,7 +168,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
    if (!LoadCommonProperties())
    {
-      DbgPrintf(2, "Cannot load common properties for node object %d", dwId);
+      DbgPrintf(2, _T("Cannot load common properties for node object %d"), dwId);
       return FALSE;
    }
 
@@ -215,10 +213,10 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	m_wSNMPPort = (WORD)DBGetFieldLong(hResult, 0, 18);
 
 	// SNMP authentication parameters
-	TCHAR snmpAuthObject[256], snmpAuthPassword[256], snmpPrivPassword[256];
-	DBGetField(hResult, 0, 19, snmpAuthObject, 256);
-	DBGetField(hResult, 0, 20, snmpAuthPassword, 256);
-	DBGetField(hResult, 0, 21, snmpPrivPassword, 256);
+	char snmpAuthObject[256], snmpAuthPassword[256], snmpPrivPassword[256];
+	DBGetFieldA(hResult, 0, 19, snmpAuthObject, 256);
+	DBGetFieldA(hResult, 0, 20, snmpAuthPassword, 256);
+	DBGetFieldA(hResult, 0, 21, snmpPrivPassword, 256);
 	int snmpMethods = DBGetFieldLong(hResult, 0, 21);
 	delete m_snmpSecurity;
 	m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword, snmpMethods & 0xFF, snmpMethods >> 8);
@@ -318,7 +316,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods) VALUES ")
 		           _T("(%d,'%s',%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d)"),
                  m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (int)m_wSNMPPort, m_dwFlags,
-                 m_snmpVersion, (const TCHAR *)DBPrepareString(hdb, m_snmpSecurity->getCommunity()),
+                 m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
 					  m_iStatusPollType, (int)m_wAgentPort, m_wAuthMethod, 
 					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret),
 					  (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
@@ -326,8 +324,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName),
 					  (const TCHAR *)DBPrepareString(hdb, m_szSysDescription),
 		           m_dwPollerNode, m_dwZoneGUID, m_dwSNMPProxy, m_iRequiredPollCount, m_nUseIfXTable,
-					  (const TCHAR *)DBPrepareString(hdb, m_snmpSecurity->getAuthPassword()),
-					  (const TCHAR *)DBPrepareString(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods);
+					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
+					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods);
 	}
    else
 	{
@@ -341,7 +339,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
 					  _T("usm_priv_password=%s,usm_methods=%d WHERE id=%d"),
                  IpToStr(m_dwIpAddr, szIpAddr), m_wSNMPPort, 
-                 m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareString(hdb, m_snmpSecurity->getCommunity()),
+                 m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
                  m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
 					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret), 
                  (const TCHAR *)DBPrepareString(hdb, m_szObjectId), m_dwNodeType,
@@ -349,8 +347,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
 					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_dwZoneGUID,
                  m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
-					  m_nUseIfXTable, (const TCHAR *)DBPrepareString(hdb, m_snmpSecurity->getAuthPassword()),
-					  (const TCHAR *)DBPrepareString(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods, m_dwId);
+					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
+					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods, m_dwId);
 	}
    bResult = DBQuery(hdb, szQuery);
 
@@ -385,7 +383,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 
 BOOL Node::DeleteFromDB()
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    BOOL bSuccess;
 
    bSuccess = Template::DeleteFromDB();
@@ -546,7 +544,7 @@ BOOL Node::isMyIP(DWORD dwIpAddr)
 // Create new interface
 //
 
-void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName, 
+void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name, 
                               DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr)
 {
    Interface *pInterface;
@@ -555,7 +553,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 	BOOL bAddToSubnet, bSyntheticMask = FALSE;
 
 	DbgPrintf(5, _T("Node::CreateNewInterface(%08X, %08X, %s, %d, %d) called for node %s [%d]"),
-	          dwIpAddr, dwNetMask, szName, dwIndex, dwType, m_szName, m_dwId);
+	          dwIpAddr, dwNetMask, name, dwIndex, dwType, m_szName, m_dwId);
 
    // Find subnet to place interface object to
    if (dwIpAddr != 0)
@@ -610,8 +608,8 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
    }
 
    // Create interface object
-   if (szName != NULL)
-      pInterface = new Interface(szName, dwIndex, dwIpAddr, dwNetMask, dwType);
+   if (name != NULL)
+      pInterface = new Interface(name, dwIndex, dwIpAddr, dwNetMask, dwType);
    else
       pInterface = new Interface(dwIpAddr, dwNetMask, bSyntheticMask);
    if (pbMacAddr != NULL)
@@ -715,11 +713,11 @@ void Node::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    time_t tNow, tExpire;
 
    pQueue = new Queue;
-   SetPollerInfo(nPoller, "wait for lock");
+   SetPollerInfo(nPoller, _T("wait for lock"));
    pollerLock();
    m_pPollRequestor = pSession;
-   SendPollerMsg(dwRqId, "Starting status poll for node %s\r\n", m_szName);
-   DbgPrintf(5, "Starting status poll for node %s (ID: %d)", m_szName, m_dwId);
+   SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
+   DbgPrintf(5, _T("Starting status poll for node %s (ID: %d)"), m_szName, m_dwId);
 
    // Read capability expiration time and current time
    tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
@@ -732,17 +730,17 @@ restart_agent_check:
       TCHAR szBuffer[256];
       DWORD dwResult;
 
-      DbgPrintf(6, "StatusPoll(%s): check SNMP", m_szName);
+      DbgPrintf(6, _T("StatusPoll(%s): check SNMP"), m_szName);
 		pTransport = createSnmpTransport();
 		if (pTransport == NULL)
 		{
-	      DbgPrintf(6, "StatusPoll(%s): cannot create SNMP transport", m_szName);
+	      DbgPrintf(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_szName);
 			goto skip_snmp_check;
 		}
 
-      SetPollerInfo(nPoller, "check SNMP");
-      SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
-      dwResult = SnmpGet(m_snmpVersion, pTransport, ".1.3.6.1.2.1.1.2.0",
+      SetPollerInfo(nPoller, _T("check SNMP"));
+      SendPollerMsg(dwRqId, _T("Checking SNMP agent connectivity\r\n"));
+      dwResult = SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"),
 		                   NULL, 0, szBuffer, 256, FALSE, FALSE);
       if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
       {
@@ -750,12 +748,12 @@ restart_agent_check:
          {
             m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
             PostEventEx(pQueue, EVENT_SNMP_OK, m_dwId, NULL);
-            SendPollerMsg(dwRqId, POLLER_INFO "Connectivity with SNMP agent restored\r\n");
+            SendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
          }
       }
       else
       {
-         SendPollerMsg(dwRqId, POLLER_ERROR "SNMP agent unreachable\r\n");
+         SendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
          if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
          {
             if ((tNow > m_tFailTimeSNMP + tExpire) &&
@@ -764,7 +762,7 @@ restart_agent_check:
                m_dwFlags &= ~NF_IS_SNMP;
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
                m_szObjectId[0] = 0;
-               SendPollerMsg(dwRqId, POLLER_WARNING "Attribute isSNMP set to FALSE\r\n");
+               SendPollerMsg(dwRqId, POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
             }
          }
          else
@@ -775,33 +773,33 @@ restart_agent_check:
          }
       }
 		delete pTransport;
-      DbgPrintf(6, "StatusPoll(%s): SNMP check finished", m_szName);
+      DbgPrintf(6, _T("StatusPoll(%s): SNMP check finished"), m_szName);
    }
 
 skip_snmp_check:
    // Check native agent connectivity
    if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
    {
-      DbgPrintf(6, "StatusPoll(%s): checking agent", m_szName);
-      SetPollerInfo(nPoller, "check agent");
-      SendPollerMsg(dwRqId, "Checking NetXMS agent connectivity\r\n");
+      DbgPrintf(6, _T("StatusPoll(%s): checking agent"), m_szName);
+      SetPollerInfo(nPoller, _T("check agent"));
+      SendPollerMsg(dwRqId, _T("Checking NetXMS agent connectivity\r\n"));
 
 		DWORD error, socketError;
 		agentLock();
       if (connectToAgent(&error, &socketError))
       {
-         DbgPrintf(7, "StatusPoll(%s): connected to agent", m_szName);
+         DbgPrintf(7, _T("StatusPoll(%s): connected to agent"), m_szName);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
             m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
             PostEventEx(pQueue, EVENT_AGENT_OK, m_dwId, NULL);
-            SendPollerMsg(dwRqId, POLLER_INFO "Connectivity with NetXMS agent restored\r\n");
+            SendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
          }
       }
       else
       {
-         DbgPrintf(6, "StatusPoll(%s): agent unreachable, error=%d, socketError=%d", m_szName, (int)error, (int)socketError);
-         SendPollerMsg(dwRqId, POLLER_ERROR "NetXMS agent unreachable\r\n");
+         DbgPrintf(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d"), m_szName, (int)error, (int)socketError);
+         SendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
             if ((tNow > m_tFailTimeAgent + tExpire) &&
@@ -811,7 +809,7 @@ skip_snmp_check:
                m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
                m_szPlatformName[0] = 0;
                m_szAgentVersion[0] = 0;
-               SendPollerMsg(dwRqId, POLLER_WARNING "Attribute isNetXMSAgent set to FALSE\r\n");
+               SendPollerMsg(dwRqId, POLLER_WARNING _T("Attribute isNetXMSAgent set to FALSE\r\n"));
             }
          }
          else
@@ -822,10 +820,10 @@ skip_snmp_check:
          }
       }
 		agentUnlock();
-      DbgPrintf(7, "StatusPoll(%s): agent check finished", m_szName);
+      DbgPrintf(7, _T("StatusPoll(%s): agent check finished"), m_szName);
    }
 
-   SetPollerInfo(nPoller, "prepare polling list");
+   SetPollerInfo(nPoller, _T("prepare polling list"));
 
    // Find service poller node object
    LockData();
@@ -864,8 +862,8 @@ skip_snmp_check:
    UnlockChildList();
 
    // Poll interfaces and services
-   SetPollerInfo(nPoller, "child poll");
-   DbgPrintf(7, "StatusPoll(%s): starting child object poll", m_szName);
+   SetPollerInfo(nPoller, _T("child poll"));
+   DbgPrintf(7, _T("StatusPoll(%s): starting child object poll"), m_szName);
 	pCluster = getMyCluster();
 	pTransport = createSnmpTransport();
    for(i = 0; i < dwPollListSize; i++)
@@ -873,13 +871,13 @@ skip_snmp_check:
       switch(ppPollList[i]->Type())
       {
          case OBJECT_INTERFACE:
-			   DbgPrintf(7, "StatusPoll(%s): polling interface %d [%s]", m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
+			   DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
             ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId, pQueue,
 					(pCluster != NULL) ? pCluster->isSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
 					pTransport);
             break;
          case OBJECT_NETWORKSERVICE:
-			   DbgPrintf(7, "StatusPoll(%s): polling network service %d [%s]", m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
+			   DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
             ((NetworkService *)ppPollList[i])->StatusPoll(pSession, dwRqId,
                                                           (Node *)pPollerNode, pQueue);
             break;
@@ -890,7 +888,7 @@ skip_snmp_check:
    }
 	delete pTransport;
    safe_free(ppPollList);
-   DbgPrintf(7, "StatusPoll(%s): finished child object poll", m_szName);
+   DbgPrintf(7, _T("StatusPoll(%s): finished child object poll"), m_szName);
 
    // Check if entire node is down
 	// This check is disabled for nodes without IP address
@@ -929,11 +927,11 @@ skip_snmp_check:
 		   {
 		      m_dwDynamicFlags |= NDF_UNREACHABLE;
 		      PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
-		      SendPollerMsg(dwRqId, POLLER_ERROR "Node is unreachable\r\n");
+		      SendPollerMsg(dwRqId, POLLER_ERROR _T("Node is unreachable\r\n"));
 		   }
 		   else
 		   {
-		      SendPollerMsg(dwRqId, POLLER_WARNING "Node is still unreachable\r\n");
+		      SendPollerMsg(dwRqId, POLLER_WARNING _T("Node is still unreachable\r\n"));
 		   }
 		}
 		else
@@ -942,12 +940,12 @@ skip_snmp_check:
 		   {
 		      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE);
 		      PostEvent(EVENT_NODE_UP, m_dwId, NULL);
-		      SendPollerMsg(dwRqId, POLLER_INFO "Node recovered from unreachable state\r\n");
+		      SendPollerMsg(dwRqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
 				goto restart_agent_check;
 		   }
 		   else
 		   {
-		      SendPollerMsg(dwRqId, POLLER_INFO "Node is connected\r\n");
+		      SendPollerMsg(dwRqId, POLLER_INFO _T("Node is connected\r\n"));
 		   }
 		}
 	}
@@ -956,7 +954,7 @@ skip_snmp_check:
    ResendEvents(pQueue);
    delete pQueue;
    
-   SetPollerInfo(nPoller, "cleanup");
+   SetPollerInfo(nPoller, _T("cleanup"));
    if (pPollerNode != NULL)
       pPollerNode->DecRefCount();
 
@@ -970,13 +968,13 @@ skip_snmp_check:
 
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
-   SendPollerMsg(dwRqId, "Finished status poll for node %s\r\n", m_szName);
-   SendPollerMsg(dwRqId, "Node status after poll is %s\r\n", g_szStatusText[m_iStatus]);
+   SendPollerMsg(dwRqId, _T("Finished status poll for node %s\r\n"), m_szName);
+   SendPollerMsg(dwRqId, _T("Node status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
    m_pPollRequestor = NULL;
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
    pollerUnlock();
-   DbgPrintf(5, "Finished status poll for node %s (ID: %d)", m_szName, m_dwId);
+   DbgPrintf(5, _T("Finished status poll for node %s (ID: %d)"), m_szName, m_dwId);
 }
 
 
@@ -1059,16 +1057,16 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
    int j, iDelCount;
    AgentConnection *pAgentConn;
    INTERFACE_LIST *pIfList;
-   char szBuffer[4096];
+   TCHAR szBuffer[4096];
 	Cluster *pCluster;
 	SNMP_Transport *pTransport;
    BOOL bHasChanges = FALSE;
 
-   SetPollerInfo(nPoller, "wait for lock");
+   SetPollerInfo(nPoller, _T("wait for lock"));
    pollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_szName);
-   DbgPrintf(4, "Starting configuration poll for node %s (ID: %d)", m_szName, m_dwId);
+   DbgPrintf(4, _T("Starting configuration poll for node %s (ID: %d)"), m_szName, m_dwId);
 
    // Check for forced capabilities recheck
    if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
@@ -1086,17 +1084,17 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
    if ((m_dwDynamicFlags & NDF_UNREACHABLE) && !(m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES))
    {
       SendPollerMsg(dwRqId, POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
-      DbgPrintf(4, "Node is marked as unreachable, configuration poll aborted");
+      DbgPrintf(4, _T("Node is marked as unreachable, configuration poll aborted"));
       m_tLastConfigurationPoll = time(NULL);
    }
    else
    {
       // Check node's capabilities
-      SetPollerInfo(nPoller, "capability check");
+      SetPollerInfo(nPoller, _T("capability check"));
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
       
 		// ***** NetXMS agent check *****
-      DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}", m_szName, m_dwFlags, m_dwDynamicFlags);
+      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}"), m_szName, m_dwFlags, m_dwDynamicFlags);
       if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))) &&
           (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
       {
@@ -1104,10 +1102,10 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
          pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
                                           m_wAuthMethod, m_szSharedSecret);
          setAgentProxy(pAgentConn);
-         DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - connecting", m_szName);
+         DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_szName);
          if (pAgentConn->connect(g_pServerKey))
          {
-            DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - connected", m_szName);
+            DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_szName);
             LockData();
             m_dwFlags |= NF_IS_NATIVE_AGENT;
             if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
@@ -1122,24 +1120,24 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 				}
             UnlockData();
       
-            if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+            if (pAgentConn->GetParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
             {
                LockData();
-               if (strcmp(m_szAgentVersion, szBuffer))
+               if (_tcscmp(m_szAgentVersion, szBuffer))
                {
-                  strcpy(m_szAgentVersion, szBuffer);
+                  _tcscpy(m_szAgentVersion, szBuffer);
                   bHasChanges = TRUE;
                   SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
                }
                UnlockData();
             }
 
-            if (pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
+            if (pAgentConn->GetParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
             {
                LockData();
-               if (strcmp(m_szPlatformName, szBuffer))
+               if (_tcscmp(m_szPlatformName, szBuffer))
                {
-                  strcpy(m_szPlatformName, szBuffer);
+                  _tcscpy(m_szPlatformName, szBuffer);
                   bHasChanges = TRUE;
                   SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
                }
@@ -1147,7 +1145,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check IP forwarding status
-            if (pAgentConn->GetParameter("Net.IP.Forwarding", 16, szBuffer) == ERR_SUCCESS)
+            if (pAgentConn->GetParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
             {
                if (_tcstoul(szBuffer, NULL, 10) != 0)
                   m_dwFlags |= NF_IS_ROUTER;
@@ -1156,15 +1154,15 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
 				// Get uname
-				if (pAgentConn->GetParameter("System.Uname", MAX_DB_STRING, szBuffer) == ERR_SUCCESS)
+				if (pAgentConn->GetParameter(_T("System.Uname"), MAX_DB_STRING, szBuffer) == ERR_SUCCESS)
 				{
-					TranslateStr(szBuffer, "\r\n", " ");
-					TranslateStr(szBuffer, "\n", " ");
-					TranslateStr(szBuffer, "\r", " ");
+					TranslateStr(szBuffer, _T("\r\n"), _T(" "));
+					TranslateStr(szBuffer, _T("\n"), _T(" "));
+					TranslateStr(szBuffer, _T("\r"), _T(" "));
                LockData();
-               if (strcmp(m_szSysDescription, szBuffer))
+               if (_tcscmp(m_szSysDescription, szBuffer))
                {
-                  strcpy(m_szSysDescription, szBuffer);
+                  _tcscpy(m_szSysDescription, szBuffer);
                   bHasChanges = TRUE;
                   SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
                }
@@ -1190,7 +1188,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             pAgentConn->disconnect();
          }
          delete pAgentConn;
-         DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - finished", m_szName);
+         DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_szName);
       }
 
 		// ***** SNMP check *****
@@ -1198,11 +1196,11 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
           (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_dwIpAddr != 0))
       {
 	      SendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
-         DbgPrintf(5, "ConfPoll(%s): calling SnmpCheckCommSettings()", m_szName);
+         DbgPrintf(5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_szName);
 			pTransport = createSnmpTransport();
 			if (pTransport == NULL)
 			{
-				DbgPrintf(5, "ConfPoll(%s): unable to create SNMP transport", m_szName);
+				DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_szName);
 				goto skip_snmp_checks;
 			}
 
@@ -1226,11 +1224,11 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					(m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
 
 				if (SnmpGet(m_snmpVersion, pTransport,
-								".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
+								_T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 4096,
 								FALSE, FALSE) == SNMP_ERR_SUCCESS)
 				{
 					LockData();
-					if (strcmp(m_szObjectId, szBuffer))
+					if (_tcscmp(m_szObjectId, szBuffer))
 					{
 						nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
 						bHasChanges = TRUE;
@@ -1251,7 +1249,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 				UnlockData();
 
             // Check IP forwarding
-            if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.2.1.4.1.0", 1))
+            if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
             {
 					LockData();
                m_dwFlags |= NF_IS_ROUTER;
@@ -1266,7 +1264,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
             // Check for bridge MIB support
             if (SnmpGet(m_snmpVersion, pTransport,
-                        ".1.3.6.1.2.1.17.1.1.0", NULL, 0, szBuffer, 4096,
+                        _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096,
                         FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
 					LockData();
@@ -1281,7 +1279,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check for CDP (Cisco Discovery Protocol) support
-            if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.4.1.9.9.23.1.3.1.0", 1))
+            if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), 1))
             {
 					LockData();
                m_dwFlags |= NF_IS_CDP;
@@ -1295,7 +1293,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check for SONMP (Nortel topology discovery discovery protocol) support
-            if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.4.1.45.1.6.13.1.2.0", 1))
+            if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
             {
 					LockData();
                m_dwFlags |= NF_IS_SONMP;
@@ -1310,7 +1308,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 		      // Check for LLDP (Link Layer Discovery Protocol) support
 				if (SnmpGet(m_snmpVersion, pTransport,
-								".1.0.8802.1.1.2.1.3.2.0", NULL, 0, szBuffer, 4096,
+								_T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 4096,
 								FALSE, FALSE) == SNMP_ERR_SUCCESS)
 				{
 					LockData();
@@ -1326,16 +1324,16 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 				// Get system description
 				if (SnmpGet(m_snmpVersion, pTransport,
-				            ".1.3.6.1.2.1.1.1.0", NULL, 0, szBuffer,
+				            _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer,
 				            MAX_DB_STRING, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 				{
-					TranslateStr(szBuffer, "\r\n", " ");
-					TranslateStr(szBuffer, "\n", " ");
-					TranslateStr(szBuffer, "\r", " ");
+					TranslateStr(szBuffer, _T("\r\n"), _T(" "));
+					TranslateStr(szBuffer, _T("\n"), _T(" "));
+					TranslateStr(szBuffer, _T("\r"), _T(" "));
 					LockData();
-               if (strcmp(m_szSysDescription, szBuffer))
+               if (_tcscmp(m_szSysDescription, szBuffer))
                {
-                  strcpy(m_szSysDescription, szBuffer);
+                  _tcscpy(m_szSysDescription, szBuffer);
                   bHasChanges = TRUE;
                   SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
                }
@@ -1347,15 +1345,15 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
          else
          {
             // Check for CheckPoint SNMP agent on port 161
-            DbgPrintf(5, "ConfPoll(%s): checking for CheckPoint SNMP", m_szName);
+            DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_szName);
             if (SnmpGet(m_snmpVersion, pTransport,
-                        ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
+                        _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0,
                         szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
                LockData();
-               if (strcmp(m_szObjectId, ".1.3.6.1.4.1.2620.1.1"))
+               if (_tcscmp(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
                {
-                  nx_strncpy(m_szObjectId, ".1.3.6.1.4.1.2620.1.1", MAX_OID_LEN * 4);
+                  nx_strncpy(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
                   bHasChanges = TRUE;
                }
 
@@ -1370,13 +1368,13 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 skip_snmp_checks:
       // Check for CheckPoint SNMP agent on port 260
-      DbgPrintf(5, "ConfPoll(%s): checking for CheckPoint SNMP on port 260", m_szName);
+      DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
       if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
       {
 			pTransport = new SNMP_UDPTransport;
 			((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
          if (SnmpGet(SNMP_VERSION_1, pTransport,
-                     ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
+                     _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0,
                      szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
          {
             LockData();
@@ -1399,7 +1397,7 @@ skip_snmp_checks:
 		pCluster = getMyCluster();
 
       // Retrieve interface list
-      SetPollerInfo(nPoller, "interface check");
+      SetPollerInfo(nPoller, _T("interface check"));
       SendPollerMsg(dwRqId, _T("Capability check finished\r\n"));
       SendPollerMsg(dwRqId, _T("Checking interface configuration...\r\n"));
       pIfList = getInterfaceList();
@@ -1483,7 +1481,7 @@ skip_snmp_checks:
                      // Existing interface, check configuration
                      if (memcmp(pIfList->pInterfaces[j].bMacAddr, pInterface->MacAddr(), MAC_ADDR_LENGTH))
                      {
-                        char szOldMac[16], szNewMac[16];
+                        TCHAR szOldMac[16], szNewMac[16];
 
                         BinToStr((BYTE *)pInterface->MacAddr(), MAC_ADDR_LENGTH, szOldMac);
                         BinToStr(pIfList->pInterfaces[j].bMacAddr, MAC_ADDR_LENGTH, szNewMac);
@@ -1492,7 +1490,7 @@ skip_snmp_checks:
                                   pInterface->Name(), szOldMac, szNewMac);
                         pInterface->SetMacAddr(pIfList->pInterfaces[j].bMacAddr);
                      }
-                     if (strcmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
+                     if (_tcscmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
                      {
                         pInterface->SetName(pIfList->pInterfaces[j].szName);
                      }
@@ -1546,10 +1544,10 @@ skip_snmp_checks:
 
             if (bCreate)
             {
-               char szBuffer[MAX_OBJECT_NAME];
+               TCHAR szBuffer[MAX_OBJECT_NAME];
 
                // Create pseudo interface for NAT
-               ConfigReadStr("NATAdapterName", szBuffer, MAX_OBJECT_NAME, "NetXMS NAT Adapter");
+               ConfigReadStr(_T("NATAdapterName"), szBuffer, MAX_OBJECT_NAME, _T("NetXMS NAT Adapter"));
                CreateNewInterface(m_dwIpAddr, 0, szBuffer,
                                   0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
                bHasChanges = TRUE;
@@ -1651,7 +1649,7 @@ skip_snmp_checks:
 			 isMyIP(dwAddr))
 		{
 			SendPollerMsg(dwRqId, _T("Node name is an IP address and need to be resolved\r\n"));
-	      SetPollerInfo(nPoller, "resolving name");
+	      SetPollerInfo(nPoller, _T("resolving name"));
 			if (ResolveName(FALSE))
 			{
 				SendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
@@ -1667,7 +1665,7 @@ skip_snmp_checks:
 			if (g_dwFlags & AF_SYNC_NODE_NAMES_WITH_DNS)
 			{
 				SendPollerMsg(dwRqId, _T("Syncing node name with DNS\r\n"));
-		      SetPollerInfo(nPoller, "resolving name");
+		      SetPollerInfo(nPoller, _T("resolving name"));
 				if (ResolveName(TRUE))
 				{
 					SendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
@@ -1693,12 +1691,12 @@ skip_snmp_checks:
    }
 
    // Finish configuration poll
-   SetPollerInfo(nPoller, "cleanup");
+   SetPollerInfo(nPoller, _T("cleanup"));
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
    m_dwDynamicFlags &= ~NDF_RECHECK_CAPABILITIES;
    pollerUnlock();
-   DbgPrintf(4, "Finished configuration poll for node %s (ID: %d)", m_szName, m_dwId);
+   DbgPrintf(4, _T("Finished configuration poll for node %s (ID: %d)"), m_szName, m_dwId);
 
    if (bHasChanges)
    {
@@ -1878,7 +1876,14 @@ BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
    // Close current connection or clean up after broken connection
    m_pAgentConnection->disconnect();
    m_pAgentConnection->setPort(m_wAgentPort);
+#ifdef UNICODE
+	char mbSecret[MAX_SECRET_LENGTH];
+	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, m_szSharedSecret, -1, mbSecret, MAX_SECRET_LENGTH, NULL, NULL);
+	mbSecret[MAX_SECRET_LENGTH - 1] = 0;
+   m_pAgentConnection->setAuthData(m_wAuthMethod, mbSecret);
+#else
    m_pAgentConnection->setAuthData(m_wAuthMethod, m_szSharedSecret);
+#endif
    setAgentProxy(m_pAgentConnection);
    bRet = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
    if (bRet)
@@ -1894,7 +1899,7 @@ BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
 // Get item's value via SNMP
 //
 
-DWORD Node::GetItemFromSNMP(WORD port, const char *szParam, DWORD dwBufSize, char *szBuffer)
+DWORD Node::GetItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
 {
    DWORD dwResult;
 
@@ -1920,7 +1925,7 @@ DWORD Node::GetItemFromSNMP(WORD port, const char *szParam, DWORD dwBufSize, cha
 			dwResult = SNMP_ERR_COMM;
 		}
    }
-   DbgPrintf(7, "Node(%s)->GetItemFromSNMP(%s): dwResult=%d", m_szName, szParam, dwResult);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -1930,7 +1935,7 @@ DWORD Node::GetItemFromSNMP(WORD port, const char *szParam, DWORD dwBufSize, cha
 // Get item's value via SNMP from CheckPoint's agent
 //
 
-DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer)
+DWORD Node::GetItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
 {
    DWORD dwResult;
 
@@ -1950,7 +1955,7 @@ DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char
                          dwBufSize, FALSE, TRUE);
 		delete pTransport;
    }
-   DbgPrintf(7, "Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d", m_szName, szParam, dwResult);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -1960,7 +1965,7 @@ DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char
 // Get item's value via native agent
 //
 
-DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer)
+DWORD Node::GetItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
 {
    DWORD dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
    DWORD dwTries = 3;
@@ -1981,7 +1986,7 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = m_pAgentConnection->GetParameter((char *)szParam, dwBufSize, szBuffer);
+      dwError = m_pAgentConnection->GetParameter(szParam, dwBufSize, szBuffer);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -2008,7 +2013,7 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
 
 end_loop:
    agentUnlock();
-   DbgPrintf(7, "Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d",
+   DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"),
              m_szName, szParam, dwError, dwResult);
    return dwResult;
 }
@@ -2018,23 +2023,23 @@ end_loop:
 // Get value for server's internal parameter
 //
 
-DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer)
+DWORD Node::GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
 {
    DWORD dwError = DCE_SUCCESS;
 
-   if (!stricmp(szParam, "Status"))
+   if (!_tcsicmp(szParam, _T("Status")))
    {
-      sprintf(szBuffer, "%d", m_iStatus);
+      _sntprintf(szBuffer, dwBufSize, _T("%d"), m_iStatus);
    }
-   else if (!stricmp(szParam, "Dummy"))
+   else if (!_tcsicmp(szParam, _T("Dummy")))
    {
       _tcscpy(szBuffer, _T("0"));
    }
-   else if (!stricmp(szParam, "AgentStatus"))
+   else if (!_tcsicmp(szParam, _T("AgentStatus")))
    {
       if (m_dwFlags & NF_IS_NATIVE_AGENT)
       {
-         szBuffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ? '1' : '0';
+         szBuffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ? _T('1') : _T('0');
          szBuffer[1] = 0;
       }
       else
@@ -2042,14 +2047,14 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString("ChildStatus(*)", szParam, FALSE))
+   else if (MatchString(_T("ChildStatus(*)"), szParam, FALSE))
    {
-      char *pEnd, szArg[256];
+      TCHAR *pEnd, szArg[256];
       DWORD i, dwId;
       NetObj *pObject = NULL;
 
-      AgentGetParameterArg((char *)szParam, 1, szArg, 256);
-      dwId = strtoul(szArg, &pEnd, 0);
+      AgentGetParameterArg(szParam, 1, szArg, 256);
+      dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd != 0)
       {
          // Argument is object's name
@@ -2060,7 +2065,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
       {
-         if (((dwId == 0) && (!stricmp(m_pChildList[i]->Name(), szArg))) ||
+         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->Name(), szArg))) ||
              (dwId == m_pChildList[i]->Id()))
          {
             pObject = m_pChildList[i];
@@ -2071,21 +2076,21 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
 
       if (pObject != NULL)
       {
-         sprintf(szBuffer, "%d", pObject->Status());
+         _sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
       }
       else
       {
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString("ConditionStatus(*)", szParam, FALSE))
+   else if (MatchString(_T("ConditionStatus(*)"), szParam, FALSE))
    {
-      char *pEnd, szArg[256];
+      TCHAR *pEnd, szArg[256];
       DWORD dwId;
       NetObj *pObject = NULL;
 
-      AgentGetParameterArg((char *)szParam, 1, szArg, 256);
-      dwId = strtoul(szArg, &pEnd, 0);
+      AgentGetParameterArg(szParam, 1, szArg, 256);
+      dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd == 0)
 		{
 			pObject = FindObjectById(dwId);
@@ -2103,7 +2108,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       {
 			if (pObject->IsTrustedNode(m_dwId))
 			{
-				sprintf(szBuffer, "%d", pObject->Status());
+				_sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
 			}
 			else
 			{
@@ -2117,29 +2122,29 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
    }
    else if (m_dwFlags & NF_IS_LOCAL_MGMT)
    {
-      if (!stricmp(szParam, "Server.AverageDCPollerQueueSize"))
+      if (!_tcsicmp(szParam, _T("Server.AverageDCPollerQueueSize")))
       {
-         sprintf(szBuffer, "%f", g_dAvgPollerQueueSize);
+         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgPollerQueueSize);
       }
-      else if (!stricmp(szParam, "Server.AverageDBWriterQueueSize"))
+      else if (!_tcsicmp(szParam, _T("Server.AverageDBWriterQueueSize")))
       {
-         sprintf(szBuffer, "%f", g_dAvgDBWriterQueueSize);
+         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgDBWriterQueueSize);
       }
-      else if (!stricmp(szParam, "Server.AverageStatusPollerQueueSize"))
+      else if (!_tcsicmp(szParam, _T("Server.AverageStatusPollerQueueSize")))
       {
-         sprintf(szBuffer, "%f", g_dAvgStatusPollerQueueSize);
+         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgStatusPollerQueueSize);
       }
-      else if (!stricmp(szParam, "Server.AverageConfigurationPollerQueueSize"))
+      else if (!_tcsicmp(szParam, _T("Server.AverageConfigurationPollerQueueSize")))
       {
-         sprintf(szBuffer, "%f", g_dAvgConfigPollerQueueSize);
+         _sntprintf(szBuffer, dwBufSize, _T("%f"), g_dAvgConfigPollerQueueSize);
       }
-      else if (!stricmp(szParam, "Server.AverageDCIQueuingTime"))
+      else if (!_tcsicmp(szParam, _T("Server.AverageDCIQueuingTime")))
       {
-         sprintf(szBuffer, "%u", g_dwAvgDCIQueuingTime);
+         _sntprintf(szBuffer, dwBufSize, _T("%u"), g_dwAvgDCIQueuingTime);
       }
-      else if (!stricmp(szParam, "Server.TotalEventsProcessed"))
+      else if (!_tcsicmp(szParam, _T("Server.TotalEventsProcessed")))
       {
-         sprintf(szBuffer, INT64_FMT, g_totalEventsProcessed);
+         _sntprintf(szBuffer, dwBufSize, INT64_FMT, g_totalEventsProcessed);
       }
       else
       {
@@ -2159,7 +2164,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
 // Get item's value for client
 //
 
-DWORD Node::GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize)
+DWORD Node::GetItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize)
 {
    DWORD dwResult = 0, dwRetCode;
 
@@ -2250,9 +2255,9 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_AGENT_PORT, m_wAgentPort);
    pMsg->SetVariable(VID_AUTH_METHOD, m_wAuthMethod);
    pMsg->SetVariable(VID_SHARED_SECRET, m_szSharedSecret);
-	pMsg->SetVariable(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
-	pMsg->SetVariable(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
-	pMsg->SetVariable(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
+	pMsg->SetVariableFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
+	pMsg->SetVariableFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
+	pMsg->SetVariableFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
 	pMsg->SetVariable(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
    pMsg->SetVariable(VID_SNMP_OID, m_szObjectId);
    pMsg->SetVariable(VID_SNMP_PORT, m_wSNMPPort);
@@ -2276,8 +2281,6 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 
 DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
-	TCHAR buffer[256];
-
    if (!bAlreadyLocked)
       LockData();
 
@@ -2355,14 +2358,16 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change SNMP authentication data
    if (pRequest->IsVariableExist(VID_SNMP_AUTH_OBJECT))
 	{
-      pRequest->GetVariableStr(VID_SNMP_AUTH_OBJECT, buffer, 256);
-		m_snmpSecurity->setAuthName(buffer);
+		char mbBuffer[256];
 
-		pRequest->GetVariableStr(VID_SNMP_AUTH_PASSWORD, buffer, 256);
-		m_snmpSecurity->setAuthPassword(buffer);
+      pRequest->GetVariableStrA(VID_SNMP_AUTH_OBJECT, mbBuffer, 256);
+		m_snmpSecurity->setAuthName(mbBuffer);
 
-		pRequest->GetVariableStr(VID_SNMP_PRIV_PASSWORD, buffer, 256);
-		m_snmpSecurity->setPrivPassword(buffer);
+		pRequest->GetVariableStrA(VID_SNMP_AUTH_PASSWORD, mbBuffer, 256);
+		m_snmpSecurity->setAuthPassword(mbBuffer);
+
+		pRequest->GetVariableStrA(VID_SNMP_PRIV_PASSWORD, mbBuffer, 256);
+		m_snmpSecurity->setPrivPassword(mbBuffer);
 
 		WORD methods = pRequest->GetVariableShort(VID_SNMP_USM_METHODS);
 		m_snmpSecurity->setAuthMethod((int)(methods & 0xFF));
@@ -2436,15 +2441,15 @@ int Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex)
 
 int Node::getInterfaceStatusFromAgent(DWORD dwIndex)
 {
-   char szParam[128], szBuffer[32];
+   TCHAR szParam[128], szBuffer[32];
    DWORD dwAdminStatus, dwLinkState;
    int iStatus;
 
    // Get administrative status
-   sprintf(szParam, "Net.Interface.AdminStatus(%u)", dwIndex);
+   _sntprintf(szParam, 128, _T("Net.Interface.AdminStatus(%u)"), dwIndex);
    if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
    {
-      dwAdminStatus = strtoul(szBuffer, NULL, 0);
+      dwAdminStatus = _tcstoul(szBuffer, NULL, 0);
 
       switch(dwAdminStatus)
       {
@@ -2456,10 +2461,10 @@ int Node::getInterfaceStatusFromAgent(DWORD dwIndex)
             iStatus = STATUS_DISABLED;
             break;
          case 1:     // Interface administratively up, check link state
-            sprintf(szParam, "Net.Interface.Link(%u)", dwIndex);
+            _sntprintf(szParam, 128, _T("Net.Interface.Link(%u)"), dwIndex);
             if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
             {
-               dwLinkState = strtoul(szBuffer, NULL, 0);
+               dwLinkState = _tcstoul(szBuffer, NULL, 0);
                iStatus = (dwLinkState == 0) ? STATUS_CRITICAL : STATUS_NORMAL;
             }
             else
@@ -2578,7 +2583,7 @@ void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
    LONG nAdminStatus;
 
    if (SnmpGet(m_snmpVersion, pTransport,
-               ".1.3.6.1.2.1.14.1.2.0", NULL, 0, &nAdminStatus, sizeof(LONG),
+               _T(".1.3.6.1.2.1.14.1.2.0"), NULL, 0, &nAdminStatus, sizeof(LONG),
                FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
 		LockData();
@@ -2675,7 +2680,7 @@ BOOL Node::applyTemplateItem(DWORD dwTemplateId, DCItem *pItem)
 
    lockDciAccess();	// write lock
 
-   DbgPrintf(5, "Applying item \"%s\" to node \"%s\"", pItem->getName(), m_szName);
+   DbgPrintf(5, _T("Applying item \"%s\" to node \"%s\""), pItem->getName(), m_szName);
 
    // Check if that template item exists
    for(i = 0; i < m_dwNumItems; i++)
@@ -2978,7 +2983,7 @@ void Node::updateRoutingTable()
 // Call SNMP Enumerate with node's SNMP parameters
 //
 
-DWORD Node::CallSnmpEnumerate(const char *pszRootOid, 
+DWORD Node::CallSnmpEnumerate(const TCHAR *pszRootOid, 
                               DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
                               void *pArg)
 {
@@ -3063,7 +3068,7 @@ void Node::PrepareForDeletion(void)
 // If variable doesn't exist at all, will return FALSE
 //
 
-BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const char *pszOID, int nValue)
+BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue)
 {
    DWORD dwTemp;
 
@@ -3120,7 +3125,7 @@ void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
    {
       pIfList->pInterfaces[i].szName[MAX_OBJECT_NAME - 1] = 0;
       if (pIfList->pInterfaces[i].szName[0] == 0)
-         _stprintf(pIfList->pInterfaces[i].szName, _T("%d"), pIfList->pInterfaces[i].dwIndex);
+         _sntprintf(pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME, _T("%d"), pIfList->pInterfaces[i].dwIndex);
    }
 }
 
@@ -3223,7 +3228,12 @@ BOOL Node::ResolveName(BOOL useOnlyDNS)
 	hs = gethostbyaddr((const char *)&dwAddr, 4, AF_INET);
 	if (hs != NULL)
 	{
+#ifdef UNICODE
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, m_szName, MAX_OBJECT_NAME);
+		m_szName[MAX_OBJECT_NAME - 1] = 0;
+#else
 		nx_strncpy(m_szName, hs->h_name, MAX_OBJECT_NAME);
+#endif
 		bSuccess = TRUE;
 	}
 	else
@@ -3240,7 +3250,12 @@ BOOL Node::ResolveName(BOOL useOnlyDNS)
 					hs = gethostbyaddr((const char *)&dwAddr, 4, AF_INET);
 					if (hs != NULL)
 					{
+#ifdef UNICODE
+						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, m_szName, MAX_OBJECT_NAME);
+						m_szName[MAX_OBJECT_NAME - 1] = 0;
+#else
 						nx_strncpy(m_szName, hs->h_name, MAX_OBJECT_NAME);
+#endif
 						bSuccess = TRUE;
 						break;
 					}
@@ -3253,7 +3268,7 @@ BOOL Node::ResolveName(BOOL useOnlyDNS)
 		if (!(bSuccess || useOnlyDNS))
 		{
 			DbgPrintf(4, _T("Resolving name for node %d [%s] via agent..."), m_dwId, m_szName);
-			if (GetItemFromAgent("System.Hostname", 256, szBuffer) == DCE_SUCCESS)
+			if (GetItemFromAgent(_T("System.Hostname"), 256, szBuffer) == DCE_SUCCESS)
 			{
 				StrStrip(szBuffer);
 				if (szBuffer[0] != 0)
@@ -3268,7 +3283,7 @@ BOOL Node::ResolveName(BOOL useOnlyDNS)
 		if (!(bSuccess || useOnlyDNS))
 		{
 			DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP..."), m_dwId, m_szName);
-			if (GetItemFromSNMP(0, ".1.3.6.1.2.1.1.5.0", 256, szBuffer) == DCE_SUCCESS)
+			if (GetItemFromSNMP(0, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer) == DCE_SUCCESS)
 			{
 				StrStrip(szBuffer);
 				if (szBuffer[0] != 0)
@@ -3516,7 +3531,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
    pollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, _T("Starting interface names poll for node %s\r\n"), m_szName);
-   DbgPrintf(4, "Starting interface names poll for node %s (ID: %d)", m_szName, m_dwId);
+   DbgPrintf(4, _T("Starting interface names poll for node %s (ID: %d)"), m_szName, m_dwId);
 
    // Retrieve interface list
    pIfList = getInterfaceList();
@@ -3535,7 +3550,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
                if (pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex())
                {
 						SendPollerMsg(dwRqId, _T("   Checking interface %d (%s)\r\n"), pInterface->IfIndex(), pInterface->Name());
-                  if (strcmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
+                  if (_tcscmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
                   {
                      pInterface->SetName(pIfList->pInterfaces[j].szName);
 							SendPollerMsg(dwRqId, POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->IfIndex(), pIfList->pInterfaces[j].szName);
@@ -3557,7 +3572,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
    // Finish poll
 	SendPollerMsg(dwRqId, _T("Finished interface names poll for node %s\r\n"), m_szName);
    pollerUnlock();
-   DbgPrintf(4, "Finished interface names poll for node %s (ID: %d)", m_szName, m_dwId);
+   DbgPrintf(4, _T("Finished interface names poll for node %s (ID: %d)"), m_szName, m_dwId);
 }
 
 

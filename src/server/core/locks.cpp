@@ -65,32 +65,32 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
 // Will return FALSE if someone already locked database
 //
 
-BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
+BOOL InitLocks(DWORD *pdwIpAddr, TCHAR *pszInfo)
 {
    BOOL bSuccess = FALSE;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
    *pdwIpAddr = UNLOCKED;
    pszInfo[0] = 0;
 
    // Check current database lock status
-   ConfigReadStr("DBLockStatus", szBuffer, 256, "ERROR");
-   if (!strcmp(szBuffer, "UNLOCKED"))
+   ConfigReadStr(_T("DBLockStatus"), szBuffer, 256, _T("ERROR"));
+   if (!_tcscmp(szBuffer, _T("UNLOCKED")))
    {
       IpToStr(GetLocalIpAddr(), szBuffer);
-      ConfigWriteStr("DBLockStatus", szBuffer, FALSE);
+      ConfigWriteStr(_T("DBLockStatus"), szBuffer, FALSE);
       GetSysInfoStr(szBuffer, sizeof(szBuffer));
-      ConfigWriteStr("DBLockInfo", szBuffer, TRUE);
-      ConfigWriteULong("DBLockPID", GetCurrentProcessId(), TRUE);
+      ConfigWriteStr(_T("DBLockInfo"), szBuffer, TRUE);
+      ConfigWriteULong(_T("DBLockPID"), GetCurrentProcessId(), TRUE);
       m_hMutexLockerAccess = MutexCreate();
       bSuccess = TRUE;
    }
    else
    {
-      if (strcmp(szBuffer, "ERROR"))
+      if (_tcscmp(szBuffer, _T("ERROR")))
       {
-         *pdwIpAddr = ntohl(inet_addr(szBuffer));
-         ConfigReadStr("DBLockInfo", pszInfo, 256, "<error>");
+         *pdwIpAddr = ntohl(_t_inet_addr(szBuffer));
+         ConfigReadStr(_T("DBLockInfo"), pszInfo, 256, _T("<error>"));
       }
    }
 
@@ -102,11 +102,11 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
 // Unlock database
 //
 
-void NXCORE_EXPORTABLE UnlockDB(void)
+void NXCORE_EXPORTABLE UnlockDB()
 {
-   ConfigWriteStr("DBLockStatus", "UNLOCKED", FALSE);
-   ConfigWriteStr("DBLockInfo", "", FALSE);
-   ConfigWriteULong("DBLockPID", 0, FALSE);
+   ConfigWriteStr(_T("DBLockStatus"), _T("UNLOCKED"), FALSE);
+   ConfigWriteStr(_T("DBLockInfo"), _T(""), FALSE);
+   ConfigWriteULong(_T("DBLockPID"), 0, FALSE);
 }
 
 
@@ -117,10 +117,10 @@ void NXCORE_EXPORTABLE UnlockDB(void)
 // field, and pszCurrentOwnerInfo will be filled with the value of  owner_info field.
 //
 
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const char *pszOwnerInfo, 
-                   DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo)
+BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const TCHAR *pszOwnerInfo, 
+                   DWORD *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo)
 {
-   char szBuffer[256];
+   TCHAR szBuffer[256];
    BOOL bSuccess = FALSE;
    DWORD dwTemp;
 
@@ -132,27 +132,27 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const char *pszOwnerInfo,
    if (dwId >= NUMBER_OF_LOCKS)
    {
       *pdwCurrentOwner = UNLOCKED;
-      strcpy(pszCurrentOwnerInfo, "Unknown component");
+      _tcscpy(pszCurrentOwnerInfo, _T("Unknown component"));
       return FALSE;
    }
 
-   DbgPrintf(5, "*Locks* Attempting to lock component \"%s\" by %d (%s)",
-             m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL");
+   DbgPrintf(5, _T("*Locks* Attempting to lock component \"%s\" by %d (%s)"),
+             m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"));
    MutexLock(m_hMutexLockerAccess, INFINITE);
    if (m_locks[dwId].dwLockStatus == UNLOCKED)
    {
       m_locks[dwId].dwLockStatus = dwLockBy;
       nx_strncpy(m_locks[dwId].szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
       bSuccess = TRUE;
-      DbgPrintf(5, "*Locks* Component \"%s\" successfully locked by %d (%s)",
-                m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL");
+      DbgPrintf(5, _T("*Locks* Component \"%s\" successfully locked by %d (%s)"),
+                m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"));
    }
    else
    {
       *pdwCurrentOwner = m_locks[dwId].dwLockStatus;
-      strcpy(pszCurrentOwnerInfo, m_locks[dwId].szOwnerInfo);
-      DbgPrintf(5, "*Locks* Component \"%s\" cannot be locked by %d (%s) - already locked by \"%s\"",
-                m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL",
+      _tcscpy(pszCurrentOwnerInfo, m_locks[dwId].szOwnerInfo);
+      DbgPrintf(5, _T("*Locks* Component \"%s\" cannot be locked by %d (%s) - already locked by \"%s\""),
+                m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"),
                 m_locks[dwId].szOwnerInfo);
    }
    MutexUnlock(m_hMutexLockerAccess);
@@ -170,7 +170,7 @@ void UnlockComponent(DWORD dwId)
    m_locks[dwId].dwLockStatus = UNLOCKED;
    m_locks[dwId].szOwnerInfo[0] = 0;
    MutexUnlock(m_hMutexLockerAccess);
-   DbgPrintf(5, "*Locks* Component \"%s\" unlocked", m_locks[dwId].pszName);
+   DbgPrintf(5, _T("*Locks* Component \"%s\" unlocked"), m_locks[dwId].pszName);
 }
 
 
@@ -190,5 +190,5 @@ void RemoveAllSessionLocks(DWORD dwSessionId)
          m_locks[i].szOwnerInfo[0] = 0;
       }
    MutexUnlock(m_hMutexLockerAccess);
-   DbgPrintf(5, "*Locks* All locks for session %d removed", dwSessionId);
+   DbgPrintf(5, _T("*Locks* All locks for session %d removed"), dwSessionId);
 }

@@ -85,7 +85,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 
    if (!LoadCommonProperties())
    {
-      DbgPrintf(2, "Cannot load common properties for cluster object %d", dwId);
+      DbgPrintf(2, _T("Cannot load common properties for cluster object %d"), dwId);
       return FALSE;
    }
 
@@ -99,7 +99,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
    if (!m_bIsDeleted)
    {
 		// Load member nodes
-		_stprintf(szQuery, _T("SELECT node_id FROM cluster_members WHERE cluster_id=%d"), m_dwId);
+		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM cluster_members WHERE cluster_id=%d"), m_dwId);
 		hResult = DBSelect(g_hCoreDB, szQuery);
 		if (hResult != NULL)
 		{
@@ -135,7 +135,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 		// Load sync net list
 		if (bResult)
 		{
-			_stprintf(szQuery, _T("SELECT subnet_addr,subnet_mask FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT subnet_addr,subnet_mask FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
 			hResult = DBSelect(g_hCoreDB, szQuery);
 			if (hResult != NULL)
 			{
@@ -160,7 +160,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 		// Load resources
 		if (bResult)
 		{
-			_stprintf(szQuery, _T("SELECT resource_id,resource_name,ip_addr,current_owner FROM cluster_resources WHERE cluster_id=%d"), m_dwId);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT resource_id,resource_name,ip_addr,current_owner FROM cluster_resources WHERE cluster_id=%d"), m_dwId);
 			hResult = DBSelect(g_hCoreDB, szQuery);
 			if (hResult != NULL)
 			{
@@ -211,7 +211,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   _stprintf(szQuery, _T("SELECT id FROM clusters WHERE id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM clusters WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -240,14 +240,14 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 		// Save cluster members list
 		if (DBBegin(hdb))
 		{
-			_stprintf(szQuery, _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_dwId);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_dwId);
 			DBQuery(hdb, szQuery);
 			LockChildList(FALSE);
 			for(i = 0; i < m_dwChildCount; i++)
 			{
 				if (m_pChildList[i]->Type() == OBJECT_NODE)
 				{
-					_stprintf(szQuery, _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (%d,%d)"),
+					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (%d,%d)"),
 								 m_dwId, m_pChildList[i]->Id());
 					bResult = DBQuery(hdb, szQuery);
 					if (!bResult)
@@ -270,11 +270,11 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 		{
 			if (DBBegin(hdb))
 			{
-				_stprintf(szQuery, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
 				DBQuery(hdb, szQuery);
 				for(i = 0; i < m_dwNumSyncNets; i++)
 				{
-					_stprintf(szQuery, _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (%d,'%s','%s')"),
+					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (%d,'%s','%s')"),
 								 m_dwId, IpToStr(m_pSyncNetList[i].dwAddr, szIpAddr),
 								 IpToStr(m_pSyncNetList[i].dwMask, szNetMask));
 					bResult = DBQuery(hdb, szQuery);
@@ -297,12 +297,12 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 		{
 			if (DBBegin(hdb))
 			{
-				_stprintf(szQuery, _T("DELETE FROM cluster_resources WHERE cluster_id=%d"), m_dwId);
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_resources WHERE cluster_id=%d"), m_dwId);
 				DBQuery(hdb, szQuery);
 				for(i = 0; i < m_dwNumResources; i++)
 				{
 					pszEscName = EncodeSQLString(m_pResourceList[i].szName);
-					_stprintf(szQuery, _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,'%s','%s',%d)"),
+					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,'%s','%s',%d)"),
 								 m_dwId, m_pResourceList[i].dwId, pszEscName,
 								 IpToStr(m_pResourceList[i].dwIpAddr, szIpAddr),
 								 m_pResourceList[i].dwCurrOwner);
@@ -347,11 +347,11 @@ BOOL Cluster::DeleteFromDB(void)
    bSuccess = Template::DeleteFromDB();
    if (bSuccess)
    {
-      _stprintf(szQuery, _T("DELETE FROM clusters WHERE id=%d"), m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM clusters WHERE id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
-      _stprintf(szQuery, _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
-      _stprintf(szQuery, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;

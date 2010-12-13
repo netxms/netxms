@@ -51,11 +51,11 @@ void UniversalRoot::LinkChildObjects()
 {
    DWORD i, dwNumChilds, dwObjectId;
    NetObj *pObject;
-   char szQuery[256];
+   TCHAR szQuery[256];
    DB_RESULT hResult;
 
    // Load child list and link objects
-   sprintf(szQuery, "SELECT object_id FROM container_members WHERE container_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -81,7 +81,7 @@ void UniversalRoot::LinkChildObjects()
 
 BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
 {
-   char szQuery[1024];
+   TCHAR szQuery[1024];
    DWORD i;
 
    LockData();
@@ -89,12 +89,12 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Update members list
-   sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
    DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)", m_dwId, m_pChildList[i]->Id());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();

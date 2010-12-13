@@ -60,7 +60,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 	if (!ConfigReadInt(_T("EnableEventStormDetection"), 0))
 	{
 		// Event storm detection is off
-	   DbgPrintf(1, "Event storm detector thread stopped because event storm detection is off");
+	   DbgPrintf(1, _T("Event storm detector thread stopped because event storm detection is off"));
 		return THREAD_OK;
 	}
 
@@ -79,7 +79,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 			if (actualDuration >= duration)
 			{
 				g_dwFlags |= AF_EVENT_STORM_DETECTED;
-				DbgPrintf(2, "Event storm detected: threshold=" INT64_FMT " eventsPerSecond=" INT64_FMT, eventsPerSecond, numEvents);
+				DbgPrintf(2, _T("Event storm detected: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, eventsPerSecond, numEvents);
 				PostEvent(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 			}
 		}
@@ -87,11 +87,11 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 		{
 			actualDuration = 0;
 			g_dwFlags &= ~AF_EVENT_STORM_DETECTED;
-		   DbgPrintf(2, "Event storm condition cleared");
+		   DbgPrintf(2, _T("Event storm condition cleared"));
 			PostEvent(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 		}
 	}
-   DbgPrintf(1, "Event storm detector thread stopped");
+   DbgPrintf(1, _T("Event storm detector thread stopped"));
 	return THREAD_OK;
 }
 
@@ -132,11 +132,11 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		// possible event recursion in case of severe DB failure
 		if ((pEvent->getFlags() & EF_LOG) && (pEvent->getCode() != EVENT_DB_QUERY_FAILED))
       {
-         char szQuery[8192];
+         TCHAR szQuery[8192];
 
-         snprintf(szQuery, 8192, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
-                                 "event_source,event_severity,event_message,root_event_id,user_tag) "
-                                 "VALUES (" INT64_FMT ",%d," TIME_T_FMT ",%d,%d,%s," INT64_FMT ",%s)", 
+         snprintf(szQuery, 8192, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
+                                 _T("event_source,event_severity,event_message,root_event_id,user_tag) ")
+                                 _T("VALUES (") INT64_FMT _T(",%d,") TIME_T_FMT _T(",%d,%d,%s,") INT64_FMT _T(",%s)"), 
                   pEvent->getId(), pEvent->getCode(), pEvent->getTimeStamp(),
                   pEvent->getSourceId(), pEvent->getSeverity(),
 						(const TCHAR *)DBPrepareString(g_hCoreDB, pEvent->getMessage(), EVENTLOG_MAX_MESSAGE_SIZE),
@@ -155,7 +155,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
             pObject = g_pEntireNet;
          DbgPrintf(5, _T("EVENT %d (F:0x%04X S:%d%s) FROM %s: %s"), pEvent->getCode(), 
                    pEvent->getFlags(), pEvent->getSeverity(),
-                   (pEvent->getRootId() == 0) ? "" : " CORRELATED",
+                   (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
                    pObject->Name(), pEvent->getMessage());
       }
 
@@ -170,6 +170,6 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
    }
 
 	ThreadJoin(m_threadStormDetector);
-   DbgPrintf(1, "Event processing thread stopped");
+   DbgPrintf(1, _T("Event processing thread stopped"));
    return THREAD_OK;
 }

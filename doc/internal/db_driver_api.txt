@@ -1,0 +1,46 @@
+BOOL DrvInit(const char *);
+
+DBDRV_CONNECTION DrvConnect(const char *, const char *, const char *, const char *);
+
+void DrvDisconnect(DBDRV_CONNECTION);
+
+DWORD DrvQuery(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
+
+DBDRV_RESULT DrvSelect(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
+
+DBDRV_ASYNC_RESULT DrvAsyncSelect(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
+
+BOOL DrvFetch(DBDRV_ASYNC_RESULT);
+
+LONG DrvGetFieldLength(DBDRV_RESULT, int, int);
+
+LONG DrvGetFieldLengthAsync(DBDRV_RESULT, int);
+
+WCHAR* DrvGetField(DBDRV_RESULT, int, int, WCHAR *, int);
+
+WCHAR* DrvGetFieldAsync(DBDRV_ASYNC_RESULT, int, WCHAR *, int);
+
+int DrvGetNumRows(DBDRV_RESULT);
+
+int DrvGetColumnCount(DBDRV_RESULT);
+
+const char* DrvGetColumnName(DBDRV_RESULT, int);
+
+int DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT);
+
+const char* DrvGetColumnNameAsync(DBDRV_ASYNC_RESULT, int);
+
+void DrvFreeResult(DBDRV_RESULT);
+
+void DrvFreeAsyncResult(DBDRV_ASYNC_RESULT);
+
+DWORD DrvBegin(DBDRV_CONNECTION);
+
+DWORD DrvCommit(DBDRV_CONNECTION);
+
+DWORD DrvRollback(DBDRV_CONNECTION);
+
+void DrvUnload(void);
+
+WCHAR *DrvPrepareStringW(const WCHAR *);
+char *DrvPrepareStringA(const char *);

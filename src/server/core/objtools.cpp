@@ -69,7 +69,7 @@ BOOL IsTableTool(DWORD dwToolId)
    LONG nType;
    BOOL bResult = FALSE;
 
-   _stprintf(szBuffer, _T("SELECT tool_type FROM object_tools WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szBuffer, 256, _T("SELECT tool_type FROM object_tools WHERE tool_id=%d"), dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
    {
@@ -99,7 +99,7 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId)
    if (dwUserId == 0)
       return TRUE;
 
-   _stprintf(szBuffer, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szBuffer, 256, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
    {
@@ -167,8 +167,8 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
    if ((pszEnum != NULL) && (pszRegEx != NULL))
    {
       // Load column information
-      _stprintf(szBuffer, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=%d ORDER BY col_number"),
-                ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
+      _sntprintf(szBuffer, 4096, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=%d ORDER BY col_number"),
+                 ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
       hResult = DBSelect(g_hCoreDB, szBuffer);
       if (hResult != NULL)
       {
@@ -183,7 +183,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 					table.addColumn(szBuffer, DBGetFieldULong(hResult, i, 1));
                pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
             }
-	         if (regcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
+	         if (_tregcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
 	         {
                pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
                if (pConn != NULL)
@@ -196,7 +196,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
                      for(i = 0; i < dwNumRows; i++)
                      {
                         pszLine = (TCHAR *)pConn->getDataLine(i);
-                        if (regexec(&preg, pszLine, dwNumCols + 1, pMatchList, 0) == 0)
+                        if (_tregexec(&preg, pszLine, dwNumCols + 1, pMatchList, 0) == 0)
                         {
 									table.addRow();
 
@@ -292,7 +292,7 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
                if (dwIndex == 0)    // Many devices uses index 0 for internal MAC, etc.
                   _tcscpy(szBuffer, _T("INTERNAL"));
                else
-                  _stprintf(szBuffer, _T("%d"), dwIndex);
+                  _sntprintf(szBuffer, 64, _T("%d"), dwIndex);
             }
             break;
          default:
@@ -322,7 +322,7 @@ static DWORD TableHandler(DWORD dwVersion, SNMP_Variable *pVar,
    // Create index (OID suffix) for columns
    if (((SNMP_ENUM_ARGS *)pArg)->dwFlags & TF_SNMP_INDEXED_BY_VALUE)
    {
-      _stprintf(szSuffix, _T(".%u"), pVar->GetValueAsUInt());
+      _sntprintf(szSuffix, MAX_OID_LEN * 4, _T(".%u"), pVar->GetValueAsUInt());
    }
    else
    {
@@ -390,8 +390,8 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    msg.SetCode(CMD_TABLE_DATA);
    msg.SetId(((TOOL_STARTUP_INFO *)pArg)->dwRqId);
 
-   _stprintf(szBuffer, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=%d ORDER BY col_number"),
-             ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
+   _sntprintf(szBuffer, 256, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=%d ORDER BY col_number"),
+              ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
    {
@@ -464,7 +464,7 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
    TCHAR szBuffer[256];
    DB_RESULT hResult;
 
-   _stprintf(szBuffer, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szBuffer, 256, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=%d"), dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
    {
@@ -512,13 +512,13 @@ DWORD DeleteObjectToolFromDB(DWORD dwToolId)
 {
    TCHAR szQuery[256];
 
-   _stprintf(szQuery, _T("DELETE FROM object_tools WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools WHERE tool_id=%d"), dwToolId);
    DBQuery(g_hCoreDB, szQuery);
 
-   _stprintf(szQuery, _T("DELETE FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
    DBQuery(g_hCoreDB, szQuery);
 
-   _stprintf(szQuery, _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
    DBQuery(g_hCoreDB, szQuery);
 
    NotifyClientSessions(NX_NOTIFY_OBJTOOL_DELETED, dwToolId);
@@ -541,7 +541,7 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 
    // Check if tool already exist
    dwToolId = pMsg->GetVariableLong(VID_TOOL_ID);
-   _stprintf(szQuery, _T("SELECT tool_id FROM object_tools WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT tool_id FROM object_tools WHERE tool_id=%d"), dwToolId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -586,7 +586,7 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    DBQuery(g_hCoreDB, szQuery);
 
    // Update ACL
-   _stprintf(szQuery, _T("DELETE FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
    DBQuery(g_hCoreDB, szQuery);
    dwAclSize = pMsg->GetVariableLong(VID_ACL_SIZE);
    if (dwAclSize > 0)
@@ -595,14 +595,14 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
       pMsg->GetVariableInt32Array(VID_ACL, dwAclSize, pdwAcl);
       for(i = 0; i < dwAclSize; i++)
       {
-         _stprintf(szQuery, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (%d,%d)"),
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (%d,%d)"),
                    dwToolId, pdwAcl[i]);
          DBQuery(g_hCoreDB, szQuery);
       }
    }
 
    // Update columns configuration
-   _stprintf(szQuery, _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
    DBQuery(g_hCoreDB, szQuery);
    if ((nType == TOOL_TYPE_TABLE_SNMP) ||
        (nType == TOOL_TYPE_TABLE_AGENT))
@@ -615,9 +615,9 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
          pMsg->GetVariableStr(dwId++, szBuffer, MAX_DB_STRING);
          pszName = EncodeSQLString(szBuffer);
          pMsg->GetVariableStr(dwId++, szBuffer, MAX_DB_STRING);
-         _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools_table_columns (tool_id,"
-                                      "col_number,col_name,col_oid,col_format,col_substr) "
-                                      "VALUES (%d,%d,'%s','%s',%d,%d)"),
+         _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools_table_columns (tool_id,")
+                                   _T("col_number,col_name,col_oid,col_format,col_substr) ")
+                                   _T("VALUES (%d,%d,'%s','%s',%d,%d)"),
                     dwToolId, i, pszName, szBuffer, pMsg->GetVariableShort(dwId),
                     pMsg->GetVariableShort(dwId + 1));
          free(pszName);

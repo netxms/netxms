@@ -50,76 +50,76 @@ public:
 NXSL_DiscoveryClass::NXSL_DiscoveryClass()
                      :NXSL_Class()
 {
-   strcpy(m_szName, "NewNode");
+   _tcscpy(m_szName, _T("NewNode"));
 }
 
 NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    DISCOVERY_FILTER_DATA *pData;
    NXSL_Value *pValue = NULL;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
    pData = (DISCOVERY_FILTER_DATA *)pObject->getData();
-   if (!strcmp(pszAttr, "ipAddr"))
+   if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
       IpToStr(pData->dwIpAddr, szBuffer);
       pValue = new NXSL_Value(szBuffer);
    }
-   else if (!strcmp(pszAttr, "netMask"))
+   else if (!_tcscmp(pszAttr, _T("netMask")))
    {
       IpToStr(pData->dwNetMask, szBuffer);
       pValue = new NXSL_Value(szBuffer);
    }
-   else if (!strcmp(pszAttr, "subnet"))
+   else if (!_tcscmp(pszAttr, _T("subnet")))
    {
       IpToStr(pData->dwSubnetAddr, szBuffer);
       pValue = new NXSL_Value(szBuffer);
    }
-   else if (!strcmp(pszAttr, "isAgent"))
+   else if (!_tcscmp(pszAttr, _T("isAgent")))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_AGENT) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isSNMP"))
+   else if (!_tcscmp(pszAttr, _T("isSNMP")))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_SNMP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isBridge"))
+   else if (!_tcscmp(pszAttr, _T("isBridge")))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_BRIDGE) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isRouter"))
+   else if (!_tcscmp(pszAttr, _T("isRouter")))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_ROUTER) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isPrinter"))
+   else if (!_tcscmp(pszAttr, _T("isPrinter")))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_PRINTER) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isCDP"))
+   else if (!_tcscmp(pszAttr, _T("isCDP")))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_CDP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isSONMP"))
+   else if (!_tcscmp(pszAttr, _T("isSONMP")))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_SONMP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isLLDP"))
+   else if (!_tcscmp(pszAttr, _T("isLLDP")))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_LLDP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "snmpVersion"))
+   else if (!_tcscmp(pszAttr, _T("snmpVersion")))
    {
       pValue = new NXSL_Value((LONG)pData->nSNMPVersion);
    }
-   else if (!strcmp(pszAttr, "snmpOID"))
+   else if (!_tcscmp(pszAttr, _T("snmpOID")))
    {
       pValue = new NXSL_Value(pData->szObjectId);
    }
-   else if (!strcmp(pszAttr, "agentVersion"))
+   else if (!_tcscmp(pszAttr, _T("agentVersion")))
    {
       pValue = new NXSL_Value(pData->szAgentVersion);
    }
-   else if (!strcmp(pszAttr, "platformName"))
+   else if (!_tcscmp(pszAttr, _T("platformName")))
    {
       pValue = new NXSL_Value(pData->szPlatform);
    }
@@ -144,16 +144,16 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
                   Cluster *pCluster)
 {
    Node *pNode;
-   char szIpAddr1[32], szIpAddr2[32];
+   TCHAR szIpAddr1[32], szIpAddr2[32];
    DWORD dwFlags = 0;
 
-   DbgPrintf(4, "PollNode(%s,%s)",  
+   DbgPrintf(4, _T("PollNode(%s,%s)"),  
              IpToStr(dwIpAddr, szIpAddr1), IpToStr(dwNetMask, szIpAddr2));
    // Check for node existence
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
    {
-      DbgPrintf(4, "PollNode: Node %s already exist in database", 
+      DbgPrintf(4, _T("PollNode: Node %s already exist in database"), 
                 IpToStr(dwIpAddr, szIpAddr1));
       return NULL;
    }
@@ -207,18 +207,18 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
 	{
-		DbgPrintf(4, "AcceptNewNode(%s): node already exist in database", szIpAddr);
+		DbgPrintf(4, _T("AcceptNewNode(%s): node already exist in database"), szIpAddr);
       return FALSE;  // Node already exist in database
 	}
 
    // Read configuration
-   ConfigReadStr("DiscoveryFilter", szFilter, MAX_DB_STRING, "");
+   ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_DB_STRING, _T(""));
    StrStrip(szFilter);
 
    // Run filter script
-   if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, "none")))
+   if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
 	{
-		DbgPrintf(4, "AcceptNewNode(%s): no filtering, node accepted", szIpAddr);
+		DbgPrintf(4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
       return TRUE;   // No filtering
 	}
 
@@ -229,7 +229,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    data.dwSubnetAddr = dwIpAddr & dwNetMask;
 
    // Check SNMP support
-	DbgPrintf(4, "AcceptNewNode(%s): checking SNMP support", szIpAddr);
+	DbgPrintf(4, _T("AcceptNewNode(%s): checking SNMP support"), szIpAddr);
 	pTransport = new SNMP_UDPTransport;
 	pTransport->createUDPTransport(NULL, htonl(dwIpAddr), 161);
 	SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &data.nSNMPVersion, NULL);
@@ -240,21 +240,21 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 	}
 
    // Check NetXMS agent support
-	DbgPrintf(4, "AcceptNewNode(%s): checking NetXMS agent", szIpAddr);
+	DbgPrintf(4, _T("AcceptNewNode(%s): checking NetXMS agent"), szIpAddr);
    pAgentConn = new AgentConnection(htonl(dwIpAddr), AGENT_LISTEN_PORT,
-                                    AUTH_NONE, "");
+                                    AUTH_NONE, _T(""));
    if (pAgentConn->connect(g_pServerKey))
    {
       data.dwFlags |= NNF_IS_AGENT;
-      pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, data.szAgentVersion);
-      pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, data.szPlatform);
+      pAgentConn->GetParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.szAgentVersion);
+      pAgentConn->GetParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, data.szPlatform);
    }
 
    // Check if node is a router
    if (data.dwFlags & NNF_IS_SNMP)
    {
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  ".1.3.6.1.2.1.4.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                  _T(".1.3.6.1.2.1.4.1.0"), NULL, 0, &dwTemp, sizeof(DWORD),
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
@@ -264,7 +264,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    else if (data.dwFlags & NNF_IS_AGENT)
    {
       // Check IP forwarding status
-      if (pAgentConn->GetParameter("Net.IP.Forwarding", 16, szBuffer) == ERR_SUCCESS)
+      if (pAgentConn->GetParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
       {
          if (_tcstoul(szBuffer, NULL, 10) != 0)
             data.dwFlags |= NNF_IS_ROUTER;
@@ -276,12 +276,12 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    {
 		// Get SNMP OID
 		SnmpGet(data.nSNMPVersion, pTransport,
-		        ".1.3.6.1.2.1.1.2.0", NULL, 0, data.szObjectId, MAX_OID_LEN * 4,
+		        _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, data.szObjectId, MAX_OID_LEN * 4,
 		        FALSE, FALSE);
 
       // Check if node is a bridge
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  ".1.3.6.1.2.1.17.1.1.0", NULL, 0, szBuffer, 256,
+                  _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 256,
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          data.dwFlags |= NNF_IS_BRIDGE;
@@ -289,7 +289,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 
       // Check for CDP (Cisco Discovery Protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  ".1.3.6.1.4.1.9.9.23.1.3.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                  _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), NULL, 0, &dwTemp, sizeof(DWORD),
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
@@ -298,7 +298,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 
       // Check for SONMP (Nortel topology discovery protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  ".1.3.6.1.4.1.45.1.6.13.1.2.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                  _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), NULL, 0, &dwTemp, sizeof(DWORD),
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
@@ -307,7 +307,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 
       // Check for LLDP (Link Layer Discovery Protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  ".1.0.8802.1.1.2.1.3.2.0", NULL, 0, szBuffer, 256,
+                  _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 256,
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          data.dwFlags |= NNF_IS_LLDP;
@@ -319,14 +319,14 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 	delete pTransport;
 
    // Check if we use simple filter instead of script
-   if (!_tcsicmp(szFilter, "auto"))
+   if (!_tcsicmp(szFilter, _T("auto")))
    {
       DWORD dwFlags;
       DB_RESULT hResult;
       int i, nRows, nType;
 
       dwFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
-		DbgPrintf(4, "AcceptNewNode(%s): auto filter, dwFlags=%04X", szIpAddr, dwFlags);
+		DbgPrintf(4, _T("AcceptNewNode(%s): auto filter, dwFlags=%04X"), szIpAddr, dwFlags);
 
       if ((dwFlags & (DFF_ALLOW_AGENT | DFF_ALLOW_SNMP)) == 0)
       {
@@ -350,7 +350,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       // Check range
       if ((dwFlags & DFF_ONLY_RANGE) && bResult)
       {
-			DbgPrintf(4, "AcceptNewNode(%s): auto filter - checking range", szIpAddr);
+			DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
          hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
          if (hResult != NULL)
          {
@@ -373,7 +373,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
             DBFreeResult(hResult);
          }
       }
-		DbgPrintf(4, "AcceptNewNode(%s): auto filter - bResult=%d", szIpAddr, bResult);
+		DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - bResult=%d"), szIpAddr, bResult);
    }
    else
    {
@@ -381,24 +381,24 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       pScript = g_pScriptLibrary->findScript(szFilter);
       if (pScript != NULL)
       {
-         DbgPrintf(4, "AcceptNewNode(%s): Running filter script %s", szIpAddr, szFilter);
+         DbgPrintf(4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);
          pValue = new NXSL_Value(new NXSL_Object(&m_nxslDiscoveryClass, &data));
          if (pScript->run(new NXSL_ServerEnv, 1, &pValue) == 0)
          {
             bResult = (pScript->getResult()->getValueAsInt32() != 0) ? TRUE : FALSE;
-            DbgPrintf(4, "AcceptNewNode(%s): Filter script result: %d", szIpAddr, bResult);
+            DbgPrintf(4, _T("AcceptNewNode(%s): Filter script result: %d"), szIpAddr, bResult);
          }
          else
          {
-            DbgPrintf(4, "AcceptNewNode(%s): Filter script execution error: %s",
+            DbgPrintf(4, _T("AcceptNewNode(%s): Filter script execution error: %s"),
                       szIpAddr, pScript->getErrorText());
-            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szFilter,
+            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szFilter,
                       pScript->getErrorText(), 0);
          }
       }
       else
       {
-         DbgPrintf(4, "AcceptNewNode(%s): Cannot find filter script %s", szIpAddr, szFilter);
+         DbgPrintf(4, _T("AcceptNewNode(%s): Cannot find filter script %s"), szIpAddr, szFilter);
       }
       g_pScriptLibrary->unlock();
    }
@@ -416,7 +416,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
    NEW_NODE *pInfo;
 	TCHAR szIpAddr[16], szNetMask[16];
 
-   DbgPrintf(1, "Node poller started");
+   DbgPrintf(1, _T("Node poller started"));
 
    while(!ShutdownInProgress())
    {
@@ -424,7 +424,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
       if (pInfo == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 
-		DbgPrintf(4, "NodePoller: processing node %s/%s",
+		DbgPrintf(4, _T("NodePoller: processing node %s/%s"),
 		          IpToStr(pInfo->dwIpAddr, szIpAddr),
 		          IpToStr(pInfo->dwNetMask, szNetMask));
       if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask))
@@ -439,6 +439,6 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 		}
       free(pInfo);
    }
-   DbgPrintf(1, "Node poller thread terminated");
+   DbgPrintf(1, _T("Node poller thread terminated"));
    return THREAD_OK;
 }

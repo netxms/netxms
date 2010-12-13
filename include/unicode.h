@@ -51,6 +51,9 @@
 // Windows always use UCS-2
 #define UNICODE_UCS2				1
 
+#define ICONV_DEFAULT_CODEPAGE_A    "ACP"
+#define ICONV_DEFAULT_CODEPAGE_W    L"ACP"
+
 #ifdef UNICODE
 
 #define _tcstoll  wcstoll
@@ -58,16 +61,18 @@
 
 #define _ERR_error_tstring		ERR_error_string_W
 
-#else
+#define ICONV_DEFAULT_CODEPAGE      ICONV_DEFAULT_CODEPAGE_W
+
+#else	/* !UNICODE */
 
 #define _tcstoll  strtoll
 #define _tcstoull strtoull
 
 #define _ERR_error_tstring		ERR_error_string
 
-#endif
+#define ICONV_DEFAULT_CODEPAGE      ICONV_DEFAULT_CODEPAGE_A
 
-#define ICONV_DEFAULT_CODEPAGE	"ACP"
+#endif	/* UNICODE */
 
 #define ucs2_strlen	wcslen
 #define ucs2_strdup	wcsdup

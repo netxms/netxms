@@ -152,25 +152,23 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
+#define wcErrorText errorText
 #else
    WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
    MutexLock(hConn->m_mutexTransLock, INFINITE);
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
 
-   dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, errorText);
+   dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
    if (dwResult == DBERR_CONNECTION_LOST)
    {
       DBReconnect(hConn);
-      dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, errorText);
+      dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
    }
 
-#ifndef UNICODE
-   free(pwszQuery);
-#endif
-   
    if (hConn->m_driver->m_dumpSql)
    {
       ms = GetCurrentTimeMs() - ms;
@@ -178,15 +176,27 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    }
    
    MutexUnlock(hConn->m_mutexTransLock);
+
+#ifndef UNICODE
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#endif
+
    if (dwResult != DBERR_SUCCESS)
 	{	
 		if (hConn->m_driver->m_logSqlErrors)
 			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
 	}
+
+#ifndef UNICODE
+   free(pwszQuery);
+#endif
+   
    return dwResult == DBERR_SUCCESS;
 #undef pwszQuery
+#undef wcErrorText
 }
 
 BOOL LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
@@ -209,38 +219,46 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
+#define wcErrorText errorText
 #else
    WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
    
    MutexLock(hConn->m_mutexTransLock, INFINITE);
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
-   hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, errorText);
+   hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
    {
       DBReconnect(hConn);
-      hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, errorText);
+      hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
-#ifndef UNICODE
-   free(pwszQuery);
-#endif
-   
    if (hConn->m_driver->m_dumpSql)
    {
       ms = GetCurrentTimeMs() - ms;
       __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    MutexUnlock(hConn->m_mutexTransLock);
-   if (hResult == NULL)
+
+#ifndef UNICODE
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#endif
+
+	if (hResult == NULL)
 	{
 		if (hConn->m_driver->m_logSqlErrors)
 			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
 	}
 
+#ifndef UNICODE
+   free(pwszQuery);
+#endif
+   
 	if (hResult != NULL)
 	{
 		result = (DB_RESULT)malloc(sizeof(db_result_t));
@@ -328,8 +346,7 @@ BOOL LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column
 // Get field's value
 //
 
-TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
-                                      TCHAR *pszBuffer, int nBufLen)
+TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, TCHAR *pszBuffer, int nBufLen)
 {
 #ifdef UNICODE
    if (pszBuffer != NULL)
@@ -355,6 +372,12 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
       return pszTemp;
    }
 #else
+	return DBGetFieldA(hResult, iRow, iColumn, pszBuffer, nBufLen);
+#endif
+}
+
+char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, int nBufLen)
+{
    WCHAR *pwszData, *pwszBuffer;
    char *pszRet;
    int nLen;
@@ -391,8 +414,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
          {
             nLen = (int)wcslen(pwszData) + 1;
             pszRet = (char *)malloc(nLen);
-            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                                pwszData, -1, pszRet, nLen, NULL, NULL);
+            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszData, -1, pszRet, nLen, NULL, NULL);
          }
          else
          {
@@ -402,7 +424,6 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
       }
    }
    return pszRet;
-#endif
 }
 
 
@@ -599,24 +620,22 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
+#define wcErrorText errorText
 #else
    WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
    
    MutexLock(hConn->m_mutexTransLock, INFINITE);
 	if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
-   hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, errorText);
+   hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
    {
       DBReconnect(hConn);
-      hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, errorText);
+      hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
-#ifndef UNICODE
-   free(pwszQuery);
-#endif
-   
    if (hConn->m_driver->m_dumpSql)
    {
       ms = GetCurrentTimeMs() - ms;
@@ -625,12 +644,22 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    if (hResult == NULL)
    {
       MutexUnlock(hConn->m_mutexTransLock);
+
+#ifndef UNICODE
+		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#endif
+
 		if (hConn->m_driver->m_logSqlErrors)
         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
    }
 
+#ifndef UNICODE
+   free(pwszQuery);
+#endif
+   
 	if (hResult != NULL)
 	{
 		result = (DB_ASYNC_RESULT)malloc(sizeof(db_async_result_t));
@@ -935,15 +964,35 @@ String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int 
 	{
 		TCHAR *temp = (TCHAR *)malloc((maxSize + 1) * sizeof(TCHAR));
 		nx_strncpy(temp, str, maxSize + 1);
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareString(temp));
+#ifdef UNICODE
+		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringW(temp));
+#else
+		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringA(temp));
+#endif
 		free(temp);
 	}
 	else	
 	{
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareString(CHECK_NULL_EX(str)));
+#ifdef UNICODE
+		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringW(CHECK_NULL_EX(str)));
+#else
+		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringA(CHECK_NULL_EX(str)));
+#endif
 	}
 	return out;
 }
+
+#ifdef UNICODE
+
+String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int maxSize)
+{
+	WCHAR *wcs = WideStringFromMBString(str);
+	String s = DBPrepareString(conn, wcs, maxSize);
+	free(wcs);
+	return s;
+}
+
+#endif
 
 
 //

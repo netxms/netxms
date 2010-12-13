@@ -258,11 +258,11 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
-   { "GetCustomAttribute", F_GetCustomAttribute, 2 },
-   { "GetInterfaceName", F_GetInterfaceName, 2 },
-   { "GetNodeParents", F_GetNodeParents, 1 },
-	{ "FindNodeObject", F_FindNodeObject, 2 },
-	{ "PostEvent", F_PostEvent, -1 }
+   { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
+   { _T("GetInterfaceName"), F_GetInterfaceName, 2 },
+   { _T("GetNodeParents"), F_GetNodeParents, 1 },
+	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
+	{ _T("PostEvent"), F_PostEvent, -1 }
 };
 
 

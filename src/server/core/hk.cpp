@@ -38,11 +38,11 @@ static void CleanDeletedObjects(void)
 {
    DB_RESULT hResult;
 
-   hResult = DBSelect(m_hdb, "SELECT object_id FROM deleted_objects");
+   hResult = DBSelect(m_hdb, _T("SELECT object_id FROM deleted_objects"));
    if (hResult != NULL)
    {
       DB_ASYNC_RESULT hAsyncResult;
-      char szQuery[256];
+      TCHAR szQuery[256];
       int i, iNumRows;
       DWORD dwObjectId;
 
@@ -52,16 +52,16 @@ static void CleanDeletedObjects(void)
          dwObjectId = DBGetFieldULong(hResult, i, 0);
 
          // Check if there are references to this object in event log
-         sprintf(szQuery, "SELECT event_source FROM event_log WHERE event_source=%d", dwObjectId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT event_source FROM event_log WHERE event_source=%d"), dwObjectId);
          hAsyncResult = DBAsyncSelect(m_hdb, szQuery);
          if (hAsyncResult != NULL)
          {
             if (!DBFetch(hAsyncResult))
             {
                // No records with that source ID, so we can purge this object
-               sprintf(szQuery, "DELETE FROM deleted_objects WHERE object_id=%d", dwObjectId);
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM deleted_objects WHERE object_id=%d"), dwObjectId);
                QueueSQLRequest(szQuery);
-               DbgPrintf(4, "*HK* Deleted object with id %d was purged", dwObjectId);
+               DbgPrintf(4, _T("*HK* Deleted object with id %d was purged"), dwObjectId);
             }
             DBFreeAsyncResult(m_hdb, hAsyncResult);
          }
@@ -102,8 +102,8 @@ static void DeleteEmptySubnets(void)
 
 static void PGSQLMaintenance(void)
 {
-   if (!ConfigReadInt("DisableVacuum", 0))
-      DBQuery(m_hdb, "VACUUM ANALYZE");
+   if (!ConfigReadInt(_T("DisableVacuum"), 0))
+      DBQuery(m_hdb, _T("VACUUM ANALYZE"));
 }
 
 
@@ -114,7 +114,7 @@ static void PGSQLMaintenance(void)
 THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
    time_t currTime;
-   char szQuery[256];
+   TCHAR szQuery[256];
    DWORD i, dwRetentionTime, dwInterval;
 
    // Establish separate connection to database if needed
@@ -133,7 +133,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    }
 
    // Load configuration
-   dwInterval = ConfigReadULong("HouseKeepingInterval", 3600);
+   dwInterval = ConfigReadULong(_T("HouseKeepingInterval"), 3600);
 
    // Housekeeping loop
    while(!ShutdownInProgress())
@@ -143,29 +143,29 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          break;      // Shutdown has arrived
 
       // Remove outdated event log records
-      dwRetentionTime = ConfigReadULong("EventLogRetentionTime", 90);
+      dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
       if (dwRetentionTime > 0)
       {
 			dwRetentionTime *= 86400;	// Convert days to seconds
-         sprintf(szQuery, "DELETE FROM event_log WHERE event_timestamp<%ld", currTime - dwRetentionTime);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), currTime - dwRetentionTime);
          DBQuery(m_hdb, szQuery);
       }
 
       // Remove outdated syslog records
-      dwRetentionTime = ConfigReadULong("SyslogRetentionTime", 90);
+      dwRetentionTime = ConfigReadULong(_T("SyslogRetentionTime"), 90);
       if (dwRetentionTime > 0)
       {
 			dwRetentionTime *= 86400;	// Convert days to seconds
-         sprintf(szQuery, "DELETE FROM syslog WHERE msg_timestamp<%ld", currTime - dwRetentionTime);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), currTime - dwRetentionTime);
          DBQuery(m_hdb, szQuery);
       }
 
       // Remove outdated audit log records
-      dwRetentionTime = ConfigReadULong("AuditLogRetentionTime", 90);
+      dwRetentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
       if (dwRetentionTime > 0)
       {
 			dwRetentionTime *= 86400;	// Convert days to seconds
-         sprintf(szQuery, "DELETE FROM audit_log WHERE timestamp<%ld", currTime - dwRetentionTime);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), currTime - dwRetentionTime);
          DBQuery(m_hdb, szQuery);
       }
 
@@ -192,6 +192,6 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    {
       DBDisconnect(m_hdb);
    }
-   DbgPrintf(1, "Housekeeper thread terminated");
+   DbgPrintf(1, _T("Housekeeper thread terminated"));
    return THREAD_OK;
 }

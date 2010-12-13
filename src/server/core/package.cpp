@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: package.cpp
+** File: package.cpp
 **
 **/
 
@@ -36,8 +36,8 @@ BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform)
    pszEscName = EncodeSQLString(pszName);
    pszEscVersion = EncodeSQLString(pszVersion);
    pszEscPlatform = EncodeSQLString(pszPlatform);
-   _sntprintf(szQuery, 1024, _T("SELECT pkg_id FROM agent_pkg WHERE "
-                                "pkg_name='%s' AND version='%s' AND platform='%s'"),
+   _sntprintf(szQuery, 1024, _T("SELECT pkg_id FROM agent_pkg WHERE ")
+                             _T("pkg_name='%s' AND version='%s' AND platform='%s'"),
               pszEscName, pszEscVersion, pszEscPlatform);
    free(pszEscName);
    free(pszEscVersion);
@@ -152,7 +152,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    DWORD dwMaxWait;
 
    // Read configuration
-   dwMaxWait = ConfigReadULong("AgentUpgradeWaitTime", 600);
+   dwMaxWait = ConfigReadULong(_T("AgentUpgradeWaitTime"), 600);
    if (dwMaxWait % 20 != 0)
       dwMaxWait += 20 - (dwMaxWait % 20);
 
@@ -183,16 +183,16 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
          if (pAgentConn != NULL)
          {
             BOOL bCheckOK = FALSE;
-            char szBuffer[256];
+            TCHAR szBuffer[256];
 
             // Check if package can be deployed on target node
-            if (!stricmp(pStartup->szPlatform, "src"))
+            if (!_tcsicmp(pStartup->szPlatform, _T("src")))
             {
                // Source package, check if target node
                // supports source packages
                if (pAgentConn->GetParameter(_T("Agent.SourcePackageSupport"), 32, szBuffer) == ERR_SUCCESS)
                {
-                  bCheckOK = (strtol(szBuffer, NULL, 0) != 0);
+                  bCheckOK = (_tcstol(szBuffer, NULL, 0) != 0);
                }
             }
             else
@@ -200,7 +200,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                // Binary package, check target platform
                if (pAgentConn->GetParameter(_T("System.PlatformName"), 256, szBuffer) == ERR_SUCCESS)
                {
-                  bCheckOK = !stricmp(szBuffer, pStartup->szPlatform);
+                  bCheckOK = !_tcsicmp(szBuffer, pStartup->szPlatform);
                }
             }
 
@@ -211,10 +211,10 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                pStartup->pSession->sendMessage(&msg);
 
                // Upload package file to agent
-               strcpy(szBuffer, g_szDataDir);
-               strcat(szBuffer, DDIR_PACKAGES);
-               strcat(szBuffer, FS_PATH_SEPARATOR);
-               strcat(szBuffer, pStartup->szPkgFile);
+               _tcscpy(szBuffer, g_szDataDir);
+               _tcscat(szBuffer, DDIR_PACKAGES);
+               _tcscat(szBuffer, FS_PATH_SEPARATOR);
+               _tcscat(szBuffer, pStartup->szPkgFile);
                if (pAgentConn->UploadFile(szBuffer) == ERR_SUCCESS)
                {
                   if (pAgentConn->StartUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
@@ -250,7 +250,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                         // Check version
                         if (pAgentConn->GetParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
                         {
-                           if (!stricmp(szBuffer, pStartup->szVersion))
+                           if (!_tcsicmp(szBuffer, pStartup->szVersion))
                            {
                               bSuccess = TRUE;
                            }

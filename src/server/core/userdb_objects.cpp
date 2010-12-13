@@ -471,7 +471,14 @@ bool User::validatePassword(const TCHAR *password)
 {
    BYTE hash[SHA1_DIGEST_SIZE];
 
+#ifdef UNICODE
+	char mbPassword[256];
+	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, password, -1, mbPassword, 256, NULL, NULL);
+	mbPassword[255] = 0;
+	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), hash);
+#else
 	CalculateSHA1Hash((BYTE *)password, strlen(password), hash);
+#endif
 	return !memcmp(hash, m_passwordHash, SHA1_DIGEST_SIZE);
 }
 

@@ -28,10 +28,10 @@
 // Functions
 //
 
-BOOL InitActions(void);
-void CleanupActions(void);
+BOOL InitActions();
+void CleanupActions();
 BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg);
-DWORD CreateNewAction(char *pszName, DWORD *pdwId);
+DWORD CreateNewAction(const TCHAR *pszName, DWORD *pdwId);
 DWORD DeleteActionFromDB(DWORD dwActionId);
 DWORD ModifyActionFromMessage(CSCPMessage *pMsg);
 void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction);

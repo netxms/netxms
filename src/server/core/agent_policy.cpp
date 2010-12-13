@@ -163,7 +163,7 @@ BOOL AgentPolicy::CreateFromDB(DWORD dwId)
 
 	if (!LoadCommonProperties())
    {
-      DbgPrintf(2, "Cannot load common properties for agent policy object %d", dwId);
+      DbgPrintf(2, _T("Cannot load common properties for agent policy object %d"), dwId);
       return FALSE;
    }
 

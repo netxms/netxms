@@ -78,14 +78,14 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 			{
 				// Re-enable temporary disabled user
 				user->enable();
-				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, "", 0, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
+				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, _T(""), 0, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 				DbgPrintf(3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
 			if ((blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
 			{
 				user->disable();
-				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, "", 0, _T("User account \"%s\" disabled due to inactivity"), user->getName());
+				WriteAuditLog(AUDIT_SECURITY, TRUE, 0xFFFFFFFF, _T(""), 0, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 				DbgPrintf(3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
@@ -159,7 +159,7 @@ BOOL LoadUsers(void)
    }
 
    // Load groups
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,system_access,flags,description,guid FROM user_groups");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id,name,system_access,flags,description,guid FROM user_groups"));
    if (hResult == NULL)
       return FALSE;
 
@@ -436,17 +436,17 @@ bool NXCORE_EXPORTABLE ResolveUserId(DWORD id, TCHAR *buffer, int bufSize)
 void DumpUsers(CONSOLE_CTX pCtx)
 {
    int i;
-   char szGUID[64];
+   TCHAR szGUID[64];
 
-   ConsolePrintf(pCtx, "Login name           GUID                                 System rights\n"
-                       "-----------------------------------------------------------------------\n");
+   ConsolePrintf(pCtx, _T("Login name           GUID                                 System rights\n")
+                       _T("-----------------------------------------------------------------------\n"));
    MutexLock(m_mutexUserDatabaseAccess, INFINITE);
    for(i = 0; i < m_userCount; i++)
 		if (!(m_users[i]->getId() & GROUP_FLAG))
-			ConsolePrintf(pCtx, "%-20s %-36s 0x%08X\n", m_users[i]->getName(),
+			ConsolePrintf(pCtx, _T("%-20s %-36s 0x%08X\n"), m_users[i]->getName(),
 			              m_users[i]->getGuidAsText(szGUID), m_users[i]->getSystemRights());
    MutexUnlock(m_mutexUserDatabaseAccess);
-   ConsolePrintf(pCtx, "\n");
+   ConsolePrintf(pCtx, _T("\n"));
 }
 
 

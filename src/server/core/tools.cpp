@@ -59,17 +59,17 @@ void CleanInterfaceList(INTERFACE_LIST *pIfList)
 // Get system information string
 //
 
-void GetSysInfoStr(char *pszBuffer, int nMaxSize)
+void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 {
 #ifdef _WIN32
    DWORD dwSize;
-   char computerName[MAX_COMPUTERNAME_LENGTH + 1] = "localhost", osVersion[256] = "unknown";
+   TCHAR computerName[MAX_COMPUTERNAME_LENGTH + 1] = _T("localhost"), osVersion[256] = _T("unknown");
 
    dwSize = MAX_COMPUTERNAME_LENGTH + 1;
    GetComputerName(computerName, &dwSize);
 
 	GetWindowsVersionString(osVersion, 256);
-   _snprintf(pszBuffer, nMaxSize, "%s %s", computerName, osVersion);
+   _sntprintf(pszBuffer, nMaxSize, _T("%s %s"), computerName, osVersion);
 #else
 # ifdef HAVE_SYS_UTSNAME_H
 	struct utsname uName;
@@ -87,7 +87,7 @@ void GetSysInfoStr(char *pszBuffer, int nMaxSize)
 	}
 # else
    printf("GetSysInfoStr: code not implemented\n");
-   strcpy(pszBuffer, "UNIX");
+   _tcscpy(pszBuffer, "UNIX");
 # endif // HAVE_SYS_UTSNAME_H
 
 #endif
@@ -126,7 +126,7 @@ DWORD GetLocalIpAddr(void)
 // Execute external command
 //
 
-BOOL ExecCommand(char *pszCommand)
+BOOL ExecCommand(TCHAR *pszCommand)
 {
    BOOL bSuccess = TRUE;
 
@@ -161,7 +161,7 @@ BOOL ExecCommand(char *pszCommand)
 		struct stat st;
 		int state = 0;
 
-		pTmp = strdup(pszCommand);
+		pTmp = _tcsdup(pszCommand);
 		if (pTmp != NULL)
 		{
 			pCmd[nCount++] = pTmp;

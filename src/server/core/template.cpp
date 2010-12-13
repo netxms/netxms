@@ -187,7 +187,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   _stprintf(szQuery, _T("SELECT version,enable_auto_apply,apply_filter FROM templates WHERE id=%d"), dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version,enable_auto_apply,apply_filter FROM templates WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -225,7 +225,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    // Load related nodes list
    if (!m_bIsDeleted)
    {
-      _stprintf(szQuery, _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -334,9 +334,9 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 // Delete object from database
 //
 
-BOOL Template::DeleteFromDB(void)
+BOOL Template::DeleteFromDB()
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    BOOL bSuccess;
 
    bSuccess = NetObj::DeleteFromDB();
@@ -344,19 +344,19 @@ BOOL Template::DeleteFromDB(void)
    {
       if (Type() == OBJECT_TEMPLATE)
       {
-         sprintf(szQuery, "DELETE FROM templates WHERE id=%d", m_dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM templates WHERE id=%d"), m_dwId);
          QueueSQLRequest(szQuery);
-         sprintf(szQuery, "DELETE FROM dct_node_map WHERE template_id=%d", m_dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_node_map WHERE template_id=%d"), m_dwId);
          QueueSQLRequest(szQuery);
       }
       else
       {
-         sprintf(szQuery, "DELETE FROM dct_node_map WHERE node_id=%d", m_dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_node_map WHERE node_id=%d"), m_dwId);
          QueueSQLRequest(szQuery);
       }
-      sprintf(szQuery, "DELETE FROM items WHERE node_id=%d", m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM items WHERE node_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "UPDATE items SET template_id=0 WHERE template_id=%d", m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE items SET template_id=0 WHERE template_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -815,7 +815,7 @@ BOOL Template::ApplyToNode(Node *pNode)
    }
 
    pdwItemList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
-   DbgPrintf(2, "Apply %d items from template \"%s\" to node \"%s\"",
+   DbgPrintf(2, _T("Apply %d items from template \"%s\" to node \"%s\""),
              m_dwNumItems, m_szName, pNode->Name());
 
    // Copy items
@@ -1134,7 +1134,7 @@ BOOL Template::isApplicable(Node *node)
 			TCHAR buffer[1024];
 
 			_sntprintf(buffer, 1024, _T("Template::%s::%d"), m_szName, m_dwId);
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), buffer,
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer,
 						 m_applyFilter->getErrorText(), m_dwId);
 			nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_applyFilter->getErrorText());
 		}

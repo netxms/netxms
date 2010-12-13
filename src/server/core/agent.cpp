@@ -42,7 +42,7 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
    int i, iNumArgs;
    Node *pNode;
    TCHAR *pszArgList[32], szBuffer[32];
-   TCHAR szFormat[] = "ssssssssssssssssssssssssssssssss";
+   char szFormat[] = "ssssssssssssssssssssssssssssssss";
 
    DbgPrintf(3, _T("Received trap message from agent at %s"), IpToStr(getIpAddr(), szBuffer));
    pNode = FindNodeByIP(getIpAddr());

@@ -177,7 +177,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
    BOOL bNewObject = TRUE;
 
    // Check for object's existence in database
-   _stprintf(szQuery, _T("SELECT threshold_id FROM thresholds WHERE threshold_id=%d"), m_id);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT threshold_id FROM thresholds WHERE threshold_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -189,18 +189,20 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
    // Prepare and execute query
    pszEscValue = EncodeSQLString(m_value.String());
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,"
-                       "check_function,check_operation,parameter_1,parameter_2,event_code,"
-                       "sequence_number,current_state,rearm_event_code,repeat_interval) VALUES "
-                       "(%d,%d,'%s','#00',%d,%d,%d,%d,%d,%d,%d,%d,%d)", 
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+		              _T("INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,")
+                    _T("check_function,check_operation,parameter_1,parameter_2,event_code,")
+                    _T("sequence_number,current_state,rearm_event_code,repeat_interval) VALUES ")
+                    _T("(%d,%d,'%s','#00',%d,%d,%d,%d,%d,%d,%d,%d,%d)"), 
               m_id, m_itemId, pszEscValue, m_function, m_operation, m_param1,
               m_param2, m_eventCode, dwIndex, m_isReached, m_rearmEventCode,
 				  m_repeatInterval);
    else
-      sprintf(szQuery, "UPDATE thresholds SET item_id=%d,fire_value='%s',check_function=%d,"
-                       "check_operation=%d,parameter_1=%d,parameter_2=%d,event_code=%d,"
-                       "sequence_number=%d,current_state=%d,"
-                       "rearm_event_code=%d,repeat_interval=%d WHERE threshold_id=%d",
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+		              _T("UPDATE thresholds SET item_id=%d,fire_value='%s',check_function=%d,")
+                    _T("check_operation=%d,parameter_1=%d,parameter_2=%d,event_code=%d,")
+                    _T("sequence_number=%d,current_state=%d,")
+                    _T("rearm_event_code=%d,repeat_interval=%d WHERE threshold_id=%d"),
               m_itemId, pszEscValue, m_function, m_operation, m_param1,
               m_param2, m_eventCode, dwIndex, m_isReached,
               m_rearmEventCode, m_repeatInterval, m_id);
@@ -316,7 +318,7 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
                   bMatch = ((double)fvalue == (double)m_value);
                   break;
                case DCI_DT_STRING:
-                  bMatch = !strcmp(fvalue.String(), m_value.String());
+                  bMatch = !_tcscmp(fvalue.String(), m_value.String());
                   break;
             }
             break;
@@ -379,7 +381,7 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
                   bMatch = ((double)fvalue != (double)m_value);
                   break;
                case DCI_DT_STRING:
-                  bMatch = strcmp(fvalue.String(), m_value.String());
+                  bMatch = _tcscmp(fvalue.String(), m_value.String());
                   break;
             }
             break;
@@ -651,7 +653,7 @@ BOOL Threshold::compare(Threshold *pThr)
          bMatch = ((double)pThr->m_value == (double)m_value);
          break;
       case DCI_DT_STRING:
-         bMatch = !strcmp(pThr->m_value.String(), m_value.String());
+         bMatch = !_tcscmp(pThr->m_value.String(), m_value.String());
          break;
       default:
          bMatch = TRUE;

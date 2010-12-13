@@ -95,7 +95,7 @@ public:
    TCHAR *expandText(const TCHAR *szTemplate, const TCHAR *pszAlarmMsg = NULL);
 
    DWORD getParametersCount() { return m_dwNumParameters; }
-   char *getParameter(DWORD index) { return (index < m_dwNumParameters) ? m_ppszParameters[index] : NULL; }
+   const TCHAR *getParameter(DWORD index) { return (index < m_dwNumParameters) ? m_ppszParameters[index] : NULL; }
    DWORD getParameterAsULong(DWORD index) { return (index < m_dwNumParameters) ? _tcstoul(m_ppszParameters[index], NULL, 0) : 0; }
    QWORD getParameterAsUInt64(DWORD index) { return (index < m_dwNumParameters) ? _tcstoull(m_ppszParameters[index], NULL, 0) : 0; }
    
@@ -215,8 +215,8 @@ EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 
 extern Queue *g_pEventQueue;
 extern EventPolicy *g_pEventPolicy;
-extern const char *g_szStatusText[];
-extern const char *g_szStatusTextSmall[];
+extern const TCHAR *g_szStatusText[];
+extern const TCHAR *g_szStatusTextSmall[];
 extern INT64 g_totalEventsProcessed;
 
 #endif   /* _nms_events_h_ */

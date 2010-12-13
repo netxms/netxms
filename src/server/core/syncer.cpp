@@ -56,7 +56,7 @@ delete_loop_start:;
          }
          else
          {
-            DbgPrintf(3, "* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)",
+            DbgPrintf(3, _T("* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)"),
                       pObject->Id(), pObject->RefCount());
          }
       }
@@ -100,9 +100,9 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
    }
 
    // Read configuration
-   iSyncInterval = ConfigReadInt("SyncInterval", 60);
-   DbgPrintf(1, "Syncer thread started, sync_interval = %d", iSyncInterval);
-   dwWatchdogId = WatchdogAddThread("Syncer Thread", iSyncInterval * 2 + 10);
+   iSyncInterval = ConfigReadInt(_T("SyncInterval"), 60);
+   DbgPrintf(1, _T("Syncer thread started, sync_interval = %d"), iSyncInterval);
+   dwWatchdogId = WatchdogAddThread(_T("Syncer Thread"), iSyncInterval * 2 + 10);
 
    // Main syncer loop
    while(!ShutdownInProgress())
@@ -123,6 +123,6 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       DBDisconnect(hdb);
    }
 
-   DbgPrintf(1, "Syncer thread terminated");
+   DbgPrintf(1, _T("Syncer thread terminated"));
    return THREAD_OK;
 }

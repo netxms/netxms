@@ -300,7 +300,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
       _sntprintf(szQuery, 4096, 
                  _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,")
                  _T("source_object_id,hostname,msg_tag,msg_text) VALUES ")
-                 _T("(" UINT64_FMT "," TIME_T_FMT ",%d,%d,%d,'%s','%s',%s)"),
+                 _T("(") UINT64_FMT _T(",") TIME_T_FMT _T(",%d,%d,%d,'%s','%s',%s)"),
                  record.qwMsgId, record.tmTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
 					  record.szHostName, record.szTag, (const TCHAR *)DBPrepareString(g_hCoreDB, record.szMessage));
@@ -417,7 +417,7 @@ static void CreateParserFromConfig()
 	xml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
 	if (xml != NULL)
 	{
-		TCHAR parseError[256];
+		char parseError[256];
 
 		m_parser = new LogParser;
 		m_parser->setEventNameResolver(EventNameResolver);
@@ -467,7 +467,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == -1)
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SyslogDaemon");
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SyslogDaemon"));
       return THREAD_OK;
    }
 
@@ -488,7 +488,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", nPort, "SyslogDaemon", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", nPort, _T("SyslogDaemon"), WSAGetLastError());
       closesocket(hSocket);
       return THREAD_OK;
    }

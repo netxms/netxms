@@ -48,30 +48,30 @@ static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFF
 																0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static QWORD m_qwFreeEventId = 1;
-static const char *m_pszGroupNames[NUMBER_OF_GROUPS] =
+static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
-   "Network Objects",
-   "Container Categories",
-   "Events",
-   "Data Collection Items",
-   "SNMP Trap",
-   "--Images",
-   "Actions",
-   "Event Groups",
-   "Data Collection Thresholds",
-   "Users",
-   "User Groups",
-   "Alarms",
-   "Alarm Notes",
-   "Packages",
-   "--Log Processing Policies",
-   "Object Tools",
-   "Scripts",
-   "Agent Configs",
-	"Graphs",
-	"Certificates",
-	"Situations",
-	"Maps"
+   _T("Network Objects"),
+   _T("Container Categories"),
+   _T("Events"),
+   _T("Data Collection Items"),
+   _T("SNMP Trap"),
+   _T("--Images"),
+   _T("Actions"),
+   _T("Event Groups"),
+   _T("Data Collection Thresholds"),
+   _T("Users"),
+   _T("User Groups"),
+   _T("Alarms"),
+   _T("Alarm Notes"),
+   _T("Packages"),
+   _T("--Log Processing Policies"),
+   _T("Object Tools"),
+   _T("Scripts"),
+   _T("Agent Configs"),
+	_T("Graphs"),
+	_T("Certificates"),
+	_T("Situations"),
+	_T("Maps")
 };
 
 
@@ -86,7 +86,7 @@ BOOL InitIdTable(void)
    m_mutexTableAccess = MutexCreate();
 
    // Get first available network object ID
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM nodes");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM nodes"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -94,7 +94,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM subnets");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM subnets"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -102,7 +102,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM interfaces");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM interfaces"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -110,7 +110,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM containers");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM containers"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -118,7 +118,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM templates");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM templates"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -126,7 +126,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM network_services");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM network_services"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -134,7 +134,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM conditions");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM conditions"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -142,7 +142,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM clusters");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM clusters"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -150,7 +150,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM ap_common");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM ap_common"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -158,7 +158,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM network_maps");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM network_maps"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -166,7 +166,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(object_id) FROM deleted_objects");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(object_id) FROM deleted_objects"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -176,7 +176,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available container category id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(category) FROM container_categories");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(category) FROM container_categories"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -185,7 +185,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available event code
-   hResult = DBSelect(g_hCoreDB, "SELECT max(event_code) FROM event_cfg");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(event_code) FROM event_cfg"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -194,7 +194,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available data collection item id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(item_id) FROM items");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(item_id) FROM items"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -203,7 +203,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available SNMP trap configuration record id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(trap_id) FROM snmp_trap_cfg");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(trap_id) FROM snmp_trap_cfg"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -212,7 +212,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available action id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(action_id) FROM actions");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(action_id) FROM actions"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -221,7 +221,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available event group id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM event_groups");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM event_groups"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -230,7 +230,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available threshold id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(threshold_id) FROM thresholds");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(threshold_id) FROM thresholds"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -240,7 +240,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available user id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM users");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM users"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -250,7 +250,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available user group id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM user_groups");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM user_groups"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -260,7 +260,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available alarm id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(alarm_id) FROM alarms");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(alarm_id) FROM alarms"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -270,7 +270,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available alarm note id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(note_id) FROM alarm_notes");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(note_id) FROM alarm_notes"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -280,7 +280,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available event identifier
-   hResult = DBSelect(g_hCoreDB, "SELECT max(event_id) FROM event_log");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(event_id) FROM event_log"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -289,7 +289,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available package id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(pkg_id) FROM agent_pkg");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(pkg_id) FROM agent_pkg"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -299,7 +299,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available object tool id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(tool_id) FROM object_tools");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(tool_id) FROM object_tools"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -309,7 +309,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available script id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(script_id) FROM script_library");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(script_id) FROM script_library"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -319,7 +319,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available agent config id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(config_id) FROM agent_configs");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(config_id) FROM agent_configs"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -329,7 +329,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available graph id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(graph_id) FROM graphs");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(graph_id) FROM graphs"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -339,7 +339,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available certificate id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(cert_id) FROM certificates");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(cert_id) FROM certificates"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -349,7 +349,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available situation id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM situations");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM situations"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -359,7 +359,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available map id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(map_id) FROM maps");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(map_id) FROM maps"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -367,7 +367,7 @@ BOOL InitIdTable(void)
                                         DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM web_maps");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM web_maps"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -391,7 +391,7 @@ DWORD CreateUniqueId(int iGroup)
    MutexLock(m_mutexTableAccess, INFINITE);
    if (m_dwFreeIdTable[iGroup] == m_dwIdLimits[iGroup])
    {
-      dwId = 0;   // ID zero means "no unique ID available"
+      dwId = 0;   // ID zero means _T("no unique ID available")
       nxlog_write(MSG_NO_UNIQUE_ID, EVENTLOG_ERROR_TYPE, "s", m_pszGroupNames[iGroup]);
    }
    else

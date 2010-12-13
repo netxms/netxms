@@ -77,14 +77,14 @@ void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx)
 // Print message to console, either local or remote
 //
 
-void ConsolePrintf(CONSOLE_CTX pCtx, const char *pszFormat, ...)
+void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 {
    va_list args;
 
    va_start(args, pszFormat);
    if (pCtx->hSocket == -1)
    {
-      vprintf(pszFormat, args);
+      _vtprintf(pszFormat, args);
    }
    else
    {
@@ -115,9 +115,9 @@ void ShowServerStats(CONSOLE_CTX pCtx)
       dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->getItemCount();
    RWLockUnlock(g_rwlockNodeIndex);
 
-   ConsolePrintf(pCtx, "Total number of objects:     %d\n"
-                       "Number of monitored nodes:   %d\n"
-                       "Number of collectable DCIs:  %d\n\n",
+   ConsolePrintf(pCtx, _T("Total number of objects:     %d\n")
+                       _T("Number of monitored nodes:   %d\n")
+                       _T("Number of collectable DCIs:  %d\n\n"),
                  g_dwIdIndexSize, g_dwNodeAddrIndexSize, dwNumItems);
 }
 
@@ -126,10 +126,10 @@ void ShowServerStats(CONSOLE_CTX pCtx)
 // Show queue stats
 //
 
-void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const char *pszName)
+void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName)
 {
    if (pQueue != NULL)
-      ConsolePrintf(pCtx, "%-32s : %d\n", pszName, pQueue->Size());
+      ConsolePrintf(pCtx, _T("%-32s : %d\n"), pszName, pQueue->Size());
 }
 
 
@@ -141,27 +141,28 @@ void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const char *pszName)
 
 void DumpProcess(CONSOLE_CTX pCtx)
 {
-	STARTUPINFO si;
+	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
-	char cmdLine[64], buffer[256];
+	char cmdLine[64];
 
-	ConsolePrintf(pCtx, "Dumping process to disk...\n");
+	ConsolePrintf(pCtx, _T("Dumping process to disk...\n"));
 
 	sprintf(cmdLine, "netxmsd.exe --dump %d", GetCurrentProcessId());
 	memset(&si, 0, sizeof(STARTUPINFO));
 	si.cb = sizeof(STARTUPINFO);
-	if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE,
-	                  (g_dwFlags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
+	if (CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE,
+	                   (g_dwFlags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
 	{
 		WaitForSingleObject(pi.hProcess, INFINITE);
 		CloseHandle(pi.hThread);
 		CloseHandle(pi.hProcess);
 		
-		ConsolePrintf(pCtx, "Done.\n");
+		ConsolePrintf(pCtx, _T("Done.\n"));
 	}
 	else
 	{
-		ConsolePrintf(pCtx, "Dump error: CreateProcess() failed (%s)\n", GetSystemErrorText(GetLastError(), buffer, 256));
+		TCHAR buffer[256];
+		ConsolePrintf(pCtx, _T("Dump error: CreateProcess() failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 256));
 	}
 }
 

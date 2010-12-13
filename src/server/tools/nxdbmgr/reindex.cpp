@@ -36,20 +36,20 @@ static void RecreateIndex(const TCHAR *pszIndex, const TCHAR *pszTable, const TC
 	switch(g_iSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			_stprintf(szQuery, _T("DROP INDEX %s ON %s"), pszIndex, pszTable);
+			_sntprintf(szQuery, 1024, _T("DROP INDEX %s ON %s"), pszIndex, pszTable);
 			break;
 		case DB_SYNTAX_MYSQL:
-			_stprintf(szQuery, _T("DROP INDEX %s FROM %s"), pszIndex, pszTable);
+			_sntprintf(szQuery, 1024, _T("DROP INDEX %s FROM %s"), pszIndex, pszTable);
 			break;
 		case DB_SYNTAX_PGSQL:
-			_stprintf(szQuery, _T("DROP INDEX %s CASCADE"), pszIndex);
+			_sntprintf(szQuery, 1024, _T("DROP INDEX %s CASCADE"), pszIndex);
 			break;
 		default:
-			_stprintf(szQuery, _T("DROP INDEX %s"), pszIndex);
+			_sntprintf(szQuery, 1024, _T("DROP INDEX %s"), pszIndex);
 			break;
 	}
 	DBQuery(g_hCoreDB, szQuery);
-	_stprintf(szQuery, _T("CREATE INDEX %s ON %s(%s)"), pszIndex, pszTable, pszColumns);
+	_sntprintf(szQuery, 1024, _T("CREATE INDEX %s ON %s(%s)"), pszIndex, pszTable, pszColumns);
 	SQLQuery(szQuery);
 }
 

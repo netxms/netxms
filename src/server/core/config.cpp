@@ -52,24 +52,24 @@ TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { "CodePage", CT_STRING, 0, 0, 256, 0, g_szCodePage },
-   { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
-   { "DataDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir },
-   { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
-   { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
-   { "DBEncryptedPassword", CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
-   { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
-   { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName },
-   { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
-   { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
-   { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
-   { "FullCrashDumps", CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
-   { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
-   { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
-   { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
-   { "Module", CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList },
-   { "ProcessAffinityMask", CT_LONG, 0, 0, 0, 0, &g_processAffinityMask },
-   { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("CodePage"), CT_STRING, 0, 0, 256, 0, g_szCodePage },
+   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
+   { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir },
+   { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
+   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
+   { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
+   { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName },
+   { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
+   { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
+   { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
+   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
+   { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
+   { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
+   { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
+   { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList },
+   { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
 BOOL NXCORE_EXPORTABLE LoadConfig()
@@ -80,29 +80,29 @@ BOOL NXCORE_EXPORTABLE LoadConfig()
 #if !defined(_WIN32) && !defined(_NETWARE)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
-		if (access(PREFIX "/etc/netxmsd.conf", 4) == 0)
+		if (access(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
 		{
-			_tcscpy(g_szConfigFile, PREFIX "/etc/netxmsd.conf");
+			_tcscpy(g_szConfigFile, PREFIX _T("/etc/netxmsd.conf"));
 		}
-		else if (access("/usr/etc/netxmsd.conf", 4) == 0)
+		else if (access(_T("/usr/etc/netxmsd.conf"), 4) == 0)
 		{
-			_tcscpy(g_szConfigFile, "/usr/etc/netxmsd.conf");
+			_tcscpy(g_szConfigFile, _T("/usr/etc/netxmsd.conf"));
 		}
 		else
 		{
-			_tcscpy(g_szConfigFile, "/etc/netxmsd.conf");
+			_tcscpy(g_szConfigFile, _T("/etc/netxmsd.conf"));
 		}
 	}
 #endif
 
    if (IsStandalone())
-      printf("Using configuration file \"%s\"\n", g_szConfigFile);
+      _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
 
 	config = new Config();
 	if (config->loadConfig(g_szConfigFile, _T("server")) && config->parseTemplate(_T("server"), m_cfgTemplate))
    {
-      if ((!stricmp(g_szLogFile,"{EventLog}")) ||
-          (!stricmp(g_szLogFile,"{syslog}")))
+      if ((!_tcsicmp(g_szLogFile, _T("{EventLog}"))) ||
+          (!_tcsicmp(g_szLogFile, _T("{syslog}"))))
       {
          g_dwFlags |= AF_USE_SYSLOG;
       }
@@ -200,6 +200,32 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
 
 
 //
+// Read multibyte string from configuration table
+//
+
+#ifdef UNICODE
+
+BOOL NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault)
+{
+	WCHAR *wcBuffer = (WCHAR *)malloc(iBufSize * sizeof(WCHAR));
+   BOOL rc = ConfigReadStr(szVar, wcBuffer, iBufSize, _T(""));
+	if (rc)
+	{
+		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, wcBuffer, -1, szBuffer, iBufSize, NULL, NULL);
+	}
+	else
+	{
+		strncpy(szBuffer, szDefault, iBufSize);
+	}
+	szBuffer[iBufSize - 1] = 0;
+	free(wcBuffer);
+	return rc;
+}
+
+#endif
+
+
+//
 // Read integer value from configuration table
 //
 
@@ -243,7 +269,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, in
    if (ConfigReadStr(pszVar, szBuffer, 256, _T("")))
    {
       StrToBin(szBuffer, (BYTE *)pbBytes, 128);
-      nLen = (int)strlen(szBuffer) / 2;
+      nLen = (int)_tcslen(szBuffer) / 2;
       for(i = 0; (i < nSize) && (i < nLen); i++)
          pnArray[i] = pbBytes[i];
       for(; i < nSize; i++)
@@ -313,7 +339,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCrea
 {
    TCHAR szBuffer[64];
 
-   _stprintf(szBuffer, _T("%d"), iValue);
+   _sntprintf(szBuffer, 64, _T("%d"), iValue);
    return ConfigWriteStr(szVar, szBuffer, bCreate, isVisible, needRestart);
 }
 
@@ -326,7 +352,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL 
 {
    TCHAR szBuffer[64];
 
-   _stprintf(szBuffer, _T("%u"), dwValue);
+   _sntprintf(szBuffer, 64, _T("%u"), dwValue);
    return ConfigWriteStr(szVar, szBuffer, bCreate, isVisible, needRestart);
 }
 
@@ -341,7 +367,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, i
    int i, j;
 
    for(i = 0, j = 0; (i < nSize) && (i < 127); i++, j += 2)
-      _stprintf(&szBuffer[j], _T("%02X"), (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
+      _sntprintf(&szBuffer[j], 256 - j, _T("%02X"), (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
    return ConfigWriteStr(pszVar, szBuffer, bCreate, isVisible, needRestart);
 }
 

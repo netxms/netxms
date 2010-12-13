@@ -70,7 +70,7 @@ static BOOL LoadTrapCfg()
          }
          else
          {
-            nxlog_write(MSG_INVALID_TRAP_OID, EVENTLOG_ERROR_TYPE, _T("s"),
+            nxlog_write(MSG_INVALID_TRAP_OID, NXLOG_ERROR, "s",
                         DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
             bResult = FALSE;
          }
@@ -109,7 +109,7 @@ static BOOL LoadTrapCfg()
                   }
                   else
                   {
-                     nxlog_write(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, _T("sd"), 
+                     nxlog_write(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", 
                               DBGetField(hResult, j, 0, szBuffer, MAX_DB_STRING), m_pTrapCfg[i].dwId);
                      bResult = FALSE;
                   }
@@ -145,7 +145,7 @@ void InitTraps()
    LoadTrapCfg();
    m_bLogAllTraps = ConfigReadInt(_T("LogAllSNMPTraps"), FALSE);
 
-   hResult = DBSelect(g_hCoreDB, "SELECT max(trap_id) FROM snmp_trap_log");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(trap_id) FROM snmp_trap_log"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -244,7 +244,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    int iResult;
 
    dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
-   DbgPrintf(4, "Received SNMP trap %s from %s", 
+   DbgPrintf(4, _T("Received SNMP trap %s from %s"), 
              pdu->getTrapId()->GetValueAsText(), IpToStr(dwOriginAddr, szBuffer));
 
    // Match IP address to object
@@ -579,9 +579,9 @@ DWORD DeleteTrap(DWORD dwId)
          memmove(&m_pTrapCfg[i], &m_pTrapCfg[i + 1], sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps - i));
 
          // Remove trap entry from database
-         _stprintf(szQuery, _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%d"), dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%d"), dwId);
          QueueSQLRequest(szQuery);
-         _stprintf(szQuery, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), dwId);
          QueueSQLRequest(szQuery);
          dwResult = RCC_SUCCESS;
 
@@ -657,7 +657,7 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 	m_dwNumTraps++;
    MutexUnlock(m_mutexTrapCfgAccess);
 
-   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
                       _T("VALUES (%d,'',%d,'','')"), *pdwTrapId, (DWORD)EVENT_SNMP_UNMATCHED_TRAP);
    if (!DBQuery(g_hCoreDB, szQuery))
       dwResult = RCC_DB_FAILURE;
@@ -691,7 +691,7 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 
 	// Write new trap to database
    SNMPConvertOIDToText(m_pTrapCfg[m_dwNumTraps].dwOidLen, m_pTrapCfg[m_dwNumTraps].pdwObjectId, szOID, 1024);
-   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
                       _T("VALUES (%d,'%s',%d,%s,%s)"), m_pTrapCfg[m_dwNumTraps].dwId,
 	          szOID, m_pTrapCfg[m_dwNumTraps].dwEventCode,
 				 (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[m_dwNumTraps].szDescription),

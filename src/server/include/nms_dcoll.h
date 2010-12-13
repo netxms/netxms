@@ -64,16 +64,16 @@ public:
    ~ItemValue();
 
    void SetTimeStamp(DWORD dwTime) { m_dwTimeStamp = dwTime; }
-   DWORD GetTimeStamp(void) { return m_dwTimeStamp; }
+   DWORD GetTimeStamp() { return m_dwTimeStamp; }
 
-   const TCHAR *String(void) { return m_szString; }
+   const TCHAR *String() { return m_szString; }
 
    operator double() { return m_dFloat; }
    operator DWORD() { return m_dwInt32; }
    operator QWORD() { return m_qwInt64; }
    operator LONG() { return m_iInt32; }
    operator INT64() { return m_iInt64; }
-   operator const char*() const { return m_szString; }
+   operator const TCHAR*() const { return m_szString; }
 
    const ItemValue& operator=(const ItemValue &src);
    const ItemValue& operator=(const TCHAR *pszStr);
@@ -109,7 +109,7 @@ private:
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
 
-   const ItemValue& value(void) { return m_value; }
+   const ItemValue& value() { return m_value; }
    void calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
    void calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
    void calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
@@ -129,7 +129,7 @@ public:
    DWORD getRearmEventCode() { return m_rearmEventCode; }
 	int getFunction() { return m_function; }
 	int getOperation() { return m_operation; }
-   const char *getStringValue() { return m_value.String(); }
+   const TCHAR *getStringValue() { return m_value.String(); }
    BOOL isReached() { return m_isReached; }
 	
 	int getRepeatInterval() { return m_repeatInterval; }
@@ -143,8 +143,8 @@ public:
    void createMessage(CSCPMessage *msg, DWORD baseId);
    void updateFromMessage(CSCPMessage *msg, DWORD baseId);
 
-   void createId(void);
-   DWORD getRequiredCacheSize(void) { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_param1; }
+   void createId();
+   DWORD getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_param1; }
 
    BOOL compare(Threshold *pThr);
 
@@ -268,7 +268,7 @@ public:
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 	void systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
 
-   void processNewValue(time_t nTimeStamp, const char *pszValue);
+   void processNewValue(time_t nTimeStamp, const TCHAR *pszValue);
    void processNewError();
 
    void getLastValue(CSCPMessage *pMsg, DWORD dwId);
@@ -286,9 +286,9 @@ public:
 
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg);
 
-	void setName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
-	void setDescription(TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
-	void setInstance(TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }
+	void setName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
+	void setDescription(const TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
+	void setInstance(const TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }
 	void setOrigin(int origin) { m_source = origin; }
 	void setDataType(int dataType) { m_dataType = dataType; }
 	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }

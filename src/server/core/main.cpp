@@ -106,7 +106,7 @@ TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
 TCHAR g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
 TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("0.0.0.0");
 #ifndef _WIN32
-char NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = "/var/run/netxmsd.pid";
+char NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
 #endif
 DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;
@@ -173,25 +173,25 @@ void NXCORE_EXPORTABLE ShutdownDB()
 // Check data directory for existence
 //
 
-static BOOL CheckDataDir(void)
+static BOOL CheckDataDir()
 {
-	char szBuffer[MAX_PATH];
+	TCHAR szBuffer[MAX_PATH];
 
-	if (chdir(g_szDataDir) == -1)
+	if (_tchdir(g_szDataDir) == -1)
 	{
 		nxlog_write(MSG_INVALID_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", g_szDataDir);
 		return FALSE;
 	}
 
 #ifdef _WIN32
-#define MKDIR(name) _mkdir(name)
+#define MKDIR(name) _tmkdir(name)
 #else
-#define MKDIR(name) mkdir(name, 0700)
+#define MKDIR(name) _tmkdir(name, 0700)
 #endif
 
 	// Create directory for mib files if it doesn't exist
-	strcpy(szBuffer, g_szDataDir);
-	strcat(szBuffer, DDIR_MIBS);
+	_tcscpy(szBuffer, g_szDataDir);
+	_tcscat(szBuffer, DDIR_MIBS);
 	if (MKDIR(szBuffer) == -1)
 		if (errno != EEXIST)
 		{
@@ -200,8 +200,8 @@ static BOOL CheckDataDir(void)
 		}
 
 	// Create directory for package files if it doesn't exist
-	strcpy(szBuffer, g_szDataDir);
-	strcat(szBuffer, DDIR_PACKAGES);
+	_tcscpy(szBuffer, g_szDataDir);
+	_tcscat(szBuffer, DDIR_PACKAGES);
 	if (MKDIR(szBuffer) == -1)
 		if (errno != EEXIST)
 		{
@@ -210,8 +210,8 @@ static BOOL CheckDataDir(void)
 		}
 
 	// Create directory for map background images if it doesn't exist
-	strcpy(szBuffer, g_szDataDir);
-	strcat(szBuffer, DDIR_BACKGROUNDS);
+	_tcscpy(szBuffer, g_szDataDir);
+	_tcscat(szBuffer, DDIR_BACKGROUNDS);
 	if (MKDIR(szBuffer) == -1)
 		if (errno != EEXIST)
 		{
@@ -231,18 +231,18 @@ static BOOL CheckDataDir(void)
 
 static void LoadGlobalConfig()
 {
-	g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 900);
-	g_dwStatusPollingInterval = ConfigReadInt("StatusPollingInterval", 60);
-	g_dwConfigurationPollingInterval = ConfigReadInt("ConfigurationPollingInterval", 3600);
-	g_dwRoutingTableUpdateInterval = ConfigReadInt("RoutingTableUpdateInterval", 300);
-	g_dwConditionPollingInterval = ConfigReadInt("ConditionPollingInterval", 60);
-	if (ConfigReadInt("DeleteEmptySubnets", 1))
+	g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
+	g_dwStatusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
+	g_dwConfigurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
+	g_dwRoutingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
+	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
+	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
 		g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
-	if (ConfigReadInt("EnableSNMPTraps", 1))
+	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))
 		g_dwFlags |= AF_ENABLE_SNMP_TRAPD;
-	if (ConfigReadInt("EnableZoning", 0))
+	if (ConfigReadInt(_T("EnableZoning"), 0))
 		g_dwFlags |= AF_ENABLE_ZONING;
-	if (ConfigReadInt("EnableMultipleDBConnections", 1))
+	if (ConfigReadInt(_T("EnableMultipleDBConnections"), 1))
 	{
 		// SQLite has troubles with multiple connections to the same database
 		// from different threads, and it does not speed up database access
@@ -256,22 +256,22 @@ static void LoadGlobalConfig()
 			DbgPrintf(1, _T("Configuration parameter EnableMultipleDBConnections ignored because database engine is SQLite"));
 		}
 	}
-	if (ConfigReadInt("RunNetworkDiscovery", 0))
+	if (ConfigReadInt(_T("RunNetworkDiscovery"), 0))
 		g_dwFlags |= AF_ENABLE_NETWORK_DISCOVERY;
-	if (ConfigReadInt("ActiveNetworkDiscovery", 0))
+	if (ConfigReadInt(_T("ActiveNetworkDiscovery"), 0))
 		g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
-	if (ConfigReadInt("ResolveNodeNames", 1))
+	if (ConfigReadInt(_T("ResolveNodeNames"), 1))
 		g_dwFlags |= AF_RESOLVE_NODE_NAMES;
-	if (ConfigReadInt("SyncNodeNamesWithDNS", 0))
+	if (ConfigReadInt(_T("SyncNodeNamesWithDNS"), 0))
 		g_dwFlags |= AF_SYNC_NODE_NAMES_WITH_DNS;
-	if (ConfigReadInt("InternalCA", 0))
+	if (ConfigReadInt(_T("InternalCA"), 0))
 		g_dwFlags |= AF_INTERNAL_CA;
-	if (ConfigReadInt("CheckTrustedNodes", 1))
+	if (ConfigReadInt(_T("CheckTrustedNodes"), 1))
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
 	
 	if (g_szDataDir[0] == 0)
 	{
-		ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
+		ConfigReadStr(_T("DataDirectory"), g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
 		DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_szDataDir);
 	}
 	else
@@ -279,12 +279,12 @@ static void LoadGlobalConfig()
 		DbgPrintf(1, _T("Using data directory %s"), g_szDataDir);
 	}
 
-	g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
-	g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
-	g_dwSNMPTimeout = ConfigReadInt("SNMPRequestTimeout", 2000);
-	g_dwAgentCommandTimeout = ConfigReadInt("AgentCommandTimeout", 2000);
-	g_dwThresholdRepeatInterval = ConfigReadInt("ThresholdRepeatInterval", 0);
-	g_nRequiredPolls = ConfigReadInt("PollCountForStatusChange", 1);
+	g_dwPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
+	g_dwLockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
+	g_dwSNMPTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
+	g_dwAgentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 2000);
+	g_dwThresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
+	g_nRequiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
 }
 
 
@@ -295,26 +295,26 @@ static void LoadGlobalConfig()
 static BOOL InitCryptografy()
 {
 #ifdef _WITH_ENCRYPTION
-	char szKeyFile[MAX_PATH];
+	TCHAR szKeyFile[MAX_PATH];
 	BOOL bResult = FALSE;
 	int fd, iPolicy;
 	DWORD dwLen;
 	BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
 
-	if (!InitCryptoLib(ConfigReadULong("AllowedCiphers", 15)))
+	if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 15)))
 		return FALSE;
 
-	strcpy(szKeyFile, g_szDataDir);
-	strcat(szKeyFile, DFILE_KEYS);
-	fd = open(szKeyFile, O_RDONLY | O_BINARY);
+	_tcscpy(szKeyFile, g_szDataDir);
+	_tcscat(szKeyFile, DFILE_KEYS);
+	fd = _topen(szKeyFile, O_RDONLY | O_BINARY);
 	g_pServerKey = LoadRSAKeys(szKeyFile);
 	if (g_pServerKey == NULL)
 	{
-		DbgPrintf(1, "Generating RSA key pair...");
+		DbgPrintf(1, _T("Generating RSA key pair..."));
 		g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
 		if (g_pServerKey != NULL)
 		{
-			fd = open(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
+			fd = _topen(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
 			if (fd != -1)
 			{
 				dwLen = i2d_RSAPublicKey(g_pServerKey, NULL);
@@ -341,7 +341,7 @@ static BOOL InitCryptografy()
 		bResult = TRUE;
 	}
 
-	iPolicy = ConfigReadInt("DefaultEncryptionPolicy", 1);
+	iPolicy = ConfigReadInt(_T("DefaultEncryptionPolicy"), 1);
 	if ((iPolicy < 0) || (iPolicy > 3))
 		iPolicy = 1;
 	SetAgentDEP(iPolicy);
@@ -390,7 +390,7 @@ static BOOL IsNetxmsdProcess(DWORD dwPID)
 // Database event handler
 //
 
-static void DBEventHandler(DWORD dwEvent, const TCHAR *pszArg1, const TCHAR *pszArg2, void *userArg)
+static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *pszArg2, void *userArg)
 {
 	if (!(g_dwFlags & AF_SERVER_INITIALIZED))
 		return;     // Don't try to do anything if server is not ready yet
@@ -424,7 +424,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 {
 	int i, iDBVersion;
 	DWORD dwAddr;
-	char szInfo[256];
+	TCHAR szInfo[256];
 
 	g_tServerStartTime = time(NULL);
 	srand((unsigned int)g_tServerStartTime);
@@ -442,7 +442,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 #ifndef _WIN32
 	if (SetDefaultCodepage(g_szCodePage))
 	{
-		DbgPrintf(1, "Code page set to %s", g_szCodePage);
+		DbgPrintf(1, _T("Code page set to %s"), g_szCodePage);
 	}
 	else
 	{
@@ -497,7 +497,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
 	}
-	DbgPrintf(1, "Successfully connected to database %s@%s", g_szDbName, g_szDbServer);
+	DbgPrintf(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
 
 	// Check database version
 	iDBVersion = DBGetSchemaVersion(g_hCoreDB);
@@ -507,16 +507,16 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		return FALSE;
 	}
 
-	int baseSize = ConfigReadInt("ConnectionPoolBaseSize", 5);
-	int maxSize = ConfigReadInt("ConnectionPoolMaxSize", 20);
-	int cooldownTime = ConfigReadInt("ConnectionPoolCooldownTime", 300);
+	int baseSize = ConfigReadInt(_T("ConnectionPoolBaseSize"), 5);
+	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
+	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
 	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, baseSize, maxSize, cooldownTime);
 
 	// Read database syntax
 	g_nDBSyntax = DBGetSyntax(g_hCoreDB);
 
 	// Read server ID
-	ConfigReadStr("ServerID", szInfo, 256, "");
+	ConfigReadStr(_T("ServerID"), szInfo, 256, _T(""));
 	StrStrip(szInfo);
 	if (szInfo[0] != 0)
 	{
@@ -527,7 +527,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		// Generate new ID
 		g_qwServerId = (((QWORD)time(NULL)) << 32) | rand();
 		BinToStr((BYTE *)&g_qwServerId, sizeof(QWORD), szInfo);
-		ConfigWriteStr("ServerID", szInfo, TRUE);
+		ConfigWriteStr(_T("ServerID"), szInfo, TRUE);
 	}
 
 	// Initialize locks
@@ -545,7 +545,7 @@ retry_db_lock:
 			{
 				DWORD dwPID;
 
-				dwPID = ConfigReadULong("DBLockPID", 0);
+				dwPID = ConfigReadULong(_T("DBLockPID"), 0);
 				if (!IsNetxmsdProcess(dwPID) || (dwPID == GetCurrentProcessId()))
 				{
 					UnlockDB();
@@ -561,7 +561,7 @@ retry_db_lock:
 
 	// Load global configuration parameters
 	LoadGlobalConfig();
-	DbgPrintf(1, "Global configuration loaded");
+	DbgPrintf(1, _T("Global configuration loaded"));
 
 	// Check data directory
 	if (!CheckDataDir())
@@ -586,7 +586,7 @@ retry_db_lock:
 	// Setup unique identifiers table
 	if (!InitIdTable())
 		return FALSE;
-	DbgPrintf(2, "ID table created");
+	DbgPrintf(2, _T("ID table created"));
 
 	// Load and compile scripts
 	LoadScripts();
@@ -602,7 +602,7 @@ retry_db_lock:
 		nxlog_write(MSG_ERROR_LOADING_USERS, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
 	}
-	DbgPrintf(2, "User accounts loaded");
+	DbgPrintf(2, _T("User accounts loaded"));
 
 	// Initialize audit
 	InitAuditLog();
@@ -612,12 +612,12 @@ retry_db_lock:
 	if (!LoadObjects())
 		return FALSE;
 	LoadMaps();
-	DbgPrintf(1, "Objects loaded and initialized");
+	DbgPrintf(1, _T("Objects loaded and initialized"));
 	
 	// Initialize situations
 	if (!SituationsInit())
 		return FALSE;
-	DbgPrintf(1, "Situations loaded and initialized");
+	DbgPrintf(1, _T("Situations loaded and initialized"));
 
 	// Initialize and load event actions
 	if (!InitActions())
@@ -664,18 +664,18 @@ retry_db_lock:
 
 	// Start SNMP trapper
 	InitTraps();
-	if (ConfigReadInt("EnableSNMPTraps", 1))
+	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))
 		ThreadCreate(SNMPTrapReceiver, 0, NULL);
 
 	// Start built-in syslog daemon
-	if (ConfigReadInt("EnableSyslogDaemon", 0))
+	if (ConfigReadInt(_T("EnableSyslogDaemon"), 0))
 		m_thSyslogDaemon = ThreadCreateEx(SyslogDaemon, 0, NULL);
 
-	// Start database "lazy" write thread
+	// Start database _T("lazy") write thread
 	StartDBWriter();
 
 	// Start local administartive interface listener if required
-	if (ConfigReadInt("EnableAdminInterface", 1))
+	if (ConfigReadInt(_T("EnableAdminInterface"), 1))
 		ThreadCreate(LocalAdminListener, 0, NULL);
 
 	// Load modules
@@ -685,14 +685,14 @@ retry_db_lock:
 	ThreadCreate(BeaconPoller, 0, NULL);
 
 	// Start inter-server communication listener
-	if (ConfigReadInt("EnableISCListener", 0))
+	if (ConfigReadInt(_T("EnableISCListener"), 0))
 		ThreadCreate(ISCListener, 0, NULL);
 
 	// Allow clients to connect
 	ThreadCreate(ClientListener, 0, NULL);
 
 	g_dwFlags |= AF_SERVER_INITIALIZED;
-	DbgPrintf(1, "Server initialization completed");
+	DbgPrintf(1, _T("Server initialization completed"));
 	return TRUE;
 }
 
@@ -721,7 +721,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	// Stop event processor(s)
 	g_pEventQueue->Clear();
-	dwNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
+	dwNumThreads = ConfigReadInt(_T("NumberOfEventProcessors"), 1);
 	for(i = 0; i < dwNumThreads; i++)
 		g_pEventQueue->Put(INVALID_POINTER_VALUE);
 
@@ -729,7 +729,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	ShutdownSMSSender();
 
 	ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
-	DbgPrintf(2, "All threads was notified, continue with shutdown");
+	DbgPrintf(2, _T("All threads was notified, continue with shutdown"));
 
 	// Wait for critical threads
 	ThreadJoin(m_thHouseKeeper);
@@ -738,11 +738,11 @@ void NXCORE_EXPORTABLE Shutdown()
 	ThreadJoin(m_thSyslogDaemon);
 
 	SaveObjects(g_hCoreDB);
-	DbgPrintf(2, "All objects saved to database");
+	DbgPrintf(2, _T("All objects saved to database"));
 	SaveUsers(g_hCoreDB);
-	DbgPrintf(2, "All users saved to database");
+	DbgPrintf(2, _T("All users saved to database"));
 	StopDBWriter();
-	DbgPrintf(1, "Database writer stopped");
+	DbgPrintf(1, _T("Database writer stopped"));
 
 	CleanupUsers();
 
@@ -756,11 +756,11 @@ void NXCORE_EXPORTABLE Shutdown()
 	DBConnectionPoolShutdown();
 
 	DBUnloadDriver(g_dbDriver);
-	DbgPrintf(1, "Database driver unloaded");
+	DbgPrintf(1, _T("Database driver unloaded"));
 
 	CleanupActions();
 	ShutdownEventSubsystem();
-	DbgPrintf(1, "Event processing stopped");
+	DbgPrintf(1, _T("Event processing stopped"));
 
 	// Delete all objects
 	//for(i = 0; i < g_dwIdIndexSize; i++)
@@ -795,16 +795,16 @@ void NXCORE_EXPORTABLE FastShutdown(void)
 	ConditionSet(m_condShutdown);
 
 	SaveObjects(g_hCoreDB);
-	DbgPrintf(2, "All objects saved to database");
+	DbgPrintf(2, _T("All objects saved to database"));
 	SaveUsers(g_hCoreDB);
-	DbgPrintf(2, "All users saved to database");
+	DbgPrintf(2, _T("All users saved to database"));
 
 	// Remove database lock first, because we have a chance to loose DB connection
 	UnlockDB();
 
 	// Stop database writers
 	StopDBWriter();
-	DbgPrintf(1, "Database writer stopped");
+	DbgPrintf(1, _T("Database writer stopped"));
 
 	nxlog_close();
 }
@@ -814,12 +814,12 @@ void NXCORE_EXPORTABLE FastShutdown(void)
 // Compare given string to command template with abbreviation possibility
 //
 
-static BOOL IsCommand(const char *pszTemplate, char *pszString, int iMinChars)
+static BOOL IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
 {
 	int i;
 
 	// Convert given string to uppercase
-	strupr(pszString);
+	_tcsupr(pszString);
 
 	for(i = 0; pszString[i] != 0; i++)
 		if (pszString[i] != pszTemplate[i])
@@ -834,15 +834,14 @@ static BOOL IsCommand(const char *pszTemplate, char *pszString, int iMinChars)
 // Dump index
 //
 
-static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSize,
-		BOOL bIndexByIp)
+static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSize, BOOL bIndexByIp)
 {
 	DWORD i;
-	char szIpAddr[16];
+	TCHAR szIpAddr[16];
 
 	if (!RWLockReadLock(hLock, 5000))
 	{
-		ConsolePrintf(pCtx, "ERROR: unable to obtain index lock in 5 seconds\n");
+		ConsolePrintf(pCtx, _T("ERROR: unable to obtain index lock in 5 seconds\n"));
 		return;
 	}
 
@@ -850,13 +849,13 @@ static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSiz
 	{
 		if (bIndexByIp)
 		{
-			ConsolePrintf(pCtx, "%08X [%-15s] %p %s\n", pIndex[i].dwKey,
+			ConsolePrintf(pCtx, _T("%08X [%-15s] %p %s\n"), pIndex[i].dwKey,
 					IpToStr(pIndex[i].dwKey, szIpAddr),
 					pIndex[i].pObject, ((NetObj *)pIndex[i].pObject)->Name());
 		}
 		else
 		{
-			ConsolePrintf(pCtx, "%08X %p %s\n", pIndex[i].dwKey, pIndex[i].pObject,
+			ConsolePrintf(pCtx, _T("%08X %p %s\n"), pIndex[i].dwKey, pIndex[i].pObject,
 					((NetObj *)pIndex[i].pObject)->Name());
 		}
 	}
@@ -867,95 +866,95 @@ static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSiz
 
 //
 // Process command entered from command line in standalone mode
-// Return TRUE if command was "down"
+// Return TRUE if command was _T("down")
 //
 
-int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
+int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 {
-	char *pArg;
-	char szBuffer[256];
+	const TCHAR *pArg;
+	TCHAR szBuffer[256];
 	int nExitCode = CMD_EXIT_CONTINUE;
 
 	// Get command
 	pArg = ExtractWord(pszCmdLine, szBuffer);
 
-	if (IsCommand("DEBUG", szBuffer, 2))
+	if (IsCommand(_T("DEBUG"), szBuffer, 2))
 	{
 		// Get argument
 		pArg = ExtractWord(pArg, szBuffer);
 
-		if (IsCommand("ON", szBuffer, 2))
+		if (IsCommand(_T("ON"), szBuffer, 2))
 		{
 			g_nDebugLevel = 8;
-			ConsolePrintf(pCtx, "Debug mode turned on\n");
+			ConsolePrintf(pCtx, _T("Debug mode turned on\n"));
 		}
-		else if (IsCommand("OFF", szBuffer, 2))
+		else if (IsCommand(_T("OFF"), szBuffer, 2))
 		{
 			g_nDebugLevel = 0;
-			ConsolePrintf(pCtx, "Debug mode turned off\n");
+			ConsolePrintf(pCtx, _T("Debug mode turned off\n"));
 		}
 		else
 		{
 			if (szBuffer[0] == 0)
-				ConsolePrintf(pCtx, "ERROR: Missing argument\n\n");
+				ConsolePrintf(pCtx, _T("ERROR: Missing argument\n\n"));
 			else
-				ConsolePrintf(pCtx, "ERROR: Invalid DEBUG argument\n\n");
+				ConsolePrintf(pCtx, _T("ERROR: Invalid DEBUG argument\n\n"));
 		}
 	}
-	else if (IsCommand("DOWN", szBuffer, 4))
+	else if (IsCommand(_T("DOWN"), szBuffer, 4))
 	{
-		ConsolePrintf(pCtx, "Proceeding with server shutdown...\n");
+		ConsolePrintf(pCtx, _T("Proceeding with server shutdown...\n"));
 		nExitCode = CMD_EXIT_SHUTDOWN;
 	}
-	else if (IsCommand("DUMP", szBuffer, 4))
+	else if (IsCommand(_T("DUMP"), szBuffer, 4))
 	{
 		DumpProcess(pCtx);
 	}
-	else if (IsCommand("RAISE", szBuffer, 5))
+	else if (IsCommand(_T("RAISE"), szBuffer, 5))
 	{
 		// Get argument
 		pArg = ExtractWord(pArg, szBuffer);
 
-		if (IsCommand("ACCESS", szBuffer, 6))
+		if (IsCommand(_T("ACCESS"), szBuffer, 6))
 		{
-			ConsolePrintf(pCtx, "Raising exception...\n");
+			ConsolePrintf(pCtx, _T("Raising exception...\n"));
 			char *p = NULL;
 			*p = 0;
 		}
-		else if (IsCommand("BREAKPOINT", szBuffer, 5))
+		else if (IsCommand(_T("BREAKPOINT"), szBuffer, 5))
 		{
 #ifdef _WIN32
-			ConsolePrintf(pCtx, "Raising exception...\n");
+			ConsolePrintf(pCtx, _T("Raising exception...\n"));
 			RaiseException(EXCEPTION_BREAKPOINT, 0, 0, NULL);
 #else
-			ConsolePrintf(pCtx, "ERROR: Not supported on current platform\n");
+			ConsolePrintf(pCtx, _T("ERROR: Not supported on current platform\n"));
 #endif
 		}
 		else
 		{
-			ConsolePrintf(pCtx, "Invalid exception name; possible names are:\nACCESS BREAKPOINT\n");
+			ConsolePrintf(pCtx, _T("Invalid exception name; possible names are:\nACCESS BREAKPOINT\n"));
 		}
 	}
-	else if (IsCommand("EXIT", szBuffer, 4))
+	else if (IsCommand(_T("EXIT"), szBuffer, 4))
 	{
 		if (pCtx->hSocket != -1)
 		{
-			ConsolePrintf(pCtx, "Closing session...\n");
+			ConsolePrintf(pCtx, _T("Closing session...\n"));
 			nExitCode = CMD_EXIT_CLOSE_SESSION;
 		}
 		else
 		{
-			ConsolePrintf(pCtx, "Cannot exit from local server console\n");
+			ConsolePrintf(pCtx, _T("Cannot exit from local server console\n"));
 		}
 	}
-	else if (IsCommand("SHOW", szBuffer, 2))
+	else if (IsCommand(_T("SHOW"), szBuffer, 2))
 	{
 		// Get argument
 		pArg = ExtractWord(pArg, szBuffer);
 
-		if (IsCommand("FLAGS", szBuffer, 1))
+		if (IsCommand(_T("FLAGS"), szBuffer, 1))
 		{
-			ConsolePrintf(pCtx, "Flags: 0x%08X\n", g_dwFlags);
+			ConsolePrintf(pCtx, _T("Flags: 0x%08X\n"), g_dwFlags);
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DAEMON));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSLOG));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NETWORK_DISCOVERY));
@@ -977,32 +976,32 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_EVENT_STORM_DETECTED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
-			ConsolePrintf(pCtx, "\n");
+			ConsolePrintf(pCtx, _T("\n"));
 		}
-		else if (IsCommand("INDEX", szBuffer, 1))
+		else if (IsCommand(_T("INDEX"), szBuffer, 1))
 		{
 			// Get argument
 			pArg = ExtractWord(pArg, szBuffer);
 
-			if (IsCommand("CONDITION", szBuffer, 1))
+			if (IsCommand(_T("CONDITION"), szBuffer, 1))
 			{
 				DumpIndex(pCtx, g_rwlockConditionIndex, g_pConditionIndex, g_dwConditionIndexSize, FALSE);
 			}
-			else if (IsCommand("ID", szBuffer, 2))
+			else if (IsCommand(_T("ID"), szBuffer, 2))
 			{
 				DumpIndex(pCtx, g_rwlockIdIndex, g_pIndexById, g_dwIdIndexSize, FALSE);
 			}
-			else if (IsCommand("INTERFACE", szBuffer, 2))
+			else if (IsCommand(_T("INTERFACE"), szBuffer, 2))
 			{
 				DumpIndex(pCtx, g_rwlockInterfaceIndex, g_pInterfaceIndexByAddr,
 						g_dwInterfaceAddrIndexSize, TRUE);
 			}
-			else if (IsCommand("NODE", szBuffer, 1))
+			else if (IsCommand(_T("NODE"), szBuffer, 1))
 			{
 				DumpIndex(pCtx, g_rwlockNodeIndex, g_pNodeIndexByAddr,
 						g_dwNodeAddrIndexSize, TRUE);
 			}
-			else if (IsCommand("SUBNET", szBuffer, 1))
+			else if (IsCommand(_T("SUBNET"), szBuffer, 1))
 			{
 				DumpIndex(pCtx, g_rwlockSubnetIndex, g_pSubnetIndexByAddr,
 						g_dwSubnetAddrIndexSize, TRUE);
@@ -1010,57 +1009,57 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 			else
 			{
 				if (szBuffer[0] == 0)
-					ConsolePrintf(pCtx, "ERROR: Missing index name\n"
-							"Valid names are: CONDITION, ID, INTERFACE, NODE, SUBNET\n\n");
+					ConsolePrintf(pCtx, _T("ERROR: Missing index name\n")
+							_T("Valid names are: CONDITION, ID, INTERFACE, NODE, SUBNET\n\n"));
 				else
-					ConsolePrintf(pCtx, "ERROR: Invalid index name\n\n");
+					ConsolePrintf(pCtx, _T("ERROR: Invalid index name\n\n"));
 			}
 		}
-		else if (IsCommand("MEMORY", szBuffer, 2))
+		else if (IsCommand(_T("MEMORY"), szBuffer, 2))
 		{
 #ifdef NETXMS_MEMORY_DEBUG
 			PrintMemoryBlocks();
 #else
-			ConsolePrintf(pCtx, "ERROR: Server was compiled without memory debugger\n\n");
+			ConsolePrintf(pCtx, _T("ERROR: Server was compiled without memory debugger\n\n"));
 #endif
 		}
-		else if (IsCommand("MUTEX", szBuffer, 2))
+		else if (IsCommand(_T("MUTEX"), szBuffer, 2))
 		{
-			ConsolePrintf(pCtx, "Mutex status:\n");
-			DbgTestRWLock(g_rwlockIdIndex, "g_hMutexIdIndex", pCtx);
-			DbgTestRWLock(g_rwlockNodeIndex, "g_hMutexNodeIndex", pCtx);
-			DbgTestRWLock(g_rwlockSubnetIndex, "g_hMutexSubnetIndex", pCtx);
-			DbgTestRWLock(g_rwlockInterfaceIndex, "g_hMutexInterfaceIndex", pCtx);
-			ConsolePrintf(pCtx, "\n");
+			ConsolePrintf(pCtx, _T("Mutex status:\n"));
+			DbgTestRWLock(g_rwlockIdIndex, _T("g_hMutexIdIndex"), pCtx);
+			DbgTestRWLock(g_rwlockNodeIndex, _T("g_hMutexNodeIndex"), pCtx);
+			DbgTestRWLock(g_rwlockSubnetIndex, _T("g_hMutexSubnetIndex"), pCtx);
+			DbgTestRWLock(g_rwlockInterfaceIndex, _T("g_hMutexInterfaceIndex"), pCtx);
+			ConsolePrintf(pCtx, _T("\n"));
 		}
-		else if (IsCommand("OBJECTS", szBuffer, 1))
+		else if (IsCommand(_T("OBJECTS"), szBuffer, 1))
 		{
 			DumpObjects(pCtx);
 		}
-		else if (IsCommand("POLLERS", szBuffer, 1))
+		else if (IsCommand(_T("POLLERS"), szBuffer, 1))
 		{
 			ShowPollerState(pCtx);
 		}
-		else if (IsCommand("QUEUES", szBuffer, 1))
+		else if (IsCommand(_T("QUEUES"), szBuffer, 1))
 		{
-			ShowQueueStats(pCtx, &g_conditionPollerQueue, "Condition poller");
-			ShowQueueStats(pCtx, &g_configPollQueue, "Configuration poller");
-			ShowQueueStats(pCtx, g_pItemQueue, "Data collector");
-			ShowQueueStats(pCtx, g_pLazyRequestQueue, "Database writer");
-			ShowQueueStats(pCtx, g_pEventQueue, "Event processor");
-			ShowQueueStats(pCtx, &g_discoveryPollQueue, "Network discovery poller");
-			ShowQueueStats(pCtx, &g_nodePollerQueue, "Node poller");
-			ShowQueueStats(pCtx, &g_routePollQueue, "Routing table poller");
-			ShowQueueStats(pCtx, &g_statusPollQueue, "Status poller");
-			ConsolePrintf(pCtx, "\n");
+			ShowQueueStats(pCtx, &g_conditionPollerQueue, _T("Condition poller"));
+			ShowQueueStats(pCtx, &g_configPollQueue, _T("Configuration poller"));
+			ShowQueueStats(pCtx, g_pItemQueue, _T("Data collector"));
+			ShowQueueStats(pCtx, g_pLazyRequestQueue, _T("Database writer"));
+			ShowQueueStats(pCtx, g_pEventQueue, _T("Event processor"));
+			ShowQueueStats(pCtx, &g_discoveryPollQueue, _T("Network discovery poller"));
+			ShowQueueStats(pCtx, &g_nodePollerQueue, _T("Node poller"));
+			ShowQueueStats(pCtx, &g_routePollQueue, _T("Routing table poller"));
+			ShowQueueStats(pCtx, &g_statusPollQueue, _T("Status poller"));
+			ConsolePrintf(pCtx, _T("\n"));
 		}
-		else if (IsCommand("ROUTING-TABLE", szBuffer, 1))
+		else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
 		{
 			DWORD dwNode;
 			NetObj *pObject;
 
 			pArg = ExtractWord(pArg, szBuffer);
-			dwNode = strtoul(szBuffer, NULL, 0);
+			dwNode = _tcstoul(szBuffer, NULL, 0);
 			if (dwNode != 0)
 			{
 				pObject = FindObjectById(dwNode);
@@ -1069,96 +1068,96 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 					if (pObject->Type() == OBJECT_NODE)
 					{
 						ROUTING_TABLE *pRT;
-						char szIpAddr[16];
+						TCHAR szIpAddr[16];
 						int i;
 
-						ConsolePrintf(pCtx, "Routing table for node %s:\n\n", pObject->Name());
+						ConsolePrintf(pCtx, _T("Routing table for node %s:\n\n"), pObject->Name());
 						pRT = ((Node *)pObject)->getCachedRoutingTable();
 						if (pRT != NULL)
 						{
 							for(i = 0; i < pRT->iNumEntries; i++)
 							{
-								sprintf(szBuffer, "%s/%d", IpToStr(pRT->pRoutes[i].dwDestAddr, szIpAddr),
-										BitsInMask(pRT->pRoutes[i].dwDestMask));
-								ConsolePrintf(pCtx, "%-18s %-15s %-6d %d\n", szBuffer,
-										IpToStr(pRT->pRoutes[i].dwNextHop, szIpAddr),
-										pRT->pRoutes[i].dwIfIndex, pRT->pRoutes[i].dwRouteType);
+								_sntprintf(szBuffer, 256, _T("%s/%d"), IpToStr(pRT->pRoutes[i].dwDestAddr, szIpAddr),
+										     BitsInMask(pRT->pRoutes[i].dwDestMask));
+								ConsolePrintf(pCtx, _T("%-18s %-15s %-6d %d\n"), szBuffer,
+										        IpToStr(pRT->pRoutes[i].dwNextHop, szIpAddr),
+										        pRT->pRoutes[i].dwIfIndex, pRT->pRoutes[i].dwRouteType);
 							}
-							ConsolePrintf(pCtx, "\n");
+							ConsolePrintf(pCtx, _T("\n"));
 						}
 						else
 						{
-							ConsolePrintf(pCtx, "Node doesn't have cached routing table\n\n");
+							ConsolePrintf(pCtx, _T("Node doesn't have cached routing table\n\n"));
 						}
 					}
 					else
 					{
-						ConsolePrintf(pCtx, "ERROR: Object is not a node\n\n");
+						ConsolePrintf(pCtx, _T("ERROR: Object is not a node\n\n"));
 					}
 				}
 				else
 				{
-					ConsolePrintf(pCtx, "ERROR: Object with ID %d does not exist\n\n", dwNode);
+					ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
 				}
 			}
 			else
 			{
-				ConsolePrintf(pCtx, "ERROR: Invalid or missing node ID\n\n");
+				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			}
 		}
-		else if (IsCommand("SESSIONS", szBuffer, 2))
+		else if (IsCommand(_T("SESSIONS"), szBuffer, 2))
 		{
 			DumpSessions(pCtx);
 		}
-		else if (IsCommand("STATS", szBuffer, 2))
+		else if (IsCommand(_T("STATS"), szBuffer, 2))
 		{
 			ShowServerStats(pCtx);
 		}
-		else if (IsCommand("USERS", szBuffer, 1))
+		else if (IsCommand(_T("USERS"), szBuffer, 1))
 		{
 			DumpUsers(pCtx);
 		}
-		else if (IsCommand("WATCHDOG", szBuffer, 1))
+		else if (IsCommand(_T("WATCHDOG"), szBuffer, 1))
 		{
 			WatchdogPrintStatus(pCtx);
-			ConsolePrintf(pCtx, "\n");
+			ConsolePrintf(pCtx, _T("\n"));
 		}
 		else
 		{
 			if (szBuffer[0] == 0)
-				ConsolePrintf(pCtx, "ERROR: Missing subcommand\n\n");
+				ConsolePrintf(pCtx, _T("ERROR: Missing subcommand\n\n"));
 			else
-				ConsolePrintf(pCtx, "ERROR: Invalid SHOW subcommand\n\n");
+				ConsolePrintf(pCtx, _T("ERROR: Invalid SHOW subcommand\n\n"));
 		}
 	}
-	else if (IsCommand("TRACE", szBuffer, 1))
+	else if (IsCommand(_T("TRACE"), szBuffer, 1))
 	{
 		DWORD dwNode1, dwNode2;
 		NetObj *pObject1, *pObject2;
 		NETWORK_PATH_TRACE *pTrace;
-		char szNextHop[16];
+		TCHAR szNextHop[16];
 		int i;
 
 		// Get arguments
 		pArg = ExtractWord(pArg, szBuffer);
-		dwNode1 = strtoul(szBuffer, NULL, 0);
+		dwNode1 = _tcstoul(szBuffer, NULL, 0);
 
 		pArg = ExtractWord(pArg, szBuffer);
-		dwNode2 = strtoul(szBuffer, NULL, 0);
+		dwNode2 = _tcstoul(szBuffer, NULL, 0);
 
 		if ((dwNode1 != 0) && (dwNode2 != 0))
 		{
 			pObject1 = FindObjectById(dwNode1);
 			if (pObject1 == NULL)
 			{
-				ConsolePrintf(pCtx, "ERROR: Object with ID %d does not exist\n\n", dwNode1);
+				ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode1);
 			}
 			else
 			{
 				pObject2 = FindObjectById(dwNode2);
 				if (pObject2 == NULL)
 				{
-					ConsolePrintf(pCtx, "ERROR: Object with ID %d does not exist\n\n", dwNode2);
+					ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode2);
 				}
 				else
 				{
@@ -1168,61 +1167,61 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 						pTrace = TraceRoute((Node *)pObject1, (Node *)pObject2);
 						if (pTrace != NULL)
 						{
-							ConsolePrintf(pCtx, "Trace from %s to %s (%d hops):\n",
+							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops):\n"),
 									pObject1->Name(), pObject2->Name(), pTrace->iNumHops);
 							for(i = 0; i < pTrace->iNumHops; i++)
-								ConsolePrintf(pCtx, "[%d] %s %s %s %d\n",
+								ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),
 										pTrace->pHopList[i].pObject->Id(),
 										pTrace->pHopList[i].pObject->Name(),
 										IpToStr(pTrace->pHopList[i].dwNextHop, szNextHop),
-										pTrace->pHopList[i].bIsVPN ? "VPN Connector ID:" : "Interface Index: ",
+										pTrace->pHopList[i].bIsVPN ? _T("VPN Connector ID:") : _T("Interface Index: "),
 										pTrace->pHopList[i].dwIfIndex);
 							DestroyTraceData(pTrace);
-							ConsolePrintf(pCtx, "\n");
+							ConsolePrintf(pCtx, _T("\n"));
 						}
 						else
 						{
-							ConsolePrintf(pCtx, "ERROR: Call to TraceRoute() failed\n\n");
+							ConsolePrintf(pCtx, _T("ERROR: Call to TraceRoute() failed\n\n"));
 						}
 					}
 					else
 					{
-						ConsolePrintf(pCtx, "ERROR: Object is not a node\n\n");
+						ConsolePrintf(pCtx, _T("ERROR: Object is not a node\n\n"));
 					}
 				}
 			}
 		}
 		else
 		{
-			ConsolePrintf(pCtx, "ERROR: Invalid or missing node id(s)\n\n");
+			ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node id(s)\n\n"));
 		}
 	}
-	else if (IsCommand("HELP", szBuffer, 2) || IsCommand("?", szBuffer, 1))
+	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
 	{
-		ConsolePrintf(pCtx, "Valid commands are:\n"
-				"   debug [on|off]            - Turn debug mode on or off\n"
-				"   down                      - Down NetXMS server\n"
-				"   exit                      - Exit from remote session\n"
-				"   help                      - Display this help\n"
-				"   raise <exception>         - Raise exception\n"
-				"   show flags                - Show internal server flags\n"
-				"   show index <index>        - Show internal index\n"
-				"   show mutex                - Display mutex status\n"
-				"   show objects              - Dump network objects to screen\n"
-				"   show pollers              - Show poller threads state information\n"
-				"   show queues               - Show internal queues statistics\n"
-				"   show routing-table <node> - Show cached routing table for node\n"
-				"   show sessions             - Show active client sessions\n"
-				"   show stats                - Show server statistics\n"
-				"   show users                - Show users\n"
-				"   show watchdog             - Display watchdog information\n"
-				"   trace <node1> <node2>     - Show network path trace between two nodes\n"
-				"\nAlmost all commands can be abbreviated to 2 or 3 characters\n"
-				"\n");
+		ConsolePrintf(pCtx, _T("Valid commands are:\n")
+				_T("   debug [on|off]            - Turn debug mode on or off\n")
+				_T("   down                      - Down NetXMS server\n")
+				_T("   exit                      - Exit from remote session\n")
+				_T("   help                      - Display this help\n")
+				_T("   raise <exception>         - Raise exception\n")
+				_T("   show flags                - Show internal server flags\n")
+				_T("   show index <index>        - Show internal index\n")
+				_T("   show mutex                - Display mutex status\n")
+				_T("   show objects              - Dump network objects to screen\n")
+				_T("   show pollers              - Show poller threads state information\n")
+				_T("   show queues               - Show internal queues statistics\n")
+				_T("   show routing-table <node> - Show cached routing table for node\n")
+				_T("   show sessions             - Show active client sessions\n")
+				_T("   show stats                - Show server statistics\n")
+				_T("   show users                - Show users\n")
+				_T("   show watchdog             - Display watchdog information\n")
+				_T("   trace <node1> <node2>     - Show network path trace between two nodes\n")
+				_T("\nAlmost all commands can be abbreviated to 2 or 3 characters\n")
+				_T("\n"));
 	}
 	else
 	{
-		ConsolePrintf(pCtx, "UNKNOWN COMMAND\n\n");
+		ConsolePrintf(pCtx, _T("UNKNOWN COMMAND\n\n"));
 	}
 
 	return nExitCode;
@@ -1324,12 +1323,15 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 	{
 		char *ptr, szCommand[256];
 		struct __console_ctx ctx;
+#ifdef UNICODE
+		WCHAR wcCommand[256];
+#endif
 
 		ctx.hSocket = -1;
 		ctx.pMsg = NULL;
-		printf("\nNetXMS Server V" NETXMS_VERSION_STRING " Ready\n"
-				"Enter \"help\" for command list or \"down\" for server shutdown\n"
-				"System Console\n\n");
+		_tprintf(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Ready\n")
+				   _T("Enter \"help\" for command list or \"down\" for server shutdown\n")
+				   _T("System Console\n\n"));
 
 #if USE_READLINE
 		// Initialize readline library if we use it
@@ -1353,10 +1355,19 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 
 			if (ptr != NULL)
 			{
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, wcCommand, 256);
+				wcCommand[255] = 0;
+				StrStrip(wcCommand);
+				if (wcCommand[0] != 0)
+				{
+					if (ProcessConsoleCommand(wcCommand, &ctx) == CMD_EXIT_SHUTDOWN)
+#else
 				StrStrip(ptr);
 				if (*ptr != 0)
 				{
 					if (ProcessConsoleCommand(ptr, &ctx) == CMD_EXIT_SHUTDOWN)
+#endif
 						break;
 #if USE_READLINE
 					add_history(ptr);

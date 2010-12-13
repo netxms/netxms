@@ -251,7 +251,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwFlags = 0;
    m_dwHostAddr = dwHostAddr;
 	IpToStr(dwHostAddr, m_szWorkstation);
-   strcpy(m_szUserName, "<not logged in>");
+   _tcscpy(m_szUserName, _T("<not logged in>"));
    m_dwUserId = INVALID_INDEX;
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
@@ -366,7 +366,7 @@ void ClientSession::ReadThread(void)
       // Check if message is too large
       if (iErr == 1)
       {
-         DebugPrintf(4, "Received message %s is too large (%d bytes)",
+         DebugPrintf(4, _T("Received message %s is too large (%d bytes)"),
                      NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
          continue;
@@ -375,14 +375,14 @@ void ClientSession::ReadThread(void)
       // Check for decryption error
       if (iErr == 2)
       {
-         DebugPrintf(4, "Unable to decrypt received message");
+         DebugPrintf(4, _T("Unable to decrypt received message"));
          continue;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf(4, "Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
+         DebugPrintf(4, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -394,7 +394,7 @@ void ClientSession::ReadThread(void)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DebugPrintf(6, "Received raw message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+         DebugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
          if ((pRawMsg->wCode == CMD_FILE_DATA) || 
              (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
@@ -447,7 +447,7 @@ void ClientSession::ReadThread(void)
             }
             else
             {
-               DebugPrintf(4, "Out of state message (ID: %d)", pRawMsg->dwId);
+               DebugPrintf(4, _T("Out of state message (ID: %d)"), pRawMsg->dwId);
             }
          }
       }
@@ -464,7 +464,7 @@ void ClientSession::ReadThread(void)
          }
          else if (pMsg->GetCode() == CMD_KEEPALIVE)
 			{
-		      DebugPrintf(6, "Received message %s", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
+		      DebugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
 				RespondToKeepalive(pMsg->GetId());
 				delete pMsg;
 			}
@@ -520,7 +520,7 @@ void ClientSession::ReadThread(void)
    // Waiting while reference count becomes 0
    if (m_dwRefCount > 0)
    {
-      DebugPrintf(3, "Waiting for pending requests...");
+      DebugPrintf(3, _T("Waiting for pending requests..."));
       do
       {
          ThreadSleep(1);
@@ -528,7 +528,7 @@ void ClientSession::ReadThread(void)
    }
 
 	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
-   DebugPrintf(3, "Session closed");
+   DebugPrintf(3, _T("Session closed"));
 }
 
 
@@ -540,7 +540,7 @@ void ClientSession::WriteThread(void)
 {
    CSCP_MESSAGE *pRawMsg;
    CSCP_ENCRYPTED_MESSAGE *pEnMsg;
-   char szBuffer[128];
+   TCHAR szBuffer[128];
    BOOL bResult;
 
    while(1)
@@ -549,7 +549,7 @@ void ClientSession::WriteThread(void)
       if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf(6, "Sending message %s", NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+      DebugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
       if (m_pCtx != NULL)
       {
          pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -677,7 +677,7 @@ void ClientSession::UpdateThread()
 void ClientSession::ProcessingThread()
 {
    CSCPMessage *pMsg;
-   char szBuffer[128];
+   TCHAR szBuffer[128];
    DWORD i;
 	int status;
 
@@ -688,7 +688,7 @@ void ClientSession::ProcessingThread()
          break;
 
       m_wCurrentCmd = pMsg->GetCode();
-      DebugPrintf(6, "Received message %s", NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
+      DebugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
       if (!(m_dwFlags & CSF_AUTHENTICATED) && 
           (m_wCurrentCmd != CMD_LOGIN) && 
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
@@ -1333,7 +1333,7 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 	wdt[i] = 0;
 
 #ifdef UNICODE
-	swprintf(szBuffer, L"%s%c%02d%s", wst, (tz.Bias >= 0) ? '+' : '-',
+	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (tz.Bias >= 0) ? '+' : '-',
 	         abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #else
 	sprintf(szBuffer, "%S%c%02d%S", wst, (tz.Bias >= 0) ? '+' : '-',
@@ -1365,10 +1365,10 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 	szBuffer[0] = 0;
 #endif
 	msg.SetVariable(VID_TIMEZONE, szBuffer);
-	DebugPrintf(2, "Server time zone: %s", szBuffer);
+	DebugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
 	ConfigReadStr(_T("WindowsConsoleUpgradeURL"), szBuffer, 1024,
-	              _T("http://www.netxms.org/download/netxms-%version%.exe"));
+	              _T("http://www.netxms.org/download/netxms-console-%version%.exe"));
 	strURL = szBuffer;
 	strURL.translate(_T("%version%"), NETXMS_VERSION_STRING);
 	msg.SetVariable(VID_CONSOLE_UPGRADE_URL, (const TCHAR *)strURL);
@@ -1450,13 +1450,13 @@ void ClientSession::Login(CSCPMessage *pRequest)
       if (dwResult == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
-         sprintf(m_szUserName, "%s@%s", szLogin, IpToStr(m_dwHostAddr, szBuffer));
+         _sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, IpToStr(m_dwHostAddr, szBuffer));
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? FALSE : TRUE));
-         DebugPrintf(3, "User %s authenticated", m_szUserName);
+         DebugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
       }
@@ -1491,7 +1491,7 @@ void ClientSession::sendEventDB(DWORD dwRqId)
 {
    DB_ASYNC_RESULT hResult;
    CSCPMessage msg;
-   char szBuffer[1024];
+   TCHAR szBuffer[1024];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1509,7 +1509,7 @@ void ClientSession::sendEventDB(DWORD dwRqId)
          msg.SetCode(CMD_EVENT_DB_RECORD);
          msg.SetId(dwRqId);
 
-         hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_code,event_name,severity,flags,message,description FROM event_cfg");
+         hResult = DBAsyncSelect(g_hCoreDB, _T("SELECT event_code,event_name,severity,flags,message,description FROM event_cfg"));
          if (hResult != NULL)
          {
             while(DBFetch(hResult))
@@ -1571,14 +1571,14 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
-      char szQuery[4096], szName[MAX_EVENT_NAME];
+      TCHAR szQuery[4096], szName[MAX_EVENT_NAME];
       DWORD dwEventCode;
       BOOL bEventExist = FALSE;
       DB_RESULT hResult;
 
       // Check if event with specific code exists
       dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
-      sprintf(szQuery, "SELECT event_code FROM event_cfg WHERE event_code=%d", dwEventCode);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), dwEventCode);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -1594,7 +1594,7 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
          pRequest->GetVariableStr(VID_NAME, szName, MAX_EVENT_NAME);
          if (IsValidObjectName(szName))
          {
-            char szMessage[MAX_DB_STRING], *pszDescription, *pszEscMsg, *pszEscDescr;
+            TCHAR szMessage[MAX_DB_STRING], *pszDescription, *pszEscMsg, *pszEscDescr;
 
             pRequest->GetVariableStr(VID_MESSAGE, szMessage, MAX_DB_STRING);
             pszEscMsg = EncodeSQLString(szMessage);
@@ -1605,14 +1605,14 @@ void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
 
             if (bEventExist)
             {
-               sprintf(szQuery, "UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message='%s',description='%s' WHERE event_code=%d",
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message='%s',description='%s' WHERE event_code=%d"),
                        szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
                        pszEscMsg, pszEscDescr, dwEventCode);
             }
             else
             {
-               sprintf(szQuery, "INSERT INTO event_cfg (event_code,event_name,severity,flags,"
-                                "message,description) VALUES (%d,'%s',%d,%d,'%s','%s')",
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
+                                _T("message,description) VALUES (%d,'%s',%d,%d,'%s','%s')"),
                        dwEventCode, szName, pRequest->GetVariableLong(VID_SEVERITY),
                        pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
             }
@@ -1676,7 +1676,7 @@ void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
    {
       TCHAR szQuery[256];
 
-      _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%d"), dwEventCode);
+      _sntprintf(szQuery, 256, _T("DELETE FROM event_cfg WHERE event_code=%d"), dwEventCode);
       if (DBQuery(g_hCoreDB, szQuery))
       {
          DeleteEventTemplateFromList(dwEventCode);
@@ -1751,7 +1751,7 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
    sendMessage(&msg);
    msg.DeleteAllVariables();
 
-   // Change "sync comments" flag
+   // Change _T("sync comments") flag
    if (pRequest->GetVariableShort(VID_SYNC_COMMENTS))
       m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
    else
@@ -1919,7 +1919,7 @@ void ClientSession::SendAllConfigVars(DWORD dwRqId)
    if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
       // Retrieve configuration variables from database
-      hResult = DBSelect(g_hCoreDB, "SELECT var_name,var_value,need_server_restart FROM config WHERE is_visible=1");
+      hResult = DBSelect(g_hCoreDB, _T("SELECT var_name,var_value,need_server_restart FROM config WHERE is_visible=1"));
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -2303,7 +2303,7 @@ void ClientSession::CreateUser(CSCPMessage *pRequest)
    {
       DWORD dwResult, dwUserId;
       BOOL bIsGroup;
-      char szUserName[MAX_USER_NAME];
+      TCHAR szUserName[MAX_USER_NAME];
 
       pRequest->GetVariableStr(VID_USER_NAME, szUserName, MAX_USER_NAME);
       if (IsValidObjectName(szUserName))
@@ -2396,7 +2396,7 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
       }
       else
       {
-         // System administrator account and "everyone" group cannot be deleted
+         // System administrator account and _T("everyone") group cannot be deleted
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -2413,7 +2413,7 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
 void ClientSession::LockUserDB(DWORD dwRqId, BOOL bLock)
 {
    CSCPMessage msg;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2751,7 +2751,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                {
                   case CMD_CREATE_NEW_DCI:
                      // Create dummy DCI
-                     pItem = new DCItem(CreateUniqueId(IDG_ITEM), "no name", DS_INTERNAL, 
+                     pItem = new DCItem(CreateUniqueId(IDG_ITEM), _T("no name"), DS_INTERNAL, 
                                         DCI_DT_INT, 60, 30, (Node *)pObject);
                      pItem->setStatus(ITEM_STATUS_DISABLED, false);
                      if ((bSuccess = ((Template *)pObject)->addItem(pItem)))
@@ -3168,12 +3168,12 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 					szCond[0] = 0;
 					if (dwTimeFrom != 0)
 					{
-						_stprintf(szCond, _T(" AND idata_timestamp>=%d"), dwTimeFrom);
+						_sntprintf(szCond, 256, _T(" AND idata_timestamp>=%d"), dwTimeFrom);
 						iPos = (int)_tcslen(szCond);
 					}
 					if (dwTimeTo != 0)
 					{
-						_stprintf(&szCond[iPos], _T(" AND idata_timestamp<=%d"), dwTimeTo);
+						_sntprintf(&szCond[iPos], 256 - iPos, _T(" AND idata_timestamp<=%d"), dwTimeTo);
 					}
 
 					// Get item's data type to determine actual row size
@@ -3182,21 +3182,21 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 					switch(g_nDBSyntax)
 					{
 						case DB_SYNTAX_MSSQL:
-							_stprintf(szQuery, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
+							_sntprintf(szQuery, 512, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
 										 dwMaxRows, dwObjectId, dwItemId, szCond);
 							break;
 						case DB_SYNTAX_ORACLE:
-							_stprintf(szQuery, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %d ORDER BY idata_timestamp DESC"),
+							_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %d ORDER BY idata_timestamp DESC"),
 										 dwObjectId, dwItemId, szCond, dwMaxRows);
 							break;
 						case DB_SYNTAX_MYSQL:
 						case DB_SYNTAX_PGSQL:
 						case DB_SYNTAX_SQLITE:
-							_stprintf(szQuery, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
+							_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
 										 dwObjectId, dwItemId, szCond, dwMaxRows);
 							break;
 						default:
-							_stprintf(szQuery, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
+							_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
 										 dwObjectId, dwItemId, szCond, dwMaxRows);
 							break;
 					}
@@ -3342,7 +3342,7 @@ void ClientSession::SendLastValues(CSCPMessage *pRequest)
 void ClientSession::OpenEPP(DWORD dwRqId)
 {
    CSCPMessage msg;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
    BOOL bSuccess = FALSE;
 
    // Prepare response message
@@ -3441,7 +3441,7 @@ void ClientSession::SaveEPP(CSCPMessage *pRequest)
             m_ppEPPRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRecordsToUpload);
             memset(m_ppEPPRuleList, 0, sizeof(EPRule *) * m_dwNumRecordsToUpload);
          }
-         DebugPrintf(5, "Accepted EPP upload request for %d rules", m_dwNumRecordsToUpload);
+         DebugPrintf(5, _T("Accepted EPP upload request for %d rules"), m_dwNumRecordsToUpload);
       }
       else
       {
@@ -3485,7 +3485,7 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
             CSCPMessage msg;
 
             // All records received, replace event policy...
-            DebugPrintf(5, "Replacing event processing policy with a new one at %p (%d rules)",
+            DebugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
             g_pEventPolicy->ReplacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
             g_pEventPolicy->SaveToDB();
@@ -3510,11 +3510,11 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
 
 void ClientSession::SendMIB(DWORD dwRqId)
 {
-   char szBuffer[MAX_PATH];
+   TCHAR szBuffer[MAX_PATH];
 
    // Send compiled MIB file
-   strcpy(szBuffer, g_szDataDir);
-   strcat(szBuffer, DFILE_COMPILED_MIB);
+   _tcscpy(szBuffer, g_szDataDir);
+   _tcscat(szBuffer, DFILE_COMPILED_MIB);
    SendFileOverNXCP(m_hSocket, dwRqId, szBuffer, m_pCtx, 0, NULL, NULL);
 }
 
@@ -3526,15 +3526,15 @@ void ClientSession::SendMIB(DWORD dwRqId)
 void ClientSession::SendMIBTimestamp(DWORD dwRqId)
 {
    CSCPMessage msg;
-   char szBuffer[MAX_PATH];
+   TCHAR szBuffer[MAX_PATH];
    DWORD dwResult, dwTimeStamp;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   strcpy(szBuffer, g_szDataDir);
-   strcat(szBuffer, DFILE_COMPILED_MIB);
+   _tcscpy(szBuffer, g_szDataDir);
+   _tcscat(szBuffer, DFILE_COMPILED_MIB);
    dwResult = SNMPGetMIBTreeTimestamp(szBuffer, &dwTimeStamp);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
@@ -3923,7 +3923,7 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      // Check if it is a built-in object, like "Entire Network"
+      // Check if it is a built-in object, like _T("Entire Network")
       if (pObject->Id() >= 10)
       {
          // Check access rights
@@ -4008,7 +4008,7 @@ void ClientSession::AcknowledgeAlarm(CSCPMessage *pRequest)
    pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have "acknowledge alarm" right to the object
+      // User should have _T("acknowledge alarm") right to the object
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.AckById(dwAlarmId, m_dwUserId));
@@ -4049,7 +4049,7 @@ void ClientSession::TerminateAlarm(CSCPMessage *pRequest)
    pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have "terminate alarm" right to the object
+      // User should have _T("terminate alarm") right to the object
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.TerminateById(dwAlarmId, m_dwUserId));
@@ -4090,8 +4090,8 @@ void ClientSession::DeleteAlarm(CSCPMessage *pRequest)
    pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have "terminate alarm" right to the object
-      // and system right "delete alarms"
+      // User should have _T("terminate alarm") right to the object
+      // and system right _T("delete alarms")
       if ((pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
           (m_dwSystemAccess & SYSTEM_ACCESS_DELETE_ALARMS))
       {
@@ -4131,7 +4131,7 @@ void ClientSession::CreateAction(CSCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       DWORD dwResult, dwActionId;
-      char szActionName[MAX_OBJECT_NAME];
+      TCHAR szActionName[MAX_OBJECT_NAME];
 
       pRequest->GetVariableStr(VID_ACTION_NAME, szActionName, MAX_OBJECT_NAME);
       if (IsValidObjectName(szActionName, TRUE))
@@ -4705,7 +4705,7 @@ void ClientSession::SendAllTraps2(DWORD dwRqId)
 void ClientSession::LockPackageDB(DWORD dwRqId, BOOL bLock)
 {
    CSCPMessage msg;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -4766,7 +4766,7 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
    {
       if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
       {
-         hResult = DBAsyncSelect(g_hCoreDB, "SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg");
+         hResult = DBAsyncSelect(g_hCoreDB, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
          if (hResult != NULL)
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -4876,8 +4876,8 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
                         // Create record in database
                         pszEscDescr = EncodeSQLString(szDescription);
                         _sntprintf(szQuery, 2048, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,"
-                                                     "version,description,platform,pkg_file) "
-                                                     "VALUES (%d,'%s','%s','%s','%s','%s')"),
+                                                     _T("version,description,platform,pkg_file) ")
+                                                     _T("VALUES (%d,'%s','%s','%s','%s','%s')")),
                                    m_dwUploadData, szPkgName, szPkgVersion, pszEscDescr,
                                    szPlatform, pszCleanFileName);
                         free(pszEscDescr);
@@ -5748,7 +5748,7 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
                if ((pRequest->GetVariableShort(VID_APPLY_FLAG) != 0) &&
                    (dwResult == ERR_SUCCESS))
                {
-                  dwResult = pConn->ExecAction("Agent.Restart", 0, NULL);
+                  dwResult = pConn->ExecAction(_T("Agent.Restart"), 0, NULL);
                }
 
                switch(dwResult)
@@ -5998,7 +5998,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
-      _stprintf(szQuery, _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=%d"), dwToolId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=%d"), dwToolId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -6030,7 +6030,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
             DBFreeResult(hResult);
 
             // Access list
-            _stprintf(szQuery, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
             hResult = DBSelect(g_hCoreDB, szQuery);
             if (hResult != NULL)
             {
@@ -6049,7 +6049,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                // Column information for table tools
                if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
                {
-                  _stprintf(szQuery, _T("SELECT col_name,col_oid,col_format,col_substr ")
+                  _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT col_name,col_oid,col_format,col_substr ")
                                      _T("FROM object_tools_table_columns WHERE tool_id=%d ")
                                      _T("ORDER BY col_number"), dwToolId);
                   hResult = DBSelect(g_hCoreDB, szQuery);
@@ -6441,18 +6441,19 @@ void ClientSession::updateScript(CSCPMessage *pRequest)
          pszCode = pRequest->GetVariableStr(VID_SCRIPT_CODE);
          if (pszCode != NULL)
          {
-            pszQuery = (TCHAR *)malloc((_tcslen(pszCode) + MAX_DB_STRING + 256) * sizeof(TCHAR));
+				size_t qlen = _tcslen(pszCode) + MAX_DB_STRING + 256;
+            pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
             if (dwScriptId == 0)
             {
                // New script
                dwScriptId = CreateUniqueId(IDG_SCRIPT);
-               _stprintf(pszQuery, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (%d,%s,%s)"),
+               _sntprintf(pszQuery, qlen, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (%d,%s,%s)"),
                          dwScriptId, (const TCHAR *)DBPrepareString(g_hCoreDB, szName),
 								 (const TCHAR *)DBPrepareString(g_hCoreDB, pszCode));
             }
             else
             {
-               _stprintf(pszQuery, _T("UPDATE script_library SET script_name=%s,script_code=%s WHERE script_id=%d"),
+               _sntprintf(pszQuery, qlen, _T("UPDATE script_library SET script_name=%s,script_code=%s WHERE script_id=%d"),
                          (const TCHAR *)DBPrepareString(g_hCoreDB, szName),
 								 (const TCHAR *)DBPrepareString(g_hCoreDB, pszCode), dwScriptId);
             }
@@ -6507,7 +6508,7 @@ void ClientSession::renameScript(CSCPMessage *pRequest)
       {
          if (IsValidScriptId(dwScriptId))
          {
-            _stprintf(szQuery, _T("UPDATE script_library SET script_name=%s WHERE script_id=%d"),
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE script_library SET script_name=%s WHERE script_id=%d"),
                       (const TCHAR *)DBPrepareString(g_hCoreDB, szName), dwScriptId);
             if (DBQuery(g_hCoreDB, szQuery))
             {
@@ -6554,7 +6555,7 @@ void ClientSession::deleteScript(CSCPMessage *pRequest)
       dwScriptId = pRequest->GetVariableLong(VID_SCRIPT_ID);
       if (IsValidScriptId(dwScriptId))
       {
-         _stprintf(szQuery, _T("DELETE FROM script_library WHERE script_id=%d"), dwScriptId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM script_library WHERE script_id=%d"), dwScriptId);
          if (DBQuery(g_hCoreDB, szQuery))
          {
             g_pScriptLibrary->lock();
@@ -7542,7 +7543,7 @@ void ClientSession::SendAgentCfgList(DWORD dwRqId)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
-      hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_name,sequence_number FROM agent_configs");
+      hResult = DBSelect(g_hCoreDB, _T("SELECT config_id,config_name,sequence_number FROM agent_configs"));
       if (hResult != NULL)
       {
          dwNumRows = DBGetNumRows(hResult);
@@ -7663,8 +7664,8 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
          pszEscText = EncodeSQLString(pszText);
          free(pszText);
 
-         pszQuery = (TCHAR *)malloc((_tcslen(pszEscText) + _tcslen(pszEscFilter) +
-                                     _tcslen(pszEscName) + 256) * sizeof(TCHAR));
+			size_t qlen = _tcslen(pszEscText) + _tcslen(pszEscFilter) + _tcslen(pszEscName) + 256;
+         pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
          if (bCreate)
          {
             if (dwCfgId == 0)
@@ -7689,12 +7690,12 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
                }
                msg.SetVariable(VID_SEQUENCE_NUMBER, dwSeqNum);
             }
-            _stprintf(pszQuery, _T("INSERT INTO agent_configs (config_id,config_name,config_filter,config_file,sequence_number) VALUES (%d,'%s','%s','%s',%d)"),
+            _sntprintf(pszQuery, qlen, _T("INSERT INTO agent_configs (config_id,config_name,config_filter,config_file,sequence_number) VALUES (%d,'%s','%s','%s',%d)"),
                       dwCfgId, pszEscName, pszEscFilter, pszEscText, dwSeqNum);
          }
          else
          {
-            _stprintf(pszQuery, _T("UPDATE agent_configs SET config_name='%s',config_filter='%s',config_file='%s',sequence_number=%d WHERE config_id=%d"),
+            _sntprintf(pszQuery, qlen, _T("UPDATE agent_configs SET config_name='%s',config_filter='%s',config_file='%s',sequence_number=%d WHERE config_id=%d"),
                       pszEscName, pszEscFilter, pszEscText,
                       pRequest->GetVariableLong(VID_SEQUENCE_NUMBER), dwCfgId);
          }
@@ -7872,10 +7873,10 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
    wMajor = pRequest->GetVariableShort(VID_VERSION_MAJOR);
    wMinor = pRequest->GetVariableShort(VID_VERSION_MINOR);
    wRelease = pRequest->GetVariableShort(VID_VERSION_RELEASE);
-   DbgPrintf(3, "Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\"",
+   DbgPrintf(3, _T("Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\""),
              IpToStr(m_dwHostAddr, szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
 
-   hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number"));
    if (hResult != NULL)
    {
       nNumRows = DBGetNumRows(hResult);
@@ -7904,13 +7905,13 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
             ppArgList[4] = new NXSL_Value((LONG)wRelease);
 
             // Run script
-            DbgPrintf(3, "Running configuration matching script %d", dwCfgId);
+            DbgPrintf(3, _T("Running configuration matching script %d"), dwCfgId);
             if (pScript->run(new NXSL_ServerEnv, 5, ppArgList) == 0)
             {
                pValue = pScript->getResult();
                if (pValue->getValueAsInt32() != 0)
                {
-                  DbgPrintf(3, "Configuration script %d matched for agent %s, sending config",
+                  DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"),
                             dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
                   msg.SetVariable(VID_RCC, (WORD)0);
                   pszText = DBGetField(hResult, i, 1, NULL, 0);
@@ -7921,22 +7922,22 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
                }
                else
                {
-                  DbgPrintf(3, "Configuration script %d not matched for agent %s",
+                  DbgPrintf(3, _T("Configuration script %d not matched for agent %s"),
                             dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
                }
             }
             else
             {
-               _stprintf(szError, _T("AgentCfg::%d"), dwCfgId);
-               PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szError,
+               _sntprintf(szError, 256, _T("AgentCfg::%d"), dwCfgId);
+               PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError,
                          pScript->getErrorText(), 0);
             }
             delete pScript;
          }
          else
          {
-            _stprintf(szBuffer, _T("AgentCfg::%d"), dwCfgId);
-            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szBuffer, szError, 0);
+            _sntprintf(szBuffer, 256, _T("AgentCfg::%d"), dwCfgId);
+            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, szError, 0);
          }
       }
       DBFreeResult(hResult);
@@ -8167,7 +8168,7 @@ void ClientSession::GetAddrList(CSCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      _stprintf(szQuery, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"),
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"),
                 pRequest->GetVariableLong(VID_ADDR_LIST_TYPE));
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
@@ -8213,14 +8214,14 @@ void ClientSession::SetAddrList(CSCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       dwListType = pRequest->GetVariableLong(VID_ADDR_LIST_TYPE);
-      _stprintf(szQuery, _T("DELETE FROM address_lists WHERE list_type=%d"), dwListType);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM address_lists WHERE list_type=%d"), dwListType);
       DBBegin(g_hCoreDB);
       if (DBQuery(g_hCoreDB, szQuery))
       {
          dwNumRec = pRequest->GetVariableLong(VID_NUM_RECORDS);
          for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 10)
          {
-            _stprintf(szQuery, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id) VALUES (%d,%d,'%s','%s',0)"),
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id) VALUES (%d,%d,'%s','%s',0)"),
                       dwListType, pRequest->GetVariableLong(dwId),
                       IpToStr(pRequest->GetVariableLong(dwId + 1), szIpAddr1),
                       IpToStr(pRequest->GetVariableLong(dwId + 2), szIpAddr2));
@@ -8473,7 +8474,7 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
 
    if ((m_dwSystemAccess & (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP)) == (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
    {
-      TCHAR *content = pRequest->GetVariableStr(VID_NXMP_CONTENT);
+      char *content = pRequest->GetVariableStrUTF8(VID_NXMP_CONTENT);
       if (content != NULL)
       {
 			Config *config = new Config();
@@ -8627,7 +8628,7 @@ static GRAPH_ACL_ENTRY *LoadGraphACL(DWORD dwGraphId, int *pnACLSize)
 	{
 		TCHAR szQuery[256];
 
-		_stprintf(szQuery, _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), dwGraphId);
+		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), dwGraphId);
 		hResult = DBSelect(g_hCoreDB, szQuery);
 	}
 	if (hResult != NULL)
@@ -8773,7 +8774,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 		bSuccess = FALSE;
 
 		// Check existence and access rights
-		_stprintf(szQuery, _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
+		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
 		hResult = DBSelect(g_hCoreDB, szQuery);
 		if (hResult != NULL)
 		{
@@ -8834,7 +8835,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 			}
 			else
 			{
-				_stprintf(szQuery, _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
 				DBQuery(g_hCoreDB, szQuery);
 
 				_sntprintf(szQuery, 16384, _T("UPDATE graphs SET name='%s',config='%s' WHERE graph_id=%d"),
@@ -8851,7 +8852,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 				{
 					dwUserId = pRequest->GetVariableLong(dwId++);
 					dwAccess = pRequest->GetVariableLong(dwId++);
-					_stprintf(szQuery, _T("INSERT INTO graph_acl (graph_id,user_id,user_rights) VALUES (%d,%d,%d)"),
+					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO graph_acl (graph_id,user_id,user_rights) VALUES (%d,%d,%d)"),
 					          dwGraphId, dwUserId, dwAccess);
 					if (!DBQuery(g_hCoreDB, szQuery))
 					{
@@ -8904,7 +8905,7 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
 	dwGraphId = pRequest->GetVariableLong(VID_GRAPH_ID);
-	_stprintf(szQuery, _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
+	_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
 	hResult = DBSelect(g_hCoreDB, szQuery);
 	if (hResult != NULL)
 	{
@@ -8918,10 +8919,10 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 				    (m_dwUserId == dwOwner) ||
 				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_READ))
 				{
-					_stprintf(szQuery, _T("DELETE FROM graphs WHERE graph_id=%d"), dwGraphId);
+					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graphs WHERE graph_id=%d"), dwGraphId);
 					if (DBQuery(g_hCoreDB, szQuery))
 					{
-						_stprintf(szQuery, _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
+						_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
 						DBQuery(g_hCoreDB, szQuery);
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
 						notify(NX_NOTIFY_GRAPHS_CHANGED);
@@ -9005,7 +9006,7 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 #ifdef _WITH_ENCRYPTION
-	DWORD dwLen, dwCertId;
+	DWORD dwLen, dwQLen, dwCertId;
 	BYTE *pData;
 	OPENSSL_CONST BYTE *p;
 	X509 *pCert;
@@ -9030,15 +9031,22 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 			pCert = d2i_X509(NULL, &p, dwLen);
 			if (pCert != NULL)
 			{
+#ifdef UNICODE
+				WCHAR *wname = WideStringFromMBString(CHECK_NULL_A(pCert->name));
+				pszEscSubject = EncodeSQLString(wname);
+				free(wname);
+#else
 				pszEscSubject = EncodeSQLString(CHECK_NULL(pCert->name));
+#endif
 				X509_free(pCert);
 				pszComments = pRequest->GetVariableStr(VID_COMMENTS);
 				pszEscComments = EncodeSQLString(pszComments);
 				free(pszComments);
 				dwCertId = CreateUniqueId(IDG_CERTIFICATE);
-				pszQuery = (TCHAR *)malloc((dwLen * 2 + _tcslen(pszEscComments) + _tcslen(pszEscSubject) + 256) * sizeof(TCHAR));
-				_stprintf(pszQuery, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
-				          dwCertId, CERT_TYPE_TRUSTED_CA, pszEscSubject, pszEscComments);
+				dwQLen = dwLen * 2 + _tcslen(pszEscComments) + _tcslen(pszEscSubject) + 256;
+				pszQuery = (TCHAR *)malloc(dwQLen * sizeof(TCHAR));
+				_sntprintf(pszQuery, dwQLen, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
+				           dwCertId, CERT_TYPE_TRUSTED_CA, pszEscSubject, pszEscComments);
 				free(pszEscSubject);
 				free(pszEscComments);
 				BinToStr(pData, dwLen, &pszQuery[_tcslen(pszQuery)]);
@@ -9097,7 +9105,7 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 	{
 #ifdef _WITH_ENCRYPTION
 		dwCertId = pRequest->GetVariableLong(VID_CERTIFICATE_ID);
-		_stprintf(szQuery, _T("DELETE FROM certificates WHERE cert_id=%d"), dwCertId);
+		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM certificates WHERE cert_id=%d"), dwCertId);
 		if (DBQuery(g_hCoreDB, szQuery))
 		{
 			msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -9126,7 +9134,7 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 
 void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 {
-	DWORD dwCertId;
+	DWORD dwCertId, qlen;
 	TCHAR *pszQuery, *pszComments, *pszEscComments;
 	DB_RESULT hResult;
    CSCPMessage msg;
@@ -9143,14 +9151,15 @@ void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 		{
 			pszEscComments = EncodeSQLString(pszComments);
 			free(pszComments);
-			pszQuery = (TCHAR *)malloc((_tcslen(pszEscComments) + 256) * sizeof(TCHAR));
-			_stprintf(pszQuery, _T("SELECT subject FROM certificates WHERE cert_id=%d"), dwCertId);
+			qlen = _tcslen(pszEscComments) + 256;
+			pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
+			_sntprintf(pszQuery, qlen, _T("SELECT subject FROM certificates WHERE cert_id=%d"), dwCertId);
 			hResult = DBSelect(g_hCoreDB, pszQuery);
 			if (hResult != NULL)
 			{
 				if (DBGetNumRows(hResult) > 0)
 				{
-					_stprintf(pszQuery, _T("UPDATE certificates SET comments='%s' WHERE cert_id=%d"), pszEscComments, dwCertId);
+					_sntprintf(pszQuery, qlen, _T("UPDATE certificates SET comments='%s' WHERE cert_id=%d"), pszEscComments, dwCertId);
 					if (DBQuery(g_hCoreDB, pszQuery))
 					{
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);

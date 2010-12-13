@@ -53,7 +53,7 @@ const TCHAR *g_pszSqlType[6][3] =
 // Static data
 //
 
-static TCHAR m_szCodePage[MAX_PATH] = _T("");
+static TCHAR m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
@@ -626,8 +626,7 @@ int main(int argc, char *argv[])
 	}
 
 #ifndef _WIN32
-	if (m_szCodePage[0] != 0)
-		SetDefaultCodepage(m_szCodePage);
+	SetDefaultCodepage(m_szCodePage);
 #endif
 
    // Connect to database

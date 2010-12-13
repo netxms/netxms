@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: admin.cpp
+** File: admin.cpp
 **
 **/
 
@@ -112,7 +110,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "LocalAdminListener");
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("LocalAdminListener"));
       return THREAD_OK;
    }
 
@@ -128,7 +126,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", LOCAL_ADMIN_PORT, "LocalAdminListener", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", LOCAL_ADMIN_PORT, _T("LocalAdminListener"), WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown from here */
       return THREAD_OK;

@@ -328,7 +328,7 @@ public:
 // Inline functions of NetObj class
 //
 
-inline DWORD NetObj::RefCount(void)
+inline DWORD NetObj::RefCount()
 { 
    DWORD dwRefCount;
 
@@ -338,14 +338,14 @@ inline DWORD NetObj::RefCount(void)
    return dwRefCount; 
 }
 
-inline void NetObj::IncRefCount(void)
+inline void NetObj::IncRefCount()
 { 
    MutexLock(m_mutexRefCount, INFINITE);
    m_dwRefCount++;
    MutexUnlock(m_mutexRefCount);
 }
 
-inline void NetObj::DecRefCount(void)
+inline void NetObj::DecRefCount()
 { 
    MutexLock(m_mutexRefCount, INFINITE);
    if (m_dwRefCount > 0) 
@@ -371,7 +371,7 @@ protected:
 	NXSL_Program *m_applyFilter;
 	MUTEX m_mutexDciAccess;
 
-   virtual void PrepareForDeletion(void);
+   virtual void PrepareForDeletion();
 
    void loadItemsFromDB();
    void destroyItems();
@@ -499,25 +499,25 @@ protected:
 public:
    Interface();
    Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask);
-   Interface(const char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType);
+   Interface(const TCHAR *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType);
    virtual ~Interface();
 
-   virtual int Type(void) { return OBJECT_INTERFACE; }
+   virtual int Type() { return OBJECT_INTERFACE; }
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
-   Node *GetParentNode(void);
+   Node *GetParentNode();
 
    void SetMacAddr(BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
 
-   DWORD IpNetMask(void) { return m_dwIpNetMask; }
-   DWORD IfIndex(void) { return m_dwIfIndex; }
-   DWORD IfType(void) { return m_dwIfType; }
-   const BYTE *MacAddr(void) { return m_bMacAddr; }
-	BOOL IsSyntheticMask(void) { return m_bSyntheticMask; }
+   DWORD IpNetMask() { return m_dwIpNetMask; }
+   DWORD IfIndex() { return m_dwIfIndex; }
+   DWORD IfType() { return m_dwIfType; }
+   const BYTE *MacAddr() { return m_bMacAddr; }
+	BOOL IsSyntheticMask() { return m_bSyntheticMask; }
 
-   QWORD GetLastDownEventId(void) { return m_qwLastDownEventId; }
+   QWORD GetLastDownEventId() { return m_qwLastDownEventId; }
    void SetLastDownEventId(QWORD qwId) { m_qwLastDownEventId = qwId; }
 
    BOOL IsFake() { return (m_dwIfIndex == 1) && 
@@ -564,10 +564,10 @@ public:
                   Node *pHostNode = NULL, DWORD dwPollerNode = 0);
    virtual ~NetworkService();
 
-   virtual int Type(void) { return OBJECT_NETWORKSERVICE; }
+   virtual int Type() { return OBJECT_NETWORKSERVICE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode, Queue *pEventQueue);
@@ -590,17 +590,17 @@ protected:
    DWORD m_dwNumRemoteNets;
    IP_NETWORK *m_pRemoteNetList;
 
-   Node *GetParentNode(void);
+   Node *GetParentNode();
 
 public:
    VPNConnector();
    VPNConnector(BOOL bIsHidden);
    virtual ~VPNConnector();
 
-   virtual int Type(void) { return OBJECT_VPNCONNECTOR; }
+   virtual int Type() { return OBJECT_VPNCONNECTOR; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -608,7 +608,7 @@ public:
 
    BOOL IsLocalAddr(DWORD dwIpAddr);
    BOOL IsRemoteAddr(DWORD dwIpAddr);
-   DWORD GetPeerGatewayAddr(void);
+   DWORD GetPeerGatewayAddr();
 };
 
 
@@ -628,16 +628,16 @@ protected:
    WORD m_wAgentPort;
    WORD m_wAuthMethod;
    DWORD m_dwNodeType;
-   char m_szSharedSecret[MAX_SECRET_LENGTH];
+   TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
    int m_iStatusPollType;
    int m_snmpVersion;
    WORD m_wSNMPPort;
 	WORD m_nUseIfXTable;
 	SNMP_SecurityContext *m_snmpSecurity;
-   char m_szObjectId[MAX_OID_LEN * 4];
-   char m_szAgentVersion[MAX_AGENT_VERSION_LEN];
-   char m_szPlatformName[MAX_PLATFORM_NAME_LEN];
-	char m_szSysDescription[MAX_DB_STRING];  // Agent's System.Uname or SNMP sysDescr
+   TCHAR m_szObjectId[MAX_OID_LEN * 4];
+   TCHAR m_szAgentVersion[MAX_AGENT_VERSION_LEN];
+   TCHAR m_szPlatformName[MAX_PLATFORM_NAME_LEN];
+	TCHAR m_szSysDescription[MAX_DB_STRING];  // Agent's System.Uname or SNMP sysDescr
    DWORD m_dwNumParams;           // Number of elements in supported parameters list
    NXC_AGENT_PARAM *m_pParamList; // List of supported parameters
    time_t m_tLastDiscoveryPoll;
@@ -669,7 +669,7 @@ protected:
    void routingTableLock() { MutexLock(m_mutexRTAccess, INFINITE); }
    void routingTableUnlock() { MutexUnlock(m_mutexRTAccess); }
 
-   BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const char *pszOID, int nValue);
+   BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue);
    void CheckOSPFSupport(SNMP_Transport *pTransport);
 	BOOL ResolveName(BOOL useOnlyDNS);
    void setAgentProxy(AgentConnection *pConn);
@@ -685,7 +685,7 @@ protected:
 
 	void updateContainerMembership();
 
-   virtual void PrepareForDeletion(void);
+   virtual void PrepareForDeletion();
    virtual void OnObjectDelete(DWORD dwObjectId);
 
 public:
@@ -696,7 +696,7 @@ public:
    virtual int Type(void) { return OBJECT_NODE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
 	Cluster *getMyCluster();
@@ -720,10 +720,10 @@ public:
 
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
 
-   const char *getObjectId() { return m_szObjectId; }
+   const TCHAR *getObjectId() { return m_szObjectId; }
 
    void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
-   void CreateNewInterface(DWORD dwAddr, DWORD dwNetMask, char *szName = NULL, 
+   void CreateNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, 
                            DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL);
    void DeleteInterface(Interface *pInterface);
 
@@ -759,12 +759,12 @@ public:
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    BOOL connectToAgent(DWORD *error = NULL, DWORD *socketError = NULL);
-   DWORD GetItemFromSNMP(WORD port, const char *szParam, DWORD dwBufSize, char *szBuffer);
-   DWORD GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
-   DWORD GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer);
-   DWORD GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
+   DWORD GetItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
+   DWORD GetItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
+   DWORD GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
    void queueItemsForPolling(Queue *pPollerQueue);
-   DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
+   DWORD GetItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
    DWORD getLastValues(CSCPMessage *pMsg);
 	void processNewDciValue(DCItem *item, time_t currTime, const TCHAR *value);
    void cleanDCIData();
@@ -795,10 +795,10 @@ public:
    QWORD GetLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
    void SetLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 
-   DWORD CallSnmpEnumerate(const char *pszRootOid, 
+   DWORD CallSnmpEnumerate(const TCHAR *pszRootOid, 
       DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
 
-	nxmap_ObjList *GetL2Topology(void);
+	nxmap_ObjList *GetL2Topology();
 	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
@@ -1322,8 +1322,8 @@ struct INDEX
 struct CONTAINER_CATEGORY
 {
    DWORD dwCatId;
-   char szName[MAX_OBJECT_NAME];
-   char *pszDescription;
+   TCHAR szName[MAX_OBJECT_NAME];
+   TCHAR *pszDescription;
    DWORD dwImageId;
 };
 
@@ -1394,7 +1394,7 @@ extern RWLOCK NXCORE_EXPORTABLE g_rwlockZoneIndex;
 extern RWLOCK NXCORE_EXPORTABLE g_rwlockConditionIndex;
 extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
-extern const char *g_szClassName[];
+extern const TCHAR *g_szClassName[];
 extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
 

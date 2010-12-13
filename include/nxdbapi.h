@@ -92,7 +92,7 @@ typedef db_async_result_t * DB_ASYNC_RESULT;
 
 bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode);
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
-														bool dumpSQL, void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *, void *),
+														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, void *),
 														void *userArg);
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver);
 
@@ -112,6 +112,8 @@ int LIBNXDB_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult);
 BOOL LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize);
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
                                       TCHAR *pszBuffer, int nBufLen);
+char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn,
+                                      char *pszBuffer, int nBufLen);
 LONG LIBNXDB_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
 DWORD LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
 INT64 LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int iRow, int iColumn);
@@ -140,6 +142,11 @@ int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn);
 int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn);
 
 String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize = -1);
+#ifdef UNICODE
+String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int maxSize = -1);
+#else
+#define DBPrepareStringA DBPrepareString
+#endif
 TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 

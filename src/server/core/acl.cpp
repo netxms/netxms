@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: acl.cpp
+** File: acl.cpp
 **
 **/
 
@@ -176,7 +176,7 @@ void AccessList::CreateMessage(CSCPMessage *pMsg)
 // Delete all elements
 //
 
-void AccessList::DeleteAll(void)
+void AccessList::DeleteAll()
 {
    Lock();
    m_dwNumElements = 0;

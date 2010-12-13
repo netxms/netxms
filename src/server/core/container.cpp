@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,7 +54,7 @@ Container::Container()
 
 
 //
-// "Normal" container class constructor
+// _T("Normal") container class constructor
 //
 
 Container::Container(TCHAR *pszName, DWORD dwCategory)
@@ -89,7 +88,7 @@ Container::~Container()
 
 BOOL Container::CreateFromDB(DWORD dwId)
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    DB_RESULT hResult;
    DWORD i;
 
@@ -98,7 +97,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   sprintf(szQuery, "SELECT category,enable_auto_bind,auto_bind_filter FROM containers WHERE id=%d", dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT category,enable_auto_bind,auto_bind_filter FROM containers WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -133,7 +132,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    // Load child list for later linkage
    if (!m_bIsDeleted)
    {
-      sprintf(szQuery, "SELECT object_id FROM container_members WHERE container_id=%d", m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -158,7 +157,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
 
 BOOL Container::SaveToDB(DB_HANDLE hdb)
 {
-   char szQuery[1024], *pszDynQuery, *pszEscScript;
+   TCHAR szQuery[1024], *pszDynQuery, *pszEscScript;
    DB_RESULT hResult;
    DWORD i, len;
    BOOL bNewObject = TRUE;
@@ -169,7 +168,7 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM containers WHERE id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
@@ -183,22 +182,22 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 	len = (DWORD)_tcslen(pszEscScript) + 256;
 	pszDynQuery = (TCHAR *)malloc(sizeof(TCHAR) * len);
    if (bNewObject)
-      sprintf(pszDynQuery, "INSERT INTO containers (id,category,object_class,enable_auto_bind,auto_bind_filter) VALUES (%d,%d,%d,%d,'%s')",
-              m_dwId, m_dwCategory, Type(), (m_bindFilterSource != NULL) ? 1 : 0, pszEscScript);
+      _sntprintf(pszDynQuery, len, _T("INSERT INTO containers (id,category,object_class,enable_auto_bind,auto_bind_filter) VALUES (%d,%d,%d,%d,'%s')"),
+                 m_dwId, m_dwCategory, Type(), (m_bindFilterSource != NULL) ? 1 : 0, pszEscScript);
    else
-      sprintf(pszDynQuery, "UPDATE containers SET category=%d,object_class=%d,enable_auto_bind=%d,auto_bind_filter='%s' WHERE id=%d",
-              m_dwCategory, Type(), (m_bindFilterSource != NULL) ? 1 : 0, pszEscScript, m_dwId);
+      _sntprintf(pszDynQuery, len, _T("UPDATE containers SET category=%d,object_class=%d,enable_auto_bind=%d,auto_bind_filter='%s' WHERE id=%d"),
+                 m_dwCategory, Type(), (m_bindFilterSource != NULL) ? 1 : 0, pszEscScript, m_dwId);
 	free(pszEscScript);
    DBQuery(hdb, pszDynQuery);
 	free(pszDynQuery);
 
    // Update members list
-   sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
    DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)", m_dwId, m_pChildList[i]->Id());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();
@@ -220,15 +219,15 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 
 BOOL Container::DeleteFromDB(void)
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    BOOL bSuccess;
 
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      sprintf(szQuery, "DELETE FROM containers WHERE id=%d", m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM containers WHERE id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -361,8 +360,7 @@ BOOL Container::IsSuitableForNode(Node *node)
 			TCHAR buffer[1024];
 
 			_sntprintf(buffer, 1024, _T("Container::%s::%d"), m_szName, m_dwId);
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), buffer,
-						 m_bindFilter->getErrorText(), m_dwId);
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_bindFilter->getErrorText(), m_dwId);
 			nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_bindFilter->getErrorText());
 		}
 	}

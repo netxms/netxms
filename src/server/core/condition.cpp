@@ -169,10 +169,11 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_pszScript));
-   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscScript) + 1024));
+	size_t qlen = _tcslen(pszEscScript) + 1024;
+   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
 
    // Check for object's existence in database
-   _stprintf(pszQuery, _T("SELECT id FROM conditions WHERE id=%d"), m_dwId);
+   _sntprintf(pszQuery, qlen, _T("SELECT id FROM conditions WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, pszQuery);
    if (hResult != NULL)
    {
@@ -184,7 +185,8 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
    {
-      _stprintf(pszQuery, _T("INSERT INTO conditions (id,activation_event,")
+      _sntprintf(pszQuery, qlen, 
+			                 _T("INSERT INTO conditions (id,activation_event,")
                           _T("deactivation_event,source_object,active_status,")
                           _T("inactive_status,script) VALUES (%d,%d,%d,%d,%d,%d,'%s')"),
                 m_dwId, m_dwActivationEventCode, m_dwDeactivationEventCode,
@@ -192,7 +194,8 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    }
    else
    {
-      _stprintf(pszQuery, _T("UPDATE conditions SET activation_event=%d,")
+      _sntprintf(pszQuery, qlen,
+			                 _T("UPDATE conditions SET activation_event=%d,")
                           _T("deactivation_event=%d,source_object=%d,active_status=%d,")
                           _T("inactive_status=%d,script='%s' WHERE id=%d"),
                 m_dwActivationEventCode, m_dwDeactivationEventCode, m_dwSourceObject,
@@ -202,12 +205,12 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    DBQuery(hdb, pszQuery);
 
    // Save DCI mapping
-   _stprintf(pszQuery, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_dwId);
+   _sntprintf(pszQuery, qlen, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_dwId);
    DBQuery(hdb, pszQuery);
    for(i = 0; i < m_dwDCICount; i++)
    {
-      _stprintf(pszQuery, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,")
-                          _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
+      _sntprintf(pszQuery, qlen, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,")
+                                 _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
                 m_dwId, i, m_pDCIList[i].dwId, m_pDCIList[i].dwNodeId,
                 m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
       DBQuery(hdb, pszQuery);

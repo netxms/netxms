@@ -60,7 +60,7 @@ void InitLocalNetInfo(void)
 #ifdef _WIN32
    HMODULE hModule;
 
-   hModule = LoadLibrary("NETMAN.DLL");
+   hModule = LoadLibrary(_T("NETMAN.DLL"));
    if (hModule != NULL)
    {
       imp_HrLanConnectionNameFromGuidOrPath = 
@@ -68,7 +68,7 @@ void InitLocalNetInfo(void)
    }
 #elif HAVE_SYS_UTSNAME_H
    struct utsname un;
-   char szName[MAX_PATH], szErrorText[256];
+   TCHAR szName[MAX_PATH], szErrorText[256];
    int i;
 
    if (uname(&un) != -1)
@@ -76,8 +76,8 @@ void InitLocalNetInfo(void)
       // Convert system name to lowercase
       for(i = 0; un.sysname[i] != 0; i++)
          un.sysname[i] = tolower(un.sysname[i]);
-      if (!strcmp(un.sysname, "hp-ux"))
-         strcpy(un.sysname, "hpux");
+      if (!_tcscmp(un.sysname, "hp-ux"))
+         _tcscpy(un.sysname, "hpux");
       snprintf(szName, MAX_PATH, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
 
       m_hSubAgent = DLOpen(szName, szErrorText);
@@ -113,13 +113,13 @@ void InitLocalNetInfo(void)
 // Convert string representation of MAC address to binary form
 //
 
-void StrToMac(char *pszStr, BYTE *pBuffer)
+void StrToMac(const TCHAR *pszStr, BYTE *pBuffer)
 {
    DWORD byte1, byte2, byte3, byte4, byte5, byte6;
 
    memset(pBuffer, 6, 0);
-   if (sscanf(pszStr, "%x:%x:%x:%x:%x:%x", &byte1, &byte2, &byte3, 
-              &byte4, &byte5, &byte6) == 6)
+   if (_stscanf(pszStr, _T("%x:%x:%x:%x:%x:%x"), &byte1, &byte2, &byte3, 
+                &byte4, &byte5, &byte6) == 6)
    {
       pBuffer[0] = (BYTE)byte1;
       pBuffer[1] = (BYTE)byte2;
@@ -135,7 +135,7 @@ void StrToMac(char *pszStr, BYTE *pBuffer)
 // Get local ARP cache
 //
 
-static ARP_CACHE *SysGetLocalArpCache(void)
+static ARP_CACHE *SysGetLocalArpCache()
 {
    ARP_CACHE *pArpCache = NULL;
 
@@ -235,15 +235,15 @@ static ARP_CACHE *SysGetLocalArpCache(void)
 // Get local interface list (built-in system dependent code)
 //
 
-static INTERFACE_LIST *SysGetLocalIfList(void)
+static INTERFACE_LIST *SysGetLocalIfList()
 {
    INTERFACE_LIST *pIfList = NULL;
 
 #ifdef _WIN32
    DWORD dwSize;
    IP_ADAPTER_INFO *pBuffer, *pInfo;
-   char szAdapterName[MAX_OBJECT_NAME];
-   char szMacAddr[MAX_ADAPTER_ADDRESS_LENGTH * 2 + 1];
+   TCHAR szAdapterName[MAX_OBJECT_NAME];
+   TCHAR szMacAddr[MAX_ADAPTER_ADDRESS_LENGTH * 2 + 1];
    IP_ADDR_STRING *pAddr;
 
    if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
@@ -272,19 +272,33 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
             dwSize = 256;
             if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
             {
+#ifdef UNICODE
+					nx_strncpy(szAdapterName, wName, MAX_OBJECT_NAME);
+#else
                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
                                    wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
                szAdapterName[MAX_OBJECT_NAME - 1] = 0;
+#endif
             }
             else
             {
+#ifdef UNICODE
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
+               szAdapterName[MAX_OBJECT_NAME - 1] = 0;
+#else
                nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+#endif
             }
          }
          else
          {
             // We don't have a GUID resolving function, use GUID as name
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
+            szAdapterName[MAX_OBJECT_NAME - 1] = 0;
+#else
             nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+#endif
          }
 
          BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);
@@ -297,8 +311,8 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
             nx_strncpy(pIfList->pInterfaces[pIfList->iNumEntries].szName, szAdapterName, MAX_OBJECT_NAME);
             memcpy(pIfList->pInterfaces[pIfList->iNumEntries].bMacAddr, pInfo->Address, MAC_ADDR_LENGTH);
             pIfList->pInterfaces[pIfList->iNumEntries].dwIndex = pInfo->Index;
-            pIfList->pInterfaces[pIfList->iNumEntries].dwIpAddr = ntohl(_t_inet_addr(pAddr->IpAddress.String));
-            pIfList->pInterfaces[pIfList->iNumEntries].dwIpNetMask = ntohl(_t_inet_addr(pAddr->IpMask.String));
+            pIfList->pInterfaces[pIfList->iNumEntries].dwIpAddr = ntohl(inet_addr(pAddr->IpAddress.String));
+            pIfList->pInterfaces[pIfList->iNumEntries].dwIpNetMask = ntohl(inet_addr(pAddr->IpMask.String));
             pIfList->pInterfaces[pIfList->iNumEntries].dwType = pInfo->Type;
             pIfList->pInterfaces[pIfList->iNumEntries].iNumSecondary = 0;
             pIfList->iNumEntries++;

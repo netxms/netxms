@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,22 +31,22 @@ static NXCORE_LOG s_logs[] =
 {
 	{ _T("AuditLog"), _T("audit_log"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
 		{
-			{ "record_id", "Record ID", LC_INTEGER },
-			{ "timestamp", "Timestamp", LC_TIMESTAMP },
-			{ "subsystem", "Subsystem", LC_TEXT },
-			{ "user_id", "User", LC_USER_ID },
-			{ "workstation", "Workstation", LC_TEXT },
-			{ "message", "Message", LC_TEXT },
+			{ _T("record_id"), _T("Record ID"), LC_INTEGER },
+			{ _T("timestamp"), _T("Timestamp"), LC_TIMESTAMP },
+			{ _T("subsystem"), _T("Subsystem"), LC_TEXT },
+			{ _T("user_id"), _T("User"), LC_USER_ID },
+			{ _T("workstation"), _T("Workstation"), LC_TEXT },
+			{ _T("message"), _T("Message"), LC_TEXT },
 			{ NULL, NULL, 0 }
 		}
 	},
 	{ _T("EventLog"), _T("event_log"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
-			{ "event_timestamp", "Time", LC_TIMESTAMP },
-			{ "event_source", "Source", LC_OBJECT_ID },
-			{ "event_code", "Event", LC_EVENT_CODE },
-			{ "event_severity", "Severity", LC_SEVERITY },
-			{ "event_message", "Message", LC_TEXT },
+			{ _T("event_timestamp"), _T("Time"), LC_TIMESTAMP },
+			{ _T("event_source"), _T("Source"), LC_OBJECT_ID },
+			{ _T("event_code"), _T("Event"), LC_EVENT_CODE },
+			{ _T("event_severity"), _T("Severity"), LC_SEVERITY },
+			{ _T("event_message"), _T("Message"), LC_TEXT },
 			{ NULL, NULL, 0 }
 		}
 	},

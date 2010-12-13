@@ -31,7 +31,7 @@ ServiceRoot::ServiceRoot()
             :UniversalRoot()
 {
    m_dwId = BUILTIN_OID_SERVICEROOT;
-   strcpy(m_szName, "All Services");
+   _tcscpy(m_szName, "All Services");
 }
 
 
@@ -52,7 +52,7 @@ TemplateRoot::TemplateRoot()
              :UniversalRoot()
 {
    m_dwId = BUILTIN_OID_TEMPLATEROOT;
-   strcpy(m_szName, "Templates");
+   _tcscpy(m_szName, "Templates");
 }
 
 
@@ -83,7 +83,7 @@ PolicyRoot::PolicyRoot()
            :UniversalRoot()
 {
    m_dwId = BUILTIN_OID_POLICYROOT;
-   strcpy(m_szName, "Policies");
+   _tcscpy(m_szName, "Policies");
 }
 
 
@@ -114,7 +114,7 @@ NetworkMapRoot::NetworkMapRoot()
                :UniversalRoot()
 {
    m_dwId = BUILTIN_OID_NETWORKMAPROOT;
-   strcpy(m_szName, "Network Maps");
+   _tcscpy(m_szName, "Network Maps");
 }
 
 

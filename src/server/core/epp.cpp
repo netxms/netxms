@@ -433,12 +433,12 @@ void EPRule::GenerateAlarm(Event *pEvent)
 BOOL EPRule::LoadFromDB()
 {
    DB_RESULT hResult;
-   char szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
+   TCHAR szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
    BOOL bSuccess = TRUE;
    DWORD i, count;
    
    // Load rule's sources
-   sprintf(szQuery, "SELECT object_id FROM policy_source_list WHERE rule_id=%d", m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -454,7 +454,7 @@ BOOL EPRule::LoadFromDB()
    }
 
    // Load rule's events
-   sprintf(szQuery, "SELECT event_code FROM policy_event_list WHERE rule_id=%d", m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT event_code FROM policy_event_list WHERE rule_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -470,7 +470,7 @@ BOOL EPRule::LoadFromDB()
    }
 
    // Load rule's actions
-   sprintf(szQuery, "SELECT action_id FROM policy_action_list WHERE rule_id=%d", m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT action_id FROM policy_action_list WHERE rule_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -486,7 +486,7 @@ BOOL EPRule::LoadFromDB()
    }
    
    // Load situation attributes
-   sprintf(szQuery, "SELECT attr_name,attr_value FROM policy_situation_attr_list WHERE rule_id=%d", m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT attr_name,attr_value FROM policy_situation_attr_list WHERE rule_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -519,10 +519,10 @@ void EPRule::SaveToDB()
    TCHAR *pszComment, *pszEscKey, *pszEscMessage,
 	      *pszEscScript, *pszQuery, *pszEscSituationInstance,
 			*pszEscName, *pszEscValue;
-   DWORD i;
+   DWORD i, len;
 
-   pszQuery = (TCHAR *)malloc((_tcslen(CHECK_NULL(m_pszComment)) +
-                               _tcslen(CHECK_NULL(m_pszScript)) + 4096) * sizeof(TCHAR));
+	len = (DWORD)(_tcslen(CHECK_NULL(m_pszComment)) + _tcslen(CHECK_NULL(m_pszScript)) + 4096);
+   pszQuery = (TCHAR *)malloc(len * sizeof(TCHAR));
 
    // General attributes
    pszComment = EncodeSQLString(m_pszComment);
@@ -530,7 +530,7 @@ void EPRule::SaveToDB()
    pszEscMessage = EncodeSQLString(m_szAlarmMessage);
    pszEscScript = EncodeSQLString(m_pszScript);
 	pszEscSituationInstance = EncodeSQLString(m_szSituationInstance);
-   _stprintf(pszQuery, _T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,")
+   _sntprintf(pszQuery, len, _T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,")
                        _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
 							  _T("situation_id,situation_instance) ")
                        _T("VALUES (%d,%d,'%s','%s',%d,'%s','%s',%d,%d,%d,'%s')"),
@@ -547,7 +547,7 @@ void EPRule::SaveToDB()
    // Actions
    for(i = 0; i < m_dwNumActions; i++)
    {
-      _stprintf(pszQuery, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"),
+      _sntprintf(pszQuery, len, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"),
                 m_dwId, m_pdwActionList[i]);
       DBQuery(g_hCoreDB, pszQuery);
    }
@@ -555,7 +555,7 @@ void EPRule::SaveToDB()
    // Events
    for(i = 0; i < m_dwNumEvents; i++)
    {
-      _stprintf(pszQuery, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
+      _sntprintf(pszQuery, len, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
                 m_dwId, m_pdwEventList[i]);
       DBQuery(g_hCoreDB, pszQuery);
    }
@@ -563,7 +563,7 @@ void EPRule::SaveToDB()
    // Sources
    for(i = 0; i < m_dwNumSources; i++)
    {
-      _stprintf(pszQuery, _T("INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)"),
+      _sntprintf(pszQuery, len, _T("INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)"),
                 m_dwId, m_pdwSourceList[i]);
       DBQuery(g_hCoreDB, pszQuery);
    }
@@ -573,7 +573,7 @@ void EPRule::SaveToDB()
 	{
 		pszEscName = EncodeSQLString(m_situationAttrList.getKeyByIndex(i));
 		pszEscValue = EncodeSQLString(m_situationAttrList.getValueByIndex(i));
-      _stprintf(pszQuery, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,'%s','%s')"),
+      _sntprintf(pszQuery, len, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,'%s','%s')"),
                 m_dwId, m_dwSituationId, pszEscName, pszEscValue);
 		free(pszEscName);
 		free(pszEscValue);

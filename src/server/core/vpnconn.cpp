@@ -126,8 +126,7 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
          pObject = FindObjectById(dwNodeId);
          if (pObject == NULL)
          {
-            nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
-                        "dds", dwId, dwNodeId, "VPN connector");
+            nxlog_write(MSG_INVALID_NODE_ID_EX, NXLOG_ERROR, "dds", dwId, dwNodeId, _T("VPN connector"));
          }
          else if (pObject->Type() != OBJECT_NODE)
          {
@@ -161,7 +160,7 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
 
 BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
 {
-   char szQuery[1024], szIpAddr[16], szNetMask[16];
+   TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
    BOOL bNewObject = TRUE;
    Node *pNode;
    DWORD i, dwNodeId;
@@ -173,7 +172,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM vpn_connectors WHERE id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM vpn_connectors WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -191,30 +190,28 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO vpn_connectors (id,node_id,peer_gateway) "
-                       "VALUES (%d,%d,%d)",
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO vpn_connectors (id,node_id,peer_gateway) VALUES (%d,%d,%d)"),
               m_dwId, dwNodeId, m_dwPeerGateway);
    else
-      sprintf(szQuery, "UPDATE vpn_connectors SET node_id=%d,"
-                       "peer_gateway=%d WHERE id=%d",
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE vpn_connectors SET node_id=%d,peer_gateway=%d WHERE id=%d"),
               dwNodeId, m_dwPeerGateway, m_dwId);
    DBQuery(hdb, szQuery);
 
    // Save network list
-   sprintf(szQuery, "DELETE FROM vpn_connector_networks WHERE vpn_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM vpn_connector_networks WHERE vpn_id=%d"), m_dwId);
    DBQuery(hdb, szQuery);
    for(i = 0; i < m_dwNumLocalNets; i++)
    {
-      sprintf(szQuery, "INSERT INTO vpn_connector_networks (vpn_id,network_type,"
-                       "ip_addr,ip_netmask) VALUES (%d,0,'%s','%s')",
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+		           _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,0,'%s','%s')"),
               m_dwId, IpToStr(m_pLocalNetList[i].dwAddr, szIpAddr),
               IpToStr(m_pLocalNetList[i].dwMask, szNetMask));
       DBQuery(hdb, szQuery);
    }
    for(i = 0; i < m_dwNumRemoteNets; i++)
    {
-      sprintf(szQuery, "INSERT INTO vpn_connector_networks (vpn_id,network_type,"
-                       "ip_addr,ip_netmask) VALUES (%d,1,'%s','%s')",
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+			        _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,1,'%s','%s')"),
               m_dwId, IpToStr(m_pRemoteNetList[i].dwAddr, szIpAddr),
               IpToStr(m_pRemoteNetList[i].dwMask, szNetMask));
       DBQuery(hdb, szQuery);
@@ -235,17 +232,17 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
 // Delete VPN connector object from database
 //
 
-BOOL VPNConnector::DeleteFromDB(void)
+BOOL VPNConnector::DeleteFromDB()
 {
-   char szQuery[128];
+   TCHAR szQuery[128];
    BOOL bSuccess;
 
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      sprintf(szQuery, "DELETE FROM vpn_connectors WHERE id=%d", m_dwId);
+      _sntprintf(szQuery, 128, _T("DELETE FROM vpn_connectors WHERE id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "DELETE FROM vpn_connector_networks WHERE vpn_id=%d", m_dwId);
+      _sntprintf(szQuery, 128, _T("DELETE FROM vpn_connector_networks WHERE vpn_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -256,7 +253,7 @@ BOOL VPNConnector::DeleteFromDB(void)
 // Get connector's parent node
 //
 
-Node *VPNConnector::GetParentNode(void)
+Node *VPNConnector::GetParentNode()
 {
    DWORD i;
    Node *pNode = NULL;

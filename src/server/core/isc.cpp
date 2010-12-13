@@ -234,7 +234,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", NETXMS_ISC_PORT, "ISCListener", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", NETXMS_ISC_PORT, _T("ISCListener"), WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown from here */
       return THREAD_OK;

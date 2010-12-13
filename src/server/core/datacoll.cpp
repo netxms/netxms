@@ -60,9 +60,9 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    Node *pNode;
    DWORD dwError;
    time_t currTime;
-   char *pBuffer;
+   TCHAR *pBuffer;
 
-   pBuffer = (char *)malloc(MAX_LINE_SIZE);
+   pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
 
    while(!ShutdownInProgress())
    {
@@ -95,7 +95,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 				}
 				else
 				{
-               // Change item's status to "not supported"
+               // Change item's status to _T("not supported")
                pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
 
 					if (pNode != NULL)
@@ -163,7 +163,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       else     /* pNode == NULL */
       {
 			Template *n = pItem->getRelatedNode();
-         DbgPrintf(3, "*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" node=%d proxy=%d)",
+         DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" node=%d proxy=%d)"),
 			          pItem->getId(), pItem->getName(), (n != NULL) ? n->Id() : -1, pItem->getProxyNode());
       }
 
@@ -173,7 +173,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    }
 
    free(pBuffer);
-   DbgPrintf(1, "Data collector thread terminated");
+   DbgPrintf(1, _T("Data collector thread terminated"));
    return THREAD_OK;
 }
 
@@ -189,7 +189,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
    DWORD dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
    INT64 qwStart;
 
-   dwWatchdogId = WatchdogAddThread("Item Poller", 20);
+   dwWatchdogId = WatchdogAddThread(_T("Item Poller"), 20);
    memset(dwTimingHistory, 0, sizeof(DWORD) * (60 / ITEM_POLLING_INTERVAL));
 
    while(!ShutdownInProgress())
@@ -225,7 +225,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
          dwSum += dwTimingHistory[i];
       g_dwAvgDCIQueuingTime = dwSum / (60 / ITEM_POLLING_INTERVAL);
    }
-   DbgPrintf(1, "Item poller thread terminated");
+   DbgPrintf(1, _T("Item poller thread terminated"));
    return THREAD_OK;
 }
 
@@ -292,7 +292,7 @@ BOOL InitDataCollector(void)
    g_pItemQueue = new Queue(4096, 256);
 
    // Start data collection threads
-   iNumCollectors = ConfigReadInt("NumberOfDataCollectors", 10);
+   iNumCollectors = ConfigReadInt(_T("NumberOfDataCollectors"), 10);
    for(i = 0; i < iNumCollectors; i++)
       ThreadCreate(DataCollector, 0, NULL);
 

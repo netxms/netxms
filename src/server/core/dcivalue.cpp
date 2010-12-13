@@ -47,11 +47,11 @@ ItemValue::ItemValue()
 ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
 {
    nx_strncpy(m_szString, pszValue, MAX_DB_STRING);
-   m_iInt32 = strtol(m_szString, NULL, 0);
-   m_iInt64 = strtoll(m_szString, NULL, 0);
-   m_dwInt32 = strtoul(m_szString, NULL, 0);
-   m_qwInt64 = strtoull(m_szString, NULL, 0);
-   m_dFloat = strtod(m_szString, NULL);
+   m_iInt32 = _tcstol(m_szString, NULL, 0);
+   m_iInt64 = _tcstoll(m_szString, NULL, 0);
+   m_dwInt32 = _tcstoul(m_szString, NULL, 0);
+   m_qwInt64 = _tcstoull(m_szString, NULL, 0);
+   m_dFloat = _tcstod(m_szString, NULL);
 
    if (dwTimeStamp == 0)
       m_dwTimeStamp = (DWORD)time(NULL);
@@ -103,18 +103,18 @@ const ItemValue& ItemValue::operator=(const ItemValue &src)
 const ItemValue& ItemValue::operator=(const TCHAR *pszStr)
 {
    nx_strncpy(m_szString, pszStr, MAX_DB_STRING);
-   m_iInt32 = strtol(m_szString, NULL, 0);
-   m_iInt64 = strtoll(m_szString, NULL, 0);
-   m_dwInt32 = strtoul(m_szString, NULL, 0);
-   m_qwInt64 = strtoull(m_szString, NULL, 0);
-   m_dFloat = strtod(m_szString, NULL);
+   m_iInt32 = _tcstol(m_szString, NULL, 0);
+   m_iInt64 = _tcstoll(m_szString, NULL, 0);
+   m_dwInt32 = _tcstoul(m_szString, NULL, 0);
+   m_qwInt64 = _tcstoull(m_szString, NULL, 0);
+   m_dFloat = _tcstod(m_szString, NULL);
    return *this;
 }
 
 const ItemValue& ItemValue::operator=(double dFloat)
 {
    m_dFloat = dFloat;
-   sprintf(m_szString, "%f", m_dFloat);
+   _sntprintf(m_szString, MAX_DB_STRING, _T("%f"), m_dFloat);
    m_iInt32 = (LONG)m_dFloat;
    m_iInt64 = (INT64)m_dFloat;
    m_dwInt32 = (DWORD)m_dFloat;
@@ -125,7 +125,7 @@ const ItemValue& ItemValue::operator=(double dFloat)
 const ItemValue& ItemValue::operator=(LONG iInt32)
 {
    m_iInt32 = iInt32;
-   sprintf(m_szString, "%d", m_iInt32);
+   _sntprintf(m_szString, MAX_DB_STRING, _T("%d"), m_iInt32);
    m_dFloat = (double)m_iInt32;
    m_iInt64 = (INT64)m_iInt32;
    m_dwInt32 = (DWORD)m_iInt32;
@@ -136,7 +136,7 @@ const ItemValue& ItemValue::operator=(LONG iInt32)
 const ItemValue& ItemValue::operator=(INT64 iInt64)
 {
    m_iInt64 = iInt64;
-   sprintf(m_szString, INT64_FMT, m_iInt64);
+   _sntprintf(m_szString, MAX_DB_STRING, INT64_FMT, m_iInt64);
    m_dFloat = (double)m_iInt64;
    m_iInt32 = (LONG)m_iInt64;
    m_dwInt32 = (DWORD)m_iInt64;
@@ -147,7 +147,7 @@ const ItemValue& ItemValue::operator=(INT64 iInt64)
 const ItemValue& ItemValue::operator=(DWORD dwInt32)
 {
    m_dwInt32 = dwInt32;
-   sprintf(m_szString, "%u", m_dwInt32);
+   _sntprintf(m_szString, MAX_DB_STRING, _T("%u"), m_dwInt32);
    m_dFloat = (double)m_dwInt32;
    m_iInt32 = (LONG)m_dwInt32;
    m_iInt64 = (INT64)m_dwInt32;
@@ -158,7 +158,7 @@ const ItemValue& ItemValue::operator=(DWORD dwInt32)
 const ItemValue& ItemValue::operator=(QWORD qwInt64)
 {
    m_qwInt64 = qwInt64;
-   sprintf(m_szString, UINT64_FMT, m_qwInt64);
+   _sntprintf(m_szString, MAX_DB_STRING, UINT64_FMT, m_qwInt64);
    m_dFloat = (double)((INT64)m_qwInt64);
    m_iInt32 = (LONG)m_qwInt64;
    m_iInt64 = (INT64)m_qwInt64;

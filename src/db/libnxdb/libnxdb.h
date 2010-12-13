@@ -52,9 +52,9 @@ struct db_driver_t
 	void *m_userArg;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
-	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, const WCHAR *, TCHAR *);
-	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, TCHAR *);
-	DBDRV_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, TCHAR *);
+	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
+	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
+	DBDRV_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	BOOL (* m_fpDrvFetch)(DBDRV_ASYNC_RESULT);
 	LONG (* m_fpDrvGetFieldLength)(DBDRV_RESULT, int, int);
 	LONG (* m_fpDrvGetFieldLengthAsync)(DBDRV_RESULT, int);
@@ -66,13 +66,14 @@ struct db_driver_t
 	DWORD (* m_fpDrvBegin)(DBDRV_CONNECTION);
 	DWORD (* m_fpDrvCommit)(DBDRV_CONNECTION);
 	DWORD (* m_fpDrvRollback)(DBDRV_CONNECTION);
-	void (* m_fpDrvUnload)(void);
-	void (* m_fpEventHandler)(DWORD, const TCHAR *, const TCHAR *, void *);
+	void (* m_fpDrvUnload)();
+	void (* m_fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, void *);
 	int (* m_fpDrvGetColumnCount)(DBDRV_RESULT);
 	const char* (* m_fpDrvGetColumnName)(DBDRV_RESULT, int);
 	int (* m_fpDrvGetColumnCountAsync)(DBDRV_ASYNC_RESULT);
 	const char* (* m_fpDrvGetColumnNameAsync)(DBDRV_ASYNC_RESULT, int);
-	TCHAR* (* m_fpDrvPrepareString)(const TCHAR *);
+	WCHAR* (* m_fpDrvPrepareStringW)(const WCHAR *);
+	char* (* m_fpDrvPrepareStringA)(const char *);
 };
 
 

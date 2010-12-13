@@ -634,6 +634,107 @@ TCHAR *CSCPMessage::GetVariableStr(DWORD dwVarId, TCHAR *pszBuffer, DWORD dwBufS
 
 
 //
+// Get variable as multibyte string
+//
+
+#ifdef UNICODE
+
+char *CSCPMessage::GetVariableStrA(DWORD dwVarId, char *pszBuffer, DWORD dwBufSize)
+{
+   void *pValue;
+   char *pStr = NULL;
+   DWORD dwLen;
+
+   if ((pszBuffer != NULL) && (dwBufSize == 0))
+      return NULL;   // non-sense combination
+
+   pValue = Get(dwVarId, CSCP_DT_STRING);
+   if (pValue != NULL)
+   {
+      if (pszBuffer == NULL)
+      {
+         pStr = (char *)malloc(*((DWORD *)pValue) / 2 + 1);
+      }
+      else
+      {
+         pStr = pszBuffer;
+      }
+
+      dwLen = (pszBuffer == NULL) ? (*((DWORD *)pValue) / 2) : min(*((DWORD *)pValue) / 2, dwBufSize - 1);
+		ucs2_to_mb((UCS2CHAR *)((BYTE *)pValue + 4), dwLen, pStr, dwLen + 1);
+      pStr[dwLen] = 0;
+   }
+   else
+   {
+      if (pszBuffer != NULL)
+      {
+         pStr = pszBuffer;
+         pStr[0] = 0;
+      }
+   }
+   return pStr;
+}
+
+#else
+
+char *CSCPMessage::GetVariableStrA(DWORD dwVarId, char *pszBuffer, DWORD dwBufSize)
+{
+	return GetVariableStr(dwVarId, pszBuffer, dwBufSize);
+}
+
+#endif
+
+
+//
+// Get variable as UTF-8 string
+//
+
+char *CSCPMessage::GetVariableStrUTF8(DWORD dwVarId, char *pszBuffer, DWORD dwBufSize)
+{
+   void *pValue;
+   char *pStr = NULL;
+   DWORD dwLen, dwOutSize;
+	int cc;
+
+   if ((pszBuffer != NULL) && (dwBufSize == 0))
+      return NULL;   // non-sense combination
+
+   pValue = Get(dwVarId, CSCP_DT_STRING);
+   if (pValue != NULL)
+   {
+      if (pszBuffer == NULL)
+      {
+			// Assume worst case scenario - 3 bytes per character
+			dwOutSize = *((DWORD *)pValue) + *((DWORD *)pValue) / 2 + 1;
+         pStr = (char *)malloc(dwOutSize);
+      }
+      else
+      {
+			dwOutSize = dwBufSize;
+         pStr = pszBuffer;
+      }
+
+      dwLen = *((DWORD *)pValue) / 2;
+#ifdef UNICODE_UCS2
+		cc = WideCharToMultiByte(CP_UTF8, 0, (WCHAR *)((BYTE *)pValue + 4), dwLen, pStr, dwOutSize - 1, NULL, NULL);
+#else
+		cc = ucs2_to_utf8((UCS2CHAR *)((BYTE *)pValue + 4), dwLen, pStr, dwOutSize - 1);
+#endif
+      pStr[cc] = 0;
+   }
+   else
+   {
+      if (pszBuffer != NULL)
+      {
+         pStr = pszBuffer;
+         pStr[0] = 0;
+      }
+   }
+   return pStr;
+}
+
+
+//
 // Get binary (byte array) variable
 // Result will be placed to the buffer provided (no more than dwBufSize bytes,
 // and actual size of data will be returned
@@ -664,7 +765,7 @@ DWORD CSCPMessage::GetVariableBinary(DWORD dwVarId, BYTE *pBuffer, DWORD dwBufSi
 // Build protocol message ready to be send over the wire
 //
 
-CSCP_MESSAGE *CSCPMessage::CreateMessage(void)
+CSCP_MESSAGE *CSCPMessage::CreateMessage()
 {
    DWORD dwSize;
    int iVarSize;
@@ -744,7 +845,7 @@ CSCP_MESSAGE *CSCPMessage::CreateMessage(void)
 // Delete all variables
 //
 
-void CSCPMessage::DeleteAllVariables(void)
+void CSCPMessage::DeleteAllVariables()
 {
    if (m_ppVarList != NULL)
    {
@@ -758,6 +859,22 @@ void CSCPMessage::DeleteAllVariables(void)
       m_dwNumVar = 0;
    }
 }
+
+
+//
+// Set variable from multibyte string
+//
+
+#ifdef UNICODE
+
+void CSCPMessage::SetVariableFromMBString(DWORD dwVarId, const char *pszValue)
+{
+	WCHAR *wcValue = WideStringFromMBString(pszValue);
+	Set(dwVarId, CSCP_DT_STRING, wcValue);
+	free(wcValue);
+}
+
+#endif
 
 
 //

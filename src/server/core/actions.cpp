@@ -68,15 +68,15 @@ static void DestroyActionList(void)
 // Load actions list from database
 //
 
-static BOOL LoadActions(void)
+static BOOL LoadActions()
 {
    DB_RESULT hResult;
    BOOL bResult = FALSE;
    DWORD i;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT action_id,action_name,action_type,"
-                                 "is_disabled,rcpt_addr,email_subject,action_data "
-                                 "FROM actions ORDER BY action_id");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT action_id,action_name,action_type,")
+                                 _T("is_disabled,rcpt_addr,email_subject,action_data ")
+                                 _T("FROM actions ORDER BY action_id"));
    if (hResult != NULL)
    {
       DestroyActionList();
@@ -114,7 +114,7 @@ static BOOL LoadActions(void)
 // Initialize action-related stuff
 //
 
-BOOL InitActions(void)
+BOOL InitActions()
 {
    BOOL bSuccess = FALSE;
 
@@ -147,7 +147,7 @@ static void SaveActionToDB(NXC_ACTION *pAction)
    TCHAR *pszEscRcpt, *pszEscSubj, *pszEscData, szQuery[4096];
 
    // Check if action with given ID already exist in database
-   sprintf(szQuery, "SELECT action_id FROM actions WHERE action_id=%d", pAction->dwId);
+   _sntprintf(szQuery, 4096, _T("SELECT action_id FROM actions WHERE action_id=%d"), pAction->dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -158,17 +158,19 @@ static void SaveActionToDB(NXC_ACTION *pAction)
    // Prepare and execute INSERT or UPDATE query
    pszEscRcpt = EncodeSQLString(pAction->szRcptAddr);
    pszEscSubj = EncodeSQLString(pAction->szEmailSubject);
-   pszEscData = EncodeSQLString(pAction->pszData == NULL ? "" : pAction->pszData);
+   pszEscData = EncodeSQLString(CHECK_NULL_EX(pAction->pszData));
    if (bExist)
-      sprintf(szQuery, "UPDATE actions SET action_name='%s',action_type=%d,is_disabled=%d,"
-                       "rcpt_addr='%s',email_subject='%s',action_data='%s'"
-                       "WHERE action_id=%d",
+      _sntprintf(szQuery, 4096, 
+		           _T("UPDATE actions SET action_name='%s',action_type=%d,is_disabled=%d,")
+                 _T("rcpt_addr='%s',email_subject='%s',action_data='%s'")
+                 _T("WHERE action_id=%d"),
               pAction->szName, pAction->iType, pAction->bIsDisabled,
               pszEscRcpt, pszEscSubj, pszEscData, pAction->dwId);
    else
-      sprintf(szQuery, "INSERT INTO actions (action_id,action_name,action_type,"
-                       "is_disabled,rcpt_addr,email_subject,action_data) VALUES"
-                       " (%d,'%s',%d,%d,'%s','%s','%s')",
+      _sntprintf(szQuery, 4096,
+		           _T("INSERT INTO actions (action_id,action_name,action_type,")
+                 _T("is_disabled,rcpt_addr,email_subject,action_data) VALUES")
+                 _T(" (%d,'%s',%d,%d,'%s','%s','%s')"),
               pAction->dwId,pAction->szName, pAction->iType, pAction->bIsDisabled,
               pszEscRcpt, pszEscSubj, pszEscData);
    DBQuery(g_hCoreDB, szQuery);
@@ -365,32 +367,31 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
    {
       if (pAction->bIsDisabled)
       {
-         DbgPrintf(3, "*actions* Action %d (%s) is disabled and will not be executed",
+         DbgPrintf(3, _T("*actions* Action %d (%s) is disabled and will not be executed"),
                    dwActionId, pAction->szName);
          bSuccess = TRUE;
       }
       else
       {
-         char *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
+         TCHAR *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
 
          pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
          pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, pszAlarmMsg);
          switch(pAction->iType)
          {
             case ACTION_EXEC:
-               DbgPrintf(3, "*actions* Executing command \"%s\"", pszExpandedData);
+               DbgPrintf(3, _T("*actions* Executing command \"%s\""), pszExpandedData);
                //bSuccess = ExecCommand(pszExpandedData);
-					ThreadCreate(RunCommandThread, 0, strdup(pszExpandedData));
+					ThreadCreate(RunCommandThread, 0, _tcsdup(pszExpandedData));
 					bSuccess = TRUE;
                break;
             case ACTION_SEND_EMAIL:
-               DbgPrintf(3, "*actions* Sending mail to %s: \"%s\"", 
-                         pszExpandedRcpt, pszExpandedData);
+               DbgPrintf(3, _T("*actions* Sending mail to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
                pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, pszAlarmMsg);
 					curr = pszExpandedRcpt;
 					do
 					{
-						next = strchr(curr, ';');
+						next = _tcschr(curr, _T(';'));
 						if (next != NULL)
 							*next = 0;
 						StrStrip(curr);
@@ -401,12 +402,11 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
-               DbgPrintf(3, "*actions* Sending SMS to %s: \"%s\"", 
-                         pszExpandedRcpt, pszExpandedData);
+               DbgPrintf(3, _T("*actions* Sending SMS to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
 					curr = pszExpandedRcpt;
 					do
 					{
-						next = strchr(curr, ';');
+						next = _tcschr(curr, _T(';'));
 						if (next != NULL)
 							*next = 0;
 						StrStrip(curr);
@@ -416,12 +416,11 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                bSuccess = TRUE;
                break;
             case ACTION_REMOTE:
-               DbgPrintf(3, "*actions* Executing on \"%s\": \"%s\"",
-                         pszExpandedRcpt, pszExpandedData);
+               DbgPrintf(3, _T("*actions* Executing on \"%s\": \"%s\""), pszExpandedRcpt, pszExpandedData);
                bSuccess = ExecuteRemoteAction(pszExpandedRcpt, pszExpandedData);
                break;
 				case ACTION_FORWARD_EVENT:
-               DbgPrintf(3, "*actions* Forwarding event to \"%s\"", pszExpandedRcpt);
+               DbgPrintf(3, _T("*actions* Forwarding event to \"%s\""), pszExpandedRcpt);
                bSuccess = ForwardEvent(pszExpandedRcpt, pEvent);
 					break;
             default:
@@ -440,7 +439,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 // Create new action
 //
 
-DWORD CreateNewAction(char *pszName, DWORD *pdwId)
+DWORD CreateNewAction(const TCHAR *pszName, DWORD *pdwId)
 {
    DWORD i, dwResult = RCC_SUCCESS;
 
@@ -448,7 +447,7 @@ DWORD CreateNewAction(char *pszName, DWORD *pdwId)
 
    // Check for duplicate name
    for(i = 0; i < m_dwNumActions; i++)
-      if (!stricmp(m_pActionList[i].szName, pszName))
+      if (!_tcsicmp(m_pActionList[i].szName, pszName))
       {
          dwResult = RCC_ALREADY_EXIST;
          break;
@@ -487,7 +486,7 @@ DWORD CreateNewAction(char *pszName, DWORD *pdwId)
 DWORD DeleteActionFromDB(DWORD dwActionId)
 {
    DWORD i, dwResult = RCC_INVALID_ACTION_ID;
-   char szQuery[256];
+   TCHAR szQuery[256];
 
    RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
 
@@ -500,7 +499,7 @@ DWORD DeleteActionFromDB(DWORD dwActionId)
          m_dwNumActions--;
          safe_free(m_pActionList[i].pszData);
          memmove(&m_pActionList[i], &m_pActionList[i + 1], sizeof(NXC_ACTION) * (m_dwNumActions - i));
-         sprintf(szQuery, "DELETE FROM actions WHERE action_id=%d", dwActionId);
+         _sntprintf(szQuery, 256, _T("DELETE FROM actions WHERE action_id=%d"), dwActionId);
          DBQuery(g_hCoreDB, szQuery);
 
          dwResult = RCC_SUCCESS;

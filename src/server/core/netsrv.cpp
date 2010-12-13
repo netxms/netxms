@@ -93,7 +93,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   _stprintf(szQuery, _T("SELECT id FROM network_services WHERE id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM network_services WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
@@ -186,8 +186,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
          pObject = FindObjectById(dwHostNodeId);
          if (pObject == NULL)
          {
-            nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds",
-                        dwId, dwHostNodeId, "network service");
+            nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds", dwId, dwHostNodeId, _T("network service"));
          }
          else if (pObject->Type() != OBJECT_NODE)
          {
@@ -208,7 +207,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
             if (pObject == NULL)
             {
                nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
-                        "dds", dwId, m_dwPollerNode, "network service");
+                        "dds", dwId, m_dwPollerNode, _T("network service"));
                bResult = FALSE;
             }
             else if (pObject->Type() != OBJECT_NODE)
@@ -431,7 +430,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		{
 			m_iStatus = newStatus;
 			m_iPendingStatus = -1;	// Invalidate pending status
-			SendPollerMsg(dwRqId, "      Service status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
+			SendPollerMsg(dwRqId, _T("      Service status changed to %s\r\n"), g_szStatusTextSmall[m_iStatus]);
 			PostEventEx(pEventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
 							(m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);
@@ -440,7 +439,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			UnlockData();
 		}
    }
-   SendPollerMsg(dwRqId, "   Finished status poll on network service %s\r\n", m_szName);
+   SendPollerMsg(dwRqId, _T("   Finished status poll on network service %s\r\n"), m_szName);
 }
 
 

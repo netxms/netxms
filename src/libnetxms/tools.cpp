@@ -288,15 +288,28 @@ void LIBNETXMS_EXPORTABLE Trim(TCHAR *str)
 // Remove trailing CR/LF or LF from string
 //
 
-void LIBNETXMS_EXPORTABLE RemoveTrailingCRLF(TCHAR *str)
+void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str)
 {
 	if (*str == 0)
 		return;
 
-	TCHAR *p = str + _tcslen(str) - 1;
+	char *p = str + strlen(str) - 1;
 	if (*p == '\n')
 		p--;
 	if (*p == '\r')
+		p--;
+	*(p + 1) = 0;
+}
+
+void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
+{
+	if (*str == 0)
+		return;
+
+	WCHAR *p = str + wcslen(str) - 1;
+	if (*p == L'\n')
+		p--;
+	if (*p == L'\r')
 		p--;
 	*(p + 1) = 0;
 }
@@ -338,9 +351,10 @@ INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void)
 // of line reached.
 //
 
-TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer)
+const TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(const TCHAR *line, TCHAR *buffer)
 {
-   TCHAR *ptr,*bptr;
+   const TCHAR *ptr;
+	TCHAR *bptr;
 
    for(ptr=line;(*ptr==_T(' '))||(*ptr==_T('\t'));ptr++);  // Skip initial spaces
    // Copy word to buffer

@@ -272,9 +272,9 @@ typedef struct
    DWORD dwSubnetAddr;
    DWORD dwFlags;
    int nSNMPVersion;
-   char szObjectId[MAX_OID_LEN * 4];    // SNMP OID
-   char szAgentVersion[MAX_AGENT_VERSION_LEN];
-   char szPlatform[MAX_PLATFORM_NAME_LEN];
+   TCHAR szObjectId[MAX_OID_LEN * 4];    // SNMP OID
+   TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
+   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
 } DISCOVERY_FILTER_DATA;
 
 
@@ -601,8 +601,12 @@ public:
 // Functions
 //
 
-BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize,
-                                     const TCHAR *szDefault);
+BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+#ifdef UNICODE
+BOOL NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
+#else
+#define ConfigReadStrA ConfigReadStr
+#endif
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
 DWORD NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, DWORD dwDefault);
 BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray,
@@ -621,19 +625,19 @@ BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOO
 
 BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 
-BOOL NXCORE_EXPORTABLE LoadConfig(void);
+BOOL NXCORE_EXPORTABLE LoadConfig();
 
-void NXCORE_EXPORTABLE Shutdown(void);
-void NXCORE_EXPORTABLE FastShutdown(void);
-BOOL NXCORE_EXPORTABLE Initialize(void);
+void NXCORE_EXPORTABLE Shutdown();
+void NXCORE_EXPORTABLE FastShutdown();
+BOOL NXCORE_EXPORTABLE Initialize();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
-void NXCORE_EXPORTABLE ShutdownDB(void);
-void InitiateShutdown(void);
+void NXCORE_EXPORTABLE ShutdownDB();
+void InitiateShutdown();
 
 BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
-void ConsolePrintf(CONSOLE_CTX pCtx, const char *pszFormat, ...);
-int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx);
+void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...);
+int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
 
@@ -643,16 +647,16 @@ void StopDBWriter();
 
 void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr);
 
-void SnmpInit(void);
-DWORD SnmpNewRequestId(void);
+void SnmpInit();
+DWORD SnmpNewRequestId();
 DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
-              const char *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
+              const TCHAR *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
               DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
-DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szRootOid,
+DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
 						  DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose);
 SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext);
-void StrToMac(char *pszStr, BYTE *pBuffer);
+void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 
 void InitLocalNetInfo(void);
@@ -681,28 +685,28 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
 int GetSessionCount(void);
 
-void GetSysInfoStr(char *pszBuffer, int nMaxSize);
-DWORD GetLocalIpAddr(void);
+void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
+DWORD GetLocalIpAddr();
 
-BOOL ExecCommand(char *pszCommand);
+BOOL ExecCommand(TCHAR *pszCommand);
 BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets);
 
-BOOL InitIdTable(void);
+BOOL InitIdTable();
 DWORD CreateUniqueId(int iGroup);
-QWORD CreateUniqueEventId(void);
+QWORD CreateUniqueEventId();
 
-void InitMailer(void);
-void ShutdownMailer(void);
-void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText);
+void InitMailer();
+void ShutdownMailer();
+void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText);
 
-void InitSMSSender(void);
-void ShutdownSMSSender(void);
-void NXCORE_EXPORTABLE PostSMS(TCHAR *pszRcpt, TCHAR *pszText);
+void InitSMSSender();
+void ShutdownSMSSender();
+void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText);
 
 void GetAccelarVLANIfList(DWORD dwVersion, SNMP_Transport *pTransport,
                           INTERFACE_LIST *pIfList);
 
-void InitTraps(void);
+void InitTraps();
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
 void CreateTrapCfgMessage(CSCPMessage &msg);
 DWORD CreateNewTrap(DWORD *pdwTrapId);
@@ -750,9 +754,9 @@ void DbgTestMutex(MUTEX hMutex, const TCHAR *szName, CONSOLE_CTX pCtx);
 void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx);
 void DumpSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);
-void SetPollerInfo(int nIdx, const char *pszMsg);
+void SetPollerInfo(int nIdx, const TCHAR *pszMsg);
 void ShowServerStats(CONSOLE_CTX pCtx);
-void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const char *pszName);
+void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName);
 void DumpProcess(CONSOLE_CTX pCtx);
 
 

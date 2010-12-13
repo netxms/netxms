@@ -27,7 +27,7 @@
 // Static data
 //
 
-static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
+static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE_A;
 
 
 #ifndef _WIN32

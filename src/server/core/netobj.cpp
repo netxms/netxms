@@ -113,14 +113,14 @@ BOOL NetObj::SaveToDB(DB_HANDLE hdb)
 
 BOOL NetObj::DeleteFromDB()
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
 
    // Delete ACL
-   sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM acl WHERE object_id=%d"), m_dwId);
    QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DELETE FROM object_properties WHERE object_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_properties WHERE object_id=%d"), m_dwId);
    QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DELETE FROM object_custom_attributes WHERE object_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_dwId);
    QueueSQLRequest(szQuery);
    return TRUE;
 }
@@ -678,12 +678,12 @@ void NetObj::CalculateCompoundStatus(BOOL bForcedRecalc)
 
 BOOL NetObj::LoadACLFromDB(void)
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    DB_RESULT hResult;
    BOOL bSuccess = FALSE;
 
    // Load access list
-   sprintf(szQuery, "SELECT user_id,access_rights FROM acl WHERE object_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), "SELECT user_id,access_rights FROM acl WHERE object_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -718,9 +718,9 @@ struct SAVE_PARAM
 
 static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
 
-   sprintf(szQuery, "INSERT INTO acl (object_id,user_id,access_rights) VALUES (%d,%d,%d)",
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), "INSERT INTO acl (object_id,user_id,access_rights) VALUES (%d,%d,%d)",
            ((SAVE_PARAM *)pArg)->dwObjectId, dwUserId, dwAccessRights);
    DBQuery(((SAVE_PARAM *)pArg)->hdb, szQuery);
 }
@@ -732,13 +732,13 @@ static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
 
 BOOL NetObj::SaveACLToDB(DB_HANDLE hdb)
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    BOOL bSuccess = FALSE;
    SAVE_PARAM sp;
 
    // Save access list
    LockACL();
-   sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), "DELETE FROM acl WHERE object_id=%d", m_dwId);
    if (DBQuery(hdb, szQuery))
    {
       sp.dwObjectId = m_dwId;

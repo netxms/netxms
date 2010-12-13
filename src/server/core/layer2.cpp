@@ -68,10 +68,10 @@ static DWORD SONMPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpo
 
 	// Get interface
    pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
-   _tcscpy(szOid, ".1.3.6.1.4.1.45.1.6.13.2.1.1.1");	// Slot
+   _tcscpy(szOid, _T(".1.3.6.1.4.1.45.1.6.13.2.1.1.1"));	// Slot
    _tcscat(szOid, szSuffix);
 	pRqPDU->bindVariable(new SNMP_Variable(szOid));
-   _tcscpy(szOid, ".1.3.6.1.4.1.45.1.6.13.2.1.1.2");	// Port
+   _tcscpy(szOid, _T(".1.3.6.1.4.1.45.1.6.13.2.1.1.2"));	// Port
    _tcscat(szOid, szSuffix);
 	pRqPDU->bindVariable(new SNMP_Variable(szOid));
    dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
@@ -79,8 +79,8 @@ static DWORD SONMPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpo
 
    if (dwResult == SNMP_ERR_SUCCESS)
    {
-		_stprintf(szIfName, _T("%d/%d"), pRespPDU->getVariable(0)->GetValueAsUInt(),
-		          pRespPDU->getVariable(1)->GetValueAsUInt());
+		_sntprintf(szIfName, MAX_CONNECTOR_NAME, _T("%d/%d"), pRespPDU->getVariable(0)->GetValueAsUInt(),
+		           pRespPDU->getVariable(1)->GetValueAsUInt());
 		((PeerList *)pArg)->Add(ntohl(pVar->GetValueAsUInt()), szIfName);
       delete pRespPDU;
 	}
@@ -106,7 +106,7 @@ static DWORD CDPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport
 
 	// Get interface
    pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
-   _tcscpy(szOid, ".1.3.6.1.4.1.9.9.23.1.2.1.1.7");	// Remote port name
+   _tcscpy(szOid, _T(".1.3.6.1.4.1.9.9.23.1.2.1.1.7"));	// Remote port name
    _tcscat(szOid, szSuffix);
 	pRqPDU->bindVariable(new SNMP_Variable(szOid));
    dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
@@ -114,7 +114,7 @@ static DWORD CDPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport
 
    if (dwResult == SNMP_ERR_SUCCESS)
    {
-		((PeerList *)pArg)->Add(ntohl(inet_addr(pVar->GetValueAsIPAddr(szIpAddr))),
+		((PeerList *)pArg)->Add(ntohl(_t_inet_addr(pVar->GetValueAsIPAddr(szIpAddr))),
 		                        pRespPDU->getVariable(0)->GetValueAsString(szIfName, MAX_CONNECTOR_NAME));
       delete pRespPDU;
 	}
@@ -137,12 +137,12 @@ DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent, int n
 	pList = new PeerList;
 	if (pRoot->getFlags() & NF_IS_SONMP)
 	{
-		if (pRoot->CallSnmpEnumerate(".1.3.6.1.4.1.45.1.6.13.2.1.1.3", SONMPTopoHandler, pList) != SNMP_ERR_SUCCESS)
+		if (pRoot->CallSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), SONMPTopoHandler, pList) != SNMP_ERR_SUCCESS)
 			goto cleanup;
 	}
 	else if (pRoot->getFlags() & NF_IS_CDP)
 	{
-		if (pRoot->CallSnmpEnumerate(".1.3.6.1.4.1.9.9.23.1.2.1.1.4", CDPTopoHandler, pList) != SNMP_ERR_SUCCESS)
+		if (pRoot->CallSnmpEnumerate(_T(".1.3.6.1.4.1.9.9.23.1.2.1.1.4"), CDPTopoHandler, pList) != SNMP_ERR_SUCCESS)
 			goto cleanup;
 	}
 
