@@ -404,10 +404,10 @@ public:
    DWORD GetValueLength(void) { return m_dwValueLength; }
    const BYTE *GetValue(void) { return m_pValue; }
 
-   DWORD GetValueAsUInt(void);
-   LONG GetValueAsInt(void);
+   DWORD GetValueAsUInt();
+   LONG GetValueAsInt();
    TCHAR *GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize);
-   SNMP_ObjectId *GetValueAsObjectId(void);
+   SNMP_ObjectId *GetValueAsObjectId();
    TCHAR *GetValueAsMACAddr(TCHAR *pszBuffer);
    TCHAR *GetValueAsIPAddr(TCHAR *pszBuffer);
 

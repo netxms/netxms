@@ -284,7 +284,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 // Initialize data collection subsystem
 //
 
-BOOL InitDataCollector(void)
+BOOL InitDataCollector()
 {
    int i, iNumCollectors;
 

@@ -175,12 +175,14 @@ void Situation::SaveToDatabase()
 {
 	DB_RESULT result;
 	TCHAR *query, *escName, *escComments;
+	size_t qlen;
 	BOOL isUpdate;
 	
 	escName = EncodeSQLString(CHECK_NULL_EX(m_name));
 	escComments = EncodeSQLString(CHECK_NULL_EX(m_comments));
-	query = (TCHAR *)malloc((_tcslen(escName) + _tcslen(escComments) + 256) * sizeof(TCHAR));
-	_stprintf(query, _T("SELECT id FROM situations WHERE id=%d"), m_id);
+	qlen = _tcslen(escName) + _tcslen(escComments) + 256;
+	query = (TCHAR *)malloc(qlen * sizeof(TCHAR));
+	_sntprintf(query, qlen, _T("SELECT id FROM situations WHERE id=%d"), m_id);
 	result = DBSelect(g_hCoreDB, query);
 	if (result != NULL)
 	{
@@ -192,11 +194,11 @@ void Situation::SaveToDatabase()
 		isUpdate = FALSE;
 	}
 	if (isUpdate)
-		_stprintf(query, _T("UPDATE situations SET name='%s',comments='%s' WHERE id=%d"),
-		          escName, escComments, m_id);
+		_sntprintf(query, qlen, _T("UPDATE situations SET name='%s',comments='%s' WHERE id=%d"),
+		           escName, escComments, m_id);
 	else
-		_stprintf(query, _T("INSERT INTO situations (id,name,comments) VALUES (%d,'%s','%s')"),
-		          m_id, escName, escComments);
+		_sntprintf(query, qlen, _T("INSERT INTO situations (id,name,comments) VALUES (%d,'%s','%s')"),
+		           m_id, escName, escComments);
 	free(escName);
 	free(escComments);
 	DBQuery(g_hCoreDB, query);

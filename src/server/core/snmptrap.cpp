@@ -619,7 +619,7 @@ static BOOL SaveParameterMapping(NXC_TRAP_CFG_ENTRY *pTrap)
          }
          else
          {
-            _stprintf(szOID, _T("POS:%d"), pTrap->pMaps[i].dwOidLen & 0x7FFFFFFF);
+            _sntprintf(szOID, 1024, _T("POS:%d"), pTrap->pMaps[i].dwOidLen & 0x7FFFFFFF);
          }
          pszEscDescr = EncodeSQLString(pTrap->pMaps[i].szDescription);
          _sntprintf(szQuery, 1024, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,")

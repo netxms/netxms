@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -108,10 +108,10 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    if (bNewObject)
    {
       _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,"
-                                    "service_type,ip_bind_addr,ip_proto,ip_port,"
-                                    "check_request,check_responce,poller_node_id,"
-												"required_polls) VALUES "
-                                    "(%d,%d,%d,'%s',%d,%d,'%s','%s',%d,%d)"),
+                                    _T("service_type,ip_bind_addr,ip_proto,ip_port,")
+                                    _T("check_request,check_responce,poller_node_id,")
+												_T("required_polls) VALUES ")
+                                    _T("(%d,%d,%d,'%s',%d,%d,'%s','%s',%d,%d)")),
                  m_dwId, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
                  pszEscResponse, m_dwPollerNode, m_iRequiredPollCount);
@@ -119,10 +119,10 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    else
    {
       _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%d,"
-                                    "service_type=%d,ip_bind_addr='%s',"
-                                    "ip_proto=%d,ip_port=%d,check_request='%s',"
-                                    "check_responce='%s',poller_node_id=%d,"
-												"required_polls=%d WHERE id=%d"),
+                                    _T("service_type=%d,ip_bind_addr='%s',")
+                                    _T("ip_proto=%d,ip_port=%d,check_request='%s',")
+                                    _T("check_responce='%s',poller_node_id=%d,")
+												_T("required_polls=%d WHERE id=%d")),
                  m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
                  pszEscResponse, m_dwPollerNode, m_iRequiredPollCount, m_dwId);
@@ -159,8 +159,8 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
       return FALSE;
 
    _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,"
-                               "ip_bind_addr,ip_proto,ip_port,check_request,check_responce,"
-                               "poller_node_id,required_polls FROM network_services WHERE id=%d"), dwId);
+                               _T("ip_bind_addr,ip_proto,ip_port,check_request,check_responce,")
+                               _T("poller_node_id,required_polls FROM network_services WHERE id=%d")), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -367,8 +367,8 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       return;     // Service without host node, which is VERY strange
    }
 
-   SendPollerMsg(dwRqId, "   Starting status poll on network service %s\r\n"
-                         "      Current status is %s\r\n",
+   SendPollerMsg(dwRqId, _T("   Starting status poll on network service %s\r\n")
+                         _T("      Current status is %s\r\n"),
                  m_szName, g_szStatusTextSmall[m_iStatus]);
 
    if (m_dwPollerNode != 0)
@@ -389,7 +389,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       TCHAR szBuffer[16];
       DWORD dwStatus;
 
-      SendPollerMsg(dwRqId, "      Polling service from node %s [%s]\r\n",
+      SendPollerMsg(dwRqId, _T("      Polling service from node %s [%s]\r\n"),
                     pNode->Name(), IpToStr(pNode->IpAddr(), szBuffer));
       if (pNode->CheckNetworkService(&dwStatus, 
                                      (m_dwIpAddr == 0) ? m_pHostNode->IpAddr() : m_dwIpAddr,
@@ -397,11 +397,11 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
                                      m_pszRequest, m_pszResponse) == ERR_SUCCESS)
       {
          newStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
-         SendPollerMsg(dwRqId, "      Agent reports service status [%d]\r\n", dwStatus);
+         SendPollerMsg(dwRqId, _T("      Agent reports service status [%d]\r\n"), dwStatus);
       }
       else
       {
-         SendPollerMsg(dwRqId, "      Unable to check service status due to agent or communication error\r\n");
+         SendPollerMsg(dwRqId, _T("      Unable to check service status due to agent or communication error\r\n"));
          newStatus = STATUS_UNKNOWN;
       }
 
@@ -410,7 +410,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    }
    else
    {
-      SendPollerMsg(dwRqId, "      Unable to find node object for poll\r\n");
+      SendPollerMsg(dwRqId, _T("      Unable to find node object for poll\r\n"));
       newStatus = STATUS_UNKNOWN;
    }
 

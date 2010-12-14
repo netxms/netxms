@@ -1070,30 +1070,85 @@ int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *fo
 static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
 {
 	WCHAR *fmt, *p;
+	int state = 0;
+	bool hmod;
 
 	fmt = wcsdup(oldFormat);
 	for(p = fmt; *p != 0; p++)
 	{
-		if ((*p == _T('%')) && (*(p + 1) != 0))
+		switch(state)
 		{
-			p++;
-			switch(*p)
-			{
-				case _T('s'):
-					*p = _T('S');
-					break;
-				case _T('S'):
-					*p = _T('s');
-					break;
-				case _T('c'):
-					*p = _T('C');
-					break;
-				case _T('C'):
-					*p = _T('c');
-					break;
-				default:
-					break;
-			}
+			case 0:	// Normal text
+				if (*p == L'%')
+				{
+					state = 1;
+					hmod = false;
+				}
+				break;
+			case 1:	// Format start
+				switch(*p)
+				{
+					case L's':
+						if (hmod)
+						{
+							memmove(p - 1, p, wcslen(p - 1) * sizeof(TCHAR));
+						}
+						else
+						{
+							*p = L'S';
+						}
+						state = 0;
+						break;
+					case L'S':
+						*p = L's';
+						state = 0;
+						break;
+					case L'c':
+						if (hmod)
+						{
+							memmove(p - 1, p, wcslen(p - 1) * sizeof(TCHAR));
+						}
+						else
+						{
+							*p = L'C';
+						}
+						state = 0;
+						break;
+					case L'C':
+						*p = L'c';
+						state = 0;
+						break;
+					case L'.':	// All this characters could be part of format specifier	
+					case L'*':	// and has no interest for us
+					case L'+':
+					case L'-':
+					case L' ':
+					case L'#':
+					case L'0':
+					case L'1':
+					case L'2':
+					case L'3':
+					case L'4':
+					case L'5':
+					case L'6':
+					case L'7':
+					case L'8':
+					case L'9':
+					case L'l':
+					case L'L':
+					case L'F':
+					case L'N':
+					case L'w':
+						break;
+					case L'h':	// check for %hs
+						hmod = true;
+						break;
+					default:		// All other cahacters means end of format
+						state = 0;
+						break;
+
+				}
+				break;
 		}
 	}
 	return fmt;

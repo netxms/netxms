@@ -1,4 +1,11 @@
 ***************
+* 217 ==> 218 *
+***************
+
+- All text columns in table "snmp_communities" converted from # encoded format
+
+
+***************
 * 216 ==> 217 *
 ***************
 

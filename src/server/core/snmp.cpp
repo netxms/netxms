@@ -108,7 +108,7 @@ DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags)
 //
 
 DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
-              const char *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
+              const TCHAR *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
               DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult)
 {
    SNMP_PDU *pRqPDU, *pRespPDU;
@@ -211,7 +211,7 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
 // Enumerate multiple values by walking throgh MIB, starting at given root
 //
 
-DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szRootOid,
+DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
                     DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose)
 {
@@ -353,11 +353,11 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
                      sizeof(INTERFACE_INFO) * ((INTERFACE_LIST *)pArg)->iNumEntries);
                memcpy(&(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1]), 
                       &(((INTERFACE_LIST *)pArg)->pInterfaces[i]), sizeof(INTERFACE_INFO));
-               if (strlen(((INTERFACE_LIST *)pArg)->pInterfaces[i].szName) < MAX_OBJECT_NAME - 6)
+               if (_tcslen(((INTERFACE_LIST *)pArg)->pInterfaces[i].szName) < MAX_OBJECT_NAME - 6)
                {
                   TCHAR szBuffer[8];
 
-                  sprintf(szBuffer,_T(":%d"), ((INTERFACE_LIST *)pArg)->pInterfaces[i].iNumSecondary++);
+                  _sntprintf(szBuffer, 8, _T(":%d"), ((INTERFACE_LIST *)pArg)->pInterfaces[i].iNumSecondary++);
                   _tcscat(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1].szName, szBuffer);
                }
                i = ((INTERFACE_LIST *)pArg)->iNumEntries - 1;
@@ -417,7 +417,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          // Get interface alias if needed
          if (useAliases > 0)
          {
-		      sprintf(szOid, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), pIfList->pInterfaces[i].dwIndex);
+		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), pIfList->pInterfaces[i].dwIndex);
 		      if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
 		                   pIfList->pInterfaces[i].szName, MAX_DB_STRING,
 		                   FALSE, FALSE) != SNMP_ERR_SUCCESS)
@@ -431,12 +431,12 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          }
 
 			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifTable
-         sprintf(szOid, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), pIfList->pInterfaces[i].dwIndex);
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), pIfList->pInterfaces[i].dwIndex);
          if (!useIfXTable ||
 				 (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
                       szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS))
          {
-		      sprintf(szOid, _T(".1.3.6.1.2.1.2.2.1.2.%d"), pIfList->pInterfaces[i].dwIndex);
+		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), pIfList->pInterfaces[i].dwIndex);
 		      if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
 		                  szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS)
 		         break;
@@ -485,7 +485,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          }
 
          // Interface type
-         sprintf(szOid, _T(".1.3.6.1.2.1.2.2.1.3.%d"), pIfList->pInterfaces[i].dwIndex);
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), pIfList->pInterfaces[i].dwIndex);
          if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
                       &pIfList->pInterfaces[i].dwType, sizeof(DWORD),
                       FALSE, FALSE) != SNMP_ERR_SUCCESS)
@@ -494,7 +494,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 			}
 
          // MAC address
-         sprintf(szOid, _T(".1.3.6.1.2.1.2.2.1.6.%d"), pIfList->pInterfaces[i].dwIndex);
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), pIfList->pInterfaces[i].dwIndex);
          memset(szBuffer, 0, MAC_ADDR_LENGTH);
          if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
                       szBuffer, 256, FALSE, TRUE) == SNMP_ERR_SUCCESS)
@@ -729,7 +729,7 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 	// Check original SNMP V3 settings, if set
 	if ((originalContext != NULL) && (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM))
 	{
-		DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %s/%d:%d"), originalContext->getUser(),
+		DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %hs/%d:%d"), originalContext->getUser(),
 		          originalContext->getAuthMethod(), originalContext->getPrivMethod());
 		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
 		if (SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
@@ -744,19 +744,19 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 	DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
 	if (hResult != NULL)
 	{
-		TCHAR name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
+		char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
 		SNMP_SecurityContext *ctx;
 		int i, count = DBGetNumRows(hResult);
 
 		for(i = 0; i < count; i++)
 		{
-			DBGetField(hResult, i, 0, name, MAX_DB_STRING);
-			DBGetField(hResult, i, 3, authPasswd, MAX_DB_STRING);
-			DBGetField(hResult, i, 4, privPasswd, MAX_DB_STRING);
+			DBGetFieldA(hResult, i, 0, name, MAX_DB_STRING);
+			DBGetFieldA(hResult, i, 3, authPasswd, MAX_DB_STRING);
+			DBGetFieldA(hResult, i, 4, privPasswd, MAX_DB_STRING);
 			ctx = new SNMP_SecurityContext(name, authPasswd, privPasswd,
 			                               DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
 			pTransport->setSecurityContext(ctx);
-			DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %s/%d:%d"), ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
+			DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %hs/%d:%d"), ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
 			if (SnmpGet(SNMP_VERSION_3, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
 							0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 			{
@@ -788,7 +788,8 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext)
 {
 	int i, count, snmpVer = SNMP_VERSION_2C;
-	char defCommunity[MAX_COMMUNITY_LENGTH], buffer[1024], temp[256];
+	TCHAR buffer[1024];
+	char defCommunity[MAX_COMMUNITY_LENGTH];
 	DB_RESULT hResult;
 
 	// Check for V3 USM
@@ -799,13 +800,13 @@ SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *ver
 		return securityContext;
 	}
 
-	ConfigReadStr(_T("DefaultCommunityString"), defCommunity, MAX_COMMUNITY_LENGTH, _T("public"));
+	ConfigReadStrA(_T("DefaultCommunityString"), defCommunity, MAX_COMMUNITY_LENGTH, "public");
 
 restart_check:
 	// Check current community first
 	if ((originalContext != NULL) && (originalContext->getSecurityModel() != SNMP_SECURITY_MODEL_USM))
 	{
-		DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, originalContext->getCommunity());
+		DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, originalContext->getCommunity());
 		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
 		if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
 						0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
@@ -829,15 +830,15 @@ restart_check:
 	hResult = DBSelect(g_hCoreDB, _T("SELECT community FROM snmp_communities"));
 	if (hResult != NULL)
 	{
+		char temp[256];
+
 		count = DBGetNumRows(hResult);
 		for(i = 0; i < count; i++)
 		{
-			DBGetField(hResult, i, 0, temp, 256);
-			DecodeSQLString(temp);
-			DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, temp);
+			DBGetFieldA(hResult, i, 0, temp, 256);
+			DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
 			pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
-			if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
-							0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+			if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
 			{
 				*version = snmpVer;
 				break;

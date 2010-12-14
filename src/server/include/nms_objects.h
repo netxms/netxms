@@ -318,9 +318,9 @@ public:
    void DeleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
    // Debug methods
-   const char *ParentList(char *szBuffer);
-   const char *ChildList(char *szBuffer);
-   const char *TimeStampAsText(void) { return ctime((time_t *)&m_dwTimeStamp); }
+   const char *ParentList(TCHAR *szBuffer);
+   const char *ChildList(TCHAR *szBuffer);
+   const char *TimeStampAsText() { return ctime((time_t *)&m_dwTimeStamp); }
 };
 
 

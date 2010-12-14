@@ -440,7 +440,7 @@ void NetObj::Delete(BOOL bIndexLocked)
 {
    DWORD i;
 
-   DbgPrintf(4, "Deleting object %d [%s]", m_dwId, m_szName);
+   DbgPrintf(4, _T("Deleting object %d [%s]"), m_dwId, m_szName);
 
 	// Prevent object change propagation util it marked as deleted
 	// (to prevent object re-appearance in GUI if client hides object
@@ -452,7 +452,7 @@ void NetObj::Delete(BOOL bIndexLocked)
    PrepareForDeletion();
 
    // Remove references to this object from parent objects
-   DbgPrintf(5, "NetObj::Delete(): clearing parent list for object %d", m_dwId);
+   DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_dwId);
    LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
    {
@@ -465,7 +465,7 @@ void NetObj::Delete(BOOL bIndexLocked)
    UnlockParentList();
 
    // Delete references to this object from child objects
-   DbgPrintf(5, "NetObj::Delete(): clearing child list for object %d", m_dwId);
+   DbgPrintf(5, _T("NetObj::Delete(): clearing child list for object %d"), m_dwId);
    LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
    {
@@ -484,11 +484,11 @@ void NetObj::Delete(BOOL bIndexLocked)
    Modify();
    UnlockData();
 
-   DbgPrintf(5, "NetObj::Delete(): deleting object %d from indexes", m_dwId);
+   DbgPrintf(5, _T("NetObj::Delete(): deleting object %d from indexes"), m_dwId);
    NetObjDeleteFromIndexes(this);
 
    // Notify all other objects about object deletion
-   DbgPrintf(5, "NetObj::Delete(): calling OnObjectDelete(%d)", m_dwId);
+   DbgPrintf(5, _T("NetObj::Delete(): calling OnObjectDelete(%d)"), m_dwId);
    if (!bIndexLocked)
       RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
@@ -499,7 +499,7 @@ void NetObj::Delete(BOOL bIndexLocked)
    if (!bIndexLocked)
       RWLockUnlock(g_rwlockIdIndex);
 
-   DbgPrintf(4, "Object %d successfully deleted", m_dwId);
+   DbgPrintf(4, _T("Object %d successfully deleted"), m_dwId);
 }
 
 
@@ -516,7 +516,7 @@ void NetObj::OnObjectDelete(DWORD dwObjectId)
 // Print childs IDs
 //
 
-const char *NetObj::ChildList(char *szBuffer)
+const char *NetObj::ChildList(TCHAR *szBuffer)
 {
    DWORD i;
    char *pBuf = szBuffer;
@@ -525,7 +525,7 @@ const char *NetObj::ChildList(char *szBuffer)
    LockChildList(FALSE);
    for(i = 0, pBuf = szBuffer; i < m_dwChildCount; i++)
    {
-      sprintf(pBuf, "%d ", m_pChildList[i]->Id());
+      _sntprintf(pBuf, 10, _T("%d "), m_pChildList[i]->Id());
       while(*pBuf)
          pBuf++;
    }
@@ -540,7 +540,7 @@ const char *NetObj::ChildList(char *szBuffer)
 // Print parents IDs
 //
 
-const char *NetObj::ParentList(char *szBuffer)
+const char *NetObj::ParentList(TCHAR *szBuffer)
 {
    DWORD i;
    char *pBuf = szBuffer;
@@ -549,7 +549,7 @@ const char *NetObj::ParentList(char *szBuffer)
    LockParentList(FALSE);
    for(i = 0; i < m_dwParentCount; i++)
    {
-      sprintf(pBuf, "%d ", m_pParentList[i]->Id());
+      _sntprintf(pBuf, 10, _T("%d "), m_pParentList[i]->Id());
       while(*pBuf)
          pBuf++;
    }
@@ -683,7 +683,7 @@ BOOL NetObj::LoadACLFromDB(void)
    BOOL bSuccess = FALSE;
 
    // Load access list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), "SELECT user_id,access_rights FROM acl WHERE object_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT user_id,access_rights FROM acl WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -720,7 +720,7 @@ static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
 {
    TCHAR szQuery[256];
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), "INSERT INTO acl (object_id,user_id,access_rights) VALUES (%d,%d,%d)",
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO acl (object_id,user_id,access_rights) VALUES (%d,%d,%d)"),
            ((SAVE_PARAM *)pArg)->dwObjectId, dwUserId, dwAccessRights);
    DBQuery(((SAVE_PARAM *)pArg)->hdb, szQuery);
 }
@@ -738,7 +738,7 @@ BOOL NetObj::SaveACLToDB(DB_HANDLE hdb)
 
    // Save access list
    LockACL();
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), "DELETE FROM acl WHERE object_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM acl WHERE object_id=%d"), m_dwId);
    if (DBQuery(hdb, szQuery))
    {
       sp.dwObjectId = m_dwId;

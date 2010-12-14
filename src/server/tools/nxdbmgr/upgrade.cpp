@@ -249,6 +249,20 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V217 to V218
+//
+
+static BOOL H_UpgradeFromV217(int currVersion, int newVersion)
+{
+	CHK_EXEC(SetColumnNullable(_T("snmp_communities"), _T("community"), _T("varchar(255)")));
+	CHK_EXEC(ConvertStrings(_T("snmp_communities"), _T("id"), _T("community")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='218' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V216 to V217
 //
 
@@ -4973,6 +4987,7 @@ static struct
 	{ 214, 215, H_UpgradeFromV214 },
 	{ 215, 216, H_UpgradeFromV215 },
 	{ 216, 217, H_UpgradeFromV216 },
+	{ 217, 218, H_UpgradeFromV217 },
    { 0, NULL }
 };
 

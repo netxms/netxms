@@ -9384,7 +9384,6 @@ void ClientSession::SendCommunityList(DWORD dwRqId)
 			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
 			{
 				DBGetField(hResult, i, 0, buffer, 256);
-				DecodeSQLString(buffer);
 				msg.SetVariable(id++, buffer);
 			}
 			DBFreeResult(hResult);
@@ -9411,7 +9410,7 @@ void ClientSession::SendCommunityList(DWORD dwRqId)
 void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-	TCHAR value[256], *escValue, query[1024];
+	TCHAR value[256], query[1024];
 	int i, count;
 	DWORD id;
 
@@ -9427,9 +9426,8 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
 			{
 				pRequest->GetVariableStr(id++, value, 256);
-				escValue = EncodeSQLString(value);
-				_sntprintf(query, 1024, _T("INSERT INTO snmp_communities (id,community) VALUES(%d,'%s')"), i + 1, escValue);
-				free(escValue);
+				String escValue = DBPrepareString(g_hCoreDB, value);
+				_sntprintf(query, 1024, _T("INSERT INTO snmp_communities (id,community) VALUES(%d,%s)"), i + 1, (const TCHAR *)escValue);
 				if (!DBQuery(g_hCoreDB, query))
 					break;
 			}

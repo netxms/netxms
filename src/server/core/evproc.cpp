@@ -134,9 +134,9 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       {
          TCHAR szQuery[8192];
 
-         snprintf(szQuery, 8192, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
-                                 _T("event_source,event_severity,event_message,root_event_id,user_tag) ")
-                                 _T("VALUES (") INT64_FMT _T(",%d,") TIME_T_FMT _T(",%d,%d,%s,") INT64_FMT _T(",%s)"), 
+         _sntprintf(szQuery, 8192, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
+                                   _T("event_source,event_severity,event_message,root_event_id,user_tag) ")
+                                   _T("VALUES (") INT64_FMT _T(",%d,") TIME_T_FMT _T(",%d,%d,%s,") INT64_FMT _T(",%s)"), 
                   pEvent->getId(), pEvent->getCode(), pEvent->getTimeStamp(),
                   pEvent->getSourceId(), pEvent->getSeverity(),
 						(const TCHAR *)DBPrepareString(g_hCoreDB, pEvent->getMessage(), EVENTLOG_MAX_MESSAGE_SIZE),
