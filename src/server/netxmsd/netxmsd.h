@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netxmsd.h
+** File: netxmsd.h
 **
 **/
 
@@ -28,15 +28,15 @@
 
 #ifdef _WIN32
 
-void InitService(void);
-void InstallService(TCHAR *pszExecName, TCHAR *pszDllName,
-                    TCHAR *pszLogin, TCHAR *pszPassword);
-void RemoveService(void);
-void CheckServiceConfig(void);
-void StartCoreService(void);
-void StopCoreService(void);
-void InstallEventSource(TCHAR *pszPath);
-void RemoveEventSource(void);
+void InitService();
+void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName,
+                    const TCHAR *pszLogin, const TCHAR *pszPassword);
+void RemoveService();
+void CheckServiceConfig();
+void StartCoreService();
+void StopCoreService();
+void InstallEventSource(const TCHAR *pszPath);
+void RemoveEventSource();
 
 #endif   /* _WIN32 */
 

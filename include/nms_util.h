@@ -521,6 +521,9 @@ extern "C"
 
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
+#ifdef UNICODE
+   char LIBNETXMS_EXPORTABLE *IpToStrA(DWORD dwAddr, char *szBuffer);
+#endif
    DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
 #ifdef UNICODE
    DWORD LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName);

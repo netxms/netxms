@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -817,7 +817,7 @@ restart_check:
 	}
 
 	// Check default community
-	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, defCommunity);
+	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
 	pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
 	if (SnmpGet(snmpVer, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL,
 		         0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)

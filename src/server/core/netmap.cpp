@@ -262,7 +262,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
       }
 
 		// Load links
-      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2 FROM network_map_elements WHERE map_id=%d"), m_dwId);
+      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2 FROM network_map_links WHERE map_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, query);
       if (hResult != NULL)
       {

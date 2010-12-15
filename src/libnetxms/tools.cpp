@@ -78,11 +78,26 @@ TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer)
    static TCHAR szInternalBuffer[32];
    TCHAR *szBufPtr;
 
-   szBufPtr = szBuffer == NULL ? szInternalBuffer : szBuffer;
+   szBufPtr = (szBuffer == NULL) ? szInternalBuffer : szBuffer;
    _sntprintf(szBufPtr, 32, _T("%d.%d.%d.%d"), (int)(dwAddr >> 24), (int)((dwAddr >> 16) & 255),
               (int)((dwAddr >> 8) & 255), (int)(dwAddr & 255));
    return szBufPtr;
 }
+
+#ifdef UNICODE
+
+char LIBNETXMS_EXPORTABLE *IpToStrA(DWORD dwAddr, char *szBuffer)
+{
+   static char szInternalBuffer[32];
+   char *szBufPtr;
+
+   szBufPtr = (szBuffer == NULL) ? szInternalBuffer : szBuffer;
+   snprintf(szBufPtr, 32, "%d.%d.%d.%d", (int)(dwAddr >> 24), (int)((dwAddr >> 16) & 255),
+            (int)((dwAddr >> 8) & 255), (int)(dwAddr & 255));
+   return szBufPtr;
+}
+
+#endif
 
 
 //

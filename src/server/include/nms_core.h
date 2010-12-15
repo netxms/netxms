@@ -587,7 +587,7 @@ public:
 
 	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->Put(pUpdate); }
    void onNewEvent(Event *pEvent);
-   void onSyslogMessage(NX_LOG_RECORD *pRec);
+   void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
    void onNewSNMPTrap(CSCPMessage *pMsg);
    void onObjectChange(NetObj *pObject);
    void onUserDBUpdate(int code, DWORD id, UserDatabaseObject *user);
@@ -721,7 +721,7 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
 DWORD DeleteObjectToolFromDB(DWORD dwToolId);
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
-void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
+void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
 
 void EscapeString(String &str);

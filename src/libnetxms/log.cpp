@@ -405,7 +405,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                                  (LPTSTR)&pMsg, 0, NULL) > 0)
                {
                   pMsg[_tcscspn(pMsg, _T("\r\n"))] = 0;
-                  strings[numStrings] = (TCHAR *)malloc(_tcslen(pMsg) + 1);
+                  strings[numStrings] = (TCHAR *)malloc((_tcslen(pMsg) + 1) * sizeof(TCHAR));
                   _tcscpy(strings[numStrings], pMsg);
                   LocalFree(pMsg);
                }

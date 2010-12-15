@@ -151,12 +151,12 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
 // Parse syslog message
 //
 
-static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
+static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
 {
    int i, nLen, nPos = 0;
    char *pCurr = psMsg;
 
-   memset(pRec, 0, sizeof(NX_LOG_RECORD));
+   memset(pRec, 0, sizeof(NX_SYSLOG_RECORD));
 
    // Parse PRI part
    if (*psMsg == '<')
@@ -233,7 +233,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
 // dwSourceIP is an IP address from which we receive message
 //
 
-static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
+static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, DWORD dwSourceIP)
 {
    Node *pNode = NULL;
    DWORD dwIpAddr;
@@ -246,10 +246,17 @@ static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
    }
    else
    {
-      dwIpAddr = ResolveHostName(pRec->szHostName);
+      dwIpAddr = ResolveHostNameA(pRec->szHostName);
 		if ((dwIpAddr == INADDR_NONE) || (dwIpAddr == INADDR_ANY))
 		{
+#ifdef UNICODE
+			WCHAR wname[MAX_OBJECT_NAME];
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pRec->szHostName, -1, wname, MAX_OBJECT_NAME);
+			wname[MAX_OBJECT_NAME - 1] = 0;
+			pNode = (Node *)FindObjectByName(wname, OBJECT_NODE);
+#else
 			pNode = (Node *)FindObjectByName(pRec->szHostName, OBJECT_NODE);
+#endif
 			if (pNode == NULL)
 				dwIpAddr = dwSourceIP;
 		}
@@ -263,12 +270,19 @@ static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
    {
       pRec->dwSourceObject = pNode->Id();
       if (pRec->szHostName[0] == 0)
+		{
+#ifdef UNICODE
+			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pNode->Name(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, NULL, NULL);
+			pRec->szHostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
+#else
          nx_strncpy(pRec->szHostName, pNode->Name(), MAX_SYSLOG_HOSTNAME_LEN);
+#endif
+		}
    }
    else
    {
       if (pRec->szHostName[0] == 0)
-         IpToStr(dwSourceIP, pRec->szHostName);
+         IpToStrA(dwSourceIP, pRec->szHostName);
    }
 }
 
@@ -280,7 +294,7 @@ static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
 static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
 {
    if (pSession->isAuthenticated())
-      pSession->onSyslogMessage((NX_LOG_RECORD *)pArg);
+      pSession->onSyslogMessage((NX_SYSLOG_RECORD *)pArg);
 }
 
 
@@ -290,7 +304,7 @@ static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
 
 static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 {
-   NX_LOG_RECORD record;
+   NX_SYSLOG_RECORD record;
    TCHAR szQuery[4096];
 
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
@@ -303,7 +317,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
                  _T("(") UINT64_FMT _T(",") TIME_T_FMT _T(",%d,%d,%d,'%s','%s',%s)"),
                  record.qwMsgId, record.tmTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
-					  record.szHostName, record.szTag, (const TCHAR *)DBPrepareString(g_hCoreDB, record.szMessage));
+					  record.szHostName, record.szTag, (const TCHAR *)DBPrepareStringA(g_hCoreDB, record.szMessage));
       DBQuery(g_hCoreDB, szQuery);
 
       // Send message to all connected clients
@@ -566,10 +580,10 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
 
 
 //
-// Create NXCP message from NX_LOG_RECORd structure
+// Create NXCP message from NX_SYSLOG_RECORD structure
 //
 
-void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec)
+void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
 {
    DWORD dwId = VID_SYSLOG_MSG_BASE;
 
@@ -579,9 +593,9 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec)
    pMsg->SetVariable(dwId++, (WORD)pRec->nFacility);
    pMsg->SetVariable(dwId++, (WORD)pRec->nSeverity);
    pMsg->SetVariable(dwId++, pRec->dwSourceObject);
-   pMsg->SetVariable(dwId++, pRec->szHostName);
-   pMsg->SetVariable(dwId++, pRec->szTag);
-   pMsg->SetVariable(dwId++, pRec->szMessage);
+   pMsg->SetVariableFromMBString(dwId++, pRec->szHostName);
+   pMsg->SetVariableFromMBString(dwId++, pRec->szTag);
+	pMsg->SetVariableFromMBString(dwId++, pRec->szMessage);
 }
 
 

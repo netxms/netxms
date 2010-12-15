@@ -605,7 +605,7 @@ void ClientSession::UpdateThread()
          case INFO_CAT_SYSLOG_MSG:
             MutexLock(m_mutexSendSyslog, INFINITE);
             msg.SetCode(CMD_SYSLOG_RECORDS);
-            CreateMessageFromSyslogMsg(&msg, (NX_LOG_RECORD *)pUpdate->pData);
+            CreateMessageFromSyslogMsg(&msg, (NX_SYSLOG_RECORD *)pUpdate->pData);
             sendMessage(&msg);
             MutexUnlock(m_mutexSendSyslog);
             free(pUpdate->pData);
@@ -6649,7 +6649,7 @@ void ClientSession::KillSession(CSCPMessage *pRequest)
 // Handler for new syslog messages
 //
 
-void ClientSession::onSyslogMessage(NX_LOG_RECORD *pRec)
+void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
 {
    UPDATE_INFO *pUpdate;
 
@@ -6657,7 +6657,7 @@ void ClientSession::onSyslogMessage(NX_LOG_RECORD *pRec)
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
-      pUpdate->pData = nx_memdup(pRec, sizeof(NX_LOG_RECORD));
+      pUpdate->pData = nx_memdup(pRec, sizeof(NX_SYSLOG_RECORD));
       m_pUpdateQueue->Put(pUpdate);
    }
 }

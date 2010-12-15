@@ -43,42 +43,42 @@ BOOL g_bCheckDB = FALSE;
 // Help text
 //
 
-static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
-                        "Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 NetXMS Team\n\n"
-                        "Usage: netxmsd [<options>]\n\n"
-                        "Valid options are:\n"
-                        "   -e          : Run database check on startup\n"
-                        "   -c <file>   : Set non-default configuration file\n"
-                        "               : Default is " DEFAULT_CONFIG_FILE "\n"
-                        "   -d          : Run as daemon/service\n"
-                        "   -D <level>  : Set debug level (valid levels are 0..9)\n"
-                        "   -h          : Display help and exit\n"
+static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T("\n")
+                           _T("Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 NetXMS Team\n\n")
+                           _T("Usage: netxmsd [<options>]\n\n")
+                           _T("Valid options are:\n")
+                           _T("   -e          : Run database check on startup\n")
+                           _T("   -c <file>   : Set non-default configuration file\n")
+                           _T("               : Default is ") DEFAULT_CONFIG_FILE _T("\n")
+                           _T("   -d          : Run as daemon/service\n")
+                           _T("   -D <level>  : Set debug level (valid levels are 0..9)\n")
+                           _T("   -h          : Display help and exit\n")
 #ifdef _WIN32
-                        "   -I          : Install Windows service\n"
-                        "   -L <user>   : Login name for service account.\n"
-                        "   -P <passwd> : Password for service account.\n"
+                           _T("   -I          : Install Windows service\n")
+                           _T("   -L <user>   : Login name for service account.\n")
+                           _T("   -P <passwd> : Password for service account.\n")
 #else
-                        "   -p <file>   : Specify pid file.\n"
+                           _T("   -p <file>   : Specify pid file.\n")
 #endif
 #ifdef _WIN32
-                        "   -R          : Remove Windows service\n"
-                        "   -s          : Start Windows service\n"
-                        "   -S          : Stop Windows service\n"
+                           _T("   -R          : Remove Windows service\n")
+                           _T("   -s          : Start Windows service\n")
+                           _T("   -S          : Stop Windows service\n")
 #endif
-                        "   -v          : Display version and exit\n"
-                        "\n";
+                           _T("   -v          : Display version and exit\n")
+                           _T("\n");
 
 
 //
 // Execute command and wait
 //
 
-static BOOL ExecAndWait(TCHAR *pszCommand)
+static BOOL ExecAndWait(char *pszCommand)
 {
    BOOL bSuccess = TRUE;
 
 #ifdef _WIN32
-   STARTUPINFO si;
+   STARTUPINFOA si;
    PROCESS_INFORMATION pi;
 
    // Fill in process startup info structure
@@ -87,9 +87,9 @@ static BOOL ExecAndWait(TCHAR *pszCommand)
    si.dwFlags = 0;
 
    // Create new process
-   if (!CreateProcess(NULL, pszCommand, NULL, NULL, FALSE,
-                      IsStandalone() ? 0 : CREATE_NO_WINDOW | DETACHED_PROCESS,
-                      NULL, NULL, &si, &pi))
+   if (!CreateProcessA(NULL, pszCommand, NULL, NULL, FALSE,
+                       IsStandalone() ? 0 : CREATE_NO_WINDOW | DETACHED_PROCESS,
+                       NULL, NULL, &si, &pi))
    {
       bSuccess = FALSE;
    }
@@ -120,7 +120,7 @@ static void CreateMiniDump(DWORD pid)
    HANDLE hFile, hProcess;
 	TCHAR error[256];
 
-	printf("INFO: Starting minidump for process %d\n", pid);
+	_tprintf(_T("INFO: Starting minidump for process %d\n"), pid);
 	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (hProcess != NULL)
 	{
@@ -130,16 +130,16 @@ static void CreateMiniDump(DWORD pid)
 		{
 			MiniDumpWriteDump(hProcess, pid, hFile, MiniDumpNormal, NULL, NULL, NULL);
 			CloseHandle(hFile);
-			printf("INFO: Minidump created successfully\n");
+			_tprintf(_T("INFO: Minidump created successfully\n"));
 		}
 		else
 		{
-			printf("ERROR: cannot create file for minidump (%s)\n", GetSystemErrorText(GetLastError(), error, 256));
+			_tprintf(_T("ERROR: cannot create file for minidump (%s)\n"), GetSystemErrorText(GetLastError(), error, 256));
 		}
 	}
 	else
 	{
-		printf("ERROR: cannot open process %d (%s)\n", pid, GetSystemErrorText(GetLastError(), error, 256));
+		_tprintf(_T("ERROR: cannot open process %d (%s)\n"), pid, GetSystemErrorText(GetLastError(), error, 256));
 	}
 }
 
@@ -160,9 +160,10 @@ static void CreateMiniDump(DWORD pid)
 static BOOL ParseCommandLine(int argc, char *argv[])
 {
    int ch;
-   TCHAR *eptr;
+   char *eptr;
 #ifdef _WIN32
-	char login[256] = "", password[256] = "", exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
+	TCHAR login[256] = _T(""), password[256] = _T("");
+	char exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
 	BOOL useLogin = FALSE;
 #endif
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
@@ -183,7 +184,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ "start", 0, NULL, 's' },
 		{ "stop", 0, NULL, 'S' },
 #else
-		{ "pid-file", 1, NULL, 'p' },
+		{ _T("pid-file"), 1, NULL, 'p' },
 #endif
 		{ NULL, 0, 0, 0 }
 	};
@@ -198,17 +199,22 @@ static BOOL ParseCommandLine(int argc, char *argv[])
    	switch(ch)
    	{
 			case 'h':
-	         printf(help_text);
+	         _tprintf(help_text);
 	         return FALSE;
 			case 'v':
-				printf("NetXMS Server Version " NETXMS_VERSION_STRING " Build of " __DATE__ "\n");
+				_tprintf(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build of %hs\n"), __DATE__);
 				return FALSE;
 			case 'c':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
+				g_szConfigFile[MAX_PATH - 1] = 0;
+#else
 				nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+#endif
 				break;
 			case 'C':	// Check config
 				g_dwFlags &= ~AF_DAEMON;
-				printf("Checking configuration file (%s):\n\n", g_szConfigFile);
+				_tprintf(_T("Checking configuration file (%s):\n\n"), g_szConfigFile);
 				LoadConfig();
 				return FALSE;
 			case 'd':
@@ -218,7 +224,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				g_nDebugLevel = strtol(optarg, &eptr, 0);
 				if ((*eptr != 0) || (g_nDebugLevel < 0) || (g_nDebugLevel > 9))
 				{
-					printf("Invalid debug level \"%s\" - should be in range 0..9\n", optarg);
+					_tprintf(_T("Invalid debug level \"%hs\" - should be in range 0..9\n"), optarg);
 					g_nDebugLevel = 0;
 				}
 				break;
@@ -227,11 +233,21 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				break;
 #ifdef _WIN32
 			case 'L':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, 256);
+				login[255] = 0;
+#else
 				nx_strncpy(login, optarg, 256);
+#endif
 				useLogin = TRUE;
 				break;
 			case 'P':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, 256);
+				password[255] = 0;
+#else
 				nx_strncpy(password, optarg, 256);
+#endif
 				break;
 			case 'I':	// Install service
 				ptr = strrchr(argv[0], '\\');
@@ -251,8 +267,16 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 					ptr++;
 					strcpy(ptr, "libnxsrv.dll");
 				}
-
+#ifdef UNICODE
+				WCHAR wexePath[MAX_PATH], wdllPath[MAX_PATH];
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, exePath, -1, wexePath, MAX_PATH);
+				wexePath[MAX_PATH - 1] = 0;
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dllPath, -1, wdllPath, MAX_PATH);
+				wdllPath[MAX_PATH - 1] = 0;
+				InstallService(wexePath, wdllPath, useLogin ? login : NULL, useLogin ? password : NULL);
+#else
 				InstallService(exePath, dllPath, useLogin ? login : NULL, useLogin ? password : NULL);
+#endif
 				return FALSE;
 			case 'R':	// Remove service
 				RemoveService();
@@ -267,7 +291,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				CheckServiceConfig();
 				return FALSE;
 			case '~':
-				CreateMiniDump(_tcstoul(optarg, NULL, 0));
+				CreateMiniDump(strtoul(optarg, NULL, 0));
 				return FALSE;
 #endif
    		default:
@@ -309,7 +333,7 @@ int main(int argc, char *argv[])
       RegCloseKey(hKey);
    }
 #else
-   pszEnv = getenv("NETXMSD_CONFIG");
+   pszEnv = getenv(_T("NETXMSD_CONFIG"));
    if (pszEnv != NULL)
       nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
 #endif
@@ -320,7 +344,7 @@ int main(int argc, char *argv[])
    if (!LoadConfig())
    {
       if (IsStandalone())
-         printf("Error loading configuration file\n");
+         _tprintf(_T("Error loading configuration file\n"));
       return 1;
    }
 
@@ -328,7 +352,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 	if (g_dwFlags & AF_CATCH_EXCEPTIONS)
 		SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter,
-		                    g_szDumpDir, "netxmsd", MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, IsStandalone());
+		                    g_szDumpDir, _T("netxmsd"), MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, IsStandalone());
 	__try {
 #endif
 
@@ -343,10 +367,14 @@ int main(int argc, char *argv[])
          pszSep++;
       else
          pszSep = szCmd;
-      sprintf(pszSep, "nxdbmgr -c \"%s\" -f check", g_szConfigFile);
+#ifdef UNICODE
+      snprintf(pszSep, 128, "nxdbmgr -c \"%S\" -f check", g_szConfigFile);
+#else
+      snprintf(pszSep, 128, "nxdbmgr -c \"%s\" -f check", g_szConfigFile);
+#endif
       if (!ExecAndWait(szCmd))
          if (IsStandalone())
-            printf("ERROR: Failed to execute command \"%s\"\n", szCmd);
+            _tprintf(_T("ERROR: Failed to execute command \"%hs\"\n"), szCmd);
    }
 
 #ifdef _WIN32
@@ -358,7 +386,7 @@ int main(int argc, char *argv[])
    {
       if (!Initialize())
       {
-         printf("NetXMS Core initialization failed\n");
+         _tprintf(_T("NetXMS Core initialization failed\n"));
 
          // Remove database lock
          if (g_dwFlags & AF_DB_LOCKED)
@@ -381,10 +409,10 @@ int main(int argc, char *argv[])
    }
 
    // Write PID file
-   fp = fopen(g_szPIDFile, "w");
+   fp = _tfopen(g_szPIDFile, _T("w"));
    if (fp != NULL)
    {
-      fprintf(fp, "%d", getpid());
+      _ftprintf(fp, _T("%d"), getpid());
       fclose(fp);
    }
 

@@ -327,7 +327,7 @@ public:
    DWORD GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
    DWORD GetList(const TCHAR *pszParam);
    DWORD nop();
-   DWORD ExecAction(const TCHAR *pszAction, int argc, const TCHAR **argv);
+   DWORD ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv);
    DWORD UploadFile(const TCHAR *pszFile, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    DWORD StartUpgrade(const TCHAR *pszPkgName);
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 

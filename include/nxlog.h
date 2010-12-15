@@ -57,7 +57,7 @@
 
 
 //
-// Unified log record structure
+// Syslog message structure
 //
 
 typedef struct
@@ -67,10 +67,10 @@ typedef struct
    int nFacility;
    int nSeverity;
    DWORD dwSourceObject;
-   TCHAR szHostName[MAX_SYSLOG_HOSTNAME_LEN];
-   TCHAR szTag[MAX_SYSLOG_TAG_LEN];
-   TCHAR szMessage[MAX_LOG_MSG_LENGTH];
-} NX_LOG_RECORD;
+   char szHostName[MAX_SYSLOG_HOSTNAME_LEN];
+   char szTag[MAX_SYSLOG_TAG_LEN];
+   char szMessage[MAX_LOG_MSG_LENGTH];
+} NX_SYSLOG_RECORD;
 
 
 #endif
