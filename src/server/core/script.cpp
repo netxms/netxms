@@ -30,6 +30,22 @@
 NXSL_Library *g_pScriptLibrary = NULL;
 
 
+/*
+
+//
+// NXSL class representing NetXMS object
+//
+
+class ___NXSL_NetXMSObjectClass : public NXSL_Class
+{
+public:
+   NXSL_NetXMSObjectClass() : NXSL_Class() { _tcscpy(m_szName, _T("NetXMS_Object")); }
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
+};
+
+
 //
 // Read object's attribute
 //
@@ -43,15 +59,15 @@ NXSL_Value *NXSL_NetXMSObjectClass::getAttr(NXSL_Object *pObject, const TCHAR *p
    pSysObj = (NetObj *)pObject->getData();
    if (pSysObj != NULL)
    {
-      if (!_tcscmp(pszAttr, "id"))
+      if (!_tcscmp(pszAttr, _T("id")))
       {
          pValue = new NXSL_Value(pSysObj->Id());
       }
-      else if (!_tcscmp(pszAttr, "name"))
+      else if (!_tcscmp(pszAttr, _T("name")))
       {
          pValue = new NXSL_Value((char *)pSysObj->Name());
       }
-      else if (!_tcscmp(pszAttr, "ipAddr"))
+      else if (!_tcscmp(pszAttr, _T("ipAddr")))
       {
          pValue = new NXSL_Value(IpToStr(pSysObj->IpAddr(), szBuffer));
       }
@@ -68,6 +84,8 @@ BOOL NXSL_NetXMSObjectClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr,
 {
    return FALSE;
 }
+
+*/
 
 
 //
@@ -98,7 +116,7 @@ void LoadScripts()
          }
          else
          {
-            nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, _T("dss"),
+            nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss",
                         DBGetFieldULong(hResult, i, 0),
                         DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), szError);
          }
@@ -136,8 +154,8 @@ void ReloadScript(DWORD dwScriptId)
          }
          else
          {
-            nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, _T("dss"),
-                     dwScriptId, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING), szError);
+            nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss",
+                        dwScriptId, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING), szError);
          }
       }
       DBFreeResult(hResult);

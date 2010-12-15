@@ -129,11 +129,11 @@ bool GetYesNo(const TCHAR *format, ...)
 		va_start(args, format);
 		_vtprintf(format, args);
 		va_end(args);
-		printf(" (Y/N) ");
+		_tprintf(_T(" (Y/N) "));
 
 		if (m_bForce)
 		{
-			printf("Y\n");
+			_tprintf(_T("Y\n"));
 			return true;
 		}
 		else
@@ -146,12 +146,12 @@ bool GetYesNo(const TCHAR *format, ...)
 				ch = _getch();
 				if ((ch == 'y') || (ch == 'Y'))
 				{
-					printf("Y\n");
+					_tprintf(_T("Y\n"));
 					return true;
 				}
 				if ((ch == 'n') || (ch == 'N'))
 				{
-					printf("N\n");
+					_tprintf(_T("N\n"));
 					return false;
 				}
 			}
@@ -418,9 +418,9 @@ BOOL ValidateDatabase()
    }
    else if (nVersion > DB_FORMAT_VERSION)
    {
-		printf("Your database has format version %d, this tool is compiled for version %d.\n"
-		       "You need to upgrade your server before using this database.\n",
-				 nVersion, DB_FORMAT_VERSION);
+		_tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n")
+		         _T("You need to upgrade your server before using this database.\n"),
+				   nVersion, DB_FORMAT_VERSION);
 		return FALSE;
    }
 
@@ -571,7 +571,7 @@ int main(int argc, char *argv[])
    // Check parameter correctness
    if (argc - optind == 0)
    {
-      printf("Command missing. Type nxdbmgr -h for command line syntax.\n");
+      _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
       return 1;
    }
    if (strcmp(argv[optind], "batch") && 
@@ -583,12 +583,12 @@ int main(int argc, char *argv[])
        strcmp(argv[optind], "unlock") &&
        strcmp(argv[optind], "init"))
    {
-      printf("Invalid command \"%s\". Type nxdbmgr -h for command line syntax.\n", argv[optind]);
+      _tprintf(_T("Invalid command \"%hs\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
       return 1;
    }
    if ((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import")) && (argc - optind < 2))
    {
-      printf("Required command argument missing\n");
+      _tprintf(_T("Required command argument missing\n"));
       return 1;
    }
 
@@ -614,7 +614,7 @@ int main(int argc, char *argv[])
 	Config *config = new Config();
 	if (!config->loadIniConfig(szConfigFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
    {
-      printf("Error loading configuration file\n");
+      _tprintf(_T("Error loading configuration file\n"));
       return 2;
    }
 	delete config;
@@ -632,7 +632,7 @@ int main(int argc, char *argv[])
    // Connect to database
    if (!DBInit(0, 0))
    {
-      printf("Unable to initialize database library\n");
+      _tprintf(_T("Unable to initialize database library\n"));
       return 3;
    }
 

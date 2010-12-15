@@ -203,7 +203,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				if (sqlite3_exec(db, utf8query, NULL, NULL, &errmsg) != SQLITE_OK)
 				{
 					free(utf8query);
-					printf("ERROR: SQLite query failed: %s\n   Query: %s\n", errmsg, utf8query);
+					_tprintf(_T("ERROR: SQLite query failed: %hs\n   Query: %s\n"), errmsg, (const TCHAR *)query);
 					sqlite3_free(errmsg);
 					success = FALSE;
 					break;
@@ -216,7 +216,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 			{
 				if (sqlite3_exec(db, "COMMIT", NULL, NULL, &errmsg) != SQLITE_OK)
 				{
-					printf("ERROR: Cannot commit transaction: %s", errmsg);
+					_tprintf(_T("ERROR: Cannot commit transaction: %hs"), errmsg);
 					sqlite3_free(errmsg);
 					success = FALSE;
 				}
@@ -225,7 +225,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 			{
 				if (sqlite3_exec(db, "ROLLBACK", NULL, NULL, &errmsg) != SQLITE_OK)
 				{
-					printf("ERROR: Cannot rollback transaction: %s", errmsg);
+					_tprintf(_T("ERROR: Cannot rollback transaction: %hs"), errmsg);
 					sqlite3_free(errmsg);
 				}
 			}
@@ -235,7 +235,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 			success = FALSE;
 			if (sqlite3_exec(db, "ROLLBACK", NULL, NULL, &errmsg) != SQLITE_OK)
 			{
-				printf("ERROR: Cannot rollback transaction: %s", errmsg);
+				_tprintf(_T("ERROR: Cannot rollback transaction: %hs"), errmsg);
 				sqlite3_free(errmsg);
 			}
 		}
@@ -243,7 +243,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 	else
 	{
 		success = FALSE;
-		printf("ERROR: Cannot start transaction: %s", errmsg);
+		_tprintf(_T("ERROR: Cannot start transaction: %hs"), errmsg);
 		sqlite3_free(errmsg);
 	}
 
@@ -295,7 +295,7 @@ void ExportDatabase(const char *file)
 	unlink(file);
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
-		printf("ERROR: unable to open output file\n");
+		_tprintf(_T("ERROR: unable to open output file\n"));
 		return;
 	}
 
@@ -337,7 +337,7 @@ void ExportDatabase(const char *file)
 
 	if (!success)
 	{
-		printf("ERROR: unable to determine path to schema file\n");
+		_tprintf(_T("ERROR: unable to determine path to schema file\n"));
 		goto cleanup;
 	}
 
@@ -349,13 +349,13 @@ void ExportDatabase(const char *file)
 	data = (char *)LoadFileA(buffer, &size);
 	if (data == NULL)
 	{
-		printf("ERROR: cannot load schema file \"%s\"\n", buffer);
+		_tprintf(_T("ERROR: cannot load schema file \"%hs\"\n"), buffer);
 		goto cleanup;
 	}
 
 	if (sqlite3_exec(db, data, NULL, NULL, &errmsg) != SQLITE_OK)
 	{
-		printf("ERROR: unable to apply database schema: %s\n", errmsg);
+		_tprintf(_T("ERROR: unable to apply database schema: %hs\n"), errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
@@ -365,13 +365,13 @@ void ExportDatabase(const char *file)
 	// Check that dbschema_sqlite.sql and database have the same schema version
 	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &version, &errmsg) != SQLITE_OK)
 	{
-		printf("ERROR: SQL query failed (%s)\n", errmsg);
+		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
 	if (version != DBGetSchemaVersion(g_hCoreDB))
 	{
-		printf("ERROR: Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n");
+		_tprintf(_T("ERROR: Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n"));
 		goto cleanup;
 	}
 
@@ -386,7 +386,7 @@ void ExportDatabase(const char *file)
 	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='IDataTableCreationCommand'",
 	                 GetIDataQueryCB, queryTemplate, &errmsg) != SQLITE_OK)
 	{
-		printf("ERROR: SQL query failed (%s)\n", errmsg);
+		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
@@ -401,7 +401,7 @@ void ExportDatabase(const char *file)
 		snprintf(buffer, MAX_PATH, queryTemplate, DBGetFieldLong(hResult, i, 0));
 		if (sqlite3_exec(db, buffer, NULL, NULL, &errmsg) != SQLITE_OK)
 		{
-			_tprintf(_T("ERROR: SQL query failed: %s (%s)\n"), buffer, errmsg);
+			_tprintf(_T("ERROR: SQL query failed: %hs (%hs)\n"), buffer, errmsg);
 			sqlite3_free(errmsg);
 			DBFreeResult(hResult);
 			goto cleanup;
@@ -421,5 +421,5 @@ void ExportDatabase(const char *file)
 
 cleanup:
 	sqlite3_close(db);
-	printf(success ? "Database export complete.\n" : "Database export failed.\n");
+	_tprintf(success ? _T("Database export complete.\n") : _T("Database export failed.\n"));
 }

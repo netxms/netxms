@@ -3182,7 +3182,7 @@ static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
          return FALSE;
 
    // Generate GUIDs for users and groups
-   printf("Generating GUIDs...\n");
+   _tprintf(_T("Generating GUIDs...\n"));
    
    hResult = SQLSelect(_T("SELECT id FROM users"));
    if (hResult != NULL)
@@ -5041,7 +5041,7 @@ void UpgradeDatabase(void)
                _tprintf(_T("Unable to find upgrade procedure for version %d\n"), iVersion);
                break;
             }
-            printf("Upgrading from version %d to %d\n", iVersion, m_dbUpgradeMap[i].newVersion);
+            _tprintf(_T("Upgrading from version %d to %d\n"), iVersion, m_dbUpgradeMap[i].newVersion);
             DBBegin(g_hCoreDB);
             if (m_dbUpgradeMap[i].fpProc(iVersion, m_dbUpgradeMap[i].newVersion))
             {
@@ -5050,7 +5050,7 @@ void UpgradeDatabase(void)
             }
             else
             {
-               printf("Rolling back last stage due to upgrade errors...\n");
+               _tprintf(_T("Rolling back last stage due to upgrade errors...\n"));
                DBRollback(g_hCoreDB);
                break;
             }

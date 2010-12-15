@@ -94,14 +94,14 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 		}
 		else
 		{
-			printf("ERROR: SQL query \"%s\" on import file failed (%s)\n", query, errmsg);
+			_tprintf(_T("ERROR: SQL query \"%hs\" on import file failed (%hs)\n"), query, errmsg);
 			sqlite3_free(errmsg);
 			DBRollback(g_hCoreDB);
 		}
 	}
 	else
 	{
-		printf("ERROR: unable to start transaction in target database\n");
+		_tprintf(_T("ERROR: unable to start transaction in target database\n"));
 		rc = -1;
 	}
 	return rc == SQLITE_OK;
@@ -123,7 +123,7 @@ static BOOL ImportIData(sqlite3 *db)
 	// target database metadata table
 	if (!MetaDataReadStr(_T("IDataTableCreationCommand"), queryTemplate[0], MAX_DB_STRING, _T("")))
 	{
-		printf("ERROR: unable to determine correct query for idata tables creation\n");
+		_tprintf(_T("ERROR: unable to determine correct query for idata tables creation\n"));
 		return FALSE;
 	}
 
@@ -194,7 +194,7 @@ void ImportDatabase(const char *file)
 	// Open SQLite database
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
-		printf("ERROR: unable to open output file\nDatabase import failed.\n");
+		_tprintf(_T("ERROR: unable to open output file\nDatabase import failed.\n"));
 		return;
 	}
 
@@ -202,14 +202,14 @@ void ImportDatabase(const char *file)
 	int version = 0;
 	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &version, &errmsg) != SQLITE_OK)
 	{
-		printf("ERROR: SQL query failed (%s)\n", errmsg);
+		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
 
 	if (version != DB_FORMAT_VERSION)
 	{
-		printf("ERROR: Import file was created for database format version %d, but this tool was compiled for database format version %d\n", version, DB_FORMAT_VERSION);
+		_tprintf(_T("ERROR: Import file was created for database format version %d, but this tool was compiled for database format version %d\n"), version, DB_FORMAT_VERSION);
 		goto cleanup;
 	}
 
@@ -229,5 +229,5 @@ void ImportDatabase(const char *file)
 
 cleanup:
 	sqlite3_close(db);
-	printf(success ? "Database import complete.\n" : "Database import failed.\n");
+	_tprintf(success ? _T("Database import complete.\n") : _T("Database import failed.\n"));
 }

@@ -934,7 +934,7 @@ DWORD AgentConnection::authenticate(BOOL bProxyData)
 // Execute action on agent
 //
 
-DWORD AgentConnection::ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv)
+DWORD AgentConnection::ExecAction(const TCHAR *pszAction, int argc, const TCHAR **argv)
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;

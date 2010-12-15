@@ -296,7 +296,7 @@ public:
 	void generateGuid() { uuid_generate(m_guid); }
    void SetMgmtStatus(BOOL bIsManaged);
    void SetName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
-   void ResetStatus(void) { m_iStatus = STATUS_UNKNOWN; Modify(); }
+   void ResetStatus() { m_iStatus = STATUS_UNKNOWN; Modify(); }
    void SetComments(TCHAR *pszText);
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
@@ -318,9 +318,8 @@ public:
    void DeleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
    // Debug methods
-   const char *ParentList(TCHAR *szBuffer);
-   const char *ChildList(TCHAR *szBuffer);
-   const char *TimeStampAsText() { return ctime((time_t *)&m_dwTimeStamp); }
+   const TCHAR *ParentList(TCHAR *szBuffer);
+   const TCHAR *ChildList(TCHAR *szBuffer);
 };
 
 

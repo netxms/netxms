@@ -1093,7 +1093,7 @@ BOOL LoadObjects()
 
    // Load template group objects
    DbgPrintf(2, _T("Loading template groups..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), "SELECT id FROM containers WHERE object_class=%d", OBJECT_TEMPLATEGROUP);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_TEMPLATEGROUP);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
@@ -1260,6 +1260,8 @@ void DumpObjects(CONSOLE_CTX pCtx)
    TCHAR *pBuffer;
    CONTAINER_CATEGORY *pCat;
    NetObj *pObject;
+	time_t t;
+	struct tm *ltm;
 
    pBuffer = (TCHAR *)malloc(128000 * sizeof(TCHAR));
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
@@ -1274,7 +1276,10 @@ void DumpObjects(CONSOLE_CTX pCtx)
                     pObject->IsModified(), pObject->IsDeleted());
       ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
                     pObject->ParentList(pBuffer), pObject->ChildList(&pBuffer[4096]));
-      ConsolePrintf(pCtx, _T("   Last change: %s"), pObject->TimeStampAsText());
+		t = pObject->TimeStamp();
+		ltm = localtime(&t);
+		_tcsftime(pBuffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
+      ConsolePrintf(pCtx, _T("   Last change: %s"), pBuffer);
       switch(pObject->Type())
       {
          case OBJECT_NODE:
@@ -1290,7 +1295,7 @@ void DumpObjects(CONSOLE_CTX pCtx)
             break;
          case OBJECT_CONTAINER:
             pCat = FindContainerCategory(((Container *)pObject)->Category());
-            ConsolePrintf(pCtx, _T("   Category: %s\n"), pCat ? pCat->szName : MAX_CONNECTOR_NAME"<unknown>"));
+            ConsolePrintf(pCtx, _T("   Category: %s\n"), pCat ? pCat->szName : _T("<unknown>"));
             break;
          case OBJECT_TEMPLATE:
             ConsolePrintf(pCtx, _T("   Version: %d.%d\n"), 

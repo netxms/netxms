@@ -516,10 +516,10 @@ void NetObj::OnObjectDelete(DWORD dwObjectId)
 // Print childs IDs
 //
 
-const char *NetObj::ChildList(TCHAR *szBuffer)
+const TCHAR *NetObj::ChildList(TCHAR *szBuffer)
 {
    DWORD i;
-   char *pBuf = szBuffer;
+   TCHAR *pBuf = szBuffer;
 
    *pBuf = 0;
    LockChildList(FALSE);
@@ -540,10 +540,10 @@ const char *NetObj::ChildList(TCHAR *szBuffer)
 // Print parents IDs
 //
 
-const char *NetObj::ParentList(TCHAR *szBuffer)
+const TCHAR *NetObj::ParentList(TCHAR *szBuffer)
 {
    DWORD i;
-   char *pBuf = szBuffer;
+   TCHAR *pBuf = szBuffer;
 
    *pBuf = 0;
    LockParentList(FALSE);

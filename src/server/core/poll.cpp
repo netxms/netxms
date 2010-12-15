@@ -217,8 +217,7 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
       if (pObject == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"),
-               pObject->Name(), pObject->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pObject->Name(), pObject->Id());
       SetPollerState((long)arg, szBuffer);
 		if (pObject->Type() == OBJECT_NODE)
 			((Node *)pObject)->statusPoll(NULL, 0, (long)arg);
@@ -255,8 +254,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"),
-               pNode->Name(), pNode->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
       pNode->configurationPoll(NULL, 0, (long)arg, 0);
       pNode->DecRefCount();
@@ -290,8 +288,7 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"),
-               pNode->Name(), pNode->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
       pNode->updateRoutingTable();
       pNode->DecRefCount();
@@ -397,8 +394,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"),
-               pNode->Name(), pNode->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
 
       DbgPrintf(4, _T("Starting discovery poll for node %s (%s)"),
@@ -462,8 +458,7 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
       if (pCond == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"),
-               pCond->Name(), pCond->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pCond->Name(), pCond->Id());
       SetPollerState((long)arg, szBuffer);
       pCond->check();
       pCond->EndPoll();

@@ -25,20 +25,6 @@
 
 
 //
-// NXSL class representing NetXMS object
-//
-
-class NXSL_NetXMSObjectClass : public NXSL_Class
-{
-public:
-   NXSL_NetXMSObjectClass() : NXSL_Class() { _tcscpy(m_szName, _T("NetXMS_Object")); }
-
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
-   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
-};
-
-
-//
 // "NetXMS object" class
 //
 

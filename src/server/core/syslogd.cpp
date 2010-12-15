@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -389,12 +389,19 @@ static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
 // Event name resolver
 //
 
-static bool EventNameResolver(const TCHAR *name, DWORD *code)
+static bool EventNameResolver(const char *name, DWORD *code)
 {
 	EVENT_TEMPLATE *event;
 	bool success = false;
 
+#ifdef UNICODE
+	WCHAR wname[MAX_OBJECT_NAME];
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, wname, MAX_OBJECT_NAME);
+	wname[MAX_OBJECT_NAME - 1] = 0;
+	event = FindEventTemplateByName(wname);
+#else
 	event = FindEventTemplateByName(name);
+#endif
 	if (event != NULL)
 	{
 		*code = event->dwCode;
@@ -410,11 +417,24 @@ static bool EventNameResolver(const TCHAR *name, DWORD *code)
 
 static void CreateParserFromConfig()
 {
-	TCHAR *xml;
+	char *xml;
 
 	MutexLock(m_mutexParserAccess, INFINITE);
 	delete_and_null(m_parser);
+#ifdef UNICODE
+	WCHAR *wxml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
+	if (wxml != NULL)
+	{
+		xml = UTF8StringFromWideString(wxml);
+		free(wxml);
+	}
+	else
+	{
+		xml = NULL;
+	}
+#else
 	xml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
+#endif
 	if (xml != NULL)
 	{
 		char parseError[256];

@@ -87,7 +87,7 @@ static void EndStage(void)
    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
    _puttc(_T(']'), stdout);
    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-   printf("\n");
+   _tprintf(_T("\n"));
 #else
    _tprintf(_T("  [%s]\n"), pszStatus[nCode]);
 #endif

@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** SMS Driver for sending SMS via NetXMS agent
-** Copyright (C) 2007 Victor Kirhenshtein
+** Copyright (C) 2007-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,9 +34,9 @@
 // Static data
 //
 
-static TCHAR m_szHostName[256] = "localhost";
+static TCHAR m_szHostName[256] = _T("localhost");
 static WORD m_wPort = 4700;
-static TCHAR m_szSecret[256] = "";
+static TCHAR m_szSecret[256] = _T("");
 static DWORD m_dwTimeout = 30000;	// Default timeout is 30 seconds
 
 
@@ -46,7 +45,7 @@ static DWORD m_dwTimeout = 30000;	// Default timeout is 30 seconds
 // pszInitArgs format: hostname,port,timeout,secret
 //
 
-extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
+extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 {
 	TCHAR *temp, *ptr, *eptr;
 	int field;
@@ -54,7 +53,7 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 	temp = _tcsdup(pszInitArgs);
    for(ptr = eptr = temp, field = 0; eptr != NULL; field++, ptr = eptr + 1)
    {
-		eptr = strchr(ptr, ',');
+		eptr = _tcschr(ptr, ',');
 		if (eptr != NULL)
 			*eptr = 0;
       switch(field)
@@ -63,10 +62,10 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 				nx_strncpy(m_szHostName, ptr, 256);
             break;
          case 1:  // Port
-            m_wPort = (WORD)strtoul(ptr, NULL, 0);
+            m_wPort = (WORD)_tcstoul(ptr, NULL, 0);
             break;
          case 2:  // Timeout
-            m_dwTimeout = strtoul(ptr, NULL, 0) * 1000;
+            m_dwTimeout = _tcstoul(ptr, NULL, 0) * 1000;
             break;
          case 3:  // Secret
 				nx_strncpy(m_szSecret, ptr, 256);
@@ -79,7 +78,7 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 	return TRUE;
 }
 
-extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
+extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	DWORD dwAddr;
 	BOOL bSuccess = FALSE;
@@ -94,11 +93,11 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 
       if (conn.connect())
       {
-			TCHAR *argv[2];
+			const TCHAR *argv[2];
 
 			argv[0] = pszPhoneNumber;
 			argv[1] = pszText;
-         if (conn.ExecAction("SMS.Send", 2, argv) == ERR_SUCCESS)
+         if (conn.ExecAction(_T("SMS.Send"), 2, argv) == ERR_SUCCESS)
 				bSuccess = TRUE;
 			conn.disconnect();
 		}
@@ -106,7 +105,7 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 	return bSuccess;
 }
 
-extern "C" void EXPORT SMSDriverUnload(void)
+extern "C" void EXPORT SMSDriverUnload()
 {
 }
 

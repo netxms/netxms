@@ -102,7 +102,7 @@ BOOL ExecSQLBatch(const char *pszFile)
    }
    else
    {
-      printf("ERROR: Cannot load SQL command file %s\n", pszFile);
+      _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), pszFile);
    }
    return bResult;
 }

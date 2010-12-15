@@ -102,7 +102,7 @@ BOOL ClearDatabase()
 		if (DeleteIData() &&	ClearTables())
 		{
 			success = DBCommit(g_hCoreDB);
-			printf(success ? "Database successfully cleared\n" : "ERROR: cannot commit transaction\n");
+			_tprintf(success ? _T("Database successfully cleared\n") : _T("ERROR: cannot commit transaction\n"));
 		}
 		else
 		{
@@ -111,7 +111,7 @@ BOOL ClearDatabase()
 	}
 	else
 	{
-		printf("ERROR: cannot start transaction\n");
+		_tprintf(_T("ERROR: cannot start transaction\n"));
 	}
 
 	return success;

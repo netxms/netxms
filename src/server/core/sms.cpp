@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003,2004,2005 Victor Kirhenshtein
+** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: sms.cpp
+** File: sms.cpp
 **
 **/
 
@@ -39,8 +39,8 @@ typedef struct
 //
 
 static Queue *m_pMsgQueue = NULL;
-static BOOL (* m_DrvSendMsg)(TCHAR *, TCHAR *);
-static void (* m_DrvUnload)(void);
+static BOOL (* m_DrvSendMsg)(const TCHAR *, const TCHAR *);
+static void (* m_DrvUnload)();
 static THREAD m_hThread = INVALID_THREAD_HANDLE;
 
 
@@ -71,7 +71,7 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
 // Initialize SMS subsystem
 //
 
-void InitSMSSender(void)
+void InitSMSSender()
 {
    TCHAR szDriver[MAX_PATH], szDrvConfig[MAX_PATH];
 
@@ -85,11 +85,11 @@ void InitSMSSender(void)
       hModule = DLOpen(szDriver, szErrorText);
       if (hModule != NULL)
       {
-         BOOL (* DrvInit)(TCHAR *);
+         BOOL (* DrvInit)(const TCHAR *);
 
-         DrvInit = (BOOL (*)(TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverInit", szErrorText);
-         m_DrvSendMsg = (BOOL (*)(TCHAR *, TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverSend", szErrorText);
-         m_DrvUnload = (void (*)(void))DLGetSymbolAddr(hModule, "SMSDriverUnload", szErrorText);
+         DrvInit = (BOOL (*)(const TCHAR *))DLGetSymbolAddr(hModule, _T("SMSDriverInit"), szErrorText);
+         m_DrvSendMsg = (BOOL (*)(const TCHAR *, const TCHAR *))DLGetSymbolAddr(hModule, _T("SMSDriverSend"), szErrorText);
+         m_DrvUnload = (void (*)())DLGetSymbolAddr(hModule, _T("SMSDriverUnload"), szErrorText);
          if ((DrvInit != NULL) && (m_DrvSendMsg != NULL) && (m_DrvUnload != NULL))
          {
             if (DrvInit(szDrvConfig))
@@ -112,8 +112,7 @@ void InitSMSSender(void)
       }
       else
       {
-         nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, 
-                     "ss", szDriver, szErrorText);
+         nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", szDriver, szErrorText);
       }
    }
 }
@@ -123,7 +122,7 @@ void InitSMSSender(void)
 // Shutdown SMS sender
 //
 
-void ShutdownSMSSender(void)
+void ShutdownSMSSender()
 {
    if (m_pMsgQueue != NULL)
    {
