@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007, 2008, 2009 Victor Kirhenshtein
+** Copyright (C) 2007-2010 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,34 +35,67 @@ extern "C" const char EXPORT *drvName = "ORACLE";
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
-	out[0] = _T('\'');
+	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
+	out[0] = L'\'';
 
-	const TCHAR *src = str;
+	const WCHAR *src = str;
 	int outPos;
 	for(outPos = 1; *src != 0; src++)
 	{
-		if (*src == _T('\''))
+		if (*src == L'\'')
 		{
 			len++;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
 			}
-			out[outPos++] = _T('\'');
-			out[outPos++] = _T('\'');
+			out[outPos++] = L'\'';
+			out[outPos++] = L'\'';
 		}
 		else
 		{
 			out[outPos++] = *src;
 		}
 	}
-	out[outPos++] = _T('\'');
+	out[outPos++] = L'\'';
+	out[outPos++] = 0;
+
+	return out;
+}
+
+extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+{
+	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	char *out = (char *)malloc(bufferSize);
+	out[0] = '\'';
+
+	const char *src = str;
+	int outPos;
+	for(outPos = 1; *src != 0; src++)
+	{
+		if (*src == '\'')
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (char *)realloc(out, bufferSize);
+			}
+			out[outPos++] = '\'';
+			out[outPos++] = '\'';
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = '\'';
 	out[outPos++] = 0;
 
 	return out;
@@ -74,7 +106,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
 	return TRUE;
 }
@@ -97,7 +129,7 @@ static void SetLastErrorText(ORACLE_CONN *pConn)
 {
 	sb4 nCode;
 
-#ifdef UNICODE
+#if UNICODE_UCS2
 	OCIErrorGet(pConn->handleError, 1, NULL, &nCode, (text *)pConn->szLastError,
 	            DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
 	pConn->szLastError[DBDRV_MAX_ERROR_TEXT - 1] = 0;
@@ -107,15 +139,10 @@ static void SetLastErrorText(ORACLE_CONN *pConn)
 	OCIErrorGet(pConn->handleError, 1, NULL, &nCode, (text *)buffer,
 	            DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
 	buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-#if UNICODE_UCS4
-	ucs2_to_mb(buffer, ucs2_strlen(buffer) + 1, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+	ucs2_to_ucs4(buffer, ucs2_strlen(buffer) + 1, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
 	pConn->szLastError[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-#else
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, -1,
-	                    pConn->szLastError, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
 #endif
-#endif
-	RemoveTrailingCRLF(pConn->szLastError);
+	RemoveTrailingCRLFW(pConn->szLastError);
 }
 
 
@@ -264,7 +291,7 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	OCIStmt *handleStmt;
 	DWORD dwResult;
@@ -296,7 +323,10 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 		dwResult = IsConnectionError(pConn);
 	}
 	if (errorText != NULL)
-		nx_strncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+	{
+		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+	}
 	MutexUnlock(pConn->mutexQueryLock);
 
 #if UNICODE_UCS4
@@ -310,7 +340,7 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_RESULT *pResult = NULL;
 	OCIStmt *handleStmt;
@@ -455,7 +485,10 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 		*pdwError = IsConnectionError(pConn);
 	}
 	if (errorText != NULL)
-		nx_strncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+	{
+		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+	}
 	MutexUnlock(pConn->mutexQueryLock);
 
 #if UNICODE_UCS4
@@ -555,7 +588,7 @@ extern "C" void EXPORT DrvFreeResult(ORACLE_RESULT *pResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError, TCHAR *errorText)
+                                                 DWORD *pdwError, WCHAR *errorText)
 {
 	OCIParam *handleParam;
 	OCIDefine *handleDefine;
@@ -658,7 +691,10 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 		safe_free(pConn->pBuffers[i].pData);
 	safe_free(pConn->pBuffers);
 	if (errorText != NULL)
-		nx_strncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+	{
+		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+	}
 	MutexUnlock(pConn->mutexQueryLock);
 	return NULL;
 }

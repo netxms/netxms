@@ -1139,7 +1139,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId));
+         DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
 			read = TRUE;
       }
       else

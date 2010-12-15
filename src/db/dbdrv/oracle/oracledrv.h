@@ -54,7 +54,7 @@ typedef struct
 	OCIError *handleError;
 	MUTEX mutexQueryLock;
 	int nTransLevel;
-	TCHAR szLastError[DBDRV_MAX_ERROR_TEXT];
+	WCHAR szLastError[DBDRV_MAX_ERROR_TEXT];
 	ORACLE_FETCH_BUFFER *pBuffers;
 	int nCols;
 	char **columnNames;
