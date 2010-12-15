@@ -24,14 +24,12 @@
 #include <stdarg.h>
 #include <nms_agent.h>
 #include <nms_threads.h>
+#include <netxms-regex.h>
 
 #ifdef _WIN32
 #include <psapi.h>
-#include <netxms-regex.h>
 #define read	_read
 #define close	_close
-#else
-#include <regex.h>
 #endif
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
