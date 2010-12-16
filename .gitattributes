@@ -667,6 +667,7 @@ src/java/netxms-eclipse/NXSL/src/org/netxms/ui/eclipse/nxsl/widgets/internal/Sty
 src/java/netxms-eclipse/NetworkMaps/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/NetworkMaps/build.properties -text
 src/java/netxms-eclipse/NetworkMaps/icons/layer2.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/link_add.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/netmap.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/node.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/node.png -text

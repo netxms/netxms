@@ -23,12 +23,20 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.zest.core.widgets.ZestStyles;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -45,6 +53,7 @@ public class PredefinedMap extends NetworkMap
 	
 	private org.netxms.client.objects.NetworkMap mapObject; 
 	private Action actionAddObject;
+	private Action actionLinkObjects;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#init(org.eclipse.ui.IViewSite)
@@ -55,6 +64,22 @@ public class PredefinedMap extends NetworkMap
 		super.init(site);
 		mapObject = (org.netxms.client.objects.NetworkMap)rootObject;
 		setPartName(rootObject.getObjectName());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createPartControl(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	public void createPartControl(Composite parent)
+	{
+		super.createPartControl(parent);
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				actionLinkObjects.setEnabled(((IStructuredSelection)event.getSelection()).size() == 2);
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -81,6 +106,17 @@ public class PredefinedMap extends NetworkMap
 				addObjectToMap();
 			}
 		};
+		actionAddObject.setAccelerator(SWT.CTRL | 'A');
+		
+		actionLinkObjects = new Action("&Link selected objects") {
+			@Override
+			public void run()
+			{
+				linkSelectedObjects();
+			}
+		};
+		actionLinkObjects.setAccelerator(SWT.CTRL | 'L');
+		actionLinkObjects.setImageDescriptor(Activator.getImageDescriptor("icons/link_add.png"));
 	}
 	
 	/* (non-Javadoc)
@@ -92,6 +128,43 @@ public class PredefinedMap extends NetworkMap
 		manager.add(actionAddObject);
 		manager.add(new Separator());
 		super.fillMapContextMenu(manager);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillObjectContextMenu(org.eclipse.jface.action.IMenuManager)
+	 */
+	@Override
+	protected void fillObjectContextMenu(IMenuManager manager)
+	{
+		if (((IStructuredSelection)viewer.getSelection()).size() == 2)
+		{
+			manager.add(actionLinkObjects);
+			manager.add(new Separator());
+		}
+		super.fillObjectContextMenu(manager);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
+	 */
+	@Override
+	protected void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionAddObject);
+		manager.add(actionLinkObjects);
+		manager.add(new Separator());
+		super.fillLocalPullDown(manager);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+	 */
+	@Override
+	protected void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionLinkObjects);
+		manager.add(new Separator());
+		super.fillLocalToolBar(manager);
 	}
 
 	/**
@@ -115,6 +188,25 @@ public class PredefinedMap extends NetworkMap
 		
 		if (added > 0)
 			saveMap();
+	}
+	
+	/**
+	 * Link currently selected objects
+	 */
+	private void linkSelectedObjects()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 2)
+			return;
+		
+		Object[] objects = selection.toArray();
+		long id1 = ((NetworkMapObject)objects[0]).getId();
+		long id2 = ((NetworkMapObject)objects[1]).getId();
+		if (!mapPage.areObjectsConnected(id1, id1))
+		{
+			mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, id1, id2));
+			saveMap();
+		}
 	}
 	
 	/**

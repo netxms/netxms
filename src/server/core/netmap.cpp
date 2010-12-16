@@ -379,7 +379,7 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		m_numLinks = request->GetVariableLong(VID_NUM_LINKS);
 		if (m_numLinks > 0)
 		{
-			m_links = (NetworkMapLink **)realloc(m_elements, sizeof(NetworkMapLink *) * m_numLinks);
+			m_links = (NetworkMapLink **)realloc(m_links, sizeof(NetworkMapLink *) * m_numLinks);
 			DWORD varId = VID_LINK_LIST_BASE;
 			for(int i = 0; i < m_numLinks; i++)
 			{

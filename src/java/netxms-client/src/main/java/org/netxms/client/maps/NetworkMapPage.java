@@ -166,6 +166,22 @@ public class NetworkMapPage
 	}
 	
 	/**
+	 * Checks if two objects are connected
+	 * 
+	 * @param objectId1 ID of first map object
+	 * @param objectId2 ID of second map object
+	 * @return true if given objects are connected
+	 */
+	public boolean areObjectsConnected(long objectId1, long objectId2)
+	{
+		for(NetworkMapLink l : links)
+			if (((l.getElement1() == objectId1) && (l.getElement2() == objectId2)) ||
+			    ((l.getElement1() == objectId2) && (l.getElement2() == objectId1)))
+				return true;
+		return false;
+	}
+	
+	/**
 	 * Get objects and links in one array
 	 * @return Objects and links in one array
 	 */
