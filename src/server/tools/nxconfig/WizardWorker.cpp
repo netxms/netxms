@@ -52,7 +52,7 @@ static BOOL InstallEventSource(TCHAR *pszPath)
    DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
 
    if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-         "System\\CurrentControlSet\\Services\\EventLog\\System\\" CORE_EVENT_SOURCE,
+         _T("System\\CurrentControlSet\\Services\\EventLog\\System\\") CORE_EVENT_SOURCE,
          0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL))
    {
       _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, 
@@ -199,7 +199,7 @@ static BOOL WriteConfigInt(DB_HANDLE hConn, TCHAR *pszVar, int iValue,
 {
    TCHAR szBuffer[64];
 
-   _stprintf(szBuffer, _T("%d"), iValue);
+   _sntprintf(szBuffer, 64, _T("%d"), iValue);
    return WriteConfigStr(hConn, pszVar, szBuffer, bIsVisible, bNeedRestart);
 }
 
@@ -213,7 +213,7 @@ static BOOL WriteConfigULong(DB_HANDLE hConn, TCHAR *pszVar, DWORD dwValue,
 {
    TCHAR szBuffer[64];
 
-   _stprintf(szBuffer, _T("%u"), dwValue);
+   _sntprintf(szBuffer, 64, _T("%u"), dwValue);
    return WriteConfigStr(hConn, pszVar, szBuffer, bIsVisible, bNeedRestart);
 }
 
@@ -234,29 +234,29 @@ static BOOL CreateConfigFile(WIZARD_CFG_INFO *pc)
    if (pf != NULL)
    {
       t= time(NULL);
-      fprintf(pf, _T("#\n# NetXMS Server configuration file\n")
+      _ftprintf(pf, _T("#\n# NetXMS Server configuration file\n")
                   _T("# Created by NetXMS Server configuration wizard at %s#\n\n"),
               _tctime(&t));
-      fprintf(pf, _T("LogFile = %s\n"), pc->m_bLogToSyslog ? _T("{syslog}") : pc->m_szLogFile);
-      fprintf(pf, _T("DBDriver = %s\n"), pc->m_szDBDriver);
+      _ftprintf(pf, _T("LogFile = %s\n"), pc->m_bLogToSyslog ? _T("{syslog}") : pc->m_szLogFile);
+      _ftprintf(pf, _T("DBDriver = %s\n"), pc->m_szDBDriver);
       if (pc->m_szDBDrvParams[0] != 0)
-         fprintf(pf, _T("DBDrvParams = %s\n"), pc->m_szDBDrvParams);
+         _ftprintf(pf, _T("DBDrvParams = %s\n"), pc->m_szDBDrvParams);
       if (!_tcsicmp(pc->m_szDBDriver, _T("sqlite.ddr")))
       {
-         fprintf(pf, _T("DBName = %s\\database\\%s\n"), pc->m_szInstallDir, pc->m_szDBName);
+         _ftprintf(pf, _T("DBName = %s\\database\\%s\n"), pc->m_szInstallDir, pc->m_szDBName);
       }
       else
       {
          if (pc->m_szDBServer[0] != 0)
-            fprintf(pf, _T("DBServer = %s\n"), pc->m_szDBServer);
+            _ftprintf(pf, _T("DBServer = %s\n"), pc->m_szDBServer);
          if ((pc->m_szDBName[0] != 0) && (_tcsicmp(pc->m_szDBDriver, _T("odbc.ddr"))))
-            fprintf(pf, _T("DBName = %s\n"), pc->m_szDBName);
+            _ftprintf(pf, _T("DBName = %s\n"), pc->m_szDBName);
          if (pc->m_szDBLogin[0] != 0)
-            fprintf(pf, _T("DBLogin = %s\n"), pc->m_szDBLogin);
+            _ftprintf(pf, _T("DBLogin = %s\n"), pc->m_szDBLogin);
          if (pc->m_szDBPassword[0] != 0)
-            fprintf(pf, _T("DBPassword = %s\n"), pc->m_szDBPassword);
+            _ftprintf(pf, _T("DBPassword = %s\n"), pc->m_szDBPassword);
       }
-      fprintf(pf, _T("LogFailedSQLQueries = %s\n"), pc->m_bLogFailedSQLQueries ? _T("yes") : _T("no"));
+      _ftprintf(pf, _T("LogFailedSQLQueries = %s\n"), pc->m_bLogFailedSQLQueries ? _T("yes") : _T("no"));
       fclose(pf);
       bResult = TRUE;
    }
@@ -279,16 +279,16 @@ static BOOL CreateDBMySQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    TCHAR szQuery[256];
    BOOL bResult;
 
-   _stprintf(szQuery, _T("CREATE DATABASE %s"), pc->m_szDBName);
+   _sntprintf(szQuery, 256, _T("CREATE DATABASE %s"), pc->m_szDBName);
    bResult = DBQueryEx(hConn, szQuery);
 
    if (bResult)
    {
-      _stprintf(szQuery, _T("GRANT ALL ON %s.* TO %s IDENTIFIED BY '%s'"),
+      _sntprintf(szQuery, 256, _T("GRANT ALL ON %s.* TO %s IDENTIFIED BY '%s'"),
                 pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
       bResult = DBQueryEx(hConn, szQuery);
 
-      _stprintf(szQuery, _T("GRANT ALL ON %s.* TO %s@localhost IDENTIFIED BY '%s'"),
+      _sntprintf(szQuery, 256, _T("GRANT ALL ON %s.* TO %s@localhost IDENTIFIED BY '%s'"),
                 pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
       bResult = DBQueryEx(hConn, szQuery);
    }
@@ -308,19 +308,19 @@ static BOOL CreateDBPostgreSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    TCHAR szQuery[256];
    BOOL bResult;
 
-   _stprintf(szQuery, _T("CREATE DATABASE %s"), pc->m_szDBName);
+   _sntprintf(szQuery, 256, _T("CREATE DATABASE %s"), pc->m_szDBName);
    bResult = DBQueryEx(hConn, szQuery);
 
    if (bResult)
    {
-      _stprintf(szQuery, _T("CREATE USER %s WITH PASSWORD '%s'"),
+      _sntprintf(szQuery, 256, _T("CREATE USER %s WITH PASSWORD '%s'"),
                 pc->m_szDBLogin, pc->m_szDBPassword);
       bResult = DBQueryEx(hConn, szQuery);
    }
 
    if (bResult)
    {
-      _stprintf(szQuery, _T("GRANT ALL PRIVILEGES ON DATABASE %s TO %s"),
+      _sntprintf(szQuery, 256, _T("GRANT ALL PRIVILEGES ON DATABASE %s TO %s"),
                 pc->m_szDBName, pc->m_szDBLogin);
       bResult = DBQueryEx(hConn, szQuery);
    }
@@ -341,19 +341,19 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    bResult = DBQueryEx(hConn, _T("USE master"));
    if (bResult)
    {
-      _stprintf(szQuery, _T("CREATE DATABASE %s"), pc->m_szDBName);
+      _sntprintf(szQuery, 512, _T("CREATE DATABASE %s"), pc->m_szDBName);
       bResult = DBQueryEx(hConn, szQuery);
    }
 
    if (bResult)
    {
-      _stprintf(szQuery, _T("USE %s"), pc->m_szDBName);
+      _sntprintf(szQuery, 512, _T("USE %s"), pc->m_szDBName);
       bResult = DBQueryEx(hConn, szQuery);
    }
 
    if (bResult)
    {
-      if (!strcmp(pc->m_szDBLogin, _T("*")))
+      if (!_tcscmp(pc->m_szDBLogin, _T("*")))
       {
          // Use Windows authentication
          pszLogin = pc->m_szServiceLogin;
@@ -375,7 +375,7 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 
    if (bResult)
    {
-      _stprintf(szQuery, _T("GRANT ALL TO %s"), pszLogin);
+      _sntprintf(szQuery, 512, _T("GRANT ALL TO %s"), pszLogin);
       bResult = DBQueryEx(hConn, szQuery);
    }
 
@@ -393,7 +393,7 @@ static BOOL CreateSQLiteDB(WIZARD_CFG_INFO *pc)
    DB_HANDLE hConn;
    BOOL bResult = FALSE;
 
-   _stprintf(szBaseDir, _T("%s\\database"), pc->m_szInstallDir);
+   _sntprintf(szBaseDir, MAX_PATH, _T("%s\\database"), pc->m_szInstallDir);
    SetCurrentDirectory(szBaseDir);
    DeleteFile(pc->m_szDBName);
 	hConn = DBConnect(pc->m_dbDriver, NULL, pc->m_szDBName, NULL, NULL);

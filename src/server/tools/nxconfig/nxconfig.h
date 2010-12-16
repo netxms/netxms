@@ -116,7 +116,7 @@ public:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 protected:
-	void CreateWebConfig(TCHAR *pszServer);
+	void CreateWebConfig(const TCHAR *pszServer);
 	TCHAR m_szInstallDir[MAX_PATH];
 	void CreateAgentConfig(void);
 };

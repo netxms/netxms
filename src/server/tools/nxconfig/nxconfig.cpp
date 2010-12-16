@@ -61,7 +61,8 @@ BOOL CNxconfigApp::InitInstance()
 {
    HKEY hKey;
    DWORD dwSize, dwData = 0;
-   TCHAR *pszArg, szCmd[1024];
+   const TCHAR *pszArg;
+	TCHAR szCmd[1024];
 
 	if (!AfxSocketInit())
 	{
@@ -222,11 +223,17 @@ void CNxconfigApp::CreateAgentConfig()
             // Read all IP addresses for adapter
             for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
             {
-               if (_tcscmp(pAddr->IpAddress.String, _T("0.0.0.0")))
+               if (strcmp(pAddr->IpAddress.String, "0.0.0.0"))
                {
                   if (szAddrList[0] != 0)
                      _tcscat(szAddrList, _T(", "));
-                  _tcscat(szAddrList, pAddr->IpAddress.String);
+#ifdef UNICODE
+						WCHAR ipaddr[32];
+						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pAddr->IpAddress.String, -1, ipaddr, 32);
+                  wcscat(szAddrList, ipaddr);
+#else
+                  strcat(szAddrList, pAddr->IpAddress.String);
+#endif
                }
             }
          }
@@ -255,7 +262,7 @@ void CNxconfigApp::CreateAgentConfig()
 // Create configuration file for nxhttpd
 //
 
-void CNxconfigApp::CreateWebConfig(TCHAR *pszServer)
+void CNxconfigApp::CreateWebConfig(const TCHAR *pszServer)
 {
    FILE *fp;
    time_t currTime;

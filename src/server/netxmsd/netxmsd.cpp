@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
       RegCloseKey(hKey);
    }
 #else
-   pszEnv = getenv(_T("NETXMSD_CONFIG"));
+   pszEnv = _tgetenv(_T("NETXMSD_CONFIG"));
    if (pszEnv != NULL)
       nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
 #endif

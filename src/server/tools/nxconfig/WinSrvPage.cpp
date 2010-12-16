@@ -62,7 +62,7 @@ BOOL CWinSrvPage::OnInitDialog()
    EnableDlgItem(this, IDC_EDIT_PASSWD1, FALSE);
    EnableDlgItem(this, IDC_EDIT_PASSWD2, FALSE);
 	
-   if (strcmp(pc->m_szDBLogin, _T("*")) ||
+   if (_tcscmp(pc->m_szDBLogin, _T("*")) ||
        (pc->m_iDBEngine != DB_ENGINE_MSSQL))
    {
       ::ShowWindow(::GetDlgItem(m_hWnd, IDC_ICON_WARNING), SW_HIDE);
@@ -93,7 +93,7 @@ LRESULT CWinSrvPage::OnWizardNext()
       GetDlgItemText(IDC_EDIT_LOGIN, pc->m_szServiceLogin, MAX_DB_STRING);
       GetDlgItemText(IDC_EDIT_PASSWD1, szPasswd1, MAX_DB_STRING);
       GetDlgItemText(IDC_EDIT_PASSWD2, szPasswd2, MAX_DB_STRING);
-      if (!strcmp(szPasswd1, szPasswd2))
+      if (!_tcscmp(szPasswd1, szPasswd2))
       {
          _tcscpy(pc->m_szServicePassword, szPasswd1);
       }
@@ -121,7 +121,7 @@ void CWinSrvPage::OnRadioSystem()
    EnableDlgItem(this, IDC_EDIT_PASSWD1, FALSE);
    EnableDlgItem(this, IDC_EDIT_PASSWD2, FALSE);
 
-   if ((!strcmp(pc->m_szDBLogin, _T("*"))) &&
+   if ((!_tcscmp(pc->m_szDBLogin, _T("*"))) &&
        (pc->m_iDBEngine == DB_ENGINE_MSSQL))
    {
       ::ShowWindow(::GetDlgItem(m_hWnd, IDC_ICON_WARNING), SW_SHOW);
@@ -149,7 +149,7 @@ BOOL CWinSrvPage::OnSetActive()
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
    BOOL bShow;
 
-   bShow = ((!strcmp(pc->m_szDBLogin, _T("*"))) && (pc->m_iDBEngine == DB_ENGINE_MSSQL));
+   bShow = ((!_tcscmp(pc->m_szDBLogin, _T("*"))) && (pc->m_iDBEngine == DB_ENGINE_MSSQL));
    ::ShowWindow(::GetDlgItem(m_hWnd, IDC_ICON_WARNING), bShow ? SW_SHOW : SW_HIDE);
    ::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_WARNING), bShow ? SW_SHOW : SW_HIDE);
 	

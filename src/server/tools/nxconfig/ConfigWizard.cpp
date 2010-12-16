@@ -102,15 +102,15 @@ void CConfigWizard::DefaultConfig()
    {
       static NX_CFG_TEMPLATE cfgTemplate[] =
       {
-         { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, NULL },
-         { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, NULL },
-         { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, NULL },
-         { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, NULL },
-         { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, NULL },
-         { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, NULL },
-         { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, 1, 0, NULL },
-         { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, NULL },
-         { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+         { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, NULL },
+         { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, NULL },
+         { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, NULL },
+         { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, NULL },
+         { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, NULL },
+         { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, NULL },
+         { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, 1, 0, NULL },
+         { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, NULL },
+         { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
       };
       DWORD dwFlags;
 

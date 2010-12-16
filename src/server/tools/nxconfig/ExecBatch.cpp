@@ -90,11 +90,16 @@ BOOL ExecSQLBatch(DB_HANDLE hConn, TCHAR *pszFile)
          pNext = FindEndOfQuery(pQuery, pBatch + dwSize);
          if (!IsEmptyQuery((char *)pQuery))
          {
+#ifdef UNICODE
+				WCHAR *wquery = WideStringFromMBString((char *)pQuery);
+            bResult = DBQuery(hConn, wquery);
+				free(wquery);
+#else
             bResult = DBQuery(hConn, (char *)pQuery);
+#endif
             if (!bResult)
             {
-               _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
-                          _T("SQL query failed:\n%s"), pQuery);
+               _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("SQL query failed:\n%hs"), pQuery);
                break;
             }
          }
@@ -103,8 +108,7 @@ BOOL ExecSQLBatch(DB_HANDLE hConn, TCHAR *pszFile)
    }
    else
    {
-      _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
-                 _T("Cannot load SQL command file %s"), pszFile);
+      _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("Cannot load SQL command file %s"), pszFile);
    }
 
    return bResult;

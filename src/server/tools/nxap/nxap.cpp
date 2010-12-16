@@ -41,21 +41,21 @@ static int GetPolicyInventory(AgentConnection &conn)
 	DWORD rcc = conn.getPolicyInventory(&ap);
 	if (rcc == ERR_SUCCESS)
 	{
-		char buffer[64];
+		TCHAR buffer[64];
 		uuid_t guid;
 
-		printf("GUID                                 Type Server\n"
-		       "----------------------------------------------------------\n");
+		_tprintf(_T("GUID                                 Type Server\n")
+		         _T("----------------------------------------------------------\n"));
 		for(int i = 0; i < ap->getSize(); i++)
 		{
 			ap->getGuid(i, guid);
-			printf("%-16s %-4d %s\n", uuid_to_string(guid, buffer), ap->getType(i), ap->getServer(i));
+			_tprintf(_T("%-16s %-4d %s\n"), uuid_to_string(guid, buffer), ap->getType(i), ap->getServer(i));
 		}
 		delete ap;
 	}
 	else
 	{
-      printf("%d: %s\n", rcc, AgentErrorCodeToText(rcc));
+      _tprintf(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
 	}
 	return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
@@ -70,11 +70,11 @@ static int UninstallPolicy(AgentConnection &conn, uuid_t guid)
 	DWORD rcc = conn.uninstallPolicy(guid);
 	if (rcc == ERR_SUCCESS)
 	{
-		printf("Policy successfully uninstalled from agent\n");
+		_tprintf(_T("Policy successfully uninstalled from agent\n"));
 	}
 	else
 	{
-      printf("%d: %s\n", rcc, AgentErrorCodeToText(rcc));
+      _tprintf(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
 	}
 	return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
@@ -97,8 +97,8 @@ int main(int argc, char *argv[])
 #endif
    WORD wPort = AGENT_LISTEN_PORT;
    DWORD dwAddr, dwTimeout = 5000, dwConnTimeout = 30000, dwError;
-   char szSecret[MAX_SECRET_LENGTH] = "";
-   char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
+   TCHAR szSecret[MAX_SECRET_LENGTH] = _T("");
+   TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
    RSA *pServerKey = NULL;
 	uuid_t guid;
 
@@ -111,31 +111,31 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxap [<options>] -l <host>\n"
-				       "   or: nxap [<options>] -u <guid> <host>\n"
-                   "Valid options are:\n"
-                   "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
-                   "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
+            _tprintf(_T("Usage: nxap [<options>] -l <host>\n")
+				         _T("   or: nxap [<options>] -u <guid> <host>\n")
+                     _T("Valid options are:\n")
+                     _T("   -a <auth>    : Authentication method. Valid methods are \"none\",\n")
+                     _T("                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n")
 #ifdef _WITH_ENCRYPTION
-                   "   -e <policy>  : Set encryption policy. Possible values are:\n"
-                   "                    0 = Encryption disabled;\n"
-                   "                    1 = Encrypt connection only if agent requires encryption;\n"
-                   "                    2 = Encrypt connection if agent supports encryption;\n"
-                   "                    3 = Force encrypted connection;\n"
-                   "                  Default value is 1.\n"
+                     _T("   -e <policy>  : Set encryption policy. Possible values are:\n")
+                     _T("                    0 = Encryption disabled;\n")
+                     _T("                    1 = Encrypt connection only if agent requires encryption;\n")
+                     _T("                    2 = Encrypt connection if agent supports encryption;\n")
+                     _T("                    3 = Force encrypted connection;\n")
+                     _T("                  Default value is 1.\n")
 #endif
-                   "   -h           : Display help and exit.\n"
+                     _T("   -h           : Display help and exit.\n")
 #ifdef _WITH_ENCRYPTION
-                   "   -K <file>    : Specify server's key file\n"
-                   "                  (default is " DEFAULT_DATA_DIR DFILE_KEYS ").\n"
+                     _T("   -K <file>    : Specify server's key file\n")
+                     _T("                  (default is ") DEFAULT_DATA_DIR DFILE_KEYS _T(").\n")
 #endif
-                   "   -p <port>    : Specify agent's port number. Default is %d.\n"
-                   "   -q           : Quiet mode.\n"
-                   "   -s <secret>  : Specify shared secret for authentication.\n"
-                   "   -v           : Display version and exit.\n"
-                   "   -w <seconds> : Set command timeout (default is 5 seconds)\n"
-                   "   -W <seconds> : Set connection timeout (default is 30 seconds)\n"
-                   "\n", wPort);
+                     _T("   -p <port>    : Specify agent's port number. Default is %d.\n")
+                     _T("   -q           : Quiet mode.\n")
+                     _T("   -s <secret>  : Specify shared secret for authentication.\n")
+                     _T("   -v           : Display version and exit.\n")
+                     _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
+                     _T("   -W <seconds> : Set connection timeout (default is 30 seconds)\n")
+                     _T("\n"), wPort);
 				bStart = FALSE;
             break;
          case 'a':   // Auth method
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
                iAuthMethod = AUTH_SHA1_HASH;
             else
             {
-               printf("Invalid authentication method \"%s\"\n", optarg);
+               _tprintf(_T("Invalid authentication method \"%hs\"\n"), optarg);
                bStart = FALSE;
             }
             break;
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 0) || (i > 65535))
             {
-               printf("Invalid port number \"%s\"\n", optarg);
+               _tprintf(_T("Invalid port number \"%hs\"\n"), optarg);
                bStart = FALSE;
             }
             else
@@ -169,17 +169,22 @@ int main(int argc, char *argv[])
             bVerbose = FALSE;
             break;
          case 's':   // Shared secret
-            nx_strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szSecret, MAX_SECRET_LENGTH);
+				szSecret[MAX_SECRET_LENGTH - 1] = 0;
+#else
+            nx_strncpy(szSecret, optarg, MAX_SECRET_LENGTH);
+#endif
             break;
          case 'v':   // Print version and exit
-            printf("NetXMS Agent Policy Management Tool Version " NETXMS_VERSION_STRING "\n");
+            _tprintf(_T("NetXMS Agent Policy Management Tool Version ") NETXMS_VERSION_STRING _T("\n"));
             bStart = FALSE;
             break;
          case 'w':   // Command timeout
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 1) || (i > 120))
             {
-               printf("Invalid timeout \"%s\"\n", optarg);
+               _tprintf(_T("Invalid timeout \"%hs\"\n"), optarg);
                bStart = FALSE;
             }
             else
@@ -191,7 +196,7 @@ int main(int argc, char *argv[])
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 1) || (i > 120))
             {
-               printf("Invalid timeout \"%s\"\n", optarg);
+               _tprintf(_T("Invalid timeout \"%hs\"\n"), optarg);
                bStart = FALSE;
             }
             else
@@ -205,17 +210,22 @@ int main(int argc, char *argv[])
             if ((iEncryptionPolicy < 0) ||
                 (iEncryptionPolicy > 3))
             {
-               printf("Invalid encryption policy %d\n", iEncryptionPolicy);
+               _tprintf(_T("Invalid encryption policy %d\n"), iEncryptionPolicy);
                bStart = FALSE;
             }
             break;
          case 'K':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szKeyFile, MAX_PATH);
+				szKeyFile[MAX_PATH - 1] = 0;
+#else
             nx_strncpy(szKeyFile, optarg, MAX_PATH);
+#endif
             break;
 #else
          case 'e':
          case 'K':
-            printf("ERROR: This tool was compiled without encryption support\n");
+            _tprintf(_T("ERROR: This tool was compiled without encryption support\n"));
             bStart = FALSE;
             break;
 #endif
@@ -224,7 +234,14 @@ int main(int argc, char *argv[])
 				break;
 			case 'u':	// Uninstall policy from agent
 				action = 1;
+#ifdef UNICODE
+				WCHAR wguid[256];
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, wguid, 256);
+				wguid[255] = 0;
+				uuid_parse(wguid, guid);
+#else
 				uuid_parse(optarg, guid);
+#endif
 				break;
          case '?':
             bStart = FALSE;
@@ -237,7 +254,7 @@ int main(int argc, char *argv[])
    // Check parameter correctness
 	if (action == -1)
 	{
-		printf("ERROR: You must specify either -l or -u option\n");
+		_tprintf(_T("ERROR: You must specify either -l or -u option\n"));
 		bStart = FALSE;
 	}
 
@@ -245,12 +262,12 @@ int main(int argc, char *argv[])
    {
       if (argc - optind < 1)
       {
-         printf("Required argument(s) missing.\nUse nxap -h to get complete command line syntax.\n");
+         _tprintf(_T("Required argument(s) missing.\nUse nxap -h to get complete command line syntax.\n"));
          bStart = FALSE;
       }
       else if ((iAuthMethod != AUTH_NONE) && (szSecret[0] == 0))
       {
-         printf("Shared secret not specified or empty\n");
+         _tprintf(_T("Shared secret not specified or empty\n"));
          bStart = FALSE;
       }
 
@@ -263,14 +280,14 @@ int main(int argc, char *argv[])
             pServerKey = LoadRSAKeys(szKeyFile);
             if (pServerKey == NULL)
             {
-               printf("Error loading RSA keys from \"%s\"\n", szKeyFile);
+               _tprintf(_T("Error loading RSA keys from \"%s\"\n"), szKeyFile);
                if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
                   bStart = FALSE;
             }
          }
          else
          {
-            printf("Error initializing cryptografy module\n");
+            _tprintf(_T("Error initializing cryptografy module\n"));
             if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
                bStart = FALSE;
          }
@@ -300,7 +317,7 @@ int main(int argc, char *argv[])
          }
          if ((dwAddr == 0) || (dwAddr == INADDR_NONE))
          {
-            fprintf(stderr, "Invalid host name or address specified\n");
+            _tprintf(_T("Invalid host name or address specified\n"));
          }
          else
          {
@@ -323,7 +340,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+               _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
          }
