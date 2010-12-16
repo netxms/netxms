@@ -1,0 +1,296 @@
+APACHE2-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	enterprises			      FROM SNMPv2-SMI
+	DisplayString  			      FROM SNMPv2-TC
+	OBJECT-TYPE, Integer32,
+	MODULE-IDENTITY                       FROM SNMPv2-SMI
+	MODULE-COMPLIANCE, OBJECT-GROUP       FROM SNMPv2-CONF;
+
+apache2-mib MODULE-IDENTITY
+    LAST-UPDATED "200402180000Z"
+    ORGANIZATION "Esteban Pizzini"
+    CONTACT-INFO    
+	 " Esteban Pizzini
+	   ep@fibertel.com.ar"
+    DESCRIPTION
+	"Apache2 Mib"
+    REVISION     "200402210000Z"
+    DESCRIPTION
+	"First draft"
+    ::= {enterprises 19786 1 1}
+
+apache2MIBInformation     OBJECT IDENTIFIER ::= { apache2-mib 1 }
+apache2MIBStatus          OBJECT IDENTIFIER ::= { apache2-mib 2 }
+apache2MIBNotifications	  OBJECT IDENTIFIER ::= { apache2-mib 4 }
+apache2MIBHttpErrors      OBJECT IDENTIFIER ::= { apache2-mib 5 }
+
+serverName OBJECT-TYPE
+       SYNTAX      DisplayString
+       MAX-ACCESS  read-only
+       STATUS      current
+       DESCRIPTION
+           "Server Name"
+       ::= { apache2MIBInformation 1 }
+
+serverVersion OBJECT-TYPE
+       SYNTAX      DisplayString
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "Apache Server Version"
+       ::= { apache2MIBInformation 2 }
+
+serverBuilt OBJECT-TYPE
+       SYNTAX      DisplayString
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "Apache build datetime"
+       ::= { apache2MIBInformation 3 }
+      
+serverRestart OBJECT-TYPE
+       SYNTAX      DisplayString
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "Last restart"
+       ::= { apache2MIBInformation 4 }
+
+serverRoot OBJECT-TYPE
+	SYNTAX		DisplayString
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+		"Apache's Root Path"
+	::= { apache2MIBInformation 5}
+
+serverPidfile OBJECT-TYPE
+        SYNTAX          DisplayString
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION
+                "Apache's PIDFILE"
+        ::= { apache2MIBInformation 6}
+
+serverTmpDir OBJECT-TYPE
+        SYNTAX          DisplayString
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION
+                "Temporary Directory for shared files (Net-SNMP <--> Apache)"
+        ::= { apache2MIBInformation 7}
+
+agentHttpAddress OBJECT-TYPE
+        SYNTAX          DisplayString
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION
+                "Port and Address that use the agent to get HTTP access to Apache"
+        ::= { apache2MIBInformation 8}
+
+
+totalServerPorts OBJECT-TYPE
+        SYNTAX     	Integer32
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION
+                "Total ports listened by Apache"
+      ::= { apache2MIBInformation 9}
+      
+--
+-- Tabla de puertos escuchados (implementada en serverListenPorts.c)
+--
+
+serverListenPorts OBJECT-TYPE
+        SYNTAX     SEQUENCE OF serverPort
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+                "List of ports listened by Apache"
+        ::= { apache2MIBInformation 10}
+
+serverPort OBJECT-TYPE
+        SYNTAX     	ServerPort
+        MAX-ACCESS     	not-accessible
+        STATUS          current
+        DESCRIPTION
+                "List of ports listened by Apache"
+        INDEX { serverPortIndex }
+      ::= { serverListenPorts 1}
+
+ServerPort ::= SEQUENCE {
+	serverPortIndex		Integer32,
+	serverPortNumber	Integer32
+}
+
+
+serverPortIndex OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+	"Port Index"
+    ::= { serverPort 1 }
+
+serverPortNumber OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+	"Port Number"
+    ::= { serverPort 2 }
+
+-- fin tabla
+
+totalTraffic OBJECT-TYPE
+       SYNTAX      Integer32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "Total Traffic"
+       ::= { apache2MIBStatus 1 }
+
+totalAccess OBJECT-TYPE
+       SYNTAX      Counter32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "Total HTTP Accesses"
+       ::= { apache2MIBStatus 2 }
+
+busyWorkers OBJECT-TYPE
+       SYNTAX      Gauge32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "total number of Apache's busy processes"
+       ::= { apache2MIBStatus 3 }
+
+idleWorkers OBJECT-TYPE
+       SYNTAX      Gauge32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "total number of Apache's idle processes"
+       ::= { apache2MIBStatus 4 }
+
+serverStatus OBJECT-TYPE
+       SYNTAX      Integer32 { down(0), up(1), notResponding(2), starting(3), stopping(4) }
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "Status
+            0 - Down
+            1 - Up
+            2 - Starting
+            3 - Shutting down
+            4 - not responding"
+       ::= { apache2MIBStatus 5 }
+
+serverUptime OBJECT-TYPE
+       SYNTAX      DisplayString
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "Uptime"
+       ::= { apache2MIBStatus 6 }
+
+agentHttpAccess OBJECT-TYPE
+        SYNTAX          Counter32
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION
+                "HTTP accesses generated by SNMP agent"
+        ::= { apache2MIBStatus 7}
+
+httpError400 OBJECT-TYPE
+       SYNTAX      Counter32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "HTTP_BAD_REQUEST"
+       ::= { apache2MIBHttpErrors 400 }
+
+httpError403 OBJECT-TYPE
+       SYNTAX      Counter32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "HTTP_FORBIDDEN"
+       ::= { apache2MIBHttpErrors 403 }
+
+httpError404 OBJECT-TYPE
+       SYNTAX      Counter32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "HTTP_NOT_FOUND"
+       ::= { apache2MIBHttpErrors 404 }
+
+httpError405 OBJECT-TYPE
+       SYNTAX      Counter32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "HTTP_METHOD_NOT_ALLOWED"
+       ::= { apache2MIBHttpErrors 405 }
+
+httpError500 OBJECT-TYPE
+       SYNTAX      Counter32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "HTTP_INTERNAL_SERVER_ERROR"
+       ::= { apache2MIBHttpErrors 500 }
+
+httpError501 OBJECT-TYPE
+       SYNTAX      Counter32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "HTTP_NOT_IMPLEMENTED"
+       ::= { apache2MIBHttpErrors 501 }
+
+httpError505 OBJECT-TYPE
+       SYNTAX      Counter32
+       MAX-ACCESS  read-write
+       STATUS      current
+       DESCRIPTION
+           "HTTP_VERSION_NOT_SUPPORTED"
+       ::= { apache2MIBHttpErrors 505 }
+
+serverStatusNotification NOTIFICATION-TYPE
+    OBJECTS { serverName, serverStatus }
+    MAX-ACCESS  accessible-for-notify
+    STATUS	current
+    DESCRIPTION
+	"Server status changes"
+    ::= { apache2MIBNotifications 1 }
+
+serverRestartNotification NOTIFICATION-TYPE
+    OBJECTS { serverRestart ,serverStatus}
+    MAX-ACCESS  accessible-for-notify
+    STATUS	current
+    DESCRIPTION
+	"Server Restart"
+    ::= { apache2MIBNotifications 2 }
+
+serverStartNotification NOTIFICATION-TYPE
+    OBJECTS { serverName, serverStatus }
+    MAX-ACCESS  accessible-for-notify
+    STATUS	current
+    DESCRIPTION
+	"Server Starting"
+    ::= { apache2MIBNotifications 3 }
+
+serverStopNotification NOTIFICATION-TYPE
+    OBJECTS { serverName, serverStatus }
+    MAX-ACCESS  accessible-for-notify
+    STATUS	current
+    DESCRIPTION
+	"Server Shutting down"
+    ::= { apache2MIBNotifications 4 }
+      
+END
+

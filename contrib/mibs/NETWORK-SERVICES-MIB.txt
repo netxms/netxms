@@ -62,6 +62,7 @@ application MODULE-IDENTITY
 
 DistinguishedName ::= TEXTUAL-CONVENTION
     DISPLAY-HINT "255a"
+
     STATUS current
     DESCRIPTION
         "A Distinguished Name represented in accordance with
@@ -159,6 +160,7 @@ applName OBJECT-TYPE
     DESCRIPTION
       "The name the network service application chooses to be
        known by."
+
     ::= {applEntry 2}
 
 applDirectoryName OBJECT-TYPE
@@ -256,6 +258,7 @@ applOutboundAssociations OBJECT-TYPE
     ::= {applEntry 9}
 
 applAccumulatedInboundAssociations OBJECT-TYPE
+
     SYNTAX Counter32
     MAX-ACCESS read-only
     STATUS current
@@ -451,7 +454,9 @@ assocDuration OBJECT-TYPE
        started.  If this association started prior to the last
        initialization of the network subsystem, then this
        object contains a zero value."
+
     ::= {assocEntry 5}
+
 
 -- Conformance information
 
@@ -459,6 +464,16 @@ applConformance OBJECT IDENTIFIER ::= {application 3}
 
 applGroups      OBJECT IDENTIFIER ::= {applConformance 1}
 applCompliances OBJECT IDENTIFIER ::= {applConformance 2}
+
+--applGroup OBJECT IDENTIFIER ::= { applGroups  1 }
+   applGroup OBJECT-GROUP
+       OBJECTS {
+           applIndex
+       }
+       STATUS current
+       DESCRIPTION
+         "."
+       ::= {applGroups 1}
 
 -- Compliance statements
 
@@ -526,6 +541,7 @@ assocRFC2788Compliance MODULE-COMPLIANCE
     MODULE
       MANDATORY-GROUPS {applRFC2788Group, assocRFC2788Group}
     ::= {applCompliances 6}
+
 
 -- Units of conformance
 

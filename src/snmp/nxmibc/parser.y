@@ -852,6 +852,7 @@ TextualConventionAssignment:
 SnmpNotificationTypeAssignment:
     LCidentifier NOTIFICATION_TYPE_SYM
     SnmpObjectsPart
+    SnmpAccessPart
     SnmpStatusPart
     SnmpDescriptionPart
     SnmpReferencePart
@@ -861,9 +862,10 @@ SnmpNotificationTypeAssignment:
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->iSyntax = MIB_TYPE_NOTIFTYPE;
-   $$->iStatus = $4;
-   $$->pszDescription = $5;
-   $$->pOID = $7;
+   $$->iAccess = $4;
+   $$->iStatus = $5;
+   $$->pszDescription = $6;
+   $$->pOID = $8;
 }
 |   LCidentifier TRAP_TYPE_SYM
     ENTERPRISE_SYM LCidentifier
