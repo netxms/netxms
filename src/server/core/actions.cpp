@@ -286,7 +286,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 
 static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
 {
-	system((char *)pArg);
+	_tsystem((TCHAR *)pArg);
 	free(pArg);
 	return THREAD_OK;
 }

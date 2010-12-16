@@ -3142,139 +3142,146 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
-         {
-            DB_RESULT hResult;
-            DWORD i, dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo;
-            DWORD dwNumRows = 0;
-            TCHAR szQuery[512], szCond[256];
-            int iPos = 0, iType;
-            DCI_DATA_HEADER *pData = NULL;
-            DCI_DATA_ROW *pCurr;
-				DCItem *dci;
-
-            // Get request parameters
-            dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-            dwMaxRows = pRequest->GetVariableLong(VID_MAX_ROWS);
-            dwTimeFrom = pRequest->GetVariableLong(VID_TIME_FROM);
-            dwTimeTo = pRequest->GetVariableLong(VID_TIME_TO);
-
-				dci = ((Node *)pObject)->getItemById(dwItemId);
-				if (dci != NULL)
+			if (pObject->Type() == OBJECT_NODE)
+			{
+				if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
 				{
-					if ((dwMaxRows == 0) || (dwMaxRows > MAX_DCI_DATA_RECORDS))
-						dwMaxRows = MAX_DCI_DATA_RECORDS;
+					DB_RESULT hResult;
+					DWORD i, dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo;
+					DWORD dwNumRows = 0;
+					TCHAR szQuery[512], szCond[256];
+					int iPos = 0, iType;
+					DCI_DATA_HEADER *pData = NULL;
+					DCI_DATA_ROW *pCurr;
+					DCItem *dci;
 
-					szCond[0] = 0;
-					if (dwTimeFrom != 0)
+					// Get request parameters
+					dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
+					dwMaxRows = pRequest->GetVariableLong(VID_MAX_ROWS);
+					dwTimeFrom = pRequest->GetVariableLong(VID_TIME_FROM);
+					dwTimeTo = pRequest->GetVariableLong(VID_TIME_TO);
+
+					dci = ((Node *)pObject)->getItemById(dwItemId);
+					if (dci != NULL)
 					{
-						_sntprintf(szCond, 256, _T(" AND idata_timestamp>=%d"), dwTimeFrom);
-						iPos = (int)_tcslen(szCond);
-					}
-					if (dwTimeTo != 0)
-					{
-						_sntprintf(&szCond[iPos], 256 - iPos, _T(" AND idata_timestamp<=%d"), dwTimeTo);
-					}
+						if ((dwMaxRows == 0) || (dwMaxRows > MAX_DCI_DATA_RECORDS))
+							dwMaxRows = MAX_DCI_DATA_RECORDS;
 
-					// Get item's data type to determine actual row size
-					iType = dci->getDataType();
-					// Create database-dependent query for fetching N rows
-					switch(g_nDBSyntax)
-					{
-						case DB_SYNTAX_MSSQL:
-							_sntprintf(szQuery, 512, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
-										 dwMaxRows, dwObjectId, dwItemId, szCond);
-							break;
-						case DB_SYNTAX_ORACLE:
-							_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %d ORDER BY idata_timestamp DESC"),
-										 dwObjectId, dwItemId, szCond, dwMaxRows);
-							break;
-						case DB_SYNTAX_MYSQL:
-						case DB_SYNTAX_PGSQL:
-						case DB_SYNTAX_SQLITE:
-							_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
-										 dwObjectId, dwItemId, szCond, dwMaxRows);
-							break;
-						default:
-							_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
-										 dwObjectId, dwItemId, szCond, dwMaxRows);
-							break;
-					}
-					hResult = DBSelect(g_hCoreDB, szQuery);
-					if (hResult != NULL)
-					{
-						// Send CMD_REQUEST_COMPLETED message
-						msg.SetVariable(VID_RCC, RCC_SUCCESS);
-						dci->fillMessageWithThresholds(&msg);
-						sendMessage(&msg);
-
-						dwNumRows = DBGetNumRows(hResult);
-
-						// Allocate memory for data and prepare data header
-						pData = (DCI_DATA_HEADER *)malloc(dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER));
-						pData->dwDataType = htonl((DWORD)iType);
-						pData->dwItemId = htonl(dwItemId);
-
-						// Fill memory block with records
-						pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-						for(i = 0; i < dwNumRows; i++)
+						szCond[0] = 0;
+						if (dwTimeFrom != 0)
 						{
-							pCurr->dwTimeStamp = htonl(DBGetFieldULong(hResult, i, 0));
-							switch(iType)
+							_sntprintf(szCond, 256, _T(" AND idata_timestamp>=%d"), dwTimeFrom);
+							iPos = (int)_tcslen(szCond);
+						}
+						if (dwTimeTo != 0)
+						{
+							_sntprintf(&szCond[iPos], 256 - iPos, _T(" AND idata_timestamp<=%d"), dwTimeTo);
+						}
+
+						// Get item's data type to determine actual row size
+						iType = dci->getDataType();
+						// Create database-dependent query for fetching N rows
+						switch(g_nDBSyntax)
+						{
+							case DB_SYNTAX_MSSQL:
+								_sntprintf(szQuery, 512, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
+											 dwMaxRows, dwObjectId, dwItemId, szCond);
+								break;
+							case DB_SYNTAX_ORACLE:
+								_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %d ORDER BY idata_timestamp DESC"),
+											 dwObjectId, dwItemId, szCond, dwMaxRows);
+								break;
+							case DB_SYNTAX_MYSQL:
+							case DB_SYNTAX_PGSQL:
+							case DB_SYNTAX_SQLITE:
+								_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
+											 dwObjectId, dwItemId, szCond, dwMaxRows);
+								break;
+							default:
+								_sntprintf(szQuery, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
+											 dwObjectId, dwItemId, szCond, dwMaxRows);
+								break;
+						}
+						hResult = DBSelect(g_hCoreDB, szQuery);
+						if (hResult != NULL)
+						{
+							// Send CMD_REQUEST_COMPLETED message
+							msg.SetVariable(VID_RCC, RCC_SUCCESS);
+							dci->fillMessageWithThresholds(&msg);
+							sendMessage(&msg);
+
+							dwNumRows = DBGetNumRows(hResult);
+
+							// Allocate memory for data and prepare data header
+							pData = (DCI_DATA_HEADER *)malloc(dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER));
+							pData->dwDataType = htonl((DWORD)iType);
+							pData->dwItemId = htonl(dwItemId);
+
+							// Fill memory block with records
+							pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
+							for(i = 0; i < dwNumRows; i++)
 							{
-								case DCI_DT_INT:
-								case DCI_DT_UINT:
-									pCurr->value.dwInteger = htonl(DBGetFieldULong(hResult, i, 1));
-									break;
-								case DCI_DT_INT64:
-								case DCI_DT_UINT64:
-									pCurr->value.qwInt64 = htonq(DBGetFieldUInt64(hResult, i, 1));
-									break;
-								case DCI_DT_FLOAT:
-									pCurr->value.dFloat = htond(DBGetFieldDouble(hResult, i, 1));
-									break;
-								case DCI_DT_STRING:
+								pCurr->dwTimeStamp = htonl(DBGetFieldULong(hResult, i, 0));
+								switch(iType)
+								{
+									case DCI_DT_INT:
+									case DCI_DT_UINT:
+										pCurr->value.dwInteger = htonl(DBGetFieldULong(hResult, i, 1));
+										break;
+									case DCI_DT_INT64:
+									case DCI_DT_UINT64:
+										pCurr->value.qwInt64 = htonq(DBGetFieldUInt64(hResult, i, 1));
+										break;
+									case DCI_DT_FLOAT:
+										pCurr->value.dFloat = htond(DBGetFieldDouble(hResult, i, 1));
+										break;
+									case DCI_DT_STRING:
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-									DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
-									ucs4_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+										DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
+										ucs4_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
 #else
-									DBGetField(hResult, i, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+										DBGetField(hResult, i, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
 #endif                        
 #else
-									DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
-									mb_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+										DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
+										mb_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
 #endif
-									SwapWideString(pCurr->value.szString);
-									break;
+										SwapWideString(pCurr->value.szString);
+										break;
+								}
+								pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[iType]);
 							}
-							pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[iType]);
-						}
-						DBFreeResult(hResult);
-						pData->dwNumRows = htonl(dwNumRows);
+							DBFreeResult(hResult);
+							pData->dwNumRows = htonl(dwNumRows);
 
-						// Prepare and send raw message with fetched data
-						m_pSendQueue->Put(
-							CreateRawNXCPMessage(CMD_DCI_DATA, pRequest->GetId(), 0,
-														dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER),
-														pData, NULL));
-						free(pData);
-						bSuccess = TRUE;
+							// Prepare and send raw message with fetched data
+							m_pSendQueue->Put(
+								CreateRawNXCPMessage(CMD_DCI_DATA, pRequest->GetId(), 0,
+															dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER),
+															pData, NULL));
+							free(pData);
+							bSuccess = TRUE;
+						}
+						else
+						{
+							msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+						}
 					}
 					else
 					{
-						msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+						msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
 					}
 				}
 				else
 				{
-					msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+					msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
 				}
-         }
-         else
-         {
-            msg.SetVariable(VID_RCC, RCC_DB_CONNECTION_LOST);
-         }
+			}
+			else
+			{
+	         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
       }
       else
       {

@@ -63,6 +63,7 @@ import org.netxms.ui.eclipse.charts.views.helpers.GraphSettingsFactory;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.swtchart.IAxis;
 import org.swtchart.LineStyle;
 
@@ -429,7 +430,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			}
 		};
 		actionZoomIn.setText("Zoom &in");
-		actionZoomIn.setImageDescriptor(ConsoleSharedData.getLibraryImageDescriptor(ConsoleSharedData.IMAGE_ZOOM_IN));
+		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action() {
 			/* (non-Javadoc)
@@ -443,7 +444,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			}
 		};
 		actionZoomOut.setText("Zoom &out");
-		actionZoomOut.setImageDescriptor(ConsoleSharedData.getLibraryImageDescriptor(ConsoleSharedData.IMAGE_ZOOM_OUT));
+		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
 		actionAdjustX = new Action() {
 			/* (non-Javadoc)

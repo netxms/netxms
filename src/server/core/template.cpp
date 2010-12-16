@@ -372,7 +372,7 @@ void Template::loadItemsFromDB()
    TCHAR szQuery[512];
    DB_RESULT hResult;
 
-   _sntprintf(szQuery, sizeof(szQuery),
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
               _T("status,delta_calculation,transformation,template_id,description,")
               _T("instance,template_item_id,adv_schedule,all_thresholds,resource_id,")

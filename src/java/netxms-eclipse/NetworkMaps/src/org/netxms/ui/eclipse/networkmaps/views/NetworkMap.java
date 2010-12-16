@@ -76,6 +76,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Base class for network map views
@@ -302,7 +303,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				viewer.zoomIn();
 			}
 		};
-		actionZoomIn.setImageDescriptor(ConsoleSharedData.getLibraryImageDescriptor(ConsoleSharedData.IMAGE_ZOOM_IN));
+		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
 
 		actionZoomOut = new Action("Zoom &out") {
 			@Override
@@ -311,7 +312,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				viewer.zoomOut();
 			}
 		};
-		actionZoomOut.setImageDescriptor(ConsoleSharedData.getLibraryImageDescriptor(ConsoleSharedData.IMAGE_ZOOM_OUT));
+		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 		
 		actionZoomTo = viewer.createZoomActions();
 

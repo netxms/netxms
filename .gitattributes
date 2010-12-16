@@ -961,6 +961,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/DataCol
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/StatusDisplayInfo.java -text
 src/java/netxms-eclipse/library/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/library/build.properties -text
+src/java/netxms-eclipse/library/icons/alarm.png -text
 src/java/netxms-eclipse/library/icons/checkbox_off.png -text
 src/java/netxms-eclipse/library/icons/checkbox_on.png -text
 src/java/netxms-eclipse/library/icons/refresh.gif -text

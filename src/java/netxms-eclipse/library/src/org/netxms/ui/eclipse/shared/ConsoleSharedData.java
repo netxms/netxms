@@ -32,6 +32,7 @@ import org.netxms.ui.eclipse.library.Activator;
  */
 public class ConsoleSharedData
 {
+	public static final String IMAGE_ALARM = "icons/alarm.png";
 	public static final String IMAGE_REFRESH = "icons/refresh.gif";
 	public static final String IMAGE_ZOOM_IN = "icons/zoom_in.png";
 	public static final String IMAGE_ZOOM_OUT = "icons/zoom_out.png";

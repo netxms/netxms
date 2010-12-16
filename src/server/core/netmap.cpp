@@ -140,7 +140,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 		String data = DBPrepareString(hdb, config->createXml());
 		delete config;
 		int len = data.getSize() + 256;
-		TCHAR *eq = (TCHAR *)malloc(len);
+		TCHAR *eq = (TCHAR *)malloc(len * sizeof(TCHAR));
       _sntprintf(eq, len, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data) VALUES (%d,%d,%d,%s)"),
 		           m_dwId, m_elements[i]->getId(), m_elements[i]->getType(), (const TCHAR *)data);
       DBQuery(hdb, eq);

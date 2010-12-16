@@ -27,15 +27,23 @@ import org.netxms.ui.eclipse.library.Activator;
  */
 public class SharedIcons
 {
+	public static ImageDescriptor ALARM;
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
+	public static ImageDescriptor REFRESH;
+	public static ImageDescriptor ZOOM_IN;
+	public static ImageDescriptor ZOOM_OUT;
 	
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
 	public static void init()
 	{
+		ALARM = Activator.getImageDescriptor("icons/alarm.png");
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png");
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png");
+		REFRESH = Activator.getImageDescriptor("icons/refresh.gif");
+		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png");
+		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png");
 	}
 }
