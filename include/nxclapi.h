@@ -713,8 +713,12 @@ enum
 // Network map layouts
 //
 
-#define MAP_LAYOUT_MANUAL     0
-#define MAP_LAYOUT_RADIAL     1
+#define MAP_LAYOUT_MANUAL        0x7FFF
+#define MAP_LAYOUT_SPRING        0
+#define MAP_LAYOUT_RADIAL        1
+#define MAP_LAYOUT_HTREE         2
+#define MAP_LAYOUT_VTREE		   3
+#define MAP_LAYOUT_SPARSE_VTREE  4
 
 
 //

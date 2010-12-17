@@ -50,6 +50,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Script editor view
@@ -175,7 +176,7 @@ public class ScriptEditorView extends ViewPart
 			}
 		};
 		actionSave.setText("&Save");
-		actionSave.setImageDescriptor(Activator.getImageDescriptor("icons/save_edit.gif"));
+		actionSave.setImageDescriptor(SharedIcons.SAVE);
 	}
 
 	/**

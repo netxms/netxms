@@ -48,6 +48,7 @@ libgd           BSD-like
 libipfix        LGPL
 libjpeg         BSD-like
 libpng          BSD-like
+libtre          BSD-like
 scilexer        BSD-like
 sqlite          BSD-like
 zlib            BSD-like

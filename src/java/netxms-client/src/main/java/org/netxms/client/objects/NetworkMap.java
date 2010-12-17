@@ -34,6 +34,13 @@ import org.netxms.client.maps.elements.NetworkMapElement;
  */
 public class NetworkMap extends GenericObject
 {
+	public static final int LAYOUT_MANUAL = 0x7FFF;
+	public static final int LAYOUT_SPRING = 0;
+	public static final int LAYOUT_RADIAL = 1;
+	public static final int LAYOUT_HTREE = 2;
+	public static final int LAYOUT_VTREE = 3;
+	public static final int LAYOUT_SPARSE_VTREE = 4;
+	
 	private int mapType;
 	private int layout;
 	private int background;

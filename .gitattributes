@@ -640,7 +640,6 @@ src/java/netxms-eclipse/NXSL/icons/folder.png -text
 src/java/netxms-eclipse/NXSL/icons/function.gif -text
 src/java/netxms-eclipse/NXSL/icons/library.png -text
 src/java/netxms-eclipse/NXSL/icons/new.png -text
-src/java/netxms-eclipse/NXSL/icons/save_edit.gif -text
 src/java/netxms-eclipse/NXSL/icons/script.png -text
 src/java/netxms-eclipse/NXSL/icons/var_global.gif -text
 src/java/netxms-eclipse/NXSL/icons/var_local.gif -text
@@ -692,6 +691,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/action
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowLayer2Topology.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowServiceComponents.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowServiceDependency.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/algorithms/ManualLayout.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/algorithms/SparseTree.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/dialogs/CreateNetworkMapDialog.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/preferencepages/GeneralMapPreferences.java -text
@@ -966,6 +966,7 @@ src/java/netxms-eclipse/library/icons/alarm.png -text
 src/java/netxms-eclipse/library/icons/checkbox_off.png -text
 src/java/netxms-eclipse/library/icons/checkbox_on.png -text
 src/java/netxms-eclipse/library/icons/refresh.gif -text
+src/java/netxms-eclipse/library/icons/save.gif -text
 src/java/netxms-eclipse/library/icons/zoom_in.png -text
 src/java/netxms-eclipse/library/icons/zoom_out.png -text
 src/java/netxms-eclipse/library/jar/simple-xml-2.3.5.jar -text

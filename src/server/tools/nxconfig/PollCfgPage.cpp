@@ -69,7 +69,7 @@ BOOL CPollCfgPage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 
    // Discovery
-   _stprintf(szBuffer, _T("%d"), pc->m_dwDiscoveryPI);
+   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwDiscoveryPI);
    SetDlgItemText(IDC_EDIT_INT_DP, szBuffer);
    SendDlgItemMessage(IDC_CHECK_RUN_DISCOVERY, BM_SETCHECK, pc->m_bRunAutoDiscovery);
    EnableDlgItem(this, IDC_STATIC_DI, pc->m_bRunAutoDiscovery);
@@ -77,15 +77,15 @@ BOOL CPollCfgPage::OnInitDialog()
    EnableDlgItem(this, IDC_EDIT_INT_DP, pc->m_bRunAutoDiscovery);
 
    // Status poll
-   _stprintf(szBuffer, _T("%d"), pc->m_dwNumStatusPollers);
+   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwNumStatusPollers);
    SetDlgItemText(IDC_EDIT_NUM_SP, szBuffer);
-   _stprintf(szBuffer, _T("%d"), pc->m_dwStatusPI);
+   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwStatusPI);
    SetDlgItemText(IDC_EDIT_INT_SP, szBuffer);
 	
    // Configuration poll
-   _stprintf(szBuffer, _T("%d"), pc->m_dwNumConfigPollers);
+   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwNumConfigPollers);
    SetDlgItemText(IDC_EDIT_NUM_CP, szBuffer);
-   _stprintf(szBuffer, _T("%d"), pc->m_dwConfigurationPI);
+   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwConfigurationPI);
    SetDlgItemText(IDC_EDIT_INT_CP, szBuffer);
 	
 	return TRUE;

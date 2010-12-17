@@ -126,6 +126,18 @@ public class NetworkMapElement
 	{
 		return id;
 	}
+	
+	/**
+	 * Set elements's location
+	 * 
+	 * @param x
+	 * @param y
+	 */
+	public void setLocation(int x, int y)
+	{
+		this.x = x;
+		this.y = y;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)

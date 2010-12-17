@@ -28,6 +28,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IContributionItem;
@@ -55,6 +56,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.eclipse.zest.core.viewers.AbstractZoomableViewer;
 import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
+import org.eclipse.zest.core.widgets.Graph;
+import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
@@ -70,6 +73,7 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
@@ -84,7 +88,6 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  */
 public abstract class NetworkMap extends ViewPart implements ISelectionProvider, IZoomableWorkbenchPart
 {
-	protected static final int LAYOUT_MANUAL = -1;
 	protected static final int LAYOUT_SPRING = 0;
 	protected static final int LAYOUT_RADIAL = 1;
 	protected static final int LAYOUT_HTREE = 2;
@@ -101,6 +104,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	protected SessionListener sessionListener;
 	protected MapLabelProvider labelProvider;
 	protected int layoutAlgorithm = LAYOUT_SPRING;
+	protected boolean allowManualLayout = false;     // True if manual layout can be switched on
+	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
 	
 	private RefreshAction actionRefresh;
 	private Action actionShowStatusIcon;
@@ -110,6 +115,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private Action actionZoomOut;
 	private Action[] actionZoomTo;
 	private Action[] actionSetAlgorithm;
+	private Action actionEnableAutomaticLayout;
+	private Action actionSaveLayout;
 	
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -147,8 +154,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		viewer.setContentProvider(new MapContentProvider());
 		labelProvider = new MapLabelProvider(viewer);
 		viewer.setLabelProvider(labelProvider);
-		viewer.setLayoutAlgorithm(new SpringLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
-		viewer.setInput(mapPage);
 		
 		getSite().setSelectionProvider(this);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -167,10 +172,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			}
 		});
 		
-		createActions();
-		contributeToActionBars();
-		createPopupMenu();
-		
 		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -180,6 +181,20 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			}
 		};
 		session.addListener(sessionListener);
+
+		createActions();
+		contributeToActionBars();
+		createPopupMenu();
+		
+		if (automaticLayoutEnabled)
+		{
+			setLayoutAlgorithm(layoutAlgorithm);
+		}
+		else
+		{
+			viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING, viewer.getGraphControl()));
+		}
+		viewer.setInput(mapPage);
 	}
 
 	/**
@@ -248,6 +263,55 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		actionSetAlgorithm[layoutAlgorithm].setChecked(false);
 		layoutAlgorithm = alg;
 		actionSetAlgorithm[layoutAlgorithm].setChecked(true);
+	}
+	
+	/**
+	 * Update stored object positions with actual positions read from graph control
+	 */
+	protected void updateObjectPositions()
+	{
+		Graph graph = viewer.getGraphControl();
+		List<?> nodes = graph.getNodes();
+		for(Object o : nodes)
+		{
+			if (o instanceof GraphNode)
+			{
+				Object data = ((GraphNode)o).getData();
+				if (data instanceof NetworkMapObject)
+				{
+					Point loc = ((GraphNode)o).getLocation();
+					((NetworkMapObject)data).setLocation(loc.x, loc.y);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Set manual layout mode
+	 */
+	protected void setManualLayout()
+	{
+		updateObjectPositions();
+		
+		automaticLayoutEnabled = false;
+		viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING, viewer.getGraphControl()), true);
+		
+		for(int i = 0; i < actionSetAlgorithm.length; i++)
+			actionSetAlgorithm[i].setEnabled(false);
+		actionSaveLayout.setEnabled(true);
+	}
+	
+	/**
+	 * Set automatic layout mode
+	 */
+	protected void setAutomaticLayout()
+	{
+		automaticLayoutEnabled = true;
+		setLayoutAlgorithm(layoutAlgorithm);
+		
+		for(int i = 0; i < actionSetAlgorithm.length; i++)
+			actionSetAlgorithm[i].setEnabled(true);
+		actionSaveLayout.setEnabled(false);
 	}
 
 	/**
@@ -328,7 +392,36 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				}
 			};
 			actionSetAlgorithm[i].setChecked(layoutAlgorithm == i);
+			actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
 		}
+		
+		actionEnableAutomaticLayout = new Action("Enable &automatic layout", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				if (automaticLayoutEnabled)
+				{
+					setManualLayout();
+				}
+				else
+				{
+					setAutomaticLayout();
+				}
+				setChecked(automaticLayoutEnabled);
+			}
+		};
+		actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
+		
+		actionSaveLayout = new Action("&Save layout") {
+			@Override
+			public void run()
+			{
+				updateObjectPositions();
+				saveLayout();
+			}
+		};
+		actionSaveLayout.setImageDescriptor(SharedIcons.SAVE);
+		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
 	}
 	
 	/**
@@ -338,8 +431,18 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	protected IContributionItem createLayoutSubmenu()
 	{
 		MenuManager layout = new MenuManager("&Layout");
+		if (allowManualLayout)
+		{
+			layout.add(actionEnableAutomaticLayout);
+			layout.add(new Separator());
+		}
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			layout.add(actionSetAlgorithm[i]);
+		if (allowManualLayout)
+		{
+			layout.add(new Separator());
+			layout.add(actionSaveLayout);
+		}
 		return layout;
 	}
 	
@@ -378,10 +481,14 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 * @param manager
 	 */
 	protected void fillLocalToolBar(IToolBarManager manager)
-	{	
+	{
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
 		manager.add(new Separator());
+		if (allowManualLayout)
+		{
+			manager.add(actionSaveLayout);
+		}
 		manager.add(actionRefresh);
 	}
 	
@@ -473,6 +580,14 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				return Status.OK_STATUS;
 			}
 		}.schedule();
+	}
+	
+	/**
+	 * Called when map layout has to be saved. Object positions already updated
+	 * when this method is called. Default implementation does nothing.
+	 */
+	protected void saveLayout()
+	{
 	}
 
 	/* (non-Javadoc)

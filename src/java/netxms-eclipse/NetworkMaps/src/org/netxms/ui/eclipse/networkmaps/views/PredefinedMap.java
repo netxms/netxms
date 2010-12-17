@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.progress.UIJob;
-import org.eclipse.zest.core.widgets.ZestStyles;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -55,6 +54,15 @@ public class PredefinedMap extends NetworkMap
 	private Action actionAddObject;
 	private Action actionLinkObjects;
 	
+	/**
+	 * Creare predefined map view
+	 */
+	public PredefinedMap()
+	{
+		super();
+		allowManualLayout = true;
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#init(org.eclipse.ui.IViewSite)
 	 */
@@ -64,6 +72,16 @@ public class PredefinedMap extends NetworkMap
 		super.init(site);
 		mapObject = (org.netxms.client.objects.NetworkMap)rootObject;
 		setPartName(rootObject.getObjectName());
+		
+		if (mapObject.getLayout() == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
+		{
+			automaticLayoutEnabled = false;
+		}
+		else
+		{
+			automaticLayoutEnabled = true;
+			layoutAlgorithm = mapObject.getLayout();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -167,6 +185,15 @@ public class PredefinedMap extends NetworkMap
 		super.fillLocalToolBar(manager);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#saveLayout()
+	 */
+	@Override
+	protected void saveLayout()
+	{
+		saveMap();
+	}
+
 	/**
 	 * Add object to map
 	 */
@@ -216,6 +243,7 @@ public class PredefinedMap extends NetworkMap
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
+		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL);
 		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -228,7 +256,7 @@ public class PredefinedMap extends NetworkMap
 						viewer.setInput(mapPage);
 						return Status.OK_STATUS;
 					}
-				};
+				}.schedule();
 			}
 
 			@Override

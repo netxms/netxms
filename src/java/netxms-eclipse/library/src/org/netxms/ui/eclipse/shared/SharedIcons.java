@@ -31,6 +31,7 @@ public class SharedIcons
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
 	public static ImageDescriptor REFRESH;
+	public static ImageDescriptor SAVE;
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
 	
@@ -43,6 +44,7 @@ public class SharedIcons
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png");
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png");
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif");
+		SAVE = Activator.getImageDescriptor("icons/save.gif");
 		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png");
 		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png");
 	}
