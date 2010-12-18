@@ -24,23 +24,28 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * View for predefined map
@@ -53,6 +58,8 @@ public class PredefinedMap extends NetworkMap
 	private org.netxms.client.objects.NetworkMap mapObject; 
 	private Action actionAddObject;
 	private Action actionLinkObjects;
+	private Action actionAddGroupBox;
+	private Action actionAddImage;
 	
 	/**
 	 * Creare predefined map view
@@ -126,6 +133,22 @@ public class PredefinedMap extends NetworkMap
 		};
 		actionAddObject.setAccelerator(SWT.CTRL | 'A');
 		
+		actionAddGroupBox = new Action("&Group box...") {
+			@Override
+			public void run()
+			{
+				addGroupBoxDecoration();
+			}
+		};
+		
+		actionAddImage = new Action("&Image...") {
+			@Override
+			public void run()
+			{
+				addImageDecoration();
+			}
+		};
+		
 		actionLinkObjects = new Action("&Link selected objects") {
 			@Override
 			public void run()
@@ -137,6 +160,18 @@ public class PredefinedMap extends NetworkMap
 		actionLinkObjects.setImageDescriptor(Activator.getImageDescriptor("icons/link_add.png"));
 	}
 	
+	/**
+	 * Create "Add decoration" submenu
+	 * @return menu manager for decoration submenu
+	 */
+	private IMenuManager createDecorationAdditionSubmenu()
+	{
+		MenuManager menu = new MenuManager("Add &decoration");
+		menu.add(actionAddGroupBox);
+		menu.add(actionAddImage);
+		return menu;
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillMapContextMenu(org.eclipse.jface.action.IMenuManager)
 	 */
@@ -144,6 +179,7 @@ public class PredefinedMap extends NetworkMap
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
 		manager.add(actionAddObject);
+		manager.add(createDecorationAdditionSubmenu());
 		manager.add(new Separator());
 		super.fillMapContextMenu(manager);
 	}
@@ -170,6 +206,7 @@ public class PredefinedMap extends NetworkMap
 	{
 		manager.add(actionAddObject);
 		manager.add(actionLinkObjects);
+		manager.add(createDecorationAdditionSubmenu());
 		manager.add(new Separator());
 		super.fillLocalPullDown(manager);
 	}
@@ -234,6 +271,32 @@ public class PredefinedMap extends NetworkMap
 			mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, id1, id2));
 			saveMap();
 		}
+	}
+	
+	/**
+	 * Add group box decoration
+	 */
+	private void addGroupBoxDecoration()
+	{
+		AddGroupBoxDialog dlg = new AddGroupBoxDialog(getSite().getShell());
+		if (dlg.open() != Window.OK)
+			return;
+		
+		NetworkMapDecoration element = new NetworkMapDecoration(mapPage.createElementId(), NetworkMapDecoration.GROUP_BOX);
+		element.setSize(dlg.getWidth(), dlg.getHeight());
+		element.setTitle(dlg.getTitle());
+		element.setColor(ColorConverter.rgbToInt(new RGB(64, 105, 156)));
+		mapPage.addElement(element);
+		
+		saveMap();
+	}
+	
+	/**
+	 * Add image decoration
+	 */
+	private void addImageDecoration()
+	{
+		
 	}
 	
 	/**

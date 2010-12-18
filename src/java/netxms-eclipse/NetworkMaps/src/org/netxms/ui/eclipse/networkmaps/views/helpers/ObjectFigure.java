@@ -78,6 +78,7 @@ public class ObjectFigure extends Figure
 		setSize(IMAGE_SIZE_X + IMAGE_MARGIN_X * 2, IMAGE_SIZE_Y + IMAGE_MARGIN_Y * 2 + ls.height);
 		
 		setToolTip(new ObjectTooltip(object));
+		setFocusTraversable(true);
 	}
 
 	/* (non-Javadoc)
@@ -113,7 +114,7 @@ public class ObjectFigure extends Figure
 			rect = new Rectangle(getBounds());
 		}
 			
-		// Status background
+		// Status frame
 		if (labelProvider.isShowStatusFrame())
 		{
 			rect.x += IMAGE_MARGIN_X - BACKGROUND_MARGIN_X;

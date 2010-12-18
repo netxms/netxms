@@ -22,7 +22,7 @@ import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm;
 import org.eclipse.zest.layouts.dataStructures.InternalNode;
 import org.eclipse.zest.layouts.dataStructures.InternalRelationship;
-import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
  * Manual layout of graph nodes
@@ -65,9 +65,9 @@ public class ManualLayout extends AbstractLayoutAlgorithm
 		for(int i = 0; i < entitiesToLayout.length; i++)
 		{
 			GraphItem item = (GraphItem)entitiesToLayout[i].getLayoutEntity().getGraphData();
-			if ((item != null) && (item.getData() instanceof NetworkMapObject))
+			if ((item != null) && (item.getData() instanceof NetworkMapElement))
 			{
-				NetworkMapObject mapObject = (NetworkMapObject)item.getData();
+				NetworkMapElement mapObject = (NetworkMapElement)item.getData();
 				entitiesToLayout[i].setLocation(mapObject.getX(), mapObject.getY());
 			}
 		}

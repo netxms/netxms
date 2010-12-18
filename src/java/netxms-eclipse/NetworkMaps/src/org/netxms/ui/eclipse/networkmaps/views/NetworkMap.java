@@ -64,6 +64,7 @@ import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.HorizontalTreeLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
@@ -73,6 +74,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -206,7 +208,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		{
 			viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 		}
-		viewer.getGraphControl().getLayoutAlgorithm().setFilter(new GraphLayoutFilter());
 		viewer.setInput(mapPage);
 	}
 
@@ -244,19 +245,21 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	@SuppressWarnings("rawtypes")
 	protected void setLayoutAlgorithm(int alg)
 	{
+		LayoutAlgorithm algorithm;
+		
 		switch(alg)
 		{
 			case LAYOUT_SPRING:
-				viewer.setLayoutAlgorithm(new SpringLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING), true);
+				algorithm = new SpringLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
 				break;
 			case LAYOUT_RADIAL:
-				viewer.setLayoutAlgorithm(new RadialLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING), true);
+				algorithm = new RadialLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
 				break;
 			case LAYOUT_HTREE:
-				viewer.setLayoutAlgorithm(new HorizontalTreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING), true);
+				algorithm = new HorizontalTreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
 				break;
 			case LAYOUT_VTREE:
-				viewer.setLayoutAlgorithm(new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING), true);
+				algorithm = new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
 				break;
 			case LAYOUT_SPARSE_VTREE:
 				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
@@ -267,11 +270,19 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 						return arg0.toString().compareToIgnoreCase(arg1.toString());
 					}
 				});
-				viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
+				algorithm = new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
 						new LayoutAlgorithm[] { mainLayoutAlgorithm,
-						                        new SparseTree(LayoutStyles.NO_LAYOUT_NODE_RESIZING) }));
+						                        new SparseTree(LayoutStyles.NO_LAYOUT_NODE_RESIZING) });
+				break;
+			default:
+				algorithm = new GridLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
 				break;
 		}
+		algorithm.setFilter(new GraphLayoutFilter(true));
+		ManualLayout decorationLayoutAlgorithm = new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING);
+		decorationLayoutAlgorithm.setFilter(new GraphLayoutFilter(false));
+		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(LayoutStyles.NO_LAYOUT_NODE_RESIZING, 
+				new LayoutAlgorithm[] { algorithm, decorationLayoutAlgorithm }), true);
 
 		actionSetAlgorithm[layoutAlgorithm].setChecked(false);
 		layoutAlgorithm = alg;
@@ -290,10 +301,10 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			if (o instanceof GraphNode)
 			{
 				Object data = ((GraphNode)o).getData();
-				if (data instanceof NetworkMapObject)
+				if (data instanceof NetworkMapElement)
 				{
 					Point loc = ((GraphNode)o).getLocation();
-					((NetworkMapObject)data).setLocation(loc.x, loc.y);
+					((NetworkMapElement)data).setLocation(loc.x, loc.y);
 				}
 			}
 		}

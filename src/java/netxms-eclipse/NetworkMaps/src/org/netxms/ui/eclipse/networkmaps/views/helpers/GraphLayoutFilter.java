@@ -30,6 +30,20 @@ import org.netxms.client.maps.elements.NetworkMapDecoration;
  */
 public class GraphLayoutFilter implements Filter
 {
+	private boolean filterDecoration;
+	
+	/**
+	 * Create new layout filter. If filterDecoration set to true, decoration
+	 * elements will be filtered out, otherwise all elements except decoration
+	 * will be filtered out.
+	 * 
+	 * @param filterDecoration
+	 */
+	public GraphLayoutFilter(boolean filterDecoration)
+	{
+		this.filterDecoration = filterDecoration;
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.zest.layouts.Filter#isObjectFiltered(org.eclipse.zest.layouts.LayoutItem)
 	 */
@@ -37,7 +51,12 @@ public class GraphLayoutFilter implements Filter
 	public boolean isObjectFiltered(LayoutItem object)
 	{
 		if (object.getGraphData() instanceof GraphNode)
-			return ((GraphNode)object.getGraphData()).getData() instanceof NetworkMapDecoration;
+		{
+			if (filterDecoration)
+				return ((GraphNode)object.getGraphData()).getData() instanceof NetworkMapDecoration;
+			else
+				return !(((GraphNode)object.getGraphData()).getData() instanceof NetworkMapDecoration);
+		}
 		return false;
 	}
 }

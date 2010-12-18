@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import org.eclipse.draw2d.ConnectionEndpointLocator;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Label;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -33,6 +35,7 @@ import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
@@ -100,7 +103,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		}
 		if (element instanceof NetworkMapLink)
 		{
-			return ((NetworkMapLink)element).getLabel();
+			return ((NetworkMapLink)element).getName();
 		}
 		return null;
 	}
@@ -144,6 +147,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 			return new ObjectFigure((NetworkMapObject)element, this);
+		if (element instanceof NetworkMapDecoration)
+			return new DecorationFigure((NetworkMapDecoration)element, this);
 		return null;
 	}
 	
@@ -241,6 +246,22 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
+		NetworkMapLink link = (NetworkMapLink)connection.getData();
+		
+		if (link.getConnectorName1() != null)
+		{
+			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
+			sourceEndpointLocator.setVDistance(10);
+			Label label = new Label(link.getConnectorName1());
+			connection.getConnectionFigure().add(label, sourceEndpointLocator);
+		}
+		if (link.getConnectorName2() != null)
+		{
+			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
+			targetEndpointLocator.setVDistance(10);
+			Label label = new Label(link.getConnectorName2());
+			connection.getConnectionFigure().add(label, targetEndpointLocator);
+		}
 	}
 
 	/* (non-Javadoc)

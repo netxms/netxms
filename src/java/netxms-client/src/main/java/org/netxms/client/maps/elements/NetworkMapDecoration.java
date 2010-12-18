@@ -48,6 +48,23 @@ public class NetworkMapDecoration extends NetworkMapElement
 		width = msg.getVariableAsInteger(baseId + 13);
 		height = msg.getVariableAsInteger(baseId + 14);
 	}
+	
+	/**
+	 * Create new decoration object
+	 * 
+	 * @param id
+	 * @param decorationType
+	 */
+	public NetworkMapDecoration(long id, int decorationType)
+	{
+		super(id);
+		type = MAP_ELEMENT_DECORATION;
+		this.decorationType = decorationType;
+		title = "";
+		width = 50;
+		height = 20;
+		color = 0;
+	}
 
 	/**
 	 * @return the decorationType
@@ -71,6 +88,22 @@ public class NetworkMapDecoration extends NetworkMapElement
 	public String getTitle()
 	{
 		return title;
+	}
+
+	/**
+	 * @param color the color to set
+	 */
+	public void setColor(int color)
+	{
+		this.color = color;
+	}
+
+	/**
+	 * @param title the title to set
+	 */
+	public void setTitle(String title)
+	{
+		this.title = title;
 	}
 
 	/* (non-Javadoc)
