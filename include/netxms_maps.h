@@ -362,6 +362,14 @@ public:
 
 
 //
+// Decoration types
+//
+
+#define MAP_DECORATION_GROUP_BOX 0
+#define MAP_DECORATION_IMAGE     1
+
+
+//
 // Generic map element
 //
 
@@ -423,6 +431,8 @@ protected:
 	LONG m_decorationType;
 	DWORD m_color;
 	TCHAR *m_title;
+	LONG m_width;
+	LONG m_height;
 
 public:
 	NetworkMapDecoration(DWORD id, LONG decorationType);
@@ -436,6 +446,9 @@ public:
 	LONG getDecorationType() { return m_decorationType; }
 	DWORD getColor() { return m_color; }
 	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
+
+	LONG getWidth() { return m_width; }
+	LONG getHeight() { return m_height; }
 };
 
 

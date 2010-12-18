@@ -18,12 +18,7 @@
  */
 package org.netxms.ui.eclipse.networkmaps.algorithms;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.eclipse.zest.core.widgets.Graph;
-import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.layouts.LayoutEntity;
+import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.layouts.algorithms.AbstractLayoutAlgorithm;
 import org.eclipse.zest.layouts.dataStructures.InternalNode;
 import org.eclipse.zest.layouts.dataStructures.InternalRelationship;
@@ -35,15 +30,12 @@ import org.netxms.client.maps.elements.NetworkMapObject;
  */
 public class ManualLayout extends AbstractLayoutAlgorithm
 {
-	private Graph graph;
-	
 	/**
 	 * @param styles
 	 */
-	public ManualLayout(int styles, Graph graph)
+	public ManualLayout(int styles)
 	{
 		super(styles);
-		this.graph = graph;
 	}
 
 	/* (non-Javadoc)
@@ -70,20 +62,12 @@ public class ManualLayout extends AbstractLayoutAlgorithm
 	protected void applyLayoutInternal(InternalNode[] entitiesToLayout, InternalRelationship[] relationshipsToConsider,
 			double boundsX, double boundsY, double boundsWidth, double boundsHeight)
 	{
-		List<?> nodes = graph.getNodes();
-		Map<LayoutEntity, GraphNode> nodeMap = new HashMap<LayoutEntity, GraphNode>(nodes.size());
-		for(Object n : nodes)
-		{
-			nodeMap.put(((GraphNode)n).getLayoutEntity(), (GraphNode)n);
-		}
-		
 		for(int i = 0; i < entitiesToLayout.length; i++)
 		{
-			LayoutEntity entity = entitiesToLayout[i].getLayoutEntity();
-			GraphNode node = nodeMap.get(entity);
-			if ((node != null) && (node.getData() instanceof NetworkMapObject))
+			GraphItem item = (GraphItem)entitiesToLayout[i].getLayoutEntity().getGraphData();
+			if ((item != null) && (item.getData() instanceof NetworkMapObject))
 			{
-				NetworkMapObject mapObject = (NetworkMapObject)node.getData();
+				NetworkMapObject mapObject = (NetworkMapObject)item.getData();
 				entitiesToLayout[i].setLocation(mapObject.getX(), mapObject.getY());
 			}
 		}

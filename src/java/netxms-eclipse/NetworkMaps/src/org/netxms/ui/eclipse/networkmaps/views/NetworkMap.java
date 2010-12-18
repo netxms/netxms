@@ -44,6 +44,9 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -76,6 +79,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.GraphLayoutFilter;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.IActionConstants;
@@ -171,6 +175,14 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				}
 			}
 		});
+
+		viewer.getGraphControl().addPaintListener(new PaintListener() {
+			@Override
+			public void paintControl(PaintEvent e)
+			{
+				paintGraphOverlay(e.gc);
+			}
+		});
 		
 		sessionListener = new SessionListener() {
 			@Override
@@ -192,8 +204,9 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		}
 		else
 		{
-			viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING, viewer.getGraphControl()));
+			viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 		}
+		viewer.getGraphControl().getLayoutAlgorithm().setFilter(new GraphLayoutFilter());
 		viewer.setInput(mapPage);
 	}
 
@@ -294,7 +307,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		updateObjectPositions();
 		
 		automaticLayoutEnabled = false;
-		viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING, viewer.getGraphControl()), true);
+		viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING), true);
 		
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			actionSetAlgorithm[i].setEnabled(false);
@@ -608,6 +621,15 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		if (sessionListener != null)
 			session.removeListener(sessionListener);
 		super.dispose();
+	}
+	
+	/**
+	 * Paint graph background
+	 * 
+	 * @param gc
+	 */
+	protected void paintGraphOverlay(GC gc)
+	{
 	}
 
 	/* (non-Javadoc)

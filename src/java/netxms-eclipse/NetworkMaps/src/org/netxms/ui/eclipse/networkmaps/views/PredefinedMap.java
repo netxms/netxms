@@ -253,7 +253,7 @@ public class PredefinedMap extends NetworkMap
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						viewer.setInput(mapPage);
+						viewer.refresh();
 						return Status.OK_STATUS;
 					}
 				}.schedule();

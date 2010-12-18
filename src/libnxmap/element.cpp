@@ -180,6 +180,8 @@ NetworkMapDecoration::NetworkMapDecoration(DWORD id, LONG decorationType) : Netw
 	m_decorationType = decorationType;
 	m_color = 0;
 	m_title = NULL;
+	m_width = 50;
+	m_height = 20;
 }
 
 
@@ -192,6 +194,8 @@ NetworkMapDecoration::NetworkMapDecoration(DWORD id, Config *config) : NetworkMa
 	m_decorationType = config->getValueInt(_T("/decorationType"), 0);
 	m_color = config->getValueUInt(_T("/color"), 0);
 	m_title = _tcsdup(config->getValue(_T("/title"), _T("")));
+	m_width = config->getValueInt(_T("/width"), 0);
+	m_height = config->getValueInt(_T("/height"), 0);
 }
 
 
@@ -204,6 +208,8 @@ NetworkMapDecoration::NetworkMapDecoration(CSCPMessage *msg, DWORD baseId) : Net
 	m_decorationType = (LONG)msg->GetVariableLong(baseId + 10);
 	m_color = msg->GetVariableLong(baseId + 11);
 	m_title = msg->GetVariableStr(baseId + 12);
+	m_width = (LONG)msg->GetVariableLong(baseId + 13);
+	m_height = (LONG)msg->GetVariableLong(baseId + 14);
 }
 
 
@@ -227,6 +233,8 @@ void NetworkMapDecoration::updateConfig(Config *config)
 	config->setValue(_T("/decorationType"), m_decorationType);
 	config->setValue(_T("/color"), m_color);
 	config->setValue(_T("/title"), CHECK_NULL_EX(m_title));
+	config->setValue(_T("/width"), m_width);
+	config->setValue(_T("/height"), m_height);
 }
 
 
@@ -240,4 +248,6 @@ void NetworkMapDecoration::fillMessage(CSCPMessage *msg, DWORD baseId)
 	msg->SetVariable(baseId + 10, (DWORD)m_decorationType);
 	msg->SetVariable(baseId + 11, m_color);
 	msg->SetVariable(baseId + 12, CHECK_NULL_EX(m_title));
+	msg->SetVariable(baseId + 13, (DWORD)m_width);
+	msg->SetVariable(baseId + 14, (DWORD)m_height);
 }

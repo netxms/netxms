@@ -26,9 +26,14 @@ import org.netxms.base.NXCPMessage;
  */
 public class NetworkMapDecoration extends NetworkMapElement
 {
+	public static final int GROUP_BOX = 0;
+	public static final int IMAGE = 1;
+	
 	private int decorationType;
 	private int color;
 	private String title;
+	private int width;
+	private int height;
 	
 	/**
 	 * @param msg
@@ -40,6 +45,8 @@ public class NetworkMapDecoration extends NetworkMapElement
 		decorationType = msg.getVariableAsInteger(baseId + 10);
 		color = msg.getVariableAsInteger(baseId + 11);
 		title = msg.getVariableAsString(baseId + 12);
+		width = msg.getVariableAsInteger(baseId + 13);
+		height = msg.getVariableAsInteger(baseId + 14);
 	}
 
 	/**
@@ -76,5 +83,35 @@ public class NetworkMapDecoration extends NetworkMapElement
 		msg.setVariableInt32(baseId + 10, decorationType);
 		msg.setVariableInt32(baseId + 11, color);
 		msg.setVariable(baseId + 12, title);
+		msg.setVariableInt32(baseId + 13, width);
+		msg.setVariableInt32(baseId + 14, height);
+	}
+
+	/**
+	 * @return the width
+	 */
+	public int getWidth()
+	{
+		return width;
+	}
+
+	/**
+	 * @return the height
+	 */
+	public int getHeight()
+	{
+		return height;
+	}
+	
+	/**
+	 * Set decoration size
+	 * 
+	 * @param w width
+	 * @param h height
+	 */
+	public void setSize(int w, int h)
+	{
+		width = w;
+		height = h;
 	}
 }
