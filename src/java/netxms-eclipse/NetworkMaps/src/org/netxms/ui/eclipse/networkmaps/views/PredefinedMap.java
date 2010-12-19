@@ -31,7 +31,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -285,7 +284,7 @@ public class PredefinedMap extends NetworkMap
 		NetworkMapDecoration element = new NetworkMapDecoration(mapPage.createElementId(), NetworkMapDecoration.GROUP_BOX);
 		element.setSize(dlg.getWidth(), dlg.getHeight());
 		element.setTitle(dlg.getTitle());
-		element.setColor(ColorConverter.rgbToInt(new RGB(64, 105, 156)));
+		element.setColor(ColorConverter.rgbToInt(dlg.getColor()));
 		mapPage.addElement(element);
 		
 		saveMap();

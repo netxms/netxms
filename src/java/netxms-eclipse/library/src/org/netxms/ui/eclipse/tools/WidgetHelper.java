@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.tools;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
@@ -152,7 +153,6 @@ public class WidgetHelper
 	 * @param parent Parent composite
 	 * @param flags Flags for Text creation
 	 * @param labelText Label's text
-	 * @param initialText Initial text for input field (may be null)
 	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
 	 * @return Created Text object
 	 */
@@ -191,6 +191,49 @@ public class WidgetHelper
 		combo.setLayoutData(gridData);		
 		
 		return combo;
+	}
+	
+	/**
+    * Create pair of label and color selector, with label above
+	 * 
+	 * @param parent Parent composite
+	 * @param labelText Label's text
+	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
+	 * @return Created Text object
+	 */
+	public static ColorSelector createLabeledColorSelector(final Composite parent, final String labelText, Object layoutData)
+	{
+		Composite group = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.verticalSpacing = INNER_SPACING;
+		layout.horizontalSpacing = 0;
+		layout.marginTop = 0;
+		layout.marginBottom = 0;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		group.setLayout(layout);
+
+		if (layoutData != DEFAULT_LAYOUT_DATA)
+		{
+			group.setLayoutData(layoutData);
+		}
+		else
+		{
+			GridData gridData = new GridData();
+			gridData.horizontalAlignment = GridData.FILL;
+			group.setLayoutData(gridData);
+		}
+		
+		Label label = new Label(group, SWT.NONE);
+		label.setText(labelText);
+
+		ColorSelector cs = new ColorSelector(group);
+		GridData gridData = new GridData();
+		gridData.horizontalAlignment = GridData.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		cs.getButton().setLayoutData(gridData);		
+		
+		return cs;
 	}
 	
 	/**
