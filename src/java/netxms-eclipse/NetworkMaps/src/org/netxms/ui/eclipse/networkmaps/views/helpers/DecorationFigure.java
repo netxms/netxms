@@ -20,7 +20,9 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.TreeSearch;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -114,5 +116,32 @@ public class DecorationFigure extends Figure
 	private void drawImage(Graphics gc)
 	{
 		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.Figure#containsPoint(int, int)
+	 */
+	@Override
+	public boolean containsPoint(int x, int y)
+	{
+		return label.containsPoint(x, y);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.draw2d.Figure#findFigureAt(int, int, org.eclipse.draw2d.TreeSearch)
+	 */
+	@Override
+	public IFigure findFigureAt(int x, int y, TreeSearch search)
+	{
+		if (!containsPoint(x, y))
+			return null;
+		if (search.prune(this))
+			return null;
+		IFigure child = findDescendantAtExcluding(x, y, search);
+		if (child != null)
+			return child;
+		if (label.containsPoint(x, y) && search.accept(this))
+			return this;
+		return null;
 	}
 }
