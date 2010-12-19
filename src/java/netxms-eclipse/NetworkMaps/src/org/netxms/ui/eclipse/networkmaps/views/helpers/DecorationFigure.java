@@ -94,9 +94,14 @@ public class DecorationFigure extends Figure
 		rect.width -= MARGIN_X * 2;
 		rect.height -= MARGIN_Y * 2 + 1;
 		
+		gc.setBackgroundColor(ColorConverter.colorFromInt(decoration.getColor()));
+		gc.setAlpha(16);
+		gc.fillRoundRectangle(rect, 8, 8);
+		gc.setAlpha(255);
+		
 		gc.setForegroundColor(ColorConverter.colorFromInt(decoration.getColor()));
-		gc.setAntialias(SWT.ON);
 		gc.setLineWidth(3);
+		gc.setAntialias(SWT.ON);
 		gc.drawRoundRectangle(rect, 8, 8);
 		
 		gc.setBackgroundColor(ColorConverter.colorFromInt(decoration.getColor()));

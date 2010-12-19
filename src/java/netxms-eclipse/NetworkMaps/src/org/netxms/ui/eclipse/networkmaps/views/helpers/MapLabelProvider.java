@@ -248,18 +248,20 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		NetworkMapLink link = (NetworkMapLink)connection.getData();
 		
-		if (link.getConnectorName1() != null)
+		if (link.hasConnectorName1())
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
-			sourceEndpointLocator.setVDistance(10);
-			Label label = new Label(link.getConnectorName1());
+			sourceEndpointLocator.setVDistance(0);
+			Label label = new ConnectorLabel(link.getConnectorName1());
+			label.setFont(font);
 			connection.getConnectionFigure().add(label, sourceEndpointLocator);
 		}
-		if (link.getConnectorName2() != null)
+		if (link.hasConnectorName2())
 		{
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
-			targetEndpointLocator.setVDistance(10);
-			Label label = new Label(link.getConnectorName2());
+			targetEndpointLocator.setVDistance(0);
+			Label label = new ConnectorLabel(link.getConnectorName1());
+			label.setFont(font);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
 	}

@@ -184,6 +184,36 @@ public class NetworkMapLink
 	}
 	
 	/**
+	 * Check if link has non-empty name
+	 * 
+	 * @return true if link has non-empty name
+	 */
+	public boolean hasName()
+	{
+		return (name != null) && !name.isEmpty();
+	}
+	
+	/**
+	 * Check if link has non-empty name for connector 1
+	 * 
+	 * @return true if link has non-empty name for connector 1
+	 */
+	public boolean hasConnectorName1()
+	{
+		return (connectorName1 != null) && !connectorName1.isEmpty();
+	}
+
+	/**
+	 * Check if link has non-empty name for connector 2
+	 * 
+	 * @return true if link has non-empty name for connector 2
+	 */
+	public boolean hasConnectorName2()
+	{
+		return (connectorName2 != null) && !connectorName2.isEmpty();
+	}
+	
+	/**
 	 * Check if this link is unnamed.
 	 * 
 	 * @return true if all names (link and both connectors) are null or empty
