@@ -901,6 +901,10 @@ if test "x$HAVE_LIBEXPAT" = "xno"; then
 	CPPFLAGS="$CPPFLAGS "
 fi
 
+AC_CHECK_HEADER(tre/tre.h,,AC_MSG_ERROR([*** libtre-dev not installed - please install first ***]))
+AC_CHECK_LIB(tre, tre_compile, [], [
+      AC_MSG_ERROR(libtre is required)
+   ])
 
 #--------------------------------------------------------------------
 # Checks for data types
