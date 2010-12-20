@@ -113,7 +113,7 @@
          point="org.eclipse.ui.propertyPages">
       <page
             class="org.netxms.ui.eclipse.charts.propertypages.PerfTab"
-            id="org.netxms.ui.eclipse.charts.propertypages.PerfTab"
+            id="org.netxms.ui.eclipse.charts.propertypages.PerfTab#100"
             name="Performance Tab">
          <enabledWhen>
             <instanceof

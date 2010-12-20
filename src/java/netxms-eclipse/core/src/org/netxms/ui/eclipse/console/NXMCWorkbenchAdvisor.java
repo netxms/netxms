@@ -22,6 +22,8 @@ import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.model.ContributionComparator;
+import org.eclipse.ui.model.IContributionService;
 
 /**
  * Workbench advisor for NetXMS console application
@@ -52,5 +54,16 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	{
 		super.initialize(configurer);
 		configurer.setSaveAndRestore(Activator.getDefault().getPreferenceStore().getBoolean("SAVE_AND_RESTORE"));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.WorkbenchAdvisor#getComparatorFor(java.lang.String)
+	 */
+	@Override
+	public ContributionComparator getComparatorFor(String contributionType)
+	{
+		if (contributionType.equals(IContributionService.TYPE_PROPERTY))
+			return new ExtendedContributionComparator();
+		return super.getComparatorFor(contributionType);
 	}
 }

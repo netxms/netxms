@@ -61,7 +61,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * @author Victor
+ * "General" property page for DCI
  *
  */
 public class General extends PropertyPage

@@ -98,7 +98,7 @@
   <extension
      point="org.eclipse.ui.propertyPages">
         <page
-           id="org.netxms.ui.eclipse.datacollection.propertypages.General"
+           id="org.netxms.ui.eclipse.datacollection.propertypages.General#0"
            name="General"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.General">
           <enabledWhen>
@@ -108,7 +108,7 @@
           </enabledWhen>
         </page>
         <page
-           id="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule"
+           id="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule#10"
            name="Custom Schedule"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule">
           <enabledWhen>
@@ -118,7 +118,7 @@
           </enabledWhen>
         </page>
         <page
-           id="org.netxms.ui.eclipse.datacollection.propertypages.Transformation"
+           id="org.netxms.ui.eclipse.datacollection.propertypages.Transformation#20"
            name="Transformation"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.Transformation">
           <enabledWhen>
@@ -128,7 +128,7 @@
           </enabledWhen>
         </page>
         <page
-           id="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds"
+           id="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds#30"
            name="Thresholds"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds">
           <enabledWhen>

@@ -5,7 +5,7 @@
   <extension
      point = "org.eclipse.ui.propertyPages">
         <page
-           id="org.netxms.ui.eclipse.objectmanager.propertypages.General"
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.General#0"
            name="General"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.General">
           <enabledWhen>
@@ -71,7 +71,7 @@
         </page>
 
         <page
-           id="org.netxms.ui.eclipse.objectmanager.propertypages.Communication"
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"
            name="Communication"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Communication">
           <enabledWhen>
