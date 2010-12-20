@@ -23,7 +23,7 @@
 #ifndef _netxms_regex_h
 #define _netxms_regex_h
 
-#include "../src/libtre/tre.h"
+#include <tre/tre.h>
 
 #ifdef UNICODE
 #define _tregcomp  tre_regwcomp
