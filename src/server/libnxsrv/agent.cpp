@@ -299,8 +299,14 @@ void AgentConnection::ReceiverThread()
 					onDataPush(pMsg);
 					delete pMsg;
 					break;
-				default:
+				case CMD_REQUEST_COMPLETED:
 					m_pMsgWaitQueue->Put(pMsg);
+					break;
+				default:
+					if (processCustomMessage(pMsg))
+						delete pMsg;
+					else
+						m_pMsgWaitQueue->Put(pMsg);
 					break;
 			}
 		}
@@ -827,6 +833,17 @@ void AgentConnection::onTrap(CSCPMessage *pMsg)
 
 void AgentConnection::onDataPush(CSCPMessage *pMsg)
 {
+}
+
+
+//
+// Custom message handler
+// If returns true, message considered as processed and will not be placed in wait queue
+//
+
+bool AgentConnection::processCustomMessage(CSCPMessage *pMsg)
+{
+	return false;
 }
 
 

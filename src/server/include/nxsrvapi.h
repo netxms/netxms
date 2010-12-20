@@ -304,6 +304,7 @@ protected:
    virtual void PrintMsg(const TCHAR *pszFormat, ...);
    virtual void onTrap(CSCPMessage *pMsg);
 	virtual void onDataPush(CSCPMessage *msg);
+	virtual bool processCustomMessage(CSCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
 
    void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
