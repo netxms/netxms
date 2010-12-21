@@ -155,6 +155,8 @@ typedef int bool;
 #endif
 #endif
 
+#define USE_BUNDLED_LIBTRE      1
+
 #define FS_PATH_SEPARATOR       _T("\\")
 #define FS_PATH_SEPARATOR_CHAR  _T('\\')
 

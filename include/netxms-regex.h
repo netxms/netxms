@@ -23,7 +23,11 @@
 #ifndef _netxms_regex_h
 #define _netxms_regex_h
 
+#ifdef USE_BUNDLED_LIBTRE
+#include "../src/libtre/tre.h"
+#else
 #include <tre/tre.h>
+#endif
 
 #ifdef UNICODE
 #define _tregcomp  tre_regwcomp
