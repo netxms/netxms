@@ -34,6 +34,25 @@
 
 
 //
+// Driver header
+//
+
+#ifdef _WIN32
+#define __EXPORT __declspec(dllexport)
+#else
+#define __EXPORT
+#endif
+
+#define DECLARE_DRIVER_HEADER(name) \
+extern "C" int EXPORT drvAPIVersion; \
+extern "C" const char EXPORT *drvName; \
+int EXPORT drvAPIVersion = DBDRV_API_VERSION; \
+const char EXPORT *drvName = name;
+
+#undef __EXPORT
+
+
+//
 // Constants
 //
 

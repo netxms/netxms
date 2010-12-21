@@ -93,10 +93,10 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 
       if (conn.connect())
       {
-			const TCHAR *argv[2];
+			TCHAR *argv[2];
 
-			argv[0] = pszPhoneNumber;
-			argv[1] = pszText;
+			argv[0] = (TCHAR *)pszPhoneNumber;
+			argv[1] = (TCHAR *)pszText;
          if (conn.ExecAction(_T("SMS.Send"), 2, argv) == ERR_SUCCESS)
 				bSuccess = TRUE;
 			conn.disconnect();

@@ -21,11 +21,7 @@
 **/
 
 #include "nxcore.h"
-#ifdef _WIN32
 #include <netxms-regex.h>
-#else
-#include <regex.h>
-#endif
 
 
 //

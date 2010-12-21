@@ -229,8 +229,10 @@
 #define _istupper iswupper
 #define _tgetenv  wgetenv
 #define _tmkdir   wmkdir
+#define _tchdir   wchdir
 #define _tcserror wcserror
 #define _tcserror_r wcserror_r
+#define _tsystem  wsystem
 
 #else
 
@@ -287,8 +289,10 @@
 #define _istupper isupper
 #define _tgetenv  getenv
 #define _tmkdir   mkdir
+#define _tchdir   chdir
 #define _tcserror strerror
 #define _tcserror_r strerror_r
+#define _tsystem  system
 
 #define _ERR_error_tstring		ERR_error_string
 

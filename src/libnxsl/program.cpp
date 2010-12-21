@@ -22,11 +22,7 @@
 **/
 
 #include "libnxsl.h"
-#ifdef _WIN32
 #include <netxms-regex.h>
-#else
-#include <regex.h>
-#endif
 
 
 //
@@ -822,7 +818,7 @@ void NXSL_Program::execute()
                   if (nRet == 0)
                   {
                      for(i = 0; i < cp->m_nStackItems; i++)
-                        delete m_pDataStack->pop();
+                        delete (NXSL_Value *)m_pDataStack->pop();
                      m_pDataStack->push(pValue);
                   }
                   else if (nRet == NXSL_STOP_SCRIPT_EXECUTION)

@@ -2,11 +2,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-#ifdef _WIN32
 #include <netxms-regex.h>
-#else
-#include <regex.h>
-#endif
 
 #include "main.h"
 #include "net.h"
@@ -53,7 +49,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	SOCKET nSd;
 	regex_t preg;
 
-	if (tre_regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
+	if (_tregcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
 	{
 		return PC_ERR_BAD_PARAMS;
 	}
@@ -111,7 +107,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 			if (buff != NULL && offset > 0) {
 				buff[offset] = 0;
 
-				if (tre_regexec(&preg, buff, 0, NULL, 0) == 0)
+				if (_tregexec(&preg, buff, 0, NULL, 0) == 0)
 				{
 					nRet = PC_ERR_NONE;
 				}

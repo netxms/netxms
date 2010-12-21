@@ -32,10 +32,8 @@
 // Constructor
 //
 
-LogParserRule::LogParserRule(LogParser *parser,
-									  const char *regexp, DWORD event, int numParams,
-									  const TCHAR *source, DWORD level, 
-									  DWORD idStart, DWORD idEnd)
+LogParserRule::LogParserRule(LogParser *parser, const char *regexp, DWORD event, int numParams,
+                             const TCHAR *source, DWORD level, DWORD idStart, DWORD idEnd)
 {
 	String expandedRegexp;
 

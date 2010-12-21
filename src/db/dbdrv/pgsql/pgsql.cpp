@@ -26,13 +26,7 @@
 #pragma warning(disable : 4996)
 #endif
 
-
-//
-// API version
-//
-
-extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
-extern "C" const char EXPORT *drvName = "PGSQL";
+DECLARE_DRIVER_HEADER("PGSQL")
 
 
 //
@@ -48,14 +42,14 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 
 	const WCHAR *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		long chval = *src;
 		if (chval < 32)
 		{
 			WCHAR buffer[8];
 
-			snwprintf(buffer, 8, L"\\%03o", chval);
+			swprintf(buffer, 8, L"\\%03o", chval);
 			len += 4;
 			if (len >= bufferSize)
 			{
@@ -107,7 +101,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 
 	const char *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		long chval = (long)(*((unsigned char *)src));
 		if (chval < 32)
@@ -245,7 +239,7 @@ extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
 // Perform non-SELECT query
 //
 
-static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, WCHAR *errorText)
+static BOOL UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText)
 {
 	PGresult	*pResult;
 
@@ -305,7 +299,7 @@ extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorT
 // Perform SELECT query
 //
 
-static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, WCHAR *errorText)
+static DBDRV_RESULT UnsafeDrvSelect(PG_CONN *pConn, const char *szQuery, WCHAR *errorText)
 {
 	PGresult	*pResult;
 

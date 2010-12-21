@@ -523,6 +523,8 @@ extern "C"
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
 #ifdef UNICODE
    char LIBNETXMS_EXPORTABLE *IpToStrA(DWORD dwAddr, char *szBuffer);
+#else
+#define IpToStrA IpToStr
 #endif
    DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
 #ifdef UNICODE

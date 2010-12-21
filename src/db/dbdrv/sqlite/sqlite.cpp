@@ -22,13 +22,7 @@
 
 #include "sqlitedrv.h"
 
-
-//
-// API version
-//
-
-extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
-extern "C" const char EXPORT *drvName = "SQLITE";
+DECLARE_DRIVER_HEADER("SQLITE")
 
 
 //

@@ -92,7 +92,7 @@ BOOL ExecSQLBatch(const char *pszFile)
             bResult = SQLQuery(wcQuery);
 				free(wcQuery);
 #else
-            bResult = SQLQuery(pQuery);
+            bResult = SQLQuery((char *)pQuery);
 #endif
             if (!bResult)
                pNext = pBatch + dwSize;

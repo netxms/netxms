@@ -34,12 +34,7 @@
 #define LIBNXLP_EXPORTABLE
 #endif
 
-
-#ifdef _WIN32
 #include <netxms-regex.h>
-#else
-#include <regex.h>
-#endif
 
 
 //

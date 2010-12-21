@@ -399,7 +399,8 @@ LONG H_NetIfInfoFromIOCTL(const char *pszParam, const char *pArg, char *pValue)
 static LONG ValueFromLine(char *pszLine, int nPos, char *pValue)
 {
 	int i;
-	char *eptr, *pszWord, szBuffer[256];
+	char *eptr, szBuffer[256];
+	const char *pszWord;
 	DWORD dwValue;
 	LONG nRet = SYSINFO_RC_ERROR;
 

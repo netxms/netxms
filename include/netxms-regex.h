@@ -25,9 +25,6 @@
 
 #ifdef USE_BUNDLED_LIBTRE
 #include "../src/libtre/tre.h"
-#else
-#include <tre/tre.h>
-#endif
 
 #ifdef UNICODE
 #define _tregcomp  tre_regwcomp
@@ -43,4 +40,21 @@
 
 #define regfree tre_regfree
 
+#else
+#include <tre/regex.h>
+
+#ifdef UNICODE
+#define _tregcomp  regwcomp
+#define _tregexec  regwexec
+#define _tregncomp regwncomp
+#define _tregnexec regwnexec
+#else
+#define _tregcomp  regcomp
+#define _tregexec  regexec
+#define _tregncomp regncomp
+#define _tregnexec regnexec
 #endif
+
+#endif	/* USE_BUNDLED_LIBTRE */
+
+#endif	/* _netxms_regex_h */

@@ -62,6 +62,8 @@ PGSQL_LIBS=""
 MYSQL_LIBS=""
 ODBC_LIBS=""
 FORCE_INTERNAL_EXPAT="no"
+USE_INTERNAL_LIBTRE="no"
+FORCE_INTERNAL_LIBTRE="no"
 FORCE_32BIT_BUILD="no"
 
 
@@ -128,6 +130,12 @@ AC_ARG_WITH(internal-libexpat,
 [AS_HELP_STRING(--with-internal-libexpat,force use of bundled libexpat)],
 [
 	FORCE_INTERNAL_EXPAT="yes"
+])
+
+AC_ARG_WITH(internal-libtre,
+[AS_HELP_STRING(--with-internal-libtre,force use of bundled libtre)],
+[
+	FORCE_INTERNAL_LIBTRE="yes"
 ])
 
 AC_ARG_WITH(sqlite,
@@ -289,7 +297,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2"
-	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
+	MODULES="libexpat libtre libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -898,13 +906,19 @@ else
 fi
 if test "x$HAVE_LIBEXPAT" = "xno"; then
 	MODULES="libexpat $MODULES"
-	CPPFLAGS="$CPPFLAGS "
 fi
 
-AC_CHECK_HEADER(tre/tre.h,,AC_MSG_ERROR([*** libtre-dev not installed - please install first ***]))
-AC_CHECK_LIB(tre, tre_compile, [], [
-      AC_MSG_ERROR(libtre is required)
-   ])
+if test "x$FORCE_INTERNAL_LIBTRE" = "xyes"; then
+	HAVE_LIBTRE=no
+else
+	HAVE_LIBTRE=yes
+	AC_CHECK_HEADER(tre/regex.h,,HAVE_LIBTRE=no)
+	AC_CHECK_LIB(tre, tre_compile, [], [ HAVE_LIBTRE=no ])
+fi
+if test "x$HAVE_LIBTRE" = "xno"; then
+	MODULES="libtre $MODULES"
+	AC_DEFINE(USE_BUNDLED_LIBTRE,1,Define to 1 if bundled libtre is used)
+fi
 
 #--------------------------------------------------------------------
 # Checks for data types
@@ -1652,6 +1666,7 @@ CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -D
 
 AM_CONDITIONAL([BUILD_UNICODE_LIBS], [test "x$BUILD_UNICODE" = "xyes"])
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
+AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 
 
 #--------------------------------------------------------------------
@@ -1705,7 +1720,7 @@ AC_SUBST(DB2_LIBS)
 #	only the first ever interface is implemented, so age can only be `0'. 
 #--------------------------------------------------------------------
 
-NETXMS_LIBRARY_VERSION=0:2:0
+NETXMS_LIBRARY_VERSION=1:0:0
 AC_SUBST(NETXMS_LIBRARY_VERSION)
 
 
@@ -1906,6 +1921,11 @@ if test "x${HAVE_LIBEXPAT}" = "xno"; then
 	echo "Use internal libexpat   : YES"
 else
 	echo "Use internal libexpat   : NO"
+fi
+if test "x${HAVE_LIBTRE}" = "xno"; then
+	echo "Use internal libtre     : YES"
+else
+	echo "Use internal libtre     : NO"
 fi
 if test "x${FORCE_32BIT_BUILD}" = "xyes"; then
 	echo "Force 32bit build       : YES"
