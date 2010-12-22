@@ -553,7 +553,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 	BOOL bAddToSubnet, bSyntheticMask = FALSE;
 
 	DbgPrintf(5, _T("Node::CreateNewInterface(%08X, %08X, %s, %d, %d) called for node %s [%d]"),
-	          dwIpAddr, dwNetMask, name, dwIndex, dwType, m_szName, m_dwId);
+	          dwIpAddr, dwNetMask, CHECK_NULL(name), dwIndex, dwType, m_szName, m_dwId);
 
    // Find subnet to place interface object to
    if (dwIpAddr != 0)
