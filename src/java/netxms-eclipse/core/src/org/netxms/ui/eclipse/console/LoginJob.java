@@ -33,7 +33,25 @@ public class LoginJob implements IRunnableWithProgress
 		monitor.beginTask(Messages.getString("LoginJob.connecting"), 100); //$NON-NLS-1$
 		try
 		{
-			NXCSession session = new NXCSession(server, loginName, password);
+		   final String hostName;
+		   int port = NXCSession.DEFAULT_CONN_PORT;
+		   final String[] split = server.split(":");
+		   if (split.length > 1)
+		   {
+		      hostName = split[0];
+		      try
+		      {
+		         port = Integer.valueOf(split[1]);
+		      } catch (NumberFormatException e)
+		      {
+		         // ignore
+		      }
+		   }
+		   else {
+		      hostName = server;
+		   }
+
+		   NXCSession session = new NXCSession(hostName, port, loginName, password);
 			monitor.worked(10);
 			
 			session.connect();
