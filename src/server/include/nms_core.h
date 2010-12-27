@@ -383,6 +383,7 @@ private:
 	DECLARE_THREAD_STARTER(queryServerLog)
 	DECLARE_THREAD_STARTER(getServerLogQueryData)
 	DECLARE_THREAD_STARTER(executeAction)
+	DECLARE_THREAD_STARTER(findNodeConnection)
 
    void ReadThread(void);
    void WriteThread(void);
@@ -550,6 +551,7 @@ private:
 	void updateUsmCredentials(CSCPMessage *pRequest);
 	void sendDCIThresholds(CSCPMessage *request);
 	void addClusterNode(CSCPMessage *request);
+	void findNodeConnection(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

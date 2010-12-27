@@ -159,10 +159,23 @@ BOOL SNMP_Variable::Parse(BYTE *pData, DWORD dwVarLength)
 
 
 //
+// Get raw value
+// Returns actual data length
+//
+
+size_t SNMP_Variable::getRawValue(BYTE *buffer, size_t bufSize)
+{
+	size_t len = min(bufSize, (size_t)m_dwValueLength);
+   memcpy(buffer, m_pValue, len);
+	return len;
+}
+
+
+//
 // Get value as unsigned integer
 //
 
-DWORD SNMP_Variable::GetValueAsUInt(void)
+DWORD SNMP_Variable::GetValueAsUInt()
 {
    DWORD dwValue;
 
@@ -192,7 +205,7 @@ DWORD SNMP_Variable::GetValueAsUInt(void)
 // Get value as signed integer
 //
 
-LONG SNMP_Variable::GetValueAsInt(void)
+LONG SNMP_Variable::GetValueAsInt()
 {
    LONG iValue;
 
@@ -275,7 +288,7 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
 // Get value as object id
 //
 
-SNMP_ObjectId *SNMP_Variable::GetValueAsObjectId(void)
+SNMP_ObjectId *SNMP_Variable::GetValueAsObjectId()
 {
    SNMP_ObjectId *oid = NULL;
 

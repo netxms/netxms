@@ -518,6 +518,32 @@ Interface *Node::findInterface(DWORD dwIndex, DWORD dwHostAddr)
 
 
 //
+// Find interface by name
+// Returns pointer to interface object or NULL if appropriate interface couldn't be found
+//
+
+Interface *Node::findInterface(const TCHAR *name)
+{
+   DWORD i;
+   Interface *pInterface;
+
+   LockChildList(FALSE);
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      {
+         pInterface = (Interface *)m_pChildList[i];
+			if (!_tcsicmp(pInterface->Name(), name))
+         {
+            UnlockChildList();
+            return pInterface;
+         }
+      }
+   UnlockChildList();
+   return NULL;
+}
+
+
+//
 // Check if given IP address is one of node's interfaces
 //
 
@@ -3612,4 +3638,27 @@ NXSL_Array *Node::getParentsForNXSL()
 	UnlockParentList();
 
 	return parents;
+}
+
+
+//
+// Get switch forwarding database
+//
+
+ForwardingDatabase *Node::getSwitchForwardingDatabase()
+{
+	ForwardingDatabase *fdb;
+
+	MutexLock(m_mutexTopoAccess, INFINITE);
+	if ((m_fdb == NULL) || (m_fdb->getAge() > 600))
+	{
+		if (m_fdb != NULL)
+			m_fdb->decRefCount();
+		m_fdb = GetSwitchForwardingDatabase(this);
+		if (m_fdb != NULL)
+			m_fdb->incRefCount();
+		fdb = m_fdb;
+	}
+	MutexUnlock(m_mutexTopoAccess);
+	return fdb;
 }

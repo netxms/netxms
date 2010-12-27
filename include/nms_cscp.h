@@ -314,7 +314,7 @@ typedef struct
 #define CMD_WAKEUP_NODE             0x005C
 #define CMD_DELETE_EVENT_TEMPLATE   0x005D
 #define CMD_GENERATE_EVENT_CODE     0x005E
-//#define CMD_LOCK_TRAP_CFG           0x005F
+#define CMD_FIND_NODE_CONNECTION    0x005F
 //#define CMD_UNLOCK_TRAP_CFG         0x0060
 #define CMD_CREATE_TRAP             0x0061
 #define CMD_MODIFY_TRAP             0x0062

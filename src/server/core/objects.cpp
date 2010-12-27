@@ -521,6 +521,31 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr)
 
 
 //
+// Find node by MAC address
+//
+
+Node NXCORE_EXPORTABLE *FindNodeByMAC(BYTE *macAddr)
+{
+	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
+		return NULL;
+
+   Node *pNode = NULL;
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
+	{
+		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_INTERFACE) &&
+		    !memcmp(macAddr, ((Interface *)g_pIndexById[i].pObject)->MacAddr()))
+		{
+			pNode = ((Interface *)g_pIndexById[i].pObject)->GetParentNode();
+			break;
+		}
+	}
+   RWLockUnlock(g_rwlockIdIndex);
+   return pNode;
+}
+
+
+//
 // Find subnet by IP address
 //
 

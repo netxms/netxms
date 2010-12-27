@@ -28,6 +28,7 @@
 #include <netxms_maps.h>
 #include <geolocation.h>
 #include "nxcore_jobs.h"
+#include "nms_topo.h"
 
 
 //
@@ -657,6 +658,7 @@ protected:
    ROUTING_TABLE *m_pRoutingTable;
 	nxmap_ObjList *m_pTopology;		// Layer 2 topology
 	time_t m_tLastTopologyPoll;
+	ForwardingDatabase *m_fdb;
 	ServerJobQueue *m_jobQueue;
 
    void pollerLock() { MutexLock(m_hPollerMutex, INFINITE); }
@@ -731,6 +733,7 @@ public:
    ARP_CACHE *getArpCache();
    INTERFACE_LIST *getInterfaceList();
    Interface *findInterface(DWORD dwIndex, DWORD dwHostAddr);
+   Interface *findInterface(const TCHAR *name);
 	BOOL isMyIP(DWORD dwIpAddr);
    int getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex);
    int getInterfaceStatusFromAgent(DWORD dwIndex);
@@ -799,6 +802,7 @@ public:
 
 	nxmap_ObjList *GetL2Topology();
 	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);
+	ForwardingDatabase *getSwitchForwardingDatabase();
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 };
@@ -1345,6 +1349,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
+Node NXCORE_EXPORTABLE *FindNodeByMAC(BYTE *macAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);
 DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);

@@ -138,7 +138,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_WAKEUP_NODE"),
       _T("CMD_DELETE_EVENT_TEMPLATE"),
       _T("CMD_GENERATE_EVENT_CODE"),
-      _T("0x5F"),	// was: CMD_LOCK_TRAP_CFG
+      _T("CMD_FIND_NODE_CONNECTION"),
       _T("0x60"),	// was: CMD_UNLOCK_TRAP_CFG
       _T("CMD_CREATE_TRAP"),
       _T("CMD_MODIFY_TRAP"),

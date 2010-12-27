@@ -154,6 +154,7 @@ DEFINE_THREAD_STARTER(getServerFile)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(getServerLogQueryData)
 DEFINE_THREAD_STARTER(executeAction)
+DEFINE_THREAD_STARTER(findNodeConnection)
 
 
 //
@@ -1191,6 +1192,9 @@ void ClientSession::ProcessingThread()
 				break;
 			case CMD_GET_LOG_DATA:
 				CALL_IN_NEW_THREAD(getServerLogQueryData, pMsg);
+				break;
+			case CMD_FIND_NODE_CONNECTION:
+				CALL_IN_NEW_THREAD(findNodeConnection, pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -10427,6 +10431,21 @@ void ClientSession::updateUsmCredentials(CSCPMessage *request)
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
+	
+	sendMessage(&msg);
+}
+
+
+//
+// Find connection port for the node
+//
+
+void ClientSession::findNodeConnection(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
 	
 	sendMessage(&msg);
 }

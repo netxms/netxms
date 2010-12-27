@@ -1050,8 +1050,10 @@ src/libtre/xmalloc.c -text
 src/libtre/xmalloc.h -text
 src/nxlptest/nxlptest.vcproj -text
 src/nxscript/nxscript.vcproj -text
+src/server/core/fdb.cpp -text
 src/server/core/import.cpp -text
 src/server/core/isc.cpp -text
+src/server/core/lln.cpp -text
 src/server/core/nxcore.vcproj -text
 src/server/include/Makefile.am -text
 src/server/libnxsrv/apinfo.cpp -text

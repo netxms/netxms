@@ -404,6 +404,7 @@ public:
    DWORD GetValueLength(void) { return m_dwValueLength; }
    const BYTE *GetValue(void) { return m_pValue; }
 
+	size_t getRawValue(BYTE *buffer, size_t bufSize);
    DWORD GetValueAsUInt();
    LONG GetValueAsInt();
    TCHAR *GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize);
