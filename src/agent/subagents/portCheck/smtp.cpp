@@ -42,7 +42,7 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo, DWORD dwTimeo
 		nRet = PC_ERR_HANDSHAKE;
 
 #define CHECK_OK(x) nErr = 1; while(1) { \
-	if (NetCanRead(nSd, 1000)) { \
+	if (NetCanRead(nSd, (dwTimeout != 0) ? dwTimeout : 1000)) { \
 		if (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) { \
 			if (szBuff[3] == '-') { continue; } \
 			if (strncmp(szBuff, x" ", 4) == 0) { nErr = 0; } break; \
