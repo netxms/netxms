@@ -291,6 +291,7 @@ src/java/netxms-client/src/main/java/com/jcraft/jzlib/ZStream.java -text
 src/java/netxms-client/src/main/java/com/jcraft/jzlib/ZStreamException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/ConnectionPoint.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/Glob.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
@@ -899,6 +900,12 @@ src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widget
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeElement.java -text
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeLabelProvider.java -text
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeModel.java -text
+src/java/netxms-eclipse/Topology/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/Topology/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/Topology/build.properties -text
+src/java/netxms-eclipse/Topology/plugin.xml -text
+src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/Activator.java -text
+src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/actions/FindConnectionPoint.java -text
 src/java/netxms-eclipse/UserManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/UserManager/build.properties -text
 src/java/netxms-eclipse/UserManager/icons/change_password.png -text

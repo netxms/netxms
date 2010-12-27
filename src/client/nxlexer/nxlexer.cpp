@@ -49,7 +49,8 @@ void PollLexer(UINT nStartPos, int nLen, int nInitStyle,
 
 BOOL IsKeyword(char *pszList, char *pszWord)
 {
-   TCHAR *pszNext, szBuffer[256];
+   const TCHAR *pszNext;
+	TCHAR szBuffer[256];
 
    pszNext = ExtractWord(pszList, szBuffer);
    while(szBuffer[0] != 0)

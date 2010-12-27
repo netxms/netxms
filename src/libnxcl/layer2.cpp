@@ -58,3 +58,39 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId
    }
    return dwRetCode;
 }
+
+
+//
+// Find connection point for node or interface
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD objectId, DWORD *cpNodeId, DWORD *cpIfId, DWORD *cpIfIndex)
+{
+   CSCPMessage msg, *response;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+	msg.SetCode(CMD_FIND_NODE_CONNECTION);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, objectId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   response = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (response != NULL)
+   {
+      dwRetCode = response->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+		{
+			*cpNodeId = response->GetVariableLong(VID_OBJECT_ID);
+			*cpIfId = response->GetVariableLong(VID_INTERFACE_ID);
+			*cpIfIndex = response->GetVariableLong(VID_IF_INDEX);
+		}
+      delete response;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}

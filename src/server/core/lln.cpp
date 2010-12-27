@@ -182,7 +182,6 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 	if (node->getFlags() & NF_IS_SONMP)
 	{
 		node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
-			goto cleanup;
 	}
 	else if (node->getFlags() & NF_IS_CDP)
 	{

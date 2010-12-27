@@ -25,6 +25,9 @@
 
 #include <netxms_maps.h>
 
+class Node;
+class Interface;
+
 
 //
 // Hop information structure
@@ -56,31 +59,47 @@ struct NETWORK_PATH_TRACE
 
 struct FDB_ENTRY
 {
-	DWORD ifIndex;       // Interface index
-	BYTE macAddr[6];     // MAC address
-	DWORD nodeObject;    // ID of node object or 0 if not found
+	DWORD port;                    // Port number
+	DWORD ifIndex;                 // Interface index
+	BYTE macAddr[MAC_ADDR_LENGTH]; // MAC address
+	DWORD nodeObject;              // ID of node object or 0 if not found
+};
+
+struct PORT_MAPPING_ENTRY
+{
+	DWORD port;
+	DWORD ifIndex;
 };
 
 class ForwardingDatabase
 {
 private:
-	int m_count;
-	int m_allocated;
-	FDB_ENTRY *m_fdb;	
+	int m_fdbSize;
+	int m_fdbAllocated;
+	FDB_ENTRY *m_fdb;
+	int m_pmSize;
+	int m_pmAllocated;
+	PORT_MAPPING_ENTRY *m_portMap;
 	time_t m_timestamp;
 	int m_refCount;
+
+	DWORD ifIndexFromPort(DWORD port);
 
 public:
 	ForwardingDatabase();
 	~ForwardingDatabase();
 
 	void addEntry(FDB_ENTRY *entry);
+	void addPortMapping(PORT_MAPPING_ENTRY *entry);
 
 	void incRefCount() { m_refCount++; }
 	void decRefCount();
 
 	time_t getTimeStamp() { return m_timestamp; }
 	int getAge() { return (int)(time(NULL) - m_timestamp); }
+
+	DWORD findMacAddress(const BYTE *macAddr);
+	bool isSingleMacOnPort(DWORD ifIndex);
 };
 
 
@@ -129,6 +148,7 @@ void DestroyTraceData(NETWORK_PATH_TRACE *pTrace);
 DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent,
 							 int nDepth, TCHAR *pszParentIfName);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
+Interface *FindInterfaceConnectionPoint(const BYTE *macAddr);
 
 
 #endif   /* _nms_topo_h_ */

@@ -28,7 +28,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.GenericObject;
@@ -40,7 +39,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class AddClusterNode implements IObjectActionDelegate
 {
 	private Shell shell;
-	private ViewPart viewPart;
+	private IWorkbenchPart wbPart;
 	private long clusterId;
 
 	/**
@@ -49,7 +48,7 @@ public class AddClusterNode implements IObjectActionDelegate
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
 		shell = targetPart.getSite().getShell();
-		viewPart = (targetPart instanceof ViewPart) ? (ViewPart)targetPart : null;
+		wbPart = targetPart;
 	}
 
 	/**
@@ -62,7 +61,7 @@ public class AddClusterNode implements IObjectActionDelegate
 		if (dlg.getReturnCode() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob("Add node to cluster", viewPart, Activator.PLUGIN_ID, null) {
+			new ConsoleJob("Add node to cluster", wbPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
 				{

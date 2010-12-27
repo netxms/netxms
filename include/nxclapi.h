@@ -2194,6 +2194,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyCertificateList(NXC_CERT_LIST *pList);
 
 /** Layer 2 topology **/
 DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId, void **ppTopology);
+DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD objectId, DWORD *cpNodeId, DWORD *cpIfId, DWORD *cpIfIndex);
 
 /** Situations **/
 DWORD LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *name, const TCHAR *comments, DWORD *pdwId);

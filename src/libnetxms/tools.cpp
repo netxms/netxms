@@ -476,7 +476,7 @@ BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName)
 // Convert 6-byte MAC address to text representation
 //
 
-void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr)
+TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 {
    DWORD i;
    TCHAR *pCurr;
@@ -488,6 +488,7 @@ void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr)
       *pCurr++ = _T(':');
    }
    *(pCurr - 1) = 0;
+	return pStr;
 }
 
 
@@ -495,7 +496,7 @@ void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr)
 // Convert byte array to text representation
 //
 
-TCHAR LIBNETXMS_EXPORTABLE *BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr)
+TCHAR LIBNETXMS_EXPORTABLE *BinToStr(const BYTE *pData, DWORD dwSize, TCHAR *pStr)
 {
    DWORD i;
    TCHAR *pCurr;

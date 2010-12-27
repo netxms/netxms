@@ -73,6 +73,7 @@ Node::Node()
 	m_iRequiredPollCount = 0;	// Use system default
 	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
 	m_jobQueue = new ServerJobQueue();
+	m_fdb = NULL;
 }
 
 
@@ -129,6 +130,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_iRequiredPollCount = 0;	// Use system default
 	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
 	m_jobQueue = new ServerJobQueue();
+	m_fdb = NULL;
 }
 
 
@@ -148,6 +150,8 @@ Node::~Node()
 	delete m_pTopology;
 	delete m_jobQueue;
 	delete m_snmpSecurity;
+	if (m_fdb != NULL)
+		m_fdb->decRefCount();
 }
 
 
@@ -544,6 +548,27 @@ Interface *Node::findInterface(const TCHAR *name)
 
 
 //
+// Find connection point for node
+//
+
+Interface *Node::findConnectionPoint()
+{
+	Interface *cp = NULL;
+   LockChildList(FALSE);
+   for(DWORD i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      {
+         Interface *iface = (Interface *)m_pChildList[i];
+			cp = FindInterfaceConnectionPoint(iface->MacAddr());
+			if (cp != NULL)
+				break;
+		}
+   UnlockChildList();
+   return cp;
+}
+
+
+//
 // Check if given IP address is one of node's interfaces
 //
 
@@ -766,8 +791,7 @@ restart_agent_check:
 
       SetPollerInfo(nPoller, _T("check SNMP"));
       SendPollerMsg(dwRqId, _T("Checking SNMP agent connectivity\r\n"));
-      dwResult = SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"),
-		                   NULL, 0, szBuffer, 256, FALSE, FALSE);
+      dwResult = SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 256, 0);
       if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
       {
          if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
@@ -1250,8 +1274,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					(m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
 
 				if (SnmpGet(m_snmpVersion, pTransport,
-								_T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 4096,
-								FALSE, FALSE) == SNMP_ERR_SUCCESS)
+								_T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
 				{
 					LockData();
 					if (_tcscmp(m_szObjectId, szBuffer))
@@ -1290,8 +1313,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
             // Check for bridge MIB support
             if (SnmpGet(m_snmpVersion, pTransport,
-                        _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096,
-                        FALSE, FALSE) == SNMP_ERR_SUCCESS)
+                        _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
             {
 					LockData();
                m_dwFlags |= NF_IS_BRIDGE;
@@ -1334,8 +1356,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 		      // Check for LLDP (Link Layer Discovery Protocol) support
 				if (SnmpGet(m_snmpVersion, pTransport,
-								_T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 4096,
-								FALSE, FALSE) == SNMP_ERR_SUCCESS)
+								_T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
 				{
 					LockData();
 					m_dwFlags |= NF_IS_LLDP;
@@ -1350,8 +1371,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 				// Get system description
 				if (SnmpGet(m_snmpVersion, pTransport,
-				            _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer,
-				            MAX_DB_STRING, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+				            _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
 				{
 					TranslateStr(szBuffer, _T("\r\n"), _T(" "));
 					TranslateStr(szBuffer, _T("\n"), _T(" "));
@@ -1373,8 +1393,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             // Check for CheckPoint SNMP agent on port 161
             DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_szName);
             if (SnmpGet(m_snmpVersion, pTransport,
-                        _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0,
-                        szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+                        _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
             {
                LockData();
                if (_tcscmp(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
@@ -1400,8 +1419,7 @@ skip_snmp_checks:
 			pTransport = new SNMP_UDPTransport;
 			((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
          if (SnmpGet(SNMP_VERSION_1, pTransport,
-                     _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0,
-                     szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+                     _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
          {
             LockData();
             m_dwFlags |= NF_IS_CPSNMP | NF_IS_ROUTER;
@@ -1943,7 +1961,7 @@ DWORD Node::GetItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TC
 		if (pTransport != NULL)
 		{
 			dwResult = SnmpGet(m_snmpVersion, pTransport,
-									 szParam, NULL, 0, szBuffer, dwBufSize, FALSE, TRUE);
+									 szParam, NULL, 0, szBuffer, dwBufSize, SG_STRING_RESULT);
 			delete pTransport;
 		}
 		else
@@ -1976,9 +1994,7 @@ DWORD Node::GetItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCH
 
 		pTransport = new SNMP_UDPTransport;
 		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
-      dwResult = SnmpGet(SNMP_VERSION_1, pTransport,
-                         szParam, NULL, 0, szBuffer,
-                         dwBufSize, FALSE, TRUE);
+      dwResult = SnmpGet(SNMP_VERSION_1, pTransport, szParam, NULL, 0, szBuffer, dwBufSize, SG_STRING_RESULT);
 		delete pTransport;
    }
    DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
@@ -2609,8 +2625,7 @@ void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
    LONG nAdminStatus;
 
    if (SnmpGet(m_snmpVersion, pTransport,
-               _T(".1.3.6.1.2.1.14.1.2.0"), NULL, 0, &nAdminStatus, sizeof(LONG),
-               FALSE, FALSE) == SNMP_ERR_SUCCESS)
+               _T(".1.3.6.1.2.1.14.1.2.0"), NULL, 0, &nAdminStatus, sizeof(LONG), 0) == SNMP_ERR_SUCCESS)
    {
 		LockData();
       if (nAdminStatus)
@@ -3098,8 +3113,7 @@ BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID
 {
    DWORD dwTemp;
 
-   if (SnmpGet(m_snmpVersion, pTransport, pszOID, NULL, 0, &dwTemp,
-               sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpGet(m_snmpVersion, pTransport, pszOID, NULL, 0, &dwTemp, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
       return (int)dwTemp == nValue;
    return FALSE;
 }
@@ -3657,6 +3671,11 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
 		m_fdb = GetSwitchForwardingDatabase(this);
 		if (m_fdb != NULL)
 			m_fdb->incRefCount();
+		fdb = m_fdb;
+	}
+	else
+	{
+		m_fdb->incRefCount();
 		fdb = m_fdb;
 	}
 	MutexUnlock(m_mutexTopoAccess);

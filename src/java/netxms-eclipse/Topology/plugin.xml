@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.topology.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Node"
+               label="Find &amp;switch port"
+               menubarPath="additions"
+               style="push">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.topology.actions.popup.object.Interface"
+            objectClass="org.netxms.client.objects.Interface">
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Interface"
+               label="Find &amp;switch port"
+               menubarPath="additions"
+               style="push">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

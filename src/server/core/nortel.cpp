@@ -65,14 +65,14 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar,
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
    oidName[dwNameLen - 2] = 2;
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, 
-                      pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME, FALSE, FALSE);
+                      pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME, 0);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
    // Get VLAN interface index
    oidName[dwNameLen - 2] = 6;
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, 
-                      &pVlanList->pList[dwIndex].dwIfIndex, sizeof(DWORD), FALSE, FALSE);
+                      &pVlanList->pList[dwIndex].dwIfIndex, sizeof(DWORD), 0);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
@@ -80,8 +80,7 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar,
    oidName[dwNameLen - 2] = 19;
    memset(pVlanList->pList[dwIndex].bMacAddr, 0, MAC_ADDR_LENGTH);
    memset(szBuffer, 0, MAC_ADDR_LENGTH);
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, 
-                      szBuffer, 256, FALSE, FALSE);
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, szBuffer, 256, SG_RAW_RESULT);
    if (dwResult == SNMP_ERR_SUCCESS)
       memcpy(pVlanList->pList[dwIndex].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
    return dwResult;
@@ -124,14 +123,14 @@ static DWORD HandlerPassportIfList(DWORD dwVersion, SNMP_Variable *pVar,
       memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
       oidName[dwNameLen - 6] = 2;
       dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
-                         &pIfList->pInterfaces[iIndex].dwIpAddr, sizeof(DWORD), FALSE, FALSE);
+                         &pIfList->pInterfaces[iIndex].dwIpAddr, sizeof(DWORD), 0);
 
       if (dwResult == SNMP_ERR_SUCCESS)
       {
          // Get netmask
          oidName[dwNameLen - 6] = 3;
          dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
-                            &pIfList->pInterfaces[iIndex].dwIpNetMask, sizeof(DWORD), FALSE, FALSE);
+                            &pIfList->pInterfaces[iIndex].dwIpNetMask, sizeof(DWORD), 0);
       }
    }
    else

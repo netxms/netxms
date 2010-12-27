@@ -825,6 +825,7 @@ typedef struct
 #define VID_SEED_OBJECT             ((DWORD)359)
 #define VID_BACKGROUND              ((DWORD)360)
 #define VID_NUM_ELEMENTS            ((DWORD)361)
+#define VID_INTERFACE_ID            ((DWORD)362)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

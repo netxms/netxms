@@ -536,9 +536,9 @@ extern "C"
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
    void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize);
 
-   TCHAR LIBNETXMS_EXPORTABLE *BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr);
+   TCHAR LIBNETXMS_EXPORTABLE *BinToStr(const BYTE *pData, DWORD dwSize, TCHAR *pStr);
    DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize);
-   void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr);
+   TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
    void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);

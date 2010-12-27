@@ -254,8 +254,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    if (data.dwFlags & NNF_IS_SNMP)
    {
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.3.6.1.2.1.4.1.0"), NULL, 0, &dwTemp, sizeof(DWORD),
-                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.2.1.4.1.0"), NULL, 0, &dwTemp, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.dwFlags |= NNF_IS_ROUTER;
@@ -276,21 +275,18 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    {
 		// Get SNMP OID
 		SnmpGet(data.nSNMPVersion, pTransport,
-		        _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, data.szObjectId, MAX_OID_LEN * 4,
-		        FALSE, FALSE);
+		        _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, data.szObjectId, MAX_OID_LEN * 4, 0);
 
       // Check if node is a bridge
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 256,
-                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 256, 0) == SNMP_ERR_SUCCESS)
       {
          data.dwFlags |= NNF_IS_BRIDGE;
       }
 
       // Check for CDP (Cisco Discovery Protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), NULL, 0, &dwTemp, sizeof(DWORD),
-                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), NULL, 0, &dwTemp, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.dwFlags |= NNF_IS_CDP;
@@ -298,8 +294,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 
       // Check for SONMP (Nortel topology discovery protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), NULL, 0, &dwTemp, sizeof(DWORD),
-                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
+                  _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), NULL, 0, &dwTemp, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
             data.dwFlags |= NNF_IS_SONMP;
@@ -307,8 +302,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 
       // Check for LLDP (Link Layer Discovery Protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport,
-                  _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 256,
-                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
+                  _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 256, 0) == SNMP_ERR_SUCCESS)
       {
          data.dwFlags |= NNF_IS_LLDP;
       }

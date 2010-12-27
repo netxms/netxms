@@ -534,7 +534,7 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(BYTE *macAddr)
 	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
 	{
 		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_INTERFACE) &&
-		    !memcmp(macAddr, ((Interface *)g_pIndexById[i].pObject)->MacAddr()))
+		    !memcmp(macAddr, ((Interface *)g_pIndexById[i].pObject)->MacAddr(), 6))
 		{
 			pNode = ((Interface *)g_pIndexById[i].pObject)->GetParentNode();
 			break;

@@ -600,6 +600,15 @@ public:
 
 
 //
+// Flags for SnmpGet
+//
+
+#define SG_VERBOSE       0x0001
+#define SG_STRING_RESULT 0x0002
+#define SG_RAW_RESULT    0x0004
+
+
+//
 // Functions
 //
 
@@ -653,7 +662,7 @@ void SnmpInit();
 DWORD SnmpNewRequestId();
 DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
               const TCHAR *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
-              DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
+              DWORD dwBufferSize, DWORD dwFlags);
 DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
 						  DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose);
@@ -661,9 +670,9 @@ SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *ver
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 
-void InitLocalNetInfo(void);
+void InitLocalNetInfo();
 
-ARP_CACHE *GetLocalArpCache(void);
+ARP_CACHE *GetLocalArpCache();
 ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport);
 
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport,

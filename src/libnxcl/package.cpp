@@ -208,7 +208,7 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
          if ((szBuffer[0] == _T('#')) || (szBuffer[0] == 0))
             continue;   // Empty line or comment
 
-         ptr = ExtractWord(szBuffer, szTag);
+         ptr = (TCHAR *)ExtractWord(szBuffer, szTag);
          StrStrip(ptr);
          _tcsupr(szTag);
 

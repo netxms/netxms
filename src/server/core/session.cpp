@@ -10446,6 +10446,48 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	DWORD objectId = request->GetVariableLong(VID_OBJECT_ID);
+	NetObj *object = FindObjectById(objectId);
+	if (object != NULL)
+	{
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			DebugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
+			Interface *iface = NULL;
+			if (object->Type() == OBJECT_NODE)
+			{
+				iface = ((Node *)object)->findConnectionPoint();
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			}
+			else if (object->Type() == OBJECT_INTERFACE)
+			{
+				iface = FindInterfaceConnectionPoint(((Interface *)object)->MacAddr());
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+
+			DebugPrintf(5, _T("findNodeConnection: iface=%p"), iface);
+			if (iface != NULL)
+			{
+				msg.SetVariable(VID_OBJECT_ID, iface->GetParentNode()->Id());
+				msg.SetVariable(VID_INTERFACE_ID, iface->Id());
+				msg.SetVariable(VID_IF_INDEX, iface->IfIndex());
+				DebugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->GetParentNode()->Id(), iface->Id(), iface->IfIndex());
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
 	
 	sendMessage(&msg);
 }

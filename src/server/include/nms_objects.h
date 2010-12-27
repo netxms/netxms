@@ -803,6 +803,7 @@ public:
 	nxmap_ObjList *GetL2Topology();
 	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);
 	ForwardingDatabase *getSwitchForwardingDatabase();
+	Interface *findConnectionPoint();
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 };
