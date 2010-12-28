@@ -315,7 +315,7 @@ typedef struct
 #define CMD_DELETE_EVENT_TEMPLATE   0x005D
 #define CMD_GENERATE_EVENT_CODE     0x005E
 #define CMD_FIND_NODE_CONNECTION    0x005F
-//#define CMD_UNLOCK_TRAP_CFG         0x0060
+#define CMD_FIND_MAC_LOCATION       0x0060
 #define CMD_CREATE_TRAP             0x0061
 #define CMD_MODIFY_TRAP             0x0062
 #define CMD_DELETE_TRAP             0x0063
@@ -826,6 +826,8 @@ typedef struct
 #define VID_BACKGROUND              ((DWORD)360)
 #define VID_NUM_ELEMENTS            ((DWORD)361)
 #define VID_INTERFACE_ID            ((DWORD)362)
+#define VID_LOCAL_INTERFACE_ID      ((DWORD)363)
+#define VID_LOCAL_NODE_ID           ((DWORD)364)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

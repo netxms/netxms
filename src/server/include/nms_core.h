@@ -384,6 +384,7 @@ private:
 	DECLARE_THREAD_STARTER(getServerLogQueryData)
 	DECLARE_THREAD_STARTER(executeAction)
 	DECLARE_THREAD_STARTER(findNodeConnection)
+	DECLARE_THREAD_STARTER(findMacAddress)
 
    void ReadThread(void);
    void WriteThread(void);
@@ -552,6 +553,7 @@ private:
 	void sendDCIThresholds(CSCPMessage *request);
 	void addClusterNode(CSCPMessage *request);
 	void findNodeConnection(CSCPMessage *request);
+	void findMacAddress(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -190,7 +190,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    }
 
    // Determine owning node's ID
-   pNode = GetParentNode();
+   pNode = getParentNode();
    if (pNode != NULL)
       dwNodeId = pNode->Id();
    else
@@ -261,7 +261,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    Node *pNode;
 
    m_pPollRequestor = pSession;
-   pNode = GetParentNode();
+   pNode = getParentNode();
    if (pNode == NULL)
    {
       m_iStatus = STATUS_UNKNOWN;
@@ -448,7 +448,7 @@ DWORD Interface::wakeUp()
 // Get interface's parent node
 //
 
-Node *Interface::GetParentNode(void)
+Node *Interface::getParentNode()
 {
    DWORD i;
    Node *pNode = NULL;

@@ -27,6 +27,8 @@ import org.netxms.base.NXCPMessage;
  */
 public class ConnectionPoint
 {
+	private long localNodeId;
+	private long localInterfaceId;
 	private long nodeId;
 	private long interfaceId;
 	private int interfaceIndex;
@@ -41,6 +43,8 @@ public class ConnectionPoint
 		nodeId = msg.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
 		interfaceId = msg.getVariableAsInt64(NXCPCodes.VID_INTERFACE_ID);
 		interfaceIndex = msg.getVariableAsInteger(NXCPCodes.VID_IF_INDEX);
+		localNodeId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_NODE_ID);
+		localInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_INTERFACE_ID);
 	}
 
 	/**
@@ -65,5 +69,21 @@ public class ConnectionPoint
 	public int getInterfaceIndex()
 	{
 		return interfaceIndex;
+	}
+
+	/**
+	 * @return the localNodeId
+	 */
+	public long getLocalNodeId()
+	{
+		return localNodeId;
+	}
+
+	/**
+	 * @return the localInterfaceId
+	 */
+	public long getLocalInterfaceId()
+	{
+		return localInterfaceId;
 	}
 }

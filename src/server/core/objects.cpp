@@ -514,7 +514,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr)
 
    RWLockReadLock(g_rwlockInterfaceIndex, INFINITE);
    dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwAddr);
-   pNode = (dwPos == INVALID_INDEX) ? NULL : ((Interface *)g_pInterfaceIndexByAddr[dwPos].pObject)->GetParentNode();
+   pNode = (dwPos == INVALID_INDEX) ? NULL : ((Interface *)g_pInterfaceIndexByAddr[dwPos].pObject)->getParentNode();
    RWLockUnlock(g_rwlockInterfaceIndex);
    return pNode;
 }
@@ -524,24 +524,35 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr)
 // Find node by MAC address
 //
 
-Node NXCORE_EXPORTABLE *FindNodeByMAC(BYTE *macAddr)
+Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
+{
+	Interface *pInterface = FindInterfaceByMAC(macAddr);
+	return (pInterface != NULL) ? pInterface->getParentNode() : NULL;
+}
+
+
+//
+// Find interface by MAC address
+//
+
+Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 {
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-   Node *pNode = NULL;
+   Interface *pInterface = NULL;
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
 	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
 	{
 		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_INTERFACE) &&
 		    !memcmp(macAddr, ((Interface *)g_pIndexById[i].pObject)->MacAddr(), 6))
 		{
-			pNode = ((Interface *)g_pIndexById[i].pObject)->GetParentNode();
+			pInterface = ((Interface *)g_pIndexById[i].pObject);
 			break;
 		}
 	}
    RWLockUnlock(g_rwlockIdIndex);
-   return pNode;
+   return pInterface;
 }
 
 

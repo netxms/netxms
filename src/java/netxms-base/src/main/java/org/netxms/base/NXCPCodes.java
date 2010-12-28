@@ -123,7 +123,7 @@ public final class NXCPCodes
 	public static final int CMD_DELETE_EVENT_TEMPLATE   = 0x005D;
 	public static final int CMD_GENERATE_EVENT_CODE     = 0x005E;
 	public static final int CMD_FIND_NODE_CONNECTION    = 0x005F;
-	//public static final int CMD_UNLOCK_TRAP_CFG         = 0x0060;
+	public static final int CMD_FIND_MAC_LOCATION       = 0x0060;
 	public static final int CMD_CREATE_TRAP             = 0x0061;
 	public static final int CMD_MODIFY_TRAP             = 0x0062;
 	public static final int CMD_DELETE_TRAP             = 0x0063;
@@ -630,6 +630,8 @@ public final class NXCPCodes
 	public static final long VID_BACKGROUND              = 360;
 	public static final long VID_NUM_ELEMENTS            = 361;
 	public static final long VID_INTERFACE_ID            = 362;
+	public static final long VID_LOCAL_INTERFACE_ID      = 363;
+	public static final long VID_LOCAL_NODE_ID           = 364;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

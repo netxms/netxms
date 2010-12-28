@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
             dwServiceAddr = ntohl(inet_addr(optarg));
             if ((dwServiceAddr == INADDR_NONE) || (dwServiceAddr == INADDR_ANY))
             {
-               printf("Invalid IP address \"%s\"\n", optarg);
+               _tprintf(_T("Invalid IP address \"%hs\"\n"), optarg);
                bStart = FALSE;
             }
             break;
@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
 					}
 					else
 					{
-						printf("Invalid service type \"%s\"\n", optarg);
+						_tprintf(_T("Invalid service type \"%hs\"\n"), optarg);
 						bStart = FALSE;
 					}
             }
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 0) || (i > 65535))
             {
-               printf("Invalid protocol number \"%s\"\n", optarg);
+               _tprintf(_T("Invalid protocol number \"%hs\"\n"), optarg);
                bStart = FALSE;
             }
             else
@@ -428,7 +428,7 @@ int main(int argc, char *argv[])
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 1) || (i > 120))
             {
-               printf("Invalid timeout \"%s\"\n", optarg);
+               _tprintf(_T("Invalid timeout \"%hs\"\n"), optarg);
                bStart = FALSE;
             }
             else

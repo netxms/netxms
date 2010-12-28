@@ -294,6 +294,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/ConnectionPoint.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/Glob.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/MacAddress.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/MacAddressFormatException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -text
@@ -372,6 +374,7 @@ src/java/netxms-client/src/test/java/org/netxms/client/EventDatabaseSyncTest.jav
 src/java/netxms-client/src/test/java/org/netxms/client/GlobTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/JobTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/LogTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/MacAddressTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ObjectTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ObjectToolsTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ServerConfigTest.java -text

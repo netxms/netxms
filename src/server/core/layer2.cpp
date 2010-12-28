@@ -212,7 +212,7 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr)
 				if (iface != NULL)
 				{
 					DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
-						iface->Name(), (int)iface->Id(), iface->GetParentNode()->Name(), (int)iface->GetParentNode()->Id());
+						iface->Name(), (int)iface->Id(), iface->getParentNode()->Name(), (int)iface->getParentNode()->Id());
 				}
 				else
 				{

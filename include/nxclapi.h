@@ -1796,6 +1796,20 @@ typedef struct
 } NXC_SNMP_USM_CRED;
 
 
+//
+// Connection point information
+//
+
+typedef struct
+{
+	DWORD localNodeId;
+	DWORD localInterfaceId;
+	DWORD remoteNodeId;
+	DWORD remoteInterfaceId;
+	DWORD remoteIfIndex;
+} NXC_CONNECTION_POINT;
+
+
 // All situation stuff will be available only in C++
 #ifdef __cplusplus
 
@@ -2194,7 +2208,8 @@ void LIBNXCL_EXPORTABLE NXCDestroyCertificateList(NXC_CERT_LIST *pList);
 
 /** Layer 2 topology **/
 DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId, void **ppTopology);
-DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD objectId, DWORD *cpNodeId, DWORD *cpIfId, DWORD *cpIfIndex);
+DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD objectId, NXC_CONNECTION_POINT *cpInfo);
+DWORD LIBNXCL_EXPORTABLE NXCFindMACAddress(NXC_SESSION hSession, BYTE *macAddr, NXC_CONNECTION_POINT *cpInfo);
 
 /** Situations **/
 DWORD LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *name, const TCHAR *comments, DWORD *pdwId);

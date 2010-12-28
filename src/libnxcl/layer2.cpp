@@ -64,7 +64,7 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId
 // Find connection point for node or interface
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD objectId, DWORD *cpNodeId, DWORD *cpIfId, DWORD *cpIfIndex)
+DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD objectId, NXC_CONNECTION_POINT *cpInfo)
 {
    CSCPMessage msg, *response;
    DWORD dwRetCode, dwRqId;
@@ -82,9 +82,49 @@ DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD obje
       dwRetCode = response->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
 		{
-			*cpNodeId = response->GetVariableLong(VID_OBJECT_ID);
-			*cpIfId = response->GetVariableLong(VID_INTERFACE_ID);
-			*cpIfIndex = response->GetVariableLong(VID_IF_INDEX);
+			cpInfo->remoteNodeId = response->GetVariableLong(VID_OBJECT_ID);
+			cpInfo->remoteInterfaceId = response->GetVariableLong(VID_INTERFACE_ID);
+			cpInfo->remoteIfIndex = response->GetVariableLong(VID_IF_INDEX);
+			cpInfo->localNodeId = response->GetVariableLong(VID_LOCAL_NODE_ID);
+			cpInfo->localInterfaceId = response->GetVariableLong(VID_LOCAL_INTERFACE_ID);
+		}
+      delete response;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
+
+
+//
+// Find connection point for given MAC address
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCFindMACAddress(NXC_SESSION hSession, BYTE *macAddr, NXC_CONNECTION_POINT *cpInfo)
+{
+   CSCPMessage msg, *response;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+	msg.SetCode(CMD_FIND_MAC_LOCATION);
+   msg.SetId(dwRqId);
+	msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   response = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (response != NULL)
+   {
+      dwRetCode = response->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+		{
+			cpInfo->remoteNodeId = response->GetVariableLong(VID_OBJECT_ID);
+			cpInfo->remoteInterfaceId = response->GetVariableLong(VID_INTERFACE_ID);
+			cpInfo->remoteIfIndex = response->GetVariableLong(VID_IF_INDEX);
+			cpInfo->localNodeId = response->GetVariableLong(VID_LOCAL_NODE_ID);
+			cpInfo->localInterfaceId = response->GetVariableLong(VID_LOCAL_INTERFACE_ID);
 		}
       delete response;
    }

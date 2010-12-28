@@ -20,6 +20,7 @@ package org.netxms.client.objects;
 
 import java.net.InetAddress;
 import org.netxms.base.*;
+import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
 
 /**
@@ -31,7 +32,7 @@ public class Interface extends GenericObject
 	private InetAddress subnetMask;
 	private int ifIndex;
 	private int ifType;
-	private byte[] macAddress;
+	private MacAddress macAddress;
 	private int requiredPollCount;
 	
 	/**
@@ -44,9 +45,7 @@ public class Interface extends GenericObject
 		subnetMask = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 		ifIndex = msg.getVariableAsInteger(NXCPCodes.VID_IF_INDEX);
 		ifType = msg.getVariableAsInteger(NXCPCodes.VID_IF_TYPE);
-		macAddress = msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR);
-		if (macAddress == null)
-			macAddress = new byte[6];
+		macAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
 		requiredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
 	}
 
@@ -77,7 +76,7 @@ public class Interface extends GenericObject
 	/**
 	 * @return Interface MAC address
 	 */
-	public byte[] getMacAddress()
+	public MacAddress getMacAddress()
 	{
 		return macAddress;
 	}

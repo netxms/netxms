@@ -507,7 +507,7 @@ public:
    virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
-   Node *GetParentNode();
+   Node *getParentNode();
 
    void SetMacAddr(BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
 
@@ -803,7 +803,7 @@ public:
 	nxmap_ObjList *GetL2Topology();
 	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);
 	ForwardingDatabase *getSwitchForwardingDatabase();
-	Interface *findConnectionPoint();
+	Interface *findConnectionPoint(DWORD *localIfId);
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 };
@@ -1350,7 +1350,8 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
-Node NXCORE_EXPORTABLE *FindNodeByMAC(BYTE *macAddr);
+Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
+Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);
 DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);

@@ -155,6 +155,7 @@ DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(getServerLogQueryData)
 DEFINE_THREAD_STARTER(executeAction)
 DEFINE_THREAD_STARTER(findNodeConnection)
+DEFINE_THREAD_STARTER(findMacAddress)
 
 
 //
@@ -1195,6 +1196,9 @@ void ClientSession::ProcessingThread()
 				break;
 			case CMD_FIND_NODE_CONNECTION:
 				CALL_IN_NEW_THREAD(findNodeConnection, pMsg);
+				break;
+			case CMD_FIND_MAC_LOCATION:
+				CALL_IN_NEW_THREAD(findMacAddress, pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -10449,19 +10453,23 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 
 	DWORD objectId = request->GetVariableLong(VID_OBJECT_ID);
 	NetObj *object = FindObjectById(objectId);
-	if (object != NULL)
+	if ((object != NULL) && !object->IsDeleted())
 	{
 		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			DebugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
 			Interface *iface = NULL;
+			DWORD localNodeId, localIfId;
 			if (object->Type() == OBJECT_NODE)
 			{
-				iface = ((Node *)object)->findConnectionPoint();
+				localNodeId = objectId;
+				iface = ((Node *)object)->findConnectionPoint(&localIfId);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else if (object->Type() == OBJECT_INTERFACE)
 			{
+				localNodeId = ((Interface *)object)->getParentNode()->Id();
+				localIfId = objectId;
 				iface = FindInterfaceConnectionPoint(((Interface *)object)->MacAddr());
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
@@ -10473,10 +10481,12 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 			DebugPrintf(5, _T("findNodeConnection: iface=%p"), iface);
 			if (iface != NULL)
 			{
-				msg.SetVariable(VID_OBJECT_ID, iface->GetParentNode()->Id());
+				msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
 				msg.SetVariable(VID_INTERFACE_ID, iface->Id());
 				msg.SetVariable(VID_IF_INDEX, iface->IfIndex());
-				DebugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->GetParentNode()->Id(), iface->Id(), iface->IfIndex());
+				msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+				msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+				DebugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->IfIndex());
 			}
 		}
 		else
@@ -10487,6 +10497,51 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+	
+	sendMessage(&msg);
+}
+
+
+//
+// Find connection port for given MAC address
+//
+
+void ClientSession::findMacAddress(CSCPMessage *request)
+{
+   CSCPMessage msg;
+	BYTE macAddr[6];
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	request->GetVariableBinary(VID_MAC_ADDR, macAddr, 6);
+	Interface *iface = FindInterfaceConnectionPoint(macAddr);
+	msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+	DebugPrintf(5, _T("findMacAddress: iface=%p"), iface);
+	if (iface != NULL)
+	{
+		DWORD localNodeId, localIfId;
+
+		Interface *localIf = FindInterfaceByMAC(macAddr);
+		if (localIf != NULL)
+		{
+			localIfId = localIf->Id();
+			localNodeId = localIf->getParentNode()->Id();
+		}
+		else
+		{
+			localIfId = 0;
+			localNodeId = 0;
+		}
+
+		msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
+		msg.SetVariable(VID_INTERFACE_ID, iface->Id());
+		msg.SetVariable(VID_IF_INDEX, iface->IfIndex());
+		msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+		msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+		DebugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->IfIndex());
 	}
 	
 	sendMessage(&msg);
