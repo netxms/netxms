@@ -1,7 +1,21 @@
 /**
- * Generic NetXMS object class 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
 package org.netxms.client.objects;
 
 import java.util.Arrays;
@@ -12,11 +26,15 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.netxms.base.*;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 
+/**
+ * Generic NetXMS object class 
+ */
 public class GenericObject
 {
 	// Object classes
@@ -75,13 +93,35 @@ public class GenericObject
 	private boolean inheritAccessRights = true;
 	private HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
 
-
+	/**
+	 * Create dummy object of GENERIC class
+	 * 
+	 * @param id object ID to set
+	 * @param session associated session
+	 */
+	protected GenericObject(final long id, final NXCSession session)
+	{
+		objectId = id;
+		this.session = session;
+		guid = UUID.randomUUID();
+		objectName = "unknown";
+		objectClass = OBJECT_GENERIC;
+		try
+		{
+			primaryIP = InetAddress.getByName("0.0.0.0");
+		}
+		catch(UnknownHostException e)
+		{
+		}
+		comments = "";
+		geolocation = new GeoLocation();
+	}
+	
 	/**
 	 * Create object from NXCP message
 	 * @param msg Message to create object from
 	 * @param session Associated client session
 	 */
-	
 	public GenericObject(final NXCPMessage msg, final NXCSession session)
 	{
 		int i, count;
@@ -141,7 +181,6 @@ public class GenericObject
 		}
 	}
 
-
 	/**
 	 * @return Iterator for list of parent objects
 	 */
@@ -150,7 +189,6 @@ public class GenericObject
 		return parents.iterator();
 	}
 
-
 	/**
 	 * @return Iterator for list of child objects
 	 */
@@ -158,7 +196,6 @@ public class GenericObject
 	{
 		return childs.iterator();
 	}
-
 
 	/**
 	 * @return Access list
@@ -176,7 +213,6 @@ public class GenericObject
 		return comments;
 	}
 
-
 	/**
 	 * @return the objectId
 	 */
@@ -184,7 +220,6 @@ public class GenericObject
 	{
 		return objectId;
 	}
-
 
 	/**
 	 * @return the objectName
@@ -194,7 +229,6 @@ public class GenericObject
 		return objectName;
 	}
 
-
 	/**
 	 * @return the primaryIP
 	 */
@@ -202,7 +236,6 @@ public class GenericObject
 	{
 		return primaryIP;
 	}
-
 
 	/**
 	 * @return the status
@@ -212,7 +245,6 @@ public class GenericObject
 		return status;
 	}
 
-
 	/**
 	 * @return the isDeleted
 	 */
@@ -220,7 +252,6 @@ public class GenericObject
 	{
 		return isDeleted;
 	}
-
 
 	/**
 	 * @return the inheritAccessRights

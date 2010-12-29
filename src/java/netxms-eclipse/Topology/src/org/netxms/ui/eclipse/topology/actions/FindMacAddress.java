@@ -23,28 +23,26 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.jface.window.Window;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.ConnectionPoint;
+import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
-import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.dialogs.EnterMacAddressDlg;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 
 /**
- * Find connection point for node or interface
+ * Find MAC address in the network
  *
  */
-public class FindConnectionPoint implements IObjectActionDelegate
+public class FindMacAddress implements IWorkbenchWindowActionDelegate
 {
-	private IWorkbenchPart wbPart;
-	private long objectId;
+	private IWorkbenchWindow window;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
@@ -52,12 +50,17 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
+		EnterMacAddressDlg dlg = new EnterMacAddressDlg(window.getShell());
+		if (dlg.open() != Window.OK)
+			return;
+		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Find connection point for object " + objectId, wbPart, Activator.PLUGIN_ID, null) {
+		final MacAddress macAddr = dlg.getMacAddress();
+		new ConsoleJob("Searching for MAC address " + macAddr + " in the network", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final ConnectionPoint cp = session.findConnectionPoint(objectId);
+				final ConnectionPoint cp = session.findConnectionPoint(macAddr);
 				new UIJob("Show connection point") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
@@ -71,44 +74,33 @@ public class FindConnectionPoint implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get conection point information";
+				return "Search for MAC address " + macAddr + " failed";
 			}
 		}.start();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
 	 */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if (selection instanceof IStructuredSelection)
-		{
-			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if ((obj instanceof Node) || (obj instanceof Interface))
-			{
-				action.setEnabled(true);
-				objectId = ((GenericObject)obj).getObjectId();
-			}
-			else
-			{
-				action.setEnabled(false);
-				objectId = 0;
-			}
-		}
-		else
-		{
-			action.setEnabled(false);
-			objectId = 0;
-		}
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
 	 */
 	@Override
-	public void setActivePart(IAction action, IWorkbenchPart targetPart)
+	public void dispose()
 	{
-		wbPart = targetPart;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
+	 */
+	@Override
+	public void init(IWorkbenchWindow window)
+	{
+		this.window = window;
 	}
 }

@@ -66,6 +66,8 @@ public class ObjectFigure extends Figure
 		
 		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		object = session.findObjectById(element.getObjectId());
+		if (object == null)
+			object = new UnknownObject(element.getObjectId(), session);
 		
 		setLayoutManager(new BorderLayout());
 		
@@ -157,6 +159,8 @@ public class ObjectFigure extends Figure
 	{
 		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		object = session.findObjectById(element.getObjectId());
+		if (object == null)
+			object = new UnknownObject(element.getObjectId(), session);
 		label.setText(object.getObjectName());
 		setToolTip(new ObjectTooltip(object));
 		invalidateTree();

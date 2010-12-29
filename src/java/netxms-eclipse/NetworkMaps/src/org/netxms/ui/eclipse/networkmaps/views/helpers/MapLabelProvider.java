@@ -58,6 +58,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgSubnet;
 	private Image imgService;
 	private Image imgOther;
+	private Image imgUnknown;
 	private Font font;
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
@@ -81,6 +82,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
 		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
+		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
 		
 		font = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
 		
@@ -135,6 +137,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						return imgOther;
 				}
 			}
+			else
+			{
+				return imgUnknown;
+			}
 		}
 		return null;
 	}
@@ -184,6 +190,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgSubnet.dispose();
 		imgService.dispose();
 		imgOther.dispose();
+		imgUnknown.dispose();
 		font.dispose();
 		super.dispose();
 	}

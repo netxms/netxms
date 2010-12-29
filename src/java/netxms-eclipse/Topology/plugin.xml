@@ -30,5 +30,31 @@
          </action>
       </objectContribution>
    </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.tools"
+            description="Find MAC address location in the network"
+            id="org.netxms.ui.eclipse.topology.commands.find_mac_address"
+            name="Find &amp;MAC address...">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.topology.action_sets.find_mac_address"
+            label="Find MAC address"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindMacAddress"
+               definitionId="org.netxms.ui.eclipse.topology.commands.find_mac_address"
+               id="org.netxms.ui.eclipse.topology.actions.find_mac_address"
+               label="Find &amp;MAC address..."
+               menubarPath="tools/additions"
+               style="push"
+               tooltip="Find MAC address location in the network">
+         </action>
+      </actionSet>
+   </extension>
 
 </plugin>

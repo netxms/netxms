@@ -678,6 +678,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/objects/router.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/server.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/service.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/switch.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/unknown.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/other.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/quickmap.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/router.png -text
@@ -714,6 +715,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/MapLabelProvider.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectTooltip.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/UnknownObject.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ZoomAction.java -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
@@ -909,6 +911,9 @@ src/java/netxms-eclipse/Topology/build.properties -text
 src/java/netxms-eclipse/Topology/plugin.xml -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/Activator.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/actions/FindConnectionPoint.java -text
+src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/actions/FindMacAddress.java -text
+src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/dialogs/EnterMacAddressDlg.java -text
+src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/views/HostSearchResults.java -text
 src/java/netxms-eclipse/UserManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/UserManager/build.properties -text
 src/java/netxms-eclipse/UserManager/icons/change_password.png -text
