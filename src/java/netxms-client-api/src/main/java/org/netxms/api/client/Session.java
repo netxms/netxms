@@ -218,4 +218,14 @@ public interface Session
 	 * @return connection state
 	 */
 	public abstract boolean isConnected();
+
+   /**
+    * Send KEEPALIVE message. Return nothing is connection is fine, exception thrown otherwise
+    * 
+    * @return 
+    * @throws IOException
+    * @throws NXCException
+    */
+   public abstract void checkConnection() throws IOException, NetXMSClientException;
+   
 }

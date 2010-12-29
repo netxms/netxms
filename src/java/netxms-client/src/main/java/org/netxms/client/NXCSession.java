@@ -37,16 +37,16 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.netxms.api.client.NetXMSClientException;
-import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.Session;
-import org.netxms.api.client.scripts.ScriptLibraryManager;
+import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.scripts.Script;
+import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.api.client.servermanager.ServerManager;
 import org.netxms.api.client.servermanager.ServerVariable;
-import org.netxms.api.client.users.UserManager;
-import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
+import org.netxms.api.client.users.UserManager;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPDataInputStream;
 import org.netxms.base.NXCPException;
@@ -63,11 +63,11 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.events.Alarm;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.client.events.Alarm;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
@@ -79,12 +79,12 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
-import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.ServiceRoot;
@@ -3390,5 +3390,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		if (response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID) != 0)
 			return new ConnectionPoint(response);
 		return null;
+	}
+	
+	/** {@inheritDoc} */
+	@Override
+	public void checkConnection() throws IOException, NXCException
+	{
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_KEEPALIVE);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
 	}
 }
