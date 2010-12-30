@@ -10460,17 +10460,19 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 			DebugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
 			Interface *iface = NULL;
 			DWORD localNodeId, localIfId;
+			BYTE localMacAddr[MAC_ADDR_LENGTH];
 			if (object->Type() == OBJECT_NODE)
 			{
 				localNodeId = objectId;
-				iface = ((Node *)object)->findConnectionPoint(&localIfId);
+				iface = ((Node *)object)->findConnectionPoint(&localIfId, localMacAddr);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else if (object->Type() == OBJECT_INTERFACE)
 			{
 				localNodeId = ((Interface *)object)->getParentNode()->Id();
 				localIfId = objectId;
-				iface = FindInterfaceConnectionPoint(((Interface *)object)->MacAddr());
+				memcpy(localMacAddr, ((Interface *)object)->MacAddr(), MAC_ADDR_LENGTH);
+				iface = FindInterfaceConnectionPoint(localMacAddr);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
@@ -10486,6 +10488,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				msg.SetVariable(VID_IF_INDEX, iface->IfIndex());
 				msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
 				msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+				msg.SetVariable(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
 				DebugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->IfIndex());
 			}
 		}
@@ -10541,6 +10544,7 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 		msg.SetVariable(VID_IF_INDEX, iface->IfIndex());
 		msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
 		msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+		msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
 		DebugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->IfIndex());
 	}
 	

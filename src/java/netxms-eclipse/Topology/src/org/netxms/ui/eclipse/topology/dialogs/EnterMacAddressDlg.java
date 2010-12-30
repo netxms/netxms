@@ -65,6 +65,7 @@ public class EnterMacAddressDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		textMac = new LabeledText(dialogArea, SWT.NONE);
+		textMac.setLabel("MAC address");
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
@@ -96,5 +97,15 @@ public class EnterMacAddressDlg extends Dialog
 	public MacAddress getMacAddress()
 	{
 		return macAddress;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
+	@Override
+	protected void configureShell(Shell newShell)
+	{
+		newShell.setText("Enter MAC Address");
+		super.configureShell(newShell);
 	}
 }

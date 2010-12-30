@@ -87,6 +87,7 @@ DWORD LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, DWORD obje
 			cpInfo->remoteIfIndex = response->GetVariableLong(VID_IF_INDEX);
 			cpInfo->localNodeId = response->GetVariableLong(VID_LOCAL_NODE_ID);
 			cpInfo->localInterfaceId = response->GetVariableLong(VID_LOCAL_INTERFACE_ID);
+			response->GetVariableBinary(VID_MAC_ADDR, cpInfo->localMacAddr, MAC_ADDR_LENGTH);
 		}
       delete response;
    }
@@ -125,6 +126,7 @@ DWORD LIBNXCL_EXPORTABLE NXCFindMACAddress(NXC_SESSION hSession, BYTE *macAddr, 
 			cpInfo->remoteIfIndex = response->GetVariableLong(VID_IF_INDEX);
 			cpInfo->localNodeId = response->GetVariableLong(VID_LOCAL_NODE_ID);
 			cpInfo->localInterfaceId = response->GetVariableLong(VID_LOCAL_INTERFACE_ID);
+			response->GetVariableBinary(VID_MAC_ADDR, cpInfo->localMacAddr, MAC_ADDR_LENGTH);
 		}
       delete response;
    }

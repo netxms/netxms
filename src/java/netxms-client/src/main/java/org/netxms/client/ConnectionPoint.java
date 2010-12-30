@@ -29,9 +29,11 @@ public class ConnectionPoint
 {
 	private long localNodeId;
 	private long localInterfaceId;
+	private MacAddress localMacAddress;
 	private long nodeId;
 	private long interfaceId;
 	private int interfaceIndex;
+	private Object data;
 	
 	/**
 	 * Create connection point information from NXCP message
@@ -45,6 +47,7 @@ public class ConnectionPoint
 		interfaceIndex = msg.getVariableAsInteger(NXCPCodes.VID_IF_INDEX);
 		localNodeId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_NODE_ID);
 		localInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_INTERFACE_ID);
+		localMacAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
 	}
 
 	/**
@@ -85,5 +88,33 @@ public class ConnectionPoint
 	public long getLocalInterfaceId()
 	{
 		return localInterfaceId;
+	}
+
+	/**
+	 * @return the localMacAddress
+	 */
+	public MacAddress getLocalMacAddress()
+	{
+		return localMacAddress;
+	}
+
+	/**
+	 * Get user data.
+	 * 
+	 * @return user data
+	 */
+	public Object getData()
+	{
+		return data;
+	}
+
+	/**
+	 * Set user data.
+	 * 
+	 * @param data user data
+	 */
+	public void setData(Object data)
+	{
+		this.data = data;
 	}
 }

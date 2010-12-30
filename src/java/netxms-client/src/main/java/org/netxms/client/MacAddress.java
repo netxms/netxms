@@ -101,10 +101,11 @@ public class MacAddress
 
 	/**
 	 * Parse MAC address string representation. Supported representations are 6 groups of
-	 * two hex digits, separated by spaces or colons, or unseparated. Examples of valid 
+	 * two hex digits, separated by spaces, minuses, or colons, or unseparated. Examples of valid 
 	 * MAC address strings:
 	 * 00:10:FA:23:11:7A
 	 * 01 02 fa c4 10 dc
+	 * 00-90-0b-11-01-29
 	 * 0203fcd456c1
 	 * 
 	 * @param str MAC address string
@@ -113,7 +114,7 @@ public class MacAddress
 	 */
 	public static MacAddress parseMacAddress(String str) throws MacAddressFormatException
 	{
-		Pattern pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :]?([0-9a-fA-F]{2})[ :]?([0-9a-fA-F]{2})[ :]?([0-9a-fA-F]{2})[ :]?([0-9a-fA-F]{2})[ :]?([0-9a-fA-F]{2})$");
+		Pattern pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})$");
 		Matcher matcher = pattern.matcher(str.trim());
 		if (matcher.matches())
 		{

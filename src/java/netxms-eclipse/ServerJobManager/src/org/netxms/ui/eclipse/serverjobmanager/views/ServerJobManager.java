@@ -36,8 +36,9 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -57,6 +58,7 @@ import org.netxms.ui.eclipse.serverjobmanager.Activator;
 import org.netxms.ui.eclipse.serverjobmanager.views.helpers.ServerJobComparator;
 import org.netxms.ui.eclipse.serverjobmanager.views.helpers.ServerJobLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -75,7 +77,9 @@ public class ServerJobManager extends ViewPart
 	public static final int COLUMN_PROGRESS = 4;
 	public static final int COLUMN_MESSAGE = 5;
 
-	private TableViewer viewer;
+	private static final String TABLE_CONFIG_PREFIX = "ServerJobManager";
+	
+	private SortableTableViewer viewer;
 	private NXCSession session = null;
 	private NXCListener clientListener = null;
 	
@@ -95,12 +99,21 @@ public class ServerJobManager extends ViewPart
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ServerJobLabelProvider());
 		viewer.setComparator(new ServerJobComparator());
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
+		
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+			}
+		});
 
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override

@@ -765,9 +765,9 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 	}
 	else
 	{
-		nLen = min(nBufSize, ((int)(pConn->pBuffers[nColumn].nLength / sizeof(UCS2CHAR))) + 1);
+		nLen = min(nBufSize - 1, ((int)(pConn->pBuffers[nColumn].nLength / sizeof(UCS2CHAR))));
 #if UNICODE_UCS4
-		ucs2_to_ucs4(pConn->pBuffers[nColumn].pData, nLen, pBuffer, nLen);
+		ucs2_to_ucs4(pConn->pBuffers[nColumn].pData, nLen, pBuffer, nLen + 1);
 #else
 		memcpy(pBuffer, pConn->pBuffers[nColumn].pData, nLen * sizeof(WCHAR));
 #endif

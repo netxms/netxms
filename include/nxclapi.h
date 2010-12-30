@@ -1804,6 +1804,7 @@ typedef struct
 {
 	DWORD localNodeId;
 	DWORD localInterfaceId;
+	BYTE localMacAddr[MAC_ADDR_LENGTH];
 	DWORD remoteNodeId;
 	DWORD remoteInterfaceId;
 	DWORD remoteIfIndex;

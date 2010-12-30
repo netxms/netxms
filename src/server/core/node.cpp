@@ -551,7 +551,7 @@ Interface *Node::findInterface(const TCHAR *name)
 // Find connection point for node
 //
 
-Interface *Node::findConnectionPoint(DWORD *localIfId)
+Interface *Node::findConnectionPoint(DWORD *localIfId, BYTE *localMacAddr)
 {
 	Interface *cp = NULL;
    LockChildList(FALSE);
@@ -563,6 +563,7 @@ Interface *Node::findConnectionPoint(DWORD *localIfId)
 			if (cp != NULL)
 			{
 				*localIfId = iface->Id();
+				memcpy(localMacAddr, iface->MacAddr(), MAC_ADDR_LENGTH);
 				break;
 			}
 		}
