@@ -48,7 +48,8 @@ public class ObjectFigure extends Figure
 	private static final int BACKGROUND_MARGIN_X = 4;
 	private static final int BACKGROUND_MARGIN_Y = 4;
 	
-	private static final Color SELECTION_COLOR = new Color(Display.getDefault(), 255, 242, 0);
+	//private static final Color SELECTION_COLOR = new Color(Display.getDefault(), 255, 242, 0);
+	private static final Color SELECTION_COLOR = new Color(Display.getDefault(), 132, 0, 200);
 	
 	private NetworkMapObject element;
 	private GenericObject object;
@@ -72,7 +73,7 @@ public class ObjectFigure extends Figure
 		setLayoutManager(new BorderLayout());
 		
 		label = new Label(object.getObjectName());
-		label.setFont(labelProvider.getFont());
+		label.setFont(labelProvider.getLabelFont());
 		label.setLabelAlignment(PositionConstants.CENTER);
 		add(label, BorderLayout.BOTTOM);
 		
@@ -89,15 +90,8 @@ public class ObjectFigure extends Figure
 	@Override
 	protected void paintFigure(Graphics gc)
 	{
+		gc.setAntialias(SWT.ON);
 		Rectangle rect = new Rectangle(getBounds());
-		
-		// Selection mark
-		if (labelProvider.isElementSelected(element))
-		{
-			gc.setBackgroundColor(SELECTION_COLOR);
-			gc.setAntialias(SWT.ON);
-			gc.fillRoundRectangle(rect, 16, 16);
-		}
 		
 		// Status background
 		if (labelProvider.isShowStatusBackground())
@@ -108,7 +102,6 @@ public class ObjectFigure extends Figure
 			rect.height = IMAGE_SIZE_Y + BACKGROUND_MARGIN_Y * 2;
 			
 			gc.setBackgroundColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
-			gc.setAntialias(SWT.ON);
 			gc.setAlpha(64);
 			gc.fillRoundRectangle(rect, 16, 16);
 			gc.setAlpha(255);
@@ -125,8 +118,22 @@ public class ObjectFigure extends Figure
 			rect.height = IMAGE_SIZE_Y + BACKGROUND_MARGIN_Y * 2 - 1;
 			
 			gc.setForegroundColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
-			gc.setAntialias(SWT.ON);
 			gc.setLineWidth(3);
+			gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
+			gc.drawRoundRectangle(rect, 16, 16);
+
+			rect = new Rectangle(getBounds());
+		}
+		else if (labelProvider.isElementSelected(element))
+		{
+			rect.x += IMAGE_MARGIN_X - BACKGROUND_MARGIN_X;
+			rect.y += IMAGE_MARGIN_Y - BACKGROUND_MARGIN_Y + 1;
+			rect.width = IMAGE_SIZE_X + BACKGROUND_MARGIN_X * 2;
+			rect.height = IMAGE_SIZE_Y + BACKGROUND_MARGIN_Y * 2 - 1;
+			
+			gc.setForegroundColor(SELECTION_COLOR);
+			gc.setLineWidth(3);
+			gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
 			gc.drawRoundRectangle(rect, 16, 16);
 
 			rect = new Rectangle(getBounds());

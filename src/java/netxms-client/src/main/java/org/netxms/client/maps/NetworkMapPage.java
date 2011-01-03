@@ -94,6 +94,36 @@ public class NetworkMapPage
 	{
 		links.addAll(set);
 	}
+	
+	/**
+	 * Remove element from map
+	 * 
+	 * @param elementId map element ID
+	 */
+	public void removeElement(long elementId)
+	{
+		elements.remove(elementId);
+	}
+	
+	/**
+	 * Remove map element representing NetXMS object by NetXMS object ID.
+	 * 
+	 * @param objectId NetXMS object ID
+	 */
+	public void removeObjectElement(long objectId)
+	{
+		for(NetworkMapElement element : elements.values())
+		{
+			if (element instanceof NetworkMapObject)
+			{
+				if (((NetworkMapObject)element).getObjectId() == objectId)
+				{
+					elements.remove(element.getId());
+					break;
+				}
+			}
+		}
+	}
 
 	/**
 	 * @return the name

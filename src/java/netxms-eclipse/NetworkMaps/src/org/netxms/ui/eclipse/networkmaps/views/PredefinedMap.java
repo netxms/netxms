@@ -26,6 +26,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -38,12 +39,14 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
+import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
@@ -59,6 +62,7 @@ public class PredefinedMap extends NetworkMap
 	private Action actionLinkObjects;
 	private Action actionAddGroupBox;
 	private Action actionAddImage;
+	private Action actionRemove;
 	
 	/**
 	 * Creare predefined map view
@@ -157,6 +161,16 @@ public class PredefinedMap extends NetworkMap
 		};
 		actionLinkObjects.setAccelerator(SWT.CTRL | 'L');
 		actionLinkObjects.setImageDescriptor(Activator.getImageDescriptor("icons/link_add.png"));
+
+		actionRemove = new Action("&Remove from map") {
+			@Override
+			public void run()
+			{
+				removeSelectedObjects();
+			}
+		};
+		actionRemove.setAccelerator(SWT.CTRL | 'R');
+		actionRemove.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 	}
 	
 	/**
@@ -189,14 +203,24 @@ public class PredefinedMap extends NetworkMap
 	@Override
 	protected void fillObjectContextMenu(IMenuManager manager)
 	{
-		if (((IStructuredSelection)viewer.getSelection()).size() == 2)
-		{
+		int size = ((IStructuredSelection)viewer.getSelection()).size();
+		if (size == 2)
 			manager.add(actionLinkObjects);
-			manager.add(new Separator());
-		}
+		manager.add(actionRemove);
+		manager.add(new Separator());
 		super.fillObjectContextMenu(manager);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillElementContextMenu(org.eclipse.jface.action.IMenuManager)
+	 */
+	protected void fillElementContextMenu(IMenuManager manager)
+	{
+		manager.add(actionRemove);
+		manager.add(new Separator());
+		super.fillElementContextMenu(manager);
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
 	 */
@@ -273,6 +297,31 @@ public class PredefinedMap extends NetworkMap
 	}
 	
 	/**
+	 * Remove currently selected objects
+	 */
+	private void removeSelectedObjects()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		
+		if (!MessageDialog.openQuestion(getSite().getShell(), "Confirm Removal", "Are you sure to remove selected element" + (selection.size() == 1 ? "" : "s") + " from map?"))
+			return;
+		
+		Object[] objects = selection.toArray();
+		for(Object element : objects)
+		{
+			if (element instanceof GenericObject)
+			{
+				mapPage.removeObjectElement(((GenericObject)element).getObjectId());
+			}
+			else if (element instanceof NetworkMapElement)
+			{
+				mapPage.removeElement(((NetworkMapElement)element).getId());
+			}
+		}
+		saveMap();
+	}
+	
+	/**
 	 * Add group box decoration
 	 */
 	private void addGroupBoxDecoration()
@@ -327,5 +376,14 @@ public class PredefinedMap extends NetworkMap
 				return "Cannot update map content on server";
 			}
 		}.start();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#isSelectableElement(java.lang.Object)
+	 */
+	@Override
+	protected boolean isSelectableElement(Object element)
+	{
+		return element instanceof NetworkMapDecoration;
 	}
 }

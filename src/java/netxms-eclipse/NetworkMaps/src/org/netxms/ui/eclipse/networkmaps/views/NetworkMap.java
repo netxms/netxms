@@ -531,9 +531,16 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				if (currentSelection.isEmpty())
+				{
 					fillMapContextMenu(mgr);
+				}
 				else
-					fillObjectContextMenu(mgr);
+				{
+					if (isObjectOnlySelection(currentSelection))
+						fillObjectContextMenu(mgr);
+					else
+						fillElementContextMenu(mgr);
+				}
 			}
 		});
 	
@@ -560,9 +567,21 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
-		mgr.add(new PropertyDialogAction(getSite(), this));
+		
+		if (currentSelection.size() == 1)
+		{
+			mgr.add(new Separator());
+			mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+			mgr.add(new PropertyDialogAction(getSite(), this));
+		}
+	}
+	
+	/**
+	 * Fill context menu for map element
+	 * @param mgr Menu manager
+	 */
+	protected void fillElementContextMenu(IMenuManager mgr)
+	{
 	}
 	
 	/**
@@ -585,6 +604,25 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
 		manager.add(actionRefresh);
+	}
+	
+	/**
+	 * Tests if given selection contains only NetXMS objects
+	 * 
+	 * @param selection
+	 * @return
+	 */
+	@SuppressWarnings("rawtypes")
+	private boolean isObjectOnlySelection(IStructuredSelection selection)
+	{
+		Iterator it = selection.iterator();
+		while(it.hasNext())
+		{
+			Object o = it.next();
+			if (!(o instanceof GenericObject))
+				return false;
+		}
+		return true;
 	}
 	
 	/**
@@ -668,7 +706,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		if (selection.isEmpty())
 			return selection;
 				
-		List<GenericObject> objects = new ArrayList<GenericObject>();
+		List<Object> objects = new ArrayList<Object>();
 		Iterator it = selection.iterator();
 		while(it.hasNext())
 		{
@@ -679,9 +717,24 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				if (object != null)
 					objects.add(object);
 			}
+			else if (isSelectableElement(element))
+			{
+				objects.add(element);
+			}
 		}
 
 		return new StructuredSelection(objects.toArray());
+	}
+	
+	/**
+	 * Tests if given map element is selectable. Default implementation always returns false.
+	 * 
+	 * @param element element to test
+	 * @return true if given element is selectable
+	 */
+	protected boolean isSelectableElement(Object element)
+	{
+		return false;
 	}
 
 	/* (non-Javadoc)

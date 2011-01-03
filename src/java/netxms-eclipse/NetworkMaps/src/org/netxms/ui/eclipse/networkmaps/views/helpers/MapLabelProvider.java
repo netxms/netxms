@@ -59,7 +59,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgService;
 	private Image imgOther;
 	private Image imgUnknown;
-	private Font font;
+	private Font fontLabel;
+	private Font fontTitle;
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
@@ -84,7 +85,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
 		
-		font = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
+		fontLabel = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
+		fontTitle = new Font(Display.getDefault(), "Verdana", 10, SWT.NORMAL);
 		
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon");
@@ -191,16 +193,25 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgService.dispose();
 		imgOther.dispose();
 		imgUnknown.dispose();
-		font.dispose();
+		fontLabel.dispose();
+		fontTitle.dispose();
 		super.dispose();
 	}
 
 	/**
 	 * @return the font
 	 */
-	public Font getFont()
+	public Font getLabelFont()
 	{
-		return font;
+		return fontLabel;
+	}
+
+	/**
+	 * @return the font
+	 */
+	public Font getTitleFont()
+	{
+		return fontTitle;
 	}
 
 	/**
@@ -260,7 +271,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
 			sourceEndpointLocator.setVDistance(0);
 			Label label = new ConnectorLabel(link.getConnectorName1());
-			label.setFont(font);
+			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, sourceEndpointLocator);
 		}
 		if (link.hasConnectorName2())
@@ -268,7 +279,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
 			targetEndpointLocator.setVDistance(0);
 			Label label = new ConnectorLabel(link.getConnectorName1());
-			label.setFont(font);
+			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
 	}

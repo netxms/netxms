@@ -42,7 +42,7 @@ public class DecorationFigure extends Figure
 	private static final int MARGIN_Y = 4;
 	private static final int LABEL_MARGIN = 5;
 	private static final int TITLE_OFFSET = MARGIN_X + 10;
-
+	
 	private NetworkMapDecoration decoration;
 	private MapLabelProvider labelProvider;
 	private Label label;
@@ -55,7 +55,7 @@ public class DecorationFigure extends Figure
 		setSize(decoration.getWidth(), decoration.getHeight());
 
 		label = new Label(decoration.getTitle());
-		label.setFont(labelProvider.getFont());
+		label.setFont(labelProvider.getTitleFont());
 		add(label);
 		
 		Dimension d = label.getPreferredSize();
@@ -89,12 +89,14 @@ public class DecorationFigure extends Figure
 	 */
 	private void drawGroupBox(Graphics gc)
 	{
+		gc.setAntialias(SWT.ON);
 		Rectangle rect = new Rectangle(getBounds());
 		
+		int topMargin = label.getSize().height / 2;
 		rect.x += MARGIN_X;
-		rect.y += label.getSize().height / 2;
+		rect.y += topMargin;
 		rect.width -= MARGIN_X * 2;
-		rect.height -= MARGIN_Y * 2 + 1;
+		rect.height -= MARGIN_Y + topMargin + 1;
 		
 		gc.setBackgroundColor(ColorConverter.colorFromInt(decoration.getColor()));
 		gc.setAlpha(16);
@@ -103,7 +105,7 @@ public class DecorationFigure extends Figure
 		
 		gc.setForegroundColor(ColorConverter.colorFromInt(decoration.getColor()));
 		gc.setLineWidth(3);
-		gc.setAntialias(SWT.ON);
+		gc.setLineStyle(labelProvider.isElementSelected(decoration) ? SWT.LINE_DOT : SWT.LINE_SOLID);
 		gc.drawRoundRectangle(rect, 8, 8);
 		
 		gc.setBackgroundColor(ColorConverter.colorFromInt(decoration.getColor()));
