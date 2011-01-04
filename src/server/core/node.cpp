@@ -56,7 +56,9 @@ Node::Node()
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
-	m_szSysDescription[0] = 0;
+	m_sysDescription = NULL;
+	m_sysName = NULL;
+	m_lldpNodeId = NULL;
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
@@ -112,7 +114,9 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
-	m_szSysDescription[0] = 0;
+	m_sysDescription = NULL;
+	m_sysName = NULL;
+	m_lldpNodeId = NULL;
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
@@ -212,7 +216,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwProxyNode = DBGetFieldULong(hResult, 0, 13);
    m_dwSNMPProxy = DBGetFieldULong(hResult, 0, 14);
    m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 15);
-   DBGetField(hResult, 0, 16, m_szSysDescription, MAX_DB_STRING);
+   m_sysDescription = DBGetField(hResult, 0, 16, NULL, 0);
    m_nUseIfXTable = (BYTE)DBGetFieldLong(hResult, 0, 17);
 	m_wSNMPPort = (WORD)DBGetFieldLong(hResult, 0, 18);
 
@@ -326,7 +330,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
                  m_dwProxyNode, m_dwNodeType, (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
                  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName),
-					  (const TCHAR *)DBPrepareString(hdb, m_szSysDescription),
+					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
 		           m_dwPollerNode, m_dwZoneGUID, m_dwSNMPProxy, m_iRequiredPollCount, m_nUseIfXTable,
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods);
@@ -347,7 +351,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
 					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret), 
                  (const TCHAR *)DBPrepareString(hdb, m_szObjectId), m_dwNodeType,
-					  (const TCHAR *)DBPrepareString(hdb, m_szSysDescription),
+					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
                  (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
 					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_dwZoneGUID,
                  m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
@@ -1099,6 +1103,17 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 
 
 //
+// Walker callback for print MIB
+//
+
+static DWORD PrintMIBWalkerCallback(DWORD version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+	(*((int *)arg))++;
+	return SNMP_ERR_SUCCESS;
+}
+
+
+//
 // Perform configuration poll on node
 //
 
@@ -1126,12 +1141,15 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
    if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
    {
       m_dwFlags &= ~(NF_IS_NATIVE_AGENT | NF_IS_SNMP | NF_IS_CPSNMP |
-                     NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF);
+                     NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF | NF_IS_PRINTER |
+							NF_IS_CDP | NF_IS_LLDP | NF_IS_SONMP);
 		m_dwDynamicFlags &= ~NDF_CONFIGURATION_POLL_PASSED;
       m_szObjectId[0] = 0;
       m_szPlatformName[0] = 0;
       m_szAgentVersion[0] = 0;
-		m_szSysDescription[0] = 0;
+		safe_free_and_null(m_sysDescription);
+		safe_free_and_null(m_sysName);
+		safe_free_and_null(m_lldpNodeId);
    }
 
    // Check if node is marked as unreachable
@@ -1214,11 +1232,11 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					TranslateStr(szBuffer, _T("\n"), _T(" "));
 					TranslateStr(szBuffer, _T("\r"), _T(" "));
                LockData();
-               if (_tcscmp(m_szSysDescription, szBuffer))
+               if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
                {
-                  _tcscpy(m_szSysDescription, szBuffer);
+                  m_sysDescription = _tcsdup(szBuffer);
                   bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
+                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
                }
                UnlockData();
 				}
@@ -1316,8 +1334,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check for bridge MIB support
-            if (SnmpGet(m_snmpVersion, pTransport,
-                        _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
+            if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
             {
 					LockData();
                m_dwFlags |= NF_IS_BRIDGE;
@@ -1327,6 +1344,22 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             {
 					LockData();
                m_dwFlags &= ~NF_IS_BRIDGE;
+					UnlockData();
+            }
+
+            // Check for printer MIB support
+				int count = 0;
+				SnmpEnumerate(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), PrintMIBWalkerCallback, &count, FALSE);
+            if (count > 0)
+            {
+					LockData();
+               m_dwFlags |= NF_IS_PRINTER;
+					UnlockData();
+            }
+            else
+            {
+					LockData();
+               m_dwFlags &= ~NF_IS_PRINTER;
 					UnlockData();
             }
 
@@ -1359,12 +1392,29 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
 		      // Check for LLDP (Link Layer Discovery Protocol) support
-				if (SnmpGet(m_snmpVersion, pTransport,
-								_T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
+				if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
 				{
 					LockData();
 					m_dwFlags |= NF_IS_LLDP;
 					UnlockData();
+
+					if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), NULL, 0, szBuffer, 4096, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+					{
+						_tcscat(szBuffer, _T("@"));
+						int len = (int)_tcslen(szBuffer);
+						if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, &szBuffer[len], 4096 - len, SG_HSTRING_RESULT) == SNMP_ERR_SUCCESS)
+						{
+							LockData();
+							if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
+							{
+								safe_free(m_lldpNodeId);
+								m_lldpNodeId = _tcsdup(szBuffer);
+								bHasChanges = TRUE;
+								SendPollerMsg(dwRqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
+							}
+							UnlockData();
+						}
+					}
 				}
 				else
 				{
@@ -1381,11 +1431,12 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					TranslateStr(szBuffer, _T("\n"), _T(" "));
 					TranslateStr(szBuffer, _T("\r"), _T(" "));
 					LockData();
-               if (_tcscmp(m_szSysDescription, szBuffer))
+               if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
                {
-                  _tcscpy(m_szSysDescription, szBuffer);
+						safe_free(m_sysDescription);
+                  m_sysDescription = _tcsdup(szBuffer);
                   bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
+                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
                }
 					UnlockData();
 				}
@@ -2316,7 +2367,10 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
    pMsg->SetVariable(VID_SNMP_PROXY, m_dwSNMPProxy);
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
-	pMsg->SetVariable(VID_SYS_DESCRIPTION, m_szSysDescription);
+	pMsg->SetVariable(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
+	pMsg->SetVariable(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
+	if (m_lldpNodeId != NULL)
+		pMsg->SetVariable(VID_LLDP_NODE_ID, m_lldpNodeId);
 	pMsg->SetVariable(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);
 }
 

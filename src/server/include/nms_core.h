@@ -605,9 +605,10 @@ public:
 // Flags for SnmpGet
 //
 
-#define SG_VERBOSE       0x0001
-#define SG_STRING_RESULT 0x0002
-#define SG_RAW_RESULT    0x0004
+#define SG_VERBOSE        0x0001
+#define SG_STRING_RESULT  0x0002
+#define SG_RAW_RESULT     0x0004
+#define SG_HSTRING_RESULT 0x0008
 
 
 //

@@ -64,7 +64,6 @@ BOOL CSNMPWalkDlg::OnInitDialog()
 
 	CDialog::OnInitDialog();
 	
-
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.GetClientRect(&rect);
    m_wndListCtrl.InsertColumn(0, _T("OID"), LVCFMT_LEFT, 200);
@@ -83,10 +82,15 @@ BOOL CSNMPWalkDlg::OnInitDialog()
 static void WalkerCallback(TCHAR *pszName, DWORD dwType, TCHAR *pszValue, void *pArg)
 {
    int iItem;
+	TCHAR typeName[256];
 
    iItem = ((CListCtrl *)pArg)->InsertItem(0x7FFFFFFF, pszName);
    if (iItem != -1)
    {
+		if (dwType == 0xFFFF)	// Octet string converted to hex
+			((CListCtrl *)pArg)->SetItemText(iItem, 1, _T("Hex-STRING"));
+		else
+			((CListCtrl *)pArg)->SetItemText(iItem, 1, SNMPDataTypeName(dwType, typeName, 256));
       ((CListCtrl *)pArg)->SetItemText(iItem, 2, pszValue);
       ((CListCtrl *)pArg)->EnsureVisible(iItem, FALSE);
    }

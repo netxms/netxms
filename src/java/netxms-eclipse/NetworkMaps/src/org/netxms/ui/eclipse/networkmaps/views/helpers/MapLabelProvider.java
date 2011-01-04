@@ -55,6 +55,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgNode;
 	private Image imgNodeSwitch;
 	private Image imgNodeRouter;
+	private Image imgNodePrinter;
 	private Image imgSubnet;
 	private Image imgService;
 	private Image imgOther;
@@ -80,6 +81,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgNode = Activator.getImageDescriptor("icons/objects/node.png").createImage();
 		imgNodeSwitch = Activator.getImageDescriptor("icons/objects/switch.png").createImage();
 		imgNodeRouter = Activator.getImageDescriptor("icons/objects/router.png").createImage();
+		imgNodePrinter = Activator.getImageDescriptor("icons/objects/printer.png").createImage();
 		imgSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
 		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
@@ -130,6 +132,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 							return imgNodeSwitch;
 						if ((((Node)object).getFlags() & Node.NF_IS_ROUTER) != 0)
 							return imgNodeRouter;
+						if ((((Node)object).getFlags() & Node.NF_IS_PRINTER) != 0)
+							return imgNodePrinter;
 						return imgNode;
 					case GenericObject.OBJECT_SUBNET:
 						return imgSubnet;
@@ -189,6 +193,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgNode.dispose();
 		imgNodeSwitch.dispose();
 		imgNodeRouter.dispose();
+		imgNodePrinter.dispose();
 		imgSubnet.dispose();
 		imgService.dispose();
 		imgOther.dispose();

@@ -828,6 +828,8 @@ typedef struct
 #define VID_INTERFACE_ID            ((DWORD)362)
 #define VID_LOCAL_INTERFACE_ID      ((DWORD)363)
 #define VID_LOCAL_NODE_ID           ((DWORD)364)
+#define VID_SYS_NAME                ((DWORD)365)
+#define VID_LLDP_NODE_ID            ((DWORD)366)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

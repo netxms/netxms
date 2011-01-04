@@ -154,6 +154,14 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
                {
 						pVar->getRawValue((BYTE *)pValue, dwBufferSize);
                }
+               else if (dwFlags & SG_HSTRING_RESULT)
+               {
+						int rawLen = (dwBufferSize - 1) / 2;
+						BYTE *raw = (BYTE *)malloc(rawLen);
+						rawLen = pVar->getRawValue(raw, rawLen);
+						BinToStr(raw, rawLen, (TCHAR *)pValue);
+						free(raw);
+               }
                else if (dwFlags & SG_STRING_RESULT)
                {
                   pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);

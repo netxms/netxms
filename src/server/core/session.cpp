@@ -6946,15 +6946,16 @@ typedef struct
 // SNMP walker enumeration callback
 //
 
-static DWORD WalkerCallback(DWORD dwVersion, SNMP_Variable *pVar,
-                            SNMP_Transport *pTransport, void *pArg)
+static DWORD WalkerCallback(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    CSCPMessage *pMsg = ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pMsg;
    TCHAR szBuffer[4096];
+	bool convertToHex = true;
 
+	pVar->getValueAsPrintableString(szBuffer, 4096, &convertToHex);
    pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->GetName()->GetValueAsText());
-   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, pVar->GetType());
-   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, pVar->GetValueAsString(szBuffer, 4096));
+	pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (DWORD)0xFFFF : pVar->GetType());
+   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, szBuffer);
    ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars++;
    if (((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars == 50)
    {
@@ -6984,8 +6985,7 @@ static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
    args.dwId = VID_SNMP_WALKER_DATA_BASE;
    args.dwNumVars = 0;
    args.pSession = ((WALKER_THREAD_ARGS *)pArg)->pSession;
-   ((Node *)(((WALKER_THREAD_ARGS *)pArg)->pObject))->CallSnmpEnumerate(
-         ((WALKER_THREAD_ARGS *)pArg)->szBaseOID, WalkerCallback, &args);
+   ((Node *)(((WALKER_THREAD_ARGS *)pArg)->pObject))->CallSnmpEnumerate(((WALKER_THREAD_ARGS *)pArg)->szBaseOID, WalkerCallback, &args);
    msg.SetVariable(VID_NUM_VARIABLES, args.dwNumVars);
    msg.SetEndOfSequence();
    ((WALKER_THREAD_ARGS *)pArg)->pSession->sendMessage(&msg);

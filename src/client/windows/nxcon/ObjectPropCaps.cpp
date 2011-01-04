@@ -71,6 +71,7 @@ BOOL CObjectPropCaps::OnInitDialog()
    AddListRecord(_T("isManagementServer"), (m_pObject->node.dwFlags & NF_IS_LOCAL_MGMT));
    AddListRecord(_T("isBridge"), (m_pObject->node.dwFlags & NF_IS_BRIDGE));
    AddListRecord(_T("isRouter"), (m_pObject->node.dwFlags & NF_IS_ROUTER));
+   AddListRecord(_T("isPrinter"), (m_pObject->node.dwFlags & NF_IS_PRINTER));
    AddListRecord(_T("isCDP"), (m_pObject->node.dwFlags & NF_IS_CDP));
    AddListRecord(_T("isSONMP"), (m_pObject->node.dwFlags & NF_IS_SONMP));
    AddListRecord(_T("isLLDP"), (m_pObject->node.dwFlags & NF_IS_LLDP));

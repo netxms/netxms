@@ -637,7 +637,9 @@ protected:
    TCHAR m_szObjectId[MAX_OID_LEN * 4];
    TCHAR m_szAgentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR m_szPlatformName[MAX_PLATFORM_NAME_LEN];
-	TCHAR m_szSysDescription[MAX_DB_STRING];  // Agent's System.Uname or SNMP sysDescr
+	TCHAR *m_sysDescription;  // Agent's System.Uname or SNMP sysDescr
+	TCHAR *m_sysName;				// SNMP sysName
+	TCHAR *m_lldpNodeId;			// lldpLocChassisId combined with lldpLocChassisIdSubtype, or NULL for non-LLDP nodes
    DWORD m_dwNumParams;           // Number of elements in supported parameters list
    NXC_AGENT_PARAM *m_pParamList; // List of supported parameters
    time_t m_tLastDiscoveryPoll;
@@ -718,10 +720,11 @@ public:
 	const TCHAR *getSNMPObjectId() { return m_szObjectId; }
 	const TCHAR *getAgentVersion() { return m_szAgentVersion; }
 	const TCHAR *getPlatformName() { return m_szPlatformName; }
+   const TCHAR *getObjectId() { return m_szObjectId; }
+	const TCHAR *getSysName() { return CHECK_NULL_EX(m_sysName); }
+	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
 
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
-
-   const TCHAR *getObjectId() { return m_szObjectId; }
 
    void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    void CreateNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, 
