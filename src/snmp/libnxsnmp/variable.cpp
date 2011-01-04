@@ -269,8 +269,7 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
       case ASN_OCTET_STRING:
          dwLen = min(dwBufferSize - 1, m_dwValueLength);
 #ifdef UNICODE
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_pValue, dwLen,
-                             pszBuffer, dwBufferSize);
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_pValue, dwLen, pszBuffer, dwBufferSize);
 #else
          memcpy(pszBuffer, m_pValue, dwLen);
 #endif
@@ -281,6 +280,72 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
          break;
    }
    return pszBuffer;
+}
+
+
+//
+// Get value as string
+//
+
+TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, DWORD bufferSize, bool *convertToHex)
+{
+   DWORD dwLen;
+	bool convertToHexAllowed = *convertToHex;
+	*convertToHex = false;
+
+   if ((buffer == NULL) || (bufferSize == 0))
+      return NULL;
+
+   if (m_dwType == ASN_OCTET_STRING)
+	{
+         dwLen = min(bufferSize - 1, m_dwValueLength);
+#ifdef UNICODE
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_pValue, dwLen, buffer, bufferSize);
+#else
+         memcpy(buffer, m_pValue, dwLen);
+#endif
+         buffer[dwLen] = 0;
+
+			if (convertToHexAllowed)
+			{
+				bool conversionNeeded = false;
+				for(DWORD i = 0; i < dwLen; i++)
+					if (!_istprint(buffer[i]))
+					{
+						conversionNeeded = true;
+						break;
+					}
+
+				if (conversionNeeded)
+				{
+					TCHAR *hexString = (TCHAR *)malloc((dwLen * 3 + 1) * sizeof(TCHAR));
+					DWORD i, j;
+					for(i = 0, j = 0; i < dwLen; i++)
+					{
+						hexString[j++] = bin2hex((BYTE)buffer[i] >> 4);
+						hexString[j++] = bin2hex((BYTE)buffer[i] & 15);
+						hexString[j++] = _T(' ');
+					}
+					hexString[j] = 0;
+					nx_strncpy(buffer, hexString, bufferSize);
+					free(hexString);
+					*convertToHex = true;
+				}
+			}
+			else
+			{
+				// Replace non-printable characters with question marks
+				for(DWORD i = 0; i < dwLen; i++)
+					if (!_istprint(buffer[i]))
+						buffer[i] = _T('?');
+			}
+	}
+	else
+	{
+		return GetValueAsString(buffer, bufferSize);
+	}
+
+	return buffer;
 }
 
 

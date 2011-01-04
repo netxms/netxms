@@ -399,15 +399,16 @@ public:
    BOOL Parse(BYTE *pData, DWORD dwVarLength);
    DWORD Encode(BYTE *pBuffer, DWORD dwBufferSize);
 
-   SNMP_ObjectId *GetName(void) { return m_pName; }
-   DWORD GetType(void) { return m_dwType; }
-   DWORD GetValueLength(void) { return m_dwValueLength; }
-   const BYTE *GetValue(void) { return m_pValue; }
+   SNMP_ObjectId *GetName() { return m_pName; }
+   DWORD GetType() { return m_dwType; }
+   DWORD GetValueLength() { return m_dwValueLength; }
+   const BYTE *GetValue() { return m_pValue; }
 
 	size_t getRawValue(BYTE *buffer, size_t bufSize);
    DWORD GetValueAsUInt();
    LONG GetValueAsInt();
    TCHAR *GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize);
+   TCHAR *getValueAsPrintableString(TCHAR *buffer, DWORD bufferSize, bool *convertToHex);
    SNMP_ObjectId *GetValueAsObjectId();
    TCHAR *GetValueAsMACAddr(TCHAR *pszBuffer);
    TCHAR *GetValueAsIPAddr(TCHAR *pszBuffer);
@@ -670,6 +671,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject 
 DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot);
 DWORD LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, DWORD *pdwTimestamp);
 DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType);
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(DWORD type, TCHAR *buffer, size_t bufferSize);
 
 #endif   /* __cplusplus */
 

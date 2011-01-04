@@ -131,31 +131,75 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
 
 DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType)
 {
-   static struct
-   {
-      const TCHAR *pszName;
-      DWORD dwValue;
-   } typeList[] =
-   {
-      { _T("INT"), ASN_INTEGER },
-      { _T("INTEGER"), ASN_INTEGER },
-      { _T("STRING"), ASN_OCTET_STRING },
-      { _T("OID"), ASN_OBJECT_ID },
-      { _T("IPADDR"), ASN_IP_ADDR },
-      { _T("COUNTER32"), ASN_COUNTER32 },
-      { _T("GAUGE32"), ASN_GAUGE32 },
-      { _T("TIMETICKS"), ASN_TIMETICKS },
-      { _T("COUNTER64"), ASN_COUNTER64 },
-      { _T("UINT32"), ASN_UINTEGER32 },
-      { _T("UINTEGER32"), ASN_UINTEGER32 },
-      { NULL, 0 }
-   };
+	static struct
+	{
+		const TCHAR *pszName;
+		DWORD dwValue;
+	} typeList[] =
+	{
+		{ _T("INT"), ASN_INTEGER },
+		{ _T("INTEGER"), ASN_INTEGER },
+		{ _T("STRING"), ASN_OCTET_STRING },
+		{ _T("OID"), ASN_OBJECT_ID },
+		{ _T("OBJECT IDENTIFIER"), ASN_OBJECT_ID },
+		{ _T("IPADDR"), ASN_IP_ADDR },
+		{ _T("IP ADDRESS"), ASN_IP_ADDR },
+		{ _T("COUNTER32"), ASN_COUNTER32 },
+		{ _T("GAUGE32"), ASN_GAUGE32 },
+		{ _T("TIMETICKS"), ASN_TIMETICKS },
+		{ _T("COUNTER64"), ASN_COUNTER64 },
+		{ _T("UINT32"), ASN_UINTEGER32 },
+		{ _T("UINTEGER32"), ASN_UINTEGER32 },
+		{ NULL, 0 }
+	};
    int i;
 
    for(i = 0; typeList[i].pszName != NULL; i++)
       if (!_tcsicmp(typeList[i].pszName, pszType))
          return typeList[i].dwValue;
    return ASN_NULL;
+}
+
+
+//
+// Get type name
+//
+
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(DWORD type, TCHAR *buffer, size_t bufferSize)
+{
+	static struct
+	{
+		const TCHAR *pszName;
+		DWORD dwValue;
+	} typeList[] =
+	{
+		{ _T("INTEGER"), ASN_INTEGER },
+		{ _T("STRING"), ASN_OCTET_STRING },
+		{ _T("BIT STRING"), ASN_BIT_STRING },
+		{ _T("NULL"), ASN_NULL },
+		{ _T("OBJECT IDENTIFIER"), ASN_OBJECT_ID },
+		{ _T("SEQUENCE"), ASN_SEQUENCE },
+		{ _T("OPAQUE"), ASN_OPAQUE },
+		{ _T("NSAP ADDRESS"), ASN_NSAP_ADDR },
+		{ _T("IP ADDRESS"), ASN_IP_ADDR },
+		{ _T("COUNTER32"), ASN_COUNTER32 },
+		{ _T("GAUGE32"), ASN_GAUGE32 },
+		{ _T("TIMETICKS"), ASN_TIMETICKS },
+		{ _T("COUNTER64"), ASN_COUNTER64 },
+		{ _T("UINTEGER32"), ASN_UINTEGER32 },
+		{ NULL, 0 }
+	};
+	int i;
+
+	for(i = 0; typeList[i].pszName != NULL; i++)
+		if (typeList[i].dwValue == type)
+		{
+			nx_strncpy(buffer, typeList[i].pszName, bufferSize);
+			return buffer;
+		}
+
+	_sntprintf(buffer, bufferSize, _T("0x%02x"), type);
+	return buffer;
 }
 
 

@@ -113,8 +113,13 @@ int GetData(int argc, char *argv[])
                }
                else
                {
-                  printf("%s [%02X]: %s\n", var->GetName()->GetValueAsText(),
-                         var->GetType(),var->GetValueAsString(szBuffer, 1024));
+						bool convert = true;
+						TCHAR typeName[256];
+
+						var->getValueAsPrintableString(szBuffer, 1024, &convert);
+						_tprintf(_T("%s [%s]: %s\n"), var->GetName()->GetValueAsText(),
+						         convert ? _T("Hex-STRING") : SNMPDataTypeName(var->GetType(), typeName, 256),
+                           szBuffer);
                }
             }
             delete response;

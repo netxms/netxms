@@ -51,7 +51,7 @@ int GetData(char *pszHost, char *pszRootOid)
    SNMP_PDU *pRqPDU, *pRespPDU;
    DWORD dwResult, dwRootLen, dwNameLen;
    DWORD pdwRootName[MAX_OID_LEN], pdwName[MAX_OID_LEN];
-   TCHAR szBuffer[1024];
+   TCHAR szBuffer[1024], typeName[256];
    int i, iExit = 0;
    BOOL bRunning = TRUE;
 
@@ -125,8 +125,12 @@ int GetData(char *pszHost, char *pszRootOid)
                      for(i = 0; szBuffer[i] != 0; i++)
                         if (szBuffer[i] < ' ')
                            szBuffer[i] = '.';
-                     printf("%s [%02X]: %s\n", pVar->GetName()->GetValueAsText(),
-                            pVar->GetType(), szBuffer);
+
+							bool convert = true;
+							pVar->getValueAsPrintableString(szBuffer, 1024, &convert);
+							_tprintf(_T("%s [%s]: %s\n"), pVar->GetName()->GetValueAsText(),
+										convert ? _T("Hex-STRING") : SNMPDataTypeName(pVar->GetType(), typeName, 256),
+										szBuffer);
                   }
                   else
                   {
