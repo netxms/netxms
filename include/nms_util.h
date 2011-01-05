@@ -417,8 +417,6 @@ inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
 
 #ifdef _WIN32
 
-#ifndef SWIGPERL
-
 typedef struct dirent
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
@@ -434,6 +432,34 @@ typedef struct _dir_struc
    long            nfiles; /* number if filenames in table */
    struct dirent   dirstr; /* Directory structure to return */
 } DIR;
+
+#ifdef UNICODE
+
+typedef struct dirent_w
+{
+   long            d_ino;  /* inode number (not used by MS-DOS) */
+   int             d_namlen;       /* Name length */
+   WCHAR           d_name[257];    /* file name */
+} _DIRECTW;
+
+typedef struct _dir_struc_w
+{
+   WCHAR          *start;  /* Starting position */
+   WCHAR          *curr;   /* Current position */
+   long            size;   /* Size of string table */
+   long            nfiles; /* number if filenames in table */
+   struct dirent_w dirstr; /* Directory structure to return */
+} DIRW;
+
+#define _TDIR DIRW
+#define _TDIRECT _DIRECTW
+#define _tdirent dirent_w
+
+#else
+
+#define _TDIR DIR
+#define _TDIRECT _DIRECT
+#define _tdirent dirent
 
 #endif
 
@@ -731,11 +757,24 @@ extern "C"
 #endif
 
 #ifdef _WIN32
-#ifndef SWIGPERL
+#ifdef UNICODE
+    DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
+    struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *dirp);
+    int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
+
+#define _topendir wopendir
+#define _treaddir wreaddir
+#define _tclosedir wclosedir
+#else
+#define _topendir opendir
+#define _treaddir readdir
+#define _tclosedir closedir
+#endif
+
     DIR LIBNETXMS_EXPORTABLE *opendir(const char *filename);
     struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
     int LIBNETXMS_EXPORTABLE closedir(DIR *dirp);
-#endif
+
 #endif
 
 #if defined(_WIN32) || !(HAVE_SCANDIR)

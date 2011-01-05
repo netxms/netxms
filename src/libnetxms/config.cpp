@@ -1078,49 +1078,35 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 
 bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection)
 {
-	DIR *dir;
-   struct dirent *file;
+	_TDIR *dir;
+   struct _tdirent *file;
 	TCHAR fileName[MAX_PATH];
 	bool success;
 
-#ifdef UNICODE
-	char mbpath[MAX_PATH];
-	WCHAR wname[MAX_PATH];
-
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, path, -1, mbpath, MAX_PATH, NULL, NULL);
-	mbpath[MAX_PATH - 1] = 0;
-   dir = opendir(mbpath);
-#else
-   dir = opendir(path);
-#endif
+   dir = _topendir(path);
    if (dir != NULL)
    {
 		success = true;
       while(1)
       {
-         file = readdir(dir);
+         file = _treaddir(dir);
          if (file == NULL)
             break;
 
-         if (!strcmp(file->d_name, ".") || !strcmp(file->d_name, ".."))
+         if (!_tcscmp(file->d_name, _T(".")) || !_tcscmp(file->d_name, _T("..")))
             continue;
          
-			size_t len = _tcslen(path) + strlen(file->d_name) + 2;
+			size_t len = _tcslen(path) + _tcslen(file->d_name) + 2;
 			if (len > MAX_PATH)
 				continue;	// Full file name is too long
 
          _tcscpy(fileName, path);
          _tcscat(fileName, FS_PATH_SEPARATOR);
-#ifdef UNICODE
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, file->d_name, -1, wname, MAX_PATH);
-         wcscat(fileName, wname);
-#else
-         strcat(fileName, file->d_name);
-#endif
+         _tcscat(fileName, file->d_name);
 
 			success = success && loadConfig(fileName, defaultIniSection);
       }
-      closedir(dir);
+      _tclosedir(dir);
    }
 	else
 	{

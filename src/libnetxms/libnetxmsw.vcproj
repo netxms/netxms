@@ -517,6 +517,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dirw.c"
+				>
+			</File>
+			<File
 				RelativePath=".\dload.cpp"
 				>
 			</File>
