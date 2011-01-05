@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,8 +33,11 @@ Interface::Interface()
    m_dwIpNetMask = 0;
    m_dwIfIndex = 0;
    m_dwIfType = IFTYPE_OTHER;
+	m_bridgePortNumber = 0;
+	m_slotNumber = 0;
+	m_portNumber = 0;
    m_qwLastDownEventId = 0;
-	m_bSyntheticMask = FALSE;
+	m_bSyntheticMask = false;
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
@@ -45,7 +48,7 @@ Interface::Interface()
 // Constructor for "fake" interface object
 //
 
-Interface::Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask)
+Interface::Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask)
           : NetObj()
 {
    _tcscpy(m_szName, _T("unknown"));
@@ -53,6 +56,9 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask)
    m_dwIpNetMask = dwNetMask;
    m_dwIfIndex = 1;
    m_dwIfType = IFTYPE_OTHER;
+	m_bridgePortNumber = 0;
+	m_slotNumber = 0;
+	m_portNumber = 0;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = bSyntheticMask;
@@ -75,9 +81,12 @@ Interface::Interface(const TCHAR *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwN
    m_dwIfType = dwType;
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
+	m_bridgePortNumber = 0;
+	m_slotNumber = 0;
+	m_portNumber = 0;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
-	m_bSyntheticMask = FALSE;
+	m_bSyntheticMask = false;
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
@@ -86,7 +95,7 @@ Interface::Interface(const TCHAR *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwN
 
 
 //
-// Interfacet class destructor
+// Interface class destructor
 //
 
 Interface::~Interface()
@@ -125,7 +134,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       m_dwIfIndex = DBGetFieldULong(hResult, 0, 3);
       dwNodeId = DBGetFieldULong(hResult, 0, 4);
       StrToBin(DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING), m_bMacAddr, MAC_ADDR_LENGTH);
-      m_bSyntheticMask = DBGetFieldLong(hResult, 0, 6);
+		m_bSyntheticMask = DBGetFieldLong(hResult, 0, 6) ? true : false;
       m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 7);
 
       // Link interface to node
@@ -204,7 +213,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
                        _T("VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d,%d)"),
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
-              m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask,
+				  m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask ? 1 : 0,
 				  m_iRequiredPollCount);
    else
       _sntprintf(szQuery, 1024, _T("UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',")
@@ -213,7 +222,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 							  _T("required_polls=%d WHERE id=%d"),
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
-              m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask,
+				  m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask ? 1 : 0,
 				  m_iRequiredPollCount, m_dwId);
    DBQuery(hdb, szQuery);
 
@@ -402,7 +411,7 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_IF_TYPE, m_dwIfType);
    pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
    pMsg->SetVariable(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
-   pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)m_bSyntheticMask);
+	pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 }
 
@@ -469,7 +478,7 @@ Node *Interface::getParentNode()
 // Change interface's IP address
 //
 
-void Interface::SetIpAddr(DWORD dwNewAddr) 
+void Interface::setIpAddr(DWORD dwNewAddr) 
 {
    UpdateInterfaceIndex(m_dwIpAddr, dwNewAddr, this);
    LockData();

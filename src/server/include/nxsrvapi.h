@@ -178,6 +178,9 @@ typedef struct
    TCHAR szName[MAX_DB_STRING];
    DWORD dwIndex;
    DWORD dwType;
+	DWORD dwBridgePortNumber;
+	DWORD dwSlotNumber;
+	DWORD dwPortNumber;
    DWORD dwIpAddr;
    DWORD dwIpNetMask;
    BYTE bMacAddr[MAC_ADDR_LENGTH];

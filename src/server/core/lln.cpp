@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ LinkLayerNeighbors::LinkLayerNeighbors()
 	m_connections = NULL;
 	m_count = 0;
 	m_allocated = 0;
+	m_data = NULL;
 }
 
 
@@ -156,7 +157,7 @@ static DWORD CDPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport
 				LL_NEIGHBOR_INFO info;
 
 				info.ifLocal = pRespPDU->getVariable(1)->GetValueAsUInt();
-				info.ifRemote = ifRemote->IfIndex();
+				info.ifRemote = ifRemote->getIfIndex();
 				info.objectId = remoteNode->Id();
 				info.isPtToPt = true;
 				info.protocol = LL_PROTO_CDP;
@@ -183,9 +184,13 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 	{
 		node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
 	}
-	else if (node->getFlags() & NF_IS_CDP)
+	if (node->getFlags() & NF_IS_CDP)
 	{
 		node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.9.9.23.1.2.1.1.4"), CDPTopoHandler, nbs);
+	}
+	if (node->getFlags() & NF_IS_LLDP)
+	{
+		AddLLDPNeighbors(node, nbs);
 	}
 
 	return nbs;

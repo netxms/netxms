@@ -2521,7 +2521,7 @@ void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 				BOOL bIsManaged;
 
 				bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
-				pObject->SetMgmtStatus(bIsManaged);
+				pObject->setMgmtStatus(bIsManaged);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
@@ -3672,17 +3672,17 @@ void ClientSession::createObject(CSCPMessage *pRequest)
                      pszResponse = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
                      pObject = new NetworkService(iServiceType, wIpProto, wIpPort, 
                                                   pszRequest, pszResponse, (Node *)pParent);
-                     pObject->SetName(szObjectName);
+                     pObject->setName(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_VPNCONNECTOR:
                      pObject = new VPNConnector(TRUE);
-                     pObject->SetName(szObjectName);
+                     pObject->setName(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_CONDITION:
                      pObject = new Condition(TRUE);
-                     pObject->SetName(szObjectName);
+                     pObject->setName(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_NETWORKMAPGROUP:
@@ -3692,7 +3692,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
                      break;
 						case OBJECT_NETWORKMAP:
 							pObject = new NetworkMap((int)pRequest->GetVariableShort(VID_MAP_TYPE), pRequest->GetVariableLong(VID_SEED_OBJECT));
-                     pObject->SetName(szObjectName);
+                     pObject->setName(szObjectName);
                      NetObjInsert(pObject, TRUE);
 							break;
                   default:
@@ -3715,7 +3715,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 						
 						pszComments = pRequest->GetVariableStr(VID_COMMENTS);
 						if (pszComments != NULL)
-							pObject->SetComments(pszComments);
+							pObject->setComments(pszComments);
 
                   pObject->Unhide();
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -8020,7 +8020,7 @@ void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         pObject->SetComments(pRequest->GetVariableStr(VID_COMMENTS));
+         pObject->setComments(pRequest->GetVariableStr(VID_COMMENTS));
       }
       else
       {
@@ -10471,7 +10471,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 			{
 				localNodeId = ((Interface *)object)->getParentNode()->Id();
 				localIfId = objectId;
-				memcpy(localMacAddr, ((Interface *)object)->MacAddr(), MAC_ADDR_LENGTH);
+				memcpy(localMacAddr, ((Interface *)object)->getMacAddr(), MAC_ADDR_LENGTH);
 				iface = FindInterfaceConnectionPoint(localMacAddr);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
@@ -10485,11 +10485,11 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 			{
 				msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
 				msg.SetVariable(VID_INTERFACE_ID, iface->Id());
-				msg.SetVariable(VID_IF_INDEX, iface->IfIndex());
+				msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
 				msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
 				msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
 				msg.SetVariable(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
-				DebugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->IfIndex());
+				DebugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 			}
 		}
 		else
@@ -10541,11 +10541,11 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 
 		msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
 		msg.SetVariable(VID_INTERFACE_ID, iface->Id());
-		msg.SetVariable(VID_IF_INDEX, iface->IfIndex());
+		msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
 		msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
 		msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
 		msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-		DebugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->IfIndex());
+		DebugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 	}
 	
 	sendMessage(&msg);

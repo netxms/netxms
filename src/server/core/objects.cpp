@@ -318,7 +318,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    if (bNewObject)   
    {
       // Assign unique ID to new object
-      pObject->SetId(CreateUniqueId(IDG_NETWORK_OBJECT));
+      pObject->setId(CreateUniqueId(IDG_NETWORK_OBJECT));
 		pObject->generateGuid();
 
       // Create table for storing data collection values
@@ -491,9 +491,9 @@ static DWORD GetObjectNetmask(NetObj *pObject)
    switch(pObject->Type())
    {
       case OBJECT_INTERFACE:
-         return ((Interface *)pObject)->IpNetMask();
+         return ((Interface *)pObject)->getIpNetMask();
       case OBJECT_SUBNET:
-         return ((Subnet *)pObject)->IpNetMask();
+         return ((Subnet *)pObject)->getIpNetMask();
       default:
          return 0;
    }
@@ -545,7 +545,7 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
 	{
 		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_INTERFACE) &&
-		    !memcmp(macAddr, ((Interface *)g_pIndexById[i].pObject)->MacAddr(), 6))
+		    !memcmp(macAddr, ((Interface *)g_pIndexById[i].pObject)->getMacAddr(), 6))
 		{
 			pInterface = ((Interface *)g_pIndexById[i].pObject);
 			break;
@@ -553,6 +553,31 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 	}
    RWLockUnlock(g_rwlockIdIndex);
    return pInterface;
+}
+
+
+//
+// Find node by LLDP ID
+//
+
+Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
+{
+   Node *node = NULL;
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
+	{
+		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+		{
+			const TCHAR *id = ((Node *)g_pIndexById[i].pObject)->getLLDPNodeId();
+			if ((id != NULL) && !_tcscmp(id, lldpId))
+			{
+				node = (Node *)g_pIndexById[i].pObject;
+				break;
+			}
+		}
+	}
+   RWLockUnlock(g_rwlockIdIndex);
+   return node;
 }
 
 
@@ -590,7 +615,7 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr)
 
    RWLockReadLock(g_rwlockSubnetIndex, INFINITE);
    for(i = 0; i < g_dwSubnetAddrIndexSize; i++)
-      if ((dwNodeAddr & ((Subnet *)g_pSubnetIndexByAddr[i].pObject)->IpNetMask()) == 
+      if ((dwNodeAddr & ((Subnet *)g_pSubnetIndexByAddr[i].pObject)->getIpNetMask()) == 
                ((Subnet *)g_pSubnetIndexByAddr[i].pObject)->IpAddr())
       {
          pSubnet = (Subnet *)g_pSubnetIndexByAddr[i].pObject;
@@ -871,7 +896,7 @@ BOOL LoadObjects()
                {
                   Zone *pZone;
 
-                  pZone = FindZoneByGUID(pSubnet->ZoneGUID());
+                  pZone = FindZoneByGUID(pSubnet->getZoneGUID());
                   if (pZone != NULL)
                      pZone->AddSubnet(pSubnet);
                }
@@ -1327,7 +1352,7 @@ void DumpObjects(CONSOLE_CTX pCtx)
             break;
          case OBJECT_SUBNET:
             ConsolePrintf(pCtx, _T("   Network mask: %s\n"), 
-                          IpToStr(((Subnet *)pObject)->IpNetMask(), pBuffer));
+                          IpToStr(((Subnet *)pObject)->getIpNetMask(), pBuffer));
             break;
          case OBJECT_CONTAINER:
             pCat = FindContainerCategory(((Container *)pObject)->Category());

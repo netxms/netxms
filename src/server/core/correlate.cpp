@@ -90,7 +90,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                         {
                            if (pInterface->Status() == STATUS_CRITICAL)
                            {
-                              pEvent->setRootId(pInterface->GetLastDownEventId());
+                              pEvent->setRootId(pInterface->getLastDownEventId());
                            }
                         }
                      }
@@ -122,7 +122,7 @@ void CorrelateEvent(Event *pEvent)
             pInterface = ((Node *)pObject)->findInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
             if (pInterface != NULL)
             {
-               pInterface->SetLastDownEventId(pEvent->getId());
+               pInterface->setLastDownEventId(pEvent->getId());
             }
          case EVENT_SERVICE_DOWN:
          case EVENT_SNMP_FAIL:

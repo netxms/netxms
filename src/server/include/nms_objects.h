@@ -293,12 +293,12 @@ public:
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
-   void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
+   void setId(DWORD dwId) { m_dwId = dwId; Modify(); }
 	void generateGuid() { uuid_generate(m_guid); }
-   void SetMgmtStatus(BOOL bIsManaged);
-   void SetName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
-   void ResetStatus() { m_iStatus = STATUS_UNKNOWN; Modify(); }
-   void SetComments(TCHAR *pszText);
+   void setMgmtStatus(BOOL bIsManaged);
+   void setName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
+   void resetStatus() { m_iStatus = STATUS_UNKNOWN; Modify(); }
+   void setComments(TCHAR *pszText);	/* pszText must be dynamically allocated */
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
@@ -490,15 +490,18 @@ protected:
    DWORD m_dwIfType;
    DWORD m_dwIpNetMask;
    BYTE m_bMacAddr[MAC_ADDR_LENGTH];
+	DWORD m_bridgePortNumber;		// 802.1D port number
+	DWORD m_slotNumber;				// Vendor/device specific slot number
+	DWORD m_portNumber;				// Vendor/device specific port number
    QWORD m_qwLastDownEventId;
-	BOOL m_bSyntheticMask;
+	bool m_bSyntheticMask;
 	int m_iPendingStatus;
 	int m_iPollCount;
 	int m_iRequiredPollCount;
 
 public:
    Interface();
-   Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask);
+   Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask);
    Interface(const TCHAR *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType);
    virtual ~Interface();
 
@@ -509,22 +512,23 @@ public:
 
    Node *getParentNode();
 
-   void SetMacAddr(BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
-
-   DWORD IpNetMask() { return m_dwIpNetMask; }
-   DWORD IfIndex() { return m_dwIfIndex; }
-   DWORD IfType() { return m_dwIfType; }
-   const BYTE *MacAddr() { return m_bMacAddr; }
-	BOOL IsSyntheticMask() { return m_bSyntheticMask; }
-
-   QWORD GetLastDownEventId() { return m_qwLastDownEventId; }
-   void SetLastDownEventId(QWORD qwId) { m_qwLastDownEventId = qwId; }
-
-   BOOL IsFake() { return (m_dwIfIndex == 1) && 
+   DWORD getIpNetMask() { return m_dwIpNetMask; }
+   DWORD getIfIndex() { return m_dwIfIndex; }
+   DWORD getIfType() { return m_dwIfType; }
+	DWORD getBridgePortNumber() { return m_bridgePortNumber; }
+   const BYTE *getMacAddr() { return m_bMacAddr; }
+	bool isSyntheticMask() { return m_bSyntheticMask; }
+   bool isFake() { return (m_dwIfIndex == 1) && 
                           (m_dwIfType == IFTYPE_OTHER) &&
                           (!_tcscmp(m_szName, _T("lan0")) || !_tcscmp(m_szName, _T("unknown"))) &&
                           (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
-   void SetIpAddr(DWORD dwNewAddr);
+
+   QWORD getLastDownEventId() { return m_qwLastDownEventId; }
+   void setLastDownEventId(QWORD qwId) { m_qwLastDownEventId = qwId; }
+
+   void setMacAddr(const BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
+   void setIpAddr(DWORD dwNewAddr);
+   void setBridgePortNumber(DWORD bpn) { m_bridgePortNumber = bpn; Modify(); }
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue,
 	                BOOL bClusterSync, SNMP_Transport *pTransport);
@@ -687,6 +691,7 @@ protected:
 	void ApplyUserTemplates();
 
 	void updateContainerMembership();
+	BOOL updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask);
 
    virtual void PrepareForDeletion();
    virtual void OnObjectDelete(DWORD dwObjectId);
@@ -710,11 +715,11 @@ public:
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
-   BOOL isSNMPSupported() { return m_dwFlags & NF_IS_SNMP ? TRUE : FALSE; }
-   BOOL isNativeAgent() { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }
-   BOOL isBridge() { return m_dwFlags & NF_IS_BRIDGE ? TRUE : FALSE; }
-   BOOL isRouter() { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
-   BOOL isLocalManagement() { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
+   bool isSNMPSupported() { return m_dwFlags & NF_IS_SNMP ? true : false; }
+   bool isNativeAgent() { return m_dwFlags & NF_IS_NATIVE_AGENT ? true : false; }
+   bool isBridge() { return m_dwFlags & NF_IS_BRIDGE ? true : false; }
+   bool isRouter() { return m_dwFlags & NF_IS_ROUTER ? true : false; }
+   bool isLocalManagement() { return m_dwFlags & NF_IS_LOCAL_MGMT ? true : false; }
 
 	LONG getSNMPVersion() { return m_snmpVersion; }
 	const TCHAR *getSNMPObjectId() { return m_szObjectId; }
@@ -726,10 +731,10 @@ public:
 
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
 
-   void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
-   void CreateNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, 
-                           DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL);
-   void DeleteInterface(Interface *pInterface);
+   void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
+   void createNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, 
+                           DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL, DWORD bridgePort = 0);
+   void deleteInterface(Interface *pInterface);
 
    void changeIPAddress(DWORD dwIpAddr);
 
@@ -737,6 +742,9 @@ public:
    INTERFACE_LIST *getInterfaceList();
    Interface *findInterface(DWORD dwIndex, DWORD dwHostAddr);
    Interface *findInterface(const TCHAR *name);
+	Interface *findInterfaceByMAC(const BYTE *macAddr);
+	Interface *findInterfaceByIP(DWORD ipAddr);
+	Interface *findBridgePort(DWORD bridgePortNumber);
 	BOOL isMyIP(DWORD dwIpAddr);
    int getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex);
    int getInterfaceStatusFromAgent(DWORD dwIndex);
@@ -918,14 +926,14 @@ class NXCORE_EXPORTABLE Subnet : public NetObj
 protected:
    DWORD m_dwIpNetMask;
    DWORD m_dwZoneGUID;
-	BOOL m_bSyntheticMask;
+	bool m_bSyntheticMask;
 
 public:
    Subnet();
-   Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, BOOL bSyntheticMask);
+   Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, bool bSyntheticMask);
    virtual ~Subnet();
 
-   virtual int Type(void) { return OBJECT_SUBNET; }
+   virtual int Type() { return OBJECT_SUBNET; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
@@ -934,11 +942,11 @@ public:
    void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
    virtual void CreateMessage(CSCPMessage *pMsg);
 
-   DWORD IpNetMask(void) { return m_dwIpNetMask; }
-   DWORD ZoneGUID(void) { return m_dwZoneGUID; }
-	BOOL IsSyntheticMask(void) { return m_bSyntheticMask; }
+   DWORD getIpNetMask() { return m_dwIpNetMask; }
+   DWORD getZoneGUID() { return m_dwZoneGUID; }
+	bool isSyntheticMask() { return m_bSyntheticMask; }
 
-	void SetCorrectMask(DWORD dwAddr, DWORD dwMask);
+	void setCorrectMask(DWORD dwAddr, DWORD dwMask);
 };
 
 
@@ -1354,6 +1362,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
+Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);

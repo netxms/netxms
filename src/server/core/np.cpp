@@ -167,7 +167,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    pNode = new Node(dwIpAddr, dwFlags, dwProxyNode, dwSNMPProxy, 0);
    NetObjInsert(pNode, TRUE);
    if (pszName != NULL)
-      pNode->SetName(pszName);
+      pNode->setName(pszName);
 
 	// Bind node to cluster before first configuration poll
 	if (pCluster != NULL)
@@ -177,7 +177,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
 
    if (dwCreationFlags & NXC_NCF_CREATE_UNMANAGED)
    {
-      pNode->SetMgmtStatus(FALSE);
+      pNode->setMgmtStatus(FALSE);
    }
    pNode->Unhide();
    PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);

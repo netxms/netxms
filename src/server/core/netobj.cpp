@@ -990,7 +990,7 @@ void NetObj::DropUserAccess(DWORD dwUserId)
 // Set object's management status
 //
 
-void NetObj::SetMgmtStatus(BOOL bIsManaged)
+void NetObj::setMgmtStatus(BOOL bIsManaged)
 {
    DWORD i;
    int iOldStatus;
@@ -1017,7 +1017,7 @@ void NetObj::SetMgmtStatus(BOOL bIsManaged)
    // Change status for child objects also
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      m_pChildList[i]->SetMgmtStatus(bIsManaged);
+      m_pChildList[i]->setMgmtStatus(bIsManaged);
    UnlockChildList();
 
    // Cause parent object(s) to recalculate it's status
@@ -1238,7 +1238,7 @@ void NetObj::PrepareForDeletion(void)
 // NOTE: pszText should be dynamically allocated or NULL
 //
 
-void NetObj::SetComments(TCHAR *pszText)
+void NetObj::setComments(TCHAR *pszText)
 {
    LockData();
    safe_free(m_pszComments);

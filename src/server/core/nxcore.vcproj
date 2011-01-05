@@ -421,6 +421,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\bridge.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\cert.cpp"
 				>
 			</File>
@@ -538,6 +542,10 @@
 			</File>
 			<File
 				RelativePath=".\layer2.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\lldp.cpp"
 				>
 			</File>
 			<File

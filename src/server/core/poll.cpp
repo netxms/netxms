@@ -313,14 +313,14 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
       Interface *pInterface = node->findInterface(ifIndex, ipAddr);
       if (pInterface != NULL)
 		{
-         if ((ipAddr < 0xE0000000) && !IsBroadcastAddress(ipAddr, pInterface->IpNetMask()))
+         if ((ipAddr < 0xE0000000) && !IsBroadcastAddress(ipAddr, pInterface->getIpNetMask()))
          {
             NEW_NODE *pInfo;
 				TCHAR buf1[16], buf2[16];
 
             pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
             pInfo->dwIpAddr = ipAddr;
-            pInfo->dwNetMask = pInterface->IpNetMask();
+            pInfo->dwNetMask = pInterface->getIpNetMask();
 				pInfo->ignoreFilter = FALSE;
             g_nodePollerQueue.Put(pInfo);
 				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%s"),
@@ -504,13 +504,13 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
             if (pSubnet != NULL)
             {
                if ((pSubnet->IpAddr() != dwAddr) && 
-                   !IsBroadcastAddress(dwAddr, pSubnet->IpNetMask()))
+                   !IsBroadcastAddress(dwAddr, pSubnet->getIpNetMask()))
                {
                   NEW_NODE *pInfo;
 
                   pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                   pInfo->dwIpAddr = dwAddr;
-                  pInfo->dwNetMask = pSubnet->IpNetMask();
+                  pInfo->dwNetMask = pSubnet->getIpNetMask();
 						pInfo->ignoreFilter = FALSE;
                   g_nodePollerQueue.Put(pInfo);
                }

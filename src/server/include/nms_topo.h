@@ -128,6 +128,7 @@ private:
 	int m_count;
 	int m_allocated;
 	LL_NEIGHBOR_INFO *m_connections;
+	void *m_data;
 
 	bool isDuplicate(LL_NEIGHBOR_INFO *info);
 
@@ -136,6 +137,9 @@ public:
 	~LinkLayerNeighbors();
 
 	void addConnection(LL_NEIGHBOR_INFO *info);
+
+	void setData(void *data) { m_data = data; }
+	void *getData() { return m_data; }
 };
 
 
@@ -150,5 +154,8 @@ DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent,
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
 Interface *FindInterfaceConnectionPoint(const BYTE *macAddr);
 
+void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
+
+void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, INTERFACE_LIST *ifList);
 
 #endif   /* _nms_topo_h_ */
