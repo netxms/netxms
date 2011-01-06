@@ -66,6 +66,7 @@ extern const TCHAR *g_szMessages[];
 
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
+extern Queue g_topologyPollQueue;
 extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
 extern Queue g_nodePollerQueue;
@@ -113,6 +114,7 @@ DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
 DWORD g_dwConfigurationPollingInterval;
 DWORD g_dwRoutingTableUpdateInterval;
+DWORD g_dwTopologyPollingInterval;
 DWORD g_dwConditionPollingInterval;
 DWORD g_dwPingSize;
 DWORD g_dwAuditFlags;
@@ -235,6 +237,7 @@ static void LoadGlobalConfig()
 	g_dwStatusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
 	g_dwConfigurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
 	g_dwRoutingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
+	g_dwTopologyPollingInterval = ConfigReadInt(_T("TopologyPollingInterval"), 1800);
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
 	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
 		g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
@@ -1044,6 +1047,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			ShowQueueStats(pCtx, &g_conditionPollerQueue, _T("Condition poller"));
 			ShowQueueStats(pCtx, &g_configPollQueue, _T("Configuration poller"));
+			ShowQueueStats(pCtx, &g_topologyPollQueue, _T("Topology poller"));
 			ShowQueueStats(pCtx, g_pItemQueue, _T("Data collector"));
 			ShowQueueStats(pCtx, g_pLazyRequestQueue, _T("Database writer"));
 			ShowQueueStats(pCtx, g_pEventQueue, _T("Event processor"));

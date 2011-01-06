@@ -68,8 +68,10 @@ Node::Node()
    m_pRoutingTable = NULL;
    m_tFailTimeSNMP = 0;
    m_tFailTimeAgent = 0;
-	m_pTopology = NULL;
+	m_linkLayerNeighbors = NULL;
 	m_tLastTopologyPoll = 0;
+	m_pTopology = NULL;
+	m_topologyRebuildTimestamp = 0;
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
@@ -127,8 +129,10 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_pRoutingTable = NULL;
    m_tFailTimeSNMP = 0;
    m_tFailTimeAgent = 0;
-	m_pTopology = NULL;
+	m_linkLayerNeighbors = NULL;
 	m_tLastTopologyPoll = 0;
+	m_pTopology = NULL;
+	m_topologyRebuildTimestamp = 0;
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
@@ -151,6 +155,7 @@ Node::~Node()
    delete m_pAgentConnection;
    safe_free(m_pParamList);
    DestroyRoutingTable(m_pRoutingTable);
+	delete m_linkLayerNeighbors;
 	delete m_pTopology;
 	delete m_jobQueue;
 	delete m_snmpSecurity;
@@ -3545,14 +3550,14 @@ DWORD Node::getPerfTabDCIList(CSCPMessage *pMsg)
 // Will return NULL if there are no topology information or it is expired
 //
 
-nxmap_ObjList *Node::GetL2Topology(void)
+nxmap_ObjList *Node::GetL2Topology()
 {
 	nxmap_ObjList *pResult;
 	DWORD dwExpTime;
 
 	dwExpTime = ConfigReadULong(_T("TopologyExpirationTime"), 900);
 	MutexLock(m_mutexTopoAccess, INFINITE);
-	if ((m_pTopology == NULL) || (m_tLastTopologyPoll + (time_t)dwExpTime < time(NULL)))
+	if ((m_pTopology == NULL) || (m_topologyRebuildTimestamp + (time_t)dwExpTime < time(NULL)))
 	{
 		pResult = NULL;
 	}
@@ -3577,19 +3582,12 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 	nDepth = ConfigReadInt(_T("TopologyDiscoveryRadius"), 5);
 	MutexLock(m_mutexTopoAccess, INFINITE);
 	delete m_pTopology;
-	if ((m_dwFlags & NF_IS_CDP) || (m_dwFlags & NF_IS_SONMP) || (m_dwFlags & NF_IS_LLDP))
+	if ((m_linkLayerNeighbors != NULL) && (m_linkLayerNeighbors->getSize() > 0))
 	{
 		m_pTopology = new nxmap_ObjList;
-		if ((*pdwStatus = ::BuildL2Topology(*m_pTopology, this, NULL, nDepth, NULL)) == RCC_SUCCESS)
-		{
-			m_tLastTopologyPoll = time(NULL);
-			pResult = new nxmap_ObjList(m_pTopology);
-		}
-		else
-		{
-			delete_and_null(m_pTopology);
-			pResult = NULL;
-		}
+		::BuildL2Topology(*m_pTopology, this, nDepth);
+		pResult = new nxmap_ObjList(m_pTopology);
+		m_topologyRebuildTimestamp = time(NULL);
 	}
 	else
 	{
@@ -3599,6 +3597,30 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 	}
 	MutexUnlock(m_mutexTopoAccess);
 	return pResult;
+}
+
+
+//
+// Topology poller
+//
+
+void Node::topologyPoll(int nPoller)
+{
+	pollerLock();
+
+	LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
+	if (nbs != NULL)
+	{
+		MutexLock(m_mutexTopoAccess, INFINITE);
+		delete m_linkLayerNeighbors;
+		m_linkLayerNeighbors = nbs;
+		MutexUnlock(m_mutexTopoAccess);
+		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d]"), m_szName, m_dwId);
+	}
+	
+	m_tLastTopologyPoll = time(NULL);
+   m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
+	pollerUnlock();
 }
 
 

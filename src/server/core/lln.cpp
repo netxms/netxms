@@ -180,17 +180,17 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 {
 	LinkLayerNeighbors *nbs = new LinkLayerNeighbors();
 
-	if (node->getFlags() & NF_IS_SONMP)
+	if (node->getFlags() & NF_IS_LLDP)
 	{
-		node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
+		AddLLDPNeighbors(node, nbs);
 	}
 	if (node->getFlags() & NF_IS_CDP)
 	{
 		node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.9.9.23.1.2.1.1.4"), CDPTopoHandler, nbs);
 	}
-	if (node->getFlags() & NF_IS_LLDP)
+	if (node->getFlags() & NF_IS_SONMP)
 	{
-		AddLLDPNeighbors(node, nbs);
+		node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
 	}
 
 	return nbs;

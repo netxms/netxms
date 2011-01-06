@@ -35,13 +35,15 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfDataCollectors','25',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('NumberOfStatusPollers','10',1,1);
+	VALUES ('NumberOfStatusPollers','25',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('NumberOfConfigurationPollers','5',1,1);
+	VALUES ('NumberOfConfigurationPollers','10',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfDiscoveryPollers','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('NumberOfRoutingTablePollers','5',1,1);
+	VALUES ('NumberOfRoutingTablePollers','10',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('NumberOfTopologyTablePollers','10',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfConditionPollers','10',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)

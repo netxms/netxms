@@ -49,6 +49,7 @@ extern DWORD g_dwDiscoveryPollingInterval;
 extern DWORD g_dwStatusPollingInterval;
 extern DWORD g_dwConfigurationPollingInterval;
 extern DWORD g_dwRoutingTableUpdateInterval;
+extern DWORD g_dwTopologyPollingInterval;
 extern DWORD g_dwConditionPollingInterval;
 
 
@@ -99,6 +100,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define NDF_RECHECK_CAPABILITIES       0x0400
 #define NDF_POLLING_DISABLED           0x0800
 #define NDF_CONFIGURATION_POLL_PASSED  0x1000
+#define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x2000
 
 #define __NDF_FLAGS_DEFINED
 
@@ -649,6 +651,7 @@ protected:
    time_t m_tLastDiscoveryPoll;
    time_t m_tLastStatusPoll;
    time_t m_tLastConfigurationPoll;
+	time_t m_tLastTopologyPoll;
    time_t m_tLastRTUpdate;
    time_t m_tFailTimeSNMP;
    time_t m_tFailTimeAgent;
@@ -662,9 +665,10 @@ protected:
 	DWORD m_dwSNMPProxy;			// Node used as proxy for SNMP requests
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
    ROUTING_TABLE *m_pRoutingTable;
-	nxmap_ObjList *m_pTopology;		// Layer 2 topology
-	time_t m_tLastTopologyPoll;
 	ForwardingDatabase *m_fdb;
+	LinkLayerNeighbors *m_linkLayerNeighbors;
+	nxmap_ObjList *m_pTopology;	// For compatibility, to be removed in 1.1.x
+	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;
 
    void pollerLock() { MutexLock(m_hPollerMutex, INFINITE); }
@@ -750,6 +754,7 @@ public:
    int getInterfaceStatusFromAgent(DWORD dwIndex);
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
+	LinkLayerNeighbors *getLinkLayerNeighbors() { return m_linkLayerNeighbors; }
    BOOL getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 
@@ -757,16 +762,19 @@ public:
    void setDiscoveryPollTimeStamp();
    void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void configurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
+	void topologyPoll(int nPoller);
 	void updateInterfaceNames(ClientSession *pSession, DWORD dwRqId);
    void updateRoutingTable();
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();
    bool isReadyForDiscoveryPoll();
    bool isReadyForRoutePoll();
+   bool isReadyForTopologyPoll();
    void lockForStatusPoll();
    void lockForConfigurationPoll();
    void lockForDiscoveryPoll();
    void lockForRoutePoll();
+   void lockForTopologyPoll();
 	void forceConfigurationPoll() { m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL; }
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
@@ -888,6 +896,17 @@ inline bool Node::isReadyForRoutePoll()
           ((DWORD)time(NULL) - (DWORD)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval);
 }
 
+inline bool Node::isReadyForTopologyPoll() 
+{ 
+	if (m_bIsDeleted)
+		return false;
+   return (m_iStatus != STATUS_UNMANAGED) &&
+	       (!(m_dwFlags & NF_DISABLE_TOPOLOGY_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+          ((DWORD)time(NULL) - (DWORD)m_tLastTopologyPoll > g_dwTopologyPollingInterval);
+}
+
 inline void Node::lockForStatusPoll()
 { 
    LockData(); 
@@ -906,6 +925,13 @@ inline void Node::lockForDiscoveryPoll()
 { 
    LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL; 
+   UnlockData(); 
+}
+
+inline void Node::lockForTopologyPoll() 
+{ 
+   LockData(); 
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL; 
    UnlockData(); 
 }
 

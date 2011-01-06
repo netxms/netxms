@@ -137,9 +137,11 @@ public:
 	~LinkLayerNeighbors();
 
 	void addConnection(LL_NEIGHBOR_INFO *info);
+	LL_NEIGHBOR_INFO *getConnection(int index) { return ((index >= 0) && (index < m_count)) ? &m_connections[index] : NULL; }
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
+	int getSize() { return m_count; }
 };
 
 
@@ -149,11 +151,11 @@ public:
 
 NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest);
 void DestroyTraceData(NETWORK_PATH_TRACE *pTrace);
-DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent,
-							 int nDepth, TCHAR *pszParentIfName);
+void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
 Interface *FindInterfaceConnectionPoint(const BYTE *macAddr);
 
+LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node);
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, INTERFACE_LIST *ifList);

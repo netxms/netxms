@@ -222,6 +222,7 @@ typedef void * NXC_SESSION;
 #define NF_IS_SONMP              0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
 #define NF_IS_LLDP				   0x00000800	/* Supports Link Layer Discovery Protocol */
 
+#define NF_DISABLE_TOPOLOGY_POLL 0x00800000
 #define NF_DISABLE_SNMP          0x01000000
 #define NF_DISABLE_NXCP          0x02000000
 #define NF_DISABLE_ICMP          0x04000000

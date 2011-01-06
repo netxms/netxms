@@ -29,6 +29,9 @@
 
 static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t idLen)
 {
+	TCHAR ifName[128];
+	Interface *ifc;
+
 	switch(idType)
 	{
 		case 3:	// MAC address
@@ -41,6 +44,26 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 				return node->findInterfaceByIP(ntohl(ipAddr));
 			}
 			return NULL;
+		case 5:	// Interface name
+#ifdef UNICODE
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)id, idLen, ifName, 128);
+			ifName[min(idLen, 127)] = 0;
+#else
+			int len = min(idLen, 127);
+			memcpy(ifName, id, len);
+			ifName[len] = 0;
+#endif
+			ifc = node->findInterface(ifName);	/* TODO: find by cached ifName value */
+			if (ifc == NULL)
+			{
+				// Hack for Extreme Networks switches
+				// Must be moved into driver
+				memmove(&ifName[2], ifName, (_tcslen(ifName) - 1) * sizeof(TCHAR));
+				ifName[0] = _T('1');
+				ifName[1] = _T(':');
+				Interface *ifc = node->findInterface(ifName);
+			}
+			return ifc;
 		default:
 			return NULL;
 	}

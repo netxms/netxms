@@ -42,6 +42,7 @@ struct __poller_state
 
 Queue g_statusPollQueue;
 Queue g_configPollQueue;
+Queue g_topologyPollQueue;
 Queue g_routePollQueue;
 Queue g_discoveryPollQueue;
 Queue g_nodePollerQueue;
@@ -61,7 +62,7 @@ static DWORD m_dwNewNodeId = 1;
 // Check if management server node presented in node list
 //
 
-void CheckForMgmtNode(void)
+void CheckForMgmtNode()
 {
    INTERFACE_LIST *pIfList;
    Node *pNode;
@@ -469,6 +470,39 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
 
 
 //
+// Topology poll thread
+//
+
+static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
+{
+   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
+
+   // Initialize state info
+   m_pPollerState[(long)arg].iType = 'T';
+   SetPollerState((long)arg, _T("init"));
+
+   // Wait two minutes to give configuration pollers chance to run first
+   ThreadSleep(120);
+
+   // Main loop
+   while(!ShutdownInProgress())
+   {
+      SetPollerState((long)arg, _T("wait"));
+      Node *node = (Node *)g_topologyPollQueue.GetOrBlock();
+      if (node == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), node->Name(), node->Id());
+      SetPollerState((long)arg, szBuffer);
+		node->topologyPoll((int)arg);
+      node->DecRefCount();
+   }
+   SetPollerState((long)arg, _T("finished"));
+   return THREAD_OK;
+}
+
+
+//
 // Check address range
 //
 
@@ -590,16 +624,18 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    DWORD j, dwWatchdogId;
    int i, iCounter, iNumStatusPollers, iNumConfigPollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
-   int iNumConditionPollers;
+   int iNumConditionPollers, iNumTopologyPollers;
 
    // Read configuration
    iNumConditionPollers = ConfigReadInt(_T("NumberOfConditionPollers"), 10);
-   iNumStatusPollers = ConfigReadInt(_T("NumberOfStatusPollers"), 10);
-   iNumConfigPollers = ConfigReadInt(_T("NumberOfConfigurationPollers"), 4);
-   iNumRoutePollers = ConfigReadInt(_T("NumberOfRoutingTablePollers"), 5);
+   iNumStatusPollers = ConfigReadInt(_T("NumberOfStatusPollers"), 25);
+   iNumConfigPollers = ConfigReadInt(_T("NumberOfConfigurationPollers"), 10);
+   iNumRoutePollers = ConfigReadInt(_T("NumberOfRoutingTablePollers"), 10);
    iNumDiscoveryPollers = ConfigReadInt(_T("NumberOfDiscoveryPollers"), 1);
+   iNumTopologyPollers = ConfigReadInt(_T("NumberOfTopologyPollers"), 10);
    m_iNumPollers = iNumStatusPollers + iNumConfigPollers + 
-                   iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers + 1;
+                   iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers + 
+						 iNumTopologyPollers + 1;
    DbgPrintf(2, _T("PollManager: %d pollers to start"), m_iNumPollers);
 
    // Prepare static data
@@ -624,6 +660,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    // Start condition pollers
    for(i = 0; i < iNumConditionPollers; i++, nIndex++)
       ThreadCreate(ConditionPoller, 0, CAST_TO_POINTER(nIndex, void *));
+
+   // Start topology pollers
+   for(i = 0; i < iNumTopologyPollers; i++, nIndex++)
+      ThreadCreate(TopologyPoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    // Start active discovery poller
    ThreadCreate(ActiveDiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
@@ -678,6 +718,12 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 						pNode->lockForDiscoveryPoll();
 						g_discoveryPollQueue.Put(pNode);
 					}
+					if (pNode->isReadyForTopologyPoll())
+					{
+						pNode->IncRefCount();
+						pNode->lockForTopologyPoll();
+						g_topologyPollQueue.Put(pNode);
+					}
 					break;
 				case OBJECT_CONDITION:
 					pCond = (Condition *)g_pIndexById[j].pObject;
@@ -729,7 +775,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 // Reset discovery poller after configuration change
 //
 
-void ResetDiscoveryPoller(void)
+void ResetDiscoveryPoller()
 {
    Node *pNode;
    NEW_NODE *pInfo;
