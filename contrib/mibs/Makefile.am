@@ -52,6 +52,8 @@ mibs_DATA = \
 	IP-MIB.txt \
 	IPMROUTE-STD-MIB.txt \
 	LLDP-MIB.txt \
+	LLDP-V2-MIB.txt \
+	LLDP-V2-TC-MIB.txt \
 	MAU-MIB.txt \
 	MTA-MIB.txt \
 	NET-SNMP-AGENT-MIB.txt \

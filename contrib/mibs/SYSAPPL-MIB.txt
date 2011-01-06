@@ -1,4 +1,4 @@
-- WinAgents MIB Extraction Wizard
+-- WinAgents MIB Extraction Wizard
 -- Extracted from rfc2287.txt 16.03.2005 20:21:46
 
 SYSAPPL-MIB DEFINITIONS ::= BEGIN
