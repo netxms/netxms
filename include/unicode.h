@@ -227,12 +227,20 @@
 #define _istxdigit iswxdigit
 #define _istalpha iswalpha
 #define _istupper iswupper
+#define _istprint iswprint
 #define _tgetenv  wgetenv
 #define _tmkdir   wmkdir
 #define _tchdir   wchdir
 #define _tcserror wcserror
 #define _tcserror_r wcserror_r
 #define _tsystem  wsystem
+#define _topendir wopendir
+#define _treaddir wreaddir
+#define _tclosedir wclosedir
+#define _ERR_error_tstring ERR_error_string_W
+
+#define _TDIR     DIRW
+#define _tdirent  dirent_w
 
 #else
 
@@ -287,14 +295,20 @@
 #define _istxdigit isxdigit
 #define _istalpha isalpha
 #define _istupper isupper
+#define _istprint isprint
 #define _tgetenv  getenv
 #define _tmkdir   mkdir
 #define _tchdir   chdir
 #define _tcserror strerror
 #define _tcserror_r strerror_r
 #define _tsystem  system
+#define _topendir opendir
+#define _treaddir readdir
+#define _tclosedir closedir
+#define _ERR_error_tstring ERR_error_string
 
-#define _ERR_error_tstring		ERR_error_string
+#define _TDIR     DIR
+#define _tdirent  dirent
 
 #endif
 
