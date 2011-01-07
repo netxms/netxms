@@ -29,7 +29,7 @@
 
 static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t idLen)
 {
-	TCHAR ifName[128];
+	TCHAR ifName[130];
 	Interface *ifc;
 
 	switch(idType)
@@ -54,14 +54,14 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 			ifName[len] = 0;
 #endif
 			ifc = node->findInterface(ifName);	/* TODO: find by cached ifName value */
-			if (ifc == NULL)
+			if ((ifc == NULL) && !_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19))
 			{
 				// Hack for Extreme Networks switches
 				// Must be moved into driver
-				memmove(&ifName[2], ifName, (_tcslen(ifName) - 1) * sizeof(TCHAR));
+				memmove(&ifName[2], ifName, (_tcslen(ifName) + 1) * sizeof(TCHAR));
 				ifName[0] = _T('1');
 				ifName[1] = _T(':');
-				Interface *ifc = node->findInterface(ifName);
+				ifc = node->findInterface(ifName);
 			}
 			return ifc;
 		default:
