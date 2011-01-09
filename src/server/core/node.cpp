@@ -487,7 +487,7 @@ INTERFACE_LIST *Node::getInterfaceList()
 			{
 				useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED);
 			}
-			pIfList = SnmpGetInterfaceList(m_snmpVersion, pTransport, m_dwNodeType, useIfXTable);
+			pIfList = SnmpGetInterfaceList(m_snmpVersion, pTransport, this, useIfXTable);
 
 			if (m_dwFlags & NF_IS_BRIDGE)
 			{
@@ -1463,17 +1463,17 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					UnlockData();
             }
 
-            // Check for SONMP (Nortel topology discovery discovery protocol) support
+            // Check for NDP (Nortel Discovery Protocol) support
             if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
             {
 					LockData();
-               m_dwFlags |= NF_IS_SONMP;
+               m_dwFlags |= NF_IS_NDP;
 					UnlockData();
             }
             else
             {
 					LockData();
-               m_dwFlags &= ~NF_IS_SONMP;
+               m_dwFlags &= ~NF_IS_NDP;
 					UnlockData();
             }
 

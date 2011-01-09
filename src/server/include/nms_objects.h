@@ -716,6 +716,7 @@ public:
    DWORD getFlags() { return m_dwFlags; }
    DWORD getRuntimeFlags() { return m_dwDynamicFlags; }
    DWORD getZoneGUID() { return m_dwZoneGUID; }
+	DWORD getNodeType() { return m_dwNodeType; }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 

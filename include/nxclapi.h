@@ -219,7 +219,8 @@ typedef void * NXC_SESSION;
 #define NF_BEHIND_NAT            0x00000080
 #define NF_IS_CPSNMP             0x00000100  /* CheckPoint SNMP agent on port 260 */
 #define NF_IS_CDP                0x00000200
-#define NF_IS_SONMP              0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
+#define NF_IS_NDP                0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
+#define NF_IS_SONMP              0x00000400  /* SONMP is an old name for NDP */
 #define NF_IS_LLDP				   0x00000800	/* Supports Link Layer Discovery Protocol */
 
 #define NF_DISABLE_TOPOLOGY_POLL 0x00800000

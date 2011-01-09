@@ -385,8 +385,7 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
 // Get interface list via SNMP
 //
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport,
-                                     DWORD dwNodeType, BOOL useIfXTable)
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport, Node *node, BOOL useIfXTable)
 {
    LONG i, iNumIf;
    TCHAR szOid[128], szBuffer[256];
@@ -520,8 +519,29 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
                            HandlerIpAddr, pIfList, FALSE) == SNMP_ERR_SUCCESS)
          {
             // Handle special cases
-            if (dwNodeType == NODE_TYPE_NORTEL_ACCELAR)
+				if (node->getNodeType() == NODE_TYPE_NORTEL_ACCELAR)
                GetAccelarVLANIfList(dwVersion, pTransport, pIfList);
+
+				// Nortel hack - move to driver
+				if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3"), 17))
+				{
+					DWORD mgmtIpAddr, mgmtNetMask;
+
+					if ((SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS) &&
+					    (SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), NULL, 0, &mgmtNetMask, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS))
+					{
+						int index = pIfList->iNumEntries;
+						pIfList->iNumEntries++;
+						pIfList->pInterfaces = (INTERFACE_INFO *)realloc(pIfList->pInterfaces, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
+						memset(&pIfList->pInterfaces[index], 0, sizeof(INTERFACE_INFO));
+						pIfList->pInterfaces[index].dwIpAddr = mgmtIpAddr;
+						pIfList->pInterfaces[index].dwIpNetMask = mgmtNetMask;
+						pIfList->pInterfaces[index].dwType = IFTYPE_OTHER;
+						_tcscpy(pIfList->pInterfaces[index].szName, _T("mgmt"));
+						SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
+					}
+				}
+
             bSuccess = TRUE;
          }
       }

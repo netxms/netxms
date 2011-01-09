@@ -13,6 +13,7 @@ mibsdir=$(pkgdatadir)/mibs
 mibs_DATA = \
 	ARCADA-MIB.txt \
 	ASTERISK-MIB.txt \
+	BAY-STACK-MIB.txt \
 	BGP4-MIB.txt \
 	BN-IF-EXTENSIONS-MIB.txt \
 	BRIDGE-MIB.txt \
@@ -94,6 +95,7 @@ mibs_DATA = \
 	RMON-MIB.txt \
 	RMON2-MIB.txt \
 	RS-232-MIB.txt \
+	S5-AGENT-MIB.txt \
 	S5-CHASSIS-MIB.txt \
 	S5-CHASSIS-TRAP-MIB.txt \
 	S5-ETH-MULTISEG-TOPOLOGY-MIB.txt \

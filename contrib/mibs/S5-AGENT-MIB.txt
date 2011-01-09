@@ -1,0 +1,1705 @@
+-- SECTION 1: Top Level Definitions
+
+S5-AGENT-MIB DEFINITIONS ::= BEGIN
+
+
+-- 5000 Agent MIB Release 1.3.9
+-- Revision 10/14/98
+
+-- Copyright 1995-98 Bay Networks, Inc.
+-- All rights reserved.
+-- This Bay Networks SNMP Management Information Base Specification
+-- (Specification) embodies Bay Networks' confidential and
+-- proprietary intellectual property. Bay Networks retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+
+-- This Specification is supplied "AS IS," and Bay Networks makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+
+-- Imports
+
+IMPORTS
+	IpAddress, TimeTicks
+		FROM RFC1155-SMI
+	OBJECT-TYPE
+		FROM RFC-1212
+	DisplayString
+		FROM RFC1213-MIB
+	s5Agent
+		FROM S5-ROOT-MIB
+	TimeIntervalSec, IpxAddress, MacAddress
+		FROM S5-TCS-MIB;
+
+
+-- Agent Groups
+
+s5AgentHw     OBJECT IDENTIFIER ::= { s5Agent 1 }
+s5AgentInfo   OBJECT IDENTIFIER ::= { s5Agent 2 }
+s5AgentMgmt   OBJECT IDENTIFIER ::= { s5Agent 3 }
+s5AgentSystem OBJECT IDENTIFIER ::= { s5Agent 4 }
+
+
+
+-- SECTION 2: MIB Objects
+
+-- Hardware Information
+
+s5AgMyGrpIndx OBJECT-TYPE
+	SYNTAX	INTEGER (1..32767)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the group containing
+		the agent."
+	::= { s5AgentHw 1 }
+
+s5AgMyComIndx OBJECT-TYPE
+	SYNTAX	INTEGER (1..32767)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the component containing
+		the agent."
+	::= { s5AgentHw 2 }
+
+
+-- Global Information
+
+s5AgentGbl	OBJECT IDENTIFIER ::= { s5AgentInfo 1 }
+
+s5AgInfoReBoot OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		running(2),
+		restart(3),
+		reboot(4),
+                reset(5),
+                download(6),
+                downloadAndRestart(7),
+                downloadAndReboot(8),
+                downloadAndReset(9)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Action object to reboot the agent.
+		The following values can only be read:
+		  other(1).....agent in unknown or other state
+		  running(2)...agent running
+
+		The following values can be written:
+		  restart(3)...restart agent (i.e., jump to
+		                 beginning of agent code)
+		  reboot(4)....start boot sequence for agent
+		                 (i.e., jump to beginning of
+		                 boot firmware)
+		  reset(5).....do a hardware reset
+                  download(6)..............activate download of
+                               a new agent
+                  downloadAndRestart(7)....activate download of
+                               a new agent and restart
+                  downloadAndReboot(8).....activate download of
+                               a new agent and reboot
+                  downloadAndReset(9)......activate download of
+                               a new agent and reset
+
+                 If s5AgInfoScheduleBootTime is set in the same PDU as
+                 s5AgInfoReBoot, the action specified occurs when the
+                 scheduled time reaches zero; otherwise, the action
+                 occurs immediately. The agent does best efforts to
+                 return a response before the action occurs.
+ 
+                 If any of the combined download actions are
+                 requested, neither action occurs until the
+                 expiry of s5AgInfoScheduleBootTime, if set."
+	::= { s5AgentGbl 1 }
+
+s5AgInfoWriteCfg OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		valid(2),
+		write(3)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Action object to cause current configuration
+		settings to be written to local nonvolatile
+		storage. The following values can only be read:
+		  other(1)...some unknown or other state
+		  valid(2)...contents valid
+
+		The following value can be written:
+		  write(3)...write configuration settings to
+		               local storage (such as nonvol)
+
+		If the write operation write fails, then the
+		agent will return error 'genErr' on the SET."
+	::= { s5AgentGbl 2 }
+
+s5AgInfoMgmtProtocolNxtBoot OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		ipOnly(2),
+		ipxOnly(3),
+		ipAndIpx(4)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The transport protocol(s) to use after
+		the next boot of the agent. The following
+		value is read-only:
+		  other(1)....unknown or some other protocol
+
+		The following value is read-write:
+		  ipOnly(2).....only IP
+		  ipxOnly(3)....only IPX
+		  ipAndIpx(4)...IP and IPX."
+	::= { s5AgentGbl 3 }
+
+s5AgInfoMgmtProtocolCur OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		ipOnly(2) ,
+		ipxOnly(3),
+		ipAndIpx(4)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The current transport protocol(s) that are
+		being supported by the agent. The following
+		value is read-only:
+		  other(1)....unknown or some other protocol
+
+		The following value is read-write: 
+		  ipOnly(2).....only IP
+		  ipxOnly(3)....only IPX
+		  ipAndIpx(4)...IP and IPX.
+
+		When the IP protocol stack is not enabled,
+		the agent will not respond to PING or SNMP
+		requests over IP.
+
+		When the IPX protocol stack is not enabled,
+		the agent will not respond to diagnostic SAP or
+		SNMP requests over IPX.
+
+		It is suggested that NMS not disable the transport
+		they are using."
+	::= { s5AgentGbl 4 }
+
+s5AgInfoBootMode OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		local(2),
+		net(3),
+                netWhenNeeded(4),
+                netOrLastAddress(5)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The source for initial protocol configuration
+		information at next boot. For IP, a setting of
+		net(3), netWhenNeeded(4), or netOrLastAddress(5)
+                means that BOOTP will be used to get the
+		agent's IP address(es), load server address, and
+		configuration file name.  For IPX, a setting of net(3),
+		netWhenNeeded(4), or netOrLastAddress(5) means SAP
+                will be used to get the agent's Novell
+		network number(s), and the configuation filename
+		will be loaded from local storage (note - the load
+		server address is not needed in a Novell network).
+
+		The following value is read-only:
+		  other(1).....not applicable or some other case
+
+		The following values are read-write:
+		  local(2)
+                           Don't use the network.
+		  net(3)
+                           Try using the network and if that
+		                 fails then use protocol configuration
+		                 information from local storage.
+                  netWhenNeeded(4)
+                           Use protocol configuration information
+                             from local storage if available,
+                             otherwise, try using the network.
+                  netOrLastAddress(5)
+                           Similar to netWhenNeeded, except that if
+                             using the network fails, the last set
+                             of protocol configuration information
+                             that was obtained using the network
+                             will be used if it is available.
+
+		Note:   The load server address is not configurable
+		        and is not available in this MIB object on a
+		        Novell network."
+	::= { s5AgentGbl 5 }
+
+s5AgInfoCfgLoadMode OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		local(2),
+		net(3),
+		locAsBk(4)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The source from which to load configuration
+		information at next boot. The following value
+		is read-only:
+		  other(1)...not applicable or some other case
+
+		The following values are read-write:
+		  local(2).....get from local storage
+		  net(3).......load from the network
+		  locAsBk(4)...try using network and if it fails
+		                 then use local information.
+
+		When local(2) is specified, the configuration
+		information is loaded from local storage.
+		If the local configuration is not valid
+		(checks for ip = 0.0.0.0), then BOOTP is used
+		for the IP stack. (In IPX only mode, the IP
+		address could be 0.0.0.0 and IPX does not rely
+		on the IP address.  The agent checks the IPX
+		address, and if the network number of the IPX
+		address is equal to 0 the agent uses  SAP).
+
+		When net(3) is specified, the configuration 
+		information will be downloaded from the network
+		only. The configuration information will never
+		be loaded from local storage, even if downloading
+		fails and the local configuration information exists.
+
+		When locAsBk(4) is specified, a download of the
+		configuration information will be tried over the
+		network. If the network download fails then the
+		configuration information will be loaded from
+		local storage."
+	::= { s5AgentGbl 6 }
+
+s5AgInfoImgLoadMode OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		local(2),
+		net(3),
+		locAsBk(4),
+		netIfNewer(5)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The source from which to load the agent image
+		at next boot. The following value is read-only:
+		  other(1)...not applicable or some other case
+
+		The following values are read-write:
+		  local(2)........get from local storage
+		  net(3)..........load from the network
+		  locAsBk(4)......try using network and if it fails
+		                    then use local information.
+		  netIfNewer(5)...try loading image over the net.
+		                    If can load image, and it is newer
+		                    than the local image, then use it.
+		                    Otherwise, use local image.
+
+		If the local image is not valid, the setting will
+		be net(3) and cannot be changed to local(2),
+		or locAsBk(4) until a valid image file is loaded
+		(i.e., error 'badValue' will be returned on SETS with
+		value other than net(3)). When the local image is
+		not valid and the network download of the image fails,
+		the entire boot process will be repeated.
+
+		When local(2) is specified, the image will be loaded
+		from local storage.
+
+		When net(3) is specified, the image will be downloaded
+		from the network only. The image file will never be
+		loaded from local storage, even if downloading fails
+		and the local image exists.
+
+		When locAsBk(4) is specified, a download of the image
+		will be tried over the network. If the network
+		download fails then the image is loaded from local
+		storage.
+
+		When netIfNewer(5) is specified, a download of the
+		image will be tried over the network. If successful,
+		it will then be compared to the image stored in local
+		storage. The most recent version of the two will be
+		used. If the local image is not valid, the network
+		will always be used. If the network download fails
+		then the image is loaded from the local storage."
+	::= { s5AgentGbl 7 }
+
+s5AgInfoImgSaveMode OBJECT-TYPE
+	SYNTAX	INTEGER {
+		notAvail(1),
+		writeIfDiff(2),
+		writeIfNewer(3),
+		noWrite(4)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates what to do with the image (when
+		loaded from the network) on the next boot.
+		The following value can only be read:
+		  notAvail(1)...the save operation is not
+		                  available
+
+		The following values can be written (and
+		read) if the device supports this capability:
+		  writeIfDiff(2)....save image to local storage
+		                      at next boot if image is
+		                      different from saved contents
+		  writeIfNewer(3)...save image to local storage
+		                      at next boot if image is
+		                      newer than saved contents.
+		  noWrite(4)........do not save image to local
+		                      storage at next boot, even if
+		                      image is newer or different."
+	::= { s5AgentGbl 8 }
+
+s5AgInfoImgSaveStatus OBJECT-TYPE
+	SYNTAX	INTEGER {
+		notAvail(1),
+		noSave(2),
+		saved(3),
+		saveFailed(4)
+		}
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates what happened to the image file
+		on the last boot. The following values
+		are returned:
+		  notAvail(1).....the save operation is not
+		                    available
+		  noSave(2).......image not saved since image was
+		                    not asked to be saved, or image
+		                    was not loaded from the network
+		  saved(3)........image saved
+		  saveFailed(4)...tried to save image, but failed"
+	::= { s5AgentGbl 9 }
+
+s5AgInfoVer OBJECT-TYPE
+	SYNTAX	DisplayString (SIZE(0..32))
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The version of the agent in the form
+		'major.minor.maintenance[letters]'. This
+		is an alias for the value of the object
+		s5ChasStoreCntntVer for the RAM of the
+		module containing the agent."
+	::= { s5AgentGbl 10 }
+
+s5AgInfoLocStorVer OBJECT-TYPE
+	SYNTAX	DisplayString (SIZE(0..32))
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The version of the agent image saved in local
+		storage such as flash memory in the form
+		'major.minor.maintenance[letters]'. If not
+		known or not available, then the value is
+		a zero length string. This is an alias for
+		the value of the object s5ChasStoreCntntVer
+		for the local storage of the module containing
+		the agent."
+	::= { s5AgentGbl 11 }
+
+s5AgInfoNxtBootDfltGwAddr OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The IP address of the default gateway (router)
+		for the agent to use after the next boot. (NOTE:
+		the current default router is the value of object
+		s5AgInfoCurDfltGwAddr (or ipRouteNextHop.0.0.0.0).)
+
+		If not used, then this object has the value
+		of 0.0.0.0."
+	::= { s5AgentGbl 12 }
+
+s5AgInfoCurDfltGwAddr OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The IP address of the current default gateway
+		(router). (NOTE: this is an alias for the object
+		ipRouteNextHop in the row of the table
+		ipRouteTable which has object ipRouteDest with
+		a value of 0.0.0.0.)
+
+		If not used, then this object has the value
+		of 0.0.0.0."
+	::= { s5AgentGbl 13 }
+
+s5AgInfoDramUsage  OBJECT-TYPE
+	SYNTAX	INTEGER  (-1..100)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"An indication of the percentage of DRAM currently
+		in use by this agent.  If this information is not
+		available the agent shall return -1, otherwise the
+		percentage of DRAM in use is returned as an integer
+		between 0 and 100.  The percentage is defined as the
+		DRAM currently used by  this agent divided by the
+		total DRAM available to this agent."
+	::= { s5AgentGbl 14 }
+
+s5AgInfoLoadProtocolNxtBoot OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		ipOnly(2),
+		ipxOnly(3),
+		auto(4)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The transport protocol(s) over which the 
+		agent is to use to load the configuration 
+		information and the agent image at the 
+		next boot of the agent. The following 
+		value is read-only:
+		  other(1)....unknown or some other protocol
+
+		The following values are read-write:
+		  ipOnly(2)....use load protocol over IP
+		  ipxOnly(3)...use load protocol over IPX
+		  auto(4)......try using the IP load function
+		                 and if that fails then use IPX
+		                 load function.  If the IPX
+		                 load function also fails, repeat
+		                 the same process until one or
+		                 the other protocol succeeds."
+	::= { s5AgentGbl 15 }
+
+s5AgInfoLoadProtocolLast OBJECT-TYPE
+	SYNTAX	INTEGER {
+		reserved(1),
+		ip(2),
+		ipx(3),
+		local(4)
+		}
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The transport protocol over which the agent image
+		and configuration information were last loaded.  The
+		following values are read-only:
+		  reserved(1)...reserved
+		  ip(2).........gotten from the network using
+		                  a load protocol over IP
+		  ipx(3)........gotten from the network using
+		                  a load protocol over IPX
+		  local(4)......loaded from local storage."
+	::= { s5AgentGbl 16 }
+
+
+s5AgInfoSlotScope OBJECT-TYPE
+      SYNTAX    OCTET STRING
+      ACCESS     read-only
+      STATUS     mandatory
+      DESCRIPTION
+              "This object contains information about all
+              the slots an agent can manage.  The value is encoded
+              in an octet string. One byte has information about 8
+              slots. If a bit is set then agent can manage the
+              corresponding slot. Byte 1 will have information about
+              slots 1-8, byte 2 will have information about
+              slots 9-16, and so on. For example an agent that
+              can manage slots 2-7 in a 14 slot chassis should have
+              the value :
+                              8d:00 (0111 1110 0000 0000)
+              If an agent returns a string of size 0, then it can
+              manage all slots in chassis."
+      ::= { s5AgentGbl 17 }
+
+s5AgInfoImgType OBJECT-TYPE
+      SYNTAX  INTEGER {
+              other(1),
+              typeA(2),
+              typeB(3),
+              typeC(4)
+              }
+      ACCESS  read-only
+      STATUS  mandatory
+      DESCRIPTION
+              "Indicates the type of agent image. This object is meant
+               to distinguish between agents having the same version
+               number running on the same hardware, but with dissimilar
+               functionality. Following are examples of possible values
+               for various enumerations.
+               other(1) ....... A unique agent eg., 5310A, 5dn310 etc
+               typeA(2) ....... fusion basic agent.
+               typeB(2) ....... fusion advanced agent."
+      ::= { s5AgentGbl 18 }
+
+s5AgInfoScheduleBootTime OBJECT-TYPE
+        SYNTAX  INTEGER (0..10080)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The time, measured in minutes, remaining until the
+                 action(s) set by s5AgInfoReBoot will be performed.
+                 This value must be set in the same set request as
+                 the value of s5AgInfoReBoot; otherwise, a badValue
+                 error is returned.
+ 
+                 If this value has been set, the number returned will
+                 count down to zero, and the time remaining in minutes
+                 will be rounded up to the next whole minute.
+ 
+                 Actions set via s5AgInfoReBoot can be scheduled for
+                 up to seven days in advance.
+                 7 * 24 * 60 equals the maximum settable value of
+                 10080. If this attribute has not been set, a value of 
+                 zero should be returned."
+        ::= { s5AgentGbl 19 }
+ 
+s5AgInfoScheduleBootCancel OBJECT-TYPE
+        SYNTAX  INTEGER {
+                other(1),
+                cancel(2)
+                 }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "Cancel a scheduled s5AgInfoReboot action.
+                The following value is read-only:
+                  other(1)...not applicable or some other case
+                     This is always the value that return when
+                     read.
+ 
+                The following values are read-write:
+                  cancel(2)...cancel a scheduled boot.
+ 
+                Setting this attribute to cancel(2) sets s5AgInfoReBoot
+                to running(2) and s5AgInfoScheduleBootTime to zero."
+        ::= { s5AgentGbl 20 }
+  
+s5AgInfoNumBootBanks OBJECT-TYPE
+        SYNTAX  INTEGER (0..255)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The number of local storage locations (or flash
+		 memory banks) available on this device for
+		 operational code images.
+ 
+                 Devices without local image capability or not
+		 supporting this attribute shall return a value of 0."
+        ::= { s5AgentGbl 21 }
+ 
+ 
+s5AgInfoNextBootBank OBJECT-TYPE
+        SYNTAX  INTEGER (0..255)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The source of the image to be loaded upon the
+		 next  boot of the device.
+ 
+                 If a value is set larger than s5AgInfoNumBootBanks,
+                 a badValue error should be returned.
+ 
+                 Devices without local image capability or not
+		 supporting this attribute shall return a value of 0."
+        ::= { s5AgentGbl 22 }
+
+ 
+ 
+s5AgInfoDstLoadBank OBJECT-TYPE
+        SYNTAX  INTEGER (0..255)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The local storage bank where the next system image
+                 image is downloaded to.
+ 
+                 Devices without local image capability or not 
+                 supporting this attribute shall return a value of 0."
+        ::= { s5AgentGbl 23 }
+
+s5AgInfoFileAction OBJECT-TYPE
+    SYNTAX INTEGER {
+           other(1),
+           dnldConfig(2),
+           dnldImg(3),
+           upldConfig(4),
+           upldImg(5),
+           dnldFw(6),
+           upldFw(7),
+           dnldImgIfNewer(8)
+           }
+
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object is used to download or upload a config file or
+         an image file.
+
+         In read operation, if no action taken since the boot up, it will
+         return other(1). Otherwise it will return the latest action such
+         as dnldConfig(2), dnldImg(3), upldConfig(4) and upldImg(5).
+
+         In write operation, the values that can be written are:
+
+            dnldConfig(2) ... download a config file to a device. The new
+                              config file will not take effect until the
+                              next boot cycle of the device.
+            dnldImg(3) ...... download an image to a device.
+            upldConfig(4) ... upload a config file to a server from
+                              a device. The config file contains the current                              MIB object values of the device.
+            upldImg(5) ...... upload a image from a device to a server
+            dnldFw(6) ....... download firmware to a device
+            upldFw(7) ....... upload firware from a device to a server
+            dnldImgIfNewer(8) download an image to a device if the image
+                              version is newer than the image stored in
+                              local NV storage"
+
+    ::= {s5AgentGbl 24}
+
+
+s5AgInfoFileStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+            other(1),
+            inProgress (2),
+            success (3),
+            fail (4)
+            }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object is used to get the status of the latest action as
+        shown by s5AgInfoFileAction. The values that can be read are:
+ 
+            other(1) ......... if no action taken since the boot up
+            inProgress (2) ... the operation is in progress
+            success (3) ...... the operation succeeds.
+            fail (4) ......... the operation is failed."
+
+    ::= {s5AgentGbl 25}
+
+
+s5AgInfoStackBootpMACUsage OBJECT-TYPE
+    SYNTAX INTEGER {
+            other(1),
+            useBaseUnitMACAddress (2),
+            useStackMACAddress (3)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "This object is used to get/set which MAC address is used
+        by a stackable system when performing BOOTP requests during
+        bootup.  A value of useBaseUnitMACAddress(2) indicates that
+        the MAC address of the base unit of the stack will be used.
+        A value of useStackMACAddress(3) indicates that the MAC
+        address of the stack will be used."
+    ::= {s5AgentGbl 26}
+
+
+-- Agent's Interface Information Table
+
+
+s5AgMyIfTable OBJECT-TYPE
+	SYNTAX	SEQUENCE OF S5AgMyIfEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A table that provides additional information
+		about the agent's interfaces. The number of
+		entries in the table is determined by the
+		number of interfaces on the agent."
+	::= { s5AgentInfo 2 }
+
+
+s5AgMyIfEntry OBJECT-TYPE
+	SYNTAX	S5AgMyIfEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A row in the table of additional information
+		about the agent's interfaces. Entries can not
+		be created or deleted via SNMP requests."
+	INDEX	{ s5AgMyIfIndx }
+	::= { s5AgMyIfTable 1 }
+
+
+S5AgMyIfEntry ::= SEQUENCE {
+	s5AgMyIfIndx INTEGER,
+	s5AgMyIfNxtBootIpAddr IpAddress,
+	s5AgMyIfNxtBootNetMask IpAddress,
+	s5AgMyIfCfgFname DisplayString,
+	s5AgMyIfLdSvrAddr IpAddress,
+	s5AgMyIfImgFname DisplayString,
+	s5AgMyIfValidFlag INTEGER,
+	s5AgMyIfNxtBootIpxAddr IpxAddress,
+        s5AgMyIfBootRouterAddr IpAddress,
+        s5AgMyIfMacAddr MacAddress
+	}
+
+
+
+s5AgMyIfIndx OBJECT-TYPE
+	SYNTAX	INTEGER 
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the interface. This has the same
+		value as ifIndex for the interface."
+	::= { s5AgMyIfEntry 1 }
+
+s5AgMyIfNxtBootIpAddr OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"For the next boot, the IP address of the
+		the interface. If not used, then the
+		value is 0.0.0.0. (NOTE: the current IP
+		address for the interface is found in table
+		ipAddrTable and in table s5AgOthIfTable.)"
+	::= { s5AgMyIfEntry 2 }
+
+s5AgMyIfNxtBootNetMask OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"For the next boot, the subnet mask for
+		the interface. If not used, then the
+		value is 0.0.0.0. (NOTE: the current subnet
+		mask for the interface is found in table
+		ipAddrTable.)"
+	::= { s5AgMyIfEntry 3 }
+
+s5AgMyIfCfgFname OBJECT-TYPE
+	SYNTAX	DisplayString (SIZE (0..64))
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Name of the configuration file currently
+		associated with the interface. When not
+		used, the value is a zero length string."
+	::= { s5AgMyIfEntry 4 }
+
+s5AgMyIfLdSvrAddr OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The IP address of the load server for the
+		configuration file and/or the image file.
+		If not used, then the value is 0.0.0.0"
+	::= { s5AgMyIfEntry 5 }
+
+s5AgMyIfImgFname OBJECT-TYPE
+	SYNTAX	DisplayString (SIZE (0..128))
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Name of the image file(s) currently associated
+		with the interface. Some agents in special
+		situations may support a value which contains
+		multiple file names instead of a single file
+		name. Multiple names are specified as a list
+		of file names separated by semicolons (;).
+		When the object is not used, the value is a
+		zero length string."
+	::= { s5AgMyIfEntry 6 }
+
+s5AgMyIfValidFlag OBJECT-TYPE
+	SYNTAX	INTEGER {
+		valid(1),
+		invalid(2)
+		}
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates if the configuration and/or image
+		file(s) were downloaded from this interface and
+		if the file names have not been changed. The
+		following values can be read:
+		  valid(1).....configuration and/or image file(s)
+		                 downloaded from this interface
+		                 are currently in use
+		  invalid(2)...cfg and/or image files downloaded
+		                 from this interface are not
+		                 in use (this may also mean that
+		                 there are no files downloaded from
+		                 this interface)."
+	::= { s5AgMyIfEntry 7 }
+
+s5AgMyIfNxtBootIpxAddr OBJECT-TYPE
+	SYNTAX	IpxAddress
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"For the next boot, the IPX address of the
+		the interface.  If the IPX protocol is not used,
+		then the value is 00000000:000000000000.
+
+		NOTE: The current IPX address for the 
+		      interface is found in table s5AgOthIfTable."
+	::= { s5AgMyIfEntry 8 }
+
+
+s5AgMyIfBootRouterAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The IP address of the boot router for the
+                 configuration file and/or the image file.
+                 If not used, then the value is 0.0.0.0"
+        ::= { s5AgMyIfEntry 9 }
+
+s5AgMyIfMacAddr OBJECT-TYPE
+        SYNTAX MacAddress
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+                "The MAC address of the interface.  The value
+                 is 00:00:00:00:00:00 if there is no interface."
+        ::= { s5AgMyIfEntry 10}
+
+
+
+-- Other Agents' Interface Information Table
+
+s5AgOthIfTable OBJECT-TYPE
+	SYNTAX	SEQUENCE OF S5AgOthIfEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A table that provides information about
+		each interface for each agent in the chassis.
+		The number of entries in the table is determined
+		by the number of agents in the chassis and their
+		configuration."
+	::= { s5AgentInfo 3 }
+
+s5AgOthIfEntry OBJECT-TYPE
+	SYNTAX	S5AgOthIfEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A row in the table of information about interface
+		information for all agents in the chassis. Entries
+		can not be created or deleted via SNMP requests."
+	INDEX	{ s5AgOthIfGrpIndx,
+		  s5AgOthIfComIndx,
+		  s5AgOthIfIndx }
+	::= { s5AgOthIfTable 1 }
+
+S5AgOthIfEntry ::= SEQUENCE {
+	s5AgOthIfGrpIndx INTEGER,
+	s5AgOthIfComIndx INTEGER,
+	s5AgOthIfIndx INTEGER,
+	s5AgOthIfIpAddr IpAddress,
+	s5AgOthIfIpxAddr IpxAddress
+	}
+
+s5AgOthIfGrpIndx OBJECT-TYPE
+	SYNTAX	INTEGER (1..32767)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the group containing the component
+		containing the agent."
+	::= { s5AgOthIfEntry 1 }
+
+s5AgOthIfComIndx OBJECT-TYPE
+	SYNTAX	INTEGER (1..32767)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the component in the group
+		containing the agent."
+	::= { s5AgOthIfEntry 2 }
+
+s5AgOthIfIndx OBJECT-TYPE
+	SYNTAX	INTEGER 
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the interface. This is the same
+		value as ifIndex."
+	::= { s5AgOthIfEntry 3 }
+
+s5AgOthIfIpAddr OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The IP address of the interface. If not used,
+		then the value is 0.0.0.0."
+	::= { s5AgOthIfEntry 4 }
+
+s5AgOthIfIpxAddr OBJECT-TYPE
+	SYNTAX	IpxAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The IPX address of the interface.  If the IPX
+		protocol is not used,  then the value is
+		00000000:000000000000."
+	::= { s5AgOthIfEntry 5 }
+
+
+
+-- IP Router Aging And Default Router Selection Information
+
+s5AgIpRtrDefaultTimeToLive OBJECT-TYPE
+	SYNTAX	TimeIntervalSec (60..3600)
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The lifetime of IP router entries in seconds. 
+		The maximum length of time that a IP router 
+		is to be considered alive in the absence of 
+		further positive advice. The default lifetime 
+		is used for routers learned through IP router 
+		protocols that do not specify a lifetime (e.g. 
+		statically  configured, ICMP redirects)."
+	DEFVAL { 540 }  -- 9 minutes
+	::= { s5AgentInfo 4 }
+
+s5AgIpDefaultRtrSelectionMode OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		config(2),
+		static(3),
+		dynamic(4)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The method used to select a default IP router.
+		The following value is read-only:
+		  other(1).......not applicable or other case
+		The following values are read-write:
+		  config(2).....use configured primary default 
+				router. If no primary default router 
+				is specified, there will be no 
+				default IP route.
+		  static(3).....A default router will be chose from 
+				the routers known to be up and that 
+				have been configured.
+		  dynamic(4)....ICMP router discovery as per RFC 
+				1256 is performed and the router 
+				with the highest preference level is 
+				chosen as default router."
+	DEFVAL { dynamic }
+	::= { s5AgentInfo 5 }
+
+s5AgIpRtrDiscoverySolicitMode OBJECT-TYPE
+	SYNTAX	INTEGER {
+		multicast(1),
+		broadcast(2)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The router discovery solicitation mode to use
+		when the default router selection mode is 
+		dynamic. This solicitation mode determines 
+		the IP address for ICMP router solicitations 
+		(see RFC 1256):
+		  multicast(1)..router solicitations are sent to 
+				the all-routers multicast address 
+				(224.0.0.2)
+		  broadcast(2)..router solicitations are sent to 
+				the limited broadcast address 
+				(255.255.255.255)."
+	DEFVAL { broadcast}
+	::= { s5AgentInfo 6 }
+
+
+
+-- Agent's Data Collection Table
+
+s5AgDataCollectTable OBJECT-TYPE
+	SYNTAX	SEQUENCE OF S5AgDataCollectEntry 
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A table of control information and statistics
+		for the data collection (promiscuous data
+		capturing) per source of detection."
+	::= { s5AgentInfo 7 }
+
+s5AgDataCollectEntry OBJECT-TYPE
+	SYNTAX	S5AgDataCollectEntry 
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A row in the data collection table.
+		Entries can not be created or deleted
+		via SNMP."
+	INDEX	{ s5AgDataCollectIfIndex }
+	::= { s5AgDataCollectTable 1 }
+
+S5AgDataCollectEntry ::= SEQUENCE {
+	s5AgDataCollectIfIndex INTEGER,
+	s5AgDataCollectSnTimeStamp TimeTicks,
+	s5AgDataCollectNetworkAddrStatus INTEGER
+	}
+
+s5AgDataCollectIfIndex OBJECT-TYPE
+	SYNTAX	INTEGER (0..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"An integer value representing the source
+		that collects data from the network. A value
+		greater than zero is the index of the agent's
+		interface on the NMM. This is the same value 
+		as ifIndex for the interface. A value of zero
+		indicates data collection via best available 
+		efforts (other than NMM's interfaces)."
+	::= { s5AgDataCollectEntry 1 }
+
+s5AgDataCollectSnTimeStamp OBJECT-TYPE
+	SYNTAX	TimeTicks
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The value of sysUpTime at the last time
+		a node was added or deleted from the
+		Show Node table."
+	::= { s5AgDataCollectEntry 2 }
+
+
+s5AgDataCollectNetworkAddrStatus OBJECT-TYPE
+	SYNTAX	INTEGER {
+		alwaysOff(1),
+		on(2),
+		off(3)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"A switch to enable or disable the collecting of 
+		network layer addresses for the network address
+		mapping table (s5CmNetAddrTable ).
+		The following value is read-only:
+		  alwaysOff(1)..data source is not capable of
+				  collecting or decoding network
+				  addresses
+
+		The following values are read-write if the data
+		source is capable of collecting network addresses:
+		  on(2).........packet decoding is enabled
+		  off(3)........packet decoding is disabled
+				  or not supported."
+	DEFVAL { on } -- if packet collection is possible
+	::= { s5AgDataCollectEntry 3 }
+
+
+
+-- Authentication Trap VarBinds
+
+
+s5AgUnAuthIpAddr OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"This object contains the IP address of the last
+		station that tried to access this agent with an
+		invalid community string. This object is used as
+		a VarBind in an Authentication Trap PDU. A get
+		request will return the last value used, and will
+		return the null address 0.0.0.0 if no IP
+		authentication traps have been sent."
+	::= { s5AgentInfo 8 }
+
+s5AgUnAuthIpxAddr OBJECT-TYPE
+	SYNTAX	IpxAddress
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"This object contains the IPX address of the last
+		station that tried to access this agent with an
+		invalid community string. This object is used as
+		a VarBind in an Authentication Trap PDU. A get
+		request will return the last value used, and will
+		return the null address of all zeros if no IPX
+		authentication traps have been sent."
+	::= { s5AgentInfo 9 }
+
+s5AgUnAuthComm OBJECT-TYPE
+	SYNTAX	OCTET STRING (SIZE(0..20))
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"This object contains the community string of the
+		last unauthenticated attempt to access this agent.
+		This object is used as a VarBind in an Authentication
+		Trap PDU. A get request will return the last value used,
+		and will return the null string if no authentication
+		traps have been sent."
+	::= { s5AgentInfo 10 }
+
+s5AgTrapFilterTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF S5AgTrapFilterEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "Agent Trap filter configuration table."
+        ::= { s5AgentInfo 11 }
+ 
+s5AgTrapFilterEntry OBJECT-TYPE
+        SYNTAX   S5AgTrapFilterEntry
+        ACCESS   not-accessible
+        STATUS   mandatory
+        DESCRIPTION
+                "A list of trap filter entries that determine the
+                filtering of traps. For example, an instance of the
+                s5AgtTrapFilterStatus will be named s5AgTrapFilterStatus.8"
+        INDEX   { s5AgTrapFilterIndex }
+        ::= { s5AgTrapFilterTable  1 }
+
+S5AgTrapFilterEntry ::= SEQUENCE {
+        s5AgTrapFilterIndex          INTEGER,
+      	s5AgTrapFilterTrapOID        OBJECT IDENTIFIER,
+        s5AgTrapFilterTrapInitiator1 INTEGER,
+        s5AgTrapFilterTrapInitiator2 INTEGER,
+        s5AgTrapFilterTrapInitiator3 INTEGER,
+        s5AgTrapFilterStatus         INTEGER,
+        s5AgTrapFilterDelayTime      INTEGER,
+        s5AgTrapEntryStatus          INTEGER
+        }
+
+s5AgTrapFilterIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "An index that uniquely identifies an entry in the
+                s5AgTrapFilterTable."
+        ::= { s5AgTrapFilterEntry 1 }
+ 
+s5AgTrapFilterTrapOID OBJECT-TYPE
+        SYNTAX  OBJECT IDENTIFIER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The OID of the trap.
+
+                This variable is requried for row creation."    
+        ::= { s5AgTrapFilterEntry  2 }
+
+s5AgTrapFilterTrapInitiator1 OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "A value that determines the first condition for 
+                filtering a trap.This entry is the value of the 
+                first varbind for a particular trap in most cases.
+
+                We need to specify every initiator that represents 
+                the corresponding trap variable for each trap. 
+                If the value of this initiator is 0 (wildcard or 
+                don't care), it means that it can represent all 
+                possible values for this initiator. The trap-filter 
+                design and functional spec. provides a more detailed 
+                explanation on this subject."
+        ::= { s5AgTrapFilterEntry 3 }
+
+s5AgTrapFilterTrapInitiator2 OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "A value that determines the second condition for 
+                filtering a trap. This entry is the value of the 
+                second varbind for most traps. If the value of 
+                this initiator is 0 (wildcard or don't care), 
+                it means that it can represent all possible values 
+                for this initiator. If a trap has only one varbind, 
+	        this entry should be set to 0."
+        ::= { s5AgTrapFilterEntry 4 }
+
+s5AgTrapFilterTrapInitiator3 OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "A value that determines the third condition for 
+                filtering a trap. This entry is the value of the 
+                third varbind for most traps. If the value of this 
+                initiator is 0(wildcard or don't care), it means 
+                that it can represent all possible values for this 
+                initiator. If a trap has only one or two varbinds, 
+                this entry should be set to 0."
+        ::= { s5AgTrapFilterEntry 5 }
+ 
+s5AgTrapFilterStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+                }    
+        ACCESS  read-write
+        STATUS      mandatory
+        DESCRIPTION
+                "Indicates whether this trap is enabled or not. 
+                enabled(1) indicates that if this type of event 
+                occurs, a trap that is generated will be queued 
+                for transmit. disabled(2) indicates that if this 
+                trap if generated, it will not be queued for 
+                transmit and s5AgTrapFilterDelayTime is not valid."
+        ::= { s5AgTrapFilterEntry  6 }
+ 
+ 
+s5AgTrapFilterDelayTime OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The time delay period required to be met, between 
+                each consecutive occurences of this event. Traps 
+                recieved within this period will be dropped."
+        ::= { s5AgTrapFilterEntry  7 }
+ 
+s5AgTrapEntryStatus  OBJECT-TYPE
+        SYNTAX  INTEGER {
+                valid(1),
+                createRequest(2),
+                underCreation(3),
+                invalid(4)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "A manager is restricted to change the state of an
+                entry  base on the following table:
+              
+                                       create   under
+                To:             valid  Request  Creation  invalid
+                From:
+                valid             OK       NO        OK       OK
+                createRequest    N/A      N/A       N/A      N/A
+                underCreation     OK       NO        OK       OK
+                invalid           NO       NO        NO       OK
+                nonExistent       NO       OK        NO       OK
+              
+                In the table above, it is not applicable to change 
+                the state from createRequest to any other states.
+
+                When the status of a table entry is set to the value 
+                of invalid(4), the entry will be removed from the table. 
+                If an entry has been in the underCreation(3) state for 
+                more than 10 minutes, it will be set to invalid(4) and 
+	        subsequently removed from the table. 
+
+                This variable is requried for row creation."    
+        ::= { s5AgTrapFilterEntry 8 }
+ 
+
+-- change '_' to '-' for enum named label
+-- yyang 11/30/98
+s5AgTrapFilterGlobalStatus    OBJECT-TYPE
+        SYNTAX  INTEGER{
+                enable-all(1),
+                disable-all(2),
+                enable-all-and-use-table(3),
+                disable-all-and-use-table(4)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "This value is the status of all the traps that 
+                supported by this trap-filter system.
+
+                If the value is 1 (enable all) , all traps in the 
+                system are enabled. If the value is 2 (disable all), 
+                all traps in the system are disabled. If the value 
+                is 3 (enable-all-and-use-table) all traps are enabled 
+                except for traps that are disabled in the 
+                s5AgTrapFilterTable are disabled. If the value is 4 
+                (disable-all-and-use-table) all traps are disabled 
+                except for traps that are enabled in the 
+                s5AgTrapFilterTable are enabled."
+        ::= { s5AgentInfo 12 }
+ 
+
+
+
+-- Trap Receiver Table
+
+s5AgTrpRcvrMaxEnt OBJECT-TYPE
+	SYNTAX	INTEGER (0..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The maximum number of rows in the trap
+		receiver table."
+	::= { s5AgentMgmt 1 }
+
+s5AgTrpRcvrCurEnt OBJECT-TYPE
+	SYNTAX	INTEGER (0..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The current number of rows in the trap
+		receiver table."
+	::= { s5AgentMgmt 2 }
+
+s5AgTrpRcvrNext OBJECT-TYPE
+	SYNTAX	INTEGER (0..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the next available row to be
+		created in the trap receiver table. A value
+		of zero means that the table is full and no
+		more rows can be added."
+	::= { s5AgentMgmt 3 }
+
+s5AgTrpRcvrTable OBJECT-TYPE
+	SYNTAX	SEQUENCE OF S5AgTrpRcvrEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A table of managers which to send traps."
+	::= { s5AgentMgmt 4 }
+
+s5AgTrpRcvrEntry OBJECT-TYPE
+	SYNTAX	S5AgTrpRcvrEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A row in the trap receiver table.
+		The column s5AgTrpRcvrStatus is used to create
+		and delete rows in the table. Creation requires
+		a SET PDU with objects s5AgTrpRcvrStatus,
+		s5AgTrpRcvrAddrType, s5AgTrpRcvrNetAddr,
+		and s5AgTrpRcvrComm for the new row."
+	INDEX	{ s5AgTrpRcvrIndx }
+	::= { s5AgTrpRcvrTable 1 }
+
+S5AgTrpRcvrEntry ::= SEQUENCE {
+	s5AgTrpRcvrIndx INTEGER,
+	s5AgTrpRcvrStatus INTEGER,
+	s5AgTrpRcvrAddrType INTEGER,
+	s5AgTrpRcvrNetAddr OCTET STRING,
+	s5AgTrpRcvrComm OCTET STRING,
+	s5AgTrpRcvrAgeTime TimeIntervalSec
+	}
+
+s5AgTrpRcvrIndx OBJECT-TYPE
+	SYNTAX	INTEGER (1..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the row in the table."
+	::= { s5AgTrpRcvrEntry 1 }
+
+s5AgTrpRcvrStatus OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		valid(2),
+		ignore(3),
+		delete(4),
+		create(5)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"This object is used to create and
+		delete rows in the table and control
+		if they are used. The values
+		that can be written are:
+		  valid(2)....makes an existing row
+		                valid - can only be
+		                written to change the
+		                value from ignore(3)
+		  ignore(3)...don't use this entry to
+		                send traps to at this time
+		  delete(4)...deletes the row
+		  create(5)...creates a new row - only
+		                value that can be used to
+		                create a row in the table
+
+		If the row exists, then a SET with
+		value of create(5) returns error
+		'badValue'. Deleted rows go away
+		immediately. The following values
+		can be returned on reads:
+		  other(1)....some other case
+		  valid(2)....the row exists and is valid
+		  ignore(3)...don't use this entry to
+		                send traps to at this time"
+	::= { s5AgTrpRcvrEntry 2 }
+
+s5AgTrpRcvrAddrType OBJECT-TYPE
+	SYNTAX	INTEGER {
+		ip(1),
+		ipx(2)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The type of address that is stored in
+		the object s5AgTrpRcvrNetAddr. The
+		value is:
+		  ip(1)....IP address
+		  ipx(2)...IPX address.
+
+		Note:   When changing the value of this object
+		        with an SNMP SET request, the SET PDU
+ 		        must also specify a value for the
+		        s5AgTrpRcvrNetAddr object."
+	::= { s5AgTrpRcvrEntry 3 }
+
+s5AgTrpRcvrNetAddr OBJECT-TYPE
+	SYNTAX	OCTET STRING
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The network address (in network order) for
+		SNMP manager that is to receive the trap."
+	::= { s5AgTrpRcvrEntry 4 }
+
+s5AgTrpRcvrComm OBJECT-TYPE
+	SYNTAX	OCTET STRING (SIZE(0..32))
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Community string to use."
+	::= { s5AgTrpRcvrEntry 5 }
+
+s5AgTrpRcvrAgeTime OBJECT-TYPE
+	SYNTAX	TimeIntervalSec
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The time interval used to age entries out
+		of the trap receiver table. The default
+		value if not specified will be 0, or infinite,
+		never to be aged out."
+	DEFVAL { 0 }
+	::= { s5AgTrpRcvrEntry 6 }
+
+
+-- Last Remote Login Management 
+
+s5AgRemoteLoginMgmt OBJECT IDENTIFIER ::= { s5AgentMgmt 5 }
+
+s5AgRemoteLoginIp OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"This value indicates the last IP address remote login to this system.  "
+	::= { s5AgRemoteLoginMgmt 1 }
+
+s5AgRemoteLoginStatus OBJECT-TYPE
+	SYNTAX	INTEGER {
+               statusUnknown (1),
+               successful (2),
+               passwordFail (3),
+               loginTimeout (4),
+               loginInactivityTimeout(5),
+               telnetSessionExisted (6),
+               nonAllowedIPaddr (7),
+               localConsoleBusy (8),
+               excessiveLoginFail (9),
+               accessPermissionOff (10),
+	       loginLogout (11)
+            } 
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"This value indicates the status of remote login to this system.  "
+	::= { s5AgRemoteLoginMgmt 2 }
+
+
+-- Miscellaneous System-wide settings
+
+s5AgSysAutoPvid OBJECT-TYPE
+	SYNTAX	INTEGER {
+                     enabled (1),
+                     disabled (2)
+                  } 
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION "This value indicates whether adding a port as a member
+                   of a VLAN automatically results in its PVID being set
+                   to be the same as that VLAN ID. Some exceptions apply."
+	::= { s5AgentSystem 1 }
+
+s5AgSysCurrentOperationalMode OBJECT-TYPE
+      SYNTAX      INTEGER {
+                     pure(1),
+                     hybrid(2)
+                  }
+      ACCESS      read-only
+      STATUS      mandatory
+      DESCRIPTION "Indicates the stacking mode.  Pure stack mode does not
+                   allow BS450 and BS410 units to join stack and provides
+                   some advanced features that are not available in Hybrid
+                   stack mode."
+      ::= { s5AgentSystem 2 }
+
+s5AgSysNextBootOperationalMode OBJECT-TYPE
+      SYNTAX      INTEGER {
+                     pure(1),
+                     hybrid(2)
+                  }
+      ACCESS      read-write
+      STATUS      mandatory
+      DESCRIPTION "Indicates the stacking mode at the next boot.  A change
+                   to this object will modify the stacking mode after the
+                   system is reset/rebooted."
+      ::= { s5AgentSystem 3 }
+
+s5AgSysBinaryConfigFilename OBJECT-TYPE
+	SYNTAX	DisplayString (SIZE (0..128))
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Name of the binary configuration file that will be
+             downloaded/uploaded when the s5AgInfoFileAction object is
+             set to dnldConfig(2) or upldConfig(4).  When not used,
+             the value is a zero length string."
+	::= { s5AgentSystem 4 }
+
+s5AgSysTftpServerAddress OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The IP address of the TFTP server for all TFTP operations.
+             If not used, then the value is 0.0.0.0"
+	::= { s5AgentSystem 5 }
+
+s5AgSysAsciiConfigFilename OBJECT-TYPE
+	SYNTAX	DisplayString (SIZE (0..128))
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Name of the ascii configuration file that will be
+             downloaded/uploaded either at boot time when the
+             s5AgSysAsciiConfigAutoDownload object is set to
+             useConfig(3), or when the s5AgSysAsciiConfigDownloadStatus
+             object is set to startDownload(4).  When not used, the
+             value is a zero length string."
+	::= { s5AgentSystem 6 }
+
+s5AgSysAsciiConfigAutoDownload OBJECT-TYPE
+	SYNTAX	INTEGER {
+                      disabled(1),
+                      useBootp(2),
+                      useConfig(3)
+                  }
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates whether an ASCII configuration file should be
+             downloaded at boot time.  The file can be downloaded
+             using either the configured filename and TFTP server
+             address, or a BOOTP server can be used to determine the
+             filename and TFTP server address."
+	::= { s5AgentSystem 7 }
+
+s5AgSysAsciiConfigAutoDldStatus OBJECT-TYPE
+	SYNTAX	INTEGER {
+                      passed(1),
+                      inProgress(2),
+                      failed(3)
+                  }
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates the status of the last automatic ASCII
+             configuration file download at boot time.  If no
+             automatic download at boot time has been attempted,
+             the value returned will be failed(3)."
+	::= { s5AgentSystem 8 }
+
+s5AgSysAsciiConfigManualDownload OBJECT-TYPE
+	SYNTAX	INTEGER {
+                      passed(1),
+                      inProgress(2),
+                      failed(3),
+                      downloadNow(4)
+                  }
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates the status of the last manual attempt to
+             download an ASCII configuration file.  The value of
+             this object when retrieved can be either passed(1),
+             inProgress(2) or failed(3).  Setting this object to
+             downloadNow(4) will initiate a manual ASCII
+             configuration file download.  If no attempt has been
+             made to manually download a configuration file, the
+             value returned will be failed(3)."
+	::= { s5AgentSystem 9 }
+
+s5AgSysCpuIpAddress OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The system's CPU IP address.  Note that for a stackable
+             system in standalone mode, this will be the standalone
+             IP address, but in stack mode, this will be the stack IP
+             address.  I.e., this is always the IP address at which
+             the system is reachable.  Setting this object will modify
+             the corresponding IP address."
+	::= { s5AgentSystem 10 }
+
+s5AgSysStackIpAddress OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The stack IP address of a stackable system.  A non-stackable
+             system should never return an instance of this object, nor allow
+             writes to this object.  Note that in standalone mode, this will
+             still be the stack IP address, even though it is not in use.
+             When in stack mode, the IP address of individual units can be
+             found in the s5ChasComTable in the s5Chassis MIB (and note that
+             these addresses will not be in use when in stack mode)."
+	::= { s5AgentSystem 11 }
+
+s5AgSysCpuNetMask OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The system's CPU subnet mask."
+	::= { s5AgentSystem 12 }
+
+s5AgSysManagementVlanId OBJECT-TYPE
+	SYNTAX	INTEGER (1..4094)
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The VLAN ID of the system's management VLAN."
+	::= { s5AgentSystem 13 }
+
+END

@@ -1,6 +1,8 @@
 * text=auto !eol
 contrib/backgrounds/.keep -text
 contrib/logo.jpg -text
+contrib/mibs/BAY-STACK-MIB.txt -text
+contrib/mibs/S5-AGENT-MIB.txt -text
 contrib/startup/debian/Makefile.am -text
 contrib/startup/debian/netxmsd.in -text
 contrib/startup/debian/nxagentd.in -text
