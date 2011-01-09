@@ -632,6 +632,10 @@ public final class NXCPCodes
 	public static final long VID_INTERFACE_ID            = 362;
 	public static final long VID_LOCAL_INTERFACE_ID      = 363;
 	public static final long VID_LOCAL_NODE_ID           = 364;
+	public static final long VID_SYS_NAME                = 365;
+	public static final long VID_LLDP_NODE_ID            = 366;
+	public static final long VID_IF_SLOT                 = 367;
+	public static final long VID_IF_PORT                 = 368;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

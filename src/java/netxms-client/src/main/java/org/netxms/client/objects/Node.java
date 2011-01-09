@@ -87,7 +87,9 @@ public class Node extends GenericObject
 	private String snmpOID;
 	private int snmpVersion;
 	private int snmpPort;
+	private String snmpSysName;
 	private String systemDescription;
+	private String lldpNodeId;
 	
 	/**
 	 * @param msg
@@ -118,6 +120,8 @@ public class Node extends GenericObject
 		snmpPort = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_PORT);
 		snmpVersion = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_VERSION);
 		systemDescription = msg.getVariableAsString(NXCPCodes.VID_SYS_DESCRIPTION);
+		snmpSysName = msg.getVariableAsString(NXCPCodes.VID_SYS_NAME);
+		lldpNodeId = msg.getVariableAsString(NXCPCodes.VID_LLDP_NODE_ID);
 	}
 
 	/**
@@ -332,5 +336,21 @@ public class Node extends GenericObject
 	public int getSnmpPort()
 	{
 		return snmpPort;
+	}
+
+	/**
+	 * @return the snmpSysName
+	 */
+	public String getSnmpSysName()
+	{
+		return snmpSysName;
+	}
+
+	/**
+	 * @return the lldpNodeId
+	 */
+	public String getLldpNodeId()
+	{
+		return lldpNodeId;
 	}
 }

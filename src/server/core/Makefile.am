@@ -14,7 +14,7 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			interface.cpp isc.cpp job.cpp jobmgr.cpp jobqueue.cpp \
 			layer2.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
 			loghandle.cpp logs.cpp main.cpp map.cpp modules.cpp \
-			netinfo.cpp netobj.cpp netsrv.cpp node.cpp \
+			ndp.cpp netinfo.cpp netobj.cpp netsrv.cpp node.cpp \
 			nortel.cpp np.cpp nxsl_classes.cpp nxslext.cpp \
 			objects.cpp objtools.cpp package.cpp poll.cpp \
 			radius.cpp rootobj.cpp script.cpp session.cpp \

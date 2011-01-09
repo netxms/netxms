@@ -32,6 +32,8 @@ public class Interface extends GenericObject
 	private InetAddress subnetMask;
 	private int ifIndex;
 	private int ifType;
+	private int slot;
+	private int port;
 	private MacAddress macAddress;
 	private int requiredPollCount;
 	
@@ -45,6 +47,8 @@ public class Interface extends GenericObject
 		subnetMask = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 		ifIndex = msg.getVariableAsInteger(NXCPCodes.VID_IF_INDEX);
 		ifType = msg.getVariableAsInteger(NXCPCodes.VID_IF_TYPE);
+		slot = msg.getVariableAsInteger(NXCPCodes.VID_IF_SLOT);
+		port = msg.getVariableAsInteger(NXCPCodes.VID_IF_PORT);
 		macAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
 		requiredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
 	}
@@ -96,5 +100,21 @@ public class Interface extends GenericObject
 	public String getObjectClassName()
 	{
 		return "Interface";
+	}
+
+	/**
+	 * @return the slot
+	 */
+	public int getSlot()
+	{
+		return slot;
+	}
+
+	/**
+	 * @return the port
+	 */
+	public int getPort()
+	{
+		return port;
 	}
 }
