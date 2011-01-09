@@ -562,6 +562,35 @@ Interface *Node::findInterface(const TCHAR *name)
 
 
 //
+// Find interface by slot/port pair
+// Returns pointer to interface object or NULL if appropriate interface couldn't be found
+//
+
+Interface *Node::findInterfaceBySlotAndPort(DWORD slot, DWORD port)
+{
+   DWORD i;
+   Interface *pInterface;
+
+	if ((slot == 0) || (port == 0))
+		return NULL;
+
+   LockChildList(FALSE);
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      {
+         pInterface = (Interface *)m_pChildList[i];
+			if ((pInterface->getSlotNumber() == slot) && (pInterface->getPortNumber() == port))
+         {
+            UnlockChildList();
+            return pInterface;
+         }
+      }
+   UnlockChildList();
+   return NULL;
+}
+
+
+//
 // Find interface by MAC address
 // Returns pointer to interface object or NULL if appropriate interface couldn't be found
 //

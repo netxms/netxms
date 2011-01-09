@@ -518,6 +518,8 @@ public:
    DWORD getIfIndex() { return m_dwIfIndex; }
    DWORD getIfType() { return m_dwIfType; }
 	DWORD getBridgePortNumber() { return m_bridgePortNumber; }
+	DWORD getSlotNumber() { return m_slotNumber; }
+	DWORD getPortNumber() { return m_portNumber; }
    const BYTE *getMacAddr() { return m_bMacAddr; }
 	bool isSyntheticMask() { return m_bSyntheticMask; }
    bool isFake() { return (m_dwIfIndex == 1) && 
@@ -749,6 +751,7 @@ public:
    Interface *findInterface(const TCHAR *name);
 	Interface *findInterfaceByMAC(const BYTE *macAddr);
 	Interface *findInterfaceByIP(DWORD ipAddr);
+	Interface *findInterfaceBySlotAndPort(DWORD slot, DWORD port);
 	Interface *findBridgePort(DWORD bridgePortNumber);
 	BOOL isMyIP(DWORD dwIpAddr);
    int getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex);

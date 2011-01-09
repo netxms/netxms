@@ -520,11 +520,36 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          {
             // Handle special cases
 				if (node->getNodeType() == NODE_TYPE_NORTEL_ACCELAR)
-               GetAccelarVLANIfList(dwVersion, pTransport, pIfList);
+				{
+					// Calculate slot/port pair from ifIndex
+					for(i = 0; i < pIfList->iNumEntries; i++)
+					{
+						DWORD slot = pIfList->pInterfaces[i].dwIndex / 64;
+						if ((slot > 0) && (slot <= 10))
+						{
+							pIfList->pInterfaces[i].dwSlotNumber = slot;
+							pIfList->pInterfaces[i].dwPortNumber = pIfList->pInterfaces[i].dwIndex % 64 + 1;
+						}
+					}
 
-				// Nortel hack - move to driver
+               GetAccelarVLANIfList(dwVersion, pTransport, pIfList);
+				}
+
+				// Nortel BayStack hack - move to driver
 				if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3"), 17))
 				{
+					// Calculate slot/port pair from ifIndex
+					for(i = 0; i < pIfList->iNumEntries; i++)
+					{
+						/* TODO: is index factor 64 for all models? */
+						DWORD slot = pIfList->pInterfaces[i].dwIndex / 64 + 1;
+						if ((slot > 0) && (slot <= 8))
+						{
+							pIfList->pInterfaces[i].dwSlotNumber = slot;
+							pIfList->pInterfaces[i].dwPortNumber = pIfList->pInterfaces[i].dwIndex % 64;
+						}
+					}
+
 					DWORD mgmtIpAddr, mgmtNetMask;
 
 					if ((SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS) &&

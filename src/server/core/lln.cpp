@@ -87,33 +87,33 @@ void LinkLayerNeighbors::addConnection(LL_NEIGHBOR_INFO *info)
 // Topology table walker's callback for NDP topology table
 //
 
-static DWORD NDPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static DWORD NDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-   SNMP_ObjectId *pOid;
-   TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4], szIfName[MAX_CONNECTOR_NAME];
-   SNMP_PDU *pRqPDU, *pRespPDU;
-	DWORD dwResult;
+	DWORD remoteIp;
+	var->getRawValue((BYTE *)&remoteIp, sizeof(DWORD));
+	remoteIp = ntohl(remoteIp);
+	Node *remoteNode = FindNodeByIP(remoteIp);
+	if (remoteNode == NULL)
+		return SNMP_ERR_SUCCESS;
 
-   pOid = pVar->GetName();
-   SNMPConvertOIDToText(pOid->Length() - 14, (DWORD *)&(pOid->GetValue())[14], szSuffix, MAX_OID_LEN * 4);
+	SNMP_ObjectId *oid = var->GetName();
 
-	// Get interface
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
-   _tcscpy(szOid, _T(".1.3.6.1.4.1.45.1.6.13.2.1.1.1"));	// Slot
-   _tcscat(szOid, szSuffix);
-	pRqPDU->bindVariable(new SNMP_Variable(szOid));
-   _tcscpy(szOid, _T(".1.3.6.1.4.1.45.1.6.13.2.1.1.2"));	// Port
-   _tcscat(szOid, szSuffix);
-	pRqPDU->bindVariable(new SNMP_Variable(szOid));
-   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
-   delete pRqPDU;
+	// Entries indexed by slot, port, IP address, and segment ID
+	DWORD slot = oid->GetValue()[14];
+	DWORD port = oid->GetValue()[15];
 
-   if (dwResult == SNMP_ERR_SUCCESS)
-   {
-      delete pRespPDU;
+	// Table always contains record with slot=0 and port=0 which
+	// represents local chassis. We should ignore this record.
+	if ((slot != 0) && (port != 0))
+	{
+		Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
+		Interface *ifLocal = node->findInterfaceBySlotAndPort(slot, port);
+		if (ifLocal != NULL)
+		{
+		}
 	}
 
-	return dwResult;
+	return SNMP_ERR_SUCCESS;
 }
 
 
@@ -193,6 +193,7 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 	}
 	if (node->getFlags() & NF_IS_NDP)
 	{
+		nbs->setData(node);
 		node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
 	}
 
