@@ -45,8 +45,6 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
 				topology.LinkObjectsEx(root->Id(), node->Id(),
 					(ifLocal != NULL) ? ifLocal->Name() : _T("N/A"),
 					(ifRemote != NULL) ? ifRemote->Name() : _T("N/A"));
-_tprintf(_T(">>>> LINK: %s/%s(%d) -> %s/%s(%d)\n"), root->Name(), (ifLocal != NULL) ? ifLocal->Name() : _T("N/A"), info->ifLocal,
-node->Name(), (ifRemote != NULL) ? ifRemote->Name() : _T("N/A"), info->ifRemote);
 			}
 		}
 	}

@@ -723,7 +723,8 @@ BOOL Node::isMyIP(DWORD dwIpAddr)
 //
 
 void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name, 
-                              DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr, DWORD bridgePort)
+                              DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr, DWORD bridgePort, 
+										DWORD slot, DWORD port)
 {
    Interface *pInterface;
    Subnet *pSubnet = NULL;
@@ -793,6 +794,8 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
    if (pbMacAddr != NULL)
       pInterface->setMacAddr(pbMacAddr);
 	pInterface->setBridgePortNumber(bridgePort);
+	pInterface->setSlotNumber(slot);
+	pInterface->setPortNumber(port);
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, TRUE);
@@ -1794,6 +1797,14 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 						{
 							pInterface->setBridgePortNumber(pIfList->pInterfaces[j].dwBridgePortNumber);
 						}
+						if (pIfList->pInterfaces[j].dwSlotNumber != pInterface->getSlotNumber())
+						{
+							pInterface->setSlotNumber(pIfList->pInterfaces[j].dwSlotNumber);
+						}
+						if (pIfList->pInterfaces[j].dwPortNumber != pInterface->getPortNumber())
+						{
+							pInterface->setPortNumber(pIfList->pInterfaces[j].dwPortNumber);
+						}
                   bNewInterface = FALSE;
                   break;
                }
@@ -1812,7 +1823,9 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
                                pIfList->pInterfaces[j].dwIndex,
                                pIfList->pInterfaces[j].dwType,
                                pIfList->pInterfaces[j].bMacAddr,
-										 pIfList->pInterfaces[j].dwBridgePortNumber);
+										 pIfList->pInterfaces[j].dwBridgePortNumber,
+										 pIfList->pInterfaces[j].dwSlotNumber,
+										 pIfList->pInterfaces[j].dwPortNumber);
             hasChanges = TRUE;
          }
       }

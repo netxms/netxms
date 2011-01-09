@@ -233,6 +233,11 @@ void CObjectOverview::Refresh()
 										_T("Unknown") : g_szInterfaceTypes[m_pObject->iface.dwIfType]);
 				BinToStr(m_pObject->iface.bMacAddr, MAC_ADDR_LENGTH, szTemp);
 				InsertItem(_T("MAC Address"), szTemp);
+				if ((m_pObject->iface.dwSlot != 0) && (m_pObject->iface.dwPort != 0))
+				{
+					_sntprintf(szTemp, 256, _T("%d.%d"), m_pObject->iface.dwSlot, m_pObject->iface.dwPort);
+					InsertItem(_T("Slot/Port"), szTemp);
+				}
 				break;
 			default:
 				break;

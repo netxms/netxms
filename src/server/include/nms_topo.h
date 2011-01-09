@@ -157,6 +157,7 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr);
 
 LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node);
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
+void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, INTERFACE_LIST *ifList);
 

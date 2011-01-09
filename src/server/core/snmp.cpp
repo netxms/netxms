@@ -564,6 +564,18 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 						pIfList->pInterfaces[index].dwType = IFTYPE_OTHER;
 						_tcscpy(pIfList->pInterfaces[index].szName, _T("mgmt"));
 						SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
+
+						// Update wrongly reported MAC addresses
+						for(i = 0; i < pIfList->iNumEntries; i++)
+						{
+							if ((pIfList->pInterfaces[i].dwSlotNumber != 0) &&
+								 (!memcmp(pIfList->pInterfaces[i].bMacAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
+							     !memcmp(pIfList->pInterfaces[i].bMacAddr, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH)))
+							{
+								memcpy(pIfList->pInterfaces[i].bMacAddr, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH);
+								pIfList->pInterfaces[i].bMacAddr[5] += (BYTE)pIfList->pInterfaces[i].dwPortNumber;
+							}
+						}
 					}
 				}
 

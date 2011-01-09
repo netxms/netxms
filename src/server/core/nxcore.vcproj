@@ -581,6 +581,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ndp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\netinfo.cpp"
 				>
 			</File>

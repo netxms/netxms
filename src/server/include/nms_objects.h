@@ -533,6 +533,8 @@ public:
    void setMacAddr(const BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
    void setIpAddr(DWORD dwNewAddr);
    void setBridgePortNumber(DWORD bpn) { m_bridgePortNumber = bpn; Modify(); }
+   void setSlotNumber(DWORD slot) { m_slotNumber = slot; Modify(); }
+   void setPortNumber(DWORD port) { m_portNumber = port; Modify(); }
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue,
 	                BOOL bClusterSync, SNMP_Transport *pTransport);
@@ -740,7 +742,8 @@ public:
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    void createNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, 
-                           DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL, DWORD bridgePort = 0);
+                           DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL, DWORD bridgePort = 0,
+									DWORD slot = 0, DWORD port = 0);
    void deleteInterface(Interface *pInterface);
 
    void changeIPAddress(DWORD dwIpAddr);

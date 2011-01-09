@@ -241,7 +241,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 // Delete interface object from database
 //
 
-BOOL Interface::DeleteFromDB(void)
+BOOL Interface::DeleteFromDB()
 {
    TCHAR szQuery[128];
    BOOL bSuccess;
@@ -409,6 +409,8 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_IF_INDEX, m_dwIfIndex);
    pMsg->SetVariable(VID_IF_TYPE, m_dwIfType);
+   pMsg->SetVariable(VID_IF_SLOT, m_slotNumber);
+   pMsg->SetVariable(VID_IF_PORT, m_portNumber);
    pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
    pMsg->SetVariable(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
 	pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));

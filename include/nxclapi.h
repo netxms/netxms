@@ -1045,6 +1045,8 @@ struct __nxc_object_iface
    DWORD dwIpNetMask;   // Ip netmask.
    DWORD dwIfIndex;     // Interface index.
    DWORD dwIfType;      // Interface type
+	DWORD dwSlot;			// Slot number
+	DWORD dwPort;			// Port number
    BYTE bMacAddr[MAC_ADDR_LENGTH];
 	WORD wRequiredPollCount;
 };

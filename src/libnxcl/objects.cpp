@@ -278,6 +278,8 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->iface.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
          pObject->iface.dwIfIndex = pMsg->GetVariableLong(VID_IF_INDEX);
          pObject->iface.dwIfType = pMsg->GetVariableLong(VID_IF_TYPE);
+         pObject->iface.dwSlot = pMsg->GetVariableLong(VID_IF_SLOT);
+         pObject->iface.dwPort = pMsg->GetVariableLong(VID_IF_PORT);
          pMsg->GetVariableBinary(VID_MAC_ADDR, pObject->iface.bMacAddr, MAC_ADDR_LENGTH);
 			pObject->iface.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
          break;

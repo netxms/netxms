@@ -283,7 +283,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
 			targetEndpointLocator.setVDistance(0);
-			Label label = new ConnectorLabel(link.getConnectorName1());
+			Label label = new ConnectorLabel(link.getConnectorName2());
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
