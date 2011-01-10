@@ -494,7 +494,7 @@ static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
 
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), node->Name(), node->Id());
       SetPollerState((long)arg, szBuffer);
-		node->topologyPoll((int)arg);
+		node->topologyPoll(CAST_FROM_POINTER(arg, int));
       node->DecRefCount();
    }
    SetPollerState((long)arg, _T("finished"));
