@@ -43,8 +43,8 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth)
 				Interface *ifLocal = root->findInterface(info->ifLocal, INADDR_ANY);
 				Interface *ifRemote = node->findInterface(info->ifRemote, INADDR_ANY);
 				topology.LinkObjectsEx(root->Id(), node->Id(),
-					(TCHAR *)((ifLocal != NULL) ? ifLocal->Name() : _T("N/A")),
-					(TCHAR *)((ifRemote != NULL) ? ifRemote->Name() : _T("N/A")));
+					(ifLocal != NULL) ? ifLocal->Name() : _T("N/A"),
+					(ifRemote != NULL) ? ifRemote->Name() : _T("N/A"));
 			}
 		}
 	}

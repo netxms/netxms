@@ -146,7 +146,7 @@ public:
 
    void AddObject(DWORD dwId);
    void LinkObjects(DWORD dwId1, DWORD dwId2);
-   void LinkObjectsEx(DWORD dwId1, DWORD dwId2, TCHAR *pszPort1, TCHAR *pszPort2);
+   void LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2);
    void Clear(void);
 
    DWORD GetNumObjects(void) { return m_dwNumObjects; }

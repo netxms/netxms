@@ -155,7 +155,7 @@ void nxmap_ObjList::LinkObjects(DWORD dwId1, DWORD dwId2)
 // Link two objects with named links
 //
 
-void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, TCHAR *pszPort1, TCHAR *pszPort2)
+void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, const TCHAR *pszPort1, const TCHAR *pszPort2)
 {
    DWORD i;
    int nCount;

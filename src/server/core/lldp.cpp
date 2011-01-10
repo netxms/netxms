@@ -45,14 +45,15 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 			}
 			return NULL;
 		case 5:	// Interface name
-		{
 #ifdef UNICODE
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)id, idLen, ifName, 128);
 			ifName[min(idLen, 127)] = 0;
 #else
-			int len = min(idLen, 127);
-			memcpy(ifName, id, len);
-			ifName[len] = 0;
+			{
+				int len = min(idLen, 127);
+				memcpy(ifName, id, len);
+				ifName[len] = 0;
+			}
 #endif
 			ifc = node->findInterface(ifName);	/* TODO: find by cached ifName value */
 			if ((ifc == NULL) && !_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19))
@@ -65,7 +66,6 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 				ifc = node->findInterface(ifName);
 			}
 			return ifc;
-		}
 		default:
 			return NULL;
 	}
