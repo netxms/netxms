@@ -29,6 +29,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -36,6 +37,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.commands.ActionHandler;
@@ -56,7 +58,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  * Script editor view
  *
  */
-public class ScriptEditorView extends ViewPart
+public class ScriptEditorView extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView";
 	
@@ -139,6 +141,7 @@ public class ScriptEditorView extends ViewPart
 	/**
 	 * Create actions
 	 */
+	@SuppressWarnings("deprecation")
 	private void createActions()
 	{
 		try
@@ -266,19 +269,31 @@ public class ScriptEditorView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				scriptLibraryManager.modifyScript(scriptId, scriptName, source);
-				new UIJob("Update script editor") {
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						editor.setModified(false);
-						editor.getTextWidget().setEditable(true);
-						actionSave.setEnabled(false);
-						return Status.OK_STATUS;
-					}
-				}.schedule();
+				doScriptSave(source, monitor);
 			}
 		}.start();
+	}
+	
+	/**
+	 * Do actual script save
+	 * 
+	 * @param source
+	 * @param monitor
+	 * @throws Exception
+	 */
+	private void doScriptSave(String source, IProgressMonitor monitor) throws Exception
+	{
+		scriptLibraryManager.modifyScript(scriptId, scriptName, source);
+		new UIJob("Update script editor") {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor)
+			{
+				editor.setModified(false);
+				editor.getTextWidget().setEditable(true);
+				actionSave.setEnabled(false);
+				return Status.OK_STATUS;
+			}
+		}.schedule();
 	}
 
 	/* (non-Javadoc)
@@ -298,5 +313,58 @@ public class ScriptEditorView extends ViewPart
 			return editor.getFindReplaceTarget();
 		}
 		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+	 */
+	@Override
+	public void doSave(IProgressMonitor monitor)
+	{
+		final String source = editor.getText();
+		editor.getTextWidget().setEditable(false);
+		try
+		{
+			doScriptSave(source, monitor);
+		}
+		catch(Exception e)
+		{
+			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save script: " + e.getMessage());
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+	 */
+	@Override
+	public void doSaveAs()
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isDirty()
+	 */
+	@Override
+	public boolean isDirty()
+	{
+		return editor.isModified();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+	 */
+	@Override
+	public boolean isSaveAsAllowed()
+	{
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+	 */
+	@Override
+	public boolean isSaveOnCloseNeeded()
+	{
+		return editor.isModified();
 	}
 }
