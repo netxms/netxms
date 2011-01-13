@@ -458,6 +458,11 @@ typedef struct
 #define CMD_GET_USM_CREDENTIALS     0x00EC
 #define CMD_UPDATE_USM_CREDENTIALS  0x00ED
 #define CMD_GET_DCI_THRESHOLDS      0x00EE
+#define CMD_GET_IMAGE               0x00EF
+#define CMD_CREATE_IMAGE            0x00F0
+#define CMD_DELETE_IMAGE            0x00F1
+#define CMD_MODIFY_IMAGE            0x00F2
+#define CMD_LIST_IMAGES             0x00F3
 
 
 //
@@ -832,6 +837,9 @@ typedef struct
 #define VID_LLDP_NODE_ID            ((DWORD)366)
 #define VID_IF_SLOT                 ((DWORD)367)
 #define VID_IF_PORT                 ((DWORD)368)
+#define VID_IMAGE_DATA              ((DWORD)369)
+#define VID_IMAGE_PROTECTED         ((DWORD)370)
+#define VID_NUM_IMAGES              ((DWORD)371)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)
@@ -980,6 +988,8 @@ typedef struct
 #define VID_ORDERING_COLUMNS_BASE   ((DWORD)0x40000000)
 
 #define VID_USM_CRED_LIST_BASE      ((DWORD)0x10000000)
+
+#define VID_IMAGE_LIST_BASE         ((DWORD)0x10000000)
 
 
 //

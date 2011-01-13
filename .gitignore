@@ -1,6 +1,7 @@
 /*.suo
 /Makefile
 /Makefile.in
+/README
 /aclocal.m4
 /autom4te.cache
 /bin
@@ -14,6 +15,7 @@
 contrib/mibs/netxms.mib
 /lib
 /libtool
+/m4
 netware/bin/*
 /private
 sql/dbinit_mssql.sql

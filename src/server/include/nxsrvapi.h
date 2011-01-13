@@ -64,6 +64,7 @@
 # define DDIR_SHARED_FILES     _T("\\shared")
 # define DFILE_KEYS            _T("\\server_key")
 # define DFILE_COMPILED_MIB    _T("\\mibs\\netxms.mib")
+# define DDIR_IMAGES           _T("\\images")
 
 #else    /* _WIN32 */
 
@@ -85,6 +86,7 @@
 # define DDIR_SHARED_FILES     _T("/shared")
 # define DFILE_KEYS            _T("/.server_key")
 # define DFILE_COMPILED_MIB    _T("/mibs/netxms.mib")
+# define DDIR_IMAGES           _T("/images")
 
 #endif   /* _WIN32 */
 

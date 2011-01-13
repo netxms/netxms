@@ -554,6 +554,10 @@ private:
 	void addClusterNode(CSCPMessage *request);
 	void findNodeConnection(CSCPMessage *request);
 	void findMacAddress(CSCPMessage *request);
+	void sendLibraryImage(CSCPMessage *request);
+	void updateLibraryImage(CSCPMessage *request);
+	void listLibraryImages(CSCPMessage *request);
+	void deleteLibraryImage(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

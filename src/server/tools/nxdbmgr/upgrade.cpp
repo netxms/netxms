@@ -249,6 +249,24 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V218 to V219
+//
+
+static BOOL H_UpgradeFromV218(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE images (")
+				_T("   image_name varchar(255) not null,")
+				_T("   category varchar(255) not null,")
+				_T("   protected integer default 0,")
+				_T("   ")
+				_T("   PRIMARY KEY(image_name))")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='219' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V217 to V218
 //
 
@@ -4988,6 +5006,7 @@ static struct
 	{ 215, 216, H_UpgradeFromV215 },
 	{ 216, 217, H_UpgradeFromV216 },
 	{ 217, 218, H_UpgradeFromV217 },
+	{ 218, 219, H_UpgradeFromV218 },
    { 0, NULL }
 };
 

@@ -1200,6 +1200,21 @@ void ClientSession::ProcessingThread()
 			case CMD_FIND_MAC_LOCATION:
 				CALL_IN_NEW_THREAD(findMacAddress, pMsg);
 				break;
+			case CMD_GET_IMAGE:
+				sendLibraryImage(pMsg);
+				break;
+			case CMD_CREATE_IMAGE:
+				updateLibraryImage(pMsg);
+				break;
+			case CMD_DELETE_IMAGE:
+				deleteLibraryImage(pMsg);
+				break;
+			case CMD_MODIFY_IMAGE:
+				updateLibraryImage(pMsg);
+				break;
+			case CMD_LIST_IMAGES:
+				listLibraryImages(pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -10548,5 +10563,278 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 		DebugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
 	}
 	
+	sendMessage(&msg);
+}
+
+
+//
+// Send image from library to client
+//
+
+void ClientSession::sendLibraryImage(CSCPMessage *request)
+{
+	CSCPMessage msg;
+	DWORD rcc = RCC_SUCCESS;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	TCHAR name[MAX_DB_STRING];
+	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
+	DebugPrintf(5, _T("sendLibraryImage: name=%s"), name);
+
+	int nameLen = _tcslen(name);
+	for (int i = 0; i < nameLen; i++)
+	{
+		if (!_istalpha(name[i]) && !_istdigit(name[i]) && name[i] != _T('.') && name[i] != _T('_'))
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+			sendMessage(&msg);
+			return;
+		}
+	}
+
+	TCHAR query[MAX_DB_STRING];
+	_sntprintf(query, MAX_DB_STRING, _T("SELECT image_name,category,protected FROM images WHERE image_name = '%s'"), EncodeSQLString(name));
+	DB_RESULT result = DBSelect(g_hCoreDB, query);
+	if (result != NULL)
+	{
+		int count = DBGetNumRows(result);
+		if (count > 0)
+		{
+			TCHAR buffer[MAX_DB_STRING];
+			TCHAR name[MAX_DB_STRING];
+			DBGetField(result, 0, 0, name, MAX_DB_STRING);	// image name
+			msg.SetVariable(VID_NAME, name);
+			DBGetField(result, 0, 1, buffer, MAX_DB_STRING);	// category
+			msg.SetVariable(VID_CATEGORY, buffer);
+
+			msg.SetVariable(VID_IMAGE_PROTECTED, (DWORD)DBGetFieldLong(result, 0, 3));
+
+			TCHAR absFileName[MAX_PATH];
+			_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, name);
+
+			FILE *f = _tfopen(absFileName, _T("rb"));
+			if (f != NULL)
+			{
+				struct stat st;
+				if (_tstat(absFileName, &st) == 0 && S_ISREG(st.st_mode))
+				{
+					BYTE *rawData = (BYTE *)malloc(st.st_size);
+					// TODO: check for null
+					fread(rawData, st.st_size, 1, f);
+					msg.SetVariable(VID_IMAGE_DATA, rawData, st.st_size);
+					free(rawData);
+				}
+				else
+				{
+					rcc = RCC_IO_ERROR;
+				}
+				fclose(f);
+			}
+			else
+			{
+				rcc = RCC_IO_ERROR;
+			}
+		}
+		else
+		{
+			rcc = RCC_INVALID_OBJECT_ID;
+		}
+
+		DBFreeResult(result);
+	}
+	else
+	{
+		rcc = RCC_DB_FAILURE;
+	}
+
+	msg.SetVariable(VID_RCC, rcc);
+	sendMessage(&msg);
+}
+
+
+//
+// Update library image from client
+//
+
+void ClientSession::updateLibraryImage(CSCPMessage *request)
+{
+	CSCPMessage msg;
+	DWORD rcc = RCC_SUCCESS;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	TCHAR name[MAX_DB_STRING];
+	TCHAR category[MAX_DB_STRING];
+	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
+	request->GetVariableStr(VID_CATEGORY, category, MAX_DB_STRING);
+	DWORD imageSize = request->GetVariableBinary(VID_IMAGE_DATA, NULL, 0);
+	BYTE *imageData = (BYTE *)malloc(imageSize);
+	request->GetVariableBinary(VID_IMAGE_DATA, imageData, imageSize);
+
+	DebugPrintf(5, _T("updateLibraryImage: name=%s, category=%s, imageSize=%d"), name, category, (int)imageSize);
+
+	int nameLen = _tcslen(name);
+	for (int i = 0; i < nameLen; i++)
+	{
+		if (!_istalpha(name[i]) && !_istdigit(name[i]) && name[i] != _T('.') && name[i] != _T('_'))
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+			sendMessage(&msg);
+			return;
+		}
+	}
+
+	TCHAR query[MAX_DB_STRING];
+	_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE image_name = '%s'"), EncodeSQLString(name));
+	DB_RESULT result = DBSelect(g_hCoreDB, query);
+	if (result != NULL)
+	{
+		int count = DBGetNumRows(result);
+		TCHAR query[MAX_DB_STRING] = {0};
+		if (count > 0)
+		{
+			BOOL isProtected = DBGetFieldLong(result, 0, 0) != 0; // protected
+
+			if (!isProtected)
+			{
+				_sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET category = '%s' WHERE image_name = '%s'"),
+					EncodeSQLString(category),
+					EncodeSQLString(name));
+			}
+			else
+			{
+				rcc = RCC_INVALID_REQUEST;
+			}
+		}
+		else
+		{
+			// not found in DB, create
+			_sntprintf(query, MAX_DB_STRING, _T("INSERT INTO images (image_name, category, protected) VALUES ('%s', '%s', 0)"),
+					EncodeSQLString(name),
+					EncodeSQLString(category));
+		}
+
+		if (query[0] != 0 && DBQuery(g_hCoreDB, query))
+		{
+			// DB up to date, update file)
+			TCHAR absFileName[MAX_PATH];
+			_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, name);
+			FILE *f = _tfopen(absFileName, _T("wb"));
+			if (f != NULL)
+			{
+				fwrite(imageData, imageSize, 1, f);
+				fclose(f);
+			}
+			else
+			{
+				rcc = RCC_IO_ERROR;
+			}
+		}
+
+		DBFreeResult(result);
+	}
+	else
+	{
+		rcc = RCC_DB_FAILURE;
+	}
+
+	free(imageData);
+
+	msg.SetVariable(VID_RCC, rcc);
+	sendMessage(&msg);
+}
+
+
+//
+// Delete image from library
+//
+
+void ClientSession::deleteLibraryImage(CSCPMessage *request)
+{
+	CSCPMessage msg;
+	DWORD rcc = RCC_SUCCESS;
+	TCHAR name[MAX_DB_STRING];
+	TCHAR query[MAX_DB_STRING];
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
+	DebugPrintf(5, _T("deleteLibraryImage: name=%s"), name);
+
+	_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND image_name = '%s'"), EncodeSQLString(name));
+	if (DBQuery(g_hCoreDB, query))
+	{
+		// remove from FS?
+	}
+	else
+	{
+		rcc = RCC_DB_FAILURE;
+	}
+
+	msg.SetVariable(VID_RCC, rcc);
+	sendMessage(&msg);
+}
+
+
+//
+// Send list of available images (in category)
+//
+
+void ClientSession::listLibraryImages(CSCPMessage *request)
+{
+	CSCPMessage msg;
+	TCHAR category[MAX_DB_STRING];
+	TCHAR query[MAX_DB_STRING * 2];
+	TCHAR buffer[MAX_DB_STRING];
+	DWORD rcc = RCC_SUCCESS;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (request->IsVariableExist(VID_CATEGORY))
+	{
+		request->GetVariableStr(VID_CATEGORY, category, MAX_DB_STRING);
+	}
+	else
+	{
+		category[0] = 0;
+	}
+	DebugPrintf(5, _T("listLibraryImages: category=%s"), category[0] == 0 ? _T("*ANY*") : category);
+
+	_tcscpy(query, _T("SELECT image_name,category FROM images"));
+	if (category[0] != 0)
+	{
+		_tcscat(query, _T(" WHERE category = '"));
+      _tcscat(query, EncodeSQLString(category));
+		_tcscat(query, _T("'"));
+	}
+
+	DB_RESULT result = DBSelect(g_hCoreDB, query);
+	if (result != NULL)
+	{
+		int count = DBGetNumRows(result);
+		msg.SetVariable(VID_NUM_RECORDS, (DWORD)count);
+		DWORD varId = VID_IMAGE_LIST_BASE;
+		for (int i = 0; i < count; i++)
+		{
+			DBGetField(result, i, 0, buffer, MAX_DB_STRING);	// image name
+			msg.SetVariable(varId++, buffer);
+
+			DBGetField(result, i, 1, buffer, MAX_DB_STRING);	// category
+			msg.SetVariable(varId++, buffer);
+		}
+
+		DBFreeResult(result);
+	}
+	else
+	{
+		rcc = RCC_DB_FAILURE;
+	}
+
+	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
 }
