@@ -1011,7 +1011,7 @@ void Template::ValidateDCIList(DCI_CFG *cfg)
 // Validate system template
 //
 
-void Template::ValidateSystemTemplate(void)
+void Template::ValidateSystemTemplate()
 {
 	if (!_tcsicmp(m_szName, _T("@System.Agent")))
 	{

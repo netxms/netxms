@@ -1988,6 +1988,7 @@ void Node::ApplySystemTemplates()
 		}
 	}
 
+	/*
 	pTemplate = FindTemplateByName(_T("@System.SNMP"));
 	if (pTemplate != NULL)
 	{
@@ -2012,6 +2013,7 @@ void Node::ApplySystemTemplates()
 			}
 		}
 	}
+	*/
 }
 
 

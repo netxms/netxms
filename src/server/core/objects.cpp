@@ -1278,6 +1278,9 @@ BOOL LoadObjects()
 	}
 	pTemplate->ValidateSystemTemplate();
 
+	/*
+	TODO: probably system templates must be removed completely
+
 	pTemplate = FindTemplateByName(_T("@System.SNMP"));
 	if (pTemplate == NULL)
 	{
@@ -1290,6 +1293,7 @@ BOOL LoadObjects()
 		pTemplate->Unhide();
 	}
 	pTemplate->ValidateSystemTemplate();
+	*/
 
    return TRUE;
 }
