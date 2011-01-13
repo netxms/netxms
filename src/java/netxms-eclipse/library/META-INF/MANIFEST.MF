@@ -12,6 +12,7 @@ Bundle-ClassPath: .,
  jar/simple-xml-2.3.5.jar
 Export-Package: org.netxms.api.client,
  org.netxms.api.client.constants,
+ org.netxms.api.client.images,
  org.netxms.api.client.scripts,
  org.netxms.api.client.servermanager,
  org.netxms.api.client.users,
