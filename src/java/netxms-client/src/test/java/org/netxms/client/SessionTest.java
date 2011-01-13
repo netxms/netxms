@@ -29,7 +29,7 @@ import junit.framework.TestCase;
  */
 public class SessionTest extends TestCase
 {
-	private static final String serverAddress = "127.0.0.1";
+	private static final String serverAddress = "10.10.0.1";
 	private static final String loginName = "admin";
 	private static final String password = "";
 	

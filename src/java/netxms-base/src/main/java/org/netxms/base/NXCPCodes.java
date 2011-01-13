@@ -266,7 +266,12 @@ public final class NXCPCodes
 	public static final int CMD_GET_USM_CREDENTIALS     = 0x00EC;
 	public static final int CMD_UPDATE_USM_CREDENTIALS  = 0x00ED;
 	public static final int CMD_GET_DCI_THRESHOLDS      = 0x00EE;
-	
+	public static final int CMD_GET_IMAGE               = 0x00EF;
+	public static final int CMD_CREATE_IMAGE            = 0x00F0;
+	public static final int CMD_DELETE_IMAGE            = 0x00F1;
+	public static final int CMD_MODIFY_IMAGE            = 0x00F2;
+	public static final int CMD_LIST_IMAGES             = 0x00F3;
+
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
 	public static final long VID_PASSWORD                = 2;
@@ -636,6 +641,9 @@ public final class NXCPCodes
 	public static final long VID_LLDP_NODE_ID            = 366;
 	public static final long VID_IF_SLOT                 = 367;
 	public static final long VID_IF_PORT                 = 368;
+	public static final long VID_IMAGE_DATA              = 369;
+	public static final long VID_IMAGE_PROTECTED         = 370;
+	public static final long VID_NUM_IMAGES              = 371;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
