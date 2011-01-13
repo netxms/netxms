@@ -3,9 +3,12 @@
  */
 package org.netxms.ui.eclipse.console;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.Session;
 import org.netxms.client.*;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -16,7 +19,24 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LoginJob implements IRunnableWithProgress
 {
-	private String server;
+	private final class KeepAliveHelper implements Runnable
+	{
+      @Override
+      public void run()
+      {
+         final Session session = ConsoleSharedData.getSession();
+         try
+         {
+            session.checkConnection();
+            Thread.sleep(1000 * 30); // send keepalive every 30 seconds
+         }
+         catch (Exception e) {
+            // ignore everything
+         }
+      }
+   }
+
+   private String server;
 	private String loginName;
 	private String password;
 	
@@ -74,6 +94,11 @@ public class LoginJob implements IRunnableWithProgress
 			monitor.worked(5);
 			
 			ConsoleSharedData.setSession(session);
+			
+			Runnable keepAliveTimer = new KeepAliveHelper();
+			final Thread thread = new Thread(keepAliveTimer);
+			thread.setDaemon(true);
+         thread.start();
 		}
 		catch(Exception e)
 		{
