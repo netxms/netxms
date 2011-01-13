@@ -34,6 +34,9 @@
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
+#ifndef S_ISREG
+#define S_ISREG(m)     (((m) & S_IFMT) == S_IFREG)
+#endif
 
 // WARNING! this hack works only for d2i_X509(); be carefull when adding new code
 #ifdef OPENSSL_CONST
@@ -10617,7 +10620,11 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 			FILE *f = _tfopen(absFileName, _T("rb"));
 			if (f != NULL)
 			{
+#ifdef _WIN32
+				struct _stat st;
+#else
 				struct stat st;
+#endif
 				if (_tstat(absFileName, &st) == 0 && S_ISREG(st.st_mode))
 				{
 					BYTE *rawData = (BYTE *)malloc(st.st_size);
