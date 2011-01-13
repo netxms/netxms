@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.epp.views;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +28,11 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Sash;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
@@ -59,9 +62,10 @@ public class EventProcessingPolicyEditor extends ViewPart
 	private NXCSession session;
 	private boolean policyLocked = false;
 	private EventProcessingPolicy policy; 
-	private PolicyEditor editor;
 	private NXCListener sessionListener;
 	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
+	private Sash sash;
+	private TreeViewer ruleTree;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -81,6 +85,8 @@ public class EventProcessingPolicyEditor extends ViewPart
 		{
 		}
 		
+		sash = new Sash(parent, SWT.VERTICAL);
+		
 		sessionListener = new NXCListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -92,7 +98,6 @@ public class EventProcessingPolicyEditor extends ViewPart
 		
 		parent.setLayout(new FillLayout());
 		
-		editor = new PolicyEditor(parent, SWT.NONE, new EPPCellFactory());
 		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
@@ -104,9 +109,12 @@ public class EventProcessingPolicyEditor extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				List<ServerAction> actions = session.getActions();
-				for(ServerAction a : actions)
+				synchronized(EventProcessingPolicyEditor.this.actions)
 				{
-					EventProcessingPolicyEditor.this.actions.put(a.getId(), a);
+					for(ServerAction a : actions)
+					{
+						EventProcessingPolicyEditor.this.actions.put(a.getId(), a);
+					}
 				}
 				
 				policy = session.openEventProcessingPolicy();
@@ -115,7 +123,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						editor.setContent(policy.getRules());
+//						editor.setContent(policy.getRules());
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -174,7 +182,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		editor.setFocus();
+		sash.setFocus();
 	}
 
 	/* (non-Javadoc)
@@ -188,31 +196,22 @@ public class EventProcessingPolicyEditor extends ViewPart
 		
 		if (policyLocked)
 		{
-			new Job("Close event processing policy")
-			{
+			new ConsoleJob("Close event processing policy", null, Activator.PLUGIN_ID, EventProcessingPolicyEditor.JOB_FAMILY) {
 				@Override
-				protected IStatus run(IProgressMonitor monitor)
+				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					IStatus status;
-
-					try
-					{
-						session.closeEventProcessingPolicy();
-						status = Status.OK_STATUS;
-					}
-					catch(Exception e)
-					{
-						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-								"Cannot close event processing policy: " + e.getMessage(), null);
-					}
-					return status;
+					session.closeEventProcessingPolicy();
 				}
-			}.schedule();
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot close event processing policy";
+				}
+			}.start();
 		}
 		
 		super.dispose();
-		
 		ImageFactory.clearCache();
 	}
 }

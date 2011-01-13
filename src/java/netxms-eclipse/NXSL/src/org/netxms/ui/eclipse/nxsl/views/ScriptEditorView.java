@@ -58,6 +58,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  * Script editor view
  *
  */
+@SuppressWarnings("deprecation")
 public class ScriptEditorView extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView";
@@ -69,6 +70,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	private RefreshAction actionRefresh;
 	private Action actionSave;
 	private FindReplaceAction actionFindReplace;
+	private boolean modified = false;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -95,8 +97,13 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
-				actionSave.setEnabled(true);
-				actionFindReplace.update();
+				if (!modified)
+				{
+					modified = true;
+					firePropertyChange(PROP_DIRTY);
+					actionSave.setEnabled(true);
+					actionFindReplace.update();
+				}
 			}
 		});
 		
@@ -141,7 +148,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	/**
 	 * Create actions
 	 */
-	@SuppressWarnings("deprecation")
 	private void createActions()
 	{
 		try
@@ -288,9 +294,14 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{
-				editor.setModified(false);
-				editor.getTextWidget().setEditable(true);
-				actionSave.setEnabled(false);
+				if (!editor.isDisposed())
+				{
+					editor.setModified(false);
+					editor.getTextWidget().setEditable(true);
+					actionSave.setEnabled(false);
+					modified = false;
+					firePropertyChange(PROP_DIRTY);
+				}
 				return Status.OK_STATUS;
 			}
 		}.schedule();
@@ -347,7 +358,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	@Override
 	public boolean isDirty()
 	{
-		return editor.isModified();
+		return modified;
 	}
 
 	/* (non-Javadoc)
@@ -365,6 +376,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
-		return editor.isModified();
+		return modified;
 	}
 }
