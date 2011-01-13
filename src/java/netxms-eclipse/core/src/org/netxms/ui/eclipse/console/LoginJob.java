@@ -3,11 +3,9 @@
  */
 package org.netxms.ui.eclipse.console;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.Session;
 import org.netxms.client.*;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;

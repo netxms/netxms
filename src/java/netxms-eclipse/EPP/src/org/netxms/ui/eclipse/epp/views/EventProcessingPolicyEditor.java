@@ -28,8 +28,12 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Sash;
@@ -42,10 +46,14 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Activator;
-import org.netxms.ui.eclipse.epp.widgets.PolicyEditor;
-import org.netxms.ui.eclipse.epp.widgets.helpers.EPPCellFactory;
+import org.netxms.ui.eclipse.epp.views.helpers.RuleTreeContentProvider;
+import org.netxms.ui.eclipse.epp.views.helpers.RuleTreeElement;
+import org.netxms.ui.eclipse.epp.views.helpers.RuleTreeLabelProvider;
+import org.netxms.ui.eclipse.epp.widgets.AbstractRuleEditor;
+import org.netxms.ui.eclipse.epp.widgets.CommentsEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -64,8 +72,10 @@ public class EventProcessingPolicyEditor extends ViewPart
 	private EventProcessingPolicy policy; 
 	private NXCListener sessionListener;
 	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
-	private Sash sash;
+	private SashForm splitter;
 	private TreeViewer ruleTree;
+	private Composite dataArea;
+	private AbstractRuleEditor currentEditor = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -85,7 +95,25 @@ public class EventProcessingPolicyEditor extends ViewPart
 		{
 		}
 		
-		sash = new Sash(parent, SWT.VERTICAL);
+		splitter = new SashForm(parent, SWT.HORIZONTAL);
+		splitter.setSashWidth(3);
+		
+		ruleTree = new TreeViewer(splitter, SWT.BORDER);
+		ruleTree.setContentProvider(new RuleTreeContentProvider());
+		ruleTree.setLabelProvider(new RuleTreeLabelProvider());
+		ruleTree.setAutoExpandLevel(2);
+		ruleTree.addSelectionChangedListener(new ISelectionChangedListener()	{
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				onSelectionChange();
+			}
+		});
+		
+		dataArea = new Composite(splitter, SWT.BORDER);
+		dataArea.setLayout(new FillLayout());
+		
+		splitter.setWeights(new int[] { 25, 75 });
 		
 		sessionListener = new NXCListener() {
 			@Override
@@ -96,8 +124,14 @@ public class EventProcessingPolicyEditor extends ViewPart
 		};
 		session.addListener(sessionListener);
 		
-		parent.setLayout(new FillLayout());
-		
+		openEventProcessingPolicy();
+	}
+	
+	/**
+	 * Open event processing policy
+	 */
+	private void openEventProcessingPolicy()
+	{
 		ConsoleJob job = new ConsoleJob("Open event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
@@ -119,11 +153,11 @@ public class EventProcessingPolicyEditor extends ViewPart
 				
 				policy = session.openEventProcessingPolicy();
 				policyLocked = true;
-				new UIJob("Fill rules list") {
+				new UIJob("Update rules presentation") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-//						editor.setContent(policy.getRules());
+						ruleTree.setInput(policy);
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -182,7 +216,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		sash.setFocus();
+		splitter.setFocus();
 	}
 
 	/* (non-Javadoc)
@@ -213,5 +247,34 @@ public class EventProcessingPolicyEditor extends ViewPart
 		
 		super.dispose();
 		ImageFactory.clearCache();
+	}
+	
+	/**
+	 * Handler for tree viewer selection change
+	 */
+	private void onSelectionChange()
+	{
+		if (currentEditor != null)
+			currentEditor.dispose();
+		
+		IStructuredSelection selection = (IStructuredSelection)ruleTree.getSelection();
+		if (selection.size()> 0)
+		{
+			RuleTreeElement element = (RuleTreeElement)selection.getFirstElement();
+			switch(element.getType())
+			{
+				case RuleTreeElement.COMMENTS:
+					currentEditor = new CommentsEditor(dataArea, element.getRule());
+					break;
+				default:
+					currentEditor = null;
+					break;
+			}
+			dataArea.layout();
+		}
+		else
+		{
+			currentEditor = null;
+		}
 	}
 }
