@@ -333,7 +333,7 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
 // Based on timeval.h by Wu Yongwei
 //
 
-INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void)
+INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs()
 {
 #ifdef _WIN32
    FILETIME ft;
@@ -351,7 +351,7 @@ INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void)
    INT64 t;
 
    gettimeofday(&tv, NULL);
-   t = (INT64)tv.tv_sec * 1000 + (INT64)(tv.tv_usec / 10000);
+   t = (INT64)tv.tv_sec * 1000 + (INT64)(tv.tv_usec / 1000);
 #endif
 
    return t;
