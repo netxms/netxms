@@ -211,6 +211,7 @@ public:
 
    bool isNull() { return (m_nDataType == NXSL_DT_NULL); }
    bool isObject() { return (m_nDataType == NXSL_DT_OBJECT); }
+	bool isObject(const TCHAR *className);
    bool isArray() { return (m_nDataType == NXSL_DT_ARRAY); }
    bool isString() { return (m_nDataType >= NXSL_DT_STRING); }
    bool isNumeric() { return (m_nDataType > NXSL_DT_STRING); }

@@ -1148,3 +1148,16 @@ void NXSL_Value::rshift(int nBits)
    }
    invalidateString();
 }
+
+
+//
+// Check if vaue is an object of given class
+//
+
+bool NXSL_Value::isObject(const TCHAR *className)
+{
+	if (m_nDataType != NXSL_DT_OBJECT)
+		return false;
+
+	return !_tcscmp(m_value.pObject->getClass()->getName(), className) ? true : false;
+}
