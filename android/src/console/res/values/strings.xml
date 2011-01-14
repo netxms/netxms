@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pref_encrypt_summary_disabled">Do not use encryption</string>
+    <string name="pref_encrypt_summary_enabled">Use encryption</string>
+    
+    <string name="pref_encrypt">Encrypt connection</string>
+    <string name="pref_password_summary">NetXMS password</string>
+    <string name="pref_password">Password</string>
+    <string name="pref_login_summary">NetXMS login name</string>
+    <string name="pref_login">User name</string>
+    <string name="pref_server_summary">Name or address of NetXMS server</string>
+    <string name="pref_server">Server</string>
+    <string name="pref_connection">Connection</string>
+    <string name="settings">Settings</string>
+    
+    <string name="app_name">NetXMS Client</string>
+<string name="main_title">NetXMS Management Console</string>
+<string name="notification_title">NetXMS</string>
+
+</resources>

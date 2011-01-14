@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/MainScreenLayout" 
+		android:orientation="vertical" 
+		android:gravity="fill_horizontal" 
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent" 
+		xmlns:android="http://schemas.android.com/apk/res/android">
+	<TextView android:id="@+id/MainScreenTitle" 
+			android:text="@string/main_title" 
+			android:textSize="16sp" 
+			android:textColor="#ffffff" 
+			android:background="#2b3c8e" 
+			android:paddingTop="2sp" 
+			android:paddingBottom="2sp" 
+			android:paddingLeft="5sp" 
+			android:paddingRight="5sp" 
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content">
+	</TextView>
+	<GridView android:id="@+id/ActivityList" 
+			android:background="#ffffff" 
+			android:layout_width="fill_parent" 
+			android:layout_height="fill_parent">
+	</GridView>
+</LinearLayout>
