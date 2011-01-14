@@ -230,7 +230,7 @@ void DumpSessions(CONSOLE_CTX pCtx)
          iCount++;
       }
    RWLockUnlock(m_rwlockSessionListAccess);
-   ConsolePrintf(pCtx, _T("\n%d active session%s\n\n"), iCount, iCount == 1 ? "" : "s");
+   ConsolePrintf(pCtx, _T("\n%d active session%s\n\n"), iCount, iCount == 1 ? _T("") : _T("s"));
 }
 
 
