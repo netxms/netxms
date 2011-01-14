@@ -17,4 +17,6 @@
 <string name="main_title">NetXMS Management Console</string>
 <string name="notification_title">NetXMS</string>
 
+<string name="notify_disconnected">Disconnected from server</string>
+<string name="notify_connected">Connected to server %1$s</string>
 </resources>

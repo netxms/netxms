@@ -52,8 +52,8 @@ public class ConnectTask extends AsyncTask<String, String, NXCSession>
 	protected void onPostExecute(NXCSession result)
 	{
 		if (result != null)
-			service.showNotification(1, "Connected to server " + result.getServerAddress());
+			service.onConnect(result);
 		else
-			service.showNotification(1, exception.toString());
+			service.onDisconnect();
 	}
 }
