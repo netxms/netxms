@@ -7,7 +7,7 @@
 		xmlns:android="http://schemas.android.com/apk/res/android">
 	<TextView android:id="@+id/MainScreenTitle" 
 			android:text="@string/main_title" 
-			android:textSize="16sp" 
+			android:textSize="20sp" 
 			android:textColor="#ffffff" 
 			android:background="#2b3c8e" 
 			android:paddingTop="2sp" 
@@ -18,7 +18,11 @@
 			android:layout_height="wrap_content">
 	</TextView>
 	<GridView android:id="@+id/ActivityList" 
-			android:background="#ffffff" 
+			android:background="#ffffff"
+			android:numColumns="auto_fit"
+			android:columnWidth="80dp"
+			android:gravity="center"
+			android:stretchMode="columnWidth"
 			android:layout_width="fill_parent" 
 			android:layout_height="fill_parent">
 	</GridView>

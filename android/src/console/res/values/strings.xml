@@ -19,4 +19,7 @@
 
 <string name="notify_disconnected">Disconnected from server</string>
 <string name="notify_connected">Connected to server %1$s</string>
+<string name="home_screen_alarms">Alarms</string>
+<string name="alarms_title">Alarms</string>
+<string name="home_screen_dashboards">Dashboards</string>
 </resources>

@@ -3,9 +3,13 @@
  */
 package org.netxms.ui.android.service;
 
+import java.util.Map;
+
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.events.Alarm;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.HomeScreen;
 import org.netxms.ui.android.service.tasks.ConnectTask;
@@ -31,11 +35,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	public static final String ACTION_RECONNECT = "org.netxms.ui.android.ACTION_RECONNECT";
 	
 	private static final int NOTIFY_CONN_STATUS = 1;
+	private static final int NOTIFY_ALARM = 1;
 	
+	private String mutex = "MUTEX";
 	private Binder binder = new ClientConnectorBinder();
 	private NotificationManager notificationManager;
 	private NXCSession session = null;
 	private boolean connectionInProgress = false;
+	private Map<Long, Alarm> alarms = null;
 	
    /**
     * Class for clients to access.  Because we know this service always
@@ -44,7 +51,7 @@ public class ClientConnectorService extends Service implements SessionListener
     */
    public class ClientConnectorBinder extends Binder 
    {
-   	ClientConnectorService getService() 
+   	public ClientConnectorService getService() 
       {
    		return ClientConnectorService.this;
       }
@@ -109,7 +116,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * 
 	 * @param text
 	 */
-	public void showNotification(int id, String text)
+	private void showNotification(int id, String text)
 	{
 		Notification n = new Notification(android.R.drawable.stat_notify_sdcard, text, System.currentTimeMillis());
 		n.defaults = Notification.DEFAULT_ALL;
@@ -122,15 +129,28 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 	
 	/**
+	 * Hide notification
+	 * 
+	 * @param id notification id
+	 */
+	private void hideNotification(int id)
+	{
+		notificationManager.cancel(id);
+	}
+	
+	/**
 	 * Reconnect to server if needed
 	 */
 	private void reconnect()
 	{
-		if ((session == null) && !connectionInProgress)
+		synchronized(mutex)
 		{
-			connectionInProgress = true;
-			SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-			new ConnectTask(this).execute(sp.getString("connection.server", ""), sp.getString("connection.login", ""), sp.getString("connection.password", ""));
+			if ((session == null) && !connectionInProgress)
+			{
+				connectionInProgress = true;
+				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+				new ConnectTask(this).execute(sp.getString("connection.server", ""), sp.getString("connection.login", ""), sp.getString("connection.password", ""));
+			}
 		}
 	}
 	
@@ -139,12 +159,16 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * 
 	 * @param session new session object
 	 */
-	public void onConnect(NXCSession session)
+	public void onConnect(NXCSession session, Map<Long, Alarm> alarms)
 	{
-		connectionInProgress = false;
-		this.session = session;
-		showNotification(NOTIFY_CONN_STATUS, getString(R.string.notify_connected, session.getServerAddress()));
-		session.addListener(this);
+		synchronized(mutex)
+		{
+			connectionInProgress = false;
+			this.session = session;
+			this.alarms = alarms;
+			session.addListener(this);
+			showNotification(NOTIFY_CONN_STATUS, getString(R.string.notify_connected, session.getServerAddress()));
+		}
 	}
 	
 	/**
@@ -153,13 +177,49 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void onDisconnect()
 	{
-		if (session != null)
+		synchronized(mutex)
 		{
-			session.removeListener(this);
-			showNotification(NOTIFY_CONN_STATUS, getString(R.string.notify_disconnected));
+			if (session != null)
+			{
+				session.removeListener(this);
+				hideNotification(NOTIFY_ALARM);
+				showNotification(NOTIFY_CONN_STATUS, getString(R.string.notify_disconnected));
+			}
+			connectionInProgress = false;
+			session = null;
+			alarms = null;
 		}
-		connectionInProgress = false;
-		session = null;
+	}
+	
+	/**
+	 * Process alarm change
+	 * @param alarm
+	 */
+	private void processAlarmChange(Alarm alarm)
+	{
+		synchronized(mutex)
+		{
+			if (alarms != null)
+			{
+				alarms.put(alarm.getId(), alarm);
+				showNotification(NOTIFY_ALARM, alarm.getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Process alarm change
+	 * @param alarm
+	 */
+	private void processAlarmDelete(long id)
+	{
+		synchronized(mutex)
+		{
+			if (alarms != null)
+			{
+				alarms.remove(id);
+			}
+		}
 	}
 
 	/* (non-Javadoc)
@@ -168,5 +228,38 @@ public class ClientConnectorService extends Service implements SessionListener
 	@Override
 	public void notificationHandler(SessionNotification n)
 	{
+		switch(n.getCode())
+		{
+			case SessionNotification.CONNECTION_BROKEN:
+			case SessionNotification.SERVER_SHUTDOWN:
+				onDisconnect();
+			case NXCNotification.NEW_ALARM:
+			case NXCNotification.ALARM_CHANGED:
+				processAlarmChange((Alarm)n.getObject());
+				break;
+			case NXCNotification.ALARM_DELETED:
+			case NXCNotification.ALARM_TERMINATED:
+				processAlarmDelete(((Alarm)n.getObject()).getId());
+				break;
+			default:
+				break;
+		}
+	}
+	
+	/**
+	 * Get list of active alarms
+	 * @return list of active alarms
+	 */
+	public Alarm[] getAlarms()
+	{
+		Alarm[] a;
+		synchronized(mutex)
+		{
+			if (alarms != null)
+				a = alarms.values().toArray(new Alarm[alarms.size()]);
+			else
+				a = new Alarm[0];
+		}
+		return a;
 	}
 }
