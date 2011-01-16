@@ -26,8 +26,9 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -43,6 +44,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesComparato
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -62,9 +64,9 @@ public class LastValuesView extends Composite
 	private final ViewPart viewPart;
 	private Node node;
 	private NXCSession session;
-	private TableViewer dataViewer;
+	private SortableTableViewer dataViewer;
 	
-	public LastValuesView(ViewPart viewPart, Composite parent, int style, Node _node)
+	public LastValuesView(ViewPart viewPart, Composite parent, int style, Node _node, final String configPrefix)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -79,6 +81,7 @@ public class LastValuesView extends Composite
 		dataViewer.setLabelProvider(new LastValuesLabelProvider());
 		dataViewer.setContentProvider(new ArrayContentProvider());
 		dataViewer.setComparator(new LastValuesComparator());
+		WidgetHelper.restoreTableViewerSettings(dataViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 		
 		createPopupMenu();
 
@@ -86,6 +89,14 @@ public class LastValuesView extends Composite
 			public void handleEvent(Event e)
 			{
 				dataViewer.getControl().setBounds(LastValuesView.this.getClientArea());
+			}
+		});
+		
+		dataViewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveTableViewerSettings(dataViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 			}
 		});
 

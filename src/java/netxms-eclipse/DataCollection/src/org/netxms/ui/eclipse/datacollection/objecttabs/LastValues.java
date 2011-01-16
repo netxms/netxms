@@ -45,7 +45,7 @@ public class LastValues extends ObjectTab
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		dataView = new LastValuesView(getViewPart(), parent, SWT.NONE, (Node)getObject());
+		dataView = new LastValuesView(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab");
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

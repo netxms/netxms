@@ -39,8 +39,9 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -63,6 +64,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.DciComparator;
 import org.netxms.ui.eclipse.datacollection.DciLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -85,7 +87,7 @@ public class DataCollectionEditor extends ViewPart
 	public static final int COLUMN_STATUS = 7;
 	public static final int COLUMN_TEMPLATE = 8;
 
-	private TableViewer viewer;
+	private SortableTableViewer viewer;
 	private NXCSession session;
 	private GenericObject object;
 	private DataCollectionConfiguration dciConfig = null;
@@ -126,6 +128,8 @@ public class DataCollectionEditor extends ViewPart
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DciLabelProvider());
 		viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "DataCollectionEditor");
+		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
 		{
 			@SuppressWarnings("unchecked")
@@ -163,6 +167,13 @@ public class DataCollectionEditor extends ViewPart
 			public void doubleClick(DoubleClickEvent event)
 			{
 				actionEdit.run();
+			}
+		});
+		viewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "DataCollectionEditor");
 			}
 		});
 

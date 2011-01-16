@@ -67,7 +67,7 @@
                class="org.netxms.ui.eclipse.charts.actions.ShowStatusIndicator"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowStatusIndicator"
                label="Status Indicator"
-               icon="icons/chart_line.png"
+               icon="icons/chart_status.png"
                menubarPath="additions">
          </action>
       </objectContribution>

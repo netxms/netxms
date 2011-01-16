@@ -464,6 +464,7 @@ src/java/netxms-eclipse/Charts/icons/chart_dial.gif -text
 src/java/netxms-eclipse/Charts/icons/chart_line.png -text
 src/java/netxms-eclipse/Charts/icons/chart_pie.png -text
 src/java/netxms-eclipse/Charts/icons/chart_scatter.gif -text
+src/java/netxms-eclipse/Charts/icons/chart_status.png -text
 src/java/netxms-eclipse/Charts/icons/chart_tube.png -text
 src/java/netxms-eclipse/Charts/icons/folder.png -text
 src/java/netxms-eclipse/Charts/icons/graph.png -text

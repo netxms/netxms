@@ -55,7 +55,7 @@ static BOOL (* imp_NxSubAgentGetArpCache)(StringList *) = NULL;
 // Initialize
 //
 
-void InitLocalNetInfo(void)
+void InitLocalNetInfo()
 {
 #ifdef _WIN32
    HMODULE hModule;
@@ -408,7 +408,7 @@ static INTERFACE_LIST *SysGetLocalIfList()
 // Get local ARP cache
 //
 
-ARP_CACHE *GetLocalArpCache(void)
+ARP_CACHE *GetLocalArpCache()
 {
    ARP_CACHE *pArpCache = NULL;
 
@@ -435,7 +435,7 @@ ARP_CACHE *GetLocalArpCache(void)
 // Get local interface list
 //
 
-INTERFACE_LIST *GetLocalInterfaceList(void)
+INTERFACE_LIST *GetLocalInterfaceList()
 {
    INTERFACE_LIST *pIfList = NULL;
 
