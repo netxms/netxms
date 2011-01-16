@@ -481,6 +481,7 @@ src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowBarC
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowDataComparisonChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowHistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowPieChart.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowStatusIndicator.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/ChartColor.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DataChart.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/api/DataComparisonChart.java -text
