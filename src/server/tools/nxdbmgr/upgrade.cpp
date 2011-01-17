@@ -5032,6 +5032,7 @@ static struct
 	{ 216, 217, H_UpgradeFromV216 },
 	{ 217, 218, H_UpgradeFromV217 },
 	{ 218, 219, H_UpgradeFromV218 },
+	{ 219, 220, H_UpgradeFromV219 },
    { 0, NULL }
 };
 
