@@ -369,3 +369,27 @@ INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
    VALUES (30,'.1.3.6.1.4.1.45.3.47.*',NODE_TYPE_NORTEL_OPTERA,0);
 INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
    VALUES (31,'.1.3.6.1.4.1.45.3.48.*',NODE_TYPE_NORTEL_OPTERA,0);
+
+   
+/*
+** Stock image library images
+*/
+
+INSERT INTO images (image_name, category, protected)
+   VALUES('atm.png', 'Network Objects', 1);
+INSERT INTO images (image_name, category, protected)
+   VALUES('hsm.png', 'Network Objects', 1);
+INSERT INTO images (image_name, category, protected)
+   VALUES('node.png', 'Network Objects', 1);
+INSERT INTO images (image_name, category, protected)
+   VALUES('printer.png', 'Network Objects', 1);
+INSERT INTO images (image_name, category, protected)
+   VALUES('router.png', 'Network Objects', 1);
+INSERT INTO images (image_name, category, protected)
+   VALUES('server.png', 'Network Objects', 1);
+INSERT INTO images (image_name, category, protected)
+   VALUES('service.png', 'Network Objects', 1);
+INSERT INTO images (image_name, category, protected)
+   VALUES('switch.png', 'Network Objects', 1);
+INSERT INTO images (image_name, category, protected)
+   VALUES('unknown.png', 'Network Objects', 1);

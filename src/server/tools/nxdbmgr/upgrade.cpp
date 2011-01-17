@@ -249,6 +249,31 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V219 to V220
+//
+
+static BOOL H_UpgradeFromV219(int currVersion, int newVersion)
+{
+   static TCHAR batch[] = 
+      _T("INSERT INTO images (image_name, category, protected) VALUES('atm.png', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (image_name, category, protected) VALUES('hsm.png', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (image_name, category, protected) VALUES('node.png', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (image_name, category, protected) VALUES('printer.png', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (image_name, category, protected) VALUES('router.png', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (image_name, category, protected) VALUES('server.png', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (image_name, category, protected) VALUES('service.png', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (image_name, category, protected) VALUES('switch.png', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (image_name, category, protected) VALUES('unknown.png', 'Network Objects', 1);\n")
+      _T("<END>");
+
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='220' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V218 to V219
 //
 

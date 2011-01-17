@@ -11,20 +11,7 @@
 imagesdir=$(pkgdatadir)/images
 
 images_DATA = \
-    cluster.ico cluster.png \
-    condition.ico condition.png \
-    generic_printer.ico generic_printer.png \
-    interface.ico interface.png \
-    network.ico network.png \
-    network_service.ico network_service.png \
-    node_group.ico node_group.png \
-    node.ico node.png \
-    service.ico service.png \
-    subnet.ico subnet.png \
-    template_group.ico template_group.png \
-    template.ico template.png \
-    template_root.ico template_root.png \
-    vpnc.ico vpnc.png \
-    zone.ico zone.png
+	atm.png hsm.png node.png printer.png router.png server.png \
+	service.png switch.png unknown.png
 
 EXTRA_DIST=$(images_DATA)
