@@ -39,6 +39,7 @@ static NXC_TRAP_CFG_ENTRY *m_pTrapCfg = NULL;
 static DWORD m_dwNumTraps = 0;
 static BOOL m_bLogAllTraps = FALSE;
 static INT64 m_qnTrapId = 1;
+static bool s_allowVarbindConversion = true;
 
 
 //
@@ -144,6 +145,7 @@ void InitTraps()
    m_mutexTrapCfgAccess = MutexCreate();
    LoadTrapCfg();
    m_bLogAllTraps = ConfigReadInt(_T("LogAllSNMPTraps"), FALSE);
+	s_allowVarbindConversion = ConfigReadInt(_T("AllowTrapVarbindsConversion"), 1) ? true : false;
 
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(trap_id) FROM snmp_trap_log"));
    if (hResult != NULL)
@@ -176,7 +178,8 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
          pVar = pdu->getVariable((m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x7FFFFFFF) - 1);
          if (pVar != NULL)
          {
-            pszArgList[i] = _tcsdup(pVar->GetValueAsString(szBuffer, 256));
+				bool convertToHex = true;
+				pszArgList[i] = _tcsdup(s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pVar->GetValueAsString(szBuffer, 256));
          }
          else
          {
@@ -193,7 +196,8 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
                   m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
             if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
             {
-               pszArgList[i] = _tcsdup(pdu->getVariable(j)->GetValueAsString(szBuffer, 256));
+					bool convertToHex = true;
+					pszArgList[i] = _tcsdup(s_allowVarbindConversion ? pdu->getVariable(j)->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pdu->getVariable(j)->GetValueAsString(szBuffer, 256));
                break;
             }
          }
@@ -263,10 +267,11 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       for(i = 0, dwBufPos = 0; i < pdu->getNumVariables(); i++)
       {
          pVar = pdu->getVariable(i);
+			bool convertToHex = true;
          dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                 (i == 0) ? _T("") : _T("; "),
                                 pVar->GetName()->GetValueAsText(), 
-                                pVar->GetValueAsString(szBuffer, 3000));
+										  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 3000, &convertToHex) : pVar->GetValueAsString(szBuffer, 3000));
       }
 
       // Write new trap to database
@@ -348,10 +353,11 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
             for(i = 0, dwBufPos = 0; i < pdu->getNumVariables(); i++)
             {
                pVar = pdu->getVariable(i);
+					bool convertToHex = true;
                dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                       (i == 0) ? _T("") : _T("; "),
                                       pVar->GetName()->GetValueAsText(), 
-                                      pVar->GetValueAsString(szBuffer, 512));
+												  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->GetValueAsString(szBuffer, 512));
             }
 
             // Generate default event for unmatched traps

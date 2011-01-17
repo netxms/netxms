@@ -59,6 +59,45 @@ static DWORD m_dwNewNodeId = 1;
 
 
 //
+// Create management node object
+//
+
+static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
+{
+   Node *pNode = new Node(ipAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
+   NetObjInsert(pNode, TRUE);
+   pNode->configurationPoll(NULL, 0, -1, netMask);
+   pNode->Unhide();
+   g_dwMgmtNode = pNode->Id();   // Set local management node ID
+   PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
+   
+   // Add default data collection items
+   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
+                             DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                             _T("Server.AverageDCPollerQueueSize"), 
+                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                             _T("Average length of data collection poller's request queue for last minute")));
+   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                             _T("Server.AverageDBWriterQueueSize"), 
+                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                             _T("Average length of database writer's request queue for last minute")));
+   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                             _T("Server.AverageDCIQueuingTime"), 
+                             DS_INTERNAL, DCI_DT_UINT, 60, 30, pNode,
+                             _T("Average time to queue DCI for polling for last minute")));
+   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                             _T("Server.AverageStatusPollerQueueSize"), 
+                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                             _T("Average length of status poller queue for last minute")));
+   pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                             _T("Server.AverageConfigurationPollerQueueSize"), 
+                             DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                             _T("Average length of configuration poller queue for last minute")));
+}
+
+
+//
 // Check if management server node presented in node list
 //
 
@@ -89,55 +128,54 @@ void CheckForMgmtNode()
          for(i = 0; i < pIfList->iNumEntries; i++)
             if (pIfList->pInterfaces[i].dwIpAddr != 0)
             {
-               pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
-               NetObjInsert(pNode, TRUE);
-               pNode->configurationPoll(NULL, 0, -1, pIfList->pInterfaces[i].dwIpNetMask);
-               pNode->Unhide();
-               g_dwMgmtNode = pNode->Id();   // Set local management node ID
-               PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
-               
-               // Add default data collection items
-               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
-                                         DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
-               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                         _T("Server.AverageDCPollerQueueSize"), 
-                                         DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                                         _T("Average length of data collection poller's request queue for last minute")));
-               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                         _T("Server.AverageDBWriterQueueSize"), 
-                                         DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                                         _T("Average length of database writer's request queue for last minute")));
-               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                         _T("Server.AverageDCIQueuingTime"), 
-                                         DS_INTERNAL, DCI_DT_UINT, 60, 30, pNode,
-                                         _T("Average time to queue DCI for polling for last minute")));
-               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                         _T("Server.AverageStatusPollerQueueSize"), 
-                                         DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                                         _T("Average length of status poller queue for last minute")));
-               pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                         _T("Server.AverageConfigurationPollerQueueSize"), 
-                                         DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                                         _T("Average length of configuration poller queue for last minute")));
+					CreateManagementNode(pIfList->pInterfaces[i].dwIpAddr, pIfList->pInterfaces[i].dwIpNetMask);
                break;
             }
       }
       DestroyInterfaceList(pIfList);
    }
 
-	// Check that other nodes does not have NF_IS_LOCAL_MGMT flag set
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < (int)g_dwIdIndexSize; i++)
-   {
-      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
-		    (g_dwMgmtNode != g_pIndexById[i].dwKey) &&
-			 (((Node *)g_pIndexById[i].pObject)->isLocalManagement()))
-      {
-			((Node *)g_pIndexById[i].pObject)->clearLocalMgmtFlag();
-         DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
-			          ((Node *)g_pIndexById[i].pObject)->Name(), ((Node *)g_pIndexById[i].pObject)->Id());
-      }
-   }
+	if (g_dwMgmtNode != 0)
+	{
+		// Check that other nodes does not have NF_IS_LOCAL_MGMT flag set
+		RWLockReadLock(g_rwlockIdIndex, INFINITE);
+		for(i = 0; i < (int)g_dwIdIndexSize; i++)
+		{
+			if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
+				 (g_dwMgmtNode != g_pIndexById[i].dwKey) &&
+				 (((Node *)g_pIndexById[i].pObject)->isLocalManagement()))
+			{
+				((Node *)g_pIndexById[i].pObject)->clearLocalMgmtFlag();
+				DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
+							 ((Node *)g_pIndexById[i].pObject)->Name(), ((Node *)g_pIndexById[i].pObject)->Id());
+			}
+		}
+	}
+	else
+	{
+		// Management node cannot be found or created. This can happen
+		// if management node currently does not have IP addresses (for example,
+		// it's a Windows machine which is disconnected from the network).
+		// In this case, try to find any node with NF_IS_LOCAL_MGMT flag, or create
+		// new one without interfaces
+
+		for(i = 0; i < (int)g_dwIdIndexSize; i++)
+		{
+			if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
+				 (g_dwMgmtNode != g_pIndexById[i].dwKey) &&
+				 (((Node *)g_pIndexById[i].pObject)->isLocalManagement()))
+			{
+				g_dwMgmtNode = g_pIndexById[i].dwKey;
+				break;
+			}
+		}
+
+		if (g_dwMgmtNode == 0)
+		{
+			CreateManagementNode(0, 0);
+		}
+	}
+
    RWLockUnlock(g_rwlockIdIndex);
 }
 
