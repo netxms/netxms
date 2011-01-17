@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,12 +64,19 @@ static DWORD m_dwNewNodeId = 1;
 
 static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
 {
+	TCHAR buffer[256];
+
    Node *pNode = new Node(ipAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
    NetObjInsert(pNode, TRUE);
+	pNode->setName(GetLocalHostName(buffer, 256));
    pNode->configurationPoll(NULL, 0, -1, netMask);
    pNode->Unhide();
    g_dwMgmtNode = pNode->Id();   // Set local management node ID
    PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
+
+	// Bind to the root of service tree
+	g_pServiceRoot->AddChild(pNode);
+	pNode->AddParent(g_pServiceRoot);
    
    // Add default data collection items
    pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 

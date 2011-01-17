@@ -704,6 +704,7 @@ int GetSessionCount(void);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 DWORD GetLocalIpAddr();
+TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize);
 
 BOOL ExecCommand(TCHAR *pszCommand);
 BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets);

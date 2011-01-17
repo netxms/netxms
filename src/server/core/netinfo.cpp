@@ -315,6 +315,9 @@ static INTERFACE_LIST *SysGetLocalIfList()
             pIfList->pInterfaces[pIfList->iNumEntries].dwIpNetMask = ntohl(inet_addr(pAddr->IpMask.String));
             pIfList->pInterfaces[pIfList->iNumEntries].dwType = pInfo->Type;
             pIfList->pInterfaces[pIfList->iNumEntries].iNumSecondary = 0;
+				pIfList->pInterfaces[pIfList->iNumEntries].dwPortNumber = 0;
+				pIfList->pInterfaces[pIfList->iNumEntries].dwSlotNumber = 0;
+				pIfList->pInterfaces[pIfList->iNumEntries].dwBridgePortNumber = 0;
             pIfList->iNumEntries++;
          }
       }

@@ -731,15 +731,15 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 	Cluster *pCluster;
 	bool bAddToSubnet, bSyntheticMask = false;
 
-	DbgPrintf(5, _T("Node::CreateNewInterface(%08X, %08X, %s, %d, %d) called for node %s [%d]"),
-	          dwIpAddr, dwNetMask, CHECK_NULL(name), dwIndex, dwType, m_szName, m_dwId);
+	DbgPrintf(5, _T("Node::createNewInterface(%08X, %08X, %s, %d, %d, bp=%d, slot=%d, port=%d) called for node %s [%d]"),
+	          dwIpAddr, dwNetMask, CHECK_NULL(name), dwIndex, dwType, bridgePort, slot, port, m_szName, m_dwId);
 
    // Find subnet to place interface object to
    if (dwIpAddr != 0)
    {
 		pCluster = getMyCluster();
 		bAddToSubnet = (pCluster != NULL) ? !pCluster->isSyncAddr(dwIpAddr) : TRUE;
-		DbgPrintf(5, _T("Node::CreateNewInterface: node=%s [%d] cluster=%s [%d] add=%d"),
+		DbgPrintf(5, _T("Node::createNewInterface: node=%s [%d] cluster=%s [%d] add=%d"),
 		          m_szName, m_dwId, (pCluster != NULL) ? pCluster->Name() : _T("(null)"),
 					 (pCluster != NULL) ? pCluster->Id() : 0, bAddToSubnet);
 		if (bAddToSubnet)
