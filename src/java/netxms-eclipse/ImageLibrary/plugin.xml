@@ -1,3 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.6"?>
-<plugin />
+<?eclipse version="3.0"?>
+<plugin
+>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.imagelibrary.views.ImageLibrary"
+            icon="icons/imglib.png"
+            id="org.netxms.ui.eclipse.imagelibrary.views.ImageLibrary"
+            name="Image Library"
+            restorable="true">
+      </view>
+   </extension>
+</plugin>

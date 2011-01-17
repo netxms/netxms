@@ -126,6 +126,7 @@
       <plugin id="org.netxms.ui.eclipse.epp"/>
       <plugin id="org.netxms.ui.eclipse.eventmanager"/>
       <plugin id="org.netxms.ui.eclipse.googlemaps"/>
+      <plugin id="org.netxms.ui.eclipse.imagelibrary"/>
       <plugin id="org.netxms.ui.eclipse.library"/>
       <plugin id="org.netxms.ui.eclipse.logviewer"/>
       <plugin id="org.netxms.ui.eclipse.networkmaps"/>
