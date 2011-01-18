@@ -10582,78 +10582,91 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	TCHAR name[MAX_DB_STRING];
-	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
-	DebugPrintf(5, _T("sendLibraryImage: name=%s"), name);
+	TCHAR guid[MAX_DB_STRING];
+	request->GetVariableStr(VID_GUID, guid, MAX_DB_STRING);
+	DebugPrintf(5, _T("sendLibraryImage: guid=%s"), guid);
 
-	int nameLen = _tcslen(name);
-	for (int i = 0; i < nameLen; i++)
+	int guidLen = _tcslen(guid);
+	if (guidLen != 36)
 	{
-		if (!_istalpha(name[i]) && !_istdigit(name[i]) && name[i] != _T('.') && name[i] != _T('_'))
+		rcc = RCC_INVALID_OBJECT_NAME;
+	}
+	else
+	{
+		for (int i = 0; i < guidLen; i++)
 		{
-			msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
-			sendMessage(&msg);
-			return;
+			if (!_istalpha(guid[i]) && !_istdigit(guid[i]) && guid[i] != _T('-'))
+			{
+				rcc = RCC_INVALID_OBJECT_NAME;
+				break;
+			}
 		}
 	}
 
-	TCHAR query[MAX_DB_STRING];
-	_sntprintf(query, MAX_DB_STRING, _T("SELECT image_name,category,protected FROM images WHERE image_name = '%s'"), EncodeSQLString(name));
-	DB_RESULT result = DBSelect(g_hCoreDB, query);
-	if (result != NULL)
+	if (rcc == RCC_SUCCESS)
 	{
-		int count = DBGetNumRows(result);
-		if (count > 0)
+		TCHAR query[MAX_DB_STRING];
+		_sntprintf(query, MAX_DB_STRING, _T("SELECT name,category,mimetype,protected FROM images WHERE guid = '%s'"), EncodeSQLString(guid));
+		DB_RESULT result = DBSelect(g_hCoreDB, query);
+		if (result != NULL)
 		{
-			TCHAR buffer[MAX_DB_STRING];
-			TCHAR name[MAX_DB_STRING];
-			DBGetField(result, 0, 0, name, MAX_DB_STRING);	// image name
-			msg.SetVariable(VID_NAME, name);
-			DBGetField(result, 0, 1, buffer, MAX_DB_STRING);	// category
-			msg.SetVariable(VID_CATEGORY, buffer);
-
-			msg.SetVariable(VID_IMAGE_PROTECTED, (DWORD)DBGetFieldLong(result, 0, 3));
-
-			TCHAR absFileName[MAX_PATH];
-			_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, name);
-
-			FILE *f = _tfopen(absFileName, _T("rb"));
-			if (f != NULL)
+			int count = DBGetNumRows(result);
+			if (count > 0)
 			{
-#ifdef _WIN32
-				struct _stat st;
-#else
-				struct stat st;
-#endif
-				if (_tstat(absFileName, &st) == 0 && S_ISREG(st.st_mode))
+				TCHAR buffer[MAX_DB_STRING];
+
+				msg.SetVariable(VID_GUID, guid);
+
+				DBGetField(result, 0, 0, buffer, MAX_DB_STRING);	// image name
+				msg.SetVariable(VID_NAME, buffer);
+				DBGetField(result, 0, 1, buffer, MAX_DB_STRING);	// category
+				msg.SetVariable(VID_CATEGORY, buffer);
+				DBGetField(result, 0, 2, buffer, MAX_DB_STRING);	// mime type
+				msg.SetVariable(VID_IMAGE_MIMETYPE, buffer);
+
+				msg.SetVariable(VID_IMAGE_PROTECTED, (WORD)DBGetFieldLong(result, 0, 3));
+
+				TCHAR absFileName[MAX_PATH];
+				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guid);
+
+				FILE *f = _tfopen(absFileName, _T("rb"));
+				if (f != NULL)
 				{
-					BYTE *rawData = (BYTE *)malloc(st.st_size);
-					// TODO: check for null
-					fread(rawData, st.st_size, 1, f);
-					msg.SetVariable(VID_IMAGE_DATA, rawData, st.st_size);
-					free(rawData);
+#ifdef _WIN32
+					struct _stat st;
+#else
+					struct stat st;
+#endif
+					if (_tstat(absFileName, &st) == 0 && S_ISREG(st.st_mode))
+					{
+						BYTE *rawData = (BYTE *)malloc(st.st_size);
+						// TODO: check for null
+						fread(rawData, st.st_size, 1, f);
+						msg.SetVariable(VID_IMAGE_DATA, rawData, st.st_size);
+						free(rawData);
+					}
+					else
+					{
+						rcc = RCC_IO_ERROR;
+					}
+					fclose(f);
 				}
 				else
 				{
 					rcc = RCC_IO_ERROR;
 				}
-				fclose(f);
 			}
 			else
 			{
-				rcc = RCC_IO_ERROR;
+				rcc = RCC_INVALID_OBJECT_ID;
 			}
+
+			DBFreeResult(result);
 		}
 		else
 		{
-			rcc = RCC_INVALID_OBJECT_ID;
+			rcc = RCC_DB_FAILURE;
 		}
-
-		DBFreeResult(result);
-	}
-	else
-	{
-		rcc = RCC_DB_FAILURE;
 	}
 
 	msg.SetVariable(VID_RCC, rcc);
@@ -10673,79 +10686,117 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	TCHAR name[MAX_DB_STRING];
-	TCHAR category[MAX_DB_STRING];
+	TCHAR guid[MAX_DB_STRING] = _T("");
+	TCHAR name[MAX_DB_STRING] = _T("");
+	TCHAR category[MAX_DB_STRING] = _T("");
+	TCHAR mimetype[MAX_DB_STRING] = _T("");
+
+	request->GetVariableStr(VID_GUID, guid, MAX_DB_STRING);
+	if (guid[0] == 0)
+	{
+		uuid_t uuid;
+		uuid_generate(uuid);
+		uuid_to_string(uuid, guid);
+	}
+
 	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
 	request->GetVariableStr(VID_CATEGORY, category, MAX_DB_STRING);
+	request->GetVariableStr(VID_IMAGE_MIMETYPE, mimetype, MAX_DB_STRING);
 	DWORD imageSize = request->GetVariableBinary(VID_IMAGE_DATA, NULL, 0);
 	BYTE *imageData = (BYTE *)malloc(imageSize);
 	request->GetVariableBinary(VID_IMAGE_DATA, imageData, imageSize);
 
-	DebugPrintf(5, _T("updateLibraryImage: name=%s, category=%s, imageSize=%d"), name, category, (int)imageSize);
+	DebugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guid, name, category, (int)imageSize);
 
-	int nameLen = _tcslen(name);
-	for (int i = 0; i < nameLen; i++)
+	int guidLen = _tcslen(guid);
+	if (guidLen != 36)
 	{
-		if (!_istalpha(name[i]) && !_istdigit(name[i]) && name[i] != _T('.') && name[i] != _T('_'))
-		{
-			msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
-			sendMessage(&msg);
-			return;
-		}
-	}
-
-	TCHAR query[MAX_DB_STRING];
-	_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE image_name = '%s'"), EncodeSQLString(name));
-	DB_RESULT result = DBSelect(g_hCoreDB, query);
-	if (result != NULL)
-	{
-		int count = DBGetNumRows(result);
-		TCHAR query[MAX_DB_STRING] = {0};
-		if (count > 0)
-		{
-			BOOL isProtected = DBGetFieldLong(result, 0, 0) != 0; // protected
-
-			if (!isProtected)
-			{
-				_sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET category = '%s' WHERE image_name = '%s'"),
-					EncodeSQLString(category),
-					EncodeSQLString(name));
-			}
-			else
-			{
-				rcc = RCC_INVALID_REQUEST;
-			}
-		}
-		else
-		{
-			// not found in DB, create
-			_sntprintf(query, MAX_DB_STRING, _T("INSERT INTO images (image_name, category, protected) VALUES ('%s', '%s', 0)"),
-					EncodeSQLString(name),
-					EncodeSQLString(category));
-		}
-
-		if (query[0] != 0 && DBQuery(g_hCoreDB, query))
-		{
-			// DB up to date, update file)
-			TCHAR absFileName[MAX_PATH];
-			_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, name);
-			FILE *f = _tfopen(absFileName, _T("wb"));
-			if (f != NULL)
-			{
-				fwrite(imageData, imageSize, 1, f);
-				fclose(f);
-			}
-			else
-			{
-				rcc = RCC_IO_ERROR;
-			}
-		}
-
-		DBFreeResult(result);
+		rcc = RCC_INVALID_OBJECT_NAME;
 	}
 	else
 	{
-		rcc = RCC_DB_FAILURE;
+		for (int i = 0; i < guidLen; i++)
+		{
+			if (!_istalpha(guid[i]) && !_istdigit(guid[i]) && guid[i] != _T('-'))
+			{
+				rcc = RCC_INVALID_OBJECT_NAME;
+				break;
+			}
+		}
+	}
+
+	if (rcc == RCC_SUCCESS)
+	{
+		TCHAR query[MAX_DB_STRING];
+		_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), EncodeSQLString(guid));
+		DB_RESULT result = DBSelect(g_hCoreDB, query);
+		if (result != NULL)
+		{
+			int count = DBGetNumRows(result);
+			TCHAR query[MAX_DB_STRING] = {0};
+			if (count > 0)
+			{
+				BOOL isProtected = DBGetFieldLong(result, 0, 0) != 0; // protected
+
+				if (!isProtected)
+				{
+					_sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET name = '%s', category = '%s', mimetype = '%s' WHERE guid = '%s'"),
+							EncodeSQLString(name),
+							EncodeSQLString(category),
+							EncodeSQLString(mimetype),
+							EncodeSQLString(guid));
+				}
+				else
+				{
+					rcc = RCC_INVALID_REQUEST;
+				}
+			}
+			else
+			{
+				// not found in DB, create
+				_sntprintf(query, MAX_DB_STRING, _T("INSERT INTO images (guid, name, category, mimetype, protected) VALUES ('%s', '%s', '%s', '%s', 0)"),
+						EncodeSQLString(guid),
+						EncodeSQLString(name),
+						EncodeSQLString(category),
+						EncodeSQLString(mimetype));
+			}
+
+			if (query[0] != 0)
+			{
+				if (DBQuery(g_hCoreDB, query))
+				{
+					// DB up to date, update file)
+					TCHAR absFileName[MAX_PATH];
+					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guid);
+					FILE *f = _tfopen(absFileName, _T("wb"));
+					if (f != NULL)
+					{
+						fwrite(imageData, imageSize, 1, f);
+						fclose(f);
+					}
+					else
+					{
+						rcc = RCC_IO_ERROR;
+					}
+				}
+				else
+				{
+					rcc = RCC_DB_FAILURE;
+				}
+			}
+
+			DBFreeResult(result);
+		}
+		else
+		{
+			rcc = RCC_DB_FAILURE;
+		}
+	}
+
+
+	if (rcc == RCC_SUCCESS)
+	{
+		msg.SetVariable(VID_GUID, guid);
 	}
 
 	free(imageData);
@@ -10763,16 +10814,16 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	DWORD rcc = RCC_SUCCESS;
-	TCHAR name[MAX_DB_STRING];
+	TCHAR guid[MAX_DB_STRING];
 	TCHAR query[MAX_DB_STRING];
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
-	DebugPrintf(5, _T("deleteLibraryImage: name=%s"), name);
+	request->GetVariableStr(VID_GUID, guid, MAX_DB_STRING);
+	DebugPrintf(5, _T("deleteLibraryImage: guid=%s"), guid);
 
-	_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND image_name = '%s'"), EncodeSQLString(name));
+	_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND guid = '%s'"), EncodeSQLString(guid));
 	if (DBQuery(g_hCoreDB, query))
 	{
 		// remove from FS?
@@ -10812,7 +10863,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	}
 	DebugPrintf(5, _T("listLibraryImages: category=%s"), category[0] == 0 ? _T("*ANY*") : category);
 
-	_tcscpy(query, _T("SELECT image_name,category FROM images"));
+	_tcscpy(query, _T("SELECT guid,name,category,mimetype,protected FROM images"));
 	if (category[0] != 0)
 	{
 		_tcscat(query, _T(" WHERE category = '"));
@@ -10828,11 +10879,19 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 		DWORD varId = VID_IMAGE_LIST_BASE;
 		for (int i = 0; i < count; i++)
 		{
-			DBGetField(result, i, 0, buffer, MAX_DB_STRING);	// image name
+			DBGetField(result, i, 0, buffer, MAX_DB_STRING);	// guid
 			msg.SetVariable(varId++, buffer);
 
-			DBGetField(result, i, 1, buffer, MAX_DB_STRING);	// category
+			DBGetField(result, i, 1, buffer, MAX_DB_STRING);	// image name
 			msg.SetVariable(varId++, buffer);
+
+			DBGetField(result, i, 2, buffer, MAX_DB_STRING);	// category
+			msg.SetVariable(varId++, buffer);
+
+			DBGetField(result, i, 3, buffer, MAX_DB_STRING);	// mime type
+			msg.SetVariable(varId++, buffer);
+
+			msg.SetVariable(varId++, (WORD)DBGetFieldLong(result, i, 4)); // protected flag
 		}
 
 		DBFreeResult(result);

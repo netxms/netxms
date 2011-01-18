@@ -249,42 +249,43 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
-// Upgrade from V219 to V220
-//
-
-static BOOL H_UpgradeFromV219(int currVersion, int newVersion)
-{
-   static TCHAR batch[] = 
-      _T("INSERT INTO images (image_name, category, protected) VALUES('atm.png', 'Network Objects', 1);\n")
-      _T("INSERT INTO images (image_name, category, protected) VALUES('hsm.png', 'Network Objects', 1);\n")
-      _T("INSERT INTO images (image_name, category, protected) VALUES('node.png', 'Network Objects', 1);\n")
-      _T("INSERT INTO images (image_name, category, protected) VALUES('printer.png', 'Network Objects', 1);\n")
-      _T("INSERT INTO images (image_name, category, protected) VALUES('router.png', 'Network Objects', 1);\n")
-      _T("INSERT INTO images (image_name, category, protected) VALUES('server.png', 'Network Objects', 1);\n")
-      _T("INSERT INTO images (image_name, category, protected) VALUES('service.png', 'Network Objects', 1);\n")
-      _T("INSERT INTO images (image_name, category, protected) VALUES('switch.png', 'Network Objects', 1);\n")
-      _T("INSERT INTO images (image_name, category, protected) VALUES('unknown.png', 'Network Objects', 1);\n")
-      _T("<END>");
-
-   CHK_EXEC(SQLBatch(batch));
-
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='220' WHERE var_name='SchemaVersion'")));
-   return TRUE;
-}
-
-
-//
 // Upgrade from V218 to V219
 //
 
 static BOOL H_UpgradeFromV218(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateTable(_T("CREATE TABLE images (")
-				_T("   image_name varchar(255) not null,")
+				_T("   guid varchar(36) not null,")
+				_T("   mimetype varchar(64) not null,")
+				_T("   name varchar(255) not null,")
 				_T("   category varchar(255) not null,")
 				_T("   protected integer default 0,")
 				_T("   ")
-				_T("   PRIMARY KEY(image_name))")));
+				_T("   PRIMARY KEY(guid),")
+				_T("   UNIQUE(name, category))")));
+
+   static TCHAR batch[] =
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('1ddb76a3-a05f-4a42-acda-22021768feaf', 'image/png', 'ATM', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('b314cf44-b2aa-478e-b23a-73bc5bb9a624', 'image/png', 'HSM', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('904e7291-ee3f-41b7-8132-2bd29288ecc8', 'image/png', 'Node', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('f5214d16-1ab1-4577-bb21-063cfd45d7af', 'image/png', 'Printer', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('bacde727-b183-4e6c-8dca-ab024c88b999', 'image/png', 'Router', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('ba6ab507-f62d-4b8f-824c-ca9d46f22375', 'image/png', 'Server', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('092e4b35-4e7c-42df-b9b7-d5805bfac64e', 'image/png', 'Service', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('f9105c54-8dcf-483a-b387-b4587dfd3cba', 'image/png', 'Switch', 'Network Objects', 1);\n")
+      _T("INSERT INTO images (guid, mimetype, name, category, protected) VALUES ")
+         _T("('7cd999e9-fbe0-45c3-a695-f84523b3a50c', 'image/png', 'Unknown', 'Network Objects', 1);\n")
+      _T("<END>");
+
+   CHK_EXEC(SQLBatch(batch));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='219' WHERE var_name='SchemaVersion'")));
    return TRUE;
@@ -5032,7 +5033,6 @@ static struct
 	{ 216, 217, H_UpgradeFromV216 },
 	{ 217, 218, H_UpgradeFromV217 },
 	{ 218, 219, H_UpgradeFromV218 },
-	{ 219, 220, H_UpgradeFromV219 },
    { 0, NULL }
 };
 
@@ -5060,7 +5060,7 @@ void UpgradeDatabase(void)
    {
        _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n"
                    _T("You need to upgrade your server before using this database.\n")),
-                iVersion, DB_FORMAT_VERSION);
+                (int)iVersion, DB_FORMAT_VERSION);
    }
    else
    {
@@ -5083,10 +5083,10 @@ void UpgradeDatabase(void)
                   break;
             if (m_dbUpgradeMap[i].fpProc == NULL)
             {
-               _tprintf(_T("Unable to find upgrade procedure for version %d\n"), iVersion);
+               _tprintf(_T("Unable to find upgrade procedure for version %d\n"), (int)iVersion);
                break;
             }
-            _tprintf(_T("Upgrading from version %d to %d\n"), iVersion, m_dbUpgradeMap[i].newVersion);
+            _tprintf(_T("Upgrading from version %d to %d\n"), (int)iVersion, m_dbUpgradeMap[i].newVersion);
             DBBegin(g_hCoreDB);
             if (m_dbUpgradeMap[i].fpProc(iVersion, m_dbUpgradeMap[i].newVersion))
             {

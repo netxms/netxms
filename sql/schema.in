@@ -1278,12 +1278,14 @@ CREATE TABLE network_map_links
 /*
 ** Image Library
 */
+
 CREATE TABLE images
 (
-   /* image_id integer not null, */
-   image_name varchar(255) not null,
+   GUID varchar(36) not null,
+   name varchar(255) not null,
    category varchar(255) not null,
    protected integer default 0,
    
-   PRIMARY KEY(image_name)
+   PRIMARY KEY(guid),
+   UNIQUE(name, category)
 ) TABLE_TYPE;
