@@ -111,7 +111,7 @@ AC_ARG_WITH(static-agent,
 AC_ARG_WITH(ipso-agent,
 [AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite ipso-agent"
+	COMPONENTS="$COMPONENTS ipso-agent"
 ])
 
 AC_ARG_WITH(webui,
@@ -319,49 +319,51 @@ fi
 
 check_substr "$COMPONENTS" "static-agent"
 if test $? = 0; then
-	if test "x$COMPONENTS" != "x static-agent"; then
-		AC_MSG_ERROR(Static agent and other components are mutally exclusive.)
+	if test "x$COMPONENTS" != "x sqlite static-agent"; then
+		AC_MSG_ERROR(Static agent and other components are mutually exclusive.)
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
 	MODULES="$MODULES libnxlp agent"
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
+	STATIC_SUBAGENT_LIST="ecs logwatch ping portcheck ups"
+	SUBAGENT_LIBS="../subagents/ecs/libnsm_ecs.la ../subagents/logwatch/libnsm_logwatch.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
 
 	case "$PLATFORM" in
 		Linux)
 			SUBAGENT_DIRS="linux"
-			SUBAGENT_LIBS="../subagents/linux/libnsm_linux.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/linux/libnsm_linux.la"
 			STATIC_SUBAGENT_LIST="linux $STATIC_SUBAGENT_LIST"
 			;;
 		FreeBSD)
 			SUBAGENT_DIRS="freebsd"
-			SUBAGENT_LIBS="../subagents/freebsd/libnsm_freebsd.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/freebsd/libnsm_freebsd.la"
 			STATIC_SUBAGENT_LIST="freebsd $STATIC_SUBAGENT_LIST"
 			;;
 		OpenBSD)
 			SUBAGENT_DIRS="openbsd"
-			SUBAGENT_LIBS="../subagents/openbsd/libnsm_openbsd.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/openbsd/libnsm_openbsd.la"
 			STATIC_SUBAGENT_LIST="openbsd $STATIC_SUBAGENT_LIST"
 			;;
 		NetBSD)
 			SUBAGENT_DIRS="netbsd"
-			SUBAGENT_LIBS="../subagents/netbsd/libnsm_netbsd.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/netbsd/libnsm_netbsd.la"
 			STATIC_SUBAGENT_LIST="netbsd $STATIC_SUBAGENT_LIST"
 			;;
 		SunOS)
 			SUBAGENT_DIRS="sunos"
-			SUBAGENT_LIBS="../subagents/sunos/libnsm_sunos.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/sunos/libnsm_sunos.la"
 			STATIC_SUBAGENT_LIST="sunos $STATIC_SUBAGENT_LIST"
 			;;
 		AIX)
 			SUBAGENT_DIRS="aix"
-			SUBAGENT_LIBS="../subagents/aix/libnsm_aix.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/aix/libnsm_aix.la"
 			STATIC_SUBAGENT_LIST="aix $STATIC_SUBAGENT_LIST"
 			;;
 		HP-UX)
 			SUBAGENT_DIRS="hpux"
-			SUBAGENT_LIBS="../subagents/hpux/libnsm_hpux.la"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/hpux/libnsm_hpux.la"
 			STATIC_SUBAGENT_LIST="hpux $STATIC_SUBAGENT_LIST"
 			;;
 		*)
@@ -373,7 +375,7 @@ fi
 check_substr "$COMPONENTS" "ipso-agent"
 if test $? = 0; then
 	if test "x$COMPONENTS" != "x ipso-agent"; then
-		AC_MSG_ERROR(IPSO agent and other components are mutally exclusive.)
+		AC_MSG_ERROR(IPSO agent and other components are mutually exclusive.)
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
@@ -382,9 +384,9 @@ if test $? = 0; then
 	MODULES="$MODULES libnxlp agent"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -DSQLITE_THREADSAFE=0 -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
-	STATIC_SUBAGENT_LIST="ipso ping portcheck ups"
+	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
 	SUBAGENT_DIRS="ipso"
-	SUBAGENT_LIBS="../subagents/ipso/libnsm_ipso.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
+	SUBAGENT_LIBS="../subagents/ecs/libnsm_ecs.la ../subagents/ipso/libnsm_ipso.la ../subagents/logwatch/libnsm_logwatch.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
 fi
 
 check_substr "$COMPONENTS" "snmp"
