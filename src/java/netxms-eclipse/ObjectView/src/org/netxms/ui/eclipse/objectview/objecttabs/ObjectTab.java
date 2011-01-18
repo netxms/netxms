@@ -200,4 +200,12 @@ public abstract class ObjectTab
 	public void dispose()
 	{
 	}
+
+	/**
+	 * @return the clientArea
+	 */
+	protected Composite getClientArea()
+	{
+		return clientArea;
+	}
 }

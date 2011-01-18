@@ -439,7 +439,7 @@ src/java/netxms-eclipse/Charts/icons/adjust_y.png -text
 src/java/netxms-eclipse/Charts/icons/bar_horizontal.png -text
 src/java/netxms-eclipse/Charts/icons/bar_vertical.png -text
 src/java/netxms-eclipse/Charts/icons/chart_bar.png -text
-src/java/netxms-eclipse/Charts/icons/chart_dial.gif -text
+src/java/netxms-eclipse/Charts/icons/chart_dial.png -text
 src/java/netxms-eclipse/Charts/icons/chart_line.png -text
 src/java/netxms-eclipse/Charts/icons/chart_pie.png -text
 src/java/netxms-eclipse/Charts/icons/chart_scatter.gif -text
@@ -825,6 +825,7 @@ src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/Activato
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowObjectDetailsView.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectOverview.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectTab.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/Comments.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/TabbedObjectView.java -text
 src/java/netxms-eclipse/PolicyManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PolicyManager/META-INF/MANIFEST.MF -text
@@ -1014,6 +1015,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/StringComparator
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetFactory.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetHelper.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/AbstractSelector.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/DashboardElement.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/LabeledText.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/SortableTableViewer.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/helpers/TableSortingListener.java -text

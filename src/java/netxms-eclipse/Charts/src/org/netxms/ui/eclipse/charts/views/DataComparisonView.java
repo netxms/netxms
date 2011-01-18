@@ -122,7 +122,7 @@ public class DataComparisonView extends ViewPart
 		titleImages[1] = Activator.getImageDescriptor("icons/chart_pie.png").createImage();
 		titleImages[2] = Activator.getImageDescriptor("icons/graph.png").createImage(); // TODO: add radar icon
 		titleImages[3] = Activator.getImageDescriptor("icons/chart_tube.png").createImage();
-		titleImages[4] = Activator.getImageDescriptor("icons/chart_dial.gif").createImage();
+		titleImages[4] = Activator.getImageDescriptor("icons/chart_dial.png").createImage();
 
 		// Extract information from view id
 		//   first field is unique ID
@@ -456,7 +456,7 @@ public class DataComparisonView extends ViewPart
 			}
 		};
 		actionShowDialChart.setChecked(chart.getChartType() == DataComparisonChart.DIAL_CHART);
-		actionShowDialChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_dial.gif"));
+		actionShowDialChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_dial.png"));
 
 		actionHorizontal = new Action("Show &horizontally", Action.AS_RADIO_BUTTON) {
 			@Override

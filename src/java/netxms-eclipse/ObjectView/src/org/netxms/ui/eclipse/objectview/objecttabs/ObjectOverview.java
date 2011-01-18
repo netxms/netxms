@@ -20,13 +20,11 @@ package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
 
 /**
  * Object overview tab
@@ -34,8 +32,7 @@ import org.netxms.client.objects.GenericObject;
  */
 public class ObjectOverview extends ObjectTab
 {
-	private Font headerFont;
-	private Text comments;
+	private Comments comments;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -44,26 +41,16 @@ public class ObjectOverview extends ObjectTab
 	protected void createTabContent(Composite parent)
 	{
 		GridLayout layout = new GridLayout();
-		//layout.marginHeight = 0;
-		//layout.marginWidth = 0;
+		layout.numColumns = 2;
 		parent.setLayout(layout);
 		parent.setBackground(new Color(parent.getDisplay(), 255, 255, 255));
 		
-		headerFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);
-		
-		Label label = new Label(parent, SWT.NONE);
-		label.setFont(headerFont);
-		label.setText("Attributes");
-		label.setBackground(parent.getBackground());
-		
-		label = new Label(parent, SWT.NONE);
-		label.setFont(headerFont);
-		label.setText("Comments");
-		label.setBackground(parent.getBackground());
-		
-		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY);
-		comments.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		comments.setBackground(parent.getBackground());
+		comments = new Comments(parent, getObject());
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		comments.setLayoutData(gd);
 	}
 
 	/* (non-Javadoc)
@@ -72,7 +59,9 @@ public class ObjectOverview extends ObjectTab
 	@Override
 	public void objectChanged(GenericObject object)
 	{
-		comments.setText(object.getComments());
+		comments.setComments(object.getComments());
+		
+		getClientArea().layout();
 	}
 
 	/* (non-Javadoc)
@@ -81,7 +70,6 @@ public class ObjectOverview extends ObjectTab
 	@Override
 	public void dispose()
 	{
-		headerFont.dispose();
 		super.dispose();
 	}
 }
