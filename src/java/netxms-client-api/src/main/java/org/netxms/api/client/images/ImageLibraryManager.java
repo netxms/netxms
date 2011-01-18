@@ -10,9 +10,9 @@ public interface ImageLibraryManager
 
 	public List<LibraryImage> getImageLibrary(String category) throws IOException, NetXMSClientException;
 
-	public LibraryImage getImage(String key) throws IOException, NetXMSClientException;
+	public LibraryImage getImage(String guid) throws IOException, NetXMSClientException;
 
-	public void createImage(LibraryImage image) throws IOException, NetXMSClientException;
+	public LibraryImage createImage(LibraryImage image) throws IOException, NetXMSClientException;
 
 	public void deleteImage(LibraryImage image) throws IOException, NetXMSClientException;
 

@@ -10,57 +10,77 @@ public class ImageLibraryTest extends SessionTest
 		final NXCSession session = connect();
 
 		final List<LibraryImage> library = session.getImageLibrary();
-		assertEquals(3, library.size());
-		assertEquals("image1", library.get(0).getName());
-		assertEquals(true, library.get(0).isDirty());
-		assertEquals("image2", library.get(1).getName());
-		assertEquals("image3", library.get(2).getName());
+		assertTrue(library.size() > 1);
+		final LibraryImage image1 = library.get(0);
+		assertEquals("ATM", image1.getName());
+		assertEquals(false, image1.isComplete());
+		assertEquals("Network Objects", image1.getCategory());
+		assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image1.getGuid());
 	}
 
 	public void testGetLibraryCategory() throws Exception
 	{
 		final NXCSession session = connect();
 
-		final List<LibraryImage> library = session.getImageLibrary("cat1");
-		assertEquals(1, library.size());
-		assertEquals("image1", library.get(0).getName());
-		assertEquals(true, library.get(0).isDirty());
+		final List<LibraryImage> library = session.getImageLibrary("Network Objects");
+		assertTrue(library.size() > 1);
 	}
 
 	public void testGetImage() throws Exception
 	{
 		final NXCSession session = connect();
 
-		final LibraryImage image = session.getImage("image1");
-		assertEquals("image1", image.getName());
-		assertEquals("cat1", image.getCategory());
+		final LibraryImage image = session.getImage("1ddb76a3-a05f-4a42-acda-22021768feaf"); // ATM
+		assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image.getGuid());
+		assertEquals("ATM", image.getName());
+		assertEquals("Network Objects", image.getCategory());
 		assertEquals(true, image.isProtected());
-		assertEquals(153, image.getBinaryData().length);
+		assertEquals(true, image.isComplete());
+		assertEquals("image/png", image.getMimeType());
+		assertEquals(2718, image.getBinaryData().length);
 	}
 
-	public void testDeleteImage() throws Exception
+	public void testDeleteStockImage() throws Exception
 	{
 		final NXCSession session = connect();
 
-		final LibraryImage image = new LibraryImage("image4");
-		session.deleteImage(image);
+		final LibraryImage image1 = new LibraryImage("1ddb76a3-a05f-4a42-acda-22021768feaf");
+		session.deleteImage(image1);
+
+		final LibraryImage image = session.getImage("1ddb76a3-a05f-4a42-acda-22021768feaf"); // ATM
+		assertEquals("1ddb76a3-a05f-4a42-acda-22021768feaf", image.getGuid());
+		assertEquals("ATM", image.getName());
+		assertEquals("Network Objects", image.getCategory());
+		assertEquals(true, image.isProtected());
+		assertEquals(true, image.isComplete());
+		assertEquals("image/png", image.getMimeType());
+		assertEquals(2718, image.getBinaryData().length);
 	}
 
 	public void testCreateImage() throws Exception
 	{
 		final NXCSession session = connect();
 
-		final LibraryImage image = new LibraryImage("image.png");
+		final LibraryImage image = new LibraryImage();
+		image.setName("image1");
 		image.setCategory("category");
 		image.setBinaryData("data".getBytes());
-		session.createImage(image);
+		final LibraryImage createdImage = session.createImage(image);
+
+		assertNotNull(createdImage.getGuid());
+		assertTrue(createdImage.getGuid().length() == 36);
+		
+		System.out.println(createdImage.getGuid());
+
+		session.deleteImage(createdImage);
 	}
 
 	public void testModifyImage() throws Exception
 	{
 		final NXCSession session = connect();
 
-		final LibraryImage image = new LibraryImage("image.png");
+		final LibraryImage image = new LibraryImage("c263037f-021d-41b8-ac73-b5fd64ee3a85");
+		image.setName("image1");
 		image.setCategory("category");
 		image.setBinaryData("new data".getBytes());
 		session.modifyImage(image);

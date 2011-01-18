@@ -3731,20 +3731,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		long varId = NXCPCodes.VID_IMAGE_LIST_BASE;
 		for(int i = 0; i < numOfImages; i++)
 		{
+			final String imageGuid = response.getVariableAsString(varId++);
 			final String imageName = response.getVariableAsString(varId++);
 			final String imageCategory = response.getVariableAsString(varId++);
+			final String imageMimeType = response.getVariableAsString(varId++);
 			final boolean imageProtected = response.getVariableAsBoolean(varId++);
-			ret.add(new LibraryImage(imageName, imageCategory, imageProtected));
+			ret.add(new LibraryImage(imageGuid, imageName, imageCategory, imageMimeType, imageProtected));
 		}
 
 		return Collections.unmodifiableList(ret);
 	}
 
 	@Override
-	public LibraryImage getImage(String key) throws IOException, NXCException
+	public LibraryImage getImage(String guid) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_IMAGE);
-		msg.setVariable(NXCPCodes.VID_NAME, key);
+		msg.setVariable(NXCPCodes.VID_GUID, guid);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 
@@ -3752,12 +3754,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	@Override
-	public void createImage(LibraryImage image) throws IOException, NXCException
+	public LibraryImage createImage(LibraryImage image) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_IMAGE);
 		image.fillMessage(msg);
 		sendMessage(msg);
-		waitForRCC(msg.getMessageId());
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		final String imageGuid = response.getVariableAsString(NXCPCodes.VID_GUID);
+		image.setGuid(imageGuid);
+
+		return image;
 	}
 
 	@Override

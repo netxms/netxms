@@ -644,6 +644,7 @@ public final class NXCPCodes
 	public static final long VID_IMAGE_DATA              = 369;
 	public static final long VID_IMAGE_PROTECTED         = 370;
 	public static final long VID_NUM_IMAGES              = 371;
+	public static final long VID_IMAGE_MIMETYPE          = 372;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

@@ -5,24 +5,27 @@ import org.netxms.base.NXCPMessage;
 
 public class LibraryImage
 {
+	private String guid;
 	private String name;
 	private String category;
+	private String mimeType;
 	private byte[] binaryData;
 	private boolean imageProtected;
-	private boolean dirty;
+	private boolean complete = false;
 
-	public LibraryImage(final String name)
+	public LibraryImage(final String guid)
 	{
-		this.name = name;
-		this.dirty = true;
+		this.guid = guid;
 	}
 
-	public LibraryImage(final String name, final String category, final boolean imageProtected)
+	public LibraryImage(final String guid, final String name, final String category, final String mimeType,
+			final boolean imageProtected)
 	{
+		this.guid = guid;
 		this.name = name;
 		this.category = category;
+		this.mimeType = mimeType;
 		this.imageProtected = imageProtected;
-		this.dirty = true;
 	}
 
 	/**
@@ -33,10 +36,17 @@ public class LibraryImage
 	 */
 	public LibraryImage(final NXCPMessage msg)
 	{
+		guid = msg.getVariableAsString(NXCPCodes.VID_GUID);
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		category = msg.getVariableAsString(NXCPCodes.VID_CATEGORY);
 		binaryData = msg.getVariableAsBinary(NXCPCodes.VID_IMAGE_DATA);
+		mimeType = msg.getVariableAsString(NXCPCodes.VID_IMAGE_MIMETYPE);
 		imageProtected = msg.getVariableAsBoolean(NXCPCodes.VID_IMAGE_PROTECTED);
+		this.complete = true;
+	}
+
+	public LibraryImage()
+	{
 	}
 
 	/**
@@ -44,6 +54,7 @@ public class LibraryImage
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
+		msg.setVariable(NXCPCodes.VID_GUID, guid);
 		msg.setVariable(NXCPCodes.VID_NAME, name);
 		if (category != null)
 		{
@@ -53,6 +64,23 @@ public class LibraryImage
 		{
 			msg.setVariable(NXCPCodes.VID_IMAGE_DATA, binaryData);
 		}
+	}
+
+	/**
+	 * @return the guid
+	 */
+	public String getGuid()
+	{
+		return guid;
+	}
+
+	/**
+	 * @param guid
+	 *           the guid to set
+	 */
+	public void setGuid(String guid)
+	{
+		this.guid = guid;
 	}
 
 	/**
@@ -115,23 +143,36 @@ public class LibraryImage
 	}
 
 	/**
-	 * @return is dirty?
+	 * @return is complete (contains binary data)?
 	 */
-	public boolean isDirty()
+	public boolean isComplete()
 	{
-		return dirty;
+		return complete;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
+	/**
+	 * @return the mimeType
 	 */
+	public String getMimeType()
+	{
+		return mimeType;
+	}
+
+	/**
+	 * @param mimeType
+	 *           the mimeType to set
+	 */
+	public void setMimeType(String mimeType)
+	{
+		this.mimeType = mimeType;
+	}
+
 	@Override
 	public String toString()
 	{
-		return "LibraryImage [name=" + name + ", category=" + category + ", binaryData=" + (binaryData == null ? "null" : "not null")
-				+ ", imageProtected=" + imageProtected + ", dirty=" + dirty + "]";
+		return "LibraryImage [guid=" + guid + ", name=" + name + ", category=" + category + ", mimeType=" + mimeType
+				+ ", binaryData=" + (binaryData == null ? "[null]" : "[not null]") + ", imageProtected=" + imageProtected
+				+ ", complete=" + complete + "]";
 	}
 
 }
