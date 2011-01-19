@@ -18,13 +18,20 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Layout;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
+import org.netxms.ui.eclipse.objectview.objecttabs.elements.GeneralInfo;
+import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
 
 /**
  * Object overview tab
@@ -32,7 +39,9 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
  */
 public class ObjectOverview extends ObjectTab
 {
-	private Comments comments;
+	private Set<OverviewPageElement> elements = new HashSet<OverviewPageElement>();
+	private Composite leftColumn;
+	private Composite rightColumn;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -45,12 +54,60 @@ public class ObjectOverview extends ObjectTab
 		parent.setLayout(layout);
 		parent.setBackground(new Color(parent.getDisplay(), 255, 255, 255));
 		
-		comments = new Comments(parent, getObject());
+		leftColumn = new Composite(parent, SWT.NONE);
+		leftColumn.setLayout(createColumnLayout());
 		GridData gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		comments.setLayoutData(gd);
+		leftColumn.setLayoutData(gd);
+		rightColumn = new Composite(parent, SWT.NONE);
+		rightColumn.setLayout(createColumnLayout());
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		gd.horizontalAlignment = SWT.FILL;
+		rightColumn.setLayoutData(gd);
+
+		addElement(new GeneralInfo(leftColumn, getObject()));
+		addElement(new Comments(leftColumn, getObject()));
+		addElement(new Capabilities(rightColumn, getObject()));
+	}
+	
+	/**
+	 * Create layout for column
+	 * 
+	 * @return
+	 */
+	private Layout createColumnLayout()
+	{
+		RowLayout layout = new RowLayout();
+		layout.fill = true;
+		layout.marginBottom = 0;
+		layout.marginTop = 0;
+		layout.marginLeft = 0;
+		layout.marginRight = 0;
+		layout.spacing = 5;
+		layout.type = SWT.VERTICAL;
+		return layout;
+	}
+	
+	/**
+	 * Add page element
+	 * 
+	 * @param element
+	 * @param span
+	 * @param grabExcessSpace
+	 */
+	private void addElement(OverviewPageElement element)
+	{
+		/*
+		GridData gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = grabExcessSpace;
+		gd.horizontalSpan = span;
+		element.setLayoutData(gd);
+		*/
+		elements.add(element);
 	}
 
 	/* (non-Javadoc)
@@ -59,8 +116,11 @@ public class ObjectOverview extends ObjectTab
 	@Override
 	public void objectChanged(GenericObject object)
 	{
-		comments.setComments(object.getComments());
-		
+		for(OverviewPageElement element : elements)
+		{
+			element.setVisible(element.isApplicableForObject(object));
+			element.setObject(object);
+		}
 		getClientArea().layout();
 	}
 

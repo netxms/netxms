@@ -825,7 +825,11 @@ src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/Activato
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowObjectDetailsView.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectOverview.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectTab.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/Capabilities.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/Comments.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/GeneralInfo.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/OverviewPageElement.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/TableElement.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/TabbedObjectView.java -text
 src/java/netxms-eclipse/PolicyManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PolicyManager/META-INF/MANIFEST.MF -text

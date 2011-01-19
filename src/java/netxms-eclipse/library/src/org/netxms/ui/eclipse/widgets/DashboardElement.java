@@ -122,7 +122,6 @@ public abstract class DashboardElement extends Composite
 		Point p = clientArea.computeSize(wHint, hHint, changed);
 		p.x += BORDER_WIDTH * 2;
 		p.y += BORDER_WIDTH * 2 + HEADER_HEIGHT;
-System.out.println("COMPUTE: " + p.x + " " + p.y);		
 		return p;
 	}
 
