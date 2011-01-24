@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,15 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -359,4 +363,17 @@ public class WidgetHelper
 		{
 		}
 	}
+	
+	/**
+	 * Copy given text to clipboard
+	 * 
+	 * @param text 
+	 */
+	public static void copyToClipboard(final String text)
+	{
+		final Clipboard cb = new Clipboard(Display.getCurrent());
+      Transfer transfer = TextTransfer.getInstance();
+      cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer });
+      cb.dispose();
+   }
 }

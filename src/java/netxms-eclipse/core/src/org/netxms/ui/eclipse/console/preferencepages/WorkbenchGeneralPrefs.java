@@ -24,6 +24,7 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 {
 	private Button cbShowHeapMonitor;
 	private Button cbShowTrayIcon;
+	private Button cbHideWhenMinimized;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -45,6 +46,10 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		cbShowTrayIcon.setText(Messages.getString("WorkbenchGeneralPrefs.show_tray_icon")); //$NON-NLS-1$
 		cbShowTrayIcon.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON")); //$NON-NLS-1$
 		
+		cbHideWhenMinimized = new Button(dialogArea, SWT.CHECK);
+		cbHideWhenMinimized.setText("Hide when minimized");
+		cbHideWhenMinimized.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED")); //$NON-NLS-1$
+		
 		return dialogArea;
 	}
 
@@ -65,8 +70,9 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 	{
 		super.performDefaults();
 		
-		cbShowHeapMonitor.setEnabled(true);
-		cbShowTrayIcon.setEnabled(true);
+		cbShowHeapMonitor.setSelection(true);
+		cbShowTrayIcon.setSelection(true);
+		cbHideWhenMinimized.setSelection(false);
 	}
 
 	/* (non-Javadoc)
@@ -77,6 +83,7 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 	{
 		getPreferenceStore().setValue("SHOW_MEMORY_MONITOR", cbShowHeapMonitor.getSelection()); //$NON-NLS-1$
 		Activator.getDefault().getPreferenceStore().setValue("SHOW_TRAY_ICON", cbShowTrayIcon.getSelection()); //$NON-NLS-1$
+		Activator.getDefault().getPreferenceStore().setValue("HIDE_WHEN_MINIMIZED", cbHideWhenMinimized.getSelection()); //$NON-NLS-1$
 		
 		if (cbShowTrayIcon.getSelection())
 			Activator.showTrayIcon();

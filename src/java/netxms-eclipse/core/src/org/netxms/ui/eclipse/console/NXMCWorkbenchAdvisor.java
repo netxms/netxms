@@ -18,6 +18,10 @@
  */
 package org.netxms.ui.eclipse.console;
 
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -65,5 +69,22 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 		if (contributionType.equals(IContributionService.TYPE_PROPERTY))
 			return new ExtendedContributionComparator();
 		return super.getComparatorFor(contributionType);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.application.WorkbenchAdvisor#postStartup()
+	 */
+	@Override
+	public void postStartup()
+	{
+		super.postStartup();
+		final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		shell.addShellListener(new ShellAdapter()	{
+			public void shellIconified(ShellEvent e)
+			{
+				if (Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED"))
+					shell.setVisible(false);
+			}
+		});
 	}
 }

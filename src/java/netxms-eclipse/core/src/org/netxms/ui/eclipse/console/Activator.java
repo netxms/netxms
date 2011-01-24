@@ -21,9 +21,13 @@ package org.netxms.ui.eclipse.console;
 import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -125,6 +129,20 @@ public class Activator extends AbstractUIPlugin
 			TrayItem item = new TrayItem(tray, SWT.NONE);
 			item.setToolTipText("NetXMS Management Console");
 			item.setImage(getImageDescriptor("icons/alt_window_16.gif").createImage());
+			item.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+				}
+
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e)
+				{
+					final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+					shell.setVisible(true);
+					shell.setMinimized(false);
+				}
+			});
 			ConsoleSharedData.setTrayIcon(item);
 		}
 	}

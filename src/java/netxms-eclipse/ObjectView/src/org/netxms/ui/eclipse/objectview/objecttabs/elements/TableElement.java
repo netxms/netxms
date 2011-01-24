@@ -1,5 +1,9 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
@@ -8,16 +12,21 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public abstract class TableElement extends OverviewPageElement
 {
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
 	
 	private Table table;
+	private Action actionCopy;
+	private Action actionCopyName;
+	private Action actionCopyValue;
 
 	/**
 	 * @param parent
@@ -36,6 +45,8 @@ public abstract class TableElement extends OverviewPageElement
 	{
 		table = new Table(parent, SWT.FULL_SELECTION | SWT.HIDE_SELECTION | SWT.SINGLE);
 		setupTable();
+		createActions();
+		createPopupMenu();
 		fillTableInternal();
 		return table;
 	}
@@ -67,6 +78,81 @@ public abstract class TableElement extends OverviewPageElement
 				gc.fillRectangle(event.x, event.y, event.width, event.height);
 			}
 		});
+	}
+	
+	/**
+	 * Create actions required for popup menu
+	 */
+	protected void createActions()
+	{
+		actionCopy = new Action("Copy to clipboard") {
+			@Override
+			public void run()
+			{
+				int index = table.getSelectionIndex();
+				if (index >= 0)
+				{
+					final TableItem item = table.getItem(index);
+					WidgetHelper.copyToClipboard(item.getText(0) + "=" + item.getText(1));
+				}
+			}
+		};
+
+		actionCopyName = new Action("Copy &name to clipboard") {
+			@Override
+			public void run()
+			{
+				int index = table.getSelectionIndex();
+				if (index >= 0)
+				{
+					final TableItem item = table.getItem(index);
+					WidgetHelper.copyToClipboard(item.getText(0));
+				}
+			}
+		};
+
+		actionCopyValue = new Action("Copy &value to clipboard") {
+			@Override
+			public void run()
+			{
+				int index = table.getSelectionIndex();
+				if (index >= 0)
+				{
+					final TableItem item = table.getItem(index);
+					WidgetHelper.copyToClipboard(item.getText(1));
+				}
+			}
+		};
+	}
+	
+	/**
+	 * Create popup menu
+	 */
+	private void createPopupMenu()
+	{
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		Menu menu = menuMgr.createContextMenu(table);
+		table.setMenu(menu);
+	}
+	
+	/**
+	 * Fill item's context menu
+	 * 
+	 * @param manager menu manager
+	 */
+	protected void fillContextMenu(IMenuManager manager)
+	{
+		manager.add(actionCopy);
+		manager.add(actionCopyName);
+		manager.add(actionCopyValue);
 	}
 
 	/**
