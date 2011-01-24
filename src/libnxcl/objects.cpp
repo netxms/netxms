@@ -1483,6 +1483,26 @@ void LIBNXCL_EXPORTABLE NXCGetComparableObjectNameEx(NXC_OBJECT *pObject, TCHAR 
 // Save object's cache to file
 //
 
+static void WriteStringToCacheFile(FILE *file, const TCHAR *str, bool writeNull)
+{
+	DWORD len;
+
+	if (str != NULL)
+	{
+		len = (DWORD)_tcslen(str);
+		fwrite(&len, sizeof(DWORD), 1, file);
+		fwrite(str, sizeof(TCHAR), len, file);
+	}
+	else
+	{
+		if (writeNull)
+		{
+			len = 0;
+			fwrite(&len, sizeof(DWORD), 1, file);
+		}
+	}
+}
+
 DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *pszFile)
 {
    FILE *hFile;
@@ -1515,9 +1535,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
          fwrite(pList[i].pObject->pAccessList, 1, 
                 sizeof(NXC_ACL_ENTRY) * pList[i].pObject->dwAclSize, hFile);
          
-			dwSize = (DWORD)_tcslen(pList[i].pObject->pszComments) * sizeof(TCHAR);
-         fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-         fwrite(pList[i].pObject->pszComments, 1, dwSize, hFile);
+			WriteStringToCacheFile(hFile, pList[i].pObject->pszComments, true);
 
 			if (pList[i].pObject->dwNumTrustedNodes > 0)
 				fwrite(pList[i].pObject->pdwTrustedNodes, pList[i].pObject->dwNumTrustedNodes, sizeof(DWORD), hFile);
@@ -1527,42 +1545,21 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
          fwrite(&dwSize, 1, sizeof(DWORD), hFile);
 			for(j = 0; j < pList[i].pObject->pCustomAttrs->getSize(); j++)
 			{
-            dwSize = (DWORD)_tcslen(pList[i].pObject->pCustomAttrs->getKeyByIndex(j)) * sizeof(TCHAR);
-            fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-            fwrite(pList[i].pObject->pCustomAttrs->getKeyByIndex(j), 1, dwSize, hFile);
-
-            dwSize = (DWORD)_tcslen(pList[i].pObject->pCustomAttrs->getValueByIndex(j)) * sizeof(TCHAR);
-            fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-            fwrite(pList[i].pObject->pCustomAttrs->getValueByIndex(j), 1, dwSize, hFile);
+				WriteStringToCacheFile(hFile, pList[i].pObject->pCustomAttrs->getKeyByIndex(j), true);
+				WriteStringToCacheFile(hFile, pList[i].pObject->pCustomAttrs->getValueByIndex(j), true);
 			}
 
          switch(pList[i].pObject->iClass)
          {
 				case OBJECT_NODE:
-               dwSize = (DWORD)_tcslen(CHECK_NULL_EX(pList[i].pObject->node.pszAuthName)) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->node.pszAuthName, 1, dwSize, hFile);
-
-               dwSize = (DWORD)_tcslen(CHECK_NULL_EX(pList[i].pObject->node.pszAuthPassword)) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->node.pszAuthPassword, 1, dwSize, hFile);
-
-               dwSize = (DWORD)_tcslen(CHECK_NULL_EX(pList[i].pObject->node.pszPrivPassword)) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->node.pszPrivPassword, 1, dwSize, hFile);
-
-               dwSize = (DWORD)_tcslen(CHECK_NULL_EX(pList[i].pObject->node.pszSnmpObjectId)) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->node.pszSnmpObjectId, 1, dwSize, hFile);
+					WriteStringToCacheFile(hFile, pList[i].pObject->node.pszAuthName, true);
+					WriteStringToCacheFile(hFile, pList[i].pObject->node.pszAuthPassword, true);
+					WriteStringToCacheFile(hFile, pList[i].pObject->node.pszPrivPassword, true);
+					WriteStringToCacheFile(hFile, pList[i].pObject->node.pszSnmpObjectId, true);
 					break;
             case OBJECT_NETWORKSERVICE:
-               dwSize = (DWORD)_tcslen(pList[i].pObject->netsrv.pszRequest) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->netsrv.pszRequest, 1, dwSize, hFile);
-
-               dwSize = (DWORD)_tcslen(pList[i].pObject->netsrv.pszResponse) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->netsrv.pszResponse, 1, dwSize, hFile);
+					WriteStringToCacheFile(hFile, pList[i].pObject->netsrv.pszRequest, true);
+					WriteStringToCacheFile(hFile, pList[i].pObject->netsrv.pszResponse, true);
                break;
             case OBJECT_ZONE:
                if (pList[i].pObject->zone.dwAddrListSize > 0)
@@ -1576,10 +1573,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
                       pList[i].pObject->vpnc.dwNumRemoteNets * sizeof(IP_NETWORK), hFile);
                break;
             case OBJECT_CONDITION:
-               dwSize = (DWORD)_tcslen(pList[i].pObject->cond.pszScript) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->cond.pszScript, 1, dwSize, hFile);
-
+					WriteStringToCacheFile(hFile, pList[i].pObject->cond.pszScript, true);
                fwrite(pList[i].pObject->cond.pDCIList, 1, 
                       pList[i].pObject->cond.dwNumDCI * sizeof(INPUT_DCI), hFile);
                break;
@@ -1588,6 +1582,12 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
 					       pList[i].pObject->cluster.dwNumResources * sizeof(CLUSTER_RESOURCE), hFile);
 					fwrite(pList[i].pObject->cluster.pSyncNetList, 1,
 					       pList[i].pObject->cluster.dwNumSyncNets * sizeof(IP_NETWORK), hFile);
+					break;
+				case OBJECT_TEMPLATE:
+					WriteStringToCacheFile(hFile, pList[i].pObject->dct.pszAutoApplyFilter, false);
+					break;
+				case OBJECT_CONTAINER:
+					WriteStringToCacheFile(hFile, pList[i].pObject->container.pszAutoBindFilter, false);
 					break;
             default:
                break;
@@ -1611,12 +1611,24 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
 // Load objects from cache file
 //
 
+static TCHAR *ReadStringFromCacheFile(FILE *file)
+{
+	DWORD len = 0;
+	TCHAR *str;
+
+	fread(&len, sizeof(DWORD), 1, file);
+	str = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+	fread(str, sizeof(TCHAR), len, file);
+	str[len] = 0;
+	return str;
+}
+
 void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
 {
    FILE *hFile;
    OBJECT_CACHE_HEADER hdr;
    NXC_OBJECT object;
-   DWORD i, j, dwSize, dwCount;
+   DWORD i, j, dwCount, dwSize;
 	TCHAR *key, *value;
 
    hFile = _tfopen(pszFile, _T("rb"));
@@ -1645,10 +1657,7 @@ void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
                   object.pAccessList = (NXC_ACL_ENTRY *)malloc(sizeof(NXC_ACL_ENTRY) * object.dwAclSize);
                   fread(object.pAccessList, 1, sizeof(NXC_ACL_ENTRY) * object.dwAclSize, hFile);
 
-                  fread(&dwSize, 1, sizeof(DWORD), hFile);
-                  object.pszComments = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                  fread(object.pszComments, 1, dwSize, hFile);
-                  object.pszComments[dwSize / sizeof(TCHAR)] = 0;
+						object.pszComments = ReadStringFromCacheFile(hFile);
 
 						if (object.dwNumTrustedNodes > 0)
 						{
@@ -1665,52 +1674,22 @@ void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
                   fread(&dwCount, 1, sizeof(DWORD), hFile);
 						for(j = 0; j < dwCount; j++)
 						{
-                     fread(&dwSize, 1, sizeof(DWORD), hFile);
-                     key = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                     fread(key, 1, dwSize, hFile);
-                     key[dwSize / sizeof(TCHAR)] = 0;
-
-                     fread(&dwSize, 1, sizeof(DWORD), hFile);
-                     value = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                     fread(value, 1, dwSize, hFile);
-                     value[dwSize / sizeof(TCHAR)] = 0;
-
+							key = ReadStringFromCacheFile(hFile);
+							value = ReadStringFromCacheFile(hFile);
 							object.pCustomAttrs->setPreallocated(key, value);
 						}
 
                   switch(object.iClass)
                   {
 							case OBJECT_NODE:
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.node.pszAuthName = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.node.pszAuthName, 1, dwSize, hFile);
-                        object.node.pszAuthName[dwSize / sizeof(TCHAR)] = 0;
-
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.node.pszAuthPassword = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.node.pszAuthPassword, 1, dwSize, hFile);
-                        object.node.pszAuthPassword[dwSize / sizeof(TCHAR)] = 0;
-
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.node.pszPrivPassword = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.node.pszPrivPassword, 1, dwSize, hFile);
-                        object.node.pszPrivPassword[dwSize / sizeof(TCHAR)] = 0;
-
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.node.pszSnmpObjectId = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.node.pszSnmpObjectId, 1, dwSize, hFile);
-                        object.node.pszSnmpObjectId[dwSize / sizeof(TCHAR)] = 0;
+								object.node.pszAuthName = ReadStringFromCacheFile(hFile);
+                        object.node.pszAuthPassword = ReadStringFromCacheFile(hFile);
+                        object.node.pszPrivPassword = ReadStringFromCacheFile(hFile);
+                        object.node.pszSnmpObjectId = ReadStringFromCacheFile(hFile);
 								break;
                      case OBJECT_NETWORKSERVICE:
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.netsrv.pszRequest = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.netsrv.pszRequest, 1, dwSize, hFile);
-                        object.netsrv.pszRequest[dwSize / sizeof(TCHAR)] = 0;
-
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.netsrv.pszResponse = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.netsrv.pszResponse, 1, dwSize, hFile);
-                        object.netsrv.pszResponse[dwSize / sizeof(TCHAR)] = 0;
+                        object.netsrv.pszRequest = ReadStringFromCacheFile(hFile);
+                        object.netsrv.pszResponse = ReadStringFromCacheFile(hFile);
                         break;
                      case OBJECT_ZONE:
                         if (object.zone.dwAddrListSize > 0)
@@ -1733,10 +1712,7 @@ void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
                         fread(object.vpnc.pRemoteNetList, 1, dwSize, hFile);
                         break;
                      case OBJECT_CONDITION:
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.cond.pszScript = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.cond.pszScript, 1, dwSize, hFile);
-                        object.cond.pszScript[dwSize / sizeof(TCHAR)] = 0;
+                        object.cond.pszScript = ReadStringFromCacheFile(hFile);
 
                         dwSize = object.cond.dwNumDCI * sizeof(INPUT_DCI);
                         object.cond.pDCIList = (INPUT_DCI *)malloc(dwSize);
@@ -1761,6 +1737,14 @@ void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
 								{
 									object.cluster.pSyncNetList = NULL;
 								}
+								break;
+							case OBJECT_TEMPLATE:
+								if (object.dct.pszAutoApplyFilter != NULL)
+									object.dct.pszAutoApplyFilter = ReadStringFromCacheFile(hFile);
+								break;
+							case OBJECT_CONTAINER:
+								if (object.container.pszAutoBindFilter != NULL)
+									object.container.pszAutoBindFilter = ReadStringFromCacheFile(hFile);
 								break;
                      default:
                         break;
