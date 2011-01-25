@@ -3,6 +3,7 @@
 /Makefile.in
 /README
 /aclocal.m4
+android/src/console/jar/*.jar
 /autom4te.cache
 /bin
 /bin64
