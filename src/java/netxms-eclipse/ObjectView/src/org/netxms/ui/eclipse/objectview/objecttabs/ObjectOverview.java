@@ -64,7 +64,7 @@ public class ObjectOverview extends ObjectTab
 		leftColumn.setBackground(BACKGROUND_COLOR);
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
-		gd.horizontalAlignment = SWT.FILL;
+		//gd.horizontalAlignment = SWT.FILL;
 		leftColumn.setLayoutData(gd);
 		
 		rightColumn = new Composite(parent, SWT.NONE);
@@ -72,7 +72,7 @@ public class ObjectOverview extends ObjectTab
 		rightColumn.setBackground(BACKGROUND_COLOR);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
-		gd.horizontalAlignment = SWT.FILL;
+		//gd.horizontalAlignment = SWT.FILL;
 		rightColumn.setLayoutData(gd);
 
 		addElement(new GeneralInfo(leftColumn, getObject()));

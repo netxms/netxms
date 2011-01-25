@@ -824,7 +824,9 @@ src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Startu
 src/java/netxms-eclipse/ObjectView/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectView/build.properties -text
 src/java/netxms-eclipse/ObjectView/icons/object_details.png -text
+src/java/netxms-eclipse/ObjectView/icons/restart.png -text
 src/java/netxms-eclipse/ObjectView/icons/shutdown.png -text
+src/java/netxms-eclipse/ObjectView/icons/wol.png -text
 src/java/netxms-eclipse/ObjectView/plugin.xml -text
 src/java/netxms-eclipse/ObjectView/schema/org.netxms.ui.eclipse.objectview.tabs.exsd -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -text

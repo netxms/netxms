@@ -24,11 +24,13 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.CommandBox;
 
 /**
@@ -38,7 +40,10 @@ import org.netxms.ui.eclipse.widgets.CommandBox;
 public class Commands extends OverviewPageElement
 {
 	private CommandBox commandBox;
+	private Action actionRestartAgent;
+	private Action actionRestart;
 	private Action actionShutdown;
+	private Action actionWakeup;
 	
 	/**
 	 * @param parent
@@ -55,6 +60,54 @@ public class Commands extends OverviewPageElement
 	 */
 	private void createActions()
 	{
+		actionWakeup = new Action("Wakeup node using Wake-on-LAN") {
+			@Override
+			public void run()
+			{
+				final GenericObject object = getObject();
+				new ConsoleJob("Wakeup node", null, Activator.PLUGIN_ID, null) {
+					@Override
+					protected void runInternal(IProgressMonitor monitor) throws Exception
+					{
+						NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+					}
+
+					@Override
+					protected String getErrorMessage()
+					{
+						return "Cannot send wake-on-LAN packet to node";
+					}
+				}.start();
+			}
+		};
+		actionWakeup.setImageDescriptor(Activator.getImageDescriptor("icons/wol.png"));
+		
+		actionRestart = new Action("Restart system") {
+			@Override
+			public void run()
+			{
+				final GenericObject object = getObject();
+				if (MessageDialog.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
+				{
+					new ConsoleJob("Initiate node restart", null, Activator.PLUGIN_ID, null) {
+						@Override
+						protected void runInternal(IProgressMonitor monitor) throws Exception
+						{
+							NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+							session.executeAction(object.getObjectId(), "System.Restart");
+						}
+	
+						@Override
+						protected String getErrorMessage()
+						{
+							return "Cannot initiate node restart";
+						}
+					}.start();
+				}
+			}
+		};
+		actionRestart.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png"));
+		
 		actionShutdown = new Action("Shutdown system") {
 			@Override
 			public void run()
@@ -66,6 +119,8 @@ public class Commands extends OverviewPageElement
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
+							NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+							session.executeAction(object.getObjectId(), "System.Shutdown");
 						}
 	
 						@Override
@@ -98,10 +153,16 @@ public class Commands extends OverviewPageElement
 		commandBox.deleteAll(false);
 		if (getObject() instanceof Node)
 		{
-			commandBox.add(actionShutdown, false);
+			commandBox.add(actionWakeup, false);
+			if (((Node)getObject()).hasAgent())
+			{
+				commandBox.add(actionRestart, false);
+				commandBox.add(actionShutdown, false);
+			}
 		}
 		else if (getObject() instanceof Interface)
 		{
+			commandBox.add(actionWakeup, false);
 		}
 		commandBox.rebuild();
 	}
