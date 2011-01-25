@@ -70,6 +70,7 @@ public class Commands extends OverviewPageElement
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
 						NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+						session.wakeupNode(object.getObjectId());
 					}
 
 					@Override
@@ -175,7 +176,7 @@ public class Commands extends OverviewPageElement
 	{
 		commandBox = new CommandBox(parent, SWT.NONE);
 		return commandBox;
-	}
+	} 
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.GenericObject)

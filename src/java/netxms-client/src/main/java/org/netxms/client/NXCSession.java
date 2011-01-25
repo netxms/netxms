@@ -2523,6 +2523,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Wakeup node by sending wake-on-LAN magic packet. Either node ID or interface ID may
+	 * be given. If node ID is given, system will send wakeup packets to all active
+	 * interfaces with IP address.
+	 * 
+	 * @param objectId node or interface ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void wakeupNode(final long objectId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_WAKEUP_NODE);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 
 	/**
 	 * Get list of server jobs
@@ -3708,12 +3725,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		waitForRCC(msg.getMessageId());
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.images.ImageLibraryManager#getImageLibrary()
+	 */
 	@Override
 	public List<LibraryImage> getImageLibrary() throws IOException, NXCException
 	{
 		return getImageLibrary(null);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.images.ImageLibraryManager#getImageLibrary(java.lang.String)
+	 */
 	@Override
 	public List<LibraryImage> getImageLibrary(String category) throws IOException, NXCException
 	{
@@ -3742,6 +3765,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return Collections.unmodifiableList(ret);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.images.ImageLibraryManager#getImage(java.lang.String)
+	 */
 	@Override
 	public LibraryImage getImage(String guid) throws IOException, NXCException
 	{
@@ -3753,6 +3779,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return new LibraryImage(response);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.images.ImageLibraryManager#createImage(org.netxms.api.client.images.LibraryImage)
+	 */
 	@Override
 	public LibraryImage createImage(LibraryImage image) throws IOException, NXCException
 	{
@@ -3766,6 +3795,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		return image;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.images.ImageLibraryManager#deleteImage(org.netxms.api.client.images.LibraryImage)
+	 */
 	@Override
 	public void deleteImage(LibraryImage image) throws IOException, NXCException
 	{
@@ -3780,6 +3812,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		waitForRCC(msg.getMessageId());
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.images.ImageLibraryManager#modifyImage(org.netxms.api.client.images.LibraryImage)
+	 */
 	@Override
 	public void modifyImage(LibraryImage image) throws IOException, NXCException
 	{

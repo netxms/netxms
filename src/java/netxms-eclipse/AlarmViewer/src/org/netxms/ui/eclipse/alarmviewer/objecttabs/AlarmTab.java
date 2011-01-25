@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.alarmviewer.objecttabs;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
@@ -45,7 +44,6 @@ public class AlarmTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		parent.setLayout(new FillLayout());
 		alarmList = new AlarmList(getViewPart(), parent, SWT.NONE);
 	}
 

@@ -23,8 +23,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -80,29 +79,13 @@ public abstract class ObjectTab
 	 * @param tabFolder Parent tab folder
 	 * @param ce Configuration element
 	 */
-	public void create(CTabFolder tabFolder)
+	public void create(final CTabFolder tabFolder)
 	{
 		this.tabFolder = tabFolder;
 		clientArea = new Composite(tabFolder, SWT.NONE);
 		createTabContent(clientArea);
 		clientArea.setVisible(false);
-		clientArea.addControlListener(new ControlListener() {
-
-			@Override
-			public void controlMoved(ControlEvent e)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void controlResized(ControlEvent e)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-			
-		});
+		clientArea.setLayout(new FillLayout());
 	}
 	
 	/**
