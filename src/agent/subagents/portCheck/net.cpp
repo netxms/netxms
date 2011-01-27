@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,8 +32,6 @@ SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort, DWO
 	nSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (nSocket != INVALID_SOCKET)
 	{
-		SetSocketNonBlocking(nSocket);
-
 		struct sockaddr_in sa;
 		sa.sin_family = AF_INET;
 		sa.sin_port = htons(nPort);
@@ -47,21 +44,10 @@ SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort, DWO
 			sa.sin_addr.s_addr = htonl(dwAddr);
 		}
 
-		if (connect(nSocket, (struct sockaddr*)&sa, sizeof(sa)) < 0)
+		if (ConnectEx(nSocket, (struct sockaddr*)&sa, sizeof(sa), (dwTimeout != 0) ? dwTimeout : m_dwDefaultTimeout) < 0)
 		{
-			if ((WSAGetLastError() == WSAEINPROGRESS) || (WSAGetLastError() == WSAEWOULDBLOCK))
-			{
-				if (!NetCanWrite(nSocket, (dwTimeout != 0) ? dwTimeout : m_dwDefaultTimeout))
-				{
-					closesocket(nSocket);
-					nSocket = INVALID_SOCKET;
-				}
-			}
-			else
-			{
-				closesocket(nSocket);
-				nSocket = INVALID_SOCKET;
-			}
+			closesocket(nSocket);
+			nSocket = INVALID_SOCKET;
 		}
 	}
 
