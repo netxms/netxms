@@ -34,7 +34,7 @@
 #define TOOL_TYPE_TABLE_AGENT       3
 #define TOOL_TYPE_URL               4
 #define TOOL_TYPE_COMMAND           5
-#define TOOL_TYPE_SERVER_SCRIPT     6
+#define TOOL_TYPE_SERVER_COMMAND    6
 
 
 //

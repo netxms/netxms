@@ -2134,6 +2134,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, DWORD *pd
 DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
                                              NXC_OBJECT_TOOL_DETAILS *pData);
 BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT *pObject);
+DWORD LIBNXCL_EXPORTABLE NXCExecuteServerCommand(NXC_SESSION hSession, DWORD nodeId, const TCHAR *command);
 
 /** Script library **/
 DWORD LIBNXCL_EXPORTABLE NXCGetScriptList(NXC_SESSION hSession, DWORD *pdwNumScrpts,

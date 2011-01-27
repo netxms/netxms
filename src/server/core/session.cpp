@@ -257,6 +257,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwHostAddr = dwHostAddr;
 	IpToStr(dwHostAddr, m_szWorkstation);
    _tcscpy(m_szUserName, _T("<not logged in>"));
+	_tcscpy(m_szClientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
@@ -10915,6 +10916,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 
 static THREAD_RESULT THREAD_CALL RunCommand(void *arg)
 {
+	DbgPrintf(5, _T("Running server-side command: %s\n"), (TCHAR *)arg);
 	_tsystem((TCHAR *)arg);
 	free(arg);
 	return THREAD_OK;
@@ -10936,6 +10938,7 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 			if (object->Type() == OBJECT_NODE)
 			{
 				TCHAR *cmd = request->GetVariableStr(VID_COMMAND);
+				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId, _T("Server command executed: %s"), cmd);
 				ThreadCreate(RunCommand, 0, cmd);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
@@ -10947,6 +10950,7 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, nodeId, _T("Access denied on server command execution"));
 		}
 	}
 	else

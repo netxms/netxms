@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -352,4 +352,28 @@ BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT 
       bResult = FALSE;
    }
    return bResult;
+}
+
+
+//
+// Run server script for object
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCExecuteServerCommand(NXC_SESSION hSession, DWORD nodeId, const TCHAR *command)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   // Build request message
+	msg.SetCode(CMD_EXECUTE_SERVER_COMMAND);
+   msg.SetId(dwRqId);
+	msg.SetVariable(VID_OBJECT_ID, name);
+	msg.SetVariable(VID_COMMAND, value);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
