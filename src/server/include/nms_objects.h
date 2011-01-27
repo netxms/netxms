@@ -715,6 +715,8 @@ public:
    virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
+	TCHAR *expandText(const TCHAR *pszTemplate);
+
 	Cluster *getMyCluster();
 
    DWORD getFlags() { return m_dwFlags; }

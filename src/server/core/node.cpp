@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -3906,4 +3906,170 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
 	}
 	MutexUnlock(m_mutexTopoAccess);
 	return fdb;
+}
+
+
+//
+// Substitute % macros in given text with actual values
+//
+
+TCHAR *Node::expandText(const TCHAR *pszTemplate)
+{
+   const TCHAR *pCurr;
+   DWORD dwPos, dwSize;
+   TCHAR *pText, scriptName[256];
+	int i;
+
+   dwSize = (DWORD)_tcslen(pszTemplate) + 1;
+   pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
+   for(pCurr = pszTemplate, dwPos = 0; *pCurr != 0; pCurr++)
+   {
+      switch(*pCurr)
+      {
+         case '%':   // Metacharacter
+            pCurr++;
+            if (*pCurr == 0)
+            {
+               pCurr--;
+               break;   // Abnormal loop termination
+            }
+            switch(*pCurr)
+            {
+               case '%':
+                  pText[dwPos++] = '%';
+                  break;
+               case 'n':   // Name of the node
+                  dwSize += (DWORD)_tcslen(m_szName);
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _tcscpy(&pText[dwPos], m_szName);
+                  dwPos += (DWORD)_tcslen(m_szName);
+                  break;
+               case 'a':   // IP address of the node
+                  dwSize += 16;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+						IpToStr(m_dwIpAddr, &pText[dwPos]);
+                  dwPos = (DWORD)_tcslen(pText);
+                  break;
+               case 'i':   // Node identifier
+                  dwSize += 10;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _sntprintf(&pText[dwPos], 11, _T("0x%08X"), m_dwId);
+                  dwPos = (DWORD)_tcslen(pText);
+                  break;
+               case 'v':   // NetXMS server version
+                  dwSize += (DWORD)_tcslen(NETXMS_VERSION_STRING);
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _tcscpy(&pText[dwPos], NETXMS_VERSION_STRING);
+                  dwPos += (DWORD)_tcslen(NETXMS_VERSION_STRING);
+                  break;
+					case '[':	// Script
+						for(i = 0, pCurr++; (*pCurr != ']') && (*pCurr != 0) && (i < 255); pCurr++)
+						{
+							scriptName[i++] = *pCurr;
+						}
+						if (*pCurr == 0)	// no terminating ]
+						{
+							pCurr--;
+						}
+						else
+						{
+							NXSL_Program *script;
+							NXSL_ServerEnv *pEnv;
+
+							scriptName[i] = 0;
+							StrStrip(scriptName);
+
+							g_pScriptLibrary->lock();
+							script = g_pScriptLibrary->findScript(scriptName);
+							if (script != NULL)
+							{
+								pEnv = new NXSL_ServerEnv;
+								script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+
+								if (script->run(pEnv) == 0)
+								{
+									NXSL_Value *result = script->getResult();
+									if (result != NULL)
+									{
+										const TCHAR *temp = result->getValueAsCString();
+										if (temp != NULL)
+										{
+											dwSize += (DWORD)_tcslen(temp);
+											pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+											_tcscpy(&pText[dwPos], temp);
+											dwPos += (DWORD)_tcslen(temp);
+											DbgPrintf(4, _T("Node::expandText(\"%s\"): Script %s executed successfully"),
+														 pszTemplate, scriptName);
+										}
+									}
+								}
+								else
+								{
+									DbgPrintf(4, _T("Node::expandText(\"%s\"): Script %s execution error: %s"),
+												 pszTemplate, scriptName, script->getErrorText());
+									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
+								}
+							}
+							else
+							{
+								DbgPrintf(4, _T("Node::expandText(\"%s\"): Cannot find script %s"), pszTemplate, scriptName);
+							}
+							g_pScriptLibrary->unlock();
+						}
+						break;
+					case '{':	// Custom attribute
+						for(i = 0, pCurr++; (*pCurr != '}') && (*pCurr != 0) && (i < 255); pCurr++)
+						{
+							scriptName[i++] = *pCurr;
+						}
+						if (*pCurr == 0)	// no terminating }
+						{
+							pCurr--;
+						}
+						else
+						{
+							scriptName[i] = 0;
+							StrStrip(scriptName);
+							const TCHAR *temp = GetCustomAttribute(scriptName);
+							if (temp != NULL)
+							{
+								dwSize += (DWORD)_tcslen(temp);
+								pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+								_tcscpy(&pText[dwPos], temp);
+								dwPos += (DWORD)_tcslen(temp);
+							}
+						}
+						break;
+               default:    // All other characters are invalid, ignore
+                  break;
+            }
+            break;
+         case '\\':  // Escape character
+            pCurr++;
+            if (*pCurr == 0)
+            {
+               pCurr--;
+               break;   // Abnormal loop termination
+            }
+            switch(*pCurr)
+            {
+               case 't':
+                  pText[dwPos++] = '\t';
+                  break;
+               case 'n':
+                  pText[dwPos++] = 0x0D;
+                  pText[dwPos++] = 0x0A;
+                  break;
+               default:
+                  pText[dwPos++] = *pCurr;
+                  break;
+            }
+            break;
+         default:
+            pText[dwPos++] = *pCurr;
+            break;
+      }
+   }
+   pText[dwPos] = 0;
+   return pText;
 }

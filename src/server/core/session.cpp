@@ -10916,7 +10916,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 
 static THREAD_RESULT THREAD_CALL RunCommand(void *arg)
 {
-	DbgPrintf(5, _T("Running server-side command: %s\n"), (TCHAR *)arg);
+	DbgPrintf(5, _T("Running server-side command: %s"), (TCHAR *)arg);
 	_tsystem((TCHAR *)arg);
 	free(arg);
 	return THREAD_OK;
@@ -10938,8 +10938,10 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 			if (object->Type() == OBJECT_NODE)
 			{
 				TCHAR *cmd = request->GetVariableStr(VID_COMMAND);
-				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId, _T("Server command executed: %s"), cmd);
-				ThreadCreate(RunCommand, 0, cmd);
+				TCHAR *expCmd = ((Node *)object)->expandText(cmd);
+				free(cmd);
+				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId, _T("Server command executed: %s"), expCmd);
+				ThreadCreate(RunCommand, 0, expCmd);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
