@@ -369,8 +369,8 @@ DWORD LIBNXCL_EXPORTABLE NXCExecuteServerCommand(NXC_SESSION hSession, DWORD nod
    // Build request message
 	msg.SetCode(CMD_EXECUTE_SERVER_COMMAND);
    msg.SetId(dwRqId);
-	msg.SetVariable(VID_OBJECT_ID, name);
-	msg.SetVariable(VID_COMMAND, value);
+	msg.SetVariable(VID_OBJECT_ID, nodeId);
+	msg.SetVariable(VID_COMMAND, command);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
