@@ -10,23 +10,16 @@ SOURCES = agent.cpp base64.cpp config.cpp crypto.cpp gen_uuid.c \
 	  table.cpp threads.cpp tools.cpp unicode.cpp uuid.c wcstoll.c \
 	  wcstoull.c xml.cpp
 
-if BUILD_UNICODE_LIBS
-lib_LTLIBRARIES = libnetxms.la libnetxmsw.la
-else
 lib_LTLIBRARIES = libnetxms.la
-endif
 
 libnetxms_la_SOURCES = $(SOURCES)
 libnetxms_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
+libnetxms_la_LIBADD =
 if USE_INTERNAL_EXPAT
-libnetxms_la_LIBADD = ../libexpat/libexpat/libnxexpat.la
+libnetxms_la_LIBADD += ../libexpat/libexpat/libnxexpat.la
 endif
-
-libnetxmsw_la_SOURCES = $(SOURCES)
-libnetxmsw_la_CPPFLAGS = -DUNICODE
-libnetxmsw_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
-if USE_INTERNAL_EXPAT
-libnetxmsw_la_LIBADD = ../libexpat/libexpat/libnxexpat.la
+if USE_INTERNAL_LIBTRE
+libnetxms_la_LIBADD += ../libtre/libnxtre.la
 endif
 
 EXTRA_DIST = \

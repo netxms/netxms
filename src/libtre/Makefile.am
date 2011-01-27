@@ -2,9 +2,8 @@
 
 SUBDIRS = win32
 
-lib_LTLIBRARIES = libtre.la
-libtre_la_LDFLAGS = -no-undefined -version-info 5:0:0 $(LDFLAGS)
-libtre_la_LIBADD = $(LTLIBINTL)
+lib_LTLIBRARIES = libnxtre.la
+libnxtre_la_LDFLAGS = -no-undefined -version-info 5:0:0 $(LDFLAGS)
 
 noinst_HEADERS =		\
 	tre-ast.h		\
@@ -16,7 +15,7 @@ noinst_HEADERS =		\
 	tre-stack.h		\
 	xmalloc.h
 
-libtre_la_SOURCES =		\
+libnxtre_la_SOURCES =		\
 	tre-ast.c		\
 	tre-compile.c		\
 	tre-match-approx.c	\
@@ -28,3 +27,12 @@ libtre_la_SOURCES =		\
 	regcomp.c		\
 	regexec.c		\
 	regerror.c
+
+EXTRA_DIST = 
+	AUTHORS \
+	LICENSE \
+	README \
+	THANKS \
+	libtre.def \
+	libtre.vcproj \
+	windll.cpp

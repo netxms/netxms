@@ -45,7 +45,6 @@ BUILD_CLIENT="no"
 BUILD_NXHTTPD="no"
 BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
-NEED_WXWIDGETS="no"
 MODULES="libnetxms tools install"
 STATIC_SUBAGENT_LIST=""
 SUBAGENT_DIRS=""
@@ -56,7 +55,6 @@ TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
 BUILD_UNICODE="no"
-WX_UNICODE="no"
 ORACLE_LIBS=""
 PGSQL_LIBS=""
 MYSQL_LIBS=""
@@ -274,6 +272,13 @@ AC_ARG_ENABLE(encryption,
 [AS_HELP_STRING(--disable-encryption,disable encryption support)],
 [
 	DISABLE_ENCRYPTION="yes"
+])
+
+AC_ARG_ENABLE(unicode,
+[AS_HELP_STRING(--enable-unicode,enable UNICODE build)],
+[
+	BUILD_UNICODE="yes"
+	CPPFLAGS="$CPPFLAGS -DUNICODE"
 ])
 
 AC_ARG_ENABLE(unstable,
@@ -920,6 +925,20 @@ fi
 if test "x$HAVE_LIBTRE" = "xno"; then
 	MODULES="libtre $MODULES"
 	AC_DEFINE(USE_BUNDLED_LIBTRE,1,Define to 1 if bundled libtre is used)
+
+	tre_version_1=`0`
+	tre_version_2=`8`
+	tre_version_3=`0`
+	tre_version=$tre_version_1.$tre_version_2.$tre_version_3
+	AC_DEFINE_UNQUOTED(TRE_VERSION,  "$tre_version",  [ TRE version string.  ])
+	AC_DEFINE_UNQUOTED(TRE_VERSION_1, $tre_version_1, [ TRE version level 1. ])
+	AC_DEFINE_UNQUOTED(TRE_VERSION_2, $tre_version_2, [ TRE version level 2. ])
+	AC_DEFINE_UNQUOTED(TRE_VERSION_3, $tre_version_3, [ TRE version level 3. ])
+	AC_SUBST(TRE_VERSION, $tre_version)
+
+	AC_DEFINE(TRE_REGEX_T_FIELD,value,[Define to a field in the regex_t struct where TRE should store a pointer to the internal tre_tnfa_t structure])
+	AC_DEFINE(TRE_APPROX, 1, [ Define if you want to enable approximate matching functionality. ])
+	AM_CONDITIONAL(TRE_APPROX, true)
 fi
 
 #--------------------------------------------------------------------
@@ -1197,39 +1216,6 @@ if test "x$PLATFORM" = "xFreeBSD"; then
 #endif
 #include <net/route.h>
 	])
-fi
-
-
-#--------------------------------------------------------------------
-# Check for wxWidgets
-#--------------------------------------------------------------------
-
-if test "x$NEED_WXWIDGETS" = "xyes"; then
-	AC_PATH_PROGS([WXCONF], [wx-config wxgtk2-2.8-config], [no], [$PATH:/usr/local/bin])
-	if test "x$WXCONF" = "xno"; then
-		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
-	else
-		AC_PATH_PROGS([WXRC], [wxrc wxrc-gtk2-2.8], [no], [$PATH:/usr/local/bin])
-		if test "x$WXRC" = "xno"; then
-			AC_MSG_ERROR([*** wxWidgets resource compiler not found - unable to build GUI components ***])
-		else
-			NEED_UNICODE=`$WXCONF --selected-config | grep unicode | wc -l`
-			if test $NEED_UNICODE -eq 1; then
-				BUILD_UNICODE="yes"
-				WX_UNICODE="yes"
-			fi
-			CXXFLAGS="$CXXFLAGS `$WXCONF --cxxflags --debug=$ENABLE_DEBUG`"
-			LDFLAGS="$LDFLAGS `$WXCONF --libs --debug=$ENABLE_DEBUG`"
-		fi
-	fi
-	$WXCONF --cxxflags | grep error >/dev/null
-	if test $? = 0; then
-		echo "wx-config output:"
-		echo "*** BEGIN ***"
-		$WXCONF --cxxflags
-		echo "*** END ***"
-		AC_MSG_ERROR([*** wxWidgets is not configured properly - see wx-config output above ***])
-	fi
 fi
 
 
@@ -1538,12 +1524,22 @@ if test "x$ac_found_iconv" = "xyes"; then
     [Define as const if the declaration of iconv() needs const.])
 fi
 
-if test $ac_cv_sizeof_wchar_t -eq 2; then
-	AC_DEFINE(UNICODE_UCS2, 1, Define to 1 if you have 2-byte wchar_t)
-fi
+if test "x$ac_cv_type_wchar_t" = "xyes"; then
+	if test $ac_cv_sizeof_wchar_t -eq 2; then
+		AC_DEFINE(UNICODE_UCS2, 1, Define to 1 if you have 2-byte wchar_t)
+	fi
 
-if test $ac_cv_sizeof_wchar_t -eq 4; then
-	AC_DEFINE(UNICODE_UCS4, 1, Define to 1 if you have 4-byte wchar_t)
+	if test $ac_cv_sizeof_wchar_t -eq 4; then
+		AC_DEFINE(UNICODE_UCS4, 1, Define to 1 if you have 4-byte wchar_t)
+	fi
+
+	if test "x$USE_INTERNAL_LIBTRE" = "xyes"; then
+		AC_DEFINE(TRE_WCHAR, 1,    [ Define to enable wide character support in libtre.])
+	fi
+else
+	if test "x$BUILD_UNICODE" = "xyes"; then
+		AC_MSG_ERROR(wchar_t is required for UNICODE build)
+	fi
 fi
 
 
@@ -1666,7 +1662,6 @@ fi
 
 CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
-AM_CONDITIONAL([BUILD_UNICODE_LIBS], [test "x$BUILD_UNICODE" = "xyes"])
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 
@@ -1686,7 +1681,6 @@ AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
-AC_SUBST(WXRC)
 AC_SUBST(MYSQL_LIBS)
 AC_SUBST(PGSQL_LIBS)
 AC_SUBST(ORACLE_LIBS)
@@ -1812,6 +1806,8 @@ AC_CONFIG_FILES([
 	src/libnxlp/Makefile
 	src/libnxmap/Makefile
 	src/libnxsl/Makefile
+	src/libtre/Makefile
+	src/libtre/win32/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
@@ -1915,9 +1911,9 @@ else
 	echo "Build Static Agent      : NO"
 fi
 if test "x${BUILD_UNICODE}" = "xyes"; then
-	echo "Build UNICODE libraries : YES"
+	echo "UNICODE build           : YES"
 else
-	echo "Build UNICODE libraries : NO"
+	echo "UNICODE build           : NO"
 fi
 if test "x${HAVE_LIBEXPAT}" = "xno"; then
 	echo "Use internal libexpat   : YES"

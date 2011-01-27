@@ -947,7 +947,11 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 
 				MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, MAX_PATH);
 				wname[MAX_PATH - 1] = 0;
+#ifdef _WIN32
 				_snwprintf(entryName, MAX_PATH, L"%s#%u", wname, (unsigned int)id);
+#else
+				swprintf(entryName, MAX_PATH, L"%S#%u", wname, (unsigned int)id);
+#endif
 			}
 			else
 			{
