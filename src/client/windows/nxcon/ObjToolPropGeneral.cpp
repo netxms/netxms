@@ -70,7 +70,7 @@ BOOL CObjToolPropGeneral::OnInitDialog()
    NXC_USER *pUser;
    int iItem;
    static TCHAR *m_szDataField[] = { _T("Operation"), _T("Action"), _T("Title"),
-                                     _T("Title"), _T("URL"), _T("Command") };
+                                     _T("Title"), _T("URL"), _T("Command"), _T("Command") };
 
 	CPropertyPage::OnInitDialog();
 	

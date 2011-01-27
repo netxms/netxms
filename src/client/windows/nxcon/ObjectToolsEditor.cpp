@@ -138,6 +138,7 @@ int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_DOCUMENT));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_IEXPLORER));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_COMMAND));
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_COMMAND));
    m_iSortImageBase = m_imageList.GetImageCount();
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
@@ -319,7 +320,7 @@ void CObjectToolsEditor::OnObjecttoolsNew()
    DWORD dwResult, dwToolId;
    NXC_OBJECT_TOOL_DETAILS *pData;
    CNewObjectToolDlg dlg;
-   static WORD m_wTransTbl[6] = { TOOL_TYPE_ACTION, TOOL_TYPE_COMMAND,
+   static WORD m_wTransTbl[7] = { TOOL_TYPE_ACTION, TOOL_TYPE_COMMAND, TOOL_TYPE_SERVER_COMMAND,
                                   TOOL_TYPE_INTERNAL, TOOL_TYPE_TABLE_AGENT,
                                   TOOL_TYPE_TABLE_SNMP, TOOL_TYPE_URL };
 

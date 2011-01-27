@@ -745,6 +745,7 @@
 #define IDC_CHECK_USE_REGEXP            1567
 #define IDC_EDIT_SNMP_PORT              1568
 #define IDC_CHECK_CUSTOM_PORT           1569
+#define IDC_RADIO_SERVERCMD             1571
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -1058,7 +1059,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        414
 #define _APS_NEXT_COMMAND_VALUE         33114
-#define _APS_NEXT_CONTROL_VALUE         1571
+#define _APS_NEXT_CONTROL_VALUE         1572
 #define _APS_NEXT_SYMED_VALUE           136
 #endif
 #endif

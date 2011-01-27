@@ -102,7 +102,7 @@ TCHAR *g_szDeploymentStatus[] = { _T("Pending"), _T("Uploading package"),
                                   _T("Installing"), _T("Completed"), _T("Failed"),
                                   _T("Initializing") };
 TCHAR *g_szToolType[] = { _T("Internal"), _T("Action"), _T("SNMP Table"),
-                          _T("Agent Table"), _T("URL"), _T("Command") };
+                          _T("Agent Table"), _T("URL"), _T("Client Command"), _T("Server Command") };
 TCHAR *g_szToolColFmt[] = { _T("String"), _T("Integer"), _T("Float"),
                             _T("IP Address"), _T("MAC Address"), _T("IfIndex") };
 TCHAR *g_szSyslogSeverity[] = { _T("Emergency"), _T("Alert"), _T("Critical"),

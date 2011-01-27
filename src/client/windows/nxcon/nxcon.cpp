@@ -3159,6 +3159,13 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
       case TOOL_TYPE_COMMAND:
          ExecuteCmdTool(pObject, g_pObjectToolList[dwIndex].pszData);
          break;
+      case TOOL_TYPE_SERVER_COMMAND:
+			dwResult = DoRequestArg3(NXCExecuteServerCommand, g_hSession, (void *)pObject->dwId, g_pObjectToolList[dwIndex].pszData, _T("Executing command on server..."));
+			if (dwResult == RCC_SUCCESS)
+            m_pMainWnd->MessageBox(_T("Command executed successfully"), _T("Information"), MB_OK | MB_ICONINFORMATION);
+			else
+				ErrorBox(dwResult, _T("Error executing command on server: %s"));
+         break;
       case TOOL_TYPE_URL:
          ExecuteWebTool(pObject, g_pObjectToolList[dwIndex].pszData);
          break;
@@ -3180,7 +3187,6 @@ void CConsoleApp::ExecuteTableTool(NXC_OBJECT *pNode, DWORD dwToolId)
    pWnd = new CTableView(pNode->dwId, dwToolId);
    CreateChildFrameWithSubtitle(pWnd, IDR_TABLE_VIEW,
                                 pNode->szName, m_hMDIMenu, m_hMDIAccel);
-//   return pWnd;
 }
 
 
