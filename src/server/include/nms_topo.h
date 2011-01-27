@@ -91,6 +91,7 @@ public:
 
 	void addEntry(FDB_ENTRY *entry);
 	void addPortMapping(PORT_MAPPING_ENTRY *entry);
+	void sort();
 
 	void incRefCount() { m_refCount++; }
 	void decRefCount();

@@ -114,12 +114,17 @@ void ForwardingDatabase::addEntry(FDB_ENTRY *entry)
 // Returns interface index or 0 if MAC address not found
 //
 
+static int EntryComparator(const void *p1, const void *p2)
+{
+	return memcmp(((FDB_ENTRY *)p1)->macAddr, ((FDB_ENTRY *)p2)->macAddr, MAC_ADDR_LENGTH);
+}
+
 DWORD ForwardingDatabase::findMacAddress(const BYTE *macAddr)
 {
-	for(int i = 0; i < m_fdbSize; i++)
-		if (!memcmp(macAddr, m_fdb[i].macAddr, MAC_ADDR_LENGTH))
-			return m_fdb[i].ifIndex;
-	return 0;
+	FDB_ENTRY key;
+	memcpy(key.macAddr, macAddr, MAC_ADDR_LENGTH);
+	FDB_ENTRY *entry = (FDB_ENTRY *)bsearch(&key, m_fdb, m_fdbSize, sizeof(FDB_ENTRY), EntryComparator);
+	return (entry != NULL) ? entry->ifIndex : 0;
 }
 
 
@@ -138,6 +143,16 @@ bool ForwardingDatabase::isSingleMacOnPort(DWORD ifIndex)
 				return false;
 		}
 	return count == 1;
+}
+
+
+//
+// Sort FDB
+//
+
+void ForwardingDatabase::sort()
+{
+	qsort(m_fdb, m_fdbSize, sizeof(FDB_ENTRY), EntryComparator);
 }
 
 
@@ -230,5 +245,6 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 	ForwardingDatabase *fdb = new ForwardingDatabase();
 	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.1"), Dot1dPortTableHandler, fdb);
 	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb);
+	fdb->sort();
 	return fdb;
 }

@@ -558,6 +558,7 @@ private:
 	void updateLibraryImage(CSCPMessage *request);
 	void listLibraryImages(CSCPMessage *request);
 	void deleteLibraryImage(CSCPMessage *request);
+	void executeServerCommand(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

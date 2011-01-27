@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxtools.h
+** File: nxtools.h
 **
 **/
 
@@ -34,6 +34,7 @@
 #define TOOL_TYPE_TABLE_AGENT       3
 #define TOOL_TYPE_URL               4
 #define TOOL_TYPE_COMMAND           5
+#define TOOL_TYPE_SERVER_SCRIPT     6
 
 
 //

@@ -321,3 +321,27 @@ DWORD LIBNXCL_EXPORTABLE NXCSetServerConfigCLOB(NXC_SESSION hSession, const TCHA
    
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Run server script for object
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCExecuteServerCommand(NXC_SESSION hSession, DWORD nodeId, const TCHAR *command)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   // Build request message
+	msg.SetCode(CMD_EXECUTE_SERVER_COMMAND);
+   msg.SetId(dwRqId);
+	msg.SetVariable(VID_OBJECT_ID, name);
+	msg.SetVariable(VID_COMMAND, value);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

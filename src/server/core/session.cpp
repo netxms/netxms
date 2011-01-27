@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1217,6 +1217,9 @@ void ClientSession::ProcessingThread()
 				break;
 			case CMD_LIST_IMAGES:
 				listLibraryImages(pMsg);
+				break;
+			case CMD_EXECUTE_SERVER_COMMAND:
+				executeServerCommand(pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -10902,5 +10905,54 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	}
 
 	msg.SetVariable(VID_RCC, rcc);
+	sendMessage(&msg);
+}
+
+
+//
+// Execute server side command on object
+//
+
+static THREAD_RESULT THREAD_CALL RunCommand(void *arg)
+{
+	_tsystem((TCHAR *)arg);
+	free(arg);
+	return THREAD_OK;
+}
+
+void ClientSession::executeServerCommand(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	DWORD nodeId = request->GetVariableLong(VID_OBJECT_ID);
+	NetObj *object = FindObjectById(nodeId);
+	if (object != NULL)
+	{
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		{
+			if (object->Type() == OBJECT_NODE)
+			{
+				TCHAR *cmd = request->GetVariableStr(VID_COMMAND);
+				ThreadCreate(RunCommand, 0, cmd);
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
 	sendMessage(&msg);
 }
