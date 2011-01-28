@@ -33,6 +33,7 @@ LinkLayerNeighbors::LinkLayerNeighbors()
 	m_count = 0;
 	m_allocated = 0;
 	m_data = NULL;
+	m_refCount = 1;
 }
 
 
@@ -43,6 +44,18 @@ LinkLayerNeighbors::LinkLayerNeighbors()
 LinkLayerNeighbors::~LinkLayerNeighbors()
 {
 	safe_free(m_connections);
+}
+
+
+//
+// Decrement reference count. If it reaches 0, destroy object.
+//
+
+void LinkLayerNeighbors::decRefCount()
+{
+	m_refCount--;
+	if (m_refCount == 0)
+		delete this;
 }
 
 

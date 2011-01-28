@@ -841,6 +841,8 @@ typedef struct
 #define VID_IMAGE_PROTECTED         ((DWORD)370)
 #define VID_NUM_IMAGES              ((DWORD)371)
 #define VID_IMAGE_MIMETYPE          ((DWORD)372)
+#define VID_PEER_NODE_ID            ((DWORD)373)
+#define VID_PEER_INTERFACE_ID       ((DWORD)374)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

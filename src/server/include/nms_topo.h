@@ -130,6 +130,7 @@ private:
 	int m_allocated;
 	LL_NEIGHBOR_INFO *m_connections;
 	void *m_data;
+	int m_refCount;
 
 	bool isDuplicate(LL_NEIGHBOR_INFO *info);
 
@@ -143,6 +144,9 @@ public:
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
 	int getSize() { return m_count; }
+
+	void incRefCount() { m_refCount++; }
+	void decRefCount();
 };
 
 

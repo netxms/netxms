@@ -172,7 +172,7 @@ public final class NXCPCodes
 	public static final int CMD_DEPLOY_AGENT_POLICY     = 0x008E;
 	public static final int CMD_LOG_DATA                = 0x008F;
 	public static final int CMD_GET_OBJECT_TOOL_DETAILS = 0x0090;
-	//public static final int CMD_LOCK_OBJECT_TOOLS       = 0x0091;
+	public static final int CMD_EXECUTE_SERVER_COMMAND  = 0x0091;
 	//public static final int CMD_UNLOCK_OBJECT_TOOLS     = 0x0092;
 	public static final int CMD_UPDATE_OBJECT_TOOL      = 0x0093;
 	public static final int CMD_DELETE_OBJECT_TOOL      = 0x0094;
@@ -645,6 +645,8 @@ public final class NXCPCodes
 	public static final long VID_IMAGE_PROTECTED         = 370;
 	public static final long VID_NUM_IMAGES              = 371;
 	public static final long VID_IMAGE_MIMETYPE          = 372;
+	public static final long VID_PEER_NODE_ID            = 373;
+	public static final long VID_PEER_INTERFACE_ID       = 374;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

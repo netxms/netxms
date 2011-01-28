@@ -36,6 +36,8 @@ Interface::Interface()
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
+	m_peerNodeId = 0;
+	m_peerInterfaceId = 0;
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = false;
 	m_iPendingStatus = -1;
@@ -59,6 +61,8 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask)
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
+	m_peerNodeId = 0;
+	m_peerInterfaceId = 0;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = bSyntheticMask;
@@ -84,6 +88,8 @@ Interface::Interface(const TCHAR *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwN
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
+	m_peerNodeId = 0;
+	m_peerInterfaceId = 0;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = false;
@@ -415,6 +421,8 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
 	pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
+	pMsg->SetVariable(VID_PEER_NODE_ID, m_peerNodeId);
+	pMsg->SetVariable(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
 }
 
 

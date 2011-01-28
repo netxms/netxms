@@ -495,6 +495,8 @@ protected:
 	DWORD m_bridgePortNumber;		// 802.1D port number
 	DWORD m_slotNumber;				// Vendor/device specific slot number
 	DWORD m_portNumber;				// Vendor/device specific port number
+	DWORD m_peerNodeId;				// ID of peer node object, or 0 if unknown
+	DWORD m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
    QWORD m_qwLastDownEventId;
 	bool m_bSyntheticMask;
 	int m_iPendingStatus;
@@ -520,6 +522,8 @@ public:
 	DWORD getBridgePortNumber() { return m_bridgePortNumber; }
 	DWORD getSlotNumber() { return m_slotNumber; }
 	DWORD getPortNumber() { return m_portNumber; }
+	DWORD getPeerNodeId() { return m_peerNodeId; }
+	DWORD getPeerInterfaceId() { return m_peerInterfaceId; }
    const BYTE *getMacAddr() { return m_bMacAddr; }
 	bool isSyntheticMask() { return m_bSyntheticMask; }
    bool isFake() { return (m_dwIfIndex == 1) && 
@@ -535,6 +539,7 @@ public:
    void setBridgePortNumber(DWORD bpn) { m_bridgePortNumber = bpn; Modify(); }
    void setSlotNumber(DWORD slot) { m_slotNumber = slot; Modify(); }
    void setPortNumber(DWORD port) { m_portNumber = port; Modify(); }
+	void setPeer(DWORD nodeId, DWORD ifId) { m_peerNodeId = nodeId; m_peerInterfaceId = ifId; Modify(); }
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue,
 	                BOOL bClusterSync, SNMP_Transport *pTransport);
@@ -763,7 +768,7 @@ public:
    int getInterfaceStatusFromAgent(DWORD dwIndex);
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
-	LinkLayerNeighbors *getLinkLayerNeighbors() { return m_linkLayerNeighbors; }
+	LinkLayerNeighbors *getLinkLayerNeighbors();
    BOOL getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 

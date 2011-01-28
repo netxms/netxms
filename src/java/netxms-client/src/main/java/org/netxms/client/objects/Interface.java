@@ -36,6 +36,8 @@ public class Interface extends GenericObject
 	private int port;
 	private MacAddress macAddress;
 	private int requiredPollCount;
+	private long peerNodeId;
+	private long peerInterfaceId;
 	
 	/**
 	 * @param msg
@@ -51,6 +53,8 @@ public class Interface extends GenericObject
 		port = msg.getVariableAsInteger(NXCPCodes.VID_IF_PORT);
 		macAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
 		requiredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
+		peerNodeId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_NODE_ID);
+		peerInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
 	}
 
 	/**
@@ -116,5 +120,21 @@ public class Interface extends GenericObject
 	public int getPort()
 	{
 		return port;
+	}
+
+	/**
+	 * @return the peerNodeId
+	 */
+	protected long getPeerNodeId()
+	{
+		return peerNodeId;
+	}
+
+	/**
+	 * @return the peerInterfaceId
+	 */
+	protected long getPeerInterfaceId()
+	{
+		return peerInterfaceId;
 	}
 }

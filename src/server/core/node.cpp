@@ -155,7 +155,8 @@ Node::~Node()
    delete m_pAgentConnection;
    safe_free(m_pParamList);
    DestroyRoutingTable(m_pRoutingTable);
-	delete m_linkLayerNeighbors;
+	if (m_linkLayerNeighbors != NULL)
+		m_linkLayerNeighbors->decRefCount();
 	delete m_pTopology;
 	delete m_jobQueue;
 	delete m_snmpSecurity;
@@ -3656,12 +3657,40 @@ void Node::topologyPoll(int nPoller)
 	if (nbs != NULL)
 	{
 		MutexLock(m_mutexTopoAccess, INFINITE);
-		delete m_linkLayerNeighbors;
+		if (m_linkLayerNeighbors != NULL)
+			m_linkLayerNeighbors->decRefCount();
 		m_linkLayerNeighbors = nbs;
 		MutexUnlock(m_mutexTopoAccess);
+
+		// Walk through interfaces and update peers
+		for(int i = 0; i < nbs->getSize(); i++)
+		{
+			LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
+			NetObj *object = FindObjectById(ni->objectId);
+			if ((object != NULL) && (object->Type() == OBJECT_NODE))
+			{
+				Interface *ifLocal = findInterface(ni->ifLocal, INADDR_ANY);
+				Interface *ifRemote = ((Node *)object)->findInterface(ni->ifRemote, INADDR_ANY);
+				if ((ifLocal != NULL) && (ifRemote != NULL))
+				{
+					ifLocal->setPeer(ni->objectId, ifRemote->Id());
+					ifRemote->setPeer(m_dwId, ifLocal->Id());
+				}
+			}
+		}
+
 		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d]"), m_szName, m_dwId);
 	}
-	
+
+	ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
+	MutexLock(m_mutexTopoAccess, INFINITE);
+	if (m_fdb != NULL)
+		m_fdb->decRefCount();
+	m_fdb = (fdb != NULL) ? fdb : NULL;
+	MutexUnlock(m_mutexTopoAccess);
+	if (fdb != NULL)
+		DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_szName, m_dwId);
+
 	m_tLastTopologyPoll = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
 	pollerUnlock();
@@ -3890,22 +3919,28 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
 	ForwardingDatabase *fdb;
 
 	MutexLock(m_mutexTopoAccess, INFINITE);
-	if ((m_fdb == NULL) || (m_fdb->getAge() > 600))
-	{
-		if (m_fdb != NULL)
-			m_fdb->decRefCount();
-		m_fdb = GetSwitchForwardingDatabase(this);
-		if (m_fdb != NULL)
-			m_fdb->incRefCount();
-		fdb = m_fdb;
-	}
-	else
-	{
+	if (m_fdb != NULL)
 		m_fdb->incRefCount();
-		fdb = m_fdb;
-	}
+	fdb = m_fdb;
 	MutexUnlock(m_mutexTopoAccess);
 	return fdb;
+}
+
+
+//
+// Get link layer neighbors
+//
+
+LinkLayerNeighbors *Node::getLinkLayerNeighbors()
+{
+	LinkLayerNeighbors *nbs;
+
+	MutexLock(m_mutexTopoAccess, INFINITE);
+	if (m_linkLayerNeighbors != NULL)
+		m_linkLayerNeighbors->incRefCount();
+	nbs = m_linkLayerNeighbors;
+	MutexUnlock(m_mutexTopoAccess);
+	return nbs;
 }
 
 
