@@ -73,10 +73,10 @@ public class TabbedObjectView extends ViewPart
 		
 		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD);
 		
-		header = new CLabel(parent, SWT.NONE);
+		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		header.setFont(headerFont);
-		header.setBackground(new Color(parent.getDisplay(), 0, 0, 128));
+		header.setBackground(new Color(parent.getDisplay(), 153, 180, 209));
 		header.setForeground(new Color(parent.getDisplay(), 255, 255, 255));
 		
 		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
