@@ -31,8 +31,12 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
@@ -49,6 +53,7 @@ import org.netxms.ui.eclipse.epp.views.helpers.RuleTreeElement;
 import org.netxms.ui.eclipse.epp.views.helpers.RuleTreeLabelProvider;
 import org.netxms.ui.eclipse.epp.widgets.AbstractRuleEditor;
 import org.netxms.ui.eclipse.epp.widgets.CommentsEditor;
+import org.netxms.ui.eclipse.epp.widgets.RuleOverview;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -70,6 +75,10 @@ public class EventProcessingPolicyEditor extends ViewPart
 	private SashForm splitter;
 	private TreeViewer ruleTree;
 	private Composite dataArea;
+	private CLabel header;
+	private Font headerFont;
+	private Font normalFont;
+	private Font boldFont;
 	private AbstractRuleEditor currentEditor = null;
 	
 	/* (non-Javadoc)
@@ -80,11 +89,12 @@ public class EventProcessingPolicyEditor extends ViewPart
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
 
-		// Initiate loading of event manager and object manager plugins if it was not loaded before
+		// Initiate loading of required plugins if they was not loaded yet
 		try
 		{
 			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter");
 			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+			Platform.getAdapterManager().loadAdapter(new ServerAction(0), "org.eclipse.ui.model.IWorkbenchAdapter");
 		}
 		catch(Exception e)
 		{
@@ -106,7 +116,21 @@ public class EventProcessingPolicyEditor extends ViewPart
 		});
 		
 		dataArea = new Composite(splitter, SWT.BORDER);
-		dataArea.setLayout(new FillLayout());
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = 0;
+		dataArea.setLayout(layout);
+		
+		headerFont = new Font(parent.getDisplay(), "Verdana", 10, SWT.BOLD);
+		normalFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.NORMAL);
+		boldFont = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);
+		
+		header = new CLabel(dataArea, SWT.BORDER);
+		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		header.setFont(headerFont);
+		header.setBackground(new Color(parent.getDisplay(), 153, 180, 209));
+		header.setForeground(new Color(parent.getDisplay(), 255, 255, 255));
 		
 		splitter.setWeights(new int[] { 25, 75 });
 		
@@ -240,6 +264,10 @@ public class EventProcessingPolicyEditor extends ViewPart
 			}.start();
 		}
 		
+		headerFont.dispose();
+		normalFont.dispose();
+		boldFont.dispose();
+		
 		super.dispose();
 		ImageFactory.clearCache();
 	}
@@ -258,18 +286,69 @@ public class EventProcessingPolicyEditor extends ViewPart
 			RuleTreeElement element = (RuleTreeElement)selection.getFirstElement();
 			switch(element.getType())
 			{
+				case RuleTreeElement.RULE:
+					currentEditor = new RuleOverview(dataArea, element.getRule(), this);
+					break;
 				case RuleTreeElement.COMMENTS:
-					currentEditor = new CommentsEditor(dataArea, element.getRule());
+					currentEditor = new CommentsEditor(dataArea, element.getRule(), this);
 					break;
 				default:
 					currentEditor = null;
 					break;
 			}
+			
+			if (element.getType() != RuleTreeElement.POLICY)
+			{
+				header.setText("Rule " + element.getRuleNumber() + element.getCommentString());
+			}
+			else
+			{
+				header.setText("");
+			}
+			
+			if (currentEditor != null)
+			{
+				GridData gd = new GridData();
+				gd.horizontalAlignment = SWT.FILL;
+				gd.verticalAlignment = SWT.FILL;
+				gd.grabExcessHorizontalSpace = true;
+				gd.grabExcessVerticalSpace = true;
+				currentEditor.setLayoutData(gd);
+			}
+			
 			dataArea.layout();
 		}
 		else
 		{
 			currentEditor = null;
+			header.setText("");
 		}
+	}
+	
+	/**
+	 * Find server action by ID
+	 * 
+	 * @param id action id
+	 * @return server action object or null
+	 */
+	public ServerAction findActionById(Long id)
+	{
+		return actions.get(id);
+	}
+
+	/**
+	 * @return the normalFont
+	 */
+	public Font getNormalFont()
+	{
+		return normalFont;
+	}
+
+	/**
+	 * @return the boldFont
+	 */
+	public Font getBoldFont()
+	{
+		return boldFont;
 	}
 }

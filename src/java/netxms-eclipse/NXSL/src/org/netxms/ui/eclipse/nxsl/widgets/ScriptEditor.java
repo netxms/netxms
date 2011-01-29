@@ -34,6 +34,7 @@ import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.nxsl.Activator;
@@ -271,5 +272,14 @@ public class ScriptEditor extends Composite
 	public IFindReplaceTarget getFindReplaceTarget()
 	{
 		return editor.getFindReplaceTarget();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+	 */
+	@Override
+	public Point computeSize(int wHint, int hHint, boolean changed)
+	{
+		return editor.getTextWidget().computeSize(wHint, hHint, changed);
 	}
 }

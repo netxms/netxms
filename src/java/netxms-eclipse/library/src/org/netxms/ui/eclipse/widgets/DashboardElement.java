@@ -38,14 +38,16 @@ import org.eclipse.swt.widgets.Listener;
  */
 public abstract class DashboardElement extends Composite
 {
-	private static final Color BORDER_COLOR = new Color(Display.getDefault(), 153, 180, 209);
-	private static final Color TITLE_COLOR = new Color(Display.getDefault(), 0, 0, 0);
+	private static final Color DEFAULT_BORDER_COLOR = new Color(Display.getDefault(), 153, 180, 209);
+	private static final Color DEFAULT_TITLE_COLOR = new Color(Display.getDefault(), 0, 0, 0);
 	private static final int BORDER_WIDTH = 3;
 	private static final int HEADER_HEIGHT = 22;
 	
 	private String text;
 	private Control clientArea;
 	private Font font;
+	private Color borderColor;
+	private Color titleColor;
 	
 	/**
 	 * @param parent
@@ -55,6 +57,9 @@ public abstract class DashboardElement extends Composite
 	{
 		super(parent, SWT.NONE);
 		this.text = text;
+		
+		borderColor = DEFAULT_BORDER_COLOR;
+		titleColor = DEFAULT_TITLE_COLOR;
 		
 		clientArea = createClientArea(this);
 		clientArea.setLocation(BORDER_WIDTH, BORDER_WIDTH + HEADER_HEIGHT);
@@ -88,7 +93,7 @@ public abstract class DashboardElement extends Composite
 	 */
 	private void doPaint(GC gc)
 	{
-		gc.setForeground(BORDER_COLOR);
+		gc.setForeground(borderColor);
 		gc.setLineWidth(BORDER_WIDTH);
 		Rectangle rect = getClientArea();
 		rect.x += BORDER_WIDTH / 2;
@@ -98,10 +103,10 @@ public abstract class DashboardElement extends Composite
 		gc.drawRectangle(rect);
 		
 		rect.height = BORDER_WIDTH / 2 + HEADER_HEIGHT;
-		gc.setBackground(BORDER_COLOR);
+		gc.setBackground(borderColor);
 		gc.fillRectangle(rect);
 		
-		gc.setForeground(TITLE_COLOR);
+		gc.setForeground(titleColor);
 		gc.drawText(text, 5, 5);
 	}
 
@@ -158,5 +163,37 @@ public abstract class DashboardElement extends Composite
 	{
 		font.dispose();
 		super.dispose();
+	}
+
+	/**
+	 * @return the borderColor
+	 */
+	protected Color getBorderColor()
+	{
+		return borderColor;
+	}
+
+	/**
+	 * @param borderColor the borderColor to set
+	 */
+	protected void setBorderColor(Color borderColor)
+	{
+		this.borderColor = borderColor;
+	}
+
+	/**
+	 * @return the titleColor
+	 */
+	protected Color getTitleColor()
+	{
+		return titleColor;
+	}
+
+	/**
+	 * @param titleColor the titleColor to set
+	 */
+	protected void setTitleColor(Color titleColor)
+	{
+		this.titleColor = titleColor;
 	}
 }
