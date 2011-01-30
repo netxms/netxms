@@ -5,13 +5,8 @@ package org.netxms.ui.eclipse.epp.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -40,14 +35,15 @@ import org.netxms.ui.eclipse.widgets.DashboardElement;
 public class RuleEditor extends Composite
 {
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	private static final Color TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 153, 180, 209);
-	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getDefault(), 127,154,72);
-	private static final Color ACTION_BORDER_COLOR = new Color(Display.getDefault(), 105,81,133);
+	private static final Color TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getDefault(), 198,214,172);
+	private static final Color ACTION_BORDER_COLOR = new Color(Display.getDefault(), 186,176,201);
 	private static final Color COMMENTS_BORDER_COLOR = new Color(Display.getDefault(), 60,141,163);
-	private static final Color TITLE_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	private static final Color TITLE_COLOR = new Color(Display.getDefault(), 0, 0, 0);
 	private static final int INDENT = 20;
 	
 	private EventProcessingPolicyRule rule;
+	private int ruleNumber;
 	private EventProcessingPolicyEditor editor;
 	private NXCSession session;
 	private WorkbenchLabelProvider labelProvider;
@@ -60,10 +56,11 @@ public class RuleEditor extends Composite
 	 * @param parent
 	 * @param rule
 	 */
-	public RuleEditor(Composite parent, EventProcessingPolicyRule rule, EventProcessingPolicyEditor editor)
+	public RuleEditor(Composite parent, EventProcessingPolicyRule rule, int ruleNumber, EventProcessingPolicyEditor editor)
 	{
-		super(parent, SWT.NONE);
+		super(parent, SWT.BORDER);
 		this.rule = rule;
+		this.ruleNumber = ruleNumber;
 		this.editor = editor;
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -77,6 +74,8 @@ public class RuleEditor extends Composite
 
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
 		setLayout(layout);
 		
 		createLeftPanel();
@@ -104,6 +103,7 @@ public class RuleEditor extends Composite
 		};
 		configureLayout(action);
 
+		/*
 		DashboardElement comments = new DashboardElement(this, "Comments") {
 			@Override
 			protected Control createClientArea(Composite parent)
@@ -117,20 +117,23 @@ public class RuleEditor extends Composite
 				return text;
 			}
 		};
-		configureLayout(comments);
+		configureLayout(comments);*/
 	}
 	
 	private void createLeftPanel()
 	{
 		Label label = new Label(this, SWT.NONE);
-		label.setText("1");
+		label.setText(Integer.toString(ruleNumber));
+		label.setFont(editor.getBoldFont());
 		label.setBackground(TITLE_BACKGROUND_COLOR);
+		label.setAlignment(SWT.CENTER);
 		
 		GridData gd = new GridData();
 		gd.verticalSpan = 4;
-		gd.verticalAlignment = SWT.FILL;
+		gd.horizontalAlignment = SWT.CENTER;
+		gd.verticalAlignment = SWT.CENTER;
 		gd.grabExcessVerticalSpace = true;
-		gd.widthHint = 40;
+		gd.widthHint = 30;
 		label.setLayoutData(gd);
 	}
 	
@@ -138,8 +141,8 @@ public class RuleEditor extends Composite
 	{
 		Label label = new Label(this, SWT.NONE);
 		label.setText(rule.getComments());
-		label.setBackground(TITLE_BACKGROUND_COLOR);
-		label.setForeground(TITLE_COLOR);
+		label.setBackground(BACKGROUND_COLOR);
+		//label.setForeground(TITLE_COLOR);
 		
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -431,5 +434,21 @@ public class RuleEditor extends Composite
 		imageExecute.dispose();
 		imageTerminate.dispose();
 		super.dispose();
+	}
+
+	/**
+	 * @return the ruleNumber
+	 */
+	protected int getRuleNumber()
+	{
+		return ruleNumber;
+	}
+
+	/**
+	 * @param ruleNumber the ruleNumber to set
+	 */
+	protected void setRuleNumber(int ruleNumber)
+	{
+		this.ruleNumber = ruleNumber;
 	}
 }

@@ -42,16 +42,7 @@ public class LastValues extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-      FormLayout formLayout = new FormLayout();
-		parent.setLayout(formLayout);
-		
 		dataView = new LastValuesView(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab");
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		dataView.setLayoutData(fd);
 	}
 
 	/* (non-Javadoc)

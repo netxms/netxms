@@ -27,13 +27,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -55,11 +49,6 @@ import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Activator;
-import org.netxms.ui.eclipse.epp.views.helpers.RuleTreeContentProvider;
-import org.netxms.ui.eclipse.epp.views.helpers.RuleTreeElement;
-import org.netxms.ui.eclipse.epp.views.helpers.RuleTreeLabelProvider;
-import org.netxms.ui.eclipse.epp.widgets.AbstractRuleEditor;
-import org.netxms.ui.eclipse.epp.widgets.CommentsEditor;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -120,6 +109,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 		scroller.setContent(dataArea);
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
+		scroller.getVerticalBar().setIncrement(20);
 		scroller.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e)
 			{
@@ -202,9 +192,10 @@ public class EventProcessingPolicyEditor extends ViewPart
 	 */
 	private void initPolicyEditor()
 	{
+		int ruleNumber = 1;
 		for(EventProcessingPolicyRule rule : policy.getRules())
 		{
-			RuleEditor editor = new RuleEditor(dataArea, rule, this);
+			RuleEditor editor = new RuleEditor(dataArea, rule, ruleNumber++, this);
 			ruleEditors.add(editor);
 			GridData gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;

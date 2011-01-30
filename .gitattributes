@@ -551,11 +551,6 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/Activator.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/actions/OpenPolicyEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/EditCommentsDlg.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/EventProcessingPolicyEditor.java -text
-src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/RuleTreeContentProvider.java -text
-src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/RuleTreeElement.java -text
-src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/RuleTreeLabelProvider.java -text
-src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/AbstractRuleEditor.java -text
-src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/CommentsEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/RuleEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/ImageFactory.java -text
 src/java/netxms-eclipse/EventManager/.settings/org.eclipse.jdt.core.prefs -text

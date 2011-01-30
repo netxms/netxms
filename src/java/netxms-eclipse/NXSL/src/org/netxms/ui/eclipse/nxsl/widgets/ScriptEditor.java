@@ -280,6 +280,8 @@ public class ScriptEditor extends Composite
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-		return editor.getTextWidget().computeSize(wHint, hHint, changed);
+		Point p = editor.getTextWidget().computeSize(wHint, hHint, changed);
+		p.y += 4;
+		return p;
 	}
 }
