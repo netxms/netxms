@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
@@ -36,14 +37,18 @@ import org.netxms.ui.eclipse.widgets.DashboardElement;
  * Rule overview widget
  *
  */
-public class RuleOverview extends AbstractRuleEditor
+public class RuleEditor extends Composite
 {
+	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	private static final Color TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 153, 180, 209);
 	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getDefault(), 127,154,72);
 	private static final Color ACTION_BORDER_COLOR = new Color(Display.getDefault(), 105,81,133);
 	private static final Color COMMENTS_BORDER_COLOR = new Color(Display.getDefault(), 60,141,163);
 	private static final Color TITLE_COLOR = new Color(Display.getDefault(), 255, 255, 255);
 	private static final int INDENT = 20;
 	
+	private EventProcessingPolicyRule rule;
+	private EventProcessingPolicyEditor editor;
 	private NXCSession session;
 	private WorkbenchLabelProvider labelProvider;
 	private Image imageAlarm;
@@ -55,9 +60,11 @@ public class RuleOverview extends AbstractRuleEditor
 	 * @param parent
 	 * @param rule
 	 */
-	public RuleOverview(Composite parent, final EventProcessingPolicyRule rule, EventProcessingPolicyEditor editor)
+	public RuleEditor(Composite parent, EventProcessingPolicyRule rule, EventProcessingPolicyEditor editor)
 	{
-		super(parent, rule, editor);
+		super(parent, SWT.NONE);
+		this.rule = rule;
+		this.editor = editor;
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		labelProvider = new WorkbenchLabelProvider();
@@ -66,50 +73,38 @@ public class RuleOverview extends AbstractRuleEditor
 		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage();
 		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage();
 		
-		setLayout(new FillLayout());
-		
-		final ScrolledComposite scroller = new ScrolledComposite(this, SWT.V_SCROLL);
-		
-		final Composite clientArea = new Composite(scroller, SWT.NONE);
+		setBackground(BACKGROUND_COLOR);
+
 		GridLayout layout = new GridLayout();
-		clientArea.setLayout(layout);
-		clientArea.setBackground(BACKGROUND_COLOR);
+		layout.numColumns = 2;
+		setLayout(layout);
 		
-		scroller.setContent(clientArea);
-		scroller.setExpandVertical(true);
-		scroller.setExpandHorizontal(true);
-		scroller.addControlListener(new ControlAdapter() {
-			public void controlResized(ControlEvent e)
-			{
-				Rectangle r = scroller.getClientArea();
-				scroller.setMinSize(clientArea.computeSize(r.width, SWT.DEFAULT));
-			}
-		});
+		createLeftPanel();
+		createHeader();
 		
-		DashboardElement condition = new DashboardElement(clientArea, "Filter") {
+		DashboardElement condition = new DashboardElement(this, "Filter") {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
 				setBorderColor(CONDITION_BORDER_COLOR);
 				setTitleColor(TITLE_COLOR);
-				return createConditionControl(parent, rule);
+				return createConditionControl(parent, RuleEditor.this.rule);
 			}
 		};
 		configureLayout(condition);
 
-		DashboardElement action = new DashboardElement(clientArea, "Action") {
+		DashboardElement action = new DashboardElement(this, "Action") {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
 				setBorderColor(ACTION_BORDER_COLOR);
 				setTitleColor(TITLE_COLOR);
-				return createActionControl(parent, rule);
+				return createActionControl(parent, RuleEditor.this.rule);
 			}
 		};
 		configureLayout(action);
 
-		/*
-		DashboardElement comments = new DashboardElement(clientArea, "Comments") {
+		DashboardElement comments = new DashboardElement(this, "Comments") {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -118,11 +113,38 @@ public class RuleOverview extends AbstractRuleEditor
 				
 				final Text text = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.READ_ONLY);
 				text.setBackground(BACKGROUND_COLOR);
-				text.setText(rule.getComments());
+				text.setText(RuleEditor.this.rule.getComments());
 				return text;
 			}
 		};
-		configureLayout(comments);*/
+		configureLayout(comments);
+	}
+	
+	private void createLeftPanel()
+	{
+		Label label = new Label(this, SWT.NONE);
+		label.setText("1");
+		label.setBackground(TITLE_BACKGROUND_COLOR);
+		
+		GridData gd = new GridData();
+		gd.verticalSpan = 4;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		gd.widthHint = 40;
+		label.setLayoutData(gd);
+	}
+	
+	private void createHeader()
+	{
+		Label label = new Label(this, SWT.NONE);
+		label.setText(rule.getComments());
+		label.setBackground(TITLE_BACKGROUND_COLOR);
+		label.setForeground(TITLE_COLOR);
+		
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		label.setLayoutData(gd);
 	}
 	
 	/**
