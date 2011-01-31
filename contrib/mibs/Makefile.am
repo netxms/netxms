@@ -133,6 +133,7 @@ mibs_DATA = \
 	UPS-MIB.txt \
 	USEC-MIB.txt \
 	V2ADMIN-MIB.txt \
+	VRRP-MIB.txt \
 	WF-COM.txt \
 	WWW-MIB.txt
 
