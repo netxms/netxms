@@ -68,7 +68,7 @@ static struct option longOptions[] =
 	{"quiet",     no_argument,       NULL,        'q'},
 	{"user",      required_argument, NULL,        'u'},
 	{"password",  required_argument, NULL,        'P'},
-	{"encrypt",   required_argument, NULL,        'e'},
+	{"encrypt",   no_argument,       NULL,        'e'},
 	{"host",      required_argument, NULL,        'H'},
 	{"batchsize", required_argument, NULL,        'b'},
 	{NULL, 0, NULL, 0}
@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
 
 	InitThreadLibrary();
 
+	BOOL bStart = TRUE;
 	opterr = 0;
 #if HAVE_DECL_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
@@ -169,9 +170,12 @@ int main(int argc, char *argv[])
 		case 'b': // batch size
 			optBatchSize = atoi(optarg); // 0 == unlimited
 			break;
+		case '?':
+			exit(3);
+			break;
 		}
 	}
-
+	
 	if (optHost == NULL && optind < argc)
 	{
 		optHost = argv[optind++];
