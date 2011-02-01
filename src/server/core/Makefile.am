@@ -14,15 +14,15 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			interface.cpp isc.cpp job.cpp jobmgr.cpp jobqueue.cpp \
 			layer2.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
 			loghandle.cpp logs.cpp main.cpp map.cpp modules.cpp \
-			ndp.cpp netinfo.cpp netobj.cpp netsrv.cpp node.cpp \
-			nortel.cpp np.cpp nxsl_classes.cpp nxslext.cpp \
+			ndp.cpp netinfo.cpp netmap.cpp netobj.cpp netsrv.cpp \
+			node.cpp nortel.cpp np.cpp nxsl_classes.cpp nxslext.cpp \
 			objects.cpp objtools.cpp package.cpp poll.cpp \
 			radius.cpp rootobj.cpp script.cpp session.cpp \
 			situation.cpp sms.cpp snmp.cpp snmptrap.cpp \
 			subnet.cpp syncer.cpp \
 			syslogd.cpp template.cpp tools.cpp tracert.cpp \
 			uniroot.cpp userdb.cpp userdb_objects.cpp vpnconn.cpp \
-			watchdog.cpp webmaps.cpp zone.cpp netmap.cpp
+			vrrp.cpp watchdog.cpp webmaps.cpp zone.cpp
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 		      ../../snmp/libnxsnmp/libnxsnmp.la \
