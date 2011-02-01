@@ -2,7 +2,7 @@ INCLUDES=-I@top_srcdir@/include
 if USE_INTERNAL_EXPAT
 INCLUDES += -I@top_srcdir@/src/libexpat/libexpat
 endif
-SOURCES = agent.cpp base64.cpp config.cpp crypto.cpp gen_uuid.c \
+SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp gen_uuid.c \
 	  geolocation.cpp dload.cpp hash.cpp ice.c icmp.cpp \
 	  log.cpp main.cpp md5.cpp message.cpp msgwq.cpp \
 	  nxcp.cpp qsort.c queue.cpp rwlock.cpp scandir.c serial.cpp \

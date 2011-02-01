@@ -843,6 +843,8 @@ typedef struct
 #define VID_IMAGE_MIMETYPE          ((DWORD)372)
 #define VID_PEER_NODE_ID            ((DWORD)373)
 #define VID_PEER_INTERFACE_ID       ((DWORD)374)
+#define VID_VRRP_VERSION            ((DWORD)375)
+#define VID_VRRP_VR_COUNT           ((DWORD)376)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

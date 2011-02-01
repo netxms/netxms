@@ -709,6 +709,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\vrrp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\watchdog.cpp"
 				>
 			</File>

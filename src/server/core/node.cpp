@@ -69,6 +69,7 @@ Node::Node()
    m_tFailTimeSNMP = 0;
    m_tFailTimeAgent = 0;
 	m_linkLayerNeighbors = NULL;
+	m_vrrpInfo = NULL;
 	m_tLastTopologyPoll = 0;
 	m_pTopology = NULL;
 	m_topologyRebuildTimestamp = 0;
@@ -130,6 +131,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_tFailTimeSNMP = 0;
    m_tFailTimeAgent = 0;
 	m_linkLayerNeighbors = NULL;
+	m_vrrpInfo = NULL;
 	m_tLastTopologyPoll = 0;
 	m_pTopology = NULL;
 	m_topologyRebuildTimestamp = 0;
@@ -157,6 +159,7 @@ Node::~Node()
    DestroyRoutingTable(m_pRoutingTable);
 	if (m_linkLayerNeighbors != NULL)
 		m_linkLayerNeighbors->decRefCount();
+	delete m_vrrpInfo;
 	delete m_pTopology;
 	delete m_jobQueue;
 	delete m_snmpSecurity;
@@ -499,9 +502,71 @@ INTERFACE_LIST *Node::getInterfaceList()
    }
 
    if (pIfList != NULL)
+	{
       CheckInterfaceNames(pIfList);
+		addVrrpInterfaces(pIfList);
+	}
 
    return pIfList;
+}
+
+
+//
+// Add VRRP interfaces to interface list
+//
+
+void Node::addVrrpInterfaces(INTERFACE_LIST *ifList)
+{
+	int i, j, k;
+	TCHAR buffer[32];
+
+	LockData();
+	if (m_vrrpInfo != NULL)
+	{
+		DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): m_vrrpInfo->getSize()=%d"), m_szName, (int)m_dwId, m_vrrpInfo->getSize());
+
+		for(i = 0; i < m_vrrpInfo->getSize(); i++)
+		{
+			VrrpRouter *router = m_vrrpInfo->getRouter(i);
+			DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): vrouter %d state=%d"), m_szName, (int)m_dwId, i, router->getState());
+			if (router->getState() != VRRP_STATE_MASTER)
+				continue;	// Do not add interfaces if router is not in master state
+
+			// Get netmask for this VR
+			DWORD netmask = 0;
+			for(j = 0; j < ifList->iNumEntries; j++)
+				if (ifList->pInterfaces[j].dwIndex == router->getIfIndex())
+				{
+					netmask = ifList->pInterfaces[j].dwIpNetMask;
+					break;
+				}
+
+			// Walk through all VR virtual IPs
+			for(j = 0; j < router->getVipCount(); j++)
+			{
+				DWORD vip = router->getVip(j);
+				DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): checking VIP %s@%d"), m_szName, (int)m_dwId, IpToStr(vip, buffer), i);
+				if (vip != 0)
+				{
+					for(k = 0; k < ifList->iNumEntries; k++)
+						if (ifList->pInterfaces[i].dwIpAddr == vip)
+							break;
+					if (k == ifList->iNumEntries)
+					{
+						ifList->iNumEntries++;
+						ifList->pInterfaces = (INTERFACE_INFO *)realloc(ifList->pInterfaces, sizeof(INTERFACE_INFO) * ifList->iNumEntries);
+						memset(&ifList->pInterfaces[k], 0, sizeof(INTERFACE_INFO));
+						_sntprintf(ifList->pInterfaces[k].szName, MAX_DB_STRING, _T("vrrp.%u.%u.%d"), router->getId(), router->getIfIndex(), j);
+						memcpy(ifList->pInterfaces[k].bMacAddr, router->getVirtualMacAddr(), MAC_ADDR_LENGTH);
+						ifList->pInterfaces[k].dwIpAddr = vip;
+						ifList->pInterfaces[k].dwIpNetMask = netmask;
+						DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): added interface %s"), m_szName, (int)m_dwId, ifList->pInterfaces[k].szName);
+					}
+				}
+			}
+		}
+	}
+	UnlockData();
 }
 
 
@@ -1561,6 +1626,23 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 				}
 
             CheckOSPFSupport(pTransport);
+
+				// Get VRRP information
+				VrrpInfo *vrrpInfo = GetVRRPInfo(this);
+				if (vrrpInfo != NULL)
+				{
+					LockData();
+					m_dwFlags |= NF_IS_VRRP;
+					delete m_vrrpInfo;
+					m_vrrpInfo = vrrpInfo;
+					UnlockData();
+				}
+				else
+				{
+					LockData();
+					m_dwFlags &= ~NF_IS_VRRP;
+					UnlockData();
+				}
          }
          else
          {
@@ -2524,6 +2606,11 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 	if (m_lldpNodeId != NULL)
 		pMsg->SetVariable(VID_LLDP_NODE_ID, m_lldpNodeId);
 	pMsg->SetVariable(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);
+	if (m_vrrpInfo != NULL)
+	{
+		pMsg->SetVariable(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
+		pMsg->SetVariable(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->getSize());
+	}
 }
 
 

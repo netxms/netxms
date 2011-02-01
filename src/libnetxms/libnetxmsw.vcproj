@@ -501,6 +501,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\array.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\base64.cpp"
 				>
 			</File>

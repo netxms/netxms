@@ -355,6 +355,51 @@ public:
 	const TCHAR *getValue(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
 };
 
+
+//
+// Dynamic array class
+//
+
+class LIBNETXMS_EXPORTABLE Array
+{
+private:
+	int m_size;
+	int m_allocated;
+	int m_grow;
+	void **m_data;
+	bool m_objectOwner;
+
+protected:
+	virtual void destroyObject(void *object);
+
+public:
+	Array(int initial = 0, int grow = 16, bool owner = false);
+	virtual ~Array();
+
+	int add(void *object);
+	void *get(int index) { return ((index >= 0) && (index < m_size)) ? m_data[index] : NULL; }
+	void remove(int index);
+	void clear();
+
+	int size() { return m_size; }
+
+	void setOwner(bool owner) { m_objectOwner = owner; }
+	bool isOwner() { return m_objectOwner; }
+};
+
+template <class T> class ObjectArray : public Array
+{
+protected:
+	virtual void destroyObject(void *object) { delete (T*)object; }
+
+public:
+	ObjectArray(int initial = 0, int grow = 0, bool owner = false) : Array(initial, grow, owner) { }
+	virtual ~ObjectArray() { }
+
+	int add(T *object) { return Array::add(object); }
+	T *get(int index) { return (T*)Array::get(index); }
+};
+
 #endif   /* __cplusplus */
 
 

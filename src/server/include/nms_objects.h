@@ -676,6 +676,7 @@ protected:
    ROUTING_TABLE *m_pRoutingTable;
 	ForwardingDatabase *m_fdb;
 	LinkLayerNeighbors *m_linkLayerNeighbors;
+	VrrpInfo *m_vrrpInfo;
 	nxmap_ObjList *m_pTopology;	// For compatibility, to be removed in 1.1.x
 	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;
@@ -691,6 +692,7 @@ protected:
 
    BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue);
    void CheckOSPFSupport(SNMP_Transport *pTransport);
+	void addVrrpInterfaces(INTERFACE_LIST *ifList);
 	BOOL ResolveName(BOOL useOnlyDNS);
    void setAgentProxy(AgentConnection *pConn);
 

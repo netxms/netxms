@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -151,6 +151,69 @@ public:
 
 
 //
+// VRRP information
+//
+
+#define VRRP_STATE_INITIALIZE 1
+#define VRRP_STATE_BACKUP     2
+#define VRRP_STATE_MASTER     3
+
+#define VRRP_VIP_ACTIVE       1
+#define VRRP_VIP_DISABLED     2
+#define VRRP_VIP_NOTREADY     3
+
+class VrrpRouter
+{
+	friend DWORD VRRPHandler(DWORD, SNMP_Variable *, SNMP_Transport *, void *);
+
+private:
+	DWORD m_id;
+	DWORD m_ifIndex;
+	int m_state;
+	BYTE m_virtualMacAddr[MAC_ADDR_LENGTH];
+	int m_ipAddrCount;
+	DWORD *m_ipAddrList;
+
+	void addVirtualIP(SNMP_Variable *var);
+	static DWORD walkerCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg);
+
+protected:
+	bool readVirtualIP(DWORD snmpVersion, SNMP_Transport *transport);
+
+public:
+	VrrpRouter(DWORD id, DWORD ifIndex, int state, BYTE *macAddr);
+	~VrrpRouter();
+
+	DWORD getId() { return m_id; }
+	DWORD getIfIndex() { return m_ifIndex; }
+	int getState() { return m_state; }
+	BYTE *getVirtualMacAddr() { return m_virtualMacAddr; }
+	int getVipCount() { return m_ipAddrCount; }
+	DWORD getVip(int index) { return ((index >= 0) && (index < m_ipAddrCount)) ? m_ipAddrList[index] : 0; }
+};
+
+class VrrpInfo
+{
+	friend DWORD VRRPHandler(DWORD, SNMP_Variable *, SNMP_Transport *, void *);
+
+private:
+	int m_version;
+	ObjectArray<VrrpRouter> *m_routers;
+
+protected:
+	void addRouter(VrrpRouter *router) { m_routers->add(router); }
+
+public:
+	VrrpInfo(int version);
+	~VrrpInfo();
+
+	int getVersion() { return m_version; }
+	int getSize() { return m_routers->size(); }
+	VrrpRouter *getRouter(int index) { return m_routers->get(index); }
+};
+
+
+//
 // Topology functions
 //
 
@@ -165,5 +228,7 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, INTERFACE_LIST *ifList);
+
+VrrpInfo *GetVRRPInfo(Node *node);
 
 #endif   /* _nms_topo_h_ */
