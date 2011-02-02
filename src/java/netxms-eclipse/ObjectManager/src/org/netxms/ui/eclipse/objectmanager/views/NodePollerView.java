@@ -1,0 +1,340 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.objectmanager.views;
+
+import java.text.DateFormat;
+import java.util.Date;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.progress.UIJob;
+import org.netxms.client.NXCSession;
+import org.netxms.client.NodePollListener;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
+
+/**
+ * Forced node poll view
+ *
+ */
+public class NodePollerView extends ViewPart
+{
+	public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.NodePollerView";
+	
+	private static final String[] POLL_NAME = { "", "Status Poll", "Configuration Poll", "Interface Poll" };
+	private static final Color COLOR_ERROR = new Color(Display.getDefault(), 192, 0, 0);
+	private static final Color COLOR_WARNING = new Color(Display.getDefault(), 255, 128, 0);
+	private static final Color COLOR_INFO = new Color(Display.getDefault(), 0, 128, 0);
+	private static final Color COLOR_LOCAL = new Color(Display.getDefault(), 0, 0, 192);
+	
+	private NXCSession session;
+	private Node node;
+	private int pollType;
+	private StyledText textArea;
+	private boolean pollActive = false;
+	private Action actionRestart;
+	private Action actionClearOutput;
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+	 */
+	@Override
+	public void init(IViewSite site) throws PartInitException
+	{
+		super.init(site);
+		
+		session = (NXCSession)ConsoleSharedData.getSession();
+		
+		// Secondary ID must by in form nodeId&pollType
+		String[] parts = site.getSecondaryId().split("&");
+		if (parts.length != 2)
+			throw new PartInitException("Internal error");
+		
+		GenericObject obj = session.findObjectById(Long.parseLong(parts[0]));
+		node = ((obj != null) && (obj instanceof Node)) ? (Node)obj : null;
+		if (node == null)
+			throw new PartInitException("Invalid object ID");
+		pollType = Integer.parseInt(parts[1]);
+		
+		setPartName(POLL_NAME[pollType] + " - " + node.getObjectName());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	public void createPartControl(Composite parent)
+	{
+		textArea = new StyledText(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		textArea.setEditable(false);
+		
+		createActions();
+		contributeToActionBars();
+		createPopupMenu();
+		
+		startPoll();
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionRestart = new Action("&Restart poll") {
+			@Override
+			public void run()
+			{
+				startPoll();
+			}
+		};
+		actionRestart.setImageDescriptor(Activator.getImageDescriptor("icons/restart.gif"));
+
+		actionClearOutput = new Action("&Clear output") {
+			@Override
+			public void run()
+			{
+				textArea.setText("");
+			}
+		};
+		actionClearOutput.setImageDescriptor(SharedIcons.CLEAR_LOG);
+	}
+
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionRestart);
+		manager.add(actionClearOutput);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionRestart);
+		manager.add(actionClearOutput);
+	}
+
+	/**
+	 * Create pop-up menu for user list
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu
+		Menu menu = menuMgr.createContextMenu(textArea);
+		textArea.setMenu(menu);
+	}
+
+	/**
+	 * Fill context menu
+	 * 
+	 * @param mgr Menu manager
+	 */
+	protected void fillContextMenu(final IMenuManager manager)
+	{
+		manager.add(actionClearOutput);
+	}
+
+	/**
+	 * Add poller message to text area
+	 * 
+	 * @param message poller message
+	 */
+	private void addPollerMessage(String message)
+	{
+		Date now = new Date();
+		textArea.append("[" + DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(now) + "] ");
+		
+		int index = message.indexOf(0x7F);
+		if (index != -1)
+		{
+			textArea.append(message.substring(0, index));
+			char code = message.charAt(index + 1);
+			int lastPos = textArea.getCharCount();
+			final String msgPart = message.substring(index + 2);
+			textArea.append(msgPart);
+			
+			StyleRange style = new StyleRange();
+			style.start = lastPos;
+			style.length = msgPart.length();
+			style.foreground = getTextColor(code);
+			textArea.setStyleRange(style);
+		}
+		else
+		{
+			textArea.append(message);
+		}
+		
+		textArea.setCaretOffset(textArea.getCharCount());
+	}
+	
+	/**
+	 * Get color from color code
+	 * 
+	 * @param code
+	 * @return
+	 */
+	private Color getTextColor(char code)
+	{
+		switch(code)
+		{
+			case 'e':
+				return COLOR_ERROR;
+			case 'w':
+				return COLOR_WARNING;
+			case 'i':
+				return COLOR_INFO;
+			case 'l':
+				return COLOR_LOCAL;
+		}
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 */
+	@Override
+	public void setFocus()
+	{
+		textArea.setFocus();
+	}
+
+	/**
+	 * Start poll
+	 */
+	private void startPoll()
+	{
+		if (pollActive)
+			return;
+		pollActive = true;
+		
+		addPollerMessage("\u007Fl**** Poll request sent to server ****\r\n");
+		
+		final NodePollListener listener = new NodePollListener() {
+			@Override
+			public void onPollerMessage(final String message)
+			{
+				new UIJob("Update poller window") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						addPollerMessage(message);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		};
+		
+		Job job = new Job("Node poll: " + node.getObjectName() + " [" + node.getObjectId() + "]") {
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				try
+				{
+					session.pollNode(node.getObjectId(), pollType, listener);
+					onPollComplete(true, null);
+				}
+				catch(Exception e)
+				{
+					onPollComplete(false, e.getMessage());
+				}
+				return Status.OK_STATUS;
+			}
+		};
+		job.setUser(true);
+		job.schedule();
+	}
+	
+	/**
+	 * Poll completion handler
+	 * 
+	 * @param success
+	 * @param errorMessage
+	 */
+	private void onPollComplete(final boolean success, final String errorMessage)
+	{
+		new UIJob("Update poller window") {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor)
+			{
+				if (success)
+				{
+					addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n");
+				}
+				else
+				{
+					addPollerMessage("\u007FePOLL ERROR: " + errorMessage);
+					addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n");
+				}
+				pollActive = false;
+				return Status.OK_STATUS;
+			}
+		};
+	}
+}

@@ -647,6 +647,8 @@ public final class NXCPCodes
 	public static final long VID_IMAGE_MIMETYPE          = 372;
 	public static final long VID_PEER_NODE_ID            = 373;
 	public static final long VID_PEER_INTERFACE_ID       = 374;
+	public static final long VID_VRRP_VERSION            = 374;
+	public static final long VID_VRRP_VR_COUNT           = 374;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

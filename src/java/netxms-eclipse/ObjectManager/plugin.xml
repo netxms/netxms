@@ -186,6 +186,27 @@
                label="Change IP address..."
                menubarPath="objectmgmt">
          </action>
+         <menu
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
+               label="&amp;Poll"
+               path="objectmgmt">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.StatusPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.StatusPoll"
+               label="&amp;Status poll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.ConfigurationPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.ConfigurationPoll"
+               label="&amp;Configuration poll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
       </objectContribution>
 
 
@@ -208,6 +229,17 @@
                menubarPath="objectbinding">
          </action>
       </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objectmanager.views.NodePollerView"
+            icon="icons/poller_view.png"
+            id="org.netxms.ui.eclipse.objectmanager.views.NodePollerView"
+            name="Node Poll"
+            restorable="true">
+      </view>
    </extension>
 
 </plugin>

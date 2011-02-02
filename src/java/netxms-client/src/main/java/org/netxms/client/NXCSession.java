@@ -3845,4 +3845,33 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Perform a forced node poll. This method will not return until poll is complete, so it's
+	 * advised to run it from separate thread. For each message received from poller listener's
+	 * method onPollerMessage will be called.
+	 * 
+	 * @param nodeId node object ID
+	 * @param pollType poll type (defined in org.netxms.client.constants.NodePoller)
+	 * @param listener listener
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void pollNode(long nodeId, int pollType, NodePollListener listener) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_NODE);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt16(NXCPCodes.VID_POLL_TYPE, pollType);
+		sendMessage(msg);
+		
+		int rcc;
+		do
+		{
+			final NXCPMessage response = waitForMessage(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), 120000);
+			rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
+			if ((rcc == RCC.OPERATION_IN_PROGRESS) && (listener != null))
+				listener.onPollerMessage(response.getVariableAsString(NXCPCodes.VID_POLLER_MESSAGE));
+		}
+		while(rcc == RCC.OPERATION_IN_PROGRESS);
+	}
 }

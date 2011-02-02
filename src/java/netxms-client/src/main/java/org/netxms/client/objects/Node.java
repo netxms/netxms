@@ -49,6 +49,7 @@ public class Node extends GenericObject
 	public static final int NF_IS_CDP               = 0x00000200;
 	public static final int NF_IS_SONMP             = 0x00000400;
 	public static final int NF_IS_LLDP              = 0x00000800;
+	public static final int NF_IS_VRRP              = 0x00001000;
 
 	// Node flags (user)
 	public static final int NF_DISABLE_SNMP         = 0x01000000;
@@ -90,6 +91,7 @@ public class Node extends GenericObject
 	private String snmpSysName;
 	private String systemDescription;
 	private String lldpNodeId;
+	private int vrrpVersion;
 	
 	/**
 	 * @param msg
@@ -122,6 +124,7 @@ public class Node extends GenericObject
 		systemDescription = msg.getVariableAsString(NXCPCodes.VID_SYS_DESCRIPTION);
 		snmpSysName = msg.getVariableAsString(NXCPCodes.VID_SYS_NAME);
 		lldpNodeId = msg.getVariableAsString(NXCPCodes.VID_LLDP_NODE_ID);
+		vrrpVersion = msg.getVariableAsInteger(NXCPCodes.VID_VRRP_VERSION);
 	}
 
 	/**
@@ -331,6 +334,15 @@ public class Node extends GenericObject
 	}
 
 	/**
+	 * 
+	 * @return true if node is VRRP capable
+	 */
+	public boolean isVrrpSupported()
+	{
+		return (flags & NF_IS_VRRP) != 0;
+	}
+
+	/**
 	 * @return the snmpPort
 	 */
 	public int getSnmpPort()
@@ -352,5 +364,13 @@ public class Node extends GenericObject
 	public String getLldpNodeId()
 	{
 		return lldpNodeId;
+	}
+
+	/**
+	 * @return the vrrpVersion
+	 */
+	protected int getVrrpVersion()
+	{
+		return vrrpVersion;
 	}
 }
