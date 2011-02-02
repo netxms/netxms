@@ -192,10 +192,10 @@
                path="objectmgmt">
          </menu>
          <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.StatusPoll"
+               class="org.netxms.ui.eclipse.objectmanager.actions.InterfacePoll"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.StatusPoll"
-               label="&amp;Status poll"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.InterfacePoll"
+               label="&amp;Interface names"
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
@@ -203,7 +203,15 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.ConfigurationPoll"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ConfigurationPoll"
-               label="&amp;Configuration poll"
+               label="&amp;Configuration"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.StatusPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.StatusPoll"
+               label="&amp;Status"
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>

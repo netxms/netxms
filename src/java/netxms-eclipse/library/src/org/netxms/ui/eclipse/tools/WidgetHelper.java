@@ -18,9 +18,13 @@
  */
 package org.netxms.ui.eclipse.tools;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ST;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -35,6 +39,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -376,4 +381,63 @@ public class WidgetHelper
       cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer });
       cb.dispose();
    }
+	
+	public static void addStyledTextEditorActions(final IMenuManager manager, final StyledText control, boolean readOnly)
+	{
+		if (!readOnly)
+		{
+			final Action cut = new Action("C&ut") {
+				@Override
+				public void run()
+				{
+					control.cut();
+				}
+			};
+			cut.setImageDescriptor(SharedIcons.CUT);
+			manager.add(cut);
+		}
+		
+		final Action copy = new Action("&Copy") {
+			@Override
+			public void run()
+			{
+				control.copy();
+			}
+		};
+		copy.setImageDescriptor(SharedIcons.COPY);
+		manager.add(copy);
+
+		if (!readOnly)
+		{
+			final Action paste = new Action("&Paste") {
+				@Override
+				public void run()
+				{
+					control.paste();
+				}
+			};
+			paste.setImageDescriptor(SharedIcons.PASTE);
+			manager.add(paste);
+			
+			final Action delete = new Action("&Delete") {
+				@Override
+				public void run()
+				{
+					control.invokeAction(ST.DELETE_NEXT);
+				}
+			};
+			manager.add(delete);
+
+			manager.add(new Separator());
+		}
+		
+		final Action selectAll = new Action("Select &all") {
+			@Override
+			public void run()
+			{
+				control.selectAll();
+			}
+		};
+		manager.add(selectAll);
+	}
 }

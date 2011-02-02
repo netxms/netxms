@@ -48,7 +48,9 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedFonts;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Forced node poll view
@@ -104,12 +106,11 @@ public class NodePollerView extends ViewPart
 	{
 		textArea = new StyledText(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		textArea.setEditable(false);
+		textArea.setFont(SharedFonts.CONSOLE);
 		
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
-		startPoll();
 	}
 	
 	/**
@@ -198,6 +199,7 @@ public class NodePollerView extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
+		WidgetHelper.addStyledTextEditorActions(manager, textArea, true);
 		manager.add(actionClearOutput);
 	}
 
@@ -232,6 +234,7 @@ public class NodePollerView extends ViewPart
 		}
 		
 		textArea.setCaretOffset(textArea.getCharCount());
+		textArea.setTopIndex(textArea.getLineCount() - 1);
 	}
 	
 	/**
@@ -268,11 +271,12 @@ public class NodePollerView extends ViewPart
 	/**
 	 * Start poll
 	 */
-	private void startPoll()
+	public void startPoll()
 	{
 		if (pollActive)
 			return;
 		pollActive = true;
+		actionRestart.setEnabled(false);
 		
 		addPollerMessage("\u007Fl**** Poll request sent to server ****\r\n");
 		
@@ -307,7 +311,7 @@ public class NodePollerView extends ViewPart
 				return Status.OK_STATUS;
 			}
 		};
-		job.setUser(true);
+		job.setSystem(true);
 		job.schedule();
 	}
 	
@@ -333,8 +337,9 @@ public class NodePollerView extends ViewPart
 					addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n");
 				}
 				pollActive = false;
+				actionRestart.setEnabled(true);
 				return Status.OK_STATUS;
 			}
-		};
+		}.schedule();
 	}
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.ui.eclipse.library.Activator;
 
 /**
- * @author Victor
+ * Shared console icons
  *
  */
 public class SharedIcons
@@ -32,7 +32,10 @@ public class SharedIcons
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
 	public static ImageDescriptor CLEAR_LOG;
+	public static ImageDescriptor COPY;
+	public static ImageDescriptor CUT;
 	public static ImageDescriptor DELETE_OBJECT;
+	public static ImageDescriptor PASTE;
 	public static ImageDescriptor REFRESH;
 	public static ImageDescriptor SAVE;
 	public static ImageDescriptor ZOOM_IN;
@@ -48,7 +51,10 @@ public class SharedIcons
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png");
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png");
 		CLEAR_LOG = Activator.getImageDescriptor("icons/clear_log.gif");
+		COPY = Activator.getImageDescriptor("icons/copy.gif");
+		CUT = Activator.getImageDescriptor("icons/cut.gif");
 		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif");
+		PASTE = Activator.getImageDescriptor("icons/paste.gif");
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif");
 		SAVE = Activator.getImageDescriptor("icons/save.gif");
 		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png");

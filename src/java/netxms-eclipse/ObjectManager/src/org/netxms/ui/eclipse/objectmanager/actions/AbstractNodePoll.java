@@ -49,7 +49,8 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 		{
 			try
 			{
-				window.getActivePage().showView(NodePollerView.ID, Long.toString(node.getObjectId()) + "&" + Integer.toString(getPollType()), IWorkbenchPage.VIEW_ACTIVATE);
+				NodePollerView view = (NodePollerView)window.getActivePage().showView(NodePollerView.ID, Long.toString(node.getObjectId()) + "&" + Integer.toString(getPollType()), IWorkbenchPage.VIEW_ACTIVATE);
+				view.startPoll();
 			}
 			catch(PartInitException e)
 			{
