@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -38,6 +41,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
@@ -73,9 +77,14 @@ public class EventProcessingPolicyEditor extends ViewPart
 	private ScrolledComposite scroller;
 	private Composite dataArea;
 	private List<RuleEditor> ruleEditors = new ArrayList<RuleEditor>();
+	private boolean verticalLayout = false;
 	private Font headerFont;
 	private Font normalFont;
 	private Font boldFont;
+	
+	private Action actionHorizontal;
+	private Action actionVertical;
+	private Action actionSave; 
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -130,10 +139,76 @@ public class EventProcessingPolicyEditor extends ViewPart
 			}
 		};
 		session.addListener(sessionListener);
+
+		createActions();
+		contributeToActionBars();
+		//createPopupMenu();
 		
 		openEventProcessingPolicy();
 	}
+
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionHorizontal = new Action("&Horizontal layout", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				verticalLayout = false;
+				updateLayout();
+			}
+		};
+		actionHorizontal.setChecked(!verticalLayout);
+		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif"));
+		
+		actionVertical = new Action("&Vertical layout", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				verticalLayout = true;
+				updateLayout();
+			}
+		};
+		actionVertical.setChecked(verticalLayout);
+		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif"));
+	}
 	
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionHorizontal);
+		manager.add(actionVertical);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionHorizontal);
+		manager.add(actionVertical);
+	}
+
 	/**
 	 * Open event processing policy
 	 */
@@ -204,6 +279,18 @@ public class EventProcessingPolicyEditor extends ViewPart
 		}
 		dataArea.layout();
 
+		Rectangle r = scroller.getClientArea();
+		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+	}
+	
+	/**
+	 * Update editor's layout
+	 */
+	private void updateLayout()
+	{
+		for(RuleEditor editor : ruleEditors)
+			editor.setVerticalLayout(verticalLayout, false);
+		dataArea.layout();
 		Rectangle r = scroller.getClientArea();
 		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 	}

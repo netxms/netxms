@@ -3709,22 +3709,25 @@ nxmap_ObjList *Node::GetL2Topology()
 nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 {
 	nxmap_ObjList *pResult;
-	int nDepth;
+	int nDepth = ConfigReadInt(_T("TopologyDiscoveryRadius"), 5);
 
-	nDepth = ConfigReadInt(_T("TopologyDiscoveryRadius"), 5);
 	MutexLock(m_mutexTopoAccess, INFINITE);
-	delete m_pTopology;
 	if ((m_linkLayerNeighbors != NULL) && (m_linkLayerNeighbors->getSize() > 0))
 	{
-		m_pTopology = new nxmap_ObjList;
-		::BuildL2Topology(*m_pTopology, this, nDepth);
-		pResult = new nxmap_ObjList(m_pTopology);
+		MutexUnlock(m_mutexTopoAccess);
+
+		pResult = new nxmap_ObjList;
+		::BuildL2Topology(*pResult, this, nDepth);
+
+		MutexLock(m_mutexTopoAccess, INFINITE);
+		delete m_pTopology;
+		m_pTopology = new nxmap_ObjList(pResult);
 		m_topologyRebuildTimestamp = time(NULL);
 	}
 	else
 	{
 		pResult = NULL;
-		m_pTopology = NULL;
+		delete_and_null(m_pTopology);
 		*pdwStatus = RCC_NO_L2_TOPOLOGY_SUPPORT;
 	}
 	MutexUnlock(m_mutexTopoAccess);

@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.epp.widgets;
 
@@ -13,7 +28,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
@@ -35,10 +49,10 @@ import org.netxms.ui.eclipse.widgets.DashboardElement;
 public class RuleEditor extends Composite
 {
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	private static final Color TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	private static final Color TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 225, 233, 241);
+	private static final Color RULE_BORDER_COLOR = new Color(Display.getDefault(), 153, 180, 209);
 	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getDefault(), 198,214,172);
 	private static final Color ACTION_BORDER_COLOR = new Color(Display.getDefault(), 186,176,201);
-	private static final Color COMMENTS_BORDER_COLOR = new Color(Display.getDefault(), 60,141,163);
 	private static final Color TITLE_COLOR = new Color(Display.getDefault(), 0, 0, 0);
 	private static final int INDENT = 20;
 	
@@ -51,6 +65,10 @@ public class RuleEditor extends Composite
 	private Image imageExecute;
 	private Image imageTerminate;
 	private Image imageStop;
+	private boolean verticalLayout = false;
+	private Composite mainArea;
+	private DashboardElement condition;
+	private DashboardElement action;
 	
 	/**
 	 * @param parent
@@ -58,7 +76,7 @@ public class RuleEditor extends Composite
 	 */
 	public RuleEditor(Composite parent, EventProcessingPolicyRule rule, int ruleNumber, EventProcessingPolicyEditor editor)
 	{
-		super(parent, SWT.BORDER);
+		super(parent, SWT.NONE);
 		this.rule = rule;
 		this.ruleNumber = ruleNumber;
 		this.editor = editor;
@@ -70,18 +88,21 @@ public class RuleEditor extends Composite
 		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage();
 		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage();
 		
-		setBackground(BACKGROUND_COLOR);
+		setBackground(RULE_BORDER_COLOR);
 
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
-		layout.marginHeight = 0;
+		layout.marginHeight = 1;
 		layout.marginWidth = 0;
+		layout.horizontalSpacing = 1;
+		layout.verticalSpacing = 1;
 		setLayout(layout);
 		
 		createLeftPanel();
 		createHeader();
+		createMainArea();
 		
-		DashboardElement condition = new DashboardElement(this, "Filter") {
+		condition = new DashboardElement(mainArea, "Filter") {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -92,7 +113,7 @@ public class RuleEditor extends Composite
 		};
 		configureLayout(condition);
 
-		DashboardElement action = new DashboardElement(this, "Action") {
+		action = new DashboardElement(mainArea, "Action") {
 			@Override
 			protected Control createClientArea(Composite parent)
 			{
@@ -102,34 +123,57 @@ public class RuleEditor extends Composite
 			}
 		};
 		configureLayout(action);
-
-		/*
-		DashboardElement comments = new DashboardElement(this, "Comments") {
-			@Override
-			protected Control createClientArea(Composite parent)
-			{
-				setBorderColor(COMMENTS_BORDER_COLOR);
-				setTitleColor(TITLE_COLOR);
-				
-				final Text text = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.READ_ONLY);
-				text.setBackground(BACKGROUND_COLOR);
-				text.setText(RuleEditor.this.rule.getComments());
-				return text;
-			}
-		};
-		configureLayout(comments);*/
 	}
 	
+	/**
+	 * Create main area which contains condition and action elements
+	 */
+	private void createMainArea()
+	{
+		mainArea = new Composite(this, SWT.NONE);
+		mainArea.setBackground(BACKGROUND_COLOR);
+		
+		GridLayout layout = new GridLayout();
+		layout.numColumns = verticalLayout ? 1 : 2;
+		layout.marginHeight = 4;
+		layout.marginWidth = 4;
+		layout.makeColumnsEqualWidth = true;
+		mainArea.setLayout(layout);
+		
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		mainArea.setLayoutData(gd);
+	}
+	
+	/**
+	 * Create panel with rule number and collapse/expand button on the left
+	 */
 	private void createLeftPanel()
 	{
-		Label label = new Label(this, SWT.NONE);
+		Composite panel = new Composite(this, SWT.NONE);
+		panel.setBackground(TITLE_BACKGROUND_COLOR);
+		
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		panel.setLayout(layout);
+
+		GridData gd = new GridData();
+		gd.verticalSpan = 2;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		panel.setLayoutData(gd);		
+		
+		Label label = new Label(panel, SWT.NONE);
 		label.setText(Integer.toString(ruleNumber));
 		label.setFont(editor.getBoldFont());
 		label.setBackground(TITLE_BACKGROUND_COLOR);
+		label.setForeground(TITLE_COLOR);
 		label.setAlignment(SWT.CENTER);
 		
-		GridData gd = new GridData();
-		gd.verticalSpan = 4;
+		gd = new GridData();
 		gd.horizontalAlignment = SWT.CENTER;
 		gd.verticalAlignment = SWT.CENTER;
 		gd.grabExcessVerticalSpace = true;
@@ -137,12 +181,15 @@ public class RuleEditor extends Composite
 		label.setLayoutData(gd);
 	}
 	
+	/**
+	 * Create rule header
+	 */
 	private void createHeader()
 	{
 		Label label = new Label(this, SWT.NONE);
 		label.setText(rule.getComments());
-		label.setBackground(BACKGROUND_COLOR);
-		//label.setForeground(TITLE_COLOR);
+		label.setBackground(TITLE_BACKGROUND_COLOR);
+		label.setForeground(TITLE_COLOR);
 		
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -160,6 +207,7 @@ public class RuleEditor extends Composite
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
 		ctrl.setLayoutData(gd);
 	}
 	
@@ -450,5 +498,17 @@ public class RuleEditor extends Composite
 	protected void setRuleNumber(int ruleNumber)
 	{
 		this.ruleNumber = ruleNumber;
+	}
+
+	/**
+	 * @param verticalLayout the verticalLayout to set
+	 */
+	public void setVerticalLayout(boolean verticalLayout, boolean doLayout)
+	{
+		this.verticalLayout = verticalLayout;
+		GridLayout layout = (GridLayout)mainArea.getLayout();
+		layout.numColumns = verticalLayout ? 1 : 2;
+		if (doLayout)
+			layout();
 	}
 }

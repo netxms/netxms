@@ -35,6 +35,7 @@ public class SharedIcons
 	public static ImageDescriptor COPY;
 	public static ImageDescriptor CUT;
 	public static ImageDescriptor DELETE_OBJECT;
+	public static ImageDescriptor EXPAND_ALL;
 	public static ImageDescriptor PASTE;
 	public static ImageDescriptor REFRESH;
 	public static ImageDescriptor SAVE;
@@ -54,6 +55,7 @@ public class SharedIcons
 		COPY = Activator.getImageDescriptor("icons/copy.gif");
 		CUT = Activator.getImageDescriptor("icons/cut.gif");
 		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif");
+		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.gif");
 		PASTE = Activator.getImageDescriptor("icons/paste.gif");
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif");
 		SAVE = Activator.getImageDescriptor("icons/save.gif");
