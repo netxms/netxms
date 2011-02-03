@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -122,7 +122,7 @@ void Queue::Insert(void *pElement)
       m_dwFirst += m_dwBufferIncrement;
    }
    if (m_dwFirst == 0)
-      m_dwFirst = m_dwBufferSize - 1;
+      m_dwFirst = m_dwBufferSize;
    m_pElements[--m_dwFirst] = pElement;
    m_dwNumElements++;
    ConditionSet(m_condWakeup);
@@ -203,4 +203,32 @@ void Queue::SetShutdownMode()
 	m_bShutdownFlag = TRUE;
 	ConditionSet(m_condWakeup);
 	Unlock();
+}
+
+
+//
+// Find element in queue using given key and comparator
+// Returns pointer to element or NULL if element was not found.
+// Element remains in the queue
+//
+
+void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
+{
+	void *element = NULL;
+	DWORD i, pos;
+
+	Lock();
+	for(i = 0, pos = m_dwFirst; i < m_dwNumElements; i++)
+	{
+		if (comparator(key, m_pElements[pos]))
+		{
+			element = m_pElements[pos];
+			break;
+		}
+		pos++;
+		if (pos == m_dwBufferSize)
+			pos = 0;
+	}
+	Unlock();
+	return element;
 }

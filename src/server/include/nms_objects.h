@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1411,6 +1411,8 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);
 DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID);
+Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr);
+bool NXCORE_EXPORTABLE IsClusterIP(DWORD ipAddr);
 
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx);

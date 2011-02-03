@@ -348,13 +348,19 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
 // Check potential new node from ARP cache or routing table
 //
 
+static bool PollerQueueElementComparator(void *key, void *element)
+{
+	return CAST_FROM_POINTER(key, DWORD) == ((NEW_NODE *)element)->dwIpAddr;
+}
+
 static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 {
 	TCHAR buffer[16];
 
 	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), IpToStr(ipAddr, buffer), ifIndex);
 	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) &&
-       (FindNodeByIP(ipAddr) == NULL))
+       (FindNodeByIP(ipAddr) == NULL) && !IsClusterIP(ipAddr) && 
+		 (g_nodePollerQueue.find(CAST_TO_POINTER(ipAddr, void *), PollerQueueElementComparator) == NULL))
    {
       Interface *pInterface = node->findInterface(ifIndex, ipAddr);
       if (pInterface != NULL)

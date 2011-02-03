@@ -30,6 +30,8 @@
 // Queue class
 //
 
+typedef bool (*QUEUE_COMPARATOR)(void *key, void *object);
+
 class LIBNETXMS_EXPORTABLE Queue
 {
 private:
@@ -59,6 +61,7 @@ public:
    void *GetOrBlock();
    DWORD Size() { return m_dwNumElements; }
    void Clear();
+	void *find(void *key, QUEUE_COMPARATOR comparator);
 };
 
 #endif    /* _nxqueue_h_ */

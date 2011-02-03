@@ -732,6 +732,56 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 
 
 //
+// Find cluster by resource IP
+//
+
+Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr)
+{
+   Cluster *cluster = NULL;
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
+	{
+		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CLUSTER)
+		{
+			if (((Cluster *)g_pIndexById[i].pObject)->isVirtualAddr(ipAddr))
+			{
+				cluster = (Cluster *)g_pIndexById[i].pObject;
+				break;
+			}
+		}
+	}
+   RWLockUnlock(g_rwlockIdIndex);
+   return cluster;
+}
+
+
+//
+// Check if given IP address is used by cluster (it's either
+// resource IP or located on one of sync subnets)
+//
+
+bool NXCORE_EXPORTABLE IsClusterIP(DWORD ipAddr)
+{
+   bool result = false;
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
+	{
+		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CLUSTER)
+		{
+			if (((Cluster *)g_pIndexById[i].pObject)->isVirtualAddr(ipAddr) ||
+				 ((Cluster *)g_pIndexById[i].pObject)->isSyncAddr(ipAddr))
+			{
+				result = true;
+				break;
+			}
+		}
+	}
+   RWLockUnlock(g_rwlockIdIndex);
+   return result;
+}
+
+
+//
 // Find zone object by GUID
 //
 
