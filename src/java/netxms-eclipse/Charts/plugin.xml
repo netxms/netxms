@@ -43,6 +43,20 @@
             id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph_DciValue"
             objectClass="org.netxms.client.datacollection.DciValue">
          <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowStatusIndicator"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowStatusIndicator"
+               label="Status Indicator"
+               icon="icons/chart_status.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowPieChart"
+               icon="icons/chart_pie.png"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowPieChart"
+               label="Pie Chart"
+               menubarPath="additions">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.charts.actions.ShowBarChart"
                icon="icons/chart_bar.png"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowBarChart"
@@ -54,20 +68,6 @@
                id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
                label="Line Chart"
                icon="icons/chart_line.png"
-               menubarPath="additions">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.charts.actions.ShowPieChart"
-               icon="icons/chart_pie.png"
-               id="org.netxms.ui.eclipse.charts.popupActions.ShowPieChart"
-               label="Pie Chart"
-               menubarPath="additions">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.charts.actions.ShowStatusIndicator"
-               id="org.netxms.ui.eclipse.charts.popupActions.ShowStatusIndicator"
-               label="Status Indicator"
-               icon="icons/chart_status.png"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -75,6 +75,20 @@
             id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph_DataCollectionItem"
             objectClass="org.netxms.client.datacollection.DataCollectionItem">
          <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowStatusIndicator"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowStatusIndicator"
+               label="Status Indicator"
+               icon="icons/chart_status.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowPieChart"
+               icon="icons/chart_pie.png"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowPieChart"
+               label="Pie Chart"
+               menubarPath="additions">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.charts.actions.ShowBarChart"
                icon="icons/chart_bar.png"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowBarChart"
@@ -86,13 +100,6 @@
                id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
                label="Line Chart"
                icon="icons/chart_line.png"
-               menubarPath="additions">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.charts.actions.ShowPieChart"
-               icon="icons/chart_pie.png"
-               id="org.netxms.ui.eclipse.charts.popupActions.ShowPieChart"
-               label="Pie Chart"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -157,6 +164,15 @@
                toolbarPath="view/additions">
          </action>
       </actionSet>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.charts.objecttabs.PerformanceTab"
+            icon="icons/chart_line.png"
+            name="Performance"
+            order="30">
+      </tab>
    </extension>
 
 </plugin>

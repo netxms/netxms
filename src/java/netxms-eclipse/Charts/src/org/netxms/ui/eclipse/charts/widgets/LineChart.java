@@ -108,10 +108,12 @@ public class LineChart extends Chart implements HistoricalDataChart
 		ITitle title = getTitle();
 		title.setVisible(preferenceStore.getBoolean("Chart.ShowTitle"));
 		title.setForeground(getColorFromPreferences("Chart.Colors.Title"));
+		title.setFont(Activator.getDefault().getChartTitleFont());
 		
 		// Setup legend
 		ILegend legend = getLegend();
 		legend.setPosition(swtPositionFromInternal(legendPosition));
+		legend.setFont(Activator.getDefault().getChartFont());
 		
 		// Default time range
 		timeTo = System.currentTimeMillis();
@@ -126,10 +128,12 @@ public class LineChart extends Chart implements HistoricalDataChart
 		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color"));
 		DateFormat format = new SimpleDateFormat("HH:mm");
 		xTick.setFormat(format);
+		xTick.setFont(Activator.getDefault().getChartFont());
 		
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
 		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+		yAxis.getTick().setFont(Activator.getDefault().getChartFont());
 		
 		// Setup grid
 		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style"));

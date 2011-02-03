@@ -32,6 +32,9 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
@@ -83,6 +86,20 @@ public class TabbedObjectView extends ViewPart
 		tabFolder.setUnselectedImageVisible(true);
 		tabFolder.setSimple(true);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		tabFolder.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				if (e.item != null)
+					((ObjectTab)((CTabItem)e.item).getData()).selected();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 		
 		tabs = new ArrayList<ObjectTab>();	
 		addTabs();
@@ -146,6 +163,9 @@ public class TabbedObjectView extends ViewPart
 	public void setFocus()
 	{
 		tabFolder.setFocus();
+		CTabItem item = tabFolder.getSelection();
+		if (item != null)
+			((ObjectTab)item.getData()).selected();
 	}
 	
 	/**

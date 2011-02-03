@@ -36,6 +36,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -50,6 +51,7 @@ public class PerfTab extends PropertyPage
 	private Button checkShow;
 	private LabeledText title;
 	private ColorSelector color;
+	private Button checkShowThresholds;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -95,7 +97,14 @@ public class PerfTab extends PropertyPage
       colors.setLayout(new RowLayout(SWT.VERTICAL));
       new Label(colors, SWT.NONE).setText("Color");
       color = new ColorSelector(colors);
-      color.setColorValue(settings.getColor());
+      color.setColorValue(ColorConverter.rgbFromInt(settings.getColorAsInt()));
+
+      checkShowThresholds = new Button(dialogArea, SWT.CHECK);
+      checkShowThresholds.setText("&Show thresholds on graph");
+      checkShowThresholds.setSelection(settings.isShowThresholds());
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkShowThresholds.setLayoutData(gd);
 
       return dialogArea;
 	}
@@ -112,7 +121,8 @@ public class PerfTab extends PropertyPage
 		
 		settings.setEnabled(checkShow.getSelection());
 		settings.setTitle(title.getText());
-		settings.setColor(color.getColorValue());
+		settings.setColor(ColorConverter.rgbToInt(color.getColorValue()));
+		settings.setShowThresholds(checkShowThresholds.getSelection());
 		
 		try
 		{
@@ -187,6 +197,6 @@ public class PerfTab extends PropertyPage
 		PerfTabGraphSettings defaults = new PerfTabGraphSettings();
 		checkShow.setSelection(defaults.isEnabled());
 		title.setText(defaults.getTitle());
-		color.setColorValue(defaults.getColor());
+		color.setColorValue(ColorConverter.rgbFromInt(defaults.getColorAsInt()));
 	}
 }

@@ -864,11 +864,11 @@ public class GraphSettings
 		switch(timeUnit)
 		{
 			case TIME_UNIT_MINUTE:
-				return timeFrame * 60 * 1000;
+				return (long)timeFrame * 60L * 1000L;
 			case TIME_UNIT_HOUR:
-				return timeFrame * 60 * 60 * 1000;
+				return (long)timeFrame * 60L * 60L * 1000L;
 			case TIME_UNIT_DAY:
-				return timeFrame * 24 * 60 * 60 * 1000;
+				return (long)timeFrame * 24L * 60L * 60L * 1000L;
 		}
 		return 0;
 	}

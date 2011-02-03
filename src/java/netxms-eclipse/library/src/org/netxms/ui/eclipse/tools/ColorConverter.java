@@ -42,6 +42,18 @@ public class ColorConverter
 	{
 		return rgb.red | (rgb.green << 8) | (rgb.blue << 16);
 	}
+	
+	/**
+	 * Create RGB object from integer value
+	 * 
+	 * @param color color as integer value
+	 * @return RGB object
+	 */
+	public static RGB rgbFromInt(int color)
+	{
+		return new RGB(color & 0xFF, (color >> 8) & 0xFF, (color >> 16) & 0xFF);
+	}
+
 
 	/**
 	 * Create Color object from integer RGB representation

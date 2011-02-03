@@ -113,55 +113,101 @@ extern "C" const char EXPORT *drvName = "MSSQL";
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
-	int len = (int)_tcslen(str) + 4;   // + two quotes, N prefix, and \0 at the end
+	int len = (int)wcslen(str) + 4;   // + two quotes, N prefix, and \0 at the end
 	int bufferSize = len + 128;
-	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
-	_tcscpy(out, _T("N'"));
+	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
+	wcscpy(out, L"N'");
 
-	const TCHAR *src = str;
+	const WCHAR *src = str;
 	int outPos;
 	for(outPos = 2; *src != NULL; src++)
 	{
-#ifdef UNICODE
 		long chval = *src;
-#else
-		long chval = (long)(*((unsigned char *)src));
-#endif
 		if (chval < 32)
 		{
-			TCHAR buffer[32];
+			WCHAR buffer[32];
 
-			_sntprintf(buffer, 32, _T("'+nchar(%ld)+N'"), chval);
-			int l = (int)_tcslen(buffer);
+			_snwprintf(buffer, 32, L"'+nchar(%ld)+N'", chval);
+			int l = (int)wcslen(buffer);
 
 			len += l;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
 			}
-			memcpy(&out[outPos], buffer, l * sizeof(TCHAR));
+			memcpy(&out[outPos], buffer, l * sizeof(WCHAR));
 			outPos += l;
 		}
-		else if (*src == _T('\''))
+		else if (*src == L'\'')
 		{
 			len++;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
 			}
-			out[outPos++] = _T('\'');
-			out[outPos++] = _T('\'');
+			out[outPos++] = L'\'';
+			out[outPos++] = L'\'';
 		}
 		else
 		{
 			out[outPos++] = *src;
 		}
 	}
-	out[outPos++] = _T('\'');
+	out[outPos++] = L'\'';
+	out[outPos++] = 0;
+
+	return out;
+}
+
+extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+{
+	int len = (int)strlen(str) + 4;   // + two quotes, N prefix, and \0 at the end
+	int bufferSize = len + 128;
+	char *out = (char *)malloc(bufferSize);
+	strcpy(out, "N'");
+
+	const char *src = str;
+	int outPos;
+	for(outPos = 2; *src != NULL; src++)
+	{
+		long chval = (long)(*((unsigned char *)src));
+		if (chval < 32)
+		{
+			char buffer[32];
+
+			snprintf(buffer, 32, "'+nchar(%ld)+N'", chval);
+			int l = (int)strlen(buffer);
+
+			len += l;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (char *)realloc(out, bufferSize);
+			}
+			memcpy(&out[outPos], buffer, l);
+			outPos += l;
+		}
+		else if (*src == '\'')
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (char *)realloc(out, bufferSize);
+			}
+			out[outPos++] = '\'';
+			out[outPos++] = '\'';
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = '\'';
 	out[outPos++] = 0;
 
 	return out;
@@ -172,7 +218,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
    BOOL bResult = FALSE;
 

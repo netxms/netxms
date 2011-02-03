@@ -96,6 +96,13 @@ public abstract class ObjectTab
 	protected abstract void createTabContent(Composite parent);
 	
 	/**
+	 * Called by framework when tab is selected. Default implementation do nothing.
+	 */
+	public void selected()
+	{
+	}
+	
+	/**
 	 * Test if tab should be shown for given NetXMS object. Default implementation always returns true.
 	 * 
 	 * @param object Object to test
@@ -136,6 +143,7 @@ public abstract class ObjectTab
 			if (icon != null)
 				tabItem.setImage(icon.createImage());
 			tabItem.setControl(clientArea);
+			tabItem.setData(this);
 			clientArea.setVisible(true);
 		}
 	}

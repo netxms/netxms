@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,29 @@
  */
 package org.netxms.ui.eclipse.charts.objecttabs;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.charts.PerfTabGraphSettings;
+import org.netxms.ui.eclipse.charts.objecttabs.internal.PerfTabGraph;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -37,15 +50,37 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class PerformanceTab extends ObjectTab
 {
+	private IPreferenceStore preferenceStore;
+	private List<PerfTabGraph> charts = new ArrayList<PerfTabGraph>();
+	private Composite chartArea;
+	private Label labelLoading = null;
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
+		preferenceStore = Activator.getDefault().getPreferenceStore();
+		
+		chartArea = new Composite(parent, SWT.NONE);
+		chartArea.setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
-		parent.setLayout(layout);
+		layout.makeColumnsEqualWidth = true;
+		chartArea.setLayout(layout);
+	}
+
+   /**
+	 * Create color object from preference string
+	 *  
+	 * @param name Preference name
+	 * @return Color object
+	 */
+	private Color getColorFromPreferences(final String name)
+	{
+		return new Color(chartArea.getDisplay(), PreferenceConverter.getColor(preferenceStore, name));
 	}
 
 	/* (non-Javadoc)
@@ -54,6 +89,15 @@ public class PerformanceTab extends ObjectTab
 	@Override
 	public void objectChanged(final GenericObject object)
 	{
+		for(PerfTabGraph chart : charts)
+			chart.dispose();
+		
+		if ((labelLoading == null) || labelLoading.isDisposed())
+		{
+			labelLoading = new Label(chartArea, SWT.NONE);
+			labelLoading.setText("Loading performance data...");
+		}
+		
 		Job job = new Job("Update performance tab") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
@@ -91,8 +135,36 @@ public class PerformanceTab extends ObjectTab
 	 */
 	private void update(final PerfTabDci[] items)
 	{
+		labelLoading.dispose();
+		
 		for(int i = 0; i < items.length; i++)
 		{
+			try
+			{
+				PerfTabGraphSettings settings = PerfTabGraphSettings.createFromXml(items[i].getPerfTabSettings());
+
+				PerfTabGraph chart = new PerfTabGraph(chartArea, getObject().getObjectId(), items[i], settings);
+				charts.add(chart);
+				
+				final GridData gd = new GridData();
+				gd.horizontalAlignment = SWT.FILL;
+				gd.grabExcessHorizontalSpace = true;
+				gd.heightHint = 250;
+				chart.setLayoutData(gd);
+			}
+			catch(Exception e)
+			{
+			}
 		}
+		chartArea.layout();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.GenericObject)
+	 */
+	@Override
+	public boolean showForObject(GenericObject object)
+	{
+		return object instanceof Node;
 	}
 }

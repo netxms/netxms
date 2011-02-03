@@ -20,6 +20,9 @@ package org.netxms.ui.eclipse.charts;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.progress.IProgressService;
@@ -36,6 +39,9 @@ public class Activator extends AbstractUIPlugin
 
 	// The shared instance
 	private static Activator plugin;
+	
+	private Font chartTitleFont;
+	private Font chartFont;
 
 	/*
 	 * (non-Javadoc)
@@ -85,6 +91,9 @@ public class Activator extends AbstractUIPlugin
 	   ps.setDefault("Chart.EnableZoom", true);
 	   ps.setDefault("Chart.ShowTitle", false);
 	   ps.setDefault("Chart.ShowToolTips", true);
+	   
+	   chartTitleFont = new Font(Display.getDefault(), "Verdana", 9, SWT.NORMAL);
+	   chartFont = new Font(Display.getDefault(), "Verdana", 8, SWT.NORMAL);
 	}
 
 	/*
@@ -121,5 +130,21 @@ public class Activator extends AbstractUIPlugin
 	public static ImageDescriptor getImageDescriptor(String path)
 	{
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
+	}
+
+	/**
+	 * @return the chartTitleFont
+	 */
+	public Font getChartTitleFont()
+	{
+		return chartTitleFont;
+	}
+
+	/**
+	 * @return the chartFont
+	 */
+	public Font getChartFont()
+	{
+		return chartFont;
 	}
 }

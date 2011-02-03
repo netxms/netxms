@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,11 +56,11 @@ public class ObjectOverview extends ObjectTab
 	protected void createTabContent(Composite parent)
 	{
 		viewArea = new Composite(parent, SWT.NONE);
+		viewArea.setBackground(BACKGROUND_COLOR);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		viewArea.setLayout(layout);
-		viewArea.setBackground(BACKGROUND_COLOR);
 		
 		leftColumn = new Composite(viewArea, SWT.NONE);
 		leftColumn.setLayout(createColumnLayout());
@@ -141,5 +141,17 @@ public class ObjectOverview extends ObjectTab
 	public void dispose()
 	{
 		super.dispose();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+	 */
+	@Override
+	public void selected()
+	{
+		// I don't know why, but content lay out incorrectly if object selection
+		// changes while this tab is not active.
+		// As workaround, we force reconstruction of the content on each tab activation
+		objectChanged(getObject());
 	}
 }

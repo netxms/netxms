@@ -797,6 +797,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ChangeIpAddress.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ConfigurationPoll.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateContainer.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateNode.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/DeleteObject.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/InterfacePoll.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/Manage.java -text
@@ -806,6 +807,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/UnbindObject.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/Unmanage.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/AttributeEditDialog.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNodeDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/EnterIpAddressDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AccessControl.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoApply.java -text
@@ -1028,7 +1030,7 @@ src/java/netxms-eclipse/library/icons/refresh.gif -text
 src/java/netxms-eclipse/library/icons/save.gif -text
 src/java/netxms-eclipse/library/icons/zoom_in.png -text
 src/java/netxms-eclipse/library/icons/zoom_out.png -text
-src/java/netxms-eclipse/library/jar/simple-xml-2.3.5.jar -text
+src/java/netxms-eclipse/library/jar/simple-xml-2.4.1.jar -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java -text

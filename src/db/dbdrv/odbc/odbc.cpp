@@ -110,34 +110,67 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" NETXMS_TCHAR EXPORT *DrvPrepareString(const NETXMS_TCHAR *str)
+extern "C" NETXMS_WCHAR EXPORT *DrvPrepareStringW(const NETXMS_WCHAR *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	NETXMS_TCHAR *out = (NETXMS_TCHAR *)malloc(bufferSize * sizeof(NETXMS_TCHAR));
-	out[0] = _T('\'');
+	NETXMS_WCHAR *out = (NETXMS_WCHAR *)malloc(bufferSize * sizeof(NETXMS_WCHAR));
+	out[0] = L'\'';
 
-	const NETXMS_TCHAR *src = str;
+	const NETXMS_WCHAR *src = str;
 	int outPos;
 	for(outPos = 1; *src != NULL; src++)
 	{
-		if (*src == _T('\''))
+		if (*src == L'\'')
 		{
 			len++;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(NETXMS_TCHAR));
+				out = (NETXMS_WCHAR *)realloc(out, bufferSize * sizeof(NETXMS_WCHAR));
 			}
-			out[outPos++] = _T('\'');
-			out[outPos++] = _T('\'');
+			out[outPos++] = L'\'';
+			out[outPos++] = L'\'';
 		}
 		else
 		{
 			out[outPos++] = *src;
 		}
 	}
-	out[outPos++] = _T('\'');
+	out[outPos++] = L'\'';
+	out[outPos++] = 0;
+
+	return out;
+}
+
+extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+{
+	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	char *out = (char *)malloc(bufferSize);
+	out[0] = '\'';
+
+	const char *src = str;
+	int outPos;
+	for(outPos = 1; *src != NULL; src++)
+	{
+		if (*src == '\'')
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (char *)realloc(out, bufferSize);
+			}
+			out[outPos++] = '\'';
+			out[outPos++] = '\'';
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = '\'';
 	out[outPos++] = 0;
 
 	return out;
@@ -148,9 +181,9 @@ extern "C" NETXMS_TCHAR EXPORT *DrvPrepareString(const NETXMS_TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const NETXMS_TCHAR *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
-	m_useUnicode = ExtractNamedOptionValueAsBool(cmdLine, _T("unicode"), TRUE);
+	m_useUnicode = ExtractNamedOptionValueAsBool(cmdLine, "unicode", TRUE);
    return TRUE;
 }
 

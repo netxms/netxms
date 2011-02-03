@@ -24,13 +24,12 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 
 /**
  * Dashboard element. Provides all basic functionality - border, buttons, etc.
@@ -62,7 +61,6 @@ public abstract class DashboardElement extends Composite
 		titleColor = DEFAULT_TITLE_COLOR;
 		
 		clientArea = createClientArea(this);
-		clientArea.setLocation(BORDER_WIDTH, BORDER_WIDTH + HEADER_HEIGHT);
 		
 		font = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);
 		setFont(font);
@@ -75,16 +73,18 @@ public abstract class DashboardElement extends Composite
 			}
 		});
 		
-		addListener(SWT.Resize, new Listener() {
-			@Override
-			public void handleEvent(Event event)
-			{
-				Point p = getSize();
-				p.x -= BORDER_WIDTH * 2;
-				p.y -= BORDER_WIDTH * 2 + HEADER_HEIGHT;
-				clientArea.setSize(p.x, p.y);
-			}
-		});
+		GridLayout layout = new GridLayout();
+		layout.marginWidth = BORDER_WIDTH;
+		layout.marginHeight = BORDER_WIDTH;
+		layout.marginTop = HEADER_HEIGHT;
+		setLayout(layout);
+		
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		clientArea.setLayoutData(gd);
 	}
 	
 	/**
@@ -117,18 +117,6 @@ public abstract class DashboardElement extends Composite
 	 * @return client area control
 	 */
 	abstract protected Control createClientArea(Composite parent);
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
-	@Override
-	public Point computeSize(int wHint, int hHint, boolean changed)
-	{
-		Point p = clientArea.computeSize(wHint, hHint, changed);
-		p.x += BORDER_WIDTH * 2;
-		p.y += BORDER_WIDTH * 2 + HEADER_HEIGHT;
-		return p;
-	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.swt.widgets.Composite#setFocus()

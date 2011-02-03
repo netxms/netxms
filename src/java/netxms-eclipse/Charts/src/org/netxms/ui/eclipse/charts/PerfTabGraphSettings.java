@@ -5,7 +5,8 @@ package org.netxms.ui.eclipse.charts;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import org.eclipse.swt.graphics.RGB;
+
+import org.netxms.client.datacollection.GraphItemStyle;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -18,20 +19,20 @@ import org.simpleframework.xml.core.Persister;
 @Root(name="config")
 public class PerfTabGraphSettings
 {
-	public static final int LINE_GRAPH = 0;
-	public static final int AREA_GRAPH = 1;
-	
 	@Element(required=false)
 	private boolean enabled = false;
 	
 	@Element(required=false)
-	private int type = LINE_GRAPH;
+	private int type = GraphItemStyle.LINE;
 	
 	@Element(required=false)
-	private int color = 0x00C000;
+	private String color = "0x00C000";
 	
 	@Element(required=false)
-	private String title = null;
+	private String title = "";
+	
+	@Element(required=false)
+	private boolean showThresholds = false;
 
 	/**
 	 * Create performance tab graph settings object from XML document
@@ -79,9 +80,19 @@ public class PerfTabGraphSettings
 	/**
 	 * @return the color
 	 */
-	public RGB getColor()
+	public String getColor()
 	{
-		return new RGB(color & 0xFF, (color >> 8) & 0xFF, color >> 16);
+		return color;
+	}
+
+	/**
+	 * @return the color
+	 */
+	public int getColorAsInt()
+	{
+		if (color.startsWith("0x"))
+			return Integer.parseInt(color.substring(2), 16);
+		return Integer.parseInt(color, 10);
 	}
 
 	/**
@@ -111,9 +122,17 @@ public class PerfTabGraphSettings
 	/**
 	 * @param color the color to set
 	 */
-	public void setColor(final RGB color)
+	public void setColor(final String color)
 	{
-		this.color = (color.blue << 16) | (color.green << 8) | color.red;
+		this.color = color;
+	}
+
+	/**
+	 * @param color the color to set
+	 */
+	public void setColor(final int color)
+	{
+		this.color = Integer.toString(color);
 	}
 
 	/**
@@ -122,5 +141,21 @@ public class PerfTabGraphSettings
 	public void setTitle(String title)
 	{
 		this.title = title;
+	}
+
+	/**
+	 * @return the showThresholds
+	 */
+	public boolean isShowThresholds()
+	{
+		return showThresholds;
+	}
+
+	/**
+	 * @param showThresholds the showThresholds to set
+	 */
+	public void setShowThresholds(boolean showThresholds)
+	{
+		this.showThresholds = showThresholds;
 	}
 }
