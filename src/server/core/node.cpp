@@ -493,7 +493,7 @@ INTERFACE_LIST *Node::getInterfaceList()
 			}
 			pIfList = SnmpGetInterfaceList(m_snmpVersion, pTransport, this, useIfXTable);
 
-			if (m_dwFlags & NF_IS_BRIDGE)
+			if ((pIfList != NULL) && (m_dwFlags & NF_IS_BRIDGE))
 			{
 				BridgeMapPorts(m_snmpVersion, pTransport, pIfList);
 			}
