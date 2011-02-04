@@ -164,6 +164,16 @@ public class Table
 	{
 		return columnNames.toArray(new String[columnNames.size()]);
 	}
+	
+	/**
+	 * Get formats of all columns
+	 * 
+	 * @return
+	 */
+	public Integer[] getColumnFormats()
+	{
+		return columnFormats.toArray(new Integer[columnFormats.size()]);
+	}
 
 	/**
 	 * Get cell value at given row and column

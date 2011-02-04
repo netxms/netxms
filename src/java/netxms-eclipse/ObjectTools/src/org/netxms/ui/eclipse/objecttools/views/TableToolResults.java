@@ -43,6 +43,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.ObjectToolsCache;
 import org.netxms.ui.eclipse.objecttools.views.helpers.TableContentProvider;
+import org.netxms.ui.eclipse.objecttools.views.helpers.TableItemComparator;
 import org.netxms.ui.eclipse.objecttools.views.helpers.TableLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -208,6 +209,7 @@ public class TableToolResults extends ViewPart
 					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableToolResults." + Long.toString(tool.getId()));
 				}
 			});
+			viewer.setComparator(new TableItemComparator(table.getColumnFormats()));
 		}
 		viewer.setInput(table);
 	}
