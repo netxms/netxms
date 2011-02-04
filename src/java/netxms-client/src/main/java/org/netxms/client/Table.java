@@ -156,6 +156,16 @@ public class Table
 	}
 
 	/**
+	 * Get names of all columns
+	 * 
+	 * @return array of column names
+	 */
+	public String[] getColumnNames()
+	{
+		return columnNames.toArray(new String[columnNames.size()]);
+	}
+
+	/**
 	 * Get cell value at given row and column
 	 *
 	 * @param row Row index (zero-based)

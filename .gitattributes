@@ -824,11 +824,15 @@ src/java/netxms-eclipse/ObjectTools/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ObjectTools/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectTools/build.properties -text
 src/java/netxms-eclipse/ObjectTools/icons/console.png -text
+src/java/netxms-eclipse/ObjectTools/icons/table.gif -text
 src/java/netxms-eclipse/ObjectTools/plugin.xml -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Activator.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsCache.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsDynamicMenu.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Startup.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/TableToolResults.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/helpers/TableContentProvider.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/helpers/TableLabelProvider.java -text
 src/java/netxms-eclipse/ObjectView/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectView/build.properties -text
 src/java/netxms-eclipse/ObjectView/icons/object_details.png -text

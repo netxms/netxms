@@ -141,4 +141,20 @@ public class ObjectToolsCache
 		}
 		return tools;
 	}
+	
+	/**
+	 * Find object tool in cache by ID
+	 * 
+	 * @param toolId tool id
+	 * @return tool object or null if not found
+	 */
+	public static ObjectTool findTool(long toolId)
+	{
+		ObjectTool tool;
+		synchronized(objectTools)
+		{
+			tool = objectTools.get(toolId);
+		}
+		return tool;
+	}
 }

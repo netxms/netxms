@@ -27,5 +27,17 @@
             class="org.netxms.ui.eclipse.objecttools.Startup">
       </startup>
    </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.objecttools.views.TableToolResults"
+            icon="icons/table.gif"
+            id="org.netxms.ui.eclipse.objecttools.views.TableToolResults"
+            name="Table Tool Results"
+            restorable="true">
+      </view>
+   </extension>
 
 </plugin>

@@ -33,6 +33,7 @@ public class SortableTableViewer extends TableViewer
 {
 	public static final int DEFAULT_STYLE = -1;
 	
+	private boolean initialized = false;
 	private TableColumn[] columns;
 	private TableSortingListener sortingListener;
 	
@@ -49,7 +50,38 @@ public class SortableTableViewer extends TableViewer
 	                           int style)
 	{
 		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
+		getTable().setLinesVisible(true);
+		getTable().setHeaderVisible(true);
+		createColumns(names, widths, defaultSortingColumn, defaultSortDir);
+	}
 
+	/**
+	 * Constructor for delayed initialization
+	 * 
+	 * @param parent
+	 * @param style
+	 */
+	public SortableTableViewer(Composite parent, int style)
+	{
+		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
+		getTable().setLinesVisible(true);
+		getTable().setHeaderVisible(true);
+	}
+
+	/**
+	 * Create columns
+	 * 
+	 * @param names
+	 * @param widths
+	 * @param defaultSortingColumn
+	 * @param defaultSortDir
+	 */
+	public void createColumns(String[] names, int[] widths, int defaultSortingColumn, int defaultSortDir)
+	{
+		if (initialized)
+			return;
+		initialized = true;
+		
 		sortingListener = new TableSortingListener(this);
 		
 		columns = new TableColumn[names.length];
@@ -62,13 +94,11 @@ public class SortableTableViewer extends TableViewer
 			columns[i].setData("ID", new Integer(i));
 			columns[i].addSelectionListener(sortingListener);
 		}
-		getTable().setLinesVisible(true);
-		getTable().setHeaderVisible(true);
 
 		getTable().setSortColumn(columns[defaultSortingColumn]);
 		getTable().setSortDirection(defaultSortDir);
 	}
-
+	
 	/**
 	 * Get column object by id (named data with key ID)
 	 * @param id Column ID
@@ -84,5 +114,13 @@ public class SortableTableViewer extends TableViewer
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * @return the initialized
+	 */
+	public boolean isInitialized()
+	{
+		return initialized;
 	}
 }

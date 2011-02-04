@@ -172,7 +172,7 @@ public class NodePollerView extends ViewPart
 	}
 
 	/**
-	 * Create pop-up menu for user list
+	 * Create pop-up menu
 	 */
 	private void createPopupMenu()
 	{

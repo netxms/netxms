@@ -39,6 +39,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.ISources;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
@@ -53,6 +56,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -183,79 +187,123 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	{
 		switch(tool.getType())
 		{
-			case ObjectTool.TYPE_COMMAND:
-				String temp = tool.getData();
-				temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
-				temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
-				final String command = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
-				final IOConsole console = new IOConsole(command, Activator.getImageDescriptor("icons/console.png"));
-				IViewPart consoleView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IConsoleConstants.ID_CONSOLE_VIEW);
-				System.out.println("Console view is " + consoleView);
-				ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
-				ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
-				//console.createPage((IConsoleView)consoleView);
-				//console.activate();
-				final IOConsoleOutputStream out = console.newOutputStream();
-				
-				ConsoleJob job = new ConsoleJob("Execute external command", null, Activator.PLUGIN_ID, null) {
-					@Override
-					protected String getErrorMessage()
-					{
-						return "Cannot execute external command";
-					}
-
-					@Override
-					protected void runInternal(IProgressMonitor monitor) throws Exception
-					{
-						Process proc = Runtime.getRuntime().exec(command);
-						BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-						try
-						{
-							while(true)
-							{
-								String line = in.readLine();
-								if (line == null)
-									break;
-								out.write(line);
-								out.write("\n");
-							}
-						}
-						catch(IOException e)
-						{
-							e.printStackTrace();
-						}
-						//console.setName("FINISHED: " + console.getName());
-					}
-				};
-				job.setUser(false);
-				job.start();
+			case ObjectTool.TYPE_LOCAL_COMMAND:
+				executeLocalCommand(node, tool);
 				break;
 			case ObjectTool.TYPE_ACTION:
-				new ConsoleJob("Execute action on node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
-					@Override
-					protected String getErrorMessage()
-					{
-						return "Cannot execute action on node " + node.getObjectName();
-					}
-
-					@Override
-					protected void runInternal(IProgressMonitor monitor) throws Exception
-					{
-						final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-						session.executeAction(node.getObjectId(), tool.getData());
-						new UIJob("Notify user about action execution") {
-							@Override
-							public IStatus runInUIThread(IProgressMonitor monitor)
-							{
-								MessageDialog.openInformation(null, "Tool Execution", "Action " + tool.getData() + " executed successfully on node " + node.getObjectName());
-								return Status.OK_STATUS;
-							}
-						}.schedule();
-					}
-				}.start();
+				executeAgentAction(node, tool);
+				break;
+			case ObjectTool.TYPE_TABLE_AGENT:
+			case ObjectTool.TYPE_TABLE_SNMP:
+				executeTableTool(node, tool);
 				break;
 			case ObjectTool.TYPE_URL:
 				break;
 		}
+	}
+	
+	/**
+	 * Execute table tool
+	 * 
+	 * @param node
+	 * @param tool
+	 */
+	private void executeTableTool(final Node node, final ObjectTool tool)
+	{
+		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		try
+		{
+			final IWorkbenchPage page = window.getActivePage();
+			final TableToolResults view = (TableToolResults)page.showView(TableToolResults.ID,
+					Long.toString(tool.getId()) + "&" + Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+			view.refreshTable();
+		}
+		catch(PartInitException e)
+		{
+			MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * @param node
+	 * @param tool
+	 */
+	private void executeAgentAction(final Node node, final ObjectTool tool)
+	{
+		new ConsoleJob("Execute action on node " + node.getObjectName(), null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot execute action on node " + node.getObjectName();
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				session.executeAction(node.getObjectId(), tool.getData());
+				new UIJob("Notify user about action execution") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						MessageDialog.openInformation(null, "Tool Execution", "Action " + tool.getData() + " executed successfully on node " + node.getObjectName());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		}.start();
+	}
+
+	/**
+	 * @param node
+	 * @param tool
+	 */
+	private void executeLocalCommand(final Node node, final ObjectTool tool)
+	{
+		String temp = tool.getData();
+		temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
+		temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
+		final String command = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+		final IOConsole console = new IOConsole(command, Activator.getImageDescriptor("icons/console.png"));
+		IViewPart consoleView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IConsoleConstants.ID_CONSOLE_VIEW);
+		System.out.println("Console view is " + consoleView);
+		ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
+		ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
+		//console.createPage((IConsoleView)consoleView);
+		//console.activate();
+		final IOConsoleOutputStream out = console.newOutputStream();
+		
+		ConsoleJob job = new ConsoleJob("Execute external command", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot execute external command";
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				Process proc = Runtime.getRuntime().exec(command);
+				BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+				try
+				{
+					while(true)
+					{
+						String line = in.readLine();
+						if (line == null)
+							break;
+						out.write(line);
+						out.write("\n");
+					}
+				}
+				catch(IOException e)
+				{
+					e.printStackTrace();
+				}
+				//console.setName("FINISHED: " + console.getName());
+			}
+		};
+		job.setUser(false);
+		job.start();
 	}
 }

@@ -46,6 +46,8 @@ public class ObjectToolDetails extends ObjectTool
 			columns.add(new ObjectToolTableColumn(msg, varId));
 			varId += 4;
 		}
+
+		createDisplayName();
 	}
 	
 	/**
@@ -108,6 +110,7 @@ public class ObjectToolDetails extends ObjectTool
 	public void setName(String name)
 	{
 		this.name = name;
+		createDisplayName();
 	}
 
 	/**

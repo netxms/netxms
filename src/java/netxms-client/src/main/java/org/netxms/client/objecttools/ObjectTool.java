@@ -28,12 +28,13 @@ import org.netxms.client.objects.Node;
  */
 public class ObjectTool
 {
-	public static final int TYPE_INTERNAL    = 0;
-	public static final int TYPE_ACTION      = 1;
-	public static final int TYPE_TABLE_SNMP  = 2;
-	public static final int TYPE_TABLE_AGENT = 3;
-	public static final int TYPE_URL         = 4;
-	public static final int TYPE_COMMAND     = 5;
+	public static final int TYPE_INTERNAL       = 0;
+	public static final int TYPE_ACTION         = 1;
+	public static final int TYPE_TABLE_SNMP     = 2;
+	public static final int TYPE_TABLE_AGENT    = 3;
+	public static final int TYPE_URL            = 4;
+	public static final int TYPE_LOCAL_COMMAND  = 5;
+	public static final int TYPE_SERVER_COMMAND = 6;
 	
 	public static final int REQUIRES_SNMP         = 0x00000001;
 	public static final int REQUIRES_AGENT        = 0x00000002;
@@ -43,6 +44,7 @@ public class ObjectTool
 	
 	protected long id;
 	protected String name;
+	protected String displayName;
 	protected int type;
 	protected int flags;
 	protected String description;
@@ -73,6 +75,24 @@ public class ObjectTool
 		description = msg.getVariableAsString(baseId + 5);
 		snmpOid = msg.getVariableAsString(baseId + 6);
 		confirmationText = msg.getVariableAsString(baseId + 7);
+		
+		createDisplayName();
+	}
+	
+	/**
+	 * Create display name
+	 */
+	protected void createDisplayName()
+	{
+		String[] parts = name.split("->");
+		if (parts.length > 0)
+		{
+			displayName = parts[parts.length - 1].replace("&", "").trim();
+		}
+		else
+		{
+			displayName = name.replace("&", "").trim();
+		}
 	}
 	
 	/**
@@ -162,5 +182,13 @@ public class ObjectTool
 	public String getConfirmationText()
 	{
 		return confirmationText;
+	}
+
+	/**
+	 * @return the displayName
+	 */
+	public String getDisplayName()
+	{
+		return displayName;
 	}
 }
