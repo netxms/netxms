@@ -49,6 +49,38 @@ public class ObjectBrowser extends ViewPart
 	
 	private ObjectTree objectTree;
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	public void createPartControl(Composite parent)
+	{
+      FormLayout formLayout = new FormLayout();
+		parent.setLayout(formLayout);
+		
+		// Read custom root objects
+		long[] rootObjects = null;
+		Object value = ConsoleSharedData.getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
+		if ((value != null) && (value instanceof long[]))
+		{
+			rootObjects = (long[])value;
+		}
+		
+		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, rootObjects, null);
+		FormData fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(0, 0);
+		fd.right = new FormAttachment(100, 0);
+		fd.bottom = new FormAttachment(100, 0);
+		objectTree.setLayoutData(fd);
+		
+		createMenu();
+		createPopupMenu();
+		
+		objectTree.enableDragSupport();
+		getSite().setSelectionProvider(objectTree.getTreeViewer());
+	}
+
 	/**
 	 * Create popup menu for object browser
 	 */
@@ -71,7 +103,6 @@ public class ObjectBrowser extends ViewPart
 		// Register menu for extension.
 		getSite().registerContextMenu(menuMgr, objectTree.getTreeViewer());
 	}
-	
 
 	/**
 	 * Fill context menu
@@ -132,37 +163,10 @@ public class ObjectBrowser extends ViewPart
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
    }
 
-	/**
-	 * 
-	 */
-	@Override
-	public void createPartControl(Composite parent)
-	{
-      FormLayout formLayout = new FormLayout();
-		parent.setLayout(formLayout);
-		
-		// Read custom root objects
-		long[] rootObjects = null;
-		Object value = ConsoleSharedData.getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
-		if ((value != null) && (value instanceof long[]))
-		{
-			rootObjects = (long[])value;
-		}
-		
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, rootObjects, null);
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		objectTree.setLayoutData(fd);
-		
-		createMenu();
-		createPopupMenu();
-		
-		getSite().setSelectionProvider(objectTree.getTreeViewer());
-	}
-
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
+   @Override
 	public void setFocus() 
 	{
 		objectTree.setFocus();

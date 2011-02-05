@@ -61,6 +61,7 @@ import org.eclipse.zest.core.viewers.AbstractZoomableViewer;
 import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphNode;
+import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
@@ -210,6 +211,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		{
 			viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 		}
+		viewer.setNodeStyle(ZestStyles.NODES_NO_ANIMATION);
 		viewer.setInput(mapPage);
 	}
 
@@ -771,5 +773,20 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	public AbstractZoomableViewer getZoomableViewer()
 	{
 		return viewer;
+	}
+	
+	/**
+	 * Enable or disable layout animation
+	 * 
+	 * @param enabled
+	 */
+	protected void setAnimationEnabled(boolean enabled)
+	{
+		int nodeStyle = viewer.getGraphControl().getNodeStyle();
+		if (enabled)
+			nodeStyle &= ~ZestStyles.NODES_NO_LAYOUT_ANIMATION;
+		else
+			nodeStyle |= ZestStyles.NODES_NO_LAYOUT_ANIMATION;
+		viewer.getGraphControl().setNodeStyle(nodeStyle);
 	}
 }

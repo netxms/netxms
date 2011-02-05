@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -27,11 +30,19 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.dnd.TreeDragSourceEffect;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -41,7 +52,10 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
@@ -106,6 +120,61 @@ public class PredefinedMap extends NetworkMap
 			public void selectionChanged(SelectionChangedEvent event)
 			{
 				actionLinkObjects.setEnabled(((IStructuredSelection)event.getSelection()).size() == 2);
+			}
+		});
+		
+		if (mapObject.getMapType() == 0)
+			addDropSupport();
+	}
+	
+	/**
+	 * Add drop support
+	 */
+	private void addDropSupport()
+	{
+		final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+		viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer) {
+			private int x;
+			private int y;
+			
+			@SuppressWarnings("rawtypes")
+			@Override
+			public boolean validateDrop(Object target, int operation, TransferData transferType)
+			{
+				if (!LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
+					return false;
+				
+				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
+				Iterator it = selection.iterator();
+				while(it.hasNext())
+				{
+					Object object = it.next();
+					if (!((object instanceof Node) || (object instanceof Container) || (object instanceof Subnet)))
+						return false;
+				}
+				
+				return true; 
+			}
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public boolean performDrop(Object data)
+			{
+				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
+				System.out.println("X=" + x + " Y=" + y);
+				addObjectsFromList(selection.toList(), viewer.getControl().toControl(x, y));
+				return true;
+			}
+
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.viewers.ViewerDropAdapter#dropAccept(org.eclipse.swt.dnd.DropTargetEvent)
+			 */
+			@Override
+			public void dropAccept(DropTargetEvent event)
+			{
+				x = event.x;
+				y = event.y;
+				super.dropAccept(event);
 			}
 		});
 	}
@@ -263,18 +332,36 @@ public class PredefinedMap extends NetworkMap
 		if (dlg.open() != Window.OK)
 			return;
 		
+		addObjectsFromList(dlg.getSelectedObjects(), null);
+	}
+
+	/**
+	 * Add objects from list to map
+	 * 
+	 * @param list object list
+	 */
+	private void addObjectsFromList(List<GenericObject> list, Point location)
+	{
 		int added = 0;
-		for(GenericObject object : dlg.getSelectedObjects())
+		for(GenericObject object : list)
 		{
 			if (mapPage.findObjectElement(object.getObjectId()) == null)
 			{
-				mapPage.addElement(new NetworkMapObject(mapPage.createElementId(), object.getObjectId()));
+				final NetworkMapObject mapObject = new NetworkMapObject(mapPage.createElementId(), object.getObjectId());
+				if (location != null)
+					mapObject.setLocation(location.x, location.y);
+				mapPage.addElement(mapObject);
 				added++;
 			}
 		}
 		
 		if (added > 0)
+		{
 			saveMap();
+			//setAnimationEnabled(false);
+			viewer.setInput(mapPage);
+			//setAnimationEnabled(true);
+		}
 	}
 	
 	/**

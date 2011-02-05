@@ -25,10 +25,16 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DragSourceAdapter;
+import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TreeDragSourceEffect;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -240,6 +246,29 @@ public class ObjectTree extends Composite
 		
 		// Set initial focus to filter input line
 		filterText.setFocus();
+	}
+	
+	/**
+	 * Enable drag support in object tree
+	 */
+	public void enableDragSupport()
+	{
+		Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+		//objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new TreeDragSourceEffect(objectTree.getTree()));
+		objectTree.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
+			@Override
+			public void dragStart(DragSourceEvent event)
+			{
+				LocalSelectionTransfer.getTransfer().setSelection(objectTree.getSelection());
+				event.doit = true;
+			}
+
+			@Override
+			public void dragSetData(DragSourceEvent event)
+			{
+				event.data = LocalSelectionTransfer.getTransfer().getSelection();
+			}
+		});
 	}
 	
 	/**
