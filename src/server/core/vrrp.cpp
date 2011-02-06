@@ -115,7 +115,7 @@ bool VrrpRouter::readVirtualIP(DWORD snmpVersion, SNMP_Transport *transport)
 // VRRP virtual router table walker's callback
 //
 
-static DWORD VRRPHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+DWORD VRRPHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	SNMP_ObjectId *oid = var->GetName();
 
