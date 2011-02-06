@@ -938,7 +938,6 @@ if test "x$HAVE_LIBTRE" = "xno"; then
 
 	AC_DEFINE(TRE_REGEX_T_FIELD,value,[Define to a field in the regex_t struct where TRE should store a pointer to the internal tre_tnfa_t structure])
 	AC_DEFINE(TRE_APPROX, 1, [ Define if you want to enable approximate matching functionality. ])
-	AM_CONDITIONAL(TRE_APPROX, true)
 fi
 
 #--------------------------------------------------------------------
