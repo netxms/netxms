@@ -18,7 +18,12 @@
  */
 package org.netxms.ui.eclipse.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -27,9 +32,12 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
  * Dashboard element. Provides all basic functionality - border, buttons, etc.
@@ -43,10 +51,12 @@ public abstract class DashboardElement extends Composite
 	private static final int HEADER_HEIGHT = 22;
 	
 	private String text;
+	private Composite headerArea;
 	private Control clientArea;
 	private Font font;
 	private Color borderColor;
 	private Color titleColor;
+	private List<DashboardElementButton> buttons = new ArrayList<DashboardElementButton>(0);
 	
 	/**
 	 * @param parent
@@ -59,6 +69,13 @@ public abstract class DashboardElement extends Composite
 		
 		borderColor = DEFAULT_BORDER_COLOR;
 		titleColor = DEFAULT_TITLE_COLOR;
+		
+		headerArea = new Composite(this, SWT.NONE);
+		headerArea.setBackground(borderColor);
+		RowLayout headerLayout = new RowLayout(SWT.HORIZONTAL);
+		headerLayout.marginBottom = 0;
+		headerLayout.marginTop = 0;
+		headerArea.setLayout(headerLayout);
 		
 		clientArea = createClientArea(this);
 		
@@ -76,7 +93,8 @@ public abstract class DashboardElement extends Composite
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = BORDER_WIDTH;
 		layout.marginHeight = BORDER_WIDTH;
-		layout.marginTop = HEADER_HEIGHT;
+		layout.verticalSpacing = 3;
+		//layout.marginTop = HEADER_HEIGHT;
 		setLayout(layout);
 		
 		GridData gd = new GridData();
@@ -85,6 +103,12 @@ public abstract class DashboardElement extends Composite
 		gd.grabExcessHorizontalSpace = true;
 		gd.grabExcessVerticalSpace = true;
 		clientArea.setLayoutData(gd);
+
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.RIGHT;
+		gd.verticalAlignment = SWT.FILL;
+		gd.heightHint = HEADER_HEIGHT - layout.verticalSpacing;
+		headerArea.setLayoutData(gd);
 	}
 	
 	/**
@@ -167,6 +191,9 @@ public abstract class DashboardElement extends Composite
 	protected void setBorderColor(Color borderColor)
 	{
 		this.borderColor = borderColor;
+		headerArea.setBackground(borderColor);
+		for(DashboardElementButton b : buttons)
+			b.getControl().setBackground(borderColor);
 	}
 
 	/**
@@ -183,5 +210,38 @@ public abstract class DashboardElement extends Composite
 	protected void setTitleColor(Color titleColor)
 	{
 		this.titleColor = titleColor;
+	}
+	
+	/**
+	 * Add button
+	 * 
+	 * @param button
+	 */
+	public void addButton(final DashboardElementButton button)
+	{
+		final Label l = new Label(headerArea, SWT.NONE);
+		l.setBackground(getBorderColor());
+		l.setImage(button.getImage());
+		l.setToolTipText(button.getName());
+		l.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+		l.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+			}
+
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+			}
+
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+				button.getAction().run();
+			}
+		});
+		button.setControl(l);
+		buttons.add(button);
 	}
 }

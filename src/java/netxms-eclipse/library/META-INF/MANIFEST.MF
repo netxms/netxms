@@ -22,6 +22,7 @@ Export-Package: org.netxms.api.client,
  org.netxms.ui.eclipse.shared,
  org.netxms.ui.eclipse.tools,
  org.netxms.ui.eclipse.widgets,
+ org.netxms.ui.eclipse.widgets.helpers,
  org.simpleframework.xml,
  org.simpleframework.xml.core
 Require-Bundle: org.eclipse.ui;bundle-version="3.5.0",

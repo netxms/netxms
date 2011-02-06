@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.epp.widgets;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.MouseEvent;
@@ -38,10 +40,12 @@ import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.epp.dialogs.EditRuleActionsDlg;
 import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.DashboardElement;
+import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
  * Rule overview widget
@@ -119,6 +123,13 @@ public class RuleEditor extends Composite
 			}
 		};
 		configureLayout(action);
+		action.addButton(new DashboardElementButton("Edit actions", editor.getImageEdit(), new Action() {
+			@Override
+			public void run()
+			{
+				editActions();
+			}
+		}));
 	}
 	
 	/**
@@ -204,6 +215,23 @@ public class RuleEditor extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		label.setLayoutData(gd);
+		label.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+				setCollapsed(!isCollapsed(), true);
+			}
+
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+			}
+
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+			}
+		});
 		
 		expandButton = new Label(header, SWT.NONE);
 		expandButton.setBackground(TITLE_BACKGROUND_COLOR);
@@ -569,5 +597,17 @@ public class RuleEditor extends Composite
 		((GridData)leftPanel.getLayoutData()).verticalSpan = collapsed ? 1 : 2;
 		if (doLayout)
 			editor.updateEditorAreaLayout();
+	}
+	
+	/**
+	 * Edit actions
+	 */
+	private void editActions()
+	{
+		EditRuleActionsDlg dlg = new EditRuleActionsDlg(getShell(), rule);
+		if (dlg.open() == Window.OK)
+		{
+			
+		}
 	}
 }
