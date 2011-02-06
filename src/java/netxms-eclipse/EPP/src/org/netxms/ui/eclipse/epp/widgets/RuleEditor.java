@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.epp.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -36,7 +38,6 @@ import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -61,14 +62,13 @@ public class RuleEditor extends Composite
 	private EventProcessingPolicyEditor editor;
 	private NXCSession session;
 	private WorkbenchLabelProvider labelProvider;
-	private Image imageAlarm;
-	private Image imageExecute;
-	private Image imageTerminate;
-	private Image imageStop;
+	private boolean collapsed = true;
 	private boolean verticalLayout = false;
+	private Composite leftPanel;
 	private Composite mainArea;
 	private DashboardElement condition;
 	private DashboardElement action;
+	private Label expandButton;
 	
 	/**
 	 * @param parent
@@ -83,10 +83,6 @@ public class RuleEditor extends Composite
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		labelProvider = new WorkbenchLabelProvider();
-		imageStop = Activator.getImageDescriptor("icons/stop.png").createImage();
-		imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage();
-		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage();
-		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage();
 		
 		setBackground(RULE_BORDER_COLOR);
 
@@ -143,6 +139,7 @@ public class RuleEditor extends Composite
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.exclude = collapsed;
 		mainArea.setLayoutData(gd);
 	}
 	
@@ -151,22 +148,22 @@ public class RuleEditor extends Composite
 	 */
 	private void createLeftPanel()
 	{
-		Composite panel = new Composite(this, SWT.NONE);
-		panel.setBackground(TITLE_BACKGROUND_COLOR);
+		leftPanel = new Composite(this, SWT.NONE);
+		leftPanel.setBackground(TITLE_BACKGROUND_COLOR);
 		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
-		panel.setLayout(layout);
+		leftPanel.setLayout(layout);
 
 		GridData gd = new GridData();
-		gd.verticalSpan = 2;
+		gd.verticalSpan = collapsed ? 1 : 2;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		panel.setLayoutData(gd);		
+		leftPanel.setLayoutData(gd);		
 		
-		Label label = new Label(panel, SWT.NONE);
+		Label label = new Label(leftPanel, SWT.NONE);
 		label.setText(Integer.toString(ruleNumber));
 		label.setFont(editor.getBoldFont());
 		label.setBackground(TITLE_BACKGROUND_COLOR);
@@ -186,15 +183,54 @@ public class RuleEditor extends Composite
 	 */
 	private void createHeader()
 	{
-		Label label = new Label(this, SWT.NONE);
-		label.setText(rule.getComments());
-		label.setBackground(TITLE_BACKGROUND_COLOR);
-		label.setForeground(TITLE_COLOR);
+		Composite header = new Composite(this, SWT.NONE);
+		header.setBackground(TITLE_BACKGROUND_COLOR);
+		
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		header.setLayout(layout);
 		
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		header.setLayoutData(gd);
+		
+		Label label = new Label(header, SWT.NONE);
+		label.setText(rule.getComments());
+		label.setBackground(TITLE_BACKGROUND_COLOR);
+		label.setForeground(TITLE_COLOR);
+		label.setFont(editor.getNormalFont());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
 		label.setLayoutData(gd);
+		
+		expandButton = new Label(header, SWT.NONE);
+		expandButton.setBackground(TITLE_BACKGROUND_COLOR);
+		expandButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+		expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
+		expandButton.addMouseListener(new MouseListener() {
+			private boolean doAction = false;
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+				doAction = false;
+			}
+
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+				doAction = true;
+			}
+
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+				if (doAction)
+					setCollapsed(!isCollapsed(), true);
+			}
+		});
 	}
 	
 	/**
@@ -410,7 +446,7 @@ public class RuleEditor extends Composite
 		{
 			if (rule.getAlarmSeverity() < Severity.UNMANAGED)
 			{
-				addActionGroupLabel(clientArea, "Generate alarm", imageAlarm);
+				addActionGroupLabel(clientArea, "Generate alarm", editor.getImageAlarm());
 				
 				CLabel clabel = createCLabel(clientArea, 1, false);
 				clabel.setImage(StatusDisplayInfo.getStatusImage(rule.getAlarmSeverity()));
@@ -423,14 +459,14 @@ public class RuleEditor extends Composite
 			}
 			else
 			{
-				addActionGroupLabel(clientArea, "Terminate alarms with key \"" + rule.getAlarmKey() + "\"", imageTerminate);
+				addActionGroupLabel(clientArea, "Terminate alarms with key \"" + rule.getAlarmKey() + "\"", editor.getImageTerminate());
 			}
 		}
 		
 		/* actions */
 		if (rule.getActions().size() > 0)
 		{
-			addActionGroupLabel(clientArea, "Execute the following predefined actions:", imageExecute);
+			addActionGroupLabel(clientArea, "Execute the following predefined actions:", editor.getImageExecute());
 			for(Long id : rule.getActions())
 			{
 				CLabel clabel = createCLabel(clientArea, 1, false);
@@ -450,7 +486,7 @@ public class RuleEditor extends Composite
 		/* flags */
 		if ((rule.getFlags() & EventProcessingPolicyRule.STOP_PROCESSING) != 0)
 		{
-			addActionGroupLabel(clientArea, "Stop event processing", imageStop);
+			addActionGroupLabel(clientArea, "Stop event processing", editor.getImageStop());
 		}
 		
 		return clientArea;
@@ -477,10 +513,6 @@ public class RuleEditor extends Composite
 	public void dispose()
 	{
 		labelProvider.dispose();
-		imageStop.dispose();
-		imageAlarm.dispose();
-		imageExecute.dispose();
-		imageTerminate.dispose();
 		super.dispose();
 	}
 
@@ -510,5 +542,32 @@ public class RuleEditor extends Composite
 		layout.numColumns = verticalLayout ? 1 : 2;
 		if (doLayout)
 			layout();
+	}
+	
+	/**
+	 * Check if widget is in collapsed state.
+	 * 
+	 * @return true if widget is in collapsed state
+	 */
+	public boolean isCollapsed()
+	{
+		return collapsed;
+	}
+
+	/**
+	 * Set widget's to collapsed or expanded state
+	 *  
+	 * @param collapsed true to collapse widget, false to expand
+	 * @param doLayout if set to true, view layout will be updated
+	 */
+	public void setCollapsed(boolean collapsed, boolean doLayout)
+	{
+		this.collapsed = collapsed;
+		expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
+		mainArea.setVisible(!collapsed);
+		((GridData)mainArea.getLayoutData()).exclude = collapsed;
+		((GridData)leftPanel.getLayoutData()).verticalSpan = collapsed ? 1 : 2;
+		if (doLayout)
+			editor.updateEditorAreaLayout();
 	}
 }

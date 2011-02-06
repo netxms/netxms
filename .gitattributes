@@ -1025,11 +1025,13 @@ src/java/netxms-eclipse/library/icons/checkbox_off.png -text
 src/java/netxms-eclipse/library/icons/checkbox_on.png -text
 src/java/netxms-eclipse/library/icons/clear_log.gif -text
 src/java/netxms-eclipse/library/icons/collapse.png -text
+src/java/netxms-eclipse/library/icons/collapseall.png -text
 src/java/netxms-eclipse/library/icons/copy.gif -text
 src/java/netxms-eclipse/library/icons/cut.gif -text
 src/java/netxms-eclipse/library/icons/delete_obj.gif -text
+src/java/netxms-eclipse/library/icons/edit.png -text
 src/java/netxms-eclipse/library/icons/expand.png -text
-src/java/netxms-eclipse/library/icons/expandall.gif -text
+src/java/netxms-eclipse/library/icons/expandall.png -text
 src/java/netxms-eclipse/library/icons/paste.gif -text
 src/java/netxms-eclipse/library/icons/refresh.gif -text
 src/java/netxms-eclipse/library/icons/save.gif -text

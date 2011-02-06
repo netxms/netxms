@@ -30,12 +30,14 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -57,6 +59,7 @@ import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Event processing policy editor
@@ -78,13 +81,24 @@ public class EventProcessingPolicyEditor extends ViewPart
 	private Composite dataArea;
 	private List<RuleEditor> ruleEditors = new ArrayList<RuleEditor>();
 	private boolean verticalLayout = false;
+	
 	private Font headerFont;
 	private Font normalFont;
 	private Font boldFont;
 	
+	private Image imageAlarm;
+	private Image imageExecute;
+	private Image imageTerminate;
+	private Image imageStop;
+	private Image imageCollapse;
+	private Image imageExpand;
+	private Image imageEdit;
+	
 	private Action actionHorizontal;
 	private Action actionVertical;
-	private Action actionSave; 
+	private Action actionSave;
+	private Action actionCollapseAll;
+	private Action actionExpandAll;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -104,6 +118,14 @@ public class EventProcessingPolicyEditor extends ViewPart
 		catch(Exception e)
 		{
 		}
+		
+		imageStop = Activator.getImageDescriptor("icons/stop.png").createImage();
+		imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage();
+		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage();
+		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage();
+		imageCollapse = SharedIcons.COLLAPSE.createImage();
+		imageExpand = SharedIcons.EXPAND.createImage();
+		imageEdit = SharedIcons.EDIT.createImage();
 		
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		
@@ -173,6 +195,32 @@ public class EventProcessingPolicyEditor extends ViewPart
 		};
 		actionVertical.setChecked(verticalLayout);
 		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif"));
+
+		actionSave = new Action("&Save policy") {
+			@Override
+			public void run()
+			{
+			}
+		};
+		actionSave.setImageDescriptor(SharedIcons.SAVE);
+
+		actionCollapseAll = new Action("&Collapse all") {
+			@Override
+			public void run()
+			{
+				setAllRulesCollapsed(true);
+			}
+		};
+		actionCollapseAll.setImageDescriptor(SharedIcons.COLLAPSE_ALL);
+
+		actionExpandAll = new Action("&Expand all") {
+			@Override
+			public void run()
+			{
+				setAllRulesCollapsed(false);
+			}
+		};
+		actionExpandAll.setImageDescriptor(SharedIcons.EXPAND_ALL);
 	}
 	
 	/**
@@ -193,6 +241,11 @@ public class EventProcessingPolicyEditor extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionSave);
+		manager.add(new Separator());
+		manager.add(actionExpandAll);
+		manager.add(actionCollapseAll);
+		manager.add(new Separator());
 		manager.add(actionHorizontal);
 		manager.add(actionVertical);
 	}
@@ -205,6 +258,11 @@ public class EventProcessingPolicyEditor extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionSave);
+		manager.add(new Separator());
+		manager.add(actionExpandAll);
+		manager.add(actionCollapseAll);
+		manager.add(new Separator());
 		manager.add(actionHorizontal);
 		manager.add(actionVertical);
 	}
@@ -290,11 +348,9 @@ public class EventProcessingPolicyEditor extends ViewPart
 	{
 		for(RuleEditor editor : ruleEditors)
 			editor.setVerticalLayout(verticalLayout, false);
-		dataArea.layout();
-		Rectangle r = scroller.getClientArea();
-		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+		updateEditorAreaLayout();
 	}
-
+	
 	/**
 	 * Process session notifications
 	 * 
@@ -323,6 +379,18 @@ public class EventProcessingPolicyEditor extends ViewPart
 				}
 				break;
 		}
+	}
+	
+	/**
+	 * Set all rules to collapsed or expanded state
+	 * 
+	 * @param collapsed true to collapse all, false to expand
+	 */
+	private void setAllRulesCollapsed(boolean collapsed)
+	{
+		for(RuleEditor editor : ruleEditors)
+			editor.setCollapsed(collapsed, false);
+		updateEditorAreaLayout();
 	}
 
 	/* (non-Javadoc)
@@ -364,8 +432,26 @@ public class EventProcessingPolicyEditor extends ViewPart
 		normalFont.dispose();
 		boldFont.dispose();
 		
+		imageStop.dispose();
+		imageAlarm.dispose();
+		imageExecute.dispose();
+		imageTerminate.dispose();
+		imageCollapse.dispose();
+		imageExpand.dispose();
+		imageEdit.dispose();
+		
 		super.dispose();
 		ImageFactory.clearCache();
+	}
+
+	/**
+	 * Update entire editor area layout after change in rule editor windget's size 
+	 */
+	public void updateEditorAreaLayout()
+	{
+		dataArea.layout();
+		Rectangle r = scroller.getClientArea();
+		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 	}
 	
 	/**
@@ -393,5 +479,61 @@ public class EventProcessingPolicyEditor extends ViewPart
 	public Font getBoldFont()
 	{
 		return boldFont;
+	}
+
+	/**
+	 * @return the imageAlarm
+	 */
+	public Image getImageAlarm()
+	{
+		return imageAlarm;
+	}
+
+	/**
+	 * @return the imageExecute
+	 */
+	public Image getImageExecute()
+	{
+		return imageExecute;
+	}
+
+	/**
+	 * @return the imageTerminate
+	 */
+	public Image getImageTerminate()
+	{
+		return imageTerminate;
+	}
+
+	/**
+	 * @return the imageStop
+	 */
+	public Image getImageStop()
+	{
+		return imageStop;
+	}
+
+	/**
+	 * @return the imageCollapse
+	 */
+	public Image getImageCollapse()
+	{
+		return imageCollapse;
+	}
+
+	/**
+	 * @return the imageExpand
+	 */
+	public Image getImageExpand()
+	{
+		return imageExpand;
+	}
+
+	/**
+	 * @return the imageEdit
+	 */
+	public Image getImageEdit()
+	{
+		return imageEdit;
 	}
 }
