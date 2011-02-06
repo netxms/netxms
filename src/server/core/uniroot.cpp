@@ -30,6 +30,7 @@
 UniversalRoot::UniversalRoot()
               :NetObj()
 {
+	uuid_generate(m_guid);
 }
 
 
