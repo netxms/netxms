@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.widgets;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -56,6 +57,7 @@ public abstract class DashboardElement extends Composite
 	private Font font;
 	private Color borderColor;
 	private Color titleColor;
+	private Action doubleClickAction = null;
 	private List<DashboardElementButton> buttons = new ArrayList<DashboardElementButton>(0);
 	
 	/**
@@ -87,6 +89,25 @@ public abstract class DashboardElement extends Composite
 			public void paintControl(PaintEvent e)
 			{
 				doPaint(e.gc);
+			}
+		});
+		
+		addMouseListener(new MouseListener() {
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+				if (doubleClickAction != null)
+					doubleClickAction.run();
 			}
 		});
 		
@@ -243,5 +264,21 @@ public abstract class DashboardElement extends Composite
 		});
 		button.setControl(l);
 		buttons.add(button);
+	}
+
+	/**
+	 * @return the doubleClickAction
+	 */
+	public Action getDoubleClickAction()
+	{
+		return doubleClickAction;
+	}
+
+	/**
+	 * @param doubleClickAction the doubleClickAction to set
+	 */
+	public void setDoubleClickAction(Action doubleClickAction)
+	{
+		this.doubleClickAction = doubleClickAction;
 	}
 }

@@ -123,13 +123,15 @@ public class RuleEditor extends Composite
 			}
 		};
 		configureLayout(action);
-		action.addButton(new DashboardElementButton("Edit actions", editor.getImageEdit(), new Action() {
+		final Action editRuleAction = new Action() {
 			@Override
 			public void run()
 			{
 				editActions();
 			}
-		}));
+		};
+		action.addButton(new DashboardElementButton("Edit actions", editor.getImageEdit(), editRuleAction));
+		action.setDoubleClickAction(editRuleAction);
 	}
 	
 	/**

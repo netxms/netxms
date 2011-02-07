@@ -1053,6 +1053,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetHelper.jav
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/AbstractSelector.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/CommandBox.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/DashboardElement.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/ImageCombo.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/LabeledText.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/SortableTableViewer.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/helpers/DashboardElementButton.java -text
