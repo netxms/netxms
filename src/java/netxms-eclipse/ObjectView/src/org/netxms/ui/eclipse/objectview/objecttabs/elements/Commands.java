@@ -83,6 +83,32 @@ public class Commands extends OverviewPageElement
 		};
 		actionWakeup.setImageDescriptor(Activator.getImageDescriptor("icons/wol.png"));
 		
+		actionRestartAgent = new Action("Restart NetXMS agent") {
+			@Override
+			public void run()
+			{
+				final GenericObject object = getObject();
+				if (MessageDialog.openQuestion(getShell(), "Confirmation", "Node " + object.getObjectName() + " will be rebooted. Are you sure?"))
+				{
+					new ConsoleJob("Initiate agent restart on node " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+						@Override
+						protected void runInternal(IProgressMonitor monitor) throws Exception
+						{
+							NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+							session.executeAction(object.getObjectId(), "Agent.Restart");
+						}
+	
+						@Override
+						protected String getErrorMessage()
+						{
+							return "Cannot initiate agent restart on node " + object.getObjectName();
+						}
+					}.start();
+				}
+			}
+		};
+		actionRestartAgent.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png"));
+		
 		actionRestart = new Action("Restart system") {
 			@Override
 			public void run()
