@@ -15,10 +15,12 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.ImageCombo;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -44,6 +46,8 @@ public class EditRuleActionsDlg extends Dialog
 	private LabeledText alarmMessage;
 	private LabeledText alarmKeyCreate;
 	private ImageCombo alarmSeverity;
+	private LabeledText alarmTimeout;
+	private EventSelector timeoutEvent;
 	private LabeledText alarmKeyTerminate;
 	private Button checkTerminateWithRegexp;
 	private TableViewer actionList;
@@ -193,11 +197,55 @@ public class EditRuleActionsDlg extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		alarmKeyCreate.setLayoutData(gd);
 		
-		alarmSeverity = new ImageCombo(alarmCreationGroup, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER);
+		Composite alarmCreationSubgroup = new Composite(alarmCreationGroup, SWT.NONE);
+		layout = new GridLayout();
+		layout.numColumns = 2;
+		layout.makeColumnsEqualWidth = true;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		alarmCreationSubgroup.setLayout(layout);
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		alarmCreationSubgroup.setLayoutData(gd);
+
+		Composite severityGroup = new Composite(alarmCreationSubgroup, SWT.NONE);
+		layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
+		severityGroup.setLayout(layout);
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		severityGroup.setLayoutData(gd);
+		new Label(severityGroup, SWT.NONE).setText("Alarm severity");
+		alarmSeverity = new ImageCombo(severityGroup, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER);
 		for(int i = 0; i < Severity.UNKNOWN; i++)
 			alarmSeverity.add(StatusDisplayInfo.getStatusImage(i), StatusDisplayInfo.getStatusText(i));
 		alarmSeverity.add(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN), "From event");
 		alarmSeverity.select(rule.getAlarmSeverity());
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		alarmSeverity.setLayoutData(gd);
+		
+		alarmTimeout = new LabeledText(alarmCreationSubgroup, SWT.NONE);
+		alarmTimeout.setLabel("Alarm timeout");
+		alarmTimeout.getTextControl().setTextLimit(5);
+		alarmTimeout.setText(Integer.toString(rule.getAlarmTimeout()));
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		alarmTimeout.setLayoutData(gd);
+		
+		timeoutEvent = new EventSelector(alarmCreationGroup, SWT.NONE);
+		timeoutEvent.setLabel("Timeout event");
+		timeoutEvent.setEventCode(rule.getAlarmTimeoutEvent());
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		timeoutEvent.setLayoutData(gd);
 		
 		alarmTerminationGroup = new Composite(alarmGroup, SWT.NONE);
 		gd = new GridData();
@@ -245,7 +293,7 @@ public class EditRuleActionsDlg extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
-		gd.heightHint = 200;
+		gd.heightHint = 150;
 		gd.widthHint = 300;
 		gd.verticalSpan = 2;
 		actionList.getTable().setLayoutData(gd);
