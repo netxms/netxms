@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -112,7 +112,7 @@ void UnregisterSession(DWORD dwIndex)
 
 //
 // TCP/IP Listener
-//
+// 
 
 THREAD_RESULT THREAD_CALL ListenerThread(void *)
 {
@@ -121,7 +121,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    int iNumErrors = 0, nRet;
    socklen_t iSize;
    CommSession *pSession;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
    BOOL bMasterServer, bControlServer;
    struct timeval tv;
    fd_set rdfs;
@@ -142,7 +142,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-	if (!strcmp(g_szListenAddress, "*"))
+	if (!_tcscmp(g_szListenAddress, _T("*")))
 	{
 		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	}
@@ -155,7 +155,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    servAddr.sin_port = htons(g_wListenPort);
 
    // Bind socket
-	DebugPrintf(INVALID_INDEX, 1, "Trying to bind on %s:%d", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
+	DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
@@ -200,16 +200,17 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #endif
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         DebugPrintf(INVALID_INDEX, 5, "Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
+         DebugPrintf(INVALID_INDEX, 5, _T("Incoming connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
 
          if (IsValidServerAddr(servAddr.sin_addr.s_addr, &bMasterServer, &bControlServer))
          {
             g_dwAcceptedConnections++;
-            DebugPrintf(INVALID_INDEX, 5, "Connection from %s accepted", szBuffer);
+            DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s accepted"), szBuffer);
 
             // Create new session structure and threads
             pSession = new CommSession(hClientSocket, ntohl(servAddr.sin_addr.s_addr), 
                                        bMasterServer, bControlServer);
+			
             if (!RegisterSession(pSession))
             {
                delete pSession;
@@ -224,7 +225,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             g_dwRejectedConnections++;
             shutdown(hClientSocket, SHUT_RDWR);
             closesocket(hClientSocket);
-            DebugPrintf(INVALID_INDEX, 5, "Connection from %s rejected", szBuffer);
+            DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s rejected"), szBuffer);
          }
       }
       else if (nRet == -1)
@@ -252,7 +253,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    MutexDestroy(g_hSessionListAccess);
    free(g_pSessionList);
    closesocket(hSocket);
-   DebugPrintf(INVALID_INDEX, 1, "Listener thread terminated");
+   DebugPrintf(INVALID_INDEX, 1, _T("Listener thread terminated"));
    return THREAD_OK;
 }
 
@@ -281,7 +282,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
          {
             if (g_pSessionList[i]->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
 				{
-					DebugPrintf(i, 5, "Session disconnected by watchdog (last activity timestamp is " TIME_T_FMT ")", g_pSessionList[i]->getTimeStamp());
+					DebugPrintf(i, 5, _T("Session disconnected by watchdog (last activity timestamp is ") TIME_T_FMT _T(")"), g_pSessionList[i]->getTimeStamp());
                g_pSessionList[i]->disconnect();
 				}
          }
@@ -297,7 +298,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 
    ThreadSleep(1);
    MutexUnlock(m_mutexWatchdogActive);
-   DebugPrintf(INVALID_INDEX, 1, "Session Watchdog thread terminated");
+   DebugPrintf(INVALID_INDEX, 1, _T("Session Watchdog thread terminated"));
 
    return THREAD_OK;
 }
@@ -307,7 +308,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 // Handler for Agent.ActiveConnections parameter
 //
 
-LONG H_ActiveConnections(const char *pszCmd, const char *pArg, char *pValue)
+LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    int nCounter;
    DWORD i;

@@ -138,7 +138,7 @@ void StopWatchdog()
 
 int WatchdogMain(DWORD pid)
 {
-	char cmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
+	TCHAR cmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 
 	if (g_szPlatformSuffix[0] != 0)
 	{

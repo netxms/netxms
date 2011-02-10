@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
 
          // Check if subagent with given name alreay loaded
          for(i = 0; i < m_dwNumSubAgents; i++)
-            if (!stricmp(m_pSubAgentList[i].pInfo->szName, pInfo->szName))
+            if (!_tcsicmp(m_pSubAgentList[i].pInfo->szName, pInfo->szName))
                break;
          if (i == m_dwNumSubAgents)
          {
@@ -150,11 +150,11 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
 // Load subagent
 //
 
-BOOL LoadSubAgent(char *szModuleName)
+BOOL LoadSubAgent(TCHAR *szModuleName)
 {
    HMODULE hModule;
    BOOL bSuccess = FALSE;
-   char szErrorText[256];
+   TCHAR szErrorText[256];
 
    hModule = DLOpen(szModuleName, szErrorText);
    if (hModule != NULL)
@@ -180,7 +180,7 @@ BOOL LoadSubAgent(char *szModuleName)
       sprintf(szEntryPoint, "NxSubAgentRegister_%s", szFileName);
       SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
 #else
-      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, "NxSubAgentRegister", szErrorText);
+      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, _T("NxSubAgentRegister"), szErrorText);
 #endif
 
       if (SubAgentRegister != NULL)
@@ -195,8 +195,7 @@ BOOL LoadSubAgent(char *szModuleName)
       }
       else
       {
-         nxlog_write(MSG_NO_SUBAGENT_ENTRY_POINT, EVENTLOG_ERROR_TYPE,
-                     "s", szModuleName);
+         nxlog_write(MSG_NO_SUBAGENT_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", szModuleName);
          DLClose(hModule);
       }
    }
@@ -215,7 +214,7 @@ BOOL LoadSubAgent(char *szModuleName)
 // about deregistering parameters and so on.
 //
 
-void UnloadAllSubAgents(void)
+void UnloadAllSubAgents()
 {
    DWORD i;
 
@@ -238,10 +237,10 @@ void UnloadAllSubAgents(void)
 // Enumerate loaded subagents
 //
 
-LONG H_SubAgentList(const char *cmd, const char *arg, StringList *value)
+LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    DWORD i;
-   char szBuffer[MAX_PATH + 32];
+   TCHAR szBuffer[MAX_PATH + 32];
 
    for(i = 0; i < m_dwNumSubAgents; i++)
    {

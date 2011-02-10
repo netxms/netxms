@@ -122,14 +122,13 @@ static VOID WINAPI AgentServiceMain(DWORD argc, LPTSTR *argv)
 // Initialize service
 //
 
-void InitService(void)
+void InitService()
 {
    static SERVICE_TABLE_ENTRY serviceTable[2]={ { g_windowsServiceName, AgentServiceMain }, { NULL, NULL } };
-   char szErrorText[256];
+   TCHAR szErrorText[256];
 
    if (!StartServiceCtrlDispatcher(serviceTable))
-      printf("StartServiceCtrlDispatcher() failed: %s\n",
-             GetSystemErrorText(GetLastError(), szErrorText, 256));
+      _tprintf(_T("StartServiceCtrlDispatcher() failed: %s\n"), GetSystemErrorText(GetLastError(), szErrorText, 256));
 }
 
 
@@ -137,7 +136,7 @@ void InitService(void)
 // Create service
 //
 
-void InstallService(char *execName, char *confFile)
+void InstallService(TCHAR *execName, TCHAR *confFile)
 {
    SC_HANDLE mgr, service;
    TCHAR cmdLine[8192], szErrorText[256];
@@ -145,8 +144,8 @@ void InstallService(char *execName, char *confFile)
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n",
-             GetSystemErrorText(GetLastError(), szErrorText, 256));
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"),
+               GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
 
@@ -155,15 +154,15 @@ void InstallService(char *execName, char *confFile)
 	
 	if (g_szPlatformSuffix[0] != 0)
 	{
-		strcat(cmdLine, " -P \"");
-		strcat(cmdLine, g_szPlatformSuffix);
-		strcat(cmdLine, "\"");
+		_tcscat(cmdLine, _T(" -P \""));
+		_tcscat(cmdLine, g_szPlatformSuffix);
+		_tcscat(cmdLine, _T("\""));
 	}
 	if (g_dwFlags & AF_CENTRAL_CONFIG)
 	{
-		strcat(cmdLine, " -M \"");
-		strcat(cmdLine, g_szConfigServer);
-		strcat(cmdLine, "\"");
+		_tcscat(cmdLine, _T(" -M \""));
+		_tcscat(cmdLine, g_szConfigServer);
+		_tcscat(cmdLine, _T("\""));
 	}
    
 	service = CreateService(mgr, g_windowsServiceName, g_windowsServiceDisplayName, GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
@@ -173,13 +172,13 @@ void InstallService(char *execName, char *confFile)
       DWORD code = GetLastError();
 
       if (code == ERROR_SERVICE_EXISTS)
-         printf("ERROR: Service named '%s' already exist\n", g_windowsServiceName);
+         _tprintf(_T("ERROR: Service named '%s' already exist\n"), g_windowsServiceName);
       else
-         printf("ERROR: Cannot create service (%s)\n", GetSystemErrorText(code, szErrorText, 256));
+         _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, szErrorText, 256));
    }
    else
    {
-      printf("Service \"%s\" created successfully\n", g_windowsServiceName);
+      _tprintf(_T("Service \"%s\" created successfully\n"), g_windowsServiceName);
       CloseServiceHandle(service);
 
 		InstallEventSource(execName);
@@ -193,15 +192,15 @@ void InstallService(char *execName, char *confFile)
 // Remove service
 //
 
-void RemoveService(void)
+void RemoveService()
 {
    SC_HANDLE mgr, service;
-   char szErrorText[256];
+   TCHAR szErrorText[256];
 
    mgr = OpenSCManager(NULL,NULL,GENERIC_WRITE);
    if (mgr==NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n",
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"),
              GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
@@ -209,15 +208,15 @@ void RemoveService(void)
    service=OpenService(mgr, g_windowsServiceName, DELETE);
    if (service==NULL)
    {
-      printf("ERROR: Cannot open service named '%s' (%s)\n", g_windowsServiceName,
+      _tprintf(_T("ERROR: Cannot open service named '%s' (%s)\n"), g_windowsServiceName,
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
    {
       if (DeleteService(service))
-         printf("Win32 Agent service deleted successfully\n");
+         _tprintf(_T("Win32 Agent service deleted successfully\n"));
       else
-         printf("ERROR: Cannot remove service named '%s' (%s)\n", g_windowsServiceName,
+         _tprintf(_T("ERROR: Cannot remove service named '%s' (%s)\n"), g_windowsServiceName,
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
@@ -233,15 +232,15 @@ void RemoveService(void)
 // Start service
 //
 
-void StartAgentService(void)
+void StartAgentService()
 {
    SC_HANDLE mgr, service;
-   char szErrorText[256];
+   TCHAR szErrorText[256];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n",
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"),
              GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
@@ -249,15 +248,15 @@ void StartAgentService(void)
    service = OpenService(mgr, g_windowsServiceName, SERVICE_START);
    if (service == NULL)
    {
-      printf("ERROR: Cannot open service named '%s' (%s)\n", g_windowsServiceName,
+      _tprintf(_T("ERROR: Cannot open service named '%s' (%s)\n"), g_windowsServiceName,
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
    {
       if (StartService(service, 0, NULL))
-         printf("Win32 Agent service started successfully\n");
+         _tprintf(_T("Win32 Agent service started successfully\n"));
       else
-         printf("ERROR: Cannot start service named '%s' (%s)\n", g_windowsServiceName,
+         _tprintf(_T("ERROR: Cannot start service named '%s' (%s)\n"), g_windowsServiceName,
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
@@ -271,15 +270,15 @@ void StartAgentService(void)
 // Stop service
 //
 
-void StopAgentService(void)
+void StopAgentService()
 {
    SC_HANDLE mgr, service;
-   char szErrorText[256];
+   TCHAR szErrorText[256];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n", 
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), 
              GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
@@ -287,7 +286,7 @@ void StopAgentService(void)
    service = OpenService(mgr, g_windowsServiceName, SERVICE_STOP);
    if (service == NULL)
    {
-      printf("ERROR: Cannot open service named '%s' (%s)\n", g_windowsServiceName,
+      _tprintf(_T("ERROR: Cannot open service named '%s' (%s)\n"), g_windowsServiceName,
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
@@ -295,9 +294,9 @@ void StopAgentService(void)
       SERVICE_STATUS status;
 
       if (ControlService(service, SERVICE_CONTROL_STOP, &status))
-         printf("Win32 Agent service stopped successfully\n");
+         _tprintf(_T("Win32 Agent service stopped successfully\n"));
       else
-         printf("ERROR: Cannot stop service named '%s' (%s)\n", g_windowsServiceName,
+         _tprintf(_T("ERROR: Cannot stop service named '%s' (%s)\n"), g_windowsServiceName,
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
@@ -311,7 +310,7 @@ void StopAgentService(void)
 // Install event source
 //
 
-void InstallEventSource(char *path)
+void InstallEventSource(const TCHAR *path)
 {
    HKEY hKey;
    DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
@@ -321,16 +320,16 @@ void InstallEventSource(char *path)
    if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE, key,
          0,NULL,REG_OPTION_NON_VOLATILE,KEY_SET_VALUE,NULL,&hKey,NULL))
    {
-      printf("Unable to create registry key: %s\n",
+      _tprintf(_T("Unable to create registry key: %s\n"),
              GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
 
-   RegSetValueEx(hKey, "TypesSupported", 0, REG_DWORD, (BYTE *)&dwTypes, sizeof(DWORD));
-   RegSetValueEx(hKey, "EventMessageFile", 0, REG_EXPAND_SZ, (BYTE *)path, (DWORD)(strlen(path) + 1));
+   RegSetValueEx(hKey, _T("TypesSupported"), 0, REG_DWORD, (BYTE *)&dwTypes, sizeof(DWORD));
+   RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ, (BYTE *)path, (DWORD)(_tcslen(path) + 1));
 
    RegCloseKey(hKey);
-   printf("Event source \"%s\" installed successfully\n", g_windowsEventSourceName);
+   _tprintf(_T("Event source \"%s\" installed successfully\n"), g_windowsEventSourceName);
 }
 
 
@@ -362,13 +361,13 @@ void RemoveEventSource(void)
 BOOL WaitForService(DWORD dwDesiredState)
 {
    SC_HANDLE mgr, service;
-   char szErrorText[256];
+   TCHAR szErrorText[256];
    BOOL bResult = FALSE;
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n", 
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), 
              GetSystemErrorText(GetLastError(), szErrorText, 256));
       return FALSE;
    }
@@ -376,7 +375,7 @@ BOOL WaitForService(DWORD dwDesiredState)
    service = OpenService(mgr, g_windowsServiceName, SERVICE_QUERY_STATUS);
    if (service == NULL)
    {
-      printf("ERROR: Cannot open service named '%s' (%s)\n", g_windowsServiceName,
+      _tprintf(_T("ERROR: Cannot open service named '%s' (%s)\n"), g_windowsServiceName,
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else

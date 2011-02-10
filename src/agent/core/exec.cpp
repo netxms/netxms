@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 	int nCount = 0;
 
 	pCmd[nCount++] = pTmp;
-	int nLen = strlen(pTmp);
+	int nLen = _tcslen(pTmp);
 	for (int i = 0; i < nLen; i++)
 	{
 		switch(pTmp[i])
@@ -142,38 +142,37 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 }
 #endif
 
-
-DWORD ExecuteCommand(char *pszCommand, StringList *args, pid_t *pid)
+DWORD ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
 {
-   char *pszCmdLine, *sptr;
+   TCHAR *pszCmdLine, *sptr;
    DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
 
-   DebugPrintf(INVALID_INDEX, 4, "EXEC: Expanding command \"%s\"", pszCommand);
+   DebugPrintf(INVALID_INDEX, 4, _T("EXEC: Expanding command \"%s\""), pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (args != NULL)
    {
-      dwSize = (DWORD)strlen(pszCommand) + 1;
-      pszCmdLine = (char *)malloc(dwSize);
+      dwSize = ((DWORD)_tcslen(pszCommand) + 1) * sizeof(TCHAR);
+      pszCmdLine = (TCHAR *)malloc(dwSize);
 		for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
-			if (*sptr == '$')
+			if (*sptr == _T('$'))
 			{
 				sptr++;
 				if (*sptr == 0)
 					break;   // Single $ character at the end of line
-				if ((*sptr >= '1') && (*sptr <= '9'))
+				if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
 				{
-					int argNum = *sptr - '1';
+					int argNum = *sptr - _T('1');
 
 					if (argNum < args->getSize())
 					{
 						int iArgLength;
 
 						// Extend resulting line
-						iArgLength = (int)strlen(args->getValue(argNum));
-						dwSize += iArgLength;
-						pszCmdLine = (char *)realloc(pszCmdLine, dwSize);
-						strcpy(&pszCmdLine[i], args->getValue(argNum));
+						iArgLength = (int)_tcslen(args->getValue(argNum));
+						dwSize += iArgLength * sizeof(TCHAR);
+						pszCmdLine = (TCHAR *)realloc(pszCmdLine, dwSize);
+						_tcscpy(&pszCmdLine[i], args->getValue(argNum));
 						i += iArgLength;
 					}
 				}
@@ -193,7 +192,7 @@ DWORD ExecuteCommand(char *pszCommand, StringList *args, pid_t *pid)
       pszCmdLine = pszCommand;
    }
 
-   DebugPrintf(INVALID_INDEX, 4, "EXEC: Executing \"%s\"", pszCmdLine);
+   DebugPrintf(INVALID_INDEX, 4, _T("EXEC: Executing \"%s\""), pszCmdLine);
 #if defined(_WIN32)
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
@@ -303,8 +302,8 @@ DWORD ExecuteCommand(char *pszCommand, StringList *args, pid_t *pid)
 struct POPEN_WORKER_DATA
 {
 	int status;
-	char *cmdLine;
-	char value[MAX_RESULT_LENGTH];
+	TCHAR *cmdLine;
+	TCHAR value[MAX_RESULT_LENGTH];
 	CONDITION finished;
 	CONDITION released;
 };
@@ -319,18 +318,18 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	FILE *hPipe;
 	POPEN_WORKER_DATA *data = (POPEN_WORKER_DATA *)arg;
 
-	if ((hPipe = popen(data->cmdLine, "r")) != NULL)
+	if ((hPipe = _tpopen(data->cmdLine, _T("r"))) != NULL)
 	{
-		char *pTmp;
-		int nRet;
+		TCHAR *pTmp;
 
-		nRet = (int)fread(data->value, 1, MAX_RESULT_LENGTH - 1, hPipe);
+		TCHAR *ret = _fgetts(data->value, MAX_RESULT_LENGTH, hPipe);
+		if ((ret == NULL) && feof(hPipe))
+			ret = data->value;
 		pclose(hPipe);
-	   DebugPrintf(INVALID_INDEX, 4, "H_ExternalParameter/POpenWorker: worker thread pipe read result: %d", nRet);
-		if (nRet > 0)
+	   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
+		if (ret != NULL)
 		{
-			data->value[min(nRet, MAX_RESULT_LENGTH - 1)] = 0;
-			if ((pTmp = strchr(data->value, '\n')) != NULL)
+			if ((pTmp = _tcschr(data->value, _T('\n'))) != NULL)
 			{
 				*pTmp = 0;
 			}
@@ -338,14 +337,13 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 		}
 		else
 		{
-		   DebugPrintf(INVALID_INDEX, 4, "H_ExternalParameter/POpenWorker: worker thread pipe read error: %s", strerror(errno));
+		   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read error: %s"), _tcserror(errno));
 			data->status = SYSINFO_RC_ERROR;
 		}
 	}
 	else
 	{
-		nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
-				   data->cmdLine, errno);
+		nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", data->cmdLine, errno);
 		data->status = SYSINFO_RC_ERROR;
 	}
 
@@ -365,34 +363,34 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 // Handler function for external (user-defined) parameters
 //
 
-LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
+LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue)
 {
-	char *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH];
-	const char *sptr;
+	TCHAR *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH];
+	const TCHAR *sptr;
 	int i, iSize, iStatus;
 
-   DebugPrintf(INVALID_INDEX, 4, "H_ExternalParameter called for \"%s\" \"%s\"", pszCmd, pszArg);
+   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter called for \"%s\" \"%s\""), pszCmd, pszArg);
 
    // Substitute $1 .. $9 with actual arguments
-   iSize = (int)strlen(pszArg);  // we don't need strlen + 1 because loop starts from &pszArg[1]
-   pszCmdLine = (char *)malloc(iSize);
+   iSize = (int)_tcslen(pszArg) * sizeof(TCHAR);  // we don't need _tcslen + 1 because loop starts from &pszArg[1]
+   pszCmdLine = (TCHAR *)malloc(iSize);
    for(sptr = &pszArg[1], i = 0; *sptr != 0; sptr++)
-      if (*sptr == '$')
+      if (*sptr == _T('$'))
       {
          sptr++;
          if (*sptr == 0)
             break;   // Single $ character at the end of line
-         if ((*sptr >= '1') && (*sptr <= '9'))
+         if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
          {
             if (AgentGetParameterArg(pszCmd, *sptr - '0', szBuffer, 1024))
             {
                int iArgLength;
 
                // Extend resulting line
-               iArgLength = (int)strlen(szBuffer);
-               iSize += iArgLength;
-               pszCmdLine = (char *)realloc(pszCmdLine, iSize);
-               strcpy(&pszCmdLine[i], szBuffer);
+               iArgLength = (int)_tcslen(szBuffer);
+               iSize += iArgLength * sizeof(TCHAR);
+               pszCmdLine = (TCHAR *)realloc(pszCmdLine, iSize);
+               _tcscpy(&pszCmdLine[i], szBuffer);
                i += iArgLength;
             }
          }
@@ -406,21 +404,20 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
          pszCmdLine[i++] = *sptr;
       }
    pszCmdLine[i] = 0;
-   DebugPrintf(INVALID_INDEX, 4, "H_ExternalParameter: command line is \"%s\"", pszCmdLine);
+   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter: command line is \"%s\""), pszCmdLine);
 
 #if defined(_WIN32)
-	if (*pszArg == 'E')
+	if (*pszArg == _T('E'))
 	{
 		STARTUPINFO si;
 		PROCESS_INFORMATION pi;
 		SECURITY_ATTRIBUTES sa;
 		HANDLE hOutput;
 		DWORD dwBytes;
-		char *eptr;
 
 		// Create temporary file to hold process output
 		GetTempPath(MAX_PATH - 1, szBuffer);
-		GetTempFileName(szBuffer, "nx", 0, szTempFile);
+		GetTempFileName(szBuffer, _T("nx"), 0, szTempFile);
 		sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 		sa.lpSecurityDescriptor = NULL;
 		sa.bInheritHandle = TRUE;
@@ -447,14 +444,24 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 					SetFilePointer(hOutput, 0, NULL, FILE_BEGIN);
 
 					// Read process output
-					ReadFile(hOutput, pValue, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
-					pValue[dwBytes] = 0;
-					eptr = strchr(pValue, '\r');
+					char *eptr;
+#ifdef UNICODE
+					char buffer[256];
+#define __valueptr buffer
+#else
+#define __valueptr pValue
+#endif
+					ReadFile(hOutput, __valueptr, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
+					__valueptr[dwBytes] = 0;
+					eptr = strchr(__valueptr, '\r');
 					if (eptr != NULL)
 						*eptr = 0;
-					eptr = strchr(pValue, '\n');
+					eptr = strchr(__valueptr, '\n');
 					if (eptr != NULL)
 						*eptr = 0;
+#ifdef UNICODE
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, pValue, MAX_RESULT_LENGTH);
+#endif
 					iStatus = SYSINFO_RC_SUCCESS;
 				}
 				else
@@ -500,12 +507,12 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 			data->finished = ConditionCreate(TRUE);
 			data->released = ConditionCreate(TRUE);
 			ThreadCreate(POpenWorker, 0, data);
-		   DebugPrintf(INVALID_INDEX, 4, "H_ExternalParameter (shell exec): worker thread created");
+		   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter (shell exec): worker thread created"));
 			if (ConditionWait(data->finished, g_dwExecTimeout))
 			{
 				iStatus = data->status;
 				if (iStatus == SYSINFO_RC_SUCCESS)
-					strcpy(pValue, data->value);
+					_tcscpy(pValue, data->value);
 			}
 			else
 			{
@@ -513,7 +520,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 				iStatus = SYSINFO_RC_ERROR;
 			}
 			ConditionSet(data->released);	// Allow worker to destroy data
-		   DebugPrintf(INVALID_INDEX, 4, "H_ExternalParameter (shell exec): execution status %d", iStatus);
+		   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter (shell exec): execution status %d"), iStatus);
 		}
 #endif
 
@@ -530,37 +537,37 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 // Execute external command via shell
 //
 
-DWORD ExecuteShellCommand(char *pszCommand, StringList *args)
+DWORD ExecuteShellCommand(TCHAR *pszCommand, StringList *args)
 {
-   char *pszCmdLine, *sptr;
+   TCHAR *pszCmdLine, *sptr;
    DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
 
-   DebugPrintf(INVALID_INDEX, 4, "SH_EXEC: Expanding command \"%s\"", pszCommand);
+   DebugPrintf(INVALID_INDEX, 4, _T("SH_EXEC: Expanding command \"%s\""), pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (args != NULL)
    {
-      dwSize = (DWORD)strlen(pszCommand) + 1;
-      pszCmdLine = (char *)malloc(dwSize);
+      dwSize = ((DWORD)_tcslen(pszCommand) + 1) * sizeof(TCHAR);
+      pszCmdLine = (TCHAR *)malloc(dwSize);
       for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
-         if (*sptr == '$')
+         if (*sptr == _T('$'))
          {
             sptr++;
             if (*sptr == 0)
                break;   // Single $ character at the end of line
-            if ((*sptr >= '1') && (*sptr <= '9'))
+            if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
             {
-               int argNum = *sptr - '1';
+               int argNum = *sptr - _T('1');
 
                if (argNum < args->getSize())
                {
                   int iArgLength;
 
                   // Extend resulting line
-						iArgLength = (int)strlen(args->getValue(argNum));
-                  dwSize += iArgLength;
-                  pszCmdLine = (char *)realloc(pszCmdLine, dwSize);
-                  strcpy(&pszCmdLine[i], args->getValue(argNum));
+						iArgLength = (int)_tcslen(args->getValue(argNum));
+                  dwSize += iArgLength * sizeof(TCHAR);
+                  pszCmdLine = (TCHAR *)realloc(pszCmdLine, dwSize);
+                  _tcscpy(&pszCmdLine[i], args->getValue(argNum));
                   i += iArgLength;
                }
             }
@@ -580,9 +587,9 @@ DWORD ExecuteShellCommand(char *pszCommand, StringList *args)
       pszCmdLine = pszCommand;
    }
 
-   DebugPrintf(INVALID_INDEX, 4, "SH_EXEC: Executing \"%s\"", pszCmdLine);
+   DebugPrintf(INVALID_INDEX, 4, _T("SH_EXEC: Executing \"%s\""), pszCmdLine);
 
-   if (system(pszCmdLine) == 0)
+   if (_tsystem(pszCmdLine) == 0)
       dwRetCode = ERR_SUCCESS;
    else
       dwRetCode = ERR_EXEC_FAILED;

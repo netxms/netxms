@@ -30,11 +30,11 @@
 // Get local ARP cache
 //
 
-LONG H_ArpCache(const char *cmd, const char *arg, StringList *value)
+LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    MIB_IPNETTABLE *arpCache;
    DWORD i, j, dwError, dwSize;
-   char szBuffer[128];
+   TCHAR szBuffer[128];
 
    arpCache = (MIB_IPNETTABLE *)malloc(SIZEOF_IPNETTABLE(4096));
    if (arpCache == NULL)
@@ -53,11 +53,11 @@ LONG H_ArpCache(const char *cmd, const char *arg, StringList *value)
           (arpCache->table[i].dwType == 4))  // Only static and dynamic entries
       {
          for(j = 0; j < arpCache->table[i].dwPhysAddrLen; j++)
-            sprintf(&szBuffer[j << 1], "%02X", arpCache->table[i].bPhysAddr[j]);
-         sprintf(&szBuffer[j << 1], " %d.%d.%d.%d %d", arpCache->table[i].dwAddr & 255,
-                 (arpCache->table[i].dwAddr >> 8) & 255, 
-                 (arpCache->table[i].dwAddr >> 16) & 255, arpCache->table[i].dwAddr >> 24,
-                 arpCache->table[i].dwIndex);
+            _sntprintf(&szBuffer[j << 1], 4, _T("%02X"), arpCache->table[i].bPhysAddr[j]);
+         _sntprintf(&szBuffer[j << 1], 25, _T(" %d.%d.%d.%d %d"), arpCache->table[i].dwAddr & 255,
+                    (arpCache->table[i].dwAddr >> 8) & 255, 
+                    (arpCache->table[i].dwAddr >> 16) & 255, arpCache->table[i].dwAddr >> 24,
+                    arpCache->table[i].dwIndex);
 			value->add(szBuffer);
       }
 
@@ -67,16 +67,16 @@ LONG H_ArpCache(const char *cmd, const char *arg, StringList *value)
 
 
 //
-// Send IP interface list to server (Win2K+ version)
+// Send IP interface list to server
 //
 
-static LONG H_InterfaceListW2K(const char *cmd, const char *arg, StringList *value)
+LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    DWORD dwSize;
    IP_ADAPTER_INFO *pBuffer, *pInfo;
    LONG iResult = SYSINFO_RC_SUCCESS;
-   char szAdapterName[MAX_OBJECT_NAME], szBuffer[256];
-   char szMacAddr[MAX_ADAPTER_ADDRESS_LENGTH * 2 + 1];
+   TCHAR szAdapterName[MAX_OBJECT_NAME], szBuffer[256], ipAddr[32];
+   TCHAR szMacAddr[MAX_ADAPTER_ADDRESS_LENGTH * 2 + 1];
    IP_ADDR_STRING *pAddr;
 
    if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
@@ -97,18 +97,32 @@ static LONG H_InterfaceListW2K(const char *cmd, const char *arg, StringList *val
             dwSize = 256;
             if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
             {
+#ifdef UNICODE
+					nx_strncpy(szAdapterName, wName, MAX_OBJECT_NAME);
+#else
                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
                                    wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
+#endif
             }
             else
             {
+#ifdef UNICODE
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
+					szAdapterName[MAX_OBJECT_NAME - 1] = 0;
+#else
                nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+#endif
             }
          }
          else
          {
             // We don't have a GUID resolving function, use GUID as name
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
+				szAdapterName[MAX_OBJECT_NAME - 1] = 0;
+#else
             nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+#endif
          }
 
          BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);
@@ -116,10 +130,10 @@ static LONG H_InterfaceListW2K(const char *cmd, const char *arg, StringList *val
          // Compose result string for each ip address
          for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
          {
-            sprintf(szBuffer, "%d %s/%d %d %s %s", pInfo->Index, 
-                    pAddr->IpAddress.String, 
-                    BitsInMask(ntohl(inet_addr(pAddr->IpMask.String))),
-                    pInfo->Type, szMacAddr, szAdapterName);
+            _sntprintf(szBuffer, 256, _T("%d %s/%d %d %s %s"), pInfo->Index, 
+                       IpToStr(ntohl(inet_addr(pAddr->IpAddress.String)), ipAddr), 
+                       BitsInMask(ntohl(inet_addr(pAddr->IpMask.String))),
+                       pInfo->Type, szMacAddr, szAdapterName);
             value->add(szBuffer);
          }
       }
@@ -135,67 +149,10 @@ static LONG H_InterfaceListW2K(const char *cmd, const char *arg, StringList *val
 
 
 //
-// Send IP interface list to server (NT4 version)
-//
-
-static LONG H_InterfaceListNT4(const char *cmd, const char *arg, StringList *value)
-{
-   LONG nRet = SYSINFO_RC_SUCCESS;
-   MIB_IPADDRTABLE *ifTable;
-   MIB_IFROW ifRow;
-   DWORD i, dwSize, dwError;
-   TCHAR szBuffer[2048], szIpAddr[16], szMACAddr[32];
-
-   ifTable = (MIB_IPADDRTABLE *)malloc(SIZEOF_IPADDRTABLE(256));
-   if (ifTable == NULL)
-      return SYSINFO_RC_ERROR;
-
-   dwSize = SIZEOF_IPADDRTABLE(256);
-   dwError = GetIpAddrTable(ifTable, &dwSize, FALSE);
-   if (dwError == NO_ERROR)
-   {
-      for(i = 0; i < ifTable->dwNumEntries; i++)
-      {
-         ifRow.dwIndex = ifTable->table[i].dwIndex;
-         if (GetIfEntry(&ifRow) == NO_ERROR)
-         {
-            BinToStr(ifRow.bPhysAddr, 6, szMACAddr);
-            sprintf(szBuffer, "%d %s/%d %d %s %s", ifTable->table[i].dwIndex,
-                    IpToStr(ntohl(ifTable->table[i].dwAddr), szIpAddr),
-                    BitsInMask(ntohl(ifTable->table[i].dwMask)), ifRow.dwType,
-                    szMACAddr, ifRow.bDescr);
-            value->add(szBuffer);
-         }
-      }
-   }
-   else
-   {
-      nRet = SYSINFO_RC_ERROR;
-   }
-   free(ifTable);
-   return nRet;
-}
-
-
-//
-// Send interface list to server
-// (selects appropriate method for different Windows versions)
-//
-
-LONG H_InterfaceList(const char *cmd, const char *arg, StringList *value)
-{
-   if (g_dwFlags & AF_RUNNING_ON_NT4)
-      return H_InterfaceListNT4(cmd, arg, value);
-   else
-      return H_InterfaceListW2K(cmd, arg, value);
-}
-
-
-//
 // Get IP statistics
 //
 
-LONG H_NetIPStats(const char *cmd, const char *arg, char *value)
+LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    MIB_IPSTATS ips;
    LONG iResult = SYSINFO_RC_SUCCESS;
@@ -225,11 +182,11 @@ LONG H_NetIPStats(const char *cmd, const char *arg, char *value)
 // Get adapter index from name
 //
 
-static DWORD AdapterNameToIndex(char *pszName)
+static DWORD AdapterNameToIndex(TCHAR *pszName)
 {
    DWORD dwSize, dwIndex = 0;
    IP_ADAPTER_INFO *pBuffer, *pInfo;
-   char szAdapterName[MAX_OBJECT_NAME];
+   TCHAR szAdapterName[MAX_OBJECT_NAME];
 
    if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
       return 0;
@@ -249,21 +206,35 @@ static DWORD AdapterNameToIndex(char *pszName)
             dwSize = 256;
             if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
             {
+#ifdef UNICODE
+					nx_strncpy(szAdapterName, wName, MAX_OBJECT_NAME);
+#else
                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
                                    wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
+#endif
             }
             else
             {
+#ifdef UNICODE
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
+					szAdapterName[MAX_OBJECT_NAME - 1] = 0;
+#else
                nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+#endif
             }
          }
          else
          {
             // We don't have a GUID resolving function, use GUID as name
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
+				szAdapterName[MAX_OBJECT_NAME - 1] = 0;
+#else
             nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+#endif
          }
 
-         if (!stricmp(szAdapterName, pszName))
+         if (!_tcsicmp(szAdapterName, pszName))
          {
             dwIndex = pInfo->Index;
             break;
@@ -280,10 +251,10 @@ static DWORD AdapterNameToIndex(char *pszName)
 // Get interface statistics
 //
 
-LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
+LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    LONG iResult = SYSINFO_RC_SUCCESS;
-   char *eptr, szBuffer[256];
+   TCHAR *eptr, szBuffer[256];
    DWORD dwIndex;
 
    AgentGetParameterArg(cmd, 1, szBuffer, 256);
@@ -294,7 +265,7 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
    else
    {
       // Determine if it index or name
-      dwIndex = strtoul(szBuffer, &eptr, 10);
+      dwIndex = _tcstoul(szBuffer, &eptr, 10);
       if (*eptr != 0)
       {
          // It's a name, determine index
@@ -317,7 +288,12 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
                   ret_uint(value, info.dwOutOctets);
                   break;
                case NETINFO_IF_DESCR:
+#ifdef UNICODE
+						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)info.bDescr, -1, value, MAX_RESULT_LENGTH);
+						value[MAX_RESULT_LENGTH - 1] = 0;
+#else
                   ret_string(value, (char *)info.bDescr);
+#endif
                   break;
                case NETINFO_IF_IN_ERRORS:
                   ret_uint(value, info.dwInErrors);
@@ -367,11 +343,11 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
 // Get IP routing table
 //
 
-LONG H_IPRoutingTable(const char *pszCmd, const char *pArg, StringList *value)
+LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
 {
    MIB_IPFORWARDTABLE *pRoutingTable;
    DWORD i, dwError, dwSize;
-   char szBuffer[256], szDestIp[16], szNextHop[16];
+   TCHAR szBuffer[256], szDestIp[16], szNextHop[16];
 
    // Determine required buffer size
    dwSize = 0;
@@ -392,12 +368,12 @@ LONG H_IPRoutingTable(const char *pszCmd, const char *pArg, StringList *value)
 
    for(i = 0; i < pRoutingTable->dwNumEntries; i++)
    {
-      snprintf(szBuffer, 256, "%s/%d %s %d %d", 
-               IpToStr(ntohl(pRoutingTable->table[i].dwForwardDest), szDestIp),
-               BitsInMask(ntohl(pRoutingTable->table[i].dwForwardMask)),
-               IpToStr(ntohl(pRoutingTable->table[i].dwForwardNextHop), szNextHop),
-               pRoutingTable->table[i].dwForwardIfIndex,
-               pRoutingTable->table[i].dwForwardType);
+      _sntprintf(szBuffer, 256, _T("%s/%d %s %d %d"), 
+                 IpToStr(ntohl(pRoutingTable->table[i].dwForwardDest), szDestIp),
+                 BitsInMask(ntohl(pRoutingTable->table[i].dwForwardMask)),
+                 IpToStr(ntohl(pRoutingTable->table[i].dwForwardNextHop), szNextHop),
+                 pRoutingTable->table[i].dwForwardIfIndex,
+                 pRoutingTable->table[i].dwForwardType);
 		value->add(szBuffer);
    }
 

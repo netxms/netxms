@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,32 +27,32 @@
 // Externals
 //
 
-LONG H_ActiveConnections(const char *cmd, const char *arg, char *pValue);
-LONG H_AgentStats(const char *cmd, const char *arg, char *value);
-LONG H_AgentTraps(const char *cmd, const char *arg, char *value);
-LONG H_AgentUptime(const char *cmd, const char *arg, char *value);
-LONG H_CRC32(const char *cmd, const char *arg, char *value);
-LONG H_DirInfo(const char *cmd, const char *arg, char *value);
-LONG H_FileTime(const char *cmd, const char *arg, char *value);
-LONG H_MD5Hash(const char *cmd, const char *arg, char *value);
-LONG H_SHA1Hash(const char *cmd, const char *arg, char *value);
-LONG H_SubAgentList(const char *cmd, const char *arg, StringList *value);
-LONG H_ActionList(const char *cmd, const char *arg, StringList *value);
-LONG H_ExternalParameter(const char *cmd, const char *arg, char *value);
-LONG H_PlatformName(const char *cmd, const char *arg, char *value);
+LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
+LONG H_AgentStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 #ifdef _WIN32
-LONG H_ArpCache(const char *cmd, const char *arg, StringList *value);
-LONG H_InterfaceList(const char *cmd, const char *arg, StringList *value);
-LONG H_IPRoutingTable(const char *cmd, const char *arg, StringList *pValue);
-LONG H_DiskInfo(const char *cmd, const char *arg, char *value);
-LONG H_MemoryInfo(const char *cmd, const char *arg, char *value);
-LONG H_HostName(const char *cmd, const char *arg, char *value);
-LONG H_SystemUname(const char *cmd, const char *arg, char *value);
-LONG H_NetIPStats(const char *cmd, const char *arg, char *value);
-LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value);
-LONG H_CPUCount(const char *cmd, const char *arg, char *value);
-LONG H_PhysicalDiskInfo(const char *cmd, const char *arg, char *pValue);
+LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue);
+LONG H_DiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_HostName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_CPUCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
 #endif
 
 
@@ -77,7 +77,7 @@ static DWORD m_dwUnsupportedRequests = 0;
 // Handler for parameters which always returns string constant
 //
 
-static LONG H_StringConstant(const char *cmd, const char *arg, char *value)
+static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    ret_string(value, arg);
    return SYSINFO_RC_SUCCESS;
@@ -88,7 +88,7 @@ static LONG H_StringConstant(const char *cmd, const char *arg, char *value)
 // Handler for parameters which returns floating point value from specific variable
 //
 
-static LONG H_FloatPtr(const char *cmd, const char *arg, char *value)
+static LONG H_FloatPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    ret_double(value, *((double *)arg));
    return SYSINFO_RC_SUCCESS;
@@ -99,7 +99,7 @@ static LONG H_FloatPtr(const char *cmd, const char *arg, char *value)
 // Handler for parameters which returns DWORD value from specific variable
 //
 
-static LONG H_UIntPtr(const char *cmd, const char *arg, char *value)
+static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    ret_uint(value, *((DWORD *)arg));
    return SYSINFO_RC_SUCCESS;
@@ -108,29 +108,29 @@ static LONG H_UIntPtr(const char *cmd, const char *arg, char *value)
 
 //
 // Handler for Agent.SupportedCiphers
-//
+// 
 
-static LONG H_SupportedCiphers(const char *pszCmd, const char *pArg, char *pValue)
+static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
    DWORD dwCiphers;
 
    dwCiphers = CSCPGetSupportedCiphers();
    if (dwCiphers == 0)
    {
-      ret_string(pValue, "NONE");
+      ret_string(pValue, _T("NONE"));
    }
    else
    {
       *pValue = 0;
       if (dwCiphers & CSCP_SUPPORT_AES_256)
-         strcat(pValue, "AES-256 ");
+         _tcscat(pValue, _T("AES-256 "));
       if (dwCiphers & CSCP_SUPPORT_BLOWFISH)
-         strcat(pValue, "BLOWFISH ");
+         _tcscat(pValue, _T("BLOWFISH "));
       if (dwCiphers & CSCP_SUPPORT_IDEA)
-         strcat(pValue, "IDEA ");
+         _tcscat(pValue, _T("IDEA "));
       if (dwCiphers & CSCP_SUPPORT_3DES)
-         strcat(pValue, "3DES ");
-      pValue[strlen(pValue) - 1] = 0;
+         _tcscat(pValue, _T("3DES "));
+      pValue[_tcslen(pValue) - 1] = 0;
    }
    return SYSINFO_RC_SUCCESS;
 }
@@ -140,7 +140,7 @@ static LONG H_SupportedCiphers(const char *pszCmd, const char *pArg, char *pValu
 // Handler for parameters list
 //
 
-static LONG H_ParamList(const char *cmd, const char *arg, StringList *value)
+static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    int i;
 
@@ -155,7 +155,7 @@ static LONG H_ParamList(const char *cmd, const char *arg, StringList *value)
 // Handler for push parameters list
 //
 
-static LONG H_PushParamList(const char *cmd, const char *arg, StringList *value)
+static LONG H_PushParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    int i;
 
@@ -169,7 +169,7 @@ static LONG H_PushParamList(const char *cmd, const char *arg, StringList *value)
 // Handler for enums list
 //
 
-static LONG H_EnumList(const char *cmd, const char *arg, StringList *value)
+static LONG H_EnumList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    int i;
 
@@ -186,76 +186,76 @@ static LONG H_EnumList(const char *cmd, const char *arg, StringList *value)
 static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 {
 #ifdef _WIN32
-   { "Disk.Free(*)", H_DiskInfo, (char *)DISKINFO_FREE_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { "Disk.FreePerc(*)", H_DiskInfo, (char *)DISKINFO_FREE_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { "Disk.Total(*)", H_DiskInfo, (char *)DISKINFO_TOTAL_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { "Disk.Used(*)", H_DiskInfo, (char *)DISKINFO_USED_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { "Disk.UsedPerc(*)", H_DiskInfo, (char *)DISKINFO_USED_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { "FileSystem.Free(*)", H_DiskInfo, (char *)DISKINFO_FREE_BYTES, DCI_DT_UINT64, DCIDESC_FS_FREE },
-   { "FileSystem.FreePerc(*)", H_DiskInfo, (char *)DISKINFO_FREE_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
-   { "FileSystem.Total(*)", H_DiskInfo, (char *)DISKINFO_TOTAL_BYTES, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
-   { "FileSystem.Used(*)", H_DiskInfo, (char *)DISKINFO_USED_BYTES, DCI_DT_UINT64, DCIDESC_FS_USED },
-   { "FileSystem.UsedPerc(*)", H_DiskInfo, (char *)DISKINFO_USED_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
-   { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
-   { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NETINFO_IF_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
-   { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NETINFO_IF_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
-   { "Net.Interface.Description(*)", H_NetInterfaceStats, (char *)NETINFO_IF_DESCR, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
-   { "Net.Interface.InErrors(*)", H_NetInterfaceStats, (char *)NETINFO_IF_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
-   { "Net.Interface.Link(*)", H_NetInterfaceStats, (char *)NETINFO_IF_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { "Net.Interface.MTU(*)", H_NetInterfaceStats, (char *)NETINFO_IF_MTU, DCI_DT_UINT, DCIDESC_NET_INTERFACE_MTU },
-   { "Net.Interface.OperStatus(*)", H_NetInterfaceStats, (char *)NETINFO_IF_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
-   { "Net.Interface.OutErrors(*)", H_NetInterfaceStats, (char *)NETINFO_IF_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
-   { "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, (char *)NETINFO_IF_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
-   { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, (char *)NETINFO_IF_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
-   { "Net.Interface.Speed(*)", H_NetInterfaceStats, (char *)NETINFO_IF_SPEED, DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
-   { "Net.IP.Forwarding", H_NetIPStats, (char *)NETINFO_IP_FORWARDING, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
-   { "PhysicalDisk.Firmware(*)", H_PhysicalDiskInfo, "F", DCI_DT_STRING, DCIDESC_PHYSICALDISK_FIRMWARE },
-   { "PhysicalDisk.Model(*)", H_PhysicalDiskInfo, "M", DCI_DT_STRING, DCIDESC_PHYSICALDISK_MODEL },
-   { "PhysicalDisk.SerialNumber(*)", H_PhysicalDiskInfo, "N", DCI_DT_STRING, DCIDESC_PHYSICALDISK_SERIALNUMBER },
-   { "PhysicalDisk.SmartAttr(*)", H_PhysicalDiskInfo, "A", DCI_DT_STRING, DCIDESC_PHYSICALDISK_SMARTATTR },
-   { "PhysicalDisk.SmartStatus(*)", H_PhysicalDiskInfo, "S", DCI_DT_INT, DCIDESC_PHYSICALDISK_SMARTSTATUS },
-   { "PhysicalDisk.Temperature(*)", H_PhysicalDiskInfo, "T", DCI_DT_INT, DCIDESC_PHYSICALDISK_TEMPERATURE },
-   { "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
-   { "System.Hostname", H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
-   { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
-   { "System.Memory.Physical.FreePerc", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
-   { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
-   { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
-   { "System.Memory.Physical.UsedPerc", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
-   { "System.Memory.Virtual.Free", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
-   { "System.Memory.Virtual.FreePerc", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_FREE_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
-   { "System.Memory.Virtual.Total", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
-   { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
-   { "System.Memory.Virtual.UsedPerc", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
-   { "System.Uname", H_SystemUname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+   { _T("Disk.Free(*)"), H_DiskInfo, (TCHAR *)DISKINFO_FREE_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_FREE_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.Total(*)"), H_DiskInfo, (TCHAR *)DISKINFO_TOTAL_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.Used(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("FileSystem.Free(*)"), H_DiskInfo, (TCHAR *)DISKINFO_FREE_BYTES, DCI_DT_UINT64, DCIDESC_FS_FREE },
+   { _T("FileSystem.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_FREE_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
+   { _T("FileSystem.Total(*)"), H_DiskInfo, (TCHAR *)DISKINFO_TOTAL_BYTES, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
+   { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_BYTES, DCI_DT_UINT64, DCIDESC_FS_USED },
+   { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
+   { _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
+   { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
+   { _T("Net.Interface.BytesOut(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
+   { _T("Net.Interface.Description(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_DESCR, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
+   { _T("Net.Interface.InErrors(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
+   { _T("Net.Interface.Link(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Net.Interface.MTU(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_MTU, DCI_DT_UINT, DCIDESC_NET_INTERFACE_MTU },
+   { _T("Net.Interface.OperStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
+   { _T("Net.Interface.OutErrors(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
+   { _T("Net.Interface.PacketsIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
+   { _T("Net.Interface.PacketsOut(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
+   { _T("Net.Interface.Speed(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_SPEED, DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
+   { _T("Net.IP.Forwarding"), H_NetIPStats, (TCHAR *)NETINFO_IP_FORWARDING, DCI_DT_INT, DCIDESC_NET_IP_FORWARDING },
+   { _T("PhysicalDisk.Firmware(*)"), H_PhysicalDiskInfo, _T("F"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_FIRMWARE },
+   { _T("PhysicalDisk.Model(*)"), H_PhysicalDiskInfo, _T("M"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_MODEL },
+   { _T("PhysicalDisk.SerialNumber(*)"), H_PhysicalDiskInfo, _T("N"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_SERIALNUMBER },
+   { _T("PhysicalDisk.SmartAttr(*)"), H_PhysicalDiskInfo, _T("A"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_SMARTATTR },
+   { _T("PhysicalDisk.SmartStatus(*)"), H_PhysicalDiskInfo, _T("S"), DCI_DT_INT, DCIDESC_PHYSICALDISK_SMARTSTATUS },
+   { _T("PhysicalDisk.Temperature(*)"), H_PhysicalDiskInfo, _T("T"), DCI_DT_INT, DCIDESC_PHYSICALDISK_TEMPERATURE },
+   { _T("System.CPU.Count"), H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+   { _T("System.Hostname"), H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
+   { _T("System.Memory.Physical.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+   { _T("System.Memory.Physical.FreePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
+   { _T("System.Memory.Physical.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
+   { _T("System.Memory.Physical.Used"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+   { _T("System.Memory.Physical.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_USED_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
+   { _T("System.Memory.Virtual.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
+   { _T("System.Memory.Virtual.FreePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_FREE_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
+   { _T("System.Memory.Virtual.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
+   { _T("System.Memory.Virtual.Used"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+   { _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
+   { _T("System.Uname"), H_SystemUname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
 #endif
-   { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
-   { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTERRORS },
-   { "Agent.ActiveConnections", H_ActiveConnections, NULL, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
-   { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures, DCI_DT_UINT, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
-   { "Agent.ConfigurationServer", H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
-   { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests, DCI_DT_UINT, DCIDESC_AGENT_FAILEDREQUESTS },
-   { "Agent.GeneratedTraps", H_AgentTraps, "G", DCI_DT_UINT64, DCIDESC_AGENT_GENERATED_TRAPS },
-   { "Agent.LastTrapTime", H_AgentTraps, "T", DCI_DT_UINT64, DCIDESC_AGENT_LAST_TRAP_TIME },
-   { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests, DCI_DT_UINT, DCIDESC_AGENT_PROCESSEDREQUESTS },
-   { "Agent.Registrar", H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
-   { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections, DCI_DT_UINT, DCIDESC_AGENT_REJECTEDCONNECTIONS },
-   { "Agent.SentTraps", H_AgentTraps, "S", DCI_DT_UINT64, DCIDESC_AGENT_SENT_TRAPS },
-   { "Agent.SourcePackageSupport", H_StringConstant, "0", DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
-   { "Agent.SupportedCiphers", H_SupportedCiphers, NULL, DCI_DT_STRING, DCIDESC_AGENT_SUPPORTEDCIPHERS },
-   { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests, DCI_DT_UINT, DCIDESC_AGENT_TIMEDOUTREQUESTS },
-   { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests, DCI_DT_UINT, DCIDESC_AGENT_UNSUPPORTEDREQUESTS },
-   { "Agent.Uptime", H_AgentUptime, NULL, DCI_DT_UINT, DCIDESC_AGENT_UPTIME },
-   { "Agent.Version", H_StringConstant, AGENT_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
-   { "File.Count(*)", H_DirInfo, (char *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
-   { "File.Hash.CRC32(*)", H_CRC32, NULL, DCI_DT_UINT, DCIDESC_FILE_HASH_CRC32 },
-   { "File.Hash.MD5(*)", H_MD5Hash, NULL, DCI_DT_STRING, DCIDESC_FILE_HASH_MD5 },
-   { "File.Hash.SHA1(*)", H_SHA1Hash, NULL, DCI_DT_STRING, DCIDESC_FILE_HASH_SHA1 },
-   { "File.Size(*)", H_DirInfo, (char *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, DCIDESC_FILE_SIZE },
-   { "File.Time.Access(*)", H_FileTime, (char *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },
-   { "File.Time.Change(*)", H_FileTime, (char *)FILETIME_CTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_CHANGE },
-   { "File.Time.Modify(*)", H_FileTime, (char *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
-   { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME }
+   { _T("Agent.AcceptedConnections"), H_UIntPtr, (TCHAR *)&g_dwAcceptedConnections, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
+   { _T("Agent.AcceptErrors"), H_UIntPtr, (TCHAR *)&g_dwAcceptErrors, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTERRORS },
+   { _T("Agent.ActiveConnections"), H_ActiveConnections, NULL, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
+   { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&m_dwAuthenticationFailures, DCI_DT_UINT, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
+   { _T("Agent.ConfigurationServer"), H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
+   { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&m_dwFailedRequests, DCI_DT_UINT, DCIDESC_AGENT_FAILEDREQUESTS },
+   { _T("Agent.GeneratedTraps"), H_AgentTraps, _T("G"), DCI_DT_UINT64, DCIDESC_AGENT_GENERATED_TRAPS },
+   { _T("Agent.LastTrapTime"), H_AgentTraps, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_LAST_TRAP_TIME },
+   { _T("Agent.ProcessedRequests"), H_UIntPtr, (TCHAR *)&m_dwProcessedRequests, DCI_DT_UINT, DCIDESC_AGENT_PROCESSEDREQUESTS },
+   { _T("Agent.Registrar"), H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
+   { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_dwRejectedConnections, DCI_DT_UINT, DCIDESC_AGENT_REJECTEDCONNECTIONS },
+   { _T("Agent.SentTraps"), H_AgentTraps, _T("S"), DCI_DT_UINT64, DCIDESC_AGENT_SENT_TRAPS },
+   { _T("Agent.SourcePackageSupport"), H_StringConstant, _T("0"), DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+   { _T("Agent.SupportedCiphers"), H_SupportedCiphers, NULL, DCI_DT_STRING, DCIDESC_AGENT_SUPPORTEDCIPHERS },
+   { _T("Agent.TimedOutRequests"), H_UIntPtr, (TCHAR *)&m_dwTimedOutRequests, DCI_DT_UINT, DCIDESC_AGENT_TIMEDOUTREQUESTS },
+   { _T("Agent.UnsupportedRequests"), H_UIntPtr, (TCHAR *)&m_dwUnsupportedRequests, DCI_DT_UINT, DCIDESC_AGENT_UNSUPPORTEDREQUESTS },
+   { _T("Agent.Uptime"), H_AgentUptime, NULL, DCI_DT_UINT, DCIDESC_AGENT_UPTIME },
+   { _T("Agent.Version"), H_StringConstant, AGENT_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
+   { _T("File.Count(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
+   { _T("File.Hash.CRC32(*)"), H_CRC32, NULL, DCI_DT_UINT, DCIDESC_FILE_HASH_CRC32 },
+   { _T("File.Hash.MD5(*)"), H_MD5Hash, NULL, DCI_DT_STRING, DCIDESC_FILE_HASH_MD5 },
+   { _T("File.Hash.SHA1(*)"), H_SHA1Hash, NULL, DCI_DT_STRING, DCIDESC_FILE_HASH_SHA1 },
+   { _T("File.Size(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, DCIDESC_FILE_SIZE },
+   { _T("File.Time.Access(*)"), H_FileTime, (TCHAR *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },
+   { _T("File.Time.Change(*)"), H_FileTime, (TCHAR *)FILETIME_CTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_CHANGE },
+   { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
+   { _T("System.PlatformName"), H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME }
 };
 
 
@@ -266,15 +266,15 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
 {
 #ifdef _WIN32
-   { "Net.ArpCache", H_ArpCache, NULL },
-   { "Net.InterfaceList", H_InterfaceList, NULL },
-   { "Net.IP.RoutingTable", H_IPRoutingTable, NULL },
+   { _T("Net.ArpCache"), H_ArpCache, NULL },
+   { _T("Net.InterfaceList"), H_InterfaceList, NULL },
+   { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
 #endif
-   { "Agent.ActionList", H_ActionList, NULL },
-   { "Agent.SubAgentList", H_SubAgentList, NULL },
-   { "Agent.SupportedEnums", H_EnumList, NULL },
-   { "Agent.SupportedParameters", H_ParamList, NULL },
-   { "Agent.SupportedPushParameters", H_PushParamList, NULL }
+   { _T("Agent.ActionList"), H_ActionList, NULL },
+   { _T("Agent.SubAgentList"), H_SubAgentList, NULL },
+   { _T("Agent.SupportedEnums"), H_EnumList, NULL },
+   { _T("Agent.SupportedParameters"), H_ParamList, NULL },
+   { _T("Agent.SupportedPushParameters"), H_PushParamList, NULL }
 };
 
 
@@ -305,7 +305,7 @@ BOOL InitParameterList()
 
 //
 // Add push parameter to list
-//
+// by LWX
 
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 {
@@ -313,7 +313,7 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 
    // Search for existing parameter
    for(i = 0; i < m_iNumPushParams; i++)
-      if (!stricmp(m_pPushParamList[i].name, name))
+      if (!_tcsicmp(m_pPushParamList[i].name, name))
          break;
    if (i < m_iNumPushParams)
    {
@@ -325,9 +325,9 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
    {
       // Add new parameter
       m_pPushParamList = (NETXMS_SUBAGENT_PUSHPARAM *)realloc(m_pPushParamList, sizeof(NETXMS_SUBAGENT_PUSHPARAM) * (m_iNumPushParams + 1));
-      nx_strncpy(m_pPushParamList[m_iNumPushParams].name, name, MAX_PARAM_NAME - 1);
+      nx_strncpy(m_pPushParamList[m_iNumPushParams].name, name, MAX_PARAM_NAME - 1); 
       m_pPushParamList[m_iNumPushParams].dataType = dataType;
-      nx_strncpy(m_pPushParamList[m_iNumPushParams].description, description, MAX_DB_STRING);
+      nx_strncpy(m_pPushParamList[m_iNumPushParams].description, description, MAX_DB_STRING); 
       m_iNumPushParams++;
    }
 }
@@ -335,16 +335,16 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 
 //
 // Add parameter to list
-//
+// 
 
-void AddParameter(const char *pszName, LONG (* fpHandler)(const char *, const char *, char *), const char *pArg,
-                  int iDataType, const char *pszDescription)
+void AddParameter(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *), const TCHAR *pArg,
+                  int iDataType, const TCHAR *pszDescription)
 {
    int i;
 
    // Search for existing parameter
    for(i = 0; i < m_iNumParams; i++)
-      if (!stricmp(m_pParamList[i].szName, pszName))
+      if (!_tcsicmp(m_pParamList[i].szName, pszName))
          break;
    if (i < m_iNumParams)
    {
@@ -355,9 +355,9 @@ void AddParameter(const char *pszName, LONG (* fpHandler)(const char *, const ch
 
       // If we are replacing System.PlatformName, add pointer to
       // platform suffix as argument, otherwise, use supplied pArg
-      if (!strcmp(pszName, "System.PlatformName"))
+      if (!_tcscmp(pszName, _T("System.PlatformName")))
       {
-         m_pParamList[i].pArg = g_szPlatformSuffix;
+         m_pParamList[i].pArg = g_szPlatformSuffix; // to be TCHAR
       }
       else
       {
@@ -380,15 +380,15 @@ void AddParameter(const char *pszName, LONG (* fpHandler)(const char *, const ch
 
 //
 // Add enum to list
-//
+// 
 
-void AddEnum(const char *pszName, LONG (* fpHandler)(const char *, const char *, StringList *), const char *pArg)
+void AddEnum(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *pArg)
 {
    int i;
 
    // Search for existing enum
    for(i = 0; i < m_iNumEnums; i++)
-      if (!stricmp(m_pEnumList[i].szName, pszName))
+      if (!_tcsicmp(m_pEnumList[i].szName, pszName))
          break;
    if (i < m_iNumEnums)
    {
@@ -410,13 +410,13 @@ void AddEnum(const char *pszName, LONG (* fpHandler)(const char *, const char *,
 
 //
 // Add external parameter
-//
+//  
 
-BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec)
+BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec) //to be TCHAR
 {
-   char *pszCmdLine, *pszArg;
+   TCHAR *pszCmdLine, *pszArg;
 
-   pszCmdLine = strchr(pszCfgLine, ':');
+   pszCmdLine = _tcschr(pszCfgLine, _T(':'));
    if (pszCmdLine == NULL)
       return FALSE;
 
@@ -427,10 +427,10 @@ BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec)
    if ((*pszCfgLine == 0) || (*pszCmdLine == 0))
       return FALSE;
 
-	pszArg = (char *)malloc(strlen(pszCmdLine) + 2);
-	pszArg[0] = bShellExec ? 'S' : 'E';
-	strcpy(&pszArg[1], pszCmdLine);
-   AddParameter(pszCfgLine, H_ExternalParameter, pszArg, DCI_DT_STRING, "");
+	pszArg = (TCHAR *)malloc((_tcslen(pszCmdLine) + 2) * sizeof(TCHAR));
+	pszArg[0] = bShellExec ? _T('S') : _T('E');
+	_tcscpy(&pszArg[1], pszCmdLine);
+   AddParameter(pszCfgLine, H_ExternalParameter, pszArg, DCI_DT_STRING, _T(""));
    return TRUE;
 }
 
@@ -439,12 +439,12 @@ BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec)
 // Get parameter's value
 //
 
-DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue)
+DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 {
    int i, rc;
    DWORD dwErrorCode;
 
-   DebugPrintf(dwSessionId, 5, "Requesting parameter \"%s\"", pszParam);
+   DebugPrintf(dwSessionId, 5, _T("Requesting parameter \"%s\""), pszParam);
    for(i = 0; i < m_iNumParams; i++)
       if (MatchString(m_pParamList[i].szName, pszParam, FALSE))
       {
@@ -484,12 +484,12 @@ DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue)
 // Get parameter's value
 //
 
-DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, StringList *pValue)
+DWORD GetEnumValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
 {
    int i, rc;
    DWORD dwErrorCode;
 
-   DebugPrintf(dwSessionId, 5, "Requesting enum \"%s\"", pszParam);
+   DebugPrintf(dwSessionId, 5, _T("Requesting enum \"%s\""), pszParam);
    for(i = 0; i < m_iNumEnums; i++)
       if (MatchString(m_pEnumList[i].szName, pszParam, FALSE))
       {

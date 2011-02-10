@@ -27,7 +27,7 @@
 // Externals
 //
 
-LONG H_PlatformName(const char *cmd, const char *arg, char *value);
+LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 
 //
@@ -57,9 +57,9 @@ BOOL RegisterOnServer(TCHAR *pszServer)
 #ifdef _WIN32
    WSADATA wsaData;
 
-   if (WSAStartup(2, &wsaData) != 0)
+   if (WSAStartup(0x0202, &wsaData) != 0)
    {
-      printf("ERROR: Unable to initialize Windows Sockets\n");
+      _tprintf(_T("ERROR: Unable to initialize Windows Sockets\n"));
       return FALSE;
    }
 #endif
@@ -85,7 +85,7 @@ BOOL RegisterOnServer(TCHAR *pszServer)
          msg.SetCode(CMD_REGISTER_AGENT);
          msg.SetId(2);
          if (H_PlatformName(NULL, NULL, szBuffer) != SYSINFO_RC_SUCCESS)
-            strcpy(szBuffer, "error");
+            _tcscpy(szBuffer, _T("error"));
          msg.SetVariable(VID_PLATFORM_NAME, szBuffer);
          msg.SetVariable(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
          msg.SetVariable(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);

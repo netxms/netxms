@@ -242,7 +242,7 @@ DWORD GetPolicyInventory(CommSession *session, CSCPMessage *msg)
 			ConfigEntry *e = list->getEntry(i);
 			uuid_t guid;
 
-			if (MatchString("policy-*", e->getName(), TRUE))
+			if (MatchString(_T("policy-*"), e->getName(), TRUE))
 			{
 				uuid_parse(&(e->getName()[7]), guid);
 				msg->SetVariable(varId++, guid, UUID_LENGTH);

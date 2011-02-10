@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -160,7 +160,7 @@ void CommSession::run()
 
 void CommSession::disconnect()
 {
-	DebugPrintf(m_dwIndex, 5, "CommSession::disconnect()");
+	DebugPrintf(m_dwIndex, 5, _T("CommSession::disconnect()"));
    shutdown(m_hSocket, SHUT_RDWR);
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
@@ -177,7 +177,7 @@ void CommSession::readThread()
    CSCPMessage *pMsg;
    BYTE *pDecryptionBuffer = NULL;
    int iErr;
-   char szBuffer[256];
+   TCHAR szBuffer[256];  //
    WORD wFlags;
 
    // Initialize raw message receiving function
@@ -209,7 +209,7 @@ void CommSession::readThread()
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf(m_dwIndex, 5, "Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
+         DebugPrintf(m_dwIndex, 5, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -230,7 +230,7 @@ void CommSession::readThread()
             pRawMsg->dwId = ntohl(pRawMsg->dwId);
             pRawMsg->wCode = ntohs(pRawMsg->wCode);
             pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-            DebugPrintf(m_dwIndex, 6, "Received raw message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+            DebugPrintf(m_dwIndex, 6, _T("Received raw message %s"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
             if (pRawMsg->wCode == CMD_FILE_DATA)
             {
@@ -273,7 +273,7 @@ void CommSession::readThread()
             pRawMsg->dwId = ntohl(pRawMsg->dwId);
             pRawMsg->wCode = ntohs(pRawMsg->wCode);
             pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-            DebugPrintf(m_dwIndex, 6, "Received control message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+            DebugPrintf(m_dwIndex, 6, _T("Received control message %s"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
             if (pRawMsg->wCode == CMD_GET_NXCP_CAPS)
             {
@@ -294,7 +294,7 @@ void CommSession::readThread()
             pMsg = new CSCPMessage(pRawMsg);
             if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
             {
-               DebugPrintf(m_dwIndex, 6, "Received message %s", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
+               DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
                if (m_pCtx == NULL)
                {
                   CSCPMessage *pResponse;
@@ -331,7 +331,7 @@ void CommSession::readThread()
    if (m_bProxyConnection)
       ThreadJoin(m_hProxyReadThread);
 
-   DebugPrintf(m_dwIndex, 5, "Session with %s closed", IpToStr(m_dwHostAddr, szBuffer));
+   DebugPrintf(m_dwIndex, 5, _T("Session with %s closed"), IpToStr(m_dwHostAddr, szBuffer));
 }
 
 
@@ -342,9 +342,9 @@ void CommSession::readThread()
 BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx)
 {
    BOOL bResult = TRUE;
-   char szBuffer[128];
+   TCHAR szBuffer[128];
 
-   DebugPrintf(m_dwIndex, 6, "Sending message %s (size %d)", NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer), ntohl(pMsg->dwSize));
+   DebugPrintf(m_dwIndex, 6, _T("Sending message %s (size %d)"), NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer), ntohl(pMsg->dwSize));
    if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
    {
       CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -369,7 +369,7 @@ BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
       free(pMsg);
    }
 	if (!bResult)
-	   DebugPrintf(m_dwIndex, 6, "CommSession::SendRawMessage() for %s (size %d) failed", NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer), ntohl(pMsg->dwSize));
+	   DebugPrintf(m_dwIndex, 6, _T("CommSession::SendRawMessage() for %s (size %d) failed"), NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer), ntohl(pMsg->dwSize));
    return bResult;
 }
 
@@ -402,7 +402,7 @@ void CommSession::writeThread()
 void CommSession::processingThread()
 {
    CSCPMessage *pMsg;
-   char szBuffer[128];
+   TCHAR szBuffer[128];
    CSCPMessage msg;
    DWORD dwCommand, dwRet;
 
@@ -412,7 +412,7 @@ void CommSession::processingThread()
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
       dwCommand = pMsg->GetCode();
-      DebugPrintf(m_dwIndex, 6, "Received message %s", NXCPMessageCodeName((WORD)dwCommand, szBuffer));
+      DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName((WORD)dwCommand, szBuffer));
 
       // Prepare response message
       msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -554,7 +554,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
    }
    else
    {
-      char szSecret[MAX_SECRET_LENGTH];
+      TCHAR szSecret[MAX_SECRET_LENGTH];
       BYTE hash[32];
       WORD wAuthMethod;
 
@@ -563,7 +563,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
       {
          case AUTH_PLAINTEXT:
             pRequest->GetVariableStr(VID_SHARED_SECRET, szSecret, MAX_SECRET_LENGTH);
-            if (!strcmp(szSecret, g_szSharedSecret))
+            if (!_tcscmp(szSecret, g_szSharedSecret))
             {
                m_bIsAuthenticated = TRUE;
                pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
@@ -576,7 +576,16 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             break;
          case AUTH_MD5_HASH:
             pRequest->GetVariableBinary(VID_SHARED_SECRET, (BYTE *)szSecret, MD5_DIGEST_SIZE);
+#ifdef UNICODE
+				{
+					char sharedSecret[256];
+					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, g_szSharedSecret, -1, sharedSecret, 256, NULL, NULL);
+					sharedSecret[255] = 0;
+					CalculateMD5Hash((BYTE *)sharedSecret, strlen(sharedSecret), hash);
+				}
+#else
             CalculateMD5Hash((BYTE *)g_szSharedSecret, strlen(g_szSharedSecret), hash);
+#endif
             if (!memcmp(szSecret, hash, MD5_DIGEST_SIZE))
             {
                m_bIsAuthenticated = TRUE;
@@ -584,13 +593,22 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "MD5");
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, _T("MD5"));
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
          case AUTH_SHA1_HASH:
             pRequest->GetVariableBinary(VID_SHARED_SECRET, (BYTE *)szSecret, SHA1_DIGEST_SIZE);
+#ifdef UNICODE
+				{
+					char sharedSecret[256];
+					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, g_szSharedSecret, -1, sharedSecret, 256, NULL, NULL);
+					sharedSecret[255] = 0;
+					CalculateSHA1Hash((BYTE *)sharedSecret, strlen(sharedSecret), hash);
+				}
+#else
             CalculateSHA1Hash((BYTE *)g_szSharedSecret, strlen(g_szSharedSecret), hash);
+#endif
             if (!memcmp(szSecret, hash, SHA1_DIGEST_SIZE))
             {
                m_bIsAuthenticated = TRUE;
@@ -598,7 +616,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "SHA1");
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, _T("SHA1"));
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -616,7 +634,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 void CommSession::getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   char szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
+   TCHAR szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];   //
    DWORD dwErrorCode;
 
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
@@ -633,7 +651,7 @@ void CommSession::getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   char szParameter[MAX_PARAM_NAME];
+   TCHAR szParameter[MAX_PARAM_NAME];    //
 
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
@@ -655,7 +673,7 @@ void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   char szAction[MAX_PARAM_NAME];
+   TCHAR szAction[MAX_PARAM_NAME];         //
    StringList args;
    DWORD i, dwRetCode;
 
@@ -690,7 +708,7 @@ void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
    {
       szFileName[0] = 0;
       pRequest->GetVariableStr(VID_FILE_NAME, szFileName, MAX_PATH);
-		DebugPrintf(m_dwIndex, 5, "CommSession::recvFile(): Preparing for receiving file \"%s\"", szFileName);
+		DebugPrintf(m_dwIndex, 5, _T("CommSession::recvFile(): Preparing for receiving file \"%s\""), szFileName);
       BuildFullPath(szFileName, szFullPath);
 
       // Check if for some reason we have already opened file
@@ -700,11 +718,11 @@ void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
       }
       else
       {
-			DebugPrintf(m_dwIndex, 5, "CommSession::recvFile(): Writing to local file \"%s\"", szFullPath);
+			DebugPrintf(m_dwIndex, 5, _T("CommSession::recvFile(): Writing to local file \"%s\""), szFullPath);
          m_hCurrFile = _topen(szFullPath, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0600);
          if (m_hCurrFile == -1)
          {
-				DebugPrintf(m_dwIndex, 2, "CommSession::recvFile(): Error opening file \"%s\" for writing (%s)", szFullPath, strerror(errno));
+				DebugPrintf(m_dwIndex, 2, _T("CommSession::recvFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
             pMsg->SetVariable(VID_RCC, ERR_IO_FAILURE);
          }
          else
@@ -812,8 +830,8 @@ void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
          }
          else
          {
-				DebugPrintf(m_dwIndex, 2, "CommSession::updateConfig(): Error opening file \"%s\" for writing (%s)",
-                        g_szConfigFile, strerror(errno));
+				DebugPrintf(m_dwIndex, 2, _T("CommSession::updateConfig(): Error opening file \"%s\" for writing (%s)"),
+                        g_szConfigFile, _tcserror(errno));
             pMsg->SetVariable(VID_RCC, ERR_FILE_OPEN_ERROR);
          }
          free(pConfig);
@@ -884,7 +902,7 @@ DWORD CommSession::setupProxyConnection(CSCPMessage *pRequest)
             sendRawMessage(pRawMsg, pSavedCtx);
             DestroyEncryptionContext(pSavedCtx);
 
-            DebugPrintf(m_dwIndex, 5, "Established proxy connection to %s:%d", IpToStr(dwAddr, szBuffer), wPort);
+            DebugPrintf(m_dwIndex, 5, _T("Established proxy connection to %s:%d"), IpToStr(dwAddr, szBuffer), wPort);
          }
          else
          {

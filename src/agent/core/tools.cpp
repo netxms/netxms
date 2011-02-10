@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,12 +45,12 @@ void ConsolePrintf(const char *pszFormat, ...)
 // Print debug messages
 //
 
-void DebugPrintf(DWORD dwSessionId, int level, const char *pszFormat, ...)
+void DebugPrintf(DWORD dwSessionId, int level, const TCHAR *pszFormat, ...)
 {
    if (level <= (int)g_debugLevel)
    {
       va_list args;
-      char szBuffer[4096];
+      TCHAR szBuffer[4096];
 
       va_start(args, pszFormat);
       _vsntprintf(szBuffer, 4096, pszFormat, args);
@@ -135,18 +135,18 @@ done:
 // Get error text for PDH functions
 //
 
-char *GetPdhErrorText(DWORD dwError, char *pszBuffer, int iBufSize)
+TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize)
 {
-   char *msgBuf;
+   TCHAR *msgBuf;
 
    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
                      FORMAT_MESSAGE_FROM_HMODULE | 
                      FORMAT_MESSAGE_IGNORE_INSERTS,
-                     GetModuleHandle("PDH.DLL"), dwError,
+                     GetModuleHandle(_T("PDH.DLL")), dwError,
                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-                     (LPSTR)&msgBuf, 0, NULL)>0)
+                     (LPTSTR)&msgBuf, 0, NULL)>0)
    {
-      msgBuf[strcspn(msgBuf, "\r\n")] = 0;
+      msgBuf[_tcscspn(msgBuf, _T("\r\n"))] = 0;
       nx_strncpy(pszBuffer, msgBuf, iBufSize);
       LocalFree(msgBuf);
    }

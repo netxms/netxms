@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,17 +33,17 @@ static DWORD m_dwNumActions = 0;
 
 //
 // Add action
-//
+// 
 
-BOOL AddAction(const char *pszName, int iType, const char *pArg, 
+BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg, 
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
-               const char *pszSubAgent, const char *pszDescription)
+               const TCHAR *pszSubAgent, const TCHAR *pszDescription)
 {
    DWORD i;
 
    // Check if action with given name already registered
    for(i = 0; i < m_dwNumActions; i++)
-      if (!stricmp(m_pActionList[i].szName, pszName))
+      if (!_tcsicmp(m_pActionList[i].szName, pszName))
          return FALSE;
 
    // Create new entry in action list
@@ -56,7 +56,7 @@ BOOL AddAction(const char *pszName, int iType, const char *pArg,
    {
       case AGENT_ACTION_EXEC:
       case AGENT_ACTION_SHELLEXEC:
-         m_pActionList[i].handler.pszCmdLine = strdup(pArg);
+         m_pActionList[i].handler.pszCmdLine = _tcsdup(pArg);
          break;
       case AGENT_ACTION_SUBAGENT:
          m_pActionList[i].handler.sa.fpHandler = fpHandler;
@@ -73,35 +73,35 @@ BOOL AddAction(const char *pszName, int iType, const char *pArg,
 //
 // Add action from config record
 // Accepts string of format <action_name>:<command_line>
-//
+// 
 
-BOOL AddActionFromConfig(char *pszLine, BOOL bShellExec)
+BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec) //to be TCHAR
 {
-   char *pCmdLine;
+   TCHAR *pCmdLine;
 
-   pCmdLine = strchr(pszLine, ':');
+   pCmdLine = _tcschr(pszLine, _T(':'));
    if (pCmdLine == NULL)
       return FALSE;
    *pCmdLine = 0;
    pCmdLine++;
    StrStrip(pszLine);
    StrStrip(pCmdLine);
-   return AddAction(pszLine, bShellExec ? AGENT_ACTION_SHELLEXEC : AGENT_ACTION_EXEC, pCmdLine, NULL, NULL, "");
+   return AddAction(pszLine, bShellExec ? AGENT_ACTION_SHELLEXEC : AGENT_ACTION_EXEC, pCmdLine, NULL, NULL, _T(""));
 }
 
 
 //
 // Execute action
-//
+// 
 
-DWORD ExecAction(char *pszAction, StringList *pArgs)
+DWORD ExecAction(const TCHAR *pszAction, StringList *pArgs)
 {
    DWORD i, dwErrorCode = ERR_UNKNOWN_PARAMETER;
 
    for(i = 0; i < m_dwNumActions; i++)
-      if (!stricmp(m_pActionList[i].szName, pszAction))
+      if (!_tcsicmp(m_pActionList[i].szName, pszAction))
       {
-         DebugPrintf(INVALID_INDEX, 4, "Executing action %s of type %d", pszAction, m_pActionList[i].iType);
+         DebugPrintf(INVALID_INDEX, 4, _T("Executing action %s of type %d"), pszAction, m_pActionList[i].iType);
          switch(m_pActionList[i].iType)
          {
             case AGENT_ACTION_EXEC:
@@ -125,12 +125,12 @@ DWORD ExecAction(char *pszAction, StringList *pArgs)
 
 //
 // Enumerate available actions
-//
+// 
 
-LONG H_ActionList(const char *cmd, const char *arg, StringList *value)
+LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
    DWORD i;
-   char szBuffer[1024];
+   TCHAR szBuffer[1024];
 
    for(i = 0; i < m_dwNumActions; i++)
    {

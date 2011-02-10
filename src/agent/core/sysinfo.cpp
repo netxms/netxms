@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #endif
 
 #if defined(_WIN32)
-#define STAT _stati64
+#define STAT _tstati64
 #define STAT_STRUCT struct _stati64
 #elif HAVE_LSTAT64 && HAVE_STRUCT_STAT64
 #define STAT lstat64
@@ -45,7 +45,7 @@
 // Handler for Agent.Uptime parameter
 //
 
-LONG H_AgentUptime(const char *cmd, const char *arg, char *value)
+LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    ret_uint(value, (DWORD)(time(NULL) - g_tmAgentStartTime));
    return SYSINFO_RC_SUCCESS;
@@ -56,7 +56,7 @@ LONG H_AgentUptime(const char *cmd, const char *arg, char *value)
 // File filter for GetDirInfo
 //
 
-static bool MatchFileFilter(const char *fileName, STAT_STRUCT &fileInfo, const char *pattern, int ageFilter, INT64 sizeFilter)
+static bool MatchFileFilter(const TCHAR *fileName, STAT_STRUCT &fileInfo, const TCHAR *pattern, int ageFilter, INT64 sizeFilter)
 {
 	if (!MatchString(pattern, fileName, FALSE))
 		return false;
@@ -98,14 +98,14 @@ static bool MatchFileFilter(const char *fileName, STAT_STRUCT &fileInfo, const c
 // Helper function for H_DirInfo
 // 
 
-static LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
+static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
                        unsigned int &uFileCount, QWORD &llFileSize,
                        int ageFilter, INT64 sizeFilter)
 {
-   DIR *pDir = NULL;
-   struct dirent *pFile;
+   _TDIR *pDir = NULL;
+   struct _tdirent *pFile;
 	STAT_STRUCT fileInfo;
-   char szFileName[MAX_PATH];
+   TCHAR szFileName[MAX_PATH];
    LONG nRet = SYSINFO_RC_SUCCESS;
 
    if (STAT(szPath, &fileInfo) == -1) 
@@ -121,25 +121,25 @@ static LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
    }
 
    // this is a dir
-   pDir = opendir(szPath);
+   pDir = _topendir(szPath);
    if (pDir != NULL)
    {
       while(1)
       {
-         pFile = readdir(pDir);
+         pFile = _treaddir(pDir);
          if (pFile == NULL)
             break;
 
-         if (!strcmp(pFile->d_name, ".") || !strcmp(pFile->d_name, ".."))
+         if (!_tcscmp(pFile->d_name, _T(".")) || !_tcscmp(pFile->d_name, _T("..")))
             continue;
          
-			size_t len = strlen(szPath) + strlen(pFile->d_name) + 2;
+			size_t len = _tcslen(szPath) + _tcslen(pFile->d_name) + 2;
 			if (len > MAX_PATH)
 				continue;	// Full file name is too long
 
-         strcpy(szFileName, szPath);
-         strcat(szFileName, FS_PATH_SEPARATOR);
-         strcat(szFileName, pFile->d_name);
+         _tcscpy(szFileName, szPath);
+         _tcscat(szFileName, FS_PATH_SEPARATOR);
+         _tcscat(szFileName, pFile->d_name);
 
          // skip unaccessible entries
          if (STAT(szFileName, &fileInfo) == -1)
@@ -165,14 +165,11 @@ static LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
              uFileCount++;
          }
       }
-      closedir(pDir);
+      _tclosedir(pDir);
    }
    
    return nRet;
 }
-
-#undef STAT
-#undef STAT_STRUCT
 
 
 //
@@ -189,9 +186,9 @@ static LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
 //                if > 0, only files created before now - value will match
 //
 
-LONG H_DirInfo(const char *cmd, const char *arg, char *value)
+LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   char szPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10], szBuffer[128];
+   TCHAR szPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10], szBuffer[128];
    bool bRecursive = false;
 
    unsigned int uFileCount = 0;
@@ -214,11 +211,11 @@ LONG H_DirInfo(const char *cmd, const char *arg, char *value)
 	int ageFilter = _tcstoul(szBuffer, NULL, 0);
 
 	// Recursion flag
-	bRecursive = ((atoi(szRecursive) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
+	bRecursive = ((_tcstol(szRecursive, NULL, 0) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
 
    // If pattern is omited use asterisk
    if (szPattern[0] == 0)
-      strcpy(szPattern, "*");
+      _tcscpy(szPattern, _T("*"));
 
    nRet = GetDirInfo(szPath, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
 
@@ -243,9 +240,9 @@ LONG H_DirInfo(const char *cmd, const char *arg, char *value)
 // Calculate MD5 hash for file
 //
 
-LONG H_MD5Hash(const char *cmd, const char *arg, char *value)
+LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   char szFileName[MAX_PATH], szHashText[MD5_DIGEST_SIZE * 2 + 1];
+   TCHAR szFileName[MAX_PATH], szHashText[MD5_DIGEST_SIZE * 2 + 1];
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD i;
 
@@ -257,7 +254,7 @@ LONG H_MD5Hash(const char *cmd, const char *arg, char *value)
 
    // Convert MD5 hash to text form
    for(i = 0; i < MD5_DIGEST_SIZE; i++)
-      sprintf(&szHashText[i << 1], "%02x", hash[i]);
+      _sntprintf(&szHashText[i << 1], 4, _T("%02x"), hash[i]);
 
    ret_string(value, szHashText);
    return SYSINFO_RC_SUCCESS;
@@ -268,9 +265,9 @@ LONG H_MD5Hash(const char *cmd, const char *arg, char *value)
 // Calculate SHA1 hash for file
 //
 
-LONG H_SHA1Hash(const char *cmd, const char *arg, char *value)
+LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   char szFileName[MAX_PATH], szHashText[SHA1_DIGEST_SIZE * 2 + 1];
+   TCHAR szFileName[MAX_PATH], szHashText[SHA1_DIGEST_SIZE * 2 + 1];
    BYTE hash[SHA1_DIGEST_SIZE];
    DWORD i;
 
@@ -282,7 +279,7 @@ LONG H_SHA1Hash(const char *cmd, const char *arg, char *value)
 
    // Convert SHA1 hash to text form
    for(i = 0; i < SHA1_DIGEST_SIZE; i++)
-      sprintf(&szHashText[i << 1], "%02x", hash[i]);
+      _sntprintf(&szHashText[i << 1], 4, _T("%02x"), hash[i]);
 
    ret_string(value, szHashText);
    return SYSINFO_RC_SUCCESS;
@@ -293,9 +290,9 @@ LONG H_SHA1Hash(const char *cmd, const char *arg, char *value)
 // Calculate CRC32 for file
 //
 
-LONG H_CRC32(const char *cmd, const char *arg, char *value)
+LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   char szFileName[MAX_PATH];
+   TCHAR szFileName[MAX_PATH];
    DWORD dwCRC32;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
@@ -313,7 +310,7 @@ LONG H_CRC32(const char *cmd, const char *arg, char *value)
 // Handler for System.PlatformName
 //
 
-LONG H_PlatformName(const char *cmd, const char *arg, char *value)
+LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
    LONG nResult = SYSINFO_RC_SUCCESS;
 
@@ -325,28 +322,28 @@ LONG H_PlatformName(const char *cmd, const char *arg, char *value)
    switch(sysInfo.wProcessorArchitecture)
    {
       case PROCESSOR_ARCHITECTURE_INTEL:
-         strcpy(value, "windows-i386");
+         _tcscpy(value, _T("windows-i386"));
          break;
       case PROCESSOR_ARCHITECTURE_MIPS:
-         strcpy(value, "windows-mips");
+         _tcscpy(value, _T("windows-mips"));
          break;
       case PROCESSOR_ARCHITECTURE_ALPHA:
-         strcpy(value, "windows-alpha");
+         _tcscpy(value, _T("windows-alpha"));
          break;
       case PROCESSOR_ARCHITECTURE_PPC:
-         strcpy(value, "windows-ppc");
+         _tcscpy(value, _T("windows-ppc"));
          break;
       case PROCESSOR_ARCHITECTURE_IA64:
-         strcpy(value, "windows-ia64");
+         _tcscpy(value, _T("windows-ia64"));
          break;
       case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
-         strcpy(value, "windows-i386");
+         _tcscpy(value, _T("windows-i386"));
          break;
       case PROCESSOR_ARCHITECTURE_AMD64:
-         strcpy(value, "windows-x64");
+         _tcscpy(value, _T("windows-x64"));
          break;
       default:
-         strcpy(value, "windows-unknown");
+         _tcscpy(value, _T("windows-unknown"));
          break;
    }
 
@@ -385,9 +382,9 @@ LONG H_PlatformName(const char *cmd, const char *arg, char *value)
    // Add user-configurable platform name suffix
    if ((nResult == SYSINFO_RC_SUCCESS) && (g_szPlatformSuffix[0] != 0))
    {
-      if (g_szPlatformSuffix[0] != '-')
-         strcat(value, "-");
-      strcat(value, g_szPlatformSuffix);
+      if (g_szPlatformSuffix[0] != _T('-'))
+         _tcscat(value, _T("-"));
+      _tcscat(value, g_szPlatformSuffix);
    }
 
    return nResult;
@@ -398,16 +395,16 @@ LONG H_PlatformName(const char *cmd, const char *arg, char *value)
 // Handler for File.Time.* parameters
 //
 
-LONG H_FileTime(const char *cmd, const char *arg, char *value)
+LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-	char szFilePath[MAX_PATH];
+	TCHAR szFilePath[MAX_PATH];
 	LONG nRet = SYSINFO_RC_SUCCESS;
-	struct stat fileInfo;
+	STAT_STRUCT fileInfo;
 
 	if (!AgentGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (stat(szFilePath, &fileInfo) == -1) 
+	if (STAT(szFilePath, &fileInfo) == -1) 
 		return SYSINFO_RC_ERROR;
 
 	switch(CAST_FROM_POINTER(arg, int))

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,9 +47,9 @@
 //
 
 #ifdef _DEBUG
-#define DEBUG_SUFFIX          "-debug"
+#define DEBUG_SUFFIX          _T("-debug")
 #else
-#define DEBUG_SUFFIX          ""
+#define DEBUG_SUFFIX          _T("")
 #endif
 #define AGENT_VERSION_STRING  NETXMS_VERSION_STRING DEBUG_SUFFIX
 
@@ -59,11 +59,11 @@
 //
 
 #if defined(_WIN32)
-#define AGENT_DEFAULT_CONFIG     "C:\\nxagentd.conf"
-#define AGENT_DEFAULT_CONFIG_D   "C:\\nxagentd.conf.d"
-#define AGENT_DEFAULT_LOG        "C:\\nxagentd.log"
-#define AGENT_DEFAULT_FILE_STORE "C:\\"
-#define AGENT_DEFAULT_DATA_DIR   "C:\\"
+#define AGENT_DEFAULT_CONFIG     _T("C:\\nxagentd.conf")
+#define AGENT_DEFAULT_CONFIG_D   _T("C:\\nxagentd.conf.d")
+#define AGENT_DEFAULT_LOG        _T("C:\\nxagentd.log")
+#define AGENT_DEFAULT_FILE_STORE _T("C:\\")
+#define AGENT_DEFAULT_DATA_DIR   _T("C:\\")
 #elif defined(_NETWARE)
 #define AGENT_DEFAULT_CONFIG     "SYS:ETC/nxagentd.conf"
 #define AGENT_DEFAULT_CONFIG_D   "SYS:ETC/nxagentd.conf.d"
@@ -84,7 +84,7 @@
 #define AGENT_DEFAULT_DATA_DIR   "/var/opt/netxms/agent"
 #endif
 
-#define REGISTRY_FILE_NAME       "registry.dat"
+#define REGISTRY_FILE_NAME       _T("registry.dat")
 
 
 //
@@ -113,9 +113,9 @@
 #define AF_ENABLE_AUTOLOAD          0x00000100
 #define AF_ENABLE_PROXY             0x00000200
 #define AF_CENTRAL_CONFIG           0x00000400
-#define AF_ENABLE_SNMP_PROXY			0x00000800
+#define AF_ENABLE_SNMP_PROXY		0x00000800
 #define AF_SHUTDOWN                 0x00001000
-#define AF_RUNNING_ON_NT4           0x00002000
+//deprecated: #define AF_RUNNING_ON_NT4           0x00002000
 #define AF_REGISTER                 0x00004000
 #define AF_ENABLE_WATCHDOG          0x00008000
 #define AF_CATCH_EXCEPTIONS         0x00010000
@@ -196,7 +196,7 @@
 
 #define AGENT_ACTION_EXEC        1
 #define AGENT_ACTION_SUBAGENT    2
-#define AGENT_ACTION_SHELLEXEC	3
+#define AGENT_ACTION_SHELLEXEC	 3
 
 
 //
@@ -209,7 +209,7 @@ typedef struct
    int iType;
    union
    {
-      char *pszCmdLine;
+      TCHAR *pszCmdLine;      // to TCHAR 
       struct __subagentAction
       {
          LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *);
@@ -229,7 +229,7 @@ struct SUBAGENT
 {
    HMODULE hModule;              // Subagent's module handle
    NETXMS_SUBAGENT_INFO *pInfo;  // Information provided by subagent
-   char szName[MAX_PATH];        // Name of the module
+   TCHAR szName[MAX_PATH];        // Name of the module  // to TCHAR by LWX
 #ifdef _NETWARE
    char szEntryPoint[256];       // Name of agent's entry point
 #endif
@@ -326,39 +326,36 @@ public:
 BOOL Initialize();
 void Shutdown();
 void Main();
-
-void ConsolePrintf(const char *pszFormat, ...);
-void DebugPrintf(DWORD dwSessionId, int level, const char *pszFormat, ...);
+void ConsolePrintf(const TCHAR *pszFormat, ...);
+void DebugPrintf(DWORD dwSessionId, int level, const TCHAR *pszFormat, ...);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
 BOOL DownloadConfig(TCHAR *pszServer);
 
 BOOL InitParameterList();
-void AddParameter(const char *szName, LONG (* fpHandler)(const char *, const char *, char *), const char *pArg,
-                  int iDataType, const char *pszDescription);
-void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
-void AddEnum(const char *szName, LONG (* fpHandler)(const char *, const char *, StringList *), const char *pArg);
-BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec);
-DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue);
-DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, StringList *pValue);
-void GetParameterList(CSCPMessage *pMsg);
 
-BOOL LoadSubAgent(char *szModuleName);
+void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *), const TCHAR *pArg,
+                  int iDataType, const TCHAR *pszDescription);
+void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
+void AddEnum(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *pArg);
+BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec);
+DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
+DWORD GetEnumValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue);
+void GetParameterList(CSCPMessage *pMsg);
+BOOL LoadSubAgent(TCHAR *szModuleName);
 void UnloadAllSubAgents();
 BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *),
                   TCHAR *pszEntryPoint);
 BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
-
-BOOL AddAction(const char *pszName, int iType, const char *pArg, 
+BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg, 
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
-               const char *pszSubAgent, const char *pszDescription);
-BOOL AddActionFromConfig(char *pszLine, BOOL bShellExec);
-DWORD ExecAction(char *pszAction, StringList *pArgs);
-
-DWORD ExecuteCommand(char *pszCommand, StringList *pArgs, pid_t *pid);
-DWORD ExecuteShellCommand(char *pszCommand, StringList *pArgs);
+               const TCHAR *pszSubAgent, const TCHAR *pszDescription);
+BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
+DWORD ExecAction(const TCHAR *pszAction, StringList *pArgs);
+DWORD ExecuteCommand(TCHAR *pszCommand, StringList *pArgs, pid_t *pid);
+DWORD ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);
 
 BOOL WaitForProcess(const TCHAR *name);
 
@@ -374,15 +371,15 @@ void CloseRegistry(bool modified);
 #ifdef _WIN32
 
 void InitService();
-void InstallService(char *execName, char *confFile);
+void InstallService(TCHAR *execName, TCHAR *confFile);
 void RemoveService();
 void StartAgentService();
 void StopAgentService();
 BOOL WaitForService(DWORD dwDesiredState);
-void InstallEventSource(char *path);
+void InstallEventSource(const TCHAR *path);
 void RemoveEventSource();
 
-char *GetPdhErrorText(DWORD dwError, char *pszBuffer, int iBufSize);
+TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);
 
 #endif
 
@@ -392,19 +389,19 @@ char *GetPdhErrorText(DWORD dwError, char *pszBuffer, int iBufSize);
 //
 
 extern DWORD g_dwFlags;
-extern char g_szLogFile[];
-extern char g_szSharedSecret[];
-extern char g_szConfigFile[];
-extern char g_szFileStore[];
-extern char g_szConfigServer[];
-extern char g_szRegistrar[];
-extern char g_szListenAddress[];
+extern TCHAR g_szLogFile[];
+extern TCHAR g_szSharedSecret[]; 
+extern TCHAR g_szConfigFile[];  
+extern TCHAR g_szFileStore[];     
+extern TCHAR g_szConfigServer[]; 
+extern TCHAR g_szRegistrar[];  
+extern TCHAR g_szListenAddress[]; 
 extern TCHAR g_szConfigIncludeDir[];
 extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];
 extern DWORD g_dwServerCount;
 extern time_t g_tmAgentStartTime;
-extern char g_szPlatformSuffix[];
+extern TCHAR g_szPlatformSuffix[]; 
 extern DWORD g_dwStartupDelay;
 extern DWORD g_dwIdleTimeout;
 extern DWORD g_dwMaxSessions;
@@ -422,9 +419,7 @@ extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
 
 #ifdef _WIN32
-extern BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
 extern DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
-
 extern TCHAR g_windowsEventSourceName[];
 #endif   /* _WIN32 */
 

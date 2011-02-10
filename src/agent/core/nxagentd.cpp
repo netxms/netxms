@@ -117,15 +117,15 @@ extern const TCHAR *g_szMessages[];
 //
 
 DWORD g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
-char g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
-char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
-char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
-char g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
-char g_szDataDirectory[MAX_PATH] = AGENT_DEFAULT_DATA_DIR;
-char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
-char g_szConfigServer[MAX_DB_STRING] = "not_set";
-char g_szRegistrar[MAX_DB_STRING] = "not_set";
-char g_szListenAddress[MAX_PATH] = "*";
+TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
+TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
+TCHAR g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
+TCHAR g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
+TCHAR g_szDataDirectory[MAX_PATH] = AGENT_DEFAULT_DATA_DIR;
+TCHAR g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = _T("");
+TCHAR g_szConfigServer[MAX_DB_STRING] = _T("not_set");
+TCHAR g_szRegistrar[MAX_DB_STRING] = _T("not_set");
+TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
@@ -144,11 +144,10 @@ DWORD g_dwIdleTimeout = 120;   // Session idle timeout
 #endif
 
 #if !defined(_WIN32) && !defined(_NETWARE)
-char g_szPidFile[MAX_PATH] = "/var/run/nxagentd.pid";
+TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
 #endif
 
 #ifdef _WIN32
-BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
 DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 #endif   /* _WIN32 */
 
@@ -161,20 +160,20 @@ int g_nThreadCount = 0;
 // Static variables
 //
 
-static char *m_pszActionList = NULL;
-static char *m_pszShellActionList = NULL;
-static char *m_pszServerList = NULL;
-static char *m_pszControlServerList = NULL;
-static char *m_pszMasterServerList = NULL;
-static char *m_pszSubagentList = NULL;
-static char *m_pszExtParamList = NULL;
-static char *m_pszShExtParamList = NULL;
+static TCHAR *m_pszActionList = NULL;
+static TCHAR *m_pszShellActionList = NULL;
+static TCHAR *m_pszServerList = NULL;
+static TCHAR *m_pszControlServerList = NULL;
+static TCHAR *m_pszMasterServerList = NULL;
+static TCHAR *m_pszSubagentList = NULL;
+static TCHAR *m_pszExtParamList = NULL;
+static TCHAR *m_pszShExtParamList = NULL;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
-static char m_szProcessToWait[MAX_PATH] = "";
-static char m_szDumpDir[MAX_PATH] = "C:\\";
+static TCHAR m_szProcessToWait[MAX_PATH] = _T("");
+static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
 static DWORD m_dwMaxLogSize = 16384 * 1024;
 static DWORD m_dwLogHistorySize = 4;
 static Config *s_registry = NULL;
@@ -375,19 +374,8 @@ static void ImportSymbols()
 {
    HMODULE hModule;
 
-   // KERNEL32.DLL
-   hModule = GetModuleHandle("KERNEL32.DLL");
-   if (hModule != NULL)
-   {
-      imp_GlobalMemoryStatusEx = (BOOL (__stdcall *)(LPMEMORYSTATUSEX))GetProcAddressAndLog(hModule,"GlobalMemoryStatusEx");
-   }
-   else
-   {
-      nxlog_write(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "KERNEL32.DLL");
-   }
-
    // NETMAN.DLL
-   hModule = LoadLibrary("NETMAN.DLL");
+   hModule = LoadLibrary(_T("NETMAN.DLL"));
    if (hModule != NULL)
    {
       imp_HrLanConnectionNameFromGuidOrPath = 
@@ -669,8 +657,8 @@ static void DBLibraryDebugCallback(int level, const TCHAR *format, va_list args)
 
 BOOL Initialize()
 {
-   char *pItem, *pEnd;
-	char regPath[MAX_PATH];
+   TCHAR *pItem, *pEnd;
+	TCHAR regPath[MAX_PATH];
 #ifdef _NETWARE
    char szLoadPath[1024], szSearchPath[1024];
 #endif
@@ -680,7 +668,7 @@ BOOL Initialize()
 	{
 		if (!nxlog_set_rotation_policy((int)m_dwMaxLogSize, (int)m_dwLogHistorySize))
 			if (!(g_dwFlags & AF_DAEMON))
-				printf("WARNING: cannot set log rotation policy; using default values\n");
+				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}
    if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
 	                ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
@@ -692,7 +680,7 @@ BOOL Initialize()
 	                g_dwNumMessages, g_szMessages))
 #endif
 	{
-		fprintf(stderr, "FATAL ERROR: Cannot open log file\n");
+		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
 		return FALSE;
 	}
 	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
@@ -713,24 +701,11 @@ BOOL Initialize()
 
 #ifdef _WIN32
    WSADATA wsaData;
-   OSVERSIONINFO ver;
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
    if (wrc != 0)
    {
       nxlog_write(MSG_WSASTARTUP_FAILED, NXLOG_ERROR, "e", wrc);
       return FALSE;
-   }
-
-   // Set NT4 flag
-   ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-   if (GetVersionEx(&ver))
-   {
-      if ((ver.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
-          (ver.dwMajorVersion <= 4))
-      {
-         g_dwFlags |= AF_RUNNING_ON_NT4;
-		   DebugPrintf(INVALID_INDEX, 1, "Running on Windows NT 4.0");
-      }
    }
 #endif
 
@@ -761,7 +736,7 @@ BOOL Initialize()
 
    // Initialize API for subagents
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer, PushData);
-   DebugPrintf(INVALID_INDEX, 1, "Subagent API initialized");
+   DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
    if (!InitCryptoLib(m_dwEnabledCiphers))
@@ -822,7 +797,7 @@ BOOL Initialize()
              (dwAddr == INADDR_ANY))
          {
             if (!(g_dwFlags & AF_DAEMON))
-               printf("Invalid server address '%s'\n", pItem);
+               _tprintf(_T("Invalid server address '%s'\n"), pItem);
          }
          else
          {
@@ -864,7 +839,7 @@ BOOL Initialize()
              (dwAddr == INADDR_ANY))
          {
             if (!(g_dwFlags & AF_DAEMON))
-               printf("Invalid server address '%s'\n", pItem);
+               _tprintf(_T("Invalid server address '%s'\n"), pItem);
          }
          else
          {
@@ -947,7 +922,7 @@ BOOL Initialize()
    {
       for(pItem = pEnd = m_pszShellActionList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
-         pEnd = strchr(pItem, '\n');
+         pEnd = _tcschr(pItem, _T('\n'));
 
          if (pEnd != NULL)
             *pEnd = 0;
@@ -1235,9 +1210,9 @@ int main(int argc, char *argv[])
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
    BOOL bRestart = FALSE;
    DWORD dwOldPID, dwMainPID;
-	char *eptr;
+	TCHAR *eptr;
 #ifdef _WIN32
-   char szModuleName[MAX_PATH];
+   TCHAR szModuleName[MAX_PATH];
 #endif
 
    InitThreadLibrary();
@@ -1449,11 +1424,11 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 					if (g_dwFlags & AF_CATCH_EXCEPTIONS)
 						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, m_szDumpDir,
-												  "nxagentd", MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
+												  _T("nxagentd"), MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
 					__try {
 #endif
-					if ((!stricmp(g_szLogFile, "{syslog}")) || 
-						 (!stricmp(g_szLogFile, "{eventlog}")))
+					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) || 
+						 (!_tcsicmp(g_szLogFile, _T("{eventlog}"))))
 						g_dwFlags |= AF_USE_SYSLOG;
 
 #ifdef _WIN32
@@ -1469,7 +1444,7 @@ int main(int argc, char *argv[])
 						}
 						else
 						{
-							ConsolePrintf("Agent initialization failed\n");
+							ConsolePrintf(_T("Agent initialization failed\n"));
 							nxlog_close();
 							iExitCode = 3;
 						}
@@ -1508,7 +1483,7 @@ int main(int argc, char *argv[])
 						}
 						else
 						{
-							ConsolePrintf("Agent initialization failed\n");
+							ConsolePrintf(_T("Agent initialization failed\n"));
 							nxlog_close();
 							iExitCode = 3;
 						}
@@ -1525,20 +1500,20 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-					ConsolePrintf("Error parsing configuration file\n");
+					ConsolePrintf(_T("Error parsing configuration file\n"));
 					iExitCode = 2;
 				}
          }
          else
          {
-            ConsolePrintf("Error loading configuration file\n");
+            ConsolePrintf(_T("Error loading configuration file\n"));
             iExitCode = 2;
          }
          break;
       case ACTION_CHECK_CONFIG:
 			if (!g_config->loadIniConfig(g_szConfigFile, _T("agent")) || !g_config->parseTemplate(_T("agent"), m_cfgTemplate))
          {
-            ConsolePrintf("Configuration file check failed\n");
+            ConsolePrintf(_T("Configuration file check failed\n"));
             iExitCode = 2;
          }
          break;

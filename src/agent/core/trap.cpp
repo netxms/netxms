@@ -153,28 +153,24 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
 					ppArgList[i] = (TCHAR *)_T("");
             break;
          case 'd':
-            ppArgList[i] = (char *)malloc(16);
-            sprintf(ppArgList[i], "%d", va_arg(args, LONG));
+            ppArgList[i] = (TCHAR *)malloc(16);   //
+            _sntprintf(ppArgList[i], 16, _T("%d"), va_arg(args, LONG)); //
             break;
          case 'D':
-            ppArgList[i] = (char *)malloc(32);
-            sprintf(ppArgList[i], INT64_FMT, va_arg(args, INT64));
+            ppArgList[i] = (TCHAR *)malloc(32); //
+            _sntprintf(ppArgList[i], 32, INT64_FMT, va_arg(args, INT64)); //
             break;
          case 'x':
          case 'i':
-            ppArgList[i] = (char *)malloc(16);
-            sprintf(ppArgList[i], "0x%08X", va_arg(args, DWORD));
+            ppArgList[i] = (TCHAR *)malloc(16);  //
+            _sntprintf(ppArgList[i], 16, _T("0x%08X"), va_arg(args, DWORD));  //
             break;
          case 'X':
-            ppArgList[i] = (char *)malloc(32);
-#ifdef _WIN32
-            sprintf(ppArgList[i], "0x%016I64X", va_arg(args, QWORD));
-#else
-            sprintf(ppArgList[i], "0x%016llX", va_arg(args, QWORD));
-#endif
+            ppArgList[i] = (TCHAR *)malloc(32);
+            _sntprintf(ppArgList[i], 32, UINT64X_FMT(_T("016")), va_arg(args, QWORD));
             break;
          case 'a':
-            ppArgList[i] = (char *)malloc(16);
+            ppArgList[i] = (TCHAR *)malloc(16);
             IpToStr(va_arg(args, DWORD), ppArgList[i]);
             break;
          default:
@@ -190,6 +186,7 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
           (pszFormat[i] == 'D') || (pszFormat[i] == 'X') ||
           (pszFormat[i] == 'i') || (pszFormat[i] == 'a'))
          free(ppArgList[i]);
+
 }
 
 
@@ -205,6 +202,7 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, ...)
    va_start(args, pszFormat);
    SendTrap(dwEventCode, pszFormat, args);
    va_end(args);
+
 }
 
 
@@ -212,7 +210,7 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, ...)
 // Handler for trap statistic DCIs
 //
 
-LONG H_AgentTraps(const char *cmd, const char *arg, char *value)
+LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	switch(arg[0])
 	{

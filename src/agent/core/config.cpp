@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 // Externals
 //
 
-LONG H_PlatformName(const char *cmd, const char *arg, char *value);
+LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 
 //
@@ -76,9 +76,9 @@ BOOL DownloadConfig(TCHAR *pszServer)
 #ifdef _WIN32
    WSADATA wsaData;
 
-   if (WSAStartup(2, &wsaData) != 0)
+   if (WSAStartup(0x0202, &wsaData) != 0)
    {
-      printf("ERROR: Unable to initialize Windows Sockets\n");
+      _tprintf(_T("ERROR: Unable to initialize Windows Sockets\n"));
       return FALSE;
    }
 #endif
@@ -86,7 +86,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
    dwAddr = ResolveHostName(pszServer);
    if (dwAddr == INADDR_NONE)
    {
-      printf("ERROR: Unable to resolve name of management server\n");
+      _tprintf(_T("ERROR: Unable to resolve name of management server\n"));
       return FALSE;
    }
 
@@ -104,7 +104,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
          msg.SetCode(CMD_GET_MY_CONFIG);
          msg.SetId(1);
          if (H_PlatformName(NULL, NULL, szBuffer) != SYSINFO_RC_SUCCESS)
-            strcpy(szBuffer, "error");
+            _tcscpy(szBuffer, _T("error"));
          msg.SetVariable(VID_PLATFORM_NAME, szBuffer);
          msg.SetVariable(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
          msg.SetVariable(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);

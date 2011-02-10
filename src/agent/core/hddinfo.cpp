@@ -37,10 +37,10 @@
 
 //
 // Get value of specific attribute from SMART_ATA_VALUES structure
-//
+// 
 
 static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
-                              char *pValue, int nType)
+                              TCHAR *pValue, int nType)
 {
    int i;
    BOOL bResult = FALSE;
@@ -68,26 +68,27 @@ static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
 // Handler for PhysicalDisk.*
 //
 
-LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
+LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue)
 {
    LONG nRet = SYSINFO_RC_ERROR, nDisk, nCmd;
-   char szBuffer[128], *eptr;
+   TCHAR szBuffer[128], *eptr;                     //
+   BYTE pbValue[40];                               // 
    HANDLE hDevice;
    SENDCMDINPARAMS rq;
    SENDCMDOUTPARAMS *pResult;
    DWORD dwBytes;
    BOOL bSwapWords = FALSE;
-
+   //memset(pbValue, 0, sizeof(BYTE) * 40);
    if (!AgentGetParameterArg(pszParam, 1, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Get physical disk number (zero-based)
-   nDisk = strtol(szBuffer, &eptr, 0);
+   nDisk = _tcstol(szBuffer, &eptr, 0);             //
    if ((*eptr != 0) || (nDisk < 0) || (nDisk > 255))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Open device
-   sprintf(szBuffer, "\\\\.\\PHYSICALDRIVE%d", nDisk);
+   _sntprintf(szBuffer, 128, _T("\\\\.\\PHYSICALDRIVE%d"), nDisk);      //
    hDevice = CreateFile(szBuffer, GENERIC_READ | GENERIC_WRITE, 
                         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
    if (hDevice != INVALID_HANDLE_VALUE)
@@ -102,20 +103,20 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
       // Setup request-dependent fields
       switch(pszArg[0])
       {
-         case 'A':   // Generic SMART attribute
-         case 'T':   // Temperature
+         case _T('A'):   // Generic SMART attribute
+         case _T('T'):   // Temperature
             rq.irDriveRegs.bFeaturesReg = ATA_SMART_READ_VALUES;
             rq.irDriveRegs.bSectorNumberReg = 1;
             rq.irDriveRegs.bSectorCountReg = 1;
             nCmd = SMART_RCV_DRIVE_DATA;
             break;
-         case 'S':   // Disk status reported by SMART
+         case _T('S'):   // Disk status reported by SMART
             rq.irDriveRegs.bFeaturesReg = ATA_SMART_STATUS;
             nCmd = SMART_SEND_DRIVE_COMMAND;
             break;
-         case 'M':   // Model
-         case 'N':   // Serial number
-         case 'F':   // Firmware
+         case _T('M'):   // Model
+         case _T('N'):   // Serial number
+         case _T('F'):   // Firmware
             rq.irDriveRegs.bCommandReg = ATA_IDENTIFY_DEVICE;
 	         rq.irDriveRegs.bCylHighReg = 0;
             rq.irDriveRegs.bCylLowReg = 0;
@@ -144,12 +145,12 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
 #endif
          switch(pszArg[0])
          {
-            case 'A':   // Generic attribute
+            case _T('A'):   // Generic attribute
                if (AgentGetParameterArg(pszParam, 2, szBuffer, 128))
                {
                   LONG nAttr;
 
-                  nAttr = strtol(szBuffer, &eptr, 0);
+                  nAttr = _tcstol(szBuffer, &eptr, 0);
                   if ((*eptr != 0) || (nAttr <= 0) || (nAttr > 255))
                   {
                      nRet = SYSINFO_RC_UNSUPPORTED;
@@ -166,14 +167,14 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
                   nRet = SYSINFO_RC_UNSUPPORTED;
                }
                break;
-            case 'T':   // Temperature
+            case _T('T'):   // Temperature
                if (GetAttributeValue((ATA_SMART_VALUES *)pResult->bBuffer, 0xC2,
                                      pValue, ATTR_TYPE_BYTE))
                {
                   nRet = SYSINFO_RC_SUCCESS;
                }
                break;
-            case 'S':   // SMART status
+            case _T('S'):   // SMART status
                if ((((IDEREGS *)pResult->bBuffer)->bCylHighReg == SMART_CYL_HI) &&
                    (((IDEREGS *)pResult->bBuffer)->bCylLowReg == SMART_CYL_LOW))
                {
@@ -190,23 +191,44 @@ LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
                }
                nRet = SYSINFO_RC_SUCCESS;
                break;
-            case 'M':   // Model
-               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40);
+            case _T('M'):   // Model
+#if defined UNICODE
+				memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40); // has bug
+				pbValue[40] = 0;
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 40);
+               StrStrip(pValue);
+#else
+			   memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40); //
                pValue[40] = 0;
                StrStrip(pValue);
+#endif
                nRet = SYSINFO_RC_SUCCESS;
                break;
-            case 'N':   // Serial number
-               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20);
+            case _T('N'):   // Serial number
+#if defined UNICODE
+			   memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20); // has bug
+			   pbValue[20] = 0;
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 20);
+               StrStrip(pValue); 
+#else
+			   memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20); //
                pValue[20] = 0;
                StrStrip(pValue);
+#endif
                nRet = SYSINFO_RC_SUCCESS;
                break;
-            case 'F':   // Firmware
-               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8);
+            case _T('F'):   // Firmware
+#if defined UNICODE
+				memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8); // has bug
+			   pbValue[8] = 0;
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 8);
+               StrStrip(pValue); 
+#else
+				memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8);  //
                pValue[8] = 0;
                StrStrip(pValue);
-               nRet = SYSINFO_RC_SUCCESS;
+#endif
+				nRet = SYSINFO_RC_SUCCESS;
                break;
             default:
                nRet = SYSINFO_RC_UNSUPPORTED;
