@@ -79,7 +79,7 @@ public abstract class DashboardElement extends Composite
 		headerLayout.marginTop = 0;
 		headerArea.setLayout(headerLayout);
 		
-		clientArea = createClientArea(this);
+		clientArea = createClientAreaInternal();
 		
 		font = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);
 		setFont(font);
@@ -119,17 +119,27 @@ public abstract class DashboardElement extends Composite
 		setLayout(layout);
 		
 		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.grabExcessVerticalSpace = true;
-		clientArea.setLayoutData(gd);
-
-		gd = new GridData();
 		gd.horizontalAlignment = SWT.RIGHT;
 		gd.verticalAlignment = SWT.FILL;
 		gd.heightHint = HEADER_HEIGHT - layout.verticalSpacing;
 		headerArea.setLayoutData(gd);
+	}
+	
+	/**
+	 * Create client area control and do necessary configuration
+	 * 
+	 * @return
+	 */
+	private Control createClientAreaInternal()
+	{
+		Control ca = createClientArea(this);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		ca.setLayoutData(gd);
+		return ca;
 	}
 	
 	/**
@@ -280,5 +290,16 @@ public abstract class DashboardElement extends Composite
 	public void setDoubleClickAction(Action doubleClickAction)
 	{
 		this.doubleClickAction = doubleClickAction;
+	}
+	
+	/**
+	 * Dispose current client area and create new one by calling createClientArea
+	 */
+	public void replaceClientArea()
+	{
+		if (clientArea != null)
+			clientArea.dispose();
+		clientArea = createClientAreaInternal();
+		layout();
 	}
 }

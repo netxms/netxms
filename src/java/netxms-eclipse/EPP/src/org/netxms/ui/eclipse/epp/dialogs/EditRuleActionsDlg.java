@@ -1,9 +1,25 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.epp.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -26,7 +42,7 @@ import org.netxms.ui.eclipse.widgets.ImageCombo;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * @author victor
+ * Dialog for editing rule's actions
  *
  */
 public class EditRuleActionsDlg extends Dialog
@@ -362,5 +378,53 @@ public class EditRuleActionsDlg extends Dialog
 			group.setVisible(true);
 		}
 		((Composite)getDialogArea()).layout();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 */
+	@Override
+	protected void okPressed()
+	{
+		switch(alarmAction)
+		{
+			case ALARM_CREATE:
+				try
+				{
+					int t = Integer.parseInt(alarmTimeout.getText());
+					if (t < 0)
+					{
+						MessageDialog.openWarning(getShell(), "Warning", "Please enter valid timeout value (must be 0 or positive integer");
+						return;
+					}
+					rule.setAlarmTimeout(t);
+				}
+				catch(NumberFormatException e)
+				{
+					MessageDialog.openWarning(getShell(), "Warning", "Please enter valid timeout value (must be 0 or positive integer");
+					return;
+				}
+				rule.setAlarmMessage(alarmMessage.getText());
+				rule.setAlarmKey(alarmKeyCreate.getText());
+				rule.setAlarmSeverity(alarmSeverity.getSelectionIndex());
+				rule.setAlarmTimeoutEvent(timeoutEvent.getEventCode());
+				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
+				break;
+			case ALARM_TERMINATE:
+				rule.setAlarmKey(alarmKeyTerminate.getText());
+				rule.setAlarmSeverity(Severity.UNMANAGED);
+				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
+				break;
+			default:
+				rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.GENERATE_ALARM);
+				break;
+		}
+		
+		if (checkStopProcessing.getSelection())
+			rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.STOP_PROCESSING);
+		else
+			rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.STOP_PROCESSING);
+		
+		super.okPressed();
 	}
 }

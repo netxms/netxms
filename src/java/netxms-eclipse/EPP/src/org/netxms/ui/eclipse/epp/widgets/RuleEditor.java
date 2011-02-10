@@ -609,7 +609,8 @@ public class RuleEditor extends Composite
 		EditRuleActionsDlg dlg = new EditRuleActionsDlg(getShell(), rule);
 		if (dlg.open() == Window.OK)
 		{
-			
+			action.replaceClientArea();
+			editor.updateEditorAreaLayout();
 		}
 	}
 }
