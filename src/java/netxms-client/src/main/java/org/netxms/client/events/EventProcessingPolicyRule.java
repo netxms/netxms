@@ -313,4 +313,36 @@ public class EventProcessingPolicyRule
 	{
 		return situationAttributes;
 	}
+
+	/**
+	 * @param sources the sources to set
+	 */
+	public void setSources(List<Long> sources)
+	{
+		this.sources = sources;
+	}
+
+	/**
+	 * @param events the events to set
+	 */
+	public void setEvents(List<Long> events)
+	{
+		this.events = events;
+	}
+
+	/**
+	 * @param actions the actions to set
+	 */
+	public void setActions(List<Long> actions)
+	{
+		this.actions = actions;
+	}
+
+	/**
+	 * @param situationAttributes the situationAttributes to set
+	 */
+	public void setSituationAttributes(Map<String, String> situationAttributes)
+	{
+		this.situationAttributes = situationAttributes;
+	}
 }

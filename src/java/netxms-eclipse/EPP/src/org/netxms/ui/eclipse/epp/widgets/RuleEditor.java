@@ -48,7 +48,7 @@ import org.netxms.ui.eclipse.widgets.DashboardElement;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
- * Rule overview widget
+ * Rule editor widget
  *
  */
 public class RuleEditor extends Composite
@@ -489,7 +489,10 @@ public class RuleEditor extends Composite
 			}
 			else
 			{
-				addActionGroupLabel(clientArea, "Terminate alarms with key \"" + rule.getAlarmKey() + "\"", editor.getImageTerminate());
+				addActionGroupLabel(clientArea, "Terminate alarms", editor.getImageTerminate());
+				createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"");
+				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
+					createLabel(clientArea, 1, false, "(use regular expression for alarm termination)");
 			}
 		}
 		
@@ -606,7 +609,7 @@ public class RuleEditor extends Composite
 	 */
 	private void editActions()
 	{
-		EditRuleActionsDlg dlg = new EditRuleActionsDlg(getShell(), rule);
+		EditRuleActionsDlg dlg = new EditRuleActionsDlg(getShell(), editor, rule);
 		if (dlg.open() == Window.OK)
 		{
 			action.replaceClientArea();

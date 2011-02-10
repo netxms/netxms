@@ -18,9 +18,17 @@
  */
 package org.netxms.ui.eclipse.epp.dialogs;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -33,9 +41,13 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.epp.dialogs.helpers.ActionComparator;
+import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.ImageCombo;
@@ -51,8 +63,10 @@ public class EditRuleActionsDlg extends Dialog
 	private static final int ALARM_CREATE = 1;
 	private static final int ALARM_TERMINATE = 2;
 	
+	private EventProcessingPolicyEditor editor;
 	private EventProcessingPolicyRule rule;
 	private int alarmAction;
+	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	
 	private Button alarmNoAction;
 	private Button alarmCreate;
@@ -67,8 +81,8 @@ public class EditRuleActionsDlg extends Dialog
 	private LabeledText alarmKeyTerminate;
 	private Button checkTerminateWithRegexp;
 	private TableViewer actionList;
-	private Button addAction;
-	private Button removeAction;
+	private Button addActionButton;
+	private Button removeActionButton;
 	private Button checkStopProcessing;
 	
 	/**
@@ -76,10 +90,11 @@ public class EditRuleActionsDlg extends Dialog
 	 * 
 	 * @param parentShell
 	 */
-	public EditRuleActionsDlg(Shell parentShell, EventProcessingPolicyRule rule)
+	public EditRuleActionsDlg(Shell parentShell, EventProcessingPolicyEditor editor, EventProcessingPolicyRule rule)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
+		this.editor = editor;
 		this.rule = rule;
 		alarmAction = calculateAlarmAction();
 	}
@@ -313,18 +328,56 @@ public class EditRuleActionsDlg extends Dialog
 		gd.widthHint = 300;
 		gd.verticalSpan = 2;
 		actionList.getTable().setLayoutData(gd);
+		actionList.setLabelProvider(new WorkbenchLabelProvider());
+		actionList.setContentProvider(new ArrayContentProvider());
+		actionList.setComparator(new ActionComparator());
+		actions.putAll(editor.findServerActions(rule.getActions()));
+		actionList.setInput(actions.values().toArray());
 		
-		addAction = new Button(actionsGroup, SWT.PUSH);
-		addAction.setText("&Add...");
+		Composite actionButtonsGroup = new Composite(actionsGroup, SWT.NONE);
+		layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		actionButtonsGroup.setLayout(layout);
+		
+		addActionButton = new Button(actionButtonsGroup, SWT.PUSH);
+		addActionButton.setText("&Add...");
 		gd = new GridData();
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-		addAction.setLayoutData(gd);
+		addActionButton.setLayoutData(gd);
+		addActionButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				addAction();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 		
-		removeAction = new Button(actionsGroup, SWT.PUSH);
-		removeAction.setText("&Delete");
+		removeActionButton = new Button(actionButtonsGroup, SWT.PUSH);
+		removeActionButton.setText("&Delete");
 		gd = new GridData();
 		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-		removeAction.setLayoutData(gd);
+		removeActionButton.setLayoutData(gd);
+		removeActionButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				removeAction();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 		
 		/* options group */
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
@@ -414,11 +467,17 @@ public class EditRuleActionsDlg extends Dialog
 				rule.setAlarmKey(alarmKeyTerminate.getText());
 				rule.setAlarmSeverity(Severity.UNMANAGED);
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
+				if (checkTerminateWithRegexp.getSelection())
+					rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.TERMINATE_BY_REGEXP);
+				else
+					rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.TERMINATE_BY_REGEXP);
 				break;
 			default:
 				rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.GENERATE_ALARM);
 				break;
 		}
+		
+		rule.setActions(new ArrayList<Long>(actions.keySet()));
 		
 		if (checkStopProcessing.getSelection())
 			rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.STOP_PROCESSING);
@@ -426,5 +485,39 @@ public class EditRuleActionsDlg extends Dialog
 			rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.STOP_PROCESSING);
 		
 		super.okPressed();
+	}
+	
+	/**
+	 * Add action(s)
+	 */
+	private void addAction()
+	{
+		ActionSelectionDialog dlg = new ActionSelectionDialog(getShell(), editor.getActions());
+		dlg.enableMultiSelection(true);
+		if (dlg.open() == Window.OK)
+		{
+			for(ServerAction a : dlg.getSelectedActions())
+				actions.put(a.getId(), a);
+			actionList.setInput(actions.values().toArray());
+		}
+	}
+	
+	/**
+	 * Remove actions
+	 */
+	@SuppressWarnings("rawtypes")
+	private void removeAction()
+	{
+		IStructuredSelection selection = (IStructuredSelection)actionList.getSelection();
+		if (!selection.isEmpty())
+		{
+			Iterator it = selection.iterator();
+			while(it.hasNext())
+			{
+				ServerAction a = (ServerAction)it.next();
+				actions.remove(a.getId());
+			}
+			actionList.setInput(actions.values().toArray());
+		}
 	}
 }

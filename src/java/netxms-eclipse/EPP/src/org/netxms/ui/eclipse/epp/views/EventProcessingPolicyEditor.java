@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.epp.views;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -463,6 +464,34 @@ public class EventProcessingPolicyEditor extends ViewPart
 	public ServerAction findActionById(Long id)
 	{
 		return actions.get(id);
+	}
+	
+	/**
+	 * Find server actions for list of Ids
+	 * 
+	 * @param idList list of action identifiers
+	 * @return list of server actions
+	 */
+	public Map<Long, ServerAction> findServerActions(List<Long> idList)
+	{
+		Map<Long, ServerAction> resultSet = new HashMap<Long, ServerAction>();
+		for(Long id : idList)
+		{
+			ServerAction action = actions.get(id);
+			if (action != null)
+				resultSet.put(id, action);
+		}
+		return resultSet;
+	}
+	
+	/**
+	 * Return complete actions list
+	 * 
+	 * @return actions list
+	 */
+	public Collection<ServerAction> getActions()
+	{
+		return actions.values();
 	}
 
 	/**
