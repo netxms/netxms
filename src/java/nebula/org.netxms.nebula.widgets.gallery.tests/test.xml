@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<project name="testsuite" default="junits" basedir=".">
+	<property name="classname" value="org.netxms.nebula.widgets.gallery.tests.AllTests" />
+
+	<!-- The property ${eclipse-home} should be passed into this script -->
+	<!-- Set a meaningful default value for when it is not. -->
+	<property name="eclipse-home" value="${basedir}\..\.." />
+
+	<!-- sets the properties eclipse-home, and library-file -->
+	<property name="plugin-name" value="org.netxms.nebula.widgets.gallery.tests" />
+	<property name="library-file" value="${eclipse-home}/dropins/eclipse/plugins/org.eclipse.test/library.xml" />
+
+	<!-- buildDir=/home/www-data/build/gef/downloads/drops/3.4.0/N200801142250 -->
+	<!-- load org.eclipse.gef.releng/builder/tests/configs/local/testing.properties -->
+	<echo message="Load ${buildDir}/org.eclipse.${subprojectName2}.releng/builder/tests/configs/local/testing.properties" />
+	<property file="${buildDir}/org.eclipse.${subprojectName2}.releng/builder/tests/configs/local/testing.properties" />
+
+	<!-- This target holds all initialization code that needs to be done for -->
+	<!-- all tests that are to be run. Initialization for individual tests -->
+	<!-- should be done within the body of the suite target. -->
+	<target name="init">
+		<tstamp />
+		<delete>
+			<fileset dir="${eclipse-home}" includes="org*.xml" />
+		</delete>
+	</target>
+
+	<!-- This target defines the tests that need to be run. -->
+	<target name="suite">
+		<property name="gallery-folder" value="${eclipse-home}/gallery_folder" />
+		<delete dir="${gef-folder}" quiet="true" />
+		<ant target="ui-test" antfile="${library-file}" dir="${eclipse-home}">
+			<property name="data-dir" value="${gef-folder}" />
+			<property name="plugin-name" value="${plugin-name}" />
+			<property name="vmargs" value="${Dflags}" />
+			<property name="classname" value="${classname}" />
+		</ant>
+	</target>
+
+	<!-- This target holds code to cleanup the testing environment after -->
+	<!-- after all of the tests have been run. You can use this target to -->
+	<!-- delete temporary files that have been created. -->
+	<target name="cleanup">
+		<mkdir dir="${results}/consolelogs" />
+		<copy failonerror="false" file="${eclipse-home}/results/${classname}.txt" tofile="${results}/consolelogs/${classname}_${platform}.metadata.log.txt" />
+	</target>
+
+	<!-- This target runs the test suite. Any actions that need to happen -->
+	<!-- after all the tests have been run should go here. -->
+	<target name="junits" depends="init,suite,cleanup">
+		<ant target="collect" antfile="${library-file}" dir="${eclipse-home}">
+			<property name="includes" value="org*.xml" />
+			<property name="output-file" value="${plugin-name}.xml" />
+		</ant>
+	</target>
+
+</project>
