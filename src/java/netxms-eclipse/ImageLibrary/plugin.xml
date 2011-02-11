@@ -9,9 +9,28 @@
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.imagelibrary.views.ImageLibrary"
             icon="icons/imglib.png"
-            id="org.netxms.ui.eclipse.imagelibrary.views.ImageLibrary"
+            id="org.netxms.ui.eclipse.imagelibrary.view.imagelibrary"
             name="Image Library"
             restorable="true">
       </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.imagelibrary.action_set"
+            label="Image Library"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.imagelibrary.actions.OpenLibraryManager"
+               definitionId="org.netxms.ui.eclipse.imagelibrary.commands.open_library_manager"
+               icon="icons/imglib.png"
+               id="org.netxms.ui.eclipse.imagelibrary.actions.open"
+               label="Image Library"
+               menubarPath="config/additions"
+               style="push"
+               toolbarPath="config/additions"
+               tooltip="Open Image Library management">
+         </action>
+      </actionSet>
    </extension>
 </plugin>
