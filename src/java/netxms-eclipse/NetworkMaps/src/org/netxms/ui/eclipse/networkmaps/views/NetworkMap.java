@@ -211,7 +211,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		{
 			viewer.setLayoutAlgorithm(new ManualLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 		}
-		viewer.setNodeStyle(ZestStyles.NODES_NO_ANIMATION);
+		//viewer.setNodeStyle(ZestStyles.NODES_NO_ANIMATION);
 		viewer.setInput(mapPage);
 	}
 

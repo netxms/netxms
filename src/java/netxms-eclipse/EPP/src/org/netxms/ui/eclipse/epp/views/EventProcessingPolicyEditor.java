@@ -82,6 +82,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 	private Composite dataArea;
 	private List<RuleEditor> ruleEditors = new ArrayList<RuleEditor>();
 	private boolean verticalLayout = false;
+	private boolean modified = false;
 	
 	private Font headerFont;
 	private Font normalFont;
@@ -201,9 +202,11 @@ public class EventProcessingPolicyEditor extends ViewPart
 			@Override
 			public void run()
 			{
+				savePolicy();
 			}
 		};
 		actionSave.setImageDescriptor(SharedIcons.SAVE);
+		actionSave.setEnabled(false);
 
 		actionCollapseAll = new Action("&Collapse all") {
 			@Override
@@ -402,6 +405,41 @@ public class EventProcessingPolicyEditor extends ViewPart
 	{
 		dataArea.setFocus();
 	}
+	
+	/**
+	 * Save policy to server
+	 */
+	private void savePolicy()
+	{
+		actionSave.setEnabled(false);
+		new ConsoleJob("Save event processing policy", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				session.saveEventProcessingPolicy(policy);
+				modified = false;
+			}
+
+			@Override
+			protected void jobFinalize()
+			{
+				new UIJob("Update UI") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						actionSave.setEnabled(modified);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot save event processing policy";
+			}
+		}.start();
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
@@ -414,7 +452,7 @@ public class EventProcessingPolicyEditor extends ViewPart
 		
 		if (policyLocked)
 		{
-			new ConsoleJob("Close event processing policy", null, Activator.PLUGIN_ID, EventProcessingPolicyEditor.JOB_FAMILY) {
+			new ConsoleJob("Close event processing policy", null, Activator.PLUGIN_ID, JOB_FAMILY) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -564,5 +602,22 @@ public class EventProcessingPolicyEditor extends ViewPart
 	public Image getImageEdit()
 	{
 		return imageEdit;
+	}
+
+	/**
+	 * @return the modified
+	 */
+	public boolean isModified()
+	{
+		return modified;
+	}
+
+	/**
+	 * @param modified the modified to set
+	 */
+	public void setModified(boolean modified)
+	{
+		this.modified = modified;
+		actionSave.setEnabled(modified);
 	}
 }
