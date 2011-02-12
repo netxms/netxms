@@ -48,4 +48,47 @@
             sequence="F4">
       </key>
    </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleEvents"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10"
+            name="Events">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"
+            name="Source Objects">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter#20"
+            name="Severity Filter">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30"
+            name="Filtering Script">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
 </plugin>

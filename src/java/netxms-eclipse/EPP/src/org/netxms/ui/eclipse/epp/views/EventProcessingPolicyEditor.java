@@ -32,6 +32,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -45,6 +46,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
@@ -66,7 +68,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  * Event processing policy editor
  *
  */
-public class EventProcessingPolicyEditor extends ViewPart
+public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor";
 	public static final String JOB_FAMILY = "PolicyEditorJob";
@@ -417,13 +419,21 @@ public class EventProcessingPolicyEditor extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.saveEventProcessingPolicy(policy);
-				modified = false;
+				new UIJob("Update policy editor UI") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						modified = false;
+						firePropertyChange(PROP_DIRTY);
+						return Status.OK_STATUS;
+					}
+				}.schedule();
 			}
 
 			@Override
 			protected void jobFinalize()
 			{
-				new UIJob("Update UI") {
+				new UIJob("Update policy editor UI") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -619,5 +629,57 @@ public class EventProcessingPolicyEditor extends ViewPart
 	{
 		this.modified = modified;
 		actionSave.setEnabled(modified);
+		firePropertyChange(PROP_DIRTY);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+	 */
+	@Override
+	public void doSave(IProgressMonitor monitor)
+	{
+		try
+		{
+			session.saveEventProcessingPolicy(policy);
+		}
+		catch(Exception e)
+		{
+			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save event processing policy: " + e.getMessage());
+		}	
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+	 */
+	@Override
+	public void doSaveAs()
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isDirty()
+	 */
+	@Override
+	public boolean isDirty()
+	{
+		return modified;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+	 */
+	@Override
+	public boolean isSaveAsAllowed()
+	{
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+	 */
+	@Override
+	public boolean isSaveOnCloseNeeded()
+	{
+		return modified;
 	}
 }

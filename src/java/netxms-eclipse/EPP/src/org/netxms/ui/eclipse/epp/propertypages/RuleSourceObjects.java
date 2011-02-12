@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,16 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectmanager.propertypages;
+package org.netxms.ui.eclipse.epp.propertypages;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -42,61 +39,57 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- *"Trusted nodes" property page for NetXMS objects
+ * "Source objects" property page for EPP rule
  *
  */
-public class TrustedNodes extends PropertyPage
+public class RuleSourceObjects extends PropertyPage
 {
-	public static final int COLUMN_NAME = 0;
-	
-	private GenericObject object = null;
+	private NXCSession session;
+	private RuleEditor editor;
+	private EventProcessingPolicyRule rule;
 	private SortableTableViewer viewer;
+	private Map<Long, GenericObject> objects = new HashMap<Long, GenericObject>();
 	private Button addButton;
 	private Button deleteButton;
-	private HashMap<Long, GenericObject> trustedNodes = new HashMap<Long, GenericObject>(0);
-	private boolean isModified = false;
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
+		session = (NXCSession)ConsoleSharedData.getSession();
+		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
+		rule = editor.getRule();
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
-		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Node" };
+      final String[] columnNames = { "Object" };
       final int[] columnWidths = { 300 };
-      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                       SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new WorkbenchLabelProvider());
       viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
-      
-      GenericObject[] nodes = object.getTrustedNodes();
-      for(int i = 0; i < nodes.length; i++)
-      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
-      viewer.setInput(nodes);
+
+      for(GenericObject o : session.findMultipleObjects(rule.getSources().toArray(new Long[0])))
+      	objects.put(o.getObjectId(), o);
+      viewer.setInput(objects.values().toArray());
       
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -128,15 +121,7 @@ public class TrustedNodes extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
-				if (dlg.open() == Window.OK)
-				{
-					GenericObject[] nodes = dlg.getSelectedObjects(GenericObject.OBJECT_NODE);
-			      for(int i = 0; i < nodes.length; i++)
-			      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
-			      viewer.setInput(trustedNodes.values().toArray());
-			      isModified = true;
-				}
+				addEvent();
 			}
       });
       RowData rd = new RowData();
@@ -152,88 +137,60 @@ public class TrustedNodes extends PropertyPage
 				widgetSelected(e);
 			}
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				Iterator<GenericObject> it = selection.iterator();
-				if (it.hasNext())
-				{
-					while(it.hasNext())
-					{
-						GenericObject object = it.next();
-						trustedNodes.remove(object.getObjectId());
-					}
-			      viewer.setInput(trustedNodes.values().toArray());
-			      isModified = true;
-				}
+				deleteEvent();
 			}
       });
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-      
+		
 		return dialogArea;
+	}
+
+	/**
+	 * Add new event
+	 */
+	private void addEvent()
+	{
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
+		dlg.enableMultiSelection(true);
+		if (dlg.open() == Window.OK)
+		{
+			for(GenericObject o : dlg.getSelectedObjects())
+				objects.put(o.getObjectId(), o);
+		}
+      viewer.setInput(objects.values().toArray());
 	}
 	
 	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
+	 * Delete object from list
 	 */
-	protected void applyChanges(final boolean isApply)
+	@SuppressWarnings("unchecked")
+	private void deleteEvent()
 	{
-		if (!isModified)
-			return;		// Nothing to apply
-		
-		if (isApply)
-			setValid(false);
-		
-		new Job("Update trusted nodes for object " + object.getObjectName()) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		Iterator<GenericObject> it = selection.iterator();
+		if (it.hasNext())
+		{
+			while(it.hasNext())
 			{
-				IStatus status;
-				
-				try
-				{
-					if (object != null)
-					{
-						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-						Set<Long> idList = trustedNodes.keySet();
-						long[] nodes = new long[idList.size()];
-						int i = 0;
-						for(long id : idList)
-							nodes[i++] = id;
-						md.setTrustedNodes(nodes);
-						((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
-					}
-					isModified = false;
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot update trusted nodes list: " + e.getMessage(), null);
-				}
-
-				if (isApply)
-				{
-					new UIJob("Update \"Trusted Nodes\" property page") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							TrustedNodes.this.setValid(true);
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-
-				return status;
+				GenericObject o = it.next();
+				objects.remove(o.getObjectId());
 			}
-		}.schedule();
+	      viewer.setInput(objects.values().toArray());
+		}
+	}
+	
+	/**
+	 * Update rule object
+	 */
+	private void doApply()
+	{
+		rule.setSources(new ArrayList<Long>(objects.keySet()));
+		editor.setModified(true);
 	}
 
 	/* (non-Javadoc)
@@ -242,7 +199,7 @@ public class TrustedNodes extends PropertyPage
 	@Override
 	protected void performApply()
 	{
-		applyChanges(true);
+		doApply();
 	}
 
 	/* (non-Javadoc)
@@ -251,19 +208,7 @@ public class TrustedNodes extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		applyChanges(false);
-		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
-	@Override
-	protected void performDefaults()
-	{
-		trustedNodes.clear();
-		viewer.setInput(new GenericObject[0]);
-		isModified = true;
-		super.performDefaults();
+		doApply();
+		return super.performOk();
 	}
 }

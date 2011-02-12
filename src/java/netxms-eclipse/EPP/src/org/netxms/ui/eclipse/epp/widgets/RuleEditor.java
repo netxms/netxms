@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
@@ -51,6 +52,7 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
  * Rule editor widget
  *
  */
+@SuppressWarnings("restriction")
 public class RuleEditor extends Composite
 {
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
@@ -73,6 +75,7 @@ public class RuleEditor extends Composite
 	private DashboardElement condition;
 	private DashboardElement action;
 	private Label expandButton;
+	private boolean modified = false;
 	
 	/**
 	 * @param parent
@@ -112,6 +115,15 @@ public class RuleEditor extends Composite
 			}
 		};
 		configureLayout(condition);
+		final Action editRuleCondition = new Action() {
+			@Override
+			public void run()
+			{
+				editCondition("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
+			}
+		};
+		condition.addButton(new DashboardElementButton("Edit condition", editor.getImageEdit(), editRuleCondition));
+		condition.setDoubleClickAction(editRuleCondition);
 
 		action = new DashboardElement(mainArea, "Action") {
 			@Override
@@ -278,6 +290,33 @@ public class RuleEditor extends Composite
 	}
 	
 	/**
+	 * Create mouse listener for elements
+	 * 
+	 * @param pageId property page ID to be opened on double click
+	 * @return
+	 */
+	private MouseListener createMouseListener(final String pageId)
+	{
+		return new MouseListener() {
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+				editCondition(pageId);
+			}
+		};
+	}
+	
+	/**
 	 * Create condition summary control
 	 * 
 	 * @param parent
@@ -294,16 +333,18 @@ public class RuleEditor extends Composite
 		clientArea.setLayout(layout);
 		
 		boolean needAnd = false;
-		createLabel(clientArea, 0, true, "IF");
+		createLabel(clientArea, 0, true, "IF", null);
 		
 		/* events */
 		if (rule.getEvents().size() > 0)
 		{
-			addConditionGroupLabel(clientArea, "event code is one of the following:", needAnd);
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
+			addConditionGroupLabel(clientArea, "event code is one of the following:", needAnd, listener);
 			
 			for(Long code : rule.getEvents())
 			{
 				CLabel clabel = createCLabel(clientArea, 2, false);
+				clabel.addMouseListener(listener);
 				
 				EventTemplate event = session.findEventTemplateByCode(code);
 				if (event != null)
@@ -323,11 +364,13 @@ public class RuleEditor extends Composite
 		/* source */
 		if (rule.getSources().size() > 0)
 		{
-			addConditionGroupLabel(clientArea, "source object is one of the following:", needAnd);
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0");
+			addConditionGroupLabel(clientArea, "source object is one of the following:", needAnd, listener);
 			
 			for(Long id : rule.getSources())
 			{
 				CLabel clabel = createCLabel(clientArea, 2, false);
+				clabel.addMouseListener(listener);
 				
 				GenericObject object = session.findObjectById(id);
 				if (object != null)
@@ -346,22 +389,23 @@ public class RuleEditor extends Composite
 		/* severity */
 		if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_ANY) != EventProcessingPolicyRule.SEVERITY_ANY)
 		{
-			addConditionGroupLabel(clientArea, "event severity is one of the following:", needAnd);
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter#20");
+			addConditionGroupLabel(clientArea, "event severity is one of the following:", needAnd, listener);
 			
 			if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_NORMAL) != 0)
-				addSeverityLabel(clientArea, Severity.NORMAL);
+				addSeverityLabel(clientArea, Severity.NORMAL, listener);
 
 			if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_WARNING) != 0)
-				addSeverityLabel(clientArea, Severity.WARNING);
+				addSeverityLabel(clientArea, Severity.WARNING, listener);
 
 			if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_MINOR) != 0)
-				addSeverityLabel(clientArea, Severity.MINOR);
+				addSeverityLabel(clientArea, Severity.MINOR, listener);
 
 			if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_MAJOR) != 0)
-				addSeverityLabel(clientArea, Severity.MAJOR);
+				addSeverityLabel(clientArea, Severity.MAJOR, listener);
 
 			if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_CRITICAL) != 0)
-				addSeverityLabel(clientArea, Severity.CRITICAL);
+				addSeverityLabel(clientArea, Severity.CRITICAL, listener);
 			
 			needAnd = true;
 		}
@@ -369,7 +413,8 @@ public class RuleEditor extends Composite
 		/* script */
 		if ((rule.getScript() != null) && !rule.getScript().isEmpty())
 		{
-			addConditionGroupLabel(clientArea, "the following script returns true:", needAnd);
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30");
+			addConditionGroupLabel(clientArea, "the following script returns true:", needAnd, listener);
 			
 			ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER);
 			GridData gd = new GridData();
@@ -379,6 +424,7 @@ public class RuleEditor extends Composite
 			scriptEditor.setLayoutData(gd);
 			scriptEditor.setText(rule.getScript());
 			scriptEditor.getTextWidget().setEditable(false);
+			scriptEditor.getTextWidget().addMouseListener(listener);
 		}
 		
 		return clientArea;
@@ -393,7 +439,7 @@ public class RuleEditor extends Composite
 	 * @param text
 	 * @return
 	 */
-	private Label createLabel(Composite parent, int indent, boolean bold, String text)
+	private Label createLabel(Composite parent, int indent, boolean bold, String text, MouseListener mouseListener)
 	{
 		Label label = new Label(parent, SWT.NONE);
 		label.setBackground(BACKGROUND_COLOR);
@@ -403,6 +449,9 @@ public class RuleEditor extends Composite
 		GridData gd = new GridData();
 		gd.horizontalIndent = INDENT * indent;
 		label.setLayoutData(gd);
+		
+		if (mouseListener != null)
+			label.addMouseListener(mouseListener);
 		
 		return label;
 	}
@@ -435,11 +484,11 @@ public class RuleEditor extends Composite
 	 * @param title group's title
 	 * @param needAnd true if AND clause have to be added
 	 */
-	private void addConditionGroupLabel(Composite parent, String title, boolean needAnd)
+	private void addConditionGroupLabel(Composite parent, String title, boolean needAnd, MouseListener mouseListener)
 	{
 		if (needAnd)
-			createLabel(parent, 0, true, "AND");
-		createLabel(parent, 1, false, title);
+			createLabel(parent, 0, true, "AND", null);
+		createLabel(parent, 1, false, title, mouseListener);
 	}
 	
 	/**
@@ -448,11 +497,12 @@ public class RuleEditor extends Composite
 	 * @param parent parent composite
 	 * @param severity severity code
 	 */
-	private void addSeverityLabel(Composite parent, int severity)
+	private void addSeverityLabel(Composite parent, int severity, MouseListener mouseListener)
 	{
 		CLabel clabel = createCLabel(parent, 2, false);
 		clabel.setText(StatusDisplayInfo.getStatusText(severity));
 		clabel.setImage(StatusDisplayInfo.getStatusImage(severity));
+		clabel.addMouseListener(mouseListener);
 	}
 
 	/**
@@ -484,15 +534,15 @@ public class RuleEditor extends Composite
 				
 				if ((rule.getAlarmKey() != null) && !rule.getAlarmKey().isEmpty())
 				{
-					createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"");
+					createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"", null);
 				}
 			}
 			else
 			{
 				addActionGroupLabel(clientArea, "Terminate alarms", editor.getImageTerminate());
-				createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"");
+				createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"", null);
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
-					createLabel(clientArea, 1, false, "(use regular expression for alarm termination)");
+					createLabel(clientArea, 1, false, "(use regular expression for alarm termination)", null);
 			}
 		}
 		
@@ -614,6 +664,50 @@ public class RuleEditor extends Composite
 		{
 			action.replaceClientArea();
 			editor.updateEditorAreaLayout();
+			editor.setModified(true);
 		}
+	}
+	
+	/**
+	 * Edit rule's condition
+	 */
+	private void editCondition(String pageId)
+	{
+		PropertyDialog dlg = PropertyDialog.createDialogOn(editor.getSite().getShell(), pageId, this);
+		if (dlg != null)
+		{
+			modified = false;
+			dlg.open();
+			if (modified)
+			{
+				condition.replaceClientArea();
+				editor.updateEditorAreaLayout();
+				editor.setModified(true);
+			}
+		}
+	}
+
+	/**
+	 * @return the rule
+	 */
+	public EventProcessingPolicyRule getRule()
+	{
+		return rule;
+	}
+
+	/**
+	 * @return the modified
+	 */
+	public boolean isModified()
+	{
+		return modified;
+	}
+
+	/**
+	 * @param modified the modified to set
+	 */
+	public void setModified(boolean modified)
+	{
+		this.modified = modified;
 	}
 }

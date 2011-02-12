@@ -25,33 +25,32 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Container;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
+ * "Auto Bind" property page
  *
  */
 public class AutoBind extends PropertyPage
 {
 	private Container object;
 	private Button checkboxEnable;
-	private Text filterSource;
+	private ScriptEditor filterSource;
 	private boolean initialAutoBindFlag;
 	private String initialAutoBindFilter;
 
@@ -110,9 +109,8 @@ public class AutoBind extends PropertyPage
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
 		label.setLayoutData(gd);
       
-      filterSource = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(object.getAutoBindFilter());
-		filterSource.setFont(new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL));
 		filterSource.setEnabled(object.isAutoBindEnabled());
 		
 		gd = new GridData();

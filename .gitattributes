@@ -615,6 +615,10 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/EditCommentsDl
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/EditRuleActionsDlg.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/ActionComparator.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/ActionListFilter.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleEvents.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleFilterScript.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleSeverityFilter.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleSourceObjects.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/EventProcessingPolicyEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/RuleEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/ImageFactory.java -text
@@ -853,7 +857,6 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/Ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/Activator.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/AttrListLabelProvider.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/AttrViewerComparator.java -text
-src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/TrustedNodesComparator.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/AbstractNodePoll.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/AddClusterNode.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/BindObject.java -text
@@ -1109,6 +1112,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstant
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedFonts.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedIcons.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ColorConverter.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/ObjectLabelComparator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/StringComparator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetFactory.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetHelper.java -text

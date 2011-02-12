@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
+ * "General" property page for NetMS objects 
  *
  */
 public class General extends PropertyPage
