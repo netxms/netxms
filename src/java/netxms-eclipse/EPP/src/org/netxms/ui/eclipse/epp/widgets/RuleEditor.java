@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.epp.widgets;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.MouseEvent;
@@ -41,7 +40,6 @@ import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.epp.dialogs.EditRuleActionsDlg;
 import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -119,7 +117,7 @@ public class RuleEditor extends Composite
 			@Override
 			public void run()
 			{
-				editCondition("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
+				editRule("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
 			}
 		};
 		condition.addButton(new DashboardElementButton("Edit condition", editor.getImageEdit(), editRuleCondition));
@@ -139,7 +137,7 @@ public class RuleEditor extends Composite
 			@Override
 			public void run()
 			{
-				editActions();
+				editRule("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1");
 			}
 		};
 		action.addButton(new DashboardElementButton("Edit actions", editor.getImageEdit(), editRuleAction));
@@ -311,7 +309,7 @@ public class RuleEditor extends Composite
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
-				editCondition(pageId);
+				editRule(pageId);
 			}
 		};
 	}
@@ -524,13 +522,15 @@ public class RuleEditor extends Composite
 		/* alarm */
 		if ((rule.getFlags() & EventProcessingPolicyRule.GENERATE_ALARM) != 0)
 		{
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleAlarm#10");
 			if (rule.getAlarmSeverity() < Severity.UNMANAGED)
 			{
-				addActionGroupLabel(clientArea, "Generate alarm", editor.getImageAlarm());
+				addActionGroupLabel(clientArea, "Generate alarm", editor.getImageAlarm(), listener);
 				
 				CLabel clabel = createCLabel(clientArea, 1, false);
 				clabel.setImage(StatusDisplayInfo.getStatusImage(rule.getAlarmSeverity()));
 				clabel.setText(rule.getAlarmMessage());
+				clabel.addMouseListener(listener);
 				
 				if ((rule.getAlarmKey() != null) && !rule.getAlarmKey().isEmpty())
 				{
@@ -539,20 +539,22 @@ public class RuleEditor extends Composite
 			}
 			else
 			{
-				addActionGroupLabel(clientArea, "Terminate alarms", editor.getImageTerminate());
-				createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"", null);
+				addActionGroupLabel(clientArea, "Terminate alarms", editor.getImageTerminate(), listener);
+				createLabel(clientArea, 1, false, "with key \"" + rule.getAlarmKey() + "\"", listener);
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
-					createLabel(clientArea, 1, false, "(use regular expression for alarm termination)", null);
+					createLabel(clientArea, 1, false, "(use regular expression for alarm termination)", listener);
 			}
 		}
 		
 		/* actions */
 		if (rule.getActions().size() > 0)
 		{
-			addActionGroupLabel(clientArea, "Execute the following predefined actions:", editor.getImageExecute());
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleServerActions#30");
+			addActionGroupLabel(clientArea, "Execute the following predefined actions:", editor.getImageExecute(), listener);
 			for(Long id : rule.getActions())
 			{
 				CLabel clabel = createCLabel(clientArea, 1, false);
+				clabel.addMouseListener(listener);
 				ServerAction action = editor.findActionById(id);
 				if (action != null)
 				{
@@ -569,7 +571,8 @@ public class RuleEditor extends Composite
 		/* flags */
 		if ((rule.getFlags() & EventProcessingPolicyRule.STOP_PROCESSING) != 0)
 		{
-			addActionGroupLabel(clientArea, "Stop event processing", editor.getImageStop());
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1");
+			addActionGroupLabel(clientArea, "Stop event processing", editor.getImageStop(), listener);
 		}
 		
 		return clientArea;
@@ -582,11 +585,12 @@ public class RuleEditor extends Composite
 	 * @param title group's title
 	 * @param needAnd true if AND clause have to be added
 	 */
-	private void addActionGroupLabel(Composite parent, String title, Image image)
+	private void addActionGroupLabel(Composite parent, String title, Image image, MouseListener mouseListener)
 	{
 		CLabel label = createCLabel(parent, 0, true);
 		label.setImage(image);
 		label.setText(title);
+		label.addMouseListener(mouseListener);
 	}
 
 	/* (non-Javadoc)
@@ -655,23 +659,9 @@ public class RuleEditor extends Composite
 	}
 	
 	/**
-	 * Edit actions
-	 */
-	private void editActions()
-	{
-		EditRuleActionsDlg dlg = new EditRuleActionsDlg(getShell(), editor, rule);
-		if (dlg.open() == Window.OK)
-		{
-			action.replaceClientArea();
-			editor.updateEditorAreaLayout();
-			editor.setModified(true);
-		}
-	}
-	
-	/**
 	 * Edit rule's condition
 	 */
-	private void editCondition(String pageId)
+	private void editRule(String pageId)
 	{
 		PropertyDialog dlg = PropertyDialog.createDialogOn(editor.getSite().getShell(), pageId, this);
 		if (dlg != null)
@@ -681,6 +671,7 @@ public class RuleEditor extends Composite
 			if (modified)
 			{
 				condition.replaceClientArea();
+				action.replaceClientArea();
 				editor.updateEditorAreaLayout();
 				editor.setModified(true);
 			}
@@ -709,5 +700,13 @@ public class RuleEditor extends Composite
 	public void setModified(boolean modified)
 	{
 		this.modified = modified;
+	}
+
+	/**
+	 * @return the editor
+	 */
+	public EventProcessingPolicyEditor getEditorView()
+	{
+		return editor;
 	}
 }

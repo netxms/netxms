@@ -16,19 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.epp.dialogs;
+package org.netxms.ui.eclipse.epp.propertypages;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -38,36 +28,32 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.ServerAction;
+import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.epp.dialogs.helpers.ActionComparator;
-import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
+import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.ImageCombo;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Dialog for editing rule's actions
+ * "Alarm" property page for EPP rule
  *
  */
-public class EditRuleActionsDlg extends Dialog
+public class RuleAlarm extends PropertyPage
 {
 	private static final int ALARM_NO_ACTION = 0;
 	private static final int ALARM_CREATE = 1;
 	private static final int ALARM_TERMINATE = 2;
 	
-	private EventProcessingPolicyEditor editor;
+	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private int alarmAction;
-	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	
+	private Composite dialogArea;
 	private Button alarmNoAction;
 	private Button alarmCreate;
 	private Button alarmTerminate;
@@ -80,69 +66,31 @@ public class EditRuleActionsDlg extends Dialog
 	private EventSelector timeoutEvent;
 	private LabeledText alarmKeyTerminate;
 	private Button checkTerminateWithRegexp;
-	private TableViewer actionList;
-	private Button addActionButton;
-	private Button removeActionButton;
-	private Button checkStopProcessing;
-	
-	/**
-	 * Default constructor
-	 * 
-	 * @param parentShell
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
-	public EditRuleActionsDlg(Shell parentShell, EventProcessingPolicyEditor editor, EventProcessingPolicyRule rule)
+	@Override
+	protected Control createContents(Composite parent)
 	{
-		super(parentShell);
-		setShellStyle(getShellStyle() | SWT.RESIZE);
-		this.editor = editor;
-		this.rule = rule;
+		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
+		rule = editor.getRule();
 		alarmAction = calculateAlarmAction();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-		newShell.setText("Edit Rule Actions");
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	protected Control createDialogArea(Composite parent)
-	{
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
+		dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
-		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-		dialogArea.setLayout(layout);
-		
-		/* alarm group */
-		Group alarmGroup = new Group(dialogArea, SWT.NONE);
-		alarmGroup.setText("Alarm");
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		alarmGroup.setLayoutData(gd);
-		
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		alarmGroup.setLayout(layout);
-		
-		Composite radioGroup = new Composite(alarmGroup, SWT.NONE);
+		layout.verticalSpacing = WidgetHelper.OUTER_SPACING * 2;
+      dialogArea.setLayout(layout);
+
+		Composite radioGroup = new Composite(dialogArea, SWT.NONE);
 		RowLayout rbLayout = new RowLayout(SWT.VERTICAL);
 		rbLayout.marginBottom = 0;
 		rbLayout.marginTop = 0;
 		rbLayout.marginLeft = 0;
 		rbLayout.marginRight = 0;
 		radioGroup.setLayout(rbLayout);
-		gd = new GridData();
+		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		radioGroup.setLayoutData(gd);
 		
@@ -197,7 +145,7 @@ public class EditRuleActionsDlg extends Dialog
 			}
 		});
 		
-		alarmCreationGroup = new Composite(alarmGroup, SWT.NONE);
+		alarmCreationGroup = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -209,7 +157,6 @@ public class EditRuleActionsDlg extends Dialog
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
-		layout.marginLeft = 10;
 		alarmCreationGroup.setLayout(layout);
 		
 		alarmMessage = new LabeledText(alarmCreationGroup, SWT.NONE);
@@ -278,7 +225,7 @@ public class EditRuleActionsDlg extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		timeoutEvent.setLayoutData(gd);
 		
-		alarmTerminationGroup = new Composite(alarmGroup, SWT.NONE);
+		alarmTerminationGroup = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -290,7 +237,6 @@ public class EditRuleActionsDlg extends Dialog
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
-		layout.marginLeft = 10;
 		alarmTerminationGroup.setLayout(layout);
 		
 		alarmKeyTerminate = new LabeledText(alarmTerminationGroup, SWT.NONE);
@@ -304,97 +250,10 @@ public class EditRuleActionsDlg extends Dialog
 		checkTerminateWithRegexp = new Button(alarmTerminationGroup, SWT.CHECK);
 		checkTerminateWithRegexp.setText("Use regular expression for alarm termination");
 		checkTerminateWithRegexp.setSelection((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0);
-		
-		/* actions group */
-		Group actionsGroup = new Group(dialogArea, SWT.NONE);
-		actionsGroup.setText("Actions");
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		actionsGroup.setLayout(layout);
-		gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		actionsGroup.setLayoutData(gd);
-		
-		actionList = new TableViewer(actionsGroup);
-		gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		gd.heightHint = 150;
-		gd.widthHint = 300;
-		gd.verticalSpan = 2;
-		actionList.getTable().setLayoutData(gd);
-		actionList.setLabelProvider(new WorkbenchLabelProvider());
-		actionList.setContentProvider(new ArrayContentProvider());
-		actionList.setComparator(new ActionComparator());
-		actions.putAll(editor.findServerActions(rule.getActions()));
-		actionList.setInput(actions.values().toArray());
-		
-		Composite actionButtonsGroup = new Composite(actionsGroup, SWT.NONE);
-		layout = new GridLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-		actionButtonsGroup.setLayout(layout);
-		
-		addActionButton = new Button(actionButtonsGroup, SWT.PUSH);
-		addActionButton.setText("&Add...");
-		gd = new GridData();
-		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-		addActionButton.setLayoutData(gd);
-		addActionButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				addAction();
-			}
 
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		removeActionButton = new Button(actionButtonsGroup, SWT.PUSH);
-		removeActionButton.setText("&Delete");
-		gd = new GridData();
-		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-		removeActionButton.setLayoutData(gd);
-		removeActionButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				removeAction();
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		/* options group */
-		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText("Options");
-		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
-		gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		optionsGroup.setLayoutData(gd);
-		
-		checkStopProcessing = new Button(optionsGroup, SWT.CHECK);
-		checkStopProcessing.setText("Stop event processing");
-		checkStopProcessing.setSelection((rule.getFlags() & EventProcessingPolicyRule.STOP_PROCESSING) != 0);
-		
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Calculate alarm action for the rule
 	 * 
@@ -430,14 +289,13 @@ public class EditRuleActionsDlg extends Dialog
 			((GridData)group.getLayoutData()).exclude = false;
 			group.setVisible(true);
 		}
-		((Composite)getDialogArea()).layout();
+		dialogArea.layout();
 	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	
+	/**
+	 * Apply data
 	 */
-	@Override
-	protected void okPressed()
+	private boolean doApply()
 	{
 		switch(alarmAction)
 		{
@@ -448,14 +306,14 @@ public class EditRuleActionsDlg extends Dialog
 					if (t < 0)
 					{
 						MessageDialog.openWarning(getShell(), "Warning", "Please enter valid timeout value (must be 0 or positive integer");
-						return;
+						return false;
 					}
 					rule.setAlarmTimeout(t);
 				}
 				catch(NumberFormatException e)
 				{
 					MessageDialog.openWarning(getShell(), "Warning", "Please enter valid timeout value (must be 0 or positive integer");
-					return;
+					return false;
 				}
 				rule.setAlarmMessage(alarmMessage.getText());
 				rule.setAlarmKey(alarmKeyCreate.getText());
@@ -476,48 +334,25 @@ public class EditRuleActionsDlg extends Dialog
 				rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.GENERATE_ALARM);
 				break;
 		}
-		
-		rule.setActions(new ArrayList<Long>(actions.keySet()));
-		
-		if (checkStopProcessing.getSelection())
-			rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.STOP_PROCESSING);
-		else
-			rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.STOP_PROCESSING);
-		
-		super.okPressed();
+		editor.setModified(true);
+		return true;
 	}
 	
-	/**
-	 * Add action(s)
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
-	private void addAction()
+	@Override
+	protected void performApply()
 	{
-		ActionSelectionDialog dlg = new ActionSelectionDialog(getShell(), editor.getActions());
-		dlg.enableMultiSelection(true);
-		if (dlg.open() == Window.OK)
-		{
-			for(ServerAction a : dlg.getSelectedActions())
-				actions.put(a.getId(), a);
-			actionList.setInput(actions.values().toArray());
-		}
+		doApply();
 	}
-	
-	/**
-	 * Remove actions
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
-	@SuppressWarnings("rawtypes")
-	private void removeAction()
+	@Override
+	public boolean performOk()
 	{
-		IStructuredSelection selection = (IStructuredSelection)actionList.getSelection();
-		if (!selection.isEmpty())
-		{
-			Iterator it = selection.iterator();
-			while(it.hasNext())
-			{
-				ServerAction a = (ServerAction)it.next();
-				actions.remove(a.getId());
-			}
-			actionList.setInput(actions.values().toArray());
-		}
+		return doApply();
 	}
 }

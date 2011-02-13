@@ -62,7 +62,7 @@ public class ActionSelectionDialog extends Dialog
 	/**
 	 * @param parentShell
 	 */
-	protected ActionSelectionDialog(Shell parentShell, Collection<ServerAction> actions)
+	public ActionSelectionDialog(Shell parentShell, Collection<ServerAction> actions)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);

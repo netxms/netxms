@@ -51,6 +51,7 @@
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleEvents"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10"
             name="Events">
@@ -61,6 +62,7 @@
          </enabledWhen>
       </page>
       <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"
             name="Source Objects">
@@ -71,6 +73,7 @@
          </enabledWhen>
       </page>
       <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleSeverityFilter#20"
             name="Severity Filter">
@@ -81,9 +84,62 @@
          </enabledWhen>
       </page>
       <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
             class="org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript"
             id="org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30"
             name="Filtering Script">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleServerActions"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleServerActions#30"
+            name="Server Actions">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleCondition"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
+            name="Condition">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleAction"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            name="Action">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleAlarm"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleAlarm#10"
+            name="Alarm">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleComments"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleComments#2"
+            name="Comments">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
