@@ -311,6 +311,7 @@ public class RuleEditor extends Composite
 		expandButton.setBackground(TITLE_BACKGROUND_COLOR);
 		expandButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
+		expandButton.setToolTipText(collapsed ? "Expand rule" : "Collapse rule");
 		expandButton.addMouseListener(new MouseListener() {
 			private boolean doAction = false;
 			
@@ -717,6 +718,7 @@ public class RuleEditor extends Composite
 	{
 		this.collapsed = collapsed;
 		expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
+		expandButton.setToolTipText(collapsed ? "Expand rule" : "Collapse rule");
 		mainArea.setVisible(!collapsed);
 		((GridData)mainArea.getLayoutData()).exclude = collapsed;
 		((GridData)leftPanel.getLayoutData()).verticalSpan = collapsed ? 1 : 2;

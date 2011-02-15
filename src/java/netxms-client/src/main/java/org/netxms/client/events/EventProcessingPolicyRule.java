@@ -86,6 +86,27 @@ public class EventProcessingPolicyRule
 	}
 	
 	/**
+	 * Copy constructor
+	 */
+	public EventProcessingPolicyRule(EventProcessingPolicyRule src)
+	{
+		sources = new ArrayList<Long>(src.sources);
+		events = new ArrayList<Long>(src.events);
+		script = src.script;
+		flags = src.flags;
+		alarmKey = src.alarmKey;
+		alarmMessage = src.alarmMessage;
+		alarmSeverity = src.alarmSeverity;
+		alarmTimeout = src.alarmTimeout;
+		alarmTimeoutEvent = src.alarmTimeoutEvent;
+		actions = new ArrayList<Long>(src.actions);
+		situationId = src.situationId;
+		situationInstance = src.situationInstance;
+		situationAttributes = new HashMap<String, String>(src.situationAttributes);
+		comments = src.comments;
+	}
+	
+	/**
 	 * Create rule from NXCP message.
 	 * 
 	 * @param msg NXCP message

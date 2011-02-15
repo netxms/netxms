@@ -89,6 +89,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private boolean modified = false;
 	private Set<RuleEditor> selection = new HashSet<RuleEditor>();
 	private int lastSelectedRule = -1;
+	private List<EventProcessingPolicyRule> clipboard = new ArrayList<EventProcessingPolicyRule>(0);
 	
 	private Font headerFont;
 	private Font normalFont;
@@ -109,6 +110,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private Action actionExpandAll;
 	private Action actionInsertBefore;
 	private Action actionInsertAfter;
+	private Action actionCut;
+	private Action actionCopy;
+	private Action actionPaste;
 	private Action actionDelete;
 	
 	/* (non-Javadoc)
@@ -259,6 +263,36 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				insertRule(lastSelectedRule);
 			}
 		};
+
+		actionCut = new Action("Cu&t") {
+			@Override
+			public void run()
+			{
+				cutRules();
+			}
+		};
+		actionCut.setImageDescriptor(SharedIcons.CUT);
+		actionCut.setEnabled(false);
+
+		actionCopy = new Action("&Copy") {
+			@Override
+			public void run()
+			{
+				copyRules();
+			}
+		};
+		actionCopy.setImageDescriptor(SharedIcons.COPY);
+		actionCopy.setEnabled(false);
+
+		actionPaste = new Action("&Paste") {
+			@Override
+			public void run()
+			{
+				pasteRules();
+			}
+		};
+		actionPaste.setImageDescriptor(SharedIcons.PASTE);
+		actionPaste.setEnabled(false);
 	}
 	
 	/**
@@ -289,6 +323,11 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		manager.add(new Separator());
 		manager.add(actionInsertBefore);
 		manager.add(actionInsertAfter);
+		manager.add(new Separator());
+		manager.add(actionCut);
+		manager.add(actionCopy);
+		manager.add(actionPaste);
+		manager.add(new Separator());
 		manager.add(actionDelete);
 	}
 
@@ -307,6 +346,11 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		manager.add(new Separator());
 		manager.add(actionHorizontal);
 		manager.add(actionVertical);
+		manager.add(new Separator());
+		manager.add(actionCut);
+		manager.add(actionCopy);
+		manager.add(actionPaste);
+		manager.add(actionDelete);
 	}
 
 	/**
@@ -772,6 +816,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		actionDelete.setEnabled(selection.size() > 0);
 		actionInsertBefore.setEnabled(selection.size() == 1);
 		actionInsertAfter.setEnabled(selection.size() == 1);
+		actionCut.setEnabled(selection.size() > 0);
+		actionCopy.setEnabled(selection.size() > 0);
+		actionPaste.setEnabled((selection.size() == 1) && !clipboard.isEmpty());
 	}
 	
 	/**
@@ -824,6 +871,76 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		
 		setModified(true);
 	}
+	
+	/**
+	 * Cut selected rules to internal clipboard
+	 */
+	private void cutRules()
+	{
+		clipboard.clear();
+		actionPaste.setEnabled(true);
+		
+		for(RuleEditor e : selection)
+		{
+			clipboard.add(e.getRule());
+			policy.deleteRule(e.getRuleNumber() - 1);
+			ruleEditors.remove(e);
+			e.dispose();
+		}
+		
+		// Renumber rules
+		for(int i = 0; i < ruleEditors.size(); i++)
+			ruleEditors.get(i).setRuleNumber(i + 1);
+		
+		selection.clear();
+		lastSelectedRule = -1;
+		onSelectionChange();
+		
+		updateEditorAreaLayout();
+		setModified(true);
+	}
+
+	/**
+	 * Copy selected rules to internal clipboard
+	 */
+	private void copyRules()
+	{
+		clipboard.clear();
+		actionPaste.setEnabled(true);
+		
+		for(RuleEditor e : selection)
+			clipboard.add(new EventProcessingPolicyRule(e.getRule()));
+	}
+
+	/**
+	 * Paste rules from internal clipboard
+	 */
+	private void pasteRules()
+	{
+		int position = lastSelectedRule;
+		for(EventProcessingPolicyRule rule : clipboard)
+		{
+			policy.insertRule(rule, position);
+
+			RuleEditor editor = new RuleEditor(dataArea, rule, position + 1, this);
+			ruleEditors.add(position, editor);
+			GridData gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			editor.setLayoutData(gd);
+			
+			if (position < ruleEditors.size() - 1)
+				editor.moveAbove(ruleEditors.get(position + 1));
+			
+			position++;
+		}
+		
+		for(int i = position; i < ruleEditors.size(); i++)
+			ruleEditors.get(i).setRuleNumber(i + 1);
+		
+		updateEditorAreaLayout();
+		setModified(true);
+	}
 
 	/**
 	 * Fill context menu for rule
@@ -834,6 +951,11 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		manager.add(actionInsertBefore);
 		manager.add(actionInsertAfter);
+		manager.add(new Separator());
+		manager.add(actionCut);
+		manager.add(actionCopy);
+		manager.add(actionPaste);
+		manager.add(new Separator());
 		manager.add(actionDelete);
 	}
 }
