@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,8 @@ package org.netxms.client.events;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * This class represents NetXMS event processing policy.
- * 
- * @author Victor
  */
 public class EventProcessingPolicy
 {
@@ -49,6 +46,33 @@ public class EventProcessingPolicy
 	public void addRule(EventProcessingPolicyRule rule)
 	{
 		rules.add(rule);
+	}
+	
+	/**
+	 * Insert rule before rule at given position
+	 * 
+	 * @param rule rule to insert
+	 * @param index position to insert at
+	 */
+	public void insertRule(EventProcessingPolicyRule rule, int index)
+	{
+		rules.add(index, rule);
+	}
+
+	/**
+	 * Delete rule.
+	 * 
+	 * @param index zero-based index
+	 */
+	public void deleteRule(int index)
+	{
+		try
+		{
+			rules.remove(index);
+		}
+		catch(IndexOutOfBoundsException e)
+		{
+		}
 	}
 
 	/**

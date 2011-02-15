@@ -21,8 +21,10 @@ package org.netxms.ui.eclipse.epp.views;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -85,6 +87,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private List<RuleEditor> ruleEditors = new ArrayList<RuleEditor>();
 	private boolean verticalLayout = false;
 	private boolean modified = false;
+	private Set<RuleEditor> selection = new HashSet<RuleEditor>();
+	private int lastSelectedRule = -1;
 	
 	private Font headerFont;
 	private Font normalFont;
@@ -103,6 +107,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private Action actionSave;
 	private Action actionCollapseAll;
 	private Action actionExpandAll;
+	private Action actionInsertBefore;
+	private Action actionInsertAfter;
+	private Action actionDelete;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -168,7 +175,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 		createActions();
 		contributeToActionBars();
-		//createPopupMenu();
 		
 		openEventProcessingPolicy();
 	}
@@ -227,6 +233,32 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 		actionExpandAll.setImageDescriptor(SharedIcons.EXPAND_ALL);
+		
+		actionDelete = new Action("&Delete") {
+			@Override
+			public void run()
+			{
+				deleteSelectedRules();
+			}
+		};
+		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
+		actionDelete.setEnabled(false);
+
+		actionInsertBefore = new Action("Insert &before") {
+			@Override
+			public void run()
+			{
+				insertRule(lastSelectedRule - 1);
+			}
+		};
+
+		actionInsertAfter = new Action("Insert &after") {
+			@Override
+			public void run()
+			{
+				insertRule(lastSelectedRule);
+			}
+		};
 	}
 	
 	/**
@@ -254,6 +286,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		manager.add(new Separator());
 		manager.add(actionHorizontal);
 		manager.add(actionVertical);
+		manager.add(new Separator());
+		manager.add(actionInsertBefore);
+		manager.add(actionInsertAfter);
+		manager.add(actionDelete);
 	}
 
 	/**
@@ -681,5 +717,123 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	public boolean isSaveOnCloseNeeded()
 	{
 		return modified;
+	}
+	
+	/**
+	 * Clear selection
+	 */
+	private void clearSelection()
+	{
+		for(RuleEditor e : selection)
+			e.setSelected(false);
+		selection.clear();
+		lastSelectedRule = -1;
+	}
+	
+	/**
+	 * Set selection to given rule
+	 * 
+	 * @param e rule editor
+	 */
+	public void setSelection(RuleEditor e)
+	{
+		clearSelection();
+		addToSelection(e, false);
+	}
+	
+	/**
+	 * Add rule to selection
+	 * 
+	 * @param e rule editor
+	 */
+	public void addToSelection(RuleEditor e, boolean allFromPrevSelection)
+	{
+		if (allFromPrevSelection && (lastSelectedRule != -1))
+		{
+			int direction = Integer.signum(e.getRuleNumber() - lastSelectedRule);
+			for(int i = lastSelectedRule + direction; i != e.getRuleNumber(); i += direction)
+			{
+				RuleEditor r = ruleEditors.get(i - 1);
+				selection.add(r);
+				r.setSelected(true);
+			}
+		}
+		selection.add(e);
+		e.setSelected(true);
+		lastSelectedRule = e.getRuleNumber();
+		onSelectionChange();
+	}
+	
+	/**
+	 * Internal handler for selection change
+	 */
+	private void onSelectionChange()
+	{
+		actionDelete.setEnabled(selection.size() > 0);
+		actionInsertBefore.setEnabled(selection.size() == 1);
+		actionInsertAfter.setEnabled(selection.size() == 1);
+	}
+	
+	/**
+	 * Delete selected rules
+	 */
+	private void deleteSelectedRules()
+	{
+		for(RuleEditor e : selection)
+		{
+			policy.deleteRule(e.getRuleNumber() - 1);
+			ruleEditors.remove(e);
+			e.dispose();
+		}
+		
+		// Renumber rules
+		for(int i = 0; i < ruleEditors.size(); i++)
+			ruleEditors.get(i).setRuleNumber(i + 1);
+		
+		selection.clear();
+		lastSelectedRule = -1;
+		onSelectionChange();
+		
+		updateEditorAreaLayout();
+		setModified(true);
+	}
+
+	/**
+	 * Insert new rule at given position
+	 * 
+	 * @param position
+	 */
+	private void insertRule(int position)
+	{
+		EventProcessingPolicyRule rule = new EventProcessingPolicyRule();
+		policy.insertRule(rule, position);
+		
+		RuleEditor editor = new RuleEditor(dataArea, rule, position + 1, this);
+		ruleEditors.add(position, editor);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		editor.setLayoutData(gd);
+		
+		for(int i = position + 1; i < ruleEditors.size(); i++)
+			ruleEditors.get(i).setRuleNumber(i + 1);
+		
+		if (position < ruleEditors.size() - 1)
+			editor.moveAbove(ruleEditors.get(position + 1));
+		updateEditorAreaLayout();
+		
+		setModified(true);
+	}
+
+	/**
+	 * Fill context menu for rule
+	 * 
+	 * @param manager menu manager
+	 */
+	public void fillRuleContextMenu(IMenuManager manager)
+	{
+		manager.add(actionInsertBefore);
+		manager.add(actionInsertAfter);
+		manager.add(actionDelete);
 	}
 }

@@ -19,6 +19,9 @@
 package org.netxms.ui.eclipse.epp.widgets;
 
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.MouseEvent;
@@ -31,6 +34,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
@@ -55,6 +59,7 @@ public class RuleEditor extends Composite
 {
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
 	private static final Color TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 225, 233, 241);
+	private static final Color SELECTED_TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 245, 249, 104);
 	private static final Color RULE_BORDER_COLOR = new Color(Display.getDefault(), 153, 180, 209);
 	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getDefault(), 198,214,172);
 	private static final Color ACTION_BORDER_COLOR = new Color(Display.getDefault(), 186,176,201);
@@ -69,11 +74,13 @@ public class RuleEditor extends Composite
 	private boolean collapsed = true;
 	private boolean verticalLayout = false;
 	private Composite leftPanel;
+	private Label ruleNumberLabel;
 	private Composite mainArea;
 	private DashboardElement condition;
 	private DashboardElement action;
 	private Label expandButton;
 	private boolean modified = false;
+	private boolean selected = false;
 	
 	/**
 	 * @param parent
@@ -171,8 +178,36 @@ public class RuleEditor extends Composite
 	 */
 	private void createLeftPanel()
 	{
+		final MouseListener mouseListener = new MouseListener() {
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+			}
+
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+				switch(e.button)
+				{
+					case 1:
+						processRuleMouseEvent(e);
+						break;
+					default:
+						if (!selected)
+							editor.setSelection(RuleEditor.this);
+						break;
+				}
+			}
+
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+			}
+		};
+		
 		leftPanel = new Composite(this, SWT.NONE);
 		leftPanel.setBackground(TITLE_BACKGROUND_COLOR);
+		leftPanel.addMouseListener(mouseListener);
 		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -186,21 +221,47 @@ public class RuleEditor extends Composite
 		gd.grabExcessVerticalSpace = true;
 		leftPanel.setLayoutData(gd);		
 		
-		Label label = new Label(leftPanel, SWT.NONE);
-		label.setText(Integer.toString(ruleNumber));
-		label.setFont(editor.getBoldFont());
-		label.setBackground(TITLE_BACKGROUND_COLOR);
-		label.setForeground(TITLE_COLOR);
-		label.setAlignment(SWT.CENTER);
+		ruleNumberLabel = new Label(leftPanel, SWT.NONE);
+		ruleNumberLabel.setText(Integer.toString(ruleNumber));
+		ruleNumberLabel.setFont(editor.getBoldFont());
+		ruleNumberLabel.setBackground(TITLE_BACKGROUND_COLOR);
+		ruleNumberLabel.setForeground(TITLE_COLOR);
+		ruleNumberLabel.setAlignment(SWT.CENTER);
+		ruleNumberLabel.addMouseListener(mouseListener);
 		
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.CENTER;
 		gd.verticalAlignment = SWT.CENTER;
 		gd.grabExcessVerticalSpace = true;
 		gd.widthHint = 30;
-		label.setLayoutData(gd);
+		ruleNumberLabel.setLayoutData(gd);
+		
+		createPopupMenu(new Control[] { leftPanel, ruleNumberLabel });
 	}
-	
+
+	/**
+	 * Create popup menu for given controls
+	 * 
+	 * @param controls
+	 */
+	private void createPopupMenu(final Control[] controls)
+	{
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				editor.fillRuleContextMenu(mgr);
+			}
+		});
+
+		for(Control c : controls)
+		{
+			Menu menu = menuMgr.createContextMenu(c);
+			c.setMenu(menu);
+		}
+	}
+		
 	/**
 	 * Create rule header
 	 */
@@ -231,7 +292,8 @@ public class RuleEditor extends Composite
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
-				setCollapsed(!isCollapsed(), true);
+				if (e.button == 1)
+					setCollapsed(!isCollapsed(), true);
 			}
 
 			@Override
@@ -255,19 +317,21 @@ public class RuleEditor extends Composite
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
-				doAction = false;
+				if (e.button == 1)
+					doAction = false;
 			}
 
 			@Override
 			public void mouseDown(MouseEvent e)
 			{
-				doAction = true;
+				if (e.button == 1)
+					doAction = true;
 			}
 
 			@Override
 			public void mouseUp(MouseEvent e)
 			{
-				if (doAction)
+				if ((e.button == 1) && doAction)
 					setCollapsed(!isCollapsed(), true);
 			}
 		});
@@ -336,7 +400,7 @@ public class RuleEditor extends Composite
 		/* events */
 		if (rule.getEvents().size() > 0)
 		{
-			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0");
 			addConditionGroupLabel(clientArea, "event code is one of the following:", needAnd, listener);
 			
 			for(Long code : rule.getEvents())
@@ -606,7 +670,7 @@ public class RuleEditor extends Composite
 	/**
 	 * @return the ruleNumber
 	 */
-	protected int getRuleNumber()
+	public int getRuleNumber()
 	{
 		return ruleNumber;
 	}
@@ -614,9 +678,11 @@ public class RuleEditor extends Composite
 	/**
 	 * @param ruleNumber the ruleNumber to set
 	 */
-	protected void setRuleNumber(int ruleNumber)
+	public void setRuleNumber(int ruleNumber)
 	{
 		this.ruleNumber = ruleNumber;
+		ruleNumberLabel.setText(Integer.toString(ruleNumber));
+		leftPanel.layout();
 	}
 
 	/**
@@ -708,5 +774,51 @@ public class RuleEditor extends Composite
 	public EventProcessingPolicyEditor getEditorView()
 	{
 		return editor;
+	}
+	
+	/**
+	 * Process mouse click on rule number
+	 * 
+	 * @param e mouse event
+	 */
+	private void processRuleMouseEvent(MouseEvent e)
+	{
+		boolean ctrlPressed = (e.stateMask & SWT.CTRL) != 0;
+		boolean shiftPressed = (e.stateMask & SWT.SHIFT) != 0;
+		
+		if (ctrlPressed)
+		{
+			editor.addToSelection(this, false);
+		}
+		else if (shiftPressed)
+		{
+			editor.addToSelection(this, true);
+		}
+		else
+		{
+			editor.setSelection(this);
+		}
+	}
+
+	/**
+	 * @return the selected
+	 */
+	public boolean isSelected()
+	{
+		return selected;
+	}
+
+	/**
+	 * Set selection status
+	 * 
+	 * @param selected the selected to set
+	 */
+	public void setSelected(boolean selected)
+	{
+		this.selected = selected;
+		leftPanel.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : TITLE_BACKGROUND_COLOR);
+		for(Control c : leftPanel.getChildren())
+			c.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : TITLE_BACKGROUND_COLOR);
+		leftPanel.redraw();
 	}
 }
