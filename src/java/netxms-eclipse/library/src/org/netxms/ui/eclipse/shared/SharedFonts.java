@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.shared;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 
 /**
  * Shared console fonts
@@ -36,7 +35,7 @@ public class SharedFonts
 	 */
 	public static void init()
 	{
-		Display display = PlatformUI.getWorkbench().getDisplay();
+		Display display = Display.getCurrent();
 		
 		CONSOLE = new Font(display, "Courier New", 10, SWT.NORMAL);
 	}
