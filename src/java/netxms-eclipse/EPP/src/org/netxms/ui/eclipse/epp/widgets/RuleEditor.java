@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.epp.widgets;
 
+import java.util.Map.Entry;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -75,6 +76,7 @@ public class RuleEditor extends Composite
 	private boolean verticalLayout = false;
 	private Composite leftPanel;
 	private Label ruleNumberLabel;
+	private Label headerLabel;
 	private Composite mainArea;
 	private DashboardElement condition;
 	private DashboardElement action;
@@ -124,7 +126,7 @@ public class RuleEditor extends Composite
 			@Override
 			public void run()
 			{
-				editRule("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
+				editRule("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0");
 			}
 		};
 		condition.addButton(new DashboardElementButton("Edit condition", editor.getImageEdit(), editRuleCondition));
@@ -271,7 +273,7 @@ public class RuleEditor extends Composite
 		header.setBackground(TITLE_BACKGROUND_COLOR);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+		layout.numColumns = 3;
 		header.setLayout(layout);
 		
 		GridData gd = new GridData();
@@ -279,16 +281,16 @@ public class RuleEditor extends Composite
 		gd.grabExcessHorizontalSpace = true;
 		header.setLayoutData(gd);
 		
-		Label label = new Label(header, SWT.NONE);
-		label.setText(rule.getComments());
-		label.setBackground(TITLE_BACKGROUND_COLOR);
-		label.setForeground(TITLE_COLOR);
-		label.setFont(editor.getNormalFont());
+		headerLabel = new Label(header, SWT.NONE);
+		headerLabel.setText(rule.getComments());
+		headerLabel.setBackground(TITLE_BACKGROUND_COLOR);
+		headerLabel.setForeground(TITLE_COLOR);
+		headerLabel.setFont(editor.getNormalFont());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		label.setLayoutData(gd);
-		label.addMouseListener(new MouseListener() {
+		headerLabel.setLayoutData(gd);
+		headerLabel.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -304,6 +306,36 @@ public class RuleEditor extends Composite
 			@Override
 			public void mouseUp(MouseEvent e)
 			{
+			}
+		});
+		
+		Label editButton = new Label(header, SWT.NONE);
+		editButton.setBackground(TITLE_BACKGROUND_COLOR);
+		editButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+		editButton.setImage(editor.getImageEdit());
+		editButton.setToolTipText("Edit rule");
+		editButton.addMouseListener(new MouseListener() {
+			private boolean doAction = false;
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+				if (e.button == 1)
+					doAction = false;
+			}
+
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+				if (e.button == 1)
+					doAction = true;
+			}
+
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+				if ((e.button == 1) && doAction)
+					editRule("org.netxms.ui.eclipse.epp.propertypages.RuleComments#2");
 			}
 		});
 		
@@ -398,32 +430,6 @@ public class RuleEditor extends Composite
 		boolean needAnd = false;
 		createLabel(clientArea, 0, true, "IF", null);
 		
-		/* events */
-		if (rule.getEvents().size() > 0)
-		{
-			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0");
-			addConditionGroupLabel(clientArea, "event code is one of the following:", needAnd, listener);
-			
-			for(Long code : rule.getEvents())
-			{
-				CLabel clabel = createCLabel(clientArea, 2, false);
-				clabel.addMouseListener(listener);
-				
-				EventTemplate event = session.findEventTemplateByCode(code);
-				if (event != null)
-				{
-					clabel.setText(event.getName());
-					clabel.setImage(StatusDisplayInfo.getStatusImage(event.getSeverity()));
-				}
-				else
-				{
-					clabel.setText("<" + code.toString() + ">");
-					clabel.setImage(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN));
-				}
-			}
-			needAnd = true;
-		}
-		
 		/* source */
 		if (rule.getSources().size() > 0)
 		{
@@ -444,6 +450,32 @@ public class RuleEditor extends Composite
 				else
 				{
 					clabel.setText("[" + id.toString() + "]");
+				}
+			}
+			needAnd = true;
+		}
+		
+		/* events */
+		if (rule.getEvents().size() > 0)
+		{
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10");
+			addConditionGroupLabel(clientArea, "event code is one of the following:", needAnd, listener);
+			
+			for(Long code : rule.getEvents())
+			{
+				CLabel clabel = createCLabel(clientArea, 2, false);
+				clabel.addMouseListener(listener);
+				
+				EventTemplate event = session.findEventTemplateByCode(code);
+				if (event != null)
+				{
+					clabel.setText(event.getName());
+					clabel.setImage(StatusDisplayInfo.getStatusImage(event.getSeverity()));
+				}
+				else
+				{
+					clabel.setText("<" + code.toString() + ">");
+					clabel.setImage(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN));
 				}
 			}
 			needAnd = true;
@@ -611,6 +643,19 @@ public class RuleEditor extends Composite
 			}
 		}
 		
+		/* situation */
+		if (rule.getSituationId() != 0)
+		{
+			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSituation#20");
+			addActionGroupLabel(clientArea, "Update situation object", editor.getImageSituation(), listener);
+			createLabel(clientArea, 1, false, "instance \"" + rule.getSituationInstance() + "\"", listener);
+			createLabel(clientArea, 1, false, "attributes:", listener);
+			for(Entry<String, String> e : rule.getSituationAttributes().entrySet())
+			{
+				createLabel(clientArea, 2, false, e.getKey() + " = \"" + e.getValue() + "\"", listener);
+			}
+		}
+		
 		/* actions */
 		if (rule.getActions().size() > 0)
 		{
@@ -738,6 +783,7 @@ public class RuleEditor extends Composite
 			dlg.open();
 			if (modified)
 			{
+				headerLabel.setText(rule.getComments());
 				condition.replaceClientArea();
 				action.replaceClientArea();
 				editor.updateEditorAreaLayout();

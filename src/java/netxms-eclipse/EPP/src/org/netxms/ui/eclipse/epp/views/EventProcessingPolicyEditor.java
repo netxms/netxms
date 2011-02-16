@@ -96,6 +96,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private Font boldFont;
 	
 	private Image imageAlarm;
+	private Image imageSituation;
 	private Image imageExecute;
 	private Image imageTerminate;
 	private Image imageStop;
@@ -136,6 +137,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		
 		imageStop = Activator.getImageDescriptor("icons/stop.png").createImage();
 		imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage();
+		imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage();
 		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage();
 		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage();
 		imageCollapse = SharedIcons.COLLAPSE.createImage();
@@ -957,5 +959,13 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		manager.add(actionPaste);
 		manager.add(new Separator());
 		manager.add(actionDelete);
+	}
+
+	/**
+	 * @return the imageSituation
+	 */
+	public Image getImageSituation()
+	{
+		return imageSituation;
 	}
 }

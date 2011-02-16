@@ -604,6 +604,7 @@ src/java/netxms-eclipse/EPP/icons/alarm.png -text
 src/java/netxms-eclipse/EPP/icons/epp.png -text
 src/java/netxms-eclipse/EPP/icons/execute.png -text
 src/java/netxms-eclipse/EPP/icons/h_layout.gif -text
+src/java/netxms-eclipse/EPP/icons/situation.gif -text
 src/java/netxms-eclipse/EPP/icons/stop.png -text
 src/java/netxms-eclipse/EPP/icons/terminate.png -text
 src/java/netxms-eclipse/EPP/icons/v_layout.gif -text
