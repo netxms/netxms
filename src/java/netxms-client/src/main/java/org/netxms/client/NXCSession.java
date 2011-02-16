@@ -96,6 +96,7 @@ import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.situations.Situation;
 import org.netxms.client.snmp.SnmpTrap;
 
 /**
@@ -357,6 +358,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 						case NXCPCodes.CMD_TRAP_CFG_UPDATE:
 							processTrapConfigChange(msg);
 							break;
+						case NXCPCodes.CMD_SITUATION_CHANGE:
+							processSituationChange(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -489,6 +493,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			long id = msg.getVariableAsInt64(NXCPCodes.VID_TRAP_ID);
 			SnmpTrap trap = (code != NXCNotification.TRAP_CONFIGURATION_DELETED) ? new SnmpTrap(msg) : null;
 			sendNotification(new NXCNotification(code, id, trap));
+		}
+
+		/**
+		 * Process server notification on situation object change
+		 * 
+		 * @param msg notification message
+		 */
+		private void processSituationChange(final NXCPMessage msg)
+		{
+			int code = msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.SITUATION_BASE;
+			Situation s = new Situation(msg);
+			sendNotification(new NXCNotification(code, s.getId(), s));
 		}
 
 		/**
@@ -3873,5 +3889,101 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				listener.onPollerMessage(response.getVariableAsString(NXCPCodes.VID_POLLER_MESSAGE));
 		}
 		while(rcc == RCC.OPERATION_IN_PROGRESS);
+	}
+	
+	/**
+	 * Get list of all configured situations
+	 * 
+	 * @return list of situation objects
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<Situation> getSituations() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SITUATION_LIST);
+		sendMessage(msg);
+		
+		NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_SITUATION_COUNT);
+		List<Situation> list = new ArrayList<Situation>(count);
+		for(int i = 0; i < count; i++)
+		{
+			response = waitForMessage(NXCPCodes.CMD_SITUATION_DATA, msg.getMessageId());
+			list.add(new Situation(response));
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * Create new situation object.
+	 * 
+	 * @param name name for new situation object
+	 * @param comments comments for new situation object
+	 * @return id assigned to created situation object
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long createSituation(String name, String comments) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_SITUATION);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_SITUATION_ID);
+	}
+	
+	/**
+	 * Modify situation object.
+	 * 
+	 * @param id situation id
+	 * @param name new name or null to leave unchanged
+	 * @param comments new comments or null to leave unchanged
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifySituation(long id, String name, String comments) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SITUATION);
+		msg.setVariableInt32(NXCPCodes.VID_SITUATION_ID, (int)id);
+		if (name != null)
+			msg.setVariable(NXCPCodes.VID_NAME, name);
+		if (comments != null)
+			msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Delete situation object
+	 * 
+	 * @param id situation id
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteSituation(long id) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_SITUATION);
+		msg.setVariableInt32(NXCPCodes.VID_SITUATION_ID, (int)id);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Delete situation instance
+	 * 
+	 * @param id situation id
+	 * @param instance situation instance
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteSituationInstance(long id, String instance) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DEL_SITUATION_INSTANCE);
+		msg.setVariableInt32(NXCPCodes.VID_SITUATION_ID, (int)id);
+		msg.setVariable(NXCPCodes.VID_SITUATION_INSTANCE, instance);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }
