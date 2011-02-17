@@ -49,7 +49,7 @@ public class RuleFilterScript extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		dialogArea.setLayout(new FillLayout());
 
-      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
 		scriptEditor.setText(rule.getScript());
 		
 		return dialogArea;

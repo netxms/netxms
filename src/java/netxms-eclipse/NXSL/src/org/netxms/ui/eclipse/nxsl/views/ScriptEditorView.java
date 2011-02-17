@@ -92,7 +92,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		parent.setLayout(new FillLayout());
 		
-		editor = new ScriptEditor(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
 		editor.getTextWidget().addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)

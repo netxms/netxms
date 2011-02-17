@@ -20,13 +20,13 @@ package org.netxms.ui.eclipse.epp.dialogs.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.ServerAction;
+import org.netxms.client.situations.Situation;
 
 /**
- * Filter for action list
+ * Filter for situation list
  *
  */
-public class ActionListFilter extends ViewerFilter
+public class SituationListFilter extends ViewerFilter
 {
 	private String filterString = null;
 	
@@ -39,7 +39,7 @@ public class ActionListFilter extends ViewerFilter
 		if (filterString == null)
 			return true;
 		
-		return ((ServerAction)element).getName().toLowerCase().contains(filterString);
+		return ((Situation)element).getName().toLowerCase().contains(filterString);
 	}
 
 	/**

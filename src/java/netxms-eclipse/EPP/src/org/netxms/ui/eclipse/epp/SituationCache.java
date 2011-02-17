@@ -94,6 +94,22 @@ public class SituationCache
 	}
 	
 	/**
+	 * Get list of all situation objects. Array returned is a copy of
+	 * cached list and it's modifications will not affect situation cache.
+	 * 
+	 * @return list of all situation objects
+	 */
+	public static Situation[] getAllSituations()
+	{
+		Situation[] list;
+		synchronized(situations)
+		{
+			list = situations.values().toArray(new Situation[situations.size()]);
+		}		
+		return list;
+	}
+	
+	/**
 	 * Find situation object in cache by ID
 	 * 
 	 * @param id situation object id

@@ -109,7 +109,7 @@ public class AutoBind extends PropertyPage
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
 		label.setLayoutData(gd);
       
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(object.getAutoBindFilter());
 		filterSource.setEnabled(object.isAutoBindEnabled());
 		

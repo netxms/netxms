@@ -60,7 +60,7 @@ public class ScriptEditor extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ScriptEditor(Composite parent, int style)
+	public ScriptEditor(Composite parent, int style, int editorStyle)
 	{
 		super(parent, style);
 		
@@ -72,7 +72,7 @@ public class ScriptEditor extends Composite
 		proposalIcons[3] = Activator.getImageDescriptor("icons/constant.gif").createImage();
 		
 		setLayout(new FillLayout());
-		editor = new SourceViewer(this, new VerticalRuler(20), SWT.NONE);
+		editor = new SourceViewer(this, new VerticalRuler(20), editorStyle);
 		editor.configure(new NXSLSourceViewerConfiguration(this));
 
 		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);

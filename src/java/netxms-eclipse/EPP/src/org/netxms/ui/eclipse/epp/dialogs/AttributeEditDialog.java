@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.serverconfig.dialogs;
+package org.netxms.ui.eclipse.epp.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -28,26 +28,25 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
-
 /**
- * Create/edit variable
+ * Add/edit attribute
  *
  */
-public class VariableEditDialog extends Dialog
+public class AttributeEditDialog extends Dialog
 {
 	private LabeledText textName;
 	private LabeledText textValue;
-	private String varName;
-	private String varValue;
+	private String attrName;
+	private String attrValue;
 	
 	/**
 	 * @param parentShell
 	 */
-	public VariableEditDialog(Shell parentShell, String varName, String varValue)
+	public AttributeEditDialog(Shell parentShell, String attrName, String attrValue)
 	{
 		super(parentShell);
-		this.varName = varName;
-		this.varValue = varValue;
+		this.attrName = attrName;
+		this.attrValue = attrValue;
 	}
 
 	/* (non-Javadoc)
@@ -67,9 +66,9 @@ public class VariableEditDialog extends Dialog
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel("Name");
       textName.getTextControl().setTextLimit(63);
-      if (varName != null)
+      if (attrName != null)
       {
-      	textName.setText(varName);
+      	textName.setText(attrName);
       	textName.getTextControl().setEditable(false);
       }
       GridData gd = new GridData();
@@ -80,15 +79,14 @@ public class VariableEditDialog extends Dialog
       
       textValue = new LabeledText(dialogArea, SWT.NONE);
       textValue.setLabel("Value");
-      textValue.getTextControl().setTextLimit(255);
-      if (varValue != null)
-      	textValue.setText(varValue);
+      if (attrValue != null)
+      	textValue.setText(attrValue);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       textValue.setLayoutData(gd);
       
-      if (varName != null)
+      if (attrName != null)
       	textValue.setFocus();
       
 		return dialogArea;
@@ -101,25 +99,25 @@ public class VariableEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((varName == null) ? "Create Variable" : "Edit Variable");
+		newShell.setText((attrName == null) ? "Add Attribute" : "Edit Attribute");
 	}
 	
 	/**
-	 * Get variable name
+	 * Get attribute name
 	 * 
 	 */
-	public String getVarName()
+	public String getAtributeName()
 	{
-		return varName;
+		return attrName;
 	}
 	
 	/**
-	 * Get variable value
+	 * Get attribute value
 	 * 
 	 */
-	public String getVarValue()
+	public String getAttributeValue()
 	{
-		return varValue;
+		return attrValue;
 	}
 
 	/* (non-Javadoc)
@@ -128,8 +126,8 @@ public class VariableEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		varName = textName.getText();
-		varValue = textValue.getText();
+		attrName = textName.getText();
+		attrValue = textValue.getText();
 		super.okPressed();
 	}
 }

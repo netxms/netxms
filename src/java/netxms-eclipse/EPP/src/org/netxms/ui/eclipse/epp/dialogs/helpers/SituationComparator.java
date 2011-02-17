@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,34 +19,21 @@
 package org.netxms.ui.eclipse.epp.dialogs.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.ServerAction;
+import org.eclipse.jface.viewers.ViewerComparator;
+import org.netxms.client.situations.Situation;
 
 /**
- * Filter for action list
+ * Comparator for situation objects
  *
  */
-public class ActionListFilter extends ViewerFilter
+public class SituationComparator extends ViewerComparator
 {
-	private String filterString = null;
-	
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public boolean select(Viewer viewer, Object parentElement, Object element)
+	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		if (filterString == null)
-			return true;
-		
-		return ((ServerAction)element).getName().toLowerCase().contains(filterString);
-	}
-
-	/**
-	 * Set filter string
-	 */
-	public void setFilterString(final String filterString)
-	{
-		this.filterString = filterString.isEmpty() ? null : filterString.toLowerCase();
+		return ((Situation)e1).getName().compareToIgnoreCase(((Situation)e2).getName());
 	}
 }

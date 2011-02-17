@@ -146,6 +146,17 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleSituation"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleSituation#20"
+            name="Situation">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.startup">

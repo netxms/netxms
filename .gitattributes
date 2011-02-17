@@ -616,8 +616,13 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/SituationCache.java -t
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/Startup.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/actions/OpenPolicyEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/ActionSelectionDialog.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/AttributeEditDialog.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/SituationSelectionDialog.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/ActionComparator.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/ActionListFilter.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/SituationComparator.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/SituationLabelProvider.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/dialogs/helpers/SituationListFilter.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleAction.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleAlarm.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleComments.java -text
@@ -626,9 +631,12 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleEven
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleFilterScript.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleServerActions.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleSeverityFilter.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleSituation.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/RuleSourceObjects.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/helpers/AttributeLabelProvider.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/EventProcessingPolicyEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/RuleEditor.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/SituationSelector.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/ImageFactory.java -text
 src/java/netxms-eclipse/EventManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/EventManager/META-INF/MANIFEST.MF -text

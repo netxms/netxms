@@ -88,10 +88,10 @@ public class Transformation extends PropertyPage
 			@Override
 			public Control createControl(Composite parent, int style)
 			{
-				return new ScriptEditor(parent, style);
+				return new ScriptEditor(parent, style,  SWT.H_SCROLL | SWT.V_SCROLL);
 			}
       };
-      transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL,
+      transformationScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,
                                                                              factory, "Step 2 - transformation script", gd);
       transformationScript.addFunctions(Arrays.asList(DCI_FUNCTIONS));
       transformationScript.addVariables(Arrays.asList(DCI_VARIABLES));
