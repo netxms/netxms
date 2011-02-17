@@ -44,7 +44,9 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.situations.Situation;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.epp.SituationCache;
 import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -648,7 +650,8 @@ public class RuleEditor extends Composite
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSituation#20");
 			addActionGroupLabel(clientArea, "Update situation object", editor.getImageSituation(), listener);
-			createLabel(clientArea, 1, false, "instance \"" + rule.getSituationInstance() + "\"", listener);
+			Situation s = SituationCache.findSituation(rule.getSituationId());
+			createLabel(clientArea, 1, false, "\"" + ((s != null) ? s.getName() : "<unknown>") + "\" instance \"" + rule.getSituationInstance() + "\"", listener);
 			createLabel(clientArea, 1, false, "attributes:", listener);
 			for(Entry<String, String> e : rule.getSituationAttributes().entrySet())
 			{

@@ -147,4 +147,10 @@
          </enabledWhen>
       </page>
    </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="org.netxms.ui.eclipse.epp.Startup">
+      </startup>
+   </extension>
 </plugin>

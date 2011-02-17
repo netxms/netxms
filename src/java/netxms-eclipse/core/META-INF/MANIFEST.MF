@@ -23,5 +23,6 @@ Export-Package: org.netxms.client,
  org.netxms.client.maps.elements,
  org.netxms.client.objects,
  org.netxms.client.objecttools,
+ org.netxms.client.situations,
  org.netxms.client.snmp,
  org.netxms.ui.eclipse.console.resources
