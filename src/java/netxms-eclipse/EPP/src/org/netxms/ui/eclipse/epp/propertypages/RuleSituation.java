@@ -24,7 +24,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -61,6 +63,7 @@ public class RuleSituation extends PropertyPage
 	private SortableTableViewer viewer;
 	private Map<String, String> attributes = new HashMap<String, String>();
 	private Button addButton;
+	private Button editButton;
 	private Button deleteButton;
 	
 	/* (non-Javadoc)
@@ -111,6 +114,15 @@ public class RuleSituation extends PropertyPage
       viewer.setLabelProvider(new AttributeLabelProvider());
       viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.setInput(attributes.entrySet().toArray());
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				int size = ((IStructuredSelection)viewer.getSelection()).size();
+				editButton.setEnabled(size == 1);
+				deleteButton.setEnabled(size > 0);
+			}
+		});
 
       gd = new GridData();
       gd.verticalAlignment = GridData.FILL;
@@ -123,14 +135,15 @@ public class RuleSituation extends PropertyPage
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
+      buttonLayout.marginRight = 0;
       buttons.setLayout(buttonLayout);
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       buttons.setLayoutData(gd);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton.setText("&Add...");
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -148,8 +161,28 @@ public class RuleSituation extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
 		
+      editButton = new Button(buttons, SWT.PUSH);
+      editButton.setText("&Edit...");
+      editButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				editAttribute();
+			}
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(rd);
+      editButton.setEnabled(false);
+		
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText("&Delete");
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -166,12 +199,13 @@ public class RuleSituation extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
+      deleteButton.setEnabled(false);
 		
 		return dialogArea;
 	}
 
 	/**
-	 * Add new event
+	 * Add new attribute
 	 */
 	private void addAttribute()
 	{
@@ -184,7 +218,26 @@ public class RuleSituation extends PropertyPage
 	}
 	
 	/**
-	 * Delete event from list
+	 * Edit selected attribute
+	 */
+	@SuppressWarnings("unchecked")
+	private void editAttribute()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
+		AttributeEditDialog dlg = new AttributeEditDialog(getShell(), attr.getKey(), attr.getValue());
+		if (dlg.open() == Window.OK)
+		{
+			attributes.put(dlg.getAtributeName(), dlg.getAttributeValue());
+	      viewer.setInput(attributes.entrySet().toArray());
+		}
+	}
+	
+	/**
+	 * Delete attribute(s) from list
 	 */
 	@SuppressWarnings("unchecked")
 	private void deleteAttribute()

@@ -209,25 +209,26 @@ CREATE TABLE nodes
 	node_flags integer not null,
 	snmp_version integer not null,
 	snmp_port integer not null,
-	community varchar(127) not null,
-	usm_auth_password varchar(127) not null,
-	usm_priv_password varchar(127) not null,
+	community varchar(127) null,
+	usm_auth_password varchar(127) null,
+	usm_priv_password varchar(127) null,
 	usm_methods integer not null,
-	snmp_oid varchar(255) not null,
+	snmp_oid varchar(255) null,
 	auth_method integer not null,
-	secret varchar(64) not null,
+	secret varchar(64) null,
 	agent_port integer not null,
 	status_poll_type integer not null,
 	node_type integer not null,
-	agent_version varchar(63) not null,
-	platform_name varchar(63) not null,
+	agent_version varchar(63) null,
+	platform_name varchar(63) null,
 	poller_node_id integer not null,
 	zone_guid integer not null,
 	proxy_node integer not null,
 	snmp_proxy integer not null,
 	required_polls integer not null,
-	uname varchar(255) not null,
+	uname varchar(255) null,
 	use_ifxtable integer not null,
+	snmp_sys_name varchar(127) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -311,6 +312,11 @@ CREATE TABLE interfaces
 	ip_netmask varchar(15) not null,
 	if_type integer not null,
 	if_index integer not null,
+	bridge_port integer not null,
+	phy_slot integer not null,
+	phy_port integer not null,
+	peer_node_id integer not null,
+	peer_if_id integer not null,
 	mac_addr varchar(15) not null,
 	synthetic_mask integer not null,
 	required_polls integer not null,
@@ -521,8 +527,8 @@ CREATE TABLE items
 	node_id integer not null,	
 	template_id integer not null,
 	template_item_id integer not null,
-	name varchar(255) not null,
-	description varchar(255) not null,
+	name varchar(255) null,
+	description varchar(255) null,
 	source integer not null,	// 0 for internal or 1 for native agent or 2 for SNMP
 	snmp_port integer not null,
 	datatype integer not null,
@@ -532,8 +538,8 @@ CREATE TABLE items
 	status integer not null,			// ACTIVE, DISABLED or NOT_SUPPORTED
 	delta_calculation integer not null,
 	transformation SQL_TEXT,         // Transformation script
-	instance varchar(255),		// Free form text which can be used in events
-	system_tag varchar(255),     		// System tag
+	instance varchar(255) null,		// Free form text which can be used in events
+	system_tag varchar(255) null,     		// System tag
 	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
 	resource_id integer not null,  	// associated cluster resource ID
 	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)

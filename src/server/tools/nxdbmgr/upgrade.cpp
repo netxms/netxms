@@ -249,6 +249,30 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V219 to V220
+//
+
+static BOOL H_UpgradeFromV219(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE interfaces ADD bridge_port integer\n")
+		_T("ALTER TABLE interfaces ADD phy_slot integer\n")
+		_T("ALTER TABLE interfaces ADD phy_port integer\n")
+		_T("ALTER TABLE interfaces ADD peer_node_id integer\n")
+		_T("ALTER TABLE interfaces ADD peer_if_id integer\n")
+		_T("UPDATE interfaces SET bridge_port=0,phy_slot=0,phy_port=0,peer_node_id=0,peer_if_id=0\n")
+		_T("ALTER TABLE nodes ADD snmp_sys_name varchar(127)\n")
+		_T("UPDATE nodes SET snmp_sys_name=''\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='220' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V218 to V219
 //
 
@@ -5033,6 +5057,7 @@ static struct
 	{ 216, 217, H_UpgradeFromV216 },
 	{ 217, 218, H_UpgradeFromV217 },
 	{ 218, 219, H_UpgradeFromV218 },
+	{ 219, 220, H_UpgradeFromV219 },
    { 0, NULL }
 };
 

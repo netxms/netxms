@@ -25,7 +25,9 @@ import java.util.Map;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -86,6 +88,14 @@ public class RuleEvents extends PropertyPage
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new WorkbenchLabelProvider());
       viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				int size = ((IStructuredSelection)viewer.getSelection()).size();
+				deleteButton.setEnabled(size > 0);
+			}
+      });
 
       for(EventTemplate e : session.findMultipleEventTemplates(rule.getEvents().toArray(new Long[0])))
       	events.put(e.getCode(), e);
@@ -103,7 +113,8 @@ public class RuleEvents extends PropertyPage
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
+      buttonLayout.marginRight = 0;
       buttons.setLayout(buttonLayout);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.RIGHT;
@@ -146,6 +157,7 @@ public class RuleEvents extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
+      deleteButton.setEnabled(false);
 		
 		return dialogArea;
 	}

@@ -196,7 +196,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
                            _T("platform_name,poller_node_id,zone_guid,")
                            _T("proxy_node,snmp_proxy,required_polls,uname,")
 									_T("use_ifxtable,snmp_port,community,usm_auth_password,")
-									_T("usm_priv_password,usm_methods")
+									_T("usm_priv_password,usm_methods,snmp_sys_name")
 	                        _T(" FROM nodes WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, query);
    if (hResult == NULL)
@@ -238,6 +238,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	delete m_snmpSecurity;
 	m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword, snmpMethods & 0xFF, snmpMethods >> 8);
 	m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+
+	m_sysName = DBGetField(hResult, 0, 22, NULL, 0);
 
    DBFreeResult(hResult);
 
@@ -330,8 +332,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("agent_port,auth_method,secret,snmp_oid,proxy_node,")
                  _T("node_type,agent_version,platform_name,uname,")
                  _T("poller_node_id,zone_guid,snmp_proxy,required_polls,")
-		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods) VALUES ")
-		           _T("(%d,'%s',%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d)"),
+		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,snmp_sys_name) VALUES ")
+		           _T("(%d,'%s',%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s)"),
                  m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (int)m_wSNMPPort, m_dwFlags,
                  m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
 					  m_iStatusPollType, (int)m_wAgentPort, m_wAuthMethod, 
@@ -342,7 +344,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
 		           m_dwPollerNode, m_dwZoneGUID, m_dwSNMPProxy, m_iRequiredPollCount, m_nUseIfXTable,
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
-					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods);
+					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
+					  (const TCHAR *)DBPrepareString(hdb, m_sysName));
 	}
    else
 	{
@@ -354,7 +357,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("agent_version=%s,platform_name=%s,poller_node_id=%d,")
                  _T("zone_guid=%d,proxy_node=%d,snmp_proxy=%d,")
 					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
-					  _T("usm_priv_password=%s,usm_methods=%d WHERE id=%d"),
+					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s WHERE id=%d"),
                  IpToStr(m_dwIpAddr, szIpAddr), m_wSNMPPort, 
                  m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
                  m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
@@ -365,7 +368,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_dwZoneGUID,
                  m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
 					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
-					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods, m_dwId);
+					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
+					  (const TCHAR *)DBPrepareString(hdb, m_sysName), m_dwId);
 	}
    bResult = DBQuery(hdb, szQuery);
 
