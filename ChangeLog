@@ -1,4 +1,125 @@
 *
+* 1.1.0
+*
+
+- Server jobs introduced
+- Java API added
+- Portable (Eclipse-based) management console introduced
+- Server switched to UNICODE on Windows platform
+- DB/2 support added
+- Windows x64 server version added
+
+
+*
+* 1.0.10
+*
+
+- Network discovery improved
+- Added VRRP support
+- Added new object tools type: server command
+- New MIBs added: VRRP-MIB
+- Fixed issues: #320, #321, #322
+
+
+*
+* 1.0.9
+*
+
+- Added LLDP support
+- MIB compiler improved
+- SNMP tools improved
+- Added automatic conversion of non-printable strings in SNMP traps
+- New MIBs added: APPLICATION-MIB, JVM-MANAGEMENT-MIB, APACHE2-MIB,
+  SYSAPPL-MIB, RADIUS-AUTH-CLIENT-MIB, RADIUS-DYNAUTH-CLIENT-MIB,
+  RADIUS-AUTH-SERVER-MIB, RADIUS-DYNAUTH-SERVER-MIB, RDBMS-MIB, 
+  RADIUS-ACCT-CLIENT-MIB, MSSQLSERVER-MIB, RADIUS-ACCT-SERVER-MIB,
+  BAY-STACK-MIB, S5-AGENT-MIB
+- Fixed broken static agent build
+- Fixed issues: #313, #318
+
+
+*
+* 1.0.8
+*
+
+- NXSL:
+	- now possible to create scripts without explicit main()
+	- named parameters added
+	- New functions: GetNodeParents, PostEvent
+- Fixed issues: #311, #312, #316, #317
+
+
+*
+* 1.0.7
+*
+
+- Implemented automatic alarm termination using regular expressions
+- Added support for ODBC connection strings in ODBCQUERY subagent and
+  ODBC database driver
+- Added server configuration parameter ProcessAffinityMask
+- Fixed issues: #309, #310
+
+
+*
+* 1.0.6
+*
+
+- Implemented adding existing nodes to cluster and removing nodes from cluster
+- LogWatch subagent improved
+- Fixed issues: #306, #307, #308
+
+
+*
+* 1.0.5
+*
+
+- New NXSL operators: += -= *= /= .= %= &= |= ^=
+- New NXSL functions: index, rindex
+- MIB compiler improved
+- New MIBs added to default distribution:
+	ASTERISK-MIB, DIGIUM-MIB, NetWare-Server-MIB, NETWORK-APPLIANCE-MIB
+- Windows console: fixed problem with saving Object Browser and maps in
+  desktop layout 
+- Fixed issues: #279, #303, #304, #305
+
+
+*
+* 1.0.4
+*
+
+- Built-in syslog server improved
+- Windows console improved
+- Created separate installation package for Windows console
+- Fixed issues: #282, #288, #296
+
+
+*
+* 1.0.3
+*
+
+- Windows console: 
+	- DCI thresholds, average, and trendlines can be shown on graphs
+	- Fixed history graph performance issue
+	- Fixed GDI resource leak
+- HP-UX platform subagent improved
+- New agent parameters for Linux: System.Memory.Physical.Available and
+  System.Memory.Physical.AvailablePerc
+- Agent parameters Disk.* renamed to FileSystem.* (old names still recognized
+  by agent for backward compatibility)
+- Fixed various inconsistencies in parameters between different systems
+- Fixed issues: #300, #302
+
+
+*
+* 1.0.2
+*
+
+- Windows console: implemented custom graphs on Performance tab in Object Browser
+- Solaris platform subagent improved
+- Fixed issues: #298
+
+
+*
 * 1.0.1
 *
 
