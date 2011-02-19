@@ -3,6 +3,7 @@
 /Makefile.in
 /README
 /aclocal.m4
+android/src/console/gen
 android/src/console/jar/*.jar
 /autom4te.cache
 /bin
@@ -14,11 +15,13 @@ android/src/console/jar/*.jar
 /config.status
 /configure
 contrib/mibs/netxms.mib
+/debug
 /lib
 /libtool
 /m4
 netware/bin/*
 /private
+/release
 sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
 sql/dbinit_oracle.sql
@@ -36,6 +39,8 @@ src/agent/core/messages.h
 src/agent/core/nxagentd
 src/agent/core/static_subagents.cpp
 src/agent/install/Output
+src/flow_analyzer/nxflowd/MSG00001.bin
+src/flow_analyzer/nxflowd/messages.h
 src/install/windows/files/*
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/.settings
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/bin
@@ -50,6 +55,7 @@ src/java/netxms-client-api/.settings
 src/java/netxms-client/.classpath
 src/java/netxms-client/.project
 src/java/netxms-client/.settings
+src/java/netxms-eclipse/core/jar/netxms-client-*.jar
 src/java/netxms-eclipse/library/jar/*.jar
 src/libnxmap/.deps
 src/libnxmap/.libs
