@@ -8,6 +8,7 @@
 - Server switched to UNICODE on Windows platform
 - DB/2 support added
 - Windows x64 server version added
+- MIB compiler improved
 
 
 *

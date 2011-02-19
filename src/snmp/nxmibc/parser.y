@@ -74,6 +74,7 @@ static char *m_pszCurrentFilename;
 
 int mperror(const char *pszMsg);
 int mplex(void);
+void ResetScanner();
 
 MP_SYNTAX *create_std_syntax(int nSyntax)
 {
@@ -214,9 +215,11 @@ static int AccessFromText(const char *pszText)
 %token OBJECT_SYM
 %token TAGS_SYM
 %token AUTOMATIC_SYM
+%token MIN_SYM
+%token MAX_SYM
+%token MODULE_SYM
 
 %token <pszString> MACRO_SYM
-%token <pszString> MODULE_SYM
 %token <pszString> UCASEFIRST_IDENT_SYM LCASEFIRST_IDENT_SYM
 %token <pszString> BSTRING_SYM HSTRING_SYM CSTRING_SYM DISPLAY_HINT_SYM
 
@@ -255,8 +258,8 @@ static int AccessFromText(const char *pszText)
 /*-----------------------------------------------------------------------*/
 
 ModuleDefinition:
-    ModuleIdentifierAssignment AssignmentList
-    End
+	ModuleIdentifierAssignment AssignmentList End
+|	ModuleIdentifierAssignment End
 ;
 
 AssignmentList:
@@ -410,7 +413,7 @@ ObjectIdentifier:
 ;
 
 NumericValue:
-    Number
+    NumberOrMinMax
 {
    $$ = NULL;
 }
@@ -418,14 +421,20 @@ NumericValue:
 {
    $$ = NULL;
 }
-|   Number DOT_SYM DOT_SYM Number 
+|   NumberOrMinMax DOT_SYM DOT_SYM NumberOrMinMax 
 {
    $$ = NULL;
 }
-|   Identifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
+|   Identifier LEFT_PAREN_SYM NumberOrMinMax RIGHT_PAREN_SYM
 {
    $$ = NULL;
 }
+;
+
+NumberOrMinMax:
+	Number
+|	MIN_SYM
+|	MAX_SYM
 ;
 
 DefinedValue:
@@ -626,7 +635,7 @@ SnmpWriteSyntaxPart:
 ;
 
 SnmpCreationPart:
-    CREATION_REQUIRES_SYM SymbolList
+    CREATION_REQUIRES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
 |
 ;
 
@@ -772,51 +781,56 @@ BuiltInType:
 ;
 
 BuiltInTypeAssignment:
-    IP_ADDRESS_SYM ASSIGNMENT_SYM Type
+    IP_ADDRESS_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_IPADDR);
    $$->pszStr = strdup("IpAddress");
 }
-|   OPAQUE_SYM ASSIGNMENT_SYM Type
+|   OPAQUE_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_OPAQUE);
    $$->pszStr = strdup("Opaque");
 }
-|   INTEGER32_SYM ASSIGNMENT_SYM Type
+|   INTEGER32_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_INTEGER32);
    $$->pszStr = strdup("Integer32");
 }
-|   UNSIGNED32_SYM ASSIGNMENT_SYM Type
+|   UNSIGNED32_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_UNSIGNED32);
    $$->pszStr = strdup("Unsigned32");
 }
-|   TIMETICKS_SYM ASSIGNMENT_SYM Type
+|   TIMETICKS_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_TIMETICKS);
    $$->pszStr = strdup("TimeTicks");
 }
-|   COUNTER_SYM ASSIGNMENT_SYM Type
+|   COUNTER_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_COUNTER);
    $$->pszStr = strdup("Counter");
 }
-|   COUNTER32_SYM ASSIGNMENT_SYM Type
+|   COUNTER32_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_COUNTER32);
    $$->pszStr = strdup("Counter32");
 }
-|   COUNTER64_SYM ASSIGNMENT_SYM Type
+|   COUNTER64_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_COUNTER64);
    $$->pszStr = strdup("Counter64");
 }
-|   GAUGE32_SYM ASSIGNMENT_SYM Type
+|   GAUGE32_SYM ASSIGNMENT_SYM TypeOrTextualConvention
 {
    $$ = create_std_syntax(MIB_TYPE_GAUGE32);
    $$->pszStr = strdup("Gauge32");
 }
+;
+
+TypeOrTextualConvention:
+	Type
+|	TextualConventionAssignment
 ;
 
 MacroAssignment:
@@ -951,6 +965,7 @@ SnmpObjectGroupAssignment:
     SnmpObjectsPart
     SnmpStatusPart
     SnmpDescriptionPart
+    SnmpReferencePart
     AssignedIdentifier
 {
    $$ = CREATE(MP_OBJECT);
@@ -959,7 +974,7 @@ SnmpObjectGroupAssignment:
    $$->iStatus = $4;
    $$->iSyntax = MIB_TYPE_OBJGROUP;
    $$->pszDescription = $5;
-   $$->pOID = $6;
+   $$->pOID = $7;
 }
 ;
 
@@ -968,6 +983,7 @@ SnmpNotificationGroupAssignment:
     SnmpObjectsPart
     SnmpStatusPart
     SnmpDescriptionPart
+    SnmpReferencePart
     AssignedIdentifier
 {
    $$ = CREATE(MP_OBJECT);
@@ -975,7 +991,7 @@ SnmpNotificationGroupAssignment:
    $$->pszName = $1;
    $$->iStatus = $4;
    $$->pszDescription = $5;
-   $$->pOID = $6;
+   $$->pOID = $7;
 }
 ;
 
@@ -998,12 +1014,17 @@ SnmpModuleComplianceList:
 ;
 
 SnmpModuleComplianceObject:
-    MODULE_SYM
+    MODULE_SYM OptionalModuleName
     SnmpMandatoryGroupPart
     SnmpCompliancePart
+;
+
+OptionalModuleName:
+	UCidentifier
 {
    free($1);
 }
+|
 ;
 
 SnmpVariationsListPart:
@@ -1023,6 +1044,7 @@ SnmpVariationPart:
     SnmpAccessPart
     SnmpCreationPart
     SnmpDefValPart
+    SnmpDescriptionPart
 ;
 
 ModuleCapabilitiesList:
@@ -1031,7 +1053,11 @@ ModuleCapabilitiesList:
 ;
 
 ModuleCapabilitiesAssignment:
-    ModuleIdentifier INCLUDES_SYM SymbolList SnmpVariationsListPart
+    SUPPORTS_SYM UCidentifier INCLUDES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM SnmpVariationsListPart
+{
+   safe_free($2);
+}
+|    ModuleIdentifier INCLUDES_SYM SymbolList SnmpVariationsListPart
 {
    safe_free($1);
 }
@@ -1306,6 +1332,7 @@ MP_MODULE *ParseMIB(char *pszFilename)
       g_nCurrLine = 1;
       InitStateStack();
       /*mpdebug=1;*/
+      ResetScanner();
       mpparse();
       fclose(mpin);
    }

@@ -1,4 +1,5 @@
 %option never-interactive
+%option 8bit
 
 %a 14000
 %p 12000
@@ -12,6 +13,7 @@
 %x MACRO
 %x MACRO_BODY
 %x EXPORTS
+%x END
 WHITESPC  [[:blank:]\t\n\r]
 
 %{
@@ -209,7 +211,7 @@ static void CountNewlines(char *pszStr, int len)
 <INITIAL>MODULE-COMPLIANCE return MODULE_COMPLIANCE_SYM;
 <INITIAL>OBJECTS return OBJECTS_SYM;
 <INITIAL>GROUP return GROUP_SYM;
-<INITIAL>AGENT[ \t]*CAPABILITIES return AGENT_CAPABILITIES_SYM;
+<INITIAL>AGENT[ \t\-]*CAPABILITIES return AGENT_CAPABILITIES_SYM;
 <INITIAL>OBJECT-TYPE return OBJECT_TYPE_SYM;
 <INITIAL>OBJECT-GROUP return OBJECT_GROUP_SYM;
 <INITIAL>OBJECT-IDENTITY return OBJECT_IDENTITY_SYM;
@@ -263,8 +265,11 @@ static void CountNewlines(char *pszStr, int len)
 <INITIAL>CREATION-REQUIRES return CREATION_REQUIRES_SYM;
 <INITIAL>OBJECT[ \t]*IDENTIFIER return OBJECT_IDENTIFIER_SYM;
 <INITIAL>OBJECT return OBJECT_SYM;
+<INITIAL>MIN return MIN_SYM;
+<INITIAL>MAX return MAX_SYM;
+<INITIAL>MODULE return MODULE_SYM;
 
-<INITIAL>[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]*{WHITESPC}*MACRO {
+<INITIAL>[A-Z][a-zA-Z0-9]*[\-a-zA-Z0-9]*{WHITESPC}*MACRO {
 /*
  * This code initiates the macro state. There are two states associated
  * with a macro definition. the MACRO state indicates that we have found
@@ -323,6 +328,9 @@ static void CountNewlines(char *pszStr, int len)
  */
    switch( YYSTATE )
    {
+      case INITIAL:
+         BEGIN(END); /* ignore everything after END symbol */
+         break;
       case MACRO_BODY:
          PopState(); /* should revert to MACRO and fall through */
       case MACRO:
@@ -336,27 +344,6 @@ static void CountNewlines(char *pszStr, int len)
 
 <MACRO_BODY>([[:alnum:][:punct:]]*) {
    return TOKEN_SYM;
-}
-
-<INITIAL>MODULE {
-   mplval.pszString = NULL;
-   return MODULE_SYM;
-}
-
-<INITIAL>MODULE[[:blank:]]+[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
-   char *ptr = mptext;
-   int leng = mpleng;
-
-   ptr += 6; /* skip past "MODULE" */
-   leng -= 6; /* skip past "MODULE" */
-   CountNewlines(ptr, leng);
-   while(isspace(*ptr))
-   {
-      ptr++;
-      leng--;
-   }
-   mplval.pszString = strdup(ptr);
-   return MODULE_SYM;
 }
 
 <INITIAL,KEYWORD>\'[0-1]*\'[Bb] {
@@ -397,7 +384,7 @@ static void CountNewlines(char *pszStr, int len)
    return LCASEFIRST_IDENT_SYM;
 }
 
-<INITIAL>([-]|0x)?[1-9][0-9]* {
+<INITIAL>([-]|0x)?[0-9]+ {
    INT64 nInt64 = strtoull(mptext, NULL, 0);
    LONG nInt32 = strtol(mptext, NULL, 0);
 
@@ -414,15 +401,12 @@ static void CountNewlines(char *pszStr, int len)
    return NUMBER_SYM;
 }
 
-<INITIAL>0 {  /*allow zero as first digit on single digit #'s*/
-   mplval.number.nType = 0;
-   mplval.number.value.nInt32 = 0;
-   return NUMBER_SYM;
-}
-
 <INITIAL,COMMENT,KEYWORD,EXPORTS>. { 
    CountNewlines(mptext, mpleng);
 }
+
+<END>.	;
+<END>\n	;
 
 %%
 
@@ -437,4 +421,10 @@ static void PopState(void)
 	{
       BEGIN(INITIAL);
 	}
+}
+
+void ResetScanner()
+{
+      mprestart(mpin);
+      BEGIN(INITIAL);
 }
