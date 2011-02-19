@@ -845,6 +845,7 @@ typedef struct
 #define VID_PEER_INTERFACE_ID       ((DWORD)374)
 #define VID_VRRP_VERSION            ((DWORD)375)
 #define VID_VRRP_VR_COUNT           ((DWORD)376)
+#define VID_DESTINATION_FILE_NAME   ((DWORD)377)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

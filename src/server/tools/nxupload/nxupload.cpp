@@ -138,11 +138,12 @@ int main(int argc, char *argv[])
    INT64 nElapsedTime;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T("");
    TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
+   TCHAR szDestinationFile[MAX_PACKAGE_NAME] = {0};
    RSA *pServerKey = NULL;
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:e:hK:p:qs:uvw:W:")) != -1)
+	while((ch = getopt(argc, argv, "a:e:hK:p:qs:uvw:W:d:")) != -1)
    {
       switch(ch)
       {
@@ -171,6 +172,7 @@ int main(int argc, char *argv[])
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds)\n")
+                     _T("   -d <file>    : Absolute destination file name\n")
                      _T("\n"), wPort);
             bStart = FALSE;
             break;
@@ -269,6 +271,14 @@ int main(int argc, char *argv[])
             bStart = FALSE;
             break;
 #endif
+		 case 'd':
+#ifdef UNICODE
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szDestinationFile, MAX_PATH);
+				szDestinationFile[MAX_PATH - 1] = 0;
+#else
+            nx_strncpy(szDestinationFile, optarg, MAX_PATH);
+#endif
+            break;
          case '?':
             bStart = FALSE;
             break;
@@ -365,7 +375,11 @@ int main(int argc, char *argv[])
                nElapsedTime = GetCurrentTimeMs();
 					if (bVerbose)
 						_tprintf(_T("Upload:                 "));
-					dwError = conn.UploadFile(fname, bVerbose ? ProgressCallback : NULL);
+					dwError = conn.UploadFile(
+						fname,
+						bVerbose ? ProgressCallback : NULL,
+						NULL,
+						szDestinationFile[0] != 0 ? szDestinationFile : NULL);
 					if (bVerbose)
 						_tprintf(_T("\r                        \r"));
                nElapsedTime = GetCurrentTimeMs() - nElapsedTime;

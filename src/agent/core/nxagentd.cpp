@@ -7,8 +7,8 @@
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
 **
-** This program is distributed in the hope that it will be usefu,,
-** but ITHOUT ANY WARRANTY; without even the implied warranty of
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
 **
@@ -230,6 +230,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
    { "TimeOut", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "WaitForProcess", CT_STRING, 0, 0, MAX_PATH, 0, m_szProcessToWait },
+   { "ArbitraryFileUpload", CT_BOOLEAN, 0, 0, AF_ARBITRARY_FILE_UPLOAD, 0, &g_dwFlags },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

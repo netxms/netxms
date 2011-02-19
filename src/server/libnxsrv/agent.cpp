@@ -979,7 +979,7 @@ DWORD AgentConnection::ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv
 // Upload file to agent
 //
 
-DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback)(INT64, void *), void *cbArg)
+DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback)(INT64, void *), void *cbArg, const TCHAR *pszDestinationFile)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
@@ -995,6 +995,10 @@ DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback
    for(i = (int)_tcslen(pszFile) - 1; 
        (i >= 0) && (pszFile[i] != '\\') && (pszFile[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &pszFile[i + 1]);
+   if (pszDestinationFile != NULL)
+   {
+		msg.SetVariable(VID_DESTINATION_FILE_NAME, pszDestinationFile);
+   }
 
    if (sendMessage(&msg))
    {
