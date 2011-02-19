@@ -1182,6 +1182,7 @@ src/libtre/tre-ast.c -text
 src/libtre/tre-ast.h -text
 src/libtre/tre-compile.c -text
 src/libtre/tre-compile.h -text
+src/libtre/tre-config.h -text
 src/libtre/tre-internal.h -text
 src/libtre/tre-match-approx.c -text
 src/libtre/tre-match-backtrack.c -text

@@ -198,6 +198,7 @@
 #define _vsntprintf nx_vswprintf
 #define _stscanf  swscanf
 #define _tfopen   wfopen
+#define _tpopen   wpopen
 #define _fgetts   fgetws
 #define _fputts   fputws
 #define _tcstol   wcstol
@@ -266,6 +267,7 @@
 #define _vsntprintf vsnprintf
 #define _stscanf  sscanf
 #define _tfopen   fopen
+#define _tpopen   popen
 #define _fgetts   fgets
 #define _fputts   fputs
 #define _tcstol   strtol
