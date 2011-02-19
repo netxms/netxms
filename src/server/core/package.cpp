@@ -215,7 +215,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                _tcscat(szBuffer, DDIR_PACKAGES);
                _tcscat(szBuffer, FS_PATH_SEPARATOR);
                _tcscat(szBuffer, pStartup->szPkgFile);
-               if (pAgentConn->UploadFile(szBuffer) == ERR_SUCCESS)
+               if (pAgentConn->uploadFile(szBuffer) == ERR_SUCCESS)
                {
                   if (pAgentConn->StartUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
                   {

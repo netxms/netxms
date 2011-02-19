@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -65,6 +65,7 @@
 # define DFILE_KEYS            _T("\\server_key")
 # define DFILE_COMPILED_MIB    _T("\\mibs\\netxms.mib")
 # define DDIR_IMAGES           _T("\\images")
+# define DDIR_FILES            _T("\\files")
 
 #else    /* _WIN32 */
 
@@ -87,6 +88,7 @@
 # define DFILE_KEYS            _T("/.server_key")
 # define DFILE_COMPILED_MIB    _T("/mibs/netxms.mib")
 # define DDIR_IMAGES           _T("/images")
+# define DDIR_FILES            _T("/files")
 
 #endif   /* _WIN32 */
 
@@ -334,7 +336,7 @@ public:
    DWORD GetList(const TCHAR *pszParam);
    DWORD nop();
    DWORD ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv);
-   DWORD UploadFile(const TCHAR *pszFile, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL, const TCHAR *szDestinationFile = NULL);
+   DWORD uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    DWORD StartUpgrade(const TCHAR *pszPkgName);
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 
                              WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL);

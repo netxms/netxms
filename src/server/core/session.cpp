@@ -1222,6 +1222,9 @@ void ClientSession::ProcessingThread()
 			case CMD_EXECUTE_SERVER_COMMAND:
 				executeServerCommand(pMsg);
 				break;
+			case CMD_UPLOAD_FILE_TO_AGENT:
+				uploadFileToAgent(pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -10953,6 +10956,70 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 		{
 			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, nodeId, _T("Access denied on server command execution"));
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Upload file from server to agent
+//
+
+void ClientSession::uploadFileToAgent(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	DWORD nodeId = request->GetVariableLong(VID_OBJECT_ID);
+	NetObj *object = FindObjectById(nodeId);
+	if (object != NULL)
+	{
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		{
+			if (object->Type() == OBJECT_NODE)
+			{
+				TCHAR *localFile = request->GetVariableStr(VID_FILE_NAME);
+				TCHAR *remoteFile = request->GetVariableStr(VID_DESTINATION_FILE_NAME);
+				if (localFile != NULL)
+				{
+					int nLen;
+					TCHAR fullPath[MAX_PATH];
+
+					// Create full path to the file store
+					_tcscpy(fullPath, g_szDataDir);
+					_tcscat(fullPath, DDIR_FILES);
+					_tcscat(fullPath, FS_PATH_SEPARATOR);
+					nLen = _tcslen(fullPath);
+					nx_strncpy(&fullPath[nLen], GetCleanFileName(localFile), MAX_PATH - nLen);
+
+					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId,
+						           _T("File upload initiated, local='%s' remote='%s'"), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+				}
+				safe_free(localFile);
+				safe_free(remoteFile);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, nodeId, _T("Access denied on file upload"));
 		}
 	}
 	else

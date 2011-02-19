@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -979,7 +979,7 @@ DWORD AgentConnection::ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv
 // Upload file to agent
 //
 
-DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback)(INT64, void *), void *cbArg, const TCHAR *pszDestinationFile)
+DWORD AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, void (* progressCallback)(INT64, void *), void *cbArg)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
@@ -992,12 +992,12 @@ DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback
 
    msg.SetCode(CMD_TRANSFER_FILE);
    msg.SetId(dwRqId);
-   for(i = (int)_tcslen(pszFile) - 1; 
-       (i >= 0) && (pszFile[i] != '\\') && (pszFile[i] != '/'); i--);
-   msg.SetVariable(VID_FILE_NAME, &pszFile[i + 1]);
-   if (pszDestinationFile != NULL)
+   for(i = (int)_tcslen(localFile) - 1; 
+       (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
+   msg.SetVariable(VID_FILE_NAME, &localFile[i + 1]);
+   if (destinationFile != NULL)
    {
-		msg.SetVariable(VID_DESTINATION_FILE_NAME, pszDestinationFile);
+		msg.SetVariable(VID_DESTINATION_FILE_NAME, destinationFile);
    }
 
    if (sendMessage(&msg))
@@ -1012,7 +1012,7 @@ DWORD AgentConnection::UploadFile(const TCHAR *pszFile, void (* progressCallback
    if (dwResult == ERR_SUCCESS)
    {
 		m_fileUploadInProgress = true;
-      if (SendFileOverNXCP(m_hSocket, dwRqId, pszFile, m_pCtx, 0, progressCallback, cbArg))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, m_pCtx, 0, progressCallback, cbArg))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;

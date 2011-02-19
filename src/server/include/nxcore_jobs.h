@@ -150,6 +150,27 @@ DWORD CancelJob(DWORD userId, CSCPMessage *msg);
 
 
 //
+// File upload job
+//
+
+class FileUploadJob : public ServerJob
+{
+protected:
+	Node *m_node;
+	TCHAR *m_localFile;
+	TCHAR *m_remoteFile;
+	INT64 m_fileSize;
+
+	virtual bool run();
+	static void uploadCallback(INT64 size, void *arg);
+
+public:
+	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, DWORD userId);
+	virtual ~FileUploadJob();
+};
+
+
+//
 // Agent policy deployment job
 //
 

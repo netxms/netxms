@@ -697,6 +697,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\upload_job.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\userdb.cpp"
 				>
 			</File>

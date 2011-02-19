@@ -178,34 +178,67 @@ static int ExecCommand(SQLITE_CONN *pConn, int nCmd, const char *pszQuery, TCHAR
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
-	out[0] = _T('\'');
+	char *out = (char *)malloc(bufferSize);
+	out[0] = '\'';
 
-	const TCHAR *src = str;
+	const char *src = str;
 	int outPos;
 	for(outPos = 1; *src != 0; src++)
 	{
-		if (*src == _T('\''))
+		if (*src == '\'')
 		{
 			len++;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (char *)realloc(out, bufferSize);
 			}
-			out[outPos++] = _T('\'');
-			out[outPos++] = _T('\'');
+			out[outPos++] = '\'';
+			out[outPos++] = '\'';
 		}
 		else
 		{
 			out[outPos++] = *src;
 		}
 	}
-	out[outPos++] = _T('\'');
+	out[outPos++] = '\'';
+	out[outPos++] = 0;
+
+	return out;
+}
+
+extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
+{
+	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
+	out[0] = L'\'';
+
+	const WCHAR *src = str;
+	int outPos;
+	for(outPos = 1; *src != 0; src++)
+	{
+		if (*src == L'\'')
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
+			}
+			out[outPos++] = L'\'';
+			out[outPos++] = L'\'';
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = L'\'';
 	out[outPos++] = 0;
 
 	return out;
@@ -216,7 +249,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
    return sqlite3_threadsafe() &&	// Fail if SQLite compiled without threading support
 		    (sqlite3_initialize() == SQLITE_OK);

@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:e:hK:p:qs:uvw:W:d:")) != -1)
+	while((ch = getopt(argc, argv, "a:d:e:hK:p:qs:uvw:W:")) != -1)
    {
       switch(ch)
       {
@@ -152,6 +152,7 @@ int main(int argc, char *argv[])
                      _T("Valid options are:\n")
                      _T("   -a <auth>    : Authentication method. Valid methods are \"none\",\n")
                      _T("                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n")
+                     _T("   -d <file>    : Fully qualified destination file name\n")
 #ifdef _WITH_ENCRYPTION
                      _T("   -e <policy>  : Set encryption policy. Possible values are:\n")
                      _T("                    0 = Encryption disabled;\n")
@@ -172,7 +173,6 @@ int main(int argc, char *argv[])
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds)\n")
-                     _T("   -d <file>    : Absolute destination file name\n")
                      _T("\n"), wPort);
             bStart = FALSE;
             break;
@@ -375,11 +375,9 @@ int main(int argc, char *argv[])
                nElapsedTime = GetCurrentTimeMs();
 					if (bVerbose)
 						_tprintf(_T("Upload:                 "));
-					dwError = conn.UploadFile(
-						fname,
-						bVerbose ? ProgressCallback : NULL,
-						NULL,
-						szDestinationFile[0] != 0 ? szDestinationFile : NULL);
+					dwError = conn.uploadFile(
+						fname, szDestinationFile[0] != 0 ? szDestinationFile : NULL,
+						bVerbose ? ProgressCallback : NULL, NULL);
 					if (bVerbose)
 						_tprintf(_T("\r                        \r"));
                nElapsedTime = GetCurrentTimeMs() - nElapsedTime;
