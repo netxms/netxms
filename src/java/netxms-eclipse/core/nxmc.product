@@ -126,6 +126,7 @@
       <plugin id="org.netxms.ui.eclipse.datacollection"/>
       <plugin id="org.netxms.ui.eclipse.epp"/>
       <plugin id="org.netxms.ui.eclipse.eventmanager"/>
+      <plugin id="org.netxms.ui.eclipse.filemanager"/>
       <plugin id="org.netxms.ui.eclipse.googlemaps"/>
       <plugin id="org.netxms.ui.eclipse.imagelibrary"/>
       <plugin id="org.netxms.ui.eclipse.library"/>
@@ -142,7 +143,7 @@
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
       <plugin id="org.netxms.ui.eclipse.serviceview"/>
       <plugin id="org.netxms.ui.eclipse.snmp"/>
-      <plugin id="org.netxms.ui.eclipse.topology" fragment=""/>
+      <plugin id="org.netxms.ui.eclipse.topology"/>
       <plugin id="org.netxms.ui.eclipse.usermanager"/>
       <plugin id="org.swtchart"/>
    </plugins>

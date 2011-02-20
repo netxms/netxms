@@ -18,25 +18,20 @@
  */
 package org.netxms.client;
 
-import junit.framework.TestCase;
-
 /**
- * Base class for NetXMS client library testing.
- * 
- * Please note that all tests expects that NetXMS server is running 
- * on local machine, with user admin and no password.
- * Change appropriate constants if needed.
+ * Test functionality related to server file store
+ *
  */
-public class SessionTest extends TestCase
+public class ServerFilesTest extends SessionTest
 {
-	private static final String serverAddress = "127.0.0.1";
-	private static final String loginName = "admin";
-	private static final String password = "";
-	
-	protected NXCSession connect() throws Exception
+	public void testFileList() throws Exception
 	{
-		NXCSession session = new NXCSession(serverAddress, loginName, password);
-		session.connect();
-		return session;
+		final NXCSession session = connect();
+
+		ServerFile[] files = session.listServerFiles();
+		for(ServerFile f : files)
+			System.out.println(f.getName() + " size=" + f.getSize() + " modified: " + f.getModifyicationTime().toString());
+
+		session.disconnect();
 	}
 }

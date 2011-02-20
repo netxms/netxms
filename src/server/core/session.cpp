@@ -1222,6 +1222,9 @@ void ClientSession::ProcessingThread()
 			case CMD_EXECUTE_SERVER_COMMAND:
 				executeServerCommand(pMsg);
 				break;
+			case CMD_LIST_SERVER_FILES:
+				listServerFileStore(pMsg);
+				break;
 			case CMD_UPLOAD_FILE_TO_AGENT:
 				uploadFileToAgent(pMsg);
 				break;
@@ -4866,7 +4869,7 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
    CSCPMessage msg;
    TCHAR szPkgName[MAX_PACKAGE_NAME_LEN], szDescription[MAX_DB_STRING];
    TCHAR szPkgVersion[MAX_AGENT_VERSION_LEN], szFileName[MAX_DB_STRING];
-   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN], *pszCleanFileName, *pszEscDescr;
+   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN], *pszEscDescr;
    TCHAR szQuery[2048];
 
    // Prepare response message
@@ -4884,7 +4887,7 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
          pRequest->GetVariableStr(VID_PLATFORM_NAME, szPlatform, MAX_PLATFORM_NAME_LEN);
 
          // Remove possible path specification from file name
-         pszCleanFileName = GetCleanFileName(szFileName);
+         const TCHAR *pszCleanFileName = GetCleanFileName(szFileName);
 
          if (IsValidObjectName(pszCleanFileName) && 
              IsValidObjectName(szPkgName) &&
@@ -11000,9 +11003,18 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 					nLen = _tcslen(fullPath);
 					nx_strncpy(&fullPath[nLen], GetCleanFileName(localFile), MAX_PATH - nLen);
 
-					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId,
-						           _T("File upload initiated, local='%s' remote='%s'"), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
-					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					ServerJob *job = new FileUploadJob((Node *)object, fullPath, remoteFile, m_dwUserId);
+					if (AddJob(job))
+					{
+						WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId,
+										  _T("File upload initiated, local='%s' remote='%s'"), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
+						msg.SetVariable(VID_JOB_ID, job->getId());
+						msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					}
+					else
+					{
+						msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+					}
 				}
 				else
 				{
@@ -11025,6 +11037,64 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Send to client list of files in server's file store
+//
+
+void ClientSession::listServerFileStore(CSCPMessage *request)
+{
+	CSCPMessage msg;
+	TCHAR path[MAX_PATH];
+
+	msg.SetId(request->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	_tcscpy(path, g_szDataDir);
+	_tcscat(path, DDIR_FILES);
+	_TDIR *dir = _topendir(path);
+	if (dir != NULL)
+	{
+		_tcscat(path, FS_PATH_SEPARATOR);
+		int pos = (int)_tcslen(path);
+
+		struct _tdirent *d;
+#ifdef _WIN32
+		struct _stat st;
+#else
+		struct stat st;
+#endif
+		DWORD count = 0, varId = VID_INSTANCE_LIST_BASE;
+		while((d = _treaddir(dir)) != NULL)
+		{
+			if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
+			{
+				nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
+				if (_tstat(path, &st) == 0)
+				{
+					if (S_ISREG(st.st_mode))
+					{
+						msg.SetVariable(varId++, d->d_name);
+						msg.SetVariable(varId++, (QWORD)st.st_size);
+						msg.SetVariable(varId++, (QWORD)st.st_mtime);
+						varId += 7;
+						count++;
+					}
+				}
+			}
+		}
+		_tclosedir(dir);
+		msg.SetVariable(VID_INSTANCE_COUNT, count);
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 	}
 
 	sendMessage(&msg);

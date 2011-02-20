@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="org.netxms.client.ServerFile"
+            class="org.netxms.ui.eclipse.filemanager.ServerFileAdapterFactory">
+         <adapter
+               type="org.eclipse.ui.model.IWorkbenchAdapter">
+         </adapter>
+      </factory>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.filemanager.actions.popup.object.Node"
+            objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.filemanager.actions.UploadFileToAgent"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Node"
+               label="Upload file..."
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

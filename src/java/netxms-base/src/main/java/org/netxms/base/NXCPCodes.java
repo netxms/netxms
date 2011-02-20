@@ -173,7 +173,7 @@ public final class NXCPCodes
 	public static final int CMD_LOG_DATA                = 0x008F;
 	public static final int CMD_GET_OBJECT_TOOL_DETAILS = 0x0090;
 	public static final int CMD_EXECUTE_SERVER_COMMAND  = 0x0091;
-	//public static final int CMD_UNLOCK_OBJECT_TOOLS     = 0x0092;
+	public static final int CMD_UPLOAD_FILE_TO_AGENT    = 0x0092;
 	public static final int CMD_UPDATE_OBJECT_TOOL      = 0x0093;
 	public static final int CMD_DELETE_OBJECT_TOOL      = 0x0094;
 	public static final int CMD_SETUP_PROXY_CONNECTION  = 0x0095;
@@ -271,6 +271,7 @@ public final class NXCPCodes
 	public static final int CMD_DELETE_IMAGE            = 0x00F1;
 	public static final int CMD_MODIFY_IMAGE            = 0x00F2;
 	public static final int CMD_LIST_IMAGES             = 0x00F3;
+	public static final int CMD_LIST_SERVER_FILES       = 0x00F4;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -647,8 +648,9 @@ public final class NXCPCodes
 	public static final long VID_IMAGE_MIMETYPE          = 372;
 	public static final long VID_PEER_NODE_ID            = 373;
 	public static final long VID_PEER_INTERFACE_ID       = 374;
-	public static final long VID_VRRP_VERSION            = 374;
-	public static final long VID_VRRP_VR_COUNT           = 374;
+	public static final long VID_VRRP_VERSION            = 375;
+	public static final long VID_VRRP_VR_COUNT           = 376;
+	public static final long VID_DESTINATION_FILE_NAME   = 377;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

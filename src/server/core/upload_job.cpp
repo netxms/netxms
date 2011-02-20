@@ -34,8 +34,11 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 	node->IncRefCount();
 
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("Upload file %s"), localFile);
+	_sntprintf(buffer, 1024, _T("Upload file %s"), GetCleanFileName(localFile));
 	setDescription(buffer);
+
+	m_localFile = _tcsdup(localFile);
+	m_remoteFile = (remoteFile != NULL) ? _tcsdup(remoteFile) : NULL;
 }
 
 
@@ -46,6 +49,8 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 FileUploadJob::~FileUploadJob()
 {
 	m_node->DecRefCount();
+	safe_free(m_localFile);
+	safe_free(m_remoteFile);
 }
 
 

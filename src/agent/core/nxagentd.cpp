@@ -201,6 +201,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 	{ "DebugLevel", CT_LONG, 0, 0, 0, 0, &g_debugLevel },
    { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
+   { "EnableArbitraryFileUpload", CT_BOOLEAN, 0, 0, AF_ARBITRARY_FILE_UPLOAD, 0, &g_dwFlags },
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
    { "EnableProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags },
    { "EnableSNMPProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags },
@@ -230,7 +231,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
    { "TimeOut", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "WaitForProcess", CT_STRING, 0, 0, MAX_PATH, 0, m_szProcessToWait },
-   { "ArbitraryFileUpload", CT_BOOLEAN, 0, 0, AF_ARBITRARY_FILE_UPLOAD, 0, &g_dwFlags },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

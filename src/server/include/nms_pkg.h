@@ -47,7 +47,7 @@ typedef struct
 //
 
 BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform);
-BOOL IsPackageFileExist(TCHAR *pszFileName);
+BOOL IsPackageFileExist(const TCHAR *pszFileName);
 BOOL IsValidPackageId(DWORD dwPkgId);
 DWORD UninstallPackage(DWORD dwPkgId);
 THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg);

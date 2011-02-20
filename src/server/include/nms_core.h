@@ -560,6 +560,7 @@ private:
 	void deleteLibraryImage(CSCPMessage *request);
 	void executeServerCommand(CSCPMessage *request);
 	void uploadFileToAgent(CSCPMessage *request);
+	void listServerFileStore(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -78,7 +78,7 @@ BOOL IsValidPackageId(DWORD dwPkgId)
 // Check if package file with given name exist
 //
 
-BOOL IsPackageFileExist(TCHAR *pszFileName)
+BOOL IsPackageFileExist(const TCHAR *pszFileName)
 {
    TCHAR szFullPath[MAX_PATH];
 

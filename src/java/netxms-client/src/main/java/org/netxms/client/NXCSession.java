@@ -3986,4 +3986,49 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * List files in server's file store.
+	 * 
+	 * @return list of files in server's file store
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public ServerFile[] listServerFiles() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SERVER_FILES);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_INSTANCE_COUNT);
+		ServerFile[] files = new ServerFile[count];
+		long varId = NXCPCodes.VID_INSTANCE_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			files[i] = new ServerFile(response, varId);
+			varId += 10;
+		}
+		return files;
+	}
+	
+	/**
+	 * Start file upload from server's file store to agent. Returns ID of upload job.
+	 * 
+	 * @param nodeId node object ID
+	 * @param serverFileName file name in server's file store
+	 * @param remoteFileName fully qualified file name on target system or null to upload file to agent's file store
+	 * @return ID of upload job
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE_TO_AGENT);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
+		if (remoteFileName != null)
+			msg.setVariable(NXCPCodes.VID_DESTINATION_FILE_NAME, remoteFileName);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
+	}
 }

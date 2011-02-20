@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -463,6 +463,7 @@ typedef struct
 #define CMD_DELETE_IMAGE            0x00F1
 #define CMD_MODIFY_IMAGE            0x00F2
 #define CMD_LIST_IMAGES             0x00F3
+#define CMD_LIST_SERVER_FILES       0x00F4
 
 
 //
