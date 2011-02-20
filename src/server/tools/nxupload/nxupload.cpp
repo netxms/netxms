@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
    INT64 nElapsedTime;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T("");
    TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
-   TCHAR szDestinationFile[MAX_PACKAGE_NAME] = {0};
+   TCHAR szDestinationFile[MAX_PATH] = {0};
    RSA *pServerKey = NULL;
 
    // Parse command line
