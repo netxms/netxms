@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,54 +40,54 @@ extern "C" const char EXPORT *drvName = "MYSQL";
 				if (len >= bufferSize - 1) \
 				{ \
 					bufferSize += 128; \
-					out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR)); \
+					out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR)); \
 				}
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
+	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
 	out[0] = _T('\'');
 
-	const TCHAR *src = str;
+	const WCHAR *src = str;
 	int outPos;
 	for(outPos = 1; *src != NULL; src++)
 	{
 		switch(*src)
 		{
-			case _T('\''):
-				out[outPos++] = _T('\'');
-				out[outPos++] = _T('\'');
+			case L'\'':
+				out[outPos++] = L'\'';
+				out[outPos++] = L'\'';
 				UPDATE_LENGTH;
 				break;
-			case _T('\r'):
-				out[outPos++] = _T('\\');
-				out[outPos++] = _T('\r');
+			case L'\r':
+				out[outPos++] = L'\\';
+				out[outPos++] = L'\r';
 				UPDATE_LENGTH;
 				break;
-			case _T('\n'):
-				out[outPos++] = _T('\\');
-				out[outPos++] = _T('\n');
+			case L'\n':
+				out[outPos++] = L'\\';
+				out[outPos++] = L'\n';
 				UPDATE_LENGTH;
 				break;
-			case _T('\b'):
-				out[outPos++] = _T('\\');
-				out[outPos++] = _T('\b');
+			case L'\b':
+				out[outPos++] = L'\\';
+				out[outPos++] = L'\b';
 				UPDATE_LENGTH;
 				break;
-			case _T('\t'):
-				out[outPos++] = _T('\\');
-				out[outPos++] = _T('\t');
+			case L'\t':
+				out[outPos++] = L'\\';
+				out[outPos++] = L'\t';
 				UPDATE_LENGTH;
 				break;
 			case 26:
-				out[outPos++] = _T('\\');
-				out[outPos++] = _T('Z');
+				out[outPos++] = L'\\';
+				out[outPos++] = L'Z';
 				break;
-			case _T('\\'):
-				out[outPos++] = _T('\\');
-				out[outPos++] = _T('\\');
+			case L'\\':
+				out[outPos++] = L'\\';
+				out[outPos++] = L'\\';
 				UPDATE_LENGTH;
 				break;
 			default:
@@ -95,7 +95,74 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 				break;
 		}
 	}
-	out[outPos++] = _T('\'');
+	out[outPos++] = L'\'';
+	out[outPos++] = 0;
+
+	return out;
+}
+
+#undef UPDATE_LENGTH
+#define UPDATE_LENGTH \
+				len++; \
+				if (len >= bufferSize - 1) \
+				{ \
+					bufferSize += 128; \
+					out = (char *)realloc(out, bufferSize); \
+				}
+
+extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+{
+	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	char *out = (char *)malloc(bufferSize);
+	out[0] = _T('\'');
+
+	const char *src = str;
+	int outPos;
+	for(outPos = 1; *src != NULL; src++)
+	{
+		switch(*src)
+		{
+			case '\'':
+				out[outPos++] = '\'';
+				out[outPos++] = '\'';
+				UPDATE_LENGTH;
+				break;
+			case '\r':
+				out[outPos++] = '\\';
+				out[outPos++] = '\r';
+				UPDATE_LENGTH;
+				break;
+			case '\n':
+				out[outPos++] = '\\';
+				out[outPos++] = '\n';
+				UPDATE_LENGTH;
+				break;
+			case '\b':
+				out[outPos++] = '\\';
+				out[outPos++] = '\b';
+				UPDATE_LENGTH;
+				break;
+			case '\t':
+				out[outPos++] = '\\';
+				out[outPos++] = '\t';
+				UPDATE_LENGTH;
+				break;
+			case 26:
+				out[outPos++] = '\\';
+				out[outPos++] = 'Z';
+				break;
+			case '\\':
+				out[outPos++] = '\\';
+				out[outPos++] = '\\';
+				UPDATE_LENGTH;
+				break;
+			default:
+				out[outPos++] = *src;
+				break;
+		}
+	}
+	out[outPos++] = '\'';
 	out[outPos++] = 0;
 
 	return out;

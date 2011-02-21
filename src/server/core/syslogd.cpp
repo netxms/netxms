@@ -314,10 +314,12 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
       _sntprintf(szQuery, 4096, 
                  _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,")
                  _T("source_object_id,hostname,msg_tag,msg_text) VALUES ")
-                 _T("(") UINT64_FMT _T(",") TIME_T_FMT _T(",%d,%d,%d,'%s','%s',%s)"),
+                 _T("(") UINT64_FMT _T(",") TIME_T_FMT _T(",%d,%d,%d,%s,%s,%s)"),
                  record.qwMsgId, record.tmTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
-					  record.szHostName, record.szTag, (const TCHAR *)DBPrepareStringA(g_hCoreDB, record.szMessage));
+					  (const TCHAR *)DBPrepareStringA(g_hCoreDB, record.szHostName),
+					  (const TCHAR *)DBPrepareStringA(g_hCoreDB, record.szTag),
+					  (const TCHAR *)DBPrepareStringA(g_hCoreDB, record.szMessage));
       DBQuery(g_hCoreDB, szQuery);
 
       // Send message to all connected clients
@@ -380,13 +382,18 @@ static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
 										   char **params, DWORD objectId, void *userArg)
 {
 	char format[] = "ssssssssssssssssssssssssssssssss";
-	char *plist[32];
+	TCHAR *plist[32];
 	int i, count;
 
 	count = min(paramCount, 32);
 	format[count] = 0;
+#ifdef UNICODE
+	for(i = 0; i < count; i++)
+		plist[i] = WideStringFromMBString(params[i]);
+#else
 	for(i = 0; i < count; i++)
 		plist[i] = params[i];
+#endif
 	PostEvent(event, objectId, format,
 	          plist[0], plist[1], plist[2], plist[3],
 	          plist[4], plist[5], plist[6], plist[7],
@@ -396,6 +403,10 @@ static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
 	          plist[20], plist[21], plist[22], plist[23],
 	          plist[24], plist[25], plist[26], plist[27],
 	          plist[28], plist[29], plist[30], plist[31]);
+#ifdef UNICODE
+	for(i = 0; i < count; i++)
+		safe_free(plist[i]);
+#endif
 }
 
 

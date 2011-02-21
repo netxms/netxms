@@ -118,7 +118,7 @@ LogParser::~LogParser()
 // Trace
 //
 
-void LogParser::trace(int level, const TCHAR *format, ...)
+void LogParser::trace(int level, const char *format, ...)
 {
 	va_list args;
 
@@ -276,7 +276,7 @@ bool LogParser::matchEvent(const char *source, DWORD eventId, DWORD level, const
 // Set associated file name
 //
 
-void LogParser::setFileName(const TCHAR *name)
+void LogParser::setFileName(const char *name)
 {
 	safe_free(m_fileName);
 	m_fileName = (name != NULL) ? _tcsdup(name) : NULL;
@@ -287,7 +287,7 @@ void LogParser::setFileName(const TCHAR *name)
 // Add macro
 //
 
-void LogParser::addMacro(const TCHAR *name, const TCHAR *value)
+void LogParser::addMacro(const char *name, const char *value)
 {
 	m_macros.set(name, value);
 }
@@ -297,7 +297,7 @@ void LogParser::addMacro(const TCHAR *name, const TCHAR *value)
 // Get macro
 //
 
-const TCHAR *LogParser::getMacro(const TCHAR *name)
+const char *LogParser::getMacro(const char *name)
 {
 	const TCHAR *value;
 
@@ -617,7 +617,7 @@ bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int 
 // Resolve event name
 //
 
-DWORD LogParser::resolveEventName(const TCHAR *name, DWORD defVal)
+DWORD LogParser::resolveEventName(const char *name, DWORD defVal)
 {
 	if (m_eventNameList != NULL)
 	{
