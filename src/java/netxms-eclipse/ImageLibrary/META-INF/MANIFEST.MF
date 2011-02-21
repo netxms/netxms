@@ -12,4 +12,5 @@ Require-Bundle: org.eclipse.ui,
  org.netxms.nebula.widgets.gallery;bundle-version="0.5.3"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.imagelibrary
+Export-Package: org.netxms.ui.eclipse.imagelibrary,
+ org.netxms.ui.eclipse.imagelibrary.dialogs
