@@ -2,21 +2,21 @@
 ** Stock image library images
 ** vim: syntax=sql
 */
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('092e4b35-4e7c-42df-b9b7-d5805bfac64e', 'Service', 'Network Objects', 1);
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('1ddb76a3-a05f-4a42-acda-22021768feaf', 'ATM', 'Network Objects', 1);
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('7cd999e9-fbe0-45c3-a695-f84523b3a50c', 'Unknown', 'Network Objects', 1);
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('904e7291-ee3f-41b7-8132-2bd29288ecc8', 'Node', 'Network Objects', 1);
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('b314cf44-b2aa-478e-b23a-73bc5bb9a624', 'HSM', 'Network Objects', 1);
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('ba6ab507-f62d-4b8f-824c-ca9d46f22375', 'Server', 'Network Objects', 1);
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('bacde727-b183-4e6c-8dca-ab024c88b999', 'Router', 'Network Objects', 1);
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('f5214d16-1ab1-4577-bb21-063cfd45d7af', 'Printer', 'Network Objects', 1);
-INSERT INTO images (GUID, name, category, protected) VALUES
-  ('f9105c54-8dcf-483a-b387-b4587dfd3cba', 'Switch', 'Network Objects', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('092e4b35-4e7c-42df-b9b7-d5805bfac64e', 'Service', 'Network Objects', 'image/png', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('1ddb76a3-a05f-4a42-acda-22021768feaf', 'ATM', 'Network Objects', 'image/png', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('7cd999e9-fbe0-45c3-a695-f84523b3a50c', 'Unknown', 'Network Objects', 'image/png', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('904e7291-ee3f-41b7-8132-2bd29288ecc8', 'Node', 'Network Objects', 'image/png', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('b314cf44-b2aa-478e-b23a-73bc5bb9a624', 'HSM', 'Network Objects', 'image/png', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('ba6ab507-f62d-4b8f-824c-ca9d46f22375', 'Server', 'Network Objects', 'image/png', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('bacde727-b183-4e6c-8dca-ab024c88b999', 'Router', 'Network Objects', 'image/png', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('f5214d16-1ab1-4577-bb21-063cfd45d7af', 'Printer', 'Network Objects', 'image/png', 1);
+INSERT INTO images (guid, name, category, mimetype, protected) VALUES
+  ('f9105c54-8dcf-483a-b387-b4587dfd3cba', 'Switch', 'Network Objects', 'image/png', 1);
