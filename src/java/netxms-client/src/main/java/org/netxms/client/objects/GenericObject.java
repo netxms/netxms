@@ -373,6 +373,39 @@ public class GenericObject
 		}
 		return list.toArray(new GenericObject[list.size()]);
 	}
+	
+	/**
+	 * Internal worker function for getAllChilds
+	 * @param classFilter class filter
+	 * @param set result set
+	 */
+	private void getAllChildsInternal(int classFilter, Set<GenericObject> set)
+	{
+		synchronized(childs)
+		{
+			final Iterator<Long> it = childs.iterator();
+			while(it.hasNext())
+			{
+				GenericObject obj = session.findObjectById(it.next());
+				if ((obj != null) && ((classFilter == -1) || (obj.getObjectClass() == classFilter)))
+					set.add(obj);
+				obj.getAllChildsInternal(classFilter, set);
+			}
+		}
+	}
+	
+	/**
+	 * Get all child objects, direct and indirect
+	 * 
+	 * @param classFilter -1 to get all childs, or NetXMS class id to retrieve objects of given class
+	 * @return set of child objects
+	 */
+	public Set<GenericObject> getAllChilds(int classFilter)
+	{
+		Set<GenericObject> result = new HashSet<GenericObject>();
+		getAllChildsInternal(classFilter, result);
+		return result;
+	}
 
 	/**
 	 * @return List of trusted nodes

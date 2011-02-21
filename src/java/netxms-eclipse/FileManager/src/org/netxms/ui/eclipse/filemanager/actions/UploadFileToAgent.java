@@ -17,7 +17,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */package org.netxms.ui.eclipse.filemanager.actions;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
@@ -30,9 +32,11 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartFileUploadDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -46,7 +50,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
 {
 	private Shell shell;
 	private ViewPart viewPart;
-	private long nodeId;
+	private Set<Long> nodes = new HashSet<Long>();
 
 	/**
 	 * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
@@ -66,6 +70,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			final Long[] nodeIdList = nodes.toArray(new Long[nodes.size()]);
 			new ConsoleJob("Initiate file upload to agent", viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
@@ -76,7 +81,8 @@ public class UploadFileToAgent implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.uploadFileToAgent(nodeId, dlg.getServerFile().getName(), dlg.getRemoteFileName());
+					for(int i = 0; i < nodeIdList.length; i++)
+						session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), dlg.getRemoteFileName());
 				}
 			}.start();
 		}
@@ -85,26 +91,34 @@ public class UploadFileToAgent implements IObjectActionDelegate
 	/**
 	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
 	 */
+	@SuppressWarnings("rawtypes")
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if (selection instanceof IStructuredSelection)
-		{
-			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof Node)
-			{
-				action.setEnabled(true);
-				nodeId = ((GenericObject)obj).getObjectId();
-			}
-			else
-			{
-				action.setEnabled(false);
-				nodeId = 0;
-			}
-		}
-		else
+		nodes.clear();
+		
+		if (!(selection instanceof IStructuredSelection))
 		{
 			action.setEnabled(false);
-			nodeId = 0;
+			return;
 		}
+		
+		Iterator it = ((IStructuredSelection)selection).iterator();
+		while(it.hasNext())
+		{
+			Object object = it.next();
+			if (object instanceof Node)
+			{
+				nodes.add(((Node)object).getObjectId());
+			}
+			else if ((object instanceof Container) || (object instanceof ServiceRoot) || 
+			         (object instanceof Subnet)  || (object instanceof EntireNetwork))
+			{
+				Set<GenericObject> set = ((GenericObject)object).getAllChilds(GenericObject.OBJECT_NODE);
+				for(GenericObject o : set)
+					nodes.add(o.getObjectId());
+			}
+		}
+		
+		action.setEnabled(nodes.size() > 0);
 	}
 }
