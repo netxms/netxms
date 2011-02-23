@@ -153,16 +153,17 @@ bool Initialize()
 		return FALSE;
 
 	// Connect to database
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	for(int i = 0; ; i++)
 	{
-		g_dbConnection = DBConnect(g_dbDriverHandle, s_dbServer, s_dbName, s_dbLogin, s_dbPassword);
+		g_dbConnection = DBConnect(g_dbDriverHandle, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, errorText);
 		if ((g_dbConnection != NULL) || (i == 5))
 			break;
 		ThreadSleep(5);
 	}
 	if (g_dbConnection == NULL)
 	{
-		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
 		return FALSE;
 	}
 	DbgPrintf(1, "Successfully connected to database %s@%s", s_dbName, s_dbServer);
