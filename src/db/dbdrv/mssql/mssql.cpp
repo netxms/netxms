@@ -1,6 +1,6 @@
 /* 
 ** Microsoft SQL Server Database Driver
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -245,7 +245,7 @@ extern "C" void EXPORT DrvUnload()
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
-                                           const char *password, const char *database)
+                                              const char *password, const char *database, WCHAR *errorText)
 {
    LOGINREC *loginrec;
    MSDB_CONN *pConn = NULL;
@@ -274,6 +274,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
       {
          if (dbuse(hProcess, database) != SUCCEED)
          {
+				wcscpy(errorText, L"Cannot switch to database");
             dbclose(hProcess);
             hProcess = NULL;
          }
@@ -294,6 +295,10 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
          dbsetuserdata(hProcess, pConn);
       }
    }
+	else
+	{
+		wcscpy(errorText, L"Cannot connect to database server");
+	}
 
    return (DBDRV_CONNECTION)pConn;
 }
@@ -318,7 +323,7 @@ extern "C" void EXPORT DrvDisconnect(MSDB_CONN *pConn)
 // Execute query
 //
 
-static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery, TCHAR *errorText)
+static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery, WCHAR *errorText)
 {
    BOOL bResult;
 
@@ -354,7 +359,8 @@ static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery, TCHAR *errorText)
 		}
 		else
 		{
-			nx_strncpy(errorText, pConn->szErrorText, DBDRV_MAX_ERROR_TEXT);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pConn->szErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 		}
 	}
 
@@ -366,7 +372,7 @@ static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery, TCHAR *errorText)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
    DWORD dwError;
    char *pszQueryUTF8;
@@ -394,7 +400,7 @@ extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery, TCHAR *erro
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    MSDB_QUERY_RESULT *pResult = NULL;
    int i, iCurrPos, iLen, *piColTypes;
@@ -587,7 +593,7 @@ extern "C" void EXPORT DrvFreeResult(MSDB_QUERY_RESULT *pResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError, TCHAR *errorText)
+                                                 DWORD *pdwError, WCHAR *errorText)
 {
    MSDB_ASYNC_QUERY_RESULT *pResult = NULL;
    char *pszQueryUTF8;

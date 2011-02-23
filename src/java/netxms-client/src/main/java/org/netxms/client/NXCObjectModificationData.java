@@ -21,6 +21,8 @@ package org.netxms.client;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Map;
+import java.util.UUID;
+
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
@@ -84,7 +86,7 @@ public class NXCObjectModificationData
 	private GeoLocation geolocation;
 	private InetAddress primaryIpAddress;
 	private int mapLayout;
-	private int mapBackground;
+	private UUID mapBackground;
 	private Collection<NetworkMapElement> mapElements;
 	private Collection<NetworkMapLink> mapLinks;
 	
@@ -577,7 +579,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the mapBackground
 	 */
-	public int getMapBackground()
+	public UUID getMapBackground()
 	{
 		return mapBackground;
 	}
@@ -585,7 +587,7 @@ public class NXCObjectModificationData
 	/**
 	 * @param mapBackground the mapBackground to set
 	 */
-	public void setMapBackground(int mapBackground)
+	public void setMapBackground(UUID mapBackground)
 	{
 		this.mapBackground = mapBackground;
 		flags |= MODIFY_MAP_BACKGROUND;

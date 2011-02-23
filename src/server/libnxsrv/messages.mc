@@ -53,7 +53,7 @@ Database driver "%1" loaded and initialized successfully
 MessageId=
 SymbolicName=MSG_DB_CONNFAIL
 Language=English
-Unable to establish connection with database
+Unable to establish connection with database (%1)
 .
 
 MessageId=

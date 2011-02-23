@@ -66,10 +66,11 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
-      hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword);
+		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+      hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, errorText);
       if (hdb == NULL)
       {
-         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
          return THREAD_OK;
       }
    }

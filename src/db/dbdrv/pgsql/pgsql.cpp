@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003 - 2010 Victor Kirhenshtein and Alex Kirhenshtein
+** Copyright (C) 2003 - 2011 Victor Kirhenshtein and Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -106,7 +106,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 		long chval = (long)(*((unsigned char *)src));
 		if (chval < 32)
 		{
-			TCHAR buffer[8];
+			char buffer[8];
 
 			snprintf(buffer, 8, "\\%03o", chval);
 			len += 4;
@@ -174,16 +174,14 @@ extern "C" void EXPORT DrvUnload()
 // Connect to database
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(
-		char *szHost,
-		char *szLogin,
-		char *szPassword,
-		char *szDatabase)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost,	const char *szLogin,	const char *szPassword, 
+															 const char *szDatabase, WCHAR *errorText)
 {
 	PG_CONN *pConn;
 
 	if (szDatabase == NULL || *szDatabase == 0)
 	{
+		wcscpy(errorText, L"Database name is empty");
 		return NULL;
 	}
 
@@ -191,11 +189,14 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(
 	if (pConn != NULL)
 	{
 		// should be replaced with PQconnectdb();
-		pConn->pHandle = PQsetdbLogin(szHost, NULL, NULL, NULL, 
-				szDatabase, szLogin, szPassword);
+		pConn->pHandle = PQsetdbLogin(szHost, NULL, NULL, NULL, szDatabase, szLogin, szPassword);
 
 		if (PQstatus(pConn->pHandle) == CONNECTION_BAD)
 		{
+			MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->pHandle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			RemoveTrailingCRLFW(errorText);
+			PQfinish(pConn->pHandle);
 			free(pConn);
 			pConn = NULL;
 		}
@@ -214,6 +215,10 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(
    		pConn->mutexQueryLock = MutexCreate();
          pConn->pFetchBuffer = NULL;
 		}
+	}
+	else
+	{
+		wcscpy(errorText, L"Memory allocation error");
 	}
 
    return (DBDRV_CONNECTION)pConn;

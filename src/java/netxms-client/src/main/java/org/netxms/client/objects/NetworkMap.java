@@ -20,6 +20,7 @@ package org.netxms.client.objects;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -43,7 +44,7 @@ public class NetworkMap extends GenericObject
 	
 	private int mapType;
 	private int layout;
-	private int background;
+	private UUID background;
 	private long seedObjectId;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
@@ -57,7 +58,7 @@ public class NetworkMap extends GenericObject
 		super(msg, session);
 		mapType = msg.getVariableAsInteger(NXCPCodes.VID_MAP_TYPE);
 		layout = msg.getVariableAsInteger(NXCPCodes.VID_LAYOUT);
-		background = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND);
+		background = msg.getVariableAsUUID(NXCPCodes.VID_BACKGROUND);
 		seedObjectId = msg.getVariableAsInt64(NXCPCodes.VID_SEED_OBJECT);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
@@ -107,7 +108,7 @@ public class NetworkMap extends GenericObject
 	/**
 	 * @return the background
 	 */
-	public int getBackground()
+	public UUID getBackground()
 	{
 		return background;
 	}

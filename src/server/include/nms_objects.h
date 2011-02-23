@@ -1338,7 +1338,7 @@ protected:
 	int m_mapType;
 	DWORD m_seedObject;
 	int m_layout;
-	int m_background;
+	uuid_t m_background;
 	int m_numElements;
 	NetworkMapElement **m_elements;
 	int m_numLinks;

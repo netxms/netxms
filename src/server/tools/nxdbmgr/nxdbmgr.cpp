@@ -643,10 +643,11 @@ int main(int argc, char *argv[])
       return 3;
    }
 
-   g_hCoreDB = DBConnect(driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword);
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   g_hCoreDB = DBConnect(driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, errorText);
    if (g_hCoreDB == NULL)
    {
-      _tprintf(_T("Unable to connect to database %s@%s as %s\n"), s_dbName, s_dbServer, s_dbLogin);
+		_tprintf(_T("Unable to connect to database %s@%s as %s: %s\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
       DBUnloadDriver(driver);
       return 4;
    }

@@ -448,7 +448,7 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
 #endif         
 #else		/* not UNICODE */
 			__buffer = UCS2StringFromMBString((const char *)pValue);
-			dwLength = ucs2_strlen(__buffer);
+			dwLength = (DWORD)ucs2_strlen(__buffer);
 #endif
          pVar = (CSCP_DF *)malloc(12 + dwLength * 2);
          pVar->df_string.dwLen = dwLength * 2;

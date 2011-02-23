@@ -11,8 +11,8 @@ package org.netxms.ui.eclipse.googlemaps.tools;
  */
 public class MapAccessor
 {
-	public static final int MAX_MAP_WIDTH = 640;
-	public static final int MAX_MAP_HEIGHT = 640;
+	public static final int MAX_MAP_WIDTH = 4096;
+	public static final int MAX_MAP_HEIGHT = 4096;
 	
 	private String licenseKey = "ABQIAAAAAzXeg8tsipIZ6SUxPAgadxRViIMKnXf3hSrUvE3b21IuEUn42BSwfTscYdOE5gZlknVLXXgYDSIB6w";
 	private double latitude = 0.0;
@@ -85,7 +85,8 @@ public class MapAccessor
 	 */
 	public String generateUrl()
 	{
-		StringBuilder sb = new StringBuilder("http://maps.google.com/staticmap?format=png32&center=");
+		//StringBuilder sb = new StringBuilder("http://maps.google.com/staticmap?format=png32&center=");
+		StringBuilder sb = new StringBuilder("http://staticmap.openstreetmap.de/staticmap.php?maptype=mapnik&format=png32&center=");
 		
 		// Coordinates of map's center
 		sb.append(latitude);
@@ -113,12 +114,12 @@ public class MapAccessor
 		sb.append(mapHeight);
 		
 		// Sensor
-		sb.append("&sensor=");
-		sb.append(sensor);
+		//sb.append("&sensor=");
+		//sb.append(sensor);
 		
 		// License key
-		sb.append("&key=");
-		sb.append(licenseKey);
+		//sb.append("&key=");
+		//sb.append(licenseKey);
 		
 		return sb.toString();
 	}

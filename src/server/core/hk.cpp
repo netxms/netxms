@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,21 +24,14 @@
 
 
 //
-// Static data
-//
-
-static DB_HANDLE m_hdb;
-
-
-//
 // Remove deleted objects which are no longer referenced
 //
 
-static void CleanDeletedObjects(void)
+static void CleanDeletedObjects(DB_HANDLE hdb)
 {
    DB_RESULT hResult;
 
-   hResult = DBSelect(m_hdb, _T("SELECT object_id FROM deleted_objects"));
+   hResult = DBSelect(hdb, _T("SELECT object_id FROM deleted_objects"));
    if (hResult != NULL)
    {
       DB_ASYNC_RESULT hAsyncResult;
@@ -53,7 +46,7 @@ static void CleanDeletedObjects(void)
 
          // Check if there are references to this object in event log
          _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT event_source FROM event_log WHERE event_source=%d"), dwObjectId);
-         hAsyncResult = DBAsyncSelect(m_hdb, szQuery);
+         hAsyncResult = DBAsyncSelect(hdb, szQuery);
          if (hAsyncResult != NULL)
          {
             if (!DBFetch(hAsyncResult))
@@ -63,7 +56,7 @@ static void CleanDeletedObjects(void)
                QueueSQLRequest(szQuery);
                DbgPrintf(4, _T("*HK* Deleted object with id %d was purged"), dwObjectId);
             }
-            DBFreeAsyncResult(m_hdb, hAsyncResult);
+            DBFreeAsyncResult(hdb, hAsyncResult);
          }
       }
       DBFreeResult(hResult);
@@ -75,7 +68,7 @@ static void CleanDeletedObjects(void)
 // Delete empty subnets
 //
 
-static void DeleteEmptySubnets(void)
+static void DeleteEmptySubnets()
 {
    DWORD i;
 
@@ -100,10 +93,10 @@ static void DeleteEmptySubnets(void)
 // Maintenance tasks specific to PostgreSQL
 //
 
-static void PGSQLMaintenance(void)
+static void PGSQLMaintenance(DB_HANDLE hdb)
 {
    if (!ConfigReadInt(_T("DisableVacuum"), 0))
-      DBQuery(m_hdb, _T("VACUUM ANALYZE"));
+      DBQuery(hdb, _T("VACUUM ANALYZE"));
 }
 
 
@@ -117,21 +110,6 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    TCHAR szQuery[256];
    DWORD i, dwRetentionTime, dwInterval;
 
-   // Establish separate connection to database if needed
-   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
-   {
-      m_hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword);
-      if (m_hdb == NULL)
-      {
-         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
-         m_hdb = g_hCoreDB;   // Switch to main DB connection
-      }
-   }
-   else
-   {
-      m_hdb = g_hCoreDB;
-   }
-
    // Load configuration
    dwInterval = ConfigReadULong(_T("HouseKeepingInterval"), 3600);
 
@@ -142,13 +120,15 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       if (SleepAndCheckForShutdown(dwInterval - (DWORD)(currTime % dwInterval)))
          break;      // Shutdown has arrived
 
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       // Remove outdated event log records
       dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
       if (dwRetentionTime > 0)
       {
 			dwRetentionTime *= 86400;	// Convert days to seconds
          _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), currTime - dwRetentionTime);
-         DBQuery(m_hdb, szQuery);
+         DBQuery(hdb, szQuery);
       }
 
       // Remove outdated syslog records
@@ -157,7 +137,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       {
 			dwRetentionTime *= 86400;	// Convert days to seconds
          _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), currTime - dwRetentionTime);
-         DBQuery(m_hdb, szQuery);
+         DBQuery(hdb, szQuery);
       }
 
       // Remove outdated audit log records
@@ -166,7 +146,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       {
 			dwRetentionTime *= 86400;	// Convert days to seconds
          _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), currTime - dwRetentionTime);
-         DBQuery(m_hdb, szQuery);
+         DBQuery(hdb, szQuery);
       }
 
       // Delete empty subnets if needed
@@ -174,7 +154,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          DeleteEmptySubnets();
 
       // Remove deleted objects which are no longer referenced
-      CleanDeletedObjects();
+      CleanDeletedObjects(hdb);
 
       // Remove expired DCI data
       RWLockReadLock(g_rwlockNodeIndex, INFINITE);
@@ -184,14 +164,11 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
       // Run DB-specific maintenance tasks
       if (g_nDBSyntax == DB_SYNTAX_PGSQL)
-         PGSQLMaintenance();
+         PGSQLMaintenance(hdb);
+
+		DBConnectionPoolReleaseConnection(hdb);
    }
 
-   // Disconnect from database if using separate connection
-   if (m_hdb != g_hCoreDB)
-   {
-      DBDisconnect(m_hdb);
-   }
    DbgPrintf(1, _T("Housekeeper thread terminated"));
    return THREAD_OK;
 }

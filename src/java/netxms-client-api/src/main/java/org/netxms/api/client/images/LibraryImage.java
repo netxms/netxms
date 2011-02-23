@@ -1,11 +1,35 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Alex Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.api.client.images;
+
+import java.util.UUID;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
+/**
+ * This class represents image in image library 
+ *
+ */
 public class LibraryImage
 {
-	private String guid;
+	private UUID guid;
 	private String name;
 	private String category;
 	private String mimeType;
@@ -13,13 +37,24 @@ public class LibraryImage
 	private boolean imageProtected;
 	private boolean complete = false;
 
-	public LibraryImage(final String guid)
+	/**
+	 * 
+	 * @param guid
+	 */
+	public LibraryImage(final UUID guid)
 	{
 		this.guid = guid;
 	}
 
-	public LibraryImage(final String guid, final String name, final String category, final String mimeType,
-			final boolean imageProtected)
+	/**
+	 * 
+	 * @param guid
+	 * @param name
+	 * @param category
+	 * @param mimeType
+	 * @param imageProtected
+	 */
+	public LibraryImage(final UUID guid, final String name, final String category, final String mimeType,	final boolean imageProtected)
 	{
 		this.guid = guid;
 		this.name = name;
@@ -31,12 +66,11 @@ public class LibraryImage
 	/**
 	 * Create object from NXCP message
 	 * 
-	 * @param msg
-	 *           Message containing object's data
+	 * @param msg Message containing object's data
 	 */
 	public LibraryImage(final NXCPMessage msg)
 	{
-		guid = msg.getVariableAsString(NXCPCodes.VID_GUID);
+		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		category = msg.getVariableAsString(NXCPCodes.VID_CATEGORY);
 		binaryData = msg.getVariableAsBinary(NXCPCodes.VID_IMAGE_DATA);
@@ -45,6 +79,9 @@ public class LibraryImage
 		this.complete = true;
 	}
 
+	/**
+	 * Default constructor
+	 */
 	public LibraryImage()
 	{
 	}
@@ -54,7 +91,8 @@ public class LibraryImage
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		msg.setVariable(NXCPCodes.VID_GUID, guid);
+		if (guid != null)
+			msg.setVariable(NXCPCodes.VID_GUID, guid);
 		msg.setVariable(NXCPCodes.VID_NAME, name);
 		if (category != null)
 		{
@@ -69,7 +107,7 @@ public class LibraryImage
 	/**
 	 * @return the guid
 	 */
-	public String getGuid()
+	public UUID getGuid()
 	{
 		return guid;
 	}
@@ -78,7 +116,7 @@ public class LibraryImage
 	 * @param guid
 	 *           the guid to set
 	 */
-	public void setGuid(String guid)
+	public void setGuid(UUID guid)
 	{
 		this.guid = guid;
 	}
@@ -167,6 +205,9 @@ public class LibraryImage
 		this.mimeType = mimeType;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString()
 	{

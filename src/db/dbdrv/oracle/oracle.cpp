@@ -1,6 +1,6 @@
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007-2010 Victor Kirhenshtein
+** Copyright (C) 2007-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -122,27 +122,35 @@ extern "C" void EXPORT DrvUnload()
 
 
 //
+// Get error text from error handle
+//
+
+static void GetErrorTextFromHandle(OCIError *handle, WCHAR *errorText)
+{
+	sb4 nCode;
+
+#if UNICODE_UCS2
+	OCIErrorGet(handle, 1, NULL, &nCode, (text *)errorText, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#else
+	UCS2CHAR buffer[DBDRV_MAX_ERROR_TEXT];
+
+	OCIErrorGet(handle, 1, NULL, &nCode, (text *)buffer, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+	buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+	ucs2_to_ucs4(buffer, ucs2_strlen(buffer) + 1, errorText, DBDRV_MAX_ERROR_TEXT);
+	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#endif
+	RemoveTrailingCRLFW(errorText);
+}
+
+
+//
 // Set last error text
 //
 
 static void SetLastErrorText(ORACLE_CONN *pConn)
 {
-	sb4 nCode;
-
-#if UNICODE_UCS2
-	OCIErrorGet(pConn->handleError, 1, NULL, &nCode, (text *)pConn->szLastError,
-	            DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
-	pConn->szLastError[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-#else
-	UCS2CHAR buffer[DBDRV_MAX_ERROR_TEXT];
-
-	OCIErrorGet(pConn->handleError, 1, NULL, &nCode, (text *)buffer,
-	            DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
-	buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-	ucs2_to_ucs4(buffer, ucs2_strlen(buffer) + 1, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
-	pConn->szLastError[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-#endif
-	RemoveTrailingCRLFW(pConn->szLastError);
+	GetErrorTextFromHandle(pConn->handleError, pConn->szLastError);
 }
 
 
@@ -185,7 +193,8 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 // Connect to database
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, char *pszPassword, char *pszDatabase)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *pszLogin, const char *pszPassword, 
+                                              const char *pszDatabase, WCHAR *errorText)
 {
 	ORACLE_CONN *pConn;
 	UCS2CHAR *pwszStr;
@@ -232,13 +241,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, cha
 				}
 				else
 				{
-/*
-	text error[1024];
-	sb4 nCode;
-	memset(error, 0, sizeof(error));
-	OCIErrorGet(pConn->handleError, 1, NULL, &nCode, (text *)error, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
-	printf("%s\n", MBStringFromUCS2String((UCS2CHAR *)error));
-*/
+					GetErrorTextFromHandle(pConn->handleError, errorText);
 					OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
 					free(pConn);
 					pConn = NULL;
@@ -246,13 +249,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, cha
 			}
 			else
 			{
-/*
-	text error[1024];
-	sb4 nCode;
-	memset(error, 0, sizeof(error));
-	OCIErrorGet(pConn->handleError, 1, NULL, &nCode, (text *)error, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
-	printf("%s\n", MBStringFromUCS2String((UCS2CHAR *)error));
-*/
+				GetErrorTextFromHandle(pConn->handleError, errorText);
 				OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
 				free(pConn);
 				pConn = NULL;
@@ -261,9 +258,14 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, cha
 		}
 		else
 		{
+			wcscpy(errorText, L"Cannot allocate environment handle");
 			free(pConn);
 			pConn = NULL;
 		}
+	}
+	else
+	{
+		wcscpy(errorText, L"Memory allocation error");
 	}
 
    return (DBDRV_CONNECTION)pConn;

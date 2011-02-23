@@ -1,6 +1,6 @@
 /* 
 ** DB2 Database Driver
-** Copyright (C) 2010 Raden Solutinos
+** Copyright (C) 2010, 2011 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ extern "C" const char EXPORT *drvName = "DB2";
 // Convert DB2 state to NetXMS database error code and get error text
 //
 
-static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, char *errorText)
+static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_WCHAR *errorText)
 {
    SQLRETURN nRet;
    SQLSMALLINT nChars;
@@ -82,20 +82,22 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, char *e
 	// Get error message
 	if (errorText != NULL)
 	{
+#if UNICODE_UCS2
+		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
+#else
 		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, buffer, DBDRV_MAX_ERROR_TEXT, &nChars);
+#endif
 		if (nRet == SQL_SUCCESS)
 		{
+#if UNICODE_UCS4
 			buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-#if UNICODE_UCS2
-			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
-#else
-			ucs2_to_mb(buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			ucs2_to_ucs4(buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 #endif
 			RemoveTrailingCRLF(errorText);
 		}
 		else
 		{
-			nx_strncpy(errorText, _T("Unable to obtain description for this error"), DBDRV_MAX_ERROR_TEXT);
+			wcscpy(errorText, L"Unable to obtain description for this error");
 		}
    }
    
@@ -107,34 +109,67 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, char *e
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
-extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	char *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
-	out[0] = _T('\'');
+	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
+	out[0] = L'\'';
 
-	const char *src = str;
+	const WCHAR *src = str;
 	int outPos;
 	for(outPos = 1; *src != NULL; src++)
 	{
-		if (*src == _T('\''))
+		if (*src == L'\'')
 		{
 			len++;
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
 			}
-			out[outPos++] = _T('\'');
-			out[outPos++] = _T('\'');
+			out[outPos++] = L'\'';
+			out[outPos++] = L'\'';
 		}
 		else
 		{
 			out[outPos++] = *src;
 		}
 	}
-	out[outPos++] = _T('\'');
+	out[outPos++] = L'\'';
+	out[outPos++] = 0;
+
+	return out;
+}
+
+extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+{
+	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	char *out = (char *)malloc(bufferSize);
+	out[0] = '\'';
+
+	const char *src = str;
+	int outPos;
+	for(outPos = 1; *src != NULL; src++)
+	{
+		if (*src == '\'')
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (char *)realloc(out, bufferSize);
+			}
+			out[outPos++] = '\'';
+			out[outPos++] = '\'';
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = '\'';
 	out[outPos++] = 0;
 
 	return out;
@@ -145,7 +180,7 @@ extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
    return TRUE;
 }
@@ -166,7 +201,7 @@ extern "C" void EXPORT DrvUnload()
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
-                                              char *pszPassword, char *pszDatabase)
+                                              char *pszPassword, char *pszDatabase, NETXMS_WCHAR *errorText)
 {
    long iResult;
    DB2DRV_CONN *pConn;
@@ -177,17 +212,26 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
    // Allocate environment
    iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
-      goto connect_failure_0;
+	{
+		wcscpy(errorText, L"Cannot allocate environment handle");
+		goto connect_failure_0;
+	}
 
    // Set required DB2 version
 	iResult = SQLSetEnvAttr(pConn->sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		wcscpy(errorText, L"Call to SQLSetEnvAttr failed");
       goto connect_failure_1;
+	}
 
 	// Allocate connection handle, set timeout
 	iResult = SQLAllocHandle(SQL_HANDLE_DBC, pConn->sqlEnv, &pConn->sqlConn); 
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		wcscpy(errorText, L"Cannot allocate connection handle");
       goto connect_failure_1;
+	}
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER *)15, 0);
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
 
@@ -195,7 +239,10 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS,
                         (SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
       goto connect_failure_2;
+	}
 
    // Create mutex
    pConn->mutexQuery = MutexCreate();
@@ -236,7 +283,7 @@ extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, char *errorText)
+extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
 {
    long iResult;
    DWORD dwResult;
@@ -281,7 +328,7 @@ extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, ch
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, char *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    long i, iResult, iCurrValue;
    DB2DRV_QUERY_RESULT *pResult = NULL;
@@ -486,7 +533,7 @@ extern "C" void EXPORT DrvFreeResult(DB2DRV_QUERY_RESULT *pResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-                                                    DWORD *pdwError, char *errorText)
+                                                    DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    DB2DRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;

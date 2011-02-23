@@ -75,7 +75,7 @@ public class LocationMap extends ViewPart
 
 		// Initial map view
 		mapAccessor = new MapAccessor(57.0, 24.0);
-		mapAccessor.setSpan(0.1, 0.1);
+		mapAccessor.setZoom(13);
 		map.showMap(mapAccessor);
 		
 		infoText.setText("Map centered at " + mapAccessor.getLatitude() + " " + mapAccessor.getLongitude());

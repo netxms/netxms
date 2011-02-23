@@ -1248,7 +1248,7 @@ CREATE TABLE network_maps
 	map_type integer not null,
 	layout integer not null,
 	seed integer not null,
-	background integer not null,
+	background varchar(36) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1292,7 +1292,6 @@ CREATE TABLE images
    category varchar(255) not null,
    mimetype varchar(32) not null,
    protected integer default 0,
-   
    PRIMARY KEY(guid),
    UNIQUE(name, category)
 ) TABLE_TYPE;

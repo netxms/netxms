@@ -77,7 +77,7 @@ typedef struct
    CONDITION condResult;
    int nCommand;              // Command given to worker thread
    int nResult;               // Command execution result
-   TCHAR *pszErrorText;       // Buffer for placing error message
+   WCHAR *pszErrorText;       // Buffer for placing error message
    const char *pszQuery;      // Query to execute
    SQLITE_RESULT *pResult;    // Result of sync SELECT
    int nNumCols;              // Number of columns in async result

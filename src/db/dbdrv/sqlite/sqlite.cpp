@@ -139,17 +139,9 @@ static THREAD_RESULT THREAD_CALL SQLiteWorkerThread(void *pArg)
       	}
       	else
       	{
-#ifdef UNICODE
 				MultiByteToWideChar(CP_UTF8, 0, sqlite3_errmsg(pConn->pdb), -1, pConn->pszErrorText, DBDRV_MAX_ERROR_TEXT);
-#else      	
-				WCHAR *wtemp;
-		   	
-				wtemp = WideStringFromUTF8String(sqlite3_errmsg(pConn->pdb));
-				WideCharToMultiByte(CP_ACP,  WC_COMPOSITECHECK | WC_DEFAULTCHAR, wtemp, -1, pConn->pszErrorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
-				free(wtemp);
-#endif
 				pConn->pszErrorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-				RemoveTrailingCRLF(pConn->pszErrorText);
+				RemoveTrailingCRLFW(pConn->pszErrorText);
 			}
       }
       	
@@ -163,7 +155,7 @@ static THREAD_RESULT THREAD_CALL SQLiteWorkerThread(void *pArg)
 // Execute command by worker thread
 //
 
-static int ExecCommand(SQLITE_CONN *pConn, int nCmd, const char *pszQuery, TCHAR *errorText)
+static int ExecCommand(SQLITE_CONN *pConn, int nCmd, const char *pszQuery, WCHAR *errorText)
 {
    pConn->pszQuery = pszQuery;
    pConn->nCommand = nCmd;
@@ -288,8 +280,8 @@ extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 // Connect to database
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
-                                       char *pszPassword, char *pszDatabase)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *pszLogin,
+                                              const char *pszPassword, const char *pszDatabase, WCHAR *errorText)
 {
    SQLITE_CONN *pConn;
 
@@ -301,7 +293,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 	pConn->condResult = ConditionCreate(FALSE);
 	pConn->hThread = ThreadCreateEx(SQLiteWorkerThread, 0, pConn);
 
-	if (ExecCommand(pConn, SQLITE_DRV_OPEN, pszDatabase, NULL) != SQLITE_OK)
+	if (ExecCommand(pConn, SQLITE_DRV_OPEN, pszDatabase, errorText) != SQLITE_OK)
 	{
 		DrvDisconnect(pConn);
 		pConn = NULL;
@@ -314,7 +306,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 // Internal query
 //
 
-static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, TCHAR *errorText)
+static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, WCHAR *errorText)
 {
    BOOL bResult;
 
@@ -329,7 +321,7 @@ static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, TCHAR *e
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
    DWORD dwResult;
    char *pszQueryUTF8;
@@ -345,7 +337,7 @@ extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    DBDRV_RESULT pResult = NULL;
    char *pszQueryUTF8;
@@ -464,7 +456,7 @@ extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT hResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError, TCHAR *errorText)
+                                                 DWORD *pdwError, WCHAR *errorText)
 {
    DBDRV_ASYNC_RESULT hResult;
    char *pszQueryUTF8;

@@ -1313,7 +1313,7 @@ DWORD AgentConnection::updateConfigFile(const TCHAR *pszConfig)
    msg.SetCode(CMD_UPDATE_AGENT_CONFIG);
    msg.SetId(dwRqId);
 #ifdef UNICODE
-   nChars = _tcslen(pszConfig);
+   nChars = (int)_tcslen(pszConfig);
    pBuffer = (BYTE *)malloc(nChars + 1);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pszConfig, nChars, (char *)pBuffer, nChars + 1, NULL, NULL);

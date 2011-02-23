@@ -29,7 +29,7 @@
 //
 
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *pszServer, const TCHAR *pszDBName,
-                                       const TCHAR *pszLogin, const TCHAR *pszPassword)
+                                       const TCHAR *pszLogin, const TCHAR *pszPassword, TCHAR *errorText)
 {
    DBDRV_CONNECTION hDrvConn;
    DB_HANDLE hConn = NULL;
@@ -40,9 +40,13 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *pszServer,
 	char *mbDatabase = (pszDBName == NULL) ? NULL : MBStringFromWideString(pszDBName);
 	char *mbLogin = (pszLogin == NULL) ? NULL : MBStringFromWideString(pszLogin);
 	char *mbPassword = (pszPassword == NULL) ? NULL : MBStringFromWideString(pszPassword);
-   hDrvConn = driver->m_fpDrvConnect(mbServer, mbLogin, mbPassword, mbDatabase);
+	errorText[0] = 0;
+   hDrvConn = driver->m_fpDrvConnect(mbServer, mbLogin, mbPassword, mbDatabase, errorText);
 #else
-   hDrvConn = driver->m_fpDrvConnect(pszServer, pszLogin, pszPassword, pszDBName);
+	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
+   hDrvConn = driver->m_fpDrvConnect(pszServer, pszLogin, pszPassword, pszDBName, wcErrorText);
+	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
    if (hDrvConn != NULL)
    {
@@ -113,12 +117,13 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
 static void DBReconnect(DB_HANDLE hConn)
 {
    int nCount;
+	WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
 	hConn->m_driver->m_fpDrvDisconnect(hConn->m_connection);
    for(nCount = 0; ; nCount++)
    {
 		hConn->m_connection = hConn->m_driver->m_fpDrvConnect(hConn->m_server, hConn->m_login,
-                                                            hConn->m_password, hConn->m_dbName);
+                                                            hConn->m_password, hConn->m_dbName, errorText);
       if (hConn->m_connection != NULL)
          break;
       if (nCount == 0)

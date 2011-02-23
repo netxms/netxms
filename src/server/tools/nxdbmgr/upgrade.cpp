@@ -252,6 +252,24 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 // Upgrade from V219 to V220
 //
 
+static BOOL H_UpgradeFromV220(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE network_maps DROP COLUMN background\n")
+		_T("ALTER TABLE network_maps ADD background varchar(36)\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='221' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
+// Upgrade from V219 to V220
+//
+
 static BOOL H_UpgradeFromV219(int currVersion, int newVersion)
 {
 	static TCHAR batch[] = 
@@ -5058,6 +5076,7 @@ static struct
 	{ 217, 218, H_UpgradeFromV217 },
 	{ 218, 219, H_UpgradeFromV218 },
 	{ 219, 220, H_UpgradeFromV219 },
+	{ 220, 221, H_UpgradeFromV220 },
    { 0, NULL }
 };
 

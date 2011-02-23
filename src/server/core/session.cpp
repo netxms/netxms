@@ -10587,36 +10587,21 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 void ClientSession::sendLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
+	TCHAR guidText[64];
 	DWORD rcc = RCC_SUCCESS;
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	TCHAR guid[MAX_DB_STRING];
-	request->GetVariableStr(VID_GUID, guid, MAX_DB_STRING);
-	DebugPrintf(5, _T("sendLibraryImage: guid=%s"), guid);
-
-	int guidLen = _tcslen(guid);
-	if (guidLen != 36)
-	{
-		rcc = RCC_INVALID_OBJECT_NAME;
-	}
-	else
-	{
-		for (int i = 0; i < guidLen; i++)
-		{
-			if (!_istalpha(guid[i]) && !_istdigit(guid[i]) && guid[i] != _T('-'))
-			{
-				rcc = RCC_INVALID_OBJECT_NAME;
-				break;
-			}
-		}
-	}
+	uuid_t guid;
+	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+	uuid_to_string(guid, guidText);
+	DebugPrintf(5, _T("sendLibraryImage: guid=%s"), guidText);
 
 	if (rcc == RCC_SUCCESS)
 	{
 		TCHAR query[MAX_DB_STRING];
-		_sntprintf(query, MAX_DB_STRING, _T("SELECT name,category,mimetype,protected FROM images WHERE guid = '%s'"), EncodeSQLString(guid));
+		_sntprintf(query, MAX_DB_STRING, _T("SELECT name,category,mimetype,protected FROM images WHERE guid = '%s'"), guidText);
 		DB_RESULT result = DBSelect(g_hCoreDB, query);
 		if (result != NULL)
 		{
@@ -10625,7 +10610,7 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 			{
 				TCHAR buffer[MAX_DB_STRING];
 
-				msg.SetVariable(VID_GUID, guid);
+				msg.SetVariable(VID_GUID, guid, UUID_LENGTH);
 
 				DBGetField(result, 0, 0, buffer, MAX_DB_STRING);	// image name
 				msg.SetVariable(VID_NAME, buffer);
@@ -10637,7 +10622,8 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 				msg.SetVariable(VID_IMAGE_PROTECTED, (WORD)DBGetFieldLong(result, 0, 3));
 
 				TCHAR absFileName[MAX_PATH];
-				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guid);
+				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
+				DbgPrintf(5, _T("sendLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
 				FILE *f = _tfopen(absFileName, _T("rb"));
 				if (f != NULL)
@@ -10693,21 +10679,24 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	CSCPMessage msg;
 	DWORD rcc = RCC_SUCCESS;
 
+	uuid_t guid;
+	uuid_clear(guid);
+
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	TCHAR guid[MAX_DB_STRING] = _T("");
 	TCHAR name[MAX_DB_STRING] = _T("");
 	TCHAR category[MAX_DB_STRING] = _T("");
 	TCHAR mimetype[MAX_DB_STRING] = _T("");
 
-	request->GetVariableStr(VID_GUID, guid, MAX_DB_STRING);
-	if (guid[0] == 0)
-	{
-		uuid_t uuid;
-		uuid_generate(uuid);
-		uuid_to_string(uuid, guid);
-	}
+	if (request->IsVariableExist(VID_GUID))
+		request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+
+	if (uuid_is_null(guid))
+		uuid_generate(guid);
+
+	TCHAR guidText[64];
+	uuid_to_string(guid, guidText);
 
 	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
 	request->GetVariableStr(VID_CATEGORY, category, MAX_DB_STRING);
@@ -10716,29 +10705,20 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	BYTE *imageData = (BYTE *)malloc(imageSize);
 	request->GetVariableBinary(VID_IMAGE_DATA, imageData, imageSize);
 
-	DebugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guid, name, category, (int)imageSize);
+	// Set default values for empty fields
+	if (name[0] == 0)
+		_tcscpy(name, guidText);
+	if (category[0] == 0)
+		_tcscpy(category, _T("Default"));
+	if (mimetype[0] == 0)
+		_tcscpy(mimetype, _T("image/png"));
 
-	int guidLen = _tcslen(guid);
-	if (guidLen != 36)
-	{
-		rcc = RCC_INVALID_OBJECT_NAME;
-	}
-	else
-	{
-		for (int i = 0; i < guidLen; i++)
-		{
-			if (!_istalpha(guid[i]) && !_istdigit(guid[i]) && guid[i] != _T('-'))
-			{
-				rcc = RCC_INVALID_OBJECT_NAME;
-				break;
-			}
-		}
-	}
+	DebugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guidText, name, category, (int)imageSize);
 
 	if (rcc == RCC_SUCCESS)
 	{
 		TCHAR query[MAX_DB_STRING];
-		_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), EncodeSQLString(guid));
+		_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
 		DB_RESULT result = DBSelect(g_hCoreDB, query);
 		if (result != NULL)
 		{
@@ -10750,11 +10730,11 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 				if (!isProtected)
 				{
-					_sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET name = '%s', category = '%s', mimetype = '%s' WHERE guid = '%s'"),
-							EncodeSQLString(name),
-							EncodeSQLString(category),
-							EncodeSQLString(mimetype),
-							EncodeSQLString(guid));
+					_sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET name = %s, category = %s, mimetype = %s WHERE guid = '%s'"),
+							(const TCHAR *)DBPrepareString(g_hCoreDB, name),
+							(const TCHAR *)DBPrepareString(g_hCoreDB, category),
+							(const TCHAR *)DBPrepareString(g_hCoreDB, mimetype),
+							guidText);
 				}
 				else
 				{
@@ -10764,11 +10744,11 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 			else
 			{
 				// not found in DB, create
-				_sntprintf(query, MAX_DB_STRING, _T("INSERT INTO images (guid, name, category, mimetype, protected) VALUES ('%s', '%s', '%s', '%s', 0)"),
-						EncodeSQLString(guid),
-						EncodeSQLString(name),
-						EncodeSQLString(category),
-						EncodeSQLString(mimetype));
+				_sntprintf(query, MAX_DB_STRING, _T("INSERT INTO images (guid, name, category, mimetype, protected) VALUES ('%s', %s, %s, %s, 0)"),
+						guidText,
+						(const TCHAR *)DBPrepareString(g_hCoreDB, name),
+						(const TCHAR *)DBPrepareString(g_hCoreDB, category),
+						(const TCHAR *)DBPrepareString(g_hCoreDB, mimetype));
 			}
 
 			if (query[0] != 0)
@@ -10777,7 +10757,8 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 				{
 					// DB up to date, update file)
 					TCHAR absFileName[MAX_PATH];
-					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guid);
+					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
+					DbgPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 					FILE *f = _tfopen(absFileName, _T("wb"));
 					if (f != NULL)
 					{
@@ -10806,7 +10787,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		msg.SetVariable(VID_GUID, guid);
+		msg.SetVariable(VID_GUID, guid, UUID_LENGTH);
 	}
 
 	free(imageData);
@@ -10824,19 +10805,45 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	DWORD rcc = RCC_SUCCESS;
-	TCHAR guid[MAX_DB_STRING];
+	uuid_t guid;
+	TCHAR guidText[64];
 	TCHAR query[MAX_DB_STRING];
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	request->GetVariableStr(VID_GUID, guid, MAX_DB_STRING);
-	DebugPrintf(5, _T("deleteLibraryImage: guid=%s"), guid);
+	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+	uuid_to_string(guid, guidText);
+	DebugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
 
-	_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND guid = '%s'"), EncodeSQLString(guid));
-	if (DBQuery(g_hCoreDB, query))
+	_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
+	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+	if (hResult != NULL)
 	{
-		// remove from FS?
+		if (DBGetNumRows(hResult) > 0)
+		{
+			if (DBGetFieldLong(hResult, 0, 0) == 0)
+			{
+				_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND guid = '%s'"), guidText);
+				if (DBQuery(g_hCoreDB, query))
+				{
+					// TODO: remove from FS?
+				}
+				else
+				{
+					rcc = RCC_DB_FAILURE;
+				}
+			}
+			else
+			{
+				rcc = RCC_ACCESS_DENIED;
+			}
+		}
+		else
+		{
+			rcc = RCC_INVALID_OBJECT_ID;
+		}
+		DBFreeResult(hResult);
 	}
 	else
 	{
@@ -10858,6 +10865,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	TCHAR category[MAX_DB_STRING];
 	TCHAR query[MAX_DB_STRING * 2];
 	TCHAR buffer[MAX_DB_STRING];
+	uuid_t guid;
 	DWORD rcc = RCC_SUCCESS;
 
 	msg.SetId(request->GetId());
@@ -10876,9 +10884,8 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	_tcscpy(query, _T("SELECT guid,name,category,mimetype,protected FROM images"));
 	if (category[0] != 0)
 	{
-		_tcscat(query, _T(" WHERE category = '"));
-      _tcscat(query, EncodeSQLString(category));
-		_tcscat(query, _T("'"));
+		_tcscat(query, _T(" WHERE category = "));
+      _tcscat(query, (const TCHAR *)DBPrepareString(g_hCoreDB, category));
 	}
 
 	DB_RESULT result = DBSelect(g_hCoreDB, query);
@@ -10889,8 +10896,8 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 		DWORD varId = VID_IMAGE_LIST_BASE;
 		for (int i = 0; i < count; i++)
 		{
-			DBGetField(result, i, 0, buffer, MAX_DB_STRING);	// guid
-			msg.SetVariable(varId++, buffer);
+			DBGetFieldGUID(result, i, 0, guid);	// guid
+			msg.SetVariable(varId++, guid, UUID_LENGTH);
 
 			DBGetField(result, i, 1, buffer, MAX_DB_STRING);	// image name
 			msg.SetVariable(varId++, buffer);

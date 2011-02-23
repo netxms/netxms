@@ -50,7 +50,7 @@ struct db_driver_t
 	MUTEX m_mutexReconnect;
 	HMODULE m_handle;
 	void *m_userArg;
-	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *);
+	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
 	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
 	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);

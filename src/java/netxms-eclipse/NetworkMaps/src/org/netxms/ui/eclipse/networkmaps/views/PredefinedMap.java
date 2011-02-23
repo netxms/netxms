@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.networkmaps.views;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -41,11 +42,15 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
@@ -55,6 +60,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
+import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
@@ -71,11 +77,14 @@ public class PredefinedMap extends NetworkMap
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap";
 	
 	private org.netxms.client.objects.NetworkMap mapObject; 
+	private Image backgroundImage = null;
 	private Action actionAddObject;
 	private Action actionLinkObjects;
 	private Action actionAddGroupBox;
 	private Action actionAddImage;
 	private Action actionRemove;
+	private Action actionSetBackground;
+	private Action actionRemoveBackground;
 	
 	/**
 	 * Creare predefined map view
@@ -239,6 +248,22 @@ public class PredefinedMap extends NetworkMap
 		};
 		actionRemove.setAccelerator(SWT.CTRL | 'R');
 		actionRemove.setImageDescriptor(SharedIcons.DELETE_OBJECT);
+
+		actionSetBackground = new Action("Set &background...") {
+			@Override
+			public void run()
+			{
+				setBackground();
+			}
+		};
+
+		actionRemoveBackground = new Action("&Remove background") {
+			@Override
+			public void run()
+			{
+				removeBackground();
+			}
+		};
 	}
 	
 	/**
@@ -261,6 +286,9 @@ public class PredefinedMap extends NetworkMap
 	{
 		manager.add(actionAddObject);
 		manager.add(createDecorationAdditionSubmenu());
+		manager.add(new Separator());
+		manager.add(actionSetBackground);
+		manager.add(actionRemoveBackground);
 		manager.add(new Separator());
 		super.fillMapContextMenu(manager);
 	}
@@ -298,6 +326,9 @@ public class PredefinedMap extends NetworkMap
 		manager.add(actionAddObject);
 		manager.add(actionLinkObjects);
 		manager.add(createDecorationAdditionSubmenu());
+		manager.add(new Separator());
+		manager.add(actionSetBackground);
+		manager.add(actionRemoveBackground);
 		manager.add(new Separator());
 		super.fillLocalPullDown(manager);
 	}
@@ -430,7 +461,11 @@ public class PredefinedMap extends NetworkMap
 	 */
 	private void addImageDecoration()
 	{
+		ImageSelectionDialog dlg = new ImageSelectionDialog(getSite().getShell());
+		if (dlg.open() != Window.OK)
+			return;
 		
+		//dlg.getImageObject();
 	}
 	
 	/**
@@ -463,6 +498,54 @@ public class PredefinedMap extends NetworkMap
 			}
 		}.start();
 	}
+	
+	/**
+	 * Save background
+	 * 
+	 * @param imageGuid background image GUID
+	 */
+	private void saveBackground(UUID imageGuid)
+	{
+		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
+		md.setMapBackground(imageGuid);
+		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				session.modifyObject(md);
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update map background on server";
+			}
+		}.start();
+	}
+
+	/**
+	 * Set new background
+	 */
+	private void setBackground()
+	{
+		ImageSelectionDialog dlg = new ImageSelectionDialog(getSite().getShell());
+		if (dlg.open() == Window.OK)
+		{
+			backgroundImage = dlg.getImageObject();
+			viewer.getGraphControl().redraw();
+			saveBackground(dlg.getLibraryImage().getGuid());
+		}
+	}
+	
+	/**
+	 * Remove background from map
+	 */
+	private void removeBackground()
+	{
+		backgroundImage = null;
+		viewer.getGraphControl().redraw();
+		saveBackground(new UUID(0, 0));
+	}
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#isSelectableElement(java.lang.Object)
@@ -471,5 +554,15 @@ public class PredefinedMap extends NetworkMap
 	protected boolean isSelectableElement(Object element)
 	{
 		return element instanceof NetworkMapDecoration;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#paintGraphOverlay(org.eclipse.swt.graphics.GC)
+	 */
+	@Override
+	protected void paintGraphOverlay(GC gc)
+	{
+		if (backgroundImage != null)
+			gc.drawImage(backgroundImage, 0, 0);
 	}
 }

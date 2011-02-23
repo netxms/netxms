@@ -42,7 +42,7 @@ NetworkMap::NetworkMap() : NetObj()
 	m_mapType = NETMAP_USER_DEFINED;
 	m_seedObject = 0;
 	m_layout = MAP_LAYOUT_MANUAL;
-	m_background = 0;
+	uuid_clear(m_background);
 	m_numElements = 0;
 	m_elements = NULL;
 	m_numLinks = 0;
@@ -59,7 +59,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_mapType = type;
 	m_seedObject = seed;
 	m_layout = MAP_LAYOUT_RADIAL;
-	m_background = 0;
+	uuid_clear(m_background);
 	m_numElements = 0;
 	m_elements = NULL;
 	m_numLinks = 0;
@@ -98,7 +98,7 @@ void NetworkMap::CalculateCompoundStatus(BOOL bForcedRecalc)
 
 BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 {
-	TCHAR query[1024];
+	TCHAR query[1024], temp[64];
 
 	if (!SaveCommonProperties(hdb))
 		return FALSE;
@@ -116,12 +116,12 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 
 	if (isNewObject)
       _sntprintf(query, 1024,
-                 _T("INSERT INTO network_maps (id,map_type,layout,seed,background) VALUES (%d,%d,%d,%d,%d)"),
-                 m_dwId, m_mapType, m_layout, m_seedObject, m_background);
+                 _T("INSERT INTO network_maps (id,map_type,layout,seed,background) VALUES (%d,%d,%d,%d,'%s')"),
+                 m_dwId, m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp));
    else
       _sntprintf(query, 1024,
-                 _T("UPDATE network_maps SET map_type=%d,layout=%d,seed=%d,background=%d WHERE id=%d"),
-                 m_mapType, m_layout, m_seedObject, m_background, m_dwId);
+                 _T("UPDATE network_maps SET map_type=%d,layout=%d,seed=%d,background='%s' WHERE id=%d"),
+                 m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp), m_dwId);
    if (!DBQuery(hdb, query))
 		return FALSE;
 
@@ -211,7 +211,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 		m_mapType = DBGetFieldLong(hResult, 0, 0);
 		m_layout = DBGetFieldLong(hResult, 0, 1);
 		m_seedObject = DBGetFieldULong(hResult, 0, 2);
-		m_background = DBGetFieldLong(hResult, 0, 3);
+		DBGetFieldGUID(hResult, 0, 3, m_background);
 		DBFreeResult(hResult);
 
 	   // Load elements
@@ -299,7 +299,7 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_MAP_TYPE, (WORD)m_mapType);
 	msg->SetVariable(VID_LAYOUT, (WORD)m_layout);
 	msg->SetVariable(VID_SEED_OBJECT, m_seedObject);
-	msg->SetVariable(VID_BACKGROUND, (DWORD)m_background);
+	msg->SetVariable(VID_BACKGROUND, m_background, UUID_LENGTH);
 
 	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_numElements);
 	DWORD varId = VID_ELEMENT_LIST_BASE;
@@ -338,7 +338,7 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
 
 	if (request->IsVariableExist(VID_BACKGROUND))
-		m_background = (int)request->GetVariableLong(VID_BACKGROUND);
+		request->GetVariableBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
 
 	if (request->IsVariableExist(VID_NUM_ELEMENTS))
 	{

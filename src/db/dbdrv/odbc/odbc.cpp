@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2010 Victor Kirhenshtein
+** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ static BOOL m_useUnicode = TRUE;
 // Convert ODBC state to NetXMS database error code and get error text
 //
 
-static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_TCHAR *errorText)
+static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_WCHAR *errorText)
 {
    SQLRETURN nRet;
    SQLSMALLINT nChars;
@@ -80,25 +80,23 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 	// Get error message
 	if (errorText != NULL)
 	{
-#ifdef UNICODE
 #if UNICODE_UCS2
 		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
 #else
 		char buffer[DBDRV_MAX_ERROR_TEXT];
 		nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, buffer, DBDRV_MAX_ERROR_TEXT, &nChars);
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
-#endif
-#else
-		nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
 #endif
 		if (nRet == SQL_SUCCESS)
 		{
-			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-			RemoveTrailingCRLF(errorText);
+#if UNICODE_UCS4
+			buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
+#endif
+			RemoveTrailingCRLFW(errorText);
 		}
 		else
 		{
-			nx_strncpy(errorText, _T("Unable to obtain description for this error"), DBDRV_MAX_ERROR_TEXT);
+			wcscpy(errorText, L"Unable to obtain description for this error");
 		}
    }
    
@@ -202,7 +200,7 @@ extern "C" void EXPORT DrvUnload()
 // pszHost should be set to ODBC source name, and pszDatabase is ignored
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, char *pszPassword, char *pszDatabase)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, char *pszPassword, char *pszDatabase, NETXMS_WCHAR *errorText)
 {
    long iResult;
    ODBCDRV_CONN *pConn;
@@ -213,17 +211,26 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, cha
    // Allocate environment
    iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
-      goto connect_failure_0;
+	{
+		wcscpy(errorText, L"Cannot allocate environment handle");
+		goto connect_failure_0;
+	}
 
    // Set required ODBC version
 	iResult = SQLSetEnvAttr(pConn->sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		wcscpy(errorText, L"Call to SQLSetEnvAttr failed");
       goto connect_failure_1;
+	}
 
 	// Allocate connection handle, set timeout
 	iResult = SQLAllocHandle(SQL_HANDLE_DBC, pConn->sqlEnv, &pConn->sqlConn); 
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		wcscpy(errorText, L"Cannot allocate connection handle");
       goto connect_failure_1;
+	}
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER *)15, 0);
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
 
@@ -240,7 +247,10 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, cha
 									(SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
 	}
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
       goto connect_failure_2;
+	}
 
    // Create mutex
    pConn->mutexQuery = MutexCreate();
@@ -281,7 +291,7 @@ extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
 {
    long iResult;
    DWORD dwResult;
@@ -335,7 +345,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, N
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -557,7 +567,7 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-                                                 DWORD *pdwError, NETXMS_TCHAR *errorText)
+                                                 DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;

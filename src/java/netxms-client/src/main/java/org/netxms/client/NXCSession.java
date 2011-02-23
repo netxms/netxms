@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.netxms.api.client.NetXMSClientException;
@@ -2218,7 +2219,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 		if ((flags & NXCObjectModificationData.MODIFY_MAP_BACKGROUND) != 0)
 		{
-			msg.setVariableInt32(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
+			msg.setVariable(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
 		}
 
 		if ((flags & NXCObjectModificationData.MODIFY_MAP_CONTENT) != 0)
@@ -3787,7 +3788,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		long varId = NXCPCodes.VID_IMAGE_LIST_BASE;
 		for(int i = 0; i < numOfImages; i++)
 		{
-			final String imageGuid = response.getVariableAsString(varId++);
+			final UUID imageGuid = response.getVariableAsUUID(varId++);
 			final String imageName = response.getVariableAsString(varId++);
 			final String imageCategory = response.getVariableAsString(varId++);
 			final String imageMimeType = response.getVariableAsString(varId++);
@@ -3799,10 +3800,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.api.client.images.ImageLibraryManager#getImage(java.lang.String)
+	 * @see org.netxms.api.client.images.ImageLibraryManager#getImage(java.util.UUID)
 	 */
 	@Override
-	public LibraryImage getImage(String guid) throws IOException, NXCException
+	public LibraryImage getImage(UUID guid) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_IMAGE);
 		msg.setVariable(NXCPCodes.VID_GUID, guid);
@@ -3822,7 +3823,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		image.fillMessage(msg);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
-		final String imageGuid = response.getVariableAsString(NXCPCodes.VID_GUID);
+		final UUID imageGuid = response.getVariableAsUUID(NXCPCodes.VID_GUID);
 		image.setGuid(imageGuid);
 
 		return image;

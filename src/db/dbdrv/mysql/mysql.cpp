@@ -175,7 +175,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const TCHAR *cmdLine)
+extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
 	return TRUE;
 }
@@ -194,16 +194,18 @@ extern "C" void EXPORT DrvUnload()
 // Connect to database
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost, const char *szLogin, const char *szPassword,
+															 const char *szDatabase, WCHAR *errorText)
 {
 	MYSQL *pMySQL;
 	MYSQL_CONN *pConn;
-	char *pHost = szHost;
-	char *pSocket = NULL;
+	const char *pHost = szHost;
+	const char *pSocket = NULL;
 	
 	pMySQL = mysql_init(NULL);
 	if (pMySQL == NULL)
 	{
+		wcscpy(errorText, L"Insufficient memory to allocate connection handle");
 		return NULL;
 	}
 
@@ -225,6 +227,9 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char 
 		0 // flags
 		))
 	{
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(pMySQL), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+		RemoveTrailingCRLFW(errorText);
 		mysql_close(pMySQL);
 		return NULL;
 	}
@@ -259,7 +264,7 @@ extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 // Perform actual non-SELECT query
 //
 
-static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, TCHAR *errorText)
+static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, WCHAR *errorText)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
 
@@ -284,8 +289,9 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, TCHAR *er
 		
 		if (errorText != NULL)
 		{
-			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
-			RemoveTrailingCRLF(errorText);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(pConn->pMySQL), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			RemoveTrailingCRLFW(errorText);
 		}
 	}
 
@@ -298,7 +304,7 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, TCHAR *er
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	DWORD dwRet;
    char *pszQueryUTF8;
@@ -314,7 +320,7 @@ extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, TCHAR *err
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	DBDRV_RESULT pResult = NULL;
 	char *pszQueryUTF8;
@@ -348,8 +354,9 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DW
 		
 		if (errorText != NULL)
 		{
-			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
-			RemoveTrailingCRLF(errorText);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(pConn->pMySQL), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			RemoveTrailingCRLFW(errorText);
 		}
 	}
 
@@ -450,7 +457,7 @@ extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT hResult)
 //
 
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError, TCHAR *errorText)
+                                                 DWORD *pdwError, WCHAR *errorText)
 {
 	MYSQL_ASYNC_RESULT *pResult = NULL;
 	char *pszQueryUTF8;
@@ -499,8 +506,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pw
 		
 		if (errorText != NULL)
 		{
-			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
-			RemoveTrailingCRLF(errorText);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mysql_error(pConn->pMySQL), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			RemoveTrailingCRLFW(errorText);
 		}
 	}
 

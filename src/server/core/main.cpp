@@ -512,16 +512,17 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		return FALSE;
 
 	// Connect to database
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	for(i = 0; ; i++)
 	{
-		g_hCoreDB = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword);
+		g_hCoreDB = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, errorText);
 		if ((g_hCoreDB != NULL) || (i == 5))
 			break;
 		ThreadSleep(5);
 	}
 	if (g_hCoreDB == NULL)
 	{
-		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
 		return FALSE;
 	}
 	DbgPrintf(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
@@ -537,7 +538,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	int baseSize = ConfigReadInt(_T("ConnectionPoolBaseSize"), 5);
 	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
 	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
-	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, baseSize, maxSize, cooldownTime);
+	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, baseSize, maxSize, cooldownTime, g_hCoreDB);
 
 	// Read database syntax
 	g_nDBSyntax = DBGetSyntax(g_hCoreDB);

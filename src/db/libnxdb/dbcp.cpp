@@ -40,18 +40,26 @@ static DB_HANDLE *m_dbHandles;
 static bool *m_dbHandlesInUseMarker;
 static time_t *m_dbHandleLastAccessTime;
 
+static DB_HANDLE m_hFallback;
+
+/**
+ * Create connections on pool initialization
+ */
 static void DBConnectionPoolPopulate()
 {
-	MutexLock(m_poolAccessMutex, INFINITE);
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
+	MutexLock(m_poolAccessMutex, INFINITE);
 	for (int i = 0; i < m_basePoolSize; i++)
 	{
-		m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password);
+		m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, errorText);
 	}
-
 	MutexUnlock(m_poolAccessMutex);
 }
 
+/**
+ * Shrink connection pool up to base size when possible
+ */
 static void DBConnectionPoolShrink()
 {
 	MutexLock(m_poolAccessMutex, INFINITE);
@@ -77,9 +85,13 @@ static void DBConnectionPoolShrink()
 	MutexUnlock(m_poolAccessMutex);
 }
 
+/**
+ * Start connection pool
+ */
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
 																const TCHAR *login, const TCHAR *password,
-																int basePoolSize, int maxPoolSize, int cooldownTime)
+																int basePoolSize, int maxPoolSize, int cooldownTime,
+																DB_HANDLE fallback)
 {
 	m_driver = driver;
 	nx_strncpy(m_server, CHECK_NULL_EX(server), 256);
@@ -91,6 +103,7 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 	m_currentPoolSize = basePoolSize;
 	m_maxPoolSize = maxPoolSize;
 	m_cooldownTime = cooldownTime;
+	m_hFallback = fallback;
 
 	m_poolAccessMutex = MutexCreate();
 
@@ -112,6 +125,9 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 	return true;
 }
 
+/**
+ * Shutdown connection poo
+ */
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 {
 	MutexDestroy(m_poolAccessMutex);
@@ -124,14 +140,18 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 		}
 	}
 
-	delete m_dbHandles;
-	delete m_dbHandlesInUseMarker;
-	delete m_dbHandleLastAccessTime;
+	delete[] m_dbHandles;
+	delete[] m_dbHandlesInUseMarker;
+	delete[] m_dbHandleLastAccessTime;
 	
 	__DBDbgPrintf(1, _T("Database Connection Pool terminated"));
 
 }
 
+/**
+ * Acquire connection from pool. This function never fails - if it's impossible to acquire
+ * pooled connection, fallback connection will be returned.
+ */
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 {
 	MutexLock(m_poolAccessMutex, INFINITE);
@@ -153,7 +173,8 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 		{
 			if (m_dbHandles[i] == NULL)
 			{
-				m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password);
+				TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+				m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, errorText);
 				m_currentPoolSize++;
 
 				handle = m_dbHandles[i];
@@ -165,13 +186,22 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 
 	MutexUnlock(m_poolAccessMutex);
 
-	DBConnectionPoolShrink();
+	if (handle == NULL)
+	{
+		handle = m_hFallback;
+	}
 
 	return handle;
 }
 
+/**
+ * Release acquired connection
+ */
 void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection)
 {
+	if (connection == m_hFallback)
+		return;
+
 	MutexLock(m_poolAccessMutex, INFINITE);
 
 	DB_HANDLE handle = NULL;
@@ -188,5 +218,4 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection)
 	MutexUnlock(m_poolAccessMutex);
 
 	DBConnectionPoolShrink();
-
 }
