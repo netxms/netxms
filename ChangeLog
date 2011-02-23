@@ -6,7 +6,6 @@
 - Java API added
 - Portable (Eclipse-based) management console introduced
 - Server switched to UNICODE on Windows platform
-- DB2 support added
 - Windows x64 server version added
 - MIB compiler improved
 

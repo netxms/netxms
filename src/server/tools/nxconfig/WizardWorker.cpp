@@ -389,19 +389,23 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 
 static BOOL CreateSQLiteDB(WIZARD_CFG_INFO *pc)
 {
-   TCHAR szBaseDir[MAX_PATH];
+   TCHAR szBaseDir[MAX_PATH], dbErrorText[DBDRV_MAX_ERROR_TEXT];
    DB_HANDLE hConn;
    BOOL bResult = FALSE;
 
    _sntprintf(szBaseDir, MAX_PATH, _T("%s\\database"), pc->m_szInstallDir);
    SetCurrentDirectory(szBaseDir);
    DeleteFile(pc->m_szDBName);
-	hConn = DBConnect(pc->m_dbDriver, NULL, pc->m_szDBName, NULL, NULL);
+	hConn = DBConnect(pc->m_dbDriver, NULL, pc->m_szDBName, NULL, NULL, dbErrorText);
    if (hConn != NULL)
    {
       DBDisconnect(hConn);
       bResult = TRUE;
    }
+	else
+	{
+		_sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("Unable to connect to database: %s"), dbErrorText);
+	}
    return bResult;
 }
 
@@ -414,6 +418,7 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
 {
    DB_HANDLE hConn;
    BOOL bResult = FALSE;
+	TCHAR dbErrorText[DBDRV_MAX_ERROR_TEXT];
 
    if (pc->m_iDBEngine == DB_ENGINE_SQLITE)
    {
@@ -425,7 +430,7 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database server as DBA"));
 		hConn = DBConnect(pc->m_dbDriver, pc->m_szDBServer, 
                         (pc->m_iDBEngine == DB_ENGINE_PGSQL) ? _T("template1") : NULL,
-                        pc->m_szDBALogin, pc->m_szDBAPassword);
+                        pc->m_szDBALogin, pc->m_szDBAPassword, dbErrorText);
       if (hConn != NULL)
       {
          PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, TRUE, 0);
@@ -453,7 +458,7 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
       }
       else
       {
-         _tcscpy(g_szWizardErrorText, _T("Unable to connect to database"));
+			_sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("Unable to connect to database: %s"), dbErrorText);
       }
    }
 
@@ -499,11 +504,13 @@ static DWORD __stdcall WorkerThread(void *pArg)
    // Connect to database as user
    if (bResult)
    {
+		TCHAR dbErrorText[DBDRV_MAX_ERROR_TEXT];
+
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database"));
-		hConn = DBConnect(pc->m_dbDriver, pc->m_szDBServer, pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
+		hConn = DBConnect(pc->m_dbDriver, pc->m_szDBServer, pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword, dbErrorText);
       bResult = (hConn != NULL);
       if (!bResult)
-         _tcscpy(g_szWizardErrorText, _T("Unable to connect to database"));
+			_sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("Unable to connect to database: %s"), dbErrorText);
       PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
    }
 
