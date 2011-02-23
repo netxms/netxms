@@ -71,7 +71,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 				szHost[0] != 0 ? szHost : szAddr, nPort);
 
 		snprintf(szTmp, sizeof(szTmp),
-				"GET %s HTTP/1.1\r\nConnection: close\r\n%s\r\n",
+				"GET %s HTTP/1.1\r\nConnection: close\r\nAccept: */*\r\n%s\r\n",
 				szURI, szHostHeader);
 
 		if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
