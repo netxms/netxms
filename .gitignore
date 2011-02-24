@@ -19,7 +19,6 @@ contrib/mibs/netxms.mib
 /lib
 /libtool
 /m4
-netware/bin/*
 /private
 /release
 sql/dbinit_mssql.sql

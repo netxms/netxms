@@ -1742,7 +1742,6 @@ AC_CONFIG_FILES([
 	images/Makefile
 	include/Makefile
 	m4/Makefile
-	netware/Makefile
 	src/Makefile
 	src/agent/Makefile
 	src/agent/core/Makefile
@@ -1757,9 +1756,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/openbsd/Makefile
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/ipso/Makefile
-	src/agent/subagents/netware/Makefile
 	src/agent/subagents/winnt/Makefile
-	src/agent/subagents/win9x/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
 	src/agent/subagents/portCheck/Makefile

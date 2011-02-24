@@ -9,8 +9,8 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = reconf configure netxms.sln Makefile.nw README.HPUX
-SUBDIRS = m4 contrib include src doc tools netware
+EXTRA_DIST = reconf configure netxms.sln README.HPUX
+SUBDIRS = m4 contrib include src doc tools
 SUBDIRS += @TOP_LEVEL_MODULES@
 
 install-exec-hook:

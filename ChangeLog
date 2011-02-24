@@ -8,6 +8,7 @@
 - Server switched to UNICODE on Windows platform
 - Windows x64 server version added
 - MIB compiler improved
+- Dropped agent support for Novell NetWare and Windows NT 4.0, 95, 98, Me
 
 
 *

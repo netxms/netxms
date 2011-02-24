@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libnsm_ecs.la
 libnsm_ecs_la_SOURCES = ecs.cpp
 libnsm_ecs_la_LDFLAGS = ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = ecs.vcproj ecs.def Makefile.nw
+EXTRA_DIST = ecs.vcproj
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then \
