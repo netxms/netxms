@@ -77,10 +77,12 @@ src/client/nxlexer/nxlexer.vcproj -text
 src/client/nxpush/nxpush.vcproj -text
 src/client/nxsms/nxsms.vcproj -text
 src/client/scilexer/LexHTML.cpp -text
+src/client/scilexer/Makefile.am -text
 src/client/scilexer/Margin.cur -text
 src/client/scilexer/PerLine.cpp -text
 src/client/scilexer/PerLine.h -text
 src/client/scilexer/scilexer.vcproj -text
+src/client/windows/Makefile.am -text
 src/client/windows/nxav/nxav.vcproj -text
 src/client/windows/nxav/res/ack.png -text
 src/client/windows/nxav/res/acknowledged.png -text
@@ -1174,9 +1176,7 @@ src/libexpat/expat_config.h -text
 src/libexpat/libexpat/Makefile.am -text
 src/libexpat/libexpat/libexpat.vcproj -text
 src/libexpat/vms/descrip.mms -text
-src/libnetxms/libnetxms.vcp eol=crlf
 src/libnetxms/libnetxms.vcproj -text
-src/libnetxms/libnetxms.vcw eol=crlf
 src/libnetxms/libnetxmsw.vcproj -text
 src/libnxcl/libnxcl.vcp eol=crlf
 src/libnxcl/libnxcl.vcproj -text

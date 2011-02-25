@@ -19,5 +19,4 @@ endif
 
 EXTRA_DIST = \
 	libnxlp.vcproj \
-	libnxlp.h \
-	libnxlp.def Makefile.nw
+	libnxlp.h

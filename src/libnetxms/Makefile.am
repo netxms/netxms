@@ -24,8 +24,6 @@ endif
 
 EXTRA_DIST = \
 	libnetxms.vcproj libnetxmsw.vcproj \
-	libnetxms.vcp libnetxms.vcw \
-	Makefile.nw netxms.def \
 	libnetxms.h ice.h md5.h sha1.h uuidP.h \
-	regex.c c_lgcc3.cpp dir.c getopt.c \
+	dir.c dirw.c getopt.c \
 	seh.cpp StackWalker.cpp StackWalker.h

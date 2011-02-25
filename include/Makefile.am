@@ -29,6 +29,7 @@ EXTRA_DIST = \
 	nxclapi.h \
 	nxconfig.h \
 	nxcpapi.h \
+	nxdbapi.h \
 	nxevent.h \
 	nxlexer_styles.h \
 	nxlog.h \

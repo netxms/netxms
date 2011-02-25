@@ -9,7 +9,6 @@ libnxexpat_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 
 EXTRA_DIST = \
 	libexpat.cpp \
-	Makefile.nw nwconfig.h nxexpat.def \
 	amigaconfig.h \
 	ascii.h \
 	asciitab.h \

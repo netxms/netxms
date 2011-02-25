@@ -307,7 +307,7 @@ AC_ARG_WITH(dist,
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
-	CLIENT_COMPONENTS="nxalarm nxevent nxpush nxsms"
+	CLIENT_COMPONENTS="nxalarm nxevent nxlexer nxpush nxsms scilexer windows"
 	UNSTABLE_SUBAGENT_DIRS="odbcquery"
 	SERVER_TOOLS="nxconfig"
 )
@@ -1770,19 +1770,21 @@ AC_CONFIG_FILES([
 	src/client/install/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile
+	src/client/nxlexer/Makefile
 	src/client/nxpush/Makefile
 	src/client/nxsms/Makefile
-	src/client/windows/nxuilib/Makefile
-	src/client/windows/nxuilib/res/Makefile
-	src/client/windows/nxuilib/sounds/Makefile
-	src/client/nxlexer/Makefile
+	src/client/scilexer/Makefile
+	src/client/windows/Makefile
+	src/client/windows/nxav/Makefile
+	src/client/windows/nxav/res/Makefile
 	src/client/windows/nxcon/Makefile
 	src/client/windows/nxcon/icons/Makefile
 	src/client/windows/nxcon/res/Makefile
-	src/client/windows/nxav/Makefile
-	src/client/windows/nxav/res/Makefile
 	src/client/windows/nxnotify/Makefile
 	src/client/windows/nxnotify/res/Makefile
+	src/client/windows/nxuilib/Makefile
+	src/client/windows/nxuilib/res/Makefile
+	src/client/windows/nxuilib/sounds/Makefile
 	src/db/Makefile
 	src/db/dbdrv/Makefile
 	src/db/dbdrv/odbc/Makefile

@@ -66,6 +66,4 @@ clean:
 
 EXTRA_DIST = \
 	$(sql_DATA) \
-	dbinit.in database.in events.in \
-	policy.in schema.in setup.in traps.in objtools.in scripts.in \
-	metadata.in maps.in
+	$(SOURCE)

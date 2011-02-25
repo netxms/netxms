@@ -6,8 +6,10 @@ lib_LTLIBRARIES = libnxtre.la
 libnxtre_la_LDFLAGS = -no-undefined -version-info 5:0:0 $(LDFLAGS)
 
 noinst_HEADERS =		\
+	tre.h                   \
 	tre-ast.h		\
 	tre-compile.h		\
+	tre-config.h            \
 	tre-internal.h		\
 	tre-match-utils.h	\
 	tre-mem.h		\
@@ -28,7 +30,7 @@ libnxtre_la_SOURCES =		\
 	regexec.c		\
 	regerror.c
 
-EXTRA_DIST = 
+EXTRA_DIST = \
 	AUTHORS \
 	LICENSE \
 	README \
