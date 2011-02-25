@@ -252,6 +252,9 @@ src/db/libnxdb/main.cpp -text
 src/db/libnxdb/session.cpp -text
 src/flow_analyzer/libipfix/libipfix.vcproj -text
 src/flow_analyzer/nxflowd/nxflowd.vcproj -text
+src/install/windows/common.iss -text
+src/install/windows/netxms-x64.iss -text
+src/install/windows/setup.iss -text
 src/java/eclipse_addons.txt -text
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/META-INF/MANIFEST.MF -text
 src/java/nebula/org.netxms.nebula.widgets.gallery.tests/build.properties -text

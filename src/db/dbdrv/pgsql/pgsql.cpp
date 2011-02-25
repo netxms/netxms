@@ -550,7 +550,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(PG_CONN *pConn, int nColumn)
 		return 0;
 	}
 
-	return strlen(value);
+	return (LONG)strlen(value);
 }
 
 

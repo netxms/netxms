@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = netxms.iss files.txt
+EXTRA_DIST = common.iss netxms.iss netxms-x64.iss setup.iss files.txt
