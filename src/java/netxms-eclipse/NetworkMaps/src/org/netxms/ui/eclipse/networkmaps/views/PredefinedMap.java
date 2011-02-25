@@ -42,8 +42,6 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
@@ -75,7 +73,6 @@ public class PredefinedMap extends NetworkMap
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap";
 	
 	private org.netxms.client.objects.NetworkMap mapObject; 
-	private Image backgroundImage = null;
 	private Action actionAddObject;
 	private Action actionLinkObjects;
 	private Action actionAddGroupBox;
@@ -529,8 +526,7 @@ public class PredefinedMap extends NetworkMap
 		ImageSelectionDialog dlg = new ImageSelectionDialog(getSite().getShell());
 		if (dlg.open() == Window.OK)
 		{
-			backgroundImage = dlg.getImageObject();
-			viewer.getGraphControl().redraw();
+			viewer.setBackgroundImage(dlg.getImageObject());
 			saveBackground(dlg.getLibraryImage().getGuid());
 		}
 	}
@@ -540,8 +536,7 @@ public class PredefinedMap extends NetworkMap
 	 */
 	private void removeBackground()
 	{
-		backgroundImage = null;
-		viewer.getGraphControl().redraw();
+		viewer.setBackgroundImage(null);
 		saveBackground(new UUID(0, 0));
 	}
 
@@ -552,15 +547,5 @@ public class PredefinedMap extends NetworkMap
 	protected boolean isSelectableElement(Object element)
 	{
 		return element instanceof NetworkMapDecoration;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#paintGraphOverlay(org.eclipse.swt.graphics.GC)
-	 */
-	@Override
-	protected void paintGraphOverlay(GC gc)
-	{
-		if (backgroundImage != null)
-			gc.drawImage(backgroundImage, 0, 0);
 	}
 }

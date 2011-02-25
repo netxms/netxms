@@ -18,17 +18,22 @@
  */
 package org.netxms.ui.eclipse.datacollection.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -43,6 +48,8 @@ public class LastValues extends ViewPart
 	private NXCSession session;
 	private Node node;
 	private LastValuesView dataView;
+	private Action actionRefresh;
+	private Action actionAutoUpdate;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -74,6 +81,9 @@ public class LastValues extends ViewPart
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
 		dataView.setLayoutData(fd);
+		
+		createActions();
+		contributeToActionBars();
 	}
 
 	/* (non-Javadoc)
@@ -83,5 +93,61 @@ public class LastValues extends ViewPart
 	public void setFocus()
 	{
 		dataView.setFocus();
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				dataView.refresh();
+			}
+		};
+		
+		actionAutoUpdate = new Action("Refresh &automatically", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				dataView.setAutoRefreshEnabled(!dataView.isAutoRefreshEnabled());
+			}
+		};
+		actionAutoUpdate.setChecked(dataView.isAutoRefreshEnabled());
+	}
+	
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionAutoUpdate);
+		manager.add(actionRefresh);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionRefresh);
 	}
 }

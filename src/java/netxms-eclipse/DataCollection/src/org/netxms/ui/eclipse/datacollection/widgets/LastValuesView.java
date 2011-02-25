@@ -25,6 +25,7 @@ import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -65,13 +66,39 @@ public class LastValuesView extends Composite
 	private Node node;
 	private NXCSession session;
 	private SortableTableViewer dataViewer;
+	private boolean autoRefreshEnabled = false;
+	private int autoRefreshInterval = 30000;	// in milliseconds
+	private Runnable refreshTimer;
 	
+	/**
+	 * Create "last values" widget
+	 * 
+	 * @param viewPart owning view part
+	 * @param parent parent widget
+	 * @param style style
+	 * @param _node node to display data for
+	 * @param configPrefix configuration prefix for saving/restoring viewer settings
+	 */
 	public LastValuesView(ViewPart viewPart, Composite parent, int style, Node _node, final String configPrefix)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
 		this.node = _node;
+		
+		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
+		
+		refreshTimer = new Runnable() {
+			@Override
+			public void run()
+			{
+				if (isDisposed())
+					return;
+				
+				getDataFromServer();
+				getDisplay().timerExec(autoRefreshInterval, this);
+			}
+		};
 		
 		// Setup table columns
 		final String[] names = { "ID", "Description", "Value", "Timestamp" };
@@ -81,7 +108,7 @@ public class LastValuesView extends Composite
 		dataViewer.setLabelProvider(new LastValuesLabelProvider());
 		dataViewer.setContentProvider(new ArrayContentProvider());
 		dataViewer.setComparator(new LastValuesComparator());
-		WidgetHelper.restoreTableViewerSettings(dataViewer, Activator.getDefault().getDialogSettings(), configPrefix);
+		WidgetHelper.restoreTableViewerSettings(dataViewer, ds, configPrefix);
 		
 		createPopupMenu();
 
@@ -96,11 +123,22 @@ public class LastValuesView extends Composite
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(dataViewer, Activator.getDefault().getDialogSettings(), configPrefix);
+				WidgetHelper.saveTableViewerSettings(dataViewer, ds, configPrefix);
+				ds.put(configPrefix + ".autoRefresh", autoRefreshEnabled);
+				ds.put(configPrefix + ".autoRefreshInterval", autoRefreshEnabled);
 			}
 		});
 
 		getDataFromServer();
+		
+		try
+		{
+			ds.getInt(configPrefix + ".autoRefreshInterval");
+		}
+		catch(NumberFormatException e)
+		{
+		}
+		setAutoRefreshEnabled(ds.getBoolean(configPrefix + ".autoRefresh"));
 	}
 	
 	/**
@@ -159,7 +197,7 @@ public class LastValuesView extends Composite
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final DciValue[] data = session.getLastValues(node.getObjectId());
-				new UIJob("Initialize last values view") {
+				new UIJob("Update last values view") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -181,5 +219,46 @@ public class LastValuesView extends Composite
 	{
 		this.node = _node;
 		getDataFromServer();
+	}
+	
+	/**
+	 * Refresh view
+	 */
+	public void refresh()
+	{
+		getDataFromServer();
+	}
+
+	/**
+	 * @return the autoRefreshEnabled
+	 */
+	public boolean isAutoRefreshEnabled()
+	{
+		return autoRefreshEnabled;
+	}
+
+	/**
+	 * @param autoRefreshEnabled the autoRefreshEnabled to set
+	 */
+	public void setAutoRefreshEnabled(boolean autoRefreshEnabled)
+	{
+		this.autoRefreshEnabled = autoRefreshEnabled;
+		getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
+	}
+
+	/**
+	 * @return the autoRefreshInterval
+	 */
+	public int getAutoRefreshInterval()
+	{
+		return autoRefreshInterval;
+	}
+
+	/**
+	 * @param autoRefreshInterval the autoRefreshInterval to set
+	 */
+	public void setAutoRefreshInterval(int autoRefreshInterval)
+	{
+		this.autoRefreshInterval = autoRefreshInterval;
 	}
 }

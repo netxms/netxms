@@ -44,9 +44,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -181,14 +178,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			}
 		});
 
-		viewer.getGraphControl().addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e)
-			{
-				paintGraphOverlay(e.gc);
-			}
-		});
-		
 		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -676,15 +665,6 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		super.dispose();
 	}
 	
-	/**
-	 * Paint graph background
-	 * 
-	 * @param gc
-	 */
-	protected void paintGraphOverlay(GC gc)
-	{
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
 	 */

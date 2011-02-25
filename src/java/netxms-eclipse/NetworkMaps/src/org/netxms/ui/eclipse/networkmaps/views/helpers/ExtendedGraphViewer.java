@@ -18,7 +18,11 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import org.eclipse.draw2d.Figure;
+import org.eclipse.draw2d.Graphics;
 import org.eclipse.jface.action.Action;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.internal.ZoomManager;
@@ -31,8 +35,11 @@ import org.eclipse.zest.core.viewers.internal.ZoomManager;
 @SuppressWarnings("restriction")
 public class ExtendedGraphViewer extends GraphViewer
 {
-	private static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 4.00 }; 
-		
+	private static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 4.00 };
+	
+	private BackgroundFigure backgroundFigure;
+	private Image backgroundImage = null;
+	
 	/**
 	 * @param composite
 	 * @param style
@@ -41,6 +48,29 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		super(composite, style);
 		getZoomManager().setZoomLevels(zoomLevels);
+		backgroundFigure = new BackgroundFigure();
+		backgroundFigure.setSize(10, 10);
+		getGraphControl().getRootLayer().add(backgroundFigure, 0);
+	}
+	
+	/**
+	 * Set background image for graph
+	 * 
+	 * @param image new image or null to clear background
+	 */
+	public void setBackgroundImage(Image image)
+	{
+		backgroundImage = image;
+		if (image != null)
+		{
+			Rectangle r = image.getBounds();
+			backgroundFigure.setSize(r.width, r.height);
+		}
+		else
+		{
+			backgroundFigure.setSize(10, 10);
+		}
+		getGraphControl().redraw();
 	}
 
 	/* (non-Javadoc)
@@ -95,4 +125,20 @@ public class ExtendedGraphViewer extends GraphViewer
 		}
 		return actions;
 	}
+
+	/**
+	 * Additional figure used to display custom background for graph.
+	 */
+	private class BackgroundFigure extends Figure
+	{
+		/* (non-Javadoc)
+		 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+		 */
+		@Override
+		protected void paintFigure(Graphics gc)
+		{
+			if (backgroundImage != null)
+				gc.drawImage(backgroundImage, 0, 0);
+		}
+	};
 }
