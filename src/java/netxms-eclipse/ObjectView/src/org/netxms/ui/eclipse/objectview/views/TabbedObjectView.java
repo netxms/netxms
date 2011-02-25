@@ -27,6 +27,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -40,11 +43,13 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
@@ -61,6 +66,7 @@ public class TabbedObjectView extends ViewPart
 	private List<ObjectTab> tabs;
 	private ISelectionService selectionService;
 	private ISelectionListener selectionListener;
+	private Action actionRefresh;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -120,6 +126,61 @@ public class TabbedObjectView extends ViewPart
 			}
 		};
 		selectionService.addSelectionListener(selectionListener);
+		
+		createActions();
+		contributeToActionBars();
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				refreshCurrentTab();
+			}
+		};
+	}
+	
+	/**
+	 * Fill action bars
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * @param manager
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionRefresh);
+	}
+	
+	/**
+	 * Fill local tool bar
+	 * @param manager
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionRefresh);
+	}
+	
+	/**
+	 * Refresh current tab
+	 */
+	private void refreshCurrentTab()
+	{
+		CTabItem item = tabFolder.getSelection();
+		if (item != null)
+			((ObjectTab)item.getData()).refresh();
 	}
 
 	/**

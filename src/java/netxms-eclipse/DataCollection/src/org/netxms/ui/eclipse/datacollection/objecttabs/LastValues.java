@@ -40,6 +40,7 @@ public class LastValues extends ObjectTab
 	protected void createTabContent(Composite parent)
 	{
 		dataView = new LastValuesView(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab");
+		dataView.setAutoRefreshEnabled(true);
 	}
 
 	/* (non-Javadoc)
@@ -58,5 +59,14 @@ public class LastValues extends ObjectTab
 	public boolean showForObject(GenericObject object)
 	{
 		return object instanceof Node;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+	 */
+	@Override
+	public void refresh()
+	{
+		dataView.refresh();
 	}
 }

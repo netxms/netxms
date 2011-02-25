@@ -32,6 +32,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
@@ -64,7 +65,8 @@ public class PerformanceTab extends ObjectTab
 		preferenceStore = Activator.getDefault().getPreferenceStore();
 		
 		chartArea = new Composite(parent, SWT.NONE);
-		chartArea.setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		//chartArea.setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chartArea.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;

@@ -154,4 +154,13 @@ public class ObjectOverview extends ObjectTab
 		// As workaround, we force reconstruction of the content on each tab activation
 		objectChanged(getObject());
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+	 */
+	@Override
+	public void refresh()
+	{
+		objectChanged(getObject());
+	}
 }

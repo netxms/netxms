@@ -202,10 +202,10 @@ public abstract class ObjectTab
 	 * This is the last method called on the ObjectTab. There is no guarantee that createTabContent() has been called,
 	 * so the tab controls may never have been created.
 	 * 
-	 * Within this method a part may release any resources, fonts, images, etc.  held by this part. It is also very
+	 * Within this method a tab may release any resources, fonts, images, etc.  held by this tab. It is also very
 	 * important to deregister all listeners from the workbench.
 	 * 
-	 * Clients should not call this method (the workbench calls this method at appropriate times). 
+	 * Clients should not call this method (the tab manager calls this method at appropriate times). 
 	 */
 	public void dispose()
 	{
@@ -217,5 +217,13 @@ public abstract class ObjectTab
 	protected Composite getClientArea()
 	{
 		return clientArea;
+	}
+
+	/**
+	 * Called by tab manager when user press refresh button in tab view.
+	 * Default implementation do nothing.
+	 */
+	public void refresh()
+	{
 	}
 }

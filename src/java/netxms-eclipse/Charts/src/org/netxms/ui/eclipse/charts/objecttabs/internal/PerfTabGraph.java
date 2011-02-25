@@ -59,7 +59,7 @@ public class PerfTabGraph extends Composite
 	 */
 	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfTabGraphSettings settings)
 	{
-		super(parent, SWT.NONE);
+		super(parent, SWT.BORDER);
 		this.nodeId = nodeId;
 		this.dci = dci;
 		session = (NXCSession)ConsoleSharedData.getSession();
