@@ -38,6 +38,39 @@
             name="Table Tool Results"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"
+            icon="icons/tools.png"
+            id="org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"
+            name="Object Tools"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open object tools editor"
+            id="org.netxms.ui.eclipse.objecttools.commands.open_objecttools_editor"
+            name="Object Tools">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.objecttools.action_set"
+            label="Object Tools Configuration"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.objecttools.actions.OpenObjectToolsEditor"
+               definitionId="org.netxms.ui.eclipse.objecttools.commands.open_objecttools_editor"
+               icon="icons/tools.png"
+               id="org.netxms.ui.eclipse.objecttools.actions.open_editor"
+               label="Object Tools"
+               menubarPath="config/additions">
+         </action>
+      </actionSet>
    </extension>
 
 </plugin>

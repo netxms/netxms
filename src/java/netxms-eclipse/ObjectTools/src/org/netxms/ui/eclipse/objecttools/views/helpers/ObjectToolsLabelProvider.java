@@ -18,17 +18,28 @@
  */
 package org.netxms.ui.eclipse.objecttools.views.helpers;
 
-import java.util.List;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor;
 
 /**
- * Label provider for NetXMS table
+ * Label provider for object tools
  *
  */
-public class TableLabelProvider extends LabelProvider implements ITableLabelProvider
+public class ObjectToolsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+	private static final String[] toolTypes = { 
+		"Internal", 
+		"Action", 
+		"SNMP Table", 
+		"Agent Table", 
+		"URL",
+		"Local Command",
+		"Server Command"
+	};
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
@@ -41,15 +52,21 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		List<String> row = (List<String>)element;
-		
-		if (columnIndex >= row.size())
-			return null;
-		
-		return row.get(columnIndex);
+		ObjectTool tool = (ObjectTool)element;
+		switch(columnIndex)
+		{
+			case ObjectToolsEditor.COLUMN_ID:
+				return Long.toString(tool.getId());
+			case ObjectToolsEditor.COLUMN_NAME:
+				return tool.getName();
+			case ObjectToolsEditor.COLUMN_TYPE:
+				return toolTypes[tool.getType()];
+			case ObjectToolsEditor.COLUMN_DESCRIPTION:
+				return tool.getDescription();
+		}
+		return null;
 	}
 }

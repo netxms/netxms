@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,11 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.actionmanager.views;
+package org.netxms.ui.eclipse.objecttools.views;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -39,7 +37,6 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -52,39 +49,33 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ServerAction;
-import org.netxms.ui.eclipse.actionmanager.Activator;
-import org.netxms.ui.eclipse.actionmanager.dialogs.EditActionDlg;
-import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionComparator;
-import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionLabelProvider;
+import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Action configuration view
- *
+ * Editor for object tools
  */
-public class ActionManager extends ViewPart implements SessionListener
+public class ObjectToolsEditor extends ViewPart implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.actionmanager.views.ActionManager";
+	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor";
+
+	private static final String TABLE_CONFIG_PREFIX = "ObjectToolsEditor";
 	
-	private static final String TABLE_CONFIG_PREFIX = "ActionList";
-	
-	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_TYPE = 1;
-	public static final int COLUMN_RCPT = 2;
-	public static final int COLUMN_SUBJ = 3;
-	public static final int COLUMN_DATA = 4;
+	public static final int COLUMN_ID = 0;
+	public static final int COLUMN_NAME = 1;
+	public static final int COLUMN_TYPE = 2;
+	public static final int COLUMN_DESCRIPTION = 3;
 	
 	private SortableTableViewer viewer;
 	private NXCSession session;
-	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	private Action actionRefresh;
 	private Action actionNew;
 	private Action actionEdit;
@@ -100,13 +91,13 @@ public class ActionManager extends ViewPart implements SessionListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { "Name", "Type", "Recipient", "Subject", "Data" };
-		final int[] columnWidths = { 150, 90, 100, 120, 200 };
+		final String[] columnNames = { "ID", "Name", "Type", "Description" };
+		final int[] columnWidths = { 90, 200, 100, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new ActionLabelProvider());
-		viewer.setComparator(new ActionComparator());
+		viewer.setLabelProvider(new ObjectToolsLabelProvider());
+		//viewer.setComparator(new ObjectToolsComparator());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
 		{
 			@Override
@@ -141,56 +132,60 @@ public class ActionManager extends ViewPart implements SessionListener
 		
 		session.addListener(this);
 		
-		refreshActionList();
+		refreshToolList();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
-	@Override
-	public void setFocus()
-	{
-		viewer.getTable().setFocus();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		session.removeListener(this);
-		super.dispose();
-	}
-	
 	/**
-	 * Refresh action list
+	 * Create actions
 	 */
-	private void refreshActionList()
+	private void createActions()
 	{
-		new ConsoleJob("Load actions configuration", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		actionRefresh = new RefreshAction() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
-			protected String getErrorMessage()
+			public void run()
 			{
-				return "Cannot load actions configuration from server";
+				refreshToolList();
 			}
-
+		};
+		
+		actionNew = new Action("&New...") {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
 			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+			public void run()
 			{
-				List<ServerAction> actions = session.getActions();
-				synchronized(ActionManager.this.actions)
-				{
-					ActionManager.this.actions.clear();
-					for(ServerAction a : actions)
-					{
-						ActionManager.this.actions.put(a.getId(), a);
-					}
-				}
-				
-				updateActionsList();
+				createTool();
 			}
-		}.start();
+		};
+		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
+		
+		actionEdit = new Action("&Edit...") {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				editTool();
+			}
+		};
+		actionEdit.setImageDescriptor(SharedIcons.EDIT);
+		
+		actionDelete = new Action("&Delete") {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				deleteTools();
+			}
+		};
+		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 	}
 
 	/**
@@ -232,62 +227,6 @@ public class ActionManager extends ViewPart implements SessionListener
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
-
-	/**
-	 * Create actions
-	 */
-	private void createActions()
-	{
-		actionRefresh = new RefreshAction() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
-			@Override
-			public void run()
-			{
-				refreshActionList();
-			}
-		};
-		
-		actionNew = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
-			@Override
-			public void run()
-			{
-				createAction();
-			}
-		};
-		actionNew.setText("&New action...");
-		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
-		
-		actionEdit = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
-			@Override
-			public void run()
-			{
-				editAction();
-			}
-		};
-		actionEdit.setText("&Properties...");
-		actionEdit.setImageDescriptor(SharedIcons.EDIT);
-		
-		actionDelete = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
-			@Override
-			public void run()
-			{
-				deleteActions();
-			}
-		};
-		actionDelete.setText("&Delete");
-		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
-	}
 	
 	/**
 	 * Create pop-up menu for user list
@@ -327,81 +266,70 @@ public class ActionManager extends ViewPart implements SessionListener
 		mgr.add(new Separator());
 		mgr.add(actionEdit);
 	}
-	
-	/**
-	 * Create new action
-	 */
-	private void createAction()
-	{
-		final ServerAction action = new ServerAction(0);
-		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, true);
-		if (dlg.open() == Window.OK)
-		{
-			new ConsoleJob("Create new action", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot create action";
-				}
 
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					long id = session.createAction(action.getName());
-					action.setId(id);
-					session.modifyAction(action);
-				}
-			}.start();
-		}
+	/**
+	 * Refresh tool list
+	 */
+	private void refreshToolList()
+	{
+		new ConsoleJob("Get object tools configuration", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final List<ObjectTool> tools = session.getObjectTools();
+				new UIJob("Update object tools list") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						viewer.setInput(tools.toArray());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get object tools configuration";
+			}
+		}.start();
 	}
 	
 	/**
-	 * Edit currently selected action
+	 * Create new tool
 	 */
-	private void editAction()
+	private void createTool()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if (selection.size() != 1)
-			return;
 		
-		final ServerAction action = (ServerAction)selection.getFirstElement();
-		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
-		if (dlg.open() == Window.OK)
-		{
-			new ConsoleJob("Update action", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot update action";
-				}
-
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					session.modifyAction(action);
-				}
-			}.start();
-		}
 	}
 	
 	/**
-	 * Delete selected actions
+	 * Edit selected tool
 	 */
-	private void deleteActions()
+	private void editTool()
+	{
+		
+	}
+	
+	/**
+	 * Delete selected tools
+	 */
+	private void deleteTools()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.isEmpty())
 			return;
 		
-		if (!MessageDialog.openConfirm(getSite().getShell(), "Confirmation", "Do you really want to delete selected actions?"))
+		if (!MessageDialog.openConfirm(getSite().getShell(), "Confirmation", "Do you really want to delete selected tools?"))
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob("Delete actions", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob("Delete objecttools", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete action";
+				return "Cannot delete object tool";
 			}
 
 			@Override
@@ -409,53 +337,38 @@ public class ActionManager extends ViewPart implements SessionListener
 			{
 				for(int i = 0; i < objects.length; i++)
 				{
-					session.deleteAction(((ServerAction)objects[i]).getId());
+					session.deleteObjectTool(((ObjectTool)objects[i]).getId());
 				}
 			}
 		}.start();
 	}
 
-	/**
-	 * Update actions list 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
-	private void updateActionsList()
+	@Override
+	public void setFocus()
 	{
-		new UIJob("Update actions list") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
-			{
-				synchronized(ActionManager.this.actions)
-				{
-					viewer.setInput(ActionManager.this.actions.values().toArray());
-				}
-				return Status.OK_STATUS;
-			}
-		}.schedule();
+		viewer.getControl().setFocus();
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.api.client.ISessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
 	 */
 	@Override
 	public void notificationHandler(SessionNotification n)
 	{
-		switch(n.getCode())
-		{
-			case NXCNotification.ACTION_CREATED:
-			case NXCNotification.ACTION_MODIFIED:
-				synchronized(actions)
-				{
-					actions.put(n.getSubCode(), (ServerAction)n.getObject());
-				}
-				updateActionsList();
-				break;
-			case NXCNotification.ACTION_DELETED:
-				synchronized(actions)
-				{
-					actions.remove(n.getSubCode());
-				}
-				updateActionsList();
-				break;
-		}
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		session.removeListener(this);
+		super.dispose();
 	}
 }

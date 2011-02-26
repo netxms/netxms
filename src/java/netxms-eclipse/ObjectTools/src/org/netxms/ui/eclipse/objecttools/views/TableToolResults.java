@@ -51,7 +51,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Display results of table tool execution
- *
  */
 public class TableToolResults extends ViewPart
 {

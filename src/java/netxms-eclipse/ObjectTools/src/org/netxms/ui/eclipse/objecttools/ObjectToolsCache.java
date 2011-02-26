@@ -128,7 +128,8 @@ public class ObjectToolsCache
 	}
 	
 	/**
-	 * Get current set of object tools
+	 * Get current set of object tools. Returned array is a copy of
+	 * cache content. 
 	 * 
 	 * @return current set of object tools
 	 */
