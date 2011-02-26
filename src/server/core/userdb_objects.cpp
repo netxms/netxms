@@ -472,9 +472,10 @@ bool User::validatePassword(const TCHAR *password)
    BYTE hash[SHA1_DIGEST_SIZE];
 
 #ifdef UNICODE
-	char mbPassword[256];
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, password, -1, mbPassword, 256, NULL, NULL);
-	mbPassword[255] = 0;
+	char mbPassword[1024];
+	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
+	mbPassword[1023] = 0;
+_tprintf(_T("password='%s' mb='%hs'\n"), password,mbPassword);
 	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), hash);
 #else
 	CalculateSHA1Hash((BYTE *)password, strlen(password), hash);
@@ -494,7 +495,14 @@ bool User::validateHashedPassword(const BYTE *password)
 
 void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 {
-	CalculateSHA1Hash((BYTE *)password, _tcslen(password), m_passwordHash);
+#ifdef UNICODE
+	char mbPassword[1024];
+	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
+	mbPassword[1023] = 0;
+	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), m_passwordHash);
+#else
+	CalculateSHA1Hash((BYTE *)password, strlen(password), m_passwordHash);
+#endif
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_flags |= UF_MODIFIED;
 	if (clearChangePasswdFlag)
