@@ -465,6 +465,7 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
 
 //
 // Validate user's password
+// For non-UNICODE build, password must be UTF-8 encoded
 //
 
 bool User::validatePassword(const TCHAR *password)
@@ -490,6 +491,7 @@ bool User::validateHashedPassword(const BYTE *password)
 
 //
 // Set user's password
+// For non-UNICODE build, password must be UTF-8 encoded
 //
 
 void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)

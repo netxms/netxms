@@ -223,6 +223,7 @@ void SaveUsers(DB_HANDLE hdb)
 // Checks if provided login name and password are correct, and returns RCC_SUCCESS
 // on success and appropriate RCC otherwise. On success authentication, user's ID is stored
 // int pdwId. If password authentication is used, dwSigLen should be set to zero.
+// For non-UNICODE build, password must be UTF-8 encoded
 //
 
 DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
@@ -654,6 +655,7 @@ static bool CheckPasswordComplexity(const TCHAR *password)
 
 //
 // Set user's password
+// For non-UNICODE build, passwords must be UTF-8 encoded
 //
 
 DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)

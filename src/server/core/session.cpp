@@ -1421,7 +1421,7 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 void ClientSession::Login(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR szLogin[MAX_USER_NAME], szPassword[MAX_DB_STRING], szBuffer[32];
+   TCHAR szLogin[MAX_USER_NAME], szPassword[1024], szBuffer[32];
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false;
    DWORD dwResult;
@@ -1452,7 +1452,11 @@ void ClientSession::Login(CSCPMessage *pRequest)
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
-				pRequest->GetVariableStr(VID_PASSWORD, szPassword, MAX_DB_STRING);
+#ifdef UNICODE
+				pRequest->GetVariableStr(VID_PASSWORD, szPassword, 256);
+#else
+				pRequest->GetVariableStrUTF8(VID_PASSWORD, szPassword, 1024);
+#endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
 													 &m_dwSystemAccess, &changePasswd, &intruderLockout);
 				break;
@@ -2592,11 +2596,17 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
        (dwUserId == m_dwUserId))     // User can change password for itself
    {
       DWORD dwResult;
-      TCHAR newPassword[256], oldPassword[256];
+      TCHAR newPassword[1024], oldPassword[1024];
 
+#ifdef UNICODE
       pRequest->GetVariableStr(VID_PASSWORD, newPassword, 256);
 		if (pRequest->IsVariableExist(VID_OLD_PASSWORD))
 			pRequest->GetVariableStr(VID_OLD_PASSWORD, oldPassword, 256);
+#else
+      pRequest->GetVariableStrUTF8(VID_PASSWORD, newPassword, 1024);
+		if (pRequest->IsVariableExist(VID_OLD_PASSWORD))
+			pRequest->GetVariableStrUTF8(VID_OLD_PASSWORD, oldPassword, 1024);
+#endif
 		else
 			oldPassword[0] = 0;
       dwResult = SetUserPassword(dwUserId, newPassword, oldPassword, dwUserId == m_dwUserId);
@@ -9086,7 +9096,7 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 				pszEscComments = EncodeSQLString(pszComments);
 				free(pszComments);
 				dwCertId = CreateUniqueId(IDG_CERTIFICATE);
-				dwQLen = dwLen * 2 + _tcslen(pszEscComments) + _tcslen(pszEscSubject) + 256;
+				dwQLen = dwLen * 2 + (DWORD)_tcslen(pszEscComments) + (DWORD)_tcslen(pszEscSubject) + 256;
 				pszQuery = (TCHAR *)malloc(dwQLen * sizeof(TCHAR));
 				_sntprintf(pszQuery, dwQLen, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
 				           dwCertId, CERT_TYPE_TRUSTED_CA, pszEscSubject, pszEscComments);
@@ -9194,7 +9204,7 @@ void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 		{
 			pszEscComments = EncodeSQLString(pszComments);
 			free(pszComments);
-			qlen = _tcslen(pszEscComments) + 256;
+			qlen = (DWORD)_tcslen(pszEscComments) + 256;
 			pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
 			_sntprintf(pszQuery, qlen, _T("SELECT subject FROM certificates WHERE cert_id=%d"), dwCertId);
 			hResult = DBSelect(g_hCoreDB, pszQuery);
@@ -11007,7 +11017,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 					_tcscpy(fullPath, g_szDataDir);
 					_tcscat(fullPath, DDIR_FILES);
 					_tcscat(fullPath, FS_PATH_SEPARATOR);
-					nLen = _tcslen(fullPath);
+					nLen = (int)_tcslen(fullPath);
 					nx_strncpy(&fullPath[nLen], GetCleanFileName(localFile), MAX_PATH - nLen);
 
 					ServerJob *job = new FileUploadJob((Node *)object, fullPath, remoteFile, m_dwUserId);

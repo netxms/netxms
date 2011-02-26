@@ -1348,7 +1348,8 @@ void CObjectBrowser::OnObjectTool(UINT nID)
 
 void CObjectBrowser::OnUpdateObjectTool(CCmdUI *pCmdUI)
 {
-   pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
+   if (m_pCurrentObject != NULL)
+	   pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
 }
 
 
