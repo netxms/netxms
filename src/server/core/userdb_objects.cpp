@@ -475,7 +475,6 @@ bool User::validatePassword(const TCHAR *password)
 	char mbPassword[1024];
 	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
 	mbPassword[1023] = 0;
-_tprintf(_T("password='%s' mb='%hs'\n"), password,mbPassword);
 	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), hash);
 #else
 	CalculateSHA1Hash((BYTE *)password, strlen(password), hash);
