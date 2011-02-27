@@ -35,12 +35,22 @@ public class ObjectLabelComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		TableColumn sortColumn = ((TableViewer)viewer).getTable().getSortColumn();
-		if (sortColumn == null)
-			return 0;
+		int rc, column;
 		
-		int rc;
-		int column = (Integer)sortColumn.getData("ID");
+		if (((TableViewer)viewer).getTable().getColumnCount() > 0)
+		{
+			TableColumn sortColumn = ((TableViewer)viewer).getTable().getSortColumn();
+			if (sortColumn == null)
+				return 0;
+		
+			column = (Integer)sortColumn.getData("ID");
+		}
+		else
+		{
+			// Table control in simple mode, assume column #0
+			column = 0;
+		}
+		
 		if (labelProvider instanceof ITableLabelProvider)
 		{
 			rc = ((ITableLabelProvider)labelProvider).getColumnText(e1, column).compareToIgnoreCase(((ITableLabelProvider)labelProvider).getColumnText(e2, column));

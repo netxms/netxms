@@ -34,16 +34,16 @@ Source: "..\..\..\x64\Release\libtre.pdb"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\..\..\x64\Release\nxzlib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\..\x64\Release\nxzlib.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 ; Executables and DLLs shared between different components (server, console, etc.)
-Source: "..\..\..\x64\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console tools websrv
-Source: "..\..\..\x64\Release\libnxcl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or tools or websrv) and pdb
+Source: "..\..\..\x64\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools websrv
+Source: "..\..\..\x64\Release\libnxcl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (tools or websrv) and pdb
 Source: "..\..\..\x64\Release\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console tools
 Source: "..\..\..\x64\Release\libnxclw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or tools) and pdb
-Source: "..\..\..\x64\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console server websrv
-Source: "..\..\..\x64\Release\libnxmap.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or server or websrv) and pdb
-Source: "..\..\..\x64\Release\libnxmapw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\..\x64\Release\libnxmapw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
-Source: "..\..\..\x64\Release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
-Source: "..\..\..\x64\Release\libnxsnmp.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (server or console) and pdb
+Source: "..\..\..\x64\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools server websrv
+Source: "..\..\..\x64\Release\libnxmap.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (tools or server or websrv) and pdb
+Source: "..\..\..\x64\Release\libnxmapw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console server
+Source: "..\..\..\x64\Release\libnxmapw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or server) and pdb
+Source: "..\..\..\x64\Release\libnxsnmpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
+Source: "..\..\..\x64\Release\libnxsnmpw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (server or console) and pdb
 Source: "..\..\..\x64\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\..\x64\Release\libnxsl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (server or console) and pdb
 Source: "..\..\..\x64\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
@@ -51,10 +51,14 @@ Source: "..\..\..\x64\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignore
 ; Server files
 Source: "..\..\..\x64\Release\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\nxsqlite.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\x64\Release\libnxsnmp.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\libnxlp.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\libnxdb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\libnxdbw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\x64\Release\libnxdbw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\libnxsrv.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\libnxsrv.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\nxcore.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server

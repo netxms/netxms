@@ -29,8 +29,10 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.situations.Situation;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -59,6 +61,11 @@ public class SituationCache
 		}
 		catch(final Exception e)
 		{
+			// It's a normal situation if user don't have access to situation objects
+			// Don't show error message in this case
+			if ((e instanceof NXCException) && (((NXCException)e).getErrorCode() == RCC.ACCESS_DENIED))
+				return;
+			
 			new UIJob("Notify about situation sync failure") {
 				@Override
 				public IStatus runInUIThread(IProgressMonitor monitor)

@@ -72,5 +72,41 @@
          </action>
       </actionSet>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="org.netxms.client.objecttools.ObjectTool"
+            class="org.netxms.ui.eclipse.objecttools.ObjectToolsAdapterFactory">
+         <adapter
+               type="org.netxms.client.objecttools.ObjectToolDetails">
+         </adapter>
+         <adapter
+               type="org.eclipse.ui.model.IWorkbenchAdapter">
+         </adapter>
+      </factory>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.objecttools.propertypages.General"
+            id="org.netxms.ui.eclipse.objecttools.propertypages.General#1"
+            name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objecttools.ObjectTool">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.objecttools.propertypages.AccessControl"
+            id="org.netxms.ui.eclipse.objecttools.propertypages.AccessControl#2"
+            name="Access Control">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objecttools.ObjectTool">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
 
 </plugin>

@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor;
 
 /**
@@ -40,13 +41,39 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		"Server Command"
 	};
 	
+	private Image[] toolTypeImages = new Image[7];
+	
+	/**
+	 * The constructor
+	 */
+	public ObjectToolsLabelProvider()
+	{
+		toolTypeImages[0] = Activator.getImageDescriptor("icons/internal_tool.gif").createImage();
+		toolTypeImages[1] = Activator.getImageDescriptor("icons/agent_action.gif").createImage();
+		toolTypeImages[2] = Activator.getImageDescriptor("icons/table.gif").createImage();
+		toolTypeImages[3] = Activator.getImageDescriptor("icons/table.gif").createImage();
+		toolTypeImages[4] = Activator.getImageDescriptor("icons/url.gif").createImage();
+		toolTypeImages[5] = Activator.getImageDescriptor("icons/console.png").createImage();
+		toolTypeImages[6] = Activator.getImageDescriptor("icons/console.png").createImage();
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		return null;
+		if (columnIndex != 0)
+			return null;
+
+		try
+		{
+			return toolTypeImages[((ObjectTool)element).getType()];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return null;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -63,10 +90,54 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 			case ObjectToolsEditor.COLUMN_NAME:
 				return tool.getName();
 			case ObjectToolsEditor.COLUMN_TYPE:
-				return toolTypes[tool.getType()];
+				try
+				{
+					return toolTypes[tool.getType()];
+				}
+				catch(ArrayIndexOutOfBoundsException e)
+				{
+					return "?unknown?";
+				}
 			case ObjectToolsEditor.COLUMN_DESCRIPTION:
 				return tool.getDescription();
 		}
 		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		for(Image i : toolTypeImages)
+			i.dispose();
+		super.dispose();
+	}
+	
+	/**
+	 * Get display name for object tool's type
+	 * @param tool object tool
+	 * @return tool type's name
+	 */
+	public static String getToolTypeName(ObjectTool tool)
+	{
+		try
+		{
+			return toolTypes[tool.getType()];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return "?unknown?";
+		}
+	}
+	
+	/**
+	 * Get names of all tool types.
+	 * @return
+	 */
+	public static String[] getAllToolTypes()
+	{
+		return toolTypes;
 	}
 }

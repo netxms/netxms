@@ -18,10 +18,13 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -37,6 +40,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -45,15 +49,23 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.client.AccessListElement;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.ObjectToolsAdapterFactory;
+import org.netxms.ui.eclipse.objecttools.dialogs.CreateNewToolDialog;
+import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsComparator;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -63,6 +75,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Editor for object tools
  */
+@SuppressWarnings("restriction")
 public class ObjectToolsEditor extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor";
@@ -74,6 +87,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	public static final int COLUMN_TYPE = 2;
 	public static final int COLUMN_DESCRIPTION = 3;
 	
+	private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
 	private SortableTableViewer viewer;
 	private NXCSession session;
 	private Action actionRefresh;
@@ -88,6 +102,15 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	public void createPartControl(Composite parent)
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
+
+		// Initiate loading of required plugins if they was not loaded yet
+		try
+		{
+			Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		}
+		catch(Exception e)
+		{
+		}
 		
 		parent.setLayout(new FillLayout());
 		
@@ -97,7 +120,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ObjectToolsLabelProvider());
-		//viewer.setComparator(new ObjectToolsComparator());
+		viewer.setComparator(new ObjectToolsComparator());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
 		{
 			@Override
@@ -141,9 +164,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -152,9 +172,6 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		};
 		
 		actionNew = new Action("&New...") {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -162,23 +179,33 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		};
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
-		
-		actionEdit = new Action("&Edit...") {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+
+		actionEdit = new PropertyDialogAction(getSite(), viewer) {
 			@Override
 			public void run()
 			{
-				editTool();
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				if (selection.size() != 1)
+					return;
+				final long toolId = ((ObjectTool)selection.getFirstElement()).getId();
+				
+				// Check if we have details loaded or can load before showing properties dialog
+				// If there will be error, adapter factory will show error message to user
+				if (Platform.getAdapterManager().getAdapter(selection.getFirstElement(), ObjectToolDetails.class) == null)
+					return;
+				
+				super.run();
+				
+				ObjectToolDetails details = ObjectToolsAdapterFactory.getDetailsFromCache(toolId);
+				if ((details != null) && details.isModified())
+				{
+					saveObjectTool(details);
+				}
 			}
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
 		actionDelete = new Action("&Delete") {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -277,12 +304,15 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<ObjectTool> tools = session.getObjectTools();
+				final List<ObjectTool> tl = session.getObjectTools();
 				new UIJob("Update object tools list") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						viewer.setInput(tools.toArray());
+						tools.clear();
+						for(ObjectTool t : tl)
+							tools.put(t.getId(), t);
+						viewer.setInput(tools.values().toArray());
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -301,15 +331,36 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void createTool()
 	{
-		
-	}
-	
-	/**
-	 * Edit selected tool
-	 */
-	private void editTool()
-	{
-		
+		final CreateNewToolDialog dlg = new CreateNewToolDialog(getSite().getShell());
+		if (dlg.open() == Window.OK)
+		{
+			new ConsoleJob("Generate new object tool ID", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					final long toolId = session.generateObjectToolId();
+					final ObjectToolDetails details = new ObjectToolDetails(toolId, dlg.getType(), dlg.getName());
+					session.modifyObjectTool(details);
+					new UIJob("Open tool properties") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, details);
+							dlg.open();
+							if (details.isModified())
+								saveObjectTool(details);
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				}
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot generate object tool ID";
+				}
+			}.start();
+		}
 	}
 	
 	/**
@@ -342,6 +393,43 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		}.start();
 	}
+	
+	/**
+	 * Save object tool configuration on server
+	 * 
+	 * @param details object tool details
+	 */
+	private void saveObjectTool(final ObjectToolDetails details)
+	{
+		new ConsoleJob("Save object tool", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				session.modifyObjectTool(details);
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot save object tool configuration";
+			}
+
+			@Override
+			protected void jobFailureHandler()
+			{
+				// Was unable to save configuration on server, invalidate cache
+				new UIJob("Update object tool adapter cache") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						ObjectToolsAdapterFactory.deleteFromCache(details.getId());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		}.schedule();
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
@@ -356,10 +444,26 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
 	 */
 	@Override
-	public void notificationHandler(SessionNotification n)
+	public void notificationHandler(final SessionNotification n)
 	{
-		// TODO Auto-generated method stub
-		
+		switch(n.getCode())
+		{
+			case NXCNotification.OBJECT_TOOLS_CHANGED:
+				refreshToolList();
+				break;
+			case NXCNotification.OBJECT_TOOL_DELETED:
+				new UIJob("Delete object tool from list") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						ObjectToolsAdapterFactory.deleteFromCache(n.getSubCode());
+						tools.remove(n.getSubCode());
+						viewer.setInput(tools.values().toArray());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+				break;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -369,6 +473,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	public void dispose()
 	{
 		session.removeListener(this);
+		ObjectToolsAdapterFactory.clearCache();
 		super.dispose();
 	}
 }

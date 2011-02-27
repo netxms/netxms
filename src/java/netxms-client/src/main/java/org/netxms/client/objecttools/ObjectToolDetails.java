@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client.objecttools;
 
@@ -11,13 +26,39 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
- * @author victor
+ * Detailed information about object tool
  *
  */
 public class ObjectToolDetails extends ObjectTool
 {
+	private boolean modified;
 	private List<Long> accessList;
 	private List<ObjectToolTableColumn> columns;
+	
+	/**
+	 * Create new tool object
+	 * 
+	 * @param toolId tool id
+	 * @param type tool type
+	 * @param name tool name
+	 */
+	public ObjectToolDetails(long toolId, int type, String name)
+	{
+		modified = false;
+		this.id = toolId;
+		this.type = type;
+		this.name = name;
+
+		data = "";
+		flags = 0;
+		description = "";
+		snmpOid = "";
+		confirmationText = "";
+		accessList = new ArrayList<Long>(0);
+		columns = new ArrayList<ObjectToolTableColumn>(0);
+
+		createDisplayName();
+	}
 	
 	/**
 	 * Create object tool from NXCP message containing detailed tool information.
@@ -27,6 +68,7 @@ public class ObjectToolDetails extends ObjectTool
 	 */
 	public ObjectToolDetails(NXCPMessage msg)
 	{
+		modified = false;
 		id = msg.getVariableAsInt64(NXCPCodes.VID_TOOL_ID);
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		type = msg.getVariableAsInteger(NXCPCodes.VID_TOOL_TYPE);
@@ -36,7 +78,8 @@ public class ObjectToolDetails extends ObjectTool
 		snmpOid = msg.getVariableAsString(NXCPCodes.VID_TOOL_OID);
 		confirmationText = msg.getVariableAsString(NXCPCodes.VID_CONFIRMATION_TEXT);
 		
-		accessList = new ArrayList<Long>(Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_ACL)));
+		Long[] acl = msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_ACL);
+		accessList = (acl != null) ? new ArrayList<Long>(Arrays.asList(acl)) : new ArrayList<Long>(0);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
 		columns = new ArrayList<ObjectToolTableColumn>(count);
@@ -102,6 +145,7 @@ public class ObjectToolDetails extends ObjectTool
 	public void setId(long id)
 	{
 		this.id = id;
+		modified = true;
 	}
 
 	/**
@@ -111,6 +155,7 @@ public class ObjectToolDetails extends ObjectTool
 	{
 		this.name = name;
 		createDisplayName();
+		modified = true;
 	}
 
 	/**
@@ -119,6 +164,7 @@ public class ObjectToolDetails extends ObjectTool
 	public void setType(int type)
 	{
 		this.type = type;
+		modified = true;
 	}
 
 	/**
@@ -127,6 +173,7 @@ public class ObjectToolDetails extends ObjectTool
 	public void setFlags(int flags)
 	{
 		this.flags = flags;
+		modified = true;
 	}
 
 	/**
@@ -135,6 +182,7 @@ public class ObjectToolDetails extends ObjectTool
 	public void setDescription(String description)
 	{
 		this.description = description;
+		modified = true;
 	}
 
 	/**
@@ -143,6 +191,7 @@ public class ObjectToolDetails extends ObjectTool
 	public void setSnmpOid(String snmpOid)
 	{
 		this.snmpOid = snmpOid;
+		modified = true;
 	}
 
 	/**
@@ -151,6 +200,7 @@ public class ObjectToolDetails extends ObjectTool
 	public void setData(String data)
 	{
 		this.data = data;
+		modified = true;
 	}
 
 	/**
@@ -159,5 +209,32 @@ public class ObjectToolDetails extends ObjectTool
 	public void setConfirmationText(String confirmationText)
 	{
 		this.confirmationText = confirmationText;
+		modified = true;
+	}
+
+	/**
+	 * @return the modified
+	 */
+	public boolean isModified()
+	{
+		return modified;
+	}
+
+	/**
+	 * @param accessList the accessList to set
+	 */
+	public void setAccessList(List<Long> accessList)
+	{
+		this.accessList = accessList;
+		modified = true;
+	}
+
+	/**
+	 * @param columns the columns to set
+	 */
+	public void setColumns(List<ObjectToolTableColumn> columns)
+	{
+		this.columns = columns;
+		modified = true;
 	}
 }
