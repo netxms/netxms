@@ -68,7 +68,7 @@
   <extension
      point = "org.eclipse.ui.propertyPages">
         <page
-           id="org.netxms.ui.eclipse.usermanager.propertypages.General"
+           id="org.netxms.ui.eclipse.usermanager.propertypages.General#0"
            name="General"
 	       class="org.netxms.ui.eclipse.usermanager.propertypages.General">
           <enabledWhen>
@@ -78,7 +78,7 @@
           </enabledWhen>
         </page>
         <page
-           id="org.netxms.ui.eclipse.usermanager.propertypages.Authentication"
+           id="org.netxms.ui.eclipse.usermanager.propertypages.Authentication#1"
            name="Authentication"
 	       class="org.netxms.ui.eclipse.usermanager.propertypages.Authentication">
           <enabledWhen>
@@ -89,12 +89,28 @@
         </page>
         <page
               class="org.netxms.ui.eclipse.usermanager.propertypages.Members"
-              id="org.netxms.ui.eclipse.usermanager.propertypages.Memebres"
+              id="org.netxms.ui.eclipse.usermanager.propertypages.Memebres#2"
               name="Members">
            <enabledWhen>
               <instanceof
                     value="org.netxms.api.client.users.UserGroup">
               </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.usermanager.propertypages.SystemRights"
+              id="org.netxms.ui.eclipse.usermanager.propertypages.SystemRights#3"
+              name="System Rights">
+           <enabledWhen>
+              <and>
+                 <instanceof
+                       value="org.netxms.api.client.users.AbstractUserObject">
+                 </instanceof>
+                 <systemTest
+                       property="org.netxms.ui.eclipse.usermanager.showSystemRightsPage"
+                       value="true">
+                 </systemTest>
+              </and>
            </enabledWhen>
         </page>
   </extension>

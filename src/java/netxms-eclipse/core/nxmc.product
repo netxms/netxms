@@ -13,6 +13,7 @@
    </configIni>
 
    <launcherArgs>
+      <vmArgs>-Dorg.netxms.ui.eclipse.usermanager.showSystemRightsPage=true</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
@@ -29,8 +30,10 @@
       </win>
    </launcher>
 
+
    <vm>
    </vm>
+
 
    <plugins>
       <plugin id="com.ibm.icu"/>

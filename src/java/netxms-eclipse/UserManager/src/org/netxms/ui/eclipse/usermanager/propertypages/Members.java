@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.usermanager.propertypages;
 
 import java.util.HashMap;
@@ -6,7 +24,6 @@ import java.util.Iterator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -24,10 +41,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
@@ -35,6 +52,9 @@ import org.netxms.ui.eclipse.usermanager.UserComparator;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
+/**
+ * "Members" page for user group
+ */
 public class Members extends PropertyPage
 {
 	private SortableTableViewer userList;
@@ -42,14 +62,14 @@ public class Members extends PropertyPage
 	private UserGroup object;
 	private HashMap<Long, AbstractUserObject> members = new HashMap<Long, AbstractUserObject>(0);
 
-	public Members()
-	{
-		userManager = (UserManager)ConsoleSharedData.getSession();
-	}
-
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
+		userManager = (UserManager)ConsoleSharedData.getSession();
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		object = (UserGroup)getElement().getAdapter(UserGroup.class);
 
@@ -168,27 +188,25 @@ public class Members extends PropertyPage
 			memberIds[i++] = id;
 		object.setMembers(memberIds);
 		
-		new Job("Update user database object") {
+		new ConsoleJob("Update user database object", null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					userManager.modifyUserDBObject(object, UserManager.USER_MODIFY_MEMBERS);
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-					                    "Cannot update user account: " + e.getMessage(), null);
-				}
+				userManager.modifyUserDBObject(object, UserManager.USER_MODIFY_MEMBERS);
+			}
 
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update user object";
+			}
+
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
-					new UIJob("Update \"Members\" property page") {
+					new UIJob("Update \"SystemRights\" property page") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
@@ -197,10 +215,8 @@ public class Members extends PropertyPage
 						}
 					}.schedule();
 				}
-
-				return status;
 			}
-		}.schedule();
+		}.start();
 	}
 
 	/* (non-Javadoc)

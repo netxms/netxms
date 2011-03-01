@@ -332,6 +332,7 @@ src/java/netxms-client-api/src/main/java/org/netxms/api/client/Session.java -tex
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/SessionListener.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/SessionNotification.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/constants/CommonRCC.java -text
+src/java/netxms-client-api/src/main/java/org/netxms/api/client/constants/UserAccessRights.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/images/ImageLibraryManager.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/images/LibraryImage.java -text
 src/java/netxms-client-api/src/main/java/org/netxms/api/client/scripts/Script.java -text
@@ -380,7 +381,6 @@ src/java/netxms-client/src/main/java/org/netxms/client/Table.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/NodePoller.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/RCC.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/Severity.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/constants/UserAccessRights.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/ConditionDciInfo.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionConfiguration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionItem.java -text
@@ -1093,6 +1093,7 @@ src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialog
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/Authentication.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/General.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/Members.java -text
+src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/SystemRights.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/views/UserManagementView.java -text
 src/java/netxms-eclipse/core/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/core/META-INF/MANIFEST.MF -text
