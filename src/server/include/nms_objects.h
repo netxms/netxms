@@ -800,8 +800,10 @@ public:
    DWORD GetItemFromCheckPointSNMP(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
    DWORD GetItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
    DWORD GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
+	DWORD getTableFromAgent(const TCHAR *name, Table **table);
    void queueItemsForPolling(Queue *pPollerQueue);
-   DWORD GetItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
+   DWORD getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize);
+   DWORD getTableForClient(const TCHAR *name, Table **table);
    DWORD getLastValues(CSCPMessage *pMsg);
 	void processNewDciValue(DCItem *item, time_t currTime, const TCHAR *value);
    void cleanDCIData();

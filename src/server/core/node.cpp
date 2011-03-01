@@ -2348,8 +2348,66 @@ DWORD Node::GetItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuf
 
 end_loop:
    agentUnlock();
-   DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"),
-             m_szName, szParam, dwError, dwResult);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_szName, szParam, dwError, dwResult);
+   return dwResult;
+}
+
+
+//
+// Get table from agent
+//
+
+DWORD Node::getTableFromAgent(const TCHAR *name, Table **table)
+{
+   DWORD dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   DWORD dwTries = 3;
+
+	*table = NULL;
+
+   if ((m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHABLE) ||
+		 (m_dwFlags & NF_DISABLE_NXCP) ||
+		 !(m_dwFlags & NF_IS_NATIVE_AGENT))
+      return DCE_COMM_ERROR;
+
+   agentLock();
+
+   // Establish connection if needed
+   if (m_pAgentConnection == NULL)
+      if (!connectToAgent())
+         goto end_loop;
+
+   // Get parameter from agent
+   while(dwTries-- > 0)
+   {
+      dwError = m_pAgentConnection->getTable(name, table);
+      switch(dwError)
+      {
+         case ERR_SUCCESS:
+            dwResult = DCE_SUCCESS;
+            goto end_loop;
+         case ERR_UNKNOWN_PARAMETER:
+            dwResult = DCE_NOT_SUPPORTED;
+            goto end_loop;
+         case ERR_NOT_CONNECTED:
+         case ERR_CONNECTION_BROKEN:
+            if (!connectToAgent())
+               goto end_loop;
+            break;
+         case ERR_REQUEST_TIMEOUT:
+				// Reset connection to agent after timeout
+				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_szName, name);
+				delete_and_null(m_pAgentConnection);
+            if (!connectToAgent())
+               goto end_loop;
+				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_szName, name);
+            break;
+      }
+   }
+
+end_loop:
+   agentUnlock();
+   DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_szName, name, dwError, dwResult);
    return dwResult;
 }
 
@@ -2496,10 +2554,30 @@ DWORD Node::GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuff
 
 
 //
+// Translate DCI error code into RCC
+//
+
+static DWORD RCCFromDCIError(DWORD error)
+{
+   switch(dwRetCode)
+   {
+      case DCE_SUCCESS:
+         return RCC_SUCCESS;
+      case DCE_COMM_ERROR:
+         return RCC_COMM_FAILURE;
+      case DCE_NOT_SUPPORTED:
+         return RCC_DCI_NOT_SUPPORTED;
+      default:
+         return RCC_SYSTEM_FAILURE;
+   }
+}
+
+
+//
 // Get item's value for client
 //
 
-DWORD Node::GetItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize)
+DWORD Node::getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, DWORD dwBufSize)
 {
    DWORD dwResult = 0, dwRetCode;
 
@@ -2525,25 +2603,20 @@ DWORD Node::GetItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffe
 
    // Translate return code to RCC
    if (dwResult != RCC_INVALID_ARGUMENT)
-   {
-      switch(dwRetCode)
-      {
-         case DCE_SUCCESS:
-            dwResult = RCC_SUCCESS;
-            break;
-         case DCE_COMM_ERROR:
-            dwResult = RCC_COMM_FAILURE;
-            break;
-         case DCE_NOT_SUPPORTED:
-            dwResult = RCC_DCI_NOT_SUPPORTED;
-            break;
-         default:
-            dwResult = RCC_SYSTEM_FAILURE;
-            break;
-      }
-   }
+		dwResult = RCCFromDCIError(dwRetCode);
 
    return dwResult;
+}
+
+
+//
+// Get table for client
+//
+
+DWORD Node::getTableForClient(const TCHAR name, Table **table)
+{
+   DWORD dwRetCode = getTableFromAgent(name, table);
+	return RCCFromDCIError(dwRetCode);
 }
 
 

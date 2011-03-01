@@ -465,6 +465,7 @@ typedef struct
 #define CMD_LIST_IMAGES             0x00F3
 #define CMD_LIST_SERVER_FILES       0x00F4
 #define CMD_GET_TABLE               0x00F5
+#define CMD_QUERY_TABLE             0x00F6
 
 
 //

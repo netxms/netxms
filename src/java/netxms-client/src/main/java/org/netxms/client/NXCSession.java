@@ -1981,10 +1981,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param dciId
 	 *           DCI ID
 	 * @return List of configured thresholds
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public Threshold[] getThresholds(final long nodeId, final long dciId) throws IOException, NXCException
 	{
@@ -2005,6 +2003,50 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		}
 
 		return list;
+	}
+
+	/**
+	 * Query parameter immediately. This call will cause server to do actual call to
+	 * managed node and will return current value for given parameter. Result is not cached.
+	 *  
+	 * @param nodeId node object ID
+	 * @param origin parameter's origin (NetXMS agent, SNMP, etc.)
+	 * @param name parameter's name
+	 * @return current parameter's value
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public String queryParameter(long nodeId, int origin, String name) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_PARAMETER);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		sendMessage(msg);
+
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsString(NXCPCodes.VID_VALUE);
+	}
+	
+	/**
+	 * Query agent's table immediately. This call will cause server to do actual call to
+	 * managed node and will return current value for given table. Result is not cached.
+	 *  
+	 * @param nodeId node object ID
+	 * @param name table's name
+	 * @return current table's value
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Table queryAgentTable(long nodeId, String name) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_TABLE);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		sendMessage(msg);
+
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return new Table(response);
 	}
 
 	/**

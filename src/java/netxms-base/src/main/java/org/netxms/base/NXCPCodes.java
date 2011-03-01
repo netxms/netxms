@@ -272,6 +272,8 @@ public final class NXCPCodes
 	public static final int CMD_MODIFY_IMAGE            = 0x00F2;
 	public static final int CMD_LIST_IMAGES             = 0x00F3;
 	public static final int CMD_LIST_SERVER_FILES       = 0x00F4;
+	public static final int CMD_GET_TABLE               = 0x00F5;
+	public static final int CMD_QUERY_TABLE             = 0x00F6;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -651,6 +653,7 @@ public final class NXCPCodes
 	public static final long VID_VRRP_VERSION            = 375;
 	public static final long VID_VRRP_VR_COUNT           = 376;
 	public static final long VID_DESTINATION_FILE_NAME   = 377;
+	public static final long VID_NUM_TABLES              = 378;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -677,6 +680,9 @@ public final class NXCPCodes
 	public static final long VID_ENUM_VALUE_BASE          = 0x10000000L;
 	public static final long VID_ACTION_ARG_BASE          = 0x10000000L;
 	public static final long VID_PARAM_LIST_BASE          = 0x10000000L;
+	public static final long VID_ENUM_LIST_BASE           = 0x20000000L;
+	public static final long VID_PUSHPARAM_LIST_BASE      = 0x30000000L;
+	public static final long VID_TABLE_LIST_BASE          = 0x40000000L;
 	public static final long VID_DCI_VALUES_BASE          = 0x10000000L;
 	public static final long VID_VARLIST_BASE             = 0x10000000L;
 	public static final long VID_VPN_NETWORK_BASE         = 0x10000000L;

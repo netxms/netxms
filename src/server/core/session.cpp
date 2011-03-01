@@ -4597,7 +4597,7 @@ void ClientSession::OnWakeUpNode(CSCPMessage *pRequest)
 // Query specific parameter from node
 //
 
-void ClientSession::QueryParameter(CSCPMessage *pRequest)
+void ClientSession::queryParameter(CSCPMessage *pRequest)
 {
    NetObj *pObject;
    CSCPMessage msg;
@@ -4623,6 +4623,59 @@ void ClientSession::QueryParameter(CSCPMessage *pRequest)
             msg.SetVariable(VID_RCC, dwResult);
             if (dwResult == RCC_SUCCESS)
                msg.SetVariable(VID_VALUE, szBuffer);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
+// Query specific table from node
+//
+
+void ClientSession::queryAgentTable(CSCPMessage *pRequest)
+{
+   NetObj *pObject;
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Find node object
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+				TCHAR name[MAX_PARAM_NAME];
+				pRequest->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
+				
+				Table *table;
+				DWORD rcc = ((Node *)pObject)->getTableForClient(name, &table);
+				msg.SetVariable(VID_RCC, rcc);
+				if (rcc == RCC_SUCCESS)
+				{
+					table->fillMessage(msg, 0, -1);
+					delete table;
+				}
          }
          else
          {

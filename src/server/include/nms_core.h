@@ -375,6 +375,8 @@ private:
 
 	DECLARE_THREAD_STARTER(GetCollectedData)
 	DECLARE_THREAD_STARTER(ClearDCIData)
+	DECLARE_THREAD_STARTER(queryParameter)
+	DECLARE_THREAD_STARTER(queryAgentTable)
 	DECLARE_THREAD_STARTER(QueryL2Topology)
 	DECLARE_THREAD_STARTER(SendEventLog)
 	DECLARE_THREAD_STARTER(SendSyslog)
@@ -445,7 +447,8 @@ private:
    void ForcedNodePoll(CSCPMessage *pRequest);
    void OnTrap(CSCPMessage *pRequest);
    void OnWakeUpNode(CSCPMessage *pRequest);
-   void QueryParameter(CSCPMessage *pRequest);
+   void queryParameter(CSCPMessage *pRequest);
+   void queryAgentTable(CSCPMessage *pRequest);
    void EditTrap(int iOperation, CSCPMessage *pRequest);
    void LockTrapCfg(DWORD dwRqId, BOOL bLock);
    void SendAllTraps(DWORD dwRqId);
