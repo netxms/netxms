@@ -3433,7 +3433,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public void executeServerCommand(long objectId, String command) throws IOException, NXCException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXEC_TABLE_TOOL);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SERVER_COMMAND);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
 		msg.setVariable(NXCPCodes.VID_COMMAND, command);
 		sendMessage(msg);
