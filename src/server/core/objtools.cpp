@@ -184,7 +184,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
                pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
                if (pConn != NULL)
                {
-                  dwResult = pConn->GetList(pszEnum);
+                  dwResult = pConn->getList(pszEnum);
                   if (dwResult == ERR_SUCCESS)
                   {
                      dwNumRows = pConn->getNumDataLines();

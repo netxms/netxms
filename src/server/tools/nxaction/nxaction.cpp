@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
 					int count = min(argc - optind - 2, 256);
 					for(i = 0, k = optind + 2; i < count; i++, k++)
 						args[i] = WideStringFromMBString(argv[k]);
-               dwError = conn.ExecAction(action, count, args);
+               dwError = conn.execAction(action, count, args);
 					for(i = 0; i < count; i++)
 						free(args[i]);
 #else

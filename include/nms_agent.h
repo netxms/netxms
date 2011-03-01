@@ -319,11 +319,11 @@
 
 typedef struct
 {
-   TCHAR szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *);
-   const TCHAR *pArg;
-   int iDataType;		// Use DT_DEPRECATED to indicate deprecated parameter
-   TCHAR szDescription[MAX_DB_STRING];
+   TCHAR name[MAX_PARAM_NAME];
+   LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *);
+   const TCHAR *arg;
+   int dataType;		// Use DT_DEPRECATED to indicate deprecated parameter
+   TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_PARAM;
 
 
@@ -340,15 +340,27 @@ typedef struct
 
 
 //
-// Subagent's enum information
+// Subagent's list information
 //
 
 typedef struct
 {
-   TCHAR szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(const TCHAR *, const TCHAR *, StringList *);
-   const TCHAR *pArg;
-} NETXMS_SUBAGENT_ENUM;
+   TCHAR name[MAX_PARAM_NAME];
+   LONG (* handler)(const TCHAR *, const TCHAR *, StringList *);
+   const TCHAR *arg;
+} NETXMS_SUBAGENT_LIST;
+
+
+//
+// Subagent's table information
+//
+
+typedef struct
+{
+   TCHAR name[MAX_PARAM_NAME];
+   LONG (* handler)(const TCHAR *, const TCHAR *, Table *);
+   const TCHAR *arg;
+} NETXMS_SUBAGENT_TABLE;
 
 
 //
@@ -357,10 +369,10 @@ typedef struct
 
 typedef struct
 {
-   TCHAR szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(const TCHAR *, StringList *, const TCHAR *);
-   const TCHAR *pArg;
-   TCHAR szDescription[MAX_DB_STRING];
+   TCHAR name[MAX_PARAM_NAME];
+   LONG (* handler)(const TCHAR *, StringList *, const TCHAR *);
+   const TCHAR *arg;
+   TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
 
@@ -368,27 +380,29 @@ typedef struct
 // Subagent initialization structure
 //
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20091206)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20110301)
 
 class CSCPMessage;
 
 typedef struct
 {
-   DWORD dwMagic;    // Magic number to check if subagent uses correct version of this structure
-   TCHAR szName[MAX_SUBAGENT_NAME];
-   TCHAR szVersion[32];
-	BOOL (* pInit)(Config *);   // Called to initialize subagent. Can be NULL.
-   void (* pShutdown)(void);  // Called at subagent unload. Can be NULL.
-   BOOL (* pCommandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
-                            CSCPMessage *pResponse, void *session);
-   DWORD dwNumParameters;
-   NETXMS_SUBAGENT_PARAM *pParamList;
-   DWORD dwNumEnums;
-   NETXMS_SUBAGENT_ENUM *pEnumList;
-   DWORD dwNumActions;
-   NETXMS_SUBAGENT_ACTION *pActionList;
-	DWORD dwNumPushParameters;
-	NETXMS_SUBAGENT_PUSHPARAM *pPushParamList;
+   DWORD magic;    // Magic number to check if subagent uses correct version of this structure
+   TCHAR name[MAX_SUBAGENT_NAME];
+   TCHAR version[32];
+	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
+   void (* shutdown)();       // Called at subagent unload. Can be NULL.
+   BOOL (* commandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
+                           CSCPMessage *pResponse, void *session);
+   DWORD numParameters;
+   NETXMS_SUBAGENT_PARAM *parameters;
+   DWORD numLists;
+   NETXMS_SUBAGENT_LIST *lists;
+   DWORD numTables;
+   NETXMS_SUBAGENT_TABLE *tables;
+   DWORD numActions;
+   NETXMS_SUBAGENT_ACTION *actions;
+	DWORD numPushParameters;
+	NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
 } NETXMS_SUBAGENT_INFO;
 
 

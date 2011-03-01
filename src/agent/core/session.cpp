@@ -440,6 +440,9 @@ void CommSession::processingThread()
             case CMD_GET_LIST:
                getList(pMsg, &msg);
                break;
+            case CMD_GET_TABLE:
+               getTable(pMsg, &msg);
+               break;
             case CMD_KEEPALIVE:
                msg.SetVariable(VID_RCC, ERR_SUCCESS);
                break;
@@ -656,13 +659,33 @@ void CommSession::getList(CSCPMessage *pRequest, CSCPMessage *pMsg)
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    StringList value;
-   DWORD dwErrorCode = GetEnumValue(m_dwIndex, szParameter, &value);
+   DWORD dwErrorCode = GetListValue(m_dwIndex, szParameter, &value);
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
 		pMsg->SetVariable(VID_NUM_STRINGS, (DWORD)value.getSize());
 		for(int i = 0; i < value.getSize(); i++)
 			pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.getValue(i));
+   }
+}
+
+
+//
+// Get table
+//
+
+void CommSession::getTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   TCHAR szParameter[MAX_PARAM_NAME];
+
+   pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
+
+   Table value;
+   DWORD dwErrorCode = GetTableValue(m_dwIndex, szParameter, &value);
+   pMsg->SetVariable(VID_RCC, dwErrorCode);
+   if (dwErrorCode == ERR_SUCCESS)
+   {
+		value.fillMessage(*pMsg, 0, -1);	// no row limit
    }
 }
 

@@ -437,7 +437,7 @@ ARP_CACHE *Node::getArpCache()
    {
       agentLock();
       if (connectToAgent())
-         pArpCache = m_pAgentConnection->GetArpCache();
+         pArpCache = m_pAgentConnection->getArpCache();
       agentUnlock();
    }
    else if (m_dwFlags & NF_IS_SNMP)
@@ -469,7 +469,7 @@ INTERFACE_LIST *Node::getInterfaceList()
       agentLock();
       if (connectToAgent())
       {
-         pIfList = m_pAgentConnection->GetInterfaceList();
+         pIfList = m_pAgentConnection->getInterfaceList();
          CleanInterfaceList(pIfList);
       }
       agentUnlock();
@@ -1380,7 +1380,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 				}
             UnlockData();
       
-            if (pAgentConn->GetParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+            if (pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
             {
                LockData();
                if (_tcscmp(m_szAgentVersion, szBuffer))
@@ -1392,7 +1392,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                UnlockData();
             }
 
-            if (pAgentConn->GetParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
+            if (pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
             {
                LockData();
                if (_tcscmp(m_szPlatformName, szBuffer))
@@ -1405,7 +1405,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check IP forwarding status
-            if (pAgentConn->GetParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
+            if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
             {
                if (_tcstoul(szBuffer, NULL, 10) != 0)
                   m_dwFlags |= NF_IS_ROUTER;
@@ -1414,7 +1414,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
 				// Get uname
-				if (pAgentConn->GetParameter(_T("System.Uname"), MAX_DB_STRING, szBuffer) == ERR_SUCCESS)
+				if (pAgentConn->getParameter(_T("System.Uname"), MAX_DB_STRING, szBuffer) == ERR_SUCCESS)
 				{
 					TranslateStr(szBuffer, _T("\r\n"), _T(" "));
 					TranslateStr(szBuffer, _T("\n"), _T(" "));
@@ -1429,7 +1429,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                UnlockData();
 				}
 
-            rcc = pAgentConn->GetSupportedParameters(&dwNumParams, &pParamList);
+            rcc = pAgentConn->getSupportedParameters(&dwNumParams, &pParamList);
 				if (rcc == ERR_SUCCESS)
 				{
 					LockData();
@@ -2321,7 +2321,7 @@ DWORD Node::GetItemFromAgent(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuf
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = m_pAgentConnection->GetParameter(szParam, dwBufSize, szBuffer);
+      dwError = m_pAgentConnection->getParameter(szParam, dwBufSize, szBuffer);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -2889,7 +2889,7 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
       pConn = createAgentConnection();
       if (pConn != NULL)
       {
-         dwError = pConn->CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
+         dwError = pConn->checkNetworkService(pdwStatus, dwIpAddr, iServiceType,
                                               wPort, wProto, pszRequest, pszResponse);
          pConn->disconnect();
          delete pConn;
@@ -3226,7 +3226,7 @@ ROUTING_TABLE *Node::getRoutingTable()
       agentLock();
       if (connectToAgent())
       {
-         pRT = m_pAgentConnection->GetRoutingTable();
+         pRT = m_pAgentConnection->getRoutingTable();
       }
       agentUnlock();
    }

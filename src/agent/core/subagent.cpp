@@ -51,18 +51,18 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
    if (SubAgentRegister(&pInfo, g_config))
    {
       // Check if information structure is valid
-      if (pInfo->dwMagic == NETXMS_SUBAGENT_INFO_MAGIC)
+      if (pInfo->magic == NETXMS_SUBAGENT_INFO_MAGIC)
       {
          DWORD i;
 
          // Check if subagent with given name alreay loaded
          for(i = 0; i < m_dwNumSubAgents; i++)
-            if (!_tcsicmp(m_pSubAgentList[i].pInfo->szName, pInfo->szName))
+            if (!_tcsicmp(m_pSubAgentList[i].pInfo->name, pInfo->name))
                break;
          if (i == m_dwNumSubAgents)
          {
 				// Initialize subagent
-				bInitOK = (pInfo->pInit != NULL) ? pInfo->pInit(g_config) : TRUE;
+				bInitOK = (pInfo->init != NULL) ? pInfo->init(g_config) : TRUE;
 				if (bInitOK)
 				{
 					// Add subagent to subagent's list
@@ -77,33 +77,39 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
 					m_dwNumSubAgents++;
 
 					// Add parameters provided by this subagent to common list
-					for(i = 0; i < pInfo->dwNumParameters; i++)
-						AddParameter(pInfo->pParamList[i].szName, 
-										 pInfo->pParamList[i].fpHandler,
-										 pInfo->pParamList[i].pArg,
-										 pInfo->pParamList[i].iDataType,
-										 pInfo->pParamList[i].szDescription);
+					for(i = 0; i < pInfo->numParameters; i++)
+						AddParameter(pInfo->parameters[i].name, 
+										 pInfo->parameters[i].handler,
+										 pInfo->parameters[i].arg,
+										 pInfo->parameters[i].dataType,
+										 pInfo->parameters[i].description);
 
 					// Add push parameters provided by this subagent to common list
-					for(i = 0; i < pInfo->dwNumPushParameters; i++)
-						AddPushParameter(pInfo->pPushParamList[i].name, 
-						                 pInfo->pPushParamList[i].dataType,
-					                    pInfo->pPushParamList[i].description);
+					for(i = 0; i < pInfo->numPushParameters; i++)
+						AddPushParameter(pInfo->pushParameters[i].name, 
+						                 pInfo->pushParameters[i].dataType,
+					                    pInfo->pushParameters[i].description);
 
-					// Add enums provided by this subagent to common list
-					for(i = 0; i < pInfo->dwNumEnums; i++)
-						AddEnum(pInfo->pEnumList[i].szName, 
-								  pInfo->pEnumList[i].fpHandler,
-								  pInfo->pEnumList[i].pArg);
+					// Add lists provided by this subagent to common list
+					for(i = 0; i < pInfo->numLists; i++)
+						AddList(pInfo->lists[i].name, 
+								  pInfo->lists[i].handler,
+								  pInfo->lists[i].arg);
+
+					// Add tables provided by this subagent to common list
+					for(i = 0; i < pInfo->numTables; i++)
+						AddTable(pInfo->tables[i].name, 
+								   pInfo->tables[i].handler,
+								   pInfo->tables[i].arg);
 
 					// Add actions provided by this subagent to common list
-					for(i = 0; i < pInfo->dwNumActions; i++)
-						AddAction(pInfo->pActionList[i].szName,
+					for(i = 0; i < pInfo->numActions; i++)
+						AddAction(pInfo->actions[i].name,
 									 AGENT_ACTION_SUBAGENT,
-									 pInfo->pActionList[i].pArg,
-									 pInfo->pActionList[i].fpHandler,
-									 pInfo->szName,
-									 pInfo->pActionList[i].szDescription);
+									 pInfo->actions[i].arg,
+									 pInfo->actions[i].handler,
+									 pInfo->name,
+									 pInfo->actions[i].description);
 
 					nxlog_write(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
 								   "s", pszModuleName);
@@ -119,7 +125,7 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
          else
          {
             nxlog_write(MSG_SUBAGENT_ALREADY_LOADED, EVENTLOG_WARNING_TYPE,
-                        "ss", pInfo->szName, m_pSubAgentList[i].szName);
+                        "ss", pInfo->name, m_pSubAgentList[i].szName);
             // On NetWare, DLClose will unload module, and if first instance
             // was loaded from the same module, it will be killed, so
             // we don't call DLClose on NetWare
@@ -224,8 +230,8 @@ void UnloadAllSubAgents()
       UnImportPublicObject(m_pSubAgentList[i].hModule, m_pSubAgentList[i].szEntryPoint);
       cleardontunloadflag(m_pSubAgentList[i].hModule);
 #endif
-      if (m_pSubAgentList[i].pInfo->pShutdown != NULL)
-         m_pSubAgentList[i].pInfo->pShutdown();
+      if (m_pSubAgentList[i].pInfo->shutdown != NULL)
+         m_pSubAgentList[i].pInfo->shutdown();
 #ifndef _NETWARE
       DLClose(m_pSubAgentList[i].hModule);
 #endif
@@ -246,11 +252,11 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
    {
 #ifdef __64BIT__
       _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"), 
-                 m_pSubAgentList[i].pInfo->szName, m_pSubAgentList[i].pInfo->szVersion,
+                 m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
                  m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
 #else
       _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"), 
-                 m_pSubAgentList[i].pInfo->szName, m_pSubAgentList[i].pInfo->szVersion,
+                 m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
                  m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
 #endif
       value->add(szBuffer);
@@ -270,8 +276,8 @@ BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *p
 
    for(i = 0; (i < m_dwNumSubAgents) && (!bResult); i++)
    {
-      if (m_pSubAgentList[i].pInfo->pCommandHandler != NULL)
-         bResult = m_pSubAgentList[i].pInfo->pCommandHandler(dwCommand, pRequest, pResponse, session);
+      if (m_pSubAgentList[i].pInfo->commandHandler != NULL)
+         bResult = m_pSubAgentList[i].pInfo->commandHandler(dwCommand, pRequest, pResponse, session);
    }
    return bResult;
 }

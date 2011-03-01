@@ -190,7 +190,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
             {
                // Source package, check if target node
                // supports source packages
-               if (pAgentConn->GetParameter(_T("Agent.SourcePackageSupport"), 32, szBuffer) == ERR_SUCCESS)
+               if (pAgentConn->getParameter(_T("Agent.SourcePackageSupport"), 32, szBuffer) == ERR_SUCCESS)
                {
                   bCheckOK = (_tcstol(szBuffer, NULL, 0) != 0);
                }
@@ -198,7 +198,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
             else
             {
                // Binary package, check target platform
-               if (pAgentConn->GetParameter(_T("System.PlatformName"), 256, szBuffer) == ERR_SUCCESS)
+               if (pAgentConn->getParameter(_T("System.PlatformName"), 256, szBuffer) == ERR_SUCCESS)
                {
                   bCheckOK = !_tcsicmp(szBuffer, pStartup->szPlatform);
                }
@@ -217,7 +217,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                _tcscat(szBuffer, pStartup->szPkgFile);
                if (pAgentConn->uploadFile(szBuffer) == ERR_SUCCESS)
                {
-                  if (pAgentConn->StartUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
+                  if (pAgentConn->startUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
                   {
                      BOOL bConnected = FALSE;
                      DWORD i;
@@ -248,7 +248,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                      if (bConnected)
                      {
                         // Check version
-                        if (pAgentConn->GetParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+                        if (pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
                         {
                            if (!_tcsicmp(szBuffer, pStartup->szVersion))
                            {

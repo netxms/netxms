@@ -5724,7 +5724,7 @@ void ClientSession::GetAgentConfig(CSCPMessage *pRequest)
             pConn = ((Node *)pObject)->createAgentConnection();
             if (pConn != NULL)
             {
-               dwResult = pConn->GetConfigFile(&pszConfig, &dwSize);
+               dwResult = pConn->getConfigFile(&pszConfig, &dwSize);
                delete pConn;
                switch(dwResult)
                {
@@ -5801,7 +5801,7 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
                if ((pRequest->GetVariableShort(VID_APPLY_FLAG) != 0) &&
                    (dwResult == ERR_SUCCESS))
                {
-                  dwResult = pConn->ExecAction(_T("Agent.Restart"), 0, NULL);
+                  dwResult = pConn->execAction(_T("Agent.Restart"), 0, NULL);
                }
 
                switch(dwResult)
@@ -5878,7 +5878,7 @@ void ClientSession::executeAction(CSCPMessage *pRequest)
             if (pConn != NULL)
             {
                pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
-               dwResult = pConn->ExecAction(szAction, 0, NULL);
+               dwResult = pConn->execAction(szAction, 0, NULL);
 
                switch(dwResult)
                {

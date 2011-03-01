@@ -464,6 +464,7 @@ typedef struct
 #define CMD_MODIFY_IMAGE            0x00F2
 #define CMD_LIST_IMAGES             0x00F3
 #define CMD_LIST_SERVER_FILES       0x00F4
+#define CMD_GET_TABLE               0x00F5
 
 
 //
@@ -847,6 +848,7 @@ typedef struct
 #define VID_VRRP_VERSION            ((DWORD)375)
 #define VID_VRRP_VR_COUNT           ((DWORD)376)
 #define VID_DESTINATION_FILE_NAME   ((DWORD)377)
+#define VID_NUM_TABLES              ((DWORD)378)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)
@@ -904,6 +906,7 @@ typedef struct
 #define VID_PARAM_LIST_BASE         ((DWORD)0x10000000)
 #define VID_ENUM_LIST_BASE          ((DWORD)0x20000000)
 #define VID_PUSHPARAM_LIST_BASE     ((DWORD)0x30000000)
+#define VID_TABLE_LIST_BASE         ((DWORD)0x40000000)
 
 // Base value for DCI last values
 #define VID_DCI_VALUES_BASE         ((DWORD)0x10000000)

@@ -41,7 +41,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
    int i;
    BOOL bConnected = FALSE;
 
-   dwError = conn.StartUpgrade(pszPkgName);
+   dwError = conn.startUpgrade(pszPkgName);
    if (dwError == ERR_SUCCESS)
    {
       conn.disconnect();

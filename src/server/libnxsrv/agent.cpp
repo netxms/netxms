@@ -554,13 +554,13 @@ void AgentConnection::destroyResultData()
 // Get interface list from agent
 //
 
-INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
+INTERFACE_LIST *AgentConnection::getInterfaceList()
 {
    INTERFACE_LIST *pIfList = NULL;
    DWORD i, dwBits;
    TCHAR *pChar, *pBuf;
 
-   if (GetList(_T("Net.InterfaceList")) == ERR_SUCCESS)
+   if (getList(_T("Net.InterfaceList")) == ERR_SUCCESS)
    {
       pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
       pIfList->iNumEntries = m_dwNumDataLines;
@@ -641,7 +641,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 // Get parameter value
 //
 
-DWORD AgentConnection::GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer)
+DWORD AgentConnection::getParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer)
 {
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
    DWORD dwRqId, dwRetCode;
@@ -685,13 +685,13 @@ DWORD AgentConnection::GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHA
 // Get ARP cache
 //
 
-ARP_CACHE *AgentConnection::GetArpCache(void)
+ARP_CACHE *AgentConnection::getArpCache()
 {
    ARP_CACHE *pArpCache = NULL;
    TCHAR szByte[4], *pBuf, *pChar;
    DWORD i, j;
 
-   if (GetList(_T("Net.ArpCache")) == ERR_SUCCESS)
+   if (getList(_T("Net.ArpCache")) == ERR_SUCCESS)
    {
       // Create empty structure
       pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
@@ -851,7 +851,7 @@ bool AgentConnection::processCustomMessage(CSCPMessage *pMsg)
 // Get list of values
 //
 
-DWORD AgentConnection::GetList(const TCHAR *pszParam)
+DWORD AgentConnection::getList(const TCHAR *pszParam)
 {
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
    DWORD i, dwRqId, dwRetCode;
@@ -875,6 +875,53 @@ DWORD AgentConnection::GetList(const TCHAR *pszParam)
                m_ppDataLines = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumDataLines);
                for(i = 0; i < m_dwNumDataLines; i++)
                   m_ppDataLines[i] = pResponse->GetVariableStr(VID_ENUM_VALUE_BASE + i);
+            }
+            delete pResponse;
+         }
+         else
+         {
+            dwRetCode = ERR_REQUEST_TIMEOUT;
+         }
+      }
+      else
+      {
+         dwRetCode = ERR_CONNECTION_BROKEN;
+      }
+   }
+   else
+   {
+      dwRetCode = ERR_NOT_CONNECTED;
+   }
+
+   return dwRetCode;
+}
+
+
+//
+// Get table
+//
+
+DWORD AgentConnection::getTable(const TCHAR *pszParam, Table **table)
+{
+   CSCPMessage msg(m_nProtocolVersion), *pResponse;
+   DWORD dwRqId, dwRetCode;
+
+	*table = NULL;
+   if (m_bIsConnected)
+   {
+      dwRqId = m_dwRequestId++;
+      msg.SetCode(CMD_GET_TABLE);
+      msg.SetId(dwRqId);
+      msg.SetVariable(VID_PARAMETER, pszParam);
+      if (sendMessage(&msg))
+      {
+         pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+         if (pResponse != NULL)
+         {
+            dwRetCode = pResponse->GetVariableLong(VID_RCC);
+            if (dwRetCode == ERR_SUCCESS)
+            {
+					*table = new Table(pResponse);
             }
             delete pResponse;
          }
@@ -951,7 +998,7 @@ DWORD AgentConnection::authenticate(BOOL bProxyData)
 // Execute action on agent
 //
 
-DWORD AgentConnection::ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv)
+DWORD AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **argv)
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
@@ -1027,7 +1074,7 @@ DWORD AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinati
 // Send upgrade command
 //
 
-DWORD AgentConnection::StartUpgrade(const TCHAR *pszPkgName)
+DWORD AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
@@ -1061,7 +1108,7 @@ DWORD AgentConnection::StartUpgrade(const TCHAR *pszPkgName)
 // Check status of network service via agent
 //
 
-DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, 
+DWORD AgentConnection::checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, 
                                            WORD wPort, WORD wProto, 
                                            const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
@@ -1117,7 +1164,7 @@ DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
 // Get list of supported parameters from subagent
 //
 
-DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList)
+DWORD AgentConnection::getSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList)
 {
    DWORD i, dwId, dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
@@ -1229,7 +1276,7 @@ DWORD AgentConnection::setupEncryption(RSA *pServerKey)
 // Get configuration file from agent
 //
 
-DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
+DWORD AgentConnection::getConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 {
    DWORD i, dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
@@ -1340,13 +1387,13 @@ DWORD AgentConnection::updateConfigFile(const TCHAR *pszConfig)
 // Get routing table from agent
 //
 
-ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
+ROUTING_TABLE *AgentConnection::getRoutingTable()
 {
    ROUTING_TABLE *pRT = NULL;
    DWORD i, dwBits;
    TCHAR *pChar, *pBuf;
 
-   if (GetList(_T("Net.IP.RoutingTable")) == ERR_SUCCESS)
+   if (getList(_T("Net.IP.RoutingTable")) == ERR_SUCCESS)
    {
       pRT = (ROUTING_TABLE *)malloc(sizeof(ROUTING_TABLE));
       pRT->iNumEntries = m_dwNumDataLines;

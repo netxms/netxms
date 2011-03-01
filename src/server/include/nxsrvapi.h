@@ -329,19 +329,20 @@ public:
 
 	SOCKET getSocket() { return m_hSocket; }
 
-   ARP_CACHE *GetArpCache(void);
-   INTERFACE_LIST *GetInterfaceList();
-   ROUTING_TABLE *GetRoutingTable();
-   DWORD GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
-   DWORD GetList(const TCHAR *pszParam);
+   ARP_CACHE *getArpCache();
+   INTERFACE_LIST *getInterfaceList();
+   ROUTING_TABLE *getRoutingTable();
+   DWORD getParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
+   DWORD getList(const TCHAR *pszParam);
+   DWORD getTable(const TCHAR *pszParam, Table **table);
    DWORD nop();
-   DWORD ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv);
+   DWORD execAction(const TCHAR *pszAction, int argc, TCHAR **argv);
    DWORD uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
-   DWORD StartUpgrade(const TCHAR *pszPkgName);
-   DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 
+   DWORD startUpgrade(const TCHAR *pszPkgName);
+   DWORD checkNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 
                              WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL);
-   DWORD GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
-   DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
+   DWORD getSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
+   DWORD getConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD updateConfigFile(const TCHAR *pszConfig);
    DWORD enableTraps();
 	DWORD getPolicyInventory(AgentPolicyInfo **info);

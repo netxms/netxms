@@ -246,8 +246,8 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    if (pAgentConn->connect(g_pServerKey))
    {
       data.dwFlags |= NNF_IS_AGENT;
-      pAgentConn->GetParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.szAgentVersion);
-      pAgentConn->GetParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, data.szPlatform);
+      pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.szAgentVersion);
+      pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, data.szPlatform);
    }
 
    // Check if node is a router
@@ -263,7 +263,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    else if (data.dwFlags & NNF_IS_AGENT)
    {
       // Check IP forwarding status
-      if (pAgentConn->GetParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
+      if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
       {
          if (_tcstoul(szBuffer, NULL, 10) != 0)
             data.dwFlags |= NNF_IS_ROUTER;

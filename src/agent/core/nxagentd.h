@@ -282,6 +282,7 @@ private:
    void updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void getList(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void getTable(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void action(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    DWORD upgrade(CSCPMessage *pRequest);
@@ -339,10 +340,12 @@ BOOL InitParameterList();
 void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *), const TCHAR *pArg,
                   int iDataType, const TCHAR *pszDescription);
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
-void AddEnum(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *pArg);
+void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *arg);
+void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg);
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec);
 DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
-DWORD GetEnumValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue);
+DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue);
+DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue);
 void GetParameterList(CSCPMessage *pMsg);
 BOOL LoadSubAgent(TCHAR *szModuleName);
 void UnloadAllSubAgents();

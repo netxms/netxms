@@ -425,7 +425,7 @@ ARP_CACHE *GetLocalArpCache()
 
       if (conn.connect(g_pServerKey))
       {
-         pArpCache = conn.GetArpCache();
+         pArpCache = conn.getArpCache();
          conn.disconnect();
       }
    }
@@ -452,7 +452,7 @@ INTERFACE_LIST *GetLocalInterfaceList()
 
       if (conn.connect(g_pServerKey))
       {
-         pIfList = conn.GetInterfaceList();
+         pIfList = conn.getInterfaceList();
          conn.disconnect();
       }
    }

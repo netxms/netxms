@@ -1,6 +1,6 @@
 /* 
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@
 #define CMD_CHECK_SERVICE  2
 #define CMD_GET_PARAMS     3
 #define CMD_GET_CONFIG     4
+#define CMD_TABLE          5
 
 
 //
@@ -61,7 +62,7 @@ static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
    DWORD dwError;
    TCHAR szBuffer[1024];
 
-   dwError = pConn->GetParameter(pszParam, 1024, szBuffer);
+   dwError = pConn->getParameter(pszParam, 1024, szBuffer);
    if (dwError == ERR_SUCCESS)
    {
       if (bShowName)
@@ -86,7 +87,7 @@ static int List(AgentConnection *pConn, const TCHAR *pszParam)
 {
    DWORD i, dwNumLines, dwError;
 
-   dwError = pConn->GetList(pszParam);
+   dwError = pConn->getList(pszParam);
    if (dwError == ERR_SUCCESS)
    {
       dwNumLines = pConn->getNumDataLines();
@@ -102,6 +103,36 @@ static int List(AgentConnection *pConn, const TCHAR *pszParam)
 
 
 //
+// Get list of values for enum parameters
+//
+
+static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
+{
+	Table *table;
+
+   DWORD rcc = pConn->getTable(pszParam, &table);
+   if (rcc == ERR_SUCCESS)
+   {
+		
+		for(int i = 0; i < table->getNumRows(); i++)
+		{
+			for(int j = 0; j < table->getNumColumns(); j++)
+			{
+				_tprintf(_T("%-16s |"), table->getAsString(i, j));
+			}
+			_puttc(_T('\n'), stdout);
+		}
+		delete table;
+   }
+   else
+   {
+      _tprintf(_T("%u: %s\n"), rcc, AgentErrorCodeToText(rcc));
+   }
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
+}
+
+
+//
 // Check network service state
 //
 
@@ -110,7 +141,7 @@ static int CheckService(AgentConnection *pConn, int iServiceType, DWORD dwServic
 {
    DWORD dwStatus, dwError;
 
-   dwError = pConn->CheckNetworkService(&dwStatus, dwServiceAddr, iServiceType, wPort,
+   dwError = pConn->checkNetworkService(&dwStatus, dwServiceAddr, iServiceType, wPort,
                                         wProto, pszRequest, pszResponse);
    if (dwError == ERR_SUCCESS)
    {
@@ -134,7 +165,7 @@ static int ListParameters(AgentConnection *pConn)
    NXC_AGENT_PARAM *pParamList;
    static const TCHAR *pszDataType[] = { _T("INT"), _T("UINT"), _T("INT64"), _T("UINT64"), _T("STRING"), _T("FLOAT"), _T("UNKNOWN") };
 
-   dwError = pConn->GetSupportedParameters(&dwNumParams, &pParamList);
+   dwError = pConn->getSupportedParameters(&dwNumParams, &pParamList);
    if (dwError == ERR_SUCCESS)
    {
       for(i = 0; i < dwNumParams; i++)
@@ -162,7 +193,7 @@ static int GetConfig(AgentConnection *pConn)
    DWORD dwError, dwSize;
    TCHAR *pszFile;
 
-   dwError = pConn->GetConfigFile(&pszFile, &dwSize);
+   dwError = pConn->getConfigFile(&pszFile, &dwSize);
    if (dwError == ERR_SUCCESS)
    {
       TranslateStr(pszFile, _T("\r\n"), _T("\n"));
@@ -219,7 +250,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:bCe:hi:IK:lnO:p:P:qr:R:s:S:t:vw:W:X:Z:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:bCe:hi:IK:lno:O:p:P:qr:R:s:S:t:Tvw:W:X:Z:")) != -1)
    {
       switch(ch)
       {
@@ -246,8 +277,9 @@ int main(int argc, char *argv[])
                      _T("   -K <file>    : Specify server's key file\n")
                      _T("                  (default is ") DEFAULT_DATA_DIR DFILE_KEYS _T(").\n")
 #endif
-                     _T("   -l           : Get list of values for enum parameter.\n")
+                     _T("   -l           : Requested parameter is a list.\n")
                      _T("   -n           : Show parameter's name in result.\n")
+                     _T("   -o <proto>   : Protocol number to be used for service check.\n")
                      _T("   -O <port>    : Proxy agent's port number. Default is %d.\n")
                      _T("   -p <port>    : Agent's port number. Default is %d.\n")
                      _T("   -P <port>    : Network service port (to be used wth -S option).\n")
@@ -258,7 +290,7 @@ int main(int argc, char *argv[])
                      _T("   -S <addr>    : Check state of network service at given address.\n")
                      _T("   -t <type>    : Set type of service to be checked.\n")
 				         _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, telnet.\n")
-                     _T("   -T <proto>   : Protocol number to be used for service check.\n")
+                     _T("   -T           : Requested parameter is a table.\n")
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds).\n")
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds).\n")
@@ -310,6 +342,9 @@ int main(int argc, char *argv[])
             break;
          case 'l':
             iCommand = CMD_LIST;
+            break;
+         case 'T':
+            iCommand = CMD_TABLE;
             break;
          case 'n':   // Show names
             bShowNames = TRUE;
@@ -408,7 +443,7 @@ int main(int argc, char *argv[])
 					}
             }
             break;
-         case 'T':   // Protocol number for service check
+         case 'o':   // Protocol number for service check
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 0) || (i > 65535))
             {
@@ -585,6 +620,15 @@ int main(int argc, char *argv[])
 								free(wcValue);
 #else
                         iExitCode = List(&conn, argv[optind + 1]);
+#endif
+                        break;
+                     case CMD_TABLE:
+#ifdef UNICODE
+								wcValue = WideStringFromMBString(argv[optind + 1]);
+                        iExitCode = GetTable(&conn, wcValue);
+								free(wcValue);
+#else
+                        iExitCode = GetTable(&conn, argv[optind + 1]);
 #endif
                         break;
                      case CMD_CHECK_SERVICE:

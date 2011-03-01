@@ -64,8 +64,10 @@ static NETXMS_SUBAGENT_PARAM *m_pParamList = NULL;
 static int m_iNumParams = 0;
 static NETXMS_SUBAGENT_PUSHPARAM *m_pPushParamList = NULL;
 static int m_iNumPushParams = 0;
-static NETXMS_SUBAGENT_ENUM *m_pEnumList = NULL;
+static NETXMS_SUBAGENT_LIST *m_pEnumList = NULL;
 static int m_iNumEnums = 0;
+static NETXMS_SUBAGENT_TABLE *m_pTableList = NULL;
+static int m_iNumTables = 0;
 static DWORD m_dwTimedOutRequests = 0;
 static DWORD m_dwAuthenticationFailures = 0;
 static DWORD m_dwProcessedRequests = 0;
@@ -145,8 +147,8 @@ static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
    int i;
 
    for(i = 0; i < m_iNumParams; i++)
-		if (m_pParamList[i].iDataType != DCI_DT_DEPRECATED)
-			value->add(m_pParamList[i].szName);
+		if (m_pParamList[i].dataType != DCI_DT_DEPRECATED)
+			value->add(m_pParamList[i].name);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -174,7 +176,21 @@ static LONG H_EnumList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
    int i;
 
    for(i = 0; i < m_iNumEnums; i++)
-		value->add(m_pEnumList[i].szName);
+		value->add(m_pEnumList[i].name);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Handler for table list
+//
+
+static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+{
+   int i;
+
+   for(i = 0; i < m_iNumTables; i++)
+		value->add(m_pTableList[i].name);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -263,7 +279,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 // Standard agent's enumerations
 //
 
-static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
+static NETXMS_SUBAGENT_LIST m_stdLists[] =
 {
 #ifdef _WIN32
    { _T("Net.ArpCache"), H_ArpCache, NULL },
@@ -272,9 +288,10 @@ static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
 #endif
    { _T("Agent.ActionList"), H_ActionList, NULL },
    { _T("Agent.SubAgentList"), H_SubAgentList, NULL },
-   { _T("Agent.SupportedEnums"), H_EnumList, NULL },
+   { _T("Agent.SupportedLists"), H_EnumList, NULL },
    { _T("Agent.SupportedParameters"), H_ParamList, NULL },
-   { _T("Agent.SupportedPushParameters"), H_PushParamList, NULL }
+   { _T("Agent.SupportedPushParameters"), H_PushParamList, NULL },
+   { _T("Agent.SupportedTables"), H_TableList, NULL }
 };
 
 
@@ -293,11 +310,11 @@ BOOL InitParameterList()
       return FALSE;
    memcpy(m_pParamList, m_stdParams, sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
 
-   m_iNumEnums = sizeof(m_stdEnums) / sizeof(NETXMS_SUBAGENT_ENUM);
-   m_pEnumList = (NETXMS_SUBAGENT_ENUM *)malloc(sizeof(NETXMS_SUBAGENT_ENUM) * m_iNumEnums);
+   m_iNumEnums = sizeof(m_stdLists) / sizeof(NETXMS_SUBAGENT_LIST);
+   m_pEnumList = (NETXMS_SUBAGENT_LIST *)malloc(sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
    if (m_pEnumList == NULL)
       return FALSE;
-   memcpy(m_pEnumList, m_stdEnums, sizeof(NETXMS_SUBAGENT_ENUM) * m_iNumEnums);
+   memcpy(m_pEnumList, m_stdLists, sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
 
    return TRUE;
 }
@@ -344,66 +361,96 @@ void AddParameter(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const 
 
    // Search for existing parameter
    for(i = 0; i < m_iNumParams; i++)
-      if (!_tcsicmp(m_pParamList[i].szName, pszName))
+      if (!_tcsicmp(m_pParamList[i].name, pszName))
          break;
    if (i < m_iNumParams)
    {
       // Replace existing handler and attributes
-      m_pParamList[i].fpHandler = fpHandler;
-      m_pParamList[i].iDataType = iDataType;
-      nx_strncpy(m_pParamList[i].szDescription, pszDescription, MAX_DB_STRING);
+      m_pParamList[i].handler = fpHandler;
+      m_pParamList[i].dataType = iDataType;
+      nx_strncpy(m_pParamList[i].description, pszDescription, MAX_DB_STRING);
 
       // If we are replacing System.PlatformName, add pointer to
       // platform suffix as argument, otherwise, use supplied pArg
       if (!_tcscmp(pszName, _T("System.PlatformName")))
       {
-         m_pParamList[i].pArg = g_szPlatformSuffix; // to be TCHAR
+         m_pParamList[i].arg = g_szPlatformSuffix; // to be TCHAR
       }
       else
       {
-         m_pParamList[i].pArg = pArg;
+         m_pParamList[i].arg = pArg;
       }
    }
    else
    {
       // Add new parameter
       m_pParamList = (NETXMS_SUBAGENT_PARAM *)realloc(m_pParamList, sizeof(NETXMS_SUBAGENT_PARAM) * (m_iNumParams + 1));
-      nx_strncpy(m_pParamList[m_iNumParams].szName, pszName, MAX_PARAM_NAME - 1);
-      m_pParamList[m_iNumParams].fpHandler = fpHandler;
-      m_pParamList[m_iNumParams].pArg = pArg;
-      m_pParamList[m_iNumParams].iDataType = iDataType;
-      nx_strncpy(m_pParamList[m_iNumParams].szDescription, pszDescription, MAX_DB_STRING);
+      nx_strncpy(m_pParamList[m_iNumParams].name, pszName, MAX_PARAM_NAME - 1);
+      m_pParamList[m_iNumParams].handler = fpHandler;
+      m_pParamList[m_iNumParams].arg = pArg;
+      m_pParamList[m_iNumParams].dataType = iDataType;
+      nx_strncpy(m_pParamList[m_iNumParams].description, pszDescription, MAX_DB_STRING);
       m_iNumParams++;
    }
 }
 
 
 //
-// Add enum to list
+// Add list
 // 
 
-void AddEnum(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *pArg)
+void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *arg)
 {
    int i;
 
    // Search for existing enum
    for(i = 0; i < m_iNumEnums; i++)
-      if (!_tcsicmp(m_pEnumList[i].szName, pszName))
+      if (!_tcsicmp(m_pEnumList[i].name, name))
          break;
    if (i < m_iNumEnums)
    {
       // Replace existing handler and arg
-      m_pEnumList[i].fpHandler = fpHandler;
-      m_pEnumList[i].pArg = pArg;
+      m_pEnumList[i].handler = handler;
+      m_pEnumList[i].arg = arg;
    }
    else
    {
       // Add new enum
-      m_pEnumList = (NETXMS_SUBAGENT_ENUM *)realloc(m_pEnumList, sizeof(NETXMS_SUBAGENT_ENUM) * (m_iNumEnums + 1));
-      nx_strncpy(m_pEnumList[m_iNumEnums].szName, pszName, MAX_PARAM_NAME - 1);
-      m_pEnumList[m_iNumEnums].fpHandler = fpHandler;
-      m_pEnumList[m_iNumEnums].pArg = pArg;
+      m_pEnumList = (NETXMS_SUBAGENT_LIST *)realloc(m_pEnumList, sizeof(NETXMS_SUBAGENT_LIST) * (m_iNumEnums + 1));
+      nx_strncpy(m_pEnumList[m_iNumEnums].name, name, MAX_PARAM_NAME - 1);
+      m_pEnumList[m_iNumEnums].handler = handler;
+      m_pEnumList[m_iNumEnums].arg = arg;
       m_iNumEnums++;
+   }
+}
+
+
+//
+// Add table
+// 
+
+void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg)
+{
+   int i;
+
+   // Search for existing table
+   for(i = 0; i < m_iNumTables; i++)
+      if (!_tcsicmp(m_pTableList[i].name, name))
+         break;
+   if (i < m_iNumTables)
+   {
+      // Replace existing handler and arg
+      m_pTableList[i].handler = handler;
+      m_pTableList[i].arg = arg;
+   }
+   else
+   {
+      // Add new enum
+      m_pTableList = (NETXMS_SUBAGENT_TABLE *)realloc(m_pTableList, sizeof(NETXMS_SUBAGENT_TABLE) * (m_iNumTables + 1));
+      nx_strncpy(m_pTableList[m_iNumTables].name, name, MAX_PARAM_NAME - 1);
+      m_pTableList[m_iNumTables].handler = handler;
+      m_pTableList[m_iNumTables].arg = arg;
+      m_iNumTables++;
    }
 }
 
@@ -446,9 +493,9 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 
    DebugPrintf(dwSessionId, 5, _T("Requesting parameter \"%s\""), pszParam);
    for(i = 0; i < m_iNumParams; i++)
-      if (MatchString(m_pParamList[i].szName, pszParam, FALSE))
+      if (MatchString(m_pParamList[i].name, pszParam, FALSE))
       {
-         rc = m_pParamList[i].fpHandler(pszParam, m_pParamList[i].pArg, pszValue);
+         rc = m_pParamList[i].handler(pszParam, m_pParamList[i].arg, pszValue);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -481,19 +528,64 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 
 
 //
-// Get parameter's value
+// Get list's value
 //
 
-DWORD GetEnumValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
+DWORD GetListValue(DWORD dwSessionId, TCHAR *pszParam, StringList *pValue)
 {
    int i, rc;
    DWORD dwErrorCode;
 
-   DebugPrintf(dwSessionId, 5, _T("Requesting enum \"%s\""), pszParam);
+   DebugPrintf(dwSessionId, 5, _T("Requesting list \"%s\""), pszParam);
    for(i = 0; i < m_iNumEnums; i++)
-      if (MatchString(m_pEnumList[i].szName, pszParam, FALSE))
+      if (MatchString(m_pEnumList[i].name, pszParam, FALSE))
       {
-         rc = m_pEnumList[i].fpHandler(pszParam, m_pEnumList[i].pArg, pValue);
+         rc = m_pEnumList[i].handler(pszParam, m_pEnumList[i].arg, pValue);
+         switch(rc)
+         {
+            case SYSINFO_RC_SUCCESS:
+               dwErrorCode = ERR_SUCCESS;
+               m_dwProcessedRequests++;
+               break;
+            case SYSINFO_RC_ERROR:
+               dwErrorCode = ERR_INTERNAL_ERROR;
+               m_dwFailedRequests++;
+               break;
+            case SYSINFO_RC_UNSUPPORTED:
+               dwErrorCode = ERR_UNKNOWN_PARAMETER;
+               m_dwUnsupportedRequests++;
+               break;
+            default:
+               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
+               dwErrorCode = ERR_INTERNAL_ERROR;
+               m_dwFailedRequests++;
+               break;
+         }
+         break;
+      }
+   if (i == m_iNumEnums)
+   {
+      dwErrorCode = ERR_UNKNOWN_PARAMETER;
+      m_dwUnsupportedRequests++;
+   }
+   return dwErrorCode;
+}
+
+
+//
+// Get table's value
+//
+
+DWORD GetTableValue(DWORD dwSessionId, TCHAR *pszParam, Table *pValue)
+{
+   int i, rc;
+   DWORD dwErrorCode;
+
+   DebugPrintf(dwSessionId, 5, _T("Requesting table \"%s\""), pszParam);
+   for(i = 0; i < m_iNumTables; i++)
+      if (MatchString(m_pTableList[i].name, pszParam, FALSE))
+      {
+         rc = m_pTableList[i].handler(pszParam, m_pTableList[i].arg, pValue);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -537,11 +629,11 @@ void GetParameterList(CSCPMessage *pMsg)
 	// Parameters
    for(i = 0, count = 0, dwId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
    {
-		if (m_pParamList[i].iDataType != DCI_DT_DEPRECATED)
+		if (m_pParamList[i].dataType != DCI_DT_DEPRECATED)
 		{
-			pMsg->SetVariable(dwId++, m_pParamList[i].szName);
-			pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
-			pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
+			pMsg->SetVariable(dwId++, m_pParamList[i].name);
+			pMsg->SetVariable(dwId++, m_pParamList[i].description);
+			pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].dataType);
 			count++;
 		}
    }
@@ -556,10 +648,17 @@ void GetParameterList(CSCPMessage *pMsg)
       pMsg->SetVariable(dwId++, (WORD)m_pPushParamList[i].dataType);
    }
 
-	// Enums
+	// Lists
    pMsg->SetVariable(VID_NUM_ENUMS, (DWORD)m_iNumEnums);
    for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
-      pMsg->SetVariable(dwId++, m_pEnumList[i].szName);
+      pMsg->SetVariable(dwId++, m_pEnumList[i].name);
+   }
+
+	// Tables
+   pMsg->SetVariable(VID_NUM_TABLES, (DWORD)m_iNumTables);
+   for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
+   {
+      pMsg->SetVariable(dwId++, m_pTableList[i].name);
    }
 }
