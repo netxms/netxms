@@ -1,6 +1,6 @@
 /*
-** Windows NT/2000/XP/2003 NetXMS subagent
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Windows platform subagent
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -142,7 +142,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
 	{ "System.ThreadCount", H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT }
 };
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
 	{ "System.ActiveuserSessions", H_ActiveUserSessions, NULL },
 	{ "System.ProcessList", H_ProcessList, NULL }
@@ -160,10 +160,12 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
+	0, NULL,	// tables
 	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
-	m_actions
+	m_actions,
+	0, NULL	// push parameters
 };
 
 
@@ -217,22 +219,3 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 		DisableThreadLibraryCalls(hInstance);
 	return TRUE;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.11  2007/08/27 11:59:38  victor
-Added parameters Net.RemoteShareStatus and Net.RemoteShareStatusText to WINNT subagent
-
-Revision 1.10  2007/06/08 00:02:37  alk
-DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
-
-NETXMS_SUBAGENT_INFO initialization fixed (actions)
-
-Revision 1.9  2007/06/07 22:07:11  alk
-descriptions changed to defines
-
-
-*/
-

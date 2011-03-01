@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008 Victor Kirhenshtein
+** Copyright (C) 2008-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -369,7 +369,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("ACPI.ThermalZone.CurrentTemp(*)"), H_ACPITZCurrTemp, "%", DCI_DT_INT, _T("Current temperature in ACPI thermal zone {instance}") },
    { _T("WMI.Query(*)"), H_WMIQuery, NULL, DCI_DT_STRING, _T("Generic WMI query") }
 };
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
    { _T("ACPI.ThermalZones"), H_ACPIThermalZones, NULL },
    { _T("WMI.Classes(*)"), H_WMIClasses, NULL },
@@ -383,9 +383,11 @@ static NETXMS_SUBAGENT_INFO m_info =
    SubAgentInit, SubAgentShutdown, NULL,      // handlers
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-   0, NULL              // actions
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 

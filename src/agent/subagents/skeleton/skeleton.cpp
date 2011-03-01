@@ -86,7 +86,7 @@ static BOOL SubAgentInit(Config *config)
 // Called by master agent at unload
 //
 
-static void SubAgentShutdown(void)
+static void SubAgentShutdown()
 {
 	/* you can perform necessary shutdown tasks here */
 }
@@ -105,22 +105,23 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Skeleton.Random",					H_Random,				NULL,
 		DCI_DT_INT,    "Generates random number in range -10 .. 10" }
 };
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-	{ "Skeleton.Enum", H_Enum, NULL }
+	{ "Skeleton.List", H_Enum, NULL }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("SKELETON"), _T("1.0"),
+	_T("SKELETON"), _T("1.0.0"),
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0,
-	NULL
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 
@@ -146,25 +147,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
 	return TRUE;
-}
-
-#endif
-
-
-//
-// NetWare library entry point
-//
-
-#ifdef _NETWARE
-
-int _init(void)
-{
-	return 0;
-}
-
-int _fini(void)
-{
-	return 0;
 }
 
 #endif

@@ -399,7 +399,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_INT,      _T("UPS {instance} temperature")
 	}
 };
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
 	{ _T("UPS.DeviceList"), H_DeviceList, NULL }
 };
@@ -411,9 +411,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0, NULL
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 

@@ -181,9 +181,10 @@ static NETXMS_SUBAGENT_INFO m_info =
 	CommandHandler,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	0, //sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	NULL, //m_enums,
-	0, NULL     // actions
+	0, NULL,	// lists
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 
@@ -196,22 +197,3 @@ DECLARE_SUBAGENT_ENTRY_POINT(PORTCHECK)
 	*ppInfo = &m_info;
 	return TRUE;
 }
-
-
-//
-// NetWare library entry point
-//
-
-#ifdef _NETWARE
-
-int _init(void)
-{
-	return 0;
-}
-
-int _fini(void)
-{
-	return 0;
-}
-
-#endif

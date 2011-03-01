@@ -358,7 +358,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Icmp.PacketLoss(*)"), H_PollResult, _T("P"), DCI_DT_UINT, _T("Packet loss for ICMP ping to {instance}") },
 	{ _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping response time for {instance}") }
 };
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
 	{ _T("Icmp.TargetList"), H_TargetList, NULL }
 };
@@ -370,9 +370,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0, NULL
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 

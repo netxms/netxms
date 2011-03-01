@@ -328,8 +328,10 @@ static NETXMS_SUBAGENT_INFO m_info =
    SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	0, NULL,	// enums
-   0, NULL	// actions
+	0, NULL,	// lists
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 

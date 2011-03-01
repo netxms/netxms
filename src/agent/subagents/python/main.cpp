@@ -143,23 +143,3 @@ int _fini(void)
 }
 
 #endif
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2007/06/08 00:02:36  alk
-DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
-
-NETXMS_SUBAGENT_INFO initialization fixed (actions)
-
-Revision 1.2  2005/10/17 20:45:47  victor
-Fixed incorrect usage of strncpy
-
-Revision 1.1.1.1  2005/02/01 20:18:04  alk
-initial import
-
-nb! NOT WORKING!
-
-
-*/

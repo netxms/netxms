@@ -244,7 +244,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("LogWatch.Parser.MatchedRecords(*)"), H_ParserStats, _T("M"), DCI_DT_INT, _T("Number of records matched by parser {instance}") },
 	{ _T("LogWatch.Parser.ProcessedRecords(*)"), H_ParserStats, _T("P"), DCI_DT_INT, _T("Number of records processed by parser {instance}") }
 };
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
 	{ _T("LogWatch.ParserList"), H_ParserList, NULL }
 };
@@ -256,9 +256,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums,
-	0, NULL
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
+	0, NULL,		// tables
+	0, NULL,		// actions
+	0, NULL		// push parameters
 };
 
 

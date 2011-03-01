@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -103,7 +101,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,				DCI_DT_INT,	DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 };
 
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
 	{ "Net.ArpCache",                 H_NetArpCache,     NULL },
 	{ "Net.InterfaceList",            H_NetIfList,       NULL },
@@ -121,10 +119,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NULL, // command handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0,
-	NULL
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 //

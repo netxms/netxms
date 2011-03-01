@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for GNU/Linux
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -398,7 +396,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKTIME_EX },
 };
 
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
 	{ "DRBD.DeviceList",              H_DRBDDeviceList,     NULL },
 	{ "Net.ArpCache",                 H_NetArpCache,        NULL },
@@ -418,10 +416,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NULL,             /* command handler */
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0,
-	NULL
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 //
@@ -448,132 +447,3 @@ extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
 	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.36  2007/10/31 08:14:33  victor
-Added per-CPU usage statistics and System.CPU.Count parameter
-
-Revision 1.35  2007/06/08 00:02:36  alk
-DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
-
-NETXMS_SUBAGENT_INFO initialization fixed (actions)
-
-Revision 1.34  2007/06/07 22:07:11  alk
-descriptions changed to defines
-
-Revision 1.33  2007/04/25 07:44:09  victor
-- Linux and HPUX subagents changed to new model
-- ODBCQUERY subagent code cleaned
-
-Revision 1.32  2007/04/24 12:04:10  alk
-code reformat
-
-Revision 1.31  2007/02/05 12:57:12  alk
-*** empty log message ***
-
-Revision 1.30  2007/01/15 00:16:06  victor
-Implemented Process.CountEx for Linux
-
-Revision 1.29  2006/10/30 17:25:10  victor
-Implemented System.ConnectedUsers and System.ActiveUserSessions
-
-Revision 1.28  2006/09/21 07:45:53  victor
-Fixed problems with platform subagent loading by server
-
-Revision 1.27  2006/09/21 07:24:08  victor
-Server now can load platform subagents to obtain local ARP cache and interface list
-
-Revision 1.26  2006/06/09 07:08:40  victor
-Some minor fixes
-
-Revision 1.25  2006/06/08 15:21:29  victor
-Initial support for DRBD device monitoring
-
-Revision 1.24  2006/03/02 21:08:20  alk
-implemented:
-	System.CPU.Usage5
-	System.CPU.Usage15
-
-Revision 1.23  2006/03/01 22:13:09  alk
-added System.CPU.Usage [broken]
-
-Revision 1.22  2005/09/15 21:47:02  victor
-Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
-
-Revision 1.21  2005/09/15 21:24:54  victor
-Minor changes
-
-Revision 1.20  2005/09/15 21:22:58  victor
-Added possibility to build statically linked agents (with platform subagent linked in)
-For now, agent has to be linked manually. I'll fix it later.
-
-Revision 1.19  2005/08/22 00:11:46  alk
-Net.IP.RoutingTable added
-
-Revision 1.18  2005/08/19 15:23:50  victor
-Added new parameters
-
-Revision 1.17  2005/06/11 16:28:24  victor
-Implemented all Net.Interface.* parameters except Net.Interface.Speed
-
-Revision 1.16  2005/06/09 12:15:43  victor
-Added support for Net.Interface.AdminStatus and Net.Interface.Link parameters
-
-Revision 1.15  2005/02/24 17:38:49  victor
-Added HDD monitring via SMART on Linux
-
-Revision 1.14  2005/02/21 20:16:05  victor
-Fixes in parameter data types and descriptions
-
-Revision 1.13  2005/01/24 19:46:50  alk
-SourcePackageSupport; return type/comment addded
-
-Revision 1.12  2005/01/24 19:40:31  alk
-return type/comments added for command list
-
-System.ProcessCount/Process.Count(*) misunderstanding resolved
-
-Revision 1.11  2005/01/17 23:31:01  alk
-Agent.SourcePackageSupport added
-
-Revision 1.10  2004/12/29 19:42:44  victor
-Linux compatibility fixes
-
-Revision 1.9  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-Revision 1.8  2004/10/16 06:32:04  victor
-Parameter name System.CPU.Procload changed to System.CPU.LoadAvg
-
-Revision 1.7  2004/10/06 13:23:32  victor
-Necessary changes to build everything on Linux
-
-Revision 1.6  2004/08/26 23:51:26  alk
-cosmetic changes
-
-Revision 1.5  2004/08/18 00:12:56  alk
-+ System.CPU.Procload* added, SINGLE processor only.
-
-Revision 1.4  2004/08/17 23:19:20  alk
-+ Disk.* implemented
-
-Revision 1.3  2004/08/17 15:17:32  alk
-+ linux agent: system.uptime, system.uname, system.hostname
-! skeleton: amount of _PARM & _ENUM filled with sizeof()
-
-Revision 1.1  2004/08/17 10:24:18  alk
-+ subagent selection based on "uname -s"
-
-
-*/

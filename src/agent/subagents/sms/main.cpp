@@ -1,6 +1,6 @@
 /*
 ** NetXMS SMS sender subagent
-** Copyright (C) 2007 Victor Kirhenshtein
+** Copyright (C) 2007-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,9 +115,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	0, NULL,
+	0, NULL,	// lists
+	0, NULL,	// tables
 	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
 	m_actions,
+	0, NULL	// push parameters
 };
 
 

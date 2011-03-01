@@ -1,9 +1,7 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for IPSO
 ** Copyright (C) 2004 Alex Kirhenshtein
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -155,7 +153,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
 };
 
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
    { "Net.ArpCache",                 H_NetArpCache,     NULL },
    { "Net.InterfaceList",            H_NetIfList,       NULL },
@@ -173,10 +171,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0,
-	NULL
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 //
@@ -283,67 +282,3 @@ LONG IPSCTLGetString(int nCallerHandle, char *pszName,
 	}
 	return nRet;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.9  2007/06/07 22:07:11  alk
-descriptions changed to defines
-
-Revision 1.8  2006/08/25 22:24:02  victor
-Implemented Net.InterfaceList and Net.ArpCache
-
-Revision 1.7  2006/08/18 08:37:46  victor
-Changed handling of ipsctl data types
-
-Revision 1.6  2006/08/17 19:22:57  victor
-Minor changes
-
-Revision 1.5  2006/08/17 07:38:52  victor
-Improved handling of data returned by ipsctl_get()
-
-Revision 1.4  2006/08/16 22:26:09  victor
-- Most of Net.Interface.XXX functions implemented on IPSO
-- Added function MACToStr
-
-Revision 1.3  2006/07/24 06:49:47  victor
-- Process and physical memory parameters are working
-- Various other changes
-
-Revision 1.2  2006/07/21 16:22:44  victor
-Some parameters are working
-
-Revision 1.1  2006/07/21 11:48:35  victor
-Initial commit
-
-Revision 1.7  2005/09/15 21:47:02  victor
-Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
-
-Revision 1.6  2005/08/22 23:00:05  alk
-Net.IP.RoutingTable added
-
-Revision 1.5  2005/03/10 19:04:07  alk
-implemented:
-	Net.Interface.AdminStatus(*)
-	Net.Interface.Link(*)
-
-Revision 1.4  2005/01/24 19:51:16  alk
-reurn types/comments added
-Process.Count(*)/System.ProcessCount fixed
-
-Revision 1.3  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.2  2005/01/17 23:25:47  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-
-*/

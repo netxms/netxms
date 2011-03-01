@@ -384,7 +384,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_UINT, _T("Total number of threads") },
    { _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, _T("System uptime") }
 };
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
    { _T("PDH.ObjectCounters(*)"), H_PdhObjectItems, _T("C") },
    { _T("PDH.ObjectInstances(*)"), H_PdhObjectItems, _T("I") },
@@ -397,9 +397,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 	_T("WinPerf"), _T(NETXMS_VERSION_STRING) _T(DEBUG_SUFFIX),
    SubAgentInit, SubAgentShutdown, NULL,      // handlers
    0, NULL,             // parameters
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-   0, NULL              // actions
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 
@@ -412,24 +414,24 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
 {
    DWORD i;
 
-   for(i = 0; i < m_info.dwNumParameters; i++)
-      if (!_tcsicmp(pszName, m_info.pParamList[i].szName))
+   for(i = 0; i < m_info.numParameters; i++)
+      if (!_tcsicmp(pszName, m_info.parameters[i].name))
          break;
 
-   if (i == m_info.dwNumParameters)
+   if (i == m_info.numParameters)
    {
       // Extend list
-      m_info.dwNumParameters++;
-      m_info.pParamList = 
-         (NETXMS_SUBAGENT_PARAM *)realloc(m_info.pParamList, 
-                  sizeof(NETXMS_SUBAGENT_PARAM) * m_info.dwNumParameters);
+      m_info.numParameters++;
+      m_info.parameters = 
+         (NETXMS_SUBAGENT_PARAM *)realloc(m_info.parameters,
+                  sizeof(NETXMS_SUBAGENT_PARAM) * m_info.numParameters);
    }
 
-   nx_strncpy(m_info.pParamList[i].szName, pszName, MAX_PARAM_NAME);
-   m_info.pParamList[i].fpHandler = fpHandler;
-   m_info.pParamList[i].pArg = pArg;
-   m_info.pParamList[i].iDataType = iDataType;
-   nx_strncpy(m_info.pParamList[i].szDescription, pszDescription, MAX_DB_STRING);
+   nx_strncpy(m_info.parameters[i].name, pszName, MAX_PARAM_NAME);
+   m_info.parameters[i].handler = fpHandler;
+   m_info.parameters[i].arg = pArg;
+   m_info.parameters[i].dataType = iDataType;
+   nx_strncpy(m_info.parameters[i].description, pszDescription, MAX_DB_STRING);
    
    return TRUE;
 }
@@ -439,7 +441,7 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
 // Add predefined counters
 //
 
-static void AddPredefinedCounters(void)
+static void AddPredefinedCounters()
 {
    DWORD i;
    WINPERF_COUNTER *pCnt;
@@ -492,7 +494,7 @@ extern "C" BOOL __declspec(dllexport) __cdecl
    DWORD i, dwBufferSize, dwBytes, dwType, dwStatus;
 	TCHAR *pBuffer, *newName;
 
-	if (m_info.pParamList != NULL)
+	if (m_info.parameters != NULL)
 		return FALSE;	// Most likely another instance of WINPERF subagent already loaded
 
 	// Read performance counter indexes
@@ -512,17 +514,17 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 	safe_free(pBuffer);
 
    // Init parameters list
-   m_info.dwNumParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
-   m_info.pParamList = (NETXMS_SUBAGENT_PARAM *)nx_memdup(m_parameters, sizeof(m_parameters));
+   m_info.numParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
+   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(m_parameters, sizeof(m_parameters));
 
 	// Check counter names for H_CounterAlias
-	for(i = 0; i < m_info.dwNumParameters; i++)
+	for(i = 0; i < m_info.numParameters; i++)
 	{
-		if (m_info.pParamList[i].fpHandler == H_CounterAlias)
+		if (m_info.parameters[i].handler == H_CounterAlias)
 		{
-			CheckCounter(m_info.pParamList[i].pArg, &newName);
+			CheckCounter(m_info.parameters[i].arg, &newName);
 			if (newName != NULL)
-				m_info.pParamList[i].pArg = newName;
+				m_info.parameters[i].arg = newName;
 		}
 	}
 

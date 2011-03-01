@@ -218,13 +218,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_STRING, "Calculates MD5 hash of * URL" }
 };
 
-/*
-static NETXMS_SUBAGENT_ENUM m_enums[] =
-{
-//	{ "Skeleton.Enum", H_Enum, NULL }
-};
-*/
-
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -232,12 +225,10 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-//	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-//	m_enums
-	0,
-	NULL,
-	0,
-	NULL
+	0, NULL,		// lists
+	0, NULL,		// tables
+	0, NULL,		// actions
+	0, NULL		// push parameters
 };
 
 

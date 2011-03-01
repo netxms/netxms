@@ -167,7 +167,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Uname", H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
    { "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+static NETXMS_SUBAGENT_LIST m_enums[] =
 {
    { "Net.InterfaceList", H_NetIfList, NULL },
    { "System.ProcessList", H_ProcessList, NULL }
@@ -180,10 +180,11 @@ static NETXMS_SUBAGENT_INFO m_info =
    SubAgentInit, SubAgentShutdown, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
-   sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+   sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
    m_enums,
-   0,
-   NULL
+	0, NULL,	// tables
+   0, NULL,	// actions
+	0, NULL	// push parameters
 };
 
 
