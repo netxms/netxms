@@ -107,6 +107,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.objecttools.propertypages.Filter"
+            id="org.netxms.ui.eclipse.objecttools.propertypages.Filter#3"
+            name="Filter">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objecttools.ObjectTool">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
 
 </plugin>

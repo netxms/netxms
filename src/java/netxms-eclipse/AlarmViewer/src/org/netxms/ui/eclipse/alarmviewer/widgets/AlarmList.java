@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,9 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -48,10 +49,11 @@ import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author victor
+ * Alarm list widget
  *
  */
 public class AlarmList extends Composite
@@ -70,11 +72,19 @@ public class AlarmList extends Composite
 	private final ViewPart viewPart;
 	private NXCSession session = null;
 	private NXCListener clientListener = null;
-	private TableViewer alarmViewer;
+	private SortableTableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
 	private HashMap<Long, Alarm> alarmList;
 	
-	public AlarmList(ViewPart viewPart, Composite parent, int style)
+	/**
+	 * Create alarm list widget
+	 *  
+	 * @param viewPart owning view part
+	 * @param parent parent composite
+	 * @param style widget style
+	 * @param configPrefix prefix for saving/loading widget configuration
+	 */
+	public AlarmList(ViewPart viewPart, Composite parent, int style, final String configPrefix)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -84,12 +94,20 @@ public class AlarmList extends Composite
 		final String[] names = { "Severity", "State", "Source", "Message", "Count", "Created", "Last Change" };
 		final int[] widths = { 100, 100, 150, 300, 70, 100, 100 };
 		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
 		alarmViewer.setLabelProvider(new AlarmListLabelProvider());
 		alarmViewer.setContentProvider(new ArrayContentProvider());
 		alarmViewer.setComparator(new AlarmComparator());
 		alarmFilter = new AlarmListFilter();
 		alarmViewer.addFilter(alarmFilter);
+		alarmViewer.getTable().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				WidgetHelper.saveTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
+			}
+		});
 		
 		createPopupMenu();
 

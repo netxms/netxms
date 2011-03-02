@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 
 /**
- * @author Victor
+ * Alarm browser view
  *
  */
 public class AlarmBrowser extends ViewPart
@@ -45,7 +45,7 @@ public class AlarmBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		alarmView = new AlarmList(this, parent, SWT.NONE);
+		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser");
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

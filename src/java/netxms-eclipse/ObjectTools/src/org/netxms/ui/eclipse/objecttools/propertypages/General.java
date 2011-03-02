@@ -178,6 +178,8 @@ public class General extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				textConfirmation.setEnabled(checkConfirmation.getSelection());
+				if (checkConfirmation.getSelection())
+					textConfirmation.setFocus();
 			}
 			
 			@Override

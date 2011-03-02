@@ -190,7 +190,6 @@ public class TabbedObjectView extends ViewPart
 	 */
 	private void setObject(GenericObject object)
 	{
-		//this.setPartName("Object Details - " + object.getObjectName());
 		header.setText(object.getObjectName());
 		for(final ObjectTab tab : tabs)
 		{

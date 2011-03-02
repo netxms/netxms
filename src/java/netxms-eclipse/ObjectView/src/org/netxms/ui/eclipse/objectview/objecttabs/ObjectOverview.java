@@ -91,14 +91,17 @@ public class ObjectOverview extends ObjectTab
 	 */
 	private Layout createColumnLayout()
 	{
-		RowLayout layout = new RowLayout();
-		layout.fill = true;
+		GridLayout layout = new GridLayout();
+/*		layout.fill = true;
 		layout.marginBottom = 0;
 		layout.marginTop = 0;
 		layout.marginLeft = 0;
 		layout.marginRight = 0;
 		layout.spacing = 5;
-		layout.type = SWT.VERTICAL;
+		layout.type = SWT.VERTICAL;*/
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = 5;
 		return layout;
 	}
 	
@@ -111,9 +114,15 @@ public class ObjectOverview extends ObjectTab
 	 */
 	private void addElement(OverviewPageElement element)
 	{
+		/*
 		RowData rd = new RowData();
 		rd.exclude = false;
-		element.setLayoutData(rd);
+		element.setLayoutData(rd);*/
+		GridData gd = new GridData();
+		gd.exclude = false;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		element.setLayoutData(gd);
 		elements.add(element);
 	}
 
@@ -127,10 +136,10 @@ public class ObjectOverview extends ObjectTab
 		for(OverviewPageElement element : elements)
 		{
 			element.setVisible(element.isApplicableForObject(object));
-			((RowData)element.getLayoutData()).exclude = !element.isVisible();
+			((GridData)element.getLayoutData()).exclude = !element.isVisible();
 			element.setObject(object);
 		}
-		viewArea.layout();
+		viewArea.layout(true, true);
 		viewArea.setRedraw(true);
 	}
 
