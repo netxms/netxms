@@ -10,4 +10,4 @@ EXTRA_DIST = \
 	oracledrv.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_oracle.a $(libdir)/libnxddr_oracle.so.0 ; fi
+	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_oracle.a $(libdir)/libnxddr_oracle.so.1 ; fi

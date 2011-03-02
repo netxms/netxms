@@ -5,7 +5,10 @@ INCLUDES=-I@top_srcdir@/include
 lib_LTLIBRARIES = libnsm_portCheck.la
 libnsm_portCheck_la_SOURCES = main.cpp net.cpp pop3.cpp ssh.cpp smtp.cpp \
 	http.cpp custom.cpp telnet.cpp
-libnsm_portCheck_la_LDFLAGS = ../../../libnetxms/libnetxms.la
+libnsm_portCheck_la_LIBADD = ../../../libnetxms/libnetxms.la
+if USE_INTERNAL_LIBTRE
+libnsm_portCheck_la_LIBADD += ../../../libtre/libnxtre.la
+endif
 
 EXTRA_DIST = portcheck.vcproj net.h main.h
 
