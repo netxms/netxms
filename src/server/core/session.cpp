@@ -893,7 +893,7 @@ void ClientSession::ProcessingThread()
 				SendAllTraps2(pMsg->GetId());
 				break;
          case CMD_QUERY_PARAMETER:
-            QueryParameter(pMsg);
+            queryParameter(pMsg);
             break;
          case CMD_LOCK_PACKAGE_DB:
             LockPackageDB(pMsg->GetId(), TRUE);
@@ -4618,7 +4618,7 @@ void ClientSession::queryParameter(CSCPMessage *pRequest)
             TCHAR szBuffer[256], szName[MAX_PARAM_NAME];
 
             pRequest->GetVariableStr(VID_NAME, szName, MAX_PARAM_NAME);
-            dwResult = ((Node *)pObject)->GetItemForClient(pRequest->GetVariableShort(VID_DCI_SOURCE_TYPE),
+            dwResult = ((Node *)pObject)->getItemForClient(pRequest->GetVariableShort(VID_DCI_SOURCE_TYPE),
                                                            szName, szBuffer, 256);
             msg.SetVariable(VID_RCC, dwResult);
             if (dwResult == RCC_SUCCESS)

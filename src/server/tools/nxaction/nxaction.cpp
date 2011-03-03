@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
 					for(i = 0; i < count; i++)
 						free(args[i]);
 #else
-               dwError = conn.ExecAction(argv[optind + 1], argc - optind - 2, &argv[optind + 2]);
+               dwError = conn.execAction(argv[optind + 1], argc - optind - 2, &argv[optind + 2]);
 #endif
                if (bVerbose)
                {

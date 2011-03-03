@@ -2559,7 +2559,7 @@ DWORD Node::GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuff
 
 static DWORD RCCFromDCIError(DWORD error)
 {
-   switch(dwRetCode)
+   switch(error)
    {
       case DCE_SUCCESS:
          return RCC_SUCCESS;
@@ -2613,9 +2613,9 @@ DWORD Node::getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffe
 // Get table for client
 //
 
-DWORD Node::getTableForClient(const TCHAR name, Table **table)
+DWORD Node::getTableForClient(const TCHAR *name, Table **table)
 {
-   DWORD dwRetCode = getTableFromAgent(name, table);
+	DWORD dwRetCode = getTableFromAgent(name, table);
 	return RCCFromDCIError(dwRetCode);
 }
 
