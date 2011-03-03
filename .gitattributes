@@ -31,6 +31,7 @@ contrib/startup/debian/nxagentd.in -text
 contrib/startup/debian/nxhttpd.in -text
 doc/RadenSolutions.xml -text
 doc/comparison_netxms_nnm.doc -text
+doc/integration/HPOM_Integration.docx -text
 doc/internal/build.w64 -text
 doc/internal/db_driver_api.txt -text
 doc/internal/dci_perftab.txt -text
@@ -944,6 +945,7 @@ src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Startu
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/actions/OpenObjectToolsEditor.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/dialogs/CreateNewToolDialog.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/AccessControl.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/Columns.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/Filter.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/General.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/ObjectToolsEditor.java -text

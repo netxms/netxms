@@ -117,6 +117,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.objecttools.propertypages.Columns"
+            id="org.netxms.ui.eclipse.objecttools.propertypages.Columns#4"
+            name="Columns">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objecttools.ObjectTool">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
 
 </plugin>

@@ -34,7 +34,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Filter" property page for object tool
- *
  */
 public class Filter extends PropertyPage
 {
