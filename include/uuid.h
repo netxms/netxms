@@ -14,8 +14,10 @@
 
 #define UUID_LENGTH     16
 
+#if !HAVE_UUID_T
 #undef uuid_t
 typedef unsigned char uuid_t[16];
+#endif
 
 /* UUID Variant definitions */
 #define UUID_VARIANT_NCS         0
