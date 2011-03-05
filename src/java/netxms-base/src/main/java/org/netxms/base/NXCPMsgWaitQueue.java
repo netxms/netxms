@@ -201,4 +201,12 @@ public class NXCPMsgWaitQueue
 			housekeeperThread = null;
 		}
 	}
+
+	/**
+	 * @return the defaultTimeout
+	 */
+	public int getDefaultTimeout()
+	{
+		return defaultTimeout;
+	}
 }

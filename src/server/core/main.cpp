@@ -1358,6 +1358,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 
 		ctx.hSocket = -1;
 		ctx.pMsg = NULL;
+		ctx.session = NULL;
 		_tprintf(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Ready\n")
 				   _T("Enter \"help\" for command list or \"down\" for server shutdown\n")
 				   _T("System Console\n\n"));

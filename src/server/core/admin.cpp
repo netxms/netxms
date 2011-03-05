@@ -51,6 +51,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
    RecvNXCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
    ctx.hSocket = sock;
    ctx.pMsg = &response;
+	ctx.session = NULL;
 
    while(1)
    {

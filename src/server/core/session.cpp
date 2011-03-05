@@ -159,6 +159,7 @@ DEFINE_THREAD_STARTER(getServerLogQueryData)
 DEFINE_THREAD_STARTER(executeAction)
 DEFINE_THREAD_STARTER(findNodeConnection)
 DEFINE_THREAD_STARTER(findMacAddress)
+DEFINE_THREAD_STARTER(processConsoleCommand)
 
 
 //
@@ -268,6 +269,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwEncryptionRqId = 0;
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
    m_dwActiveChannels = 0;
+	m_console = NULL;
 }
 
 
@@ -305,6 +307,12 @@ ClientSession::~ClientSession()
    DestroyEncryptionContext(m_pCtx);
    if (m_condEncryptionSetup != INVALID_CONDITION_HANDLE)
       ConditionDestroy(m_condEncryptionSetup);
+	
+	if (m_console != NULL)
+	{
+		delete m_console->pMsg;
+		free(m_console);
+	}
 }
 
 
@@ -312,7 +320,7 @@ ClientSession::~ClientSession()
 // Start all threads
 //
 
-void ClientSession::run(void)
+void ClientSession::run()
 {
    m_hWriteThread = ThreadCreateEx(WriteThreadStarter, 0, this);
    m_hProcessingThread = ThreadCreateEx(ProcessingThreadStarter, 0, this);
@@ -344,7 +352,7 @@ void ClientSession::DebugPrintf(int level, const TCHAR *format, ...)
 // ReadThread()
 //
 
-void ClientSession::ReadThread(void)
+void ClientSession::ReadThread()
 {
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
@@ -542,7 +550,7 @@ void ClientSession::ReadThread(void)
 // WriteThread()
 //
 
-void ClientSession::WriteThread(void)
+void ClientSession::WriteThread()
 {
    CSCP_MESSAGE *pRawMsg;
    CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -1227,6 +1235,15 @@ void ClientSession::ProcessingThread()
 				break;
 			case CMD_UPLOAD_FILE_TO_AGENT:
 				uploadFileToAgent(pMsg);
+				break;
+			case CMD_OPEN_CONSOLE:
+				openConsole(pMsg->GetId());
+				break;
+			case CMD_CLOSE_CONSOLE:
+				closeConsole(pMsg->GetId());
+				break;
+			case CMD_ADM_REQUEST:
+				CALL_IN_NEW_THREAD(processConsoleCommand, pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -11165,6 +11182,108 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Open server console
+//
+
+void ClientSession::openConsole(DWORD rqId)
+{
+	CSCPMessage msg;
+
+	msg.SetId(rqId);
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONSOLE)
+	{
+		m_dwFlags |= CSF_CONSOLE_OPEN;
+		m_console = (CONSOLE_CTX)malloc(sizeof(struct __console_ctx));
+		m_console->hSocket = -1;
+		m_console->pMsg = new CSCPMessage;
+		m_console->pMsg->SetCode(CMD_ADM_MESSAGE);
+		m_console->session = this;
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Close server console
+//
+
+void ClientSession::closeConsole(DWORD rqId)
+{
+	CSCPMessage msg;
+
+	msg.SetId(rqId);
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONSOLE)
+	{
+		if (m_dwFlags & CSF_CONSOLE_OPEN)
+		{
+			m_dwFlags &= ~CSF_CONSOLE_OPEN;
+			delete m_console->pMsg;
+			safe_free_and_null(m_console);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Process console command
+//
+
+void ClientSession::processConsoleCommand(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONSOLE) && (m_dwFlags & CSF_CONSOLE_OPEN))
+	{
+		TCHAR command[256];
+		request->GetVariableStr(VID_COMMAND, command, 256);
+		int rc = ProcessConsoleCommand(command, m_console);
+      switch(rc)
+      {
+         case CMD_EXIT_SHUTDOWN:
+            InitiateShutdown();
+            break;
+         case CMD_EXIT_CLOSE_SESSION:
+				msg.SetEndOfSequence();
+				break;
+         default:
+            break;
+      }
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
 	sendMessage(&msg);

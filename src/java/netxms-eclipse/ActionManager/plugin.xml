@@ -31,7 +31,7 @@
                class="org.netxms.ui.eclipse.actionmanager.actions.OpenActionManager"
                definitionId="org.netxms.ui.eclipse.actionmanager.commands.open_action_manager"
                icon="icons/actionmgr.png"
-               id="org.netxms.ui.eclipse.alarmviewer.actions.open"
+               id="org.netxms.ui.eclipse.actionmanager.actions.open"
                label="Actions Configuration"
                menubarPath="config/additions">
          </action>

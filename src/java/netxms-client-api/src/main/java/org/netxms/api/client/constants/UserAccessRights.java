@@ -31,6 +31,7 @@ public class UserAccessRights
 	public static final int SYSTEM_ACCESS_MANAGE_MAPS       = 0x00040000;
 	public static final int SYSTEM_ACCESS_REGISTER_AGENTS   = 0x00080000;
 	public static final int SYSTEM_ACCESS_READ_FILES        = 0x00100000;
+	public static final int SYSTEM_ACCESS_SERVER_CONSOLE    = 0x00200000;
 	
 	public static final int OBJECT_ACCESS_READ          = 0x00000001;
 	public static final int OBJECT_ACCESS_MODIFY        = 0x00000002;

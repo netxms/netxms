@@ -83,6 +83,7 @@ struct __console_ctx
 {
    SOCKET hSocket;
    CSCPMessage *pMsg;
+	ClientSession *session;
 };
 
 typedef __console_ctx * CONSOLE_CTX;
@@ -180,6 +181,7 @@ typedef void * HSNMPSESSION;
 #define CSF_PACKAGE_DB_LOCKED    ((DWORD)0x0004)
 #define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
 #define CSF_EPP_UPLOAD           ((DWORD)0x0010)
+#define CSF_CONSOLE_OPEN         ((DWORD)0x0020)
 #define CSF_AUTHENTICATED        ((DWORD)0x0080)
 #define CSF_RECEIVING_MAP_DATA   ((DWORD)0x0200)
 #define CSF_SYNC_OBJECT_COMMENTS ((DWORD)0x0400)
@@ -366,6 +368,7 @@ private:
    DWORD m_dwActiveChannels;     // Active data channels
    DWORD m_dwMapSaveRqId;        // ID of currently active map saving request
    nxMapSrv *m_pActiveMap;       // Map currenly being saved
+	CONSOLE_CTX m_console;			// Server console context
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
@@ -387,6 +390,7 @@ private:
 	DECLARE_THREAD_STARTER(executeAction)
 	DECLARE_THREAD_STARTER(findNodeConnection)
 	DECLARE_THREAD_STARTER(findMacAddress)
+	DECLARE_THREAD_STARTER(processConsoleCommand)
 
    void ReadThread(void);
    void WriteThread(void);
@@ -564,6 +568,9 @@ private:
 	void executeServerCommand(CSCPMessage *request);
 	void uploadFileToAgent(CSCPMessage *request);
 	void listServerFileStore(CSCPMessage *request);
+	void processConsoleCommand(CSCPMessage *msg);
+	void openConsole(DWORD rqId);
+	void closeConsole(DWORD rqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

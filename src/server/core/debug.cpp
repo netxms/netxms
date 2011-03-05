@@ -82,21 +82,27 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
    va_list args;
 
    va_start(args, pszFormat);
-   if (pCtx->hSocket == -1)
+	if ((pCtx->hSocket == -1) && (pCtx->session == NULL))
    {
       _vtprintf(pszFormat, args);
    }
    else
    {
-      CSCP_MESSAGE *pRawMsg;
       TCHAR szBuffer[8192];
 
       _vsntprintf(szBuffer, 8191, pszFormat, args);
 		szBuffer[8191] = 0;
       pCtx->pMsg->SetVariable(VID_MESSAGE, szBuffer);
-      pRawMsg = pCtx->pMsg->CreateMessage();
-      SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0);
-      free(pRawMsg);
+		if (pCtx->session != NULL)
+		{
+			pCtx->session->sendMessage(pCtx->pMsg);
+		}
+		else
+		{
+			CSCP_MESSAGE *pRawMsg = pCtx->pMsg->CreateMessage();
+			SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0);
+			free(pRawMsg);
+		}
    }
    va_end(args);
 }

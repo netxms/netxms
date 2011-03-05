@@ -274,6 +274,8 @@ public final class NXCPCodes
 	public static final int CMD_LIST_SERVER_FILES       = 0x00F4;
 	public static final int CMD_GET_TABLE               = 0x00F5;
 	public static final int CMD_QUERY_TABLE             = 0x00F6;
+	public static final int CMD_OPEN_CONSOLE            = 0x00F7;
+	public static final int CMD_CLOSE_CONSOLE           = 0x00F8;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

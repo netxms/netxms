@@ -72,7 +72,7 @@ public interface Session
 	public abstract NXCPMessage waitForMessage(final int code, final long id) throws NetXMSClientException;
 
 	/**
-	 * Wait for CMD_REQUEST_COMPLETED message with given id
+	 * Wait for CMD_REQUEST_COMPLETED message with given id using default timeout
 	 * 
 	 * @param id
 	 *           Message id
@@ -81,6 +81,18 @@ public interface Session
 	 *            if message was not arrived within timeout interval or contains RCC other than RCC.SUCCESS
 	 */
 	public abstract NXCPMessage waitForRCC(final long id) throws NetXMSClientException;
+
+	/**
+	 * Wait for CMD_REQUEST_COMPLETED message with given id
+	 * 
+	 * @param id
+	 *           Message id
+	 * @param timeout Timeout in milliseconds
+	 * @return received message
+	 * @throws NetXMSClientException
+	 *            if message was not arrived within timeout interval or contains RCC other than RCC.SUCCESS
+	 */
+	public abstract NXCPMessage waitForRCC(final long id, final int timeout) throws NetXMSClientException;
 
 	/**
 	 * Create new NXCP message with unique id

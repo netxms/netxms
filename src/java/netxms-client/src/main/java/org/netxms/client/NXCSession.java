@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -162,7 +163,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private int commandTimeout = 30000; // Default is 30 sec
 
 	// Notification listeners
-	private HashSet<SessionListener> listeners = new HashSet<SessionListener>(0);
+	private Set<SessionListener> listeners = new HashSet<SessionListener>(0);
+	private Set<ServerConsoleListener> consoleListeners = new HashSet<ServerConsoleListener>(0);
 
 	// Received files
 	private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
@@ -362,6 +364,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 						case NXCPCodes.CMD_SITUATION_CHANGE:
 							processSituationChange(msg);
 							break;
+						case NXCPCodes.CMD_ADM_MESSAGE:
+							processConsoleOutput(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -379,6 +384,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				catch(NXCPException e)
 				{
 				}
+			}
+		}
+		
+		/**
+		 * Process server console output
+		 * 
+		 * @param msg notification message
+		 */
+		private void processConsoleOutput(NXCPMessage msg)
+		{
+			final String text = msg.getVariableAsString(NXCPCodes.VID_MESSAGE);
+			synchronized(consoleListeners)
+			{
+				for(ServerConsoleListener l : consoleListeners)
+					l.onConsoleOutput(text);
 			}
 		}
 
@@ -723,9 +743,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * SessionListener)
 	 */
 	@Override
-	public void addListener(SessionListener lst)
+	public void addListener(SessionListener listener)
 	{
-		listeners.add(lst);
+		synchronized(listeners)
+		{
+			listeners.add(listener);
+		}
 	}
 
 	/*
@@ -735,9 +758,38 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * SessionListener)
 	 */
 	@Override
-	public void removeListener(SessionListener lst)
+	public void removeListener(SessionListener listener)
 	{
-		listeners.remove(lst);
+		synchronized(listeners)
+		{
+			listeners.remove(listener);
+		}
+	}
+	
+	/**
+	 * Add server console listener
+	 * 
+	 * @param listener
+	 */
+	public void addConsoleListener(ServerConsoleListener listener)
+	{
+		synchronized(consoleListeners)
+		{
+			consoleListeners.add(listener);
+		}
+	}
+
+	/**
+	 * Remove server console listener
+	 * 
+	 * @param listener
+	 */
+	public void removeConsoleListener(ServerConsoleListener listener)
+	{
+		synchronized(consoleListeners)
+		{
+			consoleListeners.remove(listener);
+		}
 	}
 
 	/**
@@ -746,12 +798,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param n
 	 *           Notification object
 	 */
-	protected synchronized void sendNotification(NXCNotification n)
+	protected void sendNotification(NXCNotification n)
 	{
-		Iterator<SessionListener> it = listeners.iterator();
-		while(it.hasNext())
+		synchronized(listeners)
 		{
-			it.next().notificationHandler(n);
+			Iterator<SessionListener> it = listeners.iterator();
+			while(it.hasNext())
+			{
+				it.next().notificationHandler(n);
+			}
 		}
 	}
 
@@ -810,7 +865,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	@Override
 	public NXCPMessage waitForRCC(final long id) throws NXCException
 	{
-		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id);
+		return waitForRCC(id, msgWaitQueue.getDefaultTimeout());
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.api.client.Session#waitForRCC(long, int)
+	 */
+	public NXCPMessage waitForRCC(final long id, final int timeout) throws NXCException
+	{
+		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id, timeout);
 		final int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
 		if (rcc != RCC.SUCCESS)
 		{
@@ -4073,5 +4136,48 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
+	}
+	
+	/**
+	 * Open server console.
+	 * 
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void openConsole() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_CONSOLE);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Close server console.
+	 * 
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void closeConsole() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_CONSOLE);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Process console command on server. Output of the command delivered via console listener.
+	 * 
+	 * @param command command to process
+	 * @return true if console should be closed (usually after "exit" command)
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public boolean processConsoleCommand(String command) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADM_REQUEST);
+		msg.setVariable(NXCPCodes.VID_COMMAND, command);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId(), 3600000);
+		return response.isEndOfSequence();
 	}
 }

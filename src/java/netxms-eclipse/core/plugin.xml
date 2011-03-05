@@ -41,6 +41,15 @@
             id="org.netxms.ui.eclipse.viewcategory.tools"
             name="Tools">
       </category>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.console.views.ServerConsole"
+            icon="icons/server_console.png"
+            id="org.netxms.ui.eclipse.console.views.ServerConsole"
+            name="Server Console"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -102,6 +111,30 @@
             id="org.eclipse.ui.preferencePages.Decorators">
          <keywordReference id="org.eclipse.ui.ide.appearance"/>
      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open server console"
+            id="org.netxms.ui.eclipse.console.commands.open_server_console"
+            name="Server Console">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.console.action_set"
+            label="Core Action Set"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.console.actions.OpenServerConsole"
+               definitionId="org.netxms.ui.eclipse.console.commands.open_server_consoleorg.netxms.ui.eclipse.actionmanager.commands.open_action_manager"
+               icon="icons/server_console.png"
+               id="org.netxms.ui.eclipse.console.actions.open_server_console"
+               label="Server Console"
+               menubarPath="tools/additions">
+         </action>
+      </actionSet>
    </extension>
 
 </plugin>

@@ -1397,7 +1397,7 @@ void DumpObjects(CONSOLE_CTX pCtx)
 		t = pObject->TimeStamp();
 		ltm = localtime(&t);
 		_tcsftime(pBuffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
-      ConsolePrintf(pCtx, _T("   Last change: %s"), pBuffer);
+      ConsolePrintf(pCtx, _T("   Last change: %s\n"), pBuffer);
       switch(pObject->Type())
       {
          case OBJECT_NODE:
