@@ -18,10 +18,17 @@
  */
 package org.netxms.ui.eclipse.objecttools.propertypages;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -33,7 +40,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.objecttools.ObjectToolTableColumn;
+import org.netxms.ui.eclipse.objecttools.dialogs.EditColumnDialog;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -42,6 +52,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class Columns extends PropertyPage
 {
 	private ObjectToolDetails objectTool;
+	private List<ObjectToolTableColumn> columns = new ArrayList<ObjectToolTableColumn>();
 	private TableViewer viewer;
 	private Button buttonAdd;
 	private Button buttonEdit;
@@ -64,11 +75,13 @@ public class Columns extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);
+		for(ObjectToolTableColumn tc : objectTool.getColumns())
+			columns.add(new ObjectToolTableColumn(tc));
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
@@ -80,6 +93,7 @@ public class Columns extends PropertyPage
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		viewer.getTable().setLayoutData(gd);
+		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -89,6 +103,7 @@ public class Columns extends PropertyPage
 				buttonRemove.setEnabled(selection.size() > 0);
 			}
 		});
+		viewer.setInput(columns.toArray());
 		
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -166,7 +181,14 @@ public class Columns extends PropertyPage
 	 */
 	private void addColumn()
 	{
-		
+		ObjectToolTableColumn tc = new ObjectToolTableColumn("Column " + Integer.toString(columns.size() + 1));
+		EditColumnDialog dlg = new EditColumnDialog(getShell(), true, objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP, tc);
+		if (dlg.open() == Window.OK)
+		{
+			columns.add(tc);
+			viewer.setInput(columns.toArray());
+			viewer.setSelection(new StructuredSelection(tc));
+		}
 	}
 	
 	/**
@@ -174,14 +196,57 @@ public class Columns extends PropertyPage
 	 */
 	private void editColumn()
 	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
 		
+		EditColumnDialog dlg = new EditColumnDialog(getShell(), false,
+				objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP, (ObjectToolTableColumn)selection.getFirstElement());
+		dlg.open();
+		viewer.update(selection.getFirstElement(), null);
 	}
 	
 	/**
 	 * Remove selected column(s)
 	 */
+	@SuppressWarnings("unchecked")
 	private void removeColumn()
 	{
-		
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		Iterator<ObjectToolTableColumn> it = selection.iterator();
+		while(it.hasNext())
+		{
+			columns.remove(it.next());
+		}
+		viewer.setInput(columns.toArray());
+	}
+	
+	/**
+	 * Apply changes
+	 * 
+	 * @param isApply true if update operation caused by "Apply" button
+	 */
+	protected void applyChanges(final boolean isApply)
+	{
+		objectTool.setColumns(columns);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
+	 */
+	@Override
+	protected void performApply()
+	{
+		applyChanges(true);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 */
+	@Override
+	public boolean performOk()
+	{
+		applyChanges(false);
+		return true;
 	}
 }

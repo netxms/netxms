@@ -55,12 +55,12 @@ public class EditColumnDialog extends Dialog
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createContents(org.eclipse.swt.widgets.Composite)
+	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected Control createContents(Composite parent)
+	protected Control createDialogArea(Composite parent)
 	{
-		Composite dialogArea = (Composite)super.createContents(parent);
+		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
@@ -74,10 +74,10 @@ public class EditColumnDialog extends Dialog
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.widthHint = 400;
+		gd.widthHint = 350;
 		name.setLayoutData(gd);
 		
-		format = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, "Format", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		format = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Format", WidgetHelper.DEFAULT_LAYOUT_DATA);
 		for(int i = 0; i < formatNames.length; i++)
 			format.add(formatNames[i]);
 		format.select(columnObject.getFormat());
@@ -96,6 +96,7 @@ public class EditColumnDialog extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.widthHint = 350;
 		data.setLayoutData(gd);
 		
 		return dialogArea;

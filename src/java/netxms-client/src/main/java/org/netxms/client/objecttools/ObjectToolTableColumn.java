@@ -39,6 +39,32 @@ public class ObjectToolTableColumn
 	private int substringIndex;
 	
 	/**
+	 * Create new column object
+	 * 
+	 * @param name column name
+	 */
+	public ObjectToolTableColumn(String name)
+	{
+		this.name = name;
+		this.snmpOid = "";
+		this.format = FORMAT_STRING;
+		this.substringIndex = 1;
+	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param src source object
+	 */
+	public ObjectToolTableColumn(ObjectToolTableColumn src)
+	{
+		this.name = src.name;
+		this.snmpOid = src.snmpOid;
+		this.format = src.format;
+		this.substringIndex = src.substringIndex;
+	}
+	
+	/**
 	 * Create column info object from NXCP message
 	 * 
 	 * @param msg NXCP message
