@@ -52,7 +52,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private NXCSession session;
 	private GraphViewer viewer;
 	private Image[] statusImages;
-	private Image imgNode;
+	private Image imgNodeGeneric;
+	private Image imgNodeWindows;
+	private Image imgNodeOSX;
+	private Image imgNodeLinux;
+	private Image imgNodeFreeBSD;
 	private Image imgNodeSwitch;
 	private Image imgNodeRouter;
 	private Image imgNodePrinter;
@@ -78,11 +82,15 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
 		
-		imgNode = Activator.getImageDescriptor("icons/objects/node.png").createImage();
+		imgNodeGeneric = Activator.getImageDescriptor("icons/objects/macserver.png").createImage();
+		imgNodeOSX = Activator.getImageDescriptor("icons/objects/macserver.png").createImage();
+		imgNodeWindows = Activator.getImageDescriptor("icons/objects/windowsserver.png").createImage();
+		imgNodeLinux = Activator.getImageDescriptor("icons/objects/linuxserver.png").createImage();
+		imgNodeFreeBSD = Activator.getImageDescriptor("icons/objects/freebsdserver.png").createImage();
 		imgNodeSwitch = Activator.getImageDescriptor("icons/objects/switch.png").createImage();
 		imgNodeRouter = Activator.getImageDescriptor("icons/objects/router.png").createImage();
 		imgNodePrinter = Activator.getImageDescriptor("icons/objects/printer.png").createImage();
-		imgSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
+		imgSubnet = Activator.getImageDescriptor("icons/objects/subnet.png").createImage();
 		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
@@ -134,7 +142,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 							return imgNodeRouter;
 						if ((((Node)object).getFlags() & Node.NF_IS_PRINTER) != 0)
 							return imgNodePrinter;
-						return imgNode;
+						if (((Node)object).getPlatformName().startsWith("windows"))
+								return imgNodeWindows;
+						if (((Node)object).getPlatformName().startsWith("Linux"))
+								return imgNodeLinux;
+						if (((Node)object).getPlatformName().startsWith("FreeBSD"))
+							return imgNodeFreeBSD;
+						return imgNodeGeneric;
 					case GenericObject.OBJECT_SUBNET:
 						return imgSubnet;
 					case GenericObject.OBJECT_CONTAINER:
@@ -190,7 +204,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i].dispose();
-		imgNode.dispose();
+		
+		imgNodeGeneric.dispose();
+		imgNodeWindows.dispose();
+		imgNodeLinux.dispose();
+		imgNodeOSX.dispose();
+		imgNodeFreeBSD.dispose();
+
 		imgNodeSwitch.dispose();
 		imgNodeRouter.dispose();
 		imgNodePrinter.dispose();

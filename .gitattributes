@@ -945,6 +945,7 @@ src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Object
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Startup.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/actions/OpenObjectToolsEditor.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/dialogs/CreateNewToolDialog.java -text
+src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/dialogs/EditColumnDialog.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/AccessControl.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/Columns.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/propertypages/Filter.java -text
