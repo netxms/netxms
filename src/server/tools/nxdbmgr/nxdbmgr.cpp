@@ -88,15 +88,7 @@ static BOOL m_bForce = FALSE;
 
 void ShowQuery(const TCHAR *pszQuery)
 {
-#ifdef _WIN32
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
-      _tprintf(_T(">>> "));
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0A);
-      _putts(pszQuery);
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-#else
-      _tprintf(_T(">>> %s\n"), pszQuery);
-#endif
+	WriteToTerminalEx(_T("\x1b[1m>>> \x1b[32;1m%s\x1b[0m\n"), pszQuery);
 }
 
 
@@ -182,16 +174,7 @@ DB_RESULT SQLSelect(const TCHAR *pszQuery)
 
    hResult = DBSelectEx(g_hCoreDB, pszQuery, errorText);
    if (hResult == NULL)
-   {
-#ifdef _WIN32
-      _tprintf(_T("SQL query failed (%s):\n"), errorText);
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
-      _tprintf(_T("%s\n"), pszQuery);
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-#else
-      _tprintf(_T("SQL query failed (%s):\n%s\n"), errorText, pszQuery);
-#endif
-   }
+      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
    return hResult;
 }
 
@@ -210,16 +193,7 @@ DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery)
 
    hResult = DBAsyncSelectEx(g_hCoreDB, pszQuery, errorText);
    if (hResult == NULL)
-   {
-#ifdef _WIN32
-      _tprintf(_T("SQL query failed (%s):\n"), errorText);
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
-      _tprintf(_T("%s\n"), pszQuery);
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-#else
-      _tprintf(_T("SQL query failed (%s):\n%s\n"), errorText, pszQuery);
-#endif
-   }
+      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
    return hResult;
 }
 
@@ -241,16 +215,7 @@ BOOL SQLQuery(const TCHAR *pszQuery)
 
    bResult = DBQueryEx(g_hCoreDB, pszQuery, errorText);
    if (!bResult)
-   {
-#ifdef _WIN32
-      _tprintf(_T("SQL query failed (%s):\n"), errorText);
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
-      _tprintf(_T("%s\n"), pszQuery);
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-#else
-      _tprintf(_T("SQL query failed (%s):\n%s\n"), errorText, pszQuery);
-#endif
-   }
+      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
    return bResult;
 }
 
@@ -284,14 +249,7 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 
       if (!DBQueryEx(g_hCoreDB, pszQuery, errorText))
       {
-#ifdef _WIN32
-         _tprintf(_T("SQL query failed (%s):\n"), errorText);
-         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
-         _tprintf(_T("%s\n"), pszQuery);
-         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-#else
-         _tprintf(_T("SQL query failed (%s):\n%s\n"), errorText, pszQuery);
-#endif
+	      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
          if (!g_bIgnoreErrors)
          {
             bRet = FALSE;

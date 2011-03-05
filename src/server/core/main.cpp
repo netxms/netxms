@@ -444,6 +444,43 @@ static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *psz
 
 
 //
+// Send console message to session with open console
+//
+
+static void SendConsoleMessage(ClientSession *session, void *arg)
+{
+	if (session->isConsoleOpen())
+	{
+		CSCPMessage msg;
+
+		msg.SetCode(CMD_ADM_MESSAGE);
+		msg.SetVariable(VID_MESSAGE, (TCHAR *)arg);
+		session->sendMessage(&msg);
+	}
+}
+
+
+//
+// Console writer
+//
+
+static void LogConsoleWriter(const TCHAR *format, ...)
+{
+	TCHAR buffer[8192];
+	va_list args;
+
+	va_start(args, format);
+	_vsntprintf(buffer, 8192, format, args);
+	buffer[8191] = 0;
+	va_end(args);
+
+	WriteToTerminal(buffer);
+
+	EnumerateClientSessions(SendConsoleMessage, buffer);
+}
+
+
+//
 // Server initialization
 //
 
@@ -464,6 +501,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 #else
 				  g_dwNumMessages, g_szMessages);
 #endif
+	nxlog_set_console_writer(LogConsoleWriter);
 
 	// Set code page
 #ifndef _WIN32
@@ -817,7 +855,7 @@ void NXCORE_EXPORTABLE Shutdown()
 // Fast server shutdown - normally called only by Windows service on system shutdown
 //
 
-void NXCORE_EXPORTABLE FastShutdown(void)
+void NXCORE_EXPORTABLE FastShutdown()
 {
 	g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
@@ -965,7 +1003,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	}
 	else if (IsCommand(_T("EXIT"), szBuffer, 4))
 	{
-		if (pCtx->hSocket != -1)
+		if ((pCtx->hSocket != -1) || (pCtx->session != NULL))
 		{
 			ConsolePrintf(pCtx, _T("Closing session...\n"));
 			nExitCode = CMD_EXIT_CLOSE_SESSION;
@@ -1359,9 +1397,9 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 		ctx.hSocket = -1;
 		ctx.pMsg = NULL;
 		ctx.session = NULL;
-		_tprintf(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Ready\n")
-				   _T("Enter \"help\" for command list or \"down\" for server shutdown\n")
-				   _T("System Console\n\n"));
+		WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Ready\n")
+				          _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
+				          _T("System Console\n\n"));
 
 #if USE_READLINE
 		// Initialize readline library if we use it
@@ -1371,9 +1409,9 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 		while(1)
 		{
 #if USE_READLINE
-			ptr = readline("netxmsd: ");
+			ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
 #else
-			printf("netxmsd: ");
+			WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
 			fflush(stdout);
 			if (fgets(szCommand, 255, stdin) == NULL)
 				break;   // Error reading stdin

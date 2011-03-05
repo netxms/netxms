@@ -128,7 +128,7 @@
             visible="true">
          <action
                class="org.netxms.ui.eclipse.console.actions.OpenServerConsole"
-               definitionId="org.netxms.ui.eclipse.console.commands.open_server_consoleorg.netxms.ui.eclipse.actionmanager.commands.open_action_manager"
+               definitionId="org.netxms.ui.eclipse.console.commands.open_server_console"
                icon="icons/server_console.png"
                id="org.netxms.ui.eclipse.console.actions.open_server_console"
                label="Server Console"

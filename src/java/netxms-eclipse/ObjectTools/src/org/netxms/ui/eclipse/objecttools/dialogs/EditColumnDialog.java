@@ -109,7 +109,8 @@ public class EditColumnDialog extends Dialog
 	{
 		if (snmpColumn)
 		{
-			
+			/* TODO: add OID validation */
+			columnObject.setSnmpOid(data.getText());
 		}
 		else
 		{

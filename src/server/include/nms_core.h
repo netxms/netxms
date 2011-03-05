@@ -585,17 +585,18 @@ public:
    void sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, DWORD dwRqId);
 
-   DWORD getIndex(void) { return m_dwIndex; }
+   DWORD getIndex() { return m_dwIndex; }
    void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
-   int getState(void) { return m_iState; }
+   int getState() { return m_iState; }
    const TCHAR *getUserName(void) { return m_szUserName; }
    const TCHAR *getClientInfo(void) { return m_szClientInfo; }
    DWORD getUserId() { return m_dwUserId; }
 	DWORD getSystemRights() { return m_dwSystemAccess; }
-   BOOL isAuthenticated(void) { return (m_dwFlags & CSF_AUTHENTICATED) ? TRUE : FALSE; }
-   BOOL isSubscribed(DWORD dwChannel) { return (m_dwActiveChannels & dwChannel) ? TRUE : FALSE; }
-   WORD getCurrentCmd(void) { return m_wCurrentCmd; }
-   int getCipher(void) { return (m_pCtx == NULL) ? -1 : m_pCtx->nCipher; }
+   bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
+   bool isConsoleOpen() { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
+   bool isSubscribed(DWORD dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
+   WORD getCurrentCmd() { return m_wCurrentCmd; }
+   int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->nCipher; }
 
 	bool checkSysAccessRights(DWORD requiredAccess) 
    { 
@@ -603,7 +604,7 @@ public:
          ((requiredAccess & m_dwSystemAccess) ? true : false);
    }
 
-   void kill(void);
+   void kill();
    void notify(DWORD dwCode, DWORD dwData = 0);
 
 	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->Put(pUpdate); }

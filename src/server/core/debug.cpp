@@ -80,18 +80,19 @@ void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx)
 void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 {
    va_list args;
+   TCHAR szBuffer[8192];
 
    va_start(args, pszFormat);
+   _vsntprintf(szBuffer, 8191, pszFormat, args);
+	szBuffer[8191] = 0;
+   va_end(args);
+
 	if ((pCtx->hSocket == -1) && (pCtx->session == NULL))
    {
-      _vtprintf(pszFormat, args);
+		WriteToTerminal(szBuffer);
    }
    else
    {
-      TCHAR szBuffer[8192];
-
-      _vsntprintf(szBuffer, 8191, pszFormat, args);
-		szBuffer[8191] = 0;
       pCtx->pMsg->SetVariable(VID_MESSAGE, szBuffer);
 		if (pCtx->session != NULL)
 		{
@@ -104,7 +105,6 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 			free(pRawMsg);
 		}
    }
-   va_end(args);
 }
 
 

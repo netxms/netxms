@@ -1118,6 +1118,7 @@ src/java/netxms-eclipse/core/icons/information.png -text
 src/java/netxms-eclipse/core/icons/login.png -text
 src/java/netxms-eclipse/core/icons/password.png -text
 src/java/netxms-eclipse/core/icons/pview.gif -text
+src/java/netxms-eclipse/core/icons/scroll_lock.gif -text
 src/java/netxms-eclipse/core/icons/server_console.png -text
 src/java/netxms-eclipse/core/icons/status/critical.png -text
 src/java/netxms-eclipse/core/icons/status/disabled.png -text

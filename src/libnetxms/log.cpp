@@ -45,6 +45,7 @@ static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static DWORD m_flags = 0;
 static int m_maxLogSize = 4096 * 1024;	// 4 MB
 static int m_logHistorySize = 4;		// Keep up 4 previous log files
+static void (*m_consoleWriter)(const TCHAR *, ...) = (void (*)(const TCHAR *, ...))_tprintf;
 
 
 //
@@ -62,6 +63,16 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int maxLogSize, int historyS
 	m_logHistorySize = historySize;
 
 	return TRUE;
+}
+
+
+//
+// Set console writer
+//
+
+void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(void (*writer)(const TCHAR *, ...))
+{
+	m_consoleWriter = writer;
 }
 
 
@@ -212,7 +223,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
 // Close log
 //
 
-void LIBNETXMS_EXPORTABLE nxlog_close(void)
+void LIBNETXMS_EXPORTABLE nxlog_close()
 {
    if (m_flags & NXLOG_IS_OPEN)
    {
@@ -265,7 +276,7 @@ static void WriteLogToFile(TCHAR *message)
 		fflush(m_logFileHandle);
 	}
    if (m_flags & NXLOG_PRINT_TO_STDOUT)
-      _tprintf(_T("%s %s"), buffer, message);
+      m_consoleWriter(_T("%s %s"), buffer, message);
 
 	// Check log size
 	if (m_maxLogSize != 0)
@@ -460,7 +471,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 				t = time(NULL);
 				loc = localtime(&t);
 				_tcsftime(szBuffer, 32, _T("[%d-%b-%Y %H:%M:%S]"), loc);
-				_tprintf(_T("%s %s"), szBuffer, (TCHAR *)lpMsgBuf);
+				m_consoleWriter(_T("%s %s"), szBuffer, (TCHAR *)lpMsgBuf);
 			}
 			else
 			{
@@ -478,7 +489,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 				t = time(NULL);
 				loc = localtime(&t);
 				_tcsftime(szBuffer, 32, _T("[%d-%b-%Y %H:%M:%S]"), loc);
-				_tprintf(_T("%s %s"), szBuffer, message);
+				m_consoleWriter(_T("%s %s"), szBuffer, message);
 			}
 			else
 			{
@@ -532,7 +543,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 			loc = localtime(&t);
 #endif
 			_tcsftime(szBuffer, 32, _T("[%d-%b-%Y %H:%M:%S]"), loc);
-			_tprintf(_T("%s %s"), szBuffer, pMsg);
+			m_consoleWriter(_T("%s %s"), szBuffer, pMsg);
 		}
    }
    else

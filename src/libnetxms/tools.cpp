@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1527,3 +1527,161 @@ INT64 LIBNETXMS_EXPORTABLE GetProcessRSS()
 }
 
 #endif
+
+
+//
+// Write to terminal with support for ANSI color codes
+//
+
+#ifdef _WIN32
+
+#define BG_MASK 0xF0
+#define FG_MASK 0x0F
+
+static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
+{
+	WORD attr = currAttr;
+	switch(code)
+	{
+		case 0:	// reset attribute
+			attr = 0x07;
+			break;
+		case 1:	// bold/bright
+			attr = currAttr | FOREGROUND_INTENSITY;
+			break;
+		case 22:	// normal color
+			attr = currAttr & ~FOREGROUND_INTENSITY;
+			break;
+		case 30:	// black foreground
+			attr = (currAttr & BG_MASK);
+			break;
+		case 31:	// red foreground
+			attr = (currAttr & BG_MASK) | 0x04;
+			break;
+		case 32:	// green foreground
+			attr = (currAttr & BG_MASK) | 0x02;
+			break;
+		case 33:	// yellow foreground
+			attr = (currAttr & BG_MASK) | 0x06;
+			break;
+		case 34:	// blue foreground
+			attr = (currAttr & BG_MASK) | 0x01;
+			break;
+		case 35:	// magenta foreground
+			attr = (currAttr & BG_MASK) | 0x05;
+			break;
+		case 36:	// cyan foreground
+			attr = (currAttr & BG_MASK) | 0x03;
+			break;
+		case 37:	// white (gray) foreground
+			attr = (currAttr & BG_MASK) | 0x07;
+			break;
+		case 40:	// black background
+			attr = (currAttr & FG_MASK);
+			break;
+		case 41:	// red background
+			attr = (currAttr & FG_MASK) | 0x40;
+			break;
+		case 42:	// green background
+			attr = (currAttr & FG_MASK) | 0x20;
+			break;
+		case 43:	// yellow background
+			attr = (currAttr & FG_MASK) | 0x60;
+			break;
+		case 44:	// blue background
+			attr = (currAttr & FG_MASK) | 0x10;
+			break;
+		case 45:	// magenta background
+			attr = (currAttr & FG_MASK) | 0x50;
+			break;
+		case 46:	// cyan background
+			attr = (currAttr & FG_MASK) | 0x30;
+			break;
+		case 47:	// white (gray) background
+			attr = (currAttr & FG_MASK) | 0x70;
+			break;
+		default:
+			break;
+	}
+	SetConsoleTextAttribute(out, attr);
+	return attr;
+}
+
+#endif
+
+void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
+{
+#ifdef _WIN32
+	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(out, &csbi);
+	
+	const TCHAR *curr = text;
+	while(*curr != 0)
+	{
+		const TCHAR *esc = _tcschr(curr, 27);	// Find ESC
+		if (esc != NULL)
+		{
+			esc++;
+			if (*esc == _T('['))
+			{
+				// write everything up to ESC char
+				DWORD chars;
+				WriteConsole(out, curr, esc - curr - 1, &chars, NULL);
+
+				esc++;
+
+				TCHAR code[64];
+				int pos = 0;
+				while((*esc != 0) && (*esc != _T('m')))
+				{
+					if (*esc == _T(';'))
+					{
+						code[pos] = 0;
+						csbi.wAttributes = ApplyTerminalAttribute(out, csbi.wAttributes, _tcstol(code, NULL, 10));
+						pos = 0;
+					}
+					else
+					{
+						if (pos < 63)
+							code[pos++] = *esc;
+					}
+					esc++;
+				}
+				if (pos > 0)
+				{
+					code[pos] = 0;
+					csbi.wAttributes = ApplyTerminalAttribute(out, csbi.wAttributes, _tcstol(code, NULL, 10));
+				}
+				esc++;
+			}
+			else
+			{
+				DWORD chars;
+				WriteConsole(out, curr, esc - curr, &chars, NULL);
+			}
+			curr = esc;
+		}
+		else
+		{
+			DWORD chars;
+			WriteConsole(out, curr, _tcslen(curr), &chars, NULL);
+			break;
+		}
+	}
+#else
+	fputs(text, stdout);
+#endif
+}
+
+void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
+{
+	TCHAR buffer[8192];
+	va_list args;
+
+	va_start(args, format);
+	_vsntprintf(buffer, 8192, format, args);
+	va_end(args);
+	WriteToTerminal(buffer);
+}

@@ -45,13 +45,8 @@ static void StartStage(const TCHAR *pszMsg)
       safe_free(m_pszStageMsg);
       m_pszStageMsg = _tcsdup(pszMsg);
    }
-#ifdef _WIN32
-   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
-   _puttc(_T('*'), stdout);
-   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-   _tprintf(_T(" %-68s"), m_pszStageMsg, stdout);
-#else
-   _tprintf(_T("* %-68s"), m_pszStageMsg, stdout);
+   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-68s"), m_pszStageMsg, stdout);
+#ifndef _WIN32
    fflush(stdout);
 #endif
    m_iStageErrors = m_iNumErrors;
@@ -63,10 +58,10 @@ static void StartStage(const TCHAR *pszMsg)
 // End stage
 //
 
-static void EndStage(void)
+static void EndStage()
 {
    static const TCHAR *pszStatus[] = { _T("PASSED"), _T("FIXED "), _T("ERROR ") };
-   static int nColor[] = { 0x0A, 0x0E, 0x0C };
+   static int nColor[] = { 32, 33, 31 };
    int nCode, nErrors;
 
    nErrors = m_iNumErrors - m_iStageErrors;
@@ -79,18 +74,7 @@ static void EndStage(void)
    {
       nCode = 0;
    }
-#ifdef _WIN32
-   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
-   _puttc(_T('['), stdout);
-   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), nColor[nCode]);
-   _tprintf(_T("%s"), pszStatus[nCode]);
-   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
-   _puttc(_T(']'), stdout);
-   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
-   _tprintf(_T("\n"));
-#else
-   _tprintf(_T("  [%s]\n"), pszStatus[nCode]);
-#endif
+   WriteToTerminalEx(_T("  \x1b[37;1m[\x1b[%d;1m%s\x1b[37;1m]\x1b[0m\n"), nColor[nCode], pszStatus[nCode]);
 }
 
 

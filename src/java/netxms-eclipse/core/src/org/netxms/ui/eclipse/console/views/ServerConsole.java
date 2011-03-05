@@ -23,19 +23,29 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.tm.internal.terminal.control.ITerminalListener;
 import org.eclipse.tm.internal.terminal.control.ITerminalViewControl;
 import org.eclipse.tm.internal.terminal.control.TerminalViewControlFactory;
 import org.eclipse.tm.internal.terminal.provisional.api.TerminalState;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerConsoleListener;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.views.helpers.ServerConsoleTerminalConnector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Server console view
@@ -48,6 +58,9 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	private ITerminalViewControl terminal;
 	private ServerConsoleTerminalConnector connector;
 	private NXCSession session;
+	private boolean scrollLock = false;
+	private Action actionClear;
+	private Action actionScrollLock;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -83,6 +96,10 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 			}
 		});
 
+		createActions();
+		contributeToActionBars();
+		createPopupMenu();
+		
 		// Read console input and send to server
 		Thread inputReader = new Thread() {
 			@Override
@@ -93,15 +110,27 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 					final BufferedReader in = new BufferedReader(new InputStreamReader(connector.getInputStream()));
 					while(true)
 					{
-						writeToTerminal("\u001b[33mnetxms:\u001b[0m ");
+						writeToTerminal("\u001b[33mnetxmsd:\u001b[0m ");
 						String command = in.readLine().trim();
 						if (!command.isEmpty())
-							session.processConsoleCommand(command);
+						{
+							if (session.processConsoleCommand(command))
+							{
+								// Console must be closed
+								PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+									@Override
+									public void run()
+									{
+										terminal.disconnectTerminal();
+										PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().hideView(ServerConsole.this);
+									}
+								});
+							}
+						}
 					}
 				}
 				catch(Exception e)
 				{
-					
 				}
 			}
 		};
@@ -130,6 +159,100 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 		terminal.setFocus();
 	}
 
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionClear = new Action("Clear terminal") {
+			@Override
+			public void run()
+			{
+				terminal.clearTerminal();
+				writeToTerminal("\u001b[33mnetxmsd:\u001b[0m ");
+			}
+		};
+		actionClear.setImageDescriptor(SharedIcons.CLEAR_LOG);
+
+		actionScrollLock = new Action("Scroll lock", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				scrollLock = !scrollLock;
+				terminal.setScrollLock(scrollLock);
+				actionScrollLock.setChecked(scrollLock);
+			}
+		};
+		actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif"));
+		actionScrollLock.setChecked(scrollLock);
+	}
+	
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionClear);
+		manager.add(actionScrollLock);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionClear);
+		manager.add(actionScrollLock);
+	}
+
+	/**
+	 * Create pop-up menu for user list
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu
+		Menu menu = menuMgr.createContextMenu(terminal.getControl());
+		terminal.getControl().setMenu(menu);
+	}
+
+	/**
+	 * Fill context menu
+	 * 
+	 * @param mgr Menu manager
+	 */
+	private void fillContextMenu(final IMenuManager manager)
+	{
+		manager.add(actionClear);
+		manager.add(actionScrollLock);
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.tm.internal.terminal.control.ITerminalListener#setState(org.eclipse.tm.internal.terminal.provisional.api.TerminalState)
 	 */
@@ -144,5 +267,15 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	@Override
 	public void setTerminalTitle(String title)
 	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		terminal.disposeTerminal();
+		super.dispose();
 	}
 }

@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.objecttools.propertypages;
 
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -41,6 +44,7 @@ public class Columns extends PropertyPage
 	private ObjectToolDetails objectTool;
 	private TableViewer viewer;
 	private Button buttonAdd;
+	private Button buttonEdit;
 	private Button buttonRemove;
 
 	/* (non-Javadoc)
@@ -76,6 +80,15 @@ public class Columns extends PropertyPage
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		viewer.getTable().setLayoutData(gd);
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				buttonEdit.setEnabled(selection.size() == 1);
+				buttonRemove.setEnabled(selection.size() > 0);
+			}
+		});
 		
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -89,7 +102,7 @@ public class Columns extends PropertyPage
       buttons.setLayoutData(gd);
 
       buttonAdd = new Button(buttons, SWT.PUSH);
-      buttonAdd.setText("Add...");
+      buttonAdd.setText("&Add...");
       buttonAdd.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -107,8 +120,27 @@ public class Columns extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonAdd.setLayoutData(rd);
 		
+      buttonEdit = new Button(buttons, SWT.PUSH);
+      buttonEdit.setText("&Edit...");
+      buttonEdit.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				editColumn();
+			}
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      buttonEdit.setLayoutData(rd);
+
       buttonRemove = new Button(buttons, SWT.PUSH);
-      buttonRemove.setText("Delete");
+      buttonRemove.setText("&Delete");
       buttonRemove.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -133,6 +165,14 @@ public class Columns extends PropertyPage
 	 * Add new column
 	 */
 	private void addColumn()
+	{
+		
+	}
+	
+	/**
+	 * Edit column
+	 */
+	private void editColumn()
 	{
 		
 	}

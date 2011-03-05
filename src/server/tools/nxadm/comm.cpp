@@ -52,7 +52,7 @@ static CSCP_BUFFER *m_pRecvBuffer;
 // Connect to server
 //
 
-BOOL Connect(void)
+BOOL Connect()
 {
    struct sockaddr_in sa;
 
@@ -92,7 +92,7 @@ BOOL Connect(void)
 // Disconnect from server
 //
 
-void Disconnect(void)
+void Disconnect()
 {
    if (g_hSocket != -1)
    {
@@ -121,7 +121,7 @@ void SendMsg(CSCPMessage *pMsg)
 // Receive message
 //
 
-CSCPMessage *RecvMsg(void)
+CSCPMessage *RecvMsg()
 {
    int iError;
    static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;

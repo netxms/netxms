@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxadm.cpp
+** File: nxadm.cpp
 **
 **/
 
@@ -81,7 +81,7 @@ static BOOL ExecCommand(TCHAR *pszCmd)
             pszText = pResponse->GetVariableStr(VID_MESSAGE);
             if (pszText != NULL)
             {
-               fputs(pszText, stdout);
+               WriteToTerminal(pszText);
                free(pszText);
             }
             break;
@@ -101,7 +101,7 @@ static BOOL ExecCommand(TCHAR *pszCmd)
 // Interactive mode loop
 //
 
-static void Shell(void)
+static void Shell()
 {
    char *ptr, szCommand[256];
 
@@ -116,9 +116,9 @@ static void Shell(void)
    while(1)
    {
 #if USE_READLINE
-      ptr = readline("netxmsd: ");
+      ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
 #else
-      printf("netxmsd: ");
+      WriteToTerminal("\x1b[33mnetxmsd:\x1b[0m ");
       fflush(stdout);
       if (fgets(szCommand, 255, stdin) == NULL)
          break;   // Error reading stdin
