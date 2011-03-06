@@ -2,6 +2,7 @@ package org.netxms.ui.eclipse.imagelibrary.shared;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +24,7 @@ public class ImageProvider
 {
 	private static ImageProvider instance = new ImageProvider();
 
-	private static final Map<UUID, Image> cache = new HashMap<UUID, Image>();
+	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
 
 	public static ImageProvider getInstance()
 	{
