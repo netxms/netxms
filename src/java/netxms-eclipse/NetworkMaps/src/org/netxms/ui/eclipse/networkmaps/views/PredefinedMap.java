@@ -45,6 +45,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.maps.NetworkMapLink;
@@ -56,6 +57,8 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
@@ -67,7 +70,7 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  * View for predefined map
  * 
  */
-public class PredefinedMap extends NetworkMap
+public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap";
 
@@ -136,6 +139,11 @@ public class PredefinedMap extends NetworkMap
 
 		if (mapObject.getMapType() == 0)
 			addDropSupport();
+			
+		ImageProvider.getInstance().addUpdateListener(this);
+		
+		if (mapObject.getBackground() != null)
+			viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 	}
 
 	/**
@@ -604,5 +612,31 @@ public class PredefinedMap extends NetworkMap
 	protected boolean isSelectableElement(Object element)
 	{
 		return element instanceof NetworkMapDecoration;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
+	 */
+	@Override
+	public void imageUpdated(final UUID guid)
+	{
+		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+			@Override
+			public void run()
+			{
+				if (guid.equals(mapObject.getBackground()))
+					viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid));
+			}
+		});
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		ImageProvider.getInstance().removeUpdateListener(this);
+		super.dispose();
 	}
 }
