@@ -181,7 +181,6 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			public boolean performDrop(Object data)
 			{
 				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-				System.out.println("X=" + x + " Y=" + y);
 				addObjectsFromList(selection.toList(), viewer.getControl().toControl(x, y));
 				return true;
 			}

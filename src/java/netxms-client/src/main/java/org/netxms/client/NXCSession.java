@@ -157,6 +157,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private HousekeeperThread housekeeperThread = null;
 	private long requestId = 0;
 	private boolean isConnected = false;
+	private boolean serverConsoleConnected = false;
 
 	// Communication parameters
 	private int recvBufferSize = 4194304; // Default is 4MB
@@ -4154,6 +4155,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_CONSOLE);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+		serverConsoleConnected = true;
 	}
 	
 	/**
@@ -4167,6 +4169,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_CONSOLE);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+		serverConsoleConnected = false;
 	}
 	
 	/**
@@ -4184,5 +4187,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId(), 3600000);
 		return response.isEndOfSequence();
+	}
+
+	/**
+	 * @return the serverConsoleConnected
+	 */
+	public boolean isServerConsoleConnected()
+	{
+		return serverConsoleConnected;
 	}
 }

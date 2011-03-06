@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 NetXMS Team
+** Copyright (C) 2003-2011 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -938,7 +938,7 @@ static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSiz
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 {
 	const TCHAR *pArg;
-	TCHAR szBuffer[256];
+	TCHAR szBuffer[256], *eptr;
 	int nExitCode = CMD_EXIT_CONTINUE;
 
 	// Get command
@@ -948,11 +948,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	{
 		// Get argument
 		pArg = ExtractWord(pArg, szBuffer);
-
-		if (IsCommand(_T("ON"), szBuffer, 2))
+		int level = (int)_tcstol(szBuffer, &eptr, 0);
+		if ((*eptr == 0) && (level >= 0) && (level <= 9))
 		{
-			g_nDebugLevel = 8;
-			ConsolePrintf(pCtx, _T("Debug mode turned on\n"));
+			g_nDebugLevel = level;
+			ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
 		}
 		else if (IsCommand(_T("OFF"), szBuffer, 2))
 		{
@@ -964,7 +964,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			if (szBuffer[0] == 0)
 				ConsolePrintf(pCtx, _T("ERROR: Missing argument\n\n"));
 			else
-				ConsolePrintf(pCtx, _T("ERROR: Invalid DEBUG argument\n\n"));
+				ConsolePrintf(pCtx, _T("ERROR: Invalid debug level\n\n"));
 		}
 	}
 	else if (IsCommand(_T("DOWN"), szBuffer, 4))
@@ -1266,7 +1266,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
 	{
 		ConsolePrintf(pCtx, _T("Valid commands are:\n")
-				_T("   debug [on|off]            - Turn debug mode on or off\n")
+				_T("   debug [<level>|off]       - Set debug level (valid range is 0..9)\n")
 				_T("   down                      - Down NetXMS server\n")
 				_T("   exit                      - Exit from remote session\n")
 				_T("   help                      - Display this help\n")

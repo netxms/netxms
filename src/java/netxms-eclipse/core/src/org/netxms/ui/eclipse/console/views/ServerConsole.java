@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -44,6 +45,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerConsoleListener;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.views.helpers.ServerConsoleTerminalConnector;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -86,6 +88,50 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 		terminal.connectTerminal();
 		terminal.setInvertedColors(true);
 		
+		createActions();
+		contributeToActionBars();
+		createPopupMenu();
+		
+		if (session.isServerConsoleConnected())
+			setConnected();
+		else
+			connectToServer();
+	}
+	
+	/**
+	 * Connect to server
+	 */
+	private void connectToServer()
+	{
+		new ConsoleJob("Open server console", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				session.openConsole();
+				setConnected();
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot open server console";
+			}
+
+			@Override
+			protected void jobFailureHandler()
+			{
+				writeToTerminal("\r\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m");
+				terminal.disconnectTerminal();
+			}
+		}.start();
+	}
+	
+	/**
+	 * Inform view that server console is connected
+	 */
+	private void setConnected()
+	{
 		writeToTerminal("\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m");
 		
 		session.addConsoleListener(new ServerConsoleListener() {
@@ -96,10 +142,6 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 			}
 		});
 
-		createActions();
-		contributeToActionBars();
-		createPopupMenu();
-		
 		// Read console input and send to server
 		Thread inputReader = new Thread() {
 			@Override
@@ -137,17 +179,27 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 		inputReader.start();
 	}
 
-	private void writeToTerminal(String text) {
-		try {
+	/**
+	 * Write text to terminal
+	 * 
+	 * @param text text to write
+	 */
+	private void writeToTerminal(String text)
+	{
+		try
+		{
 			connector.getRemoteToTerminalOutputStream().write(text.getBytes());
-		} catch (UnsupportedEncodingException e) {
-			// should never happen!
-			e.printStackTrace();
-		} catch (IOException e) {
+		}
+		catch(UnsupportedEncodingException e)
+		{
 			// should never happen!
 			e.printStackTrace();
 		}
-
+		catch(IOException e)
+		{
+			// should never happen!
+			e.printStackTrace();
+		}
 	}
 
 	/* (non-Javadoc)

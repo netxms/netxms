@@ -33,6 +33,7 @@ import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.eclipse.zest.core.viewers.ISelfStyleProvider;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
@@ -41,6 +42,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -133,6 +135,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 			if (object != null)
 			{
+				if (!object.getImage().equals(NXCommon.EMPTY_GUID))
+				{
+					return ImageProvider.getInstance().getImage(object.getImage());
+				}
+				
 				switch(object.getObjectClass())
 				{
 					case GenericObject.OBJECT_NODE:
