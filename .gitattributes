@@ -700,6 +700,7 @@ src/java/netxms-eclipse/ImageLibrary/icons/missing.png -text
 src/java/netxms-eclipse/ImageLibrary/plugin.xml -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Activator.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Messages.java -text
+src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/Startup.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/actions/OpenLibraryManager.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImagePropertiesDialog.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImageSelectionDialog.java -text

@@ -192,6 +192,8 @@ public class ImageSelectionDialog extends Dialog
 				imageItem.setData(image);
 			}
 		}
+		
+		gallery.redraw();
 	}
 
 	public Image getImage()

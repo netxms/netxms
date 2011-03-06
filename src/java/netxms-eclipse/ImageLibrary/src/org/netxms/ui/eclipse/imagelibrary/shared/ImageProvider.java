@@ -61,18 +61,6 @@ public class ImageProvider
 		imageLibrary = session.getImageLibrary();
 		for(final LibraryImage libraryImage : imageLibrary)
 		{
-		/*
-			try
-			{
-				Thread.sleep(500);
-			}
-			catch(InterruptedException e)
-			{
-				e.printStackTrace();
-			}
-			System.out.print("Next");
-			*/
-
 			if (!libraryImage.isComplete())
 			{
 				final LibraryImage completeLibraryImage = session.getImage(libraryImage.getGuid());
