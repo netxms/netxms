@@ -25,6 +25,7 @@ public class ImageProvider
 	private static ImageProvider instance = new ImageProvider();
 
 	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
+	private static final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
 
 	public static ImageProvider getInstance()
 	{
@@ -61,6 +62,7 @@ public class ImageProvider
 		imageLibrary = session.getImageLibrary();
 		for(final LibraryImage libraryImage : imageLibrary)
 		{
+			libraryIndex.put(libraryImage.getGuid(), libraryImage);
 			if (!libraryImage.isComplete())
 			{
 				final LibraryImage completeLibraryImage = session.getImage(libraryImage.getGuid());
@@ -90,6 +92,17 @@ public class ImageProvider
 		return image;
 	}
 
+	/**
+	 * Get image library object
+	 * 
+	 * @param guid image GUID
+	 * @return image library element or null if there are no image with given GUID
+	 */
+	public LibraryImage getLibraryImageObject(final UUID guid)
+	{
+		return libraryIndex.get(guid);
+	}
+	
 	public List<LibraryImage> getImageLibrary()
 	{
 		return imageLibrary;

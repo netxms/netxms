@@ -323,7 +323,7 @@ src/java/netxms-base/src/main/java/org/netxms/base/NXCPMessage.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPMessageReceiver.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPMsgWaitQueue.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPVariable.java -text
-src/java/netxms-base/src/main/java/org/netxms/base/NetXMSConst.java -text
+src/java/netxms-base/src/main/java/org/netxms/base/NXCommon.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPMessageTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPMsgWaitQueueTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPVariableTest.java -text
@@ -708,6 +708,7 @@ src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/mess
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/shared/ImageProvider.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/shared/ImageUpdateListener.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/views/ImageLibrary.java -text
+src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/widgets/ImageSelector.java -text
 src/java/netxms-eclipse/LanguagePacks/ru/console/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/LanguagePacks/ru/console/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/LanguagePacks/ru/console/OSGI-INF/l10n/bundle_ru.properties -text

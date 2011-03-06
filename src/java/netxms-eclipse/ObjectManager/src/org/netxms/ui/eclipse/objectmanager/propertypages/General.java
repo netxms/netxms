@@ -18,20 +18,24 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
+import java.util.UUID;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
+import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -45,6 +49,7 @@ public class General extends PropertyPage
 	private Text textName;
 	private String initialName;
 	private GenericObject object;
+	private ImageSelector image;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -76,6 +81,15 @@ public class General extends PropertyPage
       initialName = new String(object.getObjectName());
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Object name",
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      
+      // Image
+      image = new ImageSelector(dialogArea, SWT.NONE);
+      image.setLabel("Presentation image");
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      image.setLayoutData(gd);
+      image.setImageGuid(object.getImage(), false);
 		
 		return dialogArea;
 	}
@@ -87,33 +101,31 @@ public class General extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if (textName.getText().equals(initialName))
-			return;		// Nothing to apply
-		
 		if (isApply)
 			setValid(false);
 		
 		final String newName = new String(textName.getText());
-		new Job("Rename object") {
+		final UUID newImage = image.getImageGuid();
+		new ConsoleJob("Rename object", null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					if (object != null)
-						((NXCSession)ConsoleSharedData.getSession()).setObjectName(object.getObjectId(), newName);
-					initialName = newName;
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot change object name: " + e.getMessage(), e);
-				}
+				NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
+				data.setName(newName);
+				data.setImage(newImage);
+				((NXCSession)ConsoleSharedData.getSession()).modifyObject(data);
+				initialName = newName;
+			}
 
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot modify object";
+			}
+
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
 					new UIJob("Update \"General\" property page") {
@@ -125,8 +137,6 @@ public class General extends PropertyPage
 						}
 					}.schedule();
 				}
-
-				return status;
 			}
 		}.schedule();
 	}

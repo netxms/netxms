@@ -21,8 +21,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.images.LibraryImage;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
 import org.netxms.nebula.widgets.gallery.DefaultGalleryGroupRenderer;
 import org.netxms.nebula.widgets.gallery.DefaultGalleryItemRenderer;
 import org.netxms.nebula.widgets.gallery.Gallery;
@@ -31,14 +31,11 @@ import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ImageSelectionDialog extends Dialog
 {
-
 	private static final String SELECT_IMAGE_CY = "SelectImage.cy";
 	private static final String SELECT_IMAGE_CX = "SelectImage.cx";
-	private NXCSession session;
 	private Gallery gallery;
 	private LibraryImage libraryImage;
 	private Image imageObject;
@@ -49,6 +46,9 @@ public class ImageSelectionDialog extends Dialog
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -72,8 +72,6 @@ public class ImageSelectionDialog extends Dialog
 
 		final FillLayout layout = new FillLayout();
 		dialogArea.setLayout(layout);
-
-		session = (NXCSession)ConsoleSharedData.getSession();
 
 		gallery = new Gallery(dialogArea, SWT.V_SCROLL | SWT.MULTI);
 
@@ -203,6 +201,14 @@ public class ImageSelectionDialog extends Dialog
 
 	public UUID getGuid()
 	{
-		return libraryImage == null ? null : libraryImage.getGuid();
+		return libraryImage == null ? NXCommon.EMPTY_GUID : libraryImage.getGuid();
+	}
+
+	/**
+	 * @return the libraryImage
+	 */
+	public LibraryImage getLibraryImage()
+	{
+		return libraryImage;
 	}
 }
