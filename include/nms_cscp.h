@@ -852,6 +852,7 @@ typedef struct
 #define VID_VRRP_VR_COUNT           ((DWORD)376)
 #define VID_DESTINATION_FILE_NAME   ((DWORD)377)
 #define VID_NUM_TABLES              ((DWORD)378)
+#define VID_IMAGE                   ((DWORD)379)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

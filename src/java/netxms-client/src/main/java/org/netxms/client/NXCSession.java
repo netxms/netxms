@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
-import org.netxms.base.NetXMSConst;
+import org.netxms.base.NXCommon;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -143,7 +143,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private String connLoginName;
 	private String connPassword;
 	private boolean connUseEncryption;
-	private String connClientInfo = "nxjclient/" + NetXMSConst.VERSION;
+	private String connClientInfo = "nxjclient/" + NXCommon.VERSION;
 
 	// Information about logged in user
 	private int userId;
@@ -1024,7 +1024,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
 			request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
 			request.setVariableInt16(NXCPCodes.VID_AUTH_TYPE, AUTH_TYPE_PASSWORD);
-			request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NetXMSConst.VERSION);
+			request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
 			request.setVariable(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
 			request.setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
 			sendMessage(request);
@@ -2325,6 +2325,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		if ((flags & NXCObjectModificationData.MODIFY_MAP_BACKGROUND) != 0)
 		{
 			msg.setVariable(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_IMAGE) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_IMAGE, data.getImage());
 		}
 
 		if ((flags & NXCObjectModificationData.MODIFY_MAP_CONTENT) != 0)

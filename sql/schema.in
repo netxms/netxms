@@ -155,6 +155,7 @@ CREATE TABLE object_properties
 	location_type integer not null,		// 0 = unset, 1 = manual, 2 = GPS
 	latitude varchar(20),
 	longitude varchar(20),
+	image varchar(36) not null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

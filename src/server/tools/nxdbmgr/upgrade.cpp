@@ -249,7 +249,25 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
-// Upgrade from V219 to V220
+// Upgrade from V221 to V222
+//
+
+static BOOL H_UpgradeFromV221(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE object_properties ADD image varchar(36)\n")
+		_T("UPDATE object_properties SET image='00000000-0000-0000-0000-000000000000'\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='222' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
+// Upgrade from V220 to V221
 //
 
 static BOOL H_UpgradeFromV220(int currVersion, int newVersion)
@@ -5077,6 +5095,7 @@ static struct
 	{ 218, 219, H_UpgradeFromV218 },
 	{ 219, 220, H_UpgradeFromV219 },
 	{ 220, 221, H_UpgradeFromV220 },
+	{ 221, 222, H_UpgradeFromV221 },
    { 0, NULL }
 };
 

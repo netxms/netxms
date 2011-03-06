@@ -192,6 +192,7 @@ protected:
    BOOL m_bIsDeleted;
    BOOL m_bIsHidden;
 	BOOL m_bIsSystem;
+	uuid_t m_image;
    MUTEX m_mutexData;         // Object data access mutex
    MUTEX m_mutexRefCount;     // Reference counter access mutex
    RWLOCK m_rwlockParentList; // Lock for parent list

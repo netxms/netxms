@@ -85,6 +85,7 @@ public class GenericObject
 	private InetAddress primaryIP;
 	private String comments;
 	private GeoLocation geolocation;
+	private UUID image;
 	private HashSet<Long> parents = new HashSet<Long>(0);
 	private HashSet<Long> childs = new HashSet<Long>(0);
 	private HashSet<Long> trustedNodes = new HashSet<Long>(0);
@@ -115,6 +116,7 @@ public class GenericObject
 		}
 		comments = "";
 		geolocation = new GeoLocation();
+		image = NXCommon.EMPTY_GUID;
 	}
 	
 	/**
@@ -138,6 +140,7 @@ public class GenericObject
 		status = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_STATUS);
 		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
+		image = msg.getVariableAsUUID(NXCPCodes.VID_IMAGE);
 		
 		// Parents
 		count = msg.getVariableAsInteger(NXCPCodes.VID_PARENT_CNT);
@@ -179,6 +182,16 @@ public class GenericObject
 		{
 			accessList.add(new AccessListElement(msg.getVariableAsInt64(id), msg.getVariableAsInteger(id2)));
 		}
+	}
+	
+	/**
+	 * Check if object should be represented by class default image
+	 * 
+	 * @return true if default image should be used
+	 */
+	public boolean isDefaultImage()
+	{
+		return image.equals(NXCommon.EMPTY_GUID);
 	}
 
 	/**
@@ -492,5 +505,13 @@ public class GenericObject
 	public UUID getGuid()
 	{
 		return guid;
+	}
+
+	/**
+	 * @return the image
+	 */
+	public UUID getImage()
+	{
+		return image;
 	}
 }

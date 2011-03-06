@@ -56,6 +56,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_MAP_LAYOUT        = 0x00040000L;
 	public static final long MODIFY_MAP_BACKGROUND    = 0x00080000L;
 	public static final long MODIFY_MAP_CONTENT       = 0x00100000L;
+	public static final long MODIFY_IMAGE             = 0x00200000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -87,6 +88,7 @@ public class NXCObjectModificationData
 	private InetAddress primaryIpAddress;
 	private int mapLayout;
 	private UUID mapBackground;
+	private UUID image;
 	private Collection<NetworkMapElement> mapElements;
 	private Collection<NetworkMapLink> mapLinks;
 	
@@ -620,5 +622,22 @@ public class NXCObjectModificationData
 		mapElements = elements;
 		mapLinks = links;
 		flags |= MODIFY_MAP_CONTENT;
+	}
+
+	/**
+	 * @return the image
+	 */
+	public UUID getImage()
+	{
+		return image;
+	}
+
+	/**
+	 * @param image the image to set
+	 */
+	public void setImage(UUID image)
+	{
+		this.image = image;
+		flags |= MODIFY_IMAGE;
 	}
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.netxms.base;
 
 /**
  * NXCP codes
- *
  */
 public final class NXCPCodes
 {
@@ -656,6 +655,7 @@ public final class NXCPCodes
 	public static final long VID_VRRP_VR_COUNT           = 376;
 	public static final long VID_DESTINATION_FILE_NAME   = 377;
 	public static final long VID_NUM_TABLES              = 378;
+	public static final long VID_IMAGE                   = 379;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
