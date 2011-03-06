@@ -1,11 +1,14 @@
 package org.netxms.ui.eclipse.imagelibrary.dialogs;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
@@ -16,6 +19,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -25,6 +29,8 @@ import org.netxms.nebula.widgets.gallery.Gallery;
 import org.netxms.nebula.widgets.gallery.GalleryItem;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.Messages;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ImageSelectionDialog extends Dialog
@@ -34,7 +40,8 @@ public class ImageSelectionDialog extends Dialog
 	private static final String SELECT_IMAGE_CX = "SelectImage.cx";
 	private NXCSession session;
 	private Gallery gallery;
-	private LibraryImage selectedImage;
+	private LibraryImage libraryImage;
+	private Image imageObject;
 
 	public ImageSelectionDialog(Shell parentShell)
 	{
@@ -82,6 +89,37 @@ public class ImageSelectionDialog extends Dialog
 		DefaultGalleryItemRenderer itemRenderer = new DefaultGalleryItemRenderer();
 		gallery.setItemRenderer(itemRenderer);
 
+		final Display display = getShell().getDisplay();
+		final ImageProvider provider = ImageProvider.getInstance();
+		provider.addUpdateListener(new ImageUpdateListener()
+		{
+			@Override
+			public void imageUpdated(UUID guid)
+			{
+				new UIJob(display, "Image picker update")
+				{
+
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						try
+						{
+							refreshImages();
+						}
+						catch(NXCException e)
+						{
+							e.printStackTrace();
+						}
+						catch(IOException e)
+						{
+							e.printStackTrace();
+						}
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		});
+
 		try
 		{
 			refreshImages();
@@ -107,7 +145,8 @@ public class ImageSelectionDialog extends Dialog
 		final GalleryItem[] selection = gallery.getSelection();
 		if (selection.length > 0)
 		{
-			selectedImage = (LibraryImage)selection[0].getData();
+			libraryImage = (LibraryImage)selection[0].getData();
+			imageObject = selection[0].getImage();
 		}
 		saveSettings();
 		super.okPressed();
@@ -124,7 +163,8 @@ public class ImageSelectionDialog extends Dialog
 
 	private void refreshImages() throws NXCException, IOException
 	{
-		final List<LibraryImage> imageLibrary = session.getImageLibrary();
+		final ImageProvider provider = ImageProvider.getInstance();
+		final List<LibraryImage> imageLibrary = provider.getImageLibrary();
 
 		Map<String, List<LibraryImage>> categories = new HashMap<String, List<LibraryImage>>();
 		for(LibraryImage image : imageLibrary)
@@ -146,46 +186,21 @@ public class ImageSelectionDialog extends Dialog
 			final List<LibraryImage> categoryImages = categories.get(category);
 			for(LibraryImage image : categoryImages)
 			{
-				final LibraryImage completeImage;
-				if (!image.isComplete())
-				{
-					completeImage = session.getImage(image.getGuid());
-				}
-				else
-				{
-					completeImage = image;
-				}
 				final GalleryItem imageItem = new GalleryItem(categoryItem, SWT.NONE);
-				imageItem.setText(completeImage.getName());
-				final byte[] binaryData = completeImage.getBinaryData();
-				if (binaryData != null)
-				{
-					final ByteArrayInputStream stream = new ByteArrayInputStream(binaryData);
-					imageItem.setImage(new Image(Display.getDefault(), stream));
-				}
-				imageItem.setData(completeImage);
+				imageItem.setText(image.getName());
+				imageItem.setImage(provider.getImage(image.getGuid()));
+				imageItem.setData(image);
 			}
 		}
 	}
 
-	public LibraryImage getLibraryImage()
+	public Image getImage()
 	{
-		return selectedImage;
+		return imageObject;
 	}
 
-	public Image getImageObject()
+	public UUID getGuid()
 	{
-		final Image image;
-		if (selectedImage != null)
-		{
-			final ByteArrayInputStream stream = new ByteArrayInputStream(selectedImage.getBinaryData());
-			image = new Image(Display.getDefault(), stream);
-		}
-		else
-		{
-			image = null;
-		}
-		return image;
+		return libraryImage == null ? null : libraryImage.getGuid();
 	}
-
 }

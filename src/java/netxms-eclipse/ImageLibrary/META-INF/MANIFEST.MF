@@ -13,4 +13,5 @@ Require-Bundle: org.eclipse.ui,
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.imagelibrary,
- org.netxms.ui.eclipse.imagelibrary.dialogs
+ org.netxms.ui.eclipse.imagelibrary.dialogs,
+ org.netxms.ui.eclipse.imagelibrary.shared

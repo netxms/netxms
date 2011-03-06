@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.networkmaps.views;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -66,13 +65,13 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * View for predefined map
- *
+ * 
  */
 public class PredefinedMap extends NetworkMap
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap";
-	
-	private org.netxms.client.objects.NetworkMap mapObject; 
+
+	private org.netxms.client.objects.NetworkMap mapObject;
 	private Action actionAddObject;
 	private Action actionLinkObjects;
 	private Action actionAddGroupBox;
@@ -80,7 +79,7 @@ public class PredefinedMap extends NetworkMap
 	private Action actionRemove;
 	private Action actionSetBackground;
 	private Action actionRemoveBackground;
-	
+
 	/**
 	 * Creare predefined map view
 	 */
@@ -89,9 +88,13 @@ public class PredefinedMap extends NetworkMap
 		super();
 		allowManualLayout = true;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#init(org.eclipse.ui.IViewSite)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#init(org.eclipse.ui
+	 * .IViewSite)
 	 */
 	@Override
 	public void init(IViewSite site) throws PartInitException
@@ -99,7 +102,7 @@ public class PredefinedMap extends NetworkMap
 		super.init(site);
 		mapObject = (org.netxms.client.objects.NetworkMap)rootObject;
 		setPartName(rootObject.getObjectName());
-		
+
 		if (mapObject.getLayout() == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
 		{
 			automaticLayoutEnabled = false;
@@ -111,42 +114,48 @@ public class PredefinedMap extends NetworkMap
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createPartControl(org.eclipse.swt.widgets.Composite)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createPartControl(org
+	 * .eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+		viewer.addSelectionChangedListener(new ISelectionChangedListener()
+		{
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
 				actionLinkObjects.setEnabled(((IStructuredSelection)event.getSelection()).size() == 2);
 			}
 		});
-		
+
 		if (mapObject.getMapType() == 0)
 			addDropSupport();
 	}
-	
+
 	/**
 	 * Add drop support
 	 */
 	private void addDropSupport()
 	{
 		final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-		viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer) {
+		viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer)
+		{
 			private int x;
 			private int y;
-			
+
 			@SuppressWarnings("rawtypes")
 			@Override
 			public boolean validateDrop(Object target, int operation, TransferData transferType)
 			{
 				if (!LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
 					return false;
-				
+
 				IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
 				Iterator it = selection.iterator();
 				while(it.hasNext())
@@ -155,8 +164,8 @@ public class PredefinedMap extends NetworkMap
 					if (!((object instanceof Node) || (object instanceof Container) || (object instanceof Subnet)))
 						return false;
 				}
-				
-				return true; 
+
+				return true;
 			}
 
 			@SuppressWarnings("unchecked")
@@ -169,8 +178,12 @@ public class PredefinedMap extends NetworkMap
 				return true;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.viewers.ViewerDropAdapter#dropAccept(org.eclipse.swt.dnd.DropTargetEvent)
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see
+			 * org.eclipse.jface.viewers.ViewerDropAdapter#dropAccept(org.eclipse
+			 * .swt.dnd.DropTargetEvent)
 			 */
 			@Override
 			public void dropAccept(DropTargetEvent event)
@@ -182,7 +195,9 @@ public class PredefinedMap extends NetworkMap
 		});
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#buildMapPage()
 	 */
 	@Override
@@ -191,15 +206,18 @@ public class PredefinedMap extends NetworkMap
 		mapPage = ((org.netxms.client.objects.NetworkMap)rootObject).createMapPage();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createActions()
 	 */
 	@Override
 	protected void createActions()
 	{
 		super.createActions();
-		
-		actionAddObject = new Action("&Add object...") {
+
+		actionAddObject = new Action("&Add object...")
+		{
 			@Override
 			public void run()
 			{
@@ -207,24 +225,27 @@ public class PredefinedMap extends NetworkMap
 			}
 		};
 		actionAddObject.setAccelerator(SWT.CTRL | 'A');
-		
-		actionAddGroupBox = new Action("&Group box...") {
+
+		actionAddGroupBox = new Action("&Group box...")
+		{
 			@Override
 			public void run()
 			{
 				addGroupBoxDecoration();
 			}
 		};
-		
-		actionAddImage = new Action("&Image...") {
+
+		actionAddImage = new Action("&Image...")
+		{
 			@Override
 			public void run()
 			{
 				addImageDecoration();
 			}
 		};
-		
-		actionLinkObjects = new Action("&Link selected objects") {
+
+		actionLinkObjects = new Action("&Link selected objects")
+		{
 			@Override
 			public void run()
 			{
@@ -234,7 +255,8 @@ public class PredefinedMap extends NetworkMap
 		actionLinkObjects.setAccelerator(SWT.CTRL | 'L');
 		actionLinkObjects.setImageDescriptor(Activator.getImageDescriptor("icons/link_add.png"));
 
-		actionRemove = new Action("&Remove from map") {
+		actionRemove = new Action("&Remove from map")
+		{
 			@Override
 			public void run()
 			{
@@ -244,7 +266,8 @@ public class PredefinedMap extends NetworkMap
 		actionRemove.setAccelerator(SWT.CTRL | 'R');
 		actionRemove.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 
-		actionSetBackground = new Action("Set &background...") {
+		actionSetBackground = new Action("Set &background...")
+		{
 			@Override
 			public void run()
 			{
@@ -252,7 +275,8 @@ public class PredefinedMap extends NetworkMap
 			}
 		};
 
-		actionRemoveBackground = new Action("&Remove background") {
+		actionRemoveBackground = new Action("&Remove background")
+		{
 			@Override
 			public void run()
 			{
@@ -260,9 +284,10 @@ public class PredefinedMap extends NetworkMap
 			}
 		};
 	}
-	
+
 	/**
 	 * Create "Add decoration" submenu
+	 * 
 	 * @return menu manager for decoration submenu
 	 */
 	private IMenuManager createDecorationAdditionSubmenu()
@@ -272,9 +297,13 @@ public class PredefinedMap extends NetworkMap
 		menu.add(actionAddImage);
 		return menu;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillMapContextMenu(org.eclipse.jface.action.IMenuManager)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillMapContextMenu(
+	 * org.eclipse.jface.action.IMenuManager)
 	 */
 	@Override
 	protected void fillMapContextMenu(IMenuManager manager)
@@ -288,8 +317,12 @@ public class PredefinedMap extends NetworkMap
 		super.fillMapContextMenu(manager);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillObjectContextMenu(org.eclipse.jface.action.IMenuManager)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillObjectContextMenu
+	 * (org.eclipse.jface.action.IMenuManager)
 	 */
 	@Override
 	protected void fillObjectContextMenu(IMenuManager manager)
@@ -302,8 +335,12 @@ public class PredefinedMap extends NetworkMap
 		super.fillObjectContextMenu(manager);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillElementContextMenu(org.eclipse.jface.action.IMenuManager)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillElementContextMenu
+	 * (org.eclipse.jface.action.IMenuManager)
 	 */
 	protected void fillElementContextMenu(IMenuManager manager)
 	{
@@ -311,9 +348,13 @@ public class PredefinedMap extends NetworkMap
 		manager.add(new Separator());
 		super.fillElementContextMenu(manager);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillLocalPullDown(org
+	 * .eclipse.jface.action.IMenuManager)
 	 */
 	@Override
 	protected void fillLocalPullDown(IMenuManager manager)
@@ -328,8 +369,12 @@ public class PredefinedMap extends NetworkMap
 		super.fillLocalPullDown(manager);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillLocalToolBar(org
+	 * .eclipse.jface.action.IToolBarManager)
 	 */
 	@Override
 	protected void fillLocalToolBar(IToolBarManager manager)
@@ -339,7 +384,9 @@ public class PredefinedMap extends NetworkMap
 		super.fillLocalToolBar(manager);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#saveLayout()
 	 */
 	@Override
@@ -356,14 +403,15 @@ public class PredefinedMap extends NetworkMap
 		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, null);
 		if (dlg.open() != Window.OK)
 			return;
-		
+
 		addObjectsFromList(dlg.getSelectedObjects(), null);
 	}
 
 	/**
 	 * Add objects from list to map
 	 * 
-	 * @param list object list
+	 * @param list
+	 *           object list
 	 */
 	private void addObjectsFromList(List<GenericObject> list, Point location)
 	{
@@ -379,16 +427,16 @@ public class PredefinedMap extends NetworkMap
 				added++;
 			}
 		}
-		
+
 		if (added > 0)
 		{
 			saveMap();
-			//setAnimationEnabled(false);
+			// setAnimationEnabled(false);
 			viewer.setInput(mapPage);
-			//setAnimationEnabled(true);
+			// setAnimationEnabled(true);
 		}
 	}
-	
+
 	/**
 	 * Link currently selected objects
 	 */
@@ -397,7 +445,7 @@ public class PredefinedMap extends NetworkMap
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() != 2)
 			return;
-		
+
 		Object[] objects = selection.toArray();
 		long id1 = ((NetworkMapObject)objects[0]).getId();
 		long id2 = ((NetworkMapObject)objects[1]).getId();
@@ -407,17 +455,18 @@ public class PredefinedMap extends NetworkMap
 			saveMap();
 		}
 	}
-	
+
 	/**
 	 * Remove currently selected objects
 	 */
 	private void removeSelectedObjects()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		
-		if (!MessageDialog.openQuestion(getSite().getShell(), "Confirm Removal", "Are you sure to remove selected element" + (selection.size() == 1 ? "" : "s") + " from map?"))
+
+		if (!MessageDialog.openQuestion(getSite().getShell(), "Confirm Removal", "Are you sure to remove selected element"
+				+ (selection.size() == 1 ? "" : "s") + " from map?"))
 			return;
-		
+
 		Object[] objects = selection.toArray();
 		for(Object element : objects)
 		{
@@ -432,7 +481,7 @@ public class PredefinedMap extends NetworkMap
 		}
 		saveMap();
 	}
-	
+
 	/**
 	 * Add group box decoration
 	 */
@@ -441,16 +490,16 @@ public class PredefinedMap extends NetworkMap
 		AddGroupBoxDialog dlg = new AddGroupBoxDialog(getSite().getShell());
 		if (dlg.open() != Window.OK)
 			return;
-		
+
 		NetworkMapDecoration element = new NetworkMapDecoration(mapPage.createElementId(), NetworkMapDecoration.GROUP_BOX);
 		element.setSize(dlg.getWidth(), dlg.getHeight());
 		element.setTitle(dlg.getTitle());
 		element.setColor(ColorConverter.rgbToInt(dlg.getColor()));
 		mapPage.addElement(element);
-		
+
 		saveMap();
 	}
-	
+
 	/**
 	 * Add image decoration
 	 */
@@ -459,10 +508,10 @@ public class PredefinedMap extends NetworkMap
 		ImageSelectionDialog dlg = new ImageSelectionDialog(getSite().getShell());
 		if (dlg.open() != Window.OK)
 			return;
-		
-		//dlg.getImageObject();
+
+		// dlg.getImageObject();
 	}
-	
+
 	/**
 	 * Save map on server
 	 */
@@ -471,12 +520,14 @@ public class PredefinedMap extends NetworkMap
 		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
 		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL);
-		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
+		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				new UIJob("Refresh map view") {
+				new UIJob("Refresh map view")
+				{
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
@@ -493,17 +544,19 @@ public class PredefinedMap extends NetworkMap
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Save background
 	 * 
-	 * @param imageGuid background image GUID
+	 * @param imageGuid
+	 *           background image GUID
 	 */
 	private void saveBackground(UUID imageGuid)
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
 		md.setMapBackground(imageGuid);
-		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
+		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -526,11 +579,11 @@ public class PredefinedMap extends NetworkMap
 		ImageSelectionDialog dlg = new ImageSelectionDialog(getSite().getShell());
 		if (dlg.open() == Window.OK)
 		{
-			viewer.setBackgroundImage(dlg.getImageObject());
-			saveBackground(dlg.getLibraryImage().getGuid());
+			viewer.setBackgroundImage(dlg.getImage());
+			saveBackground(dlg.getGuid());
 		}
 	}
-	
+
 	/**
 	 * Remove background from map
 	 */
@@ -540,8 +593,12 @@ public class PredefinedMap extends NetworkMap
 		saveBackground(new UUID(0, 0));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#isSelectableElement(java.lang.Object)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#isSelectableElement
+	 * (java.lang.Object)
 	 */
 	@Override
 	protected boolean isSelectableElement(Object element)
