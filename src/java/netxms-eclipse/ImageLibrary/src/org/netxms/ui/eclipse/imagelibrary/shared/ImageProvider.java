@@ -61,6 +61,7 @@ public class ImageProvider
 		imageLibrary = session.getImageLibrary();
 		for(final LibraryImage libraryImage : imageLibrary)
 		{
+		/*
 			try
 			{
 				Thread.sleep(500);
@@ -70,6 +71,7 @@ public class ImageProvider
 				e.printStackTrace();
 			}
 			System.out.print("Next");
+			*/
 
 			if (!libraryImage.isComplete())
 			{
