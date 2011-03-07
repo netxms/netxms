@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.util.UUID;
 import org.eclipse.draw2d.ConnectionEndpointLocator;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
@@ -71,7 +72,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
-	
+
 	/**
 	 * Create map label provider
 	 */
@@ -79,11 +80,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		this.viewer = viewer;
 		session = (NXCSession)ConsoleSharedData.getSession();
-		
+
 		statusImages = new Image[9];
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
-		
+
 		imgNodeGeneric = Activator.getImageDescriptor("icons/objects/macserver.png").createImage();
 		imgNodeOSX = Activator.getImageDescriptor("icons/objects/macserver.png").createImage();
 		imgNodeWindows = Activator.getImageDescriptor("icons/objects/windowsserver.png").createImage();
@@ -96,17 +97,19 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
-		
+
 		fontLabel = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
 		fontTitle = new Font(Display.getDefault(), "Verdana", 10, SWT.NORMAL);
-		
+
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon");
 		showStatusFrame = store.getBoolean("NetMap.ShowStatusFrame");
 		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground");
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
 	 */
 	@Override
@@ -124,7 +127,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return null;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
 	 */
 	@Override
@@ -135,11 +140,12 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			GenericObject object = session.findObjectById(((NetworkMapObject)element).getObjectId());
 			if (object != null)
 			{
-				if (!object.getImage().equals(NXCommon.EMPTY_GUID))
+				final UUID objectImageGuid = object.getImage();
+				if (objectImageGuid != null && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
 				{
-					return ImageProvider.getInstance().getImage(object.getImage());
+					return ImageProvider.getInstance().getImage(objectImageGuid);
 				}
-				
+
 				switch(object.getObjectClass())
 				{
 					case GenericObject.OBJECT_NODE:
@@ -150,9 +156,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						if ((((Node)object).getFlags() & Node.NF_IS_PRINTER) != 0)
 							return imgNodePrinter;
 						if (((Node)object).getPlatformName().startsWith("windows"))
-								return imgNodeWindows;
+							return imgNodeWindows;
 						if (((Node)object).getPlatformName().startsWith("Linux"))
-								return imgNodeLinux;
+							return imgNodeLinux;
 						if (((Node)object).getPlatformName().startsWith("FreeBSD"))
 							return imgNodeFreeBSD;
 						return imgNodeGeneric;
@@ -172,8 +178,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
 	 */
 	@Override
 	public IFigure getFigure(Object element)
@@ -184,9 +193,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			return new DecorationFigure((NetworkMapDecoration)element, this);
 		return null;
 	}
-	
+
 	/**
 	 * Get status image for given NetXMS object
+	 * 
 	 * @param object
 	 * @return
 	 */
@@ -203,7 +213,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return image;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
 	 */
 	@Override
@@ -211,7 +223,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i].dispose();
-		
+
 		imgNodeGeneric.dispose();
 		imgNodeWindows.dispose();
 		imgNodeLinux.dispose();
@@ -255,7 +267,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	}
 
 	/**
-	 * @param showStatusIcons the showStatusIcons to set
+	 * @param showStatusIcons
+	 *           the showStatusIcons to set
 	 */
 	public void setShowStatusIcons(boolean showStatusIcons)
 	{
@@ -271,17 +284,19 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	}
 
 	/**
-	 * @param showStatusBackground the showStatusBackground to set
+	 * @param showStatusBackground
+	 *           the showStatusBackground to set
 	 */
 	public void setShowStatusBackground(boolean showStatusBackground)
 	{
 		this.showStatusBackground = showStatusBackground;
 	}
-	
+
 	/**
 	 * Check if given element selected in the viewer
 	 * 
-	 * @param object Object to test
+	 * @param object
+	 *           Object to test
 	 * @return true if given object is selected
 	 */
 	public boolean isElementSelected(NetworkMapElement element)
@@ -290,14 +305,18 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return (selection != null) ? selection.toList().contains(element) : false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java.lang.Object, org.eclipse.zest.core.widgets.GraphConnection)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java
+	 * .lang.Object, org.eclipse.zest.core.widgets.GraphConnection)
 	 */
 	@Override
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
 		NetworkMapLink link = (NetworkMapLink)connection.getData();
-		
+
 		if (link.hasConnectorName1())
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
@@ -316,8 +335,12 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang.Object, org.eclipse.zest.core.widgets.GraphNode)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang
+	 * .Object, org.eclipse.zest.core.widgets.GraphNode)
 	 */
 	@Override
 	public void selfStyleNode(Object element, GraphNode node)
@@ -339,7 +362,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	}
 
 	/**
-	 * @param showStatusFrame the showStatusFrame to set
+	 * @param showStatusFrame
+	 *           the showStatusFrame to set
 	 */
 	public void setShowStatusFrame(boolean showStatusFrame)
 	{
