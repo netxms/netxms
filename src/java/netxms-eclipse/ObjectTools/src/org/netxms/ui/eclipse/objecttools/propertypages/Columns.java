@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -39,11 +41,14 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.objecttools.ObjectToolTableColumn;
+import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.dialogs.EditColumnDialog;
+import org.netxms.ui.eclipse.objecttools.propertypages.helpers.ToolColumnLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -94,6 +99,8 @@ public class Columns extends PropertyPage
 		gd.grabExcessVerticalSpace = true;
 		viewer.getTable().setLayoutData(gd);
 		viewer.setContentProvider(new ArrayContentProvider());
+		viewer.setLabelProvider(new ToolColumnLabelProvider(objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP));
+		setupTableColumns();
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -101,6 +108,13 @@ public class Columns extends PropertyPage
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				buttonEdit.setEnabled(selection.size() == 1);
 				buttonRemove.setEnabled(selection.size() > 0);
+			}
+		});
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				editColumn();
 			}
 		});
 		viewer.setInput(columns.toArray());
@@ -175,6 +189,28 @@ public class Columns extends PropertyPage
 
       return dialogArea;
 	}
+	
+	/**
+	 * Setup table viewer columns
+	 */
+	private void setupTableColumns()
+	{
+		TableColumn column = new TableColumn(viewer.getTable(), SWT.LEFT);
+		column.setText("Name");
+		column.setWidth(200);
+		
+		column = new TableColumn(viewer.getTable(), SWT.LEFT);
+		column.setText("Format");
+		column.setWidth(90);
+		
+		column = new TableColumn(viewer.getTable(), SWT.LEFT);
+		column.setText(objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP ? "OID" : "Index");
+		column.setWidth(200);
+		
+		viewer.getTable().setHeaderVisible(true);
+		
+		WidgetHelper.restoreColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage");
+	}
 
 	/**
 	 * Add new column
@@ -247,6 +283,17 @@ public class Columns extends PropertyPage
 	public boolean performOk()
 	{
 		applyChanges(false);
+		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage");
 		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
+	 */
+	@Override
+	public boolean performCancel()
+	{
+		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage");
+		return super.performCancel();
 	}
 }
