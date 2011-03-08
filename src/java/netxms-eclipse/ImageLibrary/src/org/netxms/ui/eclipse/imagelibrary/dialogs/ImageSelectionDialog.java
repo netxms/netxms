@@ -1,28 +1,28 @@
 package org.netxms.ui.eclipse.imagelibrary.dialogs;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.images.LibraryImage;
 import org.netxms.base.NXCommon;
-import org.netxms.client.NXCException;
 import org.netxms.nebula.widgets.gallery.DefaultGalleryGroupRenderer;
 import org.netxms.nebula.widgets.gallery.DefaultGalleryItemRenderer;
 import org.netxms.nebula.widgets.gallery.Gallery;
@@ -32,23 +32,53 @@ import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 
-public class ImageSelectionDialog extends Dialog
+public class ImageSelectionDialog extends Dialog implements SelectionListener, MouseListener, ImageUpdateListener
 {
+	/**
+	 * Zero
+	 */
+	public static final int NONE = 0;
+	/**
+	 * Show "Default" button and return null as image is it's pressed
+	 */
+	public static final int ALLOW_DEFAULT = 1;
+
 	private static final String SELECT_IMAGE_CY = "SelectImage.cy";
 	private static final String SELECT_IMAGE_CX = "SelectImage.cx";
+	private static final int DEFAULT_ID = IDialogConstants.CLIENT_ID + 1;
+
 	private Gallery gallery;
 	private LibraryImage libraryImage;
 	private Image imageObject;
+	private int flags;
+	private int maxWidth = Integer.MAX_VALUE;
+	private int maxHeight = Integer.MAX_VALUE;
 
+	/**
+	 * Construct new dialog with default flags: single selection, no "default"
+	 * buttion, no null images on OK button
+	 * 
+	 * @param parentShell
+	 */
 	public ImageSelectionDialog(Shell parentShell)
+	{
+		this(parentShell, NONE);
+	}
+
+	/**
+	 * Construct new Image selection dialog with custom flags.
+	 * 
+	 * @param parentShell
+	 * @param flags
+	 *           creation flags
+	 */
+	public ImageSelectionDialog(final Shell parentShell, final int flags)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
+		this.flags = flags;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -66,6 +96,13 @@ public class ImageSelectionDialog extends Dialog
 	}
 
 	@Override
+	public boolean close()
+	{
+		ImageProvider.getInstance().removeUpdateListener(this);
+		return super.close();
+	}
+
+	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
@@ -73,7 +110,7 @@ public class ImageSelectionDialog extends Dialog
 		final FillLayout layout = new FillLayout();
 		dialogArea.setLayout(layout);
 
-		gallery = new Gallery(dialogArea, SWT.V_SCROLL | SWT.MULTI);
+		gallery = new Gallery(dialogArea, SWT.V_SCROLL /* | SWT.MULTI */);
 
 		DefaultGalleryGroupRenderer galleryGroupRenderer = new DefaultGalleryGroupRenderer();
 
@@ -87,45 +124,11 @@ public class ImageSelectionDialog extends Dialog
 		DefaultGalleryItemRenderer itemRenderer = new DefaultGalleryItemRenderer();
 		gallery.setItemRenderer(itemRenderer);
 
-		final Display display = getShell().getDisplay();
-		final ImageProvider provider = ImageProvider.getInstance();
-		provider.addUpdateListener(new ImageUpdateListener()
-		{
-			@Override
-			public void imageUpdated(UUID guid)
-			{
-				new UIJob(display, "Image picker update")
-				{
+		gallery.addSelectionListener(this);
+		gallery.addMouseListener(this);
+		ImageProvider.getInstance().addUpdateListener(this);
 
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						try
-						{
-							refreshImages();
-						}
-						catch(NXCException e)
-						{
-							e.printStackTrace();
-						}
-						catch(IOException e)
-						{
-							e.printStackTrace();
-						}
-						return Status.OK_STATUS;
-					}
-				}.schedule();
-			}
-		});
-
-		try
-		{
-			refreshImages();
-		}
-		catch(Exception e1)
-		{
-			e1.printStackTrace();
-		}
+		refreshImages();
 
 		return dialogArea;
 	}
@@ -150,6 +153,24 @@ public class ImageSelectionDialog extends Dialog
 		super.okPressed();
 	}
 
+	private void defaultPressed()
+	{
+		imageObject = null;
+		libraryImage = new LibraryImage();
+		saveSettings();
+		super.okPressed();
+	}
+
+	@Override
+	protected void buttonPressed(int buttonId)
+	{
+		super.buttonPressed(buttonId);
+		if (DEFAULT_ID == buttonId)
+		{
+			defaultPressed();
+		}
+	}
+
 	private void saveSettings()
 	{
 		Point size = getShell().getSize();
@@ -159,7 +180,18 @@ public class ImageSelectionDialog extends Dialog
 		settings.put(SELECT_IMAGE_CY, size.y);
 	}
 
-	private void refreshImages() throws NXCException, IOException
+	@Override
+	protected void createButtonsForButtonBar(Composite parent)
+	{
+		if ((flags & ALLOW_DEFAULT) == ALLOW_DEFAULT)
+		{
+			createButton(parent, DEFAULT_ID, "Default", false);
+		}
+		super.createButtonsForButtonBar(parent);
+		getButton(IDialogConstants.OK_ID).setEnabled(false);
+	}
+
+	private void refreshImages()
 	{
 		final ImageProvider provider = ImageProvider.getInstance();
 		final List<LibraryImage> imageLibrary = provider.getImageLibrary();
@@ -168,11 +200,16 @@ public class ImageSelectionDialog extends Dialog
 		for(LibraryImage image : imageLibrary)
 		{
 			final String category = image.getCategory();
-			if (!categories.containsKey(category))
+			final Image swtImage = provider.getImage(image.getGuid());
+			final Rectangle bounds = swtImage.getBounds();
+			if (bounds.height <= maxHeight && bounds.width <= maxWidth)
 			{
-				categories.put(category, new ArrayList<LibraryImage>());
+				if (!categories.containsKey(category))
+				{
+					categories.put(category, new ArrayList<LibraryImage>());
+				}
+				categories.get(category).add(image);
 			}
-			categories.get(category).add(image);
 		}
 		// this.knownCategories = categories.keySet();
 
@@ -190,7 +227,7 @@ public class ImageSelectionDialog extends Dialog
 				imageItem.setData(image);
 			}
 		}
-		
+
 		gallery.redraw();
 	}
 
@@ -210,5 +247,88 @@ public class ImageSelectionDialog extends Dialog
 	public LibraryImage getLibraryImage()
 	{
 		return libraryImage;
+	}
+
+	@Override
+	public void widgetSelected(SelectionEvent e)
+	{
+		final GalleryItem[] selection = gallery.getSelection();
+		if (selection.length > 0)
+		{
+			getButton(IDialogConstants.OK_ID).setEnabled(true);
+		}
+		else
+		{
+			getButton(IDialogConstants.OK_ID).setEnabled(false);
+		}
+	}
+
+	@Override
+	public void widgetDefaultSelected(SelectionEvent e)
+	{
+	}
+
+	@Override
+	public void mouseDoubleClick(MouseEvent e)
+	{
+		final GalleryItem[] selection = gallery.getSelection();
+		if (selection.length > 0)
+		{
+			okPressed();
+		}
+	}
+
+	@Override
+	public void mouseDown(MouseEvent e)
+	{
+	}
+
+	@Override
+	public void mouseUp(MouseEvent e)
+	{
+	}
+
+	@Override
+	public void imageUpdated(UUID guid)
+	{
+		final Shell shell = getShell();
+		if (shell != null)
+		{
+			final Display display = shell.getDisplay();
+			display.asyncExec(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					refreshImages();
+				}
+			});
+		}
+	}
+
+	/**
+	 * Set maximum allowed dimentions for images snowh by this instance of
+	 * {@link ImageSelectionDialog}
+	 * 
+	 * @param width
+	 * @param height
+	 */
+	public void setMaxImageDimensions(final int width, final int height)
+	{
+		this.maxWidth = width;
+		this.maxHeight = height;
+		final Shell shell = getShell();
+		if (shell != null)
+		{
+			shell.getDisplay().asyncExec(new Runnable()
+			{
+
+				@Override
+				public void run()
+				{
+					refreshImages();
+				}
+			});
+		}
 	}
 }

@@ -95,14 +95,16 @@ public class ImageProvider
 	/**
 	 * Get image library object
 	 * 
-	 * @param guid image GUID
-	 * @return image library element or null if there are no image with given GUID
+	 * @param guid
+	 *           image GUID
+	 * @return image library element or null if there are no image with given
+	 *         GUID
 	 */
 	public LibraryImage getLibraryImageObject(final UUID guid)
 	{
 		return libraryIndex.get(guid);
 	}
-	
+
 	public List<LibraryImage> getImageLibrary()
 	{
 		return imageLibrary;

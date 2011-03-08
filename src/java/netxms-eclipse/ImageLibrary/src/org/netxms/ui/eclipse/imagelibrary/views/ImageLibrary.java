@@ -13,7 +13,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -23,15 +22,11 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Scale;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
@@ -53,20 +48,25 @@ public class ImageLibrary extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary";
 
+	protected static final int MIN_GRID_ICON_SIZE = 48;
+	protected static final int MAX_GRID_ICON_SIZE = 256;
+
 	private Gallery gallery;
 	private Action actionNew;
 	private Action actionEdit;
 	private Action actionDelete;
 
+	private Action actionRefresh;
+	private Action actionZoomIn;
+	private Action actionZoomOut;
+
 	protected MenuDetectEvent menuEvent;
 
 	private NXCSession session;
 
-	private ControlContribution controlContributionScale;
-
-	private Action actionRefresh;
-
 	private Set<String> knownCategories;
+
+	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
 	@Override
 	public void createPartControl(final Composite parent)
@@ -81,8 +81,8 @@ public class ImageLibrary extends ViewPart
 		DefaultGalleryGroupRenderer galleryGroupRenderer = new DefaultGalleryGroupRenderer();
 
 		galleryGroupRenderer.setMinMargin(2);
-		galleryGroupRenderer.setItemHeight(48);
-		galleryGroupRenderer.setItemWidth(48);
+		galleryGroupRenderer.setItemHeight(MIN_GRID_ICON_SIZE);
+		galleryGroupRenderer.setItemWidth(MIN_GRID_ICON_SIZE);
 		galleryGroupRenderer.setAutoMargin(true);
 		galleryGroupRenderer.setAlwaysExpanded(true);
 		gallery.setGroupRenderer(galleryGroupRenderer);
@@ -173,6 +173,7 @@ public class ImageLibrary extends ViewPart
 
 		};
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
+
 		actionRefresh = new Action("&Refresh")
 		{
 			@Override
@@ -184,46 +185,48 @@ public class ImageLibrary extends ViewPart
 				}
 				catch(NetXMSClientException e)
 				{
+					//FIXME
 					e.printStackTrace();
 				}
 				catch(IOException e)
 				{
+					//FIXME
 					e.printStackTrace();
 				}
 			}
 		};
 		actionRefresh.setImageDescriptor(SharedIcons.REFRESH);
 
-		controlContributionScale = new ControlContribution("scale")
+		actionZoomIn = new Action("Zoom In")
 		{
 			@Override
-			protected Control createControl(Composite parent)
+			public void run()
 			{
-				final Scale scale = new Scale(parent, SWT.HORIZONTAL);
-				scale.setMinimum(48);
-				scale.setMaximum(256);
-				scale.setIncrement(16);
-				scale.pack();
-
-				scale.addSelectionListener(new SelectionListener()
+				final DefaultGalleryGroupRenderer groupRenderer = (DefaultGalleryGroupRenderer)gallery.getGroupRenderer();
+				if (currentIconSize < MAX_GRID_ICON_SIZE)
 				{
-					@Override
-					public void widgetSelected(SelectionEvent e)
-					{
-						final DefaultGalleryGroupRenderer groupRenderer = (DefaultGalleryGroupRenderer)gallery.getGroupRenderer();
-						final int currentValue = scale.getSelection();
-						groupRenderer.setItemHeight(currentValue);
-						groupRenderer.setItemWidth(currentValue);
-					}
-
-					@Override
-					public void widgetDefaultSelected(SelectionEvent e)
-					{
-					}
-				});
-				return scale;
+					currentIconSize += 16;
+					groupRenderer.setItemHeight(currentIconSize);
+					groupRenderer.setItemWidth(currentIconSize);
+				}
 			}
 		};
+		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
+		actionZoomOut = new Action("Zoom Out")
+		{
+			@Override
+			public void run()
+			{
+				final DefaultGalleryGroupRenderer groupRenderer = (DefaultGalleryGroupRenderer)gallery.getGroupRenderer();
+				if (currentIconSize > MIN_GRID_ICON_SIZE)
+				{
+					currentIconSize -= 16;
+					groupRenderer.setItemHeight(currentIconSize);
+					groupRenderer.setItemWidth(currentIconSize);
+				}
+			}
+		};
+		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 	}
 
 	protected void editImage(final GalleryItem galleryItem, final String name, final String category, final String fileName)
@@ -309,7 +312,8 @@ public class ImageLibrary extends ViewPart
 
 							session.createImage(image);
 
-							refreshImages(); // TODO: should be changed to add single elemnt
+							refreshImages(); // TODO: should be changed to add single
+													// elemnt
 						}
 						catch(Exception e)
 						{
@@ -408,7 +412,8 @@ public class ImageLibrary extends ViewPart
 		toolBarManager.add(actionNew);
 		toolBarManager.add(actionRefresh);
 		toolBarManager.add(new Separator());
-		toolBarManager.add(controlContributionScale);
+		toolBarManager.add(actionZoomIn);
+		toolBarManager.add(actionZoomOut);
 	}
 
 	private void refreshImages() throws NetXMSClientException, IOException
