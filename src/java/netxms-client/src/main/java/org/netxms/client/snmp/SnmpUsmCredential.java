@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.client.snmp;
 
 import org.netxms.base.NXCPMessage;
 
@@ -38,7 +38,7 @@ public class SnmpUsmCredential
 	 * @param msg NXCP message
 	 * @param baseId Base variable ID
 	 */
-	protected SnmpUsmCredential(NXCPMessage msg, long baseId)
+	public SnmpUsmCredential(NXCPMessage msg, long baseId)
 	{
 		name = msg.getVariableAsString(baseId);
 		authMethod = msg.getVariableAsInteger(baseId + 1);
@@ -65,7 +65,7 @@ public class SnmpUsmCredential
 	 * @param msg NXCP message
 	 * @param baseId Base variable ID
 	 */
-	protected void fillMessage(final NXCPMessage msg, long baseId)
+	public void fillMessage(final NXCPMessage msg, long baseId)
 	{
 		msg.setVariable(baseId, name);
 		msg.setVariableInt16(baseId + 1, authMethod);

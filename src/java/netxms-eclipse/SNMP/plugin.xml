@@ -18,6 +18,15 @@
             name="SNMP Trap Configuration"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.snmp.views.MibExplorer"
+            icon="icons/mibexplorer.gif"
+            id="org.netxms.ui.eclipse.snmp.views.MibExplorer"
+            name="MIB Explorer"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

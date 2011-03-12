@@ -25,6 +25,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Tree;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.widgets.helpers.MibTreeContentProvider;
@@ -84,5 +85,23 @@ public class MibBrowser extends Composite
 	public void setSelection(MibObject object)
 	{
 		mibTree.setSelection(new StructuredSelection(object));
+	}
+
+	/**
+	 * Refresh MIB tree
+	 */
+	public void refreshTree()
+	{
+		mibTree.setInput(Activator.getMibTree());
+	}
+	
+	/**
+	 * Get underlying tree control
+	 * 
+	 * @return tree control
+	 */
+	public Tree getTreeControl()
+	{
+		return mibTree.getTree();
 	}
 }

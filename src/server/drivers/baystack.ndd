@@ -1,0 +1,40 @@
+/**
+ * Check if given device is supported by driver
+ *
+ * @param oid Device OID
+ */
+sub isDeviceSupported(oid)
+{
+}
+
+/**
+ * Update standard interface list with vendor-specific data
+ *
+ * @param snmp SNMP transport
+ * @param iflist Interface list to be updated
+ */
+sub getInterfaces(snmp, iflist)
+{
+	// Calculate slot and port number
+	for(i = 0; iflist[i] != null; i++)
+	{
+		slot = iflist[i]->index / 64 + 1;
+		if ((slot > 0) & (slot <= 8))
+		{
+			iflist[i]->slot = slot;
+			iflist[i]->port = iflist[i].index % 64;
+		}
+	}
+	
+	// Get IP interfaces
+}
+
+/**
+ * Get VLANs. Should return null if device is not aware of VLANs.
+ *
+ * @param snmp SNMP transport
+ */
+sub getVlans(snmp)
+{
+	return null;
+}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
+import org.netxms.ui.eclipse.snmp.widgets.MibObjectDetails;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -47,25 +48,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MibSelectionDialog extends Dialog
 {
-	private static final String[] mibObjectStatus = { "", "Mandatory", "Optional", "Obsolete", "Deprecated", "Current" };
-	private static final String[] mibObjectAccess = { "", "Read", "Read/Write", "Write", "None", "Notify", "Create" };
-	private static final String[] mibObjectType =
-	{
-		"Other", "Import Item", "Object ID", "Bit String", "Integer", "Integer 32bits",
-		"Integer 64bits", "Unsigned Int 32bits", "Counter", "Counter 32bits", "Counter 64bits",
-		"Gauge", "Gauge 32bits", "Timeticks", "Octet String", "Opaque", "IP Address",
-		"Physical Address", "Network Address", "Named Type", "Sequence ID", "Sequence",
-		"Choice", "Textual Convention", "Macro", "MODCOMP", "Trap", "Notification",
-		"Module ID", "NSAP Address", "Agent Capability", "Unsigned Integer", "Null",
-		"Object Group", "Notification Group"
-	};
-	
 	private MibBrowser mibTree;
 	private Text oid;
-	private Text description;
-	private Text type;
-	private Text status;
-	private Text access;
+	private MibObjectDetails details;
 	private MibObject selectedObject;
 	private SnmpObjectId initialSelection;
 	private boolean updateObjectId = true;
@@ -155,40 +140,12 @@ public class MibSelectionDialog extends Dialog
 				onMibTreeSelectionChanged();
 			}
 		});
-		
-		/* MIB object information: status, type, etc. */
-		Composite infoGroup = new Composite(dialogArea, SWT.NONE);
-		layout = new GridLayout();
-		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.numColumns = 3;
-		layout.makeColumnsEqualWidth = true;
-		infoGroup.setLayout(layout);
+
+		details = new MibObjectDetails(dialogArea, SWT.NONE, false, mibTree);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		infoGroup.setLayoutData(gd);
-		
-		type = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Type", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		status = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Status", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		access = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Access", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		
-		/* MIB object's description */
-		gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		description = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.READ_ONLY,
-		                                             500, "Description", "", gd);
-		gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		gd.heightHint = 150;
-		description.setLayoutData(gd);
+		details.setLayoutData(gd);
 		
 		if (initialSelection != null)
 		{
@@ -208,50 +165,14 @@ public class MibSelectionDialog extends Dialog
 	private void onMibTreeSelectionChanged()
 	{
 		MibObject object = mibTree.getSelection();
-		if (object != null)
+		if ((object != null) && updateObjectId)
 		{
-			if (updateObjectId)
-			{
-				SnmpObjectId objectId = object.getObjectId(); 
-				oid.setText((objectId != null) ? objectId.toString() : "");
-			}
-			description.setText(object.getDescription());
-			type.setText(safeGetText(mibObjectType, object.getType(), "Unknown"));
-			status.setText(safeGetText(mibObjectStatus, object.getStatus(), "Unknown"));
-			access.setText(safeGetText(mibObjectAccess, object.getAccess(), "Unknown"));
+			SnmpObjectId objectId = object.getObjectId(); 
+			oid.setText((objectId != null) ? objectId.toString() : "");
 		}
-		else
-		{
-			oid.setText("");
-			description.setText("");
-			type.setText("");
-			status.setText("");
-			access.setText("");
-		}
+		details.setObject(object);
 	}
 	
-	/**
-	 * Get text for code safely.
-	 * 
-	 * @param texts Array with texts
-	 * @param code Code to get text for
-	 * @param defaultValue Default value
-	 * @return text for given code or default value in case of error
-	 */
-	private String safeGetText(String[] texts, int code, String defaultValue)
-	{
-		String result;
-		try
-		{
-			result = texts[code];
-		}
-		catch(Exception e)
-		{
-			result = defaultValue;
-		}
-		return result;
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */

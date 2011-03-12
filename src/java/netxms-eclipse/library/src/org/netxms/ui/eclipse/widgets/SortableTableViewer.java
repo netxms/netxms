@@ -95,7 +95,8 @@ public class SortableTableViewer extends TableViewer
 			columns[i].addSelectionListener(sortingListener);
 		}
 
-		getTable().setSortColumn(columns[defaultSortingColumn]);
+		if ((defaultSortingColumn >= 0) && (defaultSortingColumn < names.length))
+			getTable().setSortColumn(columns[defaultSortingColumn]);
 		getTable().setSortDirection(defaultSortDir);
 	}
 	
