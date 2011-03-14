@@ -94,12 +94,15 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException
 	{
-		long nodeId = safeCast(memento.getInteger("CurrentNode"), 0);
-		if (nodeId != 0)
+		if (memento != null)
 		{
-			GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
-			if ((object != null) && (object instanceof Node))
-				currentNode = (Node)object;
+			long nodeId = safeCast(memento.getInteger("CurrentNode"), 0);
+			if (nodeId != 0)
+			{
+				GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(nodeId);
+				if ((object != null) && (object instanceof Node))
+					currentNode = (Node)object;
+			}
 		}
 		super.init(site, memento);
 	}
