@@ -207,6 +207,7 @@ public class LastValuesView extends Composite
 				}.schedule();
 			}
 		};
+		job.setUser(false);
 		job.start();
 	}
 	

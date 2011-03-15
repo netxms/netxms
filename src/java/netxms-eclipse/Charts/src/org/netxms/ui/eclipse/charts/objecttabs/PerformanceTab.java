@@ -25,10 +25,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -39,7 +41,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.charts.objecttabs.internal.PerfTabGraph;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
@@ -51,8 +52,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class PerformanceTab extends ObjectTab
 {
-	private IPreferenceStore preferenceStore;
 	private List<PerfTabGraph> charts = new ArrayList<PerfTabGraph>();
+	private ScrolledComposite scroller;
 	private Composite chartArea;
 	private Label labelLoading = null;
 	
@@ -62,27 +63,27 @@ public class PerformanceTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		preferenceStore = Activator.getDefault().getPreferenceStore();
+		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		
-		chartArea = new Composite(parent, SWT.NONE);
-		//chartArea.setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		chartArea = new Composite(scroller, SWT.NONE);
 		chartArea.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.makeColumnsEqualWidth = true;
 		chartArea.setLayout(layout);
-	}
 
-   /**
-	 * Create color object from preference string
-	 *  
-	 * @param name Preference name
-	 * @return Color object
-	 */
-	private Color getColorFromPreferences(final String name)
-	{
-		return new Color(chartArea.getDisplay(), PreferenceConverter.getColor(preferenceStore, name));
+		scroller.setContent(chartArea);
+		scroller.setExpandVertical(true);
+		scroller.setExpandHorizontal(true);
+		scroller.getVerticalBar().setIncrement(20);
+		scroller.addControlListener(new ControlAdapter() {
+			public void controlResized(ControlEvent e)
+			{
+				Rectangle r = scroller.getClientArea();
+				scroller.setMinSize(chartArea.computeSize(r.width, SWT.DEFAULT));
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -158,7 +159,17 @@ public class PerformanceTab extends ObjectTab
 			{
 			}
 		}
+		updateChartAreaLayout();
+	}
+
+	/**
+	 * Update entire chart area layout after content change
+	 */
+	private void updateChartAreaLayout()
+	{
 		chartArea.layout();
+		Rectangle r = scroller.getClientArea();
+		scroller.setMinSize(chartArea.computeSize(r.width, SWT.DEFAULT));
 	}
 	
 	/* (non-Javadoc)

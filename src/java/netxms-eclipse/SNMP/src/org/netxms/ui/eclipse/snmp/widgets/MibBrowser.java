@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.ui.eclipse.snmp.Activator;
+import org.netxms.ui.eclipse.snmp.widgets.helpers.MibObjectComparator;
 import org.netxms.ui.eclipse.snmp.widgets.helpers.MibTreeContentProvider;
 import org.netxms.ui.eclipse.snmp.widgets.helpers.MibTreeLabelProvider;
 
@@ -54,6 +55,7 @@ public class MibBrowser extends Composite
 		mibTree = new TreeViewer(this, SWT.NONE);
 		mibTree.setContentProvider(new MibTreeContentProvider());
 		mibTree.setLabelProvider(new MibTreeLabelProvider());
+		mibTree.setComparator(new MibObjectComparator());
 		mibTree.setInput(Activator.getMibTree());
 	}
 	
@@ -103,5 +105,15 @@ public class MibBrowser extends Composite
 	public Tree getTreeControl()
 	{
 		return mibTree.getTree();
+	}
+
+	/**
+	 * Get underlying tree viewer
+	 * 
+	 * @return tree viewer
+	 */
+	public TreeViewer getTreeViewer()
+	{
+		return mibTree;
 	}
 }

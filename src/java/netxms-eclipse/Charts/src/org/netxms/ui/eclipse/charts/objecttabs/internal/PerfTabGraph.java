@@ -104,7 +104,7 @@ public class PerfTabGraph extends Composite
 		
 		updateInProgress = true;
 		
-		new ConsoleJob("Get DCI values for history graph", null, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
+		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", null, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
 		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -141,6 +141,8 @@ public class PerfTabGraph extends Composite
 				updateInProgress = false;
 				super.jobFailureHandler();
 			}
-		}.start();
+		};
+		job.setUser(false);
+		job.start();
 	}
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import org.netxms.client.snmp.MibTree;
 
 /**
  * Content provider for MIB tree. Expects MibTree object as input.
- *
  */
 public class MibTreeContentProvider implements ITreeContentProvider
 {

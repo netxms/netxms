@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -35,13 +36,19 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
@@ -77,6 +84,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public static final int COLUMN_TYPE = 1;
 	public static final int COLUMN_VALUE = 2;
 	
+	private CLabel header;
+	private Font headerFont;
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
 	private TableViewer viewer;
@@ -87,6 +96,10 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private Action actionRefresh;
 	private Action actionWalk;
 	private Action actionSetNode;
+	private Action actionCopy;
+	private Action actionCopyName;
+	private Action actionCopyType;
+	private Action actionCopyValue;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -114,7 +127,6 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setContentDescription("Current node: " + ((currentNode != null) ? currentNode.getObjectName() : "<none>"));
 		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 
@@ -136,8 +148,24 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	@Override
 	public void createPartControl(Composite parent)
 	{
+		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD);
+		
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = 0;
+		parent.setLayout(layout);
+		
+		header = new CLabel(parent, SWT.BORDER);
+		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		header.setFont(headerFont);
+		header.setBackground(new Color(parent.getDisplay(), 153, 180, 209));
+		header.setForeground(new Color(parent.getDisplay(), 255, 255, 255));
+		header.setText((currentNode != null) ? currentNode.getObjectName() : "");
+		
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);
 		splitter.setLayout(new FillLayout());
+		splitter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		SashForm mibViewSplitter = new SashForm(splitter, SWT.HORIZONTAL);
 		mibViewSplitter.setLayout(new FillLayout());
@@ -170,7 +198,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 
 		createActions();
 		contributeToActionBars();
-		createPopupMenu();
+		createTreePopupMenu();
+		createResultsPopupMenu();
 	}
 	
 	/**
@@ -207,6 +236,76 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				}
 			}
 		};
+		
+		actionCopy = new Action("Copy to clipboard") {
+			@Override
+			public void run()
+			{
+				TableItem[] selection = viewer.getTable().getSelection();
+				if (selection.length > 0)
+				{
+					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+					StringBuilder sb = new StringBuilder();
+					for(int i = 0; i < selection.length; i++)
+					{
+						if (i > 0)
+							sb.append(newLine);
+						sb.append(selection[i].getText(0));
+						sb.append(" [");
+						sb.append(selection[i].getText(1));
+						sb.append("] = ");
+						sb.append(selection[i].getText(2));
+					}
+					WidgetHelper.copyToClipboard(sb.toString());
+				}
+			}
+		};
+
+		actionCopyName = new Action("Copy &name to clipboard") {
+			@Override
+			public void run()
+			{
+				copyColumnToClipboard(0);
+			}
+		};
+
+		actionCopyType = new Action("Copy &type to clipboard") {
+			@Override
+			public void run()
+			{
+				copyColumnToClipboard(1);
+			}
+		};
+
+		actionCopyValue = new Action("Copy &value to clipboard") {
+			@Override
+			public void run()
+			{
+				copyColumnToClipboard(2);
+			}
+		};
+	}
+	
+	/**
+	 * Copy values in given column and selected rows to clipboard
+	 * 
+	 * @param column column index
+	 */
+	private void copyColumnToClipboard(int column)
+	{
+		final TableItem[] selection = viewer.getTable().getSelection();
+		if (selection.length > 0)
+		{
+			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+			final StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				sb.append(selection[i].getText(column));
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
+		}
 	}
 	
 	/**
@@ -243,7 +342,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	/**
 	 * Create popup menu for MIB tree
 	 */
-	private void createPopupMenu()
+	private void createTreePopupMenu()
 	{
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
@@ -252,7 +351,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		{
 			public void menuAboutToShow(IMenuManager mgr)
 			{
-				fillContextMenu(mgr);
+				fillTreeContextMenu(mgr);
 			}
 		});
 
@@ -261,21 +360,60 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		mibBrowser.getTreeControl().setMenu(menu);
 
 		// Register menu for extension.
-		getSite().registerContextMenu(menuMgr, viewer);
+		getSite().registerContextMenu(menuMgr, mibBrowser.getTreeViewer());
 	}
 
 	/**
-	 * Fill context menu
+	 * Fill MIB tree context menu
 	 * 
 	 * @param mgr Menu manager
 	 */
-	protected void fillContextMenu(final IMenuManager manager)
+	protected void fillTreeContextMenu(final IMenuManager manager)
 	{
 		manager.add(actionWalk);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
 		manager.add(actionRefresh);
+	}
+
+	/**
+	 * Create popup menu for results table
+	 */
+	private void createResultsPopupMenu()
+	{
+		// Create menu manager
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillResultsContextMenu(mgr);
+			}
+		});
+
+		// Create menu
+		Menu menu = menuMgr.createContextMenu(viewer.getTable());
+		viewer.getTable().setMenu(menu);
+
+		// Register menu for extension.
+		getSite().registerContextMenu(menuMgr, viewer);
+	}
+
+	/**
+	 * Fill walk results table context menu
+	 * 
+	 * @param mgr Menu manager
+	 */
+	protected void fillResultsContextMenu(final IMenuManager manager)
+	{
+		manager.add(actionCopy);
+		manager.add(actionCopyName);
+		manager.add(actionCopyType);
+		manager.add(actionCopyValue);
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	/**
@@ -316,7 +454,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	{
 		currentNode = node;
 		actionWalk.setEnabled((node != null) && !walkActive);
-		setContentDescription("Current node: " + ((currentNode != null) ? currentNode.getObjectName() : "<none>"));
+		header.setText((currentNode != null) ? currentNode.getObjectName() : "");
 	}
 
 	/* (non-Javadoc)
@@ -398,5 +536,15 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				}
 			}
 		});
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		headerFont.dispose();
+		super.dispose();
 	}
 }
