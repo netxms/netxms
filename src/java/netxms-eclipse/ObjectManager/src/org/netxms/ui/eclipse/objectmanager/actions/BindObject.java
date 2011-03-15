@@ -37,6 +37,9 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
+/**
+ * "Bind" action
+ */
 public class BindObject implements IObjectActionDelegate
 {
 	private Shell shell;
@@ -58,8 +61,7 @@ public class BindObject implements IObjectActionDelegate
 	public void run(IAction action)
 	{
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null, ObjectSelectionDialog.createNodeSelectionFilter());
-		dlg.open();
-		if (dlg.getReturnCode() == Window.OK)
+		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			new ConsoleJob("Bind object", viewPart, Activator.PLUGIN_ID, null) {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -33,21 +34,23 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
-
 /**
  * Object browser view
- *
  */
 public class ObjectBrowser extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.view.navigation.objectbrowser"; //$NON-NLS-1$
 	
 	private ObjectTree objectTree;
+	private Action actionShowFilter;
+	private Action actionHideUnmanaged;
+	private Action actionMoveObject;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -74,69 +77,38 @@ public class ObjectBrowser extends ViewPart
 		fd.bottom = new FormAttachment(100, 0);
 		objectTree.setLayoutData(fd);
 		
+		createActions();
 		createMenu();
 		createPopupMenu();
 		
 		objectTree.enableDragSupport();
 		getSite().setSelectionProvider(objectTree.getTreeViewer());
 	}
-
-	/**
-	 * Create popup menu for object browser
-	 */
-	private void createPopupMenu()
-	{
-		// Create menu manager.
-		MenuManager menuMgr = new MenuManager();
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
-
-		// Create menu.
-		Menu menu = menuMgr.createContextMenu(objectTree.getTreeControl());
-		objectTree.getTreeControl().setMenu(menu);
-
-		// Register menu for extension.
-		getSite().registerContextMenu(menuMgr, objectTree.getTreeViewer());
-	}
-
-	/**
-	 * Fill context menu
-	 * @param mgr Menu manager
-	 */
-	protected void fillContextMenu(IMenuManager mgr)
-	{
-		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
-		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
-	}
 	
 	/**
-	 * Create view menu
+	 * Create actions
 	 */
-   private void createMenu()
-   {
-      IMenuManager mgr = getViewSite().getActionBars().getMenuManager();
-      
-      // Show filter
-      Action actionShowFilter = new Action(Messages.getString("ObjectBrowser.show_filter"), SWT.TOGGLE) //$NON-NLS-1$
+	private void createActions()
+	{
+		actionMoveObject = new Action("&Move to another container") {
+			@Override
+			public void run()
+			{
+				moveObject();
+			}
+		};
+		
+      actionHideUnmanaged = new Action(Messages.getString("ObjectBrowser.hide_unmanaged"), SWT.TOGGLE) //$NON-NLS-1$
       {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+			@Override
+			public void run()
+			{
+			}
+      };
+      actionHideUnmanaged.setChecked(false);
+
+      actionShowFilter = new Action(Messages.getString("ObjectBrowser.show_filter"), SWT.TOGGLE) //$NON-NLS-1$
+      {
 			@Override
 			public void run()
 			{
@@ -144,25 +116,66 @@ public class ObjectBrowser extends ViewPart
 			}
       };
       actionShowFilter.setChecked(true);
-      mgr.add(actionShowFilter);
-      
-      // Hide unmanaged objects
-      Action actionHideUnmanaged = new Action(Messages.getString("ObjectBrowser.hide_unmanaged"), SWT.TOGGLE) //$NON-NLS-1$
-      {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
-			@Override
-			public void run()
-			{
-			}
-      };
-      actionHideUnmanaged.setChecked(false);
-      mgr.add(actionHideUnmanaged);
-      
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+	}
+
+	/**
+	 * Create view menu
+	 */
+   private void createMenu()
+   {
+      IMenuManager manager = getViewSite().getActionBars().getMenuManager();
+      manager.add(actionShowFilter);
+      manager.add(actionHideUnmanaged);
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
    }
 
+	/**
+	 * Create popup menu for object browser
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager manager = new MenuManager();
+		manager.setRemoveAllWhenShown(true);
+		manager.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = manager.createContextMenu(objectTree.getTreeControl());
+		objectTree.getTreeControl().setMenu(menu);
+
+		// Register menu for extension.
+		getSite().registerContextMenu(manager, objectTree.getTreeViewer());
+	}
+
+	/**
+	 * Fill context menu
+	 * @param manager Menu manager
+	 */
+	protected void fillContextMenu(IMenuManager manager)
+	{
+		IStructuredSelection selection = (IStructuredSelection)objectTree.getTreeViewer().getSelection();
+		
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		if ((selection.size() == 1) && (selection.getFirstElement() instanceof Node))
+			manager.add(actionMoveObject);
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+		manager.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
+	}
+	
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
@@ -179,5 +192,13 @@ public class ObjectBrowser extends ViewPart
 	public void dispose()
 	{
 		super.dispose();
+	}
+	
+	/**
+	 * Move selected object to another container
+	 */
+	private void moveObject()
+	{
+		
 	}
 }

@@ -71,6 +71,20 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
+	 * Create filter for node selection - it allows node objects and possible
+	 * parents - subnets and containers.
+	 * 
+	 * @return Class filter for node selection
+	 */
+	public static Set<Integer> createContainerSelectionFilter()
+	{
+		HashSet<Integer> classFilter = new HashSet<Integer>(2);
+		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
+		classFilter.add(GenericObject.OBJECT_CONTAINER);
+		return classFilter;
+	}
+
+	/**
 	 * Create object selection dialog.
 	 * 
 	 * @param parentShell parent shell
