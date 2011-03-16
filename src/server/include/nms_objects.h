@@ -537,6 +537,7 @@ public:
 
    void setMacAddr(const BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
    void setIpAddr(DWORD dwNewAddr);
+   void setIpNetMask(DWORD dwNewMask);
    void setBridgePortNumber(DWORD bpn) { m_bridgePortNumber = bpn; Modify(); }
    void setSlotNumber(DWORD slot) { m_slotNumber = slot; Modify(); }
    void setPortNumber(DWORD port) { m_portNumber = port; Modify(); }

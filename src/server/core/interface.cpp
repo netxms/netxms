@@ -506,3 +506,16 @@ void Interface::setIpAddr(DWORD dwNewAddr)
    Modify();
    UnlockData();
 }
+
+
+//
+// Change interface's IP subnet mask
+//
+
+void Interface::setIpNetMask(DWORD dwNetMask) 
+{
+   LockData();
+   m_dwIpNetMask = dwNetMask;
+   Modify();
+   UnlockData();
+}

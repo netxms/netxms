@@ -538,17 +538,33 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 				// Nortel BayStack hack - move to driver
 				if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3"), 17))
 				{
+					DWORD slotSize;
+					if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3.74"), 20))	// 56xx
+					{
+						slotSize = 128;
+					}
+					else if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3.40"), 20))	// BPS2000
+					{
+						slotSize = 32;
+					}
+					else
+					{
+						slotSize = 64;
+					}
+
 					// Calculate slot/port pair from ifIndex
 					for(i = 0; i < pIfList->iNumEntries; i++)
 					{
-						/* TODO: is index factor 64 for all models? */
-						DWORD slot = pIfList->pInterfaces[i].dwIndex / 64 + 1;
+						DWORD slot = pIfList->pInterfaces[i].dwIndex / slotSize + 1;
 						if ((slot > 0) && (slot <= 8))
 						{
 							pIfList->pInterfaces[i].dwSlotNumber = slot;
-							pIfList->pInterfaces[i].dwPortNumber = pIfList->pInterfaces[i].dwIndex % 64;
+							pIfList->pInterfaces[i].dwPortNumber = pIfList->pInterfaces[i].dwIndex % slotSize;
 						}
 					}
+
+					// Modern switches (55xx, 56xx) supports rapidCity MIBs
+               GetAccelarVLANIfList(dwVersion, pTransport, pIfList);
 
 					DWORD mgmtIpAddr, mgmtNetMask;
 
@@ -560,7 +576,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 						pIfList->pInterfaces = (INTERFACE_INFO *)realloc(pIfList->pInterfaces, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
 						memset(&pIfList->pInterfaces[index], 0, sizeof(INTERFACE_INFO));
 						pIfList->pInterfaces[index].dwIpAddr = mgmtIpAddr;
-						pIfList->pInterfaces[index].dwIpNetMask = mgmtNetMask;
+						pIfList->pInterfaces[index].dwIpNetMask = 0;//mgmtNetMask;
 						pIfList->pInterfaces[index].dwType = IFTYPE_OTHER;
 						_tcscpy(pIfList->pInterfaces[index].szName, _T("mgmt"));
 						SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);

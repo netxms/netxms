@@ -882,6 +882,8 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
       pSubnet->AddNode(this);
       
       // Check if subnet mask is correct on interface
+		DbgPrintf(5, _T("Node::createNewInterface(node=%s [%d]): check netmask: subnet=%08X iface=%08X syntetic=%d"),
+		          m_szName, m_dwId, pSubnet->getIpNetMask(), pInterface->getIpNetMask(), (int)pSubnet->isSyntheticMask());
       if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask())
 		{
          PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
@@ -899,6 +901,8 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 void Node::deleteInterface(Interface *pInterface)
 {
    DWORD i;
+
+	DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d])"), m_szName, m_dwId, pInterface->Name(), pInterface->Id());
 
    // Check if we should unlink node from interface's subnet
    if (pInterface->IpAddr() != 0)
@@ -926,6 +930,8 @@ void Node::deleteInterface(Interface *pInterface)
             DeleteParent(pSubnet);
             pSubnet->DeleteChild(this);
          }
+			DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
+			          m_szName, m_dwId, pInterface->Name(), pInterface->Id(), pSubnet->Name(), pSubnet->Id());
       }
    }
    pInterface->Delete(FALSE);
@@ -1818,8 +1824,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
                for(j = 0; j < pIfList->iNumEntries; j++)
                {
                   if ((pIfList->pInterfaces[j].dwIndex == pInterface->getIfIndex()) &&
-                      (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
-                      (pIfList->pInterfaces[j].dwIpNetMask == pInterface->getIpNetMask()))
+                      (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()))
                      break;
                }
 
@@ -1861,8 +1866,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
                Interface *pInterface = (Interface *)m_pChildList[i];
 
                if ((pIfList->pInterfaces[j].dwIndex == pInterface->getIfIndex()) &&
-                   (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
-                   (pIfList->pInterfaces[j].dwIpNetMask == pInterface->getIpNetMask()))
+                   (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()))
                {
                   // Existing interface, check configuration
                   if (memcmp(pIfList->pInterfaces[j].bMacAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
@@ -1891,6 +1895,10 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 						if (pIfList->pInterfaces[j].dwPortNumber != pInterface->getPortNumber())
 						{
 							pInterface->setPortNumber(pIfList->pInterfaces[j].dwPortNumber);
+						}
+						if ((pIfList->pInterfaces[j].dwIpNetMask != 0) && (pIfList->pInterfaces[j].dwIpNetMask != pInterface->getIpNetMask()))
+						{
+							pInterface->setIpNetMask(pIfList->pInterfaces[j].dwIpNetMask);
 						}
                   bNewInterface = FALSE;
                   break;
@@ -3924,7 +3932,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			}
 
 			// Check if subnet mask is correct on interface
-			if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pIfList->pInterfaces[i].dwIpNetMask))
+			if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()))
 			{
 				PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
 							 pInterface->getIfIndex(), pInterface->Name(),
