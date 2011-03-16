@@ -882,8 +882,6 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
       pSubnet->AddNode(this);
       
       // Check if subnet mask is correct on interface
-		DbgPrintf(5, _T("Node::createNewInterface(node=%s [%d]): check netmask: subnet=%08X iface=%08X syntetic=%d"),
-		          m_szName, m_dwId, pSubnet->getIpNetMask(), pInterface->getIpNetMask(), (int)pSubnet->isSyntheticMask());
       if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask())
 		{
          PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),

@@ -302,6 +302,8 @@ public class ObjectTree extends Composite
 		FormData fd = (FormData)objectTree.getTree().getLayoutData();
 		fd.top = enable ? new FormAttachment(filterArea) : new FormAttachment(0, 0);
 		layout();
+		if (!enable)
+			setFilter("");
 	}
 
 	/**
@@ -392,5 +394,13 @@ public class ObjectTree extends Composite
 			objects.add(((GenericObject)it.next()).getObjectId());
 		}
 		return objects.toArray(new Long[objects.size()]);
+	}
+	
+	/**
+	 * Refresh object tree
+	 */
+	public void refresh()
+	{
+		objectTree.setInput(session);
 	}
 }

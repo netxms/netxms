@@ -18,24 +18,35 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.views;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
+import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -51,6 +62,7 @@ public class ObjectBrowser extends ViewPart
 	private Action actionShowFilter;
 	private Action actionHideUnmanaged;
 	private Action actionMoveObject;
+	private Action actionRefresh;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -79,6 +91,7 @@ public class ObjectBrowser extends ViewPart
 		
 		createActions();
 		createMenu();
+		createToolBar();
 		createPopupMenu();
 		
 		objectTree.enableDragSupport();
@@ -90,6 +103,14 @@ public class ObjectBrowser extends ViewPart
 	 */
 	private void createActions()
 	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				objectTree.refresh();
+			}
+		};
+		
 		actionMoveObject = new Action("&Move to another container") {
 			@Override
 			public void run()
@@ -98,7 +119,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-      actionHideUnmanaged = new Action(Messages.getString("ObjectBrowser.hide_unmanaged"), SWT.TOGGLE) //$NON-NLS-1$
+      actionHideUnmanaged = new Action("&Hide unmanaged objects", SWT.TOGGLE) //$NON-NLS-1$
       {
 			@Override
 			public void run()
@@ -107,7 +128,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideUnmanaged.setChecked(false);
 
-      actionShowFilter = new Action(Messages.getString("ObjectBrowser.show_filter"), SWT.TOGGLE) //$NON-NLS-1$
+      actionShowFilter = new Action("Show &filter", SWT.TOGGLE) //$NON-NLS-1$
       {
 			@Override
 			public void run()
@@ -127,6 +148,18 @@ public class ObjectBrowser extends ViewPart
       manager.add(actionShowFilter);
       manager.add(actionHideUnmanaged);
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      manager.add(new Separator());
+      manager.add(actionRefresh);
+   }
+
+	/**
+	 * Create view toolbar
+	 */
+   private void createToolBar()
+   {
+      IToolBarManager manager = getViewSite().getActionBars().getToolBarManager();
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      manager.add(actionRefresh);
    }
 
 	/**
@@ -158,14 +191,12 @@ public class ObjectBrowser extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		IStructuredSelection selection = (IStructuredSelection)objectTree.getTreeViewer().getSelection();
-		
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
-		if ((selection.size() == 1) && (selection.getFirstElement() instanceof Node))
+		if (isValidSelectionForMove())
 			manager.add(actionMoveObject);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -195,10 +226,62 @@ public class ObjectBrowser extends ViewPart
 	}
 	
 	/**
+	 * Check if current selection is valid for moving object
+	 * 
+	 * @return true if current selection is valid for moving object
+	 */
+	private boolean isValidSelectionForMove()
+	{
+		TreeItem[] selection = objectTree.getTreeControl().getSelection();
+		if (selection.length != 1)
+			return false;
+		
+		if (selection[0].getParentItem() == null)
+			return false;
+		
+		final Object currentObject = selection[0].getData();
+		final Object parentObject = selection[0].getParentItem().getData();
+		
+		return (((currentObject instanceof Node) ||
+		         (currentObject instanceof Subnet) ||
+		         (currentObject instanceof Container)) &&
+		        ((parentObject instanceof Container) ||
+		         (parentObject instanceof ServiceRoot)));
+	}
+	
+	/**
 	 * Move selected object to another container
 	 */
 	private void moveObject()
 	{
+		if (!isValidSelectionForMove())
+			return;
 		
+		TreeItem[] selection = objectTree.getTreeControl().getSelection();
+		final Object currentObject = selection[0].getData();
+		final Object parentObject = selection[0].getParentItem().getData();
+		
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createContainerSelectionFilter());
+		dlg.enableMultiSelection(false);
+		if (dlg.open() == Window.OK)
+		{
+			final GenericObject target = dlg.getSelectedObjects().get(0);
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			new ConsoleJob("Moving object " + ((GenericObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					long objectId = ((GenericObject)currentObject).getObjectId();
+					session.bindObject(target.getObjectId(), objectId);
+					session.unbindObject(((GenericObject)parentObject).getObjectId(), objectId);
+				}
+	
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot move object " + ((GenericObject)currentObject).getObjectName();
+				}
+			}.start();
+		}
 	}
 }
