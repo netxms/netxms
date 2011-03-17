@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,8 +62,47 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+		*ppResult = new NXSL_Value;	// Return NULL if attribute not found
 	}
+
+	return 0;
+}
+
+
+//
+// Set node's custom attribute
+// First argument is a node object, second is an attribute name, third is new value
+// Returns previous value
+//
+
+static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	NXSL_Object *object;
+	Node *node;
+	const TCHAR *value;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString() || !argv[2]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	node = (Node *)object->getData();
+	value = node->GetCustomAttribute(argv[1]->getValueAsCString());
+	if (value != NULL)
+	{
+		*ppResult = new NXSL_Value(value);
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if attribute not found
+	}
+
+	node->SetCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
 
 	return 0;
 }
@@ -262,7 +301,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetInterfaceName"), F_GetInterfaceName, 2 },
    { _T("GetNodeParents"), F_GetNodeParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
-	{ _T("PostEvent"), F_PostEvent, -1 }
+	{ _T("PostEvent"), F_PostEvent, -1 },
+   { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 }
 };
 
 

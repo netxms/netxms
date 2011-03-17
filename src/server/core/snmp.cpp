@@ -576,7 +576,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 						pIfList->pInterfaces = (INTERFACE_INFO *)realloc(pIfList->pInterfaces, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
 						memset(&pIfList->pInterfaces[index], 0, sizeof(INTERFACE_INFO));
 						pIfList->pInterfaces[index].dwIpAddr = mgmtIpAddr;
-						pIfList->pInterfaces[index].dwIpNetMask = 0;//mgmtNetMask;
+						pIfList->pInterfaces[index].dwIpNetMask = mgmtNetMask;
 						pIfList->pInterfaces[index].dwType = IFTYPE_OTHER;
 						_tcscpy(pIfList->pInterfaces[index].szName, _T("mgmt"));
 						SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
