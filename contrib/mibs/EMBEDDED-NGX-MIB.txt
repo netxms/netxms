@@ -1,0 +1,657 @@
+
+EMBEDDED-NGX-MIB DEFINITIONS ::= BEGIN
+
+	-- Version: 8.0
+
+	-- SUBTREE: 1.3.6.1.4.1.6983.1
+	-- iso.org.dod.internet.private.enterprises.sofaware.products
+	  
+	IMPORTS	enterprises	FROM RFC1155-SMI OBJECT-TYPE FROM RFC-1212;
+
+	-- textual conventions
+	
+	DisplayString ::=
+		OCTET STRING
+	-- This data type is used to model textual information taken
+	-- from the NVT ASCII character set.  By convention, objects
+	-- with this syntax are declared as having
+	--
+	--      SIZE (0..255)
+
+	sofaware	OBJECT IDENTIFIER ::= { enterprises 6983 }
+	products	OBJECT IDENTIFIER ::= { sofaware 1 }
+
+	swHardware OBJECT IDENTIFIER ::= { products 1 }
+	swStorage OBJECT IDENTIFIER ::= { products 2 }
+	swLicense OBJECT IDENTIFIER ::= { products 3 }
+	swFirmware OBJECT IDENTIFIER ::= { products 4 }
+	swMem OBJECT IDENTIFIER ::= { products 5 }
+	swAV OBJECT IDENTIFIER ::= { products 6 }
+	swFW OBJECT IDENTIFIER ::= { products 7 }
+	swWireless OBJECT IDENTIFIER ::= { products 8 }
+	swHA OBJECT IDENTIFIER ::= { products 9 }
+	swGWType OBJECT IDENTIFIER ::= { products 10 }
+
+
+	-- swHardware subtree
+	swHardwareVersion OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Hardware version"
+		::= {swHardware 1 }
+
+	swHardwareType OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Gateway type"
+		::= {swHardware 2 }
+
+	-- swStorage subtree
+	swStorageConfig OBJECT IDENTIFIER ::= { swStorage 1 }
+	swStorageFirm OBJECT IDENTIFIER ::= { swStorage 2 }
+	swStorageCF OBJECT IDENTIFIER ::= { swStorage 3 }
+
+	-- swStorage.swStorageConfig subtree
+	swStorageConfigTotal OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Total configuration space in megabytes"
+		::= {swStorageConfig 1}
+
+	swStorageConfigFree OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Free configuration space in megabytes"
+		::= {swStorageConfig 2}
+
+	-- swStorage.swStorageFirm subtree
+	swStorageFirmTotal OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Total firmware space in megabytes"
+		::= {swStorageFirm 1}
+
+	swStorageFirmFree OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Free firmware space in megabytes"
+		::= {swStorageFirm 2}
+		
+	-- swStorage.swStorageCF subtree
+	swStorageCFTotal OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Total storage card space in megabytes"
+		::= {swStorageCF 1}
+
+	swStorageCFFree OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Free storage  card space in megabytes"
+		::= {swStorageCF 2}
+
+
+
+	-- swLicense subtree
+	swLicenseMacAddress OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Gateway primary MAC address"
+		::= {swLicense 1 }
+
+	swLicenseProductKey OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Currently installed Product Key"
+		::= {swLicense 2 }
+	
+	swLicenseProductName OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Currently installed Product Key description"
+		::= {swLicense 3 }
+	
+	swLicenseUsedNodes OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Currently used nodes"
+		::= {swLicense 4 }
+	
+
+
+	-- swFirmware subtree
+	swFirmwareRunning OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Currently running firmware version"
+		::= {swFirmware 1 }
+
+	swFirmwarePrimary OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Primary firmware version"
+		::= {swFirmware 2 }
+
+	swFirmwareBackup OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Backup firmware version"
+		::= {swFirmware 3 }
+
+	swFirmwareBootcodeVersion OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Bootloader version"
+		::= {swFirmware 4 }
+
+	swFirmwareDebugMode OBJECT-TYPE
+		SYNTAX  DisplayString 
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Running in debug mode"
+		::= {swFirmware 5 }
+	
+	-- swMem subtree
+	swMemRAM OBJECT IDENTIFIER ::= { swMem 1 }
+	swMemDFA OBJECT IDENTIFIER ::= { swMem 2 }
+
+	-- swMem.swMemRAM subtree
+	swMemRamFree OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Amount of free RAM space in KB"
+		::= {swMemRAM 1}
+
+	swMemRamTotal OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Total RAM space in KB"
+		::= {swMemRAM 2}
+	-- End: swMem.swMemRAM subtree
+
+	-- swMem.swMemDFA subtree
+	swMemDfaFree OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Amount of free DFA space in KB"
+		::= {swMemDFA 1}
+
+	swMemDfaTotal OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Total RAM space in KB"
+		::= {swMemDFA 2}
+
+	swMemDfaTest OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"DFA self test results"
+		::= {swMemDFA 3}
+	-- End: swMem.swMemDFA subtree
+	
+	swUserMemFree OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"User memory free in KB"
+		::= {swMem 3 }
+
+	swKernelMemFree OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Kernel memory free in KB"
+		::= {swMem 4 }
+
+	swFwMEMFree OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Firewall memory free in KB"
+		::= {swMem 5 }
+	
+
+
+	-- swAV subtree
+	swAvMain OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Main antivirus database version"
+		::= {swAV 1}
+
+	swAvDaily OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Daily antivirus database version"
+		::= {swAV 2}
+
+	swAvStatus OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"VStream Antivirus engine status"
+		::= {swAV 3}
+
+	swAvNextUpdate OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"VStream Antivirus next update"
+		::= {swAV 4}
+
+
+
+	-- swFW subtree
+	swFwActiveComputersTable OBJECT-TYPE
+      		SYNTAX  SEQUENCE OF SwActiveComputerEntry
+			ACCESS  not-accessible
+			STATUS  mandatory
+			DESCRIPTION
+				"Table for active computers"
+			::= { swFW 1 }
+                                 
+	swFwActiveComputerEntry OBJECT-TYPE
+	  		SYNTAX  SwActiveComputerEntry
+	  		ACCESS  not-accessible
+	  		STATUS  mandatory
+	  		INDEX   { swActCompNetwork }
+	  		::= { swFwActiveComputersTable 1 }                                      
+		
+	SwActiveComputerEntry ::=
+      		SEQUENCE {
+      			swActCompNetwork
+		       			DisplayString,
+				swActCompIpAddress
+						DisplayString,
+				swActCompMac
+						DisplayString,
+				swActCompType
+						DisplayString,
+				swActCompName
+						DisplayString,
+				swActCompLicense
+						DisplayString,
+				swActCompAuthStatus
+						DisplayString,
+				swActCompAuthUsername
+						DisplayString,
+				swActCompAuthSessionExpiresTime
+						DisplayString
+	         } 
+	         
+	swActCompNetwork OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Network this host is connected to"
+		::= { swFwActiveComputerEntry 1 } 
+
+	swActCompIpAddress OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Host IP address"
+		::= { swFwActiveComputerEntry 2 } 
+
+	swActCompMac OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Host MAC address"
+		::= { swFwActiveComputerEntry 3 } 
+
+	swActCompType OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Host type"
+		::= { swFwActiveComputerEntry 4 } 
+
+	swActCompName OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Host name if known"
+		::= { swFwActiveComputerEntry 5 } 
+
+	swActCompLicense OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Host license status"
+		::= { swFwActiveComputerEntry 6 } 
+
+	swActCompAuthStatus OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Host authentication status"
+		::= { swFwActiveComputerEntry 7 } 
+
+	swActCompAuthUsername OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Current Secure Hotspot username"
+		::= { swFwActiveComputerEntry 8 } 
+
+	swActCompAuthSessionExpiresTime OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Expiration time for the current Hotspot session"
+		::= { swFwActiveComputerEntry 9 } 
+
+
+	-- swWireless subtree
+	swWirelessStationsTable OBJECT-TYPE
+      		SYNTAX  SEQUENCE OF SwWirelessStationEntry
+			ACCESS  not-accessible
+			STATUS  mandatory
+			DESCRIPTION
+				"Wireless Stations"
+			::= { swWireless 1 }
+                                 
+	swWirelessStationEntry OBJECT-TYPE
+	  		SYNTAX  SwWirelessStationEntry
+	  		ACCESS  not-accessible
+	  		STATUS  mandatory
+	  		INDEX   { swWStationMac }
+	  		::= { swWirelessStationsTable 1 }  
+		
+	SwWirelessStationEntry ::=
+      		SEQUENCE {
+      			swWStationMac
+		       			DisplayString,
+				swWStationSignalDb
+		       			INTEGER,						
+				swWStationQos
+		       			DisplayString,						
+				swWStationXr
+		       			DisplayString,						
+				swWStationRate
+		       			DisplayString,						
+				swWStationCipher
+		       			DisplayString,						
+				swWStationRxFramesOk
+		       			INTEGER,						
+				swWStationRxFramesManagement
+		       			INTEGER,						
+				swWStationRxFramesControl
+		       			INTEGER,						
+				swWStationRxFramesErrorFrame
+		       			INTEGER,						
+				swWStationRxRetryRation
+		       			INTEGER,						
+				swWStationRxDupRatio
+		       			INTEGER,						
+				swWStationTxFramesOk
+		       			INTEGER,						
+				swWStationTxFramesManagement
+		       			INTEGER,						
+				swWStationTxFramesError
+		       			INTEGER,						
+				swWStationTxFailRatio
+		       			INTEGER,						
+				swWStationTxPacketErrorRatio
+		       			INTEGER
+	         } 
+	         
+	swWStationMac OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Station MAC Address"
+		::= { swWirelessStationEntry 1 } 
+
+	swWStationSignalDb OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Station signal strength in dB"
+		::= { swWirelessStationEntry 2 } 
+		       									
+	swWStationQos OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"WMM mode"
+		::= { swWirelessStationEntry 3 } 
+		
+	swWStationXr OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Extended Range mode"
+		::= { swWirelessStationEntry 4 } 
+	
+	swWStationRate OBJECT-TYPE
+		SYNTAX  DisplayString 
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Current transmission rate"
+		::= { swWirelessStationEntry 5 } 
+	       									
+	swWStationCipher OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Current cipher"
+		::= { swWirelessStationEntry 6 } 
+		       		
+	swWStationRxFramesOk OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Count of frames received without error"
+		::= { swWirelessStationEntry 7 } 
+		       			
+	swWStationRxFramesManagement OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Count of management frames received"
+		::= { swWirelessStationEntry 8 } 
+		       			
+	swWStationRxFramesControl OBJECT-TYPE
+		SYNTAX  INTEGER 
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Count of control frames received"
+		::= { swWirelessStationEntry 9 } 
+		       			
+	swWStationRxFramesErrorFrame OBJECT-TYPE
+		SYNTAX  INTEGER 
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Count of frames received with error"
+		::= { swWirelessStationEntry 10 } 
+		       			
+	swWStationRxRetryRation OBJECT-TYPE
+		SYNTAX  INTEGER 
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Percentage of received retried frames"
+		::= { swWirelessStationEntry 11 } 
+		       			
+	swWStationRxDupRatio OBJECT-TYPE
+		SYNTAX  INTEGER 
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Percentage of duplicate frames received"
+		::= { swWirelessStationEntry 12 } 
+		       			
+	swWStationTxFramesOk OBJECT-TYPE
+		SYNTAX  INTEGER 
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Count of frames transmitted successfully"
+		::= { swWirelessStationEntry 13 } 
+		       			
+	swWStationTxFramesManagement OBJECT-TYPE
+		SYNTAX  INTEGER 
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Count of management frames transmitted"
+		::= { swWirelessStationEntry 14 } 
+	       			
+	swWStationTxFramesError OBJECT-TYPE
+		SYNTAX  INTEGER  
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Count of errors during frame transmission"
+		::= { swWirelessStationEntry 15 } 
+		       			
+	swWStationTxFailRatio OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Failed frame rate in percentage"
+		::= { swWirelessStationEntry 16 } 
+		       			
+	swWStationTxPacketErrorRatio OBJECT-TYPE
+		SYNTAX  INTEGER 
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"Packet error rate in percentage"
+		::= { swWirelessStationEntry 17 } 
+
+
+	-- swHA subtree
+	swVirtualIpTable OBJECT-TYPE
+      		SYNTAX  SEQUENCE OF SwVirtualIpEntry
+			ACCESS  not-accessible
+			STATUS  mandatory
+			DESCRIPTION
+				"High Availability Virtual IP table"
+			::= { swHA 1 }
+                                 
+	swVirtualIpEntry OBJECT-TYPE
+	  		SYNTAX  SwVirtualIpEntry
+	  		ACCESS  not-accessible
+	  		STATUS  mandatory
+	  		INDEX   { swVirtualIpAddr }
+	  		::= { swVirtualIpTable 1 }  
+		
+	SwVirtualIpEntry ::=
+      		SEQUENCE {
+      			swVirtualIpAddr
+		       			DisplayString,
+      			swVirtualIpStatus
+		       			DisplayString
+	         } 
+	         
+	swVirtualIpAddr OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"High Availability Virtual IP"
+		::= { swVirtualIpEntry 1 } 
+
+	swVirtualIpStatus OBJECT-TYPE
+		SYNTAX  DisplayString
+		ACCESS  read-only
+		STATUS  mandatory 
+		DESCRIPTION 
+			"High Availability Virtual IP"
+		::= { swVirtualIpEntry 2 } 
+
+
+	-- swGWType subtree
+	-- The "sysObjectID" value indicates the following Gateway-types:
+	safeAtOffice205 OBJECT IDENTIFIER ::= { swGWType 7 }
+	safeAtOffice210 OBJECT IDENTIFIER ::= { swGWType 9 }
+	safeAtOffice225 OBJECT IDENTIFIER ::= { swGWType 11 }
+	utm1EdgeX OBJECT IDENTIFIER ::= { swGWType 15 }
+	safeAtOffice405 OBJECT IDENTIFIER ::= { swGWType 16 }
+	safeAtOffice410 OBJECT IDENTIFIER ::= { swGWType 17 }
+	safeAtOffice425 OBJECT IDENTIFIER ::= { swGWType 18 }
+	utm1EdgeW OBJECT IDENTIFIER ::= { swGWType 20 }
+	safeAtOffice500 OBJECT IDENTIFIER ::= { swGWType 21 }
+	safeAtOffice500P OBJECT IDENTIFIER ::= { swGWType 22 }
+	utm-1X300 OBJECT IDENTIFIER ::= { swGWType 23 }
+	utm-1X400 OBJECT IDENTIFIER ::= { swGWType 24 }
+	utm-1X1000 OBJECT IDENTIFIER ::= { swGWType 25 }
+	
+END
+
+

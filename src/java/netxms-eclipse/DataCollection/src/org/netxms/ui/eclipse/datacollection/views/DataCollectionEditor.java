@@ -63,6 +63,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.DciComparator;
 import org.netxms.ui.eclipse.datacollection.DciLabelProvider;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -309,9 +310,6 @@ public class DataCollectionEditor extends ViewPart
 	{
 		actionRefresh = new RefreshAction()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -321,9 +319,6 @@ public class DataCollectionEditor extends ViewPart
 
 		actionCreate = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -355,65 +350,47 @@ public class DataCollectionEditor extends ViewPart
 
 		actionCopy = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
 			}
 		};
 		actionCopy.setText("&Copy to other node(s)...");
-		//actionCopy.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
 		actionCopy.setEnabled(false);
 
 		actionMove = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
 			}
 		};
 		actionMove.setText("&Move to other node(s)...");
-		//actionMove.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
 		actionMove.setEnabled(false);
 
 		actionConvert = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
 			}
 		};
 		actionConvert.setText("Convert to &template item...");
-		//actionConvert.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
 		actionConvert.setEnabled(false);
 
 		actionDuplicate = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
+				duplicateItems();
 			}
 		};
 		actionDuplicate.setText("D&uplicate");
-		//actionDuplicate.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png"));
 		actionDuplicate.setEnabled(false);
 
 		actionActivate = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -426,9 +403,6 @@ public class DataCollectionEditor extends ViewPart
 
 		actionDisable = new Action()
 		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -620,36 +594,65 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void createItem()
 	{
-		Job job = new Job("Create new data collection item for " + object.getObjectName()) {
+		new ConsoleJob("Create new data collection item for " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				try
-				{
-					final long id = dciConfig.createItem();
-					new UIJob("Open created DCI") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							viewer.setInput(dciConfig.getItems());
-							DataCollectionItem dci = dciConfig.findItem(id);
-							viewer.setSelection(new StructuredSelection(dci), true);
-							actionEdit.run();
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-		                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-		                    "Cannot create data collection items for " + object.getObjectName() + ": " + e.getMessage(), null);
-				}
-				return status;
+				final long id = dciConfig.createItem();
+				new UIJob("Open created DCI") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						viewer.setInput(dciConfig.getItems());
+						DataCollectionItem dci = dciConfig.findItem(id);
+						viewer.setSelection(new StructuredSelection(dci), true);
+						actionEdit.run();
+						return Status.OK_STATUS;
+					}
+				}.schedule();
 			}
-		};
-		scheduleJob(job);
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot create new data collection item for " + object.getObjectName();
+			}
+		}.start();
+	}
+	
+	/**
+	 * Duplicate selected item(s)
+	 */
+	@SuppressWarnings("unchecked")
+	private void duplicateItems()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		Iterator<DataCollectionItem> it = selection.iterator();
+		final long[] dciList = new long[selection.size()];
+		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
+			dciList[i] = it.next().getId();
+		
+		new ConsoleJob("Duplicate data collection items for " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				dciConfig.copyItems(dciConfig.getNodeId(), dciList);
+				new UIJob("Update DCI list")
+				{
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						viewer.setInput(dciConfig.getItems());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot duplicate data collection item for " + object.getObjectName();
+			}
+		}.start();
 	}
 }

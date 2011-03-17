@@ -51,7 +51,7 @@ public class WidgetHelper
 	public static final int OUTER_SPACING = 4;
 	public static final int DIALOG_WIDTH_MARGIN = 10;
 	public static final int DIALOG_HEIGHT_MARGIN = 10;
-	public static final int DIALOG_SPACING = 4;
+	public static final int DIALOG_SPACING = 5;
 	public static final int BUTTON_WIDTH_HINT = 90;
 	public static final int WIDE_BUTTON_WIDTH_HINT = 120;
 	public static final String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data";

@@ -141,6 +141,8 @@ public class GenericObject
 		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
 		image = msg.getVariableAsUUID(NXCPCodes.VID_IMAGE);
+		if (image == null)
+			image = NXCommon.EMPTY_GUID;
 		
 		// Parents
 		count = msg.getVariableAsInteger(NXCPCodes.VID_PARENT_CNT);

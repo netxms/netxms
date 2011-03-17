@@ -5,14 +5,21 @@ package org.netxms.ui.eclipse.objecttools.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objecttools.ObjectToolTableColumn;
+import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.client.snmp.SnmpObjectIdFormatException;
+import org.netxms.ui.eclipse.snmp.dialogs.MibSelectionDialog;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -29,6 +36,7 @@ public class EditColumnDialog extends Dialog
 	private LabeledText name;
 	private Combo format;
 	private LabeledText data;
+	private Button selectButton;
 	
 	/**
 	 * 
@@ -82,7 +90,23 @@ public class EditColumnDialog extends Dialog
 			format.add(formatNames[i]);
 		format.select(columnObject.getFormat());
 		
-		data = new LabeledText(dialogArea, SWT.NONE);
+		Composite dataGroup = null;
+		if (snmpColumn)
+		{
+			dataGroup = new Composite(dialogArea, SWT.NONE);
+			layout = new GridLayout();
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+			layout.numColumns = 2;
+			dataGroup.setLayout(layout);
+			gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			dataGroup.setLayoutData(gd);
+		}
+		
+		data = new LabeledText(snmpColumn ? dataGroup : dialogArea, SWT.NONE);
 		if (snmpColumn)
 		{
 			data.setLabel("SNMP Object Identifier (OID)");
@@ -98,6 +122,41 @@ public class EditColumnDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 350;
 		data.setLayoutData(gd);
+		
+		if (snmpColumn)
+		{
+			selectButton = new Button(dataGroup, SWT.PUSH);
+			selectButton.setText("...");
+			gd = new GridData();
+			gd.verticalAlignment = SWT.BOTTOM;
+			selectButton.setLayoutData(gd);
+			selectButton.addSelectionListener(new SelectionListener() {
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					SnmpObjectId initial;
+					try
+					{
+						initial = SnmpObjectId.parseSnmpObjectId(data.getText());
+					}
+					catch(SnmpObjectIdFormatException ex)
+					{
+						initial = null;
+					}
+					MibSelectionDialog dlg = new MibSelectionDialog(getShell(), initial);
+					if (dlg.open() == Window.OK)
+					{
+						data.setText(dlg.getSelectedObject().getObjectId().toString());
+					}
+				}
+				
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e)
+				{
+					widgetSelected(e);
+				}
+			});
+		}
 		
 		return dialogArea;
 	}

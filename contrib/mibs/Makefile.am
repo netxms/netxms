@@ -38,6 +38,7 @@ mibs_DATA = \
 	DIGIUM-MIB.txt \
 	DS1-MIB.txt \
 	DS3-MIB.txt \
+	EMBEDDED-NGX-MIB.txt \
 	ENTITY-MIB.txt \
 	FIBRE-CHANNEL-FE-MIB.txt \
 	HOST-RESOURCES-MIB.txt \

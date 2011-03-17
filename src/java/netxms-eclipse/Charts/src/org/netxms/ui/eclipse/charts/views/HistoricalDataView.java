@@ -322,7 +322,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	private void getDataFromServer()
 	{
 		// Request data from server
-		new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
+		ConsoleJob job = new ConsoleJob("Get DCI values for history graph", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
 		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -365,7 +365,9 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 				updateInProgress = false;
 				super.jobFailureHandler();
 			}
-		}.start();
+		};
+		job.setUser(false);
+		job.start();
 	}
 
 	/* (non-Javadoc)
