@@ -23,6 +23,8 @@
 
 #include "main.h"
 
+extern int SMSPack7BitChars(const char* input, char* output, int maxOutputLen);
+
 static Serial m_serial;
 
 // pszInitArgs format: portname,speed,databits,parity,stopbits
@@ -205,6 +207,52 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 		DbgPrintf(4, _T("SMS send: AT+CMGS + message body sent, got {%hs}"), szTmp);
 	}
 	
+	return true;
+}
+
+extern "C" BOOL EXPORT SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+{
+	if (pszPhoneNumber != NULL && pszText != NULL)
+	{
+		char szTmp[512];
+
+		DbgPrintf(3, _T("SMS send: to {%s}: {%s}"), pszPhoneNumber, pszText);
+
+		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
+		m_serial.Read(szTmp, 128); // read OK
+		DbgPrintf(4, _T("SMS send: ATZ sent, got {%hs}"), szTmp);
+		m_serial.Write("ATE0\r\n", 5); // disable echo
+		m_serial.Read(szTmp, 128); // read OK
+		DbgPrintf(4, _T("SMS send: ATE0 sent, got {%hs}"), szTmp);
+		m_serial.Write("AT+CMGF=0\r\n", 11); // =0 - send text in PDU mode
+		m_serial.Read(szTmp, 128); // read OK
+		DbgPrintf(4, _T("SMS send: AT+CMGF=0 sent, got {%hs}"), szTmp);
+
+		const int pduBufferSize = 512;
+		char pduBuffer[pduBufferSize];
+		char phoneNumberFormatted[32];
+		char payload[pduBufferSize];
+		int phoneLength = _tcslen(pszPhoneNumber);
+		strncpy(phoneNumberFormatted, (const char*)pszPhoneNumber, 32);
+		strcat(phoneNumberFormatted, "FF");
+		for (int i = 0; i <= phoneLength; i += 2)
+		{
+			char tmp = phoneNumberFormatted[i+1];
+			phoneNumberFormatted[i+1] = phoneNumberFormatted[i];
+			phoneNumberFormatted[i] = tmp;
+		}
+		phoneNumberFormatted[phoneLength + 2 - phoneLength % 2] = '\0';
+		SMSPack7BitChars((const char*)pszText, payload, pduBufferSize);
+		snprintf(pduBuffer, pduBufferSize, "0001000%1X91%s0000%02X%s", strlen(phoneNumberFormatted), 
+			phoneNumberFormatted, _tcslen(pszText), payload);
+		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", strlen(pduBuffer)/2);
+		m_serial.Write(szTmp, (int)strlen(szTmp)); 
+		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pduBuffer, 0x1A);
+		m_serial.Write(szTmp, (int)strlen(szTmp)); // send text, end with ^Z
+		m_serial.Read(szTmp, 128); // read +CMGS:ref_num
+		DbgPrintf(4, _T("SMS send: AT+CMGS + message body sent, got {%hs}"), szTmp);
+	}
+
 	return true;
 }
 
