@@ -28,7 +28,7 @@
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.ui.eclipse.eventmanager.action_sets.open"
+	   <actionSet id="org.netxms.ui.eclipse.action_set.event_configuration"
 		   label="Event Configuration"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.eventmanager.actions.open"

@@ -10,6 +10,15 @@
             class="org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor"
             id="org.netxms.ui.eclipse.epp.view.policy_editor">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.epp.views.SituationsManager"
+            icon="icons/situation.gif"
+            id="org.netxms.ui.eclipse.epp.views.SituationsManager"
+            name="Situations"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -24,13 +33,19 @@
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.epp.commands.open_policy_editor">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open situations manager"
+            id="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
+            name="Situations Manager">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.ui.eclipse.epp.action_sets.open"
-		   label="Event Processing Policy"
+	   <actionSet id="org.netxms.ui.eclipse.action_set.event_processing_policy"
+	   	   label="Event Processing Policy"
 		   visible="true">
-		   <action id="org.netxms.ui.eclipse.epp.actions.open"
+		   <action id="org.netxms.ui.eclipse.epp.actions.open_policy_editor"
 			   menubarPath="config/additions"
 			   label="Event Processing Policy"
 			   tooltip="Open event processing policy editor"
@@ -39,6 +54,20 @@
 			   definitionId="org.netxms.ui.eclipse.epp.commands.open_policy_editor">
 		   </action>
 	   </actionSet>
+    <actionSet
+          id="org.netxms.ui.eclipse.action_set.situations_manager"
+          label="Situations Manager"
+          visible="true">
+       <action
+             class="org.netxms.ui.eclipse.epp.actions.OpenSituationsManager"
+             definitionId="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
+             icon="icons/situation.gif"
+             id="org.netxms.ui.eclipse.epp.actions.open_situations_manager"
+             label="Situations Manager"
+             menubarPath="config/additions"
+             tooltip="Open situations manager">
+       </action>
+    </actionSet>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">

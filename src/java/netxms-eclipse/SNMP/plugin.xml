@@ -44,8 +44,8 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.snmp.action_set"
-            label="SNMP Plugin Action Set"
+            id="org.netxms.ui.eclipse.action_set.snmp_traps_configuration"
+            label="SNMP Traps Configuration"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.snmp.actions.OpenTrapEditor"
@@ -57,6 +57,11 @@
                style="push"
                tooltip="Open SNMP traps configuration">
          </action>
+      </actionSet>
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.mib_explorer"
+            label="MIB Explorer"
+            visible="true">
          <action
                class="org.netxms.ui.eclipse.snmp.actions.OpenMibExplorer"
                definitionId="org.netxms.ui.eclipse.snmp.commands.open_mib_explorer"

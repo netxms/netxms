@@ -57,14 +57,14 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="NetXMS Management Console">
+            name="NetXMS Cortex Management Console">
          <property
                name="appName"
-               value="NetXMS Management Console">
+               value="NetXMS Cortex Management Console">
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console">
+               value="NetXMS Cortex Management Console">
          </property>
          <property
                name="preferenceCustomization"

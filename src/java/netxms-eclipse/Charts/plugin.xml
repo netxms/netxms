@@ -150,7 +150,7 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.charts.action_set"
+            id="org.netxms.ui.eclipse.action_set.predefined_graphs"
             label="Graphs"
             visible="true">
          <action

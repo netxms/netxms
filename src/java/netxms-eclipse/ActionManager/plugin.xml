@@ -24,7 +24,7 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.actionmanager.action_set"
+            id="org.netxms.ui.eclipse.action_set.actions_configuration"
             label="Actions Configuration"
             visible="true">
          <action

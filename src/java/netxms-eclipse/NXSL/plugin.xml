@@ -36,7 +36,7 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.nxsl.action_sets.open"
+            id="org.netxms.ui.eclipse.action_set.script_library"
             label="Script Library"
             visible="true">
          <action

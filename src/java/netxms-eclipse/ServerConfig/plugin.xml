@@ -48,7 +48,7 @@
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.ui.eclipse.serverconfig.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.action_set.server_configuration"
 		   label="Server Configuration"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.serverconfig.actions.open"
@@ -61,8 +61,8 @@
 			   definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_server_config">
 		   </action>
 	   </actionSet>
-	   <actionSet id="org.netxms.ui.eclipse.serverconfig.action_sets.export_configuration"
-		   label="Export configuration..."
+	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
+		   label="Configuration export/import"
 		   visible="true">
 		   <action
            class="org.netxms.ui.eclipse.serverconfig.actions.ExportConfiguration"
@@ -73,11 +73,7 @@
            menubarPath="tools/additions"
            tooltip="Export configuration">
 		   </action>
-	   </actionSet>
-	   <actionSet id="org.netxms.ui.eclipse.serverconfig.action_sets.import_configuration"
-		   label="Import configuration..."
-		   visible="true">
-		   <action
+     <action
            class="org.netxms.ui.eclipse.serverconfig.actions.ImportConfiguration"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.import_configuration"
            icon="icons/import.gif"
@@ -85,7 +81,7 @@
            label="Import configuration..."
            menubarPath="tools/additions"
            tooltip="Import configuration">
-		   </action>
+     </action>
 	   </actionSet>
    </extension>
 

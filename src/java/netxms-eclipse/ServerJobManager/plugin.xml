@@ -28,7 +28,7 @@
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.ui.eclipse.serverjobmanager.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.action_set.server_jobs"
 		   label="Server Jobs"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.serverjobmanager.actions.open"

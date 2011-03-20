@@ -35,7 +35,7 @@ public class Situation
 		long varId = NXCPCodes.VID_INSTANCE_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			final SituationInstance si = new SituationInstance(msg, varId);
+			final SituationInstance si = new SituationInstance(this, msg, varId);
 			instances.add(si);
 			varId += si.getAttributeCount() + 2; 
 		}

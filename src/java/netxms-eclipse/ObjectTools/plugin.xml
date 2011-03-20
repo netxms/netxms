@@ -59,7 +59,7 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.objecttools.action_set"
+            id="org.netxms.ui.eclipse.action_set.object_tools"
             label="Object Tools Configuration"
             visible="true">
          <action

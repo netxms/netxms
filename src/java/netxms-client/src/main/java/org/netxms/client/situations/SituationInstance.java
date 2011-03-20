@@ -13,6 +13,7 @@ import org.netxms.base.NXCPMessage;
  */
 public class SituationInstance
 {
+	private Situation parent;
 	private String name;
 	private Map<String, String> attributes;
 	
@@ -22,8 +23,9 @@ public class SituationInstance
 	 * @param msg NXCP message
 	 * @param baseId base variable id
 	 */
-	protected SituationInstance(NXCPMessage msg, long baseId)
+	protected SituationInstance(Situation parent, NXCPMessage msg, long baseId)
 	{
+		this.parent = parent;
 		name = msg.getVariableAsString(baseId);
 		
 		int count = msg.getVariableAsInteger(baseId + 1);
@@ -72,5 +74,13 @@ public class SituationInstance
 	public Map<String, String> getAttributes()
 	{
 		return attributes;
+	}
+
+	/**
+	 * @return the parent
+	 */
+	public Situation getParent()
+	{
+		return parent;
 	}
 }

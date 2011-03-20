@@ -42,7 +42,7 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.topology.action_sets.find_mac_address"
+            id="org.netxms.ui.eclipse.action_set.find_mac_address"
             label="Find MAC address"
             visible="true">
          <action

@@ -39,7 +39,7 @@
 
 
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.ui.eclipse.usermanager.action_sets.open"
+	   <actionSet id="org.netxms.ui.eclipse.action_set.user_manager"
 		   label="User Manager"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.usermanager.actions.open"
@@ -52,7 +52,7 @@
 			   definitionId="org.netxms.ui.eclipse.usermanager.commands.open_user_manager">
 		   </action>
 	   </actionSet>
-	   <actionSet id="org.netxms.ui.eclipse.usermanager.action_sets.change_password"
+	   <actionSet id="org.netxms.ui.eclipse.action_set.change_password"
 		   label="Change password..."
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.usermanager.actions.change_password"

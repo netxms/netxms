@@ -24,7 +24,7 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.serviceview.action_set"
+            id="org.netxms.ui.eclipse.action_set.service_view"
             label="Service View"
             visible="true">
          <action

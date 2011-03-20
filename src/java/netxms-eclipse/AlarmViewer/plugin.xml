@@ -23,7 +23,7 @@
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.ui.eclipse.alarmviewer.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.action_set.alarm_browser"
 		   label="Alarm Browser"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.alarmviewer.actions.open"

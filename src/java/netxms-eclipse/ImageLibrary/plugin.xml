@@ -17,7 +17,7 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="org.netxms.ui.eclipse.imagelibrary.action_set"
+            id="org.netxms.ui.eclipse.action_set.image_library"
             label="Image Library"
             visible="true">
          <action

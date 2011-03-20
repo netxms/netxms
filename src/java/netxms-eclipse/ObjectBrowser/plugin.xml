@@ -27,7 +27,7 @@
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.ui.eclipse.objectbrowser.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.action_set.object_browser"
 		   label="Object Browser"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.objectbrowser.actions.open"
