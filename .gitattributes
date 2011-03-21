@@ -647,6 +647,7 @@ src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/propertypages/helpers/
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/EventProcessingPolicyEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/SituationsManager.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/SituationTreeContentProvider.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/helpers/SituationTreeLabelProvider.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/RuleEditor.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/SituationSelector.java -text
 src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/widgets/helpers/ImageFactory.java -text

@@ -39,6 +39,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -64,6 +65,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.DciComparator;
 import org.netxms.ui.eclipse.datacollection.DciLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -353,6 +355,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
+				copyItems(false);
 			}
 		};
 		actionCopy.setText("&Copy to other node(s)...");
@@ -363,6 +366,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
+				copyItems(true);
 			}
 		};
 		actionMove.setText("&Move to other node(s)...");
@@ -637,6 +641,8 @@ public class DataCollectionEditor extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				dciConfig.copyItems(dciConfig.getNodeId(), dciList);
+				dciConfig.close();
+				dciConfig.open();
 				new UIJob("Update DCI list")
 				{
 					@Override
@@ -652,6 +658,52 @@ public class DataCollectionEditor extends ViewPart
 			protected String getErrorMessage()
 			{
 				return "Cannot duplicate data collection item for " + object.getObjectName();
+			}
+		}.start();
+	}
+	
+	/**
+	 * Copy items to another node
+	 */
+	@SuppressWarnings("unchecked")
+	private void copyItems(final boolean doMove)
+	{
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+		if (dlg.open() != Window.OK)
+			return;
+
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		Iterator<DataCollectionItem> it = selection.iterator();
+		final long[] dciList = new long[selection.size()];
+		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
+			dciList[i] = it.next().getId();
+		
+		new ConsoleJob("Copy data collection items from " + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				for(GenericObject o : dlg.getSelectedObjects(GenericObject.OBJECT_NODE))
+					dciConfig.copyItems(o.getObjectId(), dciList);
+				if (doMove)
+				{
+					for(long id : dciList)
+						dciConfig.deleteItem(id);
+					new UIJob("Update DCI list")
+					{
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							viewer.setInput(dciConfig.getItems());
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				}
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot copy data collection item from " + object.getObjectName();
 			}
 		}.start();
 	}
