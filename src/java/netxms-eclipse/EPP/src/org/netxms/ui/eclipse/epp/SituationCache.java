@@ -38,7 +38,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Local cache for situation objects
- *
  */
 public class SituationCache
 {
@@ -58,6 +57,7 @@ public class SituationCache
 				for(Situation s : list)
 					situations.put(s.getId(), s);
 			}
+			session.subscribe(NXCSession.CHANNEL_SITUATIONS);
 		}
 		catch(final Exception e)
 		{

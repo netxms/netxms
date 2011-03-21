@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.epp.views.helpers;
 
+import java.util.Map;
+
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.situations.Situation;
@@ -30,15 +32,16 @@ public class SituationTreeContentProvider implements ITreeContentProvider
 {
 	private static final String ROOT = "[root]";
 	
-	private Situation[] situations;
+	private Map<Long, Situation> situations;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
-		situations = (Situation[])newInput;
+		situations = (Map<Long, Situation>)newInput;
 	}
 
 	/* (non-Javadoc)
@@ -57,7 +60,7 @@ public class SituationTreeContentProvider implements ITreeContentProvider
 	public Object[] getChildren(Object parentElement)
 	{
 		if (parentElement == ROOT)
-			return situations;
+			return situations.values().toArray();
 		if (parentElement instanceof Situation)
 			return ((Situation)parentElement).getInstances().toArray();
 		return null;
@@ -82,7 +85,7 @@ public class SituationTreeContentProvider implements ITreeContentProvider
 	@Override
 	public boolean hasChildren(Object element)
 	{
-		return ((element == ROOT) && (situations.length > 0)) ||
+		return ((element == ROOT) && (situations.size() > 0)) ||
 		       ((element instanceof Situation) && (((Situation)element).getInstances().size() > 0));
 	}
 
