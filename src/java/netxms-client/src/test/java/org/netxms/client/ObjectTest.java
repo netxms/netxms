@@ -40,6 +40,23 @@ public class ObjectTest extends SessionTest
 		
 		session.disconnect();
 	}
+	
+	public void testPartialObjectSync() throws Exception
+	{
+		final NXCSession session = connect();
+
+		session.syncObjectSet(new long[] { 1, 2, 3 }, false);
+		Thread.sleep(1000);
+
+		final GenericObject obj = session.findObjectById(1);
+		assertEquals(true, obj != null);
+		assertEquals(1, obj.getObjectId());
+		assertEquals("Entire Network", obj.getObjectName());
+		
+		assertNull(session.findObjectById(4));
+		
+		session.disconnect();
+	}
 
 	public void testObjectIsParent() throws Exception
 	{

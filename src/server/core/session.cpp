@@ -168,7 +168,7 @@ DEFINE_THREAD_STARTER(processConsoleCommand)
 
 THREAD_RESULT THREAD_CALL ClientSession::ReadThreadStarter(void *pArg)
 {
-   ((ClientSession *)pArg)->ReadThread();
+   ((ClientSession *)pArg)->readThread();
 
    // When ClientSession::ReadThread exits, all other session
    // threads are already stopped, so we can safely destroy
@@ -185,7 +185,7 @@ THREAD_RESULT THREAD_CALL ClientSession::ReadThreadStarter(void *pArg)
 
 THREAD_RESULT THREAD_CALL ClientSession::WriteThreadStarter(void *pArg)
 {
-   ((ClientSession *)pArg)->WriteThread();
+   ((ClientSession *)pArg)->writeThread();
    return THREAD_OK;
 }
 
@@ -196,7 +196,7 @@ THREAD_RESULT THREAD_CALL ClientSession::WriteThreadStarter(void *pArg)
 
 THREAD_RESULT THREAD_CALL ClientSession::ProcessingThreadStarter(void *pArg)
 {
-   ((ClientSession *)pArg)->ProcessingThread();
+   ((ClientSession *)pArg)->processingThread();
    return THREAD_OK;
 }
 
@@ -207,7 +207,7 @@ THREAD_RESULT THREAD_CALL ClientSession::ProcessingThreadStarter(void *pArg)
 
 THREAD_RESULT THREAD_CALL ClientSession::UpdateThreadStarter(void *pArg)
 {
-   ((ClientSession *)pArg)->UpdateThread();
+   ((ClientSession *)pArg)->updateThread();
    return THREAD_OK;
 }
 
@@ -218,7 +218,7 @@ THREAD_RESULT THREAD_CALL ClientSession::UpdateThreadStarter(void *pArg)
 
 THREAD_RESULT THREAD_CALL ClientSession::PollerThreadStarter(void *pArg)
 {
-   ((POLLER_START_DATA *)pArg)->pSession->PollerThread(
+   ((POLLER_START_DATA *)pArg)->pSession->pollerThread(
       ((POLLER_START_DATA *)pArg)->pNode,
       ((POLLER_START_DATA *)pArg)->iPollType,
       ((POLLER_START_DATA *)pArg)->dwRqId);
@@ -352,7 +352,7 @@ void ClientSession::DebugPrintf(int level, const TCHAR *format, ...)
 // ReadThread()
 //
 
-void ClientSession::ReadThread()
+void ClientSession::readThread()
 {
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
@@ -550,7 +550,7 @@ void ClientSession::ReadThread()
 // WriteThread()
 //
 
-void ClientSession::WriteThread()
+void ClientSession::writeThread()
 {
    CSCP_MESSAGE *pRawMsg;
    CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -597,7 +597,7 @@ void ClientSession::WriteThread()
 // Update processing thread
 //
 
-void ClientSession::UpdateThread()
+void ClientSession::updateThread()
 {
    UPDATE_INFO *pUpdate;
    CSCPMessage msg;
@@ -688,7 +688,7 @@ void ClientSession::UpdateThread()
 // Message processing thread
 //
 
-void ClientSession::ProcessingThread()
+void ClientSession::processingThread()
 {
    CSCPMessage *pMsg;
    TCHAR szBuffer[128];
@@ -729,7 +729,10 @@ void ClientSession::ProcessingThread()
             SendConfigForAgent(pMsg);
             break;
          case CMD_GET_OBJECTS:
-            SendAllObjects(pMsg);
+            sendAllObjects(pMsg);
+            break;
+         case CMD_GET_SELECTED_OBJECTS:
+            sendSelectedObjects(pMsg);
             break;
          case CMD_GET_EVENTS:
             CALL_IN_NEW_THREAD(SendEventLog, pMsg);
@@ -1796,7 +1799,7 @@ void ClientSession::generateEventCode(DWORD dwRqId)
 // Send all objects to client
 //
 
-void ClientSession::SendAllObjects(CSCPMessage *pRequest)
+void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 {
    DWORD i, dwTimeStamp;
    CSCPMessage msg;
@@ -1808,7 +1811,7 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
    sendMessage(&msg);
    msg.DeleteAllVariables();
 
-   // Change _T("sync comments") flag
+   // Change "sync comments" flag
    if (pRequest->GetVariableShort(VID_SYNC_COMMENTS))
       m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
    else
@@ -1842,6 +1845,59 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
    sendMessage(&msg);
 
    MutexUnlock(m_mutexSendObjects);
+}
+
+
+//
+// Send selected objects to client
+//
+
+void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   // Send confirmation message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+   msg.DeleteAllVariables();
+
+   // Change "sync comments" flag
+   if (pRequest->GetVariableShort(VID_SYNC_COMMENTS))
+      m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
+   else
+      m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
+
+   DWORD dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
+	DWORD numObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
+	DWORD *objects = (DWORD *)malloc(sizeof(DWORD) * numObjects);
+	pRequest->GetVariableInt32Array(VID_OBJECT_LIST, numObjects, objects);
+
+   MutexLock(m_mutexSendObjects, INFINITE);
+
+   // Prepare message
+   msg.SetCode(CMD_OBJECT);
+
+   // Send objects, one per message
+   for(DWORD i = 0; i < numObjects; i++)
+	{
+		NetObj *object = FindObjectById(objects[i]);
+      if ((object != NULL) && 
+		    object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
+          (object->TimeStamp() >= dwTimeStamp) &&
+          !object->IsHidden())
+      {
+         object->CreateMessage(&msg);
+         if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
+            object->CommentsToMessage(&msg);
+         sendMessage(&msg);
+         msg.DeleteAllVariables();
+      }
+	}
+
+   MutexUnlock(m_mutexSendObjects);
+	safe_free(objects);
 }
 
 
@@ -4458,7 +4514,7 @@ void ClientSession::sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg)
 // Node poller thread
 //
 
-void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
+void ClientSession::pollerThread(Node *pNode, int iPollType, DWORD dwRqId)
 {
    CSCPMessage msg;
 

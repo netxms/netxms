@@ -392,11 +392,11 @@ private:
 	DECLARE_THREAD_STARTER(findMacAddress)
 	DECLARE_THREAD_STARTER(processConsoleCommand)
 
-   void ReadThread(void);
-   void WriteThread(void);
-   void ProcessingThread(void);
-   void UpdateThread(void);
-   void PollerThread(Node *pNode, int iPollType, DWORD dwRqId);
+   void readThread();
+   void writeThread();
+   void processingThread();
+   void updateThread();
+   void pollerThread(Node *pNode, int iPollType, DWORD dwRqId);
 
    void setupEncryption(DWORD dwRqId);
    void RespondToKeepalive(DWORD dwRqId);
@@ -404,7 +404,8 @@ private:
    void DebugPrintf(int level, const TCHAR *format, ...);
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
-   void SendAllObjects(CSCPMessage *pRequest);
+   void sendAllObjects(CSCPMessage *pRequest);
+   void sendSelectedObjects(CSCPMessage *pRequest);
    void SendEventLog(CSCPMessage *pRequest);
    void SendAllConfigVars(DWORD dwRqId);
    void SetConfigVariable(CSCPMessage *pRequest);

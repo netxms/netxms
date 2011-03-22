@@ -468,6 +468,7 @@ typedef struct
 #define CMD_QUERY_TABLE             0x00F6
 #define CMD_OPEN_CONSOLE            0x00F7
 #define CMD_CLOSE_CONSOLE           0x00F8
+#define CMD_GET_SELECTED_OBJECTS    0x00F9
 
 
 //

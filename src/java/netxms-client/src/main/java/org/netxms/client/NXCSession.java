@@ -26,6 +26,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -1281,6 +1282,52 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		subscribe(CHANNEL_OBJECTS);
 	}
 
+	/**
+	 * Synchronizes selected object set with the server.
+	 *
+	 * @param objects identifiers of objects need to be synchronized
+	 * @param syncComments if true, comments for objects will be synchronized as well
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void syncObjectSet(long[] objects, boolean syncComments) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_OBJECTS);
+		msg.setVariableInt16(NXCPCodes.VID_SYNC_COMMENTS, syncComments ? 1 : 0);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_OBJECTS, objects.length);
+		msg.setVariable(NXCPCodes.VID_OBJECT_LIST, objects);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Synchronize only those objects from given set which are not synchronized yet.
+	 *  
+	 * @param objects identifiers of objects need to be synchronized
+	 * @param syncComments if true, comments for objects will be synchronized as well
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void syncMissingObjects(long[] objects, boolean syncComments) throws IOException, NXCException
+	{
+		final long[] syncList = Arrays.copyOf(objects, objects.length);
+		int count = syncList.length;
+		synchronized(objectList)
+		{
+			for(int i = 0; i < syncList.length; i++)
+			{
+				if (objectList.containsKey(syncList[i]))
+				{
+					syncList[i] = 0;
+					count--;
+				}
+			}
+		}
+		
+		if (count > 0)
+			syncObjectSet(syncList, syncComments);
+	}
+	
 	/**
 	 * Find NetXMS object by it's identifier.
 	 * 

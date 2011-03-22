@@ -139,7 +139,7 @@ public class MibObject
 					stop = true;
 					break;
 	         case MIB_TAG_BYTE_OID:
-	         	id = in.readByte();
+	         	id = in.readUnsignedByte();
 	         	break;
 	         case MIB_TAG_WORD_OID:
 	         	id = in.readUnsignedShort();
@@ -154,13 +154,13 @@ public class MibObject
 	         	description = readStringFromStream(in);
 	         	break;
 	         case MIB_TAG_TYPE:
-	         	type = in.readByte();
+	         	type = in.readUnsignedByte();
 	         	break;
 	         case MIB_TAG_STATUS:
-	         	status = in.readByte();
+	         	status = in.readUnsignedByte();
 	         	break;
 	         case MIB_TAG_ACCESS:
-	         	access = in.readByte();
+	         	access = in.readUnsignedByte();
 	         	break;
 	         case MIB_TAG_OBJECT:
 	         	MibObject object = new MibObject(in, this);

@@ -275,6 +275,7 @@ public final class NXCPCodes
 	public static final int CMD_QUERY_TABLE             = 0x00F6;
 	public static final int CMD_OPEN_CONSOLE            = 0x00F7;
 	public static final int CMD_CLOSE_CONSOLE           = 0x00F8;
+	public static final int CMD_GET_SELECTED_OBJECTS    = 0x00F9;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

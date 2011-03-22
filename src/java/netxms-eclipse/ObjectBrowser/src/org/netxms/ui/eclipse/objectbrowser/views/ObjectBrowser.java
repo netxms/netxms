@@ -38,6 +38,8 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
@@ -243,7 +245,9 @@ public class ObjectBrowser extends ViewPart
 		final Object parentObject = selection[0].getParentItem().getData();
 		
 		return (((currentObject instanceof Node) ||
+	            (currentObject instanceof Cluster) ||
 		         (currentObject instanceof Subnet) ||
+	            (currentObject instanceof Condition) ||
 		         (currentObject instanceof Container)) &&
 		        ((parentObject instanceof Container) ||
 		         (parentObject instanceof ServiceRoot)));

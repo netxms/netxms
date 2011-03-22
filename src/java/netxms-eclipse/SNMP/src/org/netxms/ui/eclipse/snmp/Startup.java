@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.snmp;
 
 import java.io.File;
+import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -65,8 +66,10 @@ public class Startup implements IStartup
 					{
 						File targetDir = new File(loc.getURL().toURI());
 						File mibFile = new File(targetDir, "netxms.mib");
+						
+						Date serverMibTimestamp = session.getMibFileTimestamp();
 
-						if (!mibFile.exists())
+						if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
 						{
 							File file = session.downloadMibFile();
 							file.renameTo(mibFile);
