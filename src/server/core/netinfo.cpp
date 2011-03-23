@@ -235,9 +235,10 @@ static ARP_CACHE *SysGetLocalArpCache()
 // Get local interface list (built-in system dependent code)
 //
 
-static INTERFACE_LIST *SysGetLocalIfList()
+static InterfaceList *SysGetLocalIfList()
 {
-   INTERFACE_LIST *pIfList = NULL;
+   InterfaceList *pIfList = NULL;
+	INTERFACE_INFO iface;
 
 #ifdef _WIN32
    DWORD dwSize;
@@ -254,10 +255,7 @@ static INTERFACE_LIST *SysGetLocalIfList()
    pBuffer = (IP_ADAPTER_INFO *)malloc(dwSize);
    if (GetAdaptersInfo(pBuffer, &dwSize) == ERROR_SUCCESS)
    {
-      // Allocate and initialize interface list structure
-      pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
-      pIfList->iNumEntries = 0;
-      pIfList->pInterfaces = NULL;
+      pIfList = new InterfaceList;
 
       for(pInfo = pBuffer; pInfo != NULL; pInfo = pInfo->Next)
       {
@@ -306,19 +304,17 @@ static INTERFACE_LIST *SysGetLocalIfList()
          // Compose result for each ip address
          for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
          {
-            pIfList->pInterfaces = (INTERFACE_INFO *)realloc(pIfList->pInterfaces,
-                                          sizeof(INTERFACE_INFO) * (pIfList->iNumEntries + 1));
-            nx_strncpy(pIfList->pInterfaces[pIfList->iNumEntries].szName, szAdapterName, MAX_OBJECT_NAME);
-            memcpy(pIfList->pInterfaces[pIfList->iNumEntries].bMacAddr, pInfo->Address, MAC_ADDR_LENGTH);
-            pIfList->pInterfaces[pIfList->iNumEntries].dwIndex = pInfo->Index;
-            pIfList->pInterfaces[pIfList->iNumEntries].dwIpAddr = ntohl(inet_addr(pAddr->IpAddress.String));
-            pIfList->pInterfaces[pIfList->iNumEntries].dwIpNetMask = ntohl(inet_addr(pAddr->IpMask.String));
-            pIfList->pInterfaces[pIfList->iNumEntries].dwType = pInfo->Type;
-            pIfList->pInterfaces[pIfList->iNumEntries].iNumSecondary = 0;
-				pIfList->pInterfaces[pIfList->iNumEntries].dwPortNumber = 0;
-				pIfList->pInterfaces[pIfList->iNumEntries].dwSlotNumber = 0;
-				pIfList->pInterfaces[pIfList->iNumEntries].dwBridgePortNumber = 0;
-            pIfList->iNumEntries++;
+            nx_strncpy(iface.szName, szAdapterName, MAX_OBJECT_NAME);
+            memcpy(iface.bMacAddr, pInfo->Address, MAC_ADDR_LENGTH);
+            iface.dwIndex = pInfo->Index;
+            iface.dwIpAddr = ntohl(inet_addr(pAddr->IpAddress.String));
+            iface.dwIpNetMask = ntohl(inet_addr(pAddr->IpMask.String));
+            iface.dwType = pInfo->Type;
+            iface.iNumSecondary = 0;
+				iface.dwPortNumber = 0;
+				iface.dwSlotNumber = 0;
+				iface.dwBridgePortNumber = 0;
+				pIfList->add(&iface);
          }
       }
    }
@@ -334,12 +330,10 @@ static INTERFACE_LIST *SysGetLocalIfList()
 		StringList list;
       if (imp_NxSubAgentGetIfList(&list))
       {
-         pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
-         pIfList->iNumEntries = list.getSize();
-         pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * list.getSize());
-         memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * list.getSize());
+         pIfList = new InterfaceList(list.getSize());
          for(i = 0; i < list.getSize(); i++)
          {
+				memset(&iface, 0, sizeof(INTERFACE_INFO));
             TCHAR *pTemp = _tcsdup(list.getValue(i));
             TCHAR *pBuf = pTemp;
 
@@ -348,7 +342,7 @@ static INTERFACE_LIST *SysGetLocalIfList()
             if (pChar != NULL)
             {
                *pChar = 0;
-               pIfList->pInterfaces[i].dwIndex = _tcstoul(pBuf, NULL, 10);
+               iface.dwIndex = _tcstoul(pBuf, NULL, 10);
                pBuf = pChar + 1;
             }
 
@@ -370,9 +364,9 @@ static INTERFACE_LIST *SysGetLocalIfList()
                {
                   pSlash = defaultMask;
                }
-               pIfList->pInterfaces[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
+               iface.dwIpAddr = ntohl(_t_inet_addr(pBuf));
                dwBits = _tcstoul(pSlash, NULL, 10);
-               pIfList->pInterfaces[i].dwIpNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+               iface.dwIpNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
                pBuf = pChar + 1;
             }
 
@@ -381,7 +375,7 @@ static INTERFACE_LIST *SysGetLocalIfList()
             if (pChar != NULL)
             {
                *pChar = 0;
-               pIfList->pInterfaces[i].dwType = _tcstoul(pBuf, NULL, 10);
+               iface.dwType = _tcstoul(pBuf, NULL, 10);
                pBuf = pChar + 1;
             }
 
@@ -390,14 +384,15 @@ static INTERFACE_LIST *SysGetLocalIfList()
             if (pChar != NULL)
             {
                *pChar = 0;
-               StrToBin(pBuf, pIfList->pInterfaces[i].bMacAddr, MAC_ADDR_LENGTH);
+               StrToBin(pBuf, iface.bMacAddr, MAC_ADDR_LENGTH);
                pBuf = pChar + 1;
             }
 
             // Name
-            nx_strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
+            nx_strncpy(iface.szName, pBuf, MAX_OBJECT_NAME - 1);
 
             free(pTemp);
+				pIfList->add(&iface);
          }
       }
    }
@@ -438,9 +433,9 @@ ARP_CACHE *GetLocalArpCache()
 // Get local interface list
 //
 
-INTERFACE_LIST *GetLocalInterfaceList()
+InterfaceList *GetLocalInterfaceList()
 {
-   INTERFACE_LIST *pIfList = NULL;
+   InterfaceList *pIfList = NULL;
 
    // Get interface list from built-in code or platform subagent
    pIfList = SysGetLocalIfList();
@@ -457,6 +452,6 @@ INTERFACE_LIST *GetLocalInterfaceList()
       }
    }
 
-   CleanInterfaceList(pIfList);
+	pIfList->removeLoopbacks();
    return pIfList;
 }

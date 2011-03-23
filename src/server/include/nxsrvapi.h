@@ -196,13 +196,28 @@ typedef struct
 // Interface list used by discovery functions and AgentConnection class
 //
 
-typedef struct
+class LIBNXSRV_EXPORTABLE InterfaceList
 {
-   int iNumEntries;              // Number of entries in pInterfaces
-   int iEnumPos;                 // Used by index enumeration handler
-   void *pArg;                   // Can be used by custom enumeration handlers
-   INTERFACE_INFO *pInterfaces;  // Interface entries
-} INTERFACE_LIST;
+private:
+   int m_size;       				 // Number of valid entries
+	int m_allocated;               // Number of allocated entries
+   void *m_data;                  // Can be used by custom enumeration handlers
+   INTERFACE_INFO *m_interfaces;  // Interface entries
+
+public:
+	InterfaceList(int initialAlloc = 8);
+	~InterfaceList();
+
+	void add(INTERFACE_INFO *iface);
+	void remove(int index);
+	void removeLoopbacks();
+
+	int getSize() { return m_size; }
+	INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
+
+	void setData(void *data) { m_data = data; }
+	void *getData() { return m_data; }
+};
 
 
 //
@@ -330,7 +345,7 @@ public:
 	SOCKET getSocket() { return m_hSocket; }
 
    ARP_CACHE *getArpCache();
-   INTERFACE_LIST *getInterfaceList();
+   InterfaceList *getInterfaceList();
    ROUTING_TABLE *getRoutingTable();
    DWORD getParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
    DWORD getList(const TCHAR *pszParam);
@@ -454,7 +469,6 @@ public:
 //
 
 void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache);
-void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList);
 void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);

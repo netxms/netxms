@@ -321,9 +321,10 @@ DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *sz
 
 static DWORD HandlerIndex(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   if (((INTERFACE_LIST *)pArg)->iEnumPos < ((INTERFACE_LIST *)pArg)->iNumEntries)
-      ((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iEnumPos].dwIndex = pVar->GetValueAsUInt();
-   ((INTERFACE_LIST *)pArg)->iEnumPos++;
+	INTERFACE_INFO info;
+	memset(&info, 0, sizeof(INTERFACE_INFO));
+	info.dwIndex = pVar->GetValueAsUInt();
+	((InterfaceList *)pArg)->add(&info);
    return SNMP_ERR_SUCCESS;
 }
 
@@ -349,31 +350,26 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(DWORD), 0);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
-      int i;
+		InterfaceList *ifList = (InterfaceList *)pArg;
 
-      for(i = 0; i < ((INTERFACE_LIST *)pArg)->iNumEntries; i++)
-         if (((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIndex == dwIndex)
+		for(int i = 0; i < ifList->getSize(); i++)
+         if (ifList->get(i)->dwIndex == dwIndex)
          {
-            if (((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr != 0)
+            if (ifList->get(i)->dwIpAddr != 0)
             {
                // This interface entry already filled, so we have additional IP addresses
                // on a single interface
-               ((INTERFACE_LIST *)pArg)->iNumEntries++;
-               ((INTERFACE_LIST *)pArg)->pInterfaces = (INTERFACE_INFO *)realloc(((INTERFACE_LIST *)pArg)->pInterfaces,
-                     sizeof(INTERFACE_INFO) * ((INTERFACE_LIST *)pArg)->iNumEntries);
-               memcpy(&(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1]), 
-                      &(((INTERFACE_LIST *)pArg)->pInterfaces[i]), sizeof(INTERFACE_INFO));
-               if (_tcslen(((INTERFACE_LIST *)pArg)->pInterfaces[i].szName) < MAX_OBJECT_NAME - 6)
-               {
-                  TCHAR szBuffer[8];
-
-                  _sntprintf(szBuffer, 8, _T(":%d"), ((INTERFACE_LIST *)pArg)->pInterfaces[i].iNumSecondary++);
-                  _tcscat(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1].szName, szBuffer);
-               }
-               i = ((INTERFACE_LIST *)pArg)->iNumEntries - 1;
+					INTERFACE_INFO iface;
+					memcpy(&iface, ifList->get(i), sizeof(INTERFACE_INFO));
+					iface.dwIpAddr = ntohl(pVar->GetValueAsUInt());
+					iface.dwIpNetMask = dwNetMask;
+					ifList->add(&iface);
             }
-            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr = ntohl(pVar->GetValueAsUInt());
-            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpNetMask = dwNetMask;
+				else
+				{
+					ifList->get(i)->dwIpAddr = ntohl(pVar->GetValueAsUInt());
+					ifList->get(i)->dwIpNetMask = dwNetMask;
+				}
             break;
          }
    }
@@ -385,11 +381,11 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
 // Get interface list via SNMP
 //
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport, Node *node, BOOL useIfXTable)
+InterfaceList *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport, Node *node, BOOL useIfXTable)
 {
    LONG i, iNumIf;
    TCHAR szOid[128], szBuffer[256];
-   INTERFACE_LIST *pIfList = NULL;
+   InterfaceList *pIfList = NULL;
    int useAliases;
    BOOL bSuccess = FALSE;
 
@@ -402,48 +398,37 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 	useAliases = ConfigReadInt(_T("UseInterfaceAliases"), 0);
 
    // Create empty list
-   pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
-   pIfList->iNumEntries = iNumIf;
-   pIfList->iEnumPos = 0;
-   pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * iNumIf);
-   memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
+   pIfList = new InterfaceList(iNumIf);
 
    // Gather interface indexes
-   if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.2.2.1.1"),
-                     HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
    {
-      // Some devices can report incorrect total number of interfaces
-      // I have seen it on 3COM SuperStack II 3300
-      if (pIfList->iEnumPos < iNumIf)
-      {
-         pIfList->iNumEntries = pIfList->iEnumPos;
-         iNumIf = pIfList->iEnumPos;
-      }
-
       // Enumerate interfaces
-      for(i = 0; i < iNumIf; i++)
+		for(i = 0; i < pIfList->getSize(); i++)
       {
+			INTERFACE_INFO *iface = pIfList->get(i);
+
          // Get interface alias if needed
          if (useAliases > 0)
          {
-		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), pIfList->pInterfaces[i].dwIndex);
+		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), iface->dwIndex);
 		      if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
-		                   pIfList->pInterfaces[i].szName, MAX_DB_STRING, 0) != SNMP_ERR_SUCCESS)
+		                   iface->szName, MAX_DB_STRING, 0) != SNMP_ERR_SUCCESS)
 				{
-					pIfList->pInterfaces[i].szName[0] = 0;		// It's not an error if we cannot get interface alias
+					iface->szName[0] = 0;		// It's not an error if we cannot get interface alias
 				}
 				else
 				{
-					StrStrip(pIfList->pInterfaces[i].szName);
+					StrStrip(iface->szName);
 				}
          }
 
 			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifTable
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), pIfList->pInterfaces[i].dwIndex);
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->dwIndex);
          if (!useIfXTable ||
 				 (SnmpGet(dwVersion, pTransport, szOid, NULL, 0, szBuffer, 256, 0) != SNMP_ERR_SUCCESS))
          {
-		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), pIfList->pInterfaces[i].dwIndex);
+		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->dwIndex);
 		      if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0, szBuffer, 256, 0) != SNMP_ERR_SUCCESS)
 		         break;
 		   }
@@ -452,162 +437,158 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          switch(useAliases)
          {
          	case 1:	// Use only alias if available, otherwise name
-         		if (pIfList->pInterfaces[i].szName[0] == 0)
-	         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
+         		if (iface->szName[0] == 0)
+	         		nx_strncpy(iface->szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
          		break;
          	case 2:	// Concatenate alias with name
          	case 3:	// Concatenate name with alias
-         		if (pIfList->pInterfaces[i].szName[0] != 0)
+         		if (iface->szName[0] != 0)
          		{
 						if (useAliases == 2)
 						{
-         				if  (_tcslen(pIfList->pInterfaces[i].szName) < (MAX_DB_STRING - 3))
+         				if  (_tcslen(iface->szName) < (MAX_DB_STRING - 3))
          				{
-		      				_sntprintf(&pIfList->pInterfaces[i].szName[_tcslen(pIfList->pInterfaces[i].szName)], MAX_DB_STRING - _tcslen(pIfList->pInterfaces[i].szName), _T(" (%s)"), szBuffer);
-		      				pIfList->pInterfaces[i].szName[MAX_DB_STRING - 1] = 0;
+		      				_sntprintf(&iface->szName[_tcslen(iface->szName)], MAX_DB_STRING - _tcslen(iface->szName), _T(" (%s)"), szBuffer);
+		      				iface->szName[MAX_DB_STRING - 1] = 0;
 		      			}
 						}
 						else
 						{
 							TCHAR temp[MAX_DB_STRING];
 
-							_tcscpy(temp, pIfList->pInterfaces[i].szName);
-		         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);
-         				if  (_tcslen(pIfList->pInterfaces[i].szName) < (MAX_DB_STRING - 3))
+							_tcscpy(temp, iface->szName);
+		         		nx_strncpy(iface->szName, szBuffer, MAX_DB_STRING);
+         				if  (_tcslen(iface->szName) < (MAX_DB_STRING - 3))
          				{
-		      				_sntprintf(&pIfList->pInterfaces[i].szName[_tcslen(pIfList->pInterfaces[i].szName)], MAX_DB_STRING - _tcslen(pIfList->pInterfaces[i].szName), _T(" (%s)"), temp);
-		      				pIfList->pInterfaces[i].szName[MAX_DB_STRING - 1] = 0;
+		      				_sntprintf(&iface->szName[_tcslen(iface->szName)], MAX_DB_STRING - _tcslen(iface->szName), _T(" (%s)"), temp);
+		      				iface->szName[MAX_DB_STRING - 1] = 0;
 		      			}
 						}
          		}
          		else
          		{
-	         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
+	         		nx_strncpy(iface->szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
 					}
          		break;
          	default:	// Use only name
-         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);
+         		nx_strncpy(iface->szName, szBuffer, MAX_DB_STRING);
          		break;
          }
 
          // Interface type
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), pIfList->pInterfaces[i].dwIndex);
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->dwIndex);
          if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0,
-                      &pIfList->pInterfaces[i].dwType, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
+                      &iface->dwType, sizeof(DWORD), 0) != SNMP_ERR_SUCCESS)
 			{
-				pIfList->pInterfaces[i].dwType = IFTYPE_OTHER;
+				iface->dwType = IFTYPE_OTHER;
 			}
 
          // MAC address
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), pIfList->pInterfaces[i].dwIndex);
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), iface->dwIndex);
          memset(szBuffer, 0, MAC_ADDR_LENGTH);
          if (SnmpGet(dwVersion, pTransport, szOid, NULL, 0, szBuffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
 			{
-	         memcpy(pIfList->pInterfaces[i].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
+	         memcpy(iface->bMacAddr, szBuffer, MAC_ADDR_LENGTH);
 			}
 			else
 			{
 				// Unable to get MAC address
-	         memset(pIfList->pInterfaces[i].bMacAddr, 0, MAC_ADDR_LENGTH);
+	         memset(iface->bMacAddr, 0, MAC_ADDR_LENGTH);
 			}
       }
 
-      if (i == iNumIf)
+      // Interface IP address'es and netmasks
+      if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.20.1.1"),
+                        HandlerIpAddr, pIfList, FALSE) == SNMP_ERR_SUCCESS)
       {
-         // Interface IP address'es and netmasks
-         if (SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.20.1.1"),
-                           HandlerIpAddr, pIfList, FALSE) == SNMP_ERR_SUCCESS)
-         {
-            // Handle special cases
-				if (node->getNodeType() == NODE_TYPE_NORTEL_ACCELAR)
+         // Handle special cases
+			if (node->getNodeType() == NODE_TYPE_NORTEL_ACCELAR)
+			{
+				// Calculate slot/port pair from ifIndex
+				for(i = 0; i < pIfList->getSize(); i++)
 				{
-					// Calculate slot/port pair from ifIndex
-					for(i = 0; i < pIfList->iNumEntries; i++)
+					DWORD slot = pIfList->get(i)->dwIndex / 64;
+					if ((slot > 0) && (slot <= 10))
 					{
-						DWORD slot = pIfList->pInterfaces[i].dwIndex / 64;
-						if ((slot > 0) && (slot <= 10))
-						{
-							pIfList->pInterfaces[i].dwSlotNumber = slot;
-							pIfList->pInterfaces[i].dwPortNumber = pIfList->pInterfaces[i].dwIndex % 64 + 1;
-						}
-					}
-
-               GetAccelarVLANIfList(dwVersion, pTransport, pIfList);
-				}
-
-				// Nortel BayStack hack - move to driver
-				if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3"), 17))
-				{
-					DWORD slotSize;
-					if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3.74"), 20))	// 56xx
-					{
-						slotSize = 128;
-					}
-					else if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3.40"), 20))	// BPS2000
-					{
-						slotSize = 32;
-					}
-					else
-					{
-						slotSize = 64;
-					}
-
-					// Calculate slot/port pair from ifIndex
-					for(i = 0; i < pIfList->iNumEntries; i++)
-					{
-						DWORD slot = pIfList->pInterfaces[i].dwIndex / slotSize + 1;
-						if ((slot > 0) && (slot <= 8))
-						{
-							pIfList->pInterfaces[i].dwSlotNumber = slot;
-							pIfList->pInterfaces[i].dwPortNumber = pIfList->pInterfaces[i].dwIndex % slotSize;
-						}
-					}
-
-					// Modern switches (55xx, 56xx) supports rapidCity MIBs
-               GetAccelarVLANIfList(dwVersion, pTransport, pIfList);
-
-					DWORD mgmtIpAddr, mgmtNetMask;
-
-					if ((SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS) &&
-					    (SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), NULL, 0, &mgmtNetMask, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS))
-					{
-						int index = pIfList->iNumEntries;
-						pIfList->iNumEntries++;
-						pIfList->pInterfaces = (INTERFACE_INFO *)realloc(pIfList->pInterfaces, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
-						memset(&pIfList->pInterfaces[index], 0, sizeof(INTERFACE_INFO));
-						pIfList->pInterfaces[index].dwIpAddr = mgmtIpAddr;
-						pIfList->pInterfaces[index].dwIpNetMask = mgmtNetMask;
-						pIfList->pInterfaces[index].dwType = IFTYPE_OTHER;
-						_tcscpy(pIfList->pInterfaces[index].szName, _T("mgmt"));
-						SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
-
-						// Update wrongly reported MAC addresses
-						for(i = 0; i < pIfList->iNumEntries; i++)
-						{
-							if ((pIfList->pInterfaces[i].dwSlotNumber != 0) &&
-								 (!memcmp(pIfList->pInterfaces[i].bMacAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
-							     !memcmp(pIfList->pInterfaces[i].bMacAddr, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH)))
-							{
-								memcpy(pIfList->pInterfaces[i].bMacAddr, pIfList->pInterfaces[index].bMacAddr, MAC_ADDR_LENGTH);
-								pIfList->pInterfaces[i].bMacAddr[5] += (BYTE)pIfList->pInterfaces[i].dwPortNumber;
-							}
-						}
+						pIfList->get(i)->dwSlotNumber = slot;
+						pIfList->get(i)->dwPortNumber = pIfList->get(i)->dwIndex % 64 + 1;
 					}
 				}
 
-            bSuccess = TRUE;
-         }
+            GetAccelarVLANIfList(dwVersion, pTransport, pIfList);
+			}
+
+			// Nortel BayStack hack - move to driver
+			if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3"), 17))
+			{
+				DWORD slotSize;
+				if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3.74"), 20))	// 56xx
+				{
+					slotSize = 128;
+				}
+				else if (!_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.45.3.40"), 20))	// BPS2000
+				{
+					slotSize = 32;
+				}
+				else
+				{
+					slotSize = 64;
+				}
+
+				// Calculate slot/port pair from ifIndex
+				for(i = 0; i < pIfList->getSize(); i++)
+				{
+					DWORD slot = pIfList->get(i)->dwIndex / slotSize + 1;
+					if ((slot > 0) && (slot <= 8))
+					{
+						pIfList->get(i)->dwSlotNumber = slot;
+						pIfList->get(i)->dwPortNumber = pIfList->get(i)->dwIndex % slotSize;
+					}
+				}
+
+				// Modern switches (55xx, 56xx) supports rapidCity MIBs
+            GetAccelarVLANIfList(dwVersion, pTransport, pIfList);
+
+				DWORD mgmtIpAddr, mgmtNetMask;
+
+				if ((SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS) &&
+				    (SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), NULL, 0, &mgmtNetMask, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS))
+				{
+					INTERFACE_INFO iface;
+
+					memset(&iface, 0, sizeof(INTERFACE_INFO));
+					iface.dwIpAddr = mgmtIpAddr;
+					iface.dwIpNetMask = mgmtNetMask;
+					iface.dwType = IFTYPE_OTHER;
+					_tcscpy(iface.szName, _T("mgmt"));
+					SnmpGet(dwVersion, pTransport, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, iface.bMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
+					pIfList->add(&iface);
+
+					// Update wrongly reported MAC addresses
+					for(i = 0; i < pIfList->getSize(); i++)
+					{
+						if ((pIfList->get(i)->dwSlotNumber != 0) &&
+							 (!memcmp(pIfList->get(i)->bMacAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
+						     !memcmp(pIfList->get(i)->bMacAddr, iface.bMacAddr, MAC_ADDR_LENGTH)))
+						{
+							memcpy(pIfList->get(i)->bMacAddr, iface.bMacAddr, MAC_ADDR_LENGTH);
+							pIfList->get(i)->bMacAddr[5] += (BYTE)pIfList->get(i)->dwPortNumber;
+						}
+					}
+				}
+			}
+
+         bSuccess = TRUE;
       }
    }
 
    if (bSuccess)
    {
-      CleanInterfaceList(pIfList);
+		pIfList->removeLoopbacks();
    }
    else
    {
-      DestroyInterfaceList(pIfList);
-      pIfList = NULL;
+      delete_and_null(pIfList);
    }
 
    return pIfList;

@@ -361,6 +361,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\iflist.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\isc.cpp"
 				>
 			</File>

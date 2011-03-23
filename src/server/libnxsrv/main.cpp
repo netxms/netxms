@@ -93,21 +93,6 @@ const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError)
 
 
 //
-// Destroy interface list created by discovery functions
-//
-
-void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList)
-{
-   if (pIfList != NULL)
-   {
-      if (pIfList->pInterfaces != NULL)
-         free(pIfList->pInterfaces);
-      free(pIfList);
-   }
-}
-
-
-//
 // Destroy ARP cache created by discovery functions
 //
 

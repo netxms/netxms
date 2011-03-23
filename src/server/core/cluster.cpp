@@ -519,7 +519,7 @@ BOOL Cluster::isVirtualAddr(DWORD dwAddr)
 void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
 	DWORD i, j, k, dwPollListSize;
-	INTERFACE_LIST *pIfList;
+	InterfaceList *pIfList;
 	BOOL bModified = FALSE, bAllDown;
 	BYTE *pbResourceFound;
 	NetObj **ppPollList;
@@ -576,11 +576,11 @@ void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 			if (pIfList != NULL)
 			{
 				LockData();
-				for(j = 0; j < (DWORD)pIfList->iNumEntries; j++)
+				for(j = 0; j < (DWORD)pIfList->getSize(); j++)
 				{
 					for(k = 0; k < m_dwNumResources; k++)
 					{
-						if (m_pResourceList[k].dwIpAddr == pIfList->pInterfaces[j].dwIpAddr)
+						if (m_pResourceList[k].dwIpAddr == pIfList->get(j)->dwIpAddr)
 						{
 							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->Id())
 							{
@@ -615,7 +615,7 @@ void Cluster::statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 					}
 				}
 				UnlockData();
-				DestroyInterfaceList(pIfList);
+				delete pIfList;
 			}
 			else
 			{

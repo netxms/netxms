@@ -53,11 +53,11 @@ sub analyzeDevice(snmp)
 	}
 	SetCustomAttribute($node, ".baystack.slotSize", slotSize);
 
-	// Check if device supports rapidCity MIBs
-	if (SnmpGet(snmp, ".1.3.6.1.4.1.2272.1.3.2.1.1") != null)
-		SetCustomAttribute($node, ".baystack.rapidCity", true);
+	// Check if device supports rapidCity VLAN MIBs
+	if (SnmpGet(snmp, ".1.3.6.1.4.1.2272.1.3.1.0") != null)
+		SetCustomAttribute($node, ".baystack.rapidCity.vlan", true);
 	else
-		SetCustomAttribute($node, ".baystack.rapidCity", false);
+		SetCustomAttribute($node, ".baystack.rapidCity.vlan", false);
 }
 
 /**
@@ -80,7 +80,11 @@ sub getInterfaces(snmp, iflist)
 		}
 	}
 	
-	// Get IP interfaces
+	// Get VLAN interfaces
+	if (GetCustomAttribute($node, ".baystack.rapidCity.vlan"))
+	{
+		SnmpGetTable(snmp, ".1.3.6.1.4.1.2272.1.3.2.1.16", ".1.3.6.1.4.1.2272.1.3.2.1.17", ".1.3.6.1.4.1.2272.1.3.2.1.19");
+	}
 }
 
 /**

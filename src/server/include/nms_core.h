@@ -697,9 +697,8 @@ void InitLocalNetInfo();
 ARP_CACHE *GetLocalArpCache();
 ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport);
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport, Node *node, BOOL useIfXTable);
-INTERFACE_LIST *GetLocalInterfaceList(void);
-void CleanInterfaceList(INTERFACE_LIST *pIfList);
+InterfaceList *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport, Node *node, BOOL useIfXTable);
+InterfaceList *GetLocalInterfaceList();
 int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dwIfIndex);
 
 ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport);
@@ -736,8 +735,7 @@ void InitSMSSender();
 void ShutdownSMSSender();
 void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText);
 
-void GetAccelarVLANIfList(DWORD dwVersion, SNMP_Transport *pTransport,
-                          INTERFACE_LIST *pIfList);
+void GetAccelarVLANIfList(DWORD dwVersion, SNMP_Transport *pTransport, InterfaceList *pIfList);
 
 void InitTraps();
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);

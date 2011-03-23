@@ -110,15 +110,15 @@ static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
 
 void CheckForMgmtNode()
 {
-   INTERFACE_LIST *pIfList;
+   InterfaceList *pIfList;
    Node *pNode;
    int i;
 
    pIfList = GetLocalInterfaceList();
    if (pIfList != NULL)
    {
-      for(i = 0; i < pIfList->iNumEntries; i++)
-         if ((pNode = FindNodeByIP(pIfList->pInterfaces[i].dwIpAddr)) != NULL)
+      for(i = 0; i < pIfList->getSize(); i++)
+         if ((pNode = FindNodeByIP(pIfList->get(i)->dwIpAddr)) != NULL)
          {
             // Check management node flag
             if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
@@ -129,17 +129,17 @@ void CheckForMgmtNode()
             g_dwMgmtNode = pNode->Id();   // Set local management node ID
             break;
          }
-      if (i == pIfList->iNumEntries)   // No such node
+      if (i == pIfList->getSize())   // No such node
       {
          // Find interface with IP address
-         for(i = 0; i < pIfList->iNumEntries; i++)
-            if (pIfList->pInterfaces[i].dwIpAddr != 0)
+         for(i = 0; i < pIfList->getSize(); i++)
+            if (pIfList->get(i)->dwIpAddr != 0)
             {
-					CreateManagementNode(pIfList->pInterfaces[i].dwIpAddr, pIfList->pInterfaces[i].dwIpNetMask);
+					CreateManagementNode(pIfList->get(i)->dwIpAddr, pIfList->get(i)->dwIpNetMask);
                break;
             }
       }
-      DestroyInterfaceList(pIfList);
+      delete pIfList;
    }
 
 	if (g_dwMgmtNode != 0)

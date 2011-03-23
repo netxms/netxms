@@ -46,11 +46,11 @@ static DWORD PortMapCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 		DWORD ifIndex = pRespPDU->getVariable(0)->GetValueAsUInt();
-		INTERFACE_LIST *ifList = (INTERFACE_LIST *)arg;
-		for(int i = 0; i < ifList->iNumEntries; i++)
-			if (ifList->pInterfaces[i].dwIndex == ifIndex)
+		InterfaceList *ifList = (InterfaceList *)arg;
+		for(int i = 0; i < ifList->getSize(); i++)
+			if (ifList->get(i)->dwIndex == ifIndex)
 			{
-				ifList->pInterfaces[i].dwBridgePortNumber = var->GetValueAsUInt();
+				ifList->get(i)->dwBridgePortNumber = var->GetValueAsUInt();
 				break;
 			}
       delete pRespPDU;
@@ -58,7 +58,7 @@ static DWORD PortMapCallback(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 	return SNMP_ERR_SUCCESS;
 }
 
-void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, INTERFACE_LIST *ifList)
+void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, InterfaceList *ifList)
 {
 	SnmpEnumerate(snmpVersion, transport, _T(".1.3.6.1.2.1.17.1.4.1.1"), PortMapCallback, ifList, FALSE);
 }

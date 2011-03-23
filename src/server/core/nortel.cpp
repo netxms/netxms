@@ -94,9 +94,8 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar,
 static DWORD HandlerPassportIfList(DWORD dwVersion, SNMP_Variable *pVar,
                                   SNMP_Transport *pTransport, void *pArg)
 {
-   INTERFACE_LIST *pIfList = (INTERFACE_LIST *)pArg;
-   VLAN_LIST *pVlanList = (VLAN_LIST *)pIfList->pArg;
-   int iIndex;
+   InterfaceList *pIfList = (InterfaceList *)pArg;
+   VLAN_LIST *pVlanList = (VLAN_LIST *)pIfList->getData();
    DWORD oidName[MAX_OID_LEN], dwVlanIndex, dwIfIndex, dwNameLen, dwResult;
 
    dwIfIndex = pVar->GetValueAsUInt();
@@ -107,15 +106,13 @@ static DWORD HandlerPassportIfList(DWORD dwVersion, SNMP_Variable *pVar,
    // Create new interface only if we have VLAN with same interface index
    if (dwVlanIndex < pVlanList->dwNumVlans)
    {
-      iIndex = pIfList->iNumEntries;
-      pIfList->iNumEntries++;
-      pIfList->pInterfaces = (INTERFACE_INFO *)realloc(pIfList->pInterfaces, 
-                                             sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
-      memset(&pIfList->pInterfaces[iIndex], 0, sizeof(INTERFACE_INFO));
-      pIfList->pInterfaces[iIndex].dwIndex = dwIfIndex;
-      _tcscpy(pIfList->pInterfaces[iIndex].szName, pVlanList->pList[dwVlanIndex].szName);
-      pIfList->pInterfaces[iIndex].dwType = IFTYPE_OTHER;
-      memcpy(pIfList->pInterfaces[iIndex].bMacAddr, pVlanList->pList[dwVlanIndex].bMacAddr, MAC_ADDR_LENGTH);
+		INTERFACE_INFO iface;
+
+		memset(&iface, 0, sizeof(INTERFACE_INFO));
+      iface.dwIndex = dwIfIndex;
+      _tcscpy(iface.szName, pVlanList->pList[dwVlanIndex].szName);
+      iface.dwType = IFTYPE_OTHER;
+      memcpy(iface.bMacAddr, pVlanList->pList[dwVlanIndex].bMacAddr, MAC_ADDR_LENGTH);
       
       dwNameLen = pVar->GetName()->Length();
 
@@ -123,15 +120,17 @@ static DWORD HandlerPassportIfList(DWORD dwVersion, SNMP_Variable *pVar,
       memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
       oidName[dwNameLen - 6] = 2;
       dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
-                         &pIfList->pInterfaces[iIndex].dwIpAddr, sizeof(DWORD), 0);
+                         &iface.dwIpAddr, sizeof(DWORD), 0);
 
       if (dwResult == SNMP_ERR_SUCCESS)
       {
          // Get netmask
          oidName[dwNameLen - 6] = 3;
          dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
-                            &pIfList->pInterfaces[iIndex].dwIpNetMask, sizeof(DWORD), 0);
+                            &iface.dwIpNetMask, sizeof(DWORD), 0);
       }
+
+		pIfList->add(&iface);
    }
    else
    {
@@ -145,18 +144,16 @@ static DWORD HandlerPassportIfList(DWORD dwVersion, SNMP_Variable *pVar,
 // Get list of VLAN interfaces from Nortel Passport 8000/Accelar switch
 //
 
-void GetAccelarVLANIfList(DWORD dwVersion, SNMP_Transport *pTransport, 
-                          INTERFACE_LIST *pIfList)
+void GetAccelarVLANIfList(DWORD dwVersion, SNMP_Transport *pTransport, InterfaceList *pIfList)
 {
    VLAN_LIST vlanList;
 
    // Get VLAN list
    memset(&vlanList, 0, sizeof(VLAN_LIST));
-   SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), 
-                 HandlerVlanList, &vlanList, FALSE);
+   SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, &vlanList, FALSE);
 
    // Get interfaces
-   pIfList->pArg = &vlanList;
+   pIfList->setData(&vlanList);
    SnmpEnumerate(dwVersion, pTransport, _T(".1.3.6.1.4.1.2272.1.8.2.1.1"), 
                  HandlerPassportIfList, pIfList, FALSE);
    safe_free(vlanList.pList);

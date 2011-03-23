@@ -554,31 +554,30 @@ void AgentConnection::destroyResultData()
 // Get interface list from agent
 //
 
-INTERFACE_LIST *AgentConnection::getInterfaceList()
+InterfaceList *AgentConnection::getInterfaceList()
 {
-   INTERFACE_LIST *pIfList = NULL;
+   InterfaceList *pIfList = NULL;
+	INTERFACE_INFO iface;
    DWORD i, dwBits;
    TCHAR *pChar, *pBuf;
 
    if (getList(_T("Net.InterfaceList")) == ERR_SUCCESS)
    {
-      pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
-      pIfList->iNumEntries = m_dwNumDataLines;
-      pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
-      memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * m_dwNumDataLines);
+      pIfList = new InterfaceList(m_dwNumDataLines);
 
       // Parse result set. Each line should have the following format:
       // index ip_address/mask_bits iftype mac_address name
       for(i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];
+			memset(&iface, 0, sizeof(INTERFACE_INFO));
 
          // Index
          pChar = _tcschr(pBuf, ' ');
          if (pChar != NULL)
          {
             *pChar = 0;
-            pIfList->pInterfaces[i].dwIndex = _tcstoul(pBuf, NULL, 10);
+            iface.dwIndex = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
          }
 
@@ -600,9 +599,9 @@ INTERFACE_LIST *AgentConnection::getInterfaceList()
             {
                pSlash = defaultMask;
             }
-            pIfList->pInterfaces[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
+            iface.dwIpAddr = ntohl(_t_inet_addr(pBuf));
             dwBits = _tcstoul(pSlash, NULL, 10);
-            pIfList->pInterfaces[i].dwIpNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+            iface.dwIpNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
             pBuf = pChar + 1;
          }
 
@@ -611,7 +610,7 @@ INTERFACE_LIST *AgentConnection::getInterfaceList()
          if (pChar != NULL)
          {
             *pChar = 0;
-            pIfList->pInterfaces[i].dwType = _tcstoul(pBuf, NULL, 10);
+            iface.dwType = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
          }
 
@@ -620,12 +619,14 @@ INTERFACE_LIST *AgentConnection::getInterfaceList()
          if (pChar != NULL)
          {
             *pChar = 0;
-            StrToBin(pBuf, pIfList->pInterfaces[i].bMacAddr, MAC_ADDR_LENGTH);
+            StrToBin(pBuf, iface.bMacAddr, MAC_ADDR_LENGTH);
             pBuf = pChar + 1;
          }
 
          // Name
-         nx_strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
+         nx_strncpy(iface.szName, pBuf, MAX_OBJECT_NAME - 1);
+
+			pIfList->add(&iface);
       }
 
       Lock();

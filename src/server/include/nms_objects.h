@@ -694,14 +694,14 @@ protected:
 
    BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue);
    void CheckOSPFSupport(SNMP_Transport *pTransport);
-	void addVrrpInterfaces(INTERFACE_LIST *ifList);
+	void addVrrpInterfaces(InterfaceList *ifList);
 	BOOL ResolveName(BOOL useOnlyDNS);
    void setAgentProxy(AgentConnection *pConn);
 
    DWORD getInterfaceCount(Interface **ppInterface);
 
-   void CheckInterfaceNames(INTERFACE_LIST *pIfList);
-	void CheckSubnetBinding(INTERFACE_LIST *pIfList);
+   void CheckInterfaceNames(InterfaceList *pIfList);
+	void CheckSubnetBinding(InterfaceList *pIfList);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 
 	void ApplySystemTemplates();
@@ -760,7 +760,7 @@ public:
    void changeIPAddress(DWORD dwIpAddr);
 
    ARP_CACHE *getArpCache();
-   INTERFACE_LIST *getInterfaceList();
+   InterfaceList *getInterfaceList();
    Interface *findInterface(DWORD dwIndex, DWORD dwHostAddr);
    Interface *findInterface(const TCHAR *name);
 	Interface *findInterfaceByMAC(const BYTE *macAddr);

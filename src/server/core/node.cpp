@@ -460,9 +460,9 @@ ARP_CACHE *Node::getArpCache()
 // Get list of interfaces from node
 //
 
-INTERFACE_LIST *Node::getInterfaceList()
+InterfaceList *Node::getInterfaceList()
 {
-   INTERFACE_LIST *pIfList = NULL;
+   InterfaceList *pIfList = NULL;
 
    if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)))
    {
@@ -470,7 +470,7 @@ INTERFACE_LIST *Node::getInterfaceList()
       if (connectToAgent())
       {
          pIfList = m_pAgentConnection->getInterfaceList();
-         CleanInterfaceList(pIfList);
+			pIfList->removeLoopbacks();
       }
       agentUnlock();
    }
@@ -519,7 +519,7 @@ INTERFACE_LIST *Node::getInterfaceList()
 // Add VRRP interfaces to interface list
 //
 
-void Node::addVrrpInterfaces(INTERFACE_LIST *ifList)
+void Node::addVrrpInterfaces(InterfaceList *ifList)
 {
 	int i, j, k;
 	TCHAR buffer[32];
@@ -538,10 +538,10 @@ void Node::addVrrpInterfaces(INTERFACE_LIST *ifList)
 
 			// Get netmask for this VR
 			DWORD netmask = 0;
-			for(j = 0; j < ifList->iNumEntries; j++)
-				if (ifList->pInterfaces[j].dwIndex == router->getIfIndex())
+			for(j = 0; j < ifList->getSize(); j++)
+				if (ifList->get(j)->dwIndex == router->getIfIndex())
 				{
-					netmask = ifList->pInterfaces[j].dwIpNetMask;
+					netmask = ifList->get(j)->dwIpNetMask;
 					break;
 				}
 
@@ -552,19 +552,19 @@ void Node::addVrrpInterfaces(INTERFACE_LIST *ifList)
 				DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): checking VIP %s@%d"), m_szName, (int)m_dwId, IpToStr(vip, buffer), i);
 				if (vip != 0)
 				{
-					for(k = 0; k < ifList->iNumEntries; k++)
-						if (ifList->pInterfaces[i].dwIpAddr == vip)
+					for(k = 0; k < ifList->getSize(); k++)
+						if (ifList->get(k)->dwIpAddr == vip)
 							break;
-					if (k == ifList->iNumEntries)
+					if (k == ifList->getSize())
 					{
-						ifList->iNumEntries++;
-						ifList->pInterfaces = (INTERFACE_INFO *)realloc(ifList->pInterfaces, sizeof(INTERFACE_INFO) * ifList->iNumEntries);
-						memset(&ifList->pInterfaces[k], 0, sizeof(INTERFACE_INFO));
-						_sntprintf(ifList->pInterfaces[k].szName, MAX_DB_STRING, _T("vrrp.%u.%u.%d"), router->getId(), router->getIfIndex(), j);
-						memcpy(ifList->pInterfaces[k].bMacAddr, router->getVirtualMacAddr(), MAC_ADDR_LENGTH);
-						ifList->pInterfaces[k].dwIpAddr = vip;
-						ifList->pInterfaces[k].dwIpNetMask = netmask;
-						DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): added interface %s"), m_szName, (int)m_dwId, ifList->pInterfaces[k].szName);
+						INTERFACE_INFO iface;
+						memset(&iface, 0, sizeof(INTERFACE_INFO));
+						_sntprintf(iface.szName, MAX_DB_STRING, _T("vrrp.%u.%u.%d"), router->getId(), router->getIfIndex(), j);
+						memcpy(iface.bMacAddr, router->getVirtualMacAddr(), MAC_ADDR_LENGTH);
+						iface.dwIpAddr = vip;
+						iface.dwIpNetMask = netmask;
+						ifList->add(&iface);
+						DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): added interface %s"), m_szName, (int)m_dwId, iface.szName);
 					}
 				}
 			}
@@ -1783,7 +1783,7 @@ skip_snmp_checks:
 
 BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 {
-   INTERFACE_LIST *pIfList;
+   InterfaceList *pIfList;
    Interface **ppDeleteList;
    int i, j, iDelCount;
 	BOOL hasChanges = FALSE;
@@ -1796,13 +1796,11 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 		// Remove cluster virtual interfaces from list
 		if (pCluster != NULL)
 		{
-			for(i = 0; i < pIfList->iNumEntries; i++)
+			for(i = 0; i < pIfList->getSize(); i++)
 			{
-				if (pCluster->isVirtualAddr(pIfList->pInterfaces[i].dwIpAddr))
+				if (pCluster->isVirtualAddr(pIfList->get(i)->dwIpAddr))
 				{
-					pIfList->iNumEntries--;
-					memmove(&pIfList->pInterfaces[i], &pIfList->pInterfaces[i + 1],
-					        sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - i));
+					pIfList->remove(i);
 					i--;
 				}
 			}
@@ -1819,14 +1817,14 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 
             if (pInterface->getIfType() != IFTYPE_NETXMS_NAT_ADAPTER)
             {
-               for(j = 0; j < pIfList->iNumEntries; j++)
+               for(j = 0; j < pIfList->getSize(); j++)
                {
-                  if ((pIfList->pInterfaces[j].dwIndex == pInterface->getIfIndex()) &&
-                      (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()))
+                  if ((pIfList->get(j)->dwIndex == pInterface->getIfIndex()) &&
+                      (pIfList->get(j)->dwIpAddr == pInterface->IpAddr()))
                      break;
                }
 
-               if (j == pIfList->iNumEntries)
+               if (j == pIfList->getSize())
                {
                   // No such interface in current configuration, add it to delete list
                   ppDeleteList[iDelCount++] = pInterface;
@@ -1852,8 +1850,9 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
       safe_free(ppDeleteList);
 
       // Add new interfaces and check configuration of existing
-      for(j = 0; j < pIfList->iNumEntries; j++)
+      for(j = 0; j < pIfList->getSize(); j++)
       {
+			INTERFACE_INFO *ifInfo = pIfList->get(j);
          BOOL bNewInterface = TRUE;
 
          LockChildList(FALSE);
@@ -1863,40 +1862,40 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
             {
                Interface *pInterface = (Interface *)m_pChildList[i];
 
-               if ((pIfList->pInterfaces[j].dwIndex == pInterface->getIfIndex()) &&
-                   (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()))
+               if ((ifInfo->dwIndex == pInterface->getIfIndex()) &&
+                   (ifInfo->dwIpAddr == pInterface->IpAddr()))
                {
                   // Existing interface, check configuration
-                  if (memcmp(pIfList->pInterfaces[j].bMacAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
+                  if (memcmp(ifInfo->bMacAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
                   {
                      TCHAR szOldMac[16], szNewMac[16];
 
                      BinToStr((BYTE *)pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
-                     BinToStr(pIfList->pInterfaces[j].bMacAddr, MAC_ADDR_LENGTH, szNewMac);
+                     BinToStr(ifInfo->bMacAddr, MAC_ADDR_LENGTH, szNewMac);
                      PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "idsss",
                                pInterface->Id(), pInterface->getIfIndex(),
                                pInterface->Name(), szOldMac, szNewMac);
-                     pInterface->setMacAddr(pIfList->pInterfaces[j].bMacAddr);
+                     pInterface->setMacAddr(ifInfo->bMacAddr);
                   }
-                  if (_tcscmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
+                  if (_tcscmp(ifInfo->szName, pInterface->Name()))
                   {
-                     pInterface->setName(pIfList->pInterfaces[j].szName);
+                     pInterface->setName(ifInfo->szName);
                   }
-						if (pIfList->pInterfaces[j].dwBridgePortNumber != pInterface->getBridgePortNumber())
+						if (ifInfo->dwBridgePortNumber != pInterface->getBridgePortNumber())
 						{
-							pInterface->setBridgePortNumber(pIfList->pInterfaces[j].dwBridgePortNumber);
+							pInterface->setBridgePortNumber(ifInfo->dwBridgePortNumber);
 						}
-						if (pIfList->pInterfaces[j].dwSlotNumber != pInterface->getSlotNumber())
+						if (ifInfo->dwSlotNumber != pInterface->getSlotNumber())
 						{
-							pInterface->setSlotNumber(pIfList->pInterfaces[j].dwSlotNumber);
+							pInterface->setSlotNumber(ifInfo->dwSlotNumber);
 						}
-						if (pIfList->pInterfaces[j].dwPortNumber != pInterface->getPortNumber())
+						if (ifInfo->dwPortNumber != pInterface->getPortNumber())
 						{
-							pInterface->setPortNumber(pIfList->pInterfaces[j].dwPortNumber);
+							pInterface->setPortNumber(ifInfo->dwPortNumber);
 						}
-						if ((pIfList->pInterfaces[j].dwIpNetMask != 0) && (pIfList->pInterfaces[j].dwIpNetMask != pInterface->getIpNetMask()))
+						if ((ifInfo->dwIpNetMask != 0) && (ifInfo->dwIpNetMask != pInterface->getIpNetMask()))
 						{
-							pInterface->setIpNetMask(pIfList->pInterfaces[j].dwIpNetMask);
+							pInterface->setIpNetMask(ifInfo->dwIpNetMask);
 						}
                   bNewInterface = FALSE;
                   break;
@@ -1908,28 +1907,27 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
          if (bNewInterface)
          {
             // New interface
-            SendPollerMsg(dwRqId, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), 
-                          pIfList->pInterfaces[j].szName);
-            createNewInterface(pIfList->pInterfaces[j].dwIpAddr, 
-                               pIfList->pInterfaces[j].dwIpNetMask,
-                               pIfList->pInterfaces[j].szName,
-                               pIfList->pInterfaces[j].dwIndex,
-                               pIfList->pInterfaces[j].dwType,
-                               pIfList->pInterfaces[j].bMacAddr,
-										 pIfList->pInterfaces[j].dwBridgePortNumber,
-										 pIfList->pInterfaces[j].dwSlotNumber,
-										 pIfList->pInterfaces[j].dwPortNumber);
+            SendPollerMsg(dwRqId, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->szName);
+            createNewInterface(ifInfo->dwIpAddr, 
+                               ifInfo->dwIpNetMask,
+                               ifInfo->szName,
+                               ifInfo->dwIndex,
+                               ifInfo->dwType,
+                               ifInfo->bMacAddr,
+										 ifInfo->dwBridgePortNumber,
+										 ifInfo->dwSlotNumber,
+										 ifInfo->dwPortNumber);
             hasChanges = TRUE;
          }
       }
 
       // Check if address we are using to communicate with node
       // is configured on one of node's interfaces
-      for(i = 0; i < pIfList->iNumEntries; i++)
-         if (pIfList->pInterfaces[i].dwIpAddr == m_dwIpAddr)
+      for(i = 0; i < pIfList->getSize(); i++)
+         if (pIfList->get(i)->dwIpAddr == m_dwIpAddr)
             break;
 
-      if (i == (DWORD)pIfList->iNumEntries)
+      if (i == (DWORD)pIfList->getSize())
       {
          BOOL bCreate = TRUE;
 
@@ -1989,7 +1987,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 
 		CheckSubnetBinding(pIfList);
 
-		DestroyInterfaceList(pIfList);
+		delete pIfList;
    }
    else     /* pIfList == NULL */
    {
@@ -2080,33 +2078,6 @@ void Node::ApplySystemTemplates()
 			}
 		}
 	}
-
-	/*
-	pTemplate = FindTemplateByName(_T("@System.SNMP"));
-	if (pTemplate != NULL)
-	{
-		if (isSNMPSupported())
-		{
-			if (!pTemplate->IsChild(m_dwId))
-			{
-				DbgPrintf(4, _T("Node::ApplySystemTemplates(): applying template %d \"%s\" to node %d \"%s\""),
-				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
-				pTemplate->ApplyToNode(this);
-			}
-		}
-		else
-		{
-			if (pTemplate->IsChild(m_dwId))
-			{
-				DbgPrintf(4, _T("Node::ApplySystemTemplates(): removing template %d \"%s\" from node %d \"%s\""),
-				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
-				pTemplate->DeleteChild(this);
-				DeleteParent(pTemplate);
-				pTemplate->queueRemoveFromNode(m_dwId, TRUE);
-			}
-		}
-	}
-	*/
 }
 
 
@@ -3503,7 +3474,7 @@ BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID
 // Check and update if needed interface names
 //
 
-void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
+void Node::CheckInterfaceNames(InterfaceList *pIfList)
 {
    int i;
    TCHAR *ptr;
@@ -3512,40 +3483,42 @@ void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
 		 (m_dwNodeType == NODE_TYPE_NORTEL_OPTERA))
    {
       // Translate interface names
-      for(i = 0; i < pIfList->iNumEntries; i++)
+      for(i = 0; i < pIfList->getSize(); i++)
       {
-         if ((ptr = _tcsstr(pIfList->pInterfaces[i].szName, _T("- Port"))) != NULL)
+			INTERFACE_INFO *iface = pIfList->get(i);
+
+         if ((ptr = _tcsstr(iface->szName, _T("- Port"))) != NULL)
 			{
 				ptr += 2;
-            memmove(pIfList->pInterfaces[i].szName, ptr, _tcslen(ptr) + 1);
+            memmove(iface->szName, ptr, _tcslen(ptr) + 1);
 			}
-         else if ((ptr = _tcsstr(pIfList->pInterfaces[i].szName, _T("- Unit"))) != NULL)
+         else if ((ptr = _tcsstr(iface->szName, _T("- Unit"))) != NULL)
 			{
 				ptr += 2;
-            memmove(pIfList->pInterfaces[i].szName, ptr, _tcslen(ptr) + 1);
+            memmove(iface->szName, ptr, _tcslen(ptr) + 1);
 			}
-         else if ((_tcsstr(pIfList->pInterfaces[i].szName, _T("BayStack")) != NULL) ||
-                  (_tcsstr(pIfList->pInterfaces[i].szName, _T("Nortel Ethernet Switch")) != NULL))
+         else if ((_tcsstr(iface->szName, _T("BayStack")) != NULL) ||
+                  (_tcsstr(iface->szName, _T("Nortel Ethernet Switch")) != NULL))
          {
-            ptr = _tcsrchr(pIfList->pInterfaces[i].szName, _T('-'));
+            ptr = _tcsrchr(iface->szName, _T('-'));
             if (ptr != NULL)
             {
                ptr++;
                while(*ptr == _T(' '))
                   ptr++;
-               memmove(pIfList->pInterfaces[i].szName, ptr, _tcslen(ptr) + 1);
+               memmove(iface->szName, ptr, _tcslen(ptr) + 1);
             }
          }
-			StrStrip(pIfList->pInterfaces[i].szName);
+			StrStrip(iface->szName);
       }
    }
 
    // Cut interface names to MAX_OBJECT_NAME and check for unnamed interfaces
-   for(i = 0; i < pIfList->iNumEntries; i++)
+   for(i = 0; i < pIfList->getSize(); i++)
    {
-      pIfList->pInterfaces[i].szName[MAX_OBJECT_NAME - 1] = 0;
-      if (pIfList->pInterfaces[i].szName[0] == 0)
-         _sntprintf(pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME, _T("%d"), pIfList->pInterfaces[i].dwIndex);
+      pIfList->get(i)->szName[MAX_OBJECT_NAME - 1] = 0;
+      if (pIfList->get(i)->szName[0] == 0)
+         _sntprintf(pIfList->get(i)->szName, MAX_OBJECT_NAME, _T("%d"), pIfList->get(i)->dwIndex);
    }
 }
 
@@ -3874,7 +3847,7 @@ void Node::topologyPoll(int nPoller)
 // Check subnet bindings
 //
 
-void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
+void Node::CheckSubnetBinding(InterfaceList *pIfList)
 {
 	Subnet *pSubnet;
 	Interface *pInterface;
@@ -3886,11 +3859,12 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 	pCluster = getMyCluster();
 
 	// Check if we have subnet bindings for all interfaces
-	for(i = 0; i < pIfList->iNumEntries; i++)
+	for(i = 0; i < pIfList->getSize(); i++)
 	{
-		if (pIfList->pInterfaces[i].dwIpAddr != 0)
+		INTERFACE_INFO *iface = pIfList->get(i);
+		if (iface->dwIpAddr != 0)
 		{
-			pInterface = findInterface(pIfList->pInterfaces[i].dwIndex, pIfList->pInterfaces[i].dwIpAddr);
+			pInterface = findInterface(iface->dwIndex, iface->dwIpAddr);
 			if (pInterface == NULL)
 			{
 				nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
@@ -3900,7 +3874,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			// Is cluster interconnect interface?
 			isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : FALSE;
 
-			pSubnet = FindSubnetForNode(pIfList->pInterfaces[i].dwIpAddr);
+			pSubnet = FindSubnetForNode(iface->dwIpAddr);
 			if (pSubnet != NULL)
 			{
 				if (isSync)
@@ -3920,8 +3894,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			else if (!isSync)
 			{
 				// Create subnet
-				pSubnet = new Subnet(pIfList->pInterfaces[i].dwIpAddr & pIfList->pInterfaces[i].dwIpNetMask,
-				                     pIfList->pInterfaces[i].dwIpNetMask, m_dwZoneGUID, FALSE);
+				pSubnet = new Subnet(iface->dwIpAddr & iface->dwIpNetMask, iface->dwIpNetMask, m_dwZoneGUID, FALSE);
 				NetObjInsert(pSubnet, TRUE);
 				g_pEntireNet->AddSubnet(pSubnet);
 				pSubnet->AddNode(this);
@@ -3992,7 +3965,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 
 void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
 {
-	INTERFACE_LIST *pIfList;
+	InterfaceList *pIfList;
 	DWORD i;
 	int j;
 	
@@ -4006,7 +3979,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
    if (pIfList != NULL)
    {
       // Check names of existing interfaces
-      for(j = 0; j < pIfList->iNumEntries; j++)
+      for(j = 0; j < pIfList->getSize(); j++)
       {
          LockChildList(FALSE);
          for(i = 0; i < m_dwChildCount; i++)
@@ -4015,13 +3988,13 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
             {
                Interface *pInterface = (Interface *)m_pChildList[i];
 
-               if (pIfList->pInterfaces[j].dwIndex == pInterface->getIfIndex())
+               if (pIfList->get(j)->dwIndex == pInterface->getIfIndex())
                {
 						SendPollerMsg(dwRqId, _T("   Checking interface %d (%s)\r\n"), pInterface->getIfIndex(), pInterface->Name());
-                  if (_tcscmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
+                  if (_tcscmp(pIfList->get(j)->szName, pInterface->Name()))
                   {
-                     pInterface->setName(pIfList->pInterfaces[j].szName);
-							SendPollerMsg(dwRqId, POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->getIfIndex(), pIfList->pInterfaces[j].szName);
+                     pInterface->setName(pIfList->get(j)->szName);
+							SendPollerMsg(dwRqId, POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->getIfIndex(), pIfList->get(j)->szName);
                   }
                   break;
                }
@@ -4030,7 +4003,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
          UnlockChildList();
       }
 
-      DestroyInterfaceList(pIfList);
+      delete pIfList;
    }
    else     /* pIfList == NULL */
    {

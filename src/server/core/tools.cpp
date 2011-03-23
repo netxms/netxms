@@ -33,29 +33,6 @@
 
 
 //
-// Clean interface list from unneeded entries
-//
-
-void CleanInterfaceList(INTERFACE_LIST *pIfList)
-{
-   int i;
-
-   if (pIfList == NULL)
-      return;
-
-   // Delete loopback interface(s) from list
-   for(i = 0; i < pIfList->iNumEntries; i++)
-      if ((pIfList->pInterfaces[i].dwIpAddr & 0xFF000000) == 0x7F000000)
-      {
-         pIfList->iNumEntries--;
-         memmove(&pIfList->pInterfaces[i], &pIfList->pInterfaces[i + 1],
-                 sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - i));
-         i--;
-      }
-}
-
-
-//
 // Get system information string
 //
 
@@ -128,23 +105,23 @@ TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
 
 DWORD GetLocalIpAddr()
 {
-   INTERFACE_LIST *pIfList;
+   InterfaceList *pIfList;
    DWORD dwAddr = 0;
    int i;
 
    pIfList = GetLocalInterfaceList();
    if (pIfList != NULL)
    {
-      CleanInterfaceList(pIfList);
+		pIfList->removeLoopbacks();
       
       // Find first interface with IP address
-      for(i = 0; i < pIfList->iNumEntries; i++)
-         if (pIfList->pInterfaces[i].dwIpAddr != 0)
+      for(i = 0; i < pIfList->getSize(); i++)
+         if (pIfList->get(i)->dwIpAddr != 0)
          {
-            dwAddr = pIfList->pInterfaces[i].dwIpAddr;
+            dwAddr = pIfList->get(i)->dwIpAddr;
             break;
          }
-      DestroyInterfaceList(pIfList);
+      delete pIfList;
    }
    return dwAddr;
 }
