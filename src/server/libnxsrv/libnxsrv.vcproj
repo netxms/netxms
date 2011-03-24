@@ -377,6 +377,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ndd.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\snmp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\snmpproxy.cpp"
 				>
 			</File>
@@ -388,6 +396,10 @@
 			>
 			<File
 				RelativePath=".\libnxsrv.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\nddrv.h"
 				>
 			</File>
 			<File

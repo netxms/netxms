@@ -1,4 +1,13 @@
 ***************
+* 222 ==> 223 *
+***************
+
+- Column "node_type" dropped from table "nodes"
+- Column "primary_name" added to table "nodes"
+- Table "oid_to_type" dropped
+
+
+***************
 * 217 ==> 218 *
 ***************
 

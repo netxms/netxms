@@ -24,7 +24,6 @@
 #define _nms_objects_h_
 
 #include <nms_agent.h>
-#include <nxnt.h>
 #include <netxms_maps.h>
 #include <geolocation.h>
 #include "nxcore_jobs.h"
@@ -636,6 +635,7 @@ public:
 class NXCORE_EXPORTABLE Node : public Template
 {
 protected:
+	TCHAR m_primaryName[MAX_DNS_NAME];
    DWORD m_dwFlags;
    DWORD m_dwDynamicFlags;       // Flags used at runtime by server
 	int m_iPendingStatus;
@@ -644,7 +644,6 @@ protected:
    DWORD m_dwZoneGUID;
    WORD m_wAgentPort;
    WORD m_wAuthMethod;
-   DWORD m_dwNodeType;
    TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
    int m_iStatusPollType;
    int m_snmpVersion;
@@ -731,7 +730,6 @@ public:
    DWORD getFlags() { return m_dwFlags; }
    DWORD getRuntimeFlags() { return m_dwDynamicFlags; }
    DWORD getZoneGUID() { return m_dwZoneGUID; }
-	DWORD getNodeType() { return m_dwNodeType; }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 

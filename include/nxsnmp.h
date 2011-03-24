@@ -601,6 +601,7 @@ protected:
 	SNMP_Engine *m_authoritativeEngine;
 	SNMP_Engine *m_contextEngine;
 	bool m_enableEngineIdAutoupdate;
+	int m_snmpVersion;
 
 public:
    SNMP_Transport();
@@ -625,6 +626,9 @@ public:
 
 	void enableEngineIdAutoupdate(bool enabled) { m_enableEngineIdAutoupdate = enabled; }
 	bool isEngineIdAutoupdateEnabled() { return m_enableEngineIdAutoupdate; }
+
+	void setSnmpVersion(int version) { m_snmpVersion = version; }
+	int getSnmpVersion() { return m_snmpVersion; }
 };
 
 

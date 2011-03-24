@@ -134,6 +134,16 @@
 
 
 //
+// Flags for SnmpGet
+//
+
+#define SG_VERBOSE        0x0001
+#define SG_STRING_RESULT  0x0002
+#define SG_RAW_RESULT     0x0004
+#define SG_HSTRING_RESULT 0x0008
+
+
+//
 // Win32 service and syslog constants
 //
 
@@ -481,12 +491,21 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 
 const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code);
 
+DWORD LIBNXSRV_EXPORTABLE SnmpNewRequestId();
+DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
+                                  const TCHAR *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
+                                  DWORD dwBufferSize, DWORD dwFlags);
+DWORD LIBNXSRV_EXPORTABLE SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
+						                      DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
+                                        void *pUserArg, BOOL bVerbose);
+
 
 //
 // Variables
 //
 
 extern DWORD LIBNXSRV_EXPORTABLE g_dwFlags;
+extern DWORD LIBNXSRV_EXPORTABLE g_dwSNMPTimeout;
 extern int LIBNXSRV_EXPORTABLE g_nDebugLevel;
 
 #endif   /* _nxsrvapi_h_ */

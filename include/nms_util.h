@@ -318,7 +318,11 @@ public:
 
 	void set(const TCHAR *key, const TCHAR *value);
 	void setPreallocated(TCHAR *key, TCHAR *value);
+	void set(const TCHAR *key, DWORD value);
+
 	const TCHAR *get(const TCHAR *key);
+	DWORD getULong(const TCHAR *key, DWORD defaultValue);
+
 	void remove(const TCHAR *key);
 	void clear();
 

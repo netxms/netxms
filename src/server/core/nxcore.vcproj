@@ -605,10 +605,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\nortel.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\np.cpp"
 				>
 			</File>

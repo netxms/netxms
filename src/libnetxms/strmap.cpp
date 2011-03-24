@@ -172,6 +172,14 @@ void StringMap::set(const TCHAR *key, const TCHAR *value)
 	}
 }
 
+void StringMap::set(const TCHAR *key, DWORD value)
+{
+	TCHAR buffer[32];
+
+	_sntprintf(buffer, 32, _T("%u"), (unsigned int)value);
+	set(key, buffer);
+}
+
 
 //
 // Get value by key
@@ -183,6 +191,14 @@ const TCHAR *StringMap::get(const TCHAR *key)
 
 	index = find(key);
 	return (index != INVALID_INDEX) ? m_values[index] : NULL;
+}
+
+DWORD StringMap::getULong(const TCHAR *key, DWORD defaultValue)
+{
+	const TCHAR *value = get(key);
+	if (value == NULL)
+		return defaultValue;
+	return _tcstoul(value, NULL, 0);
 }
 
 

@@ -54,6 +54,7 @@ SNMP_Transport::SNMP_Transport()
 	m_contextEngine = NULL;
 	m_securityContext = NULL;
 	m_enableEngineIdAutoupdate = false;
+	m_snmpVersion = SNMP_VERSION_2C;
 }
 
 

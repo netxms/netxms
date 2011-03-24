@@ -1281,9 +1281,15 @@ src/server/core/nxcore.vcproj -text
 src/server/core/upload_job.cpp -text
 src/server/drivers/baystack.ndd -text
 src/server/drivers/baystack/baystack.vcproj -text
+src/server/drivers/ers8000/ers8000.cpp -text
+src/server/drivers/ers8000/ers8000.h -text
+src/server/drivers/ers8000/ers8000.vcproj -text
+src/server/drivers/ers8000/vlan.cpp -text
 src/server/include/Makefile.am -text
 src/server/libnxsrv/apinfo.cpp -text
 src/server/libnxsrv/libnxsrv.vcproj -text
+src/server/libnxsrv/ndd.cpp -text
+src/server/libnxsrv/snmp.cpp -text
 src/server/netxmsd/netxmsd.vcproj -text
 src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/generic/pdumode.cpp -text

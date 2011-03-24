@@ -125,7 +125,6 @@ QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
 time_t g_tServerStartTime = 0;
 DWORD g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
-DWORD g_dwSNMPTimeout = 2000;		// Default timeout for SNMP requests
 DWORD g_dwAgentCommandTimeout = 2000;  // Default timeout for requests to agent
 DWORD g_dwThresholdRepeatInterval = 0;	// Disabled by default
 int g_nRequiredPolls = 1;
@@ -642,9 +641,6 @@ retry_db_lock:
 
 	// Initialize certificate store and CA
 	InitCertificates();
-
-	// Initialize SNMP stuff
-	SnmpInit();
 
 	// Create synchronization stuff
 	m_condShutdown = ConditionCreate(TRUE);

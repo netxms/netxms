@@ -31,10 +31,9 @@ static TCHAR s_driverName[] = _T("BAYSTACK");
 static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 
-//
-// Driver's class
-//
-
+/**
+ * Driver's class
+ */
 class BayStackDriver : public NetworkDeviceDriver
 {
 public:
@@ -42,50 +41,133 @@ public:
 	virtual const TCHAR *getVersion();
 
 	virtual bool isDeviceSupported(const TCHAR *oid);
+	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes);
 };
 
-
-//
-// Get name
-//
-
+/**
+ * Get driver name
+ */
 const TCHAR *BayStackDriver::getName()
 {
 	return s_driverName;
 }
 
-
-//
-// Get version
-//
-
+/**
+ * Get driver version
+ */
 const TCHAR *BayStackDriver::getVersion()
 {
 	return s_driverVersion;
 }
 
-
-//
-// Check if given OID is supported
-//
-
+/**
+ * Check if given device is supported by driver
+ *
+ * @param oid Device OID
+ */
 bool BayStackDriver::isDeviceSupported(const TCHAR *oid)
 {
 	return _tcsncmp(oid, _T(".1.3.6.1.4.1.45.3"), 17) == 0;
 }
 
+/**
+ * Do additional checks on the device required by driver.
+ * Driver can set device's custom attributes from within
+ * this function.
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ */
+void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes)
+{
+	DWORD slotSize;
+	
+	if (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.74"), 20))	// 56xx
+	{
+		slotSize = 128;
+	}
+	else if (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.40"), 20))	// BPS2000
+	{
+		slotSize = 32;
+	}
+	else
+	{
+		slotSize = 64;
+	}
 
-//
-// Driver entry point
-//
+	attributes->set(_T(".baystack.rapidCity.vlan"), slotSize);
+}
 
+/**
+ * Get list of interfaces for given node
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ */
+InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes)
+{
+	// Get interface list from standard MIB
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes);
+	if (ifList == NULL)
+		return NULL;
+
+   // Translate interface names 
+	// TODO: does it really needed?
+   for(int i = 0; i < ifList->getSize(); i++)
+   {
+		INTERFACE_INFO *iface = ifList->get(i);
+
+		const TCHAR *ptr;
+      if ((ptr = _tcsstr(iface->szName, _T("- Port"))) != NULL)
+		{
+			ptr += 2;
+         memmove(iface->szName, ptr, _tcslen(ptr) + 1);
+		}
+      else if ((ptr = _tcsstr(iface->szName, _T("- Unit"))) != NULL)
+		{
+			ptr += 2;
+         memmove(iface->szName, ptr, _tcslen(ptr) + 1);
+		}
+      else if ((_tcsstr(iface->szName, _T("BayStack")) != NULL) ||
+               (_tcsstr(iface->szName, _T("Nortel Ethernet Switch")) != NULL))
+      {
+         ptr = _tcsrchr(iface->szName, _T('-'));
+         if (ptr != NULL)
+         {
+            ptr++;
+            while(*ptr == _T(' '))
+               ptr++;
+            memmove(iface->szName, ptr, _tcslen(ptr) + 1);
+         }
+      }
+		StrStrip(iface->szName);
+   }
+	
+	// Calculate slot/port pair from ifIndex
+	DWORD slotSize = attributes->getULong(_T(".baystack.rapidCity.vlan"), 64);
+	for(int i = 0; i < ifList->getSize(); i++)
+	{
+		DWORD slot = ifList->get(i)->dwIndex / slotSize + 1;
+		if ((slot > 0) && (slot <= 8))
+		{
+			ifList->get(i)->dwSlotNumber = slot;
+			ifList->get(i)->dwPortNumber = ifList->get(i)->dwIndex % slotSize;
+		}
+	}
+
+	return ifList;
+}
+
+/**
+ * Driver entry point
+ */
 DECLARE_NDD_ENTRY_POINT(s_driverName, BayStackDriver);
 
 
-//
-// DLL entry point
-//
-
+/**
+ * DLL entry point
+ */
 #ifdef _WIN32
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)

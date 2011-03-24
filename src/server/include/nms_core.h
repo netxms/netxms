@@ -621,16 +621,6 @@ public:
 
 
 //
-// Flags for SnmpGet
-//
-
-#define SG_VERBOSE        0x0001
-#define SG_STRING_RESULT  0x0002
-#define SG_RAW_RESULT     0x0004
-#define SG_HSTRING_RESULT 0x0008
-
-
-//
 // Functions
 //
 
@@ -680,17 +670,8 @@ void StopDBWriter();
 
 void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr);
 
-void SnmpInit();
-DWORD SnmpNewRequestId();
-DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
-              const TCHAR *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
-              DWORD dwBufferSize, DWORD dwFlags);
-DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
-						  DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *),
-                    void *pUserArg, BOOL bVerbose);
 SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext);
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
-DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 
 void InitLocalNetInfo();
 
@@ -703,18 +684,18 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dw
 
 ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport);
 
-void WatchdogInit(void);
+void WatchdogInit();
 DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval);
 void WatchdogNotify(DWORD dwId);
 void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
-void CheckForMgmtNode(void);
+void CheckForMgmtNode();
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
                   TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy, Cluster *pCluster);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
-int GetSessionCount(void);
+int GetSessionCount();
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 DWORD GetLocalIpAddr();
@@ -810,7 +791,6 @@ extern DWORD g_dwPingSize;
 extern DWORD g_dwAuditFlags;
 extern time_t g_tServerStartTime;
 extern DWORD g_dwLockTimeout;
-extern DWORD g_dwSNMPTimeout;
 extern DWORD g_dwAgentCommandTimeout;
 extern DWORD g_dwThresholdRepeatInterval;
 extern int g_nRequiredPolls;

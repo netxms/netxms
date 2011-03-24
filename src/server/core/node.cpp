@@ -30,11 +30,11 @@
 Node::Node()
      :Template()
 {
+	m_primaryName[0] = 0;
    m_iStatus = STATUS_UNKNOWN;
    m_dwFlags = 0;
    m_dwDynamicFlags = 0;
    m_dwZoneGUID = 0;
-   m_dwNodeType = NODE_TYPE_GENERIC;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
@@ -89,12 +89,12 @@ Node::Node()
 Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone)
      :Template()
 {
+	IpToStr(dwAddr, m_primaryName);
    m_iStatus = STATUS_UNKNOWN;
    m_dwIpAddr = dwAddr;
    m_dwFlags = dwFlags;
    m_dwDynamicFlags = 0;
    m_dwZoneGUID = dwZone;
-   m_dwNodeType = NODE_TYPE_GENERIC;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
@@ -189,10 +189,9 @@ BOOL Node::CreateFromDB(DWORD dwId)
       return FALSE;
    }
 
-   _sntprintf(query, 1024, _T("SELECT primary_ip,node_flags,")
+   _sntprintf(query, 1024, _T("SELECT primary_name,primary_ip,node_flags,")
                            _T("snmp_version,auth_method,secret,")
-                           _T("agent_port,status_poll_type,snmp_oid,")
-                           _T("node_type,agent_version,")
+                           _T("agent_port,status_poll_type,snmp_oid,agent_version,")
                            _T("platform_name,poller_node_id,zone_guid,")
                            _T("proxy_node,snmp_proxy,required_polls,uname,")
 									_T("use_ifxtable,snmp_port,community,usm_auth_password,")
@@ -209,15 +208,15 @@ BOOL Node::CreateFromDB(DWORD dwId)
       return FALSE;
    }
 
-   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
-   m_dwFlags = DBGetFieldULong(hResult, 0, 1);
-   m_snmpVersion = DBGetFieldLong(hResult, 0, 2);
-   m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 3);
-   DBGetField(hResult, 0, 4, m_szSharedSecret, MAX_SECRET_LENGTH);
-   m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 5);
-   m_iStatusPollType = DBGetFieldLong(hResult, 0, 6);
-   DBGetField(hResult, 0, 7, m_szObjectId, MAX_OID_LEN * 4);
-   m_dwNodeType = DBGetFieldULong(hResult, 0, 8);
+   DBGetField(hResult, 0, 0, m_primaryName, MAX_DNS_NAME);
+   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 1);
+   m_dwFlags = DBGetFieldULong(hResult, 0, 2);
+   m_snmpVersion = DBGetFieldLong(hResult, 0, 3);
+   m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 4);
+   DBGetField(hResult, 0, 5, m_szSharedSecret, MAX_SECRET_LENGTH);
+   m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 6);
+   m_iStatusPollType = DBGetFieldLong(hResult, 0, 7);
+   DBGetField(hResult, 0, 8, m_szObjectId, MAX_OID_LEN * 4);
    DBGetField(hResult, 0, 9, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
    DBGetField(hResult, 0, 10, m_szPlatformName, MAX_PLATFORM_NAME_LEN);
    m_dwPollerNode = DBGetFieldULong(hResult, 0, 11);
@@ -327,19 +326,20 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    if (bNewObject)
 	{
       _sntprintf(szQuery, 4096,
-                 _T("INSERT INTO nodes (id,primary_ip,snmp_port,")
+                 _T("INSERT INTO nodes (id,primary_ip,primary_name,snmp_port,")
                  _T("node_flags,snmp_version,community,status_poll_type,")
                  _T("agent_port,auth_method,secret,snmp_oid,proxy_node,")
-                 _T("node_type,agent_version,platform_name,uname,")
+                 _T("agent_version,platform_name,uname,")
                  _T("poller_node_id,zone_guid,snmp_proxy,required_polls,")
 		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,snmp_sys_name) VALUES ")
-		           _T("(%d,'%s',%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s)"),
-                 m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (int)m_wSNMPPort, m_dwFlags,
-                 m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
+		           _T("(%d,'%s',%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s)"),
+                 m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName),
+					  (int)m_wSNMPPort, m_dwFlags, m_snmpVersion, (
+					  const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
 					  m_iStatusPollType, (int)m_wAgentPort, m_wAuthMethod, 
 					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret),
 					  (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
-                 m_dwProxyNode, m_dwNodeType, (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
+                 m_dwProxyNode, (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
                  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName),
 					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
 		           m_dwPollerNode, m_dwZoneGUID, m_dwSNMPProxy, m_iRequiredPollCount, m_nUseIfXTable,
@@ -350,19 +350,18 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    else
 	{
       _sntprintf(szQuery, 4096,
-                 _T("UPDATE nodes SET primary_ip='%s',snmp_port=%d,")
+			_T("UPDATE nodes SET primary_ip='%s',primary_name=%s,snmp_port=%d,")
                  _T("node_flags=%d,snmp_version=%d,community=%s,")
                  _T("status_poll_type=%d,agent_port=%d,auth_method=%d,secret=%s,")
-                 _T("snmp_oid=%s,node_type=%d,uname=%s,")
-                 _T("agent_version=%s,platform_name=%s,poller_node_id=%d,")
+                 _T("snmp_oid=%s,uname=%s,agent_version=%s,platform_name=%s,poller_node_id=%d,")
                  _T("zone_guid=%d,proxy_node=%d,snmp_proxy=%d,")
 					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
 					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s WHERE id=%d"),
-                 IpToStr(m_dwIpAddr, szIpAddr), m_wSNMPPort, 
+                 IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName), m_wSNMPPort, 
                  m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
                  m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
 					  (const TCHAR *)DBPrepareString(hdb, m_szSharedSecret), 
-                 (const TCHAR *)DBPrepareString(hdb, m_szObjectId), m_dwNodeType,
+                 (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
 					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
                  (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
 					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_dwZoneGUID,
@@ -1471,8 +1470,6 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 			SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity);
 			if (newCtx != NULL)
          {
-            DWORD dwNodeFlags, dwNodeType;
-
             LockData();
 				delete m_snmpSecurity;
 				m_snmpSecurity = newCtx;
@@ -1498,18 +1495,6 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					}
 					UnlockData();
 				}
-
-            // Check node type
-				LockData();
-            dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
-            if (m_dwNodeType != dwNodeType)
-            {
-               m_dwFlags |= dwNodeFlags;
-               m_dwNodeType = dwNodeType;
-               SendPollerMsg(dwRqId, POLLER_WARNING _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
-               bHasChanges = TRUE;
-            }
-				UnlockData();
 
             // Check IP forwarding
             if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
@@ -2646,7 +2631,6 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
    pMsg->SetVariable(VID_SNMP_OID, m_szObjectId);
    pMsg->SetVariable(VID_SNMP_PORT, m_wSNMPPort);
-   pMsg->SetVariable(VID_NODE_TYPE, m_dwNodeType);
    pMsg->SetVariable(VID_SNMP_VERSION, (WORD)m_snmpVersion);
    pMsg->SetVariable(VID_AGENT_VERSION, m_szAgentVersion);
    pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
@@ -3430,7 +3414,7 @@ void Node::setAgentProxy(AgentConnection *pConn)
 // Prepare node object for deletion
 //
 
-void Node::PrepareForDeletion(void)
+void Node::PrepareForDeletion()
 {
    // Prevent node from being queued for polling
    LockData();
@@ -3476,45 +3460,8 @@ BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID
 
 void Node::CheckInterfaceNames(InterfaceList *pIfList)
 {
-   int i;
-   TCHAR *ptr;
-
-   if ((m_dwNodeType == NODE_TYPE_NORTEL_BAYSTACK) ||
-		 (m_dwNodeType == NODE_TYPE_NORTEL_OPTERA))
-   {
-      // Translate interface names
-      for(i = 0; i < pIfList->getSize(); i++)
-      {
-			INTERFACE_INFO *iface = pIfList->get(i);
-
-         if ((ptr = _tcsstr(iface->szName, _T("- Port"))) != NULL)
-			{
-				ptr += 2;
-            memmove(iface->szName, ptr, _tcslen(ptr) + 1);
-			}
-         else if ((ptr = _tcsstr(iface->szName, _T("- Unit"))) != NULL)
-			{
-				ptr += 2;
-            memmove(iface->szName, ptr, _tcslen(ptr) + 1);
-			}
-         else if ((_tcsstr(iface->szName, _T("BayStack")) != NULL) ||
-                  (_tcsstr(iface->szName, _T("Nortel Ethernet Switch")) != NULL))
-         {
-            ptr = _tcsrchr(iface->szName, _T('-'));
-            if (ptr != NULL)
-            {
-               ptr++;
-               while(*ptr == _T(' '))
-                  ptr++;
-               memmove(iface->szName, ptr, _tcslen(ptr) + 1);
-            }
-         }
-			StrStrip(iface->szName);
-      }
-   }
-
    // Cut interface names to MAX_OBJECT_NAME and check for unnamed interfaces
-   for(i = 0; i < pIfList->getSize(); i++)
+   for(int i = 0; i < pIfList->getSize(); i++)
    {
       pIfList->get(i)->szName[MAX_OBJECT_NAME - 1] = 0;
       if (pIfList->get(i)->szName[0] == 0)
@@ -3582,6 +3529,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port)
 	{
 		LockData();
 		pTransport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
+		pTransport->setSnmpVersion(m_snmpVersion);
 		UnlockData();
 	}
 	return pTransport;

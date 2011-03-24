@@ -35,7 +35,6 @@ EXTRA_DIST = \
 	nxlog.h \
 	nxlpapi.h \
 	nxmbapi.h \
-	nxnt.h \
 	nxqueue.h \
 	nxsl_classes.h \
 	nxsl.h \
