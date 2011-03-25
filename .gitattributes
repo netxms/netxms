@@ -1280,7 +1280,6 @@ src/server/core/ndp.cpp -text
 src/server/core/nxcore.vcproj -text
 src/server/core/upload_job.cpp -text
 src/server/drivers/Makefile.am -text
-src/server/drivers/baystack.ndd -text
 src/server/drivers/baystack/Makefile.am -text
 src/server/drivers/baystack/baystack.vcproj -text
 src/server/drivers/ers8000/Makefile.am -text

@@ -1529,6 +1529,24 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 				}
 				UnlockData();
 
+				// Allow driver to gather additional info
+				m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes);
+
+				// Get sysName
+				if (SnmpGet(m_snmpVersion, pTransport,
+				            _T(".1.3.6.1.2.1.1.5.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+				{
+					LockData();
+					if ((m_sysName == NULL) || _tcscmp(m_sysName, szBuffer))
+               {
+						safe_free(m_sysName);
+                  m_sysName = _tcsdup(szBuffer);
+                  bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   System name changed to %s\r\n"), m_sysName);
+               }
+					UnlockData();
+				}
+
             // Check IP forwarding
             if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
             {

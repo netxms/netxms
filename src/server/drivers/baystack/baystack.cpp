@@ -82,7 +82,13 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
 		slotSize = 64;
 	}
 
-	attributes->set(_T(".baystack.rapidCity.vlan"), slotSize);
+	attributes->set(_T(".baystack.slotSize"), slotSize);
+
+	DWORD numVlans;
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), NULL, 0, &numVlans, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS)
+		attributes->set(_T(".baystack.rapidCity.vlan"), numVlans);
+	else
+		attributes->set(_T(".baystack.rapidCity.vlan"), (DWORD)0);
 }
 
 /**
@@ -131,7 +137,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
    }
 	
 	// Calculate slot/port pair from ifIndex
-	DWORD slotSize = attributes->getULong(_T(".baystack.rapidCity.vlan"), 64);
+	DWORD slotSize = attributes->getULong(_T(".baystack.slotSize"), 64);
 	for(int i = 0; i < ifList->getSize(); i++)
 	{
 		DWORD slot = ifList->get(i)->dwIndex / slotSize + 1;
@@ -142,21 +148,38 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		}
 	}
 
-   GetVLANInterfaces(snmp, ifList);
+	if (attributes->getULong(_T(".baystack.rapidCity.vlan"), 0) > 0)
+		GetVLANInterfaces(snmp, ifList);
 
 	DWORD mgmtIpAddr, mgmtNetMask;
 	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS) &&
 	    (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), NULL, 0, &mgmtNetMask, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS))
 	{
-		INTERFACE_INFO iface;
+		// Get switch base MAC address
+		BYTE baseMacAddr[MAC_ADDR_LENGTH];
+		SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, baseMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
 
-		memset(&iface, 0, sizeof(INTERFACE_INFO));
-		iface.dwIpAddr = mgmtIpAddr;
-		iface.dwIpNetMask = mgmtNetMask;
-		iface.dwType = IFTYPE_OTHER;
-		_tcscpy(iface.szName, _T("mgmt"));
-		SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, iface.bMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
-		ifList->add(&iface);
+		if (mgmtIpAddr != 0)
+		{
+			int i;
+
+			// Add management virtual interface if management IP is missing in interface list
+			for(i = 0; i < ifList->getSize(); i++)
+				if (ifList->get(i)->dwIpAddr == mgmtIpAddr)
+					break;
+			if (i == ifList->getSize())
+			{
+				INTERFACE_INFO iface;
+
+				memset(&iface, 0, sizeof(INTERFACE_INFO));
+				iface.dwIpAddr = mgmtIpAddr;
+				iface.dwIpNetMask = mgmtNetMask;
+				iface.dwType = IFTYPE_OTHER;
+				_tcscpy(iface.szName, _T("MGMT"));
+				memcpy(iface.bMacAddr, baseMacAddr, MAC_ADDR_LENGTH);
+				ifList->add(&iface);
+			}
+		}
 
 		// Update wrongly reported MAC addresses
 		for(int i = 0; i < ifList->getSize(); i++)
@@ -164,9 +187,9 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 			INTERFACE_INFO *curr = ifList->get(i);
 			if ((curr->dwSlotNumber != 0) &&
 				 (!memcmp(curr->bMacAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
-			     !memcmp(curr->bMacAddr, iface.bMacAddr, MAC_ADDR_LENGTH)))
+			     !memcmp(curr->bMacAddr, baseMacAddr, MAC_ADDR_LENGTH)))
 			{
-				memcpy(curr->bMacAddr, iface.bMacAddr, MAC_ADDR_LENGTH);
+				memcpy(curr->bMacAddr, baseMacAddr, MAC_ADDR_LENGTH);
 				curr->bMacAddr[5] += (BYTE)curr->dwPortNumber;
 			}
 		}
