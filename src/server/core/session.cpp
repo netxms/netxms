@@ -6469,10 +6469,11 @@ void ClientSession::SendServerStats(DWORD dwRqId)
    msg.SetVariable(VID_SERVER_UPTIME, (DWORD)(time(NULL) - g_tServerStartTime));
 
    // Number of objects and DCIs
-   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-   for(i = 0, dwNumItems = 0; i < g_dwNodeAddrIndexSize; i++)
-      dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->getItemCount();
-   RWLockUnlock(g_rwlockNodeIndex);
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0, dwNumItems = 0; i < g_dwIdIndexSize; i++)
+		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+	      dwNumItems += ((Node *)g_pIndexById[i].pObject)->getItemCount();
+   RWLockUnlock(g_rwlockIdIndex);
    msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
    msg.SetVariable(VID_NUM_OBJECTS, g_dwIdIndexSize);
    msg.SetVariable(VID_NUM_NODES, g_dwNodeAddrIndexSize);

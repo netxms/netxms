@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -393,7 +393,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             if (pObject->IpAddr() != 0)
             {
                RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
-					if (SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, pObject->IpAddr()) == NULL)
+					if (SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, pObject->IpAddr()) == INVALID_INDEX)
 						AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
 					else
 						DbgPrintf(1, _T("WARNING: duplicate interface IP address %08X (interface object %s [%d])"),

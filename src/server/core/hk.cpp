@@ -157,10 +157,11 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       CleanDeletedObjects(hdb);
 
       // Remove expired DCI data
-      RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-      for(i = 0; i < g_dwNodeAddrIndexSize; i++)
-         ((Node *)g_pNodeIndexByAddr[i].pObject)->cleanDCIData();
-      RWLockUnlock(g_rwlockNodeIndex);
+		RWLockReadLock(g_rwlockIdIndex, INFINITE);
+      for(i = 0; i < g_dwIdIndexSize; i++)
+			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+				((Node *)g_pIndexById[i].pObject)->cleanDCIData();
+      RWLockUnlock(g_rwlockIdIndex);
 
       // Run DB-specific maintenance tasks
       if (g_nDBSyntax == DB_SYNTAX_PGSQL)
