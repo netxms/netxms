@@ -49,7 +49,7 @@ extern "C" int __NDD_EXPORT nddAPIVersion; \
 extern "C" const TCHAR __NDD_EXPORT *nddName; \
 int __NDD_EXPORT nddAPIVersion = NDDRV_API_VERSION; \
 const TCHAR __NDD_EXPORT *nddName = name; \
-extern "C" NetworkDeviceDriver __NDD_EXPORT *nddCreateInstance() {	return new(##implClass); }
+extern "C" NetworkDeviceDriver __NDD_EXPORT *nddCreateInstance() { return new implClass; }
 
 
 /**

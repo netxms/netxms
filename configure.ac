@@ -1659,7 +1659,7 @@ fi
 # Other settings
 #--------------------------------------------------------------------
 
-CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
+CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\""
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
@@ -1809,6 +1809,9 @@ AC_CONFIG_FILES([
 	src/nxscript/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
+	src/server/drivers/Makefile
+	src/server/drivers/baystack/Makefile
+	src/server/drivers/ers8000/Makefile
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile

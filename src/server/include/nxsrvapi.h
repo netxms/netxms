@@ -84,9 +84,13 @@
 #define LIBDIR               _T("/usr/lib")
 #endif
 
+#ifndef PKGLIBDIR
+#define PKGLIBDIR            _T("/usr/lib/netxms")
+#endif
+
 #define DEFAULT_LOG_FILE      DATADIR _T("/log/netxmsd.log")
 #define DEFAULT_DATA_DIR      DATADIR
-#define DEFAULT_LIBDIR        LIBDIR
+#define DEFAULT_LIBDIR        PKGLIBDIR
 #define DEFAULT_DUMP_DIR      _T("/")
 
 #define LDIR_NDD              _T("/ndd")

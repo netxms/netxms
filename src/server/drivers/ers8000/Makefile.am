@@ -1,0 +1,17 @@
+INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+
+DRIVER = ers8000
+
+pkglib_LTLIBRARIES = ers8000.la
+ers8000_la_SOURCES = ers8000.cpp vlan.cpp
+ers8000_la_LDFLAGS = -module -avoid-version
+ers8000_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la
+
+EXTRA_DIST = \
+	ers8000.vcproj \
+	ers8000.h
+
+install-exec-hook:
+	mkdir -p $(pkglibdir)/ndd
+	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/ndd/$(DRIVER).ndd
+	rm -f $(pkglibdir)/$(DRIVER).la

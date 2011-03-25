@@ -1,13 +1,18 @@
 INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/src/sqlite
 
-lib_LTLIBRARIES = libnxddr_sqlite.la
-libnxddr_sqlite_la_SOURCES = sqlite.cpp
-libnxddr_sqlite_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
-libnxddr_sqlite_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../sqlite/libnxsqlite.la
+DRIVER = sqlite
+
+pkglib_LTLIBRARIES = sqlite.la
+sqlite_la_SOURCES = sqlite.cpp
+sqlite_la_LDFLAGS = -module -avoid-version
+sqlite_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../sqlite/libnxsqlite.la
 
 EXTRA_DIST = \
 	sqlite.vcproj \
 	sqlitedrv.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_sqlite.a $(libdir)/libnxddr_sqlite.so.0 ; fi
+	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(pkglibdir)/sqlite.a $(pkglibdir)/sqlite.so ; fi
+	mkdir -p $(pkglibdir)/dbdrv
+	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/dbdrv/$(DRIVER).ddr
+	rm -f $(pkglibdir)/$(DRIVER).la	
