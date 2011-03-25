@@ -79,6 +79,7 @@ Node::Node()
 	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
 	m_jobQueue = new ServerJobQueue();
 	m_fdb = NULL;
+	m_driver = NULL;
 }
 
 
@@ -141,6 +142,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
 	m_jobQueue = new ServerJobQueue();
 	m_fdb = NULL;
+	m_driver = NULL;
 }
 
 
@@ -478,23 +480,25 @@ InterfaceList *Node::getInterfaceList()
       pIfList = GetLocalInterfaceList();
    }
    if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP) &&
-       (!(m_dwFlags & NF_DISABLE_SNMP)))
+       (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_driver != NULL))
    {
 		SNMP_Transport *pTransport;
-		BOOL useIfXTable;
+		bool useIfXTable;
 
 		pTransport = createSnmpTransport();
 		if (pTransport != NULL)
 		{
 			if (m_nUseIfXTable == IFXTABLE_DEFAULT)
 			{
-				useIfXTable = (ConfigReadInt(_T("UseIfXTable"), 1) != 0);
+				useIfXTable = (ConfigReadInt(_T("UseIfXTable"), 1) != 0) ? true : false;
 			}
 			else
 			{
-				useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED);
+				useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED) ? true : false;
 			}
-			pIfList = SnmpGetInterfaceList(m_snmpVersion, pTransport, this, useIfXTable);
+
+			int useAliases = ConfigReadInt(_T("UseInterfaceAliases"), 0);
+			pIfList = m_driver->getInterfaces(pTransport, &m_customAttributes, useAliases, useIfXTable);
 
 			if ((pIfList != NULL) && (m_dwFlags & NF_IS_BRIDGE))
 			{
@@ -1496,6 +1500,35 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					UnlockData();
 				}
 
+				// Get system description
+				if (SnmpGet(m_snmpVersion, pTransport,
+				            _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+				{
+					TranslateStr(szBuffer, _T("\r\n"), _T(" "));
+					TranslateStr(szBuffer, _T("\n"), _T(" "));
+					TranslateStr(szBuffer, _T("\r"), _T(" "));
+					LockData();
+               if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
+               {
+						safe_free(m_sysDescription);
+                  m_sysDescription = _tcsdup(szBuffer);
+                  bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
+               }
+					UnlockData();
+				}
+
+				// Select device driver
+				NetworkDeviceDriver *driver = FindDriverForNode(this);
+				DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_szName, driver->getName());
+				LockData();
+				if (driver != m_driver)
+				{
+					m_driver = driver;
+					SendPollerMsg(dwRqId, _T("   New network device driver selected: %s\r\n"), m_driver->getName());
+				}
+				UnlockData();
+
             // Check IP forwarding
             if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
             {
@@ -1597,24 +1630,6 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 				{
 					LockData();
 					m_dwFlags &= ~NF_IS_LLDP;
-					UnlockData();
-				}
-
-				// Get system description
-				if (SnmpGet(m_snmpVersion, pTransport,
-				            _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, MAX_DB_STRING, SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-				{
-					TranslateStr(szBuffer, _T("\r\n"), _T(" "));
-					TranslateStr(szBuffer, _T("\n"), _T(" "));
-					TranslateStr(szBuffer, _T("\r"), _T(" "));
-					LockData();
-               if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
-               {
-						safe_free(m_sysDescription);
-                  m_sysDescription = _tcsdup(szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
-               }
 					UnlockData();
 				}
 
@@ -2648,6 +2663,11 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 	{
 		pMsg->SetVariable(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
 		pMsg->SetVariable(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->getSize());
+	}
+	if (m_driver != NULL)
+	{
+		pMsg->SetVariable(VID_DRIVER_NAME, m_driver->getName());
+		pMsg->SetVariable(VID_DRIVER_VERSION, m_driver->getVersion());
 	}
 }
 

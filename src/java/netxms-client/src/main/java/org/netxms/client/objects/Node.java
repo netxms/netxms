@@ -92,6 +92,8 @@ public class Node extends GenericObject
 	private String systemDescription;
 	private String lldpNodeId;
 	private int vrrpVersion;
+	private String driverName;
+	private String driverVersion;
 	
 	/**
 	 * @param msg
@@ -125,6 +127,8 @@ public class Node extends GenericObject
 		snmpSysName = msg.getVariableAsString(NXCPCodes.VID_SYS_NAME);
 		lldpNodeId = msg.getVariableAsString(NXCPCodes.VID_LLDP_NODE_ID);
 		vrrpVersion = msg.getVariableAsInteger(NXCPCodes.VID_VRRP_VERSION);
+		driverName = msg.getVariableAsString(NXCPCodes.VID_DRIVER_NAME);
+		driverVersion = msg.getVariableAsString(NXCPCodes.VID_DRIVER_VERSION);
 	}
 
 	/**
@@ -372,5 +376,21 @@ public class Node extends GenericObject
 	protected int getVrrpVersion()
 	{
 		return vrrpVersion;
+	}
+
+	/**
+	 * @return the driverName
+	 */
+	public String getDriverName()
+	{
+		return driverName;
+	}
+
+	/**
+	 * @return the driverVersion
+	 */
+	public String getDriverVersion()
+	{
+		return driverVersion;
 	}
 }

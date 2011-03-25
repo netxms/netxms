@@ -656,6 +656,7 @@ protected:
 	TCHAR *m_sysDescription;  // Agent's System.Uname or SNMP sysDescr
 	TCHAR *m_sysName;				// SNMP sysName
 	TCHAR *m_lldpNodeId;			// lldpLocChassisId combined with lldpLocChassisIdSubtype, or NULL for non-LLDP nodes
+	NetworkDeviceDriver *m_driver;
    DWORD m_dwNumParams;           // Number of elements in supported parameters list
    NXC_AGENT_PARAM *m_pParamList; // List of supported parameters
    time_t m_tLastDiscoveryPoll;

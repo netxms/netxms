@@ -181,7 +181,7 @@ public abstract class TableElement extends OverviewPageElement
 	 */
 	protected void addPair(String attr, String value, boolean allowEmpty)
 	{
-		if (!allowEmpty && value.isEmpty())
+		if (!allowEmpty && ((value == null) || value.isEmpty()))
 			return;
 		TableItem item = new TableItem(table, SWT.NONE);
 		item.setText(0, attr);

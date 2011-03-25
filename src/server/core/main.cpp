@@ -119,6 +119,7 @@ DWORD g_dwConditionPollingInterval;
 DWORD g_dwPingSize;
 DWORD g_dwAuditFlags;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
+TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
 int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
 DWORD NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 QWORD g_qwServerId;
@@ -670,6 +671,7 @@ retry_db_lock:
 	InitAuditLog();
 
 	// Initialize objects infrastructure and load objects from database
+	LoadNetworkDeviceDrivers();
 	ObjectsInit();
 	if (!LoadObjects())
 		return FALSE;

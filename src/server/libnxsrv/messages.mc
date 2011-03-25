@@ -782,4 +782,28 @@ Language=English
 Unable to initialize Windows Sockets: %1
 .
 
+MessageId=
+SymbolicName=MSG_NDD_LOADED
+Language=English
+Network device driver "%1" loaded successfully
+.
+
+MessageId=
+SymbolicName=MSG_NO_NDD_ENTRY_POINT
+Language=English
+Unable to find entry point in network device driver "%1"
+.
+
+MessageId=
+SymbolicName=MSG_NDD_INIT_FAILED
+Language=English
+Initialization of network device driver "%1" failed
+.
+
+MessageId=
+SymbolicName=MSG_NDD_API_VERSION_MISMATCH
+Language=English
+Network device driver "%1" cannot be loaded because of API version mismatch (driver: %3; server: %2)
+.
+
 ;#endif

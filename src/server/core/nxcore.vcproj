@@ -581,6 +581,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ndd.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ndp.cpp"
 				>
 			</File>

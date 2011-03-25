@@ -20,7 +20,7 @@
 ** File: baystack.cpp
 **/
 
-#include <nddrv.h>
+#include "baystack.h"
 
 
 //
@@ -30,20 +30,6 @@
 static TCHAR s_driverName[] = _T("BAYSTACK");
 static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
-
-/**
- * Driver's class
- */
-class BayStackDriver : public NetworkDeviceDriver
-{
-public:
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
-
-	virtual bool isDeviceSupported(const TCHAR *oid);
-	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes);
-};
 
 /**
  * Get driver name
@@ -105,10 +91,10 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes)
+InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
@@ -153,6 +139,36 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		{
 			ifList->get(i)->dwSlotNumber = slot;
 			ifList->get(i)->dwPortNumber = ifList->get(i)->dwIndex % slotSize;
+		}
+	}
+
+   GetVLANInterfaces(snmp, ifList);
+
+	DWORD mgmtIpAddr, mgmtNetMask;
+	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS) &&
+	    (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), NULL, 0, &mgmtNetMask, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS))
+	{
+		INTERFACE_INFO iface;
+
+		memset(&iface, 0, sizeof(INTERFACE_INFO));
+		iface.dwIpAddr = mgmtIpAddr;
+		iface.dwIpNetMask = mgmtNetMask;
+		iface.dwType = IFTYPE_OTHER;
+		_tcscpy(iface.szName, _T("mgmt"));
+		SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, iface.bMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
+		ifList->add(&iface);
+
+		// Update wrongly reported MAC addresses
+		for(int i = 0; i < ifList->getSize(); i++)
+		{
+			INTERFACE_INFO *curr = ifList->get(i);
+			if ((curr->dwSlotNumber != 0) &&
+				 (!memcmp(curr->bMacAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
+			     !memcmp(curr->bMacAddr, iface.bMacAddr, MAC_ADDR_LENGTH)))
+			{
+				memcpy(curr->bMacAddr, iface.bMacAddr, MAC_ADDR_LENGTH);
+				curr->bMacAddr[5] += (BYTE)curr->dwPortNumber;
+			}
 		}
 	}
 

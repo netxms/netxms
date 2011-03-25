@@ -73,6 +73,7 @@
 #include <nxmodule.h>
 #include <nxsl.h>
 #include <nxdbapi.h>
+#include <nddrv.h>
 
 
 //
@@ -678,11 +679,13 @@ void InitLocalNetInfo();
 ARP_CACHE *GetLocalArpCache();
 ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport);
 
-InterfaceList *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport, Node *node, BOOL useIfXTable);
 InterfaceList *GetLocalInterfaceList();
 int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, DWORD dwIfIndex);
 
 ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport);
+
+void LoadNetworkDeviceDrivers();
+NetworkDeviceDriver *FindDriverForNode(Node *node);
 
 void WatchdogInit();
 DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval);
@@ -715,8 +718,6 @@ void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, c
 void InitSMSSender();
 void ShutdownSMSSender();
 void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText);
-
-void GetAccelarVLANIfList(DWORD dwVersion, SNMP_Transport *pTransport, InterfaceList *pIfList);
 
 void InitTraps();
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
@@ -755,7 +756,7 @@ X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
 BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge,
 									  BYTE *pSignature, DWORD dwSigLen, int nMappingMethod,
 									  const TCHAR *pszMappingData);
-void ReloadCertificates(void);
+void ReloadCertificates();
 #endif
 
 #ifndef _WIN32
@@ -784,6 +785,7 @@ extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
 extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
 #endif
 extern TCHAR g_szDataDir[];
+extern TCHAR g_szLibDir[];
 extern DWORD NXCORE_EXPORTABLE g_processAffinityMask;
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;

@@ -393,7 +393,11 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             if (pObject->IpAddr() != 0)
             {
                RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
-               AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
+					if (SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, pObject->IpAddr()) == NULL)
+						AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
+					else
+						DbgPrintf(1, _T("WARNING: duplicate interface IP address %08X (interface object %s [%d])"),
+						          pObject->IpAddr(), pObject->Name(), (int)pObject->Id());
                RWLockUnlock(g_rwlockInterfaceIndex);
             }
             break;

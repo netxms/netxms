@@ -72,6 +72,7 @@ public class GeneralInfo extends TableElement
 				addPair("Platform Name", node.getPlatformName(), false);
 				addPair("SNMP sysName", node.getSnmpSysName(), false);
 				addPair("SNMP Object ID", node.getSnmpOID(), false);
+				addPair("Driver", node.getDriverName(), false);
 				break;
 			default:
 				break;

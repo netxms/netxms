@@ -25,8 +25,6 @@
 
 #include <nms_common.h>
 #include <nxsrvapi.h>
-#include <nms_core.h>
-#include <nms_objects.h>
 
 
 //
@@ -54,10 +52,9 @@ const TCHAR __NDD_EXPORT *nddName = name; \
 extern "C" NetworkDeviceDriver __NDD_EXPORT *nddCreateInstance() {	return new(##implClass); }
 
 
-//
-// Base class for device drivers
-//
-
+/**
+ *Base class for device drivers
+ */
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
 {
 public:
@@ -69,7 +66,7 @@ public:
 
 	virtual bool isDeviceSupported(const TCHAR *oid);
 	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes);
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable);
 };
 
 
