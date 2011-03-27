@@ -1519,7 +1519,11 @@ src/webui/webapp/src/main/resources/org/netxms/ui/web/client/Messages_fr.propert
 src/webui/webapp/src/main/webapp/Launcher.css -text
 src/webui/webapp/src/main/webapp/Launcher.html -text
 src/webui/webapp/src/main/webapp/WEB-INF/web.xml -text
+src/webui/webapp/src/main/webapp/login.css -text
 src/webui/webapp/src/main/webapp/login.html -text
+src/webui/webapp/src/main/webapp/login/f_h2.jpg -text
+src/webui/webapp/src/main/webapp/login/footer.jpg -text
+src/webui/webapp/src/main/webapp/login/h_osw3.jpg -text
 src/webui/webapp/src/main/webapp/resources/chart/open-flash-chart.swf -text
 src/webui/webapp/src/main/webapp/resources/css/gxt-all.css -text
 src/webui/webapp/src/main/webapp/resources/css/gxt-gray.css -text
