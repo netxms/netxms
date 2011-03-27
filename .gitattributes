@@ -316,7 +316,12 @@ src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/
 src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/NoGroupRenderer.java -text
 src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/RendererHelper.java -text
 src/java/netxms-agent/pom.xml -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/Agent.java -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/RCC.java -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/Session.java -text
+src/java/netxms-agent/src/main/java/org/netxms/agent/api/Parameter.java -text
 src/java/netxms-base/pom.xml -text
+src/java/netxms-base/src/main/java/org/netxms/base/Glob.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPCodes.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPDataInputStream.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPException.java -text
@@ -364,7 +369,6 @@ src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -t
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/ConnectionPoint.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/Glob.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddress.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddressFormatException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text

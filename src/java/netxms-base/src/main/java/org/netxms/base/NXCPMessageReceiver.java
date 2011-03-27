@@ -1,13 +1,27 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.base;
 
 import java.io.*;
 
-
 /**
- * @author Victor
+ * Message receiver for NXCP protocol
  *
  */
 public class NXCPMessageReceiver
@@ -15,21 +29,21 @@ public class NXCPMessageReceiver
 	private byte[] recvBuffer;
 	private int bufferPos = 0;
 	
-	
 	/**
 	 * @param bufferSize Size of receive buffer in bytes
 	 */
-	
 	public NXCPMessageReceiver(final int bufferSize)
 	{
 		recvBuffer = new byte[bufferSize];
 	}
 	
-	
-	//
-	// Get message size from byte array
-	//
-	
+	/**
+	 * Get message size from byte array
+	 * 
+	 * @param header byte array containing message header
+	 * @return message size in bytes
+	 * @throws IOException
+	 */
 	private int getMessageSize(final byte[] header) throws IOException
 	{
 		final DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(header));
@@ -37,11 +51,13 @@ public class NXCPMessageReceiver
 		return inputStream.readInt();
 	}
 	
-	
-	//
-	// Get message from buffer if possible
-	//
-	
+	/**
+	 * Get message from receiver's buffer
+	 * 
+	 * @return message object or null if there are not enough data in the buffer
+	 * @throws IOException
+	 * @throws NXCPException
+	 */
 	private NXCPMessage getMessageFromBuffer() throws IOException, NXCPException
 	{
 		NXCPMessage msg = null;
@@ -64,11 +80,14 @@ public class NXCPMessageReceiver
 		return msg;
 	}
 	
-	
-	//
-	// Receive NXCP message from input stream
-	//
-	
+	/**
+	 * Receive NXCP message from input stream
+	 * 
+	 * @param in input stream
+	 * @return message object
+	 * @throws IOException
+	 * @throws NXCPException
+	 */
 	public NXCPMessage receiveMessage(final InputStream in) throws IOException, NXCPException
 	{
 		NXCPMessage msg = null;
@@ -80,6 +99,8 @@ public class NXCPMessageReceiver
 			if (msg != null)
 				break;
 			final int bytes = in.read(recvBuffer, bufferPos, recvBuffer.length - bufferPos);
+			if (bytes == -1)
+				throw new NXCPException(NXCPCodes.ERR_CONNECTION_CLOSED);
 			bufferPos += bytes;
 		}
 		

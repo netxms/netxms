@@ -18,6 +18,8 @@
  */
 package org.netxms.client;
 
+import org.netxms.base.Glob;
+
 import junit.framework.TestCase;
 
 /**

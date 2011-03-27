@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,18 @@
 package org.netxms.base;
 
 /**
- * @author Victor
- *
+ * NXCP exception. Used to indicate protocol level errors.
  */
 public class NXCPException extends Exception
 {
 	private static final long serialVersionUID = -1220864361254471L;
+	private static final String[] errorText = { "", "Message is too large", "Underlying communictaion session closed" };
 
 	private int errorCode;
 	
+	/**
+	 * @param errorCode
+	 */
 	public NXCPException(int errorCode)
 	{
 		super();
@@ -40,5 +43,21 @@ public class NXCPException extends Exception
 	public int getErrorCode()
 	{
 		return errorCode;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Throwable#getMessage()
+	 */
+	@Override
+	public String getMessage()
+	{
+		try
+		{
+			return "NXCP error: " + errorText[errorCode];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return "NXCP error " + Integer.toString(errorCode);
+		}
 	}
 }

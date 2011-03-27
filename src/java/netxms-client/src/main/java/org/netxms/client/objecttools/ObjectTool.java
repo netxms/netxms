@@ -18,8 +18,8 @@
  */
 package org.netxms.client.objecttools;
 
+import org.netxms.base.Glob;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.Glob;
 import org.netxms.client.objects.Node;
 
 /**

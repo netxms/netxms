@@ -388,6 +388,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				}
 				catch(NXCPException e)
 				{
+					if (e.getErrorCode() == NXCPCodes.ERR_CONNECTION_CLOSED)
+						break;
 				}
 			}
 		}

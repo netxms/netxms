@@ -25,6 +25,7 @@ public final class NXCPCodes
 {
 	// Error codes for NXCPException
 	public static final int ERR_MESSAGE_TOO_LARGE = 1;
+	public static final int ERR_CONNECTION_CLOSED = 2;
 
 	// NXCP command codes
 	public static final int CMD_LOGIN                   = 0x0001;

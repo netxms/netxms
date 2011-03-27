@@ -45,6 +45,7 @@ public class NXCPMessage
 	private Map<Long, NXCPVariable> variableMap = new HashMap<Long, NXCPVariable>(0);
 	private long timestamp;
 	private byte[] binaryData = null;
+	private long controlData = 0;
 
 	/**
 	 * @param msgCode
@@ -92,6 +93,7 @@ public class NXCPMessage
 		}
 		else if ((messageFlags & MF_CONTROL) == MF_CONTROL)
 		{
+			controlData = inputStream.readUnsignedInt();
 		}
 		else
 		{
@@ -135,7 +137,6 @@ public class NXCPMessage
 			}
 		}
 	}
-
 	
 	/**
 	 * @return the msgCode
@@ -321,34 +322,46 @@ public class NXCPMessage
 	}
 	
 
-	//
-	//	Create binary NXCP message
-	//
-	
+	/**
+	 * Create binary NXCP message
+	 * 
+	 * @return byte stream ready to send
+	 */
 	public byte[] createNXCPMessage() throws IOException
 	{
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 		//noinspection IOResourceOpenedButNotSafelyClosed
 		DataOutputStream outputStream = new DataOutputStream(byteStream);
 
-		// Create byte array with all messages
-		for(final NXCPVariable nxcpVariable: variableMap.values())
+		if ((messageFlags & MF_CONTROL) == MF_CONTROL)
 		{
-			final byte[] field = nxcpVariable.createNXCPDataField();
-			outputStream.write(field);
+			outputStream.writeShort(messageCode);
+			outputStream.writeShort(messageFlags);
+			outputStream.writeInt(HEADER_SIZE);	   // Size
+			outputStream.writeInt((int)messageId);
+			outputStream.writeInt((int)controlData);
 		}
-		final byte[] payload = byteStream.toByteArray();
+		else
+		{
+			// Create byte array with all variables
+			for(final NXCPVariable nxcpVariable: variableMap.values())
+			{
+				final byte[] field = nxcpVariable.createNXCPDataField();
+				outputStream.write(field);
+			}
+			final byte[] payload = byteStream.toByteArray();
 
-		// Create message header in new byte stream and add payload
-		byteStream = new ByteArrayOutputStream();
-		//noinspection IOResourceOpenedButNotSafelyClosed
-		outputStream = new DataOutputStream(byteStream);
-		outputStream.writeShort(messageCode);
-		outputStream.writeShort(0);	// Message flags
-		outputStream.writeInt(payload.length + HEADER_SIZE);	   // Size
-		outputStream.writeInt((int)messageId);
-		outputStream.writeInt(variableMap.size());
-		outputStream.write(payload);
+			// Create message header in new byte stream and add payload
+			byteStream = new ByteArrayOutputStream();
+			//noinspection IOResourceOpenedButNotSafelyClosed
+			outputStream = new DataOutputStream(byteStream);
+			outputStream.writeShort(messageCode);
+			outputStream.writeShort(messageFlags);
+			outputStream.writeInt(payload.length + HEADER_SIZE);	   // Size
+			outputStream.writeInt((int)messageId);
+			outputStream.writeInt(variableMap.size());
+			outputStream.write(payload);
+		}
 
 		return byteStream.toByteArray();
 	}
@@ -382,6 +395,19 @@ public class NXCPMessage
 	}
 	
 	/**
+	 * Set or clear control message flag
+	 * 
+	 * @param isControl true to set control message flag
+	 */
+	public void setControl(boolean isControl)
+	{
+		if (isControl)
+			messageFlags |= MF_CONTROL;
+		else
+			messageFlags &= ~MF_CONTROL;
+	}
+	
+	/**
 	 * Return true if message has "end of file" flag set
 	 * @return "end of file" flag
 	 */
@@ -391,11 +417,53 @@ public class NXCPMessage
 	}
 	
 	/**
+	 * Set end of file message flag
+	 * 
+	 * @param isEOF true to set end of file message flag
+	 */
+	public void setEndOfFile(boolean isEOF)
+	{
+		if (isEOF)
+			messageFlags |= MF_END_OF_FILE;
+		else
+			messageFlags &= ~MF_END_OF_FILE;
+	}
+	
+	/**
 	 * Return true if message has "end of sequence" flag set
 	 * @return "end of file" flag
 	 */
 	public boolean isEndOfSequence()
 	{
 		return (messageFlags & MF_END_OF_SEQUENCE) == MF_END_OF_SEQUENCE;
+	}
+
+	/**
+	 * Set end of sequence message flag
+	 * 
+	 * @param isEOS true to set end of sequence message flag
+	 */
+	public void setEndOfSequence(boolean isEOS)
+	{
+		if (isEOS)
+			messageFlags |= MF_END_OF_SEQUENCE;
+		else
+			messageFlags &= ~MF_END_OF_SEQUENCE;
+	}
+
+	/**
+	 * @return the controlData
+	 */
+	public long getControlData()
+	{
+		return controlData;
+	}
+
+	/**
+	 * @param controlData the controlData to set
+	 */
+	public void setControlData(long controlData)
+	{
+		this.controlData = controlData;
 	}
 }
