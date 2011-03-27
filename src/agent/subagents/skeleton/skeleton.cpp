@@ -70,6 +70,13 @@ static LONG H_Enum(const char *pszParam, const char *pArg, StringList *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
+//
+// Action handler functions
+//
+static LONG H_ActionSample(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+{
+	return ERR_SUCCESS;
+}
 
 //
 // Called by master agent to initialize subagent
@@ -109,6 +116,10 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 {
 	{ "Skeleton.List", H_Enum, NULL }
 };
+static NETXMS_SUBAGENT_ACTION m_actions[] =
+{
+	{ "Skeleton.Action",					H_ActionSample, NULL, "Skeleton action" },
+};
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
@@ -120,7 +131,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
 	0, NULL,	// tables
-   0, NULL,	// actions
+   sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
 	0, NULL	// push parameters
 };
 
