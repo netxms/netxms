@@ -315,6 +315,7 @@ src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/
 src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/ListItemRenderer.java -text
 src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/NoGroupRenderer.java -text
 src/java/nebula/org.netxms.nebula.widgets.gallery/src/org/netxms/nebula/widgets/gallery/RendererHelper.java -text
+src/java/netxms-agent/pom.xml -text
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPCodes.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPDataInputStream.java -text
