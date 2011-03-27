@@ -471,7 +471,6 @@ InterfaceList *Node::getInterfaceList()
       if (connectToAgent())
       {
          pIfList = m_pAgentConnection->getInterfaceList();
-			pIfList->removeLoopbacks();
       }
       agentUnlock();
    }
@@ -510,6 +509,7 @@ InterfaceList *Node::getInterfaceList()
 
    if (pIfList != NULL)
 	{
+		pIfList->removeLoopbacks();
       CheckInterfaceNames(pIfList);
 		addVrrpInterfaces(pIfList);
 	}
