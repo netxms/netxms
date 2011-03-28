@@ -1,4 +1,13 @@
 ***************
+* 223 ==> 224 *
+***************
+
+- Columns "zone_type" and "controller_ip" dropped from table "zones"
+- Columns "agent_proxy", "snmp_proxy", "icmp_proxy" added to table "zones"
+- Table "zone_ip_addr_list" dropped
+
+
+***************
 * 222 ==> 223 *
 ***************
 

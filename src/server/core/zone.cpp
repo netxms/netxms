@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: zone.cpp
+** File: zone.cpp
 **
 **/
 
@@ -31,12 +31,11 @@ Zone::Zone()
      :NetObj()
 {
    m_dwId = 0;
-   m_dwZoneGUID = 0;
-   m_dwControllerIpAddr = 0;
-   _tcscpy(m_szName, _T("Zone 0"));
-   m_dwAddrListSize = 0;
-   m_pdwIpAddrList = NULL;
-   m_iZoneType = ZONE_TYPE_ACTIVE;
+   m_zoneId = 0;
+   _tcscpy(m_szName, _T("Default"));
+   m_agentProxy = 0;
+   m_snmpProxy = 0;
+	m_icmpProxy = 0;
 }
 
 
@@ -46,7 +45,6 @@ Zone::Zone()
 
 Zone::~Zone()
 {
-   safe_free(m_pdwIpAddrList);
 }
 
 
@@ -58,14 +56,13 @@ BOOL Zone::CreateFromDB(DWORD dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
-   DWORD i;
 
    m_dwId = dwId;
 
    if (!LoadCommonProperties())
       return FALSE;
 
-   _sntprintf(szQuery, 256, _T("SELECT zone_guid,zone_type,controller_ip FROM zones WHERE id=%d"), dwId);
+   _sntprintf(szQuery, 256, _T("SELECT zone_guid,agent_proxy,snmp_proxy,icmp_proxy FROM zones WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -75,8 +72,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
       DBFreeResult(hResult);
       if (dwId == BUILTIN_OID_ZONE0)
       {
-         m_dwZoneGUID = 0;
-         m_iZoneType = ZONE_TYPE_ACTIVE;
+         m_zoneId = 0;
          return TRUE;
       }
       else
@@ -85,26 +81,12 @@ BOOL Zone::CreateFromDB(DWORD dwId)
       }
    }
 
-   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 0);
-   m_iZoneType = DBGetFieldLong(hResult, 0, 1);
-   m_dwControllerIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
+   m_zoneId = DBGetFieldULong(hResult, 0, 0);
+   m_agentProxy = DBGetFieldULong(hResult, 0, 1);
+   m_snmpProxy = DBGetFieldULong(hResult, 0, 2);
+   m_icmpProxy = DBGetFieldULong(hResult, 0, 3);
 
    DBFreeResult(hResult);
-
-   // Load IP address list
-   if (m_iZoneType == ZONE_TYPE_PASSIVE)
-   {
-      _sntprintf(szQuery, 256, _T("SELECT ip_addr FROM zone_ip_addr_list WHERE zone_id=%d"), m_dwId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
-      if (hResult != NULL)
-      {
-         m_dwAddrListSize = DBGetNumRows(hResult);
-         m_pdwIpAddrList = (DWORD *)malloc(sizeof(DWORD) * m_dwAddrListSize);
-         for(i = 0; i < m_dwAddrListSize; i++)
-            m_pdwIpAddrList[i] = DBGetFieldIPAddr(hResult, i, 0);
-         DBFreeResult(hResult);
-      }
-   }
 
    // Load access list
    LoadACLFromDB();
@@ -120,9 +102,8 @@ BOOL Zone::CreateFromDB(DWORD dwId)
 BOOL Zone::SaveToDB(DB_HANDLE hdb)
 {
    BOOL bNewObject = TRUE;
-   TCHAR szIpAddr[16], szQuery[8192];
+   TCHAR szQuery[8192];
    DB_RESULT hResult;
-   DWORD i;
 
    LockData();
 
@@ -140,30 +121,15 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      _sntprintf(szQuery, 8192, _T("INSERT INTO zones (id,zone_guid,zone_type,controller_ip)")
-                          _T(" VALUES (%d,%d,%d,'%s')"),
-                 m_dwId, m_dwZoneGUID, m_iZoneType,
-                 IpToStr(m_dwControllerIpAddr, szIpAddr));
+      _sntprintf(szQuery, 8192, _T("INSERT INTO zones (id,zone_guid,agent_proxy,snmp_proxy,icmp_proxy)")
+                          _T(" VALUES (%d,%d,%d,%d,%d)"),
+                 m_dwId, m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy);
    else
-      _sntprintf(szQuery, 8192, _T("UPDATE zones SET zone_guid=%d,zone_type=%d,")
-                                _T("controller_ip='%s' WHERE id=%d"),
-                 m_dwZoneGUID, m_iZoneType,
-                 IpToStr(m_dwControllerIpAddr, szIpAddr), m_dwId);
+      _sntprintf(szQuery, 8192, _T("UPDATE zones SET zone_guid=%d,agent_proxy=%d,")
+                                _T("snmp_proxy=%d,icmp_proxy=%d WHERE id=%d"),
+                 m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy, m_dwId);
    DBQuery(hdb, szQuery);
 
-   // Save ip address list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM zone_ip_addr_list WHERE zone_id=%d"), m_dwId);
-   DBQuery(hdb, szQuery);
-   if (m_iZoneType == ZONE_TYPE_PASSIVE)
-   {
-      for(i = 0; i < m_dwAddrListSize; i++)
-      {
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO zone_ip_addr_list (zone_id,ip_addr) VALUES (%d,'%s')"),
-                   m_dwId, IpToStr(m_pdwIpAddrList[i], szIpAddr));
-         DBQuery(hdb, szQuery);
-      }
-   }
-   
    SaveACLToDB(hdb);
 
    // Unlock object and clear modification flag
@@ -177,7 +143,7 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
 // Delete zone object from database
 //
 
-BOOL Zone::DeleteFromDB(void)
+BOOL Zone::DeleteFromDB()
 {
    TCHAR szQuery[256];
    BOOL bSuccess;
@@ -186,8 +152,6 @@ BOOL Zone::DeleteFromDB(void)
    if (bSuccess)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM zones WHERE id=%d"), m_dwId);
-      QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM zone_ip_addr_list WHERE zone_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -201,11 +165,10 @@ BOOL Zone::DeleteFromDB(void)
 void Zone::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
-   pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
-   pMsg->SetVariable(VID_ZONE_TYPE, (WORD)m_iZoneType);
-   pMsg->SetVariable(VID_CONTROLLER_IP_ADDR, m_dwControllerIpAddr);
-   pMsg->SetVariable(VID_ADDR_LIST_SIZE, m_dwAddrListSize);
-   pMsg->SetVariableToInt32Array(VID_IP_ADDR_LIST, m_dwAddrListSize, m_pdwIpAddrList);
+   pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
+   pMsg->SetVariable(VID_AGENT_PROXY, m_agentProxy);
+   pMsg->SetVariable(VID_SNMP_PROXY, m_snmpProxy);
+   pMsg->SetVariable(VID_ICMP_PROXY, m_icmpProxy);
 }
 
 
@@ -217,6 +180,15 @@ DWORD Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
+
+	if (pRequest->IsVariableExist(VID_AGENT_PROXY))
+		m_agentProxy = pRequest->GetVariableLong(VID_AGENT_PROXY);
+
+	if (pRequest->IsVariableExist(VID_SNMP_PROXY))
+		m_agentProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
+
+	if (pRequest->IsVariableExist(VID_ICMP_PROXY))
+		m_agentProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }

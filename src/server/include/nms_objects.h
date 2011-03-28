@@ -641,7 +641,7 @@ protected:
 	int m_iPendingStatus;
 	int m_iPollCount;
 	int m_iRequiredPollCount;
-   DWORD m_dwZoneGUID;
+   DWORD m_zoneId;
    WORD m_wAgentPort;
    WORD m_wAuthMethod;
    TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
@@ -718,7 +718,7 @@ public:
    Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone);
    virtual ~Node();
 
-   virtual int Type(void) { return OBJECT_NODE; }
+   virtual int Type() { return OBJECT_NODE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB();
@@ -730,7 +730,7 @@ public:
 
    DWORD getFlags() { return m_dwFlags; }
    DWORD getRuntimeFlags() { return m_dwDynamicFlags; }
-   DWORD getZoneGUID() { return m_dwZoneGUID; }
+   DWORD getZoneId() { return m_zoneId; }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
@@ -970,7 +970,7 @@ class NXCORE_EXPORTABLE Subnet : public NetObj
 {
 protected:
    DWORD m_dwIpNetMask;
-   DWORD m_dwZoneGUID;
+   DWORD m_zoneId;
 	bool m_bSyntheticMask;
 
 public:
@@ -988,7 +988,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
 
    DWORD getIpNetMask() { return m_dwIpNetMask; }
-   DWORD getZoneGUID() { return m_dwZoneGUID; }
+   DWORD getZoneId() { return m_zoneId; }
 	bool isSyntheticMask() { return m_bSyntheticMask; }
 
 	void setCorrectMask(DWORD dwAddr, DWORD dwMask);
@@ -1097,7 +1097,7 @@ public:
    TemplateGroup(TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~TemplateGroup() { }
 
-   virtual int Type(void) { return OBJECT_TEMPLATEGROUP; }
+   virtual int Type() { return OBJECT_TEMPLATEGROUP; }
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1109,28 +1109,27 @@ public:
 class Zone : public NetObj
 {
 protected:
-   DWORD m_dwZoneGUID;
-   int m_iZoneType;
-   DWORD m_dwControllerIpAddr;
-   DWORD m_dwAddrListSize;
-   DWORD *m_pdwIpAddrList;
+   DWORD m_zoneId;
+   DWORD m_agentProxy;
+   DWORD m_snmpProxy;
+	DWORD m_icmpProxy;
 
 public:
    Zone();
    virtual ~Zone();
 
-   virtual int Type(void) { return OBJECT_ZONE; }
+   virtual int Type() { return OBJECT_ZONE; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   DWORD GUID(void) { return m_dwZoneGUID; }
+   DWORD getZoneId() { return m_zoneId; }
 
-   void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
+   void addSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
 };
 
 

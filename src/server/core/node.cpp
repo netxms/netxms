@@ -34,7 +34,7 @@ Node::Node()
    m_iStatus = STATUS_UNKNOWN;
    m_dwFlags = 0;
    m_dwDynamicFlags = 0;
-   m_dwZoneGUID = 0;
+   m_zoneId = 0;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
@@ -95,7 +95,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_dwIpAddr = dwAddr;
    m_dwFlags = dwFlags;
    m_dwDynamicFlags = 0;
-   m_dwZoneGUID = dwZone;
+   m_zoneId = dwZone;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
@@ -222,7 +222,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    DBGetField(hResult, 0, 9, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
    DBGetField(hResult, 0, 10, m_szPlatformName, MAX_PLATFORM_NAME_LEN);
    m_dwPollerNode = DBGetFieldULong(hResult, 0, 11);
-   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 12);
+   m_zoneId = DBGetFieldULong(hResult, 0, 12);
    m_dwProxyNode = DBGetFieldULong(hResult, 0, 13);
    m_dwSNMPProxy = DBGetFieldULong(hResult, 0, 14);
    m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 15);
@@ -344,7 +344,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  m_dwProxyNode, (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
                  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName),
 					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
-		           m_dwPollerNode, m_dwZoneGUID, m_dwSNMPProxy, m_iRequiredPollCount, m_nUseIfXTable,
+		           m_dwPollerNode, m_zoneId, m_dwSNMPProxy, m_iRequiredPollCount, m_nUseIfXTable,
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
 					  (const TCHAR *)DBPrepareString(hdb, m_sysName));
@@ -366,7 +366,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  (const TCHAR *)DBPrepareString(hdb, m_szObjectId),
 					  (const TCHAR *)DBPrepareString(hdb, m_sysDescription),
                  (const TCHAR *)DBPrepareString(hdb, m_szAgentVersion),
-					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_dwZoneGUID,
+					  (const TCHAR *)DBPrepareString(hdb, m_szPlatformName), m_dwPollerNode, m_zoneId,
                  m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
 					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
@@ -842,7 +842,7 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 				// Create new subnet object
 				if (dwIpAddr < 0xE0000000)
 				{
-					pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_dwZoneGUID, bSyntheticMask);
+					pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_zoneId, bSyntheticMask);
 					NetObjInsert(pSubnet, TRUE);
 					g_pEntireNet->AddSubnet(pSubnet);
 				}
@@ -2668,7 +2668,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_AGENT_VERSION, m_szAgentVersion);
    pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
    pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
-   pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
+   pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
    pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
    pMsg->SetVariable(VID_SNMP_PROXY, m_dwSNMPProxy);
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
@@ -3880,7 +3880,7 @@ void Node::CheckSubnetBinding(InterfaceList *pIfList)
 			else if (!isSync)
 			{
 				// Create subnet
-				pSubnet = new Subnet(iface->dwIpAddr & iface->dwIpNetMask, iface->dwIpNetMask, m_dwZoneGUID, FALSE);
+				pSubnet = new Subnet(iface->dwIpAddr & iface->dwIpNetMask, iface->dwIpNetMask, m_zoneId, FALSE);
 				NetObjInsert(pSubnet, TRUE);
 				g_pEntireNet->AddSubnet(pSubnet);
 				pSubnet->AddNode(this);

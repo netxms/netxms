@@ -403,7 +403,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
          case OBJECT_ZONE:
             RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
-            AddObjectToIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->GUID(), pObject);
+            AddObjectToIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->getZoneId(), pObject);
             RWLockUnlock(g_rwlockZoneIndex);
             break;
          case OBJECT_CONDITION:
@@ -474,7 +474,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
       case OBJECT_ZONE:
          RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
-         DeleteObjectFromIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->GUID());
+         DeleteObjectFromIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->getZoneId());
          RWLockUnlock(g_rwlockZoneIndex);
          break;
       case OBJECT_CONDITION:
@@ -953,9 +953,9 @@ BOOL LoadObjects()
                {
                   Zone *pZone;
 
-                  pZone = FindZoneByGUID(pSubnet->getZoneGUID());
+                  pZone = FindZoneByGUID(pSubnet->getZoneId());
                   if (pZone != NULL)
-                     pZone->AddSubnet(pSubnet);
+                     pZone->addSubnet(pSubnet);
                }
                else
                {

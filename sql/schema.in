@@ -181,21 +181,10 @@ CREATE TABLE zones
 (
 	id integer not null,		// Zone object's ID
 	zone_guid integer not null,	// Globally unique ID for zone
-	zone_type integer not null,	// Active or passive zone
-	controller_ip varchar(15) not null,
+	agent_proxy integer not null,
+	snmp_proxy integer not null,
+	icmp_proxy integer not null,
 	PRIMARY KEY(id)
-) TABLE_TYPE;
-
-
-/*
-** Zone IP address list
-*/
-
-CREATE TABLE zone_ip_addr_list
-(
-	zone_id integer not null,	// Zone object's ID
-	ip_addr varchar(15) not null,
-	PRIMARY KEY(zone_id,ip_addr)
 ) TABLE_TYPE;
 
 

@@ -31,7 +31,7 @@ Subnet::Subnet()
        :NetObj()
 {
    m_dwIpNetMask = 0;
-   m_dwZoneGUID = 0;
+   m_zoneId = 0;
 	m_bSyntheticMask = false;
 }
 
@@ -47,7 +47,7 @@ Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, bool bSyntheticMask)
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
    _sntprintf(m_szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
-   m_dwZoneGUID = dwZone;
+   m_zoneId = dwZone;
 	m_bSyntheticMask = bSyntheticMask;
 }
 
@@ -88,7 +88,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
 
    m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
    m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 1);
-   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 2);
+   m_zoneId = DBGetFieldULong(hResult, 0, 2);
 	m_bSyntheticMask = DBGetFieldLong(hResult, 0, 3) ? true : false;
 
    DBFreeResult(hResult);
@@ -131,12 +131,12 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
 		           _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s','%s',%d,%d)"),
                  m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
-					  IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_bSyntheticMask ? 1 : 0);
+					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0);
    else
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
 		           _T("UPDATE subnets SET ip_addr='%s',ip_netmask='%s',zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
                  IpToStr(m_dwIpAddr, szIpAddr),
-					  IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_bSyntheticMask ? 1 : 0, m_dwId);
+					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0, m_dwId);
    DBQuery(hdb, szQuery);
 
    // Update node to subnet mapping
@@ -190,7 +190,7 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
-   pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
+   pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
 	pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 }
 

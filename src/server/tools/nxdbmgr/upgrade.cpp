@@ -249,6 +249,29 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V223 to V224
+//
+
+static BOOL H_UpgradeFromV223(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("DROP TABLE zone_ip_addr_list\n")
+		_T("ALTER TABLE zones DROP COLUMN zone_type\n")
+		_T("ALTER TABLE zones DROP COLUMN controller_ip\n")
+		_T("ALTER TABLE zones ADD agent_proxy integer\n")
+		_T("ALTER TABLE zones ADD snmp_proxy integer\n")
+		_T("ALTER TABLE zones ADD icmp_proxy integer\n")
+		_T("UPDATE zones SET agent_proxy=0,snmp_proxy=0,icmp_proxy=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='224' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V222 to V223
 //
 
@@ -5117,6 +5140,7 @@ static struct
 	{ 220, 221, H_UpgradeFromV220 },
 	{ 221, 222, H_UpgradeFromV221 },
 	{ 222, 223, H_UpgradeFromV222 },
+	{ 223, 224, H_UpgradeFromV223 },
    { 0, NULL }
 };
 
