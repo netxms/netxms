@@ -425,9 +425,9 @@ public final class NXCPCodes
 	public static final long VID_NUM_VARIABLES           = 144;
 	public static final long VID_COMMAND                 = 145;
 	public static final long VID_PROTOCOL_VERSION        = 146;
-	public static final long VID_ZONE_GUID               = 147;
-	public static final long VID_ZONE_TYPE               = 148;
-	public static final long VID_CONTROLLER_IP_ADDR      = 149;
+	public static final long VID_ZONE_ID                 = 147;
+	public static final long VID_AGENT_PROXY             = 148;
+	public static final long VID_ICMP_PROXY              = 149;
 	public static final long VID_ADDR_LIST_SIZE          = 150;
 	public static final long VID_IP_ADDR_LIST            = 151;
 	public static final long VID_REMOVE_DCI              = 152;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import org.netxms.client.NXCSession;
 
 /**
  * This class represents NetXMS NODE objects.
- * 
  */
 public class Node extends GenericObject
 {
@@ -94,6 +93,7 @@ public class Node extends GenericObject
 	private int vrrpVersion;
 	private String driverName;
 	private String driverVersion;
+	private long zoneId;
 	
 	/**
 	 * @param msg
@@ -129,6 +129,7 @@ public class Node extends GenericObject
 		vrrpVersion = msg.getVariableAsInteger(NXCPCodes.VID_VRRP_VERSION);
 		driverName = msg.getVariableAsString(NXCPCodes.VID_DRIVER_NAME);
 		driverVersion = msg.getVariableAsString(NXCPCodes.VID_DRIVER_VERSION);
+		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 	}
 
 	/**
@@ -392,5 +393,13 @@ public class Node extends GenericObject
 	public String getDriverVersion()
 	{
 		return driverVersion;
+	}
+
+	/**
+	 * @return the zoneId
+	 */
+	public long getZoneId()
+	{
+		return zoneId;
 	}
 }

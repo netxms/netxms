@@ -25,7 +25,6 @@ import org.netxms.client.NXCSession;
 
 /**
  * Network interface object
- *
  */
 public class Interface extends GenericObject
 {
@@ -38,6 +37,7 @@ public class Interface extends GenericObject
 	private int requiredPollCount;
 	private long peerNodeId;
 	private long peerInterfaceId;
+	private long zoneId;
 	
 	/**
 	 * @param msg
@@ -55,6 +55,7 @@ public class Interface extends GenericObject
 		requiredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
 		peerNodeId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_NODE_ID);
 		peerInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
+		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 	}
 
 	/**
@@ -136,5 +137,13 @@ public class Interface extends GenericObject
 	protected long getPeerInterfaceId()
 	{
 		return peerInterfaceId;
+	}
+
+	/**
+	 * @return the zoneId
+	 */
+	public long getZoneId()
+	{
+		return zoneId;
 	}
 }

@@ -97,6 +97,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
+import org.netxms.client.objects.Zone;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.situations.Situation;
@@ -257,6 +258,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_NETWORKMAP:
 				object = new NetworkMap(msg, this);
+				break;
+			case GenericObject.OBJECT_ZONE:
+				object = new Zone(msg, this);
 				break;
 			default:
 				object = new GenericObject(msg, this);
