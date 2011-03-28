@@ -1397,7 +1397,6 @@ void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
-void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
@@ -1442,8 +1441,6 @@ extern INDEX NXCORE_EXPORTABLE *g_pIndexById;
 extern DWORD NXCORE_EXPORTABLE g_dwIdIndexSize;
 extern INDEX NXCORE_EXPORTABLE *g_pSubnetIndexByAddr;
 extern DWORD NXCORE_EXPORTABLE g_dwSubnetAddrIndexSize;
-extern INDEX NXCORE_EXPORTABLE *g_pNodeIndexByAddr;
-extern DWORD NXCORE_EXPORTABLE g_dwNodeAddrIndexSize;
 extern INDEX NXCORE_EXPORTABLE *g_pInterfaceIndexByAddr;
 extern DWORD NXCORE_EXPORTABLE g_dwInterfaceAddrIndexSize;
 extern INDEX NXCORE_EXPORTABLE *g_pZoneIndexByGUID;
@@ -1451,7 +1448,6 @@ extern DWORD NXCORE_EXPORTABLE g_dwZoneGUIDIndexSize;
 extern INDEX NXCORE_EXPORTABLE *g_pConditionIndex;
 extern DWORD NXCORE_EXPORTABLE g_dwConditionIndexSize;
 extern RWLOCK NXCORE_EXPORTABLE g_rwlockIdIndex;
-extern RWLOCK NXCORE_EXPORTABLE g_rwlockNodeIndex;
 extern RWLOCK NXCORE_EXPORTABLE g_rwlockSubnetIndex;
 extern RWLOCK NXCORE_EXPORTABLE g_rwlockInterfaceIndex;
 extern RWLOCK NXCORE_EXPORTABLE g_rwlockZoneIndex;

@@ -114,17 +114,21 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 
 void ShowServerStats(CONSOLE_CTX pCtx)
 {
-   DWORD i, dwNumItems;
+	int dciCount = 0, nodeCount = 0;
 
-   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-   for(i = 0, dwNumItems = 0; i < g_dwNodeAddrIndexSize; i++)
-      dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->getItemCount();
-   RWLockUnlock(g_rwlockNodeIndex);
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(DWORD i = 0; i < g_dwIdIndexSize; i++)
+		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+		{
+			dciCount += (int)((Node *)g_pIndexById[i].pObject)->getItemCount();
+			nodeCount++;
+		}
+   RWLockUnlock(g_rwlockIdIndex);
 
    ConsolePrintf(pCtx, _T("Total number of objects:     %d\n")
                        _T("Number of monitored nodes:   %d\n")
                        _T("Number of collectable DCIs:  %d\n\n"),
-                 g_dwIdIndexSize, g_dwNodeAddrIndexSize, dwNumItems);
+                 (int)g_dwIdIndexSize, nodeCount, dciCount);
 }
 
 

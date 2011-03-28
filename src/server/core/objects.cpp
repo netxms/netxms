@@ -40,8 +40,8 @@ INDEX NXCORE_EXPORTABLE *g_pIndexById = NULL;
 DWORD NXCORE_EXPORTABLE g_dwIdIndexSize = 0;
 INDEX NXCORE_EXPORTABLE *g_pSubnetIndexByAddr = NULL;
 DWORD NXCORE_EXPORTABLE g_dwSubnetAddrIndexSize = 0;
-INDEX NXCORE_EXPORTABLE *g_pNodeIndexByAddr = NULL;
-DWORD NXCORE_EXPORTABLE g_dwNodeAddrIndexSize = 0;
+//INDEX NXCORE_EXPORTABLE *g_pNodeIndexByAddr = NULL;
+//DWORD NXCORE_EXPORTABLE g_dwNodeAddrIndexSize = 0;
 INDEX NXCORE_EXPORTABLE *g_pInterfaceIndexByAddr = NULL;
 DWORD NXCORE_EXPORTABLE g_dwInterfaceAddrIndexSize = 0;
 INDEX NXCORE_EXPORTABLE *g_pZoneIndexByGUID = NULL;
@@ -50,7 +50,7 @@ INDEX NXCORE_EXPORTABLE *g_pConditionIndex = NULL;
 DWORD NXCORE_EXPORTABLE g_dwConditionIndexSize = 0;
 
 RWLOCK NXCORE_EXPORTABLE g_rwlockIdIndex;
-RWLOCK NXCORE_EXPORTABLE g_rwlockNodeIndex;
+//RWLOCK NXCORE_EXPORTABLE g_rwlockNodeIndex;
 RWLOCK NXCORE_EXPORTABLE g_rwlockSubnetIndex;
 RWLOCK NXCORE_EXPORTABLE g_rwlockInterfaceIndex;
 RWLOCK NXCORE_EXPORTABLE g_rwlockZoneIndex;
@@ -166,16 +166,16 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
    DWORD i;
 
    DbgPrintf(1, _T("Started caching of DCI values"));
-   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-      for(i = 0; i < g_dwIdIndexSize; i++)
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+	{
+		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
 		{
-			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-			{
-				((Node *)g_pIndexById[i].pObject)->updateDciCache();
-		      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
-			}
+			((Node *)g_pIndexById[i].pObject)->updateDciCache();
+	      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
 		}
-   RWLockUnlock(g_rwlockNodeIndex);
+	}
+   RWLockUnlock(g_rwlockIdIndex);
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;
 }
@@ -199,7 +199,6 @@ void ObjectsInit()
    g_pTemplateUpdateQueue = new Queue;
 
    g_rwlockIdIndex = RWLockCreate();
-   g_rwlockNodeIndex = RWLockCreate();
    g_rwlockSubnetIndex = RWLockCreate();
    g_rwlockInterfaceIndex = RWLockCreate();
    g_rwlockZoneIndex = RWLockCreate();
@@ -370,6 +369,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
 			case OBJECT_NETWORKMAP:
+         case OBJECT_NODE:
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -379,14 +379,6 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
                RWLockUnlock(g_rwlockSubnetIndex);
                if (bNewObject)
                   PostEvent(EVENT_SUBNET_ADDED, pObject->Id(), NULL);
-            }
-            break;
-         case OBJECT_NODE:
-            if (pObject->IpAddr() != 0)
-            {
-               RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
-               AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
-               RWLockUnlock(g_rwlockNodeIndex);
             }
             break;
          case OBJECT_INTERFACE:
@@ -447,6 +439,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_NETWORKMAPROOT:
 		case OBJECT_NETWORKMAPGROUP:
 		case OBJECT_NETWORKMAP:
+      case OBJECT_NODE:
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -454,14 +447,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
             RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
             DeleteObjectFromIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr());
             RWLockUnlock(g_rwlockSubnetIndex);
-         }
-         break;
-      case OBJECT_NODE:
-         if (pObject->IpAddr() != 0)
-         {
-            RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
-            DeleteObjectFromIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr());
-            RWLockUnlock(g_rwlockNodeIndex);
          }
          break;
       case OBJECT_INTERFACE:
@@ -813,17 +798,18 @@ DWORD FindLocalMgmtNode()
 {
    DWORD i, dwId = 0;
 
-   if (g_pNodeIndexByAddr == NULL)
+   if (g_pIndexById == NULL)
       return 0;
 
-   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-   for(i = 0; i < g_dwNodeAddrIndexSize; i++)
-      if (((Node *)g_pNodeIndexByAddr[i].pObject)->getFlags() & NF_IS_LOCAL_MGMT)
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
+			 (((Node *)g_pIndexById[i].pObject)->getFlags() & NF_IS_LOCAL_MGMT))
       {
-         dwId = ((Node *)g_pNodeIndexByAddr[i].pObject)->Id();
+         dwId = ((Node *)g_pIndexById[i].pObject)->Id();
          break;
       }
-   RWLockUnlock(g_rwlockNodeIndex);
+   RWLockUnlock(g_rwlockIdIndex);
    return dwId;
 }
 
@@ -1508,29 +1494,6 @@ void NetObjDelete(NetObj *pObject)
    // Delete object from index by ID and object itself
    DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
    delete pObject;
-}
-
-
-//
-// Update node index when primary IP address changes
-//
-
-void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
-{
-   DWORD dwPos;
-
-   RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
-   dwPos = SearchIndex(g_pNodeIndexByAddr, g_dwNodeAddrIndexSize, dwOldIpAddr);
-   if (dwPos != INVALID_INDEX)
-   {
-      g_pNodeIndexByAddr[dwPos].dwKey = dwNewIpAddr;
-      qsort(g_pNodeIndexByAddr, g_dwNodeAddrIndexSize, sizeof(INDEX), IndexCompare);
-   }
-   else
-   {
-      AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, dwNewIpAddr, pObject);
-   }
-   RWLockUnlock(g_rwlockNodeIndex);
 }
 
 

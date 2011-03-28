@@ -65,36 +65,39 @@ Interface *FindInterfaceConnectionPoint(const BYTE *macAddr)
 	TCHAR macAddrText[32];
 	DbgPrintf(6, _T("Called FindInterfaceConnectionPoint(%s)"), MACToStr(macAddr, macAddrText));
 
-	if (g_pNodeIndexByAddr == NULL)
+	if (g_pIndexById == NULL)
       return NULL;
 
 	Interface *iface = NULL;
-   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-   for (DWORD i = 0; (i < g_dwNodeAddrIndexSize) && (iface == NULL); i++)
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(DWORD i = 0; (i < g_dwIdIndexSize) && (iface == NULL); i++)
 	{
-		ForwardingDatabase *fdb = ((Node *)g_pNodeIndexByAddr[i].pObject)->getSwitchForwardingDatabase();
-		if (fdb != NULL)
+		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
 		{
-			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"), macAddrText,
-				((Node *)g_pNodeIndexByAddr[i].pObject)->Name(), (int)((Node *)g_pNodeIndexByAddr[i].pObject)->Id());
-			DWORD ifIndex = fdb->findMacAddress(macAddr);
-			if ((ifIndex != 0) && fdb->isSingleMacOnPort(ifIndex))
+			ForwardingDatabase *fdb = ((Node *)g_pIndexById[i].pObject)->getSwitchForwardingDatabase();
+			if (fdb != NULL)
 			{
-				iface = ((Node *)g_pNodeIndexByAddr[i].pObject)->findInterface(ifIndex, INADDR_ANY);
-				if (iface != NULL)
+				DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"), macAddrText,
+					((Node *)g_pIndexById[i].pObject)->Name(), (int)((Node *)g_pIndexById[i].pObject)->Id());
+				DWORD ifIndex = fdb->findMacAddress(macAddr);
+				if ((ifIndex != 0) && fdb->isSingleMacOnPort(ifIndex))
 				{
-					DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
-						iface->Name(), (int)iface->Id(), iface->getParentNode()->Name(), (int)iface->getParentNode()->Id());
+					iface = ((Node *)g_pIndexById[i].pObject)->findInterface(ifIndex, INADDR_ANY);
+					if (iface != NULL)
+					{
+						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
+							iface->Name(), (int)iface->Id(), iface->getParentNode()->Name(), (int)iface->getParentNode()->Id());
+					}
+					else
+					{
+						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
+							macAddrText, ((Node *)g_pIndexById[i].pObject)->Name(), ((Node *)g_pIndexById[i].pObject)->Id(), ifIndex);
+					}
 				}
-				else
-				{
-					DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
-						macAddrText, ((Node *)g_pNodeIndexByAddr[i].pObject)->Name(), ((Node *)g_pNodeIndexByAddr[i].pObject)->Id(), ifIndex);
-				}
+				fdb->decRefCount();
 			}
-			fdb->decRefCount();
 		}
 	}
-   RWLockUnlock(g_rwlockNodeIndex);
+   RWLockUnlock(g_rwlockIdIndex);
 	return iface;
 }

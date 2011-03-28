@@ -2719,7 +2719,6 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
          return RCC_INVALID_IP_ADDR;
       }
 
-      UpdateNodeIndex(m_dwIpAddr, dwIpAddr, this);
       m_dwIpAddr = dwIpAddr;
    }
 
@@ -3219,7 +3218,6 @@ void Node::changeIPAddress(DWORD dwIpAddr)
 
    LockData();
 
-   UpdateNodeIndex(m_dwIpAddr, dwIpAddr, this);
    m_dwIpAddr = dwIpAddr;
    m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 

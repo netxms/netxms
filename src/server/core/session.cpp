@@ -6454,7 +6454,7 @@ void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
 void ClientSession::SendServerStats(DWORD dwRqId)
 {
    CSCPMessage msg;
-   DWORD i, dwNumItems;
+   DWORD i, dwNumItems, nodeCount;
 #ifdef _WIN32
    PROCESS_MEMORY_COUNTERS mc;
 #endif
@@ -6470,13 +6470,16 @@ void ClientSession::SendServerStats(DWORD dwRqId)
 
    // Number of objects and DCIs
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0, dwNumItems = 0; i < g_dwIdIndexSize; i++)
+   for(i = 0, dwNumItems = 0, nodeCount = 0; i < g_dwIdIndexSize; i++)
 		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+		{
 	      dwNumItems += ((Node *)g_pIndexById[i].pObject)->getItemCount();
+			nodeCount++;
+		}
    RWLockUnlock(g_rwlockIdIndex);
    msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
    msg.SetVariable(VID_NUM_OBJECTS, g_dwIdIndexSize);
-   msg.SetVariable(VID_NUM_NODES, g_dwNodeAddrIndexSize);
+   msg.SetVariable(VID_NUM_NODES, nodeCount);
 
    // Client sessions
    msg.SetVariable(VID_NUM_SESSIONS, (DWORD)GetSessionCount());

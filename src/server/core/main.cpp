@@ -1060,11 +1060,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				DumpIndex(pCtx, g_rwlockInterfaceIndex, g_pInterfaceIndexByAddr,
 						g_dwInterfaceAddrIndexSize, TRUE);
 			}
-			else if (IsCommand(_T("NODE"), szBuffer, 1))
-			{
-				DumpIndex(pCtx, g_rwlockNodeIndex, g_pNodeIndexByAddr,
-						g_dwNodeAddrIndexSize, TRUE);
-			}
 			else if (IsCommand(_T("SUBNET"), szBuffer, 1))
 			{
 				DumpIndex(pCtx, g_rwlockSubnetIndex, g_pSubnetIndexByAddr,
@@ -1074,7 +1069,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			{
 				if (szBuffer[0] == 0)
 					ConsolePrintf(pCtx, _T("ERROR: Missing index name\n")
-							_T("Valid names are: CONDITION, ID, INTERFACE, NODE, SUBNET\n\n"));
+							_T("Valid names are: CONDITION, ID, INTERFACE, SUBNET\n\n"));
 				else
 					ConsolePrintf(pCtx, _T("ERROR: Invalid index name\n\n"));
 			}
@@ -1091,7 +1086,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			ConsolePrintf(pCtx, _T("Mutex status:\n"));
 			DbgTestRWLock(g_rwlockIdIndex, _T("g_hMutexIdIndex"), pCtx);
-			DbgTestRWLock(g_rwlockNodeIndex, _T("g_hMutexNodeIndex"), pCtx);
 			DbgTestRWLock(g_rwlockSubnetIndex, _T("g_hMutexSubnetIndex"), pCtx);
 			DbgTestRWLock(g_rwlockInterfaceIndex, _T("g_hMutexInterfaceIndex"), pCtx);
 			ConsolePrintf(pCtx, _T("\n"));

@@ -590,8 +590,9 @@ public:
    DWORD getIndex() { return m_dwIndex; }
    void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
    int getState() { return m_iState; }
-   const TCHAR *getUserName(void) { return m_szUserName; }
-   const TCHAR *getClientInfo(void) { return m_szClientInfo; }
+   const TCHAR *getUserName() { return m_szUserName; }
+   const TCHAR *getClientInfo() { return m_szClientInfo; }
+	const TCHAR *getWorkstation() { return m_szWorkstation; }
    DWORD getUserId() { return m_dwUserId; }
 	DWORD getSystemRights() { return m_dwSystemAccess; }
    bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
