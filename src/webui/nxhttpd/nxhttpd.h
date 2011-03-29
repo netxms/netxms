@@ -27,7 +27,6 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxclapi.h>
-#include <nxnt.h>
 #include "messages.h"
 
 #ifdef _WIN32
@@ -420,7 +419,6 @@ extern const TCHAR *g_szStatusImageName[];
 extern const TCHAR *g_szAlarmState[];
 extern const TCHAR *g_szObjectClass[];
 extern const TCHAR *g_szInterfaceTypes[];
-extern CODE_TO_TEXT g_ctNodeType[];
 
 
 #endif // __NXHTTPD__H__

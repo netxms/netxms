@@ -222,7 +222,6 @@ void CObjectOverview::Refresh()
 				{
 					InsertItem(_T("SNMP Agent"), _T("Not detected"));
 				}
-				InsertItem(_T("Node Type"), (TCHAR *)CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
 				break;
 			case OBJECT_INTERFACE:
 				if (m_pObject->dwIpAddr != 0)

@@ -1061,7 +1061,7 @@ struct __nxc_object_node
    DWORD dwPollerNode;
    DWORD dwProxyNode;
 	DWORD dwSNMPProxy;
-   DWORD dwZoneGUID;
+   DWORD dwZoneId;
    TCHAR szSharedSecret[MAX_SECRET_LENGTH];
    TCHAR *pszAuthName;     // SNMP authentication name
 	TCHAR *pszAuthPassword; // SNMP v3 USM auth password
@@ -1083,7 +1083,7 @@ struct __nxc_object_node
 struct __nxc_object_subnet
 {
    DWORD dwIpNetMask;
-   DWORD dwZoneGUID;
+   DWORD dwZoneId;
 };
 
 struct __nxc_object_container
@@ -1113,11 +1113,10 @@ struct __nxc_object_netsrv
 
 struct __nxc_object_zone
 {
-   DWORD dwZoneGUID;
-   DWORD dwControllerIpAddr;
-   DWORD dwAddrListSize;
-   DWORD *pdwAddrList;
-   WORD wZoneType;
+   DWORD dwZoneId;
+   DWORD dwAgentProxy;
+   DWORD dwSnmpProxy;
+   DWORD dwIcmpProxy;
 };
 
 struct __nxc_object_vpnc

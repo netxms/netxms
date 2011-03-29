@@ -422,7 +422,6 @@ void ClientSession::ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObje
 			{
 				ShowObjectAttribute(response, _T("SNMP Agent"), _T("Inactive"));
 			}
-			ShowObjectAttribute(response, _T("Node Type"), CodeToText(pObject->node.dwNodeType, g_ctNodeType, _T("Unknown")));
 			ShowObjectAttribute(response, _T("CDP Support"), (pObject->node.dwFlags & NF_IS_CDP) ? _T("Yes") : _T("No"));
 			ShowObjectAttribute(response, _T("SONMP Support"), (pObject->node.dwFlags & NF_IS_SONMP) ? _T("Yes") : _T("No"));
 			ShowObjectAttribute(response, _T("LLDP Support"), (pObject->node.dwFlags & NF_IS_LLDP) ? _T("Yes") : _T("No"));

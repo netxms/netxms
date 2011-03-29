@@ -43,9 +43,6 @@ void DestroyObject(NXC_OBJECT *pObject)
          safe_free(pObject->netsrv.pszRequest);
          safe_free(pObject->netsrv.pszResponse);
          break;
-      case OBJECT_ZONE:
-         safe_free(pObject->zone.pdwAddrList);
-         break;
       case OBJECT_VPNCONNECTOR:
          safe_free(pObject->vpnc.pLocalNetList);
          safe_free(pObject->vpnc.pRemoteNetList);
@@ -159,9 +156,6 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
       case OBJECT_NETWORKSERVICE:
          safe_free(pObject->netsrv.pszRequest);
          safe_free(pObject->netsrv.pszResponse);
-         break;
-      case OBJECT_ZONE:
-         safe_free(pObject->zone.pdwAddrList);
          break;
       case OBJECT_VPNCONNECTOR:
          safe_free(pObject->vpnc.pLocalNetList);
@@ -290,7 +284,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->node.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
          pObject->node.dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
          pObject->node.dwSNMPProxy = pMsg->GetVariableLong(VID_SNMP_PROXY);
-         pObject->node.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
+         pObject->node.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
          pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
          pObject->node.wAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
          pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
@@ -311,7 +305,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
-         pObject->subnet.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
+         pObject->subnet.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
          break;
       case OBJECT_CONTAINER:
          pObject->container.dwCategory = pMsg->GetVariableLong(VID_CATEGORY);
@@ -333,12 +327,10 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 			pObject->netsrv.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
          break;
       case OBJECT_ZONE:
-         pObject->zone.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
-         pObject->zone.wZoneType = pMsg->GetVariableShort(VID_ZONE_TYPE);
-         pObject->zone.dwControllerIpAddr = pMsg->GetVariableLong(VID_CONTROLLER_IP_ADDR);
-         pObject->zone.dwAddrListSize = pMsg->GetVariableLong(VID_ADDR_LIST_SIZE);
-         pObject->zone.pdwAddrList = (DWORD *)malloc(sizeof(DWORD) * pObject->zone.dwAddrListSize);
-         pMsg->GetVariableInt32Array(VID_IP_ADDR_LIST, pObject->zone.dwAddrListSize, pObject->zone.pdwAddrList);
+         pObject->zone.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
+         pObject->zone.dwAgentProxy = pMsg->GetVariableLong(VID_AGENT_PROXY);
+         pObject->zone.dwSnmpProxy = pMsg->GetVariableLong(VID_SNMP_PROXY);
+         pObject->zone.dwIcmpProxy = pMsg->GetVariableLong(VID_ICMP_PROXY);
          break;
       case OBJECT_VPNCONNECTOR:
          pObject->vpnc.dwPeerGateway = pMsg->GetVariableLong(VID_PEER_GATEWAY);
@@ -1561,11 +1553,6 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
 					WriteStringToCacheFile(hFile, pList[i].pObject->netsrv.pszRequest, true);
 					WriteStringToCacheFile(hFile, pList[i].pObject->netsrv.pszResponse, true);
                break;
-            case OBJECT_ZONE:
-               if (pList[i].pObject->zone.dwAddrListSize > 0)
-                  fwrite(pList[i].pObject->zone.pdwAddrList, sizeof(DWORD),
-                         pList[i].pObject->zone.dwAddrListSize, hFile);
-               break;
             case OBJECT_VPNCONNECTOR:
                fwrite(pList[i].pObject->vpnc.pLocalNetList, 1, 
                       pList[i].pObject->vpnc.dwNumLocalNets * sizeof(IP_NETWORK), hFile);
@@ -1690,17 +1677,6 @@ void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
                      case OBJECT_NETWORKSERVICE:
                         object.netsrv.pszRequest = ReadStringFromCacheFile(hFile);
                         object.netsrv.pszResponse = ReadStringFromCacheFile(hFile);
-                        break;
-                     case OBJECT_ZONE:
-                        if (object.zone.dwAddrListSize > 0)
-                        {
-                           object.zone.pdwAddrList = (DWORD *)malloc(object.zone.dwAddrListSize * sizeof(DWORD));
-                           fread(object.zone.pdwAddrList, sizeof(DWORD), object.zone.dwAddrListSize, hFile);
-                        }
-                        else
-                        {
-                           object.zone.pdwAddrList = NULL;
-                        }
                         break;
                      case OBJECT_VPNCONNECTOR:
                         dwSize = object.vpnc.dwNumLocalNets * sizeof(IP_NETWORK);
