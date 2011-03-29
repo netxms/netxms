@@ -46,6 +46,8 @@ public:
 	CString	m_strMappingData;
 	BOOL	m_bRegisterAgents;
 	BOOL	m_bAccessFiles;
+	BOOL	m_bManageMaps;
+	BOOL	m_bManageSituations;
 	//}}AFX_DATA
 
 

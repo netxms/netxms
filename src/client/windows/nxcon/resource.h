@@ -718,6 +718,8 @@
 #define IDC_CHECK_SAVE_GS               1528
 #define IDC_CHECK_REGISTER_AGENTS       1532
 #define IDC_CHECK_ACCESS_FILES          1533
+#define IDC_CHECK_MANAGE_SITUATIONS     1534
+#define IDC_CHECK_MANAGE_MAPS           1535
 #define IDC_RADIO_FORWARD               1536
 #define IDC_EDIT_TITLE                  1537
 #define IDC_RADIO_ENABLE                1539

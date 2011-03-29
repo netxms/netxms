@@ -43,6 +43,8 @@ public:
 	BOOL	m_bViewTrapLog;
 	BOOL	m_bAccessFiles;
 	BOOL	m_bRegisterAgents;
+	BOOL	m_bManageMaps;
+	BOOL	m_bManageSituations;
 	//}}AFX_DATA
 
 

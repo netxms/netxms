@@ -39,6 +39,8 @@ CGroupPropDlg::CGroupPropDlg(CWnd* pParent /*=NULL*/)
 	m_bViewTrapLog = FALSE;
 	m_bAccessFiles = FALSE;
 	m_bRegisterAgents = FALSE;
+	m_bManageMaps = FALSE;
+	m_bManageSituations = FALSE;
 	//}}AFX_DATA_INIT
 
    m_pdwMembers = NULL;
@@ -75,6 +77,8 @@ void CGroupPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_VIEW_TRAP_LOG, m_bViewTrapLog);
 	DDX_Check(pDX, IDC_CHECK_ACCESS_FILES, m_bAccessFiles);
 	DDX_Check(pDX, IDC_CHECK_REGISTER_AGENTS, m_bRegisterAgents);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_MAPS, m_bManageMaps);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_SITUATIONS, m_bManageSituations);
 	//}}AFX_DATA_MAP
 }
 

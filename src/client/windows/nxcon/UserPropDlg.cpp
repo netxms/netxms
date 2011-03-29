@@ -41,6 +41,8 @@ CUserPropDlg::CUserPropDlg(CWnd* pParent /*=NULL*/)
 	m_strMappingData = _T("");
 	m_bRegisterAgents = FALSE;
 	m_bAccessFiles = FALSE;
+	m_bManageMaps = FALSE;
+	m_bManageSituations = FALSE;
 	//}}AFX_DATA_INIT
    m_nAuthMethod = 0;
 }
@@ -77,6 +79,8 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_MAPPING_DATA, m_strMappingData);
 	DDX_Check(pDX, IDC_CHECK_REGISTER_AGENTS, m_bRegisterAgents);
 	DDX_Check(pDX, IDC_CHECK_ACCESS_FILES, m_bAccessFiles);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_MAPS, m_bManageMaps);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_SITUATIONS, m_bManageSituations);
 	//}}AFX_DATA_MAP
 }
 
