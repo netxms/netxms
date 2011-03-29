@@ -31,6 +31,10 @@
 #include <dbghelp.h>
 #endif
 
+#ifdef __sun
+#include <signal.h>
+#endif
+
 
 //
 // Global data
@@ -315,6 +319,15 @@ int main(int argc, char *argv[])
    int i;
    FILE *fp;
    char *pszEnv;
+#endif
+
+#ifdef __sun
+   signal(SIGPIPE, SIG_IGN);
+   signal(SIGHUP, SIG_IGN);
+   signal(SIGINT, SIG_IGN);
+   signal(SIGQUIT, SIG_IGN);
+   signal(SIGUSR1, SIG_IGN);
+   signal(SIGUSR2, SIG_IGN);
 #endif
 
    InitThreadLibrary();
