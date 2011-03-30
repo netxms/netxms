@@ -193,6 +193,11 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
                                          CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize,
                                          CSCP_ENCRYPTION_CONTEXT **ppCtx,
                                          BYTE *pDecryptionBuffer, DWORD dwTimeout);
+int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuffer,
+                                           CSCP_BUFFER *nxcpBuffer, DWORD *bufferSize,
+                                           CSCP_ENCRYPTION_CONTEXT **ppCtx, 
+                                           BYTE **decryptionBuffer, DWORD dwTimeout,
+														 DWORD maxMsgSize);
 CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, WORD wFlags,
                                                         DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);

@@ -454,7 +454,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 
       if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
                         FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                        m_msgModuleHandle, msg, 0, (LPTSTR)&lpMsgBuf, 0, (va_list *)strings)>0)
+                        m_msgModuleHandle, msg, 0, (LPTSTR)&lpMsgBuf, 0, (va_list *)strings) > 0)
       {
          char *pCR;
 
@@ -483,7 +483,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
       {
          TCHAR message[64];
 
-         _sntprintf(message, 64, _T("MSG 0x%08X - Unable to find message text"), msg);
+         _sntprintf(message, 64, _T("MSG 0x%08X - cannot format message"), msg);
 			if (m_flags & NXLOG_USE_SYSLOG)
 			{
 				t = time(NULL);

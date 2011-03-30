@@ -57,7 +57,7 @@
 #define TRAP_UPDATE     2
 #define TRAP_DELETE     3
 
-#define RAW_MSG_SIZE    262144
+#define MAX_MSG_SIZE    4194304
 
 
 //
@@ -73,7 +73,7 @@ extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
 void UnregisterSession(DWORD dwIndex);
-void ResetDiscoveryPoller(void);
+void ResetDiscoveryPoller();
 
 
 //
@@ -354,6 +354,7 @@ void ClientSession::DebugPrintf(int level, const TCHAR *format, ...)
 
 void ClientSession::readThread()
 {
+	DWORD msgBufferSize = 1024;
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
    BYTE *pDecryptionBuffer = NULL;
@@ -366,15 +367,15 @@ void ClientSession::readThread()
    // Initialize raw message receiving function
    RecvNXCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL, 0);
 
-   pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
+   pRawMsg = (CSCP_MESSAGE *)malloc(msgBufferSize);
 #ifdef _WITH_ENCRYPTION
-   pDecryptionBuffer = (BYTE *)malloc(RAW_MSG_SIZE);
+   pDecryptionBuffer = (BYTE *)malloc(msgBufferSize);
 #endif
    while(1)
    {
-      if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, 
-                                  m_pMsgBuffer, RAW_MSG_SIZE, 
-                                  &m_pCtx, pDecryptionBuffer, INFINITE)) <= 0)
+      if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize, 
+		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
+												INFINITE, MAX_MSG_SIZE)) <= 0)
          break;
 
       // Check if message is too large
@@ -6624,21 +6625,24 @@ void ClientSession::updateScript(CSCPMessage *pRequest)
          pszCode = pRequest->GetVariableStr(VID_SCRIPT_CODE);
          if (pszCode != NULL)
          {
-				size_t qlen = _tcslen(pszCode) + MAX_DB_STRING + 256;
+				/* TODO: change to binding variable */
+				String prepCode = DBPrepareString(g_hCoreDB, pszCode);
+            free(pszCode);
+
+				size_t qlen = (size_t)prepCode.getSize() + MAX_DB_STRING + 256;
             pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
+
             if (dwScriptId == 0)
             {
                // New script
                dwScriptId = CreateUniqueId(IDG_SCRIPT);
                _sntprintf(pszQuery, qlen, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (%d,%s,%s)"),
-                         dwScriptId, (const TCHAR *)DBPrepareString(g_hCoreDB, szName),
-								 (const TCHAR *)DBPrepareString(g_hCoreDB, pszCode));
+                         dwScriptId, (const TCHAR *)DBPrepareString(g_hCoreDB, szName), (const TCHAR *)prepCode);
             }
             else
             {
                _sntprintf(pszQuery, qlen, _T("UPDATE script_library SET script_name=%s,script_code=%s WHERE script_id=%d"),
-                         (const TCHAR *)DBPrepareString(g_hCoreDB, szName),
-								 (const TCHAR *)DBPrepareString(g_hCoreDB, pszCode), dwScriptId);
+                         (const TCHAR *)DBPrepareString(g_hCoreDB, szName), (const TCHAR *)prepCode, dwScriptId);
             }
             if (DBQuery(g_hCoreDB, pszQuery))
             {
@@ -6651,7 +6655,6 @@ void ClientSession::updateScript(CSCPMessage *pRequest)
                msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
             }
             free(pszQuery);
-            free(pszCode);
          }
          else
          {
