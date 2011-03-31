@@ -560,8 +560,8 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 							break;
 					if (k == ifList->getSize())
 					{
-						INTERFACE_INFO iface;
-						memset(&iface, 0, sizeof(INTERFACE_INFO));
+						NX_INTERFACE_INFO iface;
+						memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
 						_sntprintf(iface.szName, MAX_DB_STRING, _T("vrrp.%u.%u.%d"), router->getId(), router->getIfIndex(), j);
 						memcpy(iface.bMacAddr, router->getVirtualMacAddr(), MAC_ADDR_LENGTH);
 						iface.dwIpAddr = vip;
@@ -1870,7 +1870,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
       // Add new interfaces and check configuration of existing
       for(j = 0; j < pIfList->getSize(); j++)
       {
-			INTERFACE_INFO *ifInfo = pIfList->get(j);
+			NX_INTERFACE_INFO *ifInfo = pIfList->get(j);
          BOOL bNewInterface = TRUE;
 
          LockChildList(FALSE);
@@ -3845,7 +3845,7 @@ void Node::CheckSubnetBinding(InterfaceList *pIfList)
 	// Check if we have subnet bindings for all interfaces
 	for(i = 0; i < pIfList->getSize(); i++)
 	{
-		INTERFACE_INFO *iface = pIfList->get(i);
+		NX_INTERFACE_INFO *iface = pIfList->get(i);
 		if (iface->dwIpAddr != 0)
 		{
 			pInterface = findInterface(iface->dwIndex, iface->dwIpAddr);

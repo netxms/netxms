@@ -45,6 +45,9 @@ public class LoginJob implements IRunnableWithProgress
 		this.password = password;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
+	 */
 	@Override
 	public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 	{
@@ -54,7 +57,7 @@ public class LoginJob implements IRunnableWithProgress
 			final String hostName;
 			int port = NXCSession.DEFAULT_CONN_PORT;
 			final String[] split = server.split(":");
-			if (split.length > 1)
+			if (split.length == 2)
 			{
 				hostName = split[0];
 				try

@@ -238,7 +238,7 @@ static ARP_CACHE *SysGetLocalArpCache()
 static InterfaceList *SysGetLocalIfList()
 {
    InterfaceList *pIfList = NULL;
-	INTERFACE_INFO iface;
+	NX_INTERFACE_INFO iface;
 
 #ifdef _WIN32
    DWORD dwSize;
@@ -333,7 +333,7 @@ static InterfaceList *SysGetLocalIfList()
          pIfList = new InterfaceList(list.getSize());
          for(i = 0; i < list.getSize(); i++)
          {
-				memset(&iface, 0, sizeof(INTERFACE_INFO));
+				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
             TCHAR *pTemp = _tcsdup(list.getValue(i));
             TCHAR *pBuf = pTemp;
 

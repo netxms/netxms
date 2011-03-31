@@ -99,6 +99,25 @@ char LIBNETXMS_EXPORTABLE *IpToStrA(DWORD dwAddr, char *szBuffer)
 
 
 //
+// Universal IPv4/IPv6 to string converter
+//
+
+TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
+{
+	switch(addr->sa_family)
+	{
+		case AF_INET:
+			return IpToStr(ntohl(((struct sockaddr_in *)addr)->sin_addr.s_addr), buffer);
+		case AF_INET6:
+			return Ip6ToStr(((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr, buffer);
+		default:
+			buffer[0] = 0;
+			return buffer;
+	}
+}
+
+
+//
 // Convert IPv6 address from binary form to string
 //
 

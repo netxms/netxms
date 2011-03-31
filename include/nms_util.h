@@ -602,6 +602,8 @@ extern "C"
 #define IpToStrA IpToStr
 #endif
 	TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer);
+	TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
+
    DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
 #ifdef UNICODE
    DWORD LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName);

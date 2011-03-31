@@ -348,8 +348,8 @@ private:
 	MUTEX m_mutexSendAuditLog;
 	MUTEX m_mutexSendSituations;
    MUTEX m_mutexPollerInit;
-   DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
-	TCHAR m_szWorkstation[16];	// IP address of conneced host in textual form
+	struct sockaddr *m_clientAddr;
+	TCHAR m_szWorkstation[256]; // IP address of name of conneced host in textual form
    TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
@@ -575,7 +575,7 @@ private:
 	void closeConsole(DWORD rqId);
 
 public:
-   ClientSession(SOCKET hSocket, DWORD dwHostAddr);
+   ClientSession(SOCKET hSocket, struct sockaddr *addr);
    ~ClientSession();
 
    void incRefCount() { m_dwRefCount++; }

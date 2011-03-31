@@ -62,7 +62,7 @@ typedef struct
 // Functions
 //
 
-void LoadNetXMSModules(void);
+void LoadNetXMSModules();
 
 
 //

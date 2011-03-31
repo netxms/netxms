@@ -196,7 +196,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
       errorCount = 0;     // Reset consecutive errors counter
 
       // Create new session structure and threads
-      pSession = new ClientSession(sockClient, ntohl(servAddr.sin_addr.s_addr));
+      pSession = new ClientSession(sockClient, (struct sockaddr *)&servAddr);
       if (!RegisterSession(pSession))
       {
          delete pSession;
@@ -257,12 +257,12 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
 
    // Set up queue
    listen(sock, SOMAXCONN);
-	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "Ad", servAddr.sin_addr.s_addr, wListenPort);
+	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "Ad", servAddr.sin6_addr.s6_addr, wListenPort);
 
    // Wait for connection requests
    while(!ShutdownInProgress())
    {
-      iSize = sizeof(struct sockaddr_in);
+      iSize = sizeof(struct sockaddr_in6);
       if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
       {
          int error;
@@ -287,7 +287,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
       errorCount = 0;     // Reset consecutive errors counter
 
       // Create new session structure and threads
-      pSession = new ClientSession(sockClient, ntohl(servAddr.sin_addr.s_addr));
+      pSession = new ClientSession(sockClient, (struct sockaddr *)&servAddr);
       if (!RegisterSession(pSession))
       {
          delete pSession;

@@ -232,7 +232,7 @@ THREAD_RESULT THREAD_CALL ClientSession::PollerThreadStarter(void *pArg)
 // Client session class constructor
 //
 
-ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
+ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -255,8 +255,13 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_mutexSendSituations = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_dwFlags = 0;
-   m_dwHostAddr = dwHostAddr;
-	IpToStr(dwHostAddr, m_szWorkstation);
+	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
+	if (addr->sa_family == AF_INET)
+		IpToStr(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr), m_szWorkstation);
+#ifdef WITH_IPV6
+	else
+		Ip6ToStr(((struct sockaddr_in6 *)m_clientAddr)->sin6_addr.s6_addr, m_szWorkstation);
+#endif
    _tcscpy(m_szUserName, _T("<not logged in>"));
 	_tcscpy(m_szClientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
@@ -1442,7 +1447,7 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 void ClientSession::Login(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR szLogin[MAX_USER_NAME], szPassword[1024], szBuffer[32];
+   TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false;
    DWORD dwResult;
@@ -1511,7 +1516,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
       if (dwResult == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
-         _sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, IpToStr(m_dwHostAddr, szBuffer));
+         _sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_szWorkstation);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);
@@ -4569,9 +4574,20 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
    // Find event's source object
    dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
    if (dwObjectId != 0)
+	{
       pObject = FindObjectById(dwObjectId);  // Object is specified explicitely
+	}
    else
-      pObject = FindNodeByIP(m_dwHostAddr);  // Client is the source
+	{
+		if (m_clientAddr->sa_family == AF_INET)
+			pObject = FindNodeByIP(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));  // Client is the source
+		else
+#ifdef WITH_IPV6
+			pObject = NULL;	// TODO: find object by IPv6 address
+#else
+			pObject = NULL;
+#endif
+	}
    if (pObject != NULL)
    {
       // User should have SEND_EVENTS access right to object
@@ -8060,7 +8076,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
    wMinor = pRequest->GetVariableShort(VID_VERSION_MINOR);
    wRelease = pRequest->GetVariableShort(VID_VERSION_RELEASE);
    DbgPrintf(3, _T("Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\""),
-             IpToStr(m_dwHostAddr, szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
+             SockaddrToStr(m_clientAddr, szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
 
    hResult = DBSelect(g_hCoreDB, _T("SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number"));
    if (hResult != NULL)
@@ -8084,7 +8100,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
             // $3 - major version number
             // $4 - minor version number
             // $5 - release number
-            ppArgList[0] = new NXSL_Value(IpToStr(m_dwHostAddr, szBuffer));
+            ppArgList[0] = new NXSL_Value(SockaddrToStr(m_clientAddr, szBuffer));
             ppArgList[1] = new NXSL_Value(szPlatform);
             ppArgList[2] = new NXSL_Value((LONG)wMajor);
             ppArgList[3] = new NXSL_Value((LONG)wMinor);
@@ -8098,7 +8114,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
                if (pValue->getValueAsInt32() != 0)
                {
                   DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"),
-                            dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
+                            dwCfgId, SockaddrToStr(m_clientAddr, szBuffer));
                   msg.SetVariable(VID_RCC, (WORD)0);
                   pszText = DBGetField(hResult, i, 1, NULL, 0);
                   DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, pszText);
@@ -8109,7 +8125,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
                else
                {
                   DbgPrintf(3, _T("Configuration script %d not matched for agent %s"),
-                            dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
+                            dwCfgId, SockaddrToStr(m_clientAddr, szBuffer));
                }
             }
             else
@@ -10045,24 +10061,31 @@ void ClientSession::registerAgent(CSCPMessage *pRequest)
 	{
 		if (ConfigReadInt(_T("EnableAgentRegistration"), 0))
 		{
-			node = FindNodeByIP(ntohl(m_dwHostAddr));
-			if (node != NULL)
+			if (m_clientAddr->sa_family == AF_INET)
 			{
-				// Node already exist, force configuration poll
-				node->setRecheckCapsFlag();
-				node->forceConfigurationPoll();
+				node = FindNodeByIP(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));
+				if (node != NULL)
+				{
+					// Node already exist, force configuration poll
+					node->setRecheckCapsFlag();
+					node->forceConfigurationPoll();
+				}
+				else
+				{
+					NEW_NODE *info;
+
+					info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+					info->dwIpAddr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
+					info->dwNetMask = 0;
+					info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
+					g_nodePollerQueue.Put(info);
+				}
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				NEW_NODE *info;
-
-				info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-				info->dwIpAddr = ntohl(m_dwHostAddr);
-				info->dwNetMask = 0;
-				info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
-				g_nodePollerQueue.Put(info);
+				msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
 			}
-			msg.SetVariable(VID_RCC, RCC_SUCCESS);
 		}
 		else
 		{
