@@ -108,7 +108,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	// TODO: does it really needed?
    for(int i = 0; i < ifList->getSize(); i++)
    {
-		INTERFACE_INFO *iface = ifList->get(i);
+		NX_INTERFACE_INFO *iface = ifList->get(i);
 
 		const TCHAR *ptr;
       if ((ptr = _tcsstr(iface->szName, _T("- Port"))) != NULL)
@@ -169,9 +169,9 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 					break;
 			if (i == ifList->getSize())
 			{
-				INTERFACE_INFO iface;
+				NX_INTERFACE_INFO iface;
 
-				memset(&iface, 0, sizeof(INTERFACE_INFO));
+				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
 				iface.dwIpAddr = mgmtIpAddr;
 				iface.dwIpNetMask = mgmtNetMask;
 				iface.dwType = IFTYPE_OTHER;
@@ -184,7 +184,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		// Update wrongly reported MAC addresses
 		for(int i = 0; i < ifList->getSize(); i++)
 		{
-			INTERFACE_INFO *curr = ifList->get(i);
+			NX_INTERFACE_INFO *curr = ifList->get(i);
 			if ((curr->dwSlotNumber != 0) &&
 				 (!memcmp(curr->bMacAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
 			     !memcmp(curr->bMacAddr, baseMacAddr, MAC_ADDR_LENGTH)))

@@ -213,7 +213,7 @@ typedef struct
    DWORD dwIpNetMask;
    BYTE bMacAddr[MAC_ADDR_LENGTH];
    int iNumSecondary;      // Number of secondary IP's on this interface
-} INTERFACE_INFO;
+} NX_INTERFACE_INFO;
 
 
 //
@@ -226,18 +226,18 @@ private:
    int m_size;       				 // Number of valid entries
 	int m_allocated;               // Number of allocated entries
    void *m_data;                  // Can be used by custom enumeration handlers
-   INTERFACE_INFO *m_interfaces;  // Interface entries
+   NX_INTERFACE_INFO *m_interfaces;  // Interface entries
 
 public:
 	InterfaceList(int initialAlloc = 8);
 	~InterfaceList();
 
-	void add(INTERFACE_INFO *iface);
+	void add(NX_INTERFACE_INFO *iface);
 	void remove(int index);
 	void removeLoopbacks();
 
 	int getSize() { return m_size; }
-	INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
+	NX_INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -110,10 +110,24 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
 
 
 //
+// Initialize client listener(s)
+//
+
+void InitClientListeners()
+{
+   // Create session list access rwlock
+   m_rwlockSessionListAccess = RWLockCreate();
+
+   // Start client keep-alive thread
+   ThreadCreate(ClientKeepAliveThread, 0, NULL);
+}
+
+
+//
 // Listener thread
 //
 
-THREAD_RESULT THREAD_CALL ClientListener(void *)
+THREAD_RESULT THREAD_CALL ClientListener(void *arg)
 {
    SOCKET sock, sockClient;
    struct sockaddr_in servAddr;
@@ -135,9 +149,6 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
 	SetSocketExclusiveAddrUse(sock);
 	SetSocketReuseFlag(sock);
 
-   // Create session list access rwlock
-   m_rwlockSessionListAccess = RWLockCreate();
-
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
@@ -156,9 +167,6 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
    // Set up queue
    listen(sock, SOMAXCONN);
 	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), wListenPort);
-
-   // Start client keep-alive thread
-   ThreadCreate(ClientKeepAliveThread, 0, NULL);
 
    // Wait for connection requests
    while(!ShutdownInProgress())
@@ -202,6 +210,99 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
    closesocket(sock);
    return THREAD_OK;
 }
+
+
+//
+// Listener thread - IPv6
+//
+
+#ifdef WITH_IPV6
+
+THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
+{
+   SOCKET sock, sockClient;
+   struct sockaddr_in6 servAddr;
+   int errorCount = 0;
+   socklen_t iSize;
+   WORD wListenPort;
+   ClientSession *pSession;
+
+   // Read configuration
+   wListenPort = (WORD)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT);
+
+   // Create socket
+   if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == -1)
+   {
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListener"));
+      return THREAD_OK;
+   }
+
+	SetSocketExclusiveAddrUse(sock);
+	SetSocketReuseFlag(sock);
+
+   // Fill in local address structure
+   memset(&servAddr, 0, sizeof(struct sockaddr_in6));
+   servAddr.sin6_family = AF_INET6;
+   //servAddr.sin6_addr.s6_addr = ResolveHostName(g_szListenAddress);
+   servAddr.sin6_port = htons(wListenPort);
+
+   // Bind socket
+   if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in6)) != 0)
+   {
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("ClientListener"), WSAGetLastError());
+      closesocket(sock);
+      /* TODO: we should initiate shutdown procedure here */
+      return THREAD_OK;
+   }
+
+   // Set up queue
+   listen(sock, SOMAXCONN);
+	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "Ad", servAddr.sin_addr.s_addr, wListenPort);
+
+   // Wait for connection requests
+   while(!ShutdownInProgress())
+   {
+      iSize = sizeof(struct sockaddr_in);
+      if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
+      {
+         int error;
+
+#ifdef _WIN32
+         error = WSAGetLastError();
+         if (error != WSAEINTR)
+#else
+         error = errno;
+         if (error != EINTR)
+#endif
+            nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+         errorCount++;
+         if (errorCount > 1000)
+         {
+            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+            errorCount = 0;
+         }
+         ThreadSleepMs(500);
+      }
+
+      errorCount = 0;     // Reset consecutive errors counter
+
+      // Create new session structure and threads
+      pSession = new ClientSession(sockClient, ntohl(servAddr.sin_addr.s_addr));
+      if (!RegisterSession(pSession))
+      {
+         delete pSession;
+      }
+      else
+      {
+         pSession->run();
+      }
+   }
+
+   closesocket(sock);
+   return THREAD_OK;
+}
+
+#endif
 
 
 //

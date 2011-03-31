@@ -557,7 +557,7 @@ void AgentConnection::destroyResultData()
 InterfaceList *AgentConnection::getInterfaceList()
 {
    InterfaceList *pIfList = NULL;
-	INTERFACE_INFO iface;
+	NX_INTERFACE_INFO iface;
    DWORD i, dwBits;
    TCHAR *pChar, *pBuf;
 
@@ -570,7 +570,7 @@ InterfaceList *AgentConnection::getInterfaceList()
       for(i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];
-			memset(&iface, 0, sizeof(INTERFACE_INFO));
+			memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
 
          // Index
          pChar = _tcschr(pBuf, ' ');

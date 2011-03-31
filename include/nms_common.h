@@ -156,6 +156,8 @@ typedef int bool;
 #endif
 #endif
 
+#define WITH_IPV6               1
+
 #define USE_BUNDLED_LIBTRE      1
 
 #define FS_PATH_SEPARATOR       _T("\\")
@@ -175,6 +177,7 @@ typedef int bool;
 
 #include <winsock2.h>
 #include <windows.h>
+#include <ws2tcpip.h>
 #include <stdlib.h>
 #include <malloc.h>
 

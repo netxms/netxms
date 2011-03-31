@@ -73,7 +73,8 @@ extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
-void InitCertificates(void);
+void InitClientListeners();
+void InitCertificates();
 void InitUsers();
 void CleanupUsers();
 
@@ -89,6 +90,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg);
 THREAD_RESULT THREAD_CALL EventProcessor(void *pArg);
 THREAD_RESULT THREAD_CALL WatchdogThread(void *pArg);
 THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
+THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg);
 THREAD_RESULT THREAD_CALL ISCListener(void *pArg);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
@@ -753,7 +755,11 @@ retry_db_lock:
 		ThreadCreate(ISCListener, 0, NULL);
 
 	// Allow clients to connect
+	InitClientListeners();
 	ThreadCreate(ClientListener, 0, NULL);
+#ifdef WITH_IPV6
+	ThreadCreate(ClientListenerIPv6, 0, NULL);
+#endif
 
 	g_dwFlags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));

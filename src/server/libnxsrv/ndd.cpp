@@ -85,8 +85,8 @@ void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
 
 static DWORD HandlerIndex(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-	INTERFACE_INFO info;
-	memset(&info, 0, sizeof(INTERFACE_INFO));
+	NX_INTERFACE_INFO info;
+	memset(&info, 0, sizeof(NX_INTERFACE_INFO));
 	info.dwIndex = pVar->GetValueAsUInt();
 	((InterfaceList *)pArg)->add(&info);
    return SNMP_ERR_SUCCESS;
@@ -123,8 +123,8 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
             {
                // This interface entry already filled, so we have additional IP addresses
                // on a single interface
-					INTERFACE_INFO iface;
-					memcpy(&iface, ifList->get(i), sizeof(INTERFACE_INFO));
+					NX_INTERFACE_INFO iface;
+					memcpy(&iface, ifList->get(i), sizeof(NX_INTERFACE_INFO));
 					iface.dwIpAddr = ntohl(pVar->GetValueAsUInt());
 					iface.dwIpNetMask = dwNetMask;
 					ifList->add(&iface);
@@ -167,7 +167,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       // Enumerate interfaces
 		for(i = 0; i < pIfList->getSize(); i++)
       {
-			INTERFACE_INFO *iface = pIfList->get(i);
+			NX_INTERFACE_INFO *iface = pIfList->get(i);
 
          // Get interface alias if needed
          if (useAliases > 0)

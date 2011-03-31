@@ -32,7 +32,7 @@ InterfaceList::InterfaceList(int initialAlloc)
 	m_allocated = initialAlloc;
 	m_size = 0;
 	m_data = NULL;
-	m_interfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * m_allocated);
+	m_interfaces = (NX_INTERFACE_INFO *)malloc(sizeof(NX_INTERFACE_INFO) * m_allocated);
 }
 
 
@@ -50,14 +50,14 @@ InterfaceList::~InterfaceList()
 // Add new interface
 //
 
-void InterfaceList::add(INTERFACE_INFO *iface)
+void InterfaceList::add(NX_INTERFACE_INFO *iface)
 {
 	if (m_size == m_allocated)
 	{
 		m_allocated += 32;
-		m_interfaces = (INTERFACE_INFO *)realloc(m_interfaces, sizeof(INTERFACE_INFO) * m_allocated);
+		m_interfaces = (NX_INTERFACE_INFO *)realloc(m_interfaces, sizeof(NX_INTERFACE_INFO) * m_allocated);
 	}
-	memcpy(&m_interfaces[m_size++], iface, sizeof(INTERFACE_INFO));
+	memcpy(&m_interfaces[m_size++], iface, sizeof(NX_INTERFACE_INFO));
 }
 
 
@@ -72,7 +72,7 @@ void InterfaceList::removeLoopbacks()
       if ((m_interfaces[i].dwIpAddr & 0xFF000000) == 0x7F000000)
       {
          m_size--;
-         memmove(&m_interfaces[i], &m_interfaces[i + 1], sizeof(INTERFACE_INFO) * (m_size - i));
+         memmove(&m_interfaces[i], &m_interfaces[i + 1], sizeof(NX_INTERFACE_INFO) * (m_size - i));
          i--;
       }
 }
@@ -88,5 +88,5 @@ void InterfaceList::remove(int index)
 		return;
 
 	m_size--;
-	memmove(&m_interfaces[index], &m_interfaces[index + 1], sizeof(INTERFACE_INFO) * (m_size - index));
+	memmove(&m_interfaces[index], &m_interfaces[index + 1], sizeof(NX_INTERFACE_INFO) * (m_size - index));
 }

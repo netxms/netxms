@@ -104,9 +104,9 @@ static DWORD HandlerPassportIfList(DWORD dwVersion, SNMP_Variable *pVar,
    // Create new interface only if we have VLAN with same interface index
    if (dwVlanIndex < pVlanList->dwNumVlans)
    {
-		INTERFACE_INFO iface;
+		NX_INTERFACE_INFO iface;
 
-		memset(&iface, 0, sizeof(INTERFACE_INFO));
+		memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
       iface.dwIndex = dwIfIndex;
       _tcscpy(iface.szName, pVlanList->pList[dwVlanIndex].szName);
       iface.dwType = IFTYPE_OTHER;
