@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.ConnectionPoint;
+import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

@@ -203,6 +203,8 @@ public class ObjectBrowser extends ViewPart
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));

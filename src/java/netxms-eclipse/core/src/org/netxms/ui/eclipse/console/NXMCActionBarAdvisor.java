@@ -46,6 +46,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionShowViewMenu;
 	private Action actionOpenConsole;
 	private Action actionOpenProgressView;
+	private Action actionFullScreen;
 	private IContributionItem contribItemShowView;
 	private IContributionItem contribItemOpenPerspective;
 
@@ -177,6 +178,18 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		};
 		actionOpenProgressView.setText(Messages.getString("NXMCActionBarAdvisor.progress")); //$NON-NLS-1$
 		actionOpenProgressView.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif")); //$NON-NLS-1$
+		
+		actionFullScreen = new Action("&Full Screen", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				boolean fullScreen = !PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getFullScreen();
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setFullScreen(fullScreen);
+				actionFullScreen.setChecked(fullScreen);
+			}
+		};
+		actionFullScreen.setChecked(false);
+		actionFullScreen.setAccelerator(SWT.F11);
 	}
 
 	/* (non-Javadoc)
@@ -226,6 +239,9 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		
 		// Window
+		windowMenu.add(actionFullScreen);
+		windowMenu.add(new Separator());
+		
 		MenuManager openPerspectiveMenuMgr = new MenuManager("Open Perspective", "openPerspective");
 		openPerspectiveMenuMgr.add(contribItemOpenPerspective);
 		windowMenu.add(openPerspectiveMenuMgr);

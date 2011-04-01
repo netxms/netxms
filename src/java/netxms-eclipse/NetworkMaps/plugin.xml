@@ -65,7 +65,7 @@
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPNeighbors"
                label="IP Neighbors"
                icon="icons/quickmap.png"
-               menubarPath="additions">
+               menubarPath="topology">
          </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowLayer2Topology"
@@ -73,7 +73,7 @@
                icon="icons/layer2.png"
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowLayer2Topology"
                label="Layer 2 Topology"
-               menubarPath="additions">
+               menubarPath="topology">
          </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"

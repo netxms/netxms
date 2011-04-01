@@ -419,6 +419,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\nms_cscp.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\nms_util.h"
 				>
 			</File>

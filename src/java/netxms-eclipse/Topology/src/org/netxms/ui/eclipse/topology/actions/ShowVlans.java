@@ -18,32 +18,36 @@
  */
 package org.netxms.ui.eclipse.topology.actions;
 
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
+import org.eclipse.ui.IViewReference;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.progress.UIJob;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
-import org.netxms.client.topology.ConnectionPoint;
+import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.Activator;
-import org.netxms.ui.eclipse.topology.views.HostSearchResults;
+import org.netxms.ui.eclipse.topology.views.VlanView;
 
 /**
  * Find connection point for node or interface
  *
  */
-public class FindConnectionPoint implements IObjectActionDelegate
+public class ShowVlans implements IObjectActionDelegate
 {
-	private IWorkbenchPart wbPart;
+	private IWorkbenchWindow window;
 	private long objectId;
 	
 	/* (non-Javadoc)
@@ -52,28 +56,47 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Find connection point for object " + objectId, wbPart, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+		IViewReference vr = window.getActivePage().findViewReference(VlanView.ID, Long.toString(objectId));
+		if (vr != null)
+		{
+			VlanView view = (VlanView)vr.getView(true);
+			if (view != null)
 			{
-				final ConnectionPoint cp = session.findConnectionPoint(objectId);
-				new UIJob("Show connection point") {
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						HostSearchResults.showConnection(cp);
-						return Status.OK_STATUS;
-					}
-				}.schedule();
+				window.getActivePage().activate(view);
 			}
+		}
+		else
+		{
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			new ConsoleJob("Reading VLAN list from node", null, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					final List<VlanInfo> vlans = session.getVlans(objectId);
+					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							try
+							{
+								VlanView view = (VlanView)window.getActivePage().showView(VlanView.ID, Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
+								view.setVlans(vlans);
+							}
+							catch(PartInitException e)
+							{
+								MessageDialog.openError(window.getShell(), "Error", "Cannot open VLAN view: " + e.getLocalizedMessage());
+							}
+						}
+					});
+				}
 
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot get conection point information";
-			}
-		}.start();
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot get VLAN list from node";
+				}
+			}.start();
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -85,7 +108,7 @@ public class FindConnectionPoint implements IObjectActionDelegate
 		if (selection instanceof IStructuredSelection)
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if ((obj instanceof Node) || (obj instanceof Interface))
+			if (obj instanceof Node)
 			{
 				action.setEnabled(true);
 				objectId = ((GenericObject)obj).getObjectId();
@@ -109,6 +132,6 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
-		wbPart = targetPart;
+		window = targetPart.getSite().getWorkbenchWindow();
 	}
 }

@@ -12,7 +12,16 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Node"
                label="Find &amp;switch port"
-               menubarPath="additions"
+               menubarPath="topology"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.ShowVlans"
+               enablesFor="1"
+               icon="icons/vlanview.gif"
+               id="org.netxms.ui.eclipse.topology.popupActions.VlanView"
+               label="Show VLANs"
+               menubarPath="topology"
                style="push">
          </action>
       </objectContribution>
@@ -25,7 +34,7 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Interface"
                label="Find &amp;switch port"
-               menubarPath="additions"
+               menubarPath="topology"
                style="push">
          </action>
       </objectContribution>
@@ -64,6 +73,15 @@
             icon="icons/search_history.png"
             id="org.netxms.ui.eclipse.topology.views.HostSearchResults"
             name="Connection Search"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.topology.views.VlanView"
+            icon="icons/vlanview.gif"
+            id="org.netxms.ui.eclipse.topology.views.VlanView"
+            name="VLAN View"
             restorable="true">
       </view>
    </extension>

@@ -1182,6 +1182,56 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			DumpUsers(pCtx);
 		}
+		else if (IsCommand(_T("VLANS"), szBuffer, 1))
+		{
+			DWORD dwNode;
+			NetObj *pObject;
+
+			pArg = ExtractWord(pArg, szBuffer);
+			dwNode = _tcstoul(szBuffer, NULL, 0);
+			if (dwNode != 0)
+			{
+				pObject = FindObjectById(dwNode);
+				if (pObject != NULL)
+				{
+					if (pObject->Type() == OBJECT_NODE)
+					{
+						VlanList *vlans = ((Node *)pObject)->getVlans();
+						if (vlans != NULL)
+						{
+							ConsolePrintf(pCtx, _T("\x1b[1mVLAN\x1b[0m | \x1b[1mName\x1b[0m             | \x1b[1mPorts\x1b[0m\n")
+								                 _T("-----+------------------+-----------------------------------------------------------------\n"));
+							for(int i = 0; i < vlans->getSize(); i++)
+							{
+								VlanInfo *vlan = vlans->get(i);
+								ConsolePrintf(pCtx, _T("%4d | %-16s |"), vlan->getVlanId(), vlan->getName());
+								for(int j = 0; j < vlan->getNumPorts(); j++)
+									ConsolePrintf(pCtx, _T(" %d.%d"), (int)(vlan->getPorts()[j] >> 16), (int)(vlan->getPorts()[j] & 0xFFFF));
+								ConsolePrintf(pCtx, _T("\n"));
+							}
+							ConsolePrintf(pCtx, _T("\n"));
+							vlans->decRefCount();
+						}
+						else
+						{
+							ConsolePrintf(pCtx, _T("\x1b[31mNode doesn't have VLAN information\x1b[0m\n\n"));
+						}
+					}
+					else
+					{
+						ConsolePrintf(pCtx, _T("\x1b[31mERROR: Object is not a node\x1b[0m\n\n"));
+					}
+				}
+				else
+				{
+					ConsolePrintf(pCtx, _T("\x1b[31mERROR: Object with ID %d does not exist\x1b[0m\n\n"), dwNode);
+				}
+			}
+			else
+			{
+				ConsolePrintf(pCtx, _T("\x1b[31mERROR: Invalid or missing node ID\x1b[0m\n\n"));
+			}
+		}
 		else if (IsCommand(_T("WATCHDOG"), szBuffer, 1))
 		{
 			WatchdogPrintStatus(pCtx);
@@ -1279,6 +1329,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   show sessions             - Show active client sessions\n")
 				_T("   show stats                - Show server statistics\n")
 				_T("   show users                - Show users\n")
+				_T("   show vlans <node>         - Show cached VLAN information for node\n")
 				_T("   show watchdog             - Display watchdog information\n")
 				_T("   trace <node1> <node2>     - Show network path trace between two nodes\n")
 				_T("\nAlmost all commands can be abbreviated to 2 or 3 characters\n")
