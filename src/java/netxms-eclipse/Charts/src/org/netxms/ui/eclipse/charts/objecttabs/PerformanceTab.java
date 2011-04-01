@@ -71,6 +71,10 @@ public class PerformanceTab extends ObjectTab
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.makeColumnsEqualWidth = true;
+		layout.marginWidth = 15;
+		layout.marginHeight = 15;
+		layout.horizontalSpacing = 10;
+		layout.verticalSpacing = 10;
 		chartArea.setLayout(layout);
 
 		scroller.setContent(chartArea);

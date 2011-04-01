@@ -40,7 +40,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 	/**
 	 * Fill parameter list
 	 */
-	void fillParameterList()
+	protected void fillParameterList()
 	{
 		ArrayList<AgentParameter> list = new ArrayList<AgentParameter>(10);
 
@@ -65,5 +65,14 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		}
 		
 		viewer.setInput(list.toArray());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#getConfigurationPrefix()
+	 */
+	@Override
+	protected String getConfigurationPrefix()
+	{
+		return "SelectInternalParamDlg";
 	}
 }

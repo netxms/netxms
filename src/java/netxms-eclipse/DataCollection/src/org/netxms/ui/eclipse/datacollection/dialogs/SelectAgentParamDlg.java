@@ -44,7 +44,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 	/**
 	 * Fill parameter list
 	 */
-	void fillParameterList()
+	protected void fillParameterList()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
@@ -78,5 +78,14 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		} while(!jobCompleted);
 				
 		viewer.setInput(parameters.toArray());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#getConfigurationPrefix()
+	 */
+	@Override
+	protected String getConfigurationPrefix()
+	{
+		return "SelectAgentParamDlg";
 	}
 }
