@@ -18,12 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -32,9 +36,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -100,13 +107,44 @@ public class CreateNodeDialog extends Dialog
 		gd.widthHint = 300;
 		nameField.setLayoutData(gd);
 		
-		ipAddrField = new LabeledText(dialogArea, SWT.NONE);
-		ipAddrField.setLabel("IP address");
+		final Composite ipAddrGroup = new Composite(dialogArea, SWT.NONE);
+		layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.numColumns = 2;
+		ipAddrGroup.setLayout(layout);
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		ipAddrGroup.setLayoutData(gd);
+		
+		ipAddrField = new LabeledText(ipAddrGroup, SWT.NONE);
+		ipAddrField.setLabel("Primary IP address");
 		ipAddrField.getTextControl().setTextLimit(255);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		ipAddrField.setLayoutData(gd);
+		
+		final Button resolve = new Button(ipAddrGroup, SWT.PUSH);
+		resolve.setText("&Resolve");
+		gd = new GridData();
+		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+		gd.verticalAlignment = SWT.BOTTOM;
+		resolve.setLayoutData(gd);
+		resolve.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				resolveName();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 		
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
 		optionsGroup.setText("Options");
@@ -181,6 +219,34 @@ public class CreateNodeDialog extends Dialog
 		snmpProxy = snmpProxySelector.getObjectId();
 		
 		super.okPressed();
+	}
+	
+	/**
+	 * Resolve entered name to IP address
+	 */
+	private void resolveName()
+	{
+		final String name = nameField.getText();
+		new ConsoleJob("Resolve host name", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final InetAddress addr = Inet4Address.getByName(name);
+				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						ipAddrField.setText(addr.getHostAddress());
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot resolve host name " + name + " to IP address";
+			}
+		}.start();
 	}
 
 	/**
