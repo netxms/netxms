@@ -44,9 +44,9 @@ struct VLAN_LIST
 
 
 /**
- * Handler for VLAN enumeration on Passport
+ * Handler for VLAN enumeration on Avaya ERS
  */
-static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar,
+static DWORD HandlerVlanIfList(DWORD dwVersion, SNMP_Variable *pVar,
                              SNMP_Transport *pTransport, void *pArg)
 {
    DWORD dwIndex, oidName[MAX_OID_LEN], dwNameLen, dwResult;
@@ -138,7 +138,7 @@ static DWORD HandlerPassportIfList(DWORD dwVersion, SNMP_Variable *pVar,
 }
 
 /**
- * Get list of VLAN interfaces from Nortel Passport 8000/Accelar switch
+ * Get list of VLAN interfaces from Avaya ERS switch
  *
  * @param pTransport SNMP transport
  * @param pIfList interface list to be populated
@@ -149,11 +149,92 @@ void GetVLANInterfaces(SNMP_Transport *pTransport, InterfaceList *pIfList)
 
    // Get VLAN list
    memset(&vlanList, 0, sizeof(VLAN_LIST));
-   SnmpEnumerate(pTransport->getSnmpVersion(), pTransport, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, &vlanList, FALSE);
+   SnmpEnumerate(pTransport->getSnmpVersion(), pTransport, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanIfList, &vlanList, FALSE);
 
    // Get interfaces
    pIfList->setData(&vlanList);
    SnmpEnumerate(pTransport->getSnmpVersion(), pTransport, _T(".1.3.6.1.4.1.2272.1.8.2.1.1"), 
                  HandlerPassportIfList, pIfList, FALSE);
    safe_free(vlanList.pList);
+}
+
+/**
+ * Handler for VLAN enumeration on Avaya ERS
+ */
+static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+{
+   DWORD oidName[MAX_OID_LEN], dwResult;
+   VlanList *vlanList = (VlanList *)pArg;
+	StringMap *attributes = (StringMap *)vlanList->getData();
+
+   DWORD dwNameLen = pVar->GetName()->Length();
+	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt());
+
+   // Get VLAN name
+   memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
+   oidName[dwNameLen - 2] = 2;
+   TCHAR buffer[256];
+	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, buffer, 256, SG_STRING_RESULT);
+   if (dwResult != SNMP_ERR_SUCCESS)
+	{
+		delete vlan;
+      return dwResult;
+	}
+	vlan->setName(buffer);
+
+   // Get member ports
+	// From RapidCity MIB:
+	//   The string is 32 octets long, for a total of 256 bits. Each bit 
+	//   corresponds to a port, as represented by its ifIndex value . When a 
+	//   bit has the value one(1), the corresponding port is a member of the 
+	//   set. When a bit has the value zero(0), the corresponding port is not 
+	//   a member of the set. The encoding is such that the most significant 
+	//   bit of octet #1 corresponds to ifIndex 0, while the least significant 
+	//   bit of octet #32 corresponds to ifIndex 255." 
+	// Note: on newer devices port list can be longer
+   oidName[dwNameLen - 2] = 12;
+	BYTE portMask[256];
+	memset(portMask, 0, sizeof(portMask));
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, portMask, 256, SG_RAW_RESULT);
+   if (dwResult != SNMP_ERR_SUCCESS)
+	{
+		delete vlan;
+      return dwResult;
+	}
+
+	DWORD slotSize = attributes->getULong(_T(".baystack.slotSize"), 64);
+	DWORD ifIndex = 0;
+
+	for(int i = 0; i < 256; i++)
+	{
+		BYTE mask = 0x80;
+		while(mask > 0)
+		{
+			if (portMask[i] & mask)
+			{
+				DWORD slot = ifIndex / slotSize + 1;
+				DWORD port = ifIndex % slotSize;
+				vlan->add(slot, port);
+			}
+			mask >>= 1;
+			ifIndex++;
+		}
+	}
+
+	vlanList->add(vlan);
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get VLANs 
+ */
+VlanList *BayStackDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes)
+{
+	VlanList *list = new VlanList();
+	list->setData(attributes);
+	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	{
+		delete_and_null(list);
+	}
+	return list;
 }

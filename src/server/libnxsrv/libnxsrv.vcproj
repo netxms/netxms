@@ -388,6 +388,10 @@
 				RelativePath=".\snmpproxy.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\vlan.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

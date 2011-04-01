@@ -1298,6 +1298,7 @@ src/server/libnxsrv/apinfo.cpp -text
 src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/libnxsrv/ndd.cpp -text
 src/server/libnxsrv/snmp.cpp -text
+src/server/libnxsrv/vlan.cpp -text
 src/server/netxmsd/netxmsd.vcproj -text
 src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/generic/pdumode.cpp -text

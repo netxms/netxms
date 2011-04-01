@@ -27,17 +27,14 @@
 #include <nxsrvapi.h>
 
 
-//
-// API version
-//
-
+/**
+ *API version
+ */
 #define NDDRV_API_VERSION           1
 
-
-//
-// Driver header
-//
-
+/**
+ * Driver header
+ */
 #ifdef _WIN32
 #define __NDD_EXPORT __declspec(dllexport)
 #else
@@ -53,7 +50,7 @@ extern "C" NetworkDeviceDriver __NDD_EXPORT *nddCreateInstance() { return new im
 
 
 /**
- *Base class for device drivers
+ * Base class for device drivers
  */
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
 {
@@ -67,6 +64,7 @@ public:
 	virtual bool isDeviceSupported(const TCHAR *oid);
 	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable);
+	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes);
 };
 
 

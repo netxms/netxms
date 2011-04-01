@@ -145,6 +145,8 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
  *
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
+ * @param useAliases policy for interface alias usage
+ * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
 {
@@ -272,4 +274,16 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
    }
 
    return pIfList;
+}
+
+/**
+ * Get list of VLANs on given node
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @return VLAN list or NULL
+ */
+VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes)
+{
+	return NULL;
 }

@@ -245,6 +245,59 @@ public:
 
 
 //
+// Vlan information
+//
+
+class LIBNXSRV_EXPORTABLE VlanInfo
+{
+private:
+	int m_vlanId;
+	TCHAR *m_name;
+	int m_allocated;
+	int m_numPorts;	// Number of ports in VLAN
+	DWORD *m_ports;	// member ports (slot/port pairs)
+
+public:
+	VlanInfo(int vlanId);
+	~VlanInfo();
+
+	int getVlanId() { return m_vlanId; }
+	const TCHAR *getName() { return CHECK_NULL_EX(m_name); }
+	int getNumPorts() { return m_numPorts; }
+	DWORD *getPorts() { return m_ports; }
+
+	void add(DWORD slot, DWORD port);
+	void setName(const TCHAR *name);
+};
+
+
+//
+// Vlan list
+//
+
+class LIBNXSRV_EXPORTABLE VlanList
+{
+private:
+   int m_size;          // Number of valid entries
+	int m_allocated;     // Number of allocated entries
+   void *m_data;        // Can be used by custom enumeration handlers
+   VlanInfo **m_vlans;  // VLAN entries
+
+public:
+	VlanList(int initialAlloc = 8);
+	~VlanList();
+
+	void add(VlanInfo *vlan);
+
+	int getSize() { return m_size; }
+	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : NULL; }
+
+	void setData(void *data) { m_data = data; }
+	void *getData() { return m_data; }
+};
+
+
+//
 // Route information
 //
 

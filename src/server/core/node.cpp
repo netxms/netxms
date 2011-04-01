@@ -3821,6 +3821,17 @@ void Node::topologyPoll(int nPoller)
 	if (fdb != NULL)
 		DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_szName, m_dwId);
 
+	if (m_driver != NULL)
+	{
+		SNMP_Transport *snmp = createSnmpTransport();
+		VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes);
+		if (vlanList != NULL)
+		{
+			DbgPrintf(4, _T("VLAN list retrieved for node %s [%d]"), m_szName, m_dwId);
+			delete vlanList;
+		}
+	}
+
 	m_tLastTopologyPoll = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
 	pollerUnlock();
