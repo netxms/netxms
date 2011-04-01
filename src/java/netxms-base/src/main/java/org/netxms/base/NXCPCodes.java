@@ -277,6 +277,7 @@ public final class NXCPCodes
 	public static final int CMD_OPEN_CONSOLE            = 0x00F7;
 	public static final int CMD_CLOSE_CONSOLE           = 0x00F8;
 	public static final int CMD_GET_SELECTED_OBJECTS    = 0x00F9;
+	public static final int CMD_GET_VLANS               = 0x00FA;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -660,6 +661,7 @@ public final class NXCPCodes
 	public static final long VID_IMAGE                   = 379;
 	public static final long VID_DRIVER_NAME             = 380;
 	public static final long VID_DRIVER_VERSION          = 381;
+	public static final long VID_NUM_VLANS               = 382;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -734,4 +736,5 @@ public final class NXCPCodes
 	public static final long VID_USM_CRED_LIST_BASE       = 0x10000000L;
 	public static final long VID_ELEMENT_LIST_BASE        = 0x10000000L;
 	public static final long VID_LINK_LIST_BASE           = 0x40000000L;
+	public static final long VID_VLAN_LIST_BASE           = 0x10000000L;
 }

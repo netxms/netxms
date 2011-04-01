@@ -16,10 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.client.topology;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.MacAddress;
 
 /**
  * Connection point information
@@ -40,7 +41,7 @@ public class ConnectionPoint
 	 * 
 	 * @param msg NXCP message
 	 */
-	protected ConnectionPoint(NXCPMessage msg)
+	public ConnectionPoint(NXCPMessage msg)
 	{
 		nodeId = msg.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
 		interfaceId = msg.getVariableAsInt64(NXCPCodes.VID_INTERFACE_ID);

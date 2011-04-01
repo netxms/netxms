@@ -105,6 +105,8 @@ import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
+import org.netxms.client.topology.ConnectionPoint;
+import org.netxms.client.topology.VlanInfo;
 
 /**
  * Communication session with NetXMS server.
@@ -4288,5 +4290,30 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			if (response.isEndOfSequence())
 				break;
 		}
+	}
+	
+	/**
+	 * Get list of VLANs configured on given node
+	 * 
+	 * @param nodeId node object ID
+	 * @return list of VLANs
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<VlanInfo> getVlans(long nodeId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_VLANS);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_VLANS);
+		List<VlanInfo> vlans = new ArrayList<VlanInfo>(count);
+		long varId = NXCPCodes.VID_VLAN_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			vlans.add(new VlanInfo(response, varId));
+			varId += 10;
+		}
+		return vlans;
 	}
 }

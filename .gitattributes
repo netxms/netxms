@@ -367,7 +367,6 @@ src/java/netxms-client/src/main/java/com/jcraft/jzlib/ZStream.java -text
 src/java/netxms-client/src/main/java/com/jcraft/jzlib/ZStreamException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
-src/java/netxms-client/src/main/java/org/netxms/client/ConnectionPoint.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddress.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddressFormatException.java -text
@@ -450,6 +449,9 @@ src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpTrapParameterMap
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpUsmCredential.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/snmp/SnmpWalkListener.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/topology/ConnectionPoint.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/topology/Port.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/topology/VlanInfo.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/AlarmTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ConnectionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/DataCollectionTest.java -text
