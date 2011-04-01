@@ -404,6 +404,26 @@ public:
 	T *get(int index) { return (T*)Array::get(index); }
 };
 
+
+//
+// Auxilliary class for objects which counts references and
+// destroys itself wheren reference count falls to 0
+//
+
+class LIBNETXMS_EXPORTABLE RefCountObject
+{
+private:
+	int m_refCount;
+	MUTEX m_mutex;
+
+public:
+	RefCountObject();
+	virtual ~RefCountObject();
+
+	void incRefCount();
+	void decRefCount();
+};
+
 #endif   /* __cplusplus */
 
 

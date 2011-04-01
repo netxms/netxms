@@ -678,6 +678,7 @@ protected:
    ROUTING_TABLE *m_pRoutingTable;
 	ForwardingDatabase *m_fdb;
 	LinkLayerNeighbors *m_linkLayerNeighbors;
+	VlanList *m_vlans;
 	VrrpInfo *m_vrrpInfo;
 	nxmap_ObjList *m_pTopology;	// For compatibility, to be removed in 1.1.x
 	time_t m_topologyRebuildTimestamp;
@@ -772,6 +773,7 @@ public:
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
 	LinkLayerNeighbors *getLinkLayerNeighbors();
+	VlanList *getVlans();
    BOOL getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 

@@ -1254,6 +1254,9 @@ void ClientSession::processingThread()
 			case CMD_ADM_REQUEST:
 				CALL_IN_NEW_THREAD(processConsoleCommand, pMsg);
 				break;
+			case CMD_GET_VLANS:
+				getVlans(pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -11370,6 +11373,55 @@ void ClientSession::processConsoleCommand(CSCPMessage *request)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Get VLANs configured on device
+//
+
+void ClientSession::getVlans(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+	if (object != NULL)
+	{
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if (object->Type() == OBJECT_NODE)
+			{
+				VlanList *vlans = ((Node *)object)->getVlans();
+				if (vlans != NULL)
+				{
+					vlans->fillMessage(&msg);
+					vlans->decRefCount();
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+				}
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
 	sendMessage(&msg);

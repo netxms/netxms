@@ -275,7 +275,7 @@ public:
 // Vlan list
 //
 
-class LIBNXSRV_EXPORTABLE VlanList
+class LIBNXSRV_EXPORTABLE VlanList : public RefCountObject
 {
 private:
    int m_size;          // Number of valid entries
@@ -285,7 +285,7 @@ private:
 
 public:
 	VlanList(int initialAlloc = 8);
-	~VlanList();
+	virtual ~VlanList();
 
 	void add(VlanInfo *vlan);
 
@@ -294,6 +294,8 @@ public:
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
+
+	void fillMessage(CSCPMessage *msg);
 };
 
 

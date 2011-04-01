@@ -71,7 +71,7 @@ struct PORT_MAPPING_ENTRY
 	DWORD ifIndex;
 };
 
-class ForwardingDatabase
+class ForwardingDatabase : public RefCountObject
 {
 private:
 	int m_fdbSize;
@@ -81,20 +81,16 @@ private:
 	int m_pmAllocated;
 	PORT_MAPPING_ENTRY *m_portMap;
 	time_t m_timestamp;
-	int m_refCount;
 
 	DWORD ifIndexFromPort(DWORD port);
 
 public:
 	ForwardingDatabase();
-	~ForwardingDatabase();
+	virtual ~ForwardingDatabase();
 
 	void addEntry(FDB_ENTRY *entry);
 	void addPortMapping(PORT_MAPPING_ENTRY *entry);
 	void sort();
-
-	void incRefCount() { m_refCount++; }
-	void decRefCount();
 
 	time_t getTimeStamp() { return m_timestamp; }
 	int getAge() { return (int)(time(NULL) - m_timestamp); }
@@ -123,20 +119,19 @@ struct LL_NEIGHBOR_INFO
 	int protocol;			// Protocol used to obtain information
 };
 
-class LinkLayerNeighbors
+class LinkLayerNeighbors : public RefCountObject
 {
 private:
 	int m_count;
 	int m_allocated;
 	LL_NEIGHBOR_INFO *m_connections;
 	void *m_data;
-	int m_refCount;
 
 	bool isDuplicate(LL_NEIGHBOR_INFO *info);
 
 public:
 	LinkLayerNeighbors();
-	~LinkLayerNeighbors();
+	virtual ~LinkLayerNeighbors();
 
 	void addConnection(LL_NEIGHBOR_INFO *info);
 	LL_NEIGHBOR_INFO *getConnection(int index) { return ((index >= 0) && (index < m_count)) ? &m_connections[index] : NULL; }
@@ -144,9 +139,6 @@ public:
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
 	int getSize() { return m_count; }
-
-	void incRefCount() { m_refCount++; }
-	void decRefCount();
 };
 
 

@@ -1694,7 +1694,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 			{
 				// write everything up to ESC char
 				DWORD chars;
-				WriteConsole(out, curr, esc - curr - 1, &chars, NULL);
+				WriteConsole(out, curr, (DWORD)(esc - curr - 1), &chars, NULL);
 
 				esc++;
 
@@ -1725,14 +1725,14 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 			else
 			{
 				DWORD chars;
-				WriteConsole(out, curr, esc - curr, &chars, NULL);
+				WriteConsole(out, curr, (DWORD)(esc - curr), &chars, NULL);
 			}
 			curr = esc;
 		}
 		else
 		{
 			DWORD chars;
-			WriteConsole(out, curr, _tcslen(curr), &chars, NULL);
+			WriteConsole(out, curr, (DWORD)_tcslen(curr), &chars, NULL);
 			break;
 		}
 	}
@@ -1750,4 +1750,45 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 	_vsntprintf(buffer, 8192, format, args);
 	va_end(args);
 	WriteToTerminal(buffer);
+}
+
+
+//
+// RefCountObject implementation
+//
+// Auxilliary class for objects which counts references and
+// destroys itself wheren reference count falls to 0
+//
+
+RefCountObject::RefCountObject()
+{
+	m_refCount = 1;
+	m_mutex = MutexCreate();
+}
+
+RefCountObject::~RefCountObject()
+{
+	MutexDestroy(m_mutex);
+}
+
+void RefCountObject::incRefCount()
+{
+	MutexLock(m_mutex, INFINITE);
+	m_refCount++;
+	MutexUnlock(m_mutex);
+}
+
+void RefCountObject::decRefCount()
+{
+	MutexLock(m_mutex, INFINITE);
+	m_refCount--;
+	if (m_refCount == 0)
+	{
+		MutexUnlock(m_mutex);
+		delete this;
+	}
+	else
+	{
+		MutexUnlock(m_mutex);
+	}
 }

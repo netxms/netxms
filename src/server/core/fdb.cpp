@@ -36,7 +36,6 @@ ForwardingDatabase::ForwardingDatabase()
 	m_pmSize = 0;
 	m_pmAllocated = 0;
 	m_timestamp = time(NULL);
-	m_refCount = 1;
 }
 
 
@@ -48,18 +47,6 @@ ForwardingDatabase::~ForwardingDatabase()
 {
 	safe_free(m_fdb);
 	safe_free(m_portMap);
-}
-
-
-//
-// Decrement reference count. If it reaches 0, destroy object.
-//
-
-void ForwardingDatabase::decRefCount()
-{
-	m_refCount--;
-	if (m_refCount == 0)
-		delete this;
 }
 
 

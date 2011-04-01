@@ -79,6 +79,7 @@ Node::Node()
 	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
 	m_jobQueue = new ServerJobQueue();
 	m_fdb = NULL;
+	m_vlans = NULL;
 	m_driver = NULL;
 }
 
@@ -142,6 +143,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
 	m_jobQueue = new ServerJobQueue();
 	m_fdb = NULL;
+	m_vlans = NULL;
 	m_driver = NULL;
 }
 
@@ -167,6 +169,8 @@ Node::~Node()
 	delete m_snmpSecurity;
 	if (m_fdb != NULL)
 		m_fdb->decRefCount();
+	if (m_vlans != NULL)
+		m_vlans->decRefCount();
 }
 
 
@@ -3816,7 +3820,7 @@ void Node::topologyPoll(int nPoller)
 	MutexLock(m_mutexTopoAccess, INFINITE);
 	if (m_fdb != NULL)
 		m_fdb->decRefCount();
-	m_fdb = (fdb != NULL) ? fdb : NULL;
+	m_fdb = fdb;
 	MutexUnlock(m_mutexTopoAccess);
 	if (fdb != NULL)
 		DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_szName, m_dwId);
@@ -3825,11 +3829,32 @@ void Node::topologyPoll(int nPoller)
 	{
 		SNMP_Transport *snmp = createSnmpTransport();
 		VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes);
+		MutexLock(m_mutexTopoAccess, INFINITE);
 		if (vlanList != NULL)
 		{
-			DbgPrintf(4, _T("VLAN list retrieved for node %s [%d]"), m_szName, m_dwId);
-			delete vlanList;
+			DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_szName, m_dwId);
+			if (m_vlans != NULL)
+				m_vlans->decRefCount();
+			m_vlans = vlanList;
 		}
+		else
+		{
+			DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_szName, m_dwId);
+			if (m_vlans != NULL)
+				m_vlans->decRefCount();
+			m_vlans = NULL;
+		}
+		MutexUnlock(m_mutexTopoAccess);
+
+		LockData();
+		DWORD oldFlags = m_dwFlags;
+		if (vlanList != NULL)
+			m_dwFlags |= NF_HAS_VLANS;
+		else
+			m_dwFlags &= ~NF_HAS_VLANS;
+		if (oldFlags != m_dwFlags)
+			Modify();
+		UnlockData();
 	}
 
 	m_tLastTopologyPoll = time(NULL);
@@ -4082,6 +4107,23 @@ LinkLayerNeighbors *Node::getLinkLayerNeighbors()
 	nbs = m_linkLayerNeighbors;
 	MutexUnlock(m_mutexTopoAccess);
 	return nbs;
+}
+
+
+//
+// Get link layer neighbors
+//
+
+VlanList *Node::getVlans()
+{
+	VlanList *vlans;
+
+	MutexLock(m_mutexTopoAccess, INFINITE);
+	if (m_vlans != NULL)
+		m_vlans->incRefCount();
+	vlans = m_vlans;
+	MutexUnlock(m_mutexTopoAccess);
+	return vlans;
 }
 
 

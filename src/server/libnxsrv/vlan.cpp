@@ -57,6 +57,23 @@ void VlanList::add(VlanInfo *vlan)
 }
 
 /**
+ * Fill NXCP  message with vlans data
+ */
+void VlanList::fillMessage(CSCPMessage *msg)
+{
+	msg->SetVariable(VID_NUM_VLANS, (DWORD)m_size);
+	DWORD varId = VID_VLAN_LIST_BASE;
+	for(int i = 0; i < m_size; i++)
+	{
+		msg->SetVariable(varId++, (WORD)m_vlans[i]->getVlanId());
+		msg->SetVariable(varId++, m_vlans[i]->getName());
+		msg->SetVariable(varId++, (DWORD)m_vlans[i]->getNumPorts());
+		msg->SetVariableToInt32Array(varId++, (DWORD)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
+		varId += 6;
+	}
+}
+
+/**
  * VlanInfo constructor
  */
 VlanInfo::VlanInfo(int vlanId)

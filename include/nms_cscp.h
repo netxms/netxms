@@ -469,6 +469,7 @@ typedef struct
 #define CMD_OPEN_CONSOLE            0x00F7
 #define CMD_CLOSE_CONSOLE           0x00F8
 #define CMD_GET_SELECTED_OBJECTS    0x00F9
+#define CMD_GET_VLANS               0x00FA
 
 
 //
@@ -856,6 +857,7 @@ typedef struct
 #define VID_IMAGE                   ((DWORD)379)
 #define VID_DRIVER_NAME             ((DWORD)380)
 #define VID_DRIVER_VERSION          ((DWORD)381)
+#define VID_NUM_VLANS               ((DWORD)382)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)
@@ -1007,6 +1009,8 @@ typedef struct
 #define VID_USM_CRED_LIST_BASE      ((DWORD)0x10000000)
 
 #define VID_IMAGE_LIST_BASE         ((DWORD)0x10000000)
+
+#define VID_VLAN_LIST_BASE          ((DWORD)0x10000000)
 
 
 //

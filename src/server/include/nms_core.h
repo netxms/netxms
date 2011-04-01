@@ -573,6 +573,7 @@ private:
 	void processConsoleCommand(CSCPMessage *msg);
 	void openConsole(DWORD rqId);
 	void closeConsole(DWORD rqId);
+	void getVlans(CSCPMessage *msg);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
