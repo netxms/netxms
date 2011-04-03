@@ -19,16 +19,18 @@
 package org.netxms.ui.eclipse.snmp;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.ui.IStartup;
 import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.MibTree;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -44,9 +46,9 @@ public class Startup implements IStartup
 	public void earlyStartup()
 	{
 		// wait for connect
-		Job job = new Job("Load MIB file on startup") {
+		ConsoleJob job = new ConsoleJob("Load MIB file on startup", null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				while(ConsoleSharedData.getSession() == null)
 				{
@@ -58,35 +60,62 @@ public class Startup implements IStartup
 					{
 					}
 				}
-				try
+				
+				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				Location loc = Platform.getInstanceLocation();
+				if (loc != null)
 				{
-					NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					Location loc = Platform.getInstanceLocation();
-					if (loc != null)
+					File targetDir = new File(loc.getURL().toURI());
+					File mibFile = new File(targetDir, "netxms.mib");
+					
+					Date serverMibTimestamp = session.getMibFileTimestamp();
+					if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
 					{
-						File targetDir = new File(loc.getURL().toURI());
-						File mibFile = new File(targetDir, "netxms.mib");
-						
-						Date serverMibTimestamp = session.getMibFileTimestamp();
+						File file = session.downloadMibFile();
 
-						if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
-						{
-							File file = session.downloadMibFile();
-							file.renameTo(mibFile);
-						}
+						if (mibFile.exists())
+							mibFile.delete();
 						
-						MibTree mibTree = new MibTree(mibFile);
-						Activator.setMibTree(mibTree);
+						if (!file.renameTo(mibFile))
+						{
+							// Rename failed, try to copy file
+							InputStream in = null;
+							OutputStream out = null;
+							try
+							{
+								in = new FileInputStream(file);
+								out = new FileOutputStream(mibFile);
+								byte[] buffer = new byte[16384];
+						      int len;
+						      while((len = in.read(buffer)) > 0)
+						      	out.write(buffer, 0, len);
+							}
+							catch(Exception e)
+							{
+								throw e;
+							}
+							finally
+							{
+						      in.close();
+						      out.close();
+							}
+					      
+					      file.delete();
+						}
 					}
+					
+					MibTree mibTree = new MibTree(mibFile);
+					Activator.setMibTree(mibTree);
 				}
-				catch(Exception e)
-				{
-					/* TODO: add logging and/or user notification */
-				}
-				return Status.OK_STATUS;
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot load MIB file from server";
 			}
 		};
-		job.setSystem(true);
-		job.schedule();
+		job.setUser(false);
+		job.start();
 	}
 }
