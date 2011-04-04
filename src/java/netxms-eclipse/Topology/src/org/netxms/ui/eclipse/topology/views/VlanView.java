@@ -18,8 +18,13 @@
  */
 package org.netxms.ui.eclipse.topology.views;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -28,6 +33,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.topology.views.helpers.VlanLabelProvider;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Display VLAN configuration on a node
@@ -36,9 +43,14 @@ public class VlanView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.VlanView";
 	
+	public static final int COLUMN_VLAN_ID = 0;
+	public static final int COLUMN_NAME = 1;
+	public static final int COLUMN_PORTS = 2;
+	
 	private long nodeId;
-	private List<VlanInfo> vlans;
+	private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
 	private NXCSession session;
+	private SortableTableViewer vlanList;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -59,8 +71,23 @@ public class VlanView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		// TODO Auto-generated method stub
-
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		parent.setLayout(layout);
+		
+		final String[] names = { "ID", "Name", "Ports" };
+		final int[] widths = { 80, 180, 400 };
+		vlanList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
+		vlanList.setContentProvider(new ArrayContentProvider());
+		vlanList.setLabelProvider(new VlanLabelProvider());
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessVerticalSpace = true;
+		vlanList.getTable().setLayoutData(gd);
+		vlanList.setInput(vlans.toArray());
 	}
 
 	/* (non-Javadoc)
@@ -69,8 +96,7 @@ public class VlanView extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		// TODO Auto-generated method stub
-
+		vlanList.getControl().setFocus();
 	}
 
 	/**
@@ -79,5 +105,6 @@ public class VlanView extends ViewPart
 	public void setVlans(List<VlanInfo> vlans)
 	{
 		this.vlans = vlans;
+		vlanList.setInput(vlans.toArray());
 	}
 }
