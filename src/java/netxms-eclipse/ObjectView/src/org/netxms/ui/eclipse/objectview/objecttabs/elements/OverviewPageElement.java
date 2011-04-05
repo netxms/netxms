@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.widgets.DashboardElement;
 
@@ -82,16 +81,6 @@ public abstract class OverviewPageElement extends DashboardElement
 	public boolean isApplicableForObject(GenericObject object)
 	{
 		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.DashboardElement#createClientArea(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	protected Control createClientArea(Composite parent)
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/* (non-Javadoc)

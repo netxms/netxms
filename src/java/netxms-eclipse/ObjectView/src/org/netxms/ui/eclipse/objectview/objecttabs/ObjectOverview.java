@@ -31,6 +31,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Commands;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
+import org.netxms.ui.eclipse.objectview.objecttabs.elements.Connection;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.GeneralInfo;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
 
@@ -80,6 +81,7 @@ public class ObjectOverview extends ObjectTab
 		addElement(new Commands(leftColumn, getObject()));
 		addElement(new Comments(leftColumn, getObject()));
 		addElement(new Capabilities(rightColumn, getObject()));
+		addElement(new Connection(rightColumn, getObject()));
 	}
 	
 	/**

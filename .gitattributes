@@ -998,6 +998,7 @@ src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objectta
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/Capabilities.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/Commands.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/Comments.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/Connection.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/GeneralInfo.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/OverviewPageElement.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/TableElement.java -text

@@ -126,7 +126,7 @@ public class Interface extends GenericObject
 	/**
 	 * @return the peerNodeId
 	 */
-	protected long getPeerNodeId()
+	public long getPeerNodeId()
 	{
 		return peerNodeId;
 	}
@@ -134,7 +134,7 @@ public class Interface extends GenericObject
 	/**
 	 * @return the peerInterfaceId
 	 */
-	protected long getPeerInterfaceId()
+	public long getPeerInterfaceId()
 	{
 		return peerInterfaceId;
 	}

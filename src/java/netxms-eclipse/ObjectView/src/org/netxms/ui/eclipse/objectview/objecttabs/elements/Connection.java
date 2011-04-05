@@ -1,0 +1,109 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.objectview.objecttabs.elements;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Interface;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+
+/**
+ * "Connection" element - shows peer information for interface
+ */
+public class Connection extends OverviewPageElement
+{
+	private NXCSession session;
+	private CLabel nodeLabel;
+	private CLabel interfaceLabel;
+	
+	/**
+	 * @param parent
+	 * @param object
+	 */
+	public Connection(Composite parent, GenericObject object)
+	{
+		super(parent, object);
+		session = (NXCSession)ConsoleSharedData.getSession();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.DashboardElement#createClientArea(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	protected Control createClientArea(Composite parent)
+	{
+		Composite area = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		area.setLayout(layout);
+		
+		nodeLabel = new CLabel(area, SWT.NONE);
+		GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		nodeLabel.setLayoutData(gd);
+		
+		return area;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#getTitle()
+	 */
+	@Override
+	protected String getTitle()
+	{
+		return "Connection";
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
+	 */
+	@Override
+	void onObjectChange()
+	{
+		if ((getObject() == null) || !(getObject() instanceof Interface))
+			return;
+		
+		Interface iface = (Interface)getObject();
+		long peerNodeId = iface.getPeerNodeId();
+		if (peerNodeId != 0)
+		{
+			GenericObject node = session.findObjectById(peerNodeId);
+			nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">");
+		}
+		else
+		{
+			nodeLabel.setText("N/A");
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.GenericObject)
+	 */
+	@Override
+	public boolean isApplicableForObject(GenericObject object)
+	{
+		return (object instanceof Interface) && (((Interface)object).getPeerNodeId() != 0);
+	}
+}
