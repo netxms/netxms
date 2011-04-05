@@ -926,9 +926,9 @@ if test "x$HAVE_LIBTRE" = "xno"; then
 	MODULES="libtre $MODULES"
 	AC_DEFINE(USE_BUNDLED_LIBTRE,1,Define to 1 if bundled libtre is used)
 
-	tre_version_1=`0`
-	tre_version_2=`8`
-	tre_version_3=`0`
+	tre_version_1='0'
+	tre_version_2='8'
+	tre_version_3='0'
 	tre_version=$tre_version_1.$tre_version_2.$tre_version_3
 	AC_DEFINE_UNQUOTED(TRE_VERSION,  "$tre_version",  [ TRE version string.  ])
 	AC_DEFINE_UNQUOTED(TRE_VERSION_1, $tre_version_1, [ TRE version level 1. ])
