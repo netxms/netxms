@@ -72,7 +72,7 @@ public final class StatusDisplayInfo
 		statusColor[Severity.CRITICAL] = new Color(display, 192, 0, 0);
 		statusColor[Severity.UNKNOWN] = new Color(display, 0, 0, 128);
 		statusColor[Severity.UNMANAGED] = new Color(display, 192, 192, 192);
-		statusColor[Severity.DISABLED] = new Color(display, 0, 0, 0);
+		statusColor[Severity.DISABLED] = new Color(display, 128, 64, 0);
 		statusColor[Severity.TESTING] = new Color(display, 255, 128, 255);
 	}
 	

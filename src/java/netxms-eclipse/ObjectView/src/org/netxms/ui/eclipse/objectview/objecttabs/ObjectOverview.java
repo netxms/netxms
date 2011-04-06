@@ -121,7 +121,7 @@ public class ObjectOverview extends ObjectTab
 		GridData gd = new GridData();
 		gd.exclude = false;
 		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
+		//gd.grabExcessHorizontalSpace = true;
 		element.setLayoutData(gd);
 		elements.add(element);
 	}
