@@ -84,64 +84,6 @@ void LinkLayerNeighbors::addConnection(LL_NEIGHBOR_INFO *info)
 
 
 //
-// Topology table walker's callback for CDP topology table
-//
-
-static DWORD CDPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
-{
-   TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4], ipAddr[16];
-
-	DWORD remoteIp = ntohl(_t_inet_addr(pVar->GetValueAsIPAddr(ipAddr)));
-	Node *remoteNode = FindNodeByIP(remoteIp);
-	if (remoteNode == NULL)
-		return SNMP_ERR_SUCCESS;
-
-   SNMP_ObjectId *pOid = pVar->GetName();
-   SNMPConvertOIDToText(pOid->Length() - 14, (DWORD *)&(pOid->GetValue())[14], szSuffix, MAX_OID_LEN * 4);
-
-	// Get interfaces
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
-
-	_tcscpy(szOid, _T(".1.3.6.1.4.1.9.9.23.1.2.1.1.7"));	// Remote port name
-   _tcscat(szOid, szSuffix);
-	pRqPDU->bindVariable(new SNMP_Variable(szOid));
-
-	_tcscpy(szOid, _T(".1.3.6.1.4.1.9.9.23.1.2.1.1.1"));	// Local interface index
-   _tcscat(szOid, szSuffix);
-	pRqPDU->bindVariable(new SNMP_Variable(szOid));
-
-   SNMP_PDU *pRespPDU;
-   DWORD rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
-	delete pRqPDU;
-
-	if (rcc == SNMP_ERR_SUCCESS)
-   {
-		if (pRespPDU->getNumVariables() >= 2)
-		{
-			TCHAR ifName[MAX_CONNECTOR_NAME] = _T("");
-			pRespPDU->getVariable(0)->GetValueAsString(ifName, 64);
-			Interface *ifRemote = remoteNode->findInterface(ifName);
-			if (ifRemote != NULL)
-			{
-				LL_NEIGHBOR_INFO info;
-
-				info.ifLocal = pRespPDU->getVariable(1)->GetValueAsUInt();
-				info.ifRemote = ifRemote->getIfIndex();
-				info.objectId = remoteNode->Id();
-				info.isPtToPt = true;
-				info.protocol = LL_PROTO_CDP;
-
-				((LinkLayerNeighbors *)arg)->addConnection(&info);
-			}
-		}
-      delete pRespPDU;
-	}
-
-	return rcc;
-}
-
-
-//
 // Gather link layer connectivity information from node
 //
 
@@ -155,7 +97,7 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 	}
 	if (node->getFlags() & NF_IS_CDP)
 	{
-		node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.9.9.23.1.2.1.1.4"), CDPTopoHandler, nbs);
+		AddCDPNeighbors(node, nbs);
 	}
 	if (node->getFlags() & NF_IS_NDP)
 	{

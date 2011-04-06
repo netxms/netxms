@@ -161,6 +161,8 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getFlags() & NF_IS_LLDP))
 		return;
 
+	DbgPrintf(5, _T("LLDP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
 	nbs->setData(node);
 	node->CallSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1.5"), LLDPTopoHandler, nbs);
+	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
 }

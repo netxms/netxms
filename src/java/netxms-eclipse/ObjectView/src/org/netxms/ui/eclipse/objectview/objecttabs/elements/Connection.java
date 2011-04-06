@@ -20,10 +20,13 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
@@ -37,6 +40,7 @@ public class Connection extends OverviewPageElement
 	private NXCSession session;
 	private CLabel nodeLabel;
 	private CLabel interfaceLabel;
+	private WorkbenchLabelProvider labelProvider;
 	
 	/**
 	 * @param parent
@@ -46,6 +50,14 @@ public class Connection extends OverviewPageElement
 	{
 		super(parent, object);
 		session = (NXCSession)ConsoleSharedData.getSession();
+		labelProvider = new WorkbenchLabelProvider();
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				labelProvider.dispose();
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -91,6 +103,7 @@ public class Connection extends OverviewPageElement
 		{
 			GenericObject node = session.findObjectById(peerNodeId);
 			nodeLabel.setText((node != null) ? node.getObjectName() : "<" + peerNodeId + ">");
+			nodeLabel.setImage(labelProvider.getImage(node));
 		}
 		else
 		{

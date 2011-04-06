@@ -43,7 +43,7 @@ public abstract class TableElement extends OverviewPageElement
 	@Override
 	protected Control createClientArea(Composite parent)
 	{
-		table = new Table(parent, SWT.FULL_SELECTION | SWT.HIDE_SELECTION | SWT.SINGLE);
+		table = new Table(parent, SWT.FULL_SELECTION | SWT.HIDE_SELECTION | SWT.SINGLE | SWT.H_SCROLL);
 		setupTable();
 		createActions();
 		createPopupMenu();

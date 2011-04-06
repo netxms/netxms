@@ -1,0 +1,107 @@
+/* 
+** NetXMS - Network Management System
+** Copyright (C) 2003-2011 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: cdp.cpp
+**
+**/
+
+#include "nxcore.h"
+
+
+//
+// Topology table walker's callback for CDP topology table
+//
+
+static DWORD CDPTopoHandler(DWORD dwVersion, SNMP_Variable *var, SNMP_Transport *pTransport, void *arg)
+{
+	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
+
+   TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4], ipAddrText[16];
+
+	DWORD remoteIp;
+	var->getRawValue((BYTE *)&remoteIp, sizeof(DWORD));
+	remoteIp = ntohl(remoteIp);
+	
+	DbgPrintf(6, _T("CDP(%s [%d]): remote IP address %s"), node->Name(), node->Id(), IpToStr(remoteIp, ipAddrText));
+	Node *remoteNode = FindNodeByIP(remoteIp);
+	if (remoteNode == NULL)
+	{
+		DbgPrintf(6, _T("CDP(%s [%d]): node object for remote IP %s not found"), node->Name(), node->Id(), ipAddrText);
+		return SNMP_ERR_SUCCESS;
+	}
+	DbgPrintf(6, _T("CDP(%s [%d]): remote node is %s [%d]"), node->Name(), node->Id(), remoteNode->Name(), remoteNode->Id());
+
+   SNMP_ObjectId *pOid = var->GetName();
+   SNMPConvertOIDToText(pOid->Length() - 14, (DWORD *)&(pOid->GetValue())[14], szSuffix, MAX_OID_LEN * 4);
+
+	// Get interfaces
+   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
+
+	_tcscpy(szOid, _T(".1.3.6.1.4.1.9.9.23.1.2.1.1.7"));	// Remote port name
+   _tcscat(szOid, szSuffix);
+	pRqPDU->bindVariable(new SNMP_Variable(szOid));
+
+	_tcscpy(szOid, _T(".1.3.6.1.4.1.9.9.23.1.2.1.1.1"));	// Local interface index
+   _tcscat(szOid, szSuffix);
+	pRqPDU->bindVariable(new SNMP_Variable(szOid));
+
+   SNMP_PDU *pRespPDU;
+   DWORD rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+	delete pRqPDU;
+
+	if (rcc == SNMP_ERR_SUCCESS)
+   {
+		if (pRespPDU->getNumVariables() >= 2)
+		{
+			TCHAR ifName[MAX_CONNECTOR_NAME] = _T("");
+			pRespPDU->getVariable(0)->GetValueAsString(ifName, 64);
+			Interface *ifRemote = remoteNode->findInterface(ifName);
+			if (ifRemote != NULL)
+			{
+				LL_NEIGHBOR_INFO info;
+
+				info.ifLocal = pRespPDU->getVariable(1)->GetValueAsUInt();
+				info.ifRemote = ifRemote->getIfIndex();
+				info.objectId = remoteNode->Id();
+				info.isPtToPt = true;
+				info.protocol = LL_PROTO_CDP;
+
+				((LinkLayerNeighbors *)arg)->addConnection(&info);
+			}
+		}
+      delete pRespPDU;
+	}
+
+	return rcc;
+}
+
+
+//
+// Add CDP-discovered neighbors
+//
+
+void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
+{
+	if (!(node->getFlags() & NF_IS_CDP))
+		return;
+
+	DbgPrintf(5, _T("CDP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
+	nbs->setData(node);
+	node->CallSnmpEnumerate(_T(".1.3.6.1.4.1.9.9.23.1.2.1.1.4"), CDPTopoHandler, nbs);
+	DbgPrintf(5, _T("CDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
+}

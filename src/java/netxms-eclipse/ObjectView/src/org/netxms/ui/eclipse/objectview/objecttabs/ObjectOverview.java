@@ -67,6 +67,7 @@ public class ObjectOverview extends ObjectTab
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
 		leftColumn.setLayoutData(gd);
 		
 		rightColumn = new Composite(viewArea, SWT.NONE);
@@ -74,7 +75,9 @@ public class ObjectOverview extends ObjectTab
 		rightColumn.setBackground(BACKGROUND_COLOR);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
-		gd.horizontalAlignment = SWT.FILL;
+		gd.horizontalAlignment = SWT.LEFT;
+		gd.grabExcessHorizontalSpace = true;
+		gd.minimumWidth = SWT.DEFAULT;
 		rightColumn.setLayoutData(gd);
 
 		addElement(new GeneralInfo(leftColumn, getObject()));
@@ -92,13 +95,6 @@ public class ObjectOverview extends ObjectTab
 	private Layout createColumnLayout()
 	{
 		GridLayout layout = new GridLayout();
-/*		layout.fill = true;
-		layout.marginBottom = 0;
-		layout.marginTop = 0;
-		layout.marginLeft = 0;
-		layout.marginRight = 0;
-		layout.spacing = 5;
-		layout.type = SWT.VERTICAL;*/
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		layout.verticalSpacing = 5;
@@ -114,14 +110,10 @@ public class ObjectOverview extends ObjectTab
 	 */
 	private void addElement(OverviewPageElement element)
 	{
-		/*
-		RowData rd = new RowData();
-		rd.exclude = false;
-		element.setLayoutData(rd);*/
 		GridData gd = new GridData();
 		gd.exclude = false;
 		gd.horizontalAlignment = SWT.FILL;
-		//gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessHorizontalSpace = true;
 		element.setLayoutData(gd);
 		elements.add(element);
 	}

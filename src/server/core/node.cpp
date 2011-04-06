@@ -3789,6 +3789,8 @@ void Node::topologyPoll(int nPoller)
 {
 	pollerLock();
 
+	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_szName, m_dwId);
+
 	LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
 	if (nbs != NULL)
 	{

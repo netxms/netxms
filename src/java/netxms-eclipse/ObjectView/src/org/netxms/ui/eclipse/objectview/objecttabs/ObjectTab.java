@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,9 +83,9 @@ public abstract class ObjectTab
 	{
 		this.tabFolder = tabFolder;
 		clientArea = new Composite(tabFolder, SWT.NONE);
+		clientArea.setLayout(new FillLayout());
 		createTabContent(clientArea);
 		clientArea.setVisible(false);
-		clientArea.setLayout(new FillLayout());
 	}
 	
 	/**

@@ -112,7 +112,7 @@ static DWORD NDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 
 
 //
-// Add LLDP-discovered neighbors
+// Add NDP-discovered neighbors
 //
 
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
