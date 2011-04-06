@@ -936,7 +936,9 @@ void Node::deleteInterface(Interface *pInterface)
             pSubnet->DeleteChild(this);
          }
 			DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
-			          m_szName, m_dwId, pInterface->Name(), pInterface->Id(), pSubnet->Name(), pSubnet->Id());
+			          m_szName, m_dwId, pInterface->Name(), pInterface->Id(),
+						 (pSubnet != NULL) ? pSubnet->Name() : _T("(null)"), 
+						 (pSubnet != NULL) ? pSubnet->Id() : 0);
       }
    }
    pInterface->Delete(FALSE);
