@@ -34,6 +34,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.views.helpers.VlanLabelProvider;
+import org.netxms.ui.eclipse.topology.widgets.PortView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -51,6 +52,7 @@ public class VlanView extends ViewPart
 	private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
 	private NXCSession session;
 	private SortableTableViewer vlanList;
+	private PortView portView;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -88,6 +90,13 @@ public class VlanView extends ViewPart
 		gd.grabExcessVerticalSpace = true;
 		vlanList.getTable().setLayoutData(gd);
 		vlanList.setInput(vlans.toArray());
+		
+		portView = new PortView(parent, SWT.NONE);
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		portView.setLayoutData(gd);
+		portView.setNodeId(nodeId);
 	}
 
 	/* (non-Javadoc)

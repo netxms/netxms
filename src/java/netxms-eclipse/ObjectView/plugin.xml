@@ -43,6 +43,7 @@
          point="org.netxms.ui.eclipse.objectview.tabs">
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.ObjectOverview"
+            icon="icons/overview_tab.gif"
             name="Overview"
             order="0">
       </tab>
