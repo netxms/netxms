@@ -1657,6 +1657,20 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 					UnlockData();
 				}
 
+            // Check for 802.1x support
+            if (CheckSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
+            {
+					LockData();
+               m_dwFlags |= NF_IS_8021X;
+					UnlockData();
+            }
+            else
+            {
+					LockData();
+					m_dwFlags &= ~NF_IS_8021X;
+					UnlockData();
+            }
+
             CheckOSPFSupport(pTransport);
 
 				// Get VRRP information

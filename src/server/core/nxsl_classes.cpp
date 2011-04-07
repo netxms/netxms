@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -138,6 +138,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("isLLDP")))
    {
       pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_LLDP) ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isPAE")) || !_tcscmp(pszAttr, _T("is802_1x")))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_8021X) ? 1 : 0));
    }
    else if (!_tcscmp(pszAttr, _T("snmpVersion")))
    {

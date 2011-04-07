@@ -3,23 +3,29 @@
  */
 package org.netxms.ui.eclipse.topology.widgets;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 
 /**
  * View of switch/router ports
  *
  */
-public class PortView extends Composite implements PaintListener
+public class PortView extends Canvas implements PaintListener
 {
 	private long nodeId;
 	private NXCSession session;
+	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();
 	
 	/**
 	 * @param parent
@@ -41,10 +47,11 @@ public class PortView extends Composite implements PaintListener
 		if ((object == null) || !(object instanceof Node))
 			return;
 		
+		ports.clear();
 		Set<GenericObject> interfaces = object.getAllChilds(GenericObject.OBJECT_INTERFACE);
 		for(GenericObject o : interfaces)
 		{
-			
+			ports.put(o.getObjectId(), new PortInfo((Interface)o));
 		}
 	}
 

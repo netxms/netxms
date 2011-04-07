@@ -497,6 +497,8 @@ protected:
 	DWORD m_portNumber;				// Vendor/device specific port number
 	DWORD m_peerNodeId;				// ID of peer node object, or 0 if unknown
 	DWORD m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
+	WORD m_dot1xPaeAuthState;
+	WORD m_dot1xBackendAuthState;
    QWORD m_qwLastDownEventId;
 	bool m_bSyntheticMask;
 	int m_iPendingStatus;
