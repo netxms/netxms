@@ -16,16 +16,22 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.constants;
+package org.netxms.ui.eclipse.objectmanager.actions;
+
+import org.netxms.client.constants.NodePoller;
 
 /**
- * Constants for node poller
+ * Start status poll
  *
  */
-public final class NodePoller
+public class TopologyPoll extends AbstractNodePoll
 {
-	public static final int STATUS_POLL = 1;
-	public static final int CONFIGURATION_POLL = 2;
-	public static final int INTERFACE_POLL = 3;
-	public static final int TOPOLOGY_POLL = 4;
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
+	 */
+	@Override
+	protected int getPollType()
+	{
+		return NodePoller.TOPOLOGY_POLL;
+	}
 }

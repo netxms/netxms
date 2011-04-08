@@ -613,7 +613,7 @@ Interface *Node::findInterface(DWORD dwIndex, DWORD dwHostAddr)
 
 
 //
-// Find interface by name
+// Find interface by name or description
 // Returns pointer to interface object or NULL if appropriate interface couldn't be found
 //
 
@@ -627,7 +627,7 @@ Interface *Node::findInterface(const TCHAR *name)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
-			if (!_tcsicmp(pInterface->Name(), name))
+			if (!_tcsicmp(pInterface->Name(), name) || !_tcsicmp(pInterface->getDescription(), name))
          {
             UnlockChildList();
             return pInterface;
@@ -799,7 +799,7 @@ BOOL Node::isMyIP(DWORD dwIpAddr)
 // Create new interface
 //
 
-void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name, 
+void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name, const TCHAR *descr,
                               DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr, DWORD bridgePort, 
 										DWORD slot, DWORD port)
 {
@@ -865,7 +865,7 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 
    // Create interface object
    if (name != NULL)
-      pInterface = new Interface(name, dwIndex, dwIpAddr, dwNetMask, dwType);
+		pInterface = new Interface(name, (descr != NULL) ? descr : name, dwIndex, dwIpAddr, dwNetMask, dwType);
    else
       pInterface = new Interface(dwIpAddr, dwNetMask, bSyntheticMask);
    if (pbMacAddr != NULL)
@@ -878,7 +878,7 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
    NetObjInsert(pInterface, TRUE);
    addInterface(pInterface);
    if (!m_bIsHidden)
-      pInterface->Unhide();
+      pInterface->unhide();
    PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
              pInterface->Name(), pInterface->IpAddr(),
              pInterface->getIpNetMask(), pInterface->getIfIndex());
@@ -1919,6 +1919,10 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
                   {
                      pInterface->setName(ifInfo->szName);
                   }
+                  if (_tcscmp(ifInfo->szDescription, pInterface->getDescription()))
+                  {
+                     pInterface->setDescription(ifInfo->szDescription);
+                  }
 						if (ifInfo->dwBridgePortNumber != pInterface->getBridgePortNumber())
 						{
 							pInterface->setBridgePortNumber(ifInfo->dwBridgePortNumber);
@@ -1949,6 +1953,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
             createNewInterface(ifInfo->dwIpAddr, 
                                ifInfo->dwIpNetMask,
                                ifInfo->szName,
+										 ifInfo->szDescription,
                                ifInfo->dwIndex,
                                ifInfo->dwType,
                                ifInfo->bMacAddr,
@@ -1991,7 +1996,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 
             // Create pseudo interface for NAT
             ConfigReadStr(_T("NATAdapterName"), szBuffer, MAX_OBJECT_NAME, _T("NetXMS NAT Adapter"));
-            createNewInterface(m_dwIpAddr, 0, szBuffer, 0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
+            createNewInterface(m_dwIpAddr, 0, szBuffer, szBuffer, 0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
             hasChanges = TRUE;
          }
       }
@@ -3799,15 +3804,20 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 // Topology poller
 //
 
-void Node::topologyPoll(int nPoller)
+void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
 	pollerLock();
+   m_pPollRequestor = pSession;
 
+   SendPollerMsg(dwRqId, _T("Starting topology poll for node %s\r\n"), m_szName);
 	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_szName, m_dwId);
 
 	LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
 	if (nbs != NULL)
 	{
+		SendPollerMsg(dwRqId, POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->getSize());
+		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_szName, (int)m_dwId, nbs->getSize());
+
 		MutexLock(m_mutexTopoAccess, INFINITE);
 		if (m_linkLayerNeighbors != NULL)
 			m_linkLayerNeighbors->decRefCount();
@@ -3815,23 +3825,37 @@ void Node::topologyPoll(int nPoller)
 		MutexUnlock(m_mutexTopoAccess);
 
 		// Walk through interfaces and update peers
+	   SendPollerMsg(dwRqId, _T("Updating peer information on interfaces\r\n"));
 		for(int i = 0; i < nbs->getSize(); i++)
 		{
 			LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
 			NetObj *object = FindObjectById(ni->objectId);
 			if ((object != NULL) && (object->Type() == OBJECT_NODE))
 			{
+				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): found peer node %s [%d], localIfIndex=%d remoteIfIndex=%d"),
+				          m_szName, m_dwId, object->Name(), object->Id(), ni->ifLocal, ni->ifRemote);
 				Interface *ifLocal = findInterface(ni->ifLocal, INADDR_ANY);
 				Interface *ifRemote = ((Node *)object)->findInterface(ni->ifRemote, INADDR_ANY);
+				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_szName, m_dwId, 
+				          (ifLocal != NULL) ? ifLocal->Name() : _T("(null)"),
+				          (ifRemote != NULL) ? ifRemote->Name() : _T("(null)"));
 				if ((ifLocal != NULL) && (ifRemote != NULL))
 				{
 					ifLocal->setPeer(ni->objectId, ifRemote->Id());
 					ifRemote->setPeer(m_dwId, ifLocal->Id());
+					SendPollerMsg(dwRqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
+					              ifLocal->Name(), object->Name(), ifRemote->Name());
+					DbgPrintf(5, _T("Local interface %s:%s linked to remote interface %s:%s"),
+					          m_szName, ifLocal->Name(), object->Name(), ifRemote->Name());
 				}
 			}
 		}
-
-		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d]"), m_szName, m_dwId);
+	   SendPollerMsg(dwRqId, _T("Link layer topology processed\r\n"));
+		DbgPrintf(4, _T("Link layer topology processed for node %s [%d]"), m_szName, m_dwId);
+	}
+	else
+	{
+	   SendPollerMsg(dwRqId, POLLER_ERROR _T("Link layer topology retrieved\r\n"));
 	}
 
 	ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
@@ -3841,7 +3865,15 @@ void Node::topologyPoll(int nPoller)
 	m_fdb = fdb;
 	MutexUnlock(m_mutexTopoAccess);
 	if (fdb != NULL)
+	{
 		DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_szName, m_dwId);
+	   SendPollerMsg(dwRqId, POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
+	}
+	else
+	{
+		DbgPrintf(4, _T("Failed to get switch forwarding database from node %s [%d]"), m_szName, m_dwId);
+	   SendPollerMsg(dwRqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
+	}
 
 	if (m_driver != NULL)
 	{
@@ -3850,6 +3882,7 @@ void Node::topologyPoll(int nPoller)
 		MutexLock(m_mutexTopoAccess, INFINITE);
 		if (vlanList != NULL)
 		{
+		   SendPollerMsg(dwRqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
 			DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_szName, m_dwId);
 			if (m_vlans != NULL)
 				m_vlans->decRefCount();
@@ -3857,6 +3890,7 @@ void Node::topologyPoll(int nPoller)
 		}
 		else
 		{
+		   SendPollerMsg(dwRqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
 			DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_szName, m_dwId);
 			if (m_vlans != NULL)
 				m_vlans->decRefCount();
@@ -3875,9 +3909,13 @@ void Node::topologyPoll(int nPoller)
 		UnlockData();
 	}
 
+   SendPollerMsg(dwRqId, _T("Finished topology poll for node %s\r\n"), m_szName);
+
 	m_tLastTopologyPoll = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
 	pollerUnlock();
+
+	DbgPrintf(4, _T("Finished topology poll for node %s [%d]"), m_szName, m_dwId);
 }
 
 
@@ -4033,6 +4071,11 @@ void Node::updateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
                   {
                      pInterface->setName(pIfList->get(j)->szName);
 							SendPollerMsg(dwRqId, POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->getIfIndex(), pIfList->get(j)->szName);
+                  }
+                  if (_tcscmp(pIfList->get(j)->szDescription, pInterface->getDescription()))
+                  {
+                     pInterface->setDescription(pIfList->get(j)->szDescription);
+							SendPollerMsg(dwRqId, POLLER_WARNING _T("   Description of interface %d changed to %s\r\n"), pInterface->getIfIndex(), pIfList->get(j)->szDescription);
                   }
                   break;
                }

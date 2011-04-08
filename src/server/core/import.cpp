@@ -398,7 +398,7 @@ DWORD ImportConfig(Config *config, DWORD flags)
 			NetObjInsert(object, TRUE);
 			object->AddParent(g_pTemplateRoot);
 			g_pTemplateRoot->AddChild(object);
-			object->Unhide();
+			object->unhide();
 		}
 	}
 

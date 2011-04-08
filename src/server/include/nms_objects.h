@@ -287,9 +287,9 @@ public:
 
    void Delete(BOOL bIndexLocked);     // Prepare object for deletion
 
-   BOOL IsHidden(void) { return m_bIsHidden; }
-   void Hide(void);
-   void Unhide(void);
+   BOOL isHidden() { return m_bIsHidden; }
+   void hide();
+   void unhide();
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
@@ -488,6 +488,7 @@ public:
 class NXCORE_EXPORTABLE Interface : public NetObj
 {
 protected:
+	TCHAR m_description[MAX_DB_STRING];	// Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
    DWORD m_dwIfIndex;
    DWORD m_dwIfType;
    DWORD m_dwIpNetMask;
@@ -497,8 +498,8 @@ protected:
 	DWORD m_portNumber;				// Vendor/device specific port number
 	DWORD m_peerNodeId;				// ID of peer node object, or 0 if unknown
 	DWORD m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
-	WORD m_dot1xPaeAuthState;
-	WORD m_dot1xBackendAuthState;
+	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
+	WORD m_dot1xBackendAuthState;	// 802.1x backend auth state
    QWORD m_qwLastDownEventId;
 	bool m_bSyntheticMask;
 	int m_iPendingStatus;
@@ -508,7 +509,7 @@ protected:
 public:
    Interface();
    Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask);
-   Interface(const TCHAR *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType);
+   Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD ipAddr, DWORD ipNetMask, DWORD ifType);
    virtual ~Interface();
 
    virtual int Type() { return OBJECT_INTERFACE; }
@@ -526,6 +527,7 @@ public:
 	DWORD getPortNumber() { return m_portNumber; }
 	DWORD getPeerNodeId() { return m_peerNodeId; }
 	DWORD getPeerInterfaceId() { return m_peerInterfaceId; }
+	const TCHAR *getDescription() { return m_description; }
    const BYTE *getMacAddr() { return m_bMacAddr; }
 	bool isSyntheticMask() { return m_bSyntheticMask; }
    bool isFake() { return (m_dwIfIndex == 1) && 
@@ -543,6 +545,7 @@ public:
    void setSlotNumber(DWORD slot) { m_slotNumber = slot; Modify(); }
    void setPortNumber(DWORD port) { m_portNumber = port; Modify(); }
 	void setPeer(DWORD nodeId, DWORD ifId) { m_peerNodeId = nodeId; m_peerInterfaceId = ifId; Modify(); }
+   void setDescription(const TCHAR *descr) { nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); }
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue,
 	                BOOL bClusterSync, SNMP_Transport *pTransport);
@@ -754,7 +757,7 @@ public:
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
-   void createNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, 
+   void createNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
                            DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL, DWORD bridgePort = 0,
 									DWORD slot = 0, DWORD port = 0);
    void deleteInterface(Interface *pInterface);
@@ -783,7 +786,7 @@ public:
    void setDiscoveryPollTimeStamp();
    void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void configurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
-	void topologyPoll(int nPoller);
+	void topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
 	void updateInterfaceNames(ClientSession *pSession, DWORD dwRqId);
    void updateRoutingTable();
    bool isReadyForStatusPoll();
@@ -1411,6 +1414,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
+Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);
 DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);

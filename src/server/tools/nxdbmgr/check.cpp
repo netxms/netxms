@@ -235,14 +235,19 @@ static void CheckNodes()
                m_iNumErrors++;
                if (GetYesNo(_T("\rMissing node object %d properties. Create?"), dwId))
                {
+						uuid_t guid;
+
+						uuid_generate(guid);
                   _sntprintf(szQuery, 1024, 
-                             _T("INSERT INTO object_properties (object_id,name,")
-                             _T("status,is_deleted,inherit_access_rights,")
+                             _T("INSERT INTO object_properties (object_id,guid,name,")
+                             _T("status,is_deleted,is_system,inherit_access_rights,")
                              _T("last_modified,status_calc_alg,status_prop_alg,")
                              _T("status_fixed_val,status_shift,status_translation,")
-                             _T("status_single_threshold,status_thresholds) VALUES ")
-                             _T("(%d,'lost_node_%d',5,0,1,0,0,0,0,0,0,0,'00000000')"),
-                             dwId, dwId);
+                             _T("status_single_threshold,status_thresholds,location_type,")
+									  _T("latitude,longitude,image) VALUES ")
+                             _T("(%d,'%s','lost_node_%d',5,0,0,1,0,0,0,0,0,0,0,'00000000',0,")
+									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
+									  (int)dwId, guid, (int)dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -342,14 +347,19 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
                m_iNumErrors++;
                if (GetYesNo(_T("\rMissing %s object %d properties. Create?"), pszDisplayName, dwId))
                {
+						uuid_t guid;
+
+						uuid_generate(guid);
                   _sntprintf(szQuery, 1024, 
-                             _T("INSERT INTO object_properties (object_id,name,")
-                             _T("status,is_deleted,inherit_access_rights,")
+                             _T("INSERT INTO object_properties (object_id,guid,name,")
+                             _T("status,is_deleted,is_system,inherit_access_rights,")
                              _T("last_modified,status_calc_alg,status_prop_alg,")
                              _T("status_fixed_val,status_shift,status_translation,")
-                             _T("status_single_threshold,status_thresholds) VALUES ")
-                             _T("(%d,'lost_%s_%d',5,0,1,0,0,0,0,0,0,0,'00000000')"),
-                             dwId, pszDisplayName, dwId);
+                             _T("status_single_threshold,status_thresholds,location_type,")
+									  _T("latitude,longitude,image) VALUES ")
+                             _T("(%d,'%s','lost_%s_%d',5,0,0,1,0,0,0,0,0,0,0,'00000000',0,")
+									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
+									  (int)dwId, guid, pszDisplayName, (int)dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                   szName[0] = 0;

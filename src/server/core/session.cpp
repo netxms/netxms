@@ -1839,7 +1839,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
    for(i = 0; i < g_dwIdIndexSize; i++)
       if ((((NetObj *)g_pIndexById[i].pObject)->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
           (((NetObj *)g_pIndexById[i].pObject)->TimeStamp() >= dwTimeStamp) &&
-          (!(((NetObj *)g_pIndexById[i].pObject)->IsHidden())))
+          (!(((NetObj *)g_pIndexById[i].pObject)->isHidden())))
       {
          ((NetObj *)g_pIndexById[i].pObject)->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
@@ -1895,7 +1895,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
       if ((object != NULL) && 
 		    object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
           (object->TimeStamp() >= dwTimeStamp) &&
-          !object->IsHidden())
+          !object->isHidden())
       {
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
@@ -3837,7 +3837,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 						if (pszComments != NULL)
 							pObject->setComments(pszComments);
 
-                  pObject->Unhide();
+                  pObject->unhide();
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                   msg.SetVariable(VID_OBJECT_ID, pObject->Id());
                }
@@ -4467,6 +4467,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
       if ((pObject->Type() == OBJECT_NODE) &&
           ((pData->iPollType == POLL_STATUS) ||
 			  (pData->iPollType == POLL_CONFIGURATION) ||
+			  (pData->iPollType == POLL_TOPOLOGY) ||
 			  (pData->iPollType == POLL_INTERFACE_NAMES)))
       {
          // Check access rights
@@ -4539,6 +4540,9 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, DWORD dwRqId)
       case POLL_CONFIGURATION:
 			pNode->setRecheckCapsFlag();
          pNode->configurationPoll(this, dwRqId, -1, 0);
+         break;
+      case POLL_TOPOLOGY:
+         pNode->topologyPoll(this, dwRqId, -1);
          break;
       case POLL_INTERFACE_NAMES:
          pNode->updateInterfaceNames(this, dwRqId);

@@ -623,8 +623,9 @@ InterfaceList *AgentConnection::getInterfaceList()
             pBuf = pChar + 1;
          }
 
-         // Name
-         nx_strncpy(iface.szName, pBuf, MAX_OBJECT_NAME - 1);
+         // Name (set description to name)
+         nx_strncpy(iface.szName, pBuf, MAX_DB_STRING);
+			nx_strncpy(iface.szDescription, pBuf, MAX_DB_STRING);
 
 			pIfList->add(&iface);
       }

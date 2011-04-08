@@ -30,6 +30,7 @@
 Interface::Interface()
           : NetObj()
 {
+	nx_strncpy(m_description, m_szName, MAX_DB_STRING);
    m_dwIpNetMask = 0;
    m_dwIfIndex = 0;
    m_dwIfType = IFTYPE_OTHER;
@@ -38,6 +39,8 @@ Interface::Interface()
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
+	m_dot1xPaeAuthState = 0;
+	m_dot1xBackendAuthState = 0;
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = false;
 	m_iPendingStatus = -1;
@@ -54,6 +57,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask)
           : NetObj()
 {
    _tcscpy(m_szName, _T("unknown"));
+   _tcscpy(m_description, _T("unknown"));
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
    m_dwIfIndex = 1;
@@ -63,6 +67,8 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask)
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
+	m_dot1xPaeAuthState = 0;
+	m_dot1xBackendAuthState = 0;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = bSyntheticMask;
@@ -77,19 +83,22 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask)
 // Constructor for normal interface object
 //
 
-Interface::Interface(const TCHAR *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType)
+Interface::Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD ipAddr, DWORD ipNetMask, DWORD ifType)
           : NetObj()
 {
-   nx_strncpy(m_szName, szName, MAX_OBJECT_NAME);
-   m_dwIfIndex = dwIndex;
-   m_dwIfType = dwType;
-   m_dwIpAddr = dwAddr;
-   m_dwIpNetMask = dwNetMask;
+   nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+   nx_strncpy(m_description, descr, MAX_DB_STRING);
+   m_dwIfIndex = index;
+   m_dwIfType = ifType;
+   m_dwIpAddr = ipAddr;
+   m_dwIpNetMask = ipNetMask;
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
+	m_dot1xPaeAuthState = 0;
+	m_dot1xBackendAuthState = 0;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = false;
@@ -128,7 +137,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 
    _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,")
                             _T("mac_addr,synthetic_mask,required_polls,bridge_port,phy_slot,")
-									 _T("phy_port,peer_node_id,peer_if_id FROM interfaces WHERE id=%d"), dwId);
+									 _T("phy_port,peer_node_id,peer_if_id,description FROM interfaces WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -148,6 +157,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 		m_portNumber = DBGetFieldULong(hResult, 0, 10);
 		m_peerNodeId = DBGetFieldULong(hResult, 0, 11);
 		m_peerInterfaceId = DBGetFieldULong(hResult, 0, 12);
+		DBGetField(hResult, 0, 13, m_description, MAX_DB_STRING);
 
       // Link interface to node
       if (!m_bIsDeleted)
@@ -189,7 +199,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 
 BOOL Interface::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[1024], szMacStr[16], szIpAddr[16], szNetMask[16];
+   TCHAR szQuery[2048], szMacStr[16], szIpAddr[16], szNetMask[16];
    BOOL bNewObject = TRUE;
    Node *pNode;
    DWORD dwNodeId;
@@ -220,26 +230,28 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    // Form and execute INSERT or UPDATE query
    BinToStr(m_bMacAddr, MAC_ADDR_LENGTH, szMacStr);
    if (bNewObject)
-      _sntprintf(szQuery, 1024, _T("INSERT INTO interfaces (id,ip_addr,")
+      _sntprintf(szQuery, 2048, _T("INSERT INTO interfaces (id,ip_addr,")
                        _T("ip_netmask,node_id,if_type,if_index,mac_addr,synthetic_mask,required_polls,")
-							  _T("bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id) ")
-                       _T("VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d,%d,%d,%d,%d,%d,%d)"),
+							  _T("bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description) ")
+                       _T("VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d,%d,%d,%d,%d,%d,%d,%s)"),
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
 				  m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask ? 1 : 0,
 				  m_iRequiredPollCount, (int)m_bridgePortNumber, (int)m_slotNumber,
-				  (int)m_portNumber, (int)m_peerNodeId, (int)m_peerInterfaceId);
+				  (int)m_portNumber, (int)m_peerNodeId, (int)m_peerInterfaceId,
+				  DBPrepareString(hdb, m_description));
    else
-      _sntprintf(szQuery, 1024, _T("UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',")
+      _sntprintf(szQuery, 2048, _T("UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',")
                        _T("node_id=%d,if_type=%d,if_index=%d,")
                        _T("mac_addr='%s',synthetic_mask=%d,")
 							  _T("required_polls=%d,bridge_port=%d,phy_slot=%d,phy_port=%d,")
-							  _T("peer_node_id=%d,peer_if_id=%d WHERE id=%d"),
+							  _T("peer_node_id=%d,peer_if_id=%d,description=%s WHERE id=%d"),
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
 				  m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask ? 1 : 0,
 				  m_iRequiredPollCount, (int)m_bridgePortNumber, (int)m_slotNumber,
-				  (int)m_portNumber, (int)m_peerNodeId, (int)m_peerInterfaceId, m_dwId);
+				  (int)m_portNumber, (int)m_peerNodeId, (int)m_peerInterfaceId,
+				  DBPrepareString(hdb, m_description), m_dwId);
    DBQuery(hdb, szQuery);
 
    // Save access list
@@ -433,6 +445,7 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 	pMsg->SetVariable(VID_PEER_NODE_ID, m_peerNodeId);
 	pMsg->SetVariable(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
+	pMsg->SetVariable(VID_DESCRIPTION, m_description);
 }
 
 

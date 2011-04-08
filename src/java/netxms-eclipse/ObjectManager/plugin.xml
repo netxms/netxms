@@ -206,6 +206,14 @@
                path="objectmgmt">
          </menu>
          <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.TopologyPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.TopologyPoll"
+               label="&amp;Topology"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.InterfacePoll"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.InterfacePoll"

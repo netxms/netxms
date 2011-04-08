@@ -549,6 +549,28 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 
 
 //
+// Find interface by description
+//
+
+Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description)
+{
+   Interface *pInterface = NULL;
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
+	{
+		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_INTERFACE) &&
+		    !_tcscmp(description, ((Interface *)g_pIndexById[i].pObject)->getDescription()))
+		{
+			pInterface = ((Interface *)g_pIndexById[i].pObject);
+			break;
+		}
+	}
+   RWLockUnlock(g_rwlockIdIndex);
+   return pInterface;
+}
+
+
+//
 // Find node by LLDP ID
 //
 
@@ -1005,8 +1027,8 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete pInterface;
             nxlog_write(MSG_INTERFACE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete pInterface;
          }
       }
       DBFreeResult(hResult);
@@ -1317,7 +1339,7 @@ BOOL LoadObjects()
 		g_pTemplateRoot->AddChild(pTemplate);
 		pTemplate->AddParent(g_pTemplateRoot);
 		pTemplate->CalculateCompoundStatus();
-		pTemplate->Unhide();
+		pTemplate->unhide();
 	}
 	pTemplate->ValidateSystemTemplate();
 

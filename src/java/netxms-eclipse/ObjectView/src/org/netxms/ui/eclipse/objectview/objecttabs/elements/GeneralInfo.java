@@ -54,6 +54,7 @@ public class GeneralInfo extends TableElement
 				Interface iface = (Interface)object;
 				addPair("Interface Index", Integer.toString(iface.getIfIndex()));
 				addPair("Interface Type", Integer.toString(iface.getIfType()));
+				addPair("Description", iface.getDescription());
 				addPair("MAC Address", iface.getMacAddress().toString());
 				if ((iface.getSlot() != 0) && (iface.getPort() != 0))
 					addPair("Slot/Port", Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort()));

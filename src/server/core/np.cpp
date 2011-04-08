@@ -179,7 +179,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    {
       pNode->setMgmtStatus(FALSE);
    }
-   pNode->Unhide();
+   pNode->unhide();
    PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
 
    // Add default DCIs

@@ -27,16 +27,16 @@
 // Topology table walker's callback for CDP topology table
 //
 
-static DWORD CDPTopoHandler(DWORD dwVersion, SNMP_Variable *var, SNMP_Transport *pTransport, void *arg)
+static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
-
-   TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4], ipAddrText[16];
+	SNMP_ObjectId *oid = var->GetName();
 
 	DWORD remoteIp;
 	var->getRawValue((BYTE *)&remoteIp, sizeof(DWORD));
 	remoteIp = ntohl(remoteIp);
 	
+   TCHAR ipAddrText[16];
 	DbgPrintf(6, _T("CDP(%s [%d]): remote IP address %s"), node->Name(), node->Id(), IpToStr(remoteIp, ipAddrText));
 	Node *remoteNode = FindNodeByIP(remoteIp);
 	if (remoteNode == NULL)
@@ -46,36 +46,34 @@ static DWORD CDPTopoHandler(DWORD dwVersion, SNMP_Variable *var, SNMP_Transport 
 	}
 	DbgPrintf(6, _T("CDP(%s [%d]): remote node is %s [%d]"), node->Name(), node->Id(), remoteNode->Name(), remoteNode->Id());
 
-   SNMP_ObjectId *pOid = var->GetName();
-   SNMPConvertOIDToText(pOid->Length() - 14, (DWORD *)&(pOid->GetValue())[14], szSuffix, MAX_OID_LEN * 4);
+	// Get additional info for current record
+	DWORD newOid[128];
+	memcpy(newOid, oid->GetValue(), oid->Length() * sizeof(DWORD));
+   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
 
-	// Get interfaces
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
-
-	_tcscpy(szOid, _T(".1.3.6.1.4.1.9.9.23.1.2.1.1.7"));	// Remote port name
-   _tcscat(szOid, szSuffix);
-	pRqPDU->bindVariable(new SNMP_Variable(szOid));
-
-	_tcscpy(szOid, _T(".1.3.6.1.4.1.9.9.23.1.2.1.1.1"));	// Local interface index
-   _tcscat(szOid, szSuffix);
-	pRqPDU->bindVariable(new SNMP_Variable(szOid));
+	newOid[13] = 7;	// cdpCacheDevicePort
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->Length()));
 
    SNMP_PDU *pRespPDU;
-   DWORD rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		if (pRespPDU->getNumVariables() >= 2)
+		if (pRespPDU->getNumVariables() >= 1)
 		{
 			TCHAR ifName[MAX_CONNECTOR_NAME] = _T("");
 			pRespPDU->getVariable(0)->GetValueAsString(ifName, 64);
+			DbgPrintf(6, _T("CDP(%s [%d]): remote port is \"%s\""), node->Name(), node->Id(), ifName);
 			Interface *ifRemote = remoteNode->findInterface(ifName);
 			if (ifRemote != NULL)
 			{
+				DbgPrintf(6, _T("CDP(%s [%d]): remote interface object is %s [%d]"), node->Name(), node->Id(), ifRemote->Name(), ifRemote->Id());
+		
 				LL_NEIGHBOR_INFO info;
 
-				info.ifLocal = pRespPDU->getVariable(1)->GetValueAsUInt();
+				// Index for cdpCacheTable is cdpCacheIfIndex, cdpCacheDeviceIndex
+				info.ifLocal = oid->GetValue()[oid->Length() - 2];
 				info.ifRemote = ifRemote->getIfIndex();
 				info.objectId = remoteNode->Id();
 				info.isPtToPt = true;

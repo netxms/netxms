@@ -171,6 +171,11 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       {
 			NX_INTERFACE_INFO *iface = pIfList->get(i);
 
+			// Get interface description
+	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->dwIndex);
+	      if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->szDescription, MAX_DB_STRING, 0) != SNMP_ERR_SUCCESS)
+	         break;
+
          // Get interface alias if needed
          if (useAliases > 0)
          {
@@ -186,14 +191,12 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 				}
          }
 
-			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifTable
+			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifDescr from ifTable
          _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->dwIndex);
          if (!useIfXTable ||
 				 (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, szBuffer, 256, 0) != SNMP_ERR_SUCCESS))
          {
-		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->dwIndex);
-		      if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, szBuffer, 256, 0) != SNMP_ERR_SUCCESS)
-		         break;
+		      nx_strncpy(szBuffer, iface->szDescription, 256);
 		   }
 
 			// Build full interface object name

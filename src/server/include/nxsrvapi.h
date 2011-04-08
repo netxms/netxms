@@ -203,7 +203,8 @@ typedef struct
 
 typedef struct
 {
-   TCHAR szName[MAX_DB_STRING];
+   TCHAR szName[MAX_DB_STRING];			// Interface display name
+	TCHAR szDescription[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
    DWORD dwIndex;
    DWORD dwType;
 	DWORD dwBridgePortNumber;

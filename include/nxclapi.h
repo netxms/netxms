@@ -126,6 +126,7 @@ typedef void * NXC_SESSION;
 #define POLL_STATUS           1
 #define POLL_CONFIGURATION    2
 #define POLL_INTERFACE_NAMES  3
+#define POLL_TOPOLOGY         4
 
 
 //

@@ -38,6 +38,7 @@ public class Interface extends GenericObject
 	private long peerNodeId;
 	private long peerInterfaceId;
 	private long zoneId;
+	private String description;
 	
 	/**
 	 * @param msg
@@ -56,6 +57,7 @@ public class Interface extends GenericObject
 		peerNodeId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_NODE_ID);
 		peerInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
+		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 	}
 
 	/**
@@ -145,5 +147,13 @@ public class Interface extends GenericObject
 	public long getZoneId()
 	{
 		return zoneId;
+	}
+
+	/**
+	 * @return the description
+	 */
+	public String getDescription()
+	{
+		return description;
 	}
 }

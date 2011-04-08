@@ -1140,13 +1140,13 @@ void NetObj::AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD 
 // Hide object and all its childs
 //
 
-void NetObj::Hide(void)
+void NetObj::hide()
 {
    DWORD i;
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      m_pChildList[i]->Hide();
+      m_pChildList[i]->hide();
    UnlockChildList();
 
 	LockData();
@@ -1159,7 +1159,7 @@ void NetObj::Hide(void)
 // Unhide object and all its childs
 //
 
-void NetObj::Unhide(void)
+void NetObj::unhide()
 {
    DWORD i;
 
@@ -1170,7 +1170,7 @@ void NetObj::Unhide(void)
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      m_pChildList[i]->Unhide();
+      m_pChildList[i]->unhide();
    UnlockChildList();
 }
 

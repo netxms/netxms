@@ -70,7 +70,7 @@ static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
    NetObjInsert(pNode, TRUE);
 	pNode->setName(GetLocalHostName(buffer, 256));
    pNode->configurationPoll(NULL, 0, -1, netMask);
-   pNode->Unhide();
+   pNode->unhide();
    g_dwMgmtNode = pNode->Id();   // Set local management node ID
    PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
 
@@ -545,7 +545,7 @@ static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
 
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), node->Name(), node->Id());
       SetPollerState((long)arg, szBuffer);
-		node->topologyPoll(CAST_FROM_POINTER(arg, int));
+		node->topologyPoll(NULL, 0, CAST_FROM_POINTER(arg, int));
       node->DecRefCount();
    }
    SetPollerState((long)arg, _T("finished"));

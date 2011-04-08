@@ -545,25 +545,27 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 
 	/**
 	 * Fill context menu for map object
-	 * @param mgr Menu manager
+	 * @param manager Menu manager
 	 */
-	protected void fillObjectContextMenu(IMenuManager mgr)
+	protected void fillObjectContextMenu(IMenuManager manager)
 	{
-		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
 		
 		if (currentSelection.size() == 1)
 		{
-			mgr.add(new Separator());
-			mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
-			mgr.add(new PropertyDialogAction(getSite(), this));
+			manager.add(new Separator());
+			manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+			manager.add(new PropertyDialogAction(getSite(), this));
 		}
 	}
 	

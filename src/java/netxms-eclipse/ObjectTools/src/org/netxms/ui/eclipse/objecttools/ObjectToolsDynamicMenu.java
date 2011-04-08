@@ -152,7 +152,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					rootMenu = currMenu;
 				}
 				
-				final MenuItem item = new MenuItem(rootMenu, SWT.CHECK);
+				final MenuItem item = new MenuItem(rootMenu, SWT.PUSH);
 				item.setText(path[path.length - 1]);
 				item.setData(tools[i]);
 				item.addSelectionListener(new SelectionAdapter() {

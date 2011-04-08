@@ -310,6 +310,7 @@ CREATE TABLE interfaces
 	mac_addr varchar(15) not null,
 	synthetic_mask integer not null,
 	required_polls integer not null,
+	description varchar(255),
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

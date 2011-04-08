@@ -35,6 +35,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 
 /**
@@ -55,6 +56,8 @@ public class PortView extends Composite
 	public PortView(Composite parent, int style)
 	{
 		super(parent, style);
+		
+		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		RowLayout layout = new RowLayout();
 		layout.type = SWT.VERTICAL;

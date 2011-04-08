@@ -59,6 +59,7 @@ public class Capabilities extends TableElement
 		addFlag("isAgent", (node.getFlags() & Node.NF_IS_NATIVE_AGENT) != 0);
 		addFlag("isBridge", (node.getFlags() & Node.NF_IS_BRIDGE) != 0);
 		addFlag("isCDP", (node.getFlags() & Node.NF_IS_CDP) != 0);
+		addFlag("isDot1x", (node.getFlags() & Node.NF_IS_8021X) != 0);
 		addFlag("isLLDP", (node.getFlags() & Node.NF_IS_LLDP) != 0);
 		addFlag("isNDP", (node.getFlags() & Node.NF_IS_SONMP) != 0);
 		addFlag("isPrinter", (node.getFlags() & Node.NF_IS_PRINTER) != 0);
