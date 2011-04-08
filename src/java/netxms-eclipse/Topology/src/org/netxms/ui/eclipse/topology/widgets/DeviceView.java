@@ -24,11 +24,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
@@ -42,7 +39,7 @@ import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
  * View of switch/router ports
  *
  */
-public class PortView extends Composite
+public class DeviceView extends Composite
 {
 	private long nodeId;
 	private NXCSession session;
@@ -53,7 +50,7 @@ public class PortView extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public PortView(Composite parent, int style)
+	public DeviceView(Composite parent, int style)
 	{
 		super(parent, style);
 		
@@ -61,6 +58,8 @@ public class PortView extends Composite
 		
 		RowLayout layout = new RowLayout();
 		layout.type = SWT.VERTICAL;
+		layout.fill = true;
+		layout.wrap = false;
 		setLayout(layout);
 	}
 	
@@ -73,6 +72,8 @@ public class PortView extends Composite
 		if ((object == null) || !(object instanceof Node))
 			return;
 		
+		for(SlotView s : slots.values())
+			s.dispose();
 		slots.clear();
 		ports.clear();
 		
@@ -95,13 +96,16 @@ public class PortView extends Composite
 		for(Interface iface : interfaces)
 		{
 			int slot = iface.getSlot();
-			ports.put(iface.getObjectId(), new PortInfo(iface));
 			SlotView sv = slots.get(slot);
 			if (sv == null)
 			{
 				sv = new SlotView(this, SWT.NONE);
 				slots.put(slot, sv);
 			}
+			
+			PortInfo p = new PortInfo(iface);
+			ports.put(iface.getObjectId(), p);
+			sv.addPort(p);
 		}
 		
 		layout();

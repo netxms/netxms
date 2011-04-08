@@ -18,19 +18,34 @@
  */
 package org.netxms.ui.eclipse.topology.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 
 /**
  * Single slot view
- *
  */
 public class SlotView extends Canvas implements PaintListener
 {
+	private static final int HORIZONTAL_MARGIN = 20;
+	private static final int VERTICAL_MARGIN = 10;
+	private static final int HORIZONTAL_SPACING = 10;
+	private static final int VERTICAL_SPACING = 10;
+	private static final int PORT_WIDTH = 40;
+	private static final int PORT_HEIGHT = 30;
+	
+	private List<PortInfo> ports = new ArrayList<PortInfo>();
+	private int rowCount = 2;
+	
 	/**
 	 * @param parent
 	 * @param style
@@ -40,6 +55,14 @@ public class SlotView extends Canvas implements PaintListener
 		super(parent, style | SWT.BORDER);
 		addPaintListener(this);
 	}
+	
+	/**
+	 * @param p
+	 */
+	public void addPort(PortInfo p)
+	{
+		ports.add(p);
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
@@ -47,8 +70,44 @@ public class SlotView extends Canvas implements PaintListener
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		// TODO Auto-generated method stub
+		int x = HORIZONTAL_MARGIN;
+		int y = VERTICAL_MARGIN;
+		int row = 0;
+		for(PortInfo p : ports)
+		{
+			drawPort(p, x, y, e.gc);
+			row++;
+			if (row == rowCount)
+			{
+				row = 0;
+				y = VERTICAL_MARGIN;
+				x += HORIZONTAL_SPACING + 40;
+			}
+			else
+			{
+				y += VERTICAL_SPACING + 30;
+			}
+		}
+	}
+	
+	/**
+	 * Draw single port
+	 * 
+	 * @param p port information
+	 * @param x X coordinate of top left corner
+	 * @param y Y coordinate of top left corner
+	 */
+	private void drawPort(PortInfo p, int x, int y, GC gc)
+	{
+		final String label = Integer.toString(p.getPort());
+		Rectangle rect = new Rectangle(x, y, PORT_WIDTH, PORT_HEIGHT);
 		
+		gc.setBackground(StatusDisplayInfo.getStatusColor(p.getStatus()));
+		gc.fillRectangle(rect);
+		gc.drawRectangle(rect);
+		
+		Point ext = gc.textExtent(label);
+		gc.drawText(label, x + (PORT_WIDTH - ext.x) / 2, y + (PORT_HEIGHT - ext.y) / 2);
 	}
 
 	/* (non-Javadoc)
@@ -57,7 +116,7 @@ public class SlotView extends Canvas implements PaintListener
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-		return new Point(100, 100);
+		return new Point((ports.size() / rowCount) * (40 + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 - HORIZONTAL_SPACING,
+				rowCount * 30 + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
 	}
-
 }

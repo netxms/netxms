@@ -93,5 +93,13 @@
             sequence="M1+F11">
       </key>
    </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.topology.objecttabs.Ports"
+            icon="icons/ports.gif"
+            name="Ports">
+      </tab>
+   </extension>
 
 </plugin>
