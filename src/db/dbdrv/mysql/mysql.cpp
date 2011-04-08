@@ -377,7 +377,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iCo
 	
 	mysql_data_seek((MYSQL_RES *)hResult, iRow);
 	row = mysql_fetch_row((MYSQL_RES *)hResult);
-	return (row == NULL) ? (LONG)-1 : (LONG)strlen(row[iColumn]);
+	return (row == NULL) ? (LONG)-1 : ((row[iColumn] == NULL) ? -1 : (LONG)strlen(row[iColumn]));
 }
 
 
