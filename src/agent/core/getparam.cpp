@@ -40,6 +40,7 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 #ifdef _WIN32
 LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value);
@@ -271,6 +272,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("File.Time.Access(*)"), H_FileTime, (TCHAR *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },
    { _T("File.Time.Change(*)"), H_FileTime, (TCHAR *)FILETIME_CTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_CHANGE },
    { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
+   { _T("System.CurrentTime"), H_SystemTime, NULL, DCI_DT_INT64, DCIDESC_SYSTEM_CURRENTTIME },
    { _T("System.PlatformName"), H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME }
 };
 

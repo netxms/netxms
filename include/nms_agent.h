@@ -188,6 +188,7 @@
 #define DCIDESC_FILE_TIME_ACCESS                  _T("Time of last access to file {instance}")
 #define DCIDESC_FILE_TIME_CHANGE                  _T("Time of last status change of file {instance}")
 #define DCIDESC_FILE_TIME_MODIFY                  _T("Time of last modification of file {instance}")
+#define DCIDESC_SYSTEM_CURRENTTIME                _T("Current system time")
 #define DCIDESC_SYSTEM_PLATFORMNAME               _T("Platform name")
 #define DCIDESC_PROCESS_COUNT                     _T("Number of {instance} processes")
 #define DCIDESC_PROCESS_COUNTEX                   _T("Number of {instance} processes (extended)")

@@ -42,6 +42,17 @@
 
 
 //
+// Handler for System.CurrentTime parameter
+//
+
+LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+{
+   ret_int64(value, (INT64)time(NULL));
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
 // Handler for Agent.Uptime parameter
 //
 
