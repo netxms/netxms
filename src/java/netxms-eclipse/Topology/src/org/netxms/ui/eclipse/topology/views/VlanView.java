@@ -132,11 +132,11 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		VlanInfo vlan = (VlanInfo)selection.getFirstElement();
 		if (vlan != null)
 		{
-			
+			deviceView.setHighlight(vlan.getPorts());
 		}
 		else
 		{
-			
+			deviceView.clearHighlight(true);
 		}
 	}
 }

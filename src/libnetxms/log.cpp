@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -461,13 +461,13 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                         FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
                         m_msgModuleHandle, msg, 0, (LPTSTR)&lpMsgBuf, 0, (va_list *)strings) > 0)
       {
-         char *pCR;
+         TCHAR *pCR;
 
          // Replace trailing CR/LF pair with LF
-         pCR = strchr((char *)lpMsgBuf, '\r');
+         pCR = _tcschr((TCHAR *)lpMsgBuf, _T('\r'));
          if (pCR != NULL)
          {
-            *pCR = '\n';
+            *pCR = _T('\n');
             pCR++;
             *pCR = 0;
          }

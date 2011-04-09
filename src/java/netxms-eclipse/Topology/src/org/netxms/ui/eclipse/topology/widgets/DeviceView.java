@@ -168,7 +168,8 @@ public class DeviceView extends Composite
 			}
 		}
 		
-		redraw();
+		for(SlotView sv : slots.values())
+			sv.redraw();
 	}
 	
 	/**
@@ -179,8 +180,10 @@ public class DeviceView extends Composite
 	public void clearHighlight(boolean doRedraw)
 	{
 		for(SlotView sv : slots.values())
+		{
 			sv.clearHighlight();
-		if (doRedraw)
-			redraw();
+			if (doRedraw)
+				sv.redraw();
+		}
 	}
 }

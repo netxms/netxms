@@ -46,7 +46,8 @@ public class SlotView extends Canvas implements PaintListener
 	private static final int PORT_WIDTH = 40;
 	private static final int PORT_HEIGHT = 30;
 	
-	private static final Color HIGHLIGHT_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 224, 224, 224);
+	private static final Color HIGHLIGHT_COLOR = new Color(Display.getDefault(), 64, 156, 224);
 	
 	private List<PortInfo> ports = new ArrayList<PortInfo>();
 	private int rowCount = 2;
@@ -108,14 +109,19 @@ public class SlotView extends Canvas implements PaintListener
 		final String label = Integer.toString(p.getPort());
 		Rectangle rect = new Rectangle(x, y, PORT_WIDTH, PORT_HEIGHT);
 		
-		if (portStatusVisible)
+		if (p.isHighlighted())
+		{
+			gc.setBackground(HIGHLIGHT_COLOR);
+			gc.fillRectangle(rect);
+		}
+		else if (portStatusVisible)
 		{
 			gc.setBackground(StatusDisplayInfo.getStatusColor(p.getStatus()));
 			gc.fillRectangle(rect);
 		}
-		if (p.isHighlighted())
+		else
 		{
-			gc.setBackground(HIGHLIGHT_COLOR);
+			gc.setBackground(BACKGROUND_COLOR);
 			gc.fillRectangle(rect);
 		}
 		gc.drawRectangle(rect);
