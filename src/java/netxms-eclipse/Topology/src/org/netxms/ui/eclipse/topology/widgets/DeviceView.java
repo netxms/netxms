@@ -26,12 +26,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 
@@ -44,7 +46,8 @@ public class DeviceView extends Composite
 	private long nodeId;
 	private NXCSession session;
 	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();
-	private Map<Integer, SlotView> slots = new HashMap<Integer, SlotView>(); 
+	private Map<Integer, SlotView> slots = new HashMap<Integer, SlotView>();
+	private boolean portStatusVisible = true;
 	
 	/**
 	 * @param parent
@@ -61,6 +64,8 @@ public class DeviceView extends Composite
 		layout.fill = true;
 		layout.wrap = false;
 		setLayout(layout);
+		
+		setBackground(new Color(getDisplay(), 255, 255, 255));
 	}
 	
 	/**
@@ -100,6 +105,7 @@ public class DeviceView extends Composite
 			if (sv == null)
 			{
 				sv = new SlotView(this, SWT.NONE);
+				sv.setPortStatusVisible(portStatusVisible);
 				slots.put(slot, sv);
 			}
 			
@@ -126,5 +132,55 @@ public class DeviceView extends Composite
 	{
 		this.nodeId = nodeId;
 		refresh();
+	}
+
+	/**
+	 * @return the portStatusVisible
+	 */
+	public boolean isPortStatusVisible()
+	{
+		return portStatusVisible;
+	}
+
+	/**
+	 * @param portStatusVisible the portStatusVisible to set
+	 */
+	public void setPortStatusVisible(boolean portStatusVisible)
+	{
+		this.portStatusVisible = portStatusVisible;
+	}
+	
+	/**
+	 * Set port highlight
+	 * 
+	 * @param ports
+	 */
+	public void setHighlight(Port[] ports)
+	{
+		clearHighlight(false);
+		
+		for(Port p : ports)
+		{
+			SlotView sv = slots.get(p.getSlot());
+			if (sv != null)
+			{
+				sv.addHighlight(p);
+			}
+		}
+		
+		redraw();
+	}
+	
+	/**
+	 * Clear port highlight.
+	 * 
+	 * @param doRedraw if true, control will be redrawn
+	 */
+	public void clearHighlight(boolean doRedraw)
+	{
+		for(SlotView sv : slots.values())
+			sv.clearHighlight();
+		if (doRedraw)
+			redraw();
 	}
 }

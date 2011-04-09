@@ -14,6 +14,7 @@ public class PortInfo
 	private int slot;
 	private int port;
 	private int status;
+	private boolean highlighted;
 	
 	/**
 	 * Create port information record
@@ -66,5 +67,21 @@ public class PortInfo
 	public int getPort()
 	{
 		return port;
+	}
+
+	/**
+	 * @return the highlighted
+	 */
+	public boolean isHighlighted()
+	{
+		return highlighted;
+	}
+
+	/**
+	 * @param highlighted the highlighted to set
+	 */
+	public void setHighlighted(boolean highlighted)
+	{
+		this.highlighted = highlighted;
 	}
 }

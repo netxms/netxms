@@ -23,11 +23,14 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 
@@ -43,8 +46,11 @@ public class SlotView extends Canvas implements PaintListener
 	private static final int PORT_WIDTH = 40;
 	private static final int PORT_HEIGHT = 30;
 	
+	private static final Color HIGHLIGHT_COLOR = new Color(Display.getDefault(), 255, 255, 255);
+	
 	private List<PortInfo> ports = new ArrayList<PortInfo>();
 	private int rowCount = 2;
+	private boolean portStatusVisible = true;
 	
 	/**
 	 * @param parent
@@ -102,8 +108,16 @@ public class SlotView extends Canvas implements PaintListener
 		final String label = Integer.toString(p.getPort());
 		Rectangle rect = new Rectangle(x, y, PORT_WIDTH, PORT_HEIGHT);
 		
-		gc.setBackground(StatusDisplayInfo.getStatusColor(p.getStatus()));
-		gc.fillRectangle(rect);
+		if (portStatusVisible)
+		{
+			gc.setBackground(StatusDisplayInfo.getStatusColor(p.getStatus()));
+			gc.fillRectangle(rect);
+		}
+		if (p.isHighlighted())
+		{
+			gc.setBackground(HIGHLIGHT_COLOR);
+			gc.fillRectangle(rect);
+		}
 		gc.drawRectangle(rect);
 		
 		Point ext = gc.textExtent(label);
@@ -118,5 +132,42 @@ public class SlotView extends Canvas implements PaintListener
 	{
 		return new Point((ports.size() / rowCount) * (40 + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 - HORIZONTAL_SPACING,
 				rowCount * 30 + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
+	}
+
+	/**
+	 * @return the portStatusVisible
+	 */
+	public boolean isPortStatusVisible()
+	{
+		return portStatusVisible;
+	}
+
+	/**
+	 * @param portStatusVisible the portStatusVisible to set
+	 */
+	public void setPortStatusVisible(boolean portStatusVisible)
+	{
+		this.portStatusVisible = portStatusVisible;
+	}
+	
+	/**
+	 * Clear port highlight
+	 */
+	void clearHighlight()
+	{
+		for(PortInfo pi : ports)
+			pi.setHighlighted(false);
+	}
+	
+	/**
+	 * Add port highlight
+	 * 
+	 * @param p
+	 */
+	void addHighlight(Port p)
+	{
+		for(PortInfo pi : ports)
+			if (pi.getPort() == p.getPort())
+				pi.setHighlighted(true);
 	}
 }

@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -40,7 +43,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Display VLAN configuration on a node
  */
-public class VlanView extends ViewPart
+public class VlanView extends ViewPart implements ISelectionChangedListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.VlanView";
 	
@@ -52,7 +55,7 @@ public class VlanView extends ViewPart
 	private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
 	private NXCSession session;
 	private SortableTableViewer vlanList;
-	private DeviceView portView;
+	private DeviceView deviceView;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -90,13 +93,15 @@ public class VlanView extends ViewPart
 		gd.grabExcessVerticalSpace = true;
 		vlanList.getTable().setLayoutData(gd);
 		vlanList.setInput(vlans.toArray());
+		vlanList.addSelectionChangedListener(this);
 		
-		portView = new DeviceView(parent, SWT.NONE);
+		deviceView = new DeviceView(parent, SWT.NONE);
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
-		portView.setLayoutData(gd);
-		portView.setNodeId(nodeId);
+		deviceView.setLayoutData(gd);
+		deviceView.setPortStatusVisible(false);
+		deviceView.setNodeId(nodeId);
 	}
 
 	/* (non-Javadoc)
@@ -115,5 +120,23 @@ public class VlanView extends ViewPart
 	{
 		this.vlans = vlans;
 		vlanList.setInput(vlans.toArray());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
+	 */
+	@Override
+	public void selectionChanged(SelectionChangedEvent event)
+	{
+		IStructuredSelection selection = (IStructuredSelection)vlanList.getSelection();
+		VlanInfo vlan = (VlanInfo)selection.getFirstElement();
+		if (vlan != null)
+		{
+			
+		}
+		else
+		{
+			
+		}
 	}
 }
