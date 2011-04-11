@@ -239,7 +239,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 				  m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask ? 1 : 0,
 				  m_iRequiredPollCount, (int)m_bridgePortNumber, (int)m_slotNumber,
 				  (int)m_portNumber, (int)m_peerNodeId, (int)m_peerInterfaceId,
-				  DBPrepareString(hdb, m_description));
+				  (const TCHAR *)DBPrepareString(hdb, m_description));
    else
       _sntprintf(szQuery, 2048, _T("UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',")
                        _T("node_id=%d,if_type=%d,if_index=%d,")
@@ -251,7 +251,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 				  m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask ? 1 : 0,
 				  m_iRequiredPollCount, (int)m_bridgePortNumber, (int)m_slotNumber,
 				  (int)m_portNumber, (int)m_peerNodeId, (int)m_peerInterfaceId,
-				  DBPrepareString(hdb, m_description), m_dwId);
+				  (const TCHAR *)DBPrepareString(hdb, m_description), m_dwId);
    DBQuery(hdb, szQuery);
 
    // Save access list
