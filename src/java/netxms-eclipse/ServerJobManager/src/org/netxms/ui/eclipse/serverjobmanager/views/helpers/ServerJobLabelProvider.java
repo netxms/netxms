@@ -59,13 +59,13 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 		statusTexts.put(NXCServerJob.ON_HOLD, "On hold");
 		statusTexts.put(NXCServerJob.PENDING, "Pending");
 
-		statusImages.put(NXCServerJob.ACTIVE, Activator.getImageDescriptor("icons/active.png").createImage());
+		statusImages.put(NXCServerJob.ACTIVE, Activator.getImageDescriptor("icons/active.gif").createImage());
 		statusImages.put(NXCServerJob.CANCEL_PENDING, Activator.getImageDescriptor("icons/cancel_pending.png").createImage());
 		statusImages.put(NXCServerJob.CANCELLED, Activator.getImageDescriptor("icons/cancel.png").createImage());
-		statusImages.put(NXCServerJob.COMPLETED, Activator.getImageDescriptor("icons/completed.png").createImage());
+		statusImages.put(NXCServerJob.COMPLETED, Activator.getImageDescriptor("icons/completed.gif").createImage());
 		statusImages.put(NXCServerJob.FAILED, Activator.getImageDescriptor("icons/failed.png").createImage());
-		statusImages.put(NXCServerJob.ON_HOLD, Activator.getImageDescriptor("icons/hold.png").createImage());
-		statusImages.put(NXCServerJob.PENDING, Activator.getImageDescriptor("icons/pending.png").createImage());
+		statusImages.put(NXCServerJob.ON_HOLD, Activator.getImageDescriptor("icons/hold.gif").createImage());
+		statusImages.put(NXCServerJob.PENDING, Activator.getImageDescriptor("icons/pending.gif").createImage());
 	}
 	
 	/* (non-Javadoc)

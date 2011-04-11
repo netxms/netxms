@@ -1191,6 +1191,12 @@ void ClientSession::processingThread()
 			case CMD_CANCEL_JOB:
 				cancelJob(pMsg);
 				break;
+			case CMD_HOLD_JOB:
+				holdJob(pMsg);
+				break;
+			case CMD_UNHOLD_JOB:
+				unholdJob(pMsg);
+				break;
 			case CMD_DEPLOY_AGENT_POLICY:
 				deployAgentPolicy(pMsg, false);
 				break;
@@ -10258,6 +10264,36 @@ void ClientSession::cancelJob(CSCPMessage *pRequest)
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(pRequest->GetId());
 	msg.SetVariable(VID_RCC, ::CancelJob(m_dwUserId, pRequest));
+	sendMessage(&msg);
+}
+
+
+//
+// Put server job on hold
+//
+
+void ClientSession::holdJob(CSCPMessage *pRequest)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(pRequest->GetId());
+	msg.SetVariable(VID_RCC, ::HoldJob(m_dwUserId, pRequest));
+	sendMessage(&msg);
+}
+
+
+//
+// Allow server job on hold for execution
+//
+
+void ClientSession::unholdJob(CSCPMessage *pRequest)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(pRequest->GetId());
+	msg.SetVariable(VID_RCC, ::UnholdJob(m_dwUserId, pRequest));
 	sendMessage(&msg);
 }
 

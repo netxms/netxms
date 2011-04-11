@@ -7,7 +7,7 @@
       <view
             category="org.netxms.ui.eclipse.viewcategory.tools"
             class="org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"
-            icon="icons/server_jobs.png"
+            icon="icons/server_jobs.gif"
             id="org.netxms.ui.eclipse.serverjobmanager.view.server_job_manager"
             name="Server Jobs">
       </view>
@@ -36,7 +36,7 @@
 			   toolbarPath="tools/additions"
 			   label="Server Jobs"
 			   tooltip="Open server job manager"
-			   icon="icons/server_jobs.png"
+			   icon="icons/server_jobs.gif"
 			   class="org.netxms.ui.eclipse.serverjobmanager.actions.OpenServerJobManager"
 			   definitionId="org.netxms.ui.eclipse.serverjobmanager.commands.open_server_job_manager">
 		   </action>

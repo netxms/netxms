@@ -255,7 +255,7 @@ public class ServerJobManager extends ViewPart
 				holdServerJob();
 			}
 		};
-		//actionHoldJob.setImageDescriptor(Activator.getImageDescriptor("icons/cancel.png"));
+		actionHoldJob.setImageDescriptor(Activator.getImageDescriptor("icons/hold.gif"));
 		actionHoldJob.setEnabled(false);
 		
 		actionUnholdJob = new Action("&Unhold") {
@@ -265,7 +265,7 @@ public class ServerJobManager extends ViewPart
 				unholdServerJob();
 			}
 		};
-		//actionUnholdJob.setImageDescriptor(Activator.getImageDescriptor("icons/cancel.png"));
+		actionUnholdJob.setImageDescriptor(Activator.getImageDescriptor("icons/unhold.gif"));
 		actionUnholdJob.setEnabled(false);
 		
 		actionRestartJob = new Action("&Restart") {

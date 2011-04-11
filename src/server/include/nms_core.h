@@ -550,6 +550,8 @@ private:
 	void testDCITransformation(CSCPMessage *pRequest);
 	void sendJobList(DWORD dwRqId);
 	void cancelJob(CSCPMessage *pRequest);
+	void holdJob(CSCPMessage *pRequest);
+	void unholdJob(CSCPMessage *pRequest);
 	void deployAgentPolicy(CSCPMessage *pRequest, bool uninstallFlag);
 	void getUserCustomAttribute(CSCPMessage *request);
 	void setUserCustomAttribute(CSCPMessage *request);

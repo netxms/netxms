@@ -119,7 +119,9 @@ public class NXCException extends NetXMSClientException
 		"New password is too weak",
 		"Password was used before",
 		"Invalid session handle",
-		"Node already is a member of a cluster"
+		"Node already is a member of a cluster",
+		"Job cannot be put on hold",
+		"Job on hold cannot be resumed"
 	};
 
 	public NXCException(int errorCode)
