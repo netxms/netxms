@@ -124,6 +124,7 @@
       <plugin id="org.netxms.ui.eclipse.alarmviewer"/>
       <plugin id="org.netxms.ui.eclipse.charts"/>
       <plugin id="org.netxms.ui.eclipse.console"/>
+      <plugin id="org.netxms.ui.eclipse.dashboard"/>
       <plugin id="org.netxms.ui.eclipse.datacollection"/>
       <plugin id="org.netxms.ui.eclipse.epp"/>
       <plugin id="org.netxms.ui.eclipse.eventmanager"/>

@@ -158,6 +158,64 @@ bool ServerJobQueue::cancel(DWORD jobId)
 
 
 //
+// Hold job
+//
+
+bool ServerJobQueue::hold(DWORD jobId)
+{
+	int i;
+	bool success = false;
+
+	MutexLock(m_accessMutex, INFINITE);
+	for(i = 0; i < m_jobCount; i++)
+		if (m_jobList[i]->getId()  == jobId)
+		{
+			if (m_jobList[i]->hold())
+			{
+				DbgPrintf(4, _T("Job %d put on hold (node=%d, type=%s, description=\"%s\")"),
+							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+
+				success = true;
+			}
+			break;
+		}
+	MutexUnlock(m_accessMutex);
+
+	runNext();
+	return success;
+}
+
+
+//
+// Unhold job
+//
+
+bool ServerJobQueue::unhold(DWORD jobId)
+{
+	int i;
+	bool success = false;
+
+	MutexLock(m_accessMutex, INFINITE);
+	for(i = 0; i < m_jobCount; i++)
+		if (m_jobList[i]->getId()  == jobId)
+		{
+			if (m_jobList[i]->unhold())
+			{
+				DbgPrintf(4, _T("Job %d unhold (node=%d, type=%s, description=\"%s\")"),
+							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+
+				success = true;
+			}
+			break;
+		}
+	MutexUnlock(m_accessMutex);
+
+	runNext();
+	return success;
+}
+
+
+//
 // Clean up queue
 //
 

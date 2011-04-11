@@ -84,11 +84,13 @@ protected:
 	void setDescription(const TCHAR *description);
 
 public:
-	ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId);
+	ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId, bool createOnHold);
 	virtual ~ServerJob();
 
 	void start();
 	bool cancel();
+	bool hold();
+	bool unhold();
 
 	void setAutoCancelDelay(int delay) { m_autoCancelDelay = delay; }
 	int getAutoCancelDelay() { return m_autoCancelDelay; }
@@ -103,7 +105,7 @@ public:
 	ServerJobStatus getStatus() { return m_status; }
 	int getProgress() { return m_progress; }
 	DWORD getRemoteNode() { return m_remoteNode; }
-	const TCHAR *getFailureMessage() { return CHECK_NULL(m_failureMessage); }
+	const TCHAR *getFailureMessage() { return CHECK_NULL_EX(m_failureMessage); }
 	time_t getLastStatusChange() { return m_lastStatusChange; }
 
 	void setOwningQueue(ServerJobQueue *queue);
@@ -129,6 +131,8 @@ public:
 
 	void add(ServerJob *job);
 	bool cancel(DWORD jobId);
+	bool hold(DWORD jobId);
+	bool unhold(DWORD jobId);
 	void runNext();
 	void cleanup();
 
@@ -146,7 +150,9 @@ public:
 
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job);
 void GetJobList(CSCPMessage *msg);
-DWORD CancelJob(DWORD userId, CSCPMessage *msg);
+DWORD NXCORE_EXPORTABLE CancelJob(DWORD userId, CSCPMessage *msg);
+DWORD NXCORE_EXPORTABLE HoldJob(DWORD userId, CSCPMessage *msg);
+DWORD NXCORE_EXPORTABLE UnholdJob(DWORD userId, CSCPMessage *msg);
 
 
 //
@@ -165,7 +171,7 @@ protected:
 	static void uploadCallback(INT64 size, void *arg);
 
 public:
-	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, DWORD userId);
+	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, DWORD userId, bool createOnHold);
 	virtual ~FileUploadJob();
 };
 

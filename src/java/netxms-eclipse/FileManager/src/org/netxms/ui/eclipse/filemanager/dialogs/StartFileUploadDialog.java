@@ -23,6 +23,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -33,14 +34,15 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Dialog for starting file upload
- *
  */
 public class StartFileUploadDialog extends Dialog
 {
 	private ServerFileSelector fileSelector;
 	private LabeledText textRemoteFile;
+	private Button checkJobOnHold;
 	private ServerFile serverFile;
 	private String remoteFileName;
+	private boolean createJobOnHold;
 	
 	/**
 	 * 
@@ -90,6 +92,9 @@ public class StartFileUploadDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		textRemoteFile.setLayoutData(gd);
 		
+		checkJobOnHold = new Button(dialogArea, SWT.CHECK);
+		checkJobOnHold.setText("Create upload job but don't start it (job will be in \"on hold\" state)");
+		
 		return dialogArea;
 	}
 
@@ -106,6 +111,7 @@ public class StartFileUploadDialog extends Dialog
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();
+		createJobOnHold = checkJobOnHold.getSelection();
 		super.okPressed();
 	}
 
@@ -123,5 +129,13 @@ public class StartFileUploadDialog extends Dialog
 	public String getRemoteFileName()
 	{
 		return remoteFileName;
+	}
+
+	/**
+	 * @return the createJobOnHold
+	 */
+	public boolean isCreateJobOnHold()
+	{
+		return createJobOnHold;
 	}
 }

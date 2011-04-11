@@ -2755,16 +2755,43 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/**
 	 * Cancel server job
 	 * 
-	 * @param jobId
-	 *           Job ID
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @param jobId Job ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void cancelServerJob(long jobId) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_JOB);
+		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Put server job on hold
+	 * 
+	 * @param jobId Job ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void holdServerJob(long jobId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_HOLD_JOB);
+		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Put server on hold job to pending state
+	 * 
+	 * @param jobId Job ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void unholdServerJob(long jobId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_UNHOLD_JOB);
 		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
@@ -4186,17 +4213,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param nodeId node object ID
 	 * @param serverFileName file name in server's file store
 	 * @param remoteFileName fully qualified file name on target system or null to upload file to agent's file store
+	 * @param jobOnHold if true, upload job will be created in "hold" status 
 	 * @return ID of upload job
 	 * @throws IOException if socket or file I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName) throws IOException, NXCException
+	public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName, boolean jobOnHold) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE_TO_AGENT);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
 		if (remoteFileName != null)
 			msg.setVariable(NXCPCodes.VID_DESTINATION_FILE_NAME, remoteFileName);
+		msg.setVariableInt16(NXCPCodes.VID_CREATE_JOB_ON_HOLD, jobOnHold ? 1 : 0);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsInt64(NXCPCodes.VID_JOB_ID);

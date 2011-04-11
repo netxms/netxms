@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,13 +34,13 @@ DWORD ServerJob::s_freeId = 1;
 // Constructor
 //
 
-ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId)
+ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId, bool createOnHold)
 {
 	m_id = s_freeId++;
 	m_userId = userId;
 	m_type = _tcsdup(CHECK_NULL(type));
 	m_description = _tcsdup(CHECK_NULL(description));
-	m_status = JOB_PENDING;
+	m_status = createOnHold ? JOB_ON_HOLD : JOB_PENDING;
 	m_lastStatusChange = time(NULL);
 	m_autoCancelDelay = 0;
 	m_remoteNode = node;
@@ -203,6 +203,36 @@ bool ServerJob::cancel()
 
 
 //
+// Hold job
+//
+
+bool ServerJob::hold()
+{
+	if (m_status == JOB_PENDING)
+	{
+		changeStatus(JOB_ON_HOLD);
+		return true;
+	}
+	return false;
+}
+
+
+//
+// Unhold job
+//
+
+bool ServerJob::unhold()
+{
+	if (m_status == JOB_ON_HOLD)
+	{
+		changeStatus(JOB_PENDING);
+		return true;
+	}
+	return false;
+}
+
+
+//
 // Default run (empty)
 //
 
@@ -258,7 +288,7 @@ void ServerJob::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_JOB_STATUS, (WORD)m_status);
 	msg->SetVariable(VID_JOB_PROGRESS, (WORD)m_progress);
 	if (m_status == JOB_FAILED)
-		msg->SetVariable(VID_FAILURE_MESSAGE, m_failureMessage != NULL ? m_failureMessage : _T("Internal error"));
+		msg->SetVariable(VID_FAILURE_MESSAGE, (m_failureMessage != NULL) ? m_failureMessage : _T("Internal error"));
 	else
 		msg->SetVariable(VID_FAILURE_MESSAGE, CHECK_NULL_EX(m_failureMessage));
 }

@@ -82,7 +82,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					for(int i = 0; i < nodeIdList.length; i++)
-						session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), dlg.getRemoteFileName());
+						session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), dlg.getRemoteFileName(), dlg.isCreateJobOnHold());
 				}
 			}.start();
 		}

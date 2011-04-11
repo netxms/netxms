@@ -11183,7 +11183,8 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 					nLen = (int)_tcslen(fullPath);
 					nx_strncpy(&fullPath[nLen], GetCleanFileName(localFile), MAX_PATH - nLen);
 
-					ServerJob *job = new FileUploadJob((Node *)object, fullPath, remoteFile, m_dwUserId);
+					ServerJob *job = new FileUploadJob((Node *)object, fullPath, remoteFile, m_dwUserId,
+					                                   request->GetVariableShort(VID_CREATE_JOB_ON_HOLD) ? true : false);
 					if (AddJob(job))
 					{
 						WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, nodeId,
@@ -11194,6 +11195,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 					else
 					{
 						msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+						delete job;
 					}
 				}
 				else

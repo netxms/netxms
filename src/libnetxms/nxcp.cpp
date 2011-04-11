@@ -293,10 +293,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_OPEN_CONSOLE"),
 		_T("CMD_CLOSE_CONSOLE"),
 		_T("CMD_GET_SELECTED_OBJECTS"),
-		_T("CMD_GET_VLANS")
+		_T("CMD_GET_VLANS"),
+		_T("CMD_HOLD_JOB"),
+		_T("CMD_UNHOLD_JOB")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_VLANS))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UNHOLD_JOB))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

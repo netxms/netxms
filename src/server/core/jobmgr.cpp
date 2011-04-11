@@ -24,6 +24,15 @@
 
 
 //
+// Job operation codes
+//
+
+#define CANCEL_JOB		0
+#define HOLD_JOB			1
+#define UNHOLD_JOB		2
+
+
+//
 // Add job
 //
 
@@ -65,10 +74,10 @@ void GetJobList(CSCPMessage *msg)
 
 
 //
-// Cancel job
+// Implementatoin for job status changing operations: cancel, hold, unhold
 //
 
-DWORD CancelJob(DWORD userId, CSCPMessage *msg)
+static DWORD ChangeJobStatus(DWORD userId, CSCPMessage *msg, int operation)
 {
 	DWORD i, jobId, rcc = RCC_INVALID_JOB_ID;
 
@@ -84,7 +93,21 @@ DWORD CancelJob(DWORD userId, CSCPMessage *msg)
 			{
 				if (((NetObj *)g_pIndexById[i].pObject)->CheckAccessRights(userId, OBJECT_ACCESS_CONTROL))
 				{
-					rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
+					switch(operation)
+					{
+						case CANCEL_JOB:
+							rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
+							break;
+						case HOLD_JOB:
+							rcc = queue->hold(jobId) ? RCC_SUCCESS : RCC_JOB_HOLD_FAILED;
+							break;
+						case UNHOLD_JOB:
+							rcc = queue->unhold(jobId) ? RCC_SUCCESS : RCC_JOB_UNHOLD_FAILED;
+							break;
+						default:
+							rcc = RCC_INTERNAL_ERROR;
+							break;
+					}
 				}
 				else
 				{
@@ -95,6 +118,36 @@ DWORD CancelJob(DWORD userId, CSCPMessage *msg)
    }
    RWLockUnlock(g_rwlockIdIndex);
 	return rcc;
+}
+
+
+//
+// Cancel job
+//
+
+DWORD NXCORE_EXPORTABLE CancelJob(DWORD userId, CSCPMessage *msg)
+{
+	return ChangeJobStatus(userId, msg, CANCEL_JOB);
+}
+
+
+//
+// Hold job
+//
+
+DWORD NXCORE_EXPORTABLE HoldJob(DWORD userId, CSCPMessage *msg)
+{
+	return ChangeJobStatus(userId, msg, HOLD_JOB);
+}
+
+
+//
+// Unhold job
+//
+
+DWORD NXCORE_EXPORTABLE UnholdJob(DWORD userId, CSCPMessage *msg)
+{
+	return ChangeJobStatus(userId, msg, UNHOLD_JOB);
 }
 
 

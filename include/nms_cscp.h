@@ -470,6 +470,8 @@ typedef struct
 #define CMD_CLOSE_CONSOLE           0x00F8
 #define CMD_GET_SELECTED_OBJECTS    0x00F9
 #define CMD_GET_VLANS               0x00FA
+#define CMD_HOLD_JOB                0x00FB
+#define CMD_UNHOLD_JOB              0x00FC
 
 
 //
@@ -858,6 +860,7 @@ typedef struct
 #define VID_DRIVER_NAME             ((DWORD)380)
 #define VID_DRIVER_VERSION          ((DWORD)381)
 #define VID_NUM_VLANS               ((DWORD)382)
+#define VID_CREATE_JOB_ON_HOLD      ((DWORD)383)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

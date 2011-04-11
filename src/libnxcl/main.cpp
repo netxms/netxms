@@ -54,7 +54,7 @@ void DebugPrintf(const TCHAR *format, ...)
 // Initialization function
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
+BOOL LIBNXCL_EXPORTABLE NXCInitialize()
 {
    return InitCryptoLib(0xFFFF);
 }
@@ -64,7 +64,7 @@ BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 // Shutdown function
 //
 
-void LIBNXCL_EXPORTABLE NXCShutdown(void)
+void LIBNXCL_EXPORTABLE NXCShutdown()
 {
 }
 
@@ -73,7 +73,7 @@ void LIBNXCL_EXPORTABLE NXCShutdown(void)
 // Get library version
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void)
+DWORD LIBNXCL_EXPORTABLE NXCGetVersion()
 {
    return (NETXMS_VERSION_MAJOR << 24) | (NETXMS_VERSION_MINOR << 16) | NETXMS_VERSION_BUILD;
 }
@@ -403,9 +403,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("New password is too weak"),
 		_T("Password was used before"),
 		_T("Invalid session handle"),
-		_T("Node already is a member of a cluster")
+		_T("Node already is a member of a cluster"),
+		_T("Job cannot be hold"),
+		_T("Job cannot be unhold")
    };
-   return ((dwError >= 0) && (dwError <= RCC_CLUSTER_MEMBER_ALREADY)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_JOB_UNHOLD_FAILED)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

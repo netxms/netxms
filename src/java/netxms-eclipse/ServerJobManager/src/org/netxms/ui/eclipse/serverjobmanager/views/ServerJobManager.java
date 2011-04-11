@@ -79,6 +79,10 @@ public class ServerJobManager extends ViewPart
 
 	private static final String TABLE_CONFIG_PREFIX = "ServerJobManager";
 	
+	private static final int CANCEL_JOB = 0;
+	private static final int HOLD_JOB = 1;
+	private static final int UNHOLD_JOB = 2;
+	
 	private SortableTableViewer viewer;
 	private NXCSession session = null;
 	private NXCListener clientListener = null;
@@ -86,6 +90,8 @@ public class ServerJobManager extends ViewPart
 	private RefreshAction actionRefresh;
 	private Action actionRestartJob;
 	private Action actionCancelJob;
+	private Action actionHoldJob;
+	private Action actionUnholdJob;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -122,7 +128,9 @@ public class ServerJobManager extends ViewPart
 				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
 				if (selection != null)
 				{
-					actionCancelJob.setEnabled(selection.size()> 0);
+					actionCancelJob.setEnabled(selection.size() > 0);
+					actionHoldJob.setEnabled(selection.size() > 0);
+					actionUnholdJob.setEnabled(selection.size() > 0);
 				}
 			}
 		});
@@ -160,6 +168,9 @@ public class ServerJobManager extends ViewPart
 	{
 		manager.add(actionRestartJob);
 		manager.add(actionCancelJob);
+		manager.add(new Separator());
+		manager.add(actionHoldJob);
+		manager.add(actionUnholdJob);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -201,14 +212,17 @@ public class ServerJobManager extends ViewPart
 	
 	/**
 	 * Fill context menu
-	 * @param mgr Menu manager
+	 * @param manager Menu manager
 	 */
-	protected void fillContextMenu(IMenuManager mgr)
+	protected void fillContextMenu(IMenuManager manager)
 	{
-		mgr.add(actionRestartJob);
-		mgr.add(actionCancelJob);
-		mgr.add(new Separator());
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(actionRestartJob);
+		manager.add(actionCancelJob);
+		manager.add(new Separator());
+		manager.add(actionHoldJob);
+		manager.add(actionUnholdJob);
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	/**
@@ -217,9 +231,6 @@ public class ServerJobManager extends ViewPart
 	private void createActions()
 	{
 		actionRefresh = new RefreshAction() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
 			@Override
 			public void run()
 			{
@@ -227,31 +238,42 @@ public class ServerJobManager extends ViewPart
 			}
 		};
 		
-		actionCancelJob = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionCancelJob = new Action("&Cancel") {
 			@Override
 			public void run()
 			{
 				cancelServerJob();
 			}
-
 		};
-		actionCancelJob.setText("Cancel");
 		actionCancelJob.setImageDescriptor(Activator.getImageDescriptor("icons/cancel.png"));
 		actionCancelJob.setEnabled(false);
 		
-		actionRestartJob = new Action() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionHoldJob = new Action("&Hold") {
+			@Override
+			public void run()
+			{
+				holdServerJob();
+			}
+		};
+		//actionHoldJob.setImageDescriptor(Activator.getImageDescriptor("icons/cancel.png"));
+		actionHoldJob.setEnabled(false);
+		
+		actionUnholdJob = new Action("&Unhold") {
+			@Override
+			public void run()
+			{
+				unholdServerJob();
+			}
+		};
+		//actionUnholdJob.setImageDescriptor(Activator.getImageDescriptor("icons/cancel.png"));
+		actionUnholdJob.setEnabled(false);
+		
+		actionRestartJob = new Action("&Restart") {
 			@Override
 			public void run()
 			{
 			}
 		};
-		actionRestartJob.setText("Restart");
 		actionRestartJob.setEnabled(false);
 	}
 	
@@ -328,8 +350,35 @@ public class ServerJobManager extends ViewPart
 	 */
 	private void cancelServerJob()
 	{
+		doJobAction("Cancel", CANCEL_JOB);
+	}
+	
+	/**
+	 * Hold server job
+	 */
+	private void holdServerJob()
+	{
+		doJobAction("Hold", HOLD_JOB);
+	}
+	
+	/**
+	 * Unhold server job
+	 */
+	private void unholdServerJob()
+	{
+		doJobAction("Unhold", UNHOLD_JOB);
+	}
+	
+	/**
+	 * Do job action: cancel, hold, unhold
+	 * 
+	 * @param actionName
+	 * @param actionId
+	 */
+	private void doJobAction(final String actionName, final int actionId)
+	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		new ConsoleJob("Cancel server jobs", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(actionName + " server jobs", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@SuppressWarnings("rawtypes")
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -341,7 +390,20 @@ public class ServerJobManager extends ViewPart
 					if (object instanceof NXCServerJob)
 					{
 						final NXCServerJob jobObject = (NXCServerJob)object;
-						session.cancelServerJob(jobObject.getId());
+						switch(actionId)
+						{
+							case CANCEL_JOB: 
+								session.cancelServerJob(jobObject.getId());
+								break;
+							case HOLD_JOB: 
+								session.holdServerJob(jobObject.getId());
+								break;
+							case UNHOLD_JOB: 
+								session.unholdServerJob(jobObject.getId());
+								break;
+							default:
+								throw new NXCException(RCC.INTERNAL_ERROR);
+						}
 					}
 					else
 					{
@@ -353,7 +415,7 @@ public class ServerJobManager extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot cancel server job";
+				return "Cannot " + actionName.toLowerCase() + " server job";
 			}
 
 			@Override

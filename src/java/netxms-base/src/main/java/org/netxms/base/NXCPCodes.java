@@ -278,6 +278,8 @@ public final class NXCPCodes
 	public static final int CMD_CLOSE_CONSOLE           = 0x00F8;
 	public static final int CMD_GET_SELECTED_OBJECTS    = 0x00F9;
 	public static final int CMD_GET_VLANS               = 0x00FA;
+	public static final int CMD_HOLD_JOB                = 0x00FB;
+	public static final int CMD_UNHOLD_JOB              = 0x00FC;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -662,6 +664,7 @@ public final class NXCPCodes
 	public static final long VID_DRIVER_NAME             = 380;
 	public static final long VID_DRIVER_VERSION          = 381;
 	public static final long VID_NUM_VLANS               = 382;
+	public static final long VID_CREATE_JOB_ON_HOLD      = 383;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

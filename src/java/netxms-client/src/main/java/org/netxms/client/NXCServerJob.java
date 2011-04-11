@@ -23,7 +23,6 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * Represents server-side job
- * 
  */
 public class NXCServerJob
 {
