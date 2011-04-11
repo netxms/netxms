@@ -334,6 +334,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 	m_nMultiplier = DBGetFieldLong(hResult, iRow, 18);
 	m_pszCustomUnitName = DBGetField(hResult, iRow, 19, NULL, 0);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 20, NULL, 0);
+	m_systemTag[0] = 0;
 	DBGetField(hResult, iRow, 21, m_systemTag, MAX_DB_STRING);
 	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 22);
 
