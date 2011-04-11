@@ -392,6 +392,7 @@ private:
 	DECLARE_THREAD_STARTER(findNodeConnection)
 	DECLARE_THREAD_STARTER(findMacAddress)
 	DECLARE_THREAD_STARTER(processConsoleCommand)
+	DECLARE_THREAD_STARTER(sendMib)
 
    void readThread();
    void writeThread();
@@ -438,7 +439,7 @@ private:
    void SaveEPP(CSCPMessage *pRequest);
    void ProcessEPPRecord(CSCPMessage *pRequest);
    void SendMIBTimestamp(DWORD dwRqId);
-   void SendMIB(DWORD dwRqId);
+   void sendMib(CSCPMessage *request);
    void createObject(CSCPMessage *pRequest);
    void changeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
    void deleteObject(CSCPMessage *pRequest);

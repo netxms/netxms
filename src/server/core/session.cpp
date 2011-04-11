@@ -160,6 +160,7 @@ DEFINE_THREAD_STARTER(executeAction)
 DEFINE_THREAD_STARTER(findNodeConnection)
 DEFINE_THREAD_STARTER(findMacAddress)
 DEFINE_THREAD_STARTER(processConsoleCommand)
+DEFINE_THREAD_STARTER(sendMib)
 
 
 //
@@ -839,7 +840,7 @@ void ClientSession::processingThread()
             SendMIBTimestamp(pMsg->GetId());
             break;
          case CMD_GET_MIB:
-            SendMIB(pMsg->GetId());
+            CALL_IN_NEW_THREAD(sendMib, pMsg);
             break;
          case CMD_CREATE_OBJECT:
             CALL_IN_NEW_THREAD(createObject, pMsg);
@@ -3649,14 +3650,14 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
 // Send compiled MIB file to client
 //
 
-void ClientSession::SendMIB(DWORD dwRqId)
+void ClientSession::sendMib(CSCPMessage *request)
 {
    TCHAR szBuffer[MAX_PATH];
 
    // Send compiled MIB file
    _tcscpy(szBuffer, g_szDataDir);
    _tcscat(szBuffer, DFILE_COMPILED_MIB);
-   SendFileOverNXCP(m_hSocket, dwRqId, szBuffer, m_pCtx, 0, NULL, NULL);
+	SendFileOverNXCP(m_hSocket, request->GetId(), szBuffer, m_pCtx, 0, NULL, NULL);
 }
 
 
