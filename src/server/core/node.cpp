@@ -239,7 +239,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	DBGetFieldA(hResult, 0, 19, snmpAuthObject, 256);
 	DBGetFieldA(hResult, 0, 20, snmpAuthPassword, 256);
 	DBGetFieldA(hResult, 0, 21, snmpPrivPassword, 256);
-	int snmpMethods = DBGetFieldLong(hResult, 0, 21);
+	int snmpMethods = DBGetFieldLong(hResult, 0, 22);
 	delete m_snmpSecurity;
 	m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword, snmpMethods & 0xFF, snmpMethods >> 8);
 	m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
