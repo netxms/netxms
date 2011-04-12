@@ -244,7 +244,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword, snmpMethods & 0xFF, snmpMethods >> 8);
 	m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
 
-	m_sysName = DBGetField(hResult, 0, 22, NULL, 0);
+	m_sysName = DBGetField(hResult, 0, 23, NULL, 0);
 
    DBFreeResult(hResult);
 
