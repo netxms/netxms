@@ -488,6 +488,7 @@ public:
 class NXCORE_EXPORTABLE Interface : public NetObj
 {
 protected:
+	DWORD m_flags;
 	TCHAR m_description[MAX_DB_STRING];	// Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
    DWORD m_dwIfIndex;
    DWORD m_dwIfType;
@@ -501,7 +502,6 @@ protected:
 	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
 	WORD m_dot1xBackendAuthState;	// 802.1x backend auth state
    QWORD m_qwLastDownEventId;
-	bool m_bSyntheticMask;
 	int m_iPendingStatus;
 	int m_iPollCount;
 	int m_iRequiredPollCount;
@@ -529,7 +529,8 @@ public:
 	DWORD getPeerInterfaceId() { return m_peerInterfaceId; }
 	const TCHAR *getDescription() { return m_description; }
    const BYTE *getMacAddr() { return m_bMacAddr; }
-	bool isSyntheticMask() { return m_bSyntheticMask; }
+	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
+	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
    bool isFake() { return (m_dwIfIndex == 1) && 
                           (m_dwIfType == IFTYPE_OTHER) &&
                           (!_tcscmp(m_szName, _T("lan0")) || !_tcscmp(m_szName, _T("unknown"))) &&
@@ -544,6 +545,7 @@ public:
    void setBridgePortNumber(DWORD bpn) { m_bridgePortNumber = bpn; Modify(); }
    void setSlotNumber(DWORD slot) { m_slotNumber = slot; Modify(); }
    void setPortNumber(DWORD port) { m_portNumber = port; Modify(); }
+	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
 	void setPeer(DWORD nodeId, DWORD ifId) { m_peerNodeId = nodeId; m_peerInterfaceId = ifId; Modify(); }
    void setDescription(const TCHAR *descr) { nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); }
 
@@ -759,7 +761,7 @@ public:
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    void createNewInterface(DWORD dwAddr, DWORD dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
                            DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL, DWORD bridgePort = 0,
-									DWORD slot = 0, DWORD port = 0);
+									DWORD slot = 0, DWORD port = 0, bool physPort = false);
    void deleteInterface(Interface *pInterface);
 
    void changeIPAddress(DWORD dwIpAddr);

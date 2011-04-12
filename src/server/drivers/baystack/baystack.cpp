@@ -145,6 +145,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		{
 			ifList->get(i)->dwSlotNumber = slot;
 			ifList->get(i)->dwPortNumber = ifList->get(i)->dwIndex % slotSize;
+			ifList->get(i)->isPhysicalPort = true;
 		}
 	}
 

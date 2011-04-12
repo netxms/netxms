@@ -214,6 +214,7 @@ typedef struct
    DWORD dwIpNetMask;
    BYTE bMacAddr[MAC_ADDR_LENGTH];
    int iNumSecondary;      // Number of secondary IP's on this interface
+	bool isPhysicalPort;
 } NX_INTERFACE_INFO;
 
 

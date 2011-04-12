@@ -249,6 +249,26 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V225 to V226
+//
+
+static BOOL H_UpgradeFromV225(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE interfaces ADD flags integer\n")
+		_T("UPDATE interfaces SET flags=0\n")
+		_T("UPDATE interfaces SET flags=1 WHERE synthetic_mask<>0\n")
+		_T("ALTER TABLE interfaces DROP COLUMN synthetic_mask\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='226' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V224 to V225
 //
 
@@ -5160,6 +5180,7 @@ static struct
 	{ 222, 223, H_UpgradeFromV222 },
 	{ 223, 224, H_UpgradeFromV223 },
 	{ 224, 225, H_UpgradeFromV224 },
+	{ 225, 226, H_UpgradeFromV225 },
    { 0, NULL }
 };
 

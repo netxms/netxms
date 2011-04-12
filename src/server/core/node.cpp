@@ -648,15 +648,12 @@ Interface *Node::findInterfaceBySlotAndPort(DWORD slot, DWORD port)
    DWORD i;
    Interface *pInterface;
 
-	if ((slot == 0) || (port == 0))
-		return NULL;
-
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
-			if ((pInterface->getSlotNumber() == slot) && (pInterface->getPortNumber() == port))
+			if (pInterface->isPhysicalPort() && (pInterface->getSlotNumber() == slot) && (pInterface->getPortNumber() == port))
          {
             UnlockChildList();
             return pInterface;
@@ -801,7 +798,7 @@ BOOL Node::isMyIP(DWORD dwIpAddr)
 
 void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name, const TCHAR *descr,
                               DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr, DWORD bridgePort, 
-										DWORD slot, DWORD port)
+										DWORD slot, DWORD port, bool physPort)
 {
    Interface *pInterface;
    Subnet *pSubnet = NULL;
@@ -873,6 +870,7 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 	pInterface->setBridgePortNumber(bridgePort);
 	pInterface->setSlotNumber(slot);
 	pInterface->setPortNumber(port);
+	pInterface->setPhysicalPortFlag(physPort);
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, TRUE);
@@ -1935,6 +1933,10 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
 						{
 							pInterface->setPortNumber(ifInfo->dwPortNumber);
 						}
+						if (ifInfo->isPhysicalPort != pInterface->isPhysicalPort())
+						{
+							pInterface->setPhysicalPortFlag(ifInfo->isPhysicalPort);
+						}
 						if ((ifInfo->dwIpNetMask != 0) && (ifInfo->dwIpNetMask != pInterface->getIpNetMask()))
 						{
 							pInterface->setIpNetMask(ifInfo->dwIpNetMask);
@@ -1959,7 +1961,8 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
                                ifInfo->bMacAddr,
 										 ifInfo->dwBridgePortNumber,
 										 ifInfo->dwSlotNumber,
-										 ifInfo->dwPortNumber);
+										 ifInfo->dwPortNumber,
+										 ifInfo->isPhysicalPort);
             hasChanges = TRUE;
          }
       }

@@ -28,6 +28,11 @@ import org.netxms.client.NXCSession;
  */
 public class Interface extends GenericObject
 {
+	// Interface flags
+	public static final int IF_SYNTHETIC_MASK = 0x00000001;
+	public static final int IF_PHYSICAL_PORT  = 0x00000002;
+	
+	private int flags;
 	private InetAddress subnetMask;
 	private int ifIndex;
 	private int ifType;
@@ -47,6 +52,7 @@ public class Interface extends GenericObject
 	{
 		super(msg, session);
 		
+		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		subnetMask = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 		ifIndex = msg.getVariableAsInteger(NXCPCodes.VID_IF_INDEX);
 		ifType = msg.getVariableAsInteger(NXCPCodes.VID_IF_TYPE);
@@ -155,5 +161,13 @@ public class Interface extends GenericObject
 	public String getDescription()
 	{
 		return description;
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
 	}
 }

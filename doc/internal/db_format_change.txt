@@ -1,4 +1,12 @@
 ***************
+* 225 ==> 226 *
+***************
+
+- Column "synthetic_mask" removed from table "interfaces"
+- Columns "flags" added to table "interfaces"
+
+
+***************
 * 224 ==> 225 *
 ***************
 

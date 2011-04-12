@@ -56,7 +56,7 @@ public class GeneralInfo extends TableElement
 				addPair("Interface Type", Integer.toString(iface.getIfType()));
 				addPair("Description", iface.getDescription());
 				addPair("MAC Address", iface.getMacAddress().toString());
-				if ((iface.getSlot() != 0) && (iface.getPort() != 0))
+				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 					addPair("Slot/Port", Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort()));
 				if (!iface.getPrimaryIP().isAnyLocalAddress())
 				{

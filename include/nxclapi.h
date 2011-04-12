@@ -239,6 +239,14 @@ typedef void * NXC_SESSION;
 
 
 //
+// Interface flags
+//
+
+#define IF_SYNTHETIC_MASK        0x00000001
+#define IF_PHYSICAL_PORT         0x00000002
+
+
+//
 // Node ifXTable usage mode
 //
 
@@ -1049,6 +1057,7 @@ typedef struct
 
 struct __nxc_object_iface
 {
+	DWORD dwFlags;
    DWORD dwIpNetMask;   // Ip netmask.
    DWORD dwIfIndex;     // Interface index.
    DWORD dwIfType;      // Interface type

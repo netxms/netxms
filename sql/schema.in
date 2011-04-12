@@ -298,6 +298,7 @@ CREATE TABLE interfaces
 (
 	id integer not null,
 	node_id integer not null,
+	flags integer not null,
 	ip_addr varchar(15) not null,
 	ip_netmask varchar(15) not null,
 	if_type integer not null,
@@ -308,7 +309,6 @@ CREATE TABLE interfaces
 	peer_node_id integer not null,
 	peer_if_id integer not null,
 	mac_addr varchar(15) not null,
-	synthetic_mask integer not null,
 	required_polls integer not null,
 	description varchar(255),
 	PRIMARY KEY(id)

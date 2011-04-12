@@ -78,6 +78,7 @@ InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		{
 			ifList->get(i)->dwSlotNumber = slot;
 			ifList->get(i)->dwPortNumber = ifList->get(i)->dwIndex % 64 + 1;
+			ifList->get(i)->isPhysicalPort = true;
 		}
 	}
 

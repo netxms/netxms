@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -269,6 +269,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    switch(pObject->iClass)
    {
       case OBJECT_INTERFACE:
+			pObject->iface.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
          pObject->iface.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
          pObject->iface.dwIfIndex = pMsg->GetVariableLong(VID_IF_INDEX);
          pObject->iface.dwIfType = pMsg->GetVariableLong(VID_IF_TYPE);
