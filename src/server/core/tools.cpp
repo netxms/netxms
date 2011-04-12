@@ -78,7 +78,7 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
 {
 #ifdef _WIN32
-   DWORD dwSize = bufSize;
+   DWORD dwSize = (DWORD)bufSize;
    GetComputerName(buffer, &dwSize);
 #else
 #ifdef HAVE_SYS_UTSNAME_H

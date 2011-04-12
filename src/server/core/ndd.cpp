@@ -97,7 +97,7 @@ void LoadNetworkDeviceDrivers()
 	if (dir != NULL)
 	{
 		_tcscat(path, FS_PATH_SEPARATOR);
-		int insPos = _tcslen(path);
+		int insPos = (int)_tcslen(path);
 
 		struct _tdirent *f;
 		while((f = _treaddir(dir)) != NULL)

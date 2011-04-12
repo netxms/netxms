@@ -46,7 +46,7 @@ static Interface *FindRemoteInterface(Node *node, DWORD idType, BYTE *id, size_t
 			return NULL;
 		case 5:	// Interface name
 #ifdef UNICODE
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)id, idLen, ifName, 128);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)id, (int)idLen, ifName, 128);
 			ifName[min(idLen, 127)] = 0;
 #else
 			{
