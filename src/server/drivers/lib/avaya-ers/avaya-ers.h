@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for Avaya ERS 8xxx switches (former Nortel/Bay Networks Passport)
+** Generic driver for Avaya ERS switches (former Nortel)
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,32 +17,38 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: baystack.h
+** File: avaya-ers.h
 **
 **/
 
-#ifndef _baystack_h_
-#define _baystack_h_
+#ifndef _avaya_ers_h_
+#define _avaya_ers_h_
 
 #include <nddrv.h>
-#include "../lib/avaya-ers/avaya-ers.h"
+
+#ifdef _WIN32
+#ifdef AVAYAERS_EXPORTS
+#define AVAYA_ERS_EXPORTABLE __declspec(dllexport)
+#else
+#define AVAYA_ERS_EXPORTABLE __declspec(dllimport)
+#endif
+#else
+#define AVAYA_ERS_EXPORTABLE
+#endif
 
 
 /**
  * Driver's class
  */
-class BayStackDriver : public AvayaERSDriver
+class AVAYA_ERS_EXPORTABLE AvayaERSDriver : public NetworkDeviceDriver
 {
 protected:
 	virtual DWORD getSlotSize(StringMap *attributes);
 
-public:
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
+	void getVlanInterfaces(SNMP_Transport *pTransport, InterfaceList *pIfList);
 
-	virtual bool isDeviceSupported(const TCHAR *oid);
-	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable);
+public:
+	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes);
 };
 
 #endif

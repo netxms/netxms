@@ -82,7 +82,7 @@ InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		}
 	}
 
-	GetVLANInterfaces(snmp, ifList);
+	getVlanInterfaces(snmp, ifList);
 
 	return ifList;
 }

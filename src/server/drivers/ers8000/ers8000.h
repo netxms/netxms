@@ -25,12 +25,13 @@
 #define _ers8000_h_
 
 #include <nddrv.h>
+#include "../lib/avaya-ers/avaya-ers.h"
 
 
 /**
  * Driver's class
  */
-class PassportDriver : public NetworkDeviceDriver
+class PassportDriver : public AvayaERSDriver
 {
 public:
 	virtual const TCHAR *getName();
@@ -39,10 +40,5 @@ public:
 	virtual bool isDeviceSupported(const TCHAR *oid);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable);
 };
-
-/**
- * Functions
- */
-void GetVLANInterfaces(SNMP_Transport *pTransport, InterfaceList *pIfList);
 
 #endif

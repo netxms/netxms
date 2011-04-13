@@ -1,10 +1,9 @@
 0 - 499		System events
 500 - 510	Well-known SNMP traps
 4000 - 4999	Predefined threshold violation events
+80000 - 80999   VEDAS
 89000 - 89899   XFS subagent
 89900 - 89999   AVS (ATM Video Surveillance) subsystem
 90000 - 90999	Agilis monitoring subagent
 91000 - 91099   Cortex monitoring subagent
 100000 - ...	User-defined events
-
-80000-80999	Vedas

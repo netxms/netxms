@@ -92,6 +92,17 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
 }
 
 /**
+ * Get slot size from object's custom attributes. Default implementation always return constant value 64.
+ *
+ * @param attributes object's custom attributes
+ * @return slot size
+ */
+DWORD BayStackDriver::getSlotSize(StringMap *attributes)
+{
+	return attributes->getULong(_T(".baystack.slotSize"), 64);
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
@@ -150,7 +161,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	}
 
 	if (attributes->getULong(_T(".baystack.rapidCity.vlan"), 0) > 0)
-		GetVLANInterfaces(snmp, ifList);
+		getVlanInterfaces(snmp, ifList);
 
 	DWORD mgmtIpAddr, mgmtNetMask;
 	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(DWORD), 0) == SNMP_ERR_SUCCESS) &&
