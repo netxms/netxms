@@ -694,11 +694,13 @@ int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
 // cannot handle them all
 //
 
-int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff,
-		                          size_t nSize, int nFlags)
+int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff, size_t nSize, int nFlags, MUTEX mutex)
 {
 	int nLeft = (int)nSize;
 	int nRet;
+
+	if (mutex != NULL)
+		MutexLock(mutex, INFINITE);
 
 	do
 	{
@@ -728,6 +730,9 @@ retry:
 		}
 		nLeft -= nRet;
 	} while (nLeft > 0);
+
+	if (mutex != NULL)
+		MutexUnlock(mutex);
 
 	return nLeft == 0 ? (int)nSize : nRet;
 }

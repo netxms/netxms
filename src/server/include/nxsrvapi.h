@@ -512,6 +512,7 @@ private:
 	DWORD m_recvTimeout;
    MsgWaitQueue *m_msgWaitQueue;
    MUTEX m_mutexDataLock;
+	MUTEX m_socketLock;
    THREAD m_hReceiverThread;
    CSCP_ENCRYPTION_CONTEXT *m_ctx;
 	DWORD m_commandTimeout;

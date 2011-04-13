@@ -186,8 +186,6 @@ typedef void CSCPMessage;
 //
 
 #ifdef __cplusplus
-extern "C" {
-#endif
 
 int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
                                          CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize,
@@ -204,8 +202,9 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, 
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCHAR *pszFile,
                                            CSCP_ENCRYPTION_CONTEXT *pCtx, long offset,
-														 void (* progressCallback)(INT64, void *), void *cbArg);
-BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion);
+														 void (* progressCallback)(INT64, void *), void *cbArg,
+														 MUTEX mutex);
+BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
    
 BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers);
 DWORD LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers(void);
@@ -227,8 +226,6 @@ BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const 
 												          BYTE *pBuffer, DWORD dwBufSize, DWORD *pdwSigLen);
 #endif
 
-#ifdef __cplusplus
-}
 #endif
 
 #endif   /* _nxcpapi_h_ */

@@ -113,7 +113,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
          // Send request
          pRawMsg = msg.CreateMessage();
          nLen = ntohl(pRawMsg->dwSize);
-         if (SendEx(hSocket, pRawMsg, nLen, 0) == nLen)
+         if (SendEx(hSocket, pRawMsg, nLen, 0, NULL) == nLen)
          {
             pRawMsg = (CSCP_MESSAGE *)realloc(pRawMsg, MAX_MSG_SIZE);
             pBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));

@@ -93,6 +93,7 @@ ISC::ISC()
    m_recvTimeout = 420000;  // 7 minutes
 	m_commandTimeout = 10000;	// 10 seconds
    m_mutexDataLock = MutexCreate();
+	m_socketLock = MutexCreate();
 }
 
 
@@ -113,6 +114,7 @@ ISC::ISC(DWORD addr, WORD port)
    m_recvTimeout = 420000;  // 7 minutes
 	m_commandTimeout = 10000;	// 10 seconds
    m_mutexDataLock = MutexCreate();
+	m_socketLock = MutexCreate();
 }
 
 
@@ -141,6 +143,7 @@ ISC::~ISC()
    DestroyEncryptionContext(m_ctx);
 
    MutexDestroy(m_mutexDataLock);
+	MutexDestroy(m_socketLock);
 }
 
 
@@ -164,7 +167,7 @@ void ISC::PrintMsg(const TCHAR *format, ...)
 // Receiver thread
 //
 
-void ISC::ReceiverThread(void)
+void ISC::ReceiverThread()
 {
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
@@ -319,7 +322,7 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
 	// Set non-blocking mode
 	SetSocketNonBlocking(m_socket);
 	
-   if (!NXCPGetPeerProtocolVersion(m_socket, &m_protocolVersion))
+   if (!NXCPGetPeerProtocolVersion(m_socket, &m_protocolVersion, m_socketLock))
    {
 		rcc = ISC_ERR_INVALID_NXCP_VERSION;
       PrintMsg(_T("Cannot detect NXCP version for ISC peer %s"),
@@ -441,7 +444,7 @@ BOOL ISC::SendMessage(CSCPMessage *pMsg)
       pEnMsg = CSCPEncryptMessage(m_ctx, pRawMsg);
       if (pEnMsg != NULL)
       {
-         bResult = (SendEx(m_socket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) == (int)ntohl(pEnMsg->dwSize));
+         bResult = (SendEx(m_socket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_socketLock) == (int)ntohl(pEnMsg->dwSize));
          free(pEnMsg);
       }
       else
@@ -451,7 +454,7 @@ BOOL ISC::SendMessage(CSCPMessage *pMsg)
    }
    else
    {
-      bResult = (SendEx(m_socket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+      bResult = (SendEx(m_socket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_socketLock) == (int)ntohl(pRawMsg->dwSize));
    }
    free(pRawMsg);
    return bResult;

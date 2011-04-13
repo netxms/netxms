@@ -99,7 +99,7 @@ int NetRead(SOCKET nSocket, char *pBuff, int nSize)
 
 int NetWrite(SOCKET nSocket, const char *pBuff, int nSize)
 {
-	return SendEx(nSocket, pBuff, nSize, 0);
+	return SendEx(nSocket, pBuff, nSize, 0, NULL);
 }
 
 void NetClose(SOCKET nSocket)

@@ -120,6 +120,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr,
    m_hCurrFile = -1;
    m_pCtx = NULL;
    m_ts = time(NULL);
+	m_socketWriteMutex = MutexCreate();
 }
 
 
@@ -139,6 +140,7 @@ CommSession::~CommSession()
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
    DestroyEncryptionContext(m_pCtx);
+	MutexDestroy(m_socketWriteMutex);
 }
 
 
@@ -219,7 +221,7 @@ void CommSession::readThread()
       if (m_bProxyConnection)
       {
          // Forward received message to remote peer
-         SendEx(m_hProxySocket, (char *)pRawMsg, iErr, 0);
+         SendEx(m_hProxySocket, (char *)pRawMsg, iErr, 0, NULL);
       }
       else
       {
@@ -353,7 +355,7 @@ BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
       free(pMsg);
       if (pEnMsg != NULL)
       {
-         if (SendEx(m_hSocket, (const char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) <= 0)
+         if (SendEx(m_hSocket, (const char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_socketWriteMutex) <= 0)
          {
             bResult = FALSE;
          }
@@ -362,7 +364,7 @@ BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
    }
    else
    {
-      if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
+      if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0, m_socketWriteMutex) <= 0)
       {
          bResult = FALSE;
       }
@@ -782,7 +784,7 @@ static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 
 bool CommSession::sendFile(DWORD requestId, const TCHAR *file, long offset)
 {
-	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this) ? true : false;
+	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
 }
 
 
@@ -979,7 +981,7 @@ void CommSession::proxyReadThread()
          nRet = recv(m_hProxySocket, pBuffer, 8192, 0);
          if (nRet <= 0)
             break;
-         SendEx(m_hSocket, pBuffer, nRet, 0);
+         SendEx(m_hSocket, pBuffer, nRet, 0, m_socketWriteMutex);
       }
    }
    disconnect();

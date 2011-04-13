@@ -172,7 +172,7 @@ static void Exchange(SOCKET hSocket)
 		msg = new CSCPMessage(xml);
 		rawMsg = msg->CreateMessage();
 		delete msg;
-		if ((DWORD)SendEx(hSocket, rawMsg, ntohl(rawMsg->dwSize), 0) != ntohl(rawMsg->dwSize))
+		if ((DWORD)SendEx(hSocket, rawMsg, ntohl(rawMsg->dwSize), 0, NULL) != ntohl(rawMsg->dwSize))
 		{
 			printf("Error sending message\n");
 			free(rawMsg);

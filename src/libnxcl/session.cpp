@@ -269,7 +269,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
       pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
       if (pEnMsg != NULL)
       {
-         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) == (int)ntohl(pEnMsg->dwSize));
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, NULL) == (int)ntohl(pEnMsg->dwSize));
          free(pEnMsg);
       }
       else
@@ -279,7 +279,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
    }
    else
    {
-      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, NULL) == (int)ntohl(pRawMsg->dwSize));
    }
 	MutexUnlock(m_mutexSendMsg);
    free(pRawMsg);
@@ -852,7 +852,7 @@ DWORD NXCL_Session::LoadUserDB(void)
 
 DWORD NXCL_Session::SendFile(DWORD dwRqId, TCHAR *pszFileName)
 {
-   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, 0, NULL, NULL) ? RCC_SUCCESS : RCC_IO_ERROR;
+   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx, 0, NULL, NULL, m_mutexSendMsg) ? RCC_SUCCESS : RCC_IO_ERROR;
 }
 
 

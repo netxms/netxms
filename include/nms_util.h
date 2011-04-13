@@ -580,18 +580,20 @@ typedef struct _dir_struc_w
    }
 #endif
 #else
-   TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen);
+TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen);
+#endif
+
+#ifdef __cplusplus
+int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWORD timeout);
+int LIBNETXMS_EXPORTABLE SendEx(SOCKET, const void *, size_t, int, MUTEX);
+int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
+                                size_t nSize, int nFlags, DWORD dwTimeout);
 #endif
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-	int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, DWORD timeout);
-	int LIBNETXMS_EXPORTABLE SendEx(SOCKET, const void *, size_t, int);
-   int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
-                                   size_t nSize, int nFlags, DWORD dwTimeout);
-
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
    DWORD LIBNETXMS_EXPORTABLE __bswap_32(DWORD dwVal);
 #endif

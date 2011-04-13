@@ -243,7 +243,7 @@ public:
    DWORD GetCurrentUserId(void) { return m_dwUserId; }
    DWORD GetCurrentSystemAccess(void) { return m_dwSystemAccess; }
    BOOL NeedPasswordChange(void) { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
-   BOOL IsDBConnLost(void) { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
+   BOOL IsDBConnLost() { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
 
    void setLastLock(const TCHAR *pszLock) { nx_strncpy(m_szLastLock, pszLock, MAX_LOCKINFO_LEN); }
    const TCHAR *getLastLock() { return m_szLastLock; }

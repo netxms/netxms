@@ -503,7 +503,8 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, 
 
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCHAR *pszFile,
                                            CSCP_ENCRYPTION_CONTEXT *pCtx, long offset,
-														 void (* progressCallback)(INT64, void *), void *cbArg)
+														 void (* progressCallback)(INT64, void *), void *cbArg,
+														 MUTEX mutex)
 {
 #ifndef UNDER_CE
    int hFile, iBytes;
@@ -560,13 +561,13 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
 					pEnMsg = CSCPEncryptMessage(pCtx, pMsg);
 					if (pEnMsg != NULL)
 					{
-						SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0);
+						SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, mutex);
 						free(pEnMsg);
 					}
 				}
 				else
 				{
-					if (SendEx(hSocket, (char *)pMsg, (DWORD)iBytes + CSCP_HEADER_SIZE + dwPadding, 0) <= 0)
+					if (SendEx(hSocket, (char *)pMsg, (DWORD)iBytes + CSCP_HEADER_SIZE + dwPadding, 0, mutex) <= 0)
 						break;	// Send error
 				}
 
@@ -608,13 +609,13 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
          pEnMsg = CSCPEncryptMessage(pCtx, &msg);
          if (pEnMsg != NULL)
          {
-            SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0);
+            SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, mutex);
             free(pEnMsg);
          }
       }
       else
       {
-         SendEx(hSocket, (char *)&msg, CSCP_HEADER_SIZE, 0);
+         SendEx(hSocket, (char *)&msg, CSCP_HEADER_SIZE, 0, mutex);
       }
    }
 
@@ -626,7 +627,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
 // Get version of NXCP used by peer
 //
 
-BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion)
+BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex)
 {
    CSCP_MESSAGE msg;
    CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
@@ -639,7 +640,7 @@ BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
    msg.dwSize = htonl(CSCP_HEADER_SIZE);
    msg.wCode = htons(CMD_GET_NXCP_CAPS);
    msg.wFlags = htons(MF_CONTROL);
-   if (SendEx(hSocket, &msg, CSCP_HEADER_SIZE, 0) == CSCP_HEADER_SIZE)
+   if (SendEx(hSocket, &msg, CSCP_HEADER_SIZE, 0, mutex) == CSCP_HEADER_SIZE)
    {
       pBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
       RecvNXCPMessage(0, NULL, pBuffer, 0, NULL, NULL, 0);
