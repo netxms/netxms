@@ -125,7 +125,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
 	0, NULL,	// tables
-   sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+	m_actions,
 	0, NULL	// push parameters
 };
 
