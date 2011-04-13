@@ -44,11 +44,12 @@ public class NXCPMessageReceiver
 	 * @return message size in bytes
 	 * @throws IOException
 	 */
-	private int getMessageSize(final byte[] header) throws IOException
+	private long getMessageSize(final byte[] header) throws IOException
 	{
-		final DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(header));
-		inputStream.skipBytes(4);
-		return inputStream.readInt();
+		return (((long)header[4] << 24) & 0xFF000000) | 
+		       (((long)header[5] << 16) & 0x00FF0000) | 
+		       (((long)header[6] << 8) & 0x0000FF00) |
+		       ((long)header[7] & 0x000000FF);
 	}
 	
 	/**
@@ -64,12 +65,12 @@ public class NXCPMessageReceiver
 
 		if (bufferPos >= NXCPMessage.HEADER_SIZE)
 		{
-			final int size = getMessageSize(recvBuffer);
+			final long size = getMessageSize(recvBuffer);
 			if (size <= bufferPos)
 			{
 				// Entire message in buffer, create new message object
 				msg = new NXCPMessage(recvBuffer);
-				System.arraycopy(recvBuffer, size, recvBuffer, 0, bufferPos - size);
+				System.arraycopy(recvBuffer, (int)size, recvBuffer, 0, bufferPos - (int)size);
 				bufferPos -= size;
 			}
 			else if (size > recvBuffer.length)
