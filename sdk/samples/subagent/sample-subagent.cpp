@@ -1,6 +1,6 @@
 /*
-** Skeleton NetXMS subagent
-** Copyright 2011 RadenSolutions
+** Sample NetXMS subagent
+** Copyright (c) 2011 RadenSolutions
 **
 ** This software is provided 'as-is', without any express or implied
 ** warranty.  In no event will the authors be held liable for any damages
@@ -22,12 +22,6 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-
-#ifdef _WIN32
-#define SKELETON_EXPORTABLE __declspec(dllexport) __cdecl
-#else
-#define SKELETON_EXPORTABLE
-#endif
 
 
 //
@@ -83,7 +77,7 @@ static LONG H_ActionSample(const TCHAR *action, StringList *argumentsList, const
 static BOOL SubAgentInit(Config *config)
 {
 	/* you can perform any initialization tasks here */
-	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Skeleton subagent initialized"));
+	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Sample subagent initialized"));
 	return TRUE;
 }
 
@@ -95,7 +89,7 @@ static BOOL SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
 	/* you can perform necessary shutdown tasks here */
-	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Skeleton subagent unloaded"));
+	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Sample subagent unloaded"));
 }
 
 
@@ -105,26 +99,26 @@ static void SubAgentShutdown()
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ "Skeleton.Version",				H_Version,				NULL,
-		DCI_DT_STRING, "Skeleton version" },
+	{ "Sample.Version",				H_Version,				NULL,
+		DCI_DT_STRING, "Sample subagent version" },
 	{ "Skeleton.Echo(*)",				H_Echo,					NULL,
 		DCI_DT_STRING, "Echoes string back" },
-	{ "Skeleton.Random",					H_Random,				NULL,
+	{ "Sample.Random",					H_Random,				NULL,
 		DCI_DT_INT,    "Generates random number in range -10 .. 10" }
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-	{ "Skeleton.List", H_Enum, NULL }
+	{ "Sample.List", H_Enum, NULL }
 };
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
-	{ "Skeleton.Action",					H_ActionSample, NULL, "Skeleton action" },
+	{ "Sample.Action",					H_ActionSample, NULL, "Sample action" },
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("SKELETON"), _T("1.0.0"),
+	_T("SAMPLE"), _T("1.0.0"),
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
@@ -140,7 +134,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_ENTRY_POINT(SKELETON)
+DECLARE_SUBAGENT_ENTRY_POINT(SAMPLE)
 {
 	*ppInfo = &m_info;
 	return TRUE;

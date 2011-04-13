@@ -118,4 +118,13 @@ Source: "..\..\doc\internal\event_code_ranges.txt"; DestDir: "{app}\doc"; Flags:
 Source: "..\..\doc\internal\nxcp_command_ranges.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;
 Source: "..\..\doc\internal\unicode.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;
 Source: "..\..\doc\manuals\nxcp_reference.pdf"; DestDir: "{app}\doc"; Flags: ignoreversion;
+; Examples
+Source: "..\samples\samples.sln"; DestDir: "{app}\samples"; Flags: ignoreversion;
+Source: "..\samples\subagent\sample-subagent.cpp"; DestDir: "{app}\samples\subagent"; Flags: ignoreversion;
+Source: "..\samples\subagent\sample-subagent.vcproj"; DestDir: "{app}\samples\subagent"; Flags: ignoreversion;
+; OpenSSL headers and libs
+Source: "..\openssl\include\*.h"; DestDir: "{app}\include\openssl"; Flags: ignoreversion;
+Source: "..\openssl\include\*.c"; DestDir: "{app}\include\openssl"; Flags: ignoreversion;
+Source: "..\openssl\lib\x86\*.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
+Source: "..\openssl\lib\x64\*.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 

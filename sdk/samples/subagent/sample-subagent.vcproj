@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="skeleton"
+	Name="sample-subagent"
 	ProjectGUID="{94F0ABB3-5B3E-483B-8B3B-E9E4D3BAC65A}"
 	RootNamespace="skeleton"
 	Keyword="Win32Proj"
@@ -342,7 +342,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\skeleton.cpp"
+				RelativePath=".\sample-subagent.cpp"
 				>
 			</File>
 		</Filter>
