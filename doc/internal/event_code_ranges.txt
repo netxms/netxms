@@ -6,3 +6,5 @@
 90000 - 90999	Agilis monitoring subagent
 91000 - 91099   Cortex monitoring subagent
 100000 - ...	User-defined events
+
+80000-80999	Vedas
