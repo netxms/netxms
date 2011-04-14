@@ -107,6 +107,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
    m_bIsConnected = FALSE;
    m_mutexDataLock = MutexCreate();
+	m_mutexSocketWrite = MutexCreate();
    m_hReceiverThread = INVALID_THREAD_HANDLE;
    m_pCtx = NULL;
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
@@ -155,6 +156,7 @@ AgentConnection::~AgentConnection()
 	}
 
    MutexDestroy(m_mutexDataLock);
+	MutexDestroy(m_mutexSocketWrite);
 	ConditionDestroy(m_condFileDownload);
 }
 
@@ -399,7 +401,7 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError, D
       goto connect_cleanup;
    }
 
-   if (!NXCPGetPeerProtocolVersion(m_hSocket, &m_nProtocolVersion))
+   if (!NXCPGetPeerProtocolVersion(m_hSocket, &m_nProtocolVersion, m_mutexSocketWrite))
    {
       dwError = ERR_INTERNAL_ERROR;
       goto connect_cleanup;
@@ -801,7 +803,7 @@ BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
       pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
       if (pEnMsg != NULL)
       {
-         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) == (int)ntohl(pEnMsg->dwSize));
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
          free(pEnMsg);
       }
       else
@@ -811,7 +813,7 @@ BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
    }
    else
    {
-      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
    }
    free(pRawMsg);
    return bResult;
@@ -1061,7 +1063,7 @@ DWORD AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinati
    if (dwResult == ERR_SUCCESS)
    {
 		m_fileUploadInProgress = true;
-      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, m_pCtx, 0, progressCallback, cbArg))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, m_pCtx, 0, progressCallback, cbArg, m_mutexSocketWrite))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;

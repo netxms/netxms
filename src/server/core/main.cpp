@@ -457,7 +457,7 @@ static void SendConsoleMessage(ClientSession *session, void *arg)
 
 		msg.SetCode(CMD_ADM_MESSAGE);
 		msg.SetVariable(VID_MESSAGE, (TCHAR *)arg);
-		session->sendMessage(&msg);
+		session->postMessage(&msg);
 	}
 }
 
@@ -1444,6 +1444,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 #endif
 
 		ctx.hSocket = -1;
+		ctx.socketMutex = INVALID_MUTEX_HANDLE;
 		ctx.pMsg = NULL;
 		ctx.session = NULL;
 		WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Ready\n")

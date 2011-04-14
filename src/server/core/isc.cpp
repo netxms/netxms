@@ -110,7 +110,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
             pRawMsgOut->wFlags = htons(MF_CONTROL);
             pRawMsgOut->dwNumVars = htonl(NXCP_VERSION << 24);
             pRawMsgOut->dwSize = htonl(CSCP_HEADER_SIZE);
-				if (SendEx(sock, pRawMsgOut, CSCP_HEADER_SIZE, 0) != CSCP_HEADER_SIZE)
+				if (SendEx(sock, pRawMsgOut, CSCP_HEADER_SIZE, 0, NULL) != CSCP_HEADER_SIZE)
 					DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
 				free(pRawMsgOut);
          }
@@ -179,7 +179,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 			response.SetCode(CMD_REQUEST_COMPLETED);
 			pRawMsgOut = response.CreateMessage();
 			DbgPrintf(5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.GetCode(), buffer));
-			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0) != (int)ntohl(pRawMsgOut->dwSize))
+			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0, NULL) != (int)ntohl(pRawMsgOut->dwSize))
 				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
       
 			response.DeleteAllVariables();

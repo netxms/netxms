@@ -162,7 +162,7 @@ static THREAD_RESULT THREAD_CALL ClientHandler(void *pArg)
 	            (*pq != 0) ? _T("?") :  _T(""), pq);
 
 	ptr = resp.BuildStream(size);
-	SendEx(CAST_FROM_POINTER(pArg, SOCKET), ptr, size, 0);
+	SendEx(CAST_FROM_POINTER(pArg, SOCKET), ptr, size, 0, NULL);
 	free(ptr);
 
 	shutdown(CAST_FROM_POINTER(pArg, SOCKET), SHUT_RDWR);

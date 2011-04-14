@@ -193,7 +193,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   if (iResp == 220)
                   {
                      iState = STATE_HELLO;
-                     SendEx(hSocket, "HELO netxms\r\n", 13, 0);
+                     SendEx(hSocket, "HELO netxms\r\n", 13, 0, NULL);
                   }
                   else
                   {
@@ -206,7 +206,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   {
                      iState = STATE_FROM;
                      snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", m_szFromAddr);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                   }
                   else
                   {
@@ -219,7 +219,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   {
                      iState = STATE_RCPT;
                      snprintf(szBuffer, SMTP_BUFFER_SIZE, "RCPT TO: <%s>\r\n", pszRcpt);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                   }
                   else
                   {
@@ -231,7 +231,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   if (iResp == 250)
                   {
                      iState = STATE_DATA;
-                     SendEx(hSocket, "DATA\r\n", 6, 0);
+                     SendEx(hSocket, "DATA\r\n", 6, 0, NULL);
                   }
                   else
                   {
@@ -247,13 +247,13 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      // Mail headers
                      // from
                      snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: %s <%s>\r\n", m_szFromName, m_szFromAddr);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      // to
                      snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      // subject
                      snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: %s\r\n", pszSubject);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      
 							// date
                      time_t currentTime;
@@ -278,16 +278,16 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
 #endif
 
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      // content-type
                      snprintf(szBuffer, SMTP_BUFFER_SIZE,
                                        "Content-Type: text/plain; charset=%s\r\n"
                                        "Content-Transfer-Encoding: 8bit\r\n\r\n", szEncoding);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
 
                      // Mail body
-                     SendEx(hSocket, pszText, strlen(pszText), 0);
-                     SendEx(hSocket, "\r\n.\r\n", 5, 0);
+                     SendEx(hSocket, pszText, strlen(pszText), 0, NULL);
+                     SendEx(hSocket, "\r\n.\r\n", 5, 0, NULL);
                   }
                   else
                   {
@@ -299,7 +299,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   if (iResp == 250)
                   {
                      iState = STATE_QUIT;
-                     SendEx(hSocket, "QUIT\r\n", 6, 0);
+                     SendEx(hSocket, "QUIT\r\n", 6, 0, NULL);
                   }
                   else
                   {

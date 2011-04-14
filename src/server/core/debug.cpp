@@ -96,12 +96,12 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
       pCtx->pMsg->SetVariable(VID_MESSAGE, szBuffer);
 		if (pCtx->session != NULL)
 		{
-			pCtx->session->sendMessage(pCtx->pMsg);
+			pCtx->session->postMessage(pCtx->pMsg);
 		}
 		else
 		{
 			CSCP_MESSAGE *pRawMsg = pCtx->pMsg->CreateMessage();
-			SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0);
+			SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0, pCtx->socketMutex);
 			free(pRawMsg);
 		}
    }

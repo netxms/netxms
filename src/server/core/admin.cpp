@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    RecvNXCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
    ctx.hSocket = sock;
+	ctx.socketMutex = MutexCreate();
    ctx.pMsg = &response;
 	ctx.session = NULL;
 
@@ -82,7 +83,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 
       response.SetCode(CMD_REQUEST_COMPLETED);
       pRawMsgOut = response.CreateMessage();
-      SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
+		SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0, ctx.socketMutex);
       
       free(pRawMsgOut);
       delete pRequest;
@@ -93,6 +94,7 @@ close_session:
    closesocket(sock);
    free(pRawMsg);
    free(pRecvBuffer);
+	MutexDestroy(ctx.socketMutex);
    return THREAD_OK;
 }
 
@@ -170,62 +172,3 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    closesocket(sock);
    return THREAD_OK;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.17  2006/07/25 22:05:49  victor
-Fixed some memory leaks:
-
-Server
-1. admin.cpp - ProcessingThread()
-2. events.cpp - ReloadEvents(), DeleteEventTemplateFromList()
-3. objtools.cpp - GetAgentTable()
-4. session.cpp - ClientSession::DeployPackage()
-5. users.cpp - LoadUsers()
-
-MySQL driver
-1. DrvFreeAsyncResult()
-
-Revision 1.16  2006/03/02 12:17:06  victor
-Removed various warnings related to 64bit platforms
-
-Revision 1.15  2006/02/21 13:54:10  victor
-Issue 72 fixed ("exit" command was not working in nxadm -i)
-
-Revision 1.14  2005/12/05 20:28:47  victor
-Infinite timeout in RecvCSCPMessage presented by INFINITE
-
-Revision 1.13  2005/12/03 22:53:04  victor
-- Added function RecvEx
-- Added timeout parameter to RecvCSCPMessage
-- Other minor changes
-
-Revision 1.12  2005/08/17 12:09:25  victor
-responce changed to response (issue #37)
-
-Revision 1.11  2005/06/19 21:39:20  victor
-Encryption between server and agent fully working
-
-Revision 1.10  2005/06/19 19:20:40  victor
-- Added encryption foundation
-- Encryption between server and agent almost working
-
-Revision 1.9  2005/04/07 15:50:58  victor
-- Implemented save and restore for DCI graph windows
-- More commands added to server console
-
-Revision 1.8  2005/04/06 16:16:25  victor
-Local administrator interface completely rewritten
-
-Revision 1.7  2005/02/02 22:32:16  alk
-condTimedWait fixed
-file transfers fixed
-agent upgrade script fixed
-
-Revision 1.6  2005/01/18 15:51:42  alk
-+ sockets reuse (*nix only)
-
-
-*/

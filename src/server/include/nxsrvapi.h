@@ -371,6 +371,7 @@ private:
    MsgWaitQueue *m_pMsgWaitQueue;
    BOOL m_bIsConnected;
    MUTEX m_mutexDataLock;
+	MUTEX m_mutexSocketWrite;
    THREAD m_hReceiverThread;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
    int m_iEncryptionPolicy;

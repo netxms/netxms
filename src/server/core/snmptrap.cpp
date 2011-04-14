@@ -535,7 +535,7 @@ void CreateTrapCfgMessage(CSCPMessage &msg)
 static void NotifyOnTrapCfgChangeCB(ClientSession *session, void *arg)
 {
 	if (session->isAuthenticated())
-		session->sendMessage((CSCPMessage *)arg);
+		session->postMessage((CSCPMessage *)arg);
 }
 
 static void NotifyOnTrapCfgChange(DWORD code, NXC_TRAP_CFG_ENTRY *trap)

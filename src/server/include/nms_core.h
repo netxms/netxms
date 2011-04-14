@@ -83,6 +83,7 @@
 struct __console_ctx
 {
    SOCKET hSocket;
+	MUTEX socketMutex;
    CSCPMessage *pMsg;
 	ClientSession *session;
 };
@@ -339,6 +340,7 @@ private:
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hUpdateThread;
+	MUTEX m_mutexSocketWrite;
    MUTEX m_mutexSendEvents;
    MUTEX m_mutexSendSyslog;
    MUTEX m_mutexSendTrapLog;
@@ -587,7 +589,8 @@ public:
 
    void run();
 
-   void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void sendMessage(CSCPMessage *pMsg);
    void sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, DWORD dwRqId);
 

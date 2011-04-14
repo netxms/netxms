@@ -246,6 +246,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_hUpdateThread = INVALID_THREAD_HANDLE;
+	m_mutexSocketWrite = MutexCreate();
    m_mutexSendEvents = MutexCreate();
    m_mutexSendSyslog = MutexCreate();
    m_mutexSendTrapLog = MutexCreate();
@@ -291,6 +292,7 @@ ClientSession::~ClientSession()
    delete m_pMessageQueue;
    delete m_pUpdateQueue;
    safe_free(m_pMsgBuffer);
+	MutexDestroy(m_mutexSocketWrite);
    MutexDestroy(m_mutexSendEvents);
    MutexDestroy(m_mutexSendSyslog);
    MutexDestroy(m_mutexSendTrapLog);
@@ -576,7 +578,7 @@ void ClientSession::writeThread()
          pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
          if (pEnMsg != NULL)
          {
-            bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) == (int)ntohl(pEnMsg->dwSize));
+            bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
             free(pEnMsg);
          }
          else
@@ -586,7 +588,7 @@ void ClientSession::writeThread()
       }
       else
       {
-         bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+         bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
       }
       free(pRawMsg);
 
@@ -1343,12 +1345,50 @@ void ClientSession::onFileUpload(BOOL bSuccess)
 
 
 //
+// Send message to client
+//
+
+void ClientSession::sendMessage(CSCPMessage *msg)
+{
+   TCHAR szBuffer[128];
+   BOOL bResult;
+
+	DebugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
+	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
+   if (m_pCtx != NULL)
+   {
+      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+      if (pEnMsg != NULL)
+      {
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
+         free(pEnMsg);
+      }
+      else
+      {
+         bResult = FALSE;
+      }
+   }
+   else
+   {
+      bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
+   }
+   free(pRawMsg);
+
+   if (!bResult)
+   {
+      closesocket(m_hSocket);
+      m_hSocket = -1;
+   }
+}
+
+
+//
 // Send file to client
 //
 
 BOOL ClientSession::sendFile(const TCHAR *file, DWORD dwRqId)
 {
-	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, NULL, NULL);
+	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite);
 }
 
 
@@ -1633,7 +1673,7 @@ void ClientSession::sendEventDB(DWORD dwRqId)
 static void SendEventDBChangeNotification(ClientSession *session, void *arg)
 {
 	if (session->isAuthenticated() && session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
-		session->sendMessage((CSCPMessage *)arg);
+		session->postMessage((CSCPMessage *)arg);
 }
 
 void ClientSession::modifyEventTemplate(CSCPMessage *pRequest)
@@ -3657,7 +3697,7 @@ void ClientSession::sendMib(CSCPMessage *request)
    // Send compiled MIB file
    _tcscpy(szBuffer, g_szDataDir);
    _tcscat(szBuffer, DFILE_COMPILED_MIB);
-	SendFileOverNXCP(m_hSocket, request->GetId(), szBuffer, m_pCtx, 0, NULL, NULL);
+	sendFile(szBuffer, request->GetId());
 }
 
 
@@ -7591,7 +7631,7 @@ void ClientSession::SendSubmapBkImage(CSCPMessage *pRequest)
    // Send bitmap file
    if (bSuccess)
    {
-      SendFileOverNXCP(m_hSocket, pRequest->GetId(), szBuffer, m_pCtx, 0, NULL, NULL);
+		sendFile(szBuffer, pRequest->GetId());
    }
 }
 
@@ -10143,7 +10183,7 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 		if (_taccess(fname, 0) == 0)
 		{
 			DebugPrintf(5, _T("Sending file %s"), name);
-			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, NULL, NULL))
+			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite))
 			{
 				DebugPrintf(5, _T("File %s was succesfully sent"), name);
 		      msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -11336,6 +11376,7 @@ void ClientSession::openConsole(DWORD rqId)
 		m_dwFlags |= CSF_CONSOLE_OPEN;
 		m_console = (CONSOLE_CTX)malloc(sizeof(struct __console_ctx));
 		m_console->hSocket = -1;
+		m_console->socketMutex = INVALID_MUTEX_HANDLE;
 		m_console->pMsg = new CSCPMessage;
 		m_console->pMsg->SetCode(CMD_ADM_MESSAGE);
 		m_console->session = this;

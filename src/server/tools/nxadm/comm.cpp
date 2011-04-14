@@ -112,7 +112,7 @@ void SendMsg(CSCPMessage *pMsg)
    CSCP_MESSAGE *pRawMsg;
 
    pRawMsg = pMsg->CreateMessage();
-   SendEx(g_hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0);
+   SendEx(g_hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0, NULL);
    free(pRawMsg);
 }
 
