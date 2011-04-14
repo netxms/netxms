@@ -1,20 +1,33 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.googlemaps.tools;
 
+import org.netxms.client.GeoLocation;
+
 /**
  * This class can be used to build map access URL
- * 
- * @author Victor
- *
  */
 public class MapAccessor
 {
 	public static final int MAX_MAP_WIDTH = 4096;
 	public static final int MAX_MAP_HEIGHT = 4096;
 	
-	private String licenseKey = "ABQIAAAAAzXeg8tsipIZ6SUxPAgadxRViIMKnXf3hSrUvE3b21IuEUn42BSwfTscYdOE5gZlknVLXXgYDSIB6w";
 	private double latitude = 0.0;
 	private double longitude = 0.0;
 	private int mapWidth = 640;
@@ -53,7 +66,7 @@ public class MapAccessor
 	 * @param mapHeight
 	 * @param zoom
 	 */
-	public MapAccessor(double lattitude, double longitude,  int zoom, int mapWidth, int mapHeight)
+	public MapAccessor(double lattitude, double longitude, int zoom, int mapWidth, int mapHeight)
 	{
 		this.latitude = lattitude;
 		this.longitude = longitude;
@@ -77,6 +90,18 @@ public class MapAccessor
 		spanLat = src.spanLat;
 		spanLon = src.spanLon;
 		sensor = src.sensor;
+	}
+
+	/**
+	 * Create map accessor from geolocation object
+	 * 
+	 * @param geolocation
+	 */
+	public MapAccessor(GeoLocation geolocation)
+	{
+		latitude = geolocation.getLatitude();
+		longitude = geolocation.getLongitude();
+		sensor = (geolocation.getType() == GeoLocation.GPS);
 	}
 
 	/**

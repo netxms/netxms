@@ -16,13 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.eventmanager;
+package org.netxms.ui.eclipse.googlemaps;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.eclipse.ui.progress.IProgressService;
-import org.netxms.ui.eclipse.eventmanager.views.EventConfigurator;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -31,7 +27,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin
 {
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.eventmanager";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.googlemaps";
 
 	// The shared instance
 	private static Activator plugin;
@@ -54,9 +50,6 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
-
-		IProgressService service = PlatformUI.getWorkbench().getProgressService();
-	   service.registerIconForFamily(getImageDescriptor("icons/event_configurator.png"), EventConfigurator.JOB_FAMILY);
 	}
 
 	/*
@@ -82,16 +75,4 @@ public class Activator extends AbstractUIPlugin
 		return plugin;
 	}
 
-	/**
-	 * Returns an image descriptor for the image file at the given plug-in
-	 * relative path
-	 * 
-	 * @param path
-	 *           the path
-	 * @return the image descriptor
-	 */
-	public static ImageDescriptor getImageDescriptor(String path)
-	{
-		return imageDescriptorFromPlugin(PLUGIN_ID, path);
-	}
 }

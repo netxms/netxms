@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,6 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * Adapter factory for NXCUserDBObject and derived classes
- * 
- * @author Victor
- *
  */
 public class EventTemplateAdapterFactory implements IAdapterFactory
 {

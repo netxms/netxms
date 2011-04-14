@@ -13,13 +13,18 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.googlemaps.tools.MapAccessor;
 import org.netxms.ui.eclipse.googlemaps.widgets.GoogleMap;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author Victor
+ * Loaction map view
  * 
  */
 public class LocationMap extends ViewPart
@@ -29,7 +34,27 @@ public class LocationMap extends ViewPart
 	
 	private GoogleMap map;
 	private MapAccessor mapAccessor;
-	private Label infoText;
+	private GenericObject object;
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+	 */
+	@Override
+	public void init(IViewSite site) throws PartInitException
+	{
+		super.init(site);
+		try
+		{
+			long id = Long.parseLong(site.getSecondaryId());
+			object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(id);
+		}
+		catch(Exception e)
+		{
+			throw new PartInitException("Cannot initialize geolocation view: internal error", e);
+		}
+		if (object == null)
+			throw new PartInitException("Cannot initialize geolocation view: object not found");
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -41,44 +66,14 @@ public class LocationMap extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		GridLayout layout = new GridLayout();
-		layout.horizontalSpacing = 0;
-		layout.verticalSpacing = 0;
-		layout.numColumns = 2;
-		parent.setLayout(layout);
-		
 		// Map control
 		map = new GoogleMap(parent, SWT.BORDER);
 		map.setSiteService((IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class));
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.grabExcessVerticalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		map.setLayoutData(gd);
 		
-		// Legend
-		Composite legend = new Composite(parent, SWT.BORDER);
-		GridLayout legendLayout = new GridLayout();
-		legendLayout.horizontalSpacing = 0;
-		legendLayout.verticalSpacing = 0;
-		legend.setLayout(legendLayout);
-		gd = new GridData();
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		legend.setLayoutData(gd);
-		
-		infoText = new Label(legend, SWT.WRAP);
-		gd = new GridData();
-		gd.verticalAlignment = SWT.TOP;
-		infoText.setLayoutData(gd);
-
 		// Initial map view
-		mapAccessor = new MapAccessor(57.0, 24.0);
-		mapAccessor.setZoom(13);
+		mapAccessor = new MapAccessor(object.getGeolocation());
+		mapAccessor.setZoom(14);
 		map.showMap(mapAccessor);
-		
-		infoText.setText("Map centered at " + mapAccessor.getLatitude() + " " + mapAccessor.getLongitude());
 	}
 
 	/**
