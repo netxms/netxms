@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.googlemaps.tools;
+package org.netxms.ui.eclipse.osm.tools;
 
 import org.netxms.client.GeoLocation;
 
@@ -138,14 +138,6 @@ public class MapAccessor
 		sb.append('x');
 		sb.append(mapHeight);
 		
-		// Sensor
-		//sb.append("&sensor=");
-		//sb.append(sensor);
-		
-		// License key
-		//sb.append("&key=");
-		//sb.append(licenseKey);
-		
 		return sb.toString();
 	}
 	
@@ -159,7 +151,7 @@ public class MapAccessor
 		if ((mapWidth < 1) || (mapHeight < 1))
 			return false;
 		
-		if ((zoom < 0) || (zoom > 19))
+		if ((zoom < 0) || (zoom > 18))
 			return false;
 		
 		return true;

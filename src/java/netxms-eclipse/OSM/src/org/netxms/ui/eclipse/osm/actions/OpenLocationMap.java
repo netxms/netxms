@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.googlemaps.actions;
+package org.netxms.ui.eclipse.osm.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -27,8 +27,9 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.GeoLocation;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.googlemaps.views.LocationMap;
+import org.netxms.ui.eclipse.osm.views.LocationMap;
 
 /**
  * Object action: open geolocation view
@@ -82,6 +83,6 @@ public class OpenLocationMap implements IObjectActionDelegate
 		{
 			object = null;
 		}
-		action.setEnabled(object != null);
+		action.setEnabled((object != null) && (object.getGeolocation().getType() != GeoLocation.UNSET));
 	}
 }

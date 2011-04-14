@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.googlemaps.widgets;
+package org.netxms.ui.eclipse.osm.widgets;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -29,59 +29,63 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.ui.eclipse.googlemaps.tools.MapAccessor;
+import org.netxms.client.GeoLocation;
+import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
  */
-public class GoogleMap extends Canvas
+public class GeoMapViewer extends Canvas implements PaintListener
 {
+	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getDefault(), 255, 242, 0);
+	private static final Color INFO_BLOCK_BORDER = new Color(Display.getDefault(), 0, 0, 0);
+	private static final Color INFO_BLOCK_TEXT = new Color(Display.getDefault(), 0, 0, 0);
+	
 	private String imageAccessSync = "SYNC";
 	private Image currentImage = null;
 	private MapAccessor accessor;
 	private IWorkbenchSiteProgressService siteService = null;
+	private Image centerMarker = null;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public GoogleMap(Composite parent, int style)
+	public GeoMapViewer(Composite parent, int style)
 	{
 		super(parent, style);
 		setLayout(new FillLayout());
 
-		addPaintListener(new PaintListener() {
+		addPaintListener(this);
+		
+		final Runnable timer = new Runnable() {
 			@Override
-			public void paintControl(PaintEvent e)
+			public void run()
 			{
-				synchronized(imageAccessSync)
-				{
-					if (currentImage != null)
-					{
-						e.gc.drawImage(currentImage, 0, 0);
-					}
-					else
-					{
-						e.gc.drawString("Loading...", 5, 5);
-					}
-				}
+				if (isDisposed())
+					return;
+				reloadMap();
 			}
-		});
+		};
 		
 		addListener(SWT.Resize, new Listener() {
 			@Override
 			public void handleEvent(Event event)
 			{
-				reloadMap();
+				getDisplay().timerExec(1000, timer);
 			}
 		});
 	}
@@ -147,7 +151,7 @@ public class GoogleMap extends Canvas
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						GoogleMap.this.redraw();
+						GeoMapViewer.this.redraw();
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -174,5 +178,77 @@ public class GoogleMap extends Canvas
 	public void setSiteService(IWorkbenchSiteProgressService siteService)
 	{
 		this.siteService = siteService;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
+	 */
+	@Override
+	public void paintControl(PaintEvent e)
+	{
+		final GC gc = e.gc;
+		
+		int imgW, imgH;
+		synchronized(imageAccessSync)
+		{
+			if (currentImage != null)
+			{
+				gc.drawImage(currentImage, 0, 0);
+				imgW = currentImage.getImageData().width;
+				imgH = currentImage.getImageData().height;
+			}
+			else
+			{
+				gc.drawString("Loading...", 5, 5);
+				imgW = -1;
+				imgH = -1;
+			}
+		}
+		
+		if ((centerMarker != null) && (imgW > 0) && (imgH > 0))
+		{
+			int w = centerMarker.getImageData().width;
+			int h = centerMarker.getImageData().height;
+			gc.drawImage(centerMarker, (imgW - w) / 2, (imgH - h) / 2);
+		}
+		
+		final GeoLocation gl = new GeoLocation(accessor.getLatitude(), accessor.getLongitude());
+		final String text = gl.toString();
+		final Point textSize = gc.textExtent(text); 
+		
+		Rectangle rect = getClientArea();
+		rect.x = 10;
+		//rect.x = rect.width - textSize.x - 20;
+		rect.y += 10;
+		rect.width = textSize.x + 10;
+		rect.height = textSize.y + 8;
+		
+		gc.setAntialias(SWT.ON);
+		gc.setBackground(INFO_BLOCK_BACKGROUND);
+		gc.setAlpha(127);
+		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+		gc.setAlpha(255);
+		gc.setForeground(INFO_BLOCK_BORDER);
+		gc.setLineWidth(1);
+		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+		
+		gc.setForeground(INFO_BLOCK_TEXT);
+		gc.drawText(text, rect.x + 5, rect.y + 4, true);
+	}
+
+	/**
+	 * @return the centerMarker
+	 */
+	public Image getCenterMarker()
+	{
+		return centerMarker;
+	}
+
+	/**
+	 * @param centerMarker the centerMarker to set
+	 */
+	public void setCenterMarker(Image centerMarker)
+	{
+		this.centerMarker = centerMarker;
 	}
 }

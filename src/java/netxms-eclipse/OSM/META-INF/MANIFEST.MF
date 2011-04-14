@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: NXMC Google Maps Plug-in
-Bundle-SymbolicName: org.netxms.ui.eclipse.googlemaps;singleton:=true
+Bundle-Name: NXMC Open Street Maps Plug-in
+Bundle-SymbolicName: org.netxms.ui.eclipse.osm;singleton:=true
 Bundle-Version: 1.1.0
-Bundle-Activator: org.netxms.ui.eclipse.googlemaps.Activator
+Bundle-Activator: org.netxms.ui.eclipse.osm.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,

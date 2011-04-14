@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.GeoLocation;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
@@ -78,6 +79,8 @@ public class GeneralInfo extends TableElement
 			default:
 				break;
 		}
+		if (object.getGeolocation().getType() != GeoLocation.UNSET)
+			addPair("Location", object.getGeolocation().toString());
 	}
 
 	/* (non-Javadoc)

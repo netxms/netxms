@@ -18,15 +18,18 @@
  */
 package org.netxms.client;
 
+import java.text.NumberFormat;
+
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
- * @author Victor Kirhenshtein
- *
+ * Geolocation encoding
  */
 public class GeoLocation
 {
+	private static final double ROUND_OFF = 0.00000001;
+
 	public static final int UNSET = 0;
 	public static final int MANUAL = 1;
 	public static final int GPS = 2;
@@ -91,5 +94,91 @@ public class GeoLocation
 	public double getLongitude()
 	{
 		return longitude;
+	}
+	
+	/**
+	 * Extract degrees from lat/lon value
+	 * 
+	 * @param pos
+	 * @return
+	 */
+	private static int getIntegerDegree(double pos)
+	{
+		return (int)(Math.abs(pos) + ROUND_OFF);
+	}
+	
+	/**
+	 * Extract minutes from lat/lon value
+	 * 
+	 * @param pos
+	 * @return
+	 */
+	private static int getIntegerMinutes(double pos)
+	{
+		double d = Math.abs(pos) + ROUND_OFF;
+		return (int)((d - (double)((int)d)) * 60.0);
+	}
+	
+	/**
+	 * Extract seconds from lat/lon value
+	 * 
+	 * @param pos
+	 * @return
+	 */
+	private static double getDecimalSeconds(double pos)
+	{
+		double d = Math.abs(pos) * 60.0 + ROUND_OFF;
+		return (d - (double)((int)d)) * 60.0;
+	}
+
+	/**
+	 * Convert latitude or longitude to text
+	 * 
+	 * @param pos position
+	 * @param isLat true if given position is latitude
+	 * @return
+	 */
+	private static String posToText(double pos, boolean isLat)
+	{
+		if ((pos < -180.0) || (pos > 180.0))
+			return "<invalid>";
+		
+		StringBuilder sb = new StringBuilder();
+
+		// Encode hemisphere
+		if (isLat)
+		{
+			sb.append((pos < 0) ? 'S' : 'N');
+		}
+		else
+		{
+			sb.append((pos < 0) ? 'W' : 'E');
+		}
+		sb.append(' ');
+		
+		NumberFormat nf = NumberFormat.getIntegerInstance();
+		nf.setMinimumIntegerDigits(2);
+		sb.append(nf.format(getIntegerDegree(pos)));
+		sb.append("° ");
+		sb.append(nf.format(getIntegerMinutes(pos)));
+		sb.append("' ");
+
+		nf = NumberFormat.getNumberInstance();
+		nf.setMinimumIntegerDigits(2);
+		nf.setMinimumFractionDigits(3);
+		nf.setMaximumFractionDigits(3);
+		sb.append(nf.format(getDecimalSeconds(pos)));
+		sb.append('"');
+		
+		return sb.toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		return posToText(latitude, true) + " " + posToText(longitude, false);
 	}
 }

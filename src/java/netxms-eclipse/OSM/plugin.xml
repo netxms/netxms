@@ -8,20 +8,20 @@
             name="Location Map"
             allowMultiple="true"
             icon="icons/map.png"
-            class="org.netxms.ui.eclipse.googlemaps.views.LocationMap"
-            id="org.netxms.ui.eclipse.googlemaps.view.location_map">
+            class="org.netxms.ui.eclipse.osm.views.LocationMap"
+            id="org.netxms.ui.eclipse.osm.views.LocationMap">
       </view>
    </extension>
 
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.googlemaps.actions.popup.object.showmap_NXCNode"
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.showmap_NXCNode"
             objectClass="org.netxms.client.objects.Node">
          <action
-               class="org.netxms.ui.eclipse.googlemaps.actions.OpenLocationMap"
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.googlemaps.popupActions.OpenLocationMap_NXCNode"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap_NXCNode"
                label="Location map"
                icon="icons/map.png"
                menubarPath="additions">

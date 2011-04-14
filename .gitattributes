@@ -863,11 +863,11 @@ src/java/netxms-eclipse/OSM/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/OSM/build.properties -text
 src/java/netxms-eclipse/OSM/icons/map.png -text
 src/java/netxms-eclipse/OSM/plugin.xml -text
-src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/googlemaps/Activator.java -text
-src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/googlemaps/actions/OpenLocationMap.java -text
-src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/googlemaps/tools/MapAccessor.java -text
-src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/googlemaps/views/LocationMap.java -text
-src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/googlemaps/widgets/GoogleMap.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/Activator.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenLocationMap.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapAccessor.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/views/LocationMap.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/GeoMapViewer.java -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser/icons/cluster.png -text
