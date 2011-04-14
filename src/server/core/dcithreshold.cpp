@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -233,6 +232,9 @@ int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
       case F_AVERAGE:      // Check average value for last n polls
          calculateAverageValue(&fvalue, value, ppPrevValues);
          break;
+		case F_SUM:
+         calculateSumValue(&fvalue, value, ppPrevValues);
+			break;
       case F_DEVIATION:    // Check mean absolute deviation
          calculateMDValue(&fvalue, value, ppPrevValues);
          break;
@@ -546,6 +548,52 @@ void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
          break;
       case DCI_DT_STRING:
          *pResult = _T("");   // Average value for string is meaningless
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
+// Calculate sum value for parameter
+//
+
+#define CALC_SUM_VALUE(vtype) \
+{ \
+   vtype var; \
+   var = (vtype)lastValue; \
+   for(i = 1; i < m_param1; i++) \
+   { \
+      if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
+         var += (vtype)(*ppPrevValues[i - 1]); \
+   } \
+   *pResult = var; \
+}
+
+void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+{
+   int i;
+
+   switch(m_dataType)
+   {
+      case DCI_DT_INT:
+         CALC_SUM_VALUE(LONG);
+         break;
+      case DCI_DT_UINT:
+         CALC_SUM_VALUE(DWORD);
+         break;
+      case DCI_DT_INT64:
+         CALC_SUM_VALUE(INT64);
+         break;
+      case DCI_DT_UINT64:
+         CALC_SUM_VALUE(QWORD);
+         break;
+      case DCI_DT_FLOAT:
+         CALC_SUM_VALUE(double);
+         break;
+      case DCI_DT_STRING:
+         *pResult = _T("");   // Sum value for string is meaningless
          break;
       default:
          break;

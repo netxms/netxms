@@ -111,6 +111,7 @@ private:
 
    const ItemValue& value() { return m_value; }
    void calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
    void calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
    void calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
 

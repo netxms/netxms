@@ -89,6 +89,7 @@ public class EditThresholdDialog extends Dialog
 		function.add("Mean deviation");
 		function.add("Diff with previous value");
 		function.add("Data collection error");
+		function.add("Sum of values");
 		function.select(threshold.getFunction());
 		
 		samples = WidgetHelper.createLabeledText(condGroup, SWT.BORDER, 60, "Samples", Integer.toString(threshold.getArg1()), WidgetHelper.DEFAULT_LAYOUT_DATA);

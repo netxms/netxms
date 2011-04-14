@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ThresholdLabelProvider implements ITableLabelProvider
 {
-	private static final String[] functions = { "last(", "average(", "deviation(", "diff()", "error(" };
+	private static final String[] functions = { "last(", "average(", "deviation(", "diff()", "error(", "sum(" };
 	private static final String[] operations = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" };
 	
 	private WorkbenchLabelProvider eventLabelProvider = new WorkbenchLabelProvider();
