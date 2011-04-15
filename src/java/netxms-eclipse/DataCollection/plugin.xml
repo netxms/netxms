@@ -54,6 +54,15 @@
                icon="icons/dc_editor.png"
                menubarPath="datacollection">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ApplyTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ApplyTemplate"
+               label="&amp;Apply..."
+               menubarPath="objectbinding"
+               style="push"
+               tooltip="Apply template to node(s)">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"

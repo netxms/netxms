@@ -44,7 +44,7 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpor
    VlanList *vlanList = (VlanList *)pArg;
 
    DWORD dwNameLen = pVar->GetName()->Length();
-	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt());
+	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt(), VLAN_PRM_SLOTPORT);
 
    // Get VLAN name
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));

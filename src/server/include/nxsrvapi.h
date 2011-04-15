@@ -250,25 +250,31 @@ public:
 // Vlan information
 //
 
+#define VLAN_PRM_IFINDEX   0
+#define VLAN_PRM_SLOTPORT  1
+
 class LIBNXSRV_EXPORTABLE VlanInfo
 {
 private:
 	int m_vlanId;
 	TCHAR *m_name;
+	int m_portRefMode;	// Port reference mode - by ifIndex or by slot/port
 	int m_allocated;
 	int m_numPorts;	// Number of ports in VLAN
-	DWORD *m_ports;	// member ports (slot/port pairs)
+	DWORD *m_ports;	// member ports (slot/port pairs or ifIndex)
 
 public:
-	VlanInfo(int vlanId);
+	VlanInfo(int vlanId, int prm);
 	~VlanInfo();
 
 	int getVlanId() { return m_vlanId; }
+	int getPortReferenceMode() { return m_portRefMode; }
 	const TCHAR *getName() { return CHECK_NULL_EX(m_name); }
 	int getNumPorts() { return m_numPorts; }
 	DWORD *getPorts() { return m_ports; }
 
 	void add(DWORD slot, DWORD port);
+	void add(DWORD ifIndex);
 	void setName(const TCHAR *name);
 };
 
@@ -290,9 +296,11 @@ public:
 	virtual ~VlanList();
 
 	void add(VlanInfo *vlan);
+	void addMemberPort(int vlanId, DWORD portId);
 
 	int getSize() { return m_size; }
 	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : NULL; }
+	VlanInfo *findById(int id);
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }

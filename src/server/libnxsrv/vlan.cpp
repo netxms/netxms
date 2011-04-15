@@ -57,6 +57,34 @@ void VlanList::add(VlanInfo *vlan)
 }
 
 /**
+ * Add member port to VLAN
+ *
+ * @param vlanId VLAN ID
+ * @param ifIndex port's 32bit identifier (usually ifIndex or slot/port pair)
+ */
+void VlanList::addMemberPort(int vlanId, DWORD portId)
+{
+	VlanInfo *vlan = findById(vlanId);
+	if (vlan != NULL)
+	{
+		vlan->add(portId);
+	}
+}
+
+/**
+ * Find VLAN by ID
+ *
+ * @param id VLAN ID
+ */
+VlanInfo *VlanList::findById(int id)
+{
+	for(int i = 0; i < m_size; i++)
+		if (m_vlans[i]->getVlanId() == id)
+			return m_vlans[i];
+	return NULL;
+}
+
+/**
  * Fill NXCP  message with vlans data
  */
 void VlanList::fillMessage(CSCPMessage *msg)
@@ -76,9 +104,10 @@ void VlanList::fillMessage(CSCPMessage *msg)
 /**
  * VlanInfo constructor
  */
-VlanInfo::VlanInfo(int vlanId)
+VlanInfo::VlanInfo(int vlanId, int prm)
 {
 	m_vlanId = vlanId;
+	m_portRefMode = prm;
 	m_name = NULL;
 	m_allocated = 64;
 	m_numPorts = 0;
@@ -95,16 +124,24 @@ VlanInfo::~VlanInfo()
 }
 
 /**
- * Add port info
+ * Add port identified by single 32bit ID (usually ifIndex)
  */
-void VlanInfo::add(DWORD slot, DWORD port)
+void VlanInfo::add(DWORD ifIndex)
 {
 	if (m_numPorts == m_allocated)
 	{
 		m_allocated += 64;
 		m_ports = (DWORD *)realloc(m_ports, sizeof(DWORD) * m_allocated);
 	}
-	m_ports[m_numPorts++] = (slot << 16) | port;
+	m_ports[m_numPorts++] = ifIndex;
+}
+
+/**
+ * Add port identified by slot/port pair
+ */
+void VlanInfo::add(DWORD slot, DWORD port)
+{
+	add((slot << 16) | port);
 }
 
 /**

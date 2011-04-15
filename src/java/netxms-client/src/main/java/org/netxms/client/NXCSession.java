@@ -2601,14 +2601,29 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 *           node object identifier
 	 * @param removeDci
 	 *           true if DCIs created from this template should be removed
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void removeTemplate(final long templateId, final long nodeId, final boolean removeDci) throws IOException, NXCException
 	{
 		changeObjectBinding(templateId, nodeId, false, removeDci);
+	}
+	
+	/**
+	 * Apply data collection template to node.
+	 * 
+	 * @param templateId template object ID
+	 * @param nodeId node object ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void applyTemplate(long templateId, long nodeId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_APPLY_TEMPLATE);
+		msg.setVariableInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)templateId);
+		msg.setVariableInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 
 	/**

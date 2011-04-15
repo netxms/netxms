@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.osm.widgets;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -34,7 +33,6 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -44,12 +42,14 @@ import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.GeoLocation;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
+import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
  */
 public class GeoMapViewer extends Canvas implements PaintListener
 {
+	private static final Color MAP_BACKGROUND = new Color(Display.getDefault(), 255, 255, 255);
 	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getDefault(), 255, 242, 0);
 	private static final Color INFO_BLOCK_BORDER = new Color(Display.getDefault(), 0, 0, 0);
 	private static final Color INFO_BLOCK_TEXT = new Color(Display.getDefault(), 0, 0, 0);
@@ -59,6 +59,7 @@ public class GeoMapViewer extends Canvas implements PaintListener
 	private MapAccessor accessor;
 	private IWorkbenchSiteProgressService siteService = null;
 	private Image centerMarker = null;
+	private AnimatedImage waitingImage = null;
 	
 	/**
 	 * @param parent
@@ -67,8 +68,8 @@ public class GeoMapViewer extends Canvas implements PaintListener
 	public GeoMapViewer(Composite parent, int style)
 	{
 		super(parent, style);
-		setLayout(new FillLayout());
 
+		setBackground(MAP_BACKGROUND);
 		addPaintListener(this);
 		
 		final Runnable timer = new Runnable() {
@@ -77,6 +78,7 @@ public class GeoMapViewer extends Canvas implements PaintListener
 			{
 				if (isDisposed())
 					return;
+				
 				reloadMap();
 			}
 		};
@@ -86,8 +88,15 @@ public class GeoMapViewer extends Canvas implements PaintListener
 			public void handleEvent(Event event)
 			{
 				getDisplay().timerExec(1000, timer);
+
+				Rectangle rect = getClientArea();
+				Point size = waitingImage.getSize();
+				waitingImage.setLocation(rect.x + rect.width / 2 - size.x, rect.y + rect.height / 2 - size.y);
 			}
 		});
+		
+		waitingImage = new AnimatedImage(this, SWT.NONE);
+		waitingImage.setVisible(false);
 	}
 	
 	/**
@@ -115,7 +124,16 @@ public class GeoMapViewer extends Canvas implements PaintListener
 			if (currentImage != null)
 				currentImage.dispose();
 			currentImage = null;
-			redraw();
+		}
+
+		redraw();
+		waitingImage.setVisible(true);
+		try
+		{
+			waitingImage.setImage(new URL("platform:/plugin/org.netxms.ui.eclipse.library/icons/loading.gif"));
+		}
+		catch(MalformedURLException e)
+		{
 		}
 		
 		if (!accessor.isValid())
@@ -141,6 +159,7 @@ public class GeoMapViewer extends Canvas implements PaintListener
 			protected IStatus run(IProgressMonitor monitor)
 			{
 				Image image = id.createImage();
+				
 				synchronized(imageAccessSync)
 				{
 					if (currentImage != null)
@@ -151,6 +170,8 @@ public class GeoMapViewer extends Canvas implements PaintListener
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
+						waitingImage.setImage(null);
+						waitingImage.setVisible(false);
 						GeoMapViewer.this.redraw();
 						return Status.OK_STATUS;
 					}
@@ -199,7 +220,6 @@ public class GeoMapViewer extends Canvas implements PaintListener
 			}
 			else
 			{
-				gc.drawString("Loading...", 5, 5);
 				imgW = -1;
 				imgH = -1;
 			}
