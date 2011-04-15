@@ -51,15 +51,26 @@ public class SlotView extends Canvas implements PaintListener
 	
 	private List<PortInfo> ports = new ArrayList<PortInfo>();
 	private int rowCount = 2;
+	private int slotNum;
+	private String slotName;
+	private Point nameSize;
 	private boolean portStatusVisible = true;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public SlotView(Composite parent, int style)
+	public SlotView(Composite parent, int style, int slotNum)
 	{
 		super(parent, style | SWT.BORDER);
+		this.slotNum = slotNum;
+		
+		slotName = "Slot\n" + Integer.toString(slotNum);
+		
+		GC gc = new GC(getDisplay());
+		nameSize = gc.textExtent(slotName);
+		gc.dispose();
+		
 		addPaintListener(this);
 	}
 	
@@ -77,7 +88,9 @@ public class SlotView extends Canvas implements PaintListener
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		int x = HORIZONTAL_MARGIN;
+		e.gc.drawText(slotName, HORIZONTAL_MARGIN, (getSize().y - nameSize.y) / 2);
+		
+		int x = HORIZONTAL_MARGIN + nameSize.x + HORIZONTAL_SPACING;
 		int y = VERTICAL_MARGIN;
 		int row = 0;
 		for(PortInfo p : ports)
@@ -136,7 +149,7 @@ public class SlotView extends Canvas implements PaintListener
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-		return new Point((ports.size() / rowCount) * (40 + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 - HORIZONTAL_SPACING,
+		return new Point(((ports.size() + rowCount - 1) / rowCount) * (40 + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 + nameSize.x,
 				rowCount * 30 + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
 	}
 

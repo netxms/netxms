@@ -85,7 +85,7 @@ public class DeviceView extends Composite
 		List<Interface> interfaces = new ArrayList<Interface>();
 		for(GenericObject o: object.getAllChilds(GenericObject.OBJECT_INTERFACE))
 		{
-			if (((Interface)o).getSlot() > 0)
+			if ((((Interface)o).getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				interfaces.add((Interface)o);
 		}
 		Collections.sort(interfaces, new Comparator<Interface>() {
@@ -104,7 +104,7 @@ public class DeviceView extends Composite
 			SlotView sv = slots.get(slot);
 			if (sv == null)
 			{
-				sv = new SlotView(this, SWT.NONE);
+				sv = new SlotView(this, SWT.NONE, slot);
 				sv.setPortStatusVisible(portStatusVisible);
 				slots.put(slot, sv);
 			}

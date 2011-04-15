@@ -5,7 +5,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Location Map"
+            name="Geolocation"
             allowMultiple="true"
             icon="icons/map.png"
             class="org.netxms.ui.eclipse.osm.views.LocationMap"
@@ -16,14 +16,38 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.osm.actions.popup.object.showmap_NXCNode"
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.Node"
             objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap_NXCNode"
-               label="Location map"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Node"
+               label="Geolocation"
                icon="icons/map.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.Cluster"
+            objectClass="org.netxms.client.objects.Cluster">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
+               enablesFor="1"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Cluster"
+               label="Geolocation"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.Container"
+            objectClass="org.netxms.client.objects.Container">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
+               enablesFor="1"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Container"
+               label="Geolocation"
                menubarPath="additions">
          </action>
       </objectContribution>

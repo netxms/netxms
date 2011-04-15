@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.osm.views;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -40,7 +41,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
- * Location map view
+ * Geolocation view
  */
 public class LocationMap extends ViewPart
 {
@@ -51,7 +52,7 @@ public class LocationMap extends ViewPart
 	private MapAccessor mapAccessor;
 	private WorkbenchLabelProvider labelProvider;
 	private GenericObject object;
-	private int zoomLevel = 14;
+	private int zoomLevel = 15;
 	
 	private Action actionZoomIn;
 	private Action actionZoomOut;
@@ -63,10 +64,21 @@ public class LocationMap extends ViewPart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
+		
+		// Initiate loading of required plugins if they was not loaded yet
+		try
+		{
+			Platform.getAdapterManager().loadAdapter(((NXCSession)ConsoleSharedData.getSession()).getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter");
+		}
+		catch(Exception e)
+		{
+		}
+		
 		try
 		{
 			long id = Long.parseLong(site.getSecondaryId());
 			object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(id);
+			setPartName("Geolocation - " + object.getObjectName());
 		}
 		catch(Exception e)
 		{

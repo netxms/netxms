@@ -50,7 +50,7 @@ import org.netxms.ui.eclipse.widgets.AnimatedImage;
 public class GeoMapViewer extends Canvas implements PaintListener
 {
 	private static final Color MAP_BACKGROUND = new Color(Display.getDefault(), 255, 255, 255);
-	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getDefault(), 255, 242, 0);
+	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getDefault(), 150, 240, 88);
 	private static final Color INFO_BLOCK_BORDER = new Color(Display.getDefault(), 0, 0, 0);
 	private static final Color INFO_BLOCK_TEXT = new Color(Display.getDefault(), 0, 0, 0);
 	
@@ -245,7 +245,7 @@ public class GeoMapViewer extends Canvas implements PaintListener
 		
 		gc.setAntialias(SWT.ON);
 		gc.setBackground(INFO_BLOCK_BACKGROUND);
-		gc.setAlpha(127);
+		gc.setAlpha(192);
 		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		gc.setAlpha(255);
 		gc.setForeground(INFO_BLOCK_BORDER);
