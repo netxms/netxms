@@ -374,6 +374,7 @@ src/java/netxms-client/src/main/java/com/jcraft/jzlib/ZStreamException.java -tex
 src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/GeoLocationFormatException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddress.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddressFormatException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
@@ -462,6 +463,7 @@ src/java/netxms-client/src/test/java/org/netxms/client/AlarmTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ConnectionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/DataCollectionTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/EventDatabaseSyncTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/GeoLocationTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/GlobTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ImageLibraryTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/JobTest.java -text
@@ -957,6 +959,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/pr
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Communication.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/CustomAttributes.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/General.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Location.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/TrustedNodes.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/views/NodePollerView.java -text
 src/java/netxms-eclipse/ObjectTools/.classpath -text

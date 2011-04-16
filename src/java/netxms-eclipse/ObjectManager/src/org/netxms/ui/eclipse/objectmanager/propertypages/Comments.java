@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -30,9 +29,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -95,25 +94,24 @@ public class Comments extends PropertyPage
 			setValid(false);
 		
 		final String newComments = new String(comments.getText());
-		new Job("Update comments for object " + object.getObjectName()) {
+		new ConsoleJob("Update comments for object " + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
 			@Override
-			protected IStatus run(IProgressMonitor monitor)
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				IStatus status;
-				
-				try
-				{
-					((NXCSession)ConsoleSharedData.getSession()).updateObjectComments(object.getObjectId(), newComments);
-					initialComments = newComments;
-					status = Status.OK_STATUS;
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot change comments: " + e.getMessage(), null);
-				}
+				((NXCSession)ConsoleSharedData.getSession()).updateObjectComments(object.getObjectId(), newComments);
+				initialComments = newComments;
+			}
 
+			@Override
+			protected String getErrorMessage()
+			{
+				// TODO Auto-generated method stub
+				return "Cannot change comments";
+			}
+
+			@Override
+			protected void jobFinalize()
+			{
 				if (isApply)
 				{
 					new UIJob("Update \"Comments\" property page") {
@@ -125,10 +123,8 @@ public class Comments extends PropertyPage
 						}
 					}.schedule();
 				}
-
-				return status;
 			}
-		}.schedule();
+		}.start();
 	}
 
 	/* (non-Javadoc)

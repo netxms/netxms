@@ -91,6 +91,24 @@
              </instanceof>
           </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.Location"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.Location"
+              name="Location">
+           <enabledWhen>
+              <or>
+                 <instanceof
+                       value="org.netxms.client.objects.Node">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Container">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Cluster">
+                 </instanceof>
+              </or>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

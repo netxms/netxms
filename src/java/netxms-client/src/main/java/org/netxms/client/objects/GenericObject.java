@@ -115,7 +115,7 @@ public class GenericObject
 		{
 		}
 		comments = "";
-		geolocation = new GeoLocation();
+		geolocation = new GeoLocation(false);
 		image = NXCommon.EMPTY_GUID;
 	}
 	

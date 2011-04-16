@@ -19,6 +19,8 @@
 package org.netxms.client;
 
 import java.text.NumberFormat;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -50,11 +52,11 @@ public class GeoLocation
 	}
 	
 	/**
-	 * Create geolocation object of type UNSET
+	 * Create geolocation object of type UNSET or GPS
 	 */
-	public GeoLocation()
+	public GeoLocation(boolean isGPS)
 	{
-		type = UNSET;
+		type = isGPS ? GPS : UNSET;
 		latitude = 0.0;
 		longitude = 0.0;
 	}
@@ -180,5 +182,99 @@ public class GeoLocation
 	public String toString()
 	{
 		return posToText(latitude, true) + " " + posToText(longitude, false);
+	}
+	
+	/**
+	 * @return latitude as DMS string
+	 */
+	public String getLatitudeAsString()
+	{
+		return posToText(latitude, true);
+	}
+	
+	/**
+	 * @return longitude as DMS string
+	 */
+	public String getLongitudeAsString()
+	{
+		return posToText(longitude, false);
+	}
+	
+	/**
+	 * Parse geolocation component - either latitude or longitude
+	 * 
+	 * @param str string representation of component
+	 * @param isLat true if given string is a latitude
+	 * @return double value for component
+	 * @throws GeoLocationFormatException
+	 */
+	private static double parse(String str, boolean isLat) throws GeoLocationFormatException
+	{
+		double value;
+		String in = str.trim();
+		
+		// Try to parse as simple double value first
+		try
+		{
+			value = Double.parseDouble(str);
+			if ((value < -180.0) || (value > 180.0))
+				throw new GeoLocationFormatException();
+			return value;
+		}
+		catch(NumberFormatException e)
+		{
+		}
+		
+		Pattern p = Pattern.compile((isLat ? "([NS]*)" : "([EW]*)") + "\\s*([0-9]+(?:\\.[0-9]+)*)°?\\s*([0-9]+(?:\\.[0-9]+)*)?\\'?\\s*([0-9]+(?:\\.[0-9]+)*)?\\\"?\\s*" + (isLat ? "([NS]*)" : "([EW]*)"));
+		Matcher m = p.matcher(in);
+		if (m.matches())
+		{
+			// Hemisphere sign
+			char ch;
+			if ((m.group(1) != null) && !m.group(1).isEmpty())
+				ch = m.group(1).charAt(0);
+			else if ((m.group(5) != null) && !m.group(5).isEmpty())
+				ch = m.group(5).charAt(0);
+			else
+				throw new GeoLocationFormatException();
+			int sign = ((ch == 'N') || (ch == 'E')) ? 1 : -1;
+			
+			try
+			{
+				double deg = Double.parseDouble(m.group(2));
+				double min = (m.group(3) != null) ? Double.parseDouble(m.group(3)) : 0.0;
+				double sec = (m.group(4) != null) ? Double.parseDouble(m.group(4)) : 0.0;
+				
+				value = sign * (deg + min / 60.0 + sec / 3600.0);
+				if ((value < -180.0) || (value > 180.0))
+					throw new GeoLocationFormatException();
+				
+				return value;
+			}
+			catch(NumberFormatException e)
+			{
+				throw new GeoLocationFormatException();
+			}
+		}
+		else
+		{
+			throw new GeoLocationFormatException();
+		}
+	}
+	
+	/**
+	 * Parse geolocation string. Latitude and longitude must be given either
+	 * as numeric values or in DMS form.
+	 * 
+	 * @param lat latitude string
+	 * @param lon longitude string
+	 * @return geolocation object
+	 * @throws GeoLocationFormatException if the strings does not contain a parsable geolocation
+	 */
+	public static GeoLocation parseGeoLocation(String lat, String lon) throws GeoLocationFormatException
+	{
+		double _lat = parse(lat, true);
+		double _lon = parse(lon, false);
+		return new GeoLocation(_lat, _lon);
 	}
 }
