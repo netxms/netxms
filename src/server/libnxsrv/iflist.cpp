@@ -79,6 +79,20 @@ void InterfaceList::removeLoopbacks()
 
 
 //
+// Find interface entry by ifIndex
+//
+
+NX_INTERFACE_INFO *InterfaceList::findByIfIndex(DWORD ifIndex)
+{
+   // Delete loopback interface(s) from list
+   for(int i = 0; i < m_size; i++)
+		if (m_interfaces[i].dwIndex == ifIndex)
+			return &m_interfaces[i];
+	return NULL;
+}
+
+
+//
 // Remove entry
 //
 

@@ -1811,9 +1811,11 @@ AC_CONFIG_FILES([
 	src/server/core/Makefile
 	src/server/drivers/Makefile
 	src/server/drivers/baystack/Makefile
+	src/server/drivers/cat2900xl/Makefile
 	src/server/drivers/ers8000/Makefile
 	src/server/drivers/lib/Makefile
 	src/server/drivers/lib/avaya-ers/Makefile
+	src/server/drivers/lib/cisco/Makefile
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile

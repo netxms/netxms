@@ -23,6 +23,8 @@ package org.netxms.client.topology;
  */
 public class Port
 {
+	private long objectId;
+	private long ifIndex;
 	private int slot;
 	private int port;
 	
@@ -30,12 +32,14 @@ public class Port
 	 * @param slot
 	 * @param port
 	 */
-	public Port(int slot, int port)
+	public Port(long objectId, long ifIndex, int slot, int port)
 	{
-		super();
+		this.objectId = objectId;
+		this.ifIndex = ifIndex;
 		this.slot = slot;
 		this.port = port;
 	}
+	
 	/**
 	 * @return the slot
 	 */
@@ -43,11 +47,28 @@ public class Port
 	{
 		return slot;
 	}
+	
 	/**
 	 * @return the port
 	 */
 	public int getPort()
 	{
 		return port;
+	}
+	
+	/**
+	 * @return the objectId
+	 */
+	public long getObjectId()
+	{
+		return objectId;
+	}
+	
+	/**
+	 * @return the ifIndex
+	 */
+	public long getIfIndex()
+	{
+		return ifIndex;
 	}
 }

@@ -3885,6 +3885,7 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		MutexLock(m_mutexTopoAccess, INFINITE);
 		if (vlanList != NULL)
 		{
+			resolveVlanPorts(vlanList);
 		   SendPollerMsg(dwRqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
 			DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_szName, m_dwId);
 			if (m_vlans != NULL)
@@ -3919,6 +3920,36 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	pollerUnlock();
 
 	DbgPrintf(4, _T("Finished topology poll for node %s [%d]"), m_szName, m_dwId);
+}
+
+
+//
+// Resolve port indexes in VLAN list
+//
+
+void Node::resolveVlanPorts(VlanList *vlanList)
+{
+	for(int i = 0; i < vlanList->getSize(); i++)
+	{
+		VlanInfo *vlan = vlanList->get(i);
+		vlan->prepareForResolve();
+		for(int j = 0; j < vlan->getNumPorts(); j++)
+		{
+			DWORD portId = vlan->getPorts()[j];
+			Interface *iface = NULL;
+			switch(vlan->getPortReferenceMode())
+			{
+				case VLAN_PRM_IFINDEX:
+					iface = findInterface(portId, INADDR_ANY);
+					break;
+				case VLAN_PRM_SLOTPORT:
+					iface = findInterfaceBySlotAndPort(portId >> 16, portId & 0xFFFF);
+					break;
+			}
+			if (iface != NULL)
+				vlan->resolvePort(j, (iface->getSlotNumber() << 16) | iface->getPortNumber(), iface->getIfIndex(), iface->Id());
+		}
+	}
 }
 
 

@@ -4,6 +4,7 @@
 
 - Network device drivers introduced
 - Added drivers for Avaya ERS switches
+- Added driver for Cisco Catalyst 2900XL, 2950, and 3500XL series switches
 - New threshold function: SUM
 - New NXSL functions: SetCustomAttribute
 - New MIBs added: CISCO-CLUSTER-MIB, CISCO-HSRP-EXT-MIB, CISCO-HSRP-MIB,

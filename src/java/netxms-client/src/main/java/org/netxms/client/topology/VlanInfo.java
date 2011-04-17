@@ -42,9 +42,11 @@ public class VlanInfo
 		
 		int count = msg.getVariableAsInteger(baseId + 2);
 		ports = new Port[count];
-		long[] data = msg.getVariableAsUInt32Array(baseId + 3);
-		for(int i = 0; i < data.length; i++)
-			ports[i] = new Port((int)(data[i] >> 16), (int)(data[i] & 0xFFFF));
+		long[] sps = msg.getVariableAsUInt32Array(baseId + 3);
+		long[] indexes = msg.getVariableAsUInt32Array(baseId + 4);
+		long[] ids = msg.getVariableAsUInt32Array(baseId + 5);
+		for(int i = 0; i < count; i++)
+			ports[i] = new Port(ids[i], indexes[i], (int)(sps[i] >> 16), (int)(sps[i] & 0xFFFF));
 	}
 
 	/**

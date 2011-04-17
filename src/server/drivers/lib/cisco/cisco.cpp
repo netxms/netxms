@@ -187,7 +187,7 @@ VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attribute
 	VlanList *list = new VlanList();
 	
 	// Vlan list
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.4"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	// Trunk ports

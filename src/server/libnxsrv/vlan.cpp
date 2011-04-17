@@ -97,7 +97,9 @@ void VlanList::fillMessage(CSCPMessage *msg)
 		msg->SetVariable(varId++, m_vlans[i]->getName());
 		msg->SetVariable(varId++, (DWORD)m_vlans[i]->getNumPorts());
 		msg->SetVariableToInt32Array(varId++, (DWORD)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
-		varId += 6;
+		msg->SetVariableToInt32Array(varId++, (DWORD)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIndexes());
+		msg->SetVariableToInt32Array(varId++, (DWORD)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIds());
+		varId += 4;
 	}
 }
 
@@ -112,6 +114,8 @@ VlanInfo::VlanInfo(int vlanId, int prm)
 	m_allocated = 64;
 	m_numPorts = 0;
 	m_ports = (DWORD *)malloc(m_allocated * sizeof(DWORD));
+	m_indexes = NULL;
+	m_ids = NULL;
 }
 
 /**
@@ -121,6 +125,8 @@ VlanInfo::~VlanInfo()
 {
 	safe_free(m_ports);
 	safe_free(m_name);
+	safe_free(m_indexes);
+	safe_free(m_ids);
 }
 
 /**
@@ -153,4 +159,40 @@ void VlanInfo::setName(const TCHAR *name)
 {
 	safe_free(m_name);
 	m_name = _tcsdup(name);
+}
+
+/**
+ * Prepare for port resolving. Add operation is not permitted after this call.
+ */
+void VlanInfo::prepareForResolve()
+{
+	if (m_indexes == NULL)
+	{
+		m_indexes = (DWORD *)malloc(sizeof(DWORD) * m_numPorts);
+		memset(m_indexes, 0, sizeof(DWORD) * m_numPorts);
+	}
+	if (m_ids == NULL)
+	{
+		m_ids = (DWORD *)malloc(sizeof(DWORD) * m_numPorts);
+		memset(m_ids, 0, sizeof(DWORD) * m_numPorts);
+	}
+}
+
+/**
+ * Set full port's information: slot/port, ifIndex, object ID.
+ * Must be called after call to prepareForResolve.
+ *
+ * @param index port's index
+ * @param sp slot/port pair
+ * @param ifIndex interface index
+ * @param id interface object ID
+ */
+void VlanInfo::resolvePort(int index, DWORD sp, DWORD ifIndex, DWORD id)
+{
+	if ((index >= 0) && (index < m_numPorts))
+	{
+		m_ports[index] = sp;
+		m_indexes[index] = ifIndex;
+		m_ids[index] = id;
+	}
 }

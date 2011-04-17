@@ -789,6 +789,7 @@ public:
    void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void configurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
 	void topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+	void resolveVlanPorts(VlanList *vlanList);
 	void updateInterfaceNames(ClientSession *pSession, DWORD dwRqId);
    void updateRoutingTable();
    bool isReadyForStatusPoll();

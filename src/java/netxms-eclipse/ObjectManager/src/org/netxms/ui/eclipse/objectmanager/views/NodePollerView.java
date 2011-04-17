@@ -288,7 +288,8 @@ public class NodePollerView extends ViewPart
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						addPollerMessage(message);
+						if (!textArea.isDisposed())
+							addPollerMessage(message);
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -327,17 +328,20 @@ public class NodePollerView extends ViewPart
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{
-				if (success)
+				if (!textArea.isDisposed())
 				{
-					addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n");
+					if (success)
+					{
+						addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n");
+					}
+					else
+					{
+						addPollerMessage("\u007FePOLL ERROR: " + errorMessage);
+						addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n");
+					}
+					pollActive = false;
+					actionRestart.setEnabled(true);
 				}
-				else
-				{
-					addPollerMessage("\u007FePOLL ERROR: " + errorMessage);
-					addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n");
-				}
-				pollActive = false;
-				actionRestart.setEnabled(true);
 				return Status.OK_STATUS;
 			}
 		}.schedule();

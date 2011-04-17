@@ -240,6 +240,7 @@ public:
 
 	int getSize() { return m_size; }
 	NX_INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
+	NX_INTERFACE_INFO *findByIfIndex(DWORD ifIndex);
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
@@ -262,6 +263,8 @@ private:
 	int m_allocated;
 	int m_numPorts;	// Number of ports in VLAN
 	DWORD *m_ports;	// member ports (slot/port pairs or ifIndex)
+	DWORD *m_indexes;	// ifIndexes for ports
+	DWORD *m_ids;		// Interface object IDs for ports
 
 public:
 	VlanInfo(int vlanId, int prm);
@@ -272,10 +275,15 @@ public:
 	const TCHAR *getName() { return CHECK_NULL_EX(m_name); }
 	int getNumPorts() { return m_numPorts; }
 	DWORD *getPorts() { return m_ports; }
+	DWORD *getIfIndexes() { return m_indexes; }
+	DWORD *getIfIds() { return m_ids; }
 
 	void add(DWORD slot, DWORD port);
 	void add(DWORD ifIndex);
 	void setName(const TCHAR *name);
+
+	void prepareForResolve();
+	void resolvePort(int index, DWORD sp, DWORD ifIndex, DWORD id);
 };
 
 
