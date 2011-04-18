@@ -1571,7 +1571,8 @@ void ClientSession::Login(CSCPMessage *pRequest)
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
-         msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? FALSE : TRUE));
+         msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
+			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 0 : 1));
          DebugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);

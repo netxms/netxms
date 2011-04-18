@@ -1377,10 +1377,28 @@ public:
 // Object index structure
 //
 
-struct INDEX
+struct INDEX_ELEMENT
 {
-   DWORD dwKey;
-   void *pObject;
+   QWORD key;
+   NetObj *object;
+};
+
+class ObjectIndex
+{
+private:
+	int m_size;
+	int m_allocated;
+	INDEX_ELEMENT *m_elements;
+
+	int findElement(QWORD key);
+
+public:
+	ObjectIndex();
+	~ObjectIndex();
+
+	void put(QWORD key, NetObj *object);
+	void remove(QWORD key);
+	NetObj *get(QWORD key);
 };
 
 

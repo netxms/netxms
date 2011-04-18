@@ -525,6 +525,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\index.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\interface.cpp"
 				>
 			</File>
