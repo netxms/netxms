@@ -112,23 +112,19 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 // Show server statistics
 //
 
+static void DciCountCallback(NetObj *object, void *data)
+{
+	*((int *)data) += (int)((Node *)object)->getItemCount();
+}
+
 void ShowServerStats(CONSOLE_CTX pCtx)
 {
-	int dciCount = 0, nodeCount = 0;
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(DWORD i = 0; i < g_dwIdIndexSize; i++)
-		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-		{
-			dciCount += (int)((Node *)g_pIndexById[i].pObject)->getItemCount();
-			nodeCount++;
-		}
-   RWLockUnlock(g_rwlockIdIndex);
-
+	int dciCount = 0;
+	g_idxNodeById.forEach(DciCountCallback, &dciCount);
    ConsolePrintf(pCtx, _T("Total number of objects:     %d\n")
                        _T("Number of monitored nodes:   %d\n")
                        _T("Number of collectable DCIs:  %d\n\n"),
-                 (int)g_dwIdIndexSize, nodeCount, dciCount);
+	              g_idxObjectById.getSize(), g_idxNodeById.getSize(), dciCount);
 }
 
 

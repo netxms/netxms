@@ -36,27 +36,17 @@ PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
 NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
 
 DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
-INDEX NXCORE_EXPORTABLE *g_pIndexById = NULL;
-DWORD NXCORE_EXPORTABLE g_dwIdIndexSize = 0;
-INDEX NXCORE_EXPORTABLE *g_pSubnetIndexByAddr = NULL;
-DWORD NXCORE_EXPORTABLE g_dwSubnetAddrIndexSize = 0;
-INDEX NXCORE_EXPORTABLE *g_pInterfaceIndexByAddr = NULL;
-DWORD NXCORE_EXPORTABLE g_dwInterfaceAddrIndexSize = 0;
-INDEX NXCORE_EXPORTABLE *g_pZoneIndexByGUID = NULL;
-DWORD NXCORE_EXPORTABLE g_dwZoneGUIDIndexSize = 0;
-INDEX NXCORE_EXPORTABLE *g_pConditionIndex = NULL;
-DWORD NXCORE_EXPORTABLE g_dwConditionIndexSize = 0;
-
-RWLOCK NXCORE_EXPORTABLE g_rwlockIdIndex;
-RWLOCK NXCORE_EXPORTABLE g_rwlockSubnetIndex;
-RWLOCK NXCORE_EXPORTABLE g_rwlockInterfaceIndex;
-RWLOCK NXCORE_EXPORTABLE g_rwlockZoneIndex;
-RWLOCK NXCORE_EXPORTABLE g_rwlockConditionIndex;
-
 DWORD g_dwNumCategories = 0;
 CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 
 Queue *g_pTemplateUpdateQueue = NULL;
+
+ObjectIndex g_idxObjectById;
+ObjectIndex g_idxSubnetByAddr;
+ObjectIndex g_idxInterfaceByAddr;
+ObjectIndex g_idxZoneByGUID;
+ObjectIndex g_idxNodeById;
+ObjectIndex g_idxConditionById;
 
 const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
                                _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
@@ -160,19 +150,13 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 
 static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 {
-   DWORD i;
-
    DbgPrintf(1, _T("Started caching of DCI values"));
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
+	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
+   for(int i = 0; i < nodes->size(); i++)
 	{
-		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-		{
-			((Node *)g_pIndexById[i].pObject)->updateDciCache();
-	      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
-		}
+		((Node *)nodes->get(i))->updateDciCache();
+      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
 	}
-   RWLockUnlock(g_rwlockIdIndex);
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;
 }
@@ -194,12 +178,6 @@ void ObjectsInit()
    ConfigReadByteArray(_T("StatusThresholds"), m_iStatusThresholds, 4, 50);
 
    g_pTemplateUpdateQueue = new Queue;
-
-   g_rwlockIdIndex = RWLockCreate();
-   g_rwlockSubnetIndex = RWLockCreate();
-   g_rwlockInterfaceIndex = RWLockCreate();
-   g_rwlockZoneIndex = RWLockCreate();
-   g_rwlockConditionIndex = RWLockCreate();
 
    // Create _T("Entire Network") object
    g_pEntireNet = new Network;
@@ -225,86 +203,6 @@ void ObjectsInit()
 
    // Start template update applying thread
    ThreadCreate(ApplyTemplateThread, 0, NULL);
-}
-
-
-//
-// Function to compare two indexes
-//
-
-static int IndexCompare(const void *pArg1, const void *pArg2)
-{
-   return (((INDEX *)pArg1)->dwKey < ((INDEX *)pArg2)->dwKey) ? -1 :
-            ((((INDEX *)pArg1)->dwKey > ((INDEX *)pArg2)->dwKey) ? 1 : 0);
-}
-
-
-//
-// Add new object to index
-//
-
-void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, void *pObject)
-{
-   *ppIndex = (INDEX *)realloc(*ppIndex, sizeof(INDEX) * ((*pdwIndexSize) + 1));
-   (*ppIndex)[*pdwIndexSize].dwKey = dwKey;
-   (*ppIndex)[*pdwIndexSize].pObject = pObject;
-   (*pdwIndexSize)++;
-   qsort(*ppIndex, *pdwIndexSize, sizeof(INDEX), IndexCompare);
-}
-
-
-//
-// Perform binary search on index
-// Returns INVALID_INDEX if key not found or position of appropriate network object
-// We assume that pIndex == NULL will not be passed
-//
-
-DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey)
-{
-   DWORD dwFirst, dwLast, dwMid;
-
-	if (dwIndexSize == 0)
-      return INVALID_INDEX;
-
-   dwFirst = 0;
-   dwLast = dwIndexSize - 1;
-
-   if ((dwKey < pIndex[0].dwKey) || (dwKey > pIndex[dwLast].dwKey))
-      return INVALID_INDEX;
-
-   while(dwFirst < dwLast)
-   {
-      dwMid = (dwFirst + dwLast) / 2;
-      if (dwKey == pIndex[dwMid].dwKey)
-         return dwMid;
-      if (dwKey < pIndex[dwMid].dwKey)
-         dwLast = dwMid - 1;
-      else
-         dwFirst = dwMid + 1;
-   }
-
-   if (dwKey == pIndex[dwLast].dwKey)
-      return dwLast;
-
-   return INVALID_INDEX;
-}
-
-
-//
-// Delete object from index
-//
-
-void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey)
-{
-   DWORD dwPos;
-   INDEX *pIndex = *ppIndex;
-
-   dwPos = SearchIndex(pIndex, *pdwIndexSize, dwKey);
-   if (dwPos != INVALID_INDEX)
-   {
-      (*pdwIndexSize)--;
-      memmove(&pIndex[dwPos], &pIndex[dwPos + 1], sizeof(INDEX) * (*pdwIndexSize - dwPos));
-   }
 }
 
 
@@ -342,9 +240,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          }
       }
    }
-	RWLockPreemptiveWriteLock(g_rwlockIdIndex, 1000, 500);
-   AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
-   RWLockUnlock(g_rwlockIdIndex);
+	g_idxObjectById.put(pObject->Id(), pObject);
    if (!pObject->IsDeleted())
    {
       switch(pObject->Type())
@@ -366,14 +262,14 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
 			case OBJECT_NETWORKMAP:
+            break;
          case OBJECT_NODE:
+				g_idxNodeById.put(pObject->Id(), pObject);
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
             {
-               RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
-               AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
-               RWLockUnlock(g_rwlockSubnetIndex);
+					g_idxSubnetByAddr.put(pObject->IpAddr(), pObject);
                if (bNewObject)
                   PostEvent(EVENT_SUBNET_ADDED, pObject->Id(), NULL);
             }
@@ -381,24 +277,16 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_INTERFACE:
             if (pObject->IpAddr() != 0)
             {
-               RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
-					if (SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, pObject->IpAddr()) == INVALID_INDEX)
-						AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
-					else
+					if (g_idxInterfaceByAddr.put(pObject->IpAddr(), pObject))
 						DbgPrintf(1, _T("WARNING: duplicate interface IP address %08X (interface object %s [%d])"),
 						          pObject->IpAddr(), pObject->Name(), (int)pObject->Id());
-               RWLockUnlock(g_rwlockInterfaceIndex);
             }
             break;
          case OBJECT_ZONE:
-            RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
-            AddObjectToIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->getZoneId(), pObject);
-            RWLockUnlock(g_rwlockZoneIndex);
+				g_idxZoneByGUID.put(((Zone *)pObject)->getZoneId(), pObject);
             break;
          case OBJECT_CONDITION:
-            RWLockWriteLock(g_rwlockConditionIndex, INFINITE);
-            AddObjectToIndex(&g_pConditionIndex, &g_dwConditionIndexSize, pObject->Id(), pObject);
-            RWLockUnlock(g_rwlockConditionIndex);
+				g_idxConditionById.put(pObject->Id(), pObject);
             break;
          default:
             nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
@@ -436,33 +324,31 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_NETWORKMAPROOT:
 		case OBJECT_NETWORKMAPGROUP:
 		case OBJECT_NETWORKMAP:
+			break;
       case OBJECT_NODE:
+			g_idxNodeById.remove(pObject->Id());
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
          {
-            RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
-            DeleteObjectFromIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr());
-            RWLockUnlock(g_rwlockSubnetIndex);
+				g_idxSubnetByAddr.remove(pObject->IpAddr());
          }
          break;
       case OBJECT_INTERFACE:
          if (pObject->IpAddr() != 0)
          {
-            RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
-            DeleteObjectFromIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr());
-            RWLockUnlock(g_rwlockInterfaceIndex);
+				NetObj *o = g_idxInterfaceByAddr.get(pObject->IpAddr());
+				if ((o != NULL) && (o->Id() == pObject->Id()))
+				{
+					g_idxInterfaceByAddr.remove(pObject->IpAddr());
+				}
          }
          break;
       case OBJECT_ZONE:
-         RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
-         DeleteObjectFromIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->getZoneId());
-         RWLockUnlock(g_rwlockZoneIndex);
+			g_idxZoneByGUID.remove(((Zone *)pObject)->getZoneId());
          break;
       case OBJECT_CONDITION:
-         RWLockWriteLock(g_rwlockConditionIndex, INFINITE);
-         DeleteObjectFromIndex(&g_pConditionIndex, &g_dwConditionIndexSize, pObject->Id());
-         RWLockUnlock(g_rwlockConditionIndex);
+			g_idxConditionById.remove(pObject->Id());
          break;
       default:
          nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
@@ -495,17 +381,11 @@ static DWORD GetObjectNetmask(NetObj *pObject)
 
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr)
 {
-   DWORD dwPos;
-   Node *pNode;
-
-   if ((g_pInterfaceIndexByAddr == NULL) || (dwAddr == 0))
+   if (dwAddr == 0)
       return NULL;
 
-   RWLockReadLock(g_rwlockInterfaceIndex, INFINITE);
-   dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwAddr);
-   pNode = (dwPos == INVALID_INDEX) ? NULL : ((Interface *)g_pInterfaceIndexByAddr[dwPos].pObject)->getParentNode();
-   RWLockUnlock(g_rwlockInterfaceIndex);
-   return pNode;
+	Interface *iface = (Interface *)g_idxInterfaceByAddr.get(dwAddr);
+	return (iface != NULL) ? iface->getParentNode() : NULL;
 }
 
 
@@ -524,24 +404,18 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
 // Find interface by MAC address
 //
 
+static bool MACComparator(NetObj *object, void *macAddr)
+{
+	return ((object->Type() == OBJECT_INTERFACE) &&
+		     !memcmp(macAddr, ((Interface *)object)->getMacAddr(), 6));
+}
+
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 {
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-   Interface *pInterface = NULL;
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
-	{
-		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_INTERFACE) &&
-		    !memcmp(macAddr, ((Interface *)g_pIndexById[i].pObject)->getMacAddr(), 6))
-		{
-			pInterface = ((Interface *)g_pIndexById[i].pObject);
-			break;
-		}
-	}
-   RWLockUnlock(g_rwlockIdIndex);
-   return pInterface;
+	return (Interface *)g_idxObjectById.find(MACComparator, (void *)macAddr);
 }
 
 
@@ -549,21 +423,15 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 // Find interface by description
 //
 
+static bool DescriptionComparator(NetObj *object, void *description)
+{
+	return ((object->Type() == OBJECT_INTERFACE) &&
+	        !_tcscmp((const TCHAR *)description, ((Interface *)object)->getDescription()));
+}
+
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description)
 {
-   Interface *pInterface = NULL;
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
-	{
-		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_INTERFACE) &&
-		    !_tcscmp(description, ((Interface *)g_pIndexById[i].pObject)->getDescription()))
-		{
-			pInterface = ((Interface *)g_pIndexById[i].pObject);
-			break;
-		}
-	}
-   RWLockUnlock(g_rwlockIdIndex);
-   return pInterface;
+	return (Interface *)g_idxObjectById.find(DescriptionComparator, (void *)description);
 }
 
 
@@ -571,24 +439,15 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description
 // Find node by LLDP ID
 //
 
+static bool LldpIdComparator(NetObj *object, void *lldpId)
+{
+	const TCHAR *id = ((Node *)object)->getLLDPNodeId();
+	return (id != NULL) && !_tcscmp(id, (const TCHAR *)lldpId);
+}
+
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 {
-   Node *node = NULL;
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
-	{
-		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-		{
-			const TCHAR *id = ((Node *)g_pIndexById[i].pObject)->getLLDPNodeId();
-			if ((id != NULL) && !_tcscmp(id, lldpId))
-			{
-				node = (Node *)g_pIndexById[i].pObject;
-				break;
-			}
-		}
-	}
-   RWLockUnlock(g_rwlockIdIndex);
-   return node;
+	return (Node *)g_idxNodeById.find(LldpIdComparator, (void *)lldpId);
 }
 
 
@@ -598,17 +457,9 @@ Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr)
 {
-   DWORD dwPos;
-   Subnet *pSubnet;
-
-   if ((g_pSubnetIndexByAddr == NULL) || (dwAddr == 0))
+   if (dwAddr == 0)
       return NULL;
-
-   RWLockReadLock(g_rwlockSubnetIndex, INFINITE);
-   dwPos = SearchIndex(g_pSubnetIndexByAddr, g_dwSubnetAddrIndexSize, dwAddr);
-   pSubnet = (dwPos == INVALID_INDEX) ? NULL : (Subnet *)g_pSubnetIndexByAddr[dwPos].pObject;
-   RWLockUnlock(g_rwlockSubnetIndex);
-   return pSubnet;
+	return (Subnet *)g_idxSubnetByAddr.get(dwAddr);
 }
 
 
@@ -616,24 +467,16 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr)
 // Find subnet for given IP address
 //
 
+static bool SubnetAddrComparator(NetObj *object, void *nodeAddr)
+{
+   return (CAST_FROM_POINTER(nodeAddr, DWORD) & ((Subnet *)object)->getIpNetMask()) == ((Subnet *)object)->IpAddr();
+}
+
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr)
 {
-   DWORD i;
-   Subnet *pSubnet = NULL;
-
-   if ((g_pSubnetIndexByAddr == NULL) || (dwNodeAddr == 0))
+   if (dwNodeAddr == 0)
       return NULL;
-
-   RWLockReadLock(g_rwlockSubnetIndex, INFINITE);
-   for(i = 0; i < g_dwSubnetAddrIndexSize; i++)
-      if ((dwNodeAddr & ((Subnet *)g_pSubnetIndexByAddr[i].pObject)->getIpNetMask()) == 
-               ((Subnet *)g_pSubnetIndexByAddr[i].pObject)->IpAddr())
-      {
-         pSubnet = (Subnet *)g_pSubnetIndexByAddr[i].pObject;
-         break;
-      }
-   RWLockUnlock(g_rwlockSubnetIndex);
-   return pSubnet;
+	return (Subnet *)g_idxSubnetByAddr.find(SubnetAddrComparator, CAST_TO_POINTER(dwNodeAddr, void *));
 }
 
 
@@ -643,17 +486,7 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr)
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
 {
-   DWORD dwPos;
-   NetObj *pObject;
-
-   if (g_pIndexById == NULL)
-      return NULL;
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   dwPos = SearchIndex(g_pIndexById, g_dwIdIndexSize, dwId);
-   pObject = (dwPos == INVALID_INDEX) ? NULL : (NetObj *)g_pIndexById[dwPos].pObject;
-   RWLockUnlock(g_rwlockIdIndex);
-   return pObject;
+	return g_idxObjectById.get(dwId);
 }
 
 
@@ -716,26 +549,14 @@ NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
 // Find template object by name
 //
 
+static bool TemplateNameComparator(NetObj *object, void *name)
+{
+	return (object->Type() == OBJECT_TEMPLATE) && !_tcsicmp(object->Name(), (const TCHAR *)name);
+}
+
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 {
-   DWORD i;
-   Template *pObject = NULL;
-
-   if (g_pIndexById == NULL)
-      return NULL;
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATE) &&
-			 (!_tcsicmp(((NetObj *)g_pIndexById[i].pObject)->Name(), pszName)))
-      {
-         pObject = (Template *)g_pIndexById[i].pObject;
-         break;
-      }
-   }
-   RWLockUnlock(g_rwlockIdIndex);
-   return pObject;
+	return (Template *)g_idxObjectById.find(TemplateNameComparator, (void *)pszName);
 }
 
 
@@ -743,23 +564,14 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 // Find cluster by resource IP
 //
 
+static bool ClusterResourceIPComparator(NetObj *object, void *ipAddr)
+{
+	return (object->Type() == OBJECT_CLUSTER) && ((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, DWORD));
+}
+
 Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr)
 {
-   Cluster *cluster = NULL;
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
-	{
-		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CLUSTER)
-		{
-			if (((Cluster *)g_pIndexById[i].pObject)->isVirtualAddr(ipAddr))
-			{
-				cluster = (Cluster *)g_pIndexById[i].pObject;
-				break;
-			}
-		}
-	}
-   RWLockUnlock(g_rwlockIdIndex);
-   return cluster;
+	return (Cluster *)g_idxObjectById.find(ClusterResourceIPComparator, CAST_TO_POINTER(ipAddr, void *));
 }
 
 
@@ -768,24 +580,16 @@ Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr)
 // resource IP or located on one of sync subnets)
 //
 
+static bool ClusterIPComparator(NetObj *object, void *ipAddr)
+{
+	return (object->Type() == OBJECT_CLUSTER) && 
+	       (((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, DWORD)) ||
+	        ((Cluster *)object)->isSyncAddr(CAST_FROM_POINTER(ipAddr, DWORD)));
+}
+
 bool NXCORE_EXPORTABLE IsClusterIP(DWORD ipAddr)
 {
-   bool result = false;
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-	for(DWORD i = 0; i < g_dwIdIndexSize; i++)
-	{
-		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CLUSTER)
-		{
-			if (((Cluster *)g_pIndexById[i].pObject)->isVirtualAddr(ipAddr) ||
-				 ((Cluster *)g_pIndexById[i].pObject)->isSyncAddr(ipAddr))
-			{
-				result = true;
-				break;
-			}
-		}
-	}
-   RWLockUnlock(g_rwlockIdIndex);
-   return result;
+	return g_idxObjectById.find(ClusterIPComparator, CAST_TO_POINTER(ipAddr, void *)) != NULL;
 }
 
 
@@ -795,17 +599,7 @@ bool NXCORE_EXPORTABLE IsClusterIP(DWORD ipAddr)
 
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID)
 {
-   DWORD dwPos;
-   NetObj *pObject;
-
-   if (g_pZoneIndexByGUID == NULL)
-      return NULL;
-
-   RWLockReadLock(g_rwlockZoneIndex, INFINITE);
-   dwPos = SearchIndex(g_pZoneIndexByGUID, g_dwZoneGUIDIndexSize, dwZoneGUID);
-   pObject = (dwPos == INVALID_INDEX) ? NULL : (NetObj *)g_pZoneIndexByGUID[dwPos].pObject;
-   RWLockUnlock(g_rwlockZoneIndex);
-   return (pObject->Type() == OBJECT_ZONE) ? (Zone *)pObject : NULL;
+	return (Zone *)g_idxZoneByGUID.get(dwZoneGUID);
 }
 
 
@@ -813,23 +607,41 @@ Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID)
 // Find local management node ID
 //
 
+static bool LocalMgmtNodeComparator(NetObj *object, void *data)
+{
+	return (((Node *)object)->getFlags() & NF_IS_LOCAL_MGMT) ? true : false;
+}
+
 DWORD FindLocalMgmtNode()
 {
-   DWORD i, dwId = 0;
+	NetObj *object = g_idxNodeById.find(LocalMgmtNodeComparator, NULL);
+	return (object != NULL) ? object->Id() : 0;
+}
 
-   if (g_pIndexById == NULL)
-      return 0;
 
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-		if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
-			 (((Node *)g_pIndexById[i].pObject)->getFlags() & NF_IS_LOCAL_MGMT))
-      {
-         dwId = ((Node *)g_pIndexById[i].pObject)->Id();
-         break;
-      }
-   RWLockUnlock(g_rwlockIdIndex);
-   return dwId;
+//
+// ObjectIndex::forEach callback which recalculates object's status
+//
+
+static void RecalcStatusCallback(NetObj *object, void *data)
+{
+	object->CalculateCompoundStatus();
+}
+
+
+//
+// ObjectIndex::forEach callback which links container child objects
+//
+
+static void LinkChildObjectsCallback(NetObj *object, void *data)
+{
+	if ((object->Type() == OBJECT_CONTAINER) ||
+		 (object->Type() == OBJECT_TEMPLATEGROUP) ||
+		 (object->Type() == OBJECT_POLICYGROUP) ||
+		 (object->Type() == OBJECT_NETWORKMAPGROUP))
+	{
+		((Container *)object)->LinkChildObjects();
+	}
 }
 
 
@@ -1294,12 +1106,7 @@ BOOL LoadObjects()
 
    // Link childs to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
-   for(i = 0; i < g_dwIdIndexSize; i++)
-      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CONTAINER) ||
-          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATEGROUP) ||
-          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_POLICYGROUP) ||
-          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NETWORKMAPGROUP))
-         ((Container *)g_pIndexById[i].pObject)->LinkChildObjects();
+	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
 
    // Link childs to _T("Service Root" and "Template Root") objects
    g_pServiceRoot->LinkChildObjects();
@@ -1320,8 +1127,7 @@ BOOL LoadObjects()
    // Recalculate status for zone objects
    if (g_dwFlags & AF_ENABLE_ZONING)
    {
-      for(i = 0; i < g_dwZoneGUIDIndexSize; i++)
-         ((NetObj *)g_pZoneIndexByGUID[i].pObject)->CalculateCompoundStatus();
+		g_idxZoneByGUID.forEach(RecalcStatusCallback, NULL);
    }
 
 	// Validate system templates and create when needed
@@ -1365,15 +1171,14 @@ BOOL LoadObjects()
 // Delete user or group from all objects' ACLs
 //
 
+static void DropUserAccess(NetObj *object, void *userId)
+{
+	object->DropUserAccess(CAST_FROM_POINTER(userId, DWORD));
+}
+
 void DeleteUserFromAllObjects(DWORD dwUserId)
 {
-   DWORD i;
-
-   // Walk through all objects
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-      ((NetObj *)g_pIndexById[i].pObject)->DropUserAccess(dwUserId);
-   RWLockUnlock(g_rwlockIdIndex);
+	g_idxObjectById.forEach(DropUserAccess, CAST_TO_POINTER(dwUserId, void *));
 }
 
 
@@ -1494,7 +1299,6 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
 //
 // Delete object (final step)
 // This function should be called ONLY from syncer thread
-// Access to object index by id are write-locked when this function is called
 // Object will be removed from index by ID and destroyed.
 //
 
@@ -1511,7 +1315,7 @@ void NetObjDelete(NetObj *pObject)
    QueueSQLRequest(szQuery);
 
    // Delete object from index by ID and object itself
-   DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
+	g_idxObjectById.remove(pObject->Id());
    delete pObject;
 }
 
@@ -1522,20 +1326,8 @@ void NetObjDelete(NetObj *pObject)
 
 void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
 {
-   DWORD dwPos;
-
-   RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
-   dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwOldIpAddr);
-   if (dwPos != INVALID_INDEX)
-   {
-      g_pInterfaceIndexByAddr[dwPos].dwKey = dwNewIpAddr;
-      qsort(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, sizeof(INDEX), IndexCompare);
-   }
-   else
-   {
-      AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, dwNewIpAddr, pObject);
-   }
-   RWLockUnlock(g_rwlockInterfaceIndex);
+	g_idxInterfaceByAddr.remove(dwOldIpAddr);
+	g_idxInterfaceByAddr.put(dwNewIpAddr, pObject);
 }
 
 

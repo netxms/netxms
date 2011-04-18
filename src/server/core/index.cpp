@@ -31,6 +31,7 @@ ObjectIndex::ObjectIndex()
 	m_size = 0;
 	m_allocated = 0;
 	m_elements = NULL;
+	m_lock = RWLockCreate();
 }
 
 /**
@@ -39,6 +40,7 @@ ObjectIndex::ObjectIndex()
 ObjectIndex::~ObjectIndex()
 {
 	safe_free(m_elements);
+	RWLockDestroy(m_lock);
 }
 
 /**
@@ -55,14 +57,20 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
  *
  * @param key object's key
  * @param object object
+ * @return true if existing object was replaced
  */
-void ObjectIndex::put(QWORD key, NetObj *object)
+bool ObjectIndex::put(QWORD key, NetObj *object)
 {
+	bool replace = false;
+
+	RWLockWriteLock(m_lock, INFINITE);
+
 	int pos = findElement(key);
 	if (pos != -1)
 	{
 		// Element already exist
 		m_elements[pos].object = object;
+		replace = true;
 	}
 	else
 	{
@@ -76,6 +84,28 @@ void ObjectIndex::put(QWORD key, NetObj *object)
 		m_elements[m_size].object = object;
 	   qsort(m_elements, m_size, sizeof(INDEX_ELEMENT), IndexCompare);
 	}
+
+	RWLockUnlock(m_lock);
+	return replace;
+}
+
+/**
+ * Remove object from index
+ *
+ * @param key object's key
+ */
+void ObjectIndex::remove(QWORD key)
+{
+	RWLockWriteLock(m_lock, INFINITE);
+
+	int pos = findElement(key);
+	if (pos != -1)
+	{
+		m_size--;
+		memmove(&m_elements[pos], &m_elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_size - pos));
+	}
+
+	RWLockUnlock(m_lock);
 }
 
 /**
@@ -91,25 +121,102 @@ int ObjectIndex::findElement(QWORD key)
 	if (m_size == 0)
       return -1;
 
-   dwFirst = 0;
-   dwLast = dwIndexSize - 1;
+   first = 0;
+   last = m_size - 1;
 
-   if ((dwKey < pIndex[0].dwKey) || (dwKey > pIndex[dwLast].dwKey))
-      return INVALID_INDEX;
+   if ((key < m_elements[0].key) || (key > m_elements[last].key))
+      return -1;
 
-   while(dwFirst < dwLast)
+   while(first < last)
    {
-      dwMid = (dwFirst + dwLast) / 2;
-      if (dwKey == pIndex[dwMid].dwKey)
-         return dwMid;
-      if (dwKey < pIndex[dwMid].dwKey)
-         dwLast = dwMid - 1;
+      mid = (first + last) / 2;
+      if (key == m_elements[mid].key)
+         return mid;
+      if (key < m_elements[mid].key)
+         last = mid - 1;
       else
-         dwFirst = dwMid + 1;
+         first = mid + 1;
    }
 
-   if (dwKey == pIndex[dwLast].dwKey)
-      return dwLast;
+   if (key == m_elements[last].key)
+      return last;
 
-   return INVALID_INDEX;
+   return -1;
+}
+
+/**
+ * Get object by key
+ *
+ * @param key key
+ * @return object with given key or NULL
+ */
+NetObj *ObjectIndex::get(QWORD key)
+{
+	RWLockReadLock(m_lock, INFINITE);
+	int pos = findElement(key);
+	NetObj *object = (pos == -1) ? NULL : m_elements[pos].object;
+	RWLockUnlock(m_lock);
+	return object;
+}
+
+/**
+ * Get index size
+ */
+int ObjectIndex::getSize()
+{
+	RWLockReadLock(m_lock, INFINITE);
+	int size = m_size;
+	RWLockUnlock(m_lock);
+	return size;
+}
+
+/**
+ * Get all objects in index. Result array created dynamically and
+ * must be destroyed by the caller. Changes in result array will
+ * not affect content of the index.
+ */
+ObjectArray<NetObj> *ObjectIndex::getObjects()
+{
+	RWLockReadLock(m_lock, INFINITE);
+	ObjectArray<NetObj> *result = new ObjectArray<NetObj>(m_size);
+	for(int i = 0; i < m_size; i++)
+		result->add(m_elements[i].object);
+	RWLockUnlock(m_lock);
+	return result;
+}
+
+/**
+ * Find object by compating it with given data using external comparator
+ *
+ * @param comparator comparing finction (must return true for object to be found)
+ * @param data user data passed to comparator
+ */
+NetObj *ObjectIndex::find(bool (*comparator)(NetObj *, void *), void *data)
+{
+	NetObj *result = NULL;
+
+	RWLockReadLock(m_lock, INFINITE);
+	for(int i = 0; i < m_size; i++)
+		if (comparator(m_elements[i].object, data))
+		{
+			result = m_elements[i].object;
+			break;
+		}
+	RWLockUnlock(m_lock);
+
+	return result;
+}
+
+/**
+ * Execute callback for each object
+ *
+ * @param callback
+ * @param data user data passed to callback
+ */
+void ObjectIndex::forEach(void (*callback)(NetObj *, void *), void *data)
+{
+	RWLockReadLock(m_lock, INFINITE);
+	for(int i = 0; i < m_size; i++)
+		callback(m_elements[i].object, data);
+	RWLockUnlock(m_lock);
 }

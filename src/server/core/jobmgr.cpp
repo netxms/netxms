@@ -55,21 +55,29 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 // Get job list
 //
 
+struct __job_callback_data
+{
+	CSCPMessage *msg;
+	DWORD jobCount;
+	DWORD baseId;
+};
+
+static void JobListCallback(NetObj *object, void *data)
+{
+	struct __job_callback_data *jcb = (struct __job_callback_data *)data;
+	ServerJobQueue *queue = ((Node *)object)->getJobQueue();
+	jcb->jobCount += queue->fillMessage(jcb->msg, &jcb->baseId);
+}
+
 void GetJobList(CSCPMessage *msg)
 {
-	DWORD i, id, count;
+	struct __job_callback_data jcb;
 
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0, id = VID_JOB_LIST_BASE, count = 0; i < g_dwIdIndexSize; i++)
-   {
-      if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-      {
-			ServerJobQueue *queue = ((Node *)g_pIndexById[i].pObject)->getJobQueue();
-			count += queue->fillMessage(msg, &id);
-      }
-   }
-   RWLockUnlock(g_rwlockIdIndex);
-	msg->SetVariable(VID_JOB_COUNT, count);
+	jcb.msg = msg;
+	jcb.jobCount = 0;
+	jcb.baseId = VID_JOB_LIST_BASE;
+	g_idxNodeById.forEach(JobListCallback, msg);
+	msg->SetVariable(VID_JOB_COUNT, jcb.jobCount);
 }
 
 

@@ -1389,6 +1389,7 @@ private:
 	int m_size;
 	int m_allocated;
 	INDEX_ELEMENT *m_elements;
+	RWLOCK m_lock;
 
 	int findElement(QWORD key);
 
@@ -1396,9 +1397,15 @@ public:
 	ObjectIndex();
 	~ObjectIndex();
 
-	void put(QWORD key, NetObj *object);
+	bool put(QWORD key, NetObj *object);
 	void remove(QWORD key);
 	NetObj *get(QWORD key);
+	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
+
+	int getSize();
+	ObjectArray<NetObj> *getObjects();
+
+	void forEach(void (*callback)(NetObj *, void *), void *data);
 };
 
 
@@ -1466,26 +1473,18 @@ extern TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot;
 extern PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot;
 
 extern DWORD NXCORE_EXPORTABLE g_dwMgmtNode;
-extern INDEX NXCORE_EXPORTABLE *g_pIndexById;
-extern DWORD NXCORE_EXPORTABLE g_dwIdIndexSize;
-extern INDEX NXCORE_EXPORTABLE *g_pSubnetIndexByAddr;
-extern DWORD NXCORE_EXPORTABLE g_dwSubnetAddrIndexSize;
-extern INDEX NXCORE_EXPORTABLE *g_pInterfaceIndexByAddr;
-extern DWORD NXCORE_EXPORTABLE g_dwInterfaceAddrIndexSize;
-extern INDEX NXCORE_EXPORTABLE *g_pZoneIndexByGUID;
-extern DWORD NXCORE_EXPORTABLE g_dwZoneGUIDIndexSize;
-extern INDEX NXCORE_EXPORTABLE *g_pConditionIndex;
-extern DWORD NXCORE_EXPORTABLE g_dwConditionIndexSize;
-extern RWLOCK NXCORE_EXPORTABLE g_rwlockIdIndex;
-extern RWLOCK NXCORE_EXPORTABLE g_rwlockSubnetIndex;
-extern RWLOCK NXCORE_EXPORTABLE g_rwlockInterfaceIndex;
-extern RWLOCK NXCORE_EXPORTABLE g_rwlockZoneIndex;
-extern RWLOCK NXCORE_EXPORTABLE g_rwlockConditionIndex;
 extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
 extern const TCHAR *g_szClassName[];
 extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
+
+extern ObjectIndex g_idxObjectById;
+extern ObjectIndex g_idxSubnetByAddr;
+extern ObjectIndex g_idxInterfaceByAddr;
+extern ObjectIndex g_idxZoneByGUID;
+extern ObjectIndex g_idxNodeById;
+extern ObjectIndex g_idxConditionById;
 
 
 #endif   /* _nms_objects_h_ */
