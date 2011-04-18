@@ -182,6 +182,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private byte[] serverId = new byte[8];
 	private String serverTimeZone;
 	private byte[] serverChallenge = new byte[CLIENT_CHALLENGE_SIZE];
+	private boolean zoningEnabled = false;
 
 	// Objects
 	private Map<Long, GenericObject> objectList = new HashMap<Long, GenericObject>();
@@ -1048,6 +1049,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			userId = response.getVariableAsInteger(NXCPCodes.VID_USER_ID);
 			userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
 			passwordExpired = response.getVariableAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
+			zoningEnabled = response.getVariableAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
 
 			isConnected = true;
 		}
@@ -1202,6 +1204,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public byte[] getServerChallenge()
 	{
 		return serverChallenge;
+	}
+
+	/**
+	 * @return the zoningEnabled
+	 */
+	public boolean isZoningEnabled()
+	{
+		return zoningEnabled;
 	}
 
 	/*

@@ -665,6 +665,7 @@ public final class NXCPCodes
 	public static final long VID_DRIVER_VERSION          = 381;
 	public static final long VID_NUM_VLANS               = 382;
 	public static final long VID_CREATE_JOB_ON_HOLD      = 383;
+	public static final long VID_ZONING_ENABLED          = 384;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
