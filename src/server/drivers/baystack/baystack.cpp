@@ -73,7 +73,10 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
 	{
 		slotSize = 128;
 	}
-	else if (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.40"), 20))	// BPS2000
+	/* TODO: should OPtera Metro 1200 be there? */
+	else if ((!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.35"), 20)) ||	// BayStack 450
+	         (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.40"), 20)) ||	// BPS2000
+	         (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.43"), 20)))		// BayStack 420
 	{
 		slotSize = 32;
 	}
