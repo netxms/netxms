@@ -1285,14 +1285,15 @@ void DCItem::updateCacheSize(DWORD dwCondId)
          if (dwRequiredSize < m_ppThresholdList[i]->getRequiredCacheSize())
             dwRequiredSize = m_ppThresholdList[i]->getRequiredCacheSize();
 
-      RWLockReadLock(g_rwlockConditionIndex, INFINITE);
-      for(i = 0; i < g_dwConditionIndexSize; i++)
+		ObjectArray<NetObj> *conditions = g_idxConditionById.getObjects();
+		for(i = 0; i < (DWORD)conditions->size(); i++)
       {
-         dwSize = ((Condition *)g_pConditionIndex[i].pObject)->getCacheSizeForDCI(m_dwId, dwCondId == g_pConditionIndex[i].dwKey);
+			Condition *c = (Condition *)conditions->get(i);
+			dwSize = c->getCacheSizeForDCI(m_dwId, dwCondId == c->Id());
          if (dwSize > dwRequiredSize)
             dwRequiredSize = dwSize;
       }
-      RWLockUnlock(g_rwlockConditionIndex);
+		delete conditions;
    }
    else
    {

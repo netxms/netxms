@@ -904,27 +904,34 @@ static BOOL IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
 // Dump index
 //
 
-static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index, BOOL bIndexByIp)
+struct __dump_index_data
 {
-	DWORD i;
-	TCHAR szIpAddr[16];
+	CONSOLE_CTX console;
+	bool indexByIP;
+};
 
-	for(i = 0; i < dwSize; i++)
+static void DumpIndexCallback(NetObj *object, void *data)
+{
+	struct __dump_index_data *d = (struct __dump_index_data *)data;
+	if (d->indexByIP)
 	{
-		if (bIndexByIp)
-		{
-			ConsolePrintf(pCtx, _T("%08X [%-15s] %p %s\n"), pIndex[i].dwKey,
-					IpToStr(pIndex[i].dwKey, szIpAddr),
-					pIndex[i].pObject, ((NetObj *)pIndex[i].pObject)->Name());
-		}
-		else
-		{
-			ConsolePrintf(pCtx, _T("%08X %p %s\n"), pIndex[i].dwKey, pIndex[i].pObject,
-					((NetObj *)pIndex[i].pObject)->Name());
-		}
+		TCHAR buffer[16];
+		ConsolePrintf(d->console, _T("%08X [%-15s] %p %s\n"), object->IpAddr(),
+				IpToStr(object->IpAddr(), buffer),
+				object, object->Name());
 	}
+	else
+	{
+		ConsolePrintf(d->console, _T("%08X %p %s\n"), object->Id(), object, object->Name());
+	}
+}
 
-	RWLockUnlock(hLock);
+static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index, bool indexByIp)
+{
+	struct __dump_index_data data;
+	data.console = pCtx;
+	data.indexByIP = indexByIp;
+	index->forEach(DumpIndexCallback, &data);
 }
 
 
@@ -1049,29 +1056,29 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
 			if (IsCommand(_T("CONDITION"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, &g_idxConditionById, FALSE);
+				DumpIndex(pCtx, &g_idxConditionById, false);
 			}
 			else if (IsCommand(_T("ID"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, &g_idxObjectById, FALSE);
+				DumpIndex(pCtx, &g_idxObjectById, false);
 			}
 			else if (IsCommand(_T("INTERFACE"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, &g_idxInterfaceByAddr, TRUE);
+				DumpIndex(pCtx, &g_idxInterfaceByAddr, true);
 			}
 			else if (IsCommand(_T("NODE"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, &g_idxNodeById, FALSE);
+				DumpIndex(pCtx, &g_idxNodeById, false);
 			}
 			else if (IsCommand(_T("SUBNET"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, &g_idxSubnetByAddr, TRUE);
+				DumpIndex(pCtx, &g_idxSubnetByAddr, true);
 			}
 			else
 			{
 				if (szBuffer[0] == 0)
 					ConsolePrintf(pCtx, _T("ERROR: Missing index name\n")
-							_T("Valid names are: CONDITION, ID, INTERFACE, SUBNET\n\n"));
+							_T("Valid names are: CONDITION, ID, INTERFACE, NODE, SUBNET\n\n"));
 				else
 					ConsolePrintf(pCtx, _T("ERROR: Invalid index name\n\n"));
 			}

@@ -85,6 +85,8 @@ void GetJobList(CSCPMessage *msg)
 // Implementatoin for job status changing operations: cancel, hold, unhold
 //
 
+static void ChangeJobStatus
+
 static DWORD ChangeJobStatus(DWORD userId, CSCPMessage *msg, int operation)
 {
 	DWORD i, jobId, rcc = RCC_INVALID_JOB_ID;

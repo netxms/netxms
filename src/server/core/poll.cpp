@@ -108,6 +108,21 @@ static void CreateManagementNode(DWORD ipAddr, DWORD netMask)
 // Check if management server node presented in node list
 //
 
+static void CheckMgmtFlagCallback(NetObj *object, void *data)
+{
+	if ((g_dwMgmtNode != object->Id()) && ((Node *)object)->isLocalManagement())
+	{
+		((Node *)object)->clearLocalMgmtFlag();
+		DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
+					 object->Name(), object->Id());
+	}
+}
+
+static bool LocalMgmtNodeComparator(NetObj *object, void *data)
+{
+	return ((Node *)object)->isLocalManagement();
+}
+
 void CheckForMgmtNode()
 {
    InterfaceList *pIfList;
@@ -145,18 +160,7 @@ void CheckForMgmtNode()
 	if (g_dwMgmtNode != 0)
 	{
 		// Check that other nodes does not have NF_IS_LOCAL_MGMT flag set
-		RWLockReadLock(g_rwlockIdIndex, INFINITE);
-		for(i = 0; i < (int)g_dwIdIndexSize; i++)
-		{
-			if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
-				 (g_dwMgmtNode != g_pIndexById[i].dwKey) &&
-				 (((Node *)g_pIndexById[i].pObject)->isLocalManagement()))
-			{
-				((Node *)g_pIndexById[i].pObject)->clearLocalMgmtFlag();
-				DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
-							 ((Node *)g_pIndexById[i].pObject)->Name(), ((Node *)g_pIndexById[i].pObject)->Id());
-			}
-		}
+		g_idxNodeById.forEach(CheckMgmtFlagCallback, NULL);
 	}
 	else
 	{
@@ -165,25 +169,16 @@ void CheckForMgmtNode()
 		// it's a Windows machine which is disconnected from the network).
 		// In this case, try to find any node with NF_IS_LOCAL_MGMT flag, or create
 		// new one without interfaces
-
-		for(i = 0; i < (int)g_dwIdIndexSize; i++)
+		NetObj *mgmtNode = g_idxNodeById.find(LocalMgmtNodeComparator, NULL);
+		if (mgmtNode != NULL)
 		{
-			if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
-				 (g_dwMgmtNode != g_pIndexById[i].dwKey) &&
-				 (((Node *)g_pIndexById[i].pObject)->isLocalManagement()))
-			{
-				g_dwMgmtNode = g_pIndexById[i].dwKey;
-				break;
-			}
+			g_dwMgmtNode = mgmtNode->Id();
 		}
-
-		if (g_dwMgmtNode == 0)
+		else
 		{
 			CreateManagementNode(0, 0);
 		}
 	}
-
-   RWLockUnlock(g_rwlockIdIndex);
 }
 
 
@@ -664,15 +659,82 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
 
 
 //
+// Callback for queueing objects for polling
+//
+
+static void QueueForPolling(NetObj *object, void *data)
+{
+	switch(object->Type())
+	{
+		case OBJECT_NODE:
+			{
+				Node *node = (Node *)object;
+				if (node->isReadyForConfigurationPoll())
+				{
+					node->IncRefCount();
+					node->lockForConfigurationPoll();
+					g_configPollQueue.Put(node);
+				}
+				if (node->isReadyForStatusPoll())
+				{
+					node->IncRefCount();
+					node->lockForStatusPoll();
+					g_statusPollQueue.Put(node);
+				}
+				if (node->isReadyForRoutePoll())
+				{
+					node->IncRefCount();
+					node->lockForRoutePoll();
+					g_routePollQueue.Put(node);
+				}
+				if (node->isReadyForDiscoveryPoll())
+				{
+					node->IncRefCount();
+					node->lockForDiscoveryPoll();
+					g_discoveryPollQueue.Put(node);
+				}
+				if (node->isReadyForTopologyPoll())
+				{
+					node->IncRefCount();
+					node->lockForTopologyPoll();
+					g_topologyPollQueue.Put(node);
+				}
+			}
+			break;
+		case OBJECT_CONDITION:
+			{
+				Condition *cond = (Condition *)object;
+				if (cond->ReadyForPoll())
+				{
+					cond->LockForPoll();
+					g_conditionPollerQueue.Put(cond);
+				}
+			}
+			break;
+		case OBJECT_CLUSTER:
+			{
+				Cluster *cluster = (Cluster *)object;
+				if (cluster->isReadyForStatusPoll())
+				{
+					cluster->IncRefCount();
+					cluster->lockForStatusPoll();
+					g_statusPollQueue.Put(cluster);
+				}
+			}
+			break;
+		default:
+			break;
+	}
+}
+
+
+//
 // Node and condition queuing thread
 //
 
 THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
-   Node *pNode;
-   Condition *pCond;
-	Cluster *pCluster;
-   DWORD j, dwWatchdogId;
+   DWORD dwWatchdogId;
    int i, iCounter, iNumStatusPollers, iNumConfigPollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
    int iNumConditionPollers, iNumTopologyPollers;
@@ -738,66 +800,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 
       // Walk through objects and queue them for status 
       // and/or configuration poll
-      RWLockReadLock(g_rwlockIdIndex, INFINITE);
-      for(j = 0; j < g_dwIdIndexSize; j++)
-      {
-			switch(((NetObj *)g_pIndexById[j].pObject)->Type())
-			{
-				case OBJECT_NODE:
-					pNode = (Node *)g_pIndexById[j].pObject;
-					if (pNode->isReadyForConfigurationPoll())
-					{
-						pNode->IncRefCount();
-						pNode->lockForConfigurationPoll();
-						g_configPollQueue.Put(pNode);
-					}
-					if (pNode->isReadyForStatusPoll())
-					{
-						pNode->IncRefCount();
-						pNode->lockForStatusPoll();
-						g_statusPollQueue.Put(pNode);
-					}
-					if (pNode->isReadyForRoutePoll())
-					{
-						pNode->IncRefCount();
-						pNode->lockForRoutePoll();
-						g_routePollQueue.Put(pNode);
-					}
-					if (pNode->isReadyForDiscoveryPoll())
-					{
-						pNode->IncRefCount();
-						pNode->lockForDiscoveryPoll();
-						g_discoveryPollQueue.Put(pNode);
-					}
-					if (pNode->isReadyForTopologyPoll())
-					{
-						pNode->IncRefCount();
-						pNode->lockForTopologyPoll();
-						g_topologyPollQueue.Put(pNode);
-					}
-					break;
-				case OBJECT_CONDITION:
-					pCond = (Condition *)g_pIndexById[j].pObject;
-					if (pCond->ReadyForPoll())
-					{
-						pCond->LockForPoll();
-						g_conditionPollerQueue.Put(pCond);
-					}
-					break;
-				case OBJECT_CLUSTER:
-					pCluster = (Cluster *)g_pIndexById[j].pObject;
-					if (pCluster->isReadyForStatusPoll())
-					{
-						pCluster->IncRefCount();
-						pCluster->lockForStatusPoll();
-						g_statusPollQueue.Put(pCluster);
-					}
-					break;
-				default:
-					break;
-			}
-      }
-      RWLockUnlock(g_rwlockIdIndex);
+		g_idxObjectById.forEach(QueueForPolling, NULL);
    }
 
    // Send stop signal to all pollers
