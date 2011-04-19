@@ -27,9 +27,7 @@
 // Static data
 //
 
-static INDEX *m_pSituationIndex = NULL;
-static DWORD m_dwSituationIndexSize = 0;
-static RWLOCK m_rwlockSituationIndex;
+static ObjectIndex s_idxSituations;
 
 
 //
@@ -361,24 +359,19 @@ void Situation::UpdateFromMessage(CSCPMessage *msg)
 // Initialize situations
 //
 
-BOOL SituationsInit(void)
+BOOL SituationsInit()
 {
-	DWORD i;
-	DB_RESULT result;
 	BOOL success = TRUE;
 	
-   m_rwlockSituationIndex = RWLockCreate();
-   
    // Load situations from database
-   result = DBSelect(g_hCoreDB, _T("SELECT id,name,comments FROM situations ORDER BY id"));
+   DB_RESULT result = DBSelect(g_hCoreDB, _T("SELECT id,name,comments FROM situations ORDER BY id"));
    if (result != NULL)
    {
-   	m_dwSituationIndexSize = DBGetNumRows(result);
-   	m_pSituationIndex = (INDEX *)realloc(m_pSituationIndex, sizeof(INDEX) * m_dwSituationIndexSize);
-   	for(i = 0; i < m_dwSituationIndexSize; i++)
+   	int count = DBGetNumRows(result);
+   	for(int i = 0; i < count; i++)
    	{
-   		m_pSituationIndex[i].dwKey = DBGetFieldULong(result, i, 0);
-   		m_pSituationIndex[i].pObject = (NetObj *)(new Situation(result, i));
+   		Situation *s = new Situation(result, i);
+			s_idxSituations.put(s->GetId(), (NetObj *)s);
 		}
    	DBFreeResult(result);
 	}
@@ -397,17 +390,7 @@ BOOL SituationsInit(void)
 
 Situation *FindSituationById(DWORD id)
 {
-   DWORD dwPos;
-   Situation *st;
-
-   if (m_pSituationIndex == NULL)
-      return NULL;
-
-   RWLockReadLock(m_rwlockSituationIndex, INFINITE);
-   dwPos = SearchIndex(m_pSituationIndex, m_dwSituationIndexSize, id);
-   st = (dwPos == INVALID_INDEX) ? NULL : (Situation *)m_pSituationIndex[dwPos].pObject;
-   RWLockUnlock(m_rwlockSituationIndex);
-   return st;
+	return (Situation *)s_idxSituations.get(id);
 }
 
 
@@ -415,25 +398,14 @@ Situation *FindSituationById(DWORD id)
 // Find situation by name
 //
 
+static bool SituationNameComparator(NetObj *object, void *name)
+{
+	return !_tcscmp((const TCHAR *)name, ((Situation *)object)->GetName());
+}
+
 Situation *FindSituationByName(const TCHAR *name)
 {
-   DWORD i;
-   Situation *st = NULL;
-
-   if (m_pSituationIndex == NULL)
-      return NULL;
-
-   RWLockReadLock(m_rwlockSituationIndex, INFINITE);
-	for(i = 0; i < m_dwSituationIndexSize; i++)
-	{
-		if (!_tcsicmp(name, ((Situation *)m_pSituationIndex[i].pObject)->GetName()))
-		{
-			st = (Situation *)m_pSituationIndex[i].pObject;
-			break;
-		}
-	}
-   RWLockUnlock(m_rwlockSituationIndex);
-   return st;
+	return (Situation *)s_idxSituations.find(SituationNameComparator, (void *)name);
 }
 
 
@@ -446,9 +418,7 @@ Situation *CreateSituation(const TCHAR *name)
 	Situation *st;
 	
 	st = new Situation(name);
-   RWLockWriteLock(m_rwlockSituationIndex, INFINITE);
-   AddObjectToIndex(&m_pSituationIndex, &m_dwSituationIndexSize, st->GetId(), st);
-   RWLockUnlock(m_rwlockSituationIndex);
+	s_idxSituations.put(st->GetId(), (NetObj *)st);
    st->SaveToDatabase();
 	NotifyClientsOnSituationChange(SITUATION_CREATE, st);
 	return st;
@@ -461,26 +431,21 @@ Situation *CreateSituation(const TCHAR *name)
 
 DWORD DeleteSituation(DWORD id)
 {
-   DWORD dwPos, rcc;
+   DWORD rcc;
 
-   if (m_pSituationIndex == NULL)
-      return RCC_INVALID_SITUATION_ID;
-
-   RWLockWriteLock(m_rwlockSituationIndex, INFINITE);
-   dwPos = SearchIndex(m_pSituationIndex, m_dwSituationIndexSize, id);
-   if (dwPos != INVALID_INDEX)
+	Situation *s = (Situation *)s_idxSituations.get(id);
+   if (s != NULL)
    {
-		NotifyClientsOnSituationChange(SITUATION_DELETE, (Situation *)m_pSituationIndex[dwPos].pObject);
-   	((Situation *)m_pSituationIndex[dwPos].pObject)->DeleteFromDatabase();
-   	delete (Situation *)m_pSituationIndex[dwPos].pObject;
-   	DeleteObjectFromIndex(&m_pSituationIndex, &m_dwSituationIndexSize, id);
+		s_idxSituations.remove(id);
+		NotifyClientsOnSituationChange(SITUATION_DELETE, s);
+   	s->DeleteFromDatabase();
+   	delete s;
    	rcc = RCC_SUCCESS;
    }
    else
    {
    	rcc = RCC_INVALID_SITUATION_ID;
    }
-   RWLockUnlock(m_rwlockSituationIndex);
    return rcc;
 }
 
@@ -491,22 +456,20 @@ DWORD DeleteSituation(DWORD id)
 
 void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
 {
-	DWORD i;
-	
-   RWLockReadLock(m_rwlockSituationIndex, INFINITE);
-   
-	msg->SetVariable(VID_SITUATION_COUNT, m_dwSituationIndexSize);
+	ObjectArray<NetObj> *list = s_idxSituations.getObjects();
+
+	msg->SetVariable(VID_SITUATION_COUNT, (DWORD)list->size());
 	session->sendMessage(msg);
 	
 	msg->SetCode(CMD_SITUATION_DATA);
-	for(i = 0; i < m_dwSituationIndexSize; i++)
+	for(int i = 0; i < list->size(); i++)
 	{
 		msg->DeleteAllVariables();
-		((Situation *)m_pSituationIndex[i].pObject)->CreateMessage(msg);
+		((Situation *)list->get(i))->CreateMessage(msg);
 		session->sendMessage(msg);
 	}
-	
-   RWLockUnlock(m_rwlockSituationIndex);
+
+	delete list;
 }
 
 

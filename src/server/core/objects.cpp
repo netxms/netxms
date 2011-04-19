@@ -157,6 +157,7 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 		((Node *)nodes->get(i))->updateDciCache();
       ThreadSleepMs(50);  // Give a chance to other threads to do something with database
 	}
+	delete nodes;
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;
 }
@@ -494,26 +495,26 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
 // Find object by name
 //
 
+struct __find_object_data
+{
+	int objClass;
+	const TCHAR *name;
+};
+
+static bool ObjectNameComparator(NetObj *object, void *data)
+{
+	struct __find_object_data *fd = (struct __find_object_data *)data;
+	return ((fd->objClass == -1) || (fd->objClass == object->Type())) && 
+	       !_tcsicmp(object->Name(), fd->name);
+}
+
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 {
-   DWORD i;
-   NetObj *pObject = NULL;
+	struct __find_object_data data;
 
-   if (g_pIndexById == NULL)
-      return NULL;
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-      if ((!_tcsicmp(((NetObj *)g_pIndexById[i].pObject)->Name(), name)) &&
-			 ((objClass == -1) || (objClass == ((NetObj *)g_pIndexById[i].pObject)->Type())))
-      {
-         pObject = (NetObj *)g_pIndexById[i].pObject;
-         break;
-      }
-   }
-   RWLockUnlock(g_rwlockIdIndex);
-   return pObject;
+	data.objClass = objClass;
+	data.name = name;
+	return g_idxObjectById.find(ObjectNameComparator, &data);
 }
 
 
@@ -521,27 +522,17 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 // Find object by GUID
 //
 
+static bool ObjectGuidComparator(NetObj *object, void *data)
+{
+	uuid_t temp;
+	object->getGuid(temp);
+	return !uuid_compare((BYTE *)data, temp);
+}
+
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
 {
-   DWORD i;
-	uuid_t temp;
-   NetObj *pObject = NULL;
-
-   if (g_pIndexById == NULL)
-      return NULL;
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-		((NetObj *)g_pIndexById[i].pObject)->getGuid(temp);
-		if (!uuid_compare(guid, temp) && ((objClass == -1) || (objClass == ((NetObj *)g_pIndexById[i].pObject)->Type())))
-      {
-         pObject = (NetObj *)g_pIndexById[i].pObject;
-         break;
-      }
-   }
-   RWLockUnlock(g_rwlockIdIndex);
-   return pObject;
+	NetObj *object = g_idxObjectById.find(ObjectGuidComparator, guid);
+	return (object != NULL) ? (((objClass == -1) || (objClass == object->Type())) ? object : NULL) : NULL;
 }
 
 
@@ -1186,58 +1177,62 @@ void DeleteUserFromAllObjects(DWORD dwUserId)
 // Dump objects to console in standalone mode
 //
 
+struct __dump_objects_data
+{
+	CONSOLE_CTX console;
+	TCHAR *buffer;
+};
+
+static void DumpObjectCallback(NetObj *object, void *data)
+{
+	struct __dump_objects_data *dd = (struct __dump_objects_data *)data;
+	CONSOLE_CTX pCtx = dd->console;
+   CONTAINER_CATEGORY *pCat;
+
+	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
+                       _T("   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
+                 object->Id(), object->Name(), g_szClassName[object->Type()],
+                 IpToStr(object->IpAddr(), dd->buffer),
+                 g_szStatusTextSmall[object->Status()],
+                 object->IsModified(), object->IsDeleted());
+   ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
+                 object->ParentList(dd->buffer), object->ChildList(&dd->buffer[4096]));
+	time_t t = object->TimeStamp();
+	struct tm *ltm = localtime(&t);
+	_tcsftime(dd->buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
+   ConsolePrintf(pCtx, _T("   Last change: %s\n"), dd->buffer);
+   switch(object->Type())
+   {
+      case OBJECT_NODE:
+         ConsolePrintf(pCtx, _T("   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n"),
+                       ((Node *)object)->isSNMPSupported(),
+                       ((Node *)object)->isNativeAgent(),
+                       ((Node *)object)->isLocalManagement(),
+                       ((Node *)object)->getObjectId());
+         break;
+      case OBJECT_SUBNET:
+         ConsolePrintf(pCtx, _T("   Network mask: %s\n"), IpToStr(((Subnet *)object)->getIpNetMask(), dd->buffer));
+         break;
+      case OBJECT_CONTAINER:
+         pCat = FindContainerCategory(((Container *)object)->Category());
+         ConsolePrintf(pCtx, _T("   Category: %s\n"), pCat ? pCat->szName : _T("<unknown>"));
+         break;
+      case OBJECT_TEMPLATE:
+         ConsolePrintf(pCtx, _T("   Version: %d.%d\n"), 
+                       ((Template *)(object))->getVersionMajor(),
+                       ((Template *)(object))->getVersionMinor());
+         break;
+   }
+}
+
 void DumpObjects(CONSOLE_CTX pCtx)
 {
-   DWORD i;
-   TCHAR *pBuffer;
-   CONTAINER_CATEGORY *pCat;
-   NetObj *pObject;
-	time_t t;
-	struct tm *ltm;
+	struct __dump_objects_data data;
 
-   pBuffer = (TCHAR *)malloc(128000 * sizeof(TCHAR));
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-   	pObject = (NetObj *)g_pIndexById[i].pObject;
-      ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
-                          _T("   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
-                    pObject->Id(), pObject->Name(), g_szClassName[pObject->Type()],
-                    IpToStr(pObject->IpAddr(), pBuffer),
-                    g_szStatusTextSmall[pObject->Status()],
-                    pObject->IsModified(), pObject->IsDeleted());
-      ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
-                    pObject->ParentList(pBuffer), pObject->ChildList(&pBuffer[4096]));
-		t = pObject->TimeStamp();
-		ltm = localtime(&t);
-		_tcsftime(pBuffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
-      ConsolePrintf(pCtx, _T("   Last change: %s\n"), pBuffer);
-      switch(pObject->Type())
-      {
-         case OBJECT_NODE:
-            ConsolePrintf(pCtx, _T("   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n"),
-                          ((Node *)pObject)->isSNMPSupported(),
-                          ((Node *)pObject)->isNativeAgent(),
-                          ((Node *)pObject)->isLocalManagement(),
-                          ((Node *)pObject)->getObjectId());
-            break;
-         case OBJECT_SUBNET:
-            ConsolePrintf(pCtx, _T("   Network mask: %s\n"), 
-                          IpToStr(((Subnet *)pObject)->getIpNetMask(), pBuffer));
-            break;
-         case OBJECT_CONTAINER:
-            pCat = FindContainerCategory(((Container *)pObject)->Category());
-            ConsolePrintf(pCtx, _T("   Category: %s\n"), pCat ? pCat->szName : _T("<unknown>"));
-            break;
-         case OBJECT_TEMPLATE:
-            ConsolePrintf(pCtx, _T("   Version: %d.%d\n"), 
-                          ((Template *)(pObject))->getVersionMajor(),
-                          ((Template *)(pObject))->getVersionMinor());
-            break;
-      }
-   }
-   RWLockUnlock(g_rwlockIdIndex);
-   free(pBuffer);
+   data.buffer = (TCHAR *)malloc(128000 * sizeof(TCHAR));
+	data.console = pCtx;
+	g_idxObjectById.forEach(DumpObjectCallback, &data);
+	free(data.buffer);
 }
 
 

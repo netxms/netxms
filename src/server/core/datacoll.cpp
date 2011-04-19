@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -179,13 +179,25 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
 
 //
+// Callback for queueing DCIs
+//
+
+static void QueueItems(NetObj *object, void *data)
+{
+	DbgPrintf(8, _T("ItemPoller: calling Node::queueItemsForPolling for node %s [%d]"),
+				 object->Name(), object->Id());
+	((Node *)object)->queueItemsForPolling(g_pItemQueue);
+}
+
+
+//
 // Item poller thread: check nodes' items and put into the 
 // data collector queue when data polling required
 //
 
 static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
-   DWORD i, dwSum, dwWatchdogId, dwCurrPos = 0;
+   DWORD dwSum, dwWatchdogId, dwCurrPos = 0;
    DWORD dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
    INT64 qwStart;
 
@@ -199,20 +211,8 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
       WatchdogNotify(dwWatchdogId);
 		DbgPrintf(8, _T("ItemPoller: wakeup"));
 
-      RWLockReadLock(g_rwlockIdIndex, INFINITE);
-		DbgPrintf(8, _T("ItemPoller: object index lock acquired (index size %d)"), g_dwIdIndexSize);
       qwStart = GetCurrentTimeMs();
-      for(i = 0; i < g_dwIdIndexSize; i++)
-		{
-			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-			{
-				DbgPrintf(8, _T("ItemPoller: (%d) calling QueueItemsForPolling for node %s [%d]"),
-							 i, ((Node *)g_pIndexById[i].pObject)->Name(), ((Node *)g_pIndexById[i].pObject)->Id());
-				((Node *)g_pIndexById[i].pObject)->queueItemsForPolling(g_pItemQueue);
-			}
-		}
-      RWLockUnlock(g_rwlockIdIndex);
-		DbgPrintf(8, _T("ItemPoller: object index lock released"));
+		g_idxNodeById.forEach(QueueItems, NULL);
 
       // Save last poll time
       dwTimingHistory[dwCurrPos] = (DWORD)(GetCurrentTimeMs() - qwStart);
@@ -221,7 +221,8 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
          dwCurrPos = 0;
 
       // Calculate new average for last minute
-      for(i = 0, dwSum = 0; i < (60 / ITEM_POLLING_INTERVAL); i++)
+		dwSum = 0;
+      for(int i = 0; i < (60 / ITEM_POLLING_INTERVAL); i++)
          dwSum += dwTimingHistory[i];
       g_dwAvgDCIQueuingTime = dwSum / (60 / ITEM_POLLING_INTERVAL);
    }
@@ -310,48 +311,57 @@ BOOL InitDataCollector()
 // Write full list of supported parameters (from all nodes) to message
 //
 
+struct __param_list
+{
+	DWORD size;
+	NXC_AGENT_PARAM *data;
+};
+
+static void UpdateParamList(NetObj *object, void *data)
+{
+	struct __param_list *fullList = (struct __param_list *)data;
+
+	NXC_AGENT_PARAM *paramList;
+	DWORD numParams;
+	((Node *)object)->OpenParamList(&numParams, &paramList);
+	if ((numParams > 0) && (paramList != NULL))
+	{
+		fullList->data = (NXC_AGENT_PARAM *)realloc(fullList->data, sizeof(NXC_AGENT_PARAM) * (fullList->size + numParams));
+		for(DWORD i = 0; i < numParams; i++)
+		{
+			DWORD j;
+			for(j = 0; j < fullList->size; j++)
+			{
+				if (!_tcsicmp(paramList[i].szName, fullList->data[j].szName))
+					break;
+			}
+
+			if (j == fullList->size)
+			{
+				memcpy(&fullList->data[j], &paramList[i], sizeof(NXC_AGENT_PARAM));
+				fullList->size++;
+			}
+		}
+		((Node *)object)->CloseParamList();
+	}
+}
+
 void WriteFullParamListToMessage(CSCPMessage *pMsg)
 {
-   DWORD i, j, k, dwNumParams, dwFullListSize;
-   NXC_AGENT_PARAM *pParamList, *pFullList;
-
    // Gather full parameter list
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0, dwFullListSize = 0, pFullList = NULL; i < g_dwIdIndexSize; i++)
-   {
-		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-		{
-			((Node *)g_pIndexById[i].pObject)->OpenParamList(&dwNumParams, &pParamList);
-			if ((dwNumParams > 0) && (pParamList != NULL))
-			{
-				pFullList = (NXC_AGENT_PARAM *)realloc(pFullList, sizeof(NXC_AGENT_PARAM) * (dwFullListSize + dwNumParams));
-				for(j = 0; j < dwNumParams; j++)
-				{
-					for(k = 0; k < dwFullListSize; k++)
-					{
-						if (!_tcsicmp(pFullList[k].szName, pParamList[j].szName))
-							break;
-					}
-					if (k == dwFullListSize)
-					{
-						memcpy(&pFullList[k], &pParamList[j], sizeof(NXC_AGENT_PARAM));
-						dwFullListSize++;
-					}
-				}
-			}
-			((Node *)g_pIndexById[i].pObject)->CloseParamList();
-		}
-   }
-   RWLockUnlock(g_rwlockIdIndex);
+	struct __param_list fullList;
+	fullList.size = 0;
+	fullList.data = NULL;
+	g_idxNodeById.forEach(UpdateParamList, &fullList);
 
    // Put list into the message
-   pMsg->SetVariable(VID_NUM_PARAMETERS, dwFullListSize);
-   for(i = 0, j = VID_PARAM_LIST_BASE; i < dwFullListSize; i++)
+   pMsg->SetVariable(VID_NUM_PARAMETERS, fullList.size);
+   for(DWORD i = 0, varId = VID_PARAM_LIST_BASE; i < fullList.size; i++)
    {
-      pMsg->SetVariable(j++, pFullList[i].szName);
-      pMsg->SetVariable(j++, pFullList[i].szDescription);
-      pMsg->SetVariable(j++, (WORD)pFullList[i].iDataType);
+		pMsg->SetVariable(varId++, fullList.data[i].szName);
+		pMsg->SetVariable(varId++, fullList.data[i].szDescription);
+		pMsg->SetVariable(varId++, (WORD)fullList.data[i].iDataType);
    }
 
-   safe_free(pFullList);
+	safe_free(fullList.data);
 }

@@ -70,22 +70,17 @@ static void CleanDeletedObjects(DB_HANDLE hdb)
 
 static void DeleteEmptySubnets()
 {
-   DWORD i;
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-
-   // Walk through subnets and delete empty ones
-   for(i = 0; i < g_dwIdIndexSize; i++)
-      if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_SUBNET)
-      {
-         if (((NetObj *)g_pIndexById[i].pObject)->IsEmpty())
-         {
-            PostEvent(EVENT_SUBNET_DELETED, ((NetObj *)g_pIndexById[i].pObject)->Id(), NULL);
-            ((NetObj *)g_pIndexById[i].pObject)->Delete(TRUE);
-         }
-      }
-
-   RWLockUnlock(g_rwlockIdIndex);
+	ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects();
+	for(int i = 0; i < subnets->size(); i++)
+	{
+		NetObj *object = subnets->get(i);
+		if (object->IsEmpty())
+		{
+         PostEvent(EVENT_SUBNET_DELETED, object->Id(), NULL);
+         object->Delete(FALSE);
+		}
+	}
+	delete subnets;
 }
 
 
@@ -101,6 +96,16 @@ static void PGSQLMaintenance(DB_HANDLE hdb)
 
 
 //
+// Callback for cleaning expired DCI data on node
+//
+
+static void CleanDciData(NetObj *object, void *data)
+{
+	((Node *)object)->cleanDCIData();
+}
+
+
+//
 // Housekeeper thread
 //
 
@@ -108,7 +113,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
    time_t currTime;
    TCHAR szQuery[256];
-   DWORD i, dwRetentionTime, dwInterval;
+   DWORD dwRetentionTime, dwInterval;
 
    // Load configuration
    dwInterval = ConfigReadULong(_T("HouseKeepingInterval"), 3600);
@@ -157,11 +162,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       CleanDeletedObjects(hdb);
 
       // Remove expired DCI data
-		RWLockReadLock(g_rwlockIdIndex, INFINITE);
-      for(i = 0; i < g_dwIdIndexSize; i++)
-			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-				((Node *)g_pIndexById[i].pObject)->cleanDCIData();
-      RWLockUnlock(g_rwlockIdIndex);
+		g_idxNodeById.forEach(CleanDciData, NULL);
 
       // Run DB-specific maintenance tasks
       if (g_nDBSyntax == DB_SYNTAX_PGSQL)

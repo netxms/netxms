@@ -904,16 +904,10 @@ static BOOL IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
 // Dump index
 //
 
-static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSize, BOOL bIndexByIp)
+static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index, BOOL bIndexByIp)
 {
 	DWORD i;
 	TCHAR szIpAddr[16];
-
-	if (!RWLockReadLock(hLock, 5000))
-	{
-		ConsolePrintf(pCtx, _T("ERROR: unable to obtain index lock in 5 seconds\n"));
-		return;
-	}
 
 	for(i = 0; i < dwSize; i++)
 	{
@@ -1055,21 +1049,23 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
 			if (IsCommand(_T("CONDITION"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, g_rwlockConditionIndex, g_pConditionIndex, g_dwConditionIndexSize, FALSE);
+				DumpIndex(pCtx, &g_idxConditionById, FALSE);
 			}
 			else if (IsCommand(_T("ID"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, g_rwlockIdIndex, g_pIndexById, g_dwIdIndexSize, FALSE);
+				DumpIndex(pCtx, &g_idxObjectById, FALSE);
 			}
 			else if (IsCommand(_T("INTERFACE"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, g_rwlockInterfaceIndex, g_pInterfaceIndexByAddr,
-						g_dwInterfaceAddrIndexSize, TRUE);
+				DumpIndex(pCtx, &g_idxInterfaceByAddr, TRUE);
+			}
+			else if (IsCommand(_T("NODE"), szBuffer, 2))
+			{
+				DumpIndex(pCtx, &g_idxNodeById, FALSE);
 			}
 			else if (IsCommand(_T("SUBNET"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, g_rwlockSubnetIndex, g_pSubnetIndexByAddr,
-						g_dwSubnetAddrIndexSize, TRUE);
+				DumpIndex(pCtx, &g_idxSubnetByAddr, TRUE);
 			}
 			else
 			{
@@ -1087,14 +1083,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 #else
 			ConsolePrintf(pCtx, _T("ERROR: Server was compiled without memory debugger\n\n"));
 #endif
-		}
-		else if (IsCommand(_T("MUTEX"), szBuffer, 2))
-		{
-			ConsolePrintf(pCtx, _T("Mutex status:\n"));
-			DbgTestRWLock(g_rwlockIdIndex, _T("g_hMutexIdIndex"), pCtx);
-			DbgTestRWLock(g_rwlockSubnetIndex, _T("g_hMutexSubnetIndex"), pCtx);
-			DbgTestRWLock(g_rwlockInterfaceIndex, _T("g_hMutexInterfaceIndex"), pCtx);
-			ConsolePrintf(pCtx, _T("\n"));
 		}
 		else if (IsCommand(_T("OBJECTS"), szBuffer, 1))
 		{
@@ -1321,7 +1309,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   show flags                - Show internal server flags\n")
 				_T("   show index <index>        - Show internal index\n")
-				_T("   show mutex                - Display mutex status\n")
 				_T("   show objects              - Dump network objects to screen\n")
 				_T("   show pollers              - Show poller threads state information\n")
 				_T("   show queues               - Show internal queues statistics\n")

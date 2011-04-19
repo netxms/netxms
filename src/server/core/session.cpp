@@ -1858,7 +1858,7 @@ void ClientSession::generateEventCode(DWORD dwRqId)
 
 void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 {
-   DWORD i, dwTimeStamp;
+   DWORD dwTimeStamp;
    CSCPMessage msg;
 
    // Send confirmation message
@@ -1877,25 +1877,27 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
    // Get client's last known time stamp
    dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
 
-   MutexLock(m_mutexSendObjects, INFINITE);
-
    // Prepare message
    msg.SetCode(CMD_OBJECT);
 
    // Send objects, one per message
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-      if ((((NetObj *)g_pIndexById[i].pObject)->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
-          (((NetObj *)g_pIndexById[i].pObject)->TimeStamp() >= dwTimeStamp) &&
-          (!(((NetObj *)g_pIndexById[i].pObject)->isHidden())))
+	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
+   MutexLock(m_mutexSendObjects, INFINITE);
+	for(int i = 0; i < objects->size(); i++)
+	{
+		NetObj *object = objects->get(i);
+      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
+          (object->TimeStamp() >= dwTimeStamp) &&
+          !object->isHidden())
       {
-         ((NetObj *)g_pIndexById[i].pObject)->CreateMessage(&msg);
+         object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
-            ((NetObj *)g_pIndexById[i].pObject)->CommentsToMessage(&msg);
+            object->CommentsToMessage(&msg);
          sendMessage(&msg);
          msg.DeleteAllVariables();
       }
-   RWLockUnlock(g_rwlockIdIndex);
+	}
+	delete objects;
 
    // Send end of list notification
    msg.SetCode(CMD_OBJECT_LIST_END);
@@ -6523,10 +6525,14 @@ void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
 // Send server statistics
 //
 
+static void DciCountCallback(NetObj *object, void *data)
+{
+	*((DWORD *)data) += ((Node *)object)->getItemCount();
+}
+
 void ClientSession::SendServerStats(DWORD dwRqId)
 {
    CSCPMessage msg;
-   DWORD i, dwNumItems, nodeCount;
 #ifdef _WIN32
    PROCESS_MEMORY_COUNTERS mc;
 #endif
@@ -6541,17 +6547,11 @@ void ClientSession::SendServerStats(DWORD dwRqId)
    msg.SetVariable(VID_SERVER_UPTIME, (DWORD)(time(NULL) - g_tServerStartTime));
 
    // Number of objects and DCIs
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0, dwNumItems = 0, nodeCount = 0; i < g_dwIdIndexSize; i++)
-		if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-		{
-	      dwNumItems += ((Node *)g_pIndexById[i].pObject)->getItemCount();
-			nodeCount++;
-		}
-   RWLockUnlock(g_rwlockIdIndex);
-   msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
-   msg.SetVariable(VID_NUM_OBJECTS, g_dwIdIndexSize);
-   msg.SetVariable(VID_NUM_NODES, nodeCount);
+	DWORD dciCount = 0;
+	g_idxNodeById.forEach(DciCountCallback, &dciCount);
+   msg.SetVariable(VID_NUM_ITEMS, dciCount);
+	msg.SetVariable(VID_NUM_OBJECTS, (DWORD)g_idxObjectById.getSize());
+	msg.SetVariable(VID_NUM_NODES, (DWORD)g_idxNodeById.getSize());
 
    // Client sessions
    msg.SetVariable(VID_NUM_SESSIONS, (DWORD)GetSessionCount());
