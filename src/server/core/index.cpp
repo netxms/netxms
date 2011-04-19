@@ -82,6 +82,7 @@ bool ObjectIndex::put(QWORD key, NetObj *object)
 
 		m_elements[m_size].key = key;
 		m_elements[m_size].object = object;
+		m_size++;
 	   qsort(m_elements, m_size, sizeof(INDEX_ELEMENT), IndexCompare);
 	}
 
@@ -208,7 +209,7 @@ NetObj *ObjectIndex::find(bool (*comparator)(NetObj *, void *), void *data)
 }
 
 /**
- * Execute callback for each object
+ * Execute callback for each object. Callback should return true to continue enumeration.
  *
  * @param callback
  * @param data user data passed to callback

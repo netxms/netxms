@@ -24,6 +24,13 @@
 
 
 //
+// Externals
+//
+
+void UnregisterJob(DWORD jobId);
+
+
+//
 // Static members
 //
 
@@ -61,6 +68,8 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DW
 
 ServerJob::~ServerJob()
 {
+	UnregisterJob(m_id);
+
 	ThreadJoin(m_workerThread);
 
 	safe_free(m_type);

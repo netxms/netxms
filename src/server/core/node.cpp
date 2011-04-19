@@ -939,7 +939,7 @@ void Node::deleteInterface(Interface *pInterface)
 						 (pSubnet != NULL) ? pSubnet->Id() : 0);
       }
    }
-   pInterface->Delete(FALSE);
+	pInterface->deleteObject();
 }
 
 
@@ -2131,44 +2131,37 @@ void Node::ApplySystemTemplates()
 // Apply user templates
 //
 
+static void ApplyTemplate(NetObj *object, void *node)
+{
+   if ((object->Type() == OBJECT_TEMPLATE) && !object->IsDeleted())
+   {
+      Template *pTemplate = (Template *)object;
+		if (pTemplate->isApplicable((Node *)node))
+		{
+			if (!pTemplate->IsChild(((Node *)node)->Id()))
+			{
+				DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
+				          pTemplate->Id(), pTemplate->Name(), ((Node *)node)->Id(), ((Node *)node)->Name());
+				pTemplate->ApplyToNode((Node *)node);
+			}
+		}
+		else
+		{
+			if (pTemplate->isAutoApplyEnabled() && pTemplate->IsChild(((Node *)node)->Id()))
+			{
+				DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
+				          pTemplate->Id(), pTemplate->Name(), ((Node *)node)->Id(), ((Node *)node)->Name());
+				pTemplate->DeleteChild((Node *)node);
+				((Node *)node)->DeleteParent(pTemplate);
+				pTemplate->queueRemoveFromNode(((Node *)node)->Id(), TRUE);
+			}
+		}
+   }
+}
+
 void Node::ApplyUserTemplates()
 {
-   DWORD i;
-   Template *pTemplate;
-
-   if (g_pIndexById == NULL)
-      return;
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATE) &&
-			 (!((NetObj *)g_pIndexById[i].pObject)->IsDeleted()))
-      {
-         pTemplate = (Template *)g_pIndexById[i].pObject;
-			if (pTemplate->isApplicable(this))
-			{
-				if (!pTemplate->IsChild(m_dwId))
-				{
-					DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
-					          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
-					pTemplate->ApplyToNode(this);
-				}
-			}
-			else
-			{
-				if (pTemplate->isAutoApplyEnabled() && pTemplate->IsChild(m_dwId))
-				{
-					DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
-					          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
-					pTemplate->DeleteChild(this);
-					DeleteParent(pTemplate);
-					pTemplate->queueRemoveFromNode(m_dwId, TRUE);
-				}
-			}
-      }
-   }
-   RWLockUnlock(g_rwlockIdIndex);
+	g_idxObjectById.forEach(ApplyTemplate, this);
 }
 
 
@@ -2176,44 +2169,37 @@ void Node::ApplyUserTemplates()
 // Update container membership
 //
 
+static void UpdateContainerBinding(NetObj *object, void *node)
+{
+   if ((object->Type() == OBJECT_CONTAINER) && !object->IsDeleted())
+   {
+      Container *pContainer = (Container *)object;
+		if (pContainer->IsSuitableForNode((Node *)node))
+		{
+			if (!pContainer->IsChild(((Node *)node)->Id()))
+			{
+				DbgPrintf(4, _T("Node::UpdateContainerMembership(): binding node %d \"%s\" to container %d \"%s\""),
+				          ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
+				pContainer->AddChild((Node *)node);
+				((Node *)node)->AddParent(pContainer);
+			}
+		}
+		else
+		{
+			if (pContainer->IsAutoBindEnabled() && pContainer->IsChild(((Node *)node)->Id()))
+			{
+				DbgPrintf(4, _T("Node::UpdateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
+				          ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
+				pContainer->DeleteChild((Node *)node);
+				((Node *)node)->DeleteParent(pContainer);
+			}
+		}
+   }
+}
+
 void Node::updateContainerMembership()
 {
-   DWORD i;
-   Container *pContainer;
-
-   if (g_pIndexById == NULL)
-      return;
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CONTAINER) &&
-			 (!((NetObj *)g_pIndexById[i].pObject)->IsDeleted()))
-      {
-         pContainer = (Container *)g_pIndexById[i].pObject;
-			if (pContainer->IsSuitableForNode(this))
-			{
-				if (!pContainer->IsChild(m_dwId))
-				{
-					DbgPrintf(4, _T("Node::UpdateContainerMembership(): binding node %d \"%s\" to container %d \"%s\""),
-					          m_dwId, m_szName, pContainer->Id(), pContainer->Name());
-					pContainer->AddChild(this);
-					AddParent(pContainer);
-				}
-			}
-			else
-			{
-				if (pContainer->IsAutoBindEnabled() && pContainer->IsChild(m_dwId))
-				{
-					DbgPrintf(4, _T("Node::UpdateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
-					          m_dwId, m_szName, pContainer->Id(), pContainer->Name());
-					pContainer->DeleteChild(this);
-					DeleteParent(pContainer);
-				}
-			}
-      }
-   }
-   RWLockUnlock(g_rwlockIdIndex);
+	g_idxObjectById.forEach(UpdateContainerBinding, this);
 }
 
 

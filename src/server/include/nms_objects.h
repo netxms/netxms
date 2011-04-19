@@ -172,6 +172,9 @@ typedef struct
 
 class NXCORE_EXPORTABLE NetObj
 {
+private:
+	static void onObjectDeleteCallback(NetObj *object, void *data);
+
 protected:
    DWORD m_dwId;
 	uuid_t m_guid;
@@ -285,7 +288,7 @@ public:
    void DeleteChild(NetObj *pObject);  // Delete reference to child object
    void DeleteParent(NetObj *pObject); // Delete reference to parent object
 
-   void Delete(BOOL bIndexLocked);     // Prepare object for deletion
+   void deleteObject();     // Prepare object for deletion
 
    BOOL isHidden() { return m_bIsHidden; }
    void hide();

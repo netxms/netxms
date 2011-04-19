@@ -434,11 +434,16 @@ void NetObj::DeleteParent(NetObj *pObject)
 
 //
 // Prepare object for deletion - remove all references, etc.
-// bIndexLocked should be TRUE if object index by ID is already locked
-// by current thread
 //
 
-void NetObj::Delete(BOOL bIndexLocked)
+void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
+{
+	DWORD currId = ((NetObj *)data)->Id();
+	if ((object->Id() != currId) && !object->IsDeleted())
+		object->OnObjectDelete(currId);
+}
+
+void NetObj::deleteObject()
 {
    DWORD i;
 
@@ -473,7 +478,7 @@ void NetObj::Delete(BOOL bIndexLocked)
    {
       m_pChildList[i]->DeleteParent(this);
       if (m_pChildList[i]->IsOrphaned())
-         m_pChildList[i]->Delete(bIndexLocked);
+			m_pChildList[i]->deleteObject();
    }
    free(m_pChildList);
    m_pChildList = NULL;
@@ -491,15 +496,7 @@ void NetObj::Delete(BOOL bIndexLocked)
 
    // Notify all other objects about object deletion
    DbgPrintf(5, _T("NetObj::Delete(): calling OnObjectDelete(%d)"), m_dwId);
-   if (!bIndexLocked)
-      RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-      if (g_pIndexById[i].dwKey != m_dwId)
-         ((NetObj *)g_pIndexById[i].pObject)->OnObjectDelete(m_dwId);
-   }
-   if (!bIndexLocked)
-      RWLockUnlock(g_rwlockIdIndex);
+	g_idxObjectById.forEach(onObjectDeleteCallback, this);
 
    DbgPrintf(4, _T("Object %d successfully deleted"), m_dwId);
 }

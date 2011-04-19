@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,6 +33,13 @@
 
 
 //
+// Static data
+//
+
+static ObjectIndex s_jobNodes;
+
+
+//
 // Add job
 //
 
@@ -45,9 +52,20 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 	{
 		ServerJobQueue *queue = ((Node *)object)->getJobQueue();
 		queue->add(job);
+		s_jobNodes.put(job->getId(), object);
 		success = true;
 	}
 	return success;
+}
+
+
+//
+// Unregister job from job manager
+//
+
+void UnregisterJob(DWORD jobId)
+{
+	s_jobNodes.remove(jobId);
 }
 
 
@@ -85,48 +103,45 @@ void GetJobList(CSCPMessage *msg)
 // Implementatoin for job status changing operations: cancel, hold, unhold
 //
 
-static void ChangeJobStatus
-
 static DWORD ChangeJobStatus(DWORD userId, CSCPMessage *msg, int operation)
 {
-	DWORD i, jobId, rcc = RCC_INVALID_JOB_ID;
-
-	jobId = msg->GetVariableLong(VID_JOB_ID);
-
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-   for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-      if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-      {
-			ServerJobQueue *queue = ((Node *)g_pIndexById[i].pObject)->getJobQueue();
-			if (queue->findJob(jobId) != NULL)
+	DWORD rcc = RCC_INVALID_JOB_ID;
+	DWORD jobId = msg->GetVariableLong(VID_JOB_ID);
+	Node *node = (Node *)s_jobNodes.get(jobId);
+	if (node != NULL)
+	{
+		ServerJobQueue *queue = node->getJobQueue();
+		if (queue->findJob(jobId) != NULL)
+		{
+			if (node->CheckAccessRights(userId, OBJECT_ACCESS_CONTROL))
 			{
-				if (((NetObj *)g_pIndexById[i].pObject)->CheckAccessRights(userId, OBJECT_ACCESS_CONTROL))
+				switch(operation)
 				{
-					switch(operation)
-					{
-						case CANCEL_JOB:
-							rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
-							break;
-						case HOLD_JOB:
-							rcc = queue->hold(jobId) ? RCC_SUCCESS : RCC_JOB_HOLD_FAILED;
-							break;
-						case UNHOLD_JOB:
-							rcc = queue->unhold(jobId) ? RCC_SUCCESS : RCC_JOB_UNHOLD_FAILED;
-							break;
-						default:
-							rcc = RCC_INTERNAL_ERROR;
-							break;
-					}
-				}
-				else
-				{
-					rcc = RCC_ACCESS_DENIED;
+					case CANCEL_JOB:
+						rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
+						break;
+					case HOLD_JOB:
+						rcc = queue->hold(jobId) ? RCC_SUCCESS : RCC_JOB_HOLD_FAILED;
+						break;
+					case UNHOLD_JOB:
+						rcc = queue->unhold(jobId) ? RCC_SUCCESS : RCC_JOB_UNHOLD_FAILED;
+						break;
+					default:
+						rcc = RCC_INTERNAL_ERROR;
+						break;
 				}
 			}
-      }
-   }
-   RWLockUnlock(g_rwlockIdIndex);
+			else
+			{
+				rcc = RCC_ACCESS_DENIED;
+			}
+		}
+		else
+		{
+			// Remove stalled record in job_id -> node mapping
+			s_jobNodes.remove(jobId);
+		}
+	}
 	return rcc;
 }
 
@@ -165,6 +180,12 @@ DWORD NXCORE_EXPORTABLE UnholdJob(DWORD userId, CSCPMessage *msg)
 // Job manager worker thread
 //
 
+static void CleanupJobQueue(NetObj *object, void *data)
+{
+	ServerJobQueue *queue = ((Node *)object)->getJobQueue();
+	queue->cleanup();
+}
+
 THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
 {
 	DbgPrintf(2, _T("Job Manager worker thread started"));
@@ -172,17 +193,7 @@ THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
 	while(!SleepAndCheckForShutdown(10))
 	{
 		DbgPrintf(7, _T("Job Manager: checking queues"));
-
-		RWLockReadLock(g_rwlockIdIndex, INFINITE);
-		for(DWORD i = 0; i < g_dwIdIndexSize; i++)
-		{
-			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
-			{
-				ServerJobQueue *queue = ((Node *)g_pIndexById[i].pObject)->getJobQueue();
-				queue->cleanup();
-			}
-		}
-		RWLockUnlock(g_rwlockIdIndex);
+		g_idxNodeById.forEach(CleanupJobQueue, NULL);
 	}
 
 	DbgPrintf(2, _T("Job Manager worker thread stopped"));

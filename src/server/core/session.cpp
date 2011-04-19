@@ -4086,7 +4086,7 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
 
 static THREAD_RESULT THREAD_CALL DeleteObjectWorker(void *arg)
 {
-	((NetObj *)arg)->Delete(FALSE);
+	((NetObj *)arg)->deleteObject();
 	return THREAD_OK;
 }
 
