@@ -23,9 +23,82 @@
 
 #include "main.h"
 
-int SMSPack7BitChars(const char* input, char* output, int maxOutputLen)
+static bool SMSPack7BitChars(const char* input, char* output, int* outputLength, const int maxOutputLen)
 {
-	// Nothing here yet move along
-	strncpy(output, input, maxOutputLen);
-	return 0;
+	int	bits = 0;
+	int i;
+	unsigned char octet;
+	int used = 0;
+	const int inputLength = strlen(input);
+
+	for (i = 0; i < inputLength; i++)
+	{
+		if (bits == 7)
+		{
+			bits = 0;
+			continue;
+		}
+
+		if (used == maxOutputLen)
+			return false;
+
+		octet = (input[i] & 0x7f) >> bits;
+
+		if (i < inputLength - 1)
+			octet |= input[i + 1] << (7 - bits);
+
+		*output++ = (char)octet;
+		used++;
+		bits++;
+	}
+
+	*outputLength = used;
+
+	return true;
+}
+
+bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer, const int pduBufferSize)
+{
+	const int bufferSize = 512;
+	char phoneNumberFormatted[32];
+	char payload[bufferSize];
+	char payloadHex[bufferSize*2 + 1];
+	int payloadSize = 0;
+	int phoneLength = strlen(phoneNumber);
+	int numberFormat = 0x91; // International format
+	int i;
+
+	if (phoneNumber[0] == '+')
+		strncpy(phoneNumberFormatted, &phoneNumber[1], 32);
+	else if (!strncmp(phoneNumber, "00", 2))
+		strncpy(phoneNumberFormatted, &phoneNumber[2], 32);
+	else
+	{
+		strncpy(phoneNumberFormatted, phoneNumber, 32);
+		numberFormat = 0x81;	// Unknown number format
+	}
+	strcat(phoneNumberFormatted, "F");
+
+	DbgPrintf(4, _T("Formatted phone before: %hs,%d"), phoneNumberFormatted, phoneLength);
+	for (i = 0; i <= phoneLength; i += 2)
+	{
+		char tmp = phoneNumberFormatted[i+1];
+		phoneNumberFormatted[i+1] = phoneNumberFormatted[i];
+		phoneNumberFormatted[i] = tmp;
+	}
+	phoneNumberFormatted[phoneLength + (phoneLength % 2)] = '\0';
+	DbgPrintf(4, _T("Formatted phone: %hs"), phoneNumberFormatted);
+	SMSPack7BitChars(message, payload, &payloadSize, bufferSize);
+	DbgPrintf(4, _T("Got payload size: %d"), payloadSize);
+
+	for (i = 0; i < payloadSize; i++)
+	{
+		payloadHex[i*2]		= bin2hex((((unsigned char)(payload[i]))&0xF0)>>4);
+		payloadHex[i*2 + 1]	= bin2hex(payload[i]&0xF);
+	}
+	payloadHex[i*2] = '\0';
+	snprintf(pduBuffer, pduBufferSize, "0011000%X%X%s0000AA%02X%s", strlen(phoneNumber), numberFormat, 
+		phoneNumberFormatted, strlen(message), payloadHex);
+
+	return true;
 }

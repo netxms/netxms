@@ -23,7 +23,8 @@
 
 #include "main.h"
 
-extern int SMSPack7BitChars(const char* input, char* output, int maxOutputLen);
+// extern bool SMSPack7BitChars(const char* input, char* output, int* outputLength, const int maxOutputLen);
+bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer, const int pduBufferSize);
 
 static Serial m_serial;
 
@@ -168,7 +169,7 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 	return bRet;
 }
 
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" BOOL EXPORT SMSDriverSend_(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	if (pszPhoneNumber != NULL && pszText != NULL)
 	{
@@ -210,44 +211,62 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	return true;
 }
 
-extern "C" BOOL EXPORT SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" BOOL EXPORT SMSDriverSend/*PDU*/(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	if (pszPhoneNumber != NULL && pszText != NULL)
 	{
-		char szTmp[512];
+		const int bufferSize = 512;
+		char szTmp[bufferSize];
+		char phoneNumber[bufferSize], text[bufferSize];
 
 		DbgPrintf(3, _T("SMS send: to {%s}: {%s}"), pszPhoneNumber, pszText);
+
+		if (sizeof(TCHAR) == sizeof(WCHAR))
+		{
+			if (WideCharToMultiByte(CP_ACP, 0, pszPhoneNumber, -1, phoneNumber, bufferSize, NULL, NULL) == 0 ||
+				WideCharToMultiByte(CP_ACP, 0, pszText, -1, text, bufferSize, NULL, NULL) == 0 )
+			{
+				DbgPrintf(2, _T("Failed to convert phone number or text to multibyte string"));
+				return FALSE;
+			}
+		}
+		else
+		{
+			strncpy(phoneNumber, (const char*)pszPhoneNumber, _tcslen(pszPhoneNumber) + 1);
+			strncpy(text, (const char*)pszText, _tcslen(pszText) + 1);
+		}
 
 		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
 		m_serial.Read(szTmp, 128); // read OK
 		DbgPrintf(4, _T("SMS send: ATZ sent, got {%hs}"), szTmp);
-		m_serial.Write("ATE0\r\n", 5); // disable echo
+		m_serial.Write("ATE0\r\n", 6); // disable echo
 		m_serial.Read(szTmp, 128); // read OK
 		DbgPrintf(4, _T("SMS send: ATE0 sent, got {%hs}"), szTmp);
 		m_serial.Write("AT+CMGF=0\r\n", 11); // =0 - send text in PDU mode
 		m_serial.Read(szTmp, 128); // read OK
 		DbgPrintf(4, _T("SMS send: AT+CMGF=0 sent, got {%hs}"), szTmp);
 
-		const int pduBufferSize = 512;
-		char pduBuffer[pduBufferSize];
-		char phoneNumberFormatted[32];
-		char payload[pduBufferSize];
-		int phoneLength = _tcslen(pszPhoneNumber);
-		strncpy(phoneNumberFormatted, (const char*)pszPhoneNumber, 32);
-		strcat(phoneNumberFormatted, "FF");
-		for (int i = 0; i <= phoneLength; i += 2)
+		m_serial.Write("AT+CSCA?\r\n", 10); // send SMSC query
+		m_serial.Read(szTmp, 128); // read OK
+		DbgPrintf(4, _T("SMS send: AT+CSCA? sent, got {%hs}"), szTmp);
+		if (strlen(szTmp) > 10 && !strncmp(szTmp, "\r\n+CSCA: ", 9))
 		{
-			char tmp = phoneNumberFormatted[i+1];
-			phoneNumberFormatted[i+1] = phoneNumberFormatted[i];
-			phoneNumberFormatted[i] = tmp;
+			char szTmp2[128];
+			snprintf(szTmp2, 128, "AT+CSCA=%s\r\n", szTmp + 9);
+			szTmp2[127] = '\0';
+			m_serial.Write(szTmp2, strlen(szTmp2)); // set SMSC
+			m_serial.Read(szTmp, 128); // read OK
+			DbgPrintf(4, _T("SMS send: %hs sent, got {%hs}"), szTmp2, szTmp);
 		}
-		phoneNumberFormatted[phoneLength + 2 - phoneLength % 2] = '\0';
-		SMSPack7BitChars((const char*)pszText, payload, pduBufferSize);
-		snprintf(pduBuffer, pduBufferSize, "0001000%1X91%s0000%02X%s", strlen(phoneNumberFormatted), 
-			phoneNumberFormatted, _tcslen(pszText), payload);
-		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", strlen(pduBuffer)/2);
+
+		char pduBuffer[bufferSize];
+		SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize);
+
+		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", strlen(pduBuffer)/2-1);
 		m_serial.Write(szTmp, (int)strlen(szTmp)); 
+		DbgPrintf(4, _T("SMS send: %hs sent"), szTmp);
 		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pduBuffer, 0x1A);
+		DbgPrintf(4, _T("SMS about to send: %hs sent"), szTmp);
 		m_serial.Write(szTmp, (int)strlen(szTmp)); // send text, end with ^Z
 		m_serial.Read(szTmp, 128); // read +CMGS:ref_num
 		DbgPrintf(4, _T("SMS send: AT+CMGS + message body sent, got {%hs}"), szTmp);
