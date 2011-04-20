@@ -221,20 +221,17 @@ extern "C" BOOL EXPORT SMSDriverSend/*PDU*/(const TCHAR *pszPhoneNumber, const T
 
 		DbgPrintf(3, _T("SMS send: to {%s}: {%s}"), pszPhoneNumber, pszText);
 
-		if (sizeof(TCHAR) == sizeof(WCHAR))
+#ifdef UNICODE
+		if (WideCharToMultiByte(CP_ACP, 0, pszPhoneNumber, -1, phoneNumber, bufferSize, NULL, NULL) == 0 ||
+			WideCharToMultiByte(CP_ACP, 0, pszText, -1, text, bufferSize, NULL, NULL) == 0 )
 		{
-			if (WideCharToMultiByte(CP_ACP, 0, pszPhoneNumber, -1, phoneNumber, bufferSize, NULL, NULL) == 0 ||
-				WideCharToMultiByte(CP_ACP, 0, pszText, -1, text, bufferSize, NULL, NULL) == 0 )
-			{
-				DbgPrintf(2, _T("Failed to convert phone number or text to multibyte string"));
-				return FALSE;
-			}
+			DbgPrintf(2, _T("Failed to convert phone number or text to multibyte string"));
+			return FALSE;
 		}
-		else
-		{
-			strncpy(phoneNumber, (const char*)pszPhoneNumber, _tcslen(pszPhoneNumber) + 1);
-			strncpy(text, (const char*)pszText, _tcslen(pszText) + 1);
-		}
+#else
+		nx_strncpy(phoneNumber, pszPhoneNumber, bufferSize);
+		nx_strncpy(text, pszText, bufferSize);
+#endif
 
 		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
 		m_serial.Read(szTmp, 128); // read OK
