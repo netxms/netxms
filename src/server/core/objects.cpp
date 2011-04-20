@@ -270,7 +270,23 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
             {
-					g_idxSubnetByAddr.put(pObject->IpAddr(), pObject);
+					if (g_dwFlags & AF_ENABLE_ZONING)
+					{
+						Zone *zone = (Zone *)g_idxZoneByGUID.get(((Subnet *)pObject)->getZoneId());
+						if (zone != NULL)
+						{
+							zone->addToIndex((Subnet *)pObject);
+						}
+						else
+						{
+							DbgPrintf(2, _T("Cannot find zone object with GUID=%d for subnet object %s [%d]"),
+							          (int)((Subnet *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+						}
+					}
+					else
+					{
+						g_idxSubnetByAddr.put(pObject->IpAddr(), pObject);
+					}
                if (bNewObject)
                   PostEvent(EVENT_SUBNET_ADDED, pObject->Id(), NULL);
             }

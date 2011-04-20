@@ -167,6 +167,42 @@ typedef struct
 
 
 //
+// Object index structure
+//
+
+struct INDEX_ELEMENT
+{
+   QWORD key;
+   NetObj *object;
+};
+
+class ObjectIndex
+{
+private:
+	int m_size;
+	int m_allocated;
+	INDEX_ELEMENT *m_elements;
+	RWLOCK m_lock;
+
+	int findElement(QWORD key);
+
+public:
+	ObjectIndex();
+	~ObjectIndex();
+
+	bool put(QWORD key, NetObj *object);
+	void remove(QWORD key);
+	NetObj *get(QWORD key);
+	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
+
+	int getSize();
+	ObjectArray<NetObj> *getObjects();
+
+	void forEach(void (*callback)(NetObj *, void *), void *data);
+};
+
+
+//
 // Base class for network objects
 //
 
@@ -1126,6 +1162,8 @@ protected:
    DWORD m_agentProxy;
    DWORD m_snmpProxy;
 	DWORD m_icmpProxy;
+	ObjectIndex *m_idxInterfaceByAddr;
+	ObjectIndex *m_idxSubnetByAddr;
 
 public:
    Zone();
@@ -1143,6 +1181,11 @@ public:
    DWORD getZoneId() { return m_zoneId; }
 
    void addSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
+
+	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->IpAddr(), subnet); }
+	void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->IpAddr(), iface); }
+	Subnet *getSubnetByAddr(DWORD ipAddr) { return(Subnet *) m_idxSubnetByAddr->get(ipAddr); }
+	Interface *getInterfaceByAddr(DWORD ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
 };
 
 
@@ -1373,42 +1416,6 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-};
-
-
-//
-// Object index structure
-//
-
-struct INDEX_ELEMENT
-{
-   QWORD key;
-   NetObj *object;
-};
-
-class ObjectIndex
-{
-private:
-	int m_size;
-	int m_allocated;
-	INDEX_ELEMENT *m_elements;
-	RWLOCK m_lock;
-
-	int findElement(QWORD key);
-
-public:
-	ObjectIndex();
-	~ObjectIndex();
-
-	bool put(QWORD key, NetObj *object);
-	void remove(QWORD key);
-	NetObj *get(QWORD key);
-	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
-
-	int getSize();
-	ObjectArray<NetObj> *getObjects();
-
-	void forEach(void (*callback)(NetObj *, void *), void *data);
 };
 
 

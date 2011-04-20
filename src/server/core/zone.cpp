@@ -36,6 +36,8 @@ Zone::Zone()
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
+	m_idxInterfaceByAddr = new ObjectIndex;
+	m_idxSubnetByAddr = new ObjectIndex;
 }
 
 
@@ -45,6 +47,8 @@ Zone::Zone()
 
 Zone::~Zone()
 {
+	delete m_idxInterfaceByAddr;
+	delete m_idxSubnetByAddr;
 }
 
 
