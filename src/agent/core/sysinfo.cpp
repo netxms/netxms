@@ -30,14 +30,14 @@
 #endif
 
 #if defined(_WIN32)
-#define STAT _tstati64
-#define STAT_STRUCT struct _stati64
+#define NX_STAT _tstati64
+#define NX_STAT_STRUCT struct _stati64
 #elif HAVE_LSTAT64 && HAVE_STRUCT_STAT64
-#define STAT lstat64
-#define STAT_STRUCT struct stat64
+#define NX_STAT lstat64
+#define NX_STAT_STRUCT struct stat64
 #else
-#define STAT lstat
-#define STAT_STRUCT struct stat
+#define NX_STAT lstat
+#define NX_STAT_STRUCT struct stat
 #endif
 
 
@@ -67,7 +67,7 @@ LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 // File filter for GetDirInfo
 //
 
-static bool MatchFileFilter(const TCHAR *fileName, STAT_STRUCT &fileInfo, const TCHAR *pattern, int ageFilter, INT64 sizeFilter)
+static bool MatchFileFilter(const TCHAR *fileName, NX_STAT_STRUCT &fileInfo, const TCHAR *pattern, int ageFilter, INT64 sizeFilter)
 {
 	if (!MatchString(pattern, fileName, FALSE))
 		return false;
@@ -115,11 +115,11 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
 {
    _TDIR *pDir = NULL;
    struct _tdirent *pFile;
-	STAT_STRUCT fileInfo;
+	NX_STAT_STRUCT fileInfo;
    TCHAR szFileName[MAX_PATH];
    LONG nRet = SYSINFO_RC_SUCCESS;
 
-   if (STAT(szPath, &fileInfo) == -1) 
+   if (NX_STAT(szPath, &fileInfo) == -1) 
        return SYSINFO_RC_ERROR;
 
    // if this is just a file than simply return statistics
@@ -153,7 +153,7 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
          _tcscat(szFileName, pFile->d_name);
 
          // skip unaccessible entries
-         if (STAT(szFileName, &fileInfo) == -1)
+         if (NX_STAT(szFileName, &fileInfo) == -1)
             continue;
          
          // skip symlinks
@@ -410,12 +410,12 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	TCHAR szFilePath[MAX_PATH];
 	LONG nRet = SYSINFO_RC_SUCCESS;
-	STAT_STRUCT fileInfo;
+	NX_STAT_STRUCT fileInfo;
 
 	if (!AgentGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (STAT(szFilePath, &fileInfo) == -1) 
+	if (NX_STAT(szFilePath, &fileInfo) == -1) 
 		return SYSINFO_RC_ERROR;
 
 	switch(CAST_FROM_POINTER(arg, int))
