@@ -544,11 +544,12 @@ protected:
 	int m_iPendingStatus;
 	int m_iPollCount;
 	int m_iRequiredPollCount;
+   DWORD m_zoneId;
 
 public:
    Interface();
-   Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask);
-   Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD ipAddr, DWORD ipNetMask, DWORD ifType);
+   Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheticMask);
+   Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD ipAddr, DWORD ipNetMask, DWORD ifType, DWORD zoneId);
    virtual ~Interface();
 
    virtual int Type() { return OBJECT_INTERFACE; }
@@ -558,6 +559,7 @@ public:
 
    Node *getParentNode();
 
+   DWORD getZoneId() { return m_zoneId; }
    DWORD getIpNetMask() { return m_dwIpNetMask; }
    DWORD getIfIndex() { return m_dwIfIndex; }
    DWORD getIfType() { return m_dwIfType; }
@@ -1184,6 +1186,8 @@ public:
 
 	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->IpAddr(), subnet); }
 	void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->IpAddr(), iface); }
+	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->IpAddr()); }
+	void removeFromIndex(Interface *iface) { m_idxInterfaceByAddr->remove(iface->IpAddr()); }
 	Subnet *getSubnetByAddr(DWORD ipAddr) { return(Subnet *) m_idxSubnetByAddr->get(ipAddr); }
 	Interface *getInterfaceByAddr(DWORD ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
 };

@@ -862,9 +862,9 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 
    // Create interface object
    if (name != NULL)
-		pInterface = new Interface(name, (descr != NULL) ? descr : name, dwIndex, dwIpAddr, dwNetMask, dwType);
+		pInterface = new Interface(name, (descr != NULL) ? descr : name, dwIndex, dwIpAddr, dwNetMask, dwType, m_zoneId);
    else
-      pInterface = new Interface(dwIpAddr, dwNetMask, bSyntheticMask);
+      pInterface = new Interface(dwIpAddr, dwNetMask, m_zoneId, bSyntheticMask);
    if (pbMacAddr != NULL)
       pInterface->setMacAddr(pbMacAddr);
 	pInterface->setBridgePortNumber(bridgePort);

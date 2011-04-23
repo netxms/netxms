@@ -46,6 +46,7 @@ Interface::Interface()
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
+	m_zoneId = 0;
 }
 
 
@@ -53,7 +54,7 @@ Interface::Interface()
 // Constructor for "fake" interface object
 //
 
-Interface::Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask)
+Interface::Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheticMask)
           : NetObj()
 {
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -75,6 +76,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask)
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
+	m_zoneId = zoneId;
    m_bIsHidden = TRUE;
 }
 
@@ -83,7 +85,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, bool bSyntheticMask)
 // Constructor for normal interface object
 //
 
-Interface::Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD ipAddr, DWORD ipNetMask, DWORD ifType)
+Interface::Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD ipAddr, DWORD ipNetMask, DWORD ifType, DWORD zoneId)
           : NetObj()
 {
 	m_flags = 0;
@@ -105,6 +107,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD i
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
+	m_zoneId = zoneId;
    m_bIsHidden = TRUE;
 }
 

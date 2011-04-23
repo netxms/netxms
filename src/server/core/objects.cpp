@@ -294,9 +294,25 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_INTERFACE:
             if (pObject->IpAddr() != 0)
             {
-					if (g_idxInterfaceByAddr.put(pObject->IpAddr(), pObject))
-						DbgPrintf(1, _T("WARNING: duplicate interface IP address %08X (interface object %s [%d])"),
-						          pObject->IpAddr(), pObject->Name(), (int)pObject->Id());
+					if (g_dwFlags & AF_ENABLE_ZONING)
+					{
+						Zone *zone = (Zone *)g_idxZoneByGUID.get(((Interface *)pObject)->getZoneId());
+						if (zone != NULL)
+						{
+							zone->addToIndex((Interface *)pObject);
+						}
+						else
+						{
+							DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
+							          (int)((Interface *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+						}
+					}
+					else
+					{
+						if (g_idxInterfaceByAddr.put(pObject->IpAddr(), pObject))
+							DbgPrintf(1, _T("WARNING: duplicate interface IP address %08X (interface object %s [%d])"),
+										 pObject->IpAddr(), pObject->Name(), (int)pObject->Id());
+					}
             }
             break;
          case OBJECT_ZONE:
@@ -348,16 +364,48 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
          {
-				g_idxSubnetByAddr.remove(pObject->IpAddr());
+				if (g_dwFlags & AF_ENABLE_ZONING)
+				{
+					Zone *zone = (Zone *)g_idxZoneByGUID.get(((Subnet *)pObject)->getZoneId());
+					if (zone != NULL)
+					{
+						zone->removeFromIndex((Subnet *)pObject);
+					}
+					else
+					{
+						DbgPrintf(2, _T("Cannot find zone object with GUID=%d for subnet object %s [%d]"),
+						          (int)((Subnet *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+					}
+				}
+				else
+				{
+					g_idxSubnetByAddr.remove(pObject->IpAddr());
+				}
          }
          break;
       case OBJECT_INTERFACE:
          if (pObject->IpAddr() != 0)
          {
-				NetObj *o = g_idxInterfaceByAddr.get(pObject->IpAddr());
-				if ((o != NULL) && (o->Id() == pObject->Id()))
+				if (g_dwFlags & AF_ENABLE_ZONING)
 				{
-					g_idxInterfaceByAddr.remove(pObject->IpAddr());
+					Zone *zone = (Zone *)g_idxZoneByGUID.get(((Interface *)pObject)->getZoneId());
+					if (zone != NULL)
+					{
+						zone->removeFromIndex((Interface *)pObject);
+					}
+					else
+					{
+						DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
+						          (int)((Interface *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+					}
+				}
+				else
+				{
+					NetObj *o = g_idxInterfaceByAddr.get(pObject->IpAddr());
+					if ((o != NULL) && (o->Id() == pObject->Id()))
+					{
+						g_idxInterfaceByAddr.remove(pObject->IpAddr());
+					}
 				}
          }
          break;
