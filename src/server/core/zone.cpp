@@ -42,6 +42,24 @@ Zone::Zone()
 
 
 //
+// Constructor for new zone object
+//
+
+Zone::Zone(DWORD zoneId, const TCHAR *name)
+     :NetObj()
+{
+   m_dwId = 0;
+   m_zoneId = zoneId;
+   nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+   m_agentProxy = 0;
+   m_snmpProxy = 0;
+	m_icmpProxy = 0;
+	m_idxInterfaceByAddr = new ObjectIndex;
+	m_idxSubnetByAddr = new ObjectIndex;
+}
+
+
+//
 // Zone class destructor
 //
 

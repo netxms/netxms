@@ -141,14 +141,13 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
                   TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
-                  Cluster *pCluster)
+                  Cluster *pCluster, DWORD zoneId)
 {
    Node *pNode;
    TCHAR szIpAddr1[32], szIpAddr2[32];
    DWORD dwFlags = 0;
 
-   DbgPrintf(4, _T("PollNode(%s,%s)"),  
-             IpToStr(dwIpAddr, szIpAddr1), IpToStr(dwNetMask, szIpAddr2));
+   DbgPrintf(4, _T("PollNode(%s,%s) zone %d"), IpToStr(dwIpAddr, szIpAddr1), IpToStr(dwNetMask, szIpAddr2), (int)zoneId);
    // Check for node existence
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
@@ -164,7 +163,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
       dwFlags |= NF_DISABLE_SNMP;
    if (dwCreationFlags & NXC_NCF_DISABLE_NXCP)
       dwFlags |= NF_DISABLE_NXCP;
-   pNode = new Node(dwIpAddr, dwFlags, dwProxyNode, dwSNMPProxy, 0);
+   pNode = new Node(dwIpAddr, dwFlags, dwProxyNode, dwSNMPProxy, zoneId);
    NetObjInsert(pNode, TRUE);
    if (pszName != NULL)
       pNode->setName(pszName);
@@ -418,12 +417,11 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
       if (pInfo == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 
-		DbgPrintf(4, _T("NodePoller: processing node %s/%s"),
-		          IpToStr(pInfo->dwIpAddr, szIpAddr),
-		          IpToStr(pInfo->dwNetMask, szNetMask));
+		DbgPrintf(4, _T("NodePoller: processing node %s/%s in zone %d"),
+		          IpToStr(pInfo->dwIpAddr, szIpAddr), IpToStr(pInfo->dwNetMask, szNetMask), (int)pInfo->zoneId);
       if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask))
 		{
-         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL);
+         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL, pInfo->zoneId);
 			if (node != NULL)
 			{
 				// We should do configuration poll before taking new node from the queue

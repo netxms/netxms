@@ -247,6 +247,7 @@ typedef struct
 {
    DWORD dwIpAddr;
    DWORD dwNetMask;
+	DWORD zoneId;
 	BOOL ignoreFilter;
 } NEW_NODE;
 
@@ -702,7 +703,7 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode();
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
-                  TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy, Cluster *pCluster);
+                  TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy, Cluster *pCluster, DWORD zoneId);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);

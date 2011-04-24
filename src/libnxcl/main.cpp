@@ -405,9 +405,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Invalid session handle"),
 		_T("Node already is a member of a cluster"),
 		_T("Job cannot be hold"),
-		_T("Job cannot be unhold")
+		_T("Job cannot be unhold"),
+		_T("Zone ID is already in use")
    };
-   return ((dwError >= 0) && (dwError <= RCC_JOB_UNHOLD_FAILED)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_ZONE_ID_ALREADY_IN_USE)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

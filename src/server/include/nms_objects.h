@@ -1169,6 +1169,7 @@ protected:
 
 public:
    Zone();
+   Zone(DWORD zoneId, const TCHAR *name);
    virtual ~Zone();
 
    virtual int Type() { return OBJECT_ZONE; }

@@ -460,6 +460,7 @@ enum
 #define RCC_CLUSTER_MEMBER_ALREADY  ((DWORD)90)
 #define RCC_JOB_HOLD_FAILED         ((DWORD)91)
 #define RCC_JOB_UNHOLD_FAILED       ((DWORD)92)
+#define RCC_ZONE_ID_ALREADY_IN_USE  ((DWORD)93)
 
 
 //

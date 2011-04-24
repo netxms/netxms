@@ -368,6 +368,7 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
             pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
             pInfo->dwIpAddr = ipAddr;
             pInfo->dwNetMask = pInterface->getIpNetMask();
+				pInfo->zoneId = node->getZoneId();
 				pInfo->ignoreFilter = FALSE;
             g_nodePollerQueue.Put(pInfo);
 				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%s"),
@@ -444,8 +445,8 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
 
-      DbgPrintf(4, _T("Starting discovery poll for node %s (%s)"),
-                pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
+      DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
+		          pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr), (int)pNode->getZoneId());
 
       // Retrieve and analize node's ARP cache
       pArpCache = pNode->getArpCache();
@@ -591,6 +592,7 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
                   pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                   pInfo->dwIpAddr = dwAddr;
                   pInfo->dwNetMask = pSubnet->getIpNetMask();
+						pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 						pInfo->ignoreFilter = FALSE;
                   g_nodePollerQueue.Put(pInfo);
                }
@@ -602,6 +604,7 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
                pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                pInfo->dwIpAddr = dwAddr;
                pInfo->dwNetMask = 0;
+					pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 					pInfo->ignoreFilter = FALSE;
                g_nodePollerQueue.Put(pInfo);
             }

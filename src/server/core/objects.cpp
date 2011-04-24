@@ -1310,6 +1310,10 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
 {
    switch(iParentClass)
    {
+		case OBJECT_NETWORK:
+			if ((iChildClass == OBJECT_ZONE) && (g_dwFlags & AF_ENABLE_ZONING))
+				return TRUE;
+			break;
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
          if ((iChildClass == OBJECT_CONTAINER) || 

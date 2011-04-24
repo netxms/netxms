@@ -3759,7 +3759,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    int iClass, iServiceType;
    TCHAR szObjectName[MAX_OBJECT_NAME];
    TCHAR *pszRequest, *pszResponse, *pszComments;
-   DWORD dwIpAddr;
+   DWORD dwIpAddr, zoneId;
    WORD wIpProto, wIpPort;
    BOOL bParentAlwaysValid = FALSE;
 
@@ -3803,11 +3803,11 @@ void ClientSession::createObject(CSCPMessage *pRequest)
                                            szObjectName,
                                            pRequest->GetVariableLong(VID_PROXY_NODE),
                                            pRequest->GetVariableLong(VID_SNMP_PROXY),
-														 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL);
+														 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
+														 pRequest->GetVariableLong(VID_ZONE_ID));
                      break;
                   case OBJECT_CONTAINER:
-                     pObject = new Container(szObjectName, 
-                                             pRequest->GetVariableLong(VID_CATEGORY));
+                     pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_TEMPLATEGROUP:
@@ -3865,6 +3865,18 @@ void ClientSession::createObject(CSCPMessage *pRequest)
                      pObject->setName(szObjectName);
                      NetObjInsert(pObject, TRUE);
 							break;
+						case OBJECT_ZONE:
+							zoneId = pRequest->GetVariableLong(VID_ZONE_ID);
+							if ((zoneId > 0) && (g_idxZoneByGUID.get(zoneId) == NULL))
+							{
+								pObject = new Zone(zoneId, szObjectName);
+								NetObjInsert(pObject, TRUE);
+							}
+							else
+							{
+								pObject = NULL;
+							}
+							break;
                   default:
                      break;
                }
@@ -3900,6 +3912,10 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 						if (iClass == OBJECT_NODE)
 						{
                   	msg.SetVariable(VID_RCC, RCC_ALREADY_EXIST);
+						}
+						else if (iClass == OBJECT_ZONE)
+						{
+                  	msg.SetVariable(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
 						}
 						else
 						{
@@ -10132,6 +10148,7 @@ void ClientSession::registerAgent(CSCPMessage *pRequest)
 					info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
 					info->dwIpAddr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
 					info->dwNetMask = 0;
+					info->zoneId = 0;	// Add to default zone
 					info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
 					g_nodePollerQueue.Put(info);
 				}
