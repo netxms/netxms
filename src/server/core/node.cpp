@@ -189,7 +189,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
    {
       DbgPrintf(2, _T("Cannot load common properties for node object %d"), dwId);
       return FALSE;
@@ -280,7 +280,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
       DBFreeResult(hResult);
       loadItemsFromDB();
-      LoadACLFromDB();
+      loadACLFromDB();
 
       // Walk through all items in the node and load appropriate thresholds
 		bResult = TRUE;
@@ -315,7 +315,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    // Check for object's existence in database
    _sntprintf(szQuery, 4096, _T("SELECT id FROM nodes WHERE id=%d"), m_dwId);
@@ -379,7 +379,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    bResult = DBQuery(hdb, szQuery);
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    UnlockData();
 
@@ -818,7 +818,7 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 					 (pCluster != NULL) ? pCluster->Id() : 0, bAddToSubnet);
 		if (bAddToSubnet)
 		{
-			pSubnet = FindSubnetForNode(dwIpAddr);
+			pSubnet = FindSubnetForNode(m_zoneId, dwIpAddr);
 			if (pSubnet == NULL)
 			{
 				// Check if netmask is 0 (detect), and if yes, create
@@ -845,7 +845,18 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 				{
 					pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_zoneId, bSyntheticMask);
 					NetObjInsert(pSubnet, TRUE);
-					g_pEntireNet->AddSubnet(pSubnet);
+					if (IsZoningEnabled())
+					{
+						Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+						if (zone != NULL)
+						{
+							zone->addSubnet(pSubnet);
+						}
+					}
+					else
+					{
+						g_pEntireNet->AddSubnet(pSubnet);
+					}
 				}
 			}
 			else
@@ -927,7 +938,7 @@ void Node::deleteInterface(Interface *pInterface)
       if (bUnlink)
       {
          // Last interface in subnet, should unlink node
-         Subnet *pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->getIpNetMask());
+         Subnet *pSubnet = FindSubnetByIP(m_zoneId, pInterface->IpAddr() & pInterface->getIpNetMask());
          if (pSubnet != NULL)
          {
             DeleteParent(pSubnet);
@@ -3970,7 +3981,7 @@ void Node::CheckSubnetBinding(InterfaceList *pIfList)
 			// Is cluster interconnect interface?
 			isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : FALSE;
 
-			pSubnet = FindSubnetForNode(iface->dwIpAddr);
+			pSubnet = FindSubnetForNode(m_zoneId, iface->dwIpAddr);
 			if (pSubnet != NULL)
 			{
 				if (isSync)

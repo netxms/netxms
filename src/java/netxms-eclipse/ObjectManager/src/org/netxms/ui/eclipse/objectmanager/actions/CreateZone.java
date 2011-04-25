@@ -28,20 +28,18 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Container;
+import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.objectmanager.dialogs.CreateNodeDialog;
+import org.netxms.ui.eclipse.objectmanager.dialogs.CreateZoneDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Create node object
+ * Create zone object
  *
  */
-public class CreateNode implements IObjectActionDelegate
+public class CreateZone implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private IWorkbenchPart part;
@@ -63,20 +61,16 @@ public class CreateNode implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateNodeDialog dlg = new CreateNodeDialog(window.getShell());
+		final CreateZoneDialog dlg = new CreateZoneDialog(window.getShell());
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create new node", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Create new zone", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODE, dlg.getName(), parentId);
-				cd.setCreationFlags(dlg.getCreationFlags());
-				cd.setIpAddress(dlg.getIpAddress());
-				cd.setAgentProxyId(dlg.getAgentProxy());
-				cd.setSnmpProxyId(dlg.getSnmpProxy());
+				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_ZONE, dlg.getName(), parentId);
 				cd.setZoneId(dlg.getZoneId());
 				session.createObject(cd);
 			}
@@ -84,7 +78,7 @@ public class CreateNode implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create node object \"" + dlg.getName() + "\"";
+				return "Cannot create zone object \"" + dlg.getName() + "\"";
 			}
 		}.start();
 	}
@@ -98,7 +92,7 @@ public class CreateNode implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
-			if ((object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Cluster))
+			if (object instanceof EntireNetwork)
 			{
 				parentId = ((GenericObject)object).getObjectId();
 			}

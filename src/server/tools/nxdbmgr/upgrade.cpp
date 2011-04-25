@@ -249,6 +249,24 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V226 to V227
+//
+
+static BOOL H_UpgradeFromV226(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE clusters ADD zone_guid integer\n")
+		_T("UPDATE clusters SET zone_guid=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='227' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V225 to V226
 //
 
@@ -5181,6 +5199,7 @@ static struct
 	{ 223, 224, H_UpgradeFromV223 },
 	{ 224, 225, H_UpgradeFromV224 },
 	{ 225, 226, H_UpgradeFromV225 },
+	{ 226, 227, H_UpgradeFromV226 },
    { 0, NULL }
 };
 

@@ -79,7 +79,7 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
       return FALSE;
 
    // Load network lists
@@ -148,7 +148,7 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   LoadACLFromDB();
+   loadACLFromDB();
 
    return bResult;
 }
@@ -169,7 +169,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    // Check for object's existence in database
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM vpn_connectors WHERE id=%d"), m_dwId);
@@ -218,7 +218,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    }
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;

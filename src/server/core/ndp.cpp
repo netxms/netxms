@@ -76,7 +76,7 @@ static DWORD NDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 	remoteIp = ntohl(remoteIp);
 	TCHAR ipAddrText[32];
 	DbgPrintf(6, _T("NDP(%s [%d]): found peer at %d.%d IP address %s"), node->Name(), node->Id(), slot, port, IpToStr(remoteIp, ipAddrText));
-	Node *remoteNode = FindNodeByIP(remoteIp);
+	Node *remoteNode = FindNodeByIP(node->getZoneId(), remoteIp);
 	if (remoteNode == NULL)
 	{
 		DbgPrintf(6, _T("NDP(%s [%d]): node object for IP %s not found"), node->Name(), node->Id(), ipAddrText);

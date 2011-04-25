@@ -20,10 +20,13 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.GeoLocation;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * "General" element on object overview tab
@@ -61,12 +64,16 @@ public class GeneralInfo extends TableElement
 					addPair("Slot/Port", Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort()));
 				if (!iface.getPrimaryIP().isAnyLocalAddress())
 				{
+					if (((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled())
+						addPair("Zone ID", Long.toString(iface.getZoneId()));
 					addPair("IP Address", iface.getPrimaryIP().getHostAddress());
 					addPair("IP Subnet Mask", iface.getSubnetMask().getHostAddress());
 				}
 				break;
 			case GenericObject.OBJECT_NODE:
 				Node node = (Node)object;
+				if (((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled())
+					addPair("Zone ID", Long.toString(node.getZoneId()));
 				addPair("Primary IP Address", node.getPrimaryIP().getHostAddress());
 				if ((node.getFlags() & Node.NF_IS_NATIVE_AGENT) != 0)
 					addPair("NetXMS Agent Version", node.getAgentVersion());
@@ -75,6 +82,10 @@ public class GeneralInfo extends TableElement
 				addPair("SNMP sysName", node.getSnmpSysName(), false);
 				addPair("SNMP Object ID", node.getSnmpOID(), false);
 				addPair("Driver", node.getDriverName(), false);
+				break;
+			case GenericObject.OBJECT_ZONE:
+				Zone zone = (Zone)object;
+				addPair("Zone ID", Long.toString(zone.getZoneId()));
 				break;
 			default:
 				break;

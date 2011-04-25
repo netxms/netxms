@@ -184,7 +184,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
       return FALSE;
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version,enable_auto_apply,apply_filter FROM templates WHERE id=%d"), dwId);
@@ -216,7 +216,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    DBFreeResult(hResult);
 
    // Load DCI and access list
-   LoadACLFromDB();
+   loadACLFromDB();
    loadItemsFromDB();
    for(i = 0; i < (int)m_dwNumItems; i++)
       if (!m_ppItems[i]->loadThresholdsFromDB())
@@ -273,7 +273,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    // Check for object's existence in database
    _sntprintf(query2, 128, _T("SELECT id FROM templates WHERE id=%d"), m_dwId);
@@ -311,7 +311,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    UnlockChildList();
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    UnlockData();
 

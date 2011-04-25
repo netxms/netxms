@@ -284,6 +284,17 @@
                menubarPath="objectbinding">
          </action>
       </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.EntireNetwork"
+            objectClass="org.netxms.client.objects.EntireNetwork">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateZone"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createZone"
+               label="Create &amp;zone..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
    </extension>
    <extension
          point="org.eclipse.ui.views">

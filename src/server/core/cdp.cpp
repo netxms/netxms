@@ -38,7 +38,7 @@ static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 	
    TCHAR ipAddrText[16];
 	DbgPrintf(6, _T("CDP(%s [%d]): remote IP address %s"), node->Name(), node->Id(), IpToStr(remoteIp, ipAddrText));
-	Node *remoteNode = FindNodeByIP(remoteIp);
+	Node *remoteNode = FindNodeByIP(node->getZoneId(), remoteIp);
 	if (remoteNode == NULL)
 	{
 		DbgPrintf(6, _T("CDP(%s [%d]): node object for remote IP %s not found"), node->Name(), node->Id(), ipAddrText);

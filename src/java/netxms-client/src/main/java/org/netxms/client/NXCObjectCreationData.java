@@ -46,6 +46,7 @@ public class NXCObjectCreationData
 	private long snmpProxyId;
 	private int mapType;
 	private long seedObjectId;
+	private long zoneId;
 	
 	/**
 	 * Constructor.
@@ -69,6 +70,14 @@ public class NXCObjectCreationData
 		catch(UnknownHostException e)
 		{
 		}
+		
+		comments = null;
+		creationFlags = 0;
+		agentProxyId = 0;
+		snmpProxyId = 0;
+		mapType = 0;
+		seedObjectId = 0;
+		zoneId = 0;
 	}
 
 	/**
@@ -245,5 +254,21 @@ public class NXCObjectCreationData
 	public void setSeedObjectId(long seedObjectId)
 	{
 		this.seedObjectId = seedObjectId;
+	}
+
+	/**
+	 * @return the zoneId
+	 */
+	public long getZoneId()
+	{
+		return zoneId;
+	}
+
+	/**
+	 * @param zoneId the zoneId to set
+	 */
+	public void setZoneId(long zoneId)
+	{
+		this.zoneId = zoneId;
 	}
 }

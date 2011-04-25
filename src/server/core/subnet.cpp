@@ -72,7 +72,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
       return FALSE;
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT ip_addr,ip_netmask,zone_guid,synthetic_mask FROM subnets WHERE id=%d"), dwId);
@@ -94,7 +94,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   LoadACLFromDB();
+   loadACLFromDB();
 
    return TRUE;
 }
@@ -114,7 +114,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    // Check for object's existence in database
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM subnets WHERE id=%d"), m_dwId);
@@ -151,7 +151,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    UnlockChildList();
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
@@ -165,7 +165,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 // Delete subnet object from database
 //
 
-BOOL Subnet::DeleteFromDB(void)
+BOOL Subnet::DeleteFromDB()
 {
    TCHAR szQuery[256];
    BOOL bSuccess;

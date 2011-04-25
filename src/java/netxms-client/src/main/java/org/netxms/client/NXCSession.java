@@ -2200,6 +2200,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_PARENT_ID, (int)data.getParentId());
 		msg.setVariableInt16(NXCPCodes.VID_OBJECT_CLASS, data.getObjectClass());
 		msg.setVariable(NXCPCodes.VID_OBJECT_NAME, data.getName());
+		msg.setVariableInt32(NXCPCodes.VID_ZONE_ID, (int)data.getZoneId());
 		if (data.getComments() != null)
 			msg.setVariable(NXCPCodes.VID_COMMENTS, data.getComments());
 

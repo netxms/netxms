@@ -121,7 +121,9 @@ public class NXCException extends NetXMSClientException
 		"Invalid session handle",
 		"Node already is a member of a cluster",
 		"Job cannot be put on hold",
-		"Job on hold cannot be resumed"
+		"Job on hold cannot be resumed",
+		"Zone ID is already in use",
+		"Invalid zone ID"
 	};
 
 	public NXCException(int errorCode)

@@ -231,6 +231,7 @@ CREATE TABLE clusters
 (
 	id integer not null,
 	cluster_type integer not null,
+	zone_guid integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

@@ -64,7 +64,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
    pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
 
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       pItem = (DCItem *)g_pItemQueue->GetOrBlock();
 		pNode = (Node *)pItem->getRelatedNode();
@@ -204,7 +204,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
    dwWatchdogId = WatchdogAddThread(_T("Item Poller"), 20);
    memset(dwTimingHistory, 0, sizeof(DWORD) * (60 / ITEM_POLLING_INTERVAL));
 
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
@@ -250,7 +250,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    g_dAvgDBWriterQueueSize = 0;
    g_dAvgStatusPollerQueueSize = 0;
    g_dAvgConfigPollerQueueSize = 0;
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(5))
          break;      // Shutdown has arrived

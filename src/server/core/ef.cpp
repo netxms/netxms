@@ -63,7 +63,7 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 		if (id != 0)
 			object = FindObjectById(id);  // Object is specified explicitely
 		else
-			object = FindNodeByIP(request->GetVariableLong(VID_IP_ADDRESS));	// Object is specified by IP address
+			object = FindNodeByIP(0, request->GetVariableLong(VID_IP_ADDRESS));	// Object is specified by IP address
 		
 		if (object != NULL)
 		{

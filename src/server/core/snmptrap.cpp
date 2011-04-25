@@ -252,7 +252,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
              pdu->getTrapId()->GetValueAsText(), IpToStr(dwOriginAddr, szBuffer));
 
    // Match IP address to object
-   pNode = FindNodeByIP(dwOriginAddr);
+   pNode = FindNodeByIP(0, dwOriginAddr);
 
    // Write trap to log if required
    if (m_bLogAllTraps)
@@ -378,7 +378,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addrLen)
 {
 	DWORD ipAddr = ntohl(((struct sockaddr_in *)addr)->sin_addr.s_addr);
-	Node *node = FindNodeByIP(ipAddr);
+	Node *node = FindNodeByIP(0, ipAddr);
 	TCHAR buffer[32];
 	DbgPrintf(6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
 	          IpToStr(ipAddr, buffer), (node != NULL) ? node->Name() : _T("<unknown>"));
@@ -429,7 +429,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    DbgPrintf(1, _T("SNMP Trap Receiver started"));
 
    // Wait for packets
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       nAddrLen = sizeof(struct sockaddr_in);
       iBytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen, ContextFinder);

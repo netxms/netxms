@@ -169,7 +169,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
 	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), wListenPort);
 
    // Wait for connection requests
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       iSize = sizeof(struct sockaddr_in);
       if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
@@ -260,7 +260,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
 	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "Ad", servAddr.sin6_addr.s6_addr, wListenPort);
 
    // Wait for connection requests
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       iSize = sizeof(struct sockaddr_in6);
       if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)

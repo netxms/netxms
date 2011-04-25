@@ -277,12 +277,12 @@ protected:
 
    void Modify();                  // Used to mark object as modified
 
-   BOOL LoadACLFromDB();
-   BOOL SaveACLToDB(DB_HANDLE hdb);
-   BOOL LoadCommonProperties();
-   BOOL SaveCommonProperties(DB_HANDLE hdb);
-	BOOL LoadTrustedNodes();
-	BOOL SaveTrustedNodes(DB_HANDLE hdb);
+   BOOL loadACLFromDB();
+   BOOL saveACLToDB(DB_HANDLE hdb);
+   BOOL loadCommonProperties();
+   BOOL saveCommonProperties(DB_HANDLE hdb);
+	BOOL loadTrustedNodes();
+	BOOL saveTrustedNodes(DB_HANDLE hdb);
 
    void SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...);
 
@@ -488,15 +488,16 @@ protected:
 	CLUSTER_RESOURCE *m_pResourceList;
 	DWORD m_dwFlags;
 	time_t m_tmLastPoll;
+	DWORD m_zoneId;
 
 public:
 	Cluster();
-   Cluster(const TCHAR *pszName);
+   Cluster(const TCHAR *pszName, DWORD zoneId);
 	virtual ~Cluster();
 
-   virtual int Type(void) { return OBJECT_CLUSTER; }
+   virtual int Type() { return OBJECT_CLUSTER; }
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual BOOL DeleteFromDB(void);
+   virtual BOOL DeleteFromDB();
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -507,6 +508,7 @@ public:
 	BOOL isSyncAddr(DWORD dwAddr);
 	BOOL isVirtualAddr(DWORD dwAddr);
 	BOOL isResourceOnNode(DWORD dwResource, DWORD dwNode);
+   DWORD getZoneId() { return m_zoneId; }
 
    void statusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
@@ -1189,8 +1191,11 @@ public:
 	void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->IpAddr(), iface); }
 	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->IpAddr()); }
 	void removeFromIndex(Interface *iface) { m_idxInterfaceByAddr->remove(iface->IpAddr()); }
+	void updateInterfaceIndex(DWORD oldIp, DWORD newIp, Interface *iface);
 	Subnet *getSubnetByAddr(DWORD ipAddr) { return(Subnet *) m_idxSubnetByAddr->get(ipAddr); }
 	Interface *getInterfaceByAddr(DWORD ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
+	Subnet *findSubnet(bool (*comparator)(NetObj *, void *), void *data) { return (Subnet *)m_idxSubnetByAddr->find(comparator, data); }
+	Interface *findInterface(bool (*comparator)(NetObj *, void *), void *data) { return (Interface *)m_idxInterfaceByAddr->find(comparator, data); }
 };
 
 
@@ -1447,24 +1452,24 @@ void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
-void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
+void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, Interface *pObject);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
-Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
+Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);
-DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr);
+DWORD NXCORE_EXPORTABLE FindLocalMgmtNode();
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID);
-Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr);
-bool NXCORE_EXPORTABLE IsClusterIP(DWORD ipAddr);
+Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD zone, DWORD ipAddr);
+bool NXCORE_EXPORTABLE IsClusterIP(DWORD zone, DWORD ipAddr);
 
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx);

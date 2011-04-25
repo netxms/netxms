@@ -139,7 +139,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    listen(sock, SOMAXCONN);
 
    // Wait for connection requests
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       iSize = sizeof(struct sockaddr_in);
       if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)

@@ -133,7 +133,7 @@ void CheckForMgmtNode()
    if (pIfList != NULL)
    {
       for(i = 0; i < pIfList->getSize(); i++)
-         if ((pNode = FindNodeByIP(pIfList->get(i)->dwIpAddr)) != NULL)
+         if ((pNode = FindNodeByIP(0, pIfList->get(i)->dwIpAddr)) != NULL)
          {
             // Check management node flag
             if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
@@ -251,7 +251,7 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
    SetPollerState((long)arg, _T("init"));
 
    // Main loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
       pObject = (NetObj *)g_statusPollQueue.GetOrBlock();
@@ -288,7 +288,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
    ThreadSleep(60);
 
    // Main loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
       pNode = (Node *)g_configPollQueue.GetOrBlock();
@@ -322,7 +322,7 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
    ThreadSleep(120);
 
    // Main loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
       pNode = (Node *)g_routePollQueue.GetOrBlock();
@@ -354,7 +354,7 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 
 	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), IpToStr(ipAddr, buffer), ifIndex);
 	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) &&
-       (FindNodeByIP(ipAddr) == NULL) && !IsClusterIP(ipAddr) && 
+	    (FindNodeByIP(node->getZoneId(), ipAddr) == NULL) && !IsClusterIP(node->getZoneId(), ipAddr) && 
 		 (g_nodePollerQueue.find(CAST_TO_POINTER(ipAddr, void *), PollerQueueElementComparator) == NULL))
    {
       Interface *pInterface = node->findInterface(ifIndex, ipAddr);
@@ -435,7 +435,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
    ThreadSleep(120);
 
    // Main loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
       pNode = (Node *)g_discoveryPollQueue.GetOrBlock();
@@ -499,7 +499,7 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
    SetPollerState((long)arg, _T("init"));
 
    // Main loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
       pCond = (Condition *)g_conditionPollerQueue.GetOrBlock();
@@ -532,7 +532,7 @@ static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
    ThreadSleep(120);
 
    // Main loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
       Node *node = (Node *)g_topologyPollQueue.GetOrBlock();
@@ -577,11 +577,11 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
       {
          DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"),
                    IpToStr(dwAddr, szIpAddr1));
-         if (FindNodeByIP(dwAddr) == NULL)
+         if (FindNodeByIP(0, dwAddr) == NULL)
          {
             Subnet *pSubnet;
 
-            pSubnet = FindSubnetForNode(dwAddr);
+            pSubnet = FindSubnetForNode(0, dwAddr);
             if (pSubnet != NULL)
             {
                if ((pSubnet->IpAddr() != dwAddr) && 
@@ -633,7 +633,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
    nInterval = ConfigReadInt(_T("ActiveDiscoveryInterval"), 7200);
 
    // Main loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
       if (SleepAndCheckForShutdown(nInterval))
@@ -787,7 +787,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    dwWatchdogId = WatchdogAddThread(_T("Poll Manager"), 60);
    iCounter = 0;
 
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(5))
          break;      // Shutdown has arrived

@@ -1572,7 +1572,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
          msg.SetVariable(VID_USER_ID, m_dwUserId);
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
-			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 0 : 1));
+			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
          DebugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
@@ -3768,6 +3768,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    iClass = pRequest->GetVariableShort(VID_OBJECT_CLASS);
+	zoneId = pRequest->GetVariableLong(VID_ZONE_ID);
 
    // Find parent object
    pParent = FindObjectById(pRequest->GetVariableLong(VID_PARENT_ID));
@@ -3776,7 +3777,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
       dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
       if ((pParent == NULL) && (dwIpAddr != 0))
       {
-         pParent = FindSubnetForNode(dwIpAddr);
+         pParent = FindSubnetForNode(zoneId, dwIpAddr);
          bParentAlwaysValid = TRUE;
       }
    }
@@ -3790,143 +3791,159 @@ void ClientSession::createObject(CSCPMessage *pRequest)
          // Parent object should be of valid type
          if (bParentAlwaysValid || IsValidParentClass(iClass, (pParent != NULL) ? pParent->Type() : -1))
          {
-            pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
-            if (IsValidObjectName(szObjectName, TRUE))
-            {
-               // Create new object
-               switch(iClass)
-               {
-                  case OBJECT_NODE:
-                     pObject = PollNewNode(dwIpAddr,
-                                           pRequest->GetVariableLong(VID_IP_NETMASK),
-                                           pRequest->GetVariableLong(VID_CREATION_FLAGS),
-                                           szObjectName,
-                                           pRequest->GetVariableLong(VID_PROXY_NODE),
-                                           pRequest->GetVariableLong(VID_SNMP_PROXY),
-														 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
-														 pRequest->GetVariableLong(VID_ZONE_ID));
-                     break;
-                  case OBJECT_CONTAINER:
-                     pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));
-                     NetObjInsert(pObject, TRUE);
-                     break;
-                  case OBJECT_TEMPLATEGROUP:
-                     pObject = new TemplateGroup(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
-                     break;
-                  case OBJECT_TEMPLATE:
-                     pObject = new Template(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
-                     break;
-                  case OBJECT_POLICYGROUP:
-                     pObject = new PolicyGroup(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
-                     break;
-                  case OBJECT_AGENTPOLICY_CONFIG:
-                     pObject = new AgentPolicyConfig(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
-                     break;
-                  case OBJECT_CLUSTER:
-                     pObject = new Cluster(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-                     break;
-                  case OBJECT_NETWORKSERVICE:
-                     iServiceType = (int)pRequest->GetVariableShort(VID_SERVICE_TYPE);
-                     wIpProto = pRequest->GetVariableShort(VID_IP_PROTO);
-                     wIpPort = pRequest->GetVariableShort(VID_IP_PORT);
-                     pszRequest = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
-                     pszResponse = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
-                     pObject = new NetworkService(iServiceType, wIpProto, wIpPort, 
-                                                  pszRequest, pszResponse, (Node *)pParent);
-                     pObject->setName(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-                     break;
-                  case OBJECT_VPNCONNECTOR:
-                     pObject = new VPNConnector(TRUE);
-                     pObject->setName(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-                     break;
-                  case OBJECT_CONDITION:
-                     pObject = new Condition(TRUE);
-                     pObject->setName(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-                     break;
-                  case OBJECT_NETWORKMAPGROUP:
-                     pObject = new NetworkMapGroup(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
-                     break;
-						case OBJECT_NETWORKMAP:
-							pObject = new NetworkMap((int)pRequest->GetVariableShort(VID_MAP_TYPE), pRequest->GetVariableLong(VID_SEED_OBJECT));
-                     pObject->setName(szObjectName);
-                     NetObjInsert(pObject, TRUE);
-							break;
-						case OBJECT_ZONE:
-							zoneId = pRequest->GetVariableLong(VID_ZONE_ID);
-							if ((zoneId > 0) && (g_idxZoneByGUID.get(zoneId) == NULL))
-							{
-								pObject = new Zone(zoneId, szObjectName);
+				// Check zone
+				bool zoneIsValid;
+				if (IsZoningEnabled() && (zoneId != 0) && (iClass != OBJECT_ZONE))
+				{
+					zoneIsValid = (g_idxZoneByGUID.get(zoneId) != NULL);
+				}
+				else
+				{
+					zoneIsValid = true;
+				}
+				if (zoneIsValid)
+				{
+					pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
+					if (IsValidObjectName(szObjectName, TRUE))
+					{
+						// Create new object
+						switch(iClass)
+						{
+							case OBJECT_NODE:
+								pObject = PollNewNode(dwIpAddr,
+															 pRequest->GetVariableLong(VID_IP_NETMASK),
+															 pRequest->GetVariableLong(VID_CREATION_FLAGS),
+															 szObjectName,
+															 pRequest->GetVariableLong(VID_PROXY_NODE),
+															 pRequest->GetVariableLong(VID_SNMP_PROXY),
+															 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
+															 zoneId);
+								break;
+							case OBJECT_CONTAINER:
+								pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));
 								NetObjInsert(pObject, TRUE);
-							}
-							else
-							{
-								pObject = NULL;
-							}
-							break;
-                  default:
-                     break;
-               }
-
-               // If creation was successful do binding and set comments if needed
-               if (pObject != NULL)
-               {
-                  if (pParent != NULL)    // parent can be NULL for nodes
-                  {
-                     pParent->AddChild(pObject);
-                     pObject->AddParent(pParent);
-                     pParent->CalculateCompoundStatus();
-							if (pParent->Type() == OBJECT_CLUSTER)
-							{
-								((Cluster *)pParent)->ApplyToNode((Node *)pObject);
-							}
-                  }
-						
-						pszComments = pRequest->GetVariableStr(VID_COMMENTS);
-						if (pszComments != NULL)
-							pObject->setComments(pszComments);
-
-                  pObject->unhide();
-                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                  msg.SetVariable(VID_OBJECT_ID, pObject->Id());
-               }
-               else
-               {
-						// :DIRTY HACK:
-						// PollNewNode will return NULL only if IP already
-						// in use. some new() can fail there too, but server will
-						// crash in that case
-						if (iClass == OBJECT_NODE)
-						{
-                  	msg.SetVariable(VID_RCC, RCC_ALREADY_EXIST);
+								break;
+							case OBJECT_TEMPLATEGROUP:
+								pObject = new TemplateGroup(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								break;
+							case OBJECT_TEMPLATE:
+								pObject = new Template(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								break;
+							case OBJECT_POLICYGROUP:
+								pObject = new PolicyGroup(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								break;
+							case OBJECT_AGENTPOLICY_CONFIG:
+								pObject = new AgentPolicyConfig(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								break;
+							case OBJECT_CLUSTER:
+								pObject = new Cluster(szObjectName, zoneId);
+								NetObjInsert(pObject, TRUE);
+								break;
+							case OBJECT_NETWORKSERVICE:
+								iServiceType = (int)pRequest->GetVariableShort(VID_SERVICE_TYPE);
+								wIpProto = pRequest->GetVariableShort(VID_IP_PROTO);
+								wIpPort = pRequest->GetVariableShort(VID_IP_PORT);
+								pszRequest = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
+								pszResponse = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
+								pObject = new NetworkService(iServiceType, wIpProto, wIpPort, 
+																	  pszRequest, pszResponse, (Node *)pParent);
+								pObject->setName(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								break;
+							case OBJECT_VPNCONNECTOR:
+								pObject = new VPNConnector(TRUE);
+								pObject->setName(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								break;
+							case OBJECT_CONDITION:
+								pObject = new Condition(TRUE);
+								pObject->setName(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								break;
+							case OBJECT_NETWORKMAPGROUP:
+								pObject = new NetworkMapGroup(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								break;
+							case OBJECT_NETWORKMAP:
+								pObject = new NetworkMap((int)pRequest->GetVariableShort(VID_MAP_TYPE), pRequest->GetVariableLong(VID_SEED_OBJECT));
+								pObject->setName(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								break;
+							case OBJECT_ZONE:
+								if ((zoneId > 0) && (g_idxZoneByGUID.get(zoneId) == NULL))
+								{
+									pObject = new Zone(zoneId, szObjectName);
+									NetObjInsert(pObject, TRUE);
+								}
+								else
+								{
+									pObject = NULL;
+								}
+								break;
+							default:
+								break;
 						}
-						else if (iClass == OBJECT_ZONE)
+
+						// If creation was successful do binding and set comments if needed
+						if (pObject != NULL)
 						{
-                  	msg.SetVariable(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
+							if (pParent != NULL)    // parent can be NULL for nodes
+							{
+								pParent->AddChild(pObject);
+								pObject->AddParent(pParent);
+								pParent->CalculateCompoundStatus();
+								if (pParent->Type() == OBJECT_CLUSTER)
+								{
+									((Cluster *)pParent)->ApplyToNode((Node *)pObject);
+								}
+							}
+							
+							pszComments = pRequest->GetVariableStr(VID_COMMENTS);
+							if (pszComments != NULL)
+								pObject->setComments(pszComments);
+
+							pObject->unhide();
+							msg.SetVariable(VID_RCC, RCC_SUCCESS);
+							msg.SetVariable(VID_OBJECT_ID, pObject->Id());
 						}
 						else
 						{
-                  	msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+							// :DIRTY HACK:
+							// PollNewNode will return NULL only if IP already
+							// in use. some new() can fail there too, but server will
+							// crash in that case
+							if (iClass == OBJECT_NODE)
+							{
+                  		msg.SetVariable(VID_RCC, RCC_ALREADY_EXIST);
+							}
+							else if (iClass == OBJECT_ZONE)
+							{
+                  		msg.SetVariable(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
+							}
+							else
+							{
+                  		msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+							}
 						}
-               }
-            }
-            else
-            {
-               msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
-            }
+					}
+					else
+					{
+						msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+					}
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_INVALID_ZONE_ID);
+				}
          }
          else
          {
@@ -4653,7 +4670,7 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
    else
 	{
 		if (m_clientAddr->sa_family == AF_INET)
-			pObject = FindNodeByIP(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));  // Client is the source
+			pObject = FindNodeByIP(0, ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));  // Client is the source
 		else
 #ifdef WITH_IPV6
 			pObject = NULL;	// TODO: find object by IPv6 address
@@ -5844,8 +5861,8 @@ void ClientSession::ChangeObjectIP(CSCPMessage *pRequest)
             dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
 
             // Check if we already have object with given IP
-            if ((FindNodeByIP(dwIpAddr) == NULL) &&
-                (FindSubnetByIP(dwIpAddr) == NULL))
+				if ((FindNodeByIP(((Node *)pObject)->getZoneId(), dwIpAddr) == NULL) &&
+                (FindSubnetByIP(((Node *)pObject)->getZoneId(), dwIpAddr) == NULL))
             {
                ((Node *)pObject)->changeIPAddress(dwIpAddr);
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -10134,7 +10151,7 @@ void ClientSession::registerAgent(CSCPMessage *pRequest)
 		{
 			if (m_clientAddr->sa_family == AF_INET)
 			{
-				node = FindNodeByIP(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));
+				node = FindNodeByIP(0, ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));
 				if (node != NULL)
 				{
 					// Node already exist, force configuration poll

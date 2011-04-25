@@ -131,7 +131,7 @@ BOOL NetObj::DeleteFromDB()
 // Load common object properties from database
 //
 
-BOOL NetObj::LoadCommonProperties()
+BOOL NetObj::loadCommonProperties()
 {
    DB_RESULT hResult;
    TCHAR szQuery[1024];
@@ -222,7 +222,7 @@ BOOL NetObj::LoadCommonProperties()
 	}
 	
 	if (bResult)
-		bResult = LoadTrustedNodes();
+		bResult = loadTrustedNodes();
 		
    return bResult;
 }
@@ -232,7 +232,7 @@ BOOL NetObj::LoadCommonProperties()
 // Save common object properties to database
 //
 
-BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
+BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 {
    TCHAR szQuery[32768], szTranslation[16], szThresholds[16], guid[64], image[64];
    DB_RESULT hResult;
@@ -315,7 +315,7 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
    }
 
 	if (bResult)
-		bResult = SaveTrustedNodes(hdb);
+		bResult = saveTrustedNodes(hdb);
 
    return bResult;
 }
@@ -675,7 +675,7 @@ void NetObj::CalculateCompoundStatus(BOOL bForcedRecalc)
 // Load ACL from database
 //
 
-BOOL NetObj::LoadACLFromDB(void)
+BOOL NetObj::loadACLFromDB()
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -729,7 +729,7 @@ static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
 // Save ACL to database
 //
 
-BOOL NetObj::SaveACLToDB(DB_HANDLE hdb)
+BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[256];
    BOOL bSuccess = FALSE;
@@ -1268,7 +1268,7 @@ void NetObj::CommentsToMessage(CSCPMessage *pMsg)
 // Load trusted nodes list from database
 //
 
-BOOL NetObj::LoadTrustedNodes(void)
+BOOL NetObj::loadTrustedNodes()
 {
 	DB_RESULT hResult;
 	TCHAR query[256];
@@ -1298,7 +1298,7 @@ BOOL NetObj::LoadTrustedNodes(void)
 // Save list of trusted nodes to database
 //
 
-BOOL NetObj::SaveTrustedNodes(DB_HANDLE hdb)
+BOOL NetObj::saveTrustedNodes(DB_HANDLE hdb)
 {
 	TCHAR query[256];
 	DWORD i;

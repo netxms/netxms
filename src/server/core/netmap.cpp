@@ -100,7 +100,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 {
 	TCHAR query[1024], temp[64];
 
-	if (!SaveCommonProperties(hdb))
+	if (!saveCommonProperties(hdb))
 		return FALSE;
 
 	// Check for object's existence in database
@@ -125,7 +125,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
    if (!DBQuery(hdb, query))
 		return FALSE;
 
-	if (!SaveACLToDB(hdb))
+	if (!saveACLToDB(hdb))
 		return FALSE;
 
    // Save elements
@@ -191,7 +191,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 {
 	m_dwId = dwId;
 
-	if (!LoadCommonProperties())
+	if (!loadCommonProperties())
    {
       DbgPrintf(2, _T("Cannot load common properties for network map object %d"), dwId);
       return FALSE;
@@ -201,7 +201,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
    {
 		TCHAR query[256];
 
-	   LoadACLFromDB();
+	   loadACLFromDB();
 
 		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,background FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);

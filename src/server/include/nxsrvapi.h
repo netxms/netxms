@@ -133,9 +133,6 @@
 #define AF_SERVER_INITIALIZED             0x40000000
 #define AF_SHUTDOWN                       0x80000000
 
-#define IsStandalone()                    (!(g_dwFlags & AF_DAEMON))
-#define ShutdownInProgress()              (g_dwFlags & AF_SHUTDOWN)
-
 
 //
 // Encryption usage policies
@@ -596,5 +593,26 @@ DWORD LIBNXSRV_EXPORTABLE SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransp
 extern DWORD LIBNXSRV_EXPORTABLE g_dwFlags;
 extern DWORD LIBNXSRV_EXPORTABLE g_dwSNMPTimeout;
 extern int LIBNXSRV_EXPORTABLE g_nDebugLevel;
+
+
+//
+// Helper finctions for checking server flags
+//
+
+inline bool IsStandalone()
+{
+	return !(g_dwFlags & AF_DAEMON) ? true : false;
+}
+
+inline bool IsZoningEnabled()
+{
+	return (g_dwFlags & AF_ENABLE_ZONING) ? true : false;
+}
+
+inline bool IsShutdownInProgress()
+{
+	return (g_dwFlags & AF_SHUTDOWN) ? true : false;
+}
+
 
 #endif   /* _nxsrvapi_h_ */

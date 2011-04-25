@@ -270,7 +270,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
             {
-					if (g_dwFlags & AF_ENABLE_ZONING)
+					if (IsZoningEnabled())
 					{
 						Zone *zone = (Zone *)g_idxZoneByGUID.get(((Subnet *)pObject)->getZoneId());
 						if (zone != NULL)
@@ -294,7 +294,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_INTERFACE:
             if (pObject->IpAddr() != 0)
             {
-					if (g_dwFlags & AF_ENABLE_ZONING)
+					if (IsZoningEnabled())
 					{
 						Zone *zone = (Zone *)g_idxZoneByGUID.get(((Interface *)pObject)->getZoneId());
 						if (zone != NULL)
@@ -364,7 +364,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
          {
-				if (g_dwFlags & AF_ENABLE_ZONING)
+				if (IsZoningEnabled())
 				{
 					Zone *zone = (Zone *)g_idxZoneByGUID.get(((Subnet *)pObject)->getZoneId());
 					if (zone != NULL)
@@ -386,7 +386,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_INTERFACE:
          if (pObject->IpAddr() != 0)
          {
-				if (g_dwFlags & AF_ENABLE_ZONING)
+				if (IsZoningEnabled())
 				{
 					Zone *zone = (Zone *)g_idxZoneByGUID.get(((Interface *)pObject)->getZoneId());
 					if (zone != NULL)
@@ -444,12 +444,24 @@ static DWORD GetObjectNetmask(NetObj *pObject)
 // Find node by IP address
 //
 
-Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr)
+Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD zoneId, DWORD ipAddr)
 {
-   if (dwAddr == 0)
+   if (ipAddr == 0)
       return NULL;
 
-	Interface *iface = (Interface *)g_idxInterfaceByAddr.get(dwAddr);
+	Interface *iface = NULL;
+	if (IsZoningEnabled())
+	{
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
+		if (zone != NULL)
+		{
+			iface = zone->getInterfaceByAddr(ipAddr);
+		}
+	}
+	else
+	{
+		iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
+	}
 	return (iface != NULL) ? iface->getParentNode() : NULL;
 }
 
@@ -520,11 +532,25 @@ Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 // Find subnet by IP address
 //
 
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD zoneId, DWORD ipAddr)
 {
-   if (dwAddr == 0)
+   if (ipAddr == 0)
       return NULL;
-	return (Subnet *)g_idxSubnetByAddr.get(dwAddr);
+
+	Subnet *subnet = NULL;
+	if (IsZoningEnabled())
+	{
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
+		if (zone != NULL)
+		{
+			subnet = zone->getSubnetByAddr(ipAddr);
+		}
+	}
+	else
+	{
+		subnet = (Subnet *)g_idxSubnetByAddr.get(ipAddr);
+	}
+	return subnet;
 }
 
 
@@ -537,11 +563,25 @@ static bool SubnetAddrComparator(NetObj *object, void *nodeAddr)
    return (CAST_FROM_POINTER(nodeAddr, DWORD) & ((Subnet *)object)->getIpNetMask()) == ((Subnet *)object)->IpAddr();
 }
 
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD zoneId, DWORD dwNodeAddr)
 {
    if (dwNodeAddr == 0)
       return NULL;
-	return (Subnet *)g_idxSubnetByAddr.find(SubnetAddrComparator, CAST_TO_POINTER(dwNodeAddr, void *));
+
+	Subnet *subnet = NULL;
+	if (IsZoningEnabled())
+	{
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
+		if (zone != NULL)
+		{
+			subnet = zone->findSubnet(SubnetAddrComparator, CAST_TO_POINTER(dwNodeAddr, void *));
+		}
+	}
+	else
+	{
+		subnet = (Subnet *)g_idxSubnetByAddr.find(SubnetAddrComparator, CAST_TO_POINTER(dwNodeAddr, void *));
+	}
+	return subnet;
 }
 
 
@@ -635,16 +675,27 @@ Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(DWORD ipAddr)
 // resource IP or located on one of sync subnets)
 //
 
-static bool ClusterIPComparator(NetObj *object, void *ipAddr)
+struct __cluster_ip_data
 {
-	return (object->Type() == OBJECT_CLUSTER) && 
-	       (((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, DWORD)) ||
-	        ((Cluster *)object)->isSyncAddr(CAST_FROM_POINTER(ipAddr, DWORD)));
+	DWORD ipAddr;
+	DWORD zoneId;
+};
+
+static bool ClusterIPComparator(NetObj *object, void *data)
+{
+	struct __cluster_ip_data *d = (struct __cluster_ip_data *)data;
+	return (object->Type() == OBJECT_CLUSTER) &&
+	       (((Cluster *)object)->getZoneId() == d->zoneId) &&
+			 (((Cluster *)object)->isVirtualAddr(d->ipAddr) ||
+			  ((Cluster *)object)->isSyncAddr(d->ipAddr));
 }
 
-bool NXCORE_EXPORTABLE IsClusterIP(DWORD ipAddr)
+bool NXCORE_EXPORTABLE IsClusterIP(DWORD zoneId, DWORD ipAddr)
 {
-	return g_idxObjectById.find(ClusterIPComparator, CAST_TO_POINTER(ipAddr, void *)) != NULL;
+	struct __cluster_ip_data data;
+	data.zoneId = zoneId;
+	data.ipAddr = ipAddr;
+	return g_idxObjectById.find(ClusterIPComparator, &data) != NULL;
 }
 
 
@@ -1387,10 +1438,26 @@ void NetObjDelete(NetObj *pObject)
 // Update interface index when IP address changes
 //
 
-void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
+void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, Interface *iface)
 {
-	g_idxInterfaceByAddr.remove(dwOldIpAddr);
-	g_idxInterfaceByAddr.put(dwNewIpAddr, pObject);
+	if (IsZoningEnabled())
+	{
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(iface->getZoneId());
+		if (zone != NULL)
+		{
+			zone->updateInterfaceIndex(dwOldIpAddr, dwNewIpAddr, iface);
+		}
+		else
+		{
+			DbgPrintf(1, _T("UpdateInterfaceIndex: Cannot find zone object for interface %s [%d] (zone id %d)"),
+			          iface->Name(), (int)iface->Id(), (int)iface->getZoneId());
+		}
+	}
+	else
+	{
+		g_idxInterfaceByAddr.remove(dwOldIpAddr);
+		g_idxInterfaceByAddr.put(dwNewIpAddr, iface);
+	}
 }
 
 

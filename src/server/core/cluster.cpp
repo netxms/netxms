@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ Cluster::Cluster()
 	m_pResourceList = NULL;
 	m_tmLastPoll = 0;
 	m_dwFlags = 0;
+	m_zoneId = 0;
 }
 
 
@@ -44,7 +45,7 @@ Cluster::Cluster()
 // Cluster class new object constructor
 //
 
-Cluster::Cluster(const TCHAR *pszName)
+Cluster::Cluster(const TCHAR *pszName, DWORD zoneId)
         :Template(pszName)
 {
 	m_dwClusterType = 0;
@@ -54,6 +55,7 @@ Cluster::Cluster(const TCHAR *pszName)
 	m_pResourceList = NULL;
 	m_tmLastPoll = 0;
 	m_dwFlags = 0;
+	m_zoneId = zoneId;
 }
 
 
@@ -83,14 +85,23 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
    {
       DbgPrintf(2, _T("Cannot load common properties for cluster object %d"), dwId);
       return FALSE;
    }
 
+	_sntprintf(szQuery, 256, _T("SELECT cluster_type,zone_guid FROM clusters WHERE id=%d"), (int)m_dwId);
+	hResult = DBSelect(g_hCoreDB, szQuery);
+	if (hResult == NULL)
+		return FALSE;
+
+	m_dwClusterType = DBGetFieldULong(hResult, 0, 0);
+	m_zoneId = DBGetFieldULong(hResult, 0, 1);
+	DBFreeResult(hResult);
+
    // Load DCI and access list
-   LoadACLFromDB();
+   loadACLFromDB();
    loadItemsFromDB();
    for(i = 0; i < (int)m_dwNumItems; i++)
       if (!m_ppItems[i]->loadThresholdsFromDB())
@@ -208,7 +219,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    // Check for object's existence in database
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM clusters WHERE id=%d"), m_dwId);
@@ -221,12 +232,12 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    }
    if (bNewObject)
       _sntprintf(szQuery, 4096,
-                 _T("INSERT INTO clusters (id,cluster_type) VALUES (%d,%d)"),
-                 m_dwId, m_dwClusterType);
+                 _T("INSERT INTO clusters (id,cluster_type,zone_guid) VALUES (%d,%d,%d)"),
+                 (int)m_dwId, (int)m_dwClusterType, (int)m_zoneId);
    else
       _sntprintf(szQuery, 4096,
-                 _T("UPDATE clusters SET cluster_type=%d WHERE id=%d"),
-                 m_dwClusterType, m_dwId);
+                 _T("UPDATE clusters SET cluster_type=%d,zone_guid=%d WHERE id=%d"),
+                 (int)m_dwClusterType, (int)m_zoneId, (int)m_dwId);
    bResult = DBQuery(hdb, szQuery);
 
    // Save data collection items
@@ -324,7 +335,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    }
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
 	if (bResult)

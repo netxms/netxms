@@ -45,7 +45,7 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
    char szFormat[] = "ssssssssssssssssssssssssssssssss";
 
    DbgPrintf(3, _T("Received trap message from agent at %s"), IpToStr(getIpAddr(), szBuffer));
-   pNode = FindNodeByIP(getIpAddr());
+   pNode = FindNodeByIP(0, getIpAddr());	/* FIXME: is it possible to receive traps from other zones? */
    if (pNode != NULL)
    {
       dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
@@ -91,7 +91,7 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 	msg->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
 	msg->GetVariableStr(VID_VALUE, value, MAX_RESULT_LENGTH);
 
-	Node *node = FindNodeByIP(getIpAddr());
+	Node *node = FindNodeByIP(0, getIpAddr());	/* FIXME: is it possible to receive push data form other zones? */
 	if (node != NULL)
 	{
 		DbgPrintf(5, _T("%s: agent data push: %s=%s"), node->Name(), name, value);

@@ -99,7 +99,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
    dwWatchdogId = WatchdogAddThread(_T("Syncer Thread"), iSyncInterval * 2 + 10);
 
    // Main syncer loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(iSyncInterval))
          break;   // Shutdown time has arrived

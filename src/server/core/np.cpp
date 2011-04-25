@@ -149,8 +149,8 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
 
    DbgPrintf(4, _T("PollNode(%s,%s) zone %d"), IpToStr(dwIpAddr, szIpAddr1), IpToStr(dwNetMask, szIpAddr2), (int)zoneId);
    // Check for node existence
-   if ((FindNodeByIP(dwIpAddr) != NULL) ||
-       (FindSubnetByIP(dwIpAddr) != NULL))
+   if ((FindNodeByIP(zoneId, dwIpAddr) != NULL) ||
+       (FindSubnetByIP(zoneId, dwIpAddr) != NULL))
    {
       DbgPrintf(4, _T("PollNode: Node %s already exist in database"), 
                 IpToStr(dwIpAddr, szIpAddr1));
@@ -191,7 +191,7 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
 // Check if newly discovered node should be added
 //
 
-static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
+static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD zoneId)
 {
    DISCOVERY_FILTER_DATA data;
    TCHAR szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[16];
@@ -203,8 +203,8 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 	SNMP_UDPTransport *pTransport;
 
 	IpToStr(dwIpAddr, szIpAddr);
-   if ((FindNodeByIP(dwIpAddr) != NULL) ||
-       (FindSubnetByIP(dwIpAddr) != NULL))
+   if ((FindNodeByIP(zoneId, dwIpAddr) != NULL) ||
+       (FindSubnetByIP(zoneId, dwIpAddr) != NULL))
 	{
 		DbgPrintf(4, _T("AcceptNewNode(%s): node already exist in database"), szIpAddr);
       return FALSE;  // Node already exist in database
@@ -411,7 +411,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 
    DbgPrintf(1, _T("Node poller started"));
 
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       pInfo = (NEW_NODE *)g_nodePollerQueue.GetOrBlock();
       if (pInfo == INVALID_POINTER_VALUE)
@@ -419,7 +419,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 
 		DbgPrintf(4, _T("NodePoller: processing node %s/%s in zone %d"),
 		          IpToStr(pInfo->dwIpAddr, szIpAddr), IpToStr(pInfo->dwNetMask, szNetMask), (int)pInfo->zoneId);
-      if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask))
+		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId))
 		{
          Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL, pInfo->zoneId);
 			if (node != NULL)

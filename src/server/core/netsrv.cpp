@@ -90,7 +90,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    // Check for object's existence in database
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM network_services WHERE id=%d"), m_dwId);
@@ -132,7 +132,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    DBQuery(hdb, szQuery);
                  
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;
@@ -155,7 +155,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
       return FALSE;
 
    _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,"
@@ -226,7 +226,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   LoadACLFromDB();
+   loadACLFromDB();
 
    return bResult;
 }

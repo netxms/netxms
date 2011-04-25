@@ -219,7 +219,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
       return FALSE;
 
-   pNode = FindNodeByIP(ntohl(dwAddr));
+   pNode = FindNodeByIP(0, ntohl(dwAddr));	/* TODO: add possibility to specify action target by object id */
    if (pNode != NULL)
    {
       pConn = pNode->createAgentConnection();

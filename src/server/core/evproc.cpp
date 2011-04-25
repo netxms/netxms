@@ -106,7 +106,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 	DWORD i;
 
 	m_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       pEvent = (Event *)g_pEventQueue->GetOrBlock();
       if (pEvent == INVALID_POINTER_VALUE)

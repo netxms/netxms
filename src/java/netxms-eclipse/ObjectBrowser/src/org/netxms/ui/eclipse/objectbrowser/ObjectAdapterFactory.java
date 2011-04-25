@@ -88,6 +88,8 @@ public class ObjectAdapterFactory implements IAdapterFactory
 								return Activator.getImageDescriptor("icons/service_root.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_CONTAINER:
 								return Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
+							case GenericObject.OBJECT_ZONE:
+								return Activator.getImageDescriptor("icons/zone.gif"); //$NON-NLS-1$
 							case GenericObject.OBJECT_SUBNET:
 								return Activator.getImageDescriptor("icons/subnet.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_CLUSTER:

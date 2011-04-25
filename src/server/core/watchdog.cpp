@@ -82,7 +82,7 @@ void WatchdogInit(void)
 
 void WatchdogNotify(DWORD dwId)
 {
-   if (ShutdownInProgress())
+   if (IsShutdownInProgress())
       return;
 
    MutexLock(m_mutexWatchdogAccess, INFINITE);
@@ -124,7 +124,7 @@ THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
    DWORD i;
    time_t currTime;
 
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(20))
          break;      // Shutdown has arrived

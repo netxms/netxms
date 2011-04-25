@@ -135,7 +135,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
       return FALSE;
 
    _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,")
@@ -178,6 +178,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
          {
             pObject->AddChild(this);
             AddParent(pObject);
+				m_zoneId = ((Node *)pObject)->getZoneId();
             bResult = TRUE;
          }
       }
@@ -190,7 +191,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   LoadACLFromDB();
+   loadACLFromDB();
 
    return bResult;
 }
@@ -211,7 +212,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    // Check for object's existence in database
    _sntprintf(szQuery, 1024, _T("SELECT id FROM interfaces WHERE id=%d"), m_dwId);
@@ -258,7 +259,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    DBQuery(hdb, szQuery);
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;

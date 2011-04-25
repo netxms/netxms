@@ -52,8 +52,8 @@ BOOL Network::SaveToDB(DB_HANDLE hdb)
 {
    LockData();
 
-   SaveCommonProperties(hdb);
-   SaveACLToDB(hdb);
+   saveCommonProperties(hdb);
+   saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;
@@ -66,8 +66,8 @@ BOOL Network::SaveToDB(DB_HANDLE hdb)
 // Load properties from database
 //
 
-void Network::LoadFromDB(void)
+void Network::LoadFromDB()
 {
-   LoadCommonProperties();
-   LoadACLFromDB();
+   loadCommonProperties();
+   loadACLFromDB();
 }

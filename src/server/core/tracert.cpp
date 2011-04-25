@@ -41,7 +41,7 @@ NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest)
    {
       if (pCurr->getNextHop(pSrc->IpAddr(), pDest->IpAddr(), &dwNextHop, &dwIfIndex, &bIsVPN))
       {
-         pNext = FindNodeByIP(dwNextHop);
+			pNext = FindNodeByIP(pSrc->getZoneId(), dwNextHop);
          pTrace->pHopList = (HOP_INFO *)realloc(pTrace->pHopList, sizeof(HOP_INFO) * (pTrace->iNumHops + 1));
          pTrace->pHopList[pTrace->iNumHops].dwNextHop = dwNextHop;
          pTrace->pHopList[pTrace->iNumHops].dwIfIndex = dwIfIndex;

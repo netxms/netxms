@@ -81,7 +81,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
       return FALSE;
 
    _sntprintf(szQuery, 256, _T("SELECT zone_guid,agent_proxy,snmp_proxy,icmp_proxy FROM zones WHERE id=%d"), dwId);
@@ -111,7 +111,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   LoadACLFromDB();
+   loadACLFromDB();
 
    return TRUE;
 }
@@ -129,7 +129,7 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
 
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
    
    // Check for object's existence in database
    _sntprintf(szQuery, 8192, _T("SELECT id FROM zones WHERE id=%d"), m_dwId);
@@ -152,7 +152,7 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
                  m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy, m_dwId);
    DBQuery(hdb, szQuery);
 
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;
@@ -213,4 +213,13 @@ DWORD Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_agentProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+/**
+ * Update interface index
+ */
+void Zone::updateInterfaceIndex(DWORD oldIp, DWORD newIp, Interface *iface)
+{
+	m_idxInterfaceByAddr->remove(oldIp);
+	m_idxInterfaceByAddr->put(newIp, iface);
 }

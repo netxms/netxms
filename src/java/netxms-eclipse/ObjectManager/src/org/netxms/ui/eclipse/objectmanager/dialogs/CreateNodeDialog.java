@@ -38,10 +38,13 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -51,6 +54,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateNodeDialog extends Dialog
 {
+	private NXCSession session;
+	
 	private LabeledText nameField;
 	private LabeledText ipAddrField;
 	private Button checkUnmanaged;
@@ -59,12 +64,14 @@ public class CreateNodeDialog extends Dialog
 	private Button checkDisablePing;
 	private ObjectSelector agentProxySelector;
 	private ObjectSelector snmpProxySelector;
+	private ObjectSelector zoneSelector;
 	
 	private String name;
 	private InetAddress ipAddress;
 	private int creationFlags;
 	private long agentProxy;
 	private long snmpProxy;
+	private long zoneId;
 	
 	/**
 	 * @param parentShell
@@ -72,6 +79,8 @@ public class CreateNodeDialog extends Dialog
 	public CreateNodeDialog(Shell parentShell)
 	{
 		super(parentShell);
+		session = (NXCSession)ConsoleSharedData.getSession();
+		zoneId = 0;
 	}
 
 	/* (non-Javadoc)
@@ -182,6 +191,17 @@ public class CreateNodeDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		snmpProxySelector.setLayoutData(gd);
 		
+		if (session.isZoningEnabled())
+		{
+			zoneSelector = new ObjectSelector(dialogArea, SWT.NONE);
+			zoneSelector.setLabel("Zone");
+			zoneSelector.setObjectClass(GenericObject.OBJECT_ZONE);
+			gd = new GridData();
+			gd.horizontalAlignment = SWT.FILL;
+			gd.grabExcessHorizontalSpace = true;
+			zoneSelector.setLayoutData(gd);
+		}
+		
 		return dialogArea;
 	}
 
@@ -201,7 +221,7 @@ public class CreateNodeDialog extends Dialog
 			return;
 		}
 		
-		name = nameField.getText();
+		name = nameField.getText().trim();
 		if (name.isEmpty())
 			name = ipAddrField.getText();
 		
@@ -217,6 +237,15 @@ public class CreateNodeDialog extends Dialog
 		
 		agentProxy = agentProxySelector.getObjectId();
 		snmpProxy = snmpProxySelector.getObjectId();
+		if (session.isZoningEnabled())
+		{
+			long zoneObjectId = zoneSelector.getObjectId();
+			GenericObject object = session.findObjectById(zoneObjectId);
+			if ((object != null) && (object instanceof Zone))
+			{
+				zoneId = ((Zone)object).getZoneId();
+			}
+		}
 		
 		super.okPressed();
 	}
@@ -287,5 +316,13 @@ public class CreateNodeDialog extends Dialog
 	public long getSnmpProxy()
 	{
 		return snmpProxy;
+	}
+
+	/**
+	 * @return the zoneId
+	 */
+	public long getZoneId()
+	{
+		return zoneId;
 	}
 }

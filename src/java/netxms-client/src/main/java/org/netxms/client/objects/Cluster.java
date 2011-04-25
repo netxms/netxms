@@ -36,6 +36,7 @@ public class Cluster extends GenericObject
 	private int clusterType;
 	private List<ClusterSyncNetwork> syncNetworks = new ArrayList<ClusterSyncNetwork>(1);
 	private List<ClusterResource> resources = new ArrayList<ClusterResource>();
+	private long zoneId;
 	
 	/**
 	 * @param msg
@@ -46,6 +47,7 @@ public class Cluster extends GenericObject
 		super(msg, session);
 		
 		clusterType = msg.getVariableAsInteger(NXCPCodes.VID_CLUSTER_TYPE);
+		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_SYNC_SUBNETS);
 		if (count > 0)
@@ -125,5 +127,13 @@ public class Cluster extends GenericObject
 	public String getObjectClassName()
 	{
 		return "Cluster";
+	}
+
+	/**
+	 * @return the zoneId
+	 */
+	public long getZoneId()
+	{
+		return zoneId;
 	}
 }

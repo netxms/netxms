@@ -245,7 +245,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
 	DbgPrintf(1, _T("ISC listener started"));
 
    // Wait for connection requests
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       iSize = sizeof(struct sockaddr_in);
       if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)

@@ -78,7 +78,7 @@ BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 {
 	TCHAR query[8192];
 
-	SaveCommonProperties(hdb);
+	saveCommonProperties(hdb);
 
    // Check for object's existence in database
 	bool isNewObject = true;
@@ -101,7 +101,7 @@ BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
    BOOL success = DBQuery(hdb, query);
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Update node bindings
    _sntprintf(query, 256, _T("DELETE FROM ap_bindings WHERE policy_id=%d"), m_dwId);
@@ -161,7 +161,7 @@ BOOL AgentPolicy::CreateFromDB(DWORD dwId)
 {
 	m_dwId = dwId;
 
-	if (!LoadCommonProperties())
+	if (!loadCommonProperties())
    {
       DbgPrintf(2, _T("Cannot load common properties for agent policy object %d"), dwId);
       return FALSE;
@@ -171,7 +171,7 @@ BOOL AgentPolicy::CreateFromDB(DWORD dwId)
    {
 		TCHAR query[256];
 
-	   LoadACLFromDB();
+	   loadACLFromDB();
 
 		_sntprintf(query, 256, _T("SELECT version,description FROM ap_common WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);

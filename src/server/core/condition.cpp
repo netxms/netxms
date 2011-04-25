@@ -94,7 +94,7 @@ BOOL Condition::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   if (!LoadCommonProperties())
+   if (!loadCommonProperties())
       return FALSE;
 
    // Load properties
@@ -149,7 +149,7 @@ BOOL Condition::CreateFromDB(DWORD dwId)
    }
    DBFreeResult(hResult);
 
-   return LoadACLFromDB();
+   return loadACLFromDB();
 }
 
 
@@ -166,7 +166,7 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
 
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_pszScript));
 	size_t qlen = _tcslen(pszEscScript) + 1024;
@@ -218,7 +218,7 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    free(pszQuery);
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;

@@ -119,7 +119,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    dwInterval = ConfigReadULong(_T("HouseKeepingInterval"), 3600);
 
    // Housekeeping loop
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       currTime = time(NULL);
       if (SleepAndCheckForShutdown(dwInterval - (DWORD)(currTime % dwInterval)))

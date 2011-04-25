@@ -87,7 +87,7 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
 
    LockData();
 
-   SaveCommonProperties(hdb);
+   saveCommonProperties(hdb);
 
    // Update members list
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
@@ -101,7 +101,7 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
    UnlockChildList();
 
    // Save access list
-   SaveACLToDB(hdb);
+   saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    UnlockData();
@@ -116,6 +116,6 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
 
 void UniversalRoot::LoadFromDB()
 {
-   LoadCommonProperties();
-   LoadACLFromDB();
+   loadCommonProperties();
+   loadACLFromDB();
 }

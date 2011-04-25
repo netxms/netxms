@@ -264,7 +264,7 @@ static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, DWORD dwSourceIP)
 
    // Match source IP to NetXMS object
    if ((dwIpAddr != INADDR_NONE) && (pNode == NULL))
-      pNode = FindNodeByIP(dwIpAddr);
+      pNode = FindNodeByIP(0, dwIpAddr);
 
 	if (pNode != NULL)
    {
@@ -550,7 +550,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    DbgPrintf(1, _T("Syslog Daemon started"));
 
    // Wait for packets
-   while(!ShutdownInProgress())
+   while(!IsShutdownInProgress())
    {
       FD_ZERO(&rdfs);
       FD_SET(hSocket, &rdfs);
