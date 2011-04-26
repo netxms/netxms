@@ -551,9 +551,9 @@ case "$PLATFORM" in
       LDFLAGS="-no-undefined -Wl,-brtl $LDFLAGS"
       ;;
    HP-UX)
-      CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT"
+      CPPFLAGS="$CPPFLAGS -D__STDC__ -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG"
       if test "x$CXX" = "xaCC"; then
-         CXXFLAGS="-mt $CXXFLAGS -AC99 +W749 +W829"
+         CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
          LDFLAGS="$LDFLAGS -mt"
       fi
       ;;
@@ -672,39 +672,69 @@ if test "x$CC" = "xgcc" ; then
 	fi
 fi
 
+if test "x$CXX" = "xaCC" ; then
+	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+		AC_MSG_CHECKING(whether C compiler accepts +DD32)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="+DD32 $CPPFLAGS"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			[ 
+				LDFLAGS="+DD32 $LDFLAGS"
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	else
+		AC_MSG_CHECKING(whether C compiler accepts +DD64)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="+DD64 $CPPFLAGS"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			[ 
+				LDFLAGS="+DD64 $LDFLAGS"
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	fi
+fi
 
 #--------------------------------------------------------------------
 # Additional include and library directories
 #--------------------------------------------------------------------
 
-if test -d /usr/local/include; then
-	if test "x$CC" = "xgcc"; then
-		AC_MSG_CHECKING(whether -I/usr/local/include needed)
-		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS -Werror -I/usr/local/include"
-		AC_TRY_COMPILE([],[],
-			[
-				CPPFLAGS="$OLD_CPPFLAGS -I/usr/local/include"
-				AC_MSG_RESULT(yes)
-			],
-			[
-				CPPFLAGS="$OLD_CPPFLAGS"
-				AC_MSG_RESULT(no)
-			]
-		)
-	else
-		CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+if test "x$CXX" != "xaCC"; then
+	if test -d /usr/local/include; then
+		if test "x$CC" = "xgcc"; then
+			AC_MSG_CHECKING(whether -I/usr/local/include needed)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -Werror -I/usr/local/include"
+			AC_TRY_COMPILE([],[],
+				[
+					CPPFLAGS="$OLD_CPPFLAGS -I/usr/local/include"
+					AC_MSG_RESULT(yes)
+				],
+				[
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				]
+			)
+		else
+			CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+		fi
+	fi
+
+	if test -d /usr/kerberos/include; then
+		CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
+	fi
+
+	if test -d /usr/local/lib; then
+		LDFLAGS="$LDFLAGS -L/usr/local/lib"
 	fi
 fi
-
-if test -d /usr/kerberos/include; then
-	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-fi
-
-if test -d /usr/local/lib; then
-	LDFLAGS="$LDFLAGS -L/usr/local/lib"
-fi
-
 
 #--------------------------------------------------------------------
 # Check for threads library - either POSIX or GNU
@@ -1184,6 +1214,25 @@ if test "x$PLATFORM" = "xHP-UX"; then
 #include <sys/mib.h>
 #endif
 	])
+
+	AC_MSG_CHECKING(if pst_diskinfo has read/write stats fields)
+	AC_LANG_PUSH([C++])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ 
+#include <sys/pstat.h>
+			]], [[ 
+pst_diskinfo d;
+int x;
+x = (int)d.psd_dkread;
+x = (int)d.psd_dkwrite;
+			]])],
+		[ 
+			AC_DEFINE([HAVE_DISKINFO_RWSTATS],[1],[Define to 1 if pst_diskinfo has read/write stats fields])
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			AC_MSG_RESULT(no)
+		])
+	AC_LANG_POP([C++])
 fi
 
 

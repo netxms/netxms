@@ -126,10 +126,17 @@ static void ProcessDiskStats(struct pst_diskinfo *di)
 
 	dev->queueLen[s_currSlot] = di->psd_dkqlen_curr;
 	dev->transfers[s_currSlot] = di->psd_dkxfer - dev->last.psd_dkxfer;
+#if HAVE_DISKINFO_RWSTATS
 	dev->reads[s_currSlot] = di->psd_dkread - dev->last.psd_dkread;
 	dev->writes[s_currSlot] = di->psd_dkwrite - dev->last.psd_dkwrite;
 	dev->bytesRead[s_currSlot] = di->psd_dkbyteread - dev->last.psd_dkbyteread;
 	dev->bytesWritten[s_currSlot] = di->psd_dkbytewrite - dev->last.psd_dkbytewrite;
+#else
+	dev->reads[s_currSlot] = 0;
+	dev->writes[s_currSlot] = 0;
+	dev->bytesRead[s_currSlot] = 0;
+	dev->bytesWritten[s_currSlot] = 0;
+#endif
 	dev->waitTime[s_currSlot] = PSTTIME_TO_MS(di->psd_dkwait) - PSTTIME_TO_MS(dev->last.psd_dkwait);
 
 	memcpy(&dev->last, di, sizeof(struct pst_diskinfo));

@@ -25,6 +25,7 @@
 #include <net/if_types.h>
 #endif
 
+#define __STDC__
 extern "C" {
 #include <sys/mib.h>
 }
