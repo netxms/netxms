@@ -283,7 +283,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->node.dwRuntimeFlags = pMsg->GetVariableLong(VID_RUNTIME_FLAGS);
          pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
          pObject->node.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
-         pObject->node.dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
+         pObject->node.dwProxyNode = pMsg->GetVariableLong(VID_AGENT_PROXY);
          pObject->node.dwSNMPProxy = pMsg->GetVariableLong(VID_SNMP_PROXY);
          pObject->node.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
          pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
@@ -369,6 +369,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          }
          break;
       case OBJECT_CLUSTER:
+			pObject->cluster.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
          pObject->cluster.dwClusterType = pMsg->GetVariableLong(VID_CLUSTER_TYPE);
          pObject->cluster.dwNumSyncNets = pMsg->GetVariableLong(VID_NUM_SYNC_SUBNETS);
          pObject->cluster.pSyncNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->cluster.dwNumSyncNets);
@@ -868,7 +869,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
    if (pUpdate->qwFlags & OBJ_UPDATE_POLLER_NODE)
       msg.SetVariable(VID_POLLER_NODE_ID, pUpdate->dwPollerNode);
    if (pUpdate->qwFlags & OBJ_UPDATE_PROXY_NODE)
-      msg.SetVariable(VID_PROXY_NODE, pUpdate->dwProxyNode);
+      msg.SetVariable(VID_AGENT_PROXY, pUpdate->dwProxyNode);
    if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_PROXY)
       msg.SetVariable(VID_SNMP_PROXY, pUpdate->dwSNMPProxy);
    if (pUpdate->qwFlags & OBJ_UPDATE_IP_ADDR)
@@ -1058,7 +1059,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
          msg.SetVariable(VID_IP_ADDRESS, pCreateInfo->cs.node.dwIpAddr);
          msg.SetVariable(VID_IP_NETMASK, pCreateInfo->cs.node.dwNetMask);
          msg.SetVariable(VID_CREATION_FLAGS, pCreateInfo->cs.node.dwCreationFlags);
-         msg.SetVariable(VID_PROXY_NODE, pCreateInfo->cs.node.dwProxyNode);
+         msg.SetVariable(VID_AGENT_PROXY, pCreateInfo->cs.node.dwProxyNode);
          msg.SetVariable(VID_SNMP_PROXY, pCreateInfo->cs.node.dwSNMPProxy);
          break;
       case OBJECT_CONTAINER:

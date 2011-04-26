@@ -354,32 +354,70 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    if (bNeedPoll)
    {
 		// Pings cannot be used for cluster sync interfaces
-      if ((pNode->getFlags() & NF_DISABLE_ICMP) || bClusterSync)
+      if ((pNode->getFlags() & NF_DISABLE_ICMP) || bClusterSync || (m_dwIpAddr == 0))
       {
          newStatus = STATUS_UNKNOWN;
       }
       else
       {
          // Use ICMP ping as a last option
-         if ((m_dwIpAddr != 0) && 
-              ((!(pNode->getFlags() & NF_BEHIND_NAT)) || 
-               (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER)))
-         {
-            SendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
-				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,1500,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_dwPingSize);
-            dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
-            if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
-               nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
-            newStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
-				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping result %d, new status %d"), m_dwId, m_szName, dwPingStatus, newStatus);
-         }
-         else
-         {
-            // Interface doesn't have an IP address, so we can't ping it
-				SendPollerMsg(dwRqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
-				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): no IP address, will not ping"), m_dwId, m_szName);
-            newStatus = STATUS_UNKNOWN;
-         }
+			DWORD icmpProxy = 0;
+
+			if (IsZoningEnabled() && (m_zoneId != 0))
+			{
+				Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+				if (zone != NULL)
+				{
+					icmpProxy = zone->getIcmpProxy();
+				}
+			}
+
+			if (icmpProxy != 0)
+			{
+				newStatus = STATUS_UNKNOWN;	// Set interface status to unknown in case of any error
+				Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+				if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+				{
+					AgentConnection *conn = proxyNode->createAgentConnection();
+					if (conn != NULL)
+					{
+						TCHAR parameter[64], buffer[64];
+
+						_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+						if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+						{
+							TCHAR *eptr;
+							long value = _tcstol(buffer, &eptr, 10);
+							if ((*eptr == 0) && (value >= 0))
+							{
+								newStatus = (value < 10000) ? STATUS_NORMAL : STATUS_CRITICAL;
+							}
+						}
+						conn->disconnect();
+						delete conn;
+					}
+				}
+			}
+			else	// not using ICMP proxy
+			{
+				if (!(pNode->getFlags() & NF_BEHIND_NAT) || (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER))
+				{
+					SendPollerMsg(dwRqId, _T("      Starting ICMP ping\r\n"));
+					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,1500,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_dwPingSize);
+					dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
+					if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
+						nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
+					newStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
+					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping result %d, new status %d"), m_dwId, m_szName, dwPingStatus, newStatus);
+				}
+				else
+				{
+					// Interface doesn't have an IP address, so we can't ping it
+					SendPollerMsg(dwRqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
+					DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): no IP address, will not ping"), m_dwId, m_szName);
+					newStatus = STATUS_UNKNOWN;
+				}
+			}
       }
    }
 

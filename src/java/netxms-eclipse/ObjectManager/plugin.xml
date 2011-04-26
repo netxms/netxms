@@ -109,6 +109,16 @@
               </or>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.ZoneCommunications"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.ZoneCommunications#10"
+              name="Communications">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Zone">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

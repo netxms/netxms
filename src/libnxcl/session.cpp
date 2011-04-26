@@ -397,7 +397,7 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
       m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
       m_pItemList->pItems[i].dwTemplateId = pMsg->GetVariableLong(VID_TEMPLATE_ID);
       m_pItemList->pItems[i].dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
-      m_pItemList->pItems[i].dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
+      m_pItemList->pItems[i].dwProxyNode = pMsg->GetVariableLong(VID_AGENT_PROXY);
       m_pItemList->pItems[i].iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
       m_pItemList->pItems[i].iPollingInterval = (int)pMsg->GetVariableLong(VID_POLLING_INTERVAL);
       m_pItemList->pItems[i].iRetentionTime = (int)pMsg->GetVariableLong(VID_RETENTION_TIME);

@@ -2694,7 +2694,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
    pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
    pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
-   pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
+   pMsg->SetVariable(VID_AGENT_PROXY, m_dwProxyNode);
    pMsg->SetVariable(VID_SNMP_PROXY, m_dwSNMPProxy);
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 	pMsg->SetVariable(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
@@ -2814,8 +2814,8 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	}
 
    // Change proxy node
-   if (pRequest->IsVariableExist(VID_PROXY_NODE))
-      m_dwProxyNode = pRequest->GetVariableLong(VID_PROXY_NODE);
+   if (pRequest->IsVariableExist(VID_AGENT_PROXY))
+      m_dwProxyNode = pRequest->GetVariableLong(VID_AGENT_PROXY);
 
    // Change SNMP proxy node
    if (pRequest->IsVariableExist(VID_SNMP_PROXY))
@@ -3457,11 +3457,22 @@ DWORD Node::CallSnmpEnumerate(const TCHAR *pszRootOid,
 
 void Node::setAgentProxy(AgentConnection *pConn)
 {
-   if (m_dwProxyNode != 0)
+	DWORD proxyNode = m_dwProxyNode;
+	
+	if (IsZoningEnabled() && (proxyNode == 0) && (m_zoneId != 0))
+	{
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		if (zone != NULL)
+		{
+			proxyNode = zone->getAgentProxy();
+		}
+	}
+
+   if (proxyNode != 0)
    {
       Node *pNode;
 
-      pNode = (Node *)FindObjectById(m_dwProxyNode);
+      pNode = (Node *)FindObjectById(proxyNode);
       if (pNode != NULL)
       {
          pConn->setProxy(htonl(pNode->m_dwIpAddr), pNode->m_wAgentPort,
@@ -3559,8 +3570,19 @@ Cluster *Node::getMyCluster()
 SNMP_Transport *Node::createSnmpTransport(WORD port)
 {
 	SNMP_Transport *pTransport = NULL;
+	DWORD snmpProxy = m_dwSNMPProxy;
 
-	if (m_dwSNMPProxy == 0)
+	if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneId != 0))
+	{
+		// Use zone default proxy if set
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		if (zone != NULL)
+		{
+			snmpProxy = zone->getSnmpProxy();
+		}
+	}
+
+	if (snmpProxy == 0)
 	{
 		pTransport = new SNMP_UDPTransport;
 		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), (port != 0) ? port : m_wSNMPPort);
@@ -3569,7 +3591,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port)
 	{
 		NetObj *pObject;
 
-		pObject = FindObjectById(m_dwSNMPProxy);
+		pObject = FindObjectById(snmpProxy);
 		if (pObject != NULL)
 		{
 			if (pObject->Type() == OBJECT_NODE)

@@ -96,7 +96,7 @@ public class DataCollectionItem
 		id = msg.getVariableAsInt64(NXCPCodes.VID_DCI_ID);
 		templateId = msg.getVariableAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		resourceId = msg.getVariableAsInt64(NXCPCodes.VID_RESOURCE_ID);
-		proxyNode = msg.getVariableAsInt64(NXCPCodes.VID_PROXY_NODE);
+		proxyNode = msg.getVariableAsInt64(NXCPCodes.VID_AGENT_PROXY);
 		dataType = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DATA_TYPE);
 		pollingInterval = msg.getVariableAsInteger(NXCPCodes.VID_POLLING_INTERVAL);
 		retentionTime = msg.getVariableAsInteger(NXCPCodes.VID_RETENTION_TIME);
@@ -190,7 +190,7 @@ public class DataCollectionItem
 		msg.setVariableInt16(NXCPCodes.VID_ALL_THRESHOLDS, processAllThresholds ? 1 : 0);
 		msg.setVariableInt16(NXCPCodes.VID_ADV_SCHEDULE, useAdvancedSchedule ? 1 : 0);
 		msg.setVariableInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
-		msg.setVariableInt32(NXCPCodes.VID_PROXY_NODE, (int)proxyNode);
+		msg.setVariableInt32(NXCPCodes.VID_AGENT_PROXY, (int)proxyNode);
 		msg.setVariableInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
 		msg.setVariableInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (customUnitName != null)

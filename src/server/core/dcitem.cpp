@@ -829,7 +829,7 @@ void DCItem::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszScript));
    pMsg->SetVariable(VID_ALL_THRESHOLDS, (WORD)m_processAllThresholds);
 	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
-	pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
+	pMsg->SetVariable(VID_AGENT_PROXY, m_dwProxyNode);
 	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
 	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
 	pMsg->SetVariable(VID_SNMP_PORT, m_snmpPort);
@@ -895,7 +895,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    m_deltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
    m_processAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
 	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
-	m_dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
+	m_dwProxyNode = pMsg->GetVariableLong(VID_AGENT_PROXY);
    pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
    setTransformationScript(pszStr);
    free(pszStr);

@@ -57,6 +57,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_MAP_BACKGROUND    = 0x00080000L;
 	public static final long MODIFY_MAP_CONTENT       = 0x00100000L;
 	public static final long MODIFY_IMAGE             = 0x00200000L;
+	public static final long MODIFY_ICMP_PROXY        = 0x00400000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -83,6 +84,7 @@ public class NXCObjectModificationData
 	private String snmpAuthPassword;
 	private String snmpPrivPassword;
 	private long snmpProxy;
+	private long icmpProxy;
 	private long[] trustedNodes;
 	private GeoLocation geolocation;
 	private InetAddress primaryIpAddress;
@@ -491,6 +493,23 @@ public class NXCObjectModificationData
 	{
 		this.snmpProxy = snmpProxy;
 		flags |= MODIFY_SNMP_PROXY;
+	}
+
+	/**
+	 * @return the icmpProxy
+	 */
+	public long getIcmpProxy()
+	{
+		return icmpProxy;
+	}
+
+	/**
+	 * @param icmpProxy the icmpProxy to set
+	 */
+	public void setIcmpProxy(long icmpProxy)
+	{
+		this.icmpProxy = icmpProxy;
+		flags |= MODIFY_ICMP_PROXY;
 	}
 
 	/**

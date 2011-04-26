@@ -625,7 +625,7 @@ typedef struct
 #define VID_COMMAND                 ((DWORD)145)
 #define VID_PROTOCOL_VERSION        ((DWORD)146)
 #define VID_ZONE_ID                 ((DWORD)147)
-#define VID_AGENT_PROXY             ((DWORD)148)
+#define VID_ZONING_ENABLED          ((DWORD)148)
 #define VID_ICMP_PROXY              ((DWORD)149)
 #define VID_ADDR_LIST_SIZE          ((DWORD)150)
 #define VID_IP_ADDR_LIST            ((DWORD)151)
@@ -672,7 +672,7 @@ typedef struct
 #define VID_STATUS_THRESHOLD_2      ((DWORD)192)
 #define VID_STATUS_THRESHOLD_3      ((DWORD)193)
 #define VID_STATUS_THRESHOLD_4      ((DWORD)194)
-#define VID_PROXY_NODE              ((DWORD)195)
+#define VID_AGENT_PROXY             ((DWORD)195)
 #define VID_TOOL_TYPE               ((DWORD)196)
 #define VID_TOOL_DATA               ((DWORD)197)
 #define VID_ACL                     ((DWORD)198)
@@ -861,7 +861,6 @@ typedef struct
 #define VID_DRIVER_VERSION          ((DWORD)381)
 #define VID_NUM_VLANS               ((DWORD)382)
 #define VID_CREATE_JOB_ON_HOLD      ((DWORD)383)
-#define VID_ZONING_ENABLED          ((DWORD)384)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

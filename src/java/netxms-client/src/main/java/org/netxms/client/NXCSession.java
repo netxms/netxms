@@ -2211,7 +2211,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
 				msg.setVariable(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
 				msg.setVariableInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
-				msg.setVariableInt32(NXCPCodes.VID_PROXY_NODE, (int)data.getAgentProxyId());
+				msg.setVariableInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxyId());
 				msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
 				break;
 			case GenericObject.OBJECT_NETWORKMAP:
@@ -2339,7 +2339,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 		if ((flags & NXCObjectModificationData.MODIFY_AGENT_PROXY) != 0)
 		{
-			msg.setVariableInt32(NXCPCodes.VID_PROXY_NODE, (int)data.getAgentProxy());
+			msg.setVariableInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxy());
 		}
 
 		if ((flags & NXCObjectModificationData.MODIFY_AGENT_AUTH) != 0)
@@ -2377,6 +2377,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		if ((flags & NXCObjectModificationData.MODIFY_SNMP_PORT) != 0)
 		{
 			msg.setVariableInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_ICMP_PROXY) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_ICMP_PROXY, (int)data.getIcmpProxy());
 		}
 
 		if ((flags & NXCObjectModificationData.MODIFY_GEOLOCATION) != 0)

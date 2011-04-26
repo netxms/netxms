@@ -159,7 +159,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_ALL_THRESHOLDS, (WORD)pItem->iProcessAllThresholds);
    msg.SetVariable(VID_ADV_SCHEDULE, (WORD)pItem->iAdvSchedule);
 	msg.SetVariable(VID_RESOURCE_ID, pItem->dwResourceId);
-	msg.SetVariable(VID_PROXY_NODE, pItem->dwProxyNode);
+	msg.SetVariable(VID_AGENT_PROXY, pItem->dwProxyNode);
 	msg.SetVariable(VID_BASE_UNITS, (WORD)pItem->nBaseUnits);
 	msg.SetVariable(VID_MULTIPLIER, (DWORD)pItem->nMultiplier);
 	msg.SetVariable(VID_SNMP_PORT, (WORD)pItem->nSnmpPort);

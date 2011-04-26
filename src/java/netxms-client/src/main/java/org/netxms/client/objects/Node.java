@@ -108,7 +108,7 @@ public class Node extends GenericObject
 		nodeType = msg.getVariableAsInteger(NXCPCodes.VID_NODE_TYPE);
 		requredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
 		pollerNodeId = msg.getVariableAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
-		proxyNodeId = msg.getVariableAsInt64(NXCPCodes.VID_PROXY_NODE);
+		proxyNodeId = msg.getVariableAsInt64(NXCPCodes.VID_AGENT_PROXY);
 		snmpProxyId = msg.getVariableAsInt64(NXCPCodes.VID_SNMP_PROXY);
 		agentPort = msg.getVariableAsInteger(NXCPCodes.VID_AGENT_PORT);
 		agentAuthMethod = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_METHOD);

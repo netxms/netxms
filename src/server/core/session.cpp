@@ -3814,7 +3814,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 															 pRequest->GetVariableLong(VID_IP_NETMASK),
 															 pRequest->GetVariableLong(VID_CREATION_FLAGS),
 															 szObjectName,
-															 pRequest->GetVariableLong(VID_PROXY_NODE),
+															 pRequest->GetVariableLong(VID_AGENT_PROXY),
 															 pRequest->GetVariableLong(VID_SNMP_PROXY),
 															 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
 															 zoneId);

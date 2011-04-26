@@ -7,9 +7,12 @@
 - Added driver for Cisco Catalyst 2900XL, 2950, and 3500XL series switches
 - New threshold function: SUM
 - New NXSL functions: SetCustomAttribute
+- Added support for zoning (dividing network to independent parts with
+  possibly overlapped address ranges)
 - New MIBs added: CISCO-CLUSTER-MIB, CISCO-HSRP-EXT-MIB, CISCO-HSRP-MIB,
   CISCO-MAC-NOTIFICATION-MIB, CISCO-STACKMAKER-MIB, CISCO-STP-EXTENSIONS-MIB,
   CISCO-SWITCH-CGMP-MIB, CISCO-VLAN-MEMBERSHIP-MIB, EMBEDDED-NGX-MIB
+- nxpush now supports node identification by DNS name or IP address
 
 
 *

@@ -429,7 +429,7 @@ public final class NXCPCodes
 	public static final long VID_COMMAND                 = 145;
 	public static final long VID_PROTOCOL_VERSION        = 146;
 	public static final long VID_ZONE_ID                 = 147;
-	public static final long VID_AGENT_PROXY             = 148;
+	public static final long VID_ZONING_ENABLED          = 148;
 	public static final long VID_ICMP_PROXY              = 149;
 	public static final long VID_ADDR_LIST_SIZE          = 150;
 	public static final long VID_IP_ADDR_LIST            = 151;
@@ -476,7 +476,7 @@ public final class NXCPCodes
 	public static final long VID_STATUS_THRESHOLD_2      = 192;
 	public static final long VID_STATUS_THRESHOLD_3      = 193;
 	public static final long VID_STATUS_THRESHOLD_4      = 194;
-	public static final long VID_PROXY_NODE              = 195;
+	public static final long VID_AGENT_PROXY             = 195;
 	public static final long VID_TOOL_TYPE               = 196;
 	public static final long VID_TOOL_DATA               = 197;
 	public static final long VID_ACL                     = 198;
@@ -665,7 +665,6 @@ public final class NXCPCodes
 	public static final long VID_DRIVER_VERSION          = 381;
 	public static final long VID_NUM_VLANS               = 382;
 	public static final long VID_CREATE_JOB_ON_HOLD      = 383;
-	public static final long VID_ZONING_ENABLED          = 384;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

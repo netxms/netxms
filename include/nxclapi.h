@@ -1159,6 +1159,7 @@ struct __nxc_object_cond
 
 struct __nxc_object_cluster
 {
+	DWORD dwZoneId;
 	DWORD dwClusterType;
 	DWORD dwNumSyncNets;
 	IP_NETWORK *pSyncNetList;

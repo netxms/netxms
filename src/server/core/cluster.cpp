@@ -379,6 +379,7 @@ void Cluster::CreateMessage(CSCPMessage *pMsg)
 
    Template::CreateMessage(pMsg);
    pMsg->SetVariable(VID_CLUSTER_TYPE, m_dwClusterType);
+	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
 	pMsg->SetVariable(VID_NUM_SYNC_SUBNETS, m_dwNumSyncNets);
 	if (m_dwNumSyncNets > 0)
 		pMsg->SetVariableToInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (DWORD *)m_pSyncNetList);

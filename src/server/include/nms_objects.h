@@ -1184,6 +1184,9 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    DWORD getZoneId() { return m_zoneId; }
+	DWORD getAgentProxy() { return m_agentProxy; }
+	DWORD getSnmpProxy() { return m_snmpProxy; }
+	DWORD getIcmpProxy() { return m_icmpProxy; }
 
    void addSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
 

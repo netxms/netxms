@@ -207,10 +207,10 @@ DWORD Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_agentProxy = pRequest->GetVariableLong(VID_AGENT_PROXY);
 
 	if (pRequest->IsVariableExist(VID_SNMP_PROXY))
-		m_agentProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
+		m_snmpProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
 
 	if (pRequest->IsVariableExist(VID_ICMP_PROXY))
-		m_agentProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
+		m_icmpProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
