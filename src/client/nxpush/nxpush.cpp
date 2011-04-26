@@ -84,7 +84,7 @@ static void usage(char *argv0)
 {
 	printf(
 "NetXMS PUSH  Version " NETXMS_VERSION_STRING "\n"
-"Copyright (c) 2006 Alex Kirhenshtein\n\n"
+"Copyright (c) 2006-2011 Alex Kirhenshtein\n\n"
 "Usage: %s [OPTIONS] [server] [@batch_file] [values]\n"
 "  \n"
 "Options:\n"
@@ -110,8 +110,11 @@ static void usage(char *argv0)
 "Notes:\n"
 "  * Values should be given in the following format:\n"
 "    node:dci=value\n"
-"    where node and dci can be specified either by ID or name\n"
+"    where node and dci can be specified either by ID, object name, DNS name,\n"
+"    or IP address. If you wish to specify node by DNS name or IP address,\n"
+"    you should prefix it with @ character\n"
 "  * First parameter will be used as \"host\" if -H/--host is unset\n"
+"  * Name of batch file cannot contain character = (equality sign)\n"
 "\n"
 "Examples:\n"
 "  Push two values to server 10.0.0.1 as user \"sender\" with password \"passwd\":\n"
@@ -202,7 +205,7 @@ int main(int argc, char *argv[])
 		{
 			char *p = argv[optind];
 
-			if ((*p == '@' && *p != 0) || *p == '-')
+			if (((*p == '@') && (strchr(p, '=') == NULL)) || (*p == '-'))
 			{
 				FILE *fileHandle = stdin;
 
