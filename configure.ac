@@ -553,7 +553,7 @@ case "$PLATFORM" in
    HP-UX)
       CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT"
       if test "x$CXX" = "xaCC"; then
-         CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
+         CXXFLAGS="-mt $CXXFLAGS -AC99 +W749 +W829"
          LDFLAGS="$LDFLAGS -mt"
       fi
       ;;
@@ -1751,7 +1751,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/sunos/Makefile
 	src/agent/subagents/aix/Makefile
 	src/agent/subagents/hpux/Makefile
-	src/agent/subagents/skeleton/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/openbsd/Makefile
 	src/agent/subagents/netbsd/Makefile
