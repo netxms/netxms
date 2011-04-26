@@ -8349,7 +8349,15 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          else
          {
             pRequest->GetVariableStr(dwId++, szName, 256);
-            pObject = FindObjectByName(szName, OBJECT_NODE);
+				if (szName[0] == _T('@'))
+				{
+					DWORD ipAddr = ResolveHostName(&szName[1]);
+					pObject = FindNodeByIP(0, ipAddr);
+				}
+				else
+				{
+					pObject = FindObjectByName(szName, OBJECT_NODE);
+				}
          }
 
          // Validate object
