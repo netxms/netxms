@@ -1559,20 +1559,13 @@ if test "x$ac_found_iconv" = "xyes"; then
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-
-#ifdef __cplusplus
-extern "C"
-#endif
-#if defined(__STDC__) || defined(__cplusplus)
-         size_t iconv (iconv_t cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
-#else
-         size_t iconv();
-#endif
 	]],
         [[
+		char **p = NULL;
+		iconv(0, (const char **)p, 0, 0, 0);
 	]])],
-      [ac_cv_iconv_const=],
-      [ac_cv_iconv_const=const])])
+      [ac_cv_iconv_const=const],
+      [ac_cv_iconv_const=])])
   AC_LANG_POP([C++])
   AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
     [Define as const if the declaration of iconv() needs const.])
