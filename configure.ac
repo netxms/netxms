@@ -1556,17 +1556,20 @@ if test "x$ac_found_iconv" = "xyes"; then
   AC_CACHE_CHECK(for iconv declaration, ac_cv_iconv_const,
     [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
+#if HAVE_ICONV_H
 #include <iconv.h>
-	]],
-        [[
+#endif
+
 #ifdef __cplusplus
-"C"
+extern "C"
 #endif
 #if defined(__STDC__) || defined(__cplusplus)
-         size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
+         size_t iconv (iconv_t cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
 #else
          size_t iconv();
 #endif
+	]],
+        [[
 	]])],
       [ac_cv_iconv_const=],
       [ac_cv_iconv_const=const])])
