@@ -551,8 +551,9 @@ case "$PLATFORM" in
       LDFLAGS="-no-undefined -Wl,-brtl $LDFLAGS"
       ;;
    HP-UX)
-      CPPFLAGS="$CPPFLAGS -D__STDC__ -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG"
+      CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG"
       if test "x$CXX" = "xaCC"; then
+	 CFLAGS="$CFLAGS -AC99"
          CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
          LDFLAGS="$LDFLAGS -mt"
       fi
@@ -1551,6 +1552,7 @@ AC_RUN_IFELSE(
 # taken from ZSH's configure
 # Check if iconv uses const in prototype declaration
 if test "x$ac_found_iconv" = "xyes"; then
+  AC_LANG_PUSH([C++])
   AC_CACHE_CHECK(for iconv declaration, ac_cv_iconv_const,
     [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
@@ -1568,6 +1570,7 @@ if test "x$ac_found_iconv" = "xyes"; then
 	]])],
       [ac_cv_iconv_const=],
       [ac_cv_iconv_const=const])])
+  AC_LANG_POP([C++])
   AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
     [Define as const if the declaration of iconv() needs const.])
 fi

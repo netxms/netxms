@@ -598,7 +598,7 @@ bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int 
 	{
 		snprintf(errorText, errBufSize, "%s at line %d",
                XML_ErrorString(XML_GetErrorCode(parser)),
-               XML_GetCurrentLineNumber(parser));
+               (int)XML_GetCurrentLineNumber(parser));
 	}
 	XML_ParserFree(parser);
 

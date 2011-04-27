@@ -486,7 +486,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  g_debugLevel, szPlatformSuffixOption,
+				  (int)g_debugLevel, szPlatformSuffixOption,
               (unsigned long)m_pid);
 	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
    return ExecuteCommand(szCmdLine, NULL, NULL);
@@ -1253,8 +1253,8 @@ int main(int argc, char *argv[])
             g_dwFlags &= ~AF_DAEMON;
 				break;
          case 'D':   // Turn on debug output
-				g_debugLevel = strtol(optarg, &eptr, 0);
-				if ((*eptr != 0) || (g_debugLevel < 0) || (g_debugLevel > 9))
+				g_debugLevel = strtoul(optarg, &eptr, 0);
+				if ((*eptr != 0) || (g_debugLevel > 9))
 				{
 					fprintf(stderr, "Invalid debug level: %s\n", optarg);
 					iAction = -1;

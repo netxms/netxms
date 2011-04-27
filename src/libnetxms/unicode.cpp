@@ -454,7 +454,7 @@ WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer)
 // Convert UCS-2 to UCS-4
 //
 
-size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCHAR *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
 	iconv_t cd;
 	const char *inbuf;
@@ -465,12 +465,12 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCH
 	if (cd != (iconv_t)(-1))
 	{
 		inbuf = (const char *)src;
-		inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen) * sizeof(UCS2CHAR);
+		inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : (size_t)srcLen) * sizeof(UCS2CHAR);
 		outbuf = (char *)dst;
-		outbytes = dstLen * sizeof(WCHAR);
+		outbytes = (size_t)dstLen * sizeof(WCHAR);
 		count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
 		iconv_close(cd);
-		if (count == -1)
+		if (count == (size_t)-1)
 		{
 			if (errno == EILSEQ)
 			{
@@ -503,7 +503,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCH
 // Convert UCS-4 to UCS-2
 //
 
-size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
 	iconv_t cd;
 	const char *inbuf;
@@ -514,12 +514,12 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CH
 	if (cd != (iconv_t)(-1))
 	{
 		inbuf = (const char *)src;
-		inbytes = ((srcLen == -1) ? wcslen(src) + 1 : srcLen) * sizeof(WCHAR);
+		inbytes = ((srcLen == -1) ? wcslen(src) + 1 : (size_t)srcLen) * sizeof(WCHAR);
 		outbuf = (char *)dst;
-		outbytes = dstLen * sizeof(UCS2CHAR);
+		outbytes = (size_t)dstLen * sizeof(UCS2CHAR);
 		count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
 		iconv_close(cd);
-		if (count == -1)
+		if (count == (size_t)-1)
 		{
 			if (errno == EILSEQ)
 			{
@@ -560,7 +560,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CH
 // Convert UCS-2 to UCS-4
 //
 
-size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCHAR *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
 	int i, len;
 
@@ -578,7 +578,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCH
 // Convert UCS-4 to UCS-2
 //
 
-size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
 	int i, len;
 
@@ -630,7 +630,7 @@ WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString)
 // Convert UCS-2 to UTF-8
 //
 
-size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, size_t srcLen, char *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
 	iconv_t cd;
@@ -642,12 +642,12 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, size_t srcLen, cha
 	if (cd != (iconv_t)(-1))
 	{
 		inbuf = (const char *)src;
-		inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen) * sizeof(UCS2CHAR);
+		inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : (size_t)srcLen) * sizeof(UCS2CHAR);
 		outbuf = (char *)dst;
-		outbytes = dstLen;
+		outbytes = (size_t)dstLen;
 		count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
 		iconv_close(cd);
-		if (count == -1)
+		if (count == (size_t)-1)
 		{
 			if (errno == EILSEQ)
 			{
@@ -699,7 +699,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, size_t srcLen, cha
 // Convert UCS-2 to multibyte
 //
 
-size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, size_t srcLen, char *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
 	iconv_t cd;
@@ -711,12 +711,12 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, size_t srcLen, char 
 	if (cd != (iconv_t)(-1))
 	{
 		inbuf = (const char *)src;
-		inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen) * sizeof(UCS2CHAR);
+		inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : (size_t)srcLen) * sizeof(UCS2CHAR);
 		outbuf = (char *)dst;
-		outbytes = dstLen;
+		outbytes = (size_t)dstLen;
 		count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
 		iconv_close(cd);
-		if (count == -1)
+		if (count == (size_t)-1)
 		{
 			if (errno == EILSEQ)
 			{
@@ -745,7 +745,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, size_t srcLen, char 
    char *pdst;
    int pos, size;
 
-   size = (srcLen == -1) ? ucs2_strlen(src) : srcLen;
+   size = (srcLen == -1) ? (int)ucs2_strlen(src) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
    for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
@@ -760,7 +760,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, size_t srcLen, char 
 // Convert multibyte to UCS-2
 //
 
-size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen)
+size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
 	iconv_t cd;
@@ -772,12 +772,12 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, size_t srcLen, UCS2CHAR 
 	if (cd != (iconv_t)(-1))
 	{
 		inbuf = (const char *)src;
-		inbytes = (srcLen == -1) ? strlen(src) + 1 : srcLen;
+		inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
 		outbuf = (char *)dst;
-		outbytes = dstLen * sizeof(UCS2CHAR);
+		outbytes = (size_t)dstLen * sizeof(UCS2CHAR);
 		count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
 		iconv_close(cd);
-		if (count == -1)
+		if (count == (size_t)-1)
 		{
 			if (errno == EILSEQ)
 			{
@@ -812,7 +812,7 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, size_t srcLen, UCS2CHAR 
 	UCS2CHAR *pdst;
 	int pos, size;
 
-	size = (srcLen == -1) ? strlen(src) : srcLen;
+	size = (srcLen == -1) ? (int)strlen(src) : srcLen;
 	if (size >= dstLen)
 		size = dstLen - 1;
 	for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)

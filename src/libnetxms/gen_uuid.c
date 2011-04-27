@@ -108,6 +108,7 @@ static void get_random_bytes(void *buf, int nbytes)
 static int get_node_id(unsigned char *node_id)
 {
 #ifdef HAVE_NET_IF_H
+#if defined(SIOCGIFHWADDR) || defined(SIOCGENADDR)
 	int sd;
 	struct ifreq ifr, *ifrp;
 	struct ifconf ifc;
@@ -183,6 +184,7 @@ static int get_node_id(unsigned char *node_id)
 		}
 	}
 	close(sd);
+#endif
 #endif
 	return 0;
 }

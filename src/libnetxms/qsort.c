@@ -42,7 +42,9 @@
  * Gareth McCaughan   Peterhouse   Cambridge   1998
  */
 
+#ifdef _WIN32
 #pragma warning(disable: 4018)
+#endif
 
 #include "libnetxms.h"
 #include <assert.h>

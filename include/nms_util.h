@@ -695,21 +695,9 @@ extern "C"
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
    void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const TCHAR *pszSymbol, TCHAR *pszErrorText);
 
-	void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-															void (* sendTrap2)(DWORD, const char *, va_list),
-															void (* sendTrap1)(DWORD, int, TCHAR **),
-															BOOL (* sendFile)(void *, DWORD, const TCHAR *, long),
-															BOOL (* pushData)(const TCHAR *, const TCHAR *));
-
 	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const TCHAR *option, TCHAR *buffer, int bufSize);
 	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBool(const TCHAR *optString, const TCHAR *option, BOOL defVal);
 	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, const TCHAR *option, long defVal);
-
-	TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length);
-	const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
-	int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
-	DWORD LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal);
-	bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
 #ifdef __cplusplus
 	const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));
@@ -749,8 +737,8 @@ extern "C"
 #endif
 
 #ifndef UNICODE
-	size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, size_t srcLen, char *dst, size_t dstLen);
-	size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen);
+	size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
+	size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
 	UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *pszString);
 	char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString);
 #endif
@@ -776,9 +764,9 @@ extern "C"
 #endif
 
 #ifdef UNICODE_UCS4
-	size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCHAR *dst, size_t dstLen);
-	size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen);
-	size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, size_t srcLen, char *dst, size_t dstLen);
+	size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen);
+	size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen);
+	size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
 	UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString);
 	WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString);
 #endif
@@ -864,11 +852,6 @@ extern "C"
    int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
 #endif
 
-#if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
-void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHandler)(void *),
-                                        THREAD_RESULT (THREAD_CALL * pfMain)(void *));
-#endif
-
 BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags, const TCHAR *msgModule,
                                      unsigned int msgCount, const TCHAR **messages);
 void LIBNETXMS_EXPORTABLE nxlog_close(void);
@@ -891,7 +874,23 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...);
 
 #ifdef __cplusplus
 
+TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length);
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *string, int length = -1);
+const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
+int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
+DWORD LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal);
+bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
+
+#if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
+void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHandler)(void *),
+                                        THREAD_RESULT (THREAD_CALL * pfMain)(void *));
+#endif
+
+void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
+                                          void (* sendTrap1)(DWORD, const char *, va_list),
+                                          void (* sendTrap2)(DWORD, int, TCHAR **),
+                                          BOOL (* sendFile)(void *, DWORD, const TCHAR *, long),
+                                          BOOL (* pushData)(const TCHAR *, const TCHAR *));
 
 #endif
 

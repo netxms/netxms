@@ -337,7 +337,7 @@ void MicrodowellInterface::QueryOutputVoltage(void)
 // Get line frequency (Hz)
 //
 
-void MicrodowellInterface::QueryLineFrequency(void)
+void MicrodowellInterface::QueryLineFrequency()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_LINE_FREQ];
 
@@ -345,7 +345,7 @@ void MicrodowellInterface::QueryLineFrequency(void)
 	int len;
 	if (SendCmd("\x03", 1, buff, &len) && VAL(8))
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%d", 50000.0 / VAL(8));
+		snprintf(p->szValue, MAX_RESULT_LENGTH, "%d", (int)(50000.0 / VAL(8)));
 		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else

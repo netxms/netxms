@@ -88,17 +88,6 @@ static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 
 //
-// Handler for parameters which returns floating point value from specific variable
-//
-
-static LONG H_FloatPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
-{
-   ret_double(value, *((double *)arg));
-   return SYSINFO_RC_SUCCESS;
-}
-
-
-//
 // Handler for parameters which returns DWORD value from specific variable
 //
 
