@@ -235,21 +235,24 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 	}
 	else
 	{
-		*pByteStr = 0;
-		nRet = 0;
+		goto fallback;
 	}
 	return nRet;
 
-#else
+fallback:
 
-   const WCHAR *pSrc;
-   char *pDest;
-   int iPos, iSize;
+#else
 
    if (cchByteChar == 0)
    {
       return wcslen(pWideCharStr) + 1;
    }
+
+#endif	/* HAVE_ICONV */
+
+   const WCHAR *pSrc;
+   char *pDest;
+   int iPos, iSize;
 
    iSize = (cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar;
    if (iSize >= cchByteChar)
@@ -259,7 +262,6 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
    *pDest = 0;
    return iSize;
 
-#endif	/* HAVE_ICONV */
 }
 
 
@@ -315,21 +317,24 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const
 	}
 	else
 	{
-		*pWideCharStr = 0;
-		nRet = 0;
+		goto fallback;
 	}
 	return nRet;
 
-#else
+fallback:
 
-	const char *pSrc;
-	WCHAR *pDest;
-	int iPos, iSize;
+#else
 
 	if (cchWideChar == 0)
 	{
 		return strlen(pByteStr) + 1;
 	}
+
+#endif
+
+	const char *pSrc;
+	WCHAR *pDest;
+	int iPos, iSize;
 
 	iSize = (cchByteChar == -1) ? strlen(pByteStr) : cchByteChar;
 	if (iSize >= cchWideChar)
@@ -339,7 +344,6 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const
 	*pDest = 0;
 
 	return iSize;
-#endif
 }
 
 #endif   /* not _WIN32 */
@@ -448,6 +452,43 @@ WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer)
 
 #ifdef UNICODE_UCS4
 
+
+//
+// Convert UCS-2 to UCS-4 - internal dumb method
+//
+
+static size_t __internal_ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
+{
+	int i, len;
+
+	len = (int)((srcLen == -1) ? ucs2_strlen(src) : srcLen);
+	if (len > (int)dstLen - 1)
+		len = (int)dstLen - 1;
+	for(i = 0; i < len; i++)
+		dst[i] = (WCHAR)src[i];
+	dst[i] = 0;
+	return len;
+}
+
+
+//
+// Convert UCS-4 to UCS-2 - internal dumb method
+//
+
+static size_t __internal_ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+	int i, len;
+
+	len = (int)((srcLen == -1) ? wcslen(src) : srcLen);
+	if (len > (int)dstLen - 1)
+		len = (int)dstLen - 1;
+	for(i = 0; i < len; i++)
+		dst[i] = (UCS2CHAR)src[i];
+	dst[i] = 0;
+	return len;
+}
+
+
 #ifndef __DISABLE_ICONV
 
 //
@@ -492,8 +533,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR 
 	}
 	else
 	{
-		*dst = 0;
-		count = 0;
+		count = __internal_ucs2_to_ucs4(src, srcLen, dst, dstLen);
 	}
 	return count;
 }
@@ -547,8 +587,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR 
 	}
 	else
 	{
-		*dst = 0;
-		count = 0;
+		count = __internal_ucs4_to_ucs2(src, srcLen, dst, dstLen);
 	}
 	return count;
 }
@@ -562,15 +601,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR 
 
 size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen)
 {
-	int i, len;
-
-	len = (int)((srcLen == -1) ? ucs2_strlen(src) : srcLen);
-	if (len > (int)dstLen - 1)
-		len = (int)dstLen - 1;
-	for(i = 0; i < len; i++)
-		dst[i] = (WCHAR)src[i];
-	dst[i] = 0;
-	return len;
+	return __internal_ucs2_to_ucs4(src, srcLen, dst, dstLen);
 }
 
 
@@ -580,19 +611,10 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR 
 
 size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
-	int i, len;
-
-	len = (int)((srcLen == -1) ? wcslen(src) : srcLen);
-	if (len > (int)dstLen - 1)
-		len = (int)dstLen - 1;
-	for(i = 0; i < len; i++)
-		dst[i] = (UCS2CHAR)src[i];
-	dst[i] = 0;
-	return len;
+	return __internal_ucs4_to_ucs2(src, srcLen, dst, dstLen);
 }
 
 #endif 	/* __DISABLE_ICONV */
-
 
 //
 // Convert UCS-4 string to UCS-2 string allocating UCS-2 string dynamically

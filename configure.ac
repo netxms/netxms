@@ -1676,6 +1676,7 @@ if test $? = 0; then
 		], [-lclntsh])
 	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [ORACLE_LIBS="-lclntsh $NNZ_LIB"],
 		[AC_MSG_ERROR(libclntsh is required for Oracle support)], [$NNZ_LIB])
+	AC_CHECK_LIB(rt, sem_destroy, [ORACLE_LIBS="$ORACLE_LIBS -lrt"], [])
 fi
 
 #--------------------------------------------------------------------
