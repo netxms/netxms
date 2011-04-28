@@ -49,7 +49,6 @@ public class ScriptEditor extends Composite
 {
 	private SourceViewer editor;
 	private Font editorFont;
-	private boolean modified;
 	private Set<String> functions = new HashSet<String>(0);
 	private Set<String> variables = new HashSet<String>(0);
 	private String[] functionsCache = new String[0];
@@ -173,22 +172,6 @@ public class ScriptEditor extends Composite
 	public String getText()
 	{
 		return editor.getDocument().get();
-	}
-
-	/**
-	 * @return the modified
-	 */
-	public boolean isModified()
-	{
-		return modified;
-	}
-
-	/**
-	 * @param modified the modified to set
-	 */
-	public void setModified(boolean modified)
-	{
-		this.modified = modified;
 	}
 
 	/**

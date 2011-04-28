@@ -955,7 +955,10 @@ void ClientSession::processingThread()
             CopyUserVariable(pMsg);
             break;
          case CMD_CHANGE_IP_ADDR:
-            ChangeObjectIP(pMsg);
+            changeObjectIP(pMsg);
+            break;
+         case CMD_CHANGE_ZONE:
+            changeObjectZone(pMsg);
             break;
          case CMD_REQUEST_ENCRYPTION:
             setupEncryption(pMsg->GetId());
@@ -5840,7 +5843,7 @@ void ClientSession::CopyUserVariable(CSCPMessage *pRequest)
 // Change object's IP address
 //
 
-void ClientSession::ChangeObjectIP(CSCPMessage *pRequest)
+void ClientSession::changeObjectIP(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -5880,6 +5883,68 @@ void ClientSession::ChangeObjectIP(CSCPMessage *pRequest)
       else
       {
          msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
+// Change object's zone
+//
+
+void ClientSession::changeObjectZone(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get object id and check prerequisites
+   NetObj *object = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+			if (object->Type() == OBJECT_NODE)
+			{
+				Node *node = (Node *)object;
+				DWORD zoneId = pRequest->GetVariableLong(VID_ZONE_ID);
+				Zone *zone = FindZoneByGUID(zoneId);
+				if (zone != NULL)
+				{
+					// Check if target zone already have object with same primary IP
+					if ((FindNodeByIP(zoneId, node->IpAddr()) == NULL) &&
+						 (FindSubnetByIP(zoneId, node->IpAddr()) == NULL))
+					{
+						node->changeZone(zoneId);
+						msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					}
+					else
+					{
+						msg.SetVariable(VID_RCC, RCC_ADDRESS_IN_USE);
+					}
+				}
+				else
+				{
+		         msg.SetVariable(VID_RCC, RCC_INVALID_ZONE_ID);
+				}
+         }
+         else
+         {
+	         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else

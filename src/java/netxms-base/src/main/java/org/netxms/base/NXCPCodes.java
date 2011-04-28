@@ -280,6 +280,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_VLANS               = 0x00FA;
 	public static final int CMD_HOLD_JOB                = 0x00FB;
 	public static final int CMD_UNHOLD_JOB              = 0x00FC;
+	public static final int CMD_CHANGE_ZONE             = 0x00FD;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.nxsl.views;
+package org.netxms.ui.eclipse.agentmanager.views;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -43,34 +39,31 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.commands.ActionHandler;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.eclipse.ui.texteditor.FindReplaceAction;
-import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.nxsl.Activator;
-import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
+import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
- * Script editor view
- *
+ * Agent's master config editor
  */
 @SuppressWarnings("deprecation")
-public class ScriptEditorView extends ViewPart implements ISaveablePart
+public class AgentConfigEditorView extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView";
+	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView";
 	
-	private ScriptLibraryManager scriptLibraryManager;
-	private ScriptEditor editor;
-	private long scriptId;
-	private String scriptName;
+	private NXCSession session;
+	private long nodeId;
+	private AgentConfigEditor editor;
+	private boolean modified = false;
+
 	private RefreshAction actionRefresh;
 	private Action actionSave;
 	private FindReplaceAction actionFindReplace;
-	private boolean modified = false;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -80,8 +73,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		super.init(site);
 		
-		scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
-		scriptId = Long.parseLong(site.getSecondaryId());
+		session = (NXCSession)ConsoleSharedData.getSession();
+		nodeId = Long.parseLong(site.getSecondaryId());
+		
+		GenericObject object = session.findObjectById(nodeId);
+		setPartName("Agent Config - " + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
 	}
 
 	/* (non-Javadoc)
@@ -92,7 +88,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		parent.setLayout(new FillLayout());
 		
-		editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
+		editor = new AgentConfigEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
 		editor.getTextWidget().addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
@@ -109,9 +105,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		
 		createActions();
 		contributeToActionBars();
-		//createPopupMenu();
-
-		reloadScript();
 	}
 
 	/* (non-Javadoc)
@@ -124,25 +117,13 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	}
 	
 	/**
-	 * Get resource bundle
-	 * @return
-	 * @throws IOException
+	 * Set configuration file content
+	 * 
+	 * @param config
 	 */
-	private ResourceBundle getResourceBundle() throws IOException
+	public void setConfig(final String config)
 	{
-		InputStream in = null;
-		String resource = "resource.properties";
-		ClassLoader loader = this.getClass().getClassLoader();
-		if (loader != null)
-		{
-			in = loader.getResourceAsStream(resource);
-		}
-		else
-		{
-			in = ClassLoader.getSystemResourceAsStream(resource);
-		}
-		
-		return new PropertyResourceBundle(in);
+		editor.setText(config);
 	}
 
 	/**
@@ -169,7 +150,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			@Override
 			public void run()
 			{
-				reloadScript();
 			}
 		};
 		
@@ -181,7 +161,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			@Override
 			public void run()
 			{
-				saveScript();
 			}
 		};
 		actionSave.setText("&Save");
@@ -224,105 +203,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
-	
-	/**
-	 * Reload script from server
-	 */
-	private void reloadScript()
-	{
-		new ConsoleJob("Loading script [" + scriptId + "]", this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot load script with ID " + scriptId + " from server";
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final Script script = scriptLibraryManager.getScript(scriptId);
-				new UIJob("Update script editor") {
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						scriptName = script.getName();
-						setPartName("Edit Script - " + scriptName);
-						editor.setText(script.getSource());
-						actionSave.setEnabled(false);
-						actionFindReplace.update();
-						return Status.OK_STATUS;
-					}
-				}.schedule();
-			}
-		}.start();
-	}
-	
-	/**
-	 * Save script
-	 */
-	private void saveScript()
-	{
-		final String source = editor.getText();
-		editor.getTextWidget().setEditable(false);
-		new ConsoleJob("Saving script to library", this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot save script to database";
-			}
-
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				doScriptSave(source, monitor);
-			}
-		}.start();
-	}
-	
-	/**
-	 * Do actual script save
-	 * 
-	 * @param source
-	 * @param monitor
-	 * @throws Exception
-	 */
-	private void doScriptSave(String source, IProgressMonitor monitor) throws Exception
-	{
-		scriptLibraryManager.modifyScript(scriptId, scriptName, source);
-		new UIJob("Update script editor") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
-			{
-				if (!editor.isDisposed())
-				{
-					editor.getTextWidget().setEditable(true);
-					actionSave.setEnabled(false);
-					modified = false;
-					firePropertyChange(PROP_DIRTY);
-				}
-				return Status.OK_STATUS;
-			}
-		}.schedule();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#getAdapter(java.lang.Class)
-	 */
-	@SuppressWarnings("rawtypes")
-	@Override
-	public Object getAdapter(Class adapter)
-	{
-		Object object = super.getAdapter(adapter);
-		if (object != null)
-		{
-			return object;
-		}
-		if (adapter.equals(IFindReplaceTarget.class))
-		{
-			return editor.getFindReplaceTarget();
-		}
-		return null;
-	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
@@ -330,16 +210,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
-		final String source = editor.getText();
-		editor.getTextWidget().setEditable(false);
-		try
-		{
-			doScriptSave(source, monitor);
-		}
-		catch(Exception e)
-		{
-			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save script: " + e.getMessage());
-		}
+		// TODO Auto-generated method stub
+		
 	}
 
 	/* (non-Javadoc)
@@ -375,5 +247,27 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	public boolean isSaveOnCloseNeeded()
 	{
 		return modified;
+	}
+
+	/**
+	 * Get resource bundle
+	 * @return
+	 * @throws IOException
+	 */
+	private ResourceBundle getResourceBundle() throws IOException
+	{
+		InputStream in = null;
+		String resource = "resource.properties";
+		ClassLoader loader = this.getClass().getClassLoader();
+		if (loader != null)
+		{
+			in = loader.getResourceAsStream(resource);
+		}
+		else
+		{
+			in = ClassLoader.getSystemResourceAsStream(resource);
+		}
+		
+		return new PropertyResourceBundle(in);
 	}
 }

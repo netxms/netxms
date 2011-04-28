@@ -3274,6 +3274,55 @@ void Node::changeIPAddress(DWORD dwIpAddr)
 
 
 //
+// Change node's zone
+//
+
+void Node::changeZone(DWORD newZone)
+{
+   DWORD i;
+
+   pollerLock();
+
+   LockData();
+
+   m_zoneId = newZone;
+   m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL;
+
+	// Remove from subnets
+	LockParentList(FALSE);
+	NetObj **subnets = (NetObj **)malloc(sizeof(NetObj *) * m_dwParentCount);
+	DWORD count = 0;
+	for(i = 0; i < m_dwParentCount; i++)
+		if (m_pParentList[i]->Type() == OBJECT_SUBNET)
+			subnets[count++] = m_pParentList[i];
+	UnlockParentList();
+
+	for(i = 0; i < count; i++)
+	{
+		DeleteParent(subnets[i]);
+		subnets[i]->DeleteChild(this);
+	}
+	safe_free(subnets);
+
+	// Change zone ID on interfaces
+	LockChildList(FALSE);
+	for(i = 0; i < m_dwChildCount; i++)
+		if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+			((Interface *)m_pChildList[i])->updateZoneId();
+	UnlockChildList();
+
+   Modify();
+   UnlockData();
+
+   agentLock();
+   delete_and_null(m_pAgentConnection);
+   agentUnlock();
+
+   pollerUnlock();
+}
+
+
+//
 // Get number of interface objects and pointer to the last one
 //
 

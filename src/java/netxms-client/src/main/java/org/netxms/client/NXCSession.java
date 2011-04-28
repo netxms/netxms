@@ -2503,6 +2503,23 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Move object to different zone. Only nodes and clusters can be moved between zones.
+	 * 
+	 * @param objectId Node or cluster object ID
+	 * @param zoneId
+	 * @throws IOException
+	 * @throws NXCException
+	 */
+	public void changeObjectZone(final long objectId, final long zoneId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_ZONE);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+		msg.setVariableInt32(NXCPCodes.VID_ZONE_ID, (int)zoneId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 
 	/**
 	 * Change object's comments.

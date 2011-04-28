@@ -574,3 +574,29 @@ void Interface::setIpNetMask(DWORD dwNetMask)
    Modify();
    UnlockData();
 }
+
+
+/**
+ * Update zone ID. New zone ID taken from parent node.
+ */
+void Interface::updateZoneId()
+{
+	Node *node = getParentNode();
+	if (node != NULL)
+	{
+		// Unregister from old zone
+		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		if (zone != NULL)
+			zone->removeFromIndex(this);
+
+		LockData();
+		m_zoneId = node->getZoneId();
+		Modify();
+		UnlockData();
+
+		// Register in new zone
+		zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		if (zone != NULL)
+			zone->addToIndex(this);
+	}
+}

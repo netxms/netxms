@@ -592,6 +592,8 @@ public:
 	void setPeer(DWORD nodeId, DWORD ifId) { m_peerNodeId = nodeId; m_peerInterfaceId = ifId; Modify(); }
    void setDescription(const TCHAR *descr) { nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); }
 
+	void updateZoneId();
+
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue,
 	                BOOL bClusterSync, SNMP_Transport *pTransport);
    
@@ -808,6 +810,7 @@ public:
    void deleteInterface(Interface *pInterface);
 
    void changeIPAddress(DWORD dwIpAddr);
+	void changeZone(DWORD newZone);
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();

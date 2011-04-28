@@ -472,6 +472,7 @@ typedef struct
 #define CMD_GET_VLANS               0x00FA
 #define CMD_HOLD_JOB                0x00FB
 #define CMD_UNHOLD_JOB              0x00FC
+#define CMD_CHANGE_ZONE             0x00FD
 
 
 //

@@ -121,6 +121,7 @@
       <plugin id="org.mozilla.rhino" fragment=""/>
       <plugin id="org.netxms.nebula.widgets.gallery"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
+      <plugin id="org.netxms.ui.eclipse.agentmanager"/>
       <plugin id="org.netxms.ui.eclipse.alarmviewer"/>
       <plugin id="org.netxms.ui.eclipse.charts"/>
       <plugin id="org.netxms.ui.eclipse.console"/>
