@@ -23,10 +23,12 @@
 
 #include "main.h"
 
-// extern bool SMSPack7BitChars(const char* input, char* output, int* outputLength, const int maxOutputLen);
 bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer, const int pduBufferSize);
 
+static BOOL SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText);
+
 static Serial m_serial;
+static enum { OM_TEXT, OM_PDU } omode = OM_PDU;
 
 // pszInitArgs format: portname,speed,databits,parity,stopbits
 extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
@@ -96,6 +98,16 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 							if (*p == _T('2'))
 							{
 								stopBits = TWOSTOPBITS;
+							}
+
+							// Text or PDU mode
+							if ((p = _tcschr(p, _T(','))) != NULL)
+							{
+								*p = 0; p++;
+								if (*p == _T('X'))
+									omode = OM_TEXT;
+								else if (*p == _T('P'))
+									omode = OM_PDU;
 							}
 						}
 					}
@@ -169,8 +181,11 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 	return bRet;
 }
 
-extern "C" BOOL EXPORT SMSDriverSend_(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
+	if (omode == OM_PDU)
+		return SMSDriverSendPDU(pszPhoneNumber, pszText);
+
 	if (pszPhoneNumber != NULL && pszText != NULL)
 	{
 		char szTmp[128];
@@ -211,7 +226,7 @@ extern "C" BOOL EXPORT SMSDriverSend_(const TCHAR *pszPhoneNumber, const TCHAR *
 	return true;
 }
 
-extern "C" BOOL EXPORT SMSDriverSend/*PDU*/(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+static BOOL SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	if (pszPhoneNumber != NULL && pszText != NULL)
 	{
