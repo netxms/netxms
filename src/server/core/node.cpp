@@ -514,7 +514,7 @@ InterfaceList *Node::getInterfaceList()
    if (pIfList != NULL)
 	{
 		pIfList->removeLoopbacks();
-      CheckInterfaceNames(pIfList);
+      checkInterfaceNames(pIfList);
 		addVrrpInterfaces(pIfList);
 	}
 
@@ -847,7 +847,7 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 					NetObjInsert(pSubnet, TRUE);
 					if (IsZoningEnabled())
 					{
-						Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+						Zone *zone = FindZoneByGUID(m_zoneId);
 						if (zone != NULL)
 						{
 							zone->addSubnet(pSubnet);
@@ -1767,7 +1767,7 @@ skip_snmp_checks:
 		{
 			SendPollerMsg(dwRqId, _T("Node name is an IP address and need to be resolved\r\n"));
 	      SetPollerInfo(nPoller, _T("resolving name"));
-			if (ResolveName(FALSE))
+			if (resolveName(FALSE))
 			{
 				SendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
 				bHasChanges = TRUE;
@@ -1783,7 +1783,7 @@ skip_snmp_checks:
 			{
 				SendPollerMsg(dwRqId, _T("Syncing node name with DNS\r\n"));
 		      SetPollerInfo(nPoller, _T("resolving name"));
-				if (ResolveName(TRUE))
+				if (resolveName(TRUE))
 				{
 					SendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
 					bHasChanges = TRUE;
@@ -2042,7 +2042,7 @@ BOOL Node::updateInterfaceConfiguration(DWORD dwRqId, DWORD dwNetMask)
          }
       }
 
-		CheckSubnetBinding(pIfList);
+		checkSubnetBinding(pIfList);
 
 		delete pIfList;
    }
@@ -3579,7 +3579,7 @@ BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID
 // Check and update if needed interface names
 //
 
-void Node::CheckInterfaceNames(InterfaceList *pIfList)
+void Node::checkInterfaceNames(InterfaceList *pIfList)
 {
    // Cut interface names to MAX_OBJECT_NAME and check for unnamed interfaces
    for(int i = 0; i < pIfList->getSize(); i++)
@@ -3687,7 +3687,7 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext()
 // Resolve node's name
 //
 
-BOOL Node::ResolveName(BOOL useOnlyDNS)
+BOOL Node::resolveName(BOOL useOnlyDNS)
 {
 	BOOL bSuccess = FALSE;
 	HOSTENT *hs;
@@ -4025,7 +4025,7 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 // Check subnet bindings
 //
 
-void Node::CheckSubnetBinding(InterfaceList *pIfList)
+void Node::checkSubnetBinding(InterfaceList *pIfList)
 {
 	Subnet *pSubnet;
 	Interface *pInterface;
@@ -4037,6 +4037,7 @@ void Node::CheckSubnetBinding(InterfaceList *pIfList)
 	pCluster = getMyCluster();
 
 	// Check if we have subnet bindings for all interfaces
+	DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_szName, m_dwId);
 	for(i = 0; i < pIfList->getSize(); i++)
 	{
 		NX_INTERFACE_INFO *iface = pIfList->get(i);
@@ -4066,6 +4067,14 @@ void Node::CheckSubnetBinding(InterfaceList *pIfList)
 						DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
 									 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
 						pSubnet->setCorrectMask(pInterface->IpAddr() & pInterface->getIpNetMask(), pInterface->getIpNetMask());
+					}
+
+					// Check if node is linked to this subnet
+					if (!pSubnet->IsChild(m_dwId))
+					{
+						DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
+									 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+						pSubnet->AddNode(this);
 					}
 				}
 			}

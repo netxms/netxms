@@ -748,13 +748,13 @@ protected:
    BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue);
    void CheckOSPFSupport(SNMP_Transport *pTransport);
 	void addVrrpInterfaces(InterfaceList *ifList);
-	BOOL ResolveName(BOOL useOnlyDNS);
+	BOOL resolveName(BOOL useOnlyDNS);
    void setAgentProxy(AgentConnection *pConn);
 
    DWORD getInterfaceCount(Interface **ppInterface);
 
-   void CheckInterfaceNames(InterfaceList *pIfList);
-	void CheckSubnetBinding(InterfaceList *pIfList);
+   void checkInterfaceNames(InterfaceList *pIfList);
+	void checkSubnetBinding(InterfaceList *pIfList);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 
 	void ApplySystemTemplates();

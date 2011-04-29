@@ -222,6 +222,13 @@
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Node"
             objectClass="org.netxms.client.objects.Node">
          <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.ChangeZone"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeZone_Node"
+               label="Change zone..."
+               menubarPath="objectmgmt">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeIpAddress"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeIpAddress"

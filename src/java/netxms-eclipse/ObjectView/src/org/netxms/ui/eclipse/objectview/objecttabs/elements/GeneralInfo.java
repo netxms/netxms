@@ -24,6 +24,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -82,6 +83,11 @@ public class GeneralInfo extends TableElement
 				addPair("SNMP sysName", node.getSnmpSysName(), false);
 				addPair("SNMP Object ID", node.getSnmpOID(), false);
 				addPair("Driver", node.getDriverName(), false);
+				break;
+			case GenericObject.OBJECT_SUBNET:
+				Subnet subnet = (Subnet)object;
+				if (((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled())
+					addPair("Zone ID", Long.toString(subnet.getZoneId()));
 				break;
 			case GenericObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;
