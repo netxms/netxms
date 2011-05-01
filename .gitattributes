@@ -882,8 +882,11 @@ src/java/netxms-eclipse/OSM/build.properties -text
 src/java/netxms-eclipse/OSM/icons/map.png -text
 src/java/netxms-eclipse/OSM/plugin.xml -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/Activator.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCache.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenLocationMap.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapAccessor.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/QuadTree.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/views/LocationMap.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/GeoMapViewer.java -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text

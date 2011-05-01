@@ -30,7 +30,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.client.NXCSession;
@@ -50,7 +49,6 @@ public class LocationMap extends ViewPart
 	
 	private GeoMapViewer map;
 	private MapAccessor mapAccessor;
-	private WorkbenchLabelProvider labelProvider;
 	private GenericObject object;
 	private int zoomLevel = 15;
 	
@@ -94,8 +92,6 @@ public class LocationMap extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		labelProvider = new WorkbenchLabelProvider();
-		
 		// Map control
 		map = new GeoMapViewer(parent, SWT.BORDER);
 		map.setSiteService((IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class));
@@ -108,7 +104,7 @@ public class LocationMap extends ViewPart
 		mapAccessor = new MapAccessor(object.getGeolocation());
 		mapAccessor.setZoom(zoomLevel);
 		map.showMap(mapAccessor);
-		map.setCenterMarker(labelProvider.getImage(object));
+		map.setCenterMarker(object);
 	}
 
 	/**
@@ -233,7 +229,6 @@ public class LocationMap extends ViewPart
 	@Override
 	public void dispose()
 	{
-		labelProvider.dispose();
 		super.dispose();
 	}
 }
