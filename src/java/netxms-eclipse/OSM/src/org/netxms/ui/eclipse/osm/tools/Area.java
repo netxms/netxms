@@ -101,4 +101,22 @@ public class Area
 	{
 		return (x >= xLow) && (x <= xHigh) && (y >= yLow) && (y <= yHigh);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder("Area={");
+		sb.append(xLow);
+		sb.append(',');
+		sb.append(yLow);
+		sb.append('-');
+		sb.append(xHigh);
+		sb.append(',');
+		sb.append(yHigh);
+		sb.append('}');
+		return sb.toString();
+	}
 }

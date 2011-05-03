@@ -19,7 +19,9 @@
 package org.netxms.ui.eclipse.osm.tools;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Quad tree implementation
@@ -32,18 +34,21 @@ public class QuadTree<Value>
 	private class Node
 	{
 		double x, y;
+		Node parent;
 		Node NW, NE, SW, SE;
 		Value value;
 		
-		Node(double x, double y, Value value)
+		Node(double x, double y, Value value, Node parent)
 		{
 			this.x = x;
 			this.y = y;
 			this.value = value;
+			this.parent = parent;
 		}
 	}
 	
 	private Node root;
+	private Map<Value, Node> nodeMap = new HashMap<Value, Node>();
 	
 	/**
 	 * Insert new entry
@@ -54,7 +59,7 @@ public class QuadTree<Value>
 	 */
 	public void insert(double x, double y, Value value)
 	{
-		root = insert(root, x, y, value);
+		root = insert(root, null, x, y, value);
 	}
 	
 	/**
@@ -66,19 +71,23 @@ public class QuadTree<Value>
 	 * @param value
 	 * @return
 	 */
-	private Node insert(Node n, double x, double y, Value value)
+	private Node insert(Node n, Node parent, double x, double y, Value value)
 	{
 		if (n == null)
-			return new Node(x, y, value);
+		{
+			Node nn = new Node(x, y, value, parent);
+			nodeMap.put(value, nn);
+			return nn;
+		}
 		
 		if ((x < n.x) && (y < n.y))
-			n.SW = insert(n.SW, x, y, value);
+			n.SW = insert(n.SW, n, x, y, value);
 		else if ((x < n.x) && (y >= n.y))
-			n.NW = insert(n.NW, x, y, value);
+			n.NW = insert(n.NW, n, x, y, value);
 		else if ((x >= n.x) && (y < n.y))
-			n.SE = insert(n.SE, x, y, value);
+			n.SE = insert(n.SE, n, x, y, value);
 		else if ((x >= n.x) && (y >= n.y))
-			n.NE = insert(n.NE, x, y, value);
+			n.NE = insert(n.NE, n, x, y, value);
 		
 		return n;
 	}
@@ -119,5 +128,16 @@ public class QuadTree<Value>
 			query(n.SE, result, area);
 		if ((area.getxHigh() >= n.x) && (area.getyHigh() >= n.y))
 			query(n.NE, result, area);
+	}
+	
+	public boolean remove(Value value)
+	{
+		Node n = nodeMap.get(value);
+		if (n == null)
+			return false;	// No such value
+		
+		
+		
+		return true;
 	}
 }

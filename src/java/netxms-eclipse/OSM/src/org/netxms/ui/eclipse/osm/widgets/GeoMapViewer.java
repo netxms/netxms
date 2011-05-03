@@ -46,6 +46,8 @@ import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.osm.GeoLocationCache;
+import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
@@ -70,6 +72,7 @@ public class GeoMapViewer extends Canvas implements PaintListener
 	private String imageAccessSync = "SYNC";
 	private ILabelProvider labelProvider;
 	private Image currentImage = null;
+	private Area coverage = null;
 	private MapAccessor accessor;
 	private IWorkbenchSiteProgressService siteService = null;
 	private GenericObject centerMarker = null;
@@ -194,6 +197,13 @@ public class GeoMapViewer extends Canvas implements PaintListener
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
+						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
+						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), accessor.getZoom());
+						System.out.println("COVERAGE: " + coverage);
+						System.out.println("CENTER: " + accessor.getCenterPoint());
+						System.out.println("TOP LEFT: " + new GeoLocation(coverage.getxLow(), coverage.getyLow()));
+						System.out.println("BOTTOM RIGHT: " + new GeoLocation(coverage.getxHigh(), coverage.getyHigh()));
+						
 						waitingImage.setImage(null);
 						waitingImage.setVisible(false);
 						GeoMapViewer.this.redraw();

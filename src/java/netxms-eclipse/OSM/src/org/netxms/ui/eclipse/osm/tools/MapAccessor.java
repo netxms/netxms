@@ -280,4 +280,12 @@ public class MapAccessor
 	{
 		return spanLon;
 	}
+
+	/**
+	 * @return map's center point
+	 */
+	public GeoLocation getCenterPoint()
+	{
+		return new GeoLocation(latitude, longitude);
+	}
 }
