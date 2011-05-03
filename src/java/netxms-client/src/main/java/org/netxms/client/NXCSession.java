@@ -1297,6 +1297,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 		waitForSync(syncObjects, commandTimeout * 10);
+		sendNotification(new NXCNotification(NXCNotification.OBJECT_SYNC_COMPLETED));
 		subscribe(CHANNEL_OBJECTS);
 	}
 

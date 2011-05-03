@@ -57,6 +57,8 @@ public class NXCNotification extends SessionNotification
 	public static final int TRAP_CONFIGURATION_CREATED = 1016;
 	public static final int TRAP_CONFIGURATION_MODIFIED = 1017;
 	public static final int TRAP_CONFIGURATION_DELETED = 1018;
+
+	public static final int OBJECT_SYNC_COMPLETED = 2001;
 	
 	/**
 	 * @param code

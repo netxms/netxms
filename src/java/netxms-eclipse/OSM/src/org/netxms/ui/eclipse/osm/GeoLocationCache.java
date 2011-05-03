@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.osm;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.graphics.Point;
@@ -27,6 +29,7 @@ import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.NXCNotification;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.QuadTree;
@@ -79,6 +82,36 @@ public class GeoLocationCache implements IStartup, SessionListener
 	{
 		if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 			onObjectChange((GenericObject)n.getObject());
+		else if (n.getCode() == NXCNotification.OBJECT_SYNC_COMPLETED)
+			initialize();
+	}
+	
+	/**
+	 * (Re)initialize location cache
+	 */
+	private void initialize()
+	{
+		synchronized(locationTree)
+		{
+			locationTree.removeAll();
+			objects.clear();
+		
+			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			for(GenericObject object : session.getAllObjects())
+			{
+				if ((object.getObjectClass() == GenericObject.OBJECT_NODE) ||
+					 (object.getObjectClass() == GenericObject.OBJECT_CLUSTER) ||
+					 (object.getObjectClass() == GenericObject.OBJECT_CONTAINER))
+				{
+					GeoLocation gl = object.getGeolocation();
+					if (gl.getType() != GeoLocation.UNSET)
+					{
+						objects.put(object.getObjectId(), object);
+						locationTree.insert(gl.getLatitude(), gl.getLongitude(), object.getObjectId());
+					}
+				}
+			}
+		}		
 	}
 	
 	/**
@@ -88,31 +121,59 @@ public class GeoLocationCache implements IStartup, SessionListener
 	 */
 	private void onObjectChange(GenericObject object)
 	{
-		if ((object.getObjectClass() != GenericObject.OBJECT_NODE) ||
-		    (object.getObjectClass() != GenericObject.OBJECT_CLUSTER) ||
+		if ((object.getObjectClass() != GenericObject.OBJECT_NODE) &&
+		    (object.getObjectClass() != GenericObject.OBJECT_CLUSTER) &&
 		    (object.getObjectClass() != GenericObject.OBJECT_CONTAINER))
 			return;
 		
-		GeoLocation gl = object.getGeolocation();
-		if (gl.getType() == GeoLocation.UNSET)
+		synchronized(locationTree)
 		{
-			objects.remove(object.getObjectId());
-		}
-		else
-		{
-			if (!objects.containsKey(object.getObjectId()))
+			GeoLocation gl = object.getGeolocation();
+			if (gl.getType() == GeoLocation.UNSET)
 			{
-				locationTree.insert(gl.getLatitude(), gl.getLongitude(), object.getObjectId());
+				objects.remove(object.getObjectId());
+				locationTree.remove(object.getObjectId());
 			}
 			else
 			{
-				if (!gl.equals(objects.get(object.getObjectId()).getGeolocation()))
+				if (!objects.containsKey(object.getObjectId()))
 				{
-					
+					locationTree.insert(gl.getLatitude(), gl.getLongitude(), object.getObjectId());
 				}
+				else
+				{
+					if (!gl.equals(objects.get(object.getObjectId()).getGeolocation()))
+					{
+						locationTree.remove(object.getObjectId());
+						locationTree.insert(gl.getLatitude(), gl.getLongitude(), object.getObjectId());
+					}
+				}
+				objects.put(object.getObjectId(), object);
 			}
-			objects.put(object.getObjectId(), object);
 		}
+	}
+	
+	/**
+	 * Get all objects in given area
+	 * 
+	 * @param area
+	 * @return
+	 */
+	public List<GenericObject> getObjectsInArea(Area area)
+	{
+		List<GenericObject> list = null;
+		synchronized(locationTree)
+		{
+			List<Long> idList = locationTree.query(area);
+			list = new ArrayList<GenericObject>(idList.size());
+			for(Long id : idList)
+			{
+				GenericObject o = objects.get(id);
+				if (o != null)
+					list.add(o);
+			}
+		}
+		return list;
 	}
 	
 	/**
@@ -166,5 +227,13 @@ public class GeoLocationCache implements IStartup, SessionListener
 		GeoLocation topLeft = displayToCoordinates(new Point(cp.x - mapSize.x / 2, cp.y - mapSize.y / 2), zoom);
 		GeoLocation bottomRight = displayToCoordinates(new Point(cp.x + mapSize.x / 2, cp.y + mapSize.y / 2), zoom);
 		return new Area(topLeft.getLatitude(), topLeft.getLongitude(), bottomRight.getLatitude(), bottomRight.getLongitude());
+	}
+
+	/**
+	 * @return the instance
+	 */
+	public static GeoLocationCache getInstance()
+	{
+		return instance;
 	}
 }

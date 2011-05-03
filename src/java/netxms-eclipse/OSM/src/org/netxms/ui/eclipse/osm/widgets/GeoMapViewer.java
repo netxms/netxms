@@ -20,6 +20,9 @@ package org.netxms.ui.eclipse.osm.widgets;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -73,6 +76,7 @@ public class GeoMapViewer extends Canvas implements PaintListener
 	private ILabelProvider labelProvider;
 	private Image currentImage = null;
 	private Area coverage = null;
+	private List<GenericObject> objects = new ArrayList<GenericObject>();
 	private MapAccessor accessor;
 	private IWorkbenchSiteProgressService siteService = null;
 	private GenericObject centerMarker = null;
@@ -199,6 +203,8 @@ public class GeoMapViewer extends Canvas implements PaintListener
 					{
 						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
 						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), accessor.getZoom());
+						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
+						
 						System.out.println("COVERAGE: " + coverage);
 						System.out.println("CENTER: " + accessor.getCenterPoint());
 						System.out.println("TOP LEFT: " + new GeoLocation(coverage.getxLow(), coverage.getyLow()));

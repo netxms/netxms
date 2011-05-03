@@ -45,6 +45,18 @@ public class QuadTree<Value>
 			this.value = value;
 			this.parent = parent;
 		}
+		
+		void remove(Node n)
+		{
+			if (n == NW)
+				NW = null;
+			else if (n == NE)
+				NE = null;
+			else if (n == SW)
+				SW = null;
+			else if (n == SE)
+				SE = null;
+		}
 	}
 	
 	private Node root;
@@ -130,14 +142,60 @@ public class QuadTree<Value>
 			query(n.NE, result, area);
 	}
 	
+	/**
+	 * Remove all elements
+	 */
+	public void removeAll()
+	{
+		root = null;
+		nodeMap.clear();
+	}
+	
+	/**
+	 * Remove element from tree
+	 * 
+	 * @param value
+	 * @return
+	 */
 	public boolean remove(Value value)
 	{
-		Node n = nodeMap.get(value);
+		Node n = nodeMap.remove(value);
 		if (n == null)
 			return false;	// No such value
 		
-		
+		if (n.parent != null)
+			n.parent.remove(n);
+		else
+			root = null;
+		reinsertChildren(n);
 		
 		return true;
+	}
+	
+	/**
+	 * @param n
+	 */
+	private void reinsertChildren(Node n)
+	{
+		if (n.NW != null)
+		{
+			insert(n.NW.x, n.NW.y, n.NW.value);
+			reinsertChildren(n.NW);
+		}
+		if (n.NE != null)
+		{
+			insert(n.NE.x, n.NE.y, n.NE.value);
+			reinsertChildren(n.NE);
+		}
+		if (n.SW != null)
+		{
+			insert(n.SW.x, n.SW.y, n.SW.value);
+			reinsertChildren(n.SW);
+		}
+		if (n.SE != null)
+		{
+			insert(n.SE.x, n.SE.y, n.SE.value);
+			reinsertChildren(n.SE);
+		}
 	}
 }
