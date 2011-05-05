@@ -883,6 +883,8 @@ src/java/netxms-eclipse/OSM/icons/map.png -text
 src/java/netxms-eclipse/OSM/plugin.xml -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/Activator.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCache.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/GeoLocationCacheListener.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/Startup.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/actions/OpenLocationMap.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapAccessor.java -text

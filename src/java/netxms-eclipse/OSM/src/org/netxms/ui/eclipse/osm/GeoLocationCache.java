@@ -20,11 +20,12 @@ package org.netxms.ui.eclipse.osm;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.ui.IStartup;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.GeoLocation;
@@ -38,46 +39,17 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Cache for objects' geolocation information
  */
-public class GeoLocationCache implements IStartup, SessionListener
+public class GeoLocationCache implements SessionListener
 {
 	private static final int TILE_SIZE = 256;
 	
-	private static GeoLocationCache instance = null;
+	private static GeoLocationCache instance = new GeoLocationCache();
 	
 	private Map<Long, GenericObject> objects = new HashMap<Long, GenericObject>();
 	private QuadTree<Long> locationTree = new QuadTree<Long>();
 	private NXCSession session;
+	private Set<GeoLocationCacheListener> listeners = new HashSet<GeoLocationCacheListener>();
 	
-	/**
-	 * Default constructor
-	 */
-	public GeoLocationCache()
-	{
-		instance = this;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IStartup#earlyStartup()
-	 */
-	@Override
-	public void earlyStartup()
-	{
-		while(ConsoleSharedData.getSession() == null)
-		{
-			try
-			{
-				Thread.sleep(1000);
-			}
-			catch(InterruptedException e)
-			{
-			}
-		}
-		session = (NXCSession)ConsoleSharedData.getSession(); 
-		session.addListener(this);
-		if (session.isObjectsSynchronized())
-			initialize();
-	}
-
 	/* (non-Javadoc)
 	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
 	 */
@@ -87,13 +59,24 @@ public class GeoLocationCache implements IStartup, SessionListener
 		if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 			onObjectChange((GenericObject)n.getObject());
 		else if (n.getCode() == NXCNotification.OBJECT_SYNC_COMPLETED)
-			initialize();
+			internalInitialize();
 	}
 	
 	/**
-	 * (Re)initialize location cache
+	 * Initialize location cache
 	 */
-	private void initialize()
+	void initialize()
+	{
+		session = (NXCSession)ConsoleSharedData.getSession();
+		if (session.isObjectsSynchronized())
+			internalInitialize();
+		session.addListener(this);
+	}
+	
+	/**
+	 * (Re)initialize location cache - actual initialization
+	 */
+	private void internalInitialize()
 	{
 		synchronized(locationTree)
 		{
@@ -129,31 +112,46 @@ public class GeoLocationCache implements IStartup, SessionListener
 		    (object.getObjectClass() != GenericObject.OBJECT_CONTAINER))
 			return;
 		
+		GeoLocation prevLocation = null;
+		boolean cacheChanged = false;
 		synchronized(locationTree)
 		{
 			GeoLocation gl = object.getGeolocation();
 			if (gl.getType() == GeoLocation.UNSET)
 			{
-				objects.remove(object.getObjectId());
-				locationTree.remove(object.getObjectId());
+				GenericObject prevObject = objects.remove(object.getObjectId());
+				if (prevObject != null)
+					prevLocation = prevObject.getGeolocation();
+				cacheChanged = locationTree.remove(object.getObjectId());
 			}
 			else
 			{
 				if (!objects.containsKey(object.getObjectId()))
 				{
 					locationTree.insert(gl.getLatitude(), gl.getLongitude(), object.getObjectId());
+					cacheChanged = true;
 				}
 				else
 				{
-					if (!gl.equals(objects.get(object.getObjectId()).getGeolocation()))
+					prevLocation = objects.get(object.getObjectId()).getGeolocation();
+					if (!gl.equals(prevLocation))
 					{
 						locationTree.remove(object.getObjectId());
 						locationTree.insert(gl.getLatitude(), gl.getLongitude(), object.getObjectId());
+						cacheChanged = true;
 					}
 				}
 				objects.put(object.getObjectId(), object);
 			}
 		}
+		
+		// Notify listeners about cache change
+		if (cacheChanged)
+			synchronized(listeners)
+			{
+				for(GeoLocationCacheListener l : listeners)
+					l.geoLocationCacheChanged(object, prevLocation);
+			}
 	}
 	
 	/**
@@ -177,6 +175,32 @@ public class GeoLocationCache implements IStartup, SessionListener
 			}
 		}
 		return list;
+	}
+	
+	/**
+	 * Add cache listener
+	 * 
+	 * @param listener
+	 */
+	public void addListener(GeoLocationCacheListener listener)
+	{
+		synchronized(listeners)
+		{
+			listeners.add(listener);
+		}
+	}
+	
+	/**
+	 * Remove cache listener
+	 * 
+	 * @param listener
+	 */
+	public void removeListener(GeoLocationCacheListener listener)
+	{
+		synchronized(listeners)
+		{
+			listeners.remove(listener);
+		}
 	}
 	
 	/**

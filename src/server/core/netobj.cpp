@@ -223,6 +223,9 @@ BOOL NetObj::loadCommonProperties()
 	
 	if (bResult)
 		bResult = loadTrustedNodes();
+
+	if (!bResult)
+		DbgPrintf(4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_szName, (long)m_dwId, Type());
 		
    return bResult;
 }

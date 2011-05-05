@@ -55,7 +55,7 @@
    <extension
          point="org.eclipse.ui.startup">
       <startup
-            class="org.netxms.ui.eclipse.osm.GeoLocationCache">
+            class="org.netxms.ui.eclipse.osm.Startup">
       </startup>
    </extension>
 

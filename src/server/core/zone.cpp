@@ -99,6 +99,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
       }
       else
       {
+			DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_dwId);
          return FALSE;
       }
    }

@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2010 Victor Kirhenshtein
+** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
 BOOL g_bTrace = FALSE;
 bool g_isGuiMode = false;
+bool g_checkData = false;
 int g_iSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
 const TCHAR *g_pszSqlType[6][3] = 
@@ -456,7 +457,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:fGhIMtvX")) != -1)
+   while((ch = getopt(argc, argv, "c:dfGhIMtvX")) != -1)
    {
       switch(ch)
       {
@@ -473,6 +474,7 @@ int main(int argc, char *argv[])
                      _T("   upgrade       : Upgrade database to new version\n")
                      _T("Valid options are:\n")
                      _T("   -c <config> : Use alternate configuration file. Default is ") DEFAULT_CONFIG_FILE _T("\n")
+                     _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
 #ifdef _WIN32
 				         _T("   -G          : GUI mode.\n")
@@ -497,6 +499,9 @@ int main(int argc, char *argv[])
             nx_strncpy(szConfigFile, optarg, MAX_PATH);
 #endif
             break;
+			case 'd':
+				g_checkData = true;
+				break;
          case 'f':
             m_bForce = TRUE;
             break;

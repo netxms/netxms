@@ -78,6 +78,7 @@ extern DB_HANDLE g_hCoreDB;
 extern BOOL g_bIgnoreErrors;
 extern BOOL g_bTrace;
 extern bool g_isGuiMode;
+extern bool g_checkData;
 extern int g_iSyntax;
 extern const TCHAR *g_pszTableSuffix;
 extern const TCHAR *g_pszSqlType[6][3];

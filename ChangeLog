@@ -9,6 +9,7 @@
 - New NXSL functions: SetCustomAttribute
 - Added support for zoning (dividing network to independent parts with
   possibly overlapped address ranges)
+- OpenStreetMap integration for geolocation display
 - New MIBs added: CISCO-CLUSTER-MIB, CISCO-HSRP-EXT-MIB, CISCO-HSRP-MIB,
   CISCO-MAC-NOTIFICATION-MIB, CISCO-STACKMAKER-MIB, CISCO-STP-EXTENSIONS-MIB,
   CISCO-SWITCH-CGMP-MIB, CISCO-VLAN-MEMBERSHIP-MIB, EMBEDDED-NGX-MIB

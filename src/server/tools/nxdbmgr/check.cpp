@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2010 Victor Kirhenshtein
+** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -206,6 +206,68 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 
 
 //
+// Check zone objects
+//
+
+static void CheckZones()
+{
+   DB_RESULT hResult, hResult2;
+   DWORD i, dwNumObjects, dwId;
+   TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
+   BOOL bIsDeleted;
+
+   StartStage(_T("Checking zone objects..."));
+   hResult = SQLSelect(_T("SELECT id FROM zones"));
+   if (hResult != NULL)
+   {
+      dwNumObjects = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumObjects; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+
+         // Check appropriate record in object_properties table
+         _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%d"), (int)dwId);
+         hResult2 = SQLSelect(szQuery);
+         if (hResult2 != NULL)
+         {
+            if ((DBGetNumRows(hResult2) == 0) && (dwId != 4))	// Properties for built-in zone can be missing
+            {
+               m_iNumErrors++;
+               if (GetYesNo(_T("\rMissing zone object %d properties. Create?"), dwId))
+               {
+						uuid_t guid;
+						TCHAR guidText[128];
+
+						uuid_generate(guid);
+                  _sntprintf(szQuery, 1024, 
+                             _T("INSERT INTO object_properties (object_id,guid,name,")
+                             _T("status,is_deleted,is_system,inherit_access_rights,")
+                             _T("last_modified,status_calc_alg,status_prop_alg,")
+                             _T("status_fixed_val,status_shift,status_translation,")
+                             _T("status_single_threshold,status_thresholds,location_type,")
+									  _T("latitude,longitude,image) VALUES ")
+                             _T("(%d,'%s','lost_zone_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
+									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
+									  (int)dwId, uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
+                  if (SQLQuery(szQuery))
+                     m_iNumFixes++;
+               }
+            }
+            else
+            {
+               DBGetField(hResult2, 0, 0, szName, MAX_OBJECT_NAME);
+               bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
+            }
+            DBFreeResult(hResult2);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+}
+
+
+//
 // Check node objects
 //
 
@@ -236,6 +298,7 @@ static void CheckNodes()
                if (GetYesNo(_T("\rMissing node object %d properties. Create?"), dwId))
                {
 						uuid_t guid;
+						TCHAR guidText[128];
 
 						uuid_generate(guid);
                   _sntprintf(szQuery, 1024, 
@@ -245,9 +308,9 @@ static void CheckNodes()
                              _T("status_fixed_val,status_shift,status_translation,")
                              _T("status_single_threshold,status_thresholds,location_type,")
 									  _T("latitude,longitude,image) VALUES ")
-                             _T("(%d,'%s','lost_node_%d',5,0,0,1,0,0,0,0,0,0,0,'00000000',0,")
+                             _T("(%d,'%s','lost_node_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
-									  (int)dwId, guid, (int)dwId);
+									  (int)dwId, uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -348,6 +411,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
                if (GetYesNo(_T("\rMissing %s object %d properties. Create?"), pszDisplayName, dwId))
                {
 						uuid_t guid;
+						TCHAR guidText[128];
 
 						uuid_generate(guid);
                   _sntprintf(szQuery, 1024, 
@@ -357,9 +421,9 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
                              _T("status_fixed_val,status_shift,status_translation,")
                              _T("status_single_threshold,status_thresholds,location_type,")
 									  _T("latitude,longitude,image) VALUES ")
-                             _T("(%d,'%s','lost_%s_%d',5,0,0,1,0,0,0,0,0,0,0,'00000000',0,")
+                             _T("(%d,'%s','lost_%s_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
-									  (int)dwId, guid, pszDisplayName, (int)dwId);
+									  (int)dwId, uuid_to_string(guid, guidText), pszDisplayName, (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                   szName[0] = 0;
@@ -411,7 +475,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 // Check common object properties
 //
 
-static void CheckObjectProperties(void)
+static void CheckObjectProperties()
 {
    DB_RESULT hResult;
    TCHAR szQuery[1024];
@@ -433,8 +497,8 @@ static void CheckObjectProperties(void)
             if (GetYesNo(_T("\rObject %d [%s] has invalid timestamp. Fix it?"),
 				             dwObjectId, DBGetField(hResult, i, 1, szQuery, 1024)))
             {
-               _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=%ld WHERE object_id=%d"),
-                          time(NULL), dwObjectId);
+               _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=") TIME_T_FMT _T(" WHERE object_id=%d"),
+                          TIME_T_FCAST(time(NULL)), (int)dwObjectId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
             }
@@ -450,7 +514,7 @@ static void CheckObjectProperties(void)
 // Check cluster objects
 //
 
-static void CheckClusters(void)
+static void CheckClusters()
 {
    DB_RESULT hResult;
    TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
@@ -508,7 +572,7 @@ static BOOL CheckResultSet(TCHAR *pszQuery)
 // Check event processing policy
 //
 
-static void CheckEPP(void)
+static void CheckEPP()
 {
    DB_RESULT hResult;
    TCHAR szQuery[1024];
@@ -627,7 +691,7 @@ static BOOL CreateIDataTable(DWORD nodeId)
 // Check collected data
 //
 
-static void CheckIData(void)
+static void CheckIData()
 {
 	int i, nodeCount;
 	time_t now;
@@ -701,7 +765,7 @@ static void CheckIData(void)
 // Check template to node mapping
 //
 
-static void CheckTemplateNodeMapping(void)
+static void CheckTemplateNodeMapping()
 {
    DB_RESULT hResult;
    TCHAR name[256], query[256];
@@ -741,13 +805,13 @@ static void CheckTemplateNodeMapping(void)
 // Check database for errors
 //
 
-void CheckDatabase(void)
+void CheckDatabase()
 {
    DB_RESULT hResult;
    LONG iVersion = 0;
    BOOL bCompleted = FALSE;
 
-   _tprintf(_T("Checking database:\n"));
+	_tprintf(_T("Checking database (%s collected data):\n"), g_checkData ? _T("including") : _T("excluding"));
 
    // Get database format version
    iVersion = DBGetSchemaVersion(g_hCoreDB);
@@ -811,6 +875,7 @@ void CheckDatabase(void)
       {
          DBBegin(g_hCoreDB);
 
+			CheckZones();
          CheckNodes();
          CheckComponents(_T("interface"), _T("interfaces"));
          CheckComponents(_T("network service"), _T("network_services"));
@@ -818,7 +883,8 @@ void CheckDatabase(void)
          CheckTemplateNodeMapping();
          CheckObjectProperties();
          CheckEPP();
-         CheckIData();
+			if (g_checkData)
+				CheckIData();
 
          if (m_iNumErrors == 0)
          {

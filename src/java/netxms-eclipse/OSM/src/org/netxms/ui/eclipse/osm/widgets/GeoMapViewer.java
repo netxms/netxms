@@ -50,6 +50,7 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
+import org.netxms.ui.eclipse.osm.GeoLocationCacheListener;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
@@ -57,7 +58,7 @@ import org.netxms.ui.eclipse.widgets.AnimatedImage;
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
  */
-public class GeoMapViewer extends Canvas implements PaintListener
+public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener
 {
 	private static final Color MAP_BACKGROUND = new Color(Display.getDefault(), 255, 255, 255);
 	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getDefault(), 150, 240, 88);
@@ -123,11 +124,14 @@ public class GeoMapViewer extends Canvas implements PaintListener
 			public void widgetDisposed(DisposeEvent e)
 			{
 				labelProvider.dispose();
+				GeoLocationCache.getInstance().removeListener(GeoMapViewer.this);
 			}
 		});
 		
 		waitingImage = new AnimatedImage(this, SWT.NONE);
 		waitingImage.setVisible(false);
+		
+		GeoLocationCache.getInstance().addListener(this);
 	}
 	
 	/**
@@ -204,15 +208,6 @@ public class GeoMapViewer extends Canvas implements PaintListener
 						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
 						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), accessor.getZoom());
 						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
-						
-						System.out.println("COVERAGE: " + coverage);
-						System.out.println("CENTER: " + accessor.getCenterPoint());
-						System.out.println("TOP LEFT: " + new GeoLocation(coverage.getxLow(), coverage.getyLow()));
-						System.out.println("BOTTOM RIGHT: " + new GeoLocation(coverage.getxHigh(), coverage.getyHigh()));
-						
-						System.out.println(">>> OBJECTS:");
-						for(GenericObject o : objects) System.out.println("   " + o.getObjectName() + " " + o.getGeolocation().toString());
-						
 						waitingImage.setImage(null);
 						waitingImage.setVisible(false);
 						GeoMapViewer.this.redraw();
@@ -358,5 +353,39 @@ public class GeoMapViewer extends Canvas implements PaintListener
 	public void setCenterMarker(GenericObject centerMarker)
 	{
 		this.centerMarker = centerMarker;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged(org.netxms.client.objects.GenericObject, org.netxms.client.GeoLocation)
+	 */
+	@Override
+	public void geoLocationCacheChanged(final GenericObject object, final GeoLocation prevLocation)
+	{
+		getDisplay().asyncExec(new Runnable() {
+			@Override
+			public void run()
+			{
+				onCacheChange(object, prevLocation);
+			}
+		});
+	}
+	
+	/**
+	 * Real handler for geolocation cache changes. Must be run in UI thread.
+	 * 
+	 * @param object
+	 * @param prevLocation
+	 */
+	private void onCacheChange(final GenericObject object, final GeoLocation prevLocation)
+	{
+		GeoLocation currLocation = object.getGeolocation();
+		if (((currLocation.getType() != GeoLocation.UNSET) &&
+		     coverage.contains(currLocation.getLatitude(), currLocation.getLongitude())) ||
+		    ((prevLocation != null) && (prevLocation.getType() != GeoLocation.UNSET) &&
+		     coverage.contains(prevLocation.getLatitude(), prevLocation.getLongitude())))
+		{
+			objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
+			redraw();
+		}
 	}
 }
