@@ -186,6 +186,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 	// Objects
 	private Map<Long, GenericObject> objectList = new HashMap<Long, GenericObject>();
+	private boolean objectsSynchronized = false;
 
 	// Users
 	private Map<Long, AbstractUserObject> userDB = new HashMap<Long, AbstractUserObject>();
@@ -1297,6 +1298,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 		waitForSync(syncObjects, commandTimeout * 10);
+		objectsSynchronized = true;
 		sendNotification(new NXCNotification(NXCNotification.OBJECT_SYNC_COMPLETED));
 		subscribe(CHANNEL_OBJECTS);
 	}
@@ -3664,7 +3666,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 
 		waitForRCC(msg.getMessageId());
-		final NXCPMessage response = waitForMessage(NXCPCodes.CMD_TABLE_DATA, msg.getMessageId());
+		final NXCPMessage response = waitForMessage(NXCPCodes.CMD_TABLE_DATA, msg.getMessageId(), 300000);  // wait up to 5 minutes
 		return new Table(response);
 	}
 
@@ -4393,5 +4395,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			varId += 10;
 		}
 		return vlans;
+	}
+
+	/**
+	 * @return the objectsSynchronized
+	 */
+	public boolean isObjectsSynchronized()
+	{
+		return objectsSynchronized;
 	}
 }

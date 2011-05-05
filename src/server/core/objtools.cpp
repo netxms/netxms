@@ -455,7 +455,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
 DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession)
 {
    LONG nType;
-   DWORD dwRet = SYSINFO_RC_SUCCESS;
+   DWORD dwRet = RCC_SUCCESS;
    TOOL_STARTUP_INFO *pStartup;
    TCHAR szBuffer[256];
    DB_RESULT hResult;

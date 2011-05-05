@@ -210,6 +210,9 @@ public class GeoMapViewer extends Canvas implements PaintListener
 						System.out.println("TOP LEFT: " + new GeoLocation(coverage.getxLow(), coverage.getyLow()));
 						System.out.println("BOTTOM RIGHT: " + new GeoLocation(coverage.getxHigh(), coverage.getyHigh()));
 						
+						System.out.println(">>> OBJECTS:");
+						for(GenericObject o : objects) System.out.println("   " + o.getObjectName() + " " + o.getGeolocation().toString());
+						
 						waitingImage.setImage(null);
 						waitingImage.setVisible(false);
 						GeoMapViewer.this.redraw();
@@ -265,11 +268,22 @@ public class GeoMapViewer extends Canvas implements PaintListener
 			}
 		}
 		
+		/*
 		if ((centerMarker != null) && (imgW > 0) && (imgH > 0))
 		{
 			drawObject(gc, imgW / 2, imgH / 2, centerMarker);
 			//int w = centerMarker.getImageData().width;
 			//int h = centerMarker.getImageData().height;
+		}
+		*/
+		
+		final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
+		for(GenericObject object : objects)
+		{
+			final Point virtualXY = GeoLocationCache.coordinateToDisplay(object.getGeolocation(), accessor.getZoom());
+			final int dx = virtualXY.x - centerXY.x;
+			final int dy = virtualXY.y - centerXY.y;
+			drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, object);
 		}
 		
 		final GeoLocation gl = new GeoLocation(accessor.getLatitude(), accessor.getLongitude());

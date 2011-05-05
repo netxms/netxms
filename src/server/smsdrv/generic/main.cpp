@@ -104,7 +104,7 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 							if ((p = _tcschr(p, _T(','))) != NULL)
 							{
 								*p = 0; p++;
-								if (*p == _T('X'))
+								if (*p == _T('T'))
 									omode = OM_TEXT;
 								else if (*p == _T('P'))
 									omode = OM_PDU;

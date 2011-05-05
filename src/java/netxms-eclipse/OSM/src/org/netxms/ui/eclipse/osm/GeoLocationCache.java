@@ -46,6 +46,7 @@ public class GeoLocationCache implements IStartup, SessionListener
 	
 	private Map<Long, GenericObject> objects = new HashMap<Long, GenericObject>();
 	private QuadTree<Long> locationTree = new QuadTree<Long>();
+	private NXCSession session;
 	
 	/**
 	 * Default constructor
@@ -71,7 +72,10 @@ public class GeoLocationCache implements IStartup, SessionListener
 			{
 			}
 		}
-		ConsoleSharedData.getSession().addListener(this);
+		session = (NXCSession)ConsoleSharedData.getSession(); 
+		session.addListener(this);
+		if (session.isObjectsSynchronized())
+			initialize();
 	}
 
 	/* (non-Javadoc)
@@ -96,7 +100,6 @@ public class GeoLocationCache implements IStartup, SessionListener
 			locationTree.removeAll();
 			objects.clear();
 		
-			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			for(GenericObject object : session.getAllObjects())
 			{
 				if ((object.getObjectClass() == GenericObject.OBJECT_NODE) ||
@@ -183,7 +186,7 @@ public class GeoLocationCache implements IStartup, SessionListener
 	 * @param zoom zoom level
 	 * @return abstract display coordinates
 	 */
-	private static Point coordinateToDisplay(GeoLocation location, int zoom)
+	public static Point coordinateToDisplay(GeoLocation location, int zoom)
 	{
 		final double numberOfTiles = Math.pow(2, zoom);
 		
