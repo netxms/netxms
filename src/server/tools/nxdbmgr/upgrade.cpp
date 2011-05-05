@@ -248,6 +248,7 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 }
 
 
+
 //
 // Upgrade from V226 to V227
 //

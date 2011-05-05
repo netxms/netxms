@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mm.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\nxdbmgr.cpp"
 				>
 			</File>
