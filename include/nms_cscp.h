@@ -438,12 +438,12 @@ typedef struct
 #define CMD_SITUATION_DATA          0x00D8
 #define CMD_SITUATION_CHANGE        0x00D9
 #define CMD_CREATE_MAP              0x00DA
-#define CMD_WEBMAP_ADD              0x00DB
-#define CMD_WEBMAP_UPDATE_PROPS     0x00DC
-#define CMD_WEBMAP_UPDATE_DATA      0x00DD
-#define CMD_WEBMAP_DELETE           0x00DE
-#define CMD_WEBMAP_GET_DATA         0x00DF
-#define CMD_WEBMAP_GET_LIST         0x00E0
+//#define CMD_WEBMAP_ADD              0x00DB
+//#define CMD_WEBMAP_UPDATE_PROPS     0x00DC
+//#define CMD_WEBMAP_UPDATE_DATA      0x00DD
+//#define CMD_WEBMAP_DELETE           0x00DE
+//#define CMD_WEBMAP_GET_DATA         0x00DF
+//#define CMD_WEBMAP_GET_LIST         0x00E0
 #define CMD_CONFIG_SET_CLOB         0x00E1
 #define CMD_CONFIG_GET_CLOB         0x00E2
 #define CMD_RENAME_MAP              0x00E3
@@ -999,8 +999,6 @@ typedef struct
 // Base value for object links list
 #define VID_OBJECT_LINKS_BASE			((DWORD)0x10000000)
 #define VID_SUBMAP_LINK_NAMES_BASE  ((DWORD)0x20000000)
-
-#define VID_WEBMAP_LIST_BASE        ((DWORD)0x30000000)
 
 #define VID_TABLE_COLUMN_INFO_BASE  ((DWORD)0x10000000)
 #define VID_TABLE_DATA_BASE         ((DWORD)0x20000000)

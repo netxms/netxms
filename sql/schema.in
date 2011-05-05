@@ -1152,21 +1152,6 @@ CREATE TABLE snmp_communities
 
 
 /*
-** Maps for XULRunner client and web clients
-*/
-
-CREATE TABLE web_maps
-(
-	id integer not null,
-	title varchar(63) not null,
-	properties SQL_TEXT not null,
-	data SQL_TEXT not null,
-	PRIMARY KEY(id)
-) TABLE_TYPE;
-
-
-
-/*
 ** Agent policies - common attributes
 */
 

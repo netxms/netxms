@@ -1,4 +1,12 @@
 ***************
+* 226 ==> 227 *
+***************
+
+- Maps from 1.0.x converted into network map objects
+- Table "web_maps" deleted
+
+
+***************
 * 225 ==> 226 *
 ***************
 

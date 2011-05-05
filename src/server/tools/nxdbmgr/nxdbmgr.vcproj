@@ -384,6 +384,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\include\netxms_maps.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\include\netxmsdb.h"
 				>
 			</File>

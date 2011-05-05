@@ -22,7 +22,7 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			subnet.cpp syncer.cpp syslogd.cpp template.cpp \
 			tools.cpp tracert.cpp uniroot.cpp upload_job.cpp \
 			userdb.cpp userdb_objects.cpp vpnconn.cpp \
-			vrrp.cpp watchdog.cpp webmaps.cpp zone.cpp
+			vrrp.cpp watchdog.cpp zone.cpp
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 		      ../../snmp/libnxsnmp/libnxsnmp.la \

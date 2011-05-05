@@ -246,12 +246,12 @@ public final class NXCPCodes
 	public static final int CMD_SITUATION_DATA          = 0x00D8;
 	public static final int CMD_SITUATION_CHANGE        = 0x00D9;
 	public static final int CMD_CREATE_MAP              = 0x00DA;
-	public static final int CMD_WEBMAP_ADD              = 0x00DB;
-	public static final int CMD_WEBMAP_UPDATE_PROPS     = 0x00DC;
-	public static final int CMD_WEBMAP_UPDATE_DATA      = 0x00DD;
-	public static final int CMD_WEBMAP_DELETE           = 0x00DE;
-	public static final int CMD_WEBMAP_GET_DATA         = 0x00DF;
-	public static final int CMD_WEBMAP_GET_LIST         = 0x00E0;
+	//public static final int CMD_WEBMAP_ADD              = 0x00DB;
+	//public static final int CMD_WEBMAP_UPDATE_PROPS     = 0x00DC;
+	//public static final int CMD_WEBMAP_UPDATE_DATA      = 0x00DD;
+	//public static final int CMD_WEBMAP_DELETE           = 0x00DE;
+	//public static final int CMD_WEBMAP_GET_DATA         = 0x00DF;
+	//public static final int CMD_WEBMAP_GET_LIST         = 0x00E0;
 	public static final int CMD_CONFIG_SET_CLOB         = 0x00E1;
 	public static final int CMD_CONFIG_GET_CLOB         = 0x00E2;
 	public static final int CMD_RENAME_MAP              = 0x00E3;
@@ -731,7 +731,6 @@ public final class NXCPCodes
 	public static final long VID_INSTANCE_LIST_BASE       = 0x20000000L;
 	public static final long VID_OBJECT_LINKS_BASE        = 0x10000000L;
 	public static final long VID_SUBMAP_LINK_NAMES_BASE   = 0x20000000L;
-	public static final long VID_WEBMAP_LIST_BASE         = 0x30000000L;
 	public static final long VID_JOB_LIST_BASE            = 0x10000000L;
 	public static final long VID_TABLE_COLUMN_INFO_BASE   = 0x10000000L;
 	public static final long VID_TABLE_DATA_BASE          = 0x20000000L;

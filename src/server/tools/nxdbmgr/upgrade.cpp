@@ -24,6 +24,13 @@
 
 
 //
+// Externals
+//
+
+BOOL MigrateMaps();
+
+
+//
 // Execute with error check
 //
 
@@ -247,6 +254,18 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 	return (query[0] != 0) ? SQLQuery(query) : TRUE;
 }
 
+
+//
+// Upgrade from V227 to V228
+//
+
+static BOOL H_UpgradeFromV227(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("DROP TABLE web_maps")));
+	CHK_EXEC(MigrateMaps());
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='228' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
 
 
 //
@@ -5201,6 +5220,7 @@ static struct
 	{ 224, 225, H_UpgradeFromV224 },
 	{ 225, 226, H_UpgradeFromV225 },
 	{ 226, 227, H_UpgradeFromV226 },
+	{ 227, 228, H_UpgradeFromV227 },
    { 0, NULL }
 };
 

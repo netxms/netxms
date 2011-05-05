@@ -729,10 +729,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\webmaps.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\zone.cpp"
 				>
 			</File>

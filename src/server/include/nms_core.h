@@ -544,12 +544,6 @@ private:
 	void DeleteSituationInstance(CSCPMessage *pRequest);
 	void setConfigCLOB(CSCPMessage *pRequest);
 	void getConfigCLOB(CSCPMessage *pRequest);
-	void WebMapAdd(CSCPMessage *pRequest);
-	void WebMapUpdateData(CSCPMessage *pRequest);
-	void WebMapUpdateProps(CSCPMessage *pRequest);
-	void WebMapDelete(CSCPMessage *pRequest);
-	void WebMapGetData(CSCPMessage *pRequest);
-	void WebMapGetList(DWORD dwRqId);
 	void registerAgent(CSCPMessage *pRequest);
 	void getServerFile(CSCPMessage *pRequest);
 	void testDCITransformation(CSCPMessage *pRequest);

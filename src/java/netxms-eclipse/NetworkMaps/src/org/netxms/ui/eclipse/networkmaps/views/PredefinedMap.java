@@ -47,6 +47,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
@@ -142,7 +143,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			
 		ImageProvider.getInstance().addUpdateListener(this);
 		
-		if (mapObject.getBackground() != null)
+		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 			viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 	}
 
