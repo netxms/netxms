@@ -2326,7 +2326,7 @@ BEGIN
     PUSHBUTTON      "Save && &Apply",IDC_APPLY,95,61,50,14
     PUSHBUTTON      "&Discard",IDC_DISCARD,159,61,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,223,61,50,14
-    LTEXT           "Agent's canfiguration has been modified. Please select one of the following actions:\n\t""Save""\t\tSave new configuration\n\t""Save && Apply""\tSave new configuration and apply it\n\t""Discard""\tDiscard changes\n\t""Cancel""\tReturn to editing configuration",IDC_STATIC,33,7,266,42
+    LTEXT           "Agent's configuration has been modified. Please select one of the following actions:\n\t""Save""\t\tSave new configuration\n\t""Save && Apply""\tSave new configuration and apply it\n\t""Discard""\tDiscard changes\n\t""Cancel""\tReturn to editing configuration",IDC_STATIC,33,7,266,42
     ICON            IDI_SEVERITY_MINOR,IDC_STATIC,7,7,21,20
 END
 

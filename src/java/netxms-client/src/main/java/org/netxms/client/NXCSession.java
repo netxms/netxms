@@ -3319,7 +3319,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public void updateAgentConfig(long nodeId, String config, boolean apply) throws IOException, NXCException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CONFIG);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_CONFIG);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		msg.setVariable(NXCPCodes.VID_CONFIG_FILE, config);
 		msg.setVariableInt16(NXCPCodes.VID_APPLY_FLAG, apply ? 1 : 0);

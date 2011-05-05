@@ -501,10 +501,12 @@ src/java/netxms-eclipse/AgentManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/AgentManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/AgentManager/build.properties -text
 src/java/netxms-eclipse/AgentManager/icons/agent_config.gif -text
+src/java/netxms-eclipse/AgentManager/icons/unsaved_config.png -text
 src/java/netxms-eclipse/AgentManager/plugin.xml -text
 src/java/netxms-eclipse/AgentManager/resource.properties -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/Activator.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/actions/OpenAgentConfig.java -text
+src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/dialogs/SaveConfigDialog.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/views/AgentConfigEditorView.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/AgentConfigEditor.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/AgentConfigDocument.java -text
@@ -1194,7 +1196,6 @@ src/java/netxms-eclipse/core/icons/alt_window_16.gif -text
 src/java/netxms-eclipse/core/icons/alt_window_32.gif -text
 src/java/netxms-eclipse/core/icons/information.png -text
 src/java/netxms-eclipse/core/icons/login.png -text
-src/java/netxms-eclipse/core/icons/password.png -text
 src/java/netxms-eclipse/core/icons/pview.gif -text
 src/java/netxms-eclipse/core/icons/scroll_lock.gif -text
 src/java/netxms-eclipse/core/icons/server_console.png -text

@@ -27,23 +27,25 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.ISaveablePart;
+import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.commands.ActionHandler;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
-import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.agentmanager.dialogs.SaveConfigDialog;
 import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -52,7 +54,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
  * Agent's master config editor
  */
 @SuppressWarnings("deprecation")
-public class AgentConfigEditorView extends ViewPart implements ISaveablePart
+public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 {
 	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView";
 	
@@ -60,6 +62,8 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart
 	private long nodeId;
 	private AgentConfigEditor editor;
 	private boolean modified = false;
+	private boolean saveAndApply;
+	private String saveData;
 
 	private RefreshAction actionRefresh;
 	private Action actionSave;
@@ -210,8 +214,14 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
-		// TODO Auto-generated method stub
-		
+		try
+		{
+			session.updateAgentConfig(nodeId, saveData, saveAndApply);
+		}
+		catch(Exception e)
+		{
+			MessageDialog.openError(getViewSite().getShell(), "Error", "Cannot save agent's configuration file: " + e.getMessage());
+		}
 	}
 
 	/* (non-Javadoc)
@@ -269,5 +279,18 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart
 		}
 		
 		return new PropertyResourceBundle(in);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
+	 */
+	@Override
+	public int promptToSaveOnClose()
+	{
+		SaveConfigDialog dlg = new SaveConfigDialog(getSite().getShell());
+		int rc = dlg.open();
+		saveAndApply = (rc == SaveConfigDialog.SAVE_AND_APPLY_ID);
+		saveData = editor.getText();
+		return (rc == IDialogConstants.CANCEL_ID) ? CANCEL : ((rc == SaveConfigDialog.DISCARD_ID) ? NO : YES);
 	}
 }

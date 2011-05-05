@@ -55,12 +55,14 @@
 	   <actionSet id="org.netxms.ui.eclipse.action_set.change_password"
 		   label="Change password..."
 		   visible="true">
-		   <action id="org.netxms.ui.eclipse.usermanager.actions.change_password"
-			   menubarPath="tools/additions"
-			   label="Change password..."
-			   tooltip="Change password for current user"
-			   class="org.netxms.ui.eclipse.usermanager.actions.ChangePassword"
-			   definitionId="org.netxms.ui.eclipse.usermanager.commands.change_password">
+		   <action
+           class="org.netxms.ui.eclipse.usermanager.actions.ChangePassword"
+           definitionId="org.netxms.ui.eclipse.usermanager.commands.change_password"
+           icon="icons/change_password.png"
+           id="org.netxms.ui.eclipse.usermanager.actions.change_password"
+           label="Change password..."
+           menubarPath="tools/additions"
+           tooltip="Change password for current user">
 		   </action>
 	   </actionSet>
    </extension>
