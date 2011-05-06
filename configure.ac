@@ -65,6 +65,8 @@ FORCE_INTERNAL_LIBTRE="no"
 USE_INTERNAL_ZLIB="no"
 FORCE_INTERNAL_ZLIB="no"
 FORCE_32BIT_BUILD="no"
+LDFLAGS_PREFIX=""
+LDFLAGS_SUFFIX=""
 
 
 #--------------------------------------------------------------------
@@ -556,7 +558,7 @@ AC_C_BIGENDIAN
 
 case "$PLATFORM" in
    AIX)
-      LDFLAGS="-no-undefined -Wl,-brtl $LDFLAGS"
+      LDFLAGS_PREFIX="-no-undefined -Wl,-brtl $LDFLAGS"
       ;;
    HP-UX)
       CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG"
@@ -1727,6 +1729,7 @@ fi
 #--------------------------------------------------------------------
 
 CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\""
+LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
