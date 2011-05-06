@@ -1,9 +1,16 @@
 ***************
-* 226 ==> 227 *
+* 227 ==> 228 *
 ***************
 
 - Maps from 1.0.x converted into network map objects
 - Table "web_maps" deleted
+
+
+***************
+* 226 ==> 227 *
+***************
+
+- Column "zone_guid" added to table "clusters"
 
 
 ***************
