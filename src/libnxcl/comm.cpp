@@ -241,6 +241,9 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 // Connect to server
 //
 
+#ifdef __HP_aCC
+extern "C"
+#endif
 DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const TCHAR *pszLogin, 
                                     const TCHAR *pszPassword, DWORD dwCertLen,
                                     BOOL (* pfSign)(BYTE *, DWORD, BYTE *, DWORD *, void *),

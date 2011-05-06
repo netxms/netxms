@@ -62,6 +62,8 @@ ODBC_LIBS=""
 FORCE_INTERNAL_EXPAT="no"
 USE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_LIBTRE="no"
+USE_INTERNAL_ZLIB="no"
+FORCE_INTERNAL_ZLIB="no"
 FORCE_32BIT_BUILD="no"
 
 
@@ -134,6 +136,12 @@ AC_ARG_WITH(internal-libtre,
 [AS_HELP_STRING(--with-internal-libtre,force use of bundled libtre)],
 [
 	FORCE_INTERNAL_LIBTRE="yes"
+])
+
+AC_ARG_WITH(internal-zlib,
+[AS_HELP_STRING(--with-internal-zlib,force use of bundled zlib)],
+[
+	FORCE_INTERNAL_ZLIB="yes"
 ])
 
 AC_ARG_WITH(sqlite,
@@ -302,7 +310,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2"
-	MODULES="libexpat libtre libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
+	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -931,8 +939,18 @@ if test "x$BUILD_SERVER" = "xyes" ; then
 fi
 
 if test "x$NEED_ZLIB" = "xyes"; then
-	AC_CHECK_HEADER(zlib.h,,AC_MSG_ERROR([*** ZLib development package not installed - please install first ***]))
-	AC_CHECK_LIB(z, deflate)
+	if test "x$FORCE_INTERNAL_ZLIB" = "xyes"; then
+		HAVE_ZLIB=no
+	else
+		HAVE_ZLIB=yes
+		AC_CHECK_HEADER(zlib.h,,HAVE_ZLIB=no)
+		if test "x$HAVE_ZLIB" = "xyes"; then
+			AC_CHECK_LIB(z, deflate, [], [ HAVE_ZLIB=no ])
+		fi
+	fi
+	if test "x$HAVE_ZLIB" = "xno"; then
+		MODULES="zlib $MODULES"
+	fi
 fi
 
 if test "x$FORCE_INTERNAL_EXPAT" = "xyes"; then
@@ -1712,6 +1730,7 @@ CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -D
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
+AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
 
 
 #--------------------------------------------------------------------
@@ -1900,6 +1919,7 @@ AC_CONFIG_FILES([
 	src/webui/nxhttpd/static/images/ctrlpanel/Makefile
 	src/webui/nxhttpd/static/images/objects/Makefile
 	src/webui/nxhttpd/static/images/status/Makefile
+	src/zlib/Makefile
 	sql/Makefile
 	tools/Makefile
 ])
@@ -1977,6 +1997,13 @@ if test "x${HAVE_LIBTRE}" = "xno"; then
 	echo "Use internal libtre     : YES"
 else
 	echo "Use internal libtre     : NO"
+fi
+if test "x${NEED_ZLIB}" = "xyes"; then
+	if test "x${HAVE_ZLIB}" = "xno"; then
+		echo "Use internal zlib       : YES"
+	else
+		echo "Use internal zlib       : NO"
+	fi
 fi
 if test "x${FORCE_32BIT_BUILD}" = "xyes"; then
 	echo "Force 32bit build       : YES"

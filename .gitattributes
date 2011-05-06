@@ -2317,6 +2317,7 @@ src/webui/webapp/src/main/webapp/resources/themes/slate/images/slate/window/left
 src/webui/webapp/src/main/webapp/resources/themes/slate/images/slate/window/left-right.png -text
 src/webui/webapp/src/main/webapp/resources/themes/slate/images/slate/window/right-corners.png -text
 src/webui/webapp/src/main/webapp/resources/themes/slate/images/slate/window/top-bottom.png -text
+src/zlib/Makefile.am -text
 src/zlib/nxzlib.vcproj -text
 tools/flex_bison.rule -text
 tools/mc.rule -text

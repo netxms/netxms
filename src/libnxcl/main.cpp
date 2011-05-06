@@ -409,7 +409,7 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Zone ID is already in use"),
 		_T("Invalid zone ID")
    };
-	return ((dwError >= 0) && (dwError <= RCC_INVALID_ZONE_ID)) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_INVALID_ZONE_ID) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

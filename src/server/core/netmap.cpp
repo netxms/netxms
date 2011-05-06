@@ -154,10 +154,10 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
    for(int i = 0; i < m_numLinks; i++)
    {
       _sntprintf(query, 1024, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2) VALUES (%d,%d,%d,%d,%s,%s,%s)"),
-		           m_dwId, m_links[i]->getElement1(), m_links[i]->getElement2(),
+		           (int)m_dwId, (int)m_links[i]->getElement1(), (int)m_links[i]->getElement2(),
 					  m_links[i]->getType(), (const TCHAR *)DBPrepareString(hdb, m_links[i]->getName(), 255),
 					  (const TCHAR *)DBPrepareString(hdb, m_links[i]->getConnector1Name(), 63),
-					  (const TCHAR *)DBPrepareString(hdb, m_links[i]->getConnector2Name()), 63);
+					  (const TCHAR *)DBPrepareString(hdb, m_links[i]->getConnector2Name(), 63));
       DBQuery(hdb, query);
    }
 
