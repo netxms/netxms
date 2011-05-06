@@ -10714,7 +10714,7 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 void ClientSession::sendLibraryImage(CSCPMessage *request)
 {
 	CSCPMessage msg;
-	TCHAR guidText[64];
+	TCHAR guidText[64], absFileName[MAX_PATH];
 	DWORD rcc = RCC_SUCCESS;
 
 	msg.SetId(request->GetId());
@@ -10748,31 +10748,17 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 
 				msg.SetVariable(VID_IMAGE_PROTECTED, (WORD)DBGetFieldLong(result, 0, 3));
 
-				TCHAR absFileName[MAX_PATH];
 				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
 				DbgPrintf(5, _T("sendLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
-				FILE *f = _tfopen(absFileName, _T("rb"));
-				if (f != NULL)
-				{
 #ifdef _WIN32
-					struct _stat st;
+				struct _stat st;
 #else
-					struct stat st;
+				struct stat st;
 #endif
-					if (_tstat(absFileName, &st) == 0 && S_ISREG(st.st_mode))
-					{
-						BYTE *rawData = (BYTE *)malloc(st.st_size);
-						// TODO: check for null
-						fread(rawData, st.st_size, 1, f);
-						msg.SetVariable(VID_IMAGE_DATA, rawData, st.st_size);
-						free(rawData);
-					}
-					else
-					{
-						rcc = RCC_IO_ERROR;
-					}
-					fclose(f);
+				if (_tstat(absFileName, &st) == 0 && S_ISREG(st.st_mode))
+				{
+					rcc = RCC_SUCCESS;
 				}
 				else
 				{
@@ -10794,6 +10780,9 @@ void ClientSession::sendLibraryImage(CSCPMessage *request)
 
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
+
+	if (rcc == RCC_SUCCESS)
+		sendFile(absFileName, request->GetId());
 }
 
 

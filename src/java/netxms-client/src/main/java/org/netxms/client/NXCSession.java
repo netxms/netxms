@@ -4056,8 +4056,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariable(NXCPCodes.VID_GUID, guid);
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
-
-		return new LibraryImage(response);
+		final File imageFile = waitForFile(msg.getMessageId(), 600000);
+		return new LibraryImage(response, imageFile);
 	}
 
 	/* (non-Javadoc)

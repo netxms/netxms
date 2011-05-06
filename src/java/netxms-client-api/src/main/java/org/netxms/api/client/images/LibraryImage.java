@@ -18,6 +18,9 @@
  */
 package org.netxms.api.client.images;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.UUID;
 
 import org.netxms.base.NXCPCodes;
@@ -68,14 +71,38 @@ public class LibraryImage
 	 * 
 	 * @param msg Message containing object's data
 	 */
-	public LibraryImage(final NXCPMessage msg)
+	public LibraryImage(final NXCPMessage msg, File imageFile)
 	{
 		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		category = msg.getVariableAsString(NXCPCodes.VID_CATEGORY);
-		binaryData = msg.getVariableAsBinary(NXCPCodes.VID_IMAGE_DATA);
 		mimeType = msg.getVariableAsString(NXCPCodes.VID_IMAGE_MIMETYPE);
 		imageProtected = msg.getVariableAsBoolean(NXCPCodes.VID_IMAGE_PROTECTED);
+		
+		binaryData = new byte[(int)imageFile.length()];
+		InputStream in = null;
+		try
+		{
+			in = new FileInputStream(imageFile);
+			in.read(binaryData);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (in != null)
+					in.close();
+				imageFile.delete();
+			}
+			catch(Exception e)
+			{
+			}
+		}
+		
 		this.complete = true;
 	}
 
