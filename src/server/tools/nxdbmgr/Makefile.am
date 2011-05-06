@@ -5,6 +5,7 @@ nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp export.cpp import.cpp \
                   init.cpp mm.cpp reindex.cpp unlock.cpp upgrade.cpp
 nxdbmgr_LDADD = ../../../libnetxms/libnetxms.la \
                 ../../../db/libnxdb/libnxdb.la \
+                ../../../libnxmap/libnxmap.la \
                 ../../libnxsrv/libnxsrv.la \
                 ../../../snmp/libnxsnmp/libnxsnmp.la \
                 ../../../sqlite/libnxsqlite.la
