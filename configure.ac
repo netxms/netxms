@@ -1409,6 +1409,24 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
+AC_MSG_CHECKING(whether iconv supports UTF-16)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UTF-16")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UTF_16, 1, Define to 1 if iconv supports UTF-16)
+    valid_ucs2_code="UTF-16"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
 AC_MSG_CHECKING(whether iconv supports UCS-4-INTERNAL)
 AC_RUN_IFELSE(
   [AC_LANG_PROGRAM([
@@ -1494,6 +1512,24 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(yes)
     AC_DEFINE(HAVE_ICONV_UCS_4LE, 1, Define to 1 if iconv supports UCS-4LE)
     valid_ucs4_code="UCS-4LE"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv supports UTF-32)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UTF-32")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UTF_32, 1, Define to 1 if iconv supports UTF-32)
+    valid_ucs4_code="UTF-32"
   ],
   [ AC_MSG_RESULT(no) ],
   [ AC_MSG_RESULT(no) ]

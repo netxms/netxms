@@ -60,6 +60,8 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE_A;
 #define UCS2_CODEPAGE_NAME	"UCS-2"
 #elif HAVE_ICONV_UCS2
 #define UCS2_CODEPAGE_NAME	"UCS2"
+#elif HAVE_ICONV_UTF_16
+#define UCS2_CODEPAGE_NAME	"UTF-16"
 #else
 #ifdef UNICODE
 #error Cannot determine valid UCS-2 codepage name
@@ -79,6 +81,8 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE_A;
 #define UCS4_CODEPAGE_NAME	"UCS-4"
 #elif HAVE_ICONV_UCS4
 #define UCS4_CODEPAGE_NAME	"UCS4"
+#elif HAVE_ICONV_UTF_32
+#define UCS4_CODEPAGE_NAME	"UTF-32"
 #else
 #if defined(UNICODE) && defined(UNICODE_UCS4)
 #error Cannot determine valid UCS-4 codepage name
