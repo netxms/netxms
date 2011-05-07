@@ -18,7 +18,10 @@
  */
 package org.netxms.client;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -139,6 +142,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private static final int MAX_DCI_DATA_ROWS = 200000;
 	private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
 	private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
+	private static final int FILE_BUFFER_SIZE = 128 * 1024 * 1024; // 128k
 
 	// Internal synchronization objects
 	private final Semaphore syncObjects = new Semaphore(1);
@@ -842,6 +846,55 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final OutputStream outputStream = connSocket.getOutputStream();
 		final byte[] message = msg.createNXCPMessage();
 		outputStream.write(message);
+	}
+
+	/**
+	 * Send file over CSCP
+	 * 
+	 * @param file
+	 *           source file to be sent
+	 * @return Message ID
+	 * @throws IOException
+	 * @throws NXCException
+	 */
+	public long sendFile(final File file) throws IOException, NXCException
+	{
+		final BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file));
+
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_FILE_DATA);
+		long messageId = msg.getMessageId();
+		msg.setBinaryMessage(true);
+
+		boolean success = false;
+		while(true)
+		{
+			final byte[] buffer = new byte[FILE_BUFFER_SIZE];
+			final int bytesRead = inputStream.read(buffer);
+			if (bytesRead < FILE_BUFFER_SIZE)
+			{
+				msg.setEndOfFile(true);
+			}
+
+			msg.setBinaryData(Arrays.copyOf(buffer, bytesRead));
+			sendMessage(msg);
+
+			if (bytesRead < FILE_BUFFER_SIZE)
+			{
+				success = true;
+				break;
+			}
+		}
+
+		inputStream.close();
+
+		if (!success)
+		{
+			NXCPMessage abortMessage = new NXCPMessage(NXCPCodes.CMD_ABORT_FILE_TRANSFER, messageId);
+			abortMessage.setBinaryMessage(true);
+			sendMessage(abortMessage);
+		}
+
+		return messageId;
 	}
 
 	/*
@@ -2080,7 +2133,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			waitForRCC(msg.getMessageId());
 
 			NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
-			if (!response.isRawMessage())
+			if (!response.isBinaryMessage())
 				throw new NXCException(RCC.INTERNAL_ERROR);
 
 			rowsReceived = parseDataRows(response.getBinaryData(), data);

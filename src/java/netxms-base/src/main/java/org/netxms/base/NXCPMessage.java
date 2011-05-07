@@ -341,6 +341,15 @@ public class NXCPMessage
 			outputStream.writeInt((int)messageId);
 			outputStream.writeInt((int)controlData);
 		}
+		else if ((messageFlags & MF_BINARY) == MF_BINARY) {
+			outputStream.writeShort(messageCode); // wCode
+			outputStream.writeShort(messageFlags); // wFlags
+			final int packetSize = binaryData.length + HEADER_SIZE + (8 - ((binaryData.length + HEADER_SIZE) % 8)) & 7;
+			outputStream.writeInt(packetSize); // dwSize (padded to 8 bytes boundaries)
+			outputStream.writeInt((int)messageId); // dwId
+			outputStream.writeInt(binaryData.length); // dwNumVars, here used for real size of the payload (w/o headers and padding)
+			outputStream.write(binaryData);
+		}
 		else
 		{
 			// Create byte array with all variables
@@ -375,14 +384,42 @@ public class NXCPMessage
 	{
 		return binaryData;
 	}
-		
+
+	/**
+	 * Set data for raw message.
+	 * 
+	 * @param binaryData
+	 */
+	public void setBinaryData(final byte[] binaryData)
+	{
+		this.binaryData = binaryData;
+	}
+	
 	/**
 	 * Return true if message is a raw message
 	 * @return raw message flag
 	 */
-	public boolean isRawMessage()
+	public boolean isBinaryMessage()
 	{
 		return (messageFlags & MF_BINARY) == MF_BINARY;
+	}
+
+	/**
+	 * Set or clear raw (binary) message flag
+	 * 
+	 * @param isControl
+	 *           true to set control message flag
+	 */
+	public void setBinaryMessage(boolean isRaw)
+	{
+		if (isRaw)
+		{
+			messageFlags |= MF_BINARY;
+		}
+		else
+		{
+			messageFlags &= ~MF_BINARY;
+		}
 	}
 	
 	/**
