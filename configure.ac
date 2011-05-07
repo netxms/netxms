@@ -653,7 +653,6 @@ if test "x$CC" = "xgcc" ; then
 				[ 
 					LDFLAGS="-maix32 $LDFLAGS"
 					OBJECT_MODE=32
-					AC_SUBST(OBJECT_MODE)
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 
@@ -668,7 +667,6 @@ if test "x$CC" = "xgcc" ; then
 				[ 
 					LDFLAGS="-maix64 $LDFLAGS"
 					OBJECT_MODE=64
-					AC_SUBST(OBJECT_MODE)
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 
@@ -1935,6 +1933,16 @@ sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.n
 # On HP-UX, libtool passes +b instead of -Wl,+b even if gcc/g++ used as linker 
 if test "x$CC" = "xgcc" && test "x$PLATFORM" = "xHP-UX"; then
 	sed "s,hardcode_libdir_flag_spec_ld=,#hardcode_libdir_flag_spec_ld=,g" < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
+fi
+
+# On AIX, correct OBJECT_MODE must be set before linking
+# To avoid manual setting by user, we add this to libtool script
+if test "x$PLATFORM" = "xAIX"; then
+	head -n 1 ./libtool > ./libtool.new
+	echo "export OBJECT_MODE=$OBJECT_MODE" >> ./libtool.new
+	tail -n +2 ./libtool >> ./libtool.new
+	mv libtool.new libtool
+	chmod +x ./libtool
 fi
 
 #--------------------------------------------------------------------
