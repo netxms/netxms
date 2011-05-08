@@ -101,7 +101,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ "Sample.Version",				H_Version,				NULL,
 		DCI_DT_STRING, "Sample subagent version" },
-	{ "Skeleton.Echo(*)",				H_Echo,					NULL,
+	{ "Sample.Echo(*)",				H_Echo,					NULL,
 		DCI_DT_STRING, "Echoes string back" },
 	{ "Sample.Random",					H_Random,				NULL,
 		DCI_DT_INT,    "Generates random number in range -10 .. 10" }
