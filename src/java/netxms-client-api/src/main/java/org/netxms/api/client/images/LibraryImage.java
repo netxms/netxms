@@ -22,13 +22,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.UUID;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
- * This class represents image in image library 
- *
+ * This class represents image in image library
+ * 
  */
 public class LibraryImage
 {
@@ -57,7 +56,8 @@ public class LibraryImage
 	 * @param mimeType
 	 * @param imageProtected
 	 */
-	public LibraryImage(final UUID guid, final String name, final String category, final String mimeType,	final boolean imageProtected)
+	public LibraryImage(final UUID guid, final String name, final String category, final String mimeType,
+			final boolean imageProtected)
 	{
 		this.guid = guid;
 		this.name = name;
@@ -69,7 +69,8 @@ public class LibraryImage
 	/**
 	 * Create object from NXCP message
 	 * 
-	 * @param msg Message containing object's data
+	 * @param msg
+	 *           Message containing object's data
 	 */
 	public LibraryImage(final NXCPMessage msg, File imageFile)
 	{
@@ -78,7 +79,7 @@ public class LibraryImage
 		category = msg.getVariableAsString(NXCPCodes.VID_CATEGORY);
 		mimeType = msg.getVariableAsString(NXCPCodes.VID_IMAGE_MIMETYPE);
 		imageProtected = msg.getVariableAsBoolean(NXCPCodes.VID_IMAGE_PROTECTED);
-		
+
 		binaryData = new byte[(int)imageFile.length()];
 		InputStream in = null;
 		try
@@ -95,14 +96,16 @@ public class LibraryImage
 			try
 			{
 				if (in != null)
+				{
 					in.close();
+				}
 				imageFile.delete();
 			}
 			catch(Exception e)
 			{
 			}
 		}
-		
+
 		this.complete = true;
 	}
 
@@ -119,15 +122,13 @@ public class LibraryImage
 	public void fillMessage(final NXCPMessage msg)
 	{
 		if (guid != null)
+		{
 			msg.setVariable(NXCPCodes.VID_GUID, guid);
+		}
 		msg.setVariable(NXCPCodes.VID_NAME, name);
 		if (category != null)
 		{
 			msg.setVariable(NXCPCodes.VID_CATEGORY, category);
-		}
-		if (binaryData != null)
-		{
-			msg.setVariable(NXCPCodes.VID_IMAGE_DATA, binaryData);
 		}
 	}
 
@@ -232,7 +233,9 @@ public class LibraryImage
 		this.mimeType = mimeType;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
