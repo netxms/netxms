@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
@@ -67,8 +68,15 @@ public class ImageProvider
 			{
 				final LibraryImage completeLibraryImage = session.getImage(libraryImage.getGuid());
 				final ByteArrayInputStream stream = new ByteArrayInputStream(completeLibraryImage.getBinaryData());
-				final Image image = new Image(display, stream);
-				cache.put(completeLibraryImage.getGuid(), image);
+				try {
+					final Image image = new Image(display, stream);
+					cache.put(completeLibraryImage.getGuid(), image);
+				}
+				catch (SWTException e)
+				{
+					// TODO: log?
+					cache.put(completeLibraryImage.getGuid(), missingImage);
+				}
 
 				for(final ImageUpdateListener listener : updateListeners)
 				{

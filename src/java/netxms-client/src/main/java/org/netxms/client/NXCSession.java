@@ -142,7 +142,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private static final int MAX_DCI_DATA_ROWS = 200000;
 	private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
 	private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
-	private static final int FILE_BUFFER_SIZE = 128 * 1024 * 1024; // 128k
+	private static final int FILE_BUFFER_SIZE = 128 * 1024; // 128k
 
 	// Internal synchronization objects
 	private final Semaphore syncObjects = new Semaphore(1);

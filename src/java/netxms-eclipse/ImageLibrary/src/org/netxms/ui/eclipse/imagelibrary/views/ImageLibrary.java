@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingFormatArgumentException;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -20,6 +21,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Image;
@@ -40,6 +42,7 @@ import org.netxms.nebula.widgets.gallery.Gallery;
 import org.netxms.nebula.widgets.gallery.GalleryItem;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImagePropertiesDialog;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -185,12 +188,12 @@ public class ImageLibrary extends ViewPart
 				}
 				catch(NetXMSClientException e)
 				{
-					//FIXME
+					// FIXME
 					e.printStackTrace();
 				}
 				catch(IOException e)
 				{
-					//FIXME
+					// FIXME
 					e.printStackTrace();
 				}
 			}
@@ -455,7 +458,15 @@ public class ImageLibrary extends ViewPart
 				if (binaryData != null)
 				{
 					final ByteArrayInputStream stream = new ByteArrayInputStream(binaryData);
-					imageItem.setImage(new Image(Display.getDefault(), stream));
+					try
+					{
+						imageItem.setImage(new Image(Display.getDefault(), stream));
+					}
+					catch(SWTException e)
+					{
+						// TODO: log?
+						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
+					}
 				}
 				imageItem.setData(completeImage);
 			}
