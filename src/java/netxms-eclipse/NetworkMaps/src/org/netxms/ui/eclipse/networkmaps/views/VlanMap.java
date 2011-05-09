@@ -18,11 +18,18 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.NXCException;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.objects.Node;
+import org.netxms.client.topology.Port;
+import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 
@@ -71,7 +78,8 @@ public class VlanMap extends NetworkMap
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				//collectVlanInfo(rootObject);
+				NetworkMapPage page = new NetworkMapPage();
+				collectVlanInfo(page, (Node)rootObject);
 			}
 
 			@Override
@@ -89,5 +97,30 @@ public class VlanMap extends NetworkMap
 				return "Cannot get VLAN information for " + rootObject.getObjectName();
 			}
 		}.start();
+	}
+	
+	/**
+	 * @param page
+	 * @param root
+	 * @throws Exception 
+	 * @throws NXCException 
+	 */
+	private void collectVlanInfo(NetworkMapPage page, Node root) throws Exception
+	{
+		if (page.findObjectElement(root.getObjectId()) != null)
+			return;
+		
+		page.addElement(new NetworkMapObject(mapPage.createElementId(), root.getObjectId()));
+		
+		List<VlanInfo> vlans = session.getVlans(root.getObjectId());
+		for(VlanInfo vlan : vlans)
+		{
+			if (vlan.getVlanId() == vlanId)
+			{
+				Port[] ports = vlan.getPorts();
+				break;
+			}
+		}
+
 	}
 }
