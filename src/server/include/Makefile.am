@@ -26,4 +26,5 @@ EXTRA_DIST = \
 	nxcore_maps.h \
 	nxcore_situations.h \
 	nxmodule.h \
-	nxsrvapi.h
+	nxsrvapi.h \
+   nddrv.h

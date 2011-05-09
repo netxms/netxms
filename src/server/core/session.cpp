@@ -419,7 +419,7 @@ void ClientSession::readThread()
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
          DebugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
-         if ((pRawMsg->wCode == CMD_FILE_DATA) || 
+         if ((pRawMsg->wCode == CMD_FILE_DATA) ||
              (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
          {
             if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->dwId))
@@ -434,7 +434,7 @@ void ClientSession::readThread()
 
                         close(m_hCurrFile);
                         m_hCurrFile = -1;
-                  
+
                         msg.SetCode(CMD_REQUEST_COMPLETED);
                         msg.SetId(pRawMsg->dwId);
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -450,7 +450,7 @@ void ClientSession::readThread()
 
                      close(m_hCurrFile);
                      m_hCurrFile = -1;
-               
+
                      msg.SetCode(CMD_REQUEST_COMPLETED);
                      msg.SetId(pRawMsg->dwId);
                      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
@@ -464,7 +464,7 @@ void ClientSession::readThread()
                   // Abort current file transfer because of client's problem
                   close(m_hCurrFile);
                   m_hCurrFile = -1;
-               
+
                   onFileUpload(FALSE);
                }
             }
@@ -10804,12 +10804,17 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	TCHAR name[MAX_DB_STRING] = _T("");
 	TCHAR category[MAX_DB_STRING] = _T("");
 	TCHAR mimetype[MAX_DB_STRING] = _T("");
+	TCHAR absFileName[MAX_PATH] = _T("");
 
 	if (request->IsVariableExist(VID_GUID))
+	{
 		request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+	}
 
 	if (uuid_is_null(guid))
+	{
 		uuid_generate(guid);
+	}
 
 	TCHAR guidText[64];
 	uuid_to_string(guid, guidText);
@@ -10817,9 +10822,10 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	request->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
 	request->GetVariableStr(VID_CATEGORY, category, MAX_DB_STRING);
 	request->GetVariableStr(VID_IMAGE_MIMETYPE, mimetype, MAX_DB_STRING);
-	DWORD imageSize = request->GetVariableBinary(VID_IMAGE_DATA, NULL, 0);
-	BYTE *imageData = (BYTE *)malloc(imageSize);
-	request->GetVariableBinary(VID_IMAGE_DATA, imageData, imageSize);
+
+	//DWORD imageSize = request->GetVariableBinary(VID_IMAGE_DATA, NULL, 0);
+	//BYTE *imageData = (BYTE *)malloc(imageSize);
+	//request->GetVariableBinary(VID_IMAGE_DATA, imageData, imageSize);
 
 	// Set default values for empty fields
 	if (name[0] == 0)
@@ -10829,7 +10835,8 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	if (mimetype[0] == 0)
 		_tcscpy(mimetype, _T("image/png"));
 
-	DebugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guidText, name, category, (int)imageSize);
+	//DebugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s, imageSize=%d"), guidText, name, category, (int)imageSize);
+	DebugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s"), guidText, name, category);
 
 	if (rcc == RCC_SUCCESS)
 	{
@@ -10872,18 +10879,26 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 				if (DBQuery(g_hCoreDB, query))
 				{
 					// DB up to date, update file)
-					TCHAR absFileName[MAX_PATH];
 					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
 					DbgPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
-					FILE *f = _tfopen(absFileName, _T("wb"));
-					if (f != NULL)
+
+					if (m_hCurrFile == -1)
 					{
-						fwrite(imageData, imageSize, 1, f);
-						fclose(f);
+						m_hCurrFile = _topen(absFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+						if (m_hCurrFile != -1)
+						{
+							m_dwFileRqId = request->GetId();
+							m_dwUploadCommand = CMD_MODIFY_IMAGE;
+							m_dwUploadData = 0;
+						}
+						else
+						{
+							rcc = RCC_IO_ERROR;
+						}
 					}
 					else
 					{
-						rcc = RCC_IO_ERROR;
+						rcc = RCC_RESOURCE_BUSY;
 					}
 				}
 				else
@@ -10900,13 +10915,10 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 		}
 	}
 
-
 	if (rcc == RCC_SUCCESS)
 	{
 		msg.SetVariable(VID_GUID, guid, UUID_LENGTH);
 	}
-
-	free(imageData);
 
 	msg.SetVariable(VID_RCC, rcc);
 	sendMessage(&msg);
