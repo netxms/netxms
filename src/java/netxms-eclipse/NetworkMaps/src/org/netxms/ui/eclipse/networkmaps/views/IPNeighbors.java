@@ -44,7 +44,7 @@ public class IPNeighbors extends NetworkMap
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName("IP Neighbors - " + ((rootObject != null) ? rootObject.getObjectName() : "<error>"));
+		setPartName("IP Neighbors - " + rootObject.getObjectName());
 	}
 
 	/**

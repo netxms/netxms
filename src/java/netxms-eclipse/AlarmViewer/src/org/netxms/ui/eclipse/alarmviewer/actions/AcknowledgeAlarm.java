@@ -62,11 +62,16 @@ public class AcknowledgeAlarm implements IObjectActionDelegate
 		{
 			IStatus status;
 			
+			monitor.beginTask("Acknowledging alarms...", selection.length);
 			try
 			{
-				for(int i = 0; i < selection.length; i++)
+				for(int i = 0; (i < selection.length) && !monitor.isCanceled(); i++)
+				{
 					if (selection[i] instanceof Alarm)
 						((NXCSession)ConsoleSharedData.getSession()).acknowledgeAlarm(((Alarm)selection[i]).getId());
+					monitor.worked(1);
+				}
+				monitor.done();
 				status = Status.OK_STATUS;
 			}
 			catch(Exception e)

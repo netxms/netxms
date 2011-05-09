@@ -26,7 +26,7 @@ public class Layer2Topology extends NetworkMap
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		setPartName("Layer 2 Topology - " + ((rootObject != null) ? rootObject.getObjectName() : "<error>"));
+		setPartName("Layer 2 Topology - " + rootObject.getObjectName());
 	}
 
 	/* (non-Javadoc)

@@ -62,11 +62,16 @@ public class TerminateAlarm implements IObjectActionDelegate
 		{
 			IStatus status;
 			
+			monitor.beginTask("Terminating alarms...", selection.length);
 			try
 			{
-				for(int i = 0; i < selection.length; i++)
+				for(int i = 0; (i < selection.length) && !monitor.isCanceled(); i++)
+				{
 					if (selection[i] instanceof Alarm)
 						((NXCSession)ConsoleSharedData.getSession()).terminateAlarm(((Alarm)selection[i]).getId());
+					monitor.worked(1);
+				}
+				monitor.done();
 				status = Status.OK_STATUS;
 			}
 			catch(Exception e)

@@ -51,7 +51,6 @@ public class SlotView extends Canvas implements PaintListener
 	
 	private List<PortInfo> ports = new ArrayList<PortInfo>();
 	private int rowCount = 2;
-	private int slotNum;
 	private String slotName;
 	private Point nameSize;
 	private boolean portStatusVisible = true;
@@ -60,12 +59,10 @@ public class SlotView extends Canvas implements PaintListener
 	 * @param parent
 	 * @param style
 	 */
-	public SlotView(Composite parent, int style, int slotNum)
+	public SlotView(Composite parent, int style, String slotName)
 	{
 		super(parent, style | SWT.BORDER);
-		this.slotNum = slotNum;
-		
-		slotName = "Slot\n" + Integer.toString(slotNum);
+		this.slotName = slotName;
 		
 		GC gc = new GC(getDisplay());
 		nameSize = gc.textExtent(slotName);

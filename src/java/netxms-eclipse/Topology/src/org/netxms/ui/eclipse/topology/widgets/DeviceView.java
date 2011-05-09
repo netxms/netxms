@@ -104,7 +104,7 @@ public class DeviceView extends Composite
 			SlotView sv = slots.get(slot);
 			if (sv == null)
 			{
-				sv = new SlotView(this, SWT.NONE, slot);
+				sv = new SlotView(this, SWT.NONE, "Slot " + Integer.toString(slot));
 				sv.setPortStatusVisible(portStatusVisible);
 				slots.put(slot, sv);
 			}

@@ -134,7 +134,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		super.init(site);
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		rootObject = session.findObjectById(Long.parseLong(site.getSecondaryId()));
+		String[] parts = site.getSecondaryId().split("&");
+		rootObject = session.findObjectById(Long.parseLong((parts.length > 0) ? parts[0] : site.getSecondaryId()));
 		if (rootObject == null)
 			throw new PartInitException("Root object for this map is no longer exist or is not accessible");
 	
