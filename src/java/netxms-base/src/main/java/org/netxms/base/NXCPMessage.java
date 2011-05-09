@@ -344,7 +344,7 @@ public class NXCPMessage
 		else if ((messageFlags & MF_BINARY) == MF_BINARY) {
 			outputStream.writeShort(messageCode); // wCode
 			outputStream.writeShort(messageFlags); // wFlags
-			final int packetSize = binaryData.length + HEADER_SIZE + (8 - ((binaryData.length + HEADER_SIZE) % 8)) & 7;
+			final int packetSize = binaryData.length + HEADER_SIZE + ((8 - ((binaryData.length + HEADER_SIZE) % 8)) & 7);
 			outputStream.writeInt(packetSize); // dwSize (padded to 8 bytes boundaries)
 			outputStream.writeInt((int)messageId); // dwId
 			outputStream.writeInt(binaryData.length); // dwNumVars, here used for real size of the payload (w/o headers and padding)

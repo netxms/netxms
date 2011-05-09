@@ -859,10 +859,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException
 	 * @throws NXCException
 	 */
-	private void sendFile(final long requestId, final File file) throws IOException, NXCException
+	protected void sendFile(final long requestId, final File file) throws IOException, NXCException
 	{
 		final InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
-		sendBinaryMessage(requestId, inputStream);
+		sendFileStream(requestId, inputStream);
 		inputStream.close();
 	}
 
@@ -874,10 +874,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException
 	 * @throws NXCException
 	 */
-	private void sendBinaryMessage(final long requestId, final byte[] data) throws IOException, NXCException
+	protected void sendFile(final long requestId, final byte[] data) throws IOException, NXCException
 	{
 		final InputStream inputStream = new ByteArrayInputStream(data);
-		sendBinaryMessage(requestId, inputStream);
+		sendFileStream(requestId, inputStream);
 		inputStream.close();
 	}
 
@@ -890,7 +890,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException
 	 * @throws NXCException
 	 */
-	private void sendBinaryMessage(final long requestId, final InputStream inputStream) throws IOException, NXCException
+	private void sendFileStream(final long requestId, final InputStream inputStream) throws IOException, NXCException
 	{
 		NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
 		msg.setBinaryMessage(true);
@@ -4218,7 +4218,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final UUID imageGuid = response.getVariableAsUUID(NXCPCodes.VID_GUID);
 		image.setGuid(imageGuid);
 
-		sendBinaryMessage(msg.getMessageId(), image.getBinaryData());
+		sendFile(msg.getMessageId(), image.getBinaryData());
 
 		return image;
 	}
@@ -4264,7 +4264,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 
-		sendBinaryMessage(msg.getMessageId(), image.getBinaryData());
+		sendFile(msg.getMessageId(), image.getBinaryData());
 	}
 
 	/**
