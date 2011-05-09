@@ -124,6 +124,16 @@ public class NetworkMapPage
 			}
 		}
 	}
+	
+	/**
+	 * Remove link between objects
+	 * 
+	 * @param link
+	 */
+	public void removeLink(NetworkMapLink link)
+	{
+		links.remove(link);
+	}
 
 	/**
 	 * @return the name

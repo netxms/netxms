@@ -53,6 +53,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
@@ -170,7 +171,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 				while(it.hasNext())
 				{
 					Object object = it.next();
-					if (!((object instanceof Node) || (object instanceof Container) || (object instanceof Subnet)))
+					if (!((object instanceof Node) || (object instanceof Container) || (object instanceof Subnet) || (object instanceof Condition)))
 						return false;
 				}
 
@@ -268,7 +269,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				removeSelectedObjects();
+				removeSelectedElements();
 			}
 		};
 		actionRemove.setAccelerator(SWT.CTRL | 'R');
@@ -341,6 +342,17 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		manager.add(actionRemove);
 		manager.add(new Separator());
 		super.fillObjectContextMenu(manager);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillLinkContextMenu(org.eclipse.jface.action.IMenuManager)
+	 */
+	@Override
+	protected void fillLinkContextMenu(IMenuManager manager)
+	{
+		manager.add(actionRemove);
+		manager.add(new Separator());
+		super.fillLinkContextMenu(manager);
 	}
 
 	/*
@@ -465,9 +477,9 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	}
 
 	/**
-	 * Remove currently selected objects
+	 * Remove currently selected map elements
 	 */
-	private void removeSelectedObjects()
+	private void removeSelectedElements()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
@@ -485,6 +497,10 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 			else if (element instanceof NetworkMapElement)
 			{
 				mapPage.removeElement(((NetworkMapElement)element).getId());
+			}
+			else if (element instanceof NetworkMapLink)
+			{
+				mapPage.removeLink((NetworkMapLink)element);
 			}
 		}
 		saveMap();
@@ -611,7 +627,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	@Override
 	protected boolean isSelectableElement(Object element)
 	{
-		return element instanceof NetworkMapDecoration;
+		return (element instanceof NetworkMapDecoration) || (element instanceof NetworkMapLink);
 	}
 
 	/* (non-Javadoc)

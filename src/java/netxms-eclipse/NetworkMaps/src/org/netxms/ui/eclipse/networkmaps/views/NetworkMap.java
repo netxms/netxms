@@ -71,6 +71,7 @@ import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -100,6 +101,12 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	
 	private static final String[] layoutAlgorithmNames = 
 		{ "&Spring", "&Radial", "&Horizontal tree", "&Vertical tree", "S&parse vertical tree" };
+	
+	private static final int SELECTION_EMPTY = 0;
+	private static final int SELECTION_MIXED = 1;
+	private static final int SELECTION_OBJECTS = 2;
+	private static final int SELECTION_ELEMENTS = 3;
+	private static final int SELECTION_LINKS = 4;
 	
 	protected NXCSession session;
 	protected GenericObject rootObject;
@@ -520,18 +527,23 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener()
 		{
-			public void menuAboutToShow(IMenuManager mgr)
+			public void menuAboutToShow(IMenuManager manager)
 			{
-				if (currentSelection.isEmpty())
+				int selType = analyzeSelection(currentSelection);
+				switch(selType)
 				{
-					fillMapContextMenu(mgr);
-				}
-				else
-				{
-					if (isObjectOnlySelection(currentSelection))
-						fillObjectContextMenu(mgr);
-					else
-						fillElementContextMenu(mgr);
+					case SELECTION_EMPTY:
+						fillMapContextMenu(manager);
+						break;
+					case SELECTION_OBJECTS:
+						fillObjectContextMenu(manager);
+						break;
+					case SELECTION_ELEMENTS:
+						fillElementContextMenu(manager);
+						break;
+					case SELECTION_LINKS:
+						fillLinkContextMenu(manager);
+						break;
 				}
 			}
 		});
@@ -572,15 +584,23 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	
 	/**
 	 * Fill context menu for map element
-	 * @param mgr Menu manager
+	 * @param manager Menu manager
 	 */
-	protected void fillElementContextMenu(IMenuManager mgr)
+	protected void fillElementContextMenu(IMenuManager manager)
+	{
+	}
+	
+	/**
+	 * Fill context menu for link between objects
+	 * @param manager Menu manager
+	 */
+	protected void fillLinkContextMenu(IMenuManager manager)
 	{
 	}
 	
 	/**
 	 * Fill context menu for map view
-	 * @param mgr Menu manager
+	 * @param manager Menu manager
 	 */
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
@@ -607,16 +627,42 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	private boolean isObjectOnlySelection(IStructuredSelection selection)
+	private int analyzeSelection(IStructuredSelection selection)
 	{
+		if (selection.isEmpty())
+			return SELECTION_EMPTY;
+		
 		Iterator it = selection.iterator();
+		Object first = it.next();
+		int type;
+		Class firstClass;
+		if (first instanceof GenericObject)
+		{
+			type = SELECTION_OBJECTS;
+			firstClass = GenericObject.class;
+		}
+		else if (first instanceof NetworkMapElement)
+		{
+			type = SELECTION_ELEMENTS;
+			firstClass = NetworkMapElement.class;
+		}
+		else if (first instanceof NetworkMapLink)
+		{
+			type = SELECTION_LINKS;
+			firstClass = NetworkMapLink.class;
+		}
+		else
+		{
+			return SELECTION_MIXED;
+		}
+		
 		while(it.hasNext())
 		{
-			Object o = it.next();
-			if (!(o instanceof GenericObject))
-				return false;
+			final Object o = it.next();
+			if (!firstClass.isInstance(o))
+				return SELECTION_MIXED;
 		}
-		return true;
+		return type;
 	}
 	
 	/**

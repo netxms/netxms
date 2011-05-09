@@ -236,4 +236,13 @@ public class NetworkMapLink
 			       (((NetworkMapLink)obj).element2 == this.element2);
 		return super.equals(obj);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode()
+	{
+		return (int)((element1 << 16) | (element2 & 0xFFFF));
+	}
 }
