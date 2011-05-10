@@ -54,7 +54,8 @@ const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Inte
                                _T("NetworkService"), _T("VPNConnector"), _T("Condition"),
                                _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
                                _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
-                               _T("NetworkMapGroup"), _T("NetworkMap") };
+                               _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"), 
+                               _T("Dashboard") };
 
 
 //
@@ -731,7 +732,7 @@ DWORD FindLocalMgmtNode()
 
 static void RecalcStatusCallback(NetObj *object, void *data)
 {
-	object->CalculateCompoundStatus();
+	object->calculateCompoundStatus();
 }
 
 
@@ -1037,7 +1038,7 @@ BOOL LoadObjects()
          if (pTemplate->CreateFromDB(dwId))
          {
             NetObjInsert(pTemplate, FALSE);  // Insert into indexes
-				pTemplate->CalculateCompoundStatus();	// Force status change to NORMAL
+				pTemplate->calculateCompoundStatus();	// Force status change to NORMAL
          }
          else     // Object load failed
          {
@@ -1072,7 +1073,7 @@ BOOL LoadObjects()
          if (policy->CreateFromDB(dwId))
          {
             NetObjInsert(policy, FALSE);  // Insert into indexes
-				policy->CalculateCompoundStatus();	// Force status change to NORMAL
+				policy->calculateCompoundStatus();	// Force status change to NORMAL
          }
          else     // Object load failed
          {
@@ -1224,11 +1225,11 @@ BOOL LoadObjects()
    g_bModificationsLocked = FALSE;
 
    // Recalculate status for built-in objects
-   g_pEntireNet->CalculateCompoundStatus();
-   g_pServiceRoot->CalculateCompoundStatus();
-   g_pTemplateRoot->CalculateCompoundStatus();
-   g_pPolicyRoot->CalculateCompoundStatus();
-   g_pMapRoot->CalculateCompoundStatus();
+   g_pEntireNet->calculateCompoundStatus();
+   g_pServiceRoot->calculateCompoundStatus();
+   g_pTemplateRoot->calculateCompoundStatus();
+   g_pPolicyRoot->calculateCompoundStatus();
+   g_pMapRoot->calculateCompoundStatus();
 
    // Recalculate status for zone objects
    if (g_dwFlags & AF_ENABLE_ZONING)
@@ -1247,7 +1248,7 @@ BOOL LoadObjects()
       NetObjInsert(pTemplate, TRUE);
 		g_pTemplateRoot->AddChild(pTemplate);
 		pTemplate->AddParent(g_pTemplateRoot);
-		pTemplate->CalculateCompoundStatus();
+		pTemplate->calculateCompoundStatus();
 		pTemplate->unhide();
 	}
 	pTemplate->ValidateSystemTemplate();
@@ -1263,7 +1264,7 @@ BOOL LoadObjects()
       NetObjInsert(pTemplate, TRUE);
 		g_pTemplateRoot->AddChild(pTemplate);
 		pTemplate->AddParent(g_pTemplateRoot);
-		pTemplate->CalculateCompoundStatus();
+		pTemplate->calculateCompoundStatus();
 		pTemplate->Unhide();
 	}
 	pTemplate->ValidateSystemTemplate();

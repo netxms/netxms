@@ -467,7 +467,7 @@ void NetObj::deleteObject()
    for(i = 0; i < m_dwParentCount; i++)
    {
       m_pParentList[i]->DeleteChild(this);
-      m_pParentList[i]->CalculateCompoundStatus();
+      m_pParentList[i]->calculateCompoundStatus();
    }
    free(m_pParentList);
    m_pParentList = NULL;
@@ -566,7 +566,7 @@ const TCHAR *NetObj::ParentList(TCHAR *szBuffer)
 // Calculate status for compound object based on childs' status
 //
 
-void NetObj::CalculateCompoundStatus(BOOL bForcedRecalc)
+void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    DWORD i;
    int iMostCriticalAlarm, iMostCriticalStatus, iCount, iStatusAlg;
@@ -666,7 +666,7 @@ void NetObj::CalculateCompoundStatus(BOOL bForcedRecalc)
       {
          LockParentList(FALSE);
          for(i = 0; i < m_dwParentCount; i++)
-            m_pParentList[i]->CalculateCompoundStatus();
+            m_pParentList[i]->calculateCompoundStatus();
          UnlockParentList();
          Modify();   /* LOCK? */
       }
@@ -925,7 +925,7 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    UnlockData();
 
    if (bRecalcStatus)
-      CalculateCompoundStatus(TRUE);
+      calculateCompoundStatus(TRUE);
 
    return RCC_SUCCESS;
 }
@@ -1030,7 +1030,7 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
    // Cause parent object(s) to recalculate it's status
    LockParentList(FALSE);
    for(i = 0; i < m_dwParentCount; i++)
-      m_pParentList[i]->CalculateCompoundStatus();
+      m_pParentList[i]->calculateCompoundStatus();
    UnlockParentList();
 }
 

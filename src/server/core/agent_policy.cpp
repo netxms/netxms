@@ -27,7 +27,7 @@
 // Redefined status calculation for policy group
 //
 
-void PolicyGroup::CalculateCompoundStatus(BOOL bForcedRecalc)
+void PolicyGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }

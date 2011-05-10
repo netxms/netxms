@@ -69,7 +69,7 @@ TemplateRoot::~TemplateRoot()
 // Redefined status calculation for template root
 //
 
-void TemplateRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
+void TemplateRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
@@ -100,7 +100,7 @@ PolicyRoot::~PolicyRoot()
 // Redefined status calculation for policy root
 //
 
-void PolicyRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
+void PolicyRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
@@ -131,7 +131,38 @@ NetworkMapRoot::~NetworkMapRoot()
 // Redefined status calculation for network maps root
 //
 
-void NetworkMapRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
+void NetworkMapRoot::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   m_iStatus = STATUS_NORMAL;
+}
+
+
+//
+// Network maps root class default constructor
+//
+
+DashboardRoot::DashboardRoot()
+              :UniversalRoot()
+{
+   m_dwId = BUILTIN_OID_DASHBOARDROOT;
+   _tcscpy(m_szName, _T("Dashboards"));
+}
+
+
+//
+// Dashboard tree root class destructor
+//
+
+DashboardRoot::~DashboardRoot()
+{
+}
+
+
+//
+// Redefined status calculation for dashboard tree root
+//
+
+void DashboardRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }

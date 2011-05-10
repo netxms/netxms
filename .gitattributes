@@ -393,6 +393,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/Table.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/NodePoller.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/RCC.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/Severity.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/dashboards/DashboardElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/ConditionDciInfo.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionConfiguration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionItem.java -text
@@ -427,6 +428,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/ClusterResource.j
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ClusterSyncNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Condition.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Container.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/Dashboard.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/DashboardRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/EntireNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/GenericObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Interface.java -text

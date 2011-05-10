@@ -579,7 +579,7 @@ void AlarmManager::UpdateObjectStatus(DWORD dwObjectId)
 
    pObject = FindObjectById(dwObjectId);
    if (pObject != NULL)
-      pObject->CalculateCompoundStatus();
+      pObject->calculateCompoundStatus();
 }
 
 

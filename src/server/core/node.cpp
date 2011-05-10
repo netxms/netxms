@@ -958,14 +958,14 @@ void Node::deleteInterface(Interface *pInterface)
 // Calculate node status based on child objects status
 //
 
-void Node::CalculateCompoundStatus(BOOL bForcedRecalc)
+void Node::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    int iOldStatus = m_iStatus;
    static DWORD dwEventCodes[] = { EVENT_NODE_NORMAL, EVENT_NODE_MINOR,
       EVENT_NODE_WARNING, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
       EVENT_NODE_UNKNOWN, EVENT_NODE_UNMANAGED };
 
-   NetObj::CalculateCompoundStatus(bForcedRecalc);
+   NetObj::calculateCompoundStatus(bForcedRecalc);
    if (m_iStatus != iOldStatus)
       PostEvent(dwEventCodes[m_iStatus], m_dwId, "d", iOldStatus);
 }
@@ -1238,7 +1238,7 @@ skip_snmp_check:
       UnlockData();
    }
 
-   CalculateCompoundStatus();
+   calculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
    SendPollerMsg(dwRqId, _T("Finished status poll for node %s\r\n"), m_szName);
    SendPollerMsg(dwRqId, _T("Node status after poll is %s\r\n"), g_szStatusText[m_iStatus]);

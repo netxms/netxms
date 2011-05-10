@@ -57,7 +57,7 @@ Container::Container()
 // _T("Normal") container class constructor
 //
 
-Container::Container(TCHAR *pszName, DWORD dwCategory)
+Container::Container(const TCHAR *pszName, DWORD dwCategory)
           :NetObj()
 {
    nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);

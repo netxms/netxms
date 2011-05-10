@@ -80,6 +80,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define BUILTIN_OID_ZONE0           4
 #define BUILTIN_OID_POLICYROOT      5
 #define BUILTIN_OID_NETWORKMAPROOT  6
+#define BUILTIN_OID_DASHBOARDROOT   7
 
 
 //
@@ -341,7 +342,7 @@ public:
    void resetStatus() { m_iStatus = STATUS_UNKNOWN; Modify(); }
    void setComments(TCHAR *pszText);	/* pszText must be dynamically allocated */
 
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -435,7 +436,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    int getVersionMajor() { return m_dwVersion >> 16; }
    int getVersionMinor() { return m_dwVersion & 0xFFFF; }
@@ -503,7 +504,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	BOOL isSyncAddr(DWORD dwAddr);
 	BOOL isVirtualAddr(DWORD dwAddr);
@@ -850,7 +851,7 @@ public:
    void lockForTopologyPoll();
 	void forceConfigurationPoll() { m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL; }
 
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    BOOL connectToAgent(DWORD *error = NULL, DWORD *socketError = NULL);
    DWORD GetItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer);
@@ -1062,10 +1063,9 @@ public:
    virtual ~UniversalRoot();
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual void LoadFromDB(void);
-   virtual const char *DefaultName(void) { return "Root Object"; }
+   virtual void LoadFromDB();
 
-   void LinkChildObjects(void);
+   void LinkChildObjects();
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 };
 
@@ -1080,8 +1080,7 @@ public:
    ServiceRoot();
    virtual ~ServiceRoot();
 
-   virtual int Type(void) { return OBJECT_SERVICEROOT; }
-   virtual const char *DefaultName(void) { return "All Services"; }
+   virtual int Type() { return OBJECT_SERVICEROOT; }
 };
 
 
@@ -1095,9 +1094,8 @@ public:
    TemplateRoot();
    virtual ~TemplateRoot();
 
-   virtual int Type(void) { return OBJECT_TEMPLATEROOT; }
-   virtual const char *DefaultName(void) { return "Templates"; }
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int Type() { return OBJECT_TEMPLATEROOT; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 
@@ -1118,7 +1116,7 @@ protected:
 
 public:
    Container();
-   Container(TCHAR *pszName, DWORD dwCategory);
+   Container(const TCHAR *pszName, DWORD dwCategory);
    virtual ~Container();
 
    virtual int Type(void) { return OBJECT_CONTAINER; }
@@ -1154,7 +1152,7 @@ public:
    virtual ~TemplateGroup() { }
 
    virtual int Type() { return OBJECT_TEMPLATEGROUP; }
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 
@@ -1346,11 +1344,11 @@ class NXCORE_EXPORTABLE PolicyGroup : public Container
 {
 public:
    PolicyGroup() : Container() { }
-   PolicyGroup(TCHAR *pszName) : Container(pszName, 0) { }
+   PolicyGroup(const TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~PolicyGroup() { }
 
    virtual int Type() { return OBJECT_POLICYGROUP; }
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 
@@ -1365,8 +1363,7 @@ public:
    virtual ~PolicyRoot();
 
    virtual int Type() { return OBJECT_POLICYROOT; }
-   virtual const char *DefaultName(void) { return "Policies"; }
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 
@@ -1381,8 +1378,7 @@ public:
    virtual ~NetworkMapRoot();
 
    virtual int Type() { return OBJECT_NETWORKMAPROOT; }
-   virtual const char *DefaultName() { return "Network Maps"; }
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 
@@ -1394,11 +1390,11 @@ class NXCORE_EXPORTABLE NetworkMapGroup : public Container
 {
 public:
    NetworkMapGroup() : Container() { }
-   NetworkMapGroup(TCHAR *pszName) : Container(pszName, 0) { }
+   NetworkMapGroup(const TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~NetworkMapGroup() { }
 
    virtual int Type() { return OBJECT_NETWORKMAPGROUP; }
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 
@@ -1424,7 +1420,7 @@ public:
    virtual ~NetworkMap();
 
    virtual int Type() { return OBJECT_NETWORKMAP; }
-   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB();
@@ -1432,6 +1428,55 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+};
+
+
+//
+// Dashboard tree root
+//
+
+class NXCORE_EXPORTABLE DashboardRoot : public UniversalRoot
+{
+public:
+   DashboardRoot();
+   virtual ~DashboardRoot();
+
+   virtual int Type() { return OBJECT_DASHBOARDROOT; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+};
+
+
+//
+// Dashboard object
+//
+
+class DashboardElement
+{
+public:
+	int m_type;
+	TCHAR *m_data;
+	int m_horizontalSpan;
+	int m_verticalSpan;
+	int m_horizontalAlignment;
+	int m_verticalAlignment;
+
+	DashboardElement() { m_data = NULL; }
+	~DashboardElement() { safe_free(m_data); }
+};
+
+class NXCORE_EXPORTABLE Dashboard : public Container
+{
+protected:
+	int m_numColumns;
+	ObjectArray<DashboardElement> *m_elements;
+
+public:
+   Dashboard();
+   Dashboard(const TCHAR *name);
+   virtual ~Dashboard();
+
+   virtual int Type() { return OBJECT_DASHBOARD; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 

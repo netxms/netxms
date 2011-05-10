@@ -155,6 +155,8 @@ typedef void * NXC_SESSION;
 #define OBJECT_NETWORKMAPROOT       19
 #define OBJECT_NETWORKMAPGROUP      20
 #define OBJECT_NETWORKMAP           21
+#define OBJECT_DASHBOARDROOT        22
+#define OBJECT_DASHBOARD            23
 
 
 //

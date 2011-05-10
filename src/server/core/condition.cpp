@@ -520,7 +520,7 @@ void Condition::check()
    {
       LockParentList(FALSE);
       for(i = 0; i < m_dwParentCount; i++)
-         m_pParentList[i]->CalculateCompoundStatus();
+         m_pParentList[i]->calculateCompoundStatus();
       UnlockParentList();
    }
 }

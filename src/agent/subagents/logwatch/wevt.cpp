@@ -107,6 +107,9 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 			case WINEVENT_LEVEL_VERBOSE:
 				level = EVENTLOG_INFORMATION_TYPE;
 				break;
+			default:
+				level = EVENTLOG_INFORMATION_TYPE;
+				break;
 		}
 	}
 

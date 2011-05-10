@@ -896,9 +896,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setBinaryMessage(true);
 
 		boolean success = false;
+		final byte[] buffer = new byte[FILE_BUFFER_SIZE];
 		while(true)
 		{
-			final byte[] buffer = new byte[FILE_BUFFER_SIZE];
 			final int bytesRead = inputStream.read(buffer);
 			if (bytesRead < FILE_BUFFER_SIZE)
 			{

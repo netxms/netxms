@@ -3815,22 +3815,22 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 							case OBJECT_TEMPLATEGROUP:
 								pObject = new TemplateGroup(szObjectName);
 								NetObjInsert(pObject, TRUE);
-								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								pObject->calculateCompoundStatus();	// Force status change to NORMAL
 								break;
 							case OBJECT_TEMPLATE:
 								pObject = new Template(szObjectName);
 								NetObjInsert(pObject, TRUE);
-								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								pObject->calculateCompoundStatus();	// Force status change to NORMAL
 								break;
 							case OBJECT_POLICYGROUP:
 								pObject = new PolicyGroup(szObjectName);
 								NetObjInsert(pObject, TRUE);
-								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								pObject->calculateCompoundStatus();	// Force status change to NORMAL
 								break;
 							case OBJECT_AGENTPOLICY_CONFIG:
 								pObject = new AgentPolicyConfig(szObjectName);
 								NetObjInsert(pObject, TRUE);
-								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								pObject->calculateCompoundStatus();	// Force status change to NORMAL
 								break;
 							case OBJECT_CLUSTER:
 								pObject = new Cluster(szObjectName, zoneId);
@@ -3860,7 +3860,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 							case OBJECT_NETWORKMAPGROUP:
 								pObject = new NetworkMapGroup(szObjectName);
 								NetObjInsert(pObject, TRUE);
-								pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+								pObject->calculateCompoundStatus();	// Force status change to NORMAL
 								break;
 							case OBJECT_NETWORKMAP:
 								pObject = new NetworkMap((int)pRequest->GetVariableShort(VID_MAP_TYPE), pRequest->GetVariableLong(VID_SEED_OBJECT));
@@ -3889,7 +3889,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 							{
 								pParent->AddChild(pObject);
 								pObject->AddParent(pParent);
-								pParent->CalculateCompoundStatus();
+								pParent->calculateCompoundStatus();
 								if (pParent->Type() == OBJECT_CLUSTER)
 								{
 									((Cluster *)pParent)->ApplyToNode((Node *)pObject);
@@ -4055,7 +4055,7 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                {
                   pParent->AddChild(pChild);
                   pChild->AddParent(pParent);
-                  pParent->CalculateCompoundStatus();
+                  pParent->calculateCompoundStatus();
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                }
                else

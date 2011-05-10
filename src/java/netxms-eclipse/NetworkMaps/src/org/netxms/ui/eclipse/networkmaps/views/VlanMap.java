@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;

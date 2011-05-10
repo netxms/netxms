@@ -461,6 +461,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dashboard.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\datacoll.cpp"
 				>
 			</File>

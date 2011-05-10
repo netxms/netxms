@@ -342,7 +342,8 @@ public class NXCPMessage
 			outputStream.writeInt((int)messageId);
 			outputStream.writeInt((int)controlData);
 		}
-		else if ((messageFlags & MF_BINARY) == MF_BINARY) {
+		else if ((messageFlags & MF_BINARY) == MF_BINARY) 
+		{
 			outputStream.writeShort(messageCode); // wCode
 			outputStream.writeShort(messageFlags); // wFlags
 			final int length = binaryData.length;

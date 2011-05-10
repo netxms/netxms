@@ -472,9 +472,9 @@ DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 // Calculate compound status
 //
 
-void Cluster::CalculateCompoundStatus(BOOL bForcedRecalc)
+void Cluster::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-	NetObj::CalculateCompoundStatus(bForcedRecalc);
+	NetObj::calculateCompoundStatus(bForcedRecalc);
 }
 
 

@@ -27,7 +27,7 @@
 // Redefined status calculation for network maps group
 //
 
-void NetworkMapGroup::CalculateCompoundStatus(BOOL bForcedRecalc)
+void NetworkMapGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
@@ -86,7 +86,7 @@ NetworkMap::~NetworkMap()
 // Redefined status calculation for network maps
 //
 
-void NetworkMap::CalculateCompoundStatus(BOOL bForcedRecalc)
+void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }

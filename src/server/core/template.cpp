@@ -27,7 +27,7 @@
 // Redefined status calculation for template group
 //
 
-void TemplateGroup::CalculateCompoundStatus(BOOL bForcedRecalc)
+void TemplateGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
@@ -737,7 +737,7 @@ DCItem *Template::getItemByIndex(DWORD dwIndex)
 // Redefined status calculation for template
 //
 
-void Template::CalculateCompoundStatus(BOOL bForcedRecalc)
+void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
