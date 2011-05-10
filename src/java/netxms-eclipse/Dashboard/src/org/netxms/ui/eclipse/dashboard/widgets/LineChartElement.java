@@ -16,11 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.charts.objecttabs.internal;
+package org.netxms.ui.eclipse.dashboard.widgets;
 
-import java.util.Arrays;
 import java.util.Date;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
@@ -30,58 +28,57 @@ import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.PerfTabDci;
-import org.netxms.ui.eclipse.charts.Activator;
-import org.netxms.ui.eclipse.charts.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
+import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Performance tab graph
- *
+ * Line chart element
  */
-public class PerfTabGraph extends Composite
+public class LineChartElement extends ElementWidget
 {
-	private long nodeId;
-	private PerfTabDci dci;
 	private LineChart chart;
+	private LineChartConfig config;
 	private Runnable refreshTimer;
 	private boolean updateInProgress = false;
 	private NXCSession session;
-	
+
 	/**
 	 * @param parent
-	 * @param style
+	 * @param data
 	 */
-	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfTabGraphSettings settings)
+	public LineChartElement(Composite parent, String data)
 	{
-		super(parent, SWT.BORDER);
-		this.nodeId = nodeId;
-		this.dci = dci;
-		session = (NXCSession)ConsoleSharedData.getSession();
-		
-		//GridLayout layout = new GridLayout();
-		//setLayout(layout);
+		super(parent, data);
+		try
+		{
+			config = LineChartConfig.createFromXml(data);
+		}
+		catch(Exception e)
+		{
+			config = new LineChartConfig();
+		}
+
 		setLayout(new FillLayout());
 		
 		chart = new LineChart(this, SWT.NONE);
 		chart.setTitleVisible(true);
-		chart.setChartTitle(settings.getTitle().isEmpty() ? dci.getDescription() : settings.getTitle());
+		chart.setChartTitle(config.getTitle());
 		chart.setLegendVisible(false);
 		
-		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
-		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
+		//GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
+		//chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		
-		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", dci.getDescription()));
+		for(long dciId : config.getDciList())
+			chart.addParameter(new GraphItem(config.getNodeId(), dciId, 0, 0, "", ""));
 
 		final Display display = getDisplay();
 		refreshTimer = new Runnable() {
 			@Override
 			public void run()
 			{
-				if (PerfTabGraph.this.isDisposed())
+				if (LineChartElement.this.isDisposed())
 					return;
 				
 				refreshData();
@@ -109,18 +106,27 @@ public class PerfTabGraph extends Composite
 			{
 				final Date from = new Date(System.currentTimeMillis() - 3600000);
 				final Date to = new Date(System.currentTimeMillis());
-				final DciData data = session.getCollectedData(nodeId, dci.getId(), from, to, 0);
-				//final Threshold[] thresholds = session.getThresholds(nodeId, dci.getId());
-
+				final long[] dciList = config.getDciList();
+				for(int i = 0; i < dciList.length; i++)
+				{
+					final DciData data = session.getCollectedData(config.getNodeId(), dciList[i], from, to, 0);
+					final int index = i;
+					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							if (!chart.isDisposed())
+							{
+								chart.setTimeRange(from, to);
+								chart.updateParameter(index, data, true);
+							}
+						}
+					});
+				}
 				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
 					{
-						if (!chart.isDisposed())
-						{
-							chart.setTimeRange(from, to);
-							chart.updateParameter(0, data, true);
-						}
 						updateInProgress = false;
 					}
 				});

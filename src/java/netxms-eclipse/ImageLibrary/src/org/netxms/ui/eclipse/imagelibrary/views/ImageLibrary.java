@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.NetXMSClientException;
@@ -70,6 +71,9 @@ public class ImageLibrary extends ViewPart
 
 	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
 	public void createPartControl(final Composite parent)
 	{
@@ -116,11 +120,17 @@ public class ImageLibrary extends ViewPart
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+	 */
 	@Override
 	public void setFocus()
 	{
 	}
 
+	/**
+	 * Create actions
+	 */
 	private void createActions()
 	{
 		actionNew = new Action("&Upload New Image")
@@ -418,10 +428,41 @@ public class ImageLibrary extends ViewPart
 		toolBarManager.add(actionZoomOut);
 	}
 
+	/**
+	 * @throws NetXMSClientException
+	 * @throws IOException
+	 */
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
-		final List<LibraryImage> imageLibrary = session.getImageLibrary();
+		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null) {
 
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final List<LibraryImage> imageLibrary = session.getImageLibrary();
+				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						refreshUI(imageLibrary);
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot load image library";
+			}
+			
+		}.start();
+	}
+	
+	/**
+	 * Refresh UI after retrieving imaqge library from server
+	 */
+	private void refreshUI(List<LibraryImage> imageLibrary)
+	{
 		Map<String, List<LibraryImage>> categories = new HashMap<String, List<LibraryImage>>();
 		for(LibraryImage image : imageLibrary)
 		{

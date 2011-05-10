@@ -36,7 +36,25 @@
                label="Create &amp;dashboard..."
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.OpenDashboard"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.OpenDashboard"
+               label="&amp;Open dashboard"
+               menubarPath="additions">
+         </action>
       </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.dashboard.views.DashboardView"
+            icon="icons/dashboard.png"
+            id="org.netxms.ui.eclipse.dashboard.views.DashboardView"
+            name="Dashboard"
+            restorable="true">
+      </view>
    </extension>
 
 </plugin>

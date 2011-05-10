@@ -1879,6 +1879,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
           (object->TimeStamp() >= dwTimeStamp) &&
           !object->isHidden())
       {
+//_tprintf(_T("CALL CREATE FOR %s %d\n"), object->Name(), object->Id());
          object->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             object->CommentsToMessage(&msg);

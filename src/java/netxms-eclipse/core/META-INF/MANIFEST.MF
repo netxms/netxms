@@ -17,6 +17,7 @@ Bundle-ClassPath: .,
  jar/netxms-client-1.1.1.jar
 Export-Package: org.netxms.client,
  org.netxms.client.constants,
+ org.netxms.client.dashboards,
  org.netxms.client.datacollection,
  org.netxms.client.events,
  org.netxms.client.log,

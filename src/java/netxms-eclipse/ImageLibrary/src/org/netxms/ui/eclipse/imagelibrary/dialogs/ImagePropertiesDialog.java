@@ -49,7 +49,6 @@ public class ImagePropertiesDialog extends Dialog
 
 		WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, new WidgetFactory()
 		{
-
 			@Override
 			public Control createControl(Composite parent, int style)
 			{
@@ -102,7 +101,7 @@ public class ImagePropertiesDialog extends Dialog
 					{
 					}
 				});
-				button.setText("…");
+				button.setText("...");
 				return composite;
 			}
 		}, "Image File", WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -134,6 +133,9 @@ public class ImagePropertiesDialog extends Dialog
 		return dialogArea;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 */
 	@Override
 	protected void okPressed()
 	{
@@ -143,6 +145,9 @@ public class ImagePropertiesDialog extends Dialog
 		super.okPressed();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
