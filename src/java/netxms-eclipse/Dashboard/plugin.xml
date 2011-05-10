@@ -11,5 +11,32 @@
             id="org.netxms.ui.eclipse.dashboard.DashboardPerspective">
       </perspective>
    </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.dashboard.actions.popup.object.DashboardRoot"
+            objectClass="org.netxms.client.objects.DashboardRoot">
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardRoot"
+               label="Create &amp;dashboard..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.dashboard.actions.popup.object.Dashboard"
+            objectClass="org.netxms.client.objects.Dashboard">
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#Dashboard"
+               label="Create &amp;dashboard..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+   </extension>
 
 </plugin>

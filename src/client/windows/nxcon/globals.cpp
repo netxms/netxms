@@ -92,8 +92,10 @@ TCHAR *g_szAlarmState[] = { _T("Outstanding"), _T("Acknowledged"), _T("Terminate
 TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
                              _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
                              _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),
-                             _T("VPNConnector"), _T("Condition"), _T("Cluster"), _T("AgentPolicy"),
-                             _T("PolicyGroup"), _T("PolicyRoot") };
+                             _T("VPNConnector"), _T("Condition"), _T("Cluster"), _T("PolicyGroup"), 
+									  _T("PolicyRoot"), _T("AgentPolicy"), _T("AgentPolicyConfig"),
+									  _T("NetworkMapRoot"), _T("NetworkMapGroup"), _T("NetworkMap"),
+                             _T("DashboardRoot"), _T("Dashboard") };
 TCHAR *g_szActionType[] = { _T("Execute"), _T("Remote"), _T("E-Mail"), _T("SMS"), _T("Forward") };
 TCHAR *g_szServiceType[] = { _T("User-defined"), _T("SSH"), _T("POP3"), _T("SMTP"),
                              _T("FTP"), _T("HTTP"), NULL };

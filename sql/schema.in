@@ -1258,3 +1258,33 @@ CREATE TABLE images
    PRIMARY KEY(guid),
    UNIQUE(name, category)
 ) TABLE_TYPE;
+
+
+/*
+** Dashboards
+*/
+
+CREATE TABLE dashboards
+(
+	id integer not null,
+	num_columns integer not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Dashboard elements
+*/
+
+CREATE TABLE dashboard_elements
+(
+	dashboard_id integer not null,
+	element_id integer not null,
+	element_type integer not null,
+	element_data SQL_TEXT null,
+	horizontal_span integer not null,
+	vertical_span integer not null,
+	horizontal_alignment integer not null,
+	vertical_alignment integer not null,
+	PRIMARY KEY(dashboard_id,element_id)
+) TABLE_TYPE;

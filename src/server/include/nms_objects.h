@@ -1128,13 +1128,13 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   DWORD Category(void) { return m_dwCategory; }
+   DWORD getCategory() { return m_dwCategory; }
 
-   void LinkChildObjects(void);
-   void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkChildObjects();
+   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 
-	BOOL IsSuitableForNode(Node *node);
-	BOOL IsAutoBindEnabled() { return m_bindFilter != NULL; }
+	bool isSuitableForNode(Node *node);
+	bool isAutoBindEnabled() { return m_bindFilter != NULL; }
 
 	void setAutoBindFilter(const TCHAR *script);
 };
@@ -1477,6 +1477,13 @@ public:
 
    virtual int Type() { return OBJECT_DASHBOARD; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB();
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 
@@ -1542,6 +1549,8 @@ extern Network NXCORE_EXPORTABLE *g_pEntireNet;
 extern ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot;
 extern TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot;
 extern PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot;
+extern NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot;
+extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
 
 extern DWORD NXCORE_EXPORTABLE g_dwMgmtNode;
 extern DWORD g_dwNumCategories;

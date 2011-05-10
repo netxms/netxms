@@ -119,6 +119,10 @@ public class ObjectAdapterFactory implements IAdapterFactory
 								return Activator.getImageDescriptor("icons/netmap_group.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_NETWORKMAPROOT:
 								return Activator.getImageDescriptor("icons/netmap_root.gif"); //$NON-NLS-1$
+							case GenericObject.OBJECT_DASHBOARD:
+								return Activator.getImageDescriptor("icons/dashboard.gif"); //$NON-NLS-1$
+							case GenericObject.OBJECT_DASHBOARDROOT:
+								return Activator.getImageDescriptor("icons/dashboard_root.gif"); //$NON-NLS-1$
 							default:
 								return null;
 						}

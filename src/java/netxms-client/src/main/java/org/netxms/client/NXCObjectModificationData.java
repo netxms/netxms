@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
@@ -35,29 +36,31 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 public class NXCObjectModificationData
 {
 	// Modification flags
-	public static final long MODIFY_NAME              = 0x00000001L;
-	public static final long MODIFY_ACL               = 0x00000002L;
-	public static final long MODIFY_CUSTOM_ATTRIBUTES = 0x00000004L;
-	public static final long MODIFY_AUTO_APPLY        = 0x00000008L;
-	public static final long MODIFY_AUTO_BIND         = 0x00000010L;
-	public static final long MODIFY_POLICY_CONFIG     = 0x00000020L;
-	public static final long MODIFY_VERSION           = 0x00000040L;
-	public static final long MODIFY_DESCRIPTION       = 0x00000080L;
-	public static final long MODIFY_AGENT_PORT        = 0x00000100L;
-	public static final long MODIFY_AGENT_AUTH        = 0x00000200L;
-	public static final long MODIFY_SNMP_VERSION      = 0x00000400L;
-	public static final long MODIFY_SNMP_AUTH         = 0x00000800L;
-	public static final long MODIFY_AGENT_PROXY       = 0x00001000L;
-	public static final long MODIFY_SNMP_PROXY        = 0x00002000L;
-	public static final long MODIFY_TRUSTED_NODES     = 0x00004000L;
-	public static final long MODIFY_GEOLOCATION       = 0x00008000L;
-	public static final long MODIFY_PRIMARY_IP        = 0x00010000L;
-	public static final long MODIFY_SNMP_PORT         = 0x00020000L;
-	public static final long MODIFY_MAP_LAYOUT        = 0x00040000L;
-	public static final long MODIFY_MAP_BACKGROUND    = 0x00080000L;
-	public static final long MODIFY_MAP_CONTENT       = 0x00100000L;
-	public static final long MODIFY_IMAGE             = 0x00200000L;
-	public static final long MODIFY_ICMP_PROXY        = 0x00400000L;
+	public static final long MODIFY_NAME               = 0x00000001L;
+	public static final long MODIFY_ACL                = 0x00000002L;
+	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x00000004L;
+	public static final long MODIFY_AUTO_APPLY         = 0x00000008L;
+	public static final long MODIFY_AUTO_BIND          = 0x00000010L;
+	public static final long MODIFY_POLICY_CONFIG      = 0x00000020L;
+	public static final long MODIFY_VERSION            = 0x00000040L;
+	public static final long MODIFY_DESCRIPTION        = 0x00000080L;
+	public static final long MODIFY_AGENT_PORT         = 0x00000100L;
+	public static final long MODIFY_AGENT_AUTH         = 0x00000200L;
+	public static final long MODIFY_SNMP_VERSION       = 0x00000400L;
+	public static final long MODIFY_SNMP_AUTH          = 0x00000800L;
+	public static final long MODIFY_AGENT_PROXY        = 0x00001000L;
+	public static final long MODIFY_SNMP_PROXY         = 0x00002000L;
+	public static final long MODIFY_TRUSTED_NODES      = 0x00004000L;
+	public static final long MODIFY_GEOLOCATION        = 0x00008000L;
+	public static final long MODIFY_PRIMARY_IP         = 0x00010000L;
+	public static final long MODIFY_SNMP_PORT          = 0x00020000L;
+	public static final long MODIFY_MAP_LAYOUT         = 0x00040000L;
+	public static final long MODIFY_MAP_BACKGROUND     = 0x00080000L;
+	public static final long MODIFY_MAP_CONTENT        = 0x00100000L;
+	public static final long MODIFY_IMAGE              = 0x00200000L;
+	public static final long MODIFY_ICMP_PROXY         = 0x00400000L;
+	public static final long MODIFY_COLUMN_COUNT       = 0x00800000L;
+	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x01000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -93,6 +96,8 @@ public class NXCObjectModificationData
 	private UUID image;
 	private Collection<NetworkMapElement> mapElements;
 	private Collection<NetworkMapLink> mapLinks;
+	private int columnCount;
+	private Collection<DashboardElement> dashboardElements;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -658,5 +663,39 @@ public class NXCObjectModificationData
 	{
 		this.image = image;
 		flags |= MODIFY_IMAGE;
+	}
+
+	/**
+	 * @return the columnCount
+	 */
+	public int getColumnCount()
+	{
+		return columnCount;
+	}
+
+	/**
+	 * @param columnCount the columnCount to set
+	 */
+	public void setColumnCount(int columnCount)
+	{
+		this.columnCount = columnCount;
+		flags |= MODIFY_COLUMN_COUNT;
+	}
+
+	/**
+	 * @return the dashboardElements
+	 */
+	public Collection<DashboardElement> getDashboardElements()
+	{
+		return dashboardElements;
+	}
+
+	/**
+	 * @param dashboardElements the dashboardElements to set
+	 */
+	public void setDashboardElements(Collection<DashboardElement> dashboardElements)
+	{
+		this.dashboardElements = dashboardElements;
+		flags |= MODIFY_DASHBOARD_ELEMENTS;
 	}
 }

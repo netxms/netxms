@@ -256,6 +256,33 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V228 to V229
+//
+
+static BOOL H_UpgradeFromV228(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE dashboards (")
+				_T("   id integer not null,")
+				_T("   num_columns integer not null,")
+				_T("   PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE dashboard_elements (")
+				_T("   dashboard_id integer not null,")
+				_T("   element_id integer not null,")
+				_T("   element_type integer not null,")
+				_T("   element_data $SQL:TEXT null,")
+				_T("   horizontal_span integer not null,")
+				_T("   vertical_span integer not null,")
+				_T("   horizontal_alignment integer not null,")
+				_T("   vertical_alignment integer not null,")
+				_T("   PRIMARY KEY(dashboard_id,element_id))")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='229' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V227 to V228
 //
 
@@ -5221,6 +5248,7 @@ static struct
 	{ 225, 226, H_UpgradeFromV225 },
 	{ 226, 227, H_UpgradeFromV226 },
 	{ 227, 228, H_UpgradeFromV227 },
+	{ 228, 229, H_UpgradeFromV228 },
    { 0, NULL }
 };
 

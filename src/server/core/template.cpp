@@ -255,6 +255,8 @@ BOOL Template::CreateFromDB(DWORD dwId)
       }
    }
 
+	m_iStatus = STATUS_NORMAL;
+
    return bResult;
 }
 

@@ -34,6 +34,7 @@ ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot = NULL;
 TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot = NULL;
 PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
 NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
+DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
 
 DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 DWORD g_dwNumCategories = 0;
@@ -181,25 +182,29 @@ void ObjectsInit()
 
    g_pTemplateUpdateQueue = new Queue;
 
-   // Create _T("Entire Network") object
+   // Create "Entire Network" object
    g_pEntireNet = new Network;
    NetObjInsert(g_pEntireNet, FALSE);
 
-   // Create _T("Service Root") object
+   // Create "Service Root" object
    g_pServiceRoot = new ServiceRoot;
    NetObjInsert(g_pServiceRoot, FALSE);
 
-   // Create _T("Template Root") object
+   // Create "Template Root" object
    g_pTemplateRoot = new TemplateRoot;
    NetObjInsert(g_pTemplateRoot, FALSE);
 
-	// Create _T("Policy Root") object
+	// Create "Policy Root" object
    g_pPolicyRoot = new PolicyRoot;
    NetObjInsert(g_pPolicyRoot, FALSE);
    
-	// Create _T("Network Maps Root") object
+	// Create "Network Maps Root" object
    g_pMapRoot = new NetworkMapRoot;
    NetObjInsert(g_pMapRoot, FALSE);
+   
+	// Create "Dashboard Root" object
+   g_pDashboardRoot = new DashboardRoot;
+   NetObjInsert(g_pDashboardRoot, FALSE);
    
 	DbgPrintf(1, _T("Built-in objects created"));
 
@@ -264,6 +269,8 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
 			case OBJECT_NETWORKMAP:
+			case OBJECT_DASHBOARDROOT:
+			case OBJECT_DASHBOARD:
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
@@ -358,6 +365,8 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_NETWORKMAPROOT:
 		case OBJECT_NETWORKMAPGROUP:
 		case OBJECT_NETWORKMAP:
+		case OBJECT_DASHBOARDROOT:
+		case OBJECT_DASHBOARD:
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
@@ -745,9 +754,10 @@ static void LinkChildObjectsCallback(NetObj *object, void *data)
 	if ((object->Type() == OBJECT_CONTAINER) ||
 		 (object->Type() == OBJECT_TEMPLATEGROUP) ||
 		 (object->Type() == OBJECT_POLICYGROUP) ||
-		 (object->Type() == OBJECT_NETWORKMAPGROUP))
+		 (object->Type() == OBJECT_NETWORKMAPGROUP) ||
+		 (object->Type() == OBJECT_DASHBOARD))
 	{
-		((Container *)object)->LinkChildObjects();
+		((Container *)object)->linkChildObjects();
 	}
 }
 
@@ -792,6 +802,7 @@ BOOL LoadObjects()
    g_pTemplateRoot->LoadFromDB();
 	g_pPolicyRoot->LoadFromDB();
 	g_pMapRoot->LoadFromDB();
+	g_pDashboardRoot->LoadFromDB();
 
    // Load zones
    if (g_dwFlags & AF_ENABLE_ZONING)
@@ -1211,6 +1222,31 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+   // Load dashboard objects
+   DbgPrintf(2, _T("Loading dashboards..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM dashboards"));
+   if (hResult != 0)
+   {
+      Dashboard *pd;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pd = new Dashboard;
+         if (pd->CreateFromDB(dwId))
+         {
+            NetObjInsert(pd, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pd;
+            nxlog_write(MSG_DASHBOARD_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Link childs to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
 	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
@@ -1220,6 +1256,7 @@ BOOL LoadObjects()
    g_pTemplateRoot->LinkChildObjects();
    g_pPolicyRoot->LinkChildObjects();
    g_pMapRoot->LinkChildObjects();
+	g_pDashboardRoot->LinkChildObjects();
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;
@@ -1330,7 +1367,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
          ConsolePrintf(pCtx, _T("   Network mask: %s\n"), IpToStr(((Subnet *)object)->getIpNetMask(), dd->buffer));
          break;
       case OBJECT_CONTAINER:
-         pCat = FindContainerCategory(((Container *)object)->Category());
+         pCat = FindContainerCategory(((Container *)object)->getCategory());
          ConsolePrintf(pCtx, _T("   Category: %s\n"), pCat ? pCat->szName : _T("<unknown>"));
          break;
       case OBJECT_TEMPLATE:
@@ -1384,6 +1421,11 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
       case OBJECT_NETWORKMAPGROUP:
          if ((iChildClass == OBJECT_NETWORKMAPGROUP) || 
              (iChildClass == OBJECT_NETWORKMAP))
+            return TRUE;
+         break;
+      case OBJECT_DASHBOARDROOT:
+      case OBJECT_DASHBOARD:
+         if (iChildClass == OBJECT_DASHBOARD)
             return TRUE;
          break;
       case OBJECT_POLICYROOT:

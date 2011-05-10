@@ -20,6 +20,8 @@ package org.netxms.client.objects;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -30,7 +32,7 @@ import org.netxms.client.dashboards.DashboardElement;
 public class Dashboard extends GenericObject
 {
 	private int numColumns;
-	private List<DashboardElement> elements = new ArrayList<DashboardElement>(8);
+	private List<DashboardElement> elements;
 
 	/**
 	 * @param msg
@@ -39,5 +41,40 @@ public class Dashboard extends GenericObject
 	public Dashboard(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
+		numColumns = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
+		
+		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		elements = new ArrayList<DashboardElement>(count);
+		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			elements.add(new DashboardElement(msg, varId));
+			varId += 10;
+		}
+	}
+
+	/**
+	 * @return the numColumns
+	 */
+	public int getNumColumns()
+	{
+		return numColumns;
+	}
+
+	/**
+	 * @return the elements
+	 */
+	public List<DashboardElement> getElements()
+	{
+		return elements;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+		return "Dashboard";
 	}
 }

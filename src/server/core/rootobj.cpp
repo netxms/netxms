@@ -53,6 +53,7 @@ TemplateRoot::TemplateRoot()
 {
    m_dwId = BUILTIN_OID_TEMPLATEROOT;
    _tcscpy(m_szName, _T("Templates"));
+	m_iStatus = STATUS_NORMAL;
 }
 
 
@@ -84,6 +85,7 @@ PolicyRoot::PolicyRoot()
 {
    m_dwId = BUILTIN_OID_POLICYROOT;
    _tcscpy(m_szName, _T("Policies"));
+	m_iStatus = STATUS_NORMAL;
 }
 
 
@@ -115,6 +117,7 @@ NetworkMapRoot::NetworkMapRoot()
 {
    m_dwId = BUILTIN_OID_NETWORKMAPROOT;
    _tcscpy(m_szName, _T("Network Maps"));
+	m_iStatus = STATUS_NORMAL;
 }
 
 
@@ -146,6 +149,7 @@ DashboardRoot::DashboardRoot()
 {
    m_dwId = BUILTIN_OID_DASHBOARDROOT;
    _tcscpy(m_szName, _T("Dashboards"));
+	m_iStatus = STATUS_NORMAL;
 }
 
 

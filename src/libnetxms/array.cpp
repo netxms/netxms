@@ -31,8 +31,8 @@
 Array::Array(int initial, int grow, bool owner)
 {
 	m_size = 0;
-	m_grow = grow;
-	m_allocated = initial;
+	m_grow = (grow > 0) ? grow : 16;
+	m_allocated = (initial >= 0) ? initial : 16;
 	m_data = (m_allocated > 0) ? (void **)malloc(sizeof(void *) * m_allocated) : NULL;
 	m_objectOwner = owner;
 }

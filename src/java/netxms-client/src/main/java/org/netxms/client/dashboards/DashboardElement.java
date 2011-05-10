@@ -18,6 +18,8 @@
  */
 package org.netxms.client.dashboards;
 
+import org.netxms.base.NXCPMessage;
+
 /**
  * Dashboard's element
  */
@@ -53,8 +55,59 @@ public class DashboardElement
 	{
 		this.type = type;
 		this.data = data;
+		horizontalSpan = 1;
+		verticalSpan = 1;
+		horizontalAlignment = FILL;
+		verticalAlignment = FILL;
+	}
+	
+	/**
+	 * Create dashboard element from NXCP message
+	 * 
+	 * @param msg NXCP message
+	 * @param baseId base variable ID
+	 */
+	public DashboardElement(NXCPMessage msg, long baseId)
+	{
+		type = msg.getVariableAsInteger(baseId);
+		data = msg.getVariableAsString(baseId + 1);
+		horizontalSpan = msg.getVariableAsInteger(baseId + 2);
+		verticalSpan = msg.getVariableAsInteger(baseId + 3);
+		horizontalAlignment = msg.getVariableAsInteger(baseId + 4);
+		verticalAlignment = msg.getVariableAsInteger(baseId + 5);
+	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param src original element
+	 */
+	public DashboardElement(DashboardElement src)
+	{
+		type = src.type;
+		data = src.data;
+		horizontalSpan = src.horizontalSpan;
+		verticalSpan = src.verticalSpan;
+		horizontalAlignment = src.horizontalAlignment;
+		verticalAlignment = src.verticalAlignment;
 	}
 
+	/**
+	 * Fill NXCP message with element's data
+	 * 
+	 * @param msg NXCP message
+	 * @param baseId base variable ID
+	 */
+	public void fillMessage(NXCPMessage msg, long baseId)
+	{
+		msg.setVariableInt16(baseId, type);
+		msg.setVariable(baseId + 1, data);
+		msg.setVariableInt16(baseId + 2, horizontalSpan);
+		msg.setVariableInt16(baseId + 3, verticalSpan);
+		msg.setVariableInt16(baseId + 4, horizontalAlignment);
+		msg.setVariableInt16(baseId + 5, verticalAlignment);
+	}
+	
 	/**
 	 * @return the data
 	 */

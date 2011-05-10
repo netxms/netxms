@@ -2185,7 +2185,7 @@ static void UpdateContainerBinding(NetObj *object, void *node)
    if ((object->Type() == OBJECT_CONTAINER) && !object->IsDeleted())
    {
       Container *pContainer = (Container *)object;
-		if (pContainer->IsSuitableForNode((Node *)node))
+		if (pContainer->isSuitableForNode((Node *)node))
 		{
 			if (!pContainer->IsChild(((Node *)node)->Id()))
 			{
@@ -2197,7 +2197,7 @@ static void UpdateContainerBinding(NetObj *object, void *node)
 		}
 		else
 		{
-			if (pContainer->IsAutoBindEnabled() && pContainer->IsChild(((Node *)node)->Id()))
+			if (pContainer->isAutoBindEnabled() && pContainer->IsChild(((Node *)node)->Id()))
 			{
 				DbgPrintf(4, _T("Node::UpdateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
 				          ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());

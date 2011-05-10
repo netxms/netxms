@@ -217,7 +217,7 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 // Delete object from database
 //
 
-BOOL Container::DeleteFromDB(void)
+BOOL Container::DeleteFromDB()
 {
    TCHAR szQuery[256];
    BOOL bSuccess;
@@ -225,9 +225,9 @@ BOOL Container::DeleteFromDB(void)
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM containers WHERE id=%d"), m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM containers WHERE id=%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), (int)m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -239,7 +239,7 @@ BOOL Container::DeleteFromDB(void)
 // This method is expected to be called only at startup, so we don't lock
 //
 
-void Container::LinkChildObjects(void)
+void Container::linkChildObjects()
 {
    NetObj *pObject;
    DWORD i;
@@ -251,7 +251,7 @@ void Container::LinkChildObjects(void)
       {
          pObject = FindObjectById(m_pdwChildIdList[i]);
          if (pObject != NULL)
-            LinkObject(pObject);
+            linkObject(pObject);
          else
             nxlog_write(MSG_INVALID_CONTAINER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_dwId, m_pdwChildIdList[i]);
       }
@@ -339,11 +339,11 @@ void Container::setAutoBindFilter(const TCHAR *script)
 // Check if node should be placed into container
 //
 
-BOOL Container::IsSuitableForNode(Node *node)
+bool Container::isSuitableForNode(Node *node)
 {
 	NXSL_ServerEnv *pEnv;
 	NXSL_Value *value;
-	BOOL result = FALSE;
+	bool result = false;
 
 	LockData();
 	if (m_bindFilter != NULL)

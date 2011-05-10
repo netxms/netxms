@@ -397,7 +397,7 @@ protected:
 	virtual void destroyObject(void *object) { delete (T*)object; }
 
 public:
-	ObjectArray(int initial = 0, int grow = 0, bool owner = false) : Array(initial, grow, owner) { }
+	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { }
 	virtual ~ObjectArray() { }
 
 	int add(T *object) { return Array::add(object); }

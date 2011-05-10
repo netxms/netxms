@@ -602,6 +602,7 @@ src/java/netxms-eclipse/Dashboard/icons/dashboard.png -text
 src/java/netxms-eclipse/Dashboard/icons/server_stats.png -text
 src/java/netxms-eclipse/Dashboard/plugin.xml -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CreateDashboard.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/ServerStats.java -text
 src/java/netxms-eclipse/DataCollection/.settings/org.eclipse.jdt.core.prefs -text
@@ -902,6 +903,8 @@ src/java/netxms-eclipse/ObjectBrowser/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser/icons/cluster.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/condition.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/container.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/dashboard.gif -text
+src/java/netxms-eclipse/ObjectBrowser/icons/dashboard_root.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/interface.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/netmap.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/netmap_group.png -text

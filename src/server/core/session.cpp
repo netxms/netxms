@@ -3867,6 +3867,10 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								pObject->setName(szObjectName);
 								NetObjInsert(pObject, TRUE);
 								break;
+							case OBJECT_DASHBOARD:
+								pObject = new Dashboard(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								break;
 							case OBJECT_ZONE:
 								if ((zoneId > 0) && (g_idxZoneByGUID.get(zoneId) == NULL))
 								{

@@ -806,4 +806,10 @@ Language=English
 Network device driver "%1" cannot be loaded because of API version mismatch (driver: %3; server: %2)
 .
 
+MessageId=
+SymbolicName=MSG_DASHBOARD_LOAD_FAILED
+Language=English
+Failed to load dashboard object with id %1 from database
+.
+
 ;#endif

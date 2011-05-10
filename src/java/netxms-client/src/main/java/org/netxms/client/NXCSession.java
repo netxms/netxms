@@ -63,6 +63,7 @@ import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.NXCommon;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
@@ -86,6 +87,8 @@ import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
@@ -266,6 +269,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_NETWORKMAP:
 				object = new NetworkMap(msg, this);
+				break;
+			case GenericObject.OBJECT_DASHBOARDROOT:
+				object = new DashboardRoot(msg, this);
+				break;
+			case GenericObject.OBJECT_DASHBOARD:
+				object = new Dashboard(msg, this);
 				break;
 			case GenericObject.OBJECT_ZONE:
 				object = new Zone(msg, this);
@@ -2533,6 +2542,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			}
 		}
 
+		if ((flags & NXCObjectModificationData.MODIFY_COLUMN_COUNT) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_NUM_COLUMNS, data.getColumnCount());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_DASHBOARD_ELEMENTS) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getDashboardElements().size());
+			long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+			for(DashboardElement e : data.getDashboardElements())
+			{
+				e.fillMessage(msg, varId);
+				varId += 10;
+			}
+		}
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

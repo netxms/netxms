@@ -60,6 +60,8 @@ public class GenericObject
 	public static final int OBJECT_NETWORKMAPROOT     = 19;
 	public static final int OBJECT_NETWORKMAPGROUP    = 20;
 	public static final int OBJECT_NETWORKMAP         = 21;
+	public static final int OBJECT_DASHBOARDROOT      = 22;
+	public static final int OBJECT_DASHBOARD          = 23;
 	
 	// Status codes
 	public static final int STATUS_NORMAL         = 0;

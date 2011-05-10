@@ -47,6 +47,7 @@ NetworkMap::NetworkMap() : NetObj()
 	m_elements = NULL;
 	m_numLinks = 0;
 	m_links = NULL;
+	m_iStatus = STATUS_NORMAL;
 }
 
 
@@ -64,6 +65,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_elements = NULL;
 	m_numLinks = 0;
 	m_links = NULL;
+	m_iStatus = STATUS_NORMAL;
 }
 
 
@@ -100,8 +102,10 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 {
 	TCHAR query[1024], temp[64];
 
+	LockData();
+
 	if (!saveCommonProperties(hdb))
-		return FALSE;
+		goto fail;
 
 	// Check for object's existence in database
 	bool isNewObject = true;
@@ -123,15 +127,15 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
                  _T("UPDATE network_maps SET map_type=%d,layout=%d,seed=%d,background='%s' WHERE id=%d"),
                  m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp), m_dwId);
    if (!DBQuery(hdb, query))
-		return FALSE;
+		goto fail;
 
 	if (!saveACLToDB(hdb))
-		return FALSE;
+		goto fail;
 
    // Save elements
    _sntprintf(query, 256, _T("DELETE FROM network_map_elements WHERE map_id=%d"), m_dwId);
    if (!DBQuery(hdb, query))
-		return FALSE;
+		goto fail;
    for(int i = 0; i < m_numElements; i++)
    {
 		Config *config = new Config();
@@ -150,7 +154,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 	// Save links
    _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d"), m_dwId);
    if (!DBQuery(hdb, query))
-		return FALSE;
+		goto fail;
    for(int i = 0; i < m_numLinks; i++)
    {
       _sntprintf(query, 1024, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2) VALUES (%d,%d,%d,%d,%s,%s,%s)"),
@@ -162,6 +166,10 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
    }
 
 	return TRUE;
+
+fail:
+	UnlockData();
+	return FALSE;
 }
 
 
@@ -284,6 +292,8 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
       }
 	}
 
+	m_iStatus = STATUS_NORMAL;
+
 	return TRUE;
 }
 
@@ -345,7 +355,7 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		for(int i = 0; i < m_numElements; i++)
 			delete m_elements[i];
 
-		m_numElements = request->GetVariableLong(VID_NUM_ELEMENTS);
+		m_numElements = (int)request->GetVariableLong(VID_NUM_ELEMENTS);
 		if (m_numElements > 0)
 		{
 			m_elements = (NetworkMapElement **)realloc(m_elements, sizeof(NetworkMapElement *) * m_numElements);
