@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import sun.security.util.Password;
 
 public class NXCPMessage
 {
@@ -345,11 +346,15 @@ public class NXCPMessage
 			outputStream.writeShort(messageCode); // wCode
 			outputStream.writeShort(messageFlags); // wFlags
 			final int length = binaryData.length;
-			final int packetSize = length + HEADER_SIZE + ((8 - ((length + HEADER_SIZE) % 8)) & 7);
+			final int padding = (8 - ((length + HEADER_SIZE) % 8)) & 7;
+			final int packetSize = length + HEADER_SIZE + padding;
 			outputStream.writeInt(packetSize); // dwSize (padded to 8 bytes boundaries)
 			outputStream.writeInt((int)messageId); // dwId
 			outputStream.writeInt(length); // dwNumVars, here used for real size of the payload (w/o headers and padding)
 			outputStream.write(binaryData);
+			for (int i = 0; i < padding; i++) {
+				outputStream.writeByte(0);
+			}
 		}
 		else
 		{
