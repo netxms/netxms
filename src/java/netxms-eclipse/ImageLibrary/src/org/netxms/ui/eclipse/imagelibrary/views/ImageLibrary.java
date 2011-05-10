@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.MissingFormatArgumentException;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -443,10 +442,18 @@ public class ImageLibrary extends ViewPart
 			final List<LibraryImage> categoryImages = categories.get(category);
 			for(LibraryImage image : categoryImages)
 			{
-				final LibraryImage completeImage;
+				LibraryImage completeImage;
 				if (!image.isComplete())
 				{
-					completeImage = session.getImage(image.getGuid());
+					try
+					{
+						completeImage = session.getImage(image.getGuid());
+					}
+					catch(Exception e)
+					{
+						// TODO: logging
+						completeImage = image;
+					}
 				}
 				else
 				{
@@ -465,7 +472,9 @@ public class ImageLibrary extends ViewPart
 					catch(SWTException e)
 					{
 						// TODO: log?
-						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
+						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
+																												// as
+																												// "missing"
 					}
 				}
 				imageItem.setData(completeImage);

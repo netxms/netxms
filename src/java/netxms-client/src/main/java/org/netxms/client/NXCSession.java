@@ -142,7 +142,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private static final int MAX_DCI_DATA_ROWS = 200000;
 	private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
 	private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
-	private static final int FILE_BUFFER_SIZE = 128 * 1024; // 128k
+	private static final int FILE_BUFFER_SIZE = 4 * 1024; // 128k
 
 	// Internal synchronization objects
 	private final Semaphore syncObjects = new Semaphore(1);
@@ -920,6 +920,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			NXCPMessage abortMessage = new NXCPMessage(NXCPCodes.CMD_ABORT_FILE_TRANSFER, requestId);
 			abortMessage.setBinaryMessage(true);
 			sendMessage(abortMessage);
+			waitForRCC(abortMessage.getMessageId());
 		}
 	}
 
@@ -4219,7 +4220,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		image.setGuid(imageGuid);
 
 		sendFile(msg.getMessageId(), image.getBinaryData());
-
+		
+		waitForRCC(msg.getMessageId());
+	
 		return image;
 	}
 
@@ -4265,6 +4268,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		waitForRCC(msg.getMessageId());
 
 		sendFile(msg.getMessageId(), image.getBinaryData());
+
+		waitForRCC(msg.getMessageId());
 	}
 
 	/**

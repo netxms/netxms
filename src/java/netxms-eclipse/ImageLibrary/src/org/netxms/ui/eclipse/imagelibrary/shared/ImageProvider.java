@@ -66,21 +66,29 @@ public class ImageProvider
 			libraryIndex.put(libraryImage.getGuid(), libraryImage);
 			if (!libraryImage.isComplete())
 			{
-				final LibraryImage completeLibraryImage = session.getImage(libraryImage.getGuid());
-				final ByteArrayInputStream stream = new ByteArrayInputStream(completeLibraryImage.getBinaryData());
-				try {
-					final Image image = new Image(display, stream);
-					cache.put(completeLibraryImage.getGuid(), image);
-				}
-				catch (SWTException e)
+				try
 				{
-					// TODO: log?
-					cache.put(completeLibraryImage.getGuid(), missingImage);
-				}
+					final LibraryImage completeLibraryImage = session.getImage(libraryImage.getGuid());
+					final ByteArrayInputStream stream = new ByteArrayInputStream(completeLibraryImage.getBinaryData());
+					try
+					{
+						final Image image = new Image(display, stream);
+						cache.put(completeLibraryImage.getGuid(), image);
+					}
+					catch(SWTException e)
+					{
+						// TODO: log?
+						cache.put(completeLibraryImage.getGuid(), missingImage);
+					}
 
-				for(final ImageUpdateListener listener : updateListeners)
+					for(final ImageUpdateListener listener : updateListeners)
+					{
+						listener.imageUpdated(completeLibraryImage.getGuid());
+					}
+				}
+				catch(Exception e)
 				{
-					listener.imageUpdated(completeLibraryImage.getGuid());
+					// TODO: log
 				}
 			}
 		}
