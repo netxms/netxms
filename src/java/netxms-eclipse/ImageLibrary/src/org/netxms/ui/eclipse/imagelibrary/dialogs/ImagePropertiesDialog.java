@@ -1,5 +1,6 @@
 package org.netxms.ui.eclipse.imagelibrary.dialogs;
 
+import java.io.File;
 import java.util.Set;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -75,13 +76,24 @@ public class ImagePropertiesDialog extends Dialog
 					{
 						FileDialog dialog = new FileDialog(shell, SWT.OPEN);
 						dialog.setText("Select Image");
-						String[] filterExt = { "Image Files (*.jpg;*.png;*.bmp)", "All Files (*.*)" };
-						dialog.setFilterExtensions(filterExt);
+						dialog.setFilterNames(new String[] { "Image Files (*.jpg;*.png;*.bmp)", "All Files (*.*)" });
+						dialog.setFilterExtensions(new String[] { "*.jpg;*.png;*.bmp", "*.*" });
 						final String selectedFile = dialog.open();
 						if (selectedFile != null)
 						{
 							fileName = selectedFile;
 							fileNameInputField.setText(selectedFile);
+
+							if (nameInputField.getText().length() == 0)
+							{
+								String imageName = new File(fileName).getName();
+								final int lastIndexOf = imageName.lastIndexOf('.');
+								if (lastIndexOf != -1)
+								{
+									imageName = imageName.substring(0, lastIndexOf);
+								}
+								nameInputField.setText(imageName);
+							}
 						}
 					}
 
