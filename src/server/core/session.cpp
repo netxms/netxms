@@ -383,8 +383,10 @@ void ClientSession::readThread()
    {
       if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize, 
 		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
-												INFINITE, MAX_MSG_SIZE)) <= 0)
+												INFINITE, MAX_MSG_SIZE)) <= 0) {
+         DebugPrintf(5, _T("RecvNXCPMessageEx failed (%d)"), iErr);
          break;
+      }
 
       // Check if message is too large
       if (iErr == 1)
@@ -430,6 +432,7 @@ void ClientSession::readThread()
                   {
                      if (wFlags & MF_END_OF_FILE)
                      {
+								DebugPrintf(6, _T("Got end of file marker"));
                         CSCPMessage msg;
 
                         close(m_hCurrFile);
@@ -445,6 +448,7 @@ void ClientSession::readThread()
                   }
                   else
                   {
+							DebugPrintf(6, _T("I/O error"));
                      // I/O error
                      CSCPMessage msg;
 
