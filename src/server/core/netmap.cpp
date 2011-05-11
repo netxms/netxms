@@ -104,13 +104,15 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 
 	LockData();
 
+	bool isNewObject = true;
+   DB_RESULT hResult = NULL;
+
 	if (!saveCommonProperties(hdb))
 		goto fail;
 
 	// Check for object's existence in database
-	bool isNewObject = true;
    _sntprintf(query, 256, _T("SELECT id FROM network_maps WHERE id=%d"), m_dwId);
-   DB_RESULT hResult = DBSelect(hdb, query);
+   hResult = DBSelect(hdb, query);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
