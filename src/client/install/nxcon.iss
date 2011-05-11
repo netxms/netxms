@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Management Console
-AppVerName=NetXMS Management Console 1.1.0
-AppVersion=1.1.0
+AppVerName=NetXMS Management Console 1.1.1
+AppVersion=1.1.1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName={pf}\NetXMS Management Console
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\GPL.txt
-OutputBaseFilename=netxms-console-1.1.0
+OutputBaseFilename=netxms-console-1.1.1
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -34,6 +34,8 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Source: "..\..\..\ChangeLog"; DestDir: "{app}\doc"; Flags: ignoreversion; Components: base
 Source: "..\..\..\Release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\..\Release\libexpat.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
+Source: "..\..\..\Release\libtre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "..\..\..\Release\libtre.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\..\..\Release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\..\Release\libnetxms.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\..\..\Release\libnetxmsw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
@@ -60,8 +62,6 @@ Source: "..\..\..\Release\nxav.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion;
 Source: "..\..\..\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\..\Release\nxnotify.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
 ; Command-line tools files
-Source: "..\..\..\Release\libtre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
-Source: "..\..\..\Release\libtre.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools and pdb
 Source: "..\..\..\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\Release\libnxcl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools and pdb
 Source: "..\..\..\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
@@ -77,7 +77,7 @@ Source: "..\..\..\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignorevers
 Source: "..\..\install\windows\Files\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion; Components: console
 Source: "..\..\install\windows\Files\Microsoft.VC80.MFC\*"; DestDir: "{app}\bin\Microsoft.VC80.MFC"; Flags: ignoreversion; Components: console
 Source: "..\..\install\windows\Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "..\..\install\windows\Files\dbghelp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+;Source: "..\..\install\windows\Files\dbghelp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 
 [Icons]
 Name: "{group}\Alarm Notifier"; Filename: "{app}\bin\nxnotify.exe"; Components: console
