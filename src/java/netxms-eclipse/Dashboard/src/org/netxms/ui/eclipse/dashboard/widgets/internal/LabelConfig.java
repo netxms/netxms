@@ -21,28 +21,24 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 import java.io.StringWriter;
 import java.io.Writer;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Configuration for line chart
+ * Configuration for label
  */
 @Root(name="element")
-public class LineChartConfig
+public class LabelConfig
 {
 	@Element(required=true)
-	private long nodeId = 0;
-
-	@ElementArray(required=true)
-	private long[] dciList = new long[0];
-
-	@ElementArray(required=true)
-	private String[] colors = new String[0];
-	
-	@Element(required=false)
 	private String title = "";
+
+	@Element(required=false)
+	private String foreground = "0x000000";
+
+	@Element(required=false)
+	private String background = "0xFFFFFF";
 
 	/**
 	 * Create line chart settings object from XML document
@@ -51,10 +47,10 @@ public class LineChartConfig
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
 	 */
-	public static LineChartConfig createFromXml(final String xml) throws Exception
+	public static LabelConfig createFromXml(final String xml) throws Exception
 	{
 		Serializer serializer = new Persister();
-		return serializer.read(LineChartConfig.class, xml);
+		return serializer.read(LabelConfig.class, xml);
 	}
 	
 	/**
@@ -72,72 +68,6 @@ public class LineChartConfig
 	}
 
 	/**
-	 * @return the nodeId
-	 */
-	public long getNodeId()
-	{
-		return nodeId;
-	}
-
-	/**
-	 * @param nodeId the nodeId to set
-	 */
-	public void setNodeId(long nodeId)
-	{
-		this.nodeId = nodeId;
-	}
-
-	/**
-	 * @return the dciList
-	 */
-	public long[] getDciList()
-	{
-		return dciList;
-	}
-
-	/**
-	 * @param dciList the dciList to set
-	 */
-	public void setDciList(long[] dciList)
-	{
-		this.dciList = dciList;
-	}
-
-	/**
-	 * @return the colors
-	 */
-	public String[] getColors()
-	{
-		return colors;
-	}
-
-	/**
-	 * @return the color
-	 */
-	public int getColorAsInt(int index)
-	{
-		if (colors[index].startsWith("0x"))
-			return Integer.parseInt(colors[index].substring(2), 16);
-		return Integer.parseInt(colors[index], 10);
-	}
-
-	/**
-	 * @param colors the color to set
-	 */
-	public void setColors(String[] colors)
-	{
-		this.colors = colors;
-	}
-
-	/**
-	 * @param color the color to set
-	 */
-	public void setColor(int index, int color)
-	{
-		colors[index] = Integer.toString(color);
-	}
-
-	/**
 	 * @return the title
 	 */
 	public String getTitle()
@@ -151,5 +81,37 @@ public class LineChartConfig
 	public void setTitle(String title)
 	{
 		this.title = title;
+	}
+
+	/**
+	 * @return the foreground
+	 */
+	public String getForeground()
+	{
+		return foreground;
+	}
+
+	/**
+	 * @param foreground the foreground to set
+	 */
+	public void setForeground(String foreground)
+	{
+		this.foreground = foreground;
+	}
+
+	/**
+	 * @return the background
+	 */
+	public String getBackground()
+	{
+		return background;
+	}
+
+	/**
+	 * @param background the background to set
+	 */
+	public void setBackground(String background)
+	{
+		this.background = background;
 	}
 }

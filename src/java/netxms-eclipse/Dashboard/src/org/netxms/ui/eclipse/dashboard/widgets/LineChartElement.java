@@ -32,6 +32,7 @@ import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Line chart element
@@ -51,12 +52,15 @@ public class LineChartElement extends ElementWidget
 	public LineChartElement(Composite parent, String data)
 	{
 		super(parent, data);
+		session = (NXCSession)ConsoleSharedData.getSession();
+		
 		try
 		{
 			config = LineChartConfig.createFromXml(data);
 		}
 		catch(Exception e)
 		{
+			e.printStackTrace();
 			config = new LineChartConfig();
 		}
 
@@ -71,7 +75,9 @@ public class LineChartElement extends ElementWidget
 		//chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		
 		for(long dciId : config.getDciList())
-			chart.addParameter(new GraphItem(config.getNodeId(), dciId, 0, 0, "", ""));
+		{
+			chart.addParameter(new GraphItem(config.getNodeId(), dciId, 0, 0, Long.toString(dciId), Long.toString(dciId)));
+		}
 
 		final Display display = getDisplay();
 		refreshTimer = new Runnable() {
@@ -104,6 +110,7 @@ public class LineChartElement extends ElementWidget
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				try{
 				final Date from = new Date(System.currentTimeMillis() - 3600000);
 				final Date to = new Date(System.currentTimeMillis());
 				final long[] dciList = config.getDciList();
@@ -130,6 +137,7 @@ public class LineChartElement extends ElementWidget
 						updateInProgress = false;
 					}
 				});
+				}catch(Exception e){e.printStackTrace();throw e;}
 			}
 
 			@Override

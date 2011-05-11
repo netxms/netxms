@@ -10,7 +10,12 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -25,6 +30,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.dialogs.AddDashboardElementDlg;
+import org.netxms.ui.eclipse.dashboard.dialogs.EditDashboardElement;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -98,12 +105,51 @@ public class DashboardElements extends PropertyPage
 
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("&Add...");
+      addButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				addNewElement();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 
       editButton = new Button(buttons, SWT.PUSH);
       editButton.setText("&Modify...");
+      editButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				editElement();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("&Delete");
+      deleteButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				deleteElements();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
 
       viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -206,5 +252,45 @@ public class DashboardElements extends PropertyPage
 	public boolean performOk()
 	{
 		return applyChanges(false);
+	}
+	
+	/**
+	 * Add new dashboard element
+	 */
+	private void addNewElement()
+	{
+		AddDashboardElementDlg dlg = new AddDashboardElementDlg(getShell());
+		if (dlg.open() == Window.OK)
+		{
+			DashboardElement element = new DashboardElement(dlg.getElementType(), "<element>\n</element>\n");
+			elements.add(element);
+			viewer.setInput(elements.toArray());
+			viewer.setSelection(new StructuredSelection(element));
+		}
+	}
+	
+	private void editElement()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		DashboardElement element = (DashboardElement)selection.getFirstElement();
+		EditDashboardElement dlg = new EditDashboardElement(getShell(), element.getData());
+		if (dlg.open() == Window.OK)
+		{
+			element.setData(dlg.getConfig());
+			viewer.update(element, null);
+		}
+	}
+	
+	private void deleteElements()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		for(Object o : selection.toList())
+		{
+			elements.remove(o);
+		}
+		viewer.setInput(elements.toArray());
 	}
 }

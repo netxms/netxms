@@ -53,6 +53,10 @@ public class DashboardControl extends Composite
 	{
 		GridLayout layout = new GridLayout();
 		layout.numColumns = dashboard.getNumColumns();
+		layout.marginWidth = 15;
+		layout.marginHeight = 15;
+		layout.horizontalSpacing = 10;
+		layout.verticalSpacing = 10;
 		setLayout(layout);
 		
 		for(final DashboardElement e : dashboard.getElements())
@@ -124,7 +128,9 @@ public class DashboardControl extends Composite
 		switch(e.getType())
 		{
 			case DashboardElement.LINE_CHART:
-				return new ElementWidget(this, e.getData());
+				return new LineChartElement(this, e.getData());
+			case DashboardElement.LABEL:
+				return new LabelElement(this, e.getData());
 			default:
 				return new ElementWidget(this, e.getData());
 		}

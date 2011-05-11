@@ -32,7 +32,7 @@ class ElementWidget extends Composite
 	 */
 	protected ElementWidget(Composite parent, String data)
 	{
-		super(parent, SWT.NONE);
+		super(parent, SWT.BORDER);
 	}
 
 }
