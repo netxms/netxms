@@ -333,6 +333,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
+		
+		connection.setLineWidth(2);
 	}
 
 	/*

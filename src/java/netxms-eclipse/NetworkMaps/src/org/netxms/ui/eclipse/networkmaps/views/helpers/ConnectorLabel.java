@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ public class ConnectorLabel extends Label
 	{
 		Dimension d = super.getPreferredSize(wHint, hHint);
 		d.height += 2;
-		d.width += 2;
+		d.width += 4;
 		return d;
 	}
 }

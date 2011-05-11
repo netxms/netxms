@@ -1452,8 +1452,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/**
 	 * Find NetXMS object by it's identifier.
 	 * 
-	 * @param id
-	 *           Object identifier
+	 * @param id Object identifier
 	 * @return Object with given ID or null if object cannot be found
 	 */
 	public GenericObject findObjectById(final long id)
@@ -1468,10 +1467,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
+	 * Find NetXMS object by it's identifier with additional class checking.
+	 * 
+	 * @param id object identifier
+	 * @param requiredClass required object class
+	 * @return Object with given ID or null if object cannot be found or is not an instance of required class
+	 */
+	public GenericObject findObjectById(final long id, final Class<? extends GenericObject> requiredClass)
+	{
+		GenericObject object = findObjectById(id);
+		return requiredClass.isInstance(object) ? object : null;
+	}
+	
+	/**
 	 * Find multiple NetXMS objects by identifiers
 	 * 
-	 * @param idList
-	 *           array of object identifiers
+	 * @param idList array of object identifiers
 	 * @return list of found objects
 	 */
 	public List<GenericObject> findMultipleObjects(final long[] idList)

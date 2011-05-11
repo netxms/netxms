@@ -20,7 +20,9 @@ package org.netxms.client;
 
 import java.net.InetAddress;
 
+import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 
 /**
  * @author Victor
@@ -122,6 +124,22 @@ public class ObjectTest extends SessionTest
 
 		Thread.sleep(1000);	// Object update should be received from server
 		object = session.findObjectById(id);
+		assertNull(object);
+		
+		session.disconnect();
+	}
+
+	public void testObjectFind() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		session.syncObjects();
+
+		GenericObject object = session.findObjectById(1, EntireNetwork.class);
+		assertNotNull(object);
+		assertEquals(1, object.getObjectId());
+		
+		object = session.findObjectById(1, Node.class);
 		assertNull(object);
 		
 		session.disconnect();

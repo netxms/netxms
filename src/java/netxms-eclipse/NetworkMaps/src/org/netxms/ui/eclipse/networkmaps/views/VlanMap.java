@@ -24,8 +24,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCException;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
 import org.netxms.client.topology.VlanInfo;
@@ -79,6 +81,7 @@ public class VlanMap extends NetworkMap
 			{
 				NetworkMapPage page = new NetworkMapPage();
 				collectVlanInfo(page, (Node)rootObject);
+				replaceMapPage(page);
 			}
 
 			@Override
@@ -104,12 +107,13 @@ public class VlanMap extends NetworkMap
 	 * @throws Exception 
 	 * @throws NXCException 
 	 */
-	private void collectVlanInfo(NetworkMapPage page, Node root) throws Exception
+	private long collectVlanInfo(NetworkMapPage page, Node root) throws Exception
 	{
 		if (page.findObjectElement(root.getObjectId()) != null)
-			return;
+			return -1;
 		
-		page.addElement(new NetworkMapObject(mapPage.createElementId(), root.getObjectId()));
+		long rootElementId = mapPage.createElementId();
+		page.addElement(new NetworkMapObject(rootElementId, root.getObjectId()));
 		
 		List<VlanInfo> vlans = session.getVlans(root.getObjectId());
 		for(VlanInfo vlan : vlans)
@@ -117,9 +121,39 @@ public class VlanMap extends NetworkMap
 			if (vlan.getVlanId() == vlanId)
 			{
 				Port[] ports = vlan.getPorts();
+				for(Port port : ports)
+				{
+					processVlanPort(page, root, port, rootElementId);
+				}
 				break;
 			}
 		}
-
+		
+		return rootElementId;
+	}
+	
+	/**
+	 * @param page
+	 * @param root
+	 * @param port
+	 * @throws Exception 
+	 */
+	private void processVlanPort(NetworkMapPage page, Node root, Port port, long rootElementId) throws Exception
+	{
+		Interface iface = (Interface)session.findObjectById(port.getObjectId(), Interface.class);
+		if (iface != null)
+		{
+			Node peerNode = (Node)session.findObjectById(iface.getPeerNodeId(), Node.class);
+			if ((peerNode != null) && ((peerNode.getFlags() & Node.NF_IS_BRIDGE) != 0))
+			{
+				long nodeElementId = collectVlanInfo(page, peerNode);
+				if (nodeElementId != -1)
+				{
+					Interface peerIf = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+					page.addLink(new NetworkMapLink(null, NetworkMapLink.NORMAL, rootElementId, nodeElementId,
+							       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???"));
+				}
+			}
+		}
 	}
 }

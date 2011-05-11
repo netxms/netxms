@@ -16,7 +16,7 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
    </configIni>
 
    <launcherArgs>
-      <vmArgs>-Dorg.netxms.ui.eclipse.usermanager.showSystemRightsPage=true</vmArgs>
+      <vmArgs>-Xms128m -Xmx2048m -Dorg.netxms.ui.eclipse.usermanager.showSystemRightsPage=true</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
@@ -33,15 +33,11 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
    <license>
         <url>http://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html</url>
-        <text>
-
-         </text>
    </license>
 
    <plugins>
