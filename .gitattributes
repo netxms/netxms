@@ -605,6 +605,7 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CreateDashboard.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/OpenDashboard.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DashboardElements.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/DashboardView.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/ServerStats.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/DashboardControl.java -text

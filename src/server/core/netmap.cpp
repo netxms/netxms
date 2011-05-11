@@ -167,6 +167,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
       DBQuery(hdb, query);
    }
 
+	UnlockData();
 	return TRUE;
 
 fail:

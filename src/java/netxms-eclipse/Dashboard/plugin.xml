@@ -56,5 +56,18 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements"
+            name="Dashboard Elements">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Dashboard">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
 
 </plugin>

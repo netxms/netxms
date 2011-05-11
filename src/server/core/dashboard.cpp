@@ -150,10 +150,14 @@ BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
 		           (int)m_dwId, i, element->m_type, (const TCHAR *)data, element->m_horizontalSpan,
 					  element->m_verticalSpan, element->m_horizontalAlignment, element->m_verticalAlignment);
       if (!DBQuery(hdb, eq))
+		{
+			free(eq);
 			goto fail;
+		}
 		free(eq);
    }
 
+	UnlockData();
 	return Container::SaveToDB(hdb);
 
 fail:

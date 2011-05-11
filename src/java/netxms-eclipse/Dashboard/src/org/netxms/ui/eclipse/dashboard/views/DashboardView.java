@@ -18,15 +18,22 @@
  */
 package org.netxms.ui.eclipse.dashboard.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Dashboard view
@@ -38,6 +45,8 @@ public class DashboardView extends ViewPart
 	private NXCSession session;
 	private Dashboard dashboard;
 	private DashboardControl dbc;
+	
+	private Action actionAddElement;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -59,8 +68,58 @@ public class DashboardView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		dbc = new DashboardControl(parent, SWT.NONE, dashboard);
+
+		createActions();
+		contributeToActionBars();
 	}
 
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionAddElement = new Action("&Add element...") {
+			@Override
+			public void run()
+			{
+				addElement();
+			}
+		};
+		actionAddElement.setImageDescriptor(SharedIcons.ADD_OBJECT);
+	}
+	
+	/**
+	 * Contribute actions to action bar
+	 */
+	private void contributeToActionBars()
+	{
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+
+	/**
+	 * Fill local pull-down menu
+	 * 
+	 * @param manager
+	 *           Menu manager for pull-down menu
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+		manager.add(actionAddElement);
+	}
+
+	/**
+	 * Fill local tool bar
+	 * 
+	 * @param manager
+	 *           Menu manager for local toolbar
+	 */
+	private void fillLocalToolBar(IToolBarManager manager)
+	{
+		manager.add(actionAddElement);
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
@@ -70,4 +129,11 @@ public class DashboardView extends ViewPart
 		dbc.setFocus();
 	}
 
+	/**
+	 * Add new dashboard element
+	 */
+	private void addElement()
+	{
+		
+	}
 }
