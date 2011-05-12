@@ -129,6 +129,10 @@ public class DashboardControl extends Composite
 		{
 			case DashboardElement.LINE_CHART:
 				return new LineChartElement(this, e.getData());
+			case DashboardElement.BAR_CHART:
+				return new BarChartElement(this, e.getData());
+			case DashboardElement.PIE_CHART:
+				return new PieChartElement(this, e.getData());
 			case DashboardElement.LABEL:
 				return new LabelElement(this, e.getData());
 			default:

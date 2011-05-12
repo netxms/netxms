@@ -31,7 +31,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.dialogs.AddDashboardElementDlg;
-import org.netxms.ui.eclipse.dashboard.dialogs.EditDashboardElement;
+import org.netxms.ui.eclipse.dashboard.dialogs.EditDashboardElementDlg;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -276,10 +276,9 @@ public class DashboardElements extends PropertyPage
 			return;
 		
 		DashboardElement element = (DashboardElement)selection.getFirstElement();
-		EditDashboardElement dlg = new EditDashboardElement(getShell(), element.getData());
+		EditDashboardElementDlg dlg = new EditDashboardElementDlg(getShell(), element);
 		if (dlg.open() == Window.OK)
 		{
-			element.setData(dlg.getConfig());
 			viewer.update(element, null);
 		}
 	}

@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
-import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -28,79 +27,57 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.GraphItem;
-import org.netxms.ui.eclipse.charts.widgets.LineChart;
+import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Line chart element
+ * Base class for data comparision charts - like bar chart, pie chart, etc.
  */
-public class LineChartElement extends ElementWidget
+public abstract class ComparisionChartElement extends ElementWidget
 {
-	private LineChart chart;
-	private LineChartConfig config;
+	protected DataComparisonBirtChart chart;
+	protected NXCSession session;
+
 	private Runnable refreshTimer;
 	private boolean updateInProgress = false;
-	private NXCSession session;
 
 	/**
 	 * @param parent
 	 * @param data
 	 */
-	public LineChartElement(Composite parent, String data)
+	public ComparisionChartElement(Composite parent, String data)
 	{
 		super(parent, data);
 		session = (NXCSession)ConsoleSharedData.getSession();
-		
-		try
-		{
-			config = LineChartConfig.createFromXml(data);
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-			config = new LineChartConfig();
-		}
 
-		setLayout(new FillLayout());
-		
-		chart = new LineChart(this, SWT.NONE);
-		chart.setTitleVisible(true);
-		chart.setChartTitle(config.getTitle());
-		chart.setLegendVisible(false);
-		
-		//GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
-		//chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
-		
-		for(DashboardDciInfo dci : config.getDciList())
-		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), Long.toString(dci.dciId)));
-		}
-
+		setLayout(new FillLayout());	
+	}
+	
+	protected void startRefreshTimer()
+	{
 		final Display display = getDisplay();
 		refreshTimer = new Runnable() {
 			@Override
 			public void run()
 			{
-				if (LineChartElement.this.isDisposed())
+				if (ComparisionChartElement.this.isDisposed())
 					return;
 				
-				refreshData();
+				refreshData(getDciList());
 				display.timerExec(30000, this);
 			}
 		};
 		display.timerExec(30000, refreshTimer);
-		refreshData();
+		refreshData(getDciList());
 	}
 
 	/**
 	 * Refresh graph's data
 	 */
-	private void refreshData()
+	protected void refreshData(final DashboardDciInfo[] dciList)
 	{
 		if (updateInProgress)
 			return;
@@ -112,12 +89,9 @@ public class LineChartElement extends ElementWidget
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Date from = new Date(System.currentTimeMillis() - 3600000);
-				final Date to = new Date(System.currentTimeMillis());
-				final DashboardDciInfo[] dciList = config.getDciList();
 				for(int i = 0; i < dciList.length; i++)
 				{
-					final DciData data = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, from, to, 0);
+					final DciData data = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1);
 					final int index = i;
 					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 						@Override
@@ -125,8 +99,7 @@ public class LineChartElement extends ElementWidget
 						{
 							if (!chart.isDisposed())
 							{
-								chart.setTimeRange(from, to);
-								chart.updateParameter(index, data, false);
+								chart.updateParameter(index, data.getLastValue().getValueAsDouble(), false);
 							}
 						}
 					});
@@ -140,13 +113,13 @@ public class LineChartElement extends ElementWidget
 					}
 				});
 			}
-
+	
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot get DCI values for history graph";
+				return "Cannot get DCI values for comparision chart";
 			}
-
+	
 			@Override
 			protected void jobFailureHandler()
 			{
@@ -169,4 +142,6 @@ public class LineChartElement extends ElementWidget
 			size.y = 250;
 		return size;
 	}
+
+	protected abstract DashboardDciInfo[] getDciList();
 }

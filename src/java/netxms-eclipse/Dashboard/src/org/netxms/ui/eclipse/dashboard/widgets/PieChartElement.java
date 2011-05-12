@@ -1,0 +1,82 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.dashboard.widgets;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
+
+/**
+ * Line chart element
+ */
+public class PieChartElement extends ComparisionChartElement
+{
+	private PieChartConfig config;
+
+	/**
+	 * @param parent
+	 * @param data
+	 */
+	public PieChartElement(Composite parent, String data)
+	{
+		super(parent, data);
+		
+		try
+		{
+			config = PieChartConfig.createFromXml(data);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			config = new PieChartConfig();
+		}
+
+		setLayout(new FillLayout());
+		
+		chart = new DataComparisonBirtChart(this, SWT.NONE, DataComparisonChart.PIE_CHART);
+		chart.setTitleVisible(true);
+		chart.setChartTitle(config.getTitle());
+		chart.setLegendPosition(config.getLegendPosition());
+		chart.setLegendVisible(config.isShowLegend());
+		chart.set3DModeEnabled(config.isShowIn3D());
+		chart.setTranslucent(config.isTranslucent());
+		
+		for(DashboardDciInfo dci : config.getDciList())
+		{
+			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()), 0.0);
+		}
+		chart.initializationComplete();
+
+		startRefreshTimer();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisionChartElement#getDciList()
+	 */
+	@Override
+	protected DashboardDciInfo[] getDciList()
+	{
+		return config.getDciList();
+	}
+}
