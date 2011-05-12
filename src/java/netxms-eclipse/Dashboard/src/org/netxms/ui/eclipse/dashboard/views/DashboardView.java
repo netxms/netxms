@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard.views;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -30,7 +29,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -59,6 +57,7 @@ public class DashboardView extends ViewPart
 		dashboard = (Dashboard)session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		if (dashboard == null)
 			throw new PartInitException("Dashboard object is no longer exist or is not accessible");
+		setPartName("Dashboard: " + dashboard.getObjectName());
 	}
 
 	/* (non-Javadoc)
