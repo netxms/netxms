@@ -126,11 +126,11 @@ BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
    }
 
 	if (isNewObject)
-      _sntprintf(query, 1024,
+      _sntprintf(query, 256,
                  _T("INSERT INTO dashboards (id,num_columns) VALUES (%d,%d)"),
 					  (int)m_dwId, m_numColumns);
    else
-      _sntprintf(query, 1024,
+      _sntprintf(query, 256,
                  _T("UPDATE dashboards SET num_columns=%d WHERE id=%d"),
 					  m_numColumns, (int)m_dwId);
    if (!DBQuery(hdb, query))
