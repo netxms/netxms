@@ -4,13 +4,16 @@
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -50,6 +53,8 @@ public class DashboardElements extends PropertyPage
 	private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
+	private Button upButton;
+	private Button downButton;
 	private List<DashboardElement> elements;
 	
 	/* (non-Javadoc)
@@ -103,6 +108,40 @@ public class DashboardElements extends PropertyPage
       gridData.horizontalAlignment = SWT.RIGHT;
       buttons.setLayoutData(gridData);
 
+      upButton = new Button(buttons, SWT.PUSH);
+      upButton.setText("&Up");
+      upButton.setEnabled(false);
+      upButton.addSelectionListener(new SelectionListener() {
+		@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveUp();
+			}
+      });
+      
+      downButton = new Button(buttons, SWT.PUSH);
+      downButton.setText("&Down");
+      downButton.setEnabled(false);
+      downButton.addSelectionListener(new SelectionListener() {
+   		@Override
+   			public void widgetDefaultSelected(SelectionEvent e)
+   			{
+   				widgetSelected(e);
+   			}
+
+   			@Override
+   			public void widgetSelected(SelectionEvent e)
+   			{
+   				moveDown();
+   			}
+         });
+
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("&Add...");
       addButton.addSelectionListener(new SelectionListener() {
@@ -151,6 +190,19 @@ public class DashboardElements extends PropertyPage
 			}
 		});
 
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				int index = elements.indexOf(selection.getFirstElement());
+				upButton.setEnabled((selection.size() == 1) && (index > 0));
+				downButton.setEnabled((selection.size() == 1) && (index >= 0) && (index < elements.size() - 1));
+				editButton.setEnabled(selection.size() == 1);
+				deleteButton.setEnabled(selection.size() > 0);
+			}
+      });
+      
       viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -291,5 +343,45 @@ public class DashboardElements extends PropertyPage
 			elements.remove(o);
 		}
 		viewer.setInput(elements.toArray());
+	}
+
+	/**
+	 * Move currently selected element up
+	 */
+	private void moveUp()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() == 1)
+		{
+			DashboardElement element = (DashboardElement)selection.getFirstElement();
+			
+			int index = elements.indexOf(element);
+			if (index > 0)
+			{
+				Collections.swap(elements, index - 1, index);
+		      viewer.setInput(elements.toArray());
+		      viewer.setSelection(new StructuredSelection(element));
+			}
+		}
+	}
+	
+	/**
+	 * Move currently selected element down
+	 */
+	private void moveDown()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() == 1)
+		{
+			DashboardElement element = (DashboardElement)selection.getFirstElement();
+			
+			int index = elements.indexOf(element);
+			if ((index < elements.size() - 1) && (index >= 0))
+			{
+				Collections.swap(elements, index + 1, index);
+		      viewer.setInput(elements.toArray());
+		      viewer.setSelection(new StructuredSelection(element));
+			}
+		}
 	}
 }

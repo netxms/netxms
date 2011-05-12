@@ -85,6 +85,22 @@ public abstract class GenericChart extends Canvas implements DataChart
 	}
 
 	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getPaletteEntry(int)
+	 */
+	@Override
+	public ChartColor getPaletteEntry(int index)
+	{
+		try
+		{
+			return palette[index];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return null;
+		}
+	}
+
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#is3DModeEnabled()
 	 */
 	@Override
@@ -110,7 +126,7 @@ public abstract class GenericChart extends Canvas implements DataChart
 		palette = new ChartColor[MAX_CHART_ITEMS];
 		for(int i = 0; i < MAX_CHART_ITEMS; i++)
 		{
-			palette[i] = ChartColor.createFromPreferences(preferenceStore, "Chart.Colors.Data." + i);
+			palette[i] = ChartColor.getDefaultColor(i);
 		}
 	}
 

@@ -94,6 +94,13 @@ public interface DataChart
 	public abstract void setPalette(ChartColor[] colors);
 	
 	/**
+	 * Get single palette element.
+	 * 
+	 * @param index element index
+	 */
+	public abstract ChartColor getPaletteEntry(int index);
+
+	/**
 	 * Set single palette element.
 	 * 
 	 * @param index element index

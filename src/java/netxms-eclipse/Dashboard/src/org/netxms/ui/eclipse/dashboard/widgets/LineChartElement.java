@@ -18,7 +18,10 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -29,6 +32,8 @@ import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphItemStyle;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
@@ -71,15 +76,20 @@ public class LineChartElement extends ElementWidget
 		chart = new LineChart(this, SWT.NONE);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(config.getTitle());
-		chart.setLegendVisible(false);
+		chart.setLegendVisible(config.isShowLegend());
 		
-		//GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
-		//chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
-		
+		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
+		int index = 0;
 		for(DashboardDciInfo dci : config.getDciList())
 		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), Long.toString(dci.dciId)));
+			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()));
+			int color = dci.getColorAsInt();
+			if (color == -1)
+				color = ChartColor.getDefaultColor(index).getRGB();
+			styles.add(new GraphItemStyle(GraphItemStyle.LINE, color, 2, 0));
+			index++;
 		}
+		chart.setItemStyles(styles);
 
 		final Display display = getDisplay();
 		refreshTimer = new Runnable() {

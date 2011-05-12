@@ -13,6 +13,8 @@ import org.simpleframework.xml.Root;
 @Root(name="dci")
 public class DashboardDciInfo
 {
+	private static final String UNSET_COLOR = "UNSET";
+	
 	@Attribute
 	public long nodeId = 0;
 	
@@ -20,16 +22,21 @@ public class DashboardDciInfo
 	public long dciId = 0;
 	
 	@Element(required=false)
-	public String color = "0xC00000";
+	public String color = UNSET_COLOR;
 
 	@Element(required=false)
 	public String name = "";
+	
+	@Element(required=false)
+	public int lineWidth = 2;
 
 	/**
 	 * @return the color
 	 */
 	public int getColorAsInt()
 	{
+		if (color.equals(UNSET_COLOR))
+			return -1;
 		if (color.startsWith("0x"))
 			return Integer.parseInt(color.substring(2), 16);
 		return Integer.parseInt(color, 10);
@@ -43,6 +50,10 @@ public class DashboardDciInfo
 		color = "0x" + Integer.toHexString(value);
 	}
 	
+	/**
+	 * Get DCI name. Always returns non-empty string.
+	 * @return
+	 */
 	public String getName()
 	{
 		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]");

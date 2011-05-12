@@ -37,6 +37,9 @@ public class LineChartConfig
 
 	@Element(required=false)
 	private String title = "";
+	
+	@Element(required=false)
+	private boolean showLegend = false;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -95,5 +98,21 @@ public class LineChartConfig
 	public void setDciList(DashboardDciInfo[] dciList)
 	{
 		this.dciList = dciList;
+	}
+
+	/**
+	 * @return the showLegend
+	 */
+	public boolean isShowLegend()
+	{
+		return showLegend;
+	}
+
+	/**
+	 * @param showLegend the showLegend to set
+	 */
+	public void setShowLegend(boolean showLegend)
+	{
+		this.showLegend = showLegend;
 	}
 }

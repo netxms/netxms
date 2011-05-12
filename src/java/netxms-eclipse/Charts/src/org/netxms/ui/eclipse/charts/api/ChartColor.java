@@ -21,6 +21,8 @@ package org.netxms.ui.eclipse.charts.api;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.RGB;
+import org.netxms.ui.eclipse.charts.Activator;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Color for chart element
@@ -78,6 +80,19 @@ public final class ChartColor
 	}
 	
 	/**
+	 * Create chart color from RGB object
+	 * 
+	 * @param rgb RGB object
+	 */
+	public ChartColor(RGB rgb)
+	{
+		red = rgb.red;
+		green = rgb.green;
+		blue = rgb.blue;
+		alpha = 255;
+	}
+	
+	/**
 	 * Create RGB value encoded into 32bit integer. Alpha value ignored.
 	 *  
 	 * @return RGB value for color
@@ -108,5 +123,16 @@ public final class ChartColor
 	{
 		RGB rgb = PreferenceConverter.getColor(preferenceStore, name);
 		return new ChartColor(rgb.red, rgb.green, rgb.blue);
+	}
+	
+	/**
+	 * Get default color for series
+	 * 
+	 * @param index series index
+	 * @return default color for series
+	 */
+	public static ChartColor getDefaultColor(int index)
+	{
+		return new ChartColor(ColorConverter.getColorFromPreferences(Activator.getDefault().getPreferenceStore(), "Chart.Colors.Data." + index).getRGB());
 	}
 }

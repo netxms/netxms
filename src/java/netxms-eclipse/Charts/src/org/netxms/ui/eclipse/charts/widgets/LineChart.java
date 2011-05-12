@@ -500,6 +500,16 @@ public class LineChart extends Chart implements HistoricalDataChart
 	}
 
 	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getPaletteEntry(int)
+	 */
+	@Override
+	public ChartColor getPaletteEntry(int index)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataChart#set3DModeEnabled(boolean)
 	 */
 	@Override

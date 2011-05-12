@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
@@ -62,9 +63,13 @@ public class PieChartElement extends ComparisionChartElement
 		chart.set3DModeEnabled(config.isShowIn3D());
 		chart.setTranslucent(config.isTranslucent());
 		
+		int index = 0;
 		for(DashboardDciInfo dci : config.getDciList())
 		{
 			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()), 0.0);
+			int color = dci.getColorAsInt();
+			if (color != -1)
+				chart.setPaletteEntry(index++, new ChartColor(color));
 		}
 		chart.initializationComplete();
 

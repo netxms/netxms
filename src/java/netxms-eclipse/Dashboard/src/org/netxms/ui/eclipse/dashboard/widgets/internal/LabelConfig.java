@@ -92,6 +92,16 @@ public class LabelConfig
 	}
 
 	/**
+	 * @return
+	 */
+	public int getForegroundColorAsInt()
+	{
+		if (foreground.startsWith("0x"))
+			return Integer.parseInt(foreground.substring(2), 16);
+		return Integer.parseInt(foreground, 10);
+	}
+
+	/**
 	 * @param foreground the foreground to set
 	 */
 	public void setForeground(String foreground)
@@ -105,6 +115,16 @@ public class LabelConfig
 	public String getBackground()
 	{
 		return background;
+	}
+	
+	/**
+	 * @return
+	 */
+	public int getBackgroundColorAsInt()
+	{
+		if (background.startsWith("0x"))
+			return Integer.parseInt(background.substring(2), 16);
+		return Integer.parseInt(background, 10);
 	}
 
 	/**

@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
@@ -64,7 +65,15 @@ public class Startup implements IStartup
 				Location loc = Platform.getInstanceLocation();
 				if (loc != null)
 				{
-					File targetDir = new File(loc.getURL().toURI());
+					File targetDir;
+					try
+					{
+						targetDir = new File(loc.getURL().toURI());
+					}
+					catch(URISyntaxException e)
+					{
+						targetDir = new File(loc.getURL().getPath());
+					}
 					File mibFile = new File(targetDir, "netxms.mib");
 					
 					Date serverMibTimestamp = session.getMibFileTimestamp();
