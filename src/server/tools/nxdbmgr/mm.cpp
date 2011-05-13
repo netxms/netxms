@@ -36,6 +36,8 @@ static DWORD GenerateObjectId()
 		return 0;
 
 	DWORD id = DBGetFieldULong(hResult, 0, 0) + 1;
+	if (id < 10)
+		id = 10;
 	DBFreeResult(hResult);
 	return id;
 }
