@@ -93,6 +93,7 @@ mibs_DATA = \
 	P-BRIDGE-MIB.txt \
 	PerfHist-TC-MIB.txt \
 	PIM-MIB.txt \
+	POLYCOM-RMX-MIB.txt \
 	PowerNet-MIB.txt \
 	Printer-MIB.txt \
 	Q-BRIDGE-MIB.txt \
