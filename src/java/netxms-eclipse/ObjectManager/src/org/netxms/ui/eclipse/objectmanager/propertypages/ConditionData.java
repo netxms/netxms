@@ -18,13 +18,9 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -47,30 +43,35 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.objects.Condition;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
-import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrListLabelProvider;
-import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AttrViewerComparator;
+import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * "Custom Attributes" property page
+ * "Data" property page for condition objects
  */
-public class CustomAttributes extends PropertyPage
+public class ConditionData extends PropertyPage
 {
-	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_VALUE = 1;
+	public static final int COLUMN_POSITION = 0;
+	public static final int COLUMN_NODE = 1;
+	public static final int COLUMN_METRIC = 2;
+	public static final int COLUMN_FUNCTION = 3;
 	
-	private GenericObject object = null;
+	private Condition object = null;
+	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
-	private Map<String, String> attributes = null;
+	private List<ConditionDciInfo> dciList = null;
 	private boolean isModified = false;
 
 	/* (non-Javadoc)
@@ -81,9 +82,16 @@ public class CustomAttributes extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (GenericObject)getElement().getAdapter(GenericObject.class);
+		object = (Condition)getElement().getAdapter(Condition.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
+		
+      dciList = new ArrayList<ConditionDciInfo>();
+      for(ConditionDciInfo dci : object.getDciList())
+      	dciList.add(new ConditionDciInfo(dci));
+      
+		labelProvider = new DciListLabelProvider(dciList);
+		labelProvider.resolveDciNames(object.getDciList());
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -91,16 +99,14 @@ public class CustomAttributes extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Name", "Value" };
-      final int[] columnWidths = { 150, 250 };
+      final String[] columnNames = { "Pos", "Node", "Parameter", "Function" };
+      final int[] columnWidths = { 40, 130, 220, 80 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new AttrListLabelProvider());
-      viewer.setComparator(new AttrViewerComparator());
-      
-      attributes = new HashMap<String, String>(object.getCustomAttributes());
-      viewer.setInput(attributes.entrySet());
+      viewer.setLabelProvider(labelProvider);
+      viewer.disableSorting();
+      viewer.setInput(dciList.toArray());
       
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -136,20 +142,7 @@ public class CustomAttributes extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null);
-				if (dlg.open() == Window.OK)
-				{
-					if (attributes.containsKey(dlg.getAttrName()))
-					{
-						MessageDialog.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
-					}
-					else
-					{
-						attributes.put(dlg.getAttrName(), dlg.getAttrValue());
-				      viewer.setInput(attributes.entrySet());
-				      CustomAttributes.this.isModified = true;
-					}
-				}
+				addItem();
 			}
       });
 		
@@ -165,24 +158,13 @@ public class CustomAttributes extends PropertyPage
 				widgetSelected(e);
 			}
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				if (selection.size() == 1)
-				{
-					Entry<String, String> element = (Entry<String, String>)selection.getFirstElement();
-					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), element.getValue());
-					if (dlg.open() == Window.OK)
-					{
-						attributes.put(dlg.getAttrName(), dlg.getAttrValue());
-				      viewer.setInput(attributes.entrySet());
-				      CustomAttributes.this.isModified = true;
-					}
-				}
+				editItem();
 			}
       });
+      editButton.setEnabled(false);
 		
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("&Delete");
@@ -196,24 +178,13 @@ public class CustomAttributes extends PropertyPage
 				widgetSelected(e);
 			}
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				Iterator<Entry<String, String>> it = selection.iterator();
-				if (it.hasNext())
-				{
-					while(it.hasNext())
-					{
-						Entry<String, String> element = it.next();
-						attributes.remove(element.getKey());
-					}
-			      viewer.setInput(attributes.entrySet());
-			      CustomAttributes.this.isModified = true;
-				}
+				deleteItems();
 			}
       });
+      deleteButton.setEnabled(false);
 		
       viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -235,6 +206,43 @@ public class CustomAttributes extends PropertyPage
       
 		return dialogArea;
 	}
+	
+	/**
+	 * Add new item
+	 */
+	private void addItem()
+	{
+		SelectDciDialog dlg = new SelectDciDialog(getShell());
+		if (dlg.open() == Window.OK)
+		{
+			DciValue selection = dlg.getSelection();
+			ConditionDciInfo dci = new ConditionDciInfo(selection.getNodeId(), selection.getId(), Threshold.F_LAST, 1);
+			labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), selection.getDescription());
+			dciList.add(dci);
+			viewer.setInput(dciList.toArray());
+			isModified = true;
+		}
+	}
+	
+	/**
+	 * Edit selected item
+	 */
+	private void editItem()
+	{
+		
+	}
+	
+	/**
+	 * Delete selected item(s)
+	 */
+	private void deleteItems()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		for(Object o : selection.toList())
+			dciList.remove(o);
+      viewer.setInput(dciList.toArray());
+      isModified = true;
+	}
 
 	/**
 	 * Apply changes
@@ -249,12 +257,12 @@ public class CustomAttributes extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new ConsoleJob("Update custom attributes", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Update condition's DCI list", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-				md.setCustomAttributes(attributes);
+				md.setDciList(dciList);
 				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
 				isModified = false;
 			}
@@ -262,7 +270,7 @@ public class CustomAttributes extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot update object's custom attributes";
+				return "Cannot update condition's DCI list";
 			}
 
 			@Override
@@ -274,7 +282,7 @@ public class CustomAttributes extends PropertyPage
 						@Override
 						public void run()
 						{
-							CustomAttributes.this.setValid(true);
+							ConditionData.this.setValid(true);
 						}
 					});
 				}

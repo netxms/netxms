@@ -18,11 +18,17 @@
  */
 package org.netxms.ui.eclipse.jobs;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.ui.eclipse.library.Activator;
@@ -36,6 +42,7 @@ public abstract class ConsoleJob extends Job
 	private IWorkbenchSiteProgressService siteService;
 	private String pluginId;
 	private Object jobFamily;
+	private boolean passException = false;
 	
 	/**
 	 * Constructor for console job object
@@ -51,7 +58,7 @@ public abstract class ConsoleJob extends Job
 		this.pluginId = (pluginId != null) ? pluginId : Activator.PLUGIN_ID;
 		this.jobFamily = jobFamily;
 		siteService = (wbPart != null) ? 
-					(IWorkbenchSiteProgressService)wbPart.getSite().getAdapter(IWorkbenchSiteProgressService.class) : null;
+					(IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
 		setUser(true);
 	}
 
@@ -71,7 +78,7 @@ public abstract class ConsoleJob extends Job
 		{
 			status = new Status(Status.ERROR, pluginId, 
                   (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-                  getErrorMessage() + ": " + e.getMessage(), null);
+                  getErrorMessage() + ": " + e.getMessage(), passException ? e : null);
 			jobFailureHandler();
 		}
 		finally
@@ -100,7 +107,7 @@ public abstract class ConsoleJob extends Job
 		else
 			schedule();
 	}
-
+	
 	/**
 	 * Executes job. Called from within Job.run(). If job fails, this method should throw appropriate exception.
 	 * 
@@ -129,5 +136,42 @@ public abstract class ConsoleJob extends Job
 	 */
 	protected void jobFinalize()
 	{
+	}
+
+	/**
+	 * Run job in foreground using IProgressService.busyCursorWhile
+	 * 
+	 * @return true if job was successful
+	 */
+	public boolean runInForeground()
+	{
+		passException = true;
+		IProgressService service = PlatformUI.getWorkbench().getProgressService();
+		boolean success = true;
+		try
+		{
+			service.run(true, false, new IRunnableWithProgress() {
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
+				{
+					IStatus status = ConsoleJob.this.run(monitor);
+					if (!status.isOK())
+					{
+						throw new InvocationTargetException(status.getException());
+					}
+				}
+			});
+		}
+		catch(InvocationTargetException e)
+		{
+			Throwable cause = e.getCause();
+			if (cause == null)
+				cause = e;
+			MessageDialog.openError(null, "Job failed", getErrorMessage() + ": " + cause.getLocalizedMessage());
+		}
+		catch(InterruptedException e)
+		{
+		}
+		return success;
 	}
 }

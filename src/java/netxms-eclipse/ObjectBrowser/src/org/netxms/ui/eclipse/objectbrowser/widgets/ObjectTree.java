@@ -218,6 +218,9 @@ public class ObjectTree extends Composite
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
+							if (ObjectTree.this.isDisposed() || objectTree.getControl().isDisposed())
+								return Status.OK_STATUS;
+							
 							changeCount--;
 							if (changeCount <= 0)
 							{
@@ -394,6 +397,17 @@ public class ObjectTree extends Composite
 			objects.add(((GenericObject)it.next()).getObjectId());
 		}
 		return objects.toArray(new Long[objects.size()]);
+	}
+	
+	/**
+	 * Get selected object as object
+	 * 
+	 * @return
+	 */
+	public GenericObject getFirstSelectedObject2()
+	{
+		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+		return (GenericObject)selection.getFirstElement();
 	}
 	
 	/**

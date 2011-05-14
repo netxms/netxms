@@ -63,8 +63,12 @@ public class ThresholdLabelProvider implements ITableLabelProvider
 				if (f != Threshold.F_DIFF)
 				{
 					text.append(((Threshold)element).getArg1());
+					text.append(") ");
 				}
-				text.append(") ");
+				else
+				{
+					text.append(' ');
+				}
 				text.append(operations[((Threshold)element).getOperation()]);
 				text.append(' ');
 				text.append(((Threshold)element).getValue());

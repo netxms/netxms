@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,55 +16,32 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectmanager;
+package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 
 import java.util.Map.Entry;
 
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes;
 
 /**
  * Label provider for access list elements
- *
  */
-public class AttrListLabelProvider implements ITableLabelProvider
+public class AttrListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	@Override
-	public void addListener(ILabelProviderListener listener)
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void dispose()
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public boolean isLabelProperty(Object element, String property)
-	{
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void removeListener(ILabelProviderListener listener)
-	{
-		// TODO Auto-generated method stub
-
-	}
-
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+	 */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+	 */
 	@SuppressWarnings("rawtypes")
 	@Override
 	public String getColumnText(Object element, int columnIndex)

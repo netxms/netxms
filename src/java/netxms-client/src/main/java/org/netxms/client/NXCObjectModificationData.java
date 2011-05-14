@@ -20,10 +20,12 @@ package org.netxms.client;
 
 import java.net.InetAddress;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
@@ -61,6 +63,13 @@ public class NXCObjectModificationData
 	public static final long MODIFY_ICMP_PROXY         = 0x00400000L;
 	public static final long MODIFY_COLUMN_COUNT       = 0x00800000L;
 	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x01000000L;
+	public static final long MODIFY_SCRIPT             = 0x02000000L;
+	public static final long MODIFY_ACTIVATION_EVENT   = 0x04000000L;
+	public static final long MODIFY_DEACTIVATION_EVENT = 0x08000000L;
+	public static final long MODIFY_SOURCE_OBJECT      = 0x10000000L;
+	public static final long MODIFY_ACTIVE_STATUS      = 0x20000000L;
+	public static final long MODIFY_INACTIVE_STATUS    = 0x40000000L;
+	public static final long MODIFY_DCI_LIST           = 0x80000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -98,6 +107,13 @@ public class NXCObjectModificationData
 	private Collection<NetworkMapLink> mapLinks;
 	private int columnCount;
 	private Collection<DashboardElement> dashboardElements;
+	private String script;
+	private int activationEvent;
+	private int deactivationEvent;
+	private long sourceObject;
+	private int activeStatus;
+	private int inactiveStatus;
+	private List<ConditionDciInfo> dciList;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -697,5 +713,124 @@ public class NXCObjectModificationData
 	{
 		this.dashboardElements = dashboardElements;
 		flags |= MODIFY_DASHBOARD_ELEMENTS;
+	}
+
+	/**
+	 * @return the script
+	 */
+	public String getScript()
+	{
+		return script;
+	}
+
+	/**
+	 * @param script the script to set
+	 */
+	public void setScript(String script)
+	{
+		this.script = script;
+		flags |= MODIFY_SCRIPT;
+	}
+
+	/**
+	 * @return the activationEvent
+	 */
+	public int getActivationEvent()
+	{
+		return activationEvent;
+	}
+
+	/**
+	 * @param activationEvent the activationEvent to set
+	 */
+	public void setActivationEvent(int activationEvent)
+	{
+		this.activationEvent = activationEvent;
+		flags |= MODIFY_ACTIVATION_EVENT;
+	}
+
+	/**
+	 * @return the deactivationEvent
+	 */
+	public int getDeactivationEvent()
+	{
+		return deactivationEvent;
+	}
+
+	/**
+	 * @param deactivationEvent the deactivationEvent to set
+	 */
+	public void setDeactivationEvent(int deactivationEvent)
+	{
+		this.deactivationEvent = deactivationEvent;
+		flags |= MODIFY_DEACTIVATION_EVENT;
+	}
+
+	/**
+	 * @return the sourceObject
+	 */
+	public long getSourceObject()
+	{
+		return sourceObject;
+	}
+
+	/**
+	 * @param sourceObject the sourceObject to set
+	 */
+	public void setSourceObject(long sourceObject)
+	{
+		this.sourceObject = sourceObject;
+		flags |= MODIFY_SOURCE_OBJECT;
+	}
+
+	/**
+	 * @return the activeStatus
+	 */
+	public int getActiveStatus()
+	{
+		return activeStatus;
+	}
+
+	/**
+	 * @param activeStatus the activeStatus to set
+	 */
+	public void setActiveStatus(int activeStatus)
+	{
+		this.activeStatus = activeStatus;
+		flags |= MODIFY_ACTIVE_STATUS;
+	}
+
+	/**
+	 * @return the inactiveStatus
+	 */
+	public int getInactiveStatus()
+	{
+		return inactiveStatus;
+	}
+
+	/**
+	 * @param inactiveStatus the inactiveStatus to set
+	 */
+	public void setInactiveStatus(int inactiveStatus)
+	{
+		this.inactiveStatus = inactiveStatus;
+		flags |= MODIFY_INACTIVE_STATUS;
+	}
+
+	/**
+	 * @return the dciList
+	 */
+	public List<ConditionDciInfo> getDciList()
+	{
+		return dciList;
+	}
+
+	/**
+	 * @param dciList the dciList to set
+	 */
+	public void setDciList(List<ConditionDciInfo> dciList)
+	{
+		this.dciList = dciList;
+		flags |= MODIFY_DCI_LIST;
 	}
 }

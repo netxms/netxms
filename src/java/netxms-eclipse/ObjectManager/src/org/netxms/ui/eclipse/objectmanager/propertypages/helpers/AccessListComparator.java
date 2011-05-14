@@ -16,20 +16,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.widgets.internal;
+package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Comparator for "Last Values" widget
+ * Comparator for access list elements
  *
  */
-public class LastValuesComparator extends ViewerComparator
+public class AccessListComparator extends ViewerComparator
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,29 +36,15 @@ public class LastValuesComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		int result;
-		
-		DciValue v1 = (DciValue)e1;
-		DciValue v2 = (DciValue)e2;
-
-		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
-		{
-			case LastValuesView.COLUMN_ID:
-				result = (int)(v1.getId() - v2.getId());
-				break;
-			case LastValuesView.COLUMN_DESCRIPTION:
-				result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
-				break;
-			case LastValuesView.COLUMN_VALUE:
-				result = v1.getValue().compareToIgnoreCase(v2.getValue());
-				break;
-			case LastValuesView.COLUMN_TIMESTAMP:
-				result = v1.getTimestamp().compareTo(v2.getTimestamp());
-				break;
-			default:
-				result = 0;
-				break;
-		}
-		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		ITableLabelProvider lp = (ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider();
+		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+		String text1 = lp.getColumnText(e1, column);
+		String text2 = lp.getColumnText(e2, column);
+		if (text1 == null)
+			text1 = "";
+		if (text2 == null)
+			text2 = "";
+		int result = text1.compareToIgnoreCase(text2);
+		return (((SortableTableViewer) viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
 }

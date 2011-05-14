@@ -64,6 +64,7 @@ import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.NXCommon;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
@@ -2227,10 +2228,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param dciId
 	 *           DCI ID
 	 * @return List of configured thresholds
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public Threshold[] getThresholds(final long nodeId, final long dciId) throws IOException, NXCException
 	{
@@ -2251,6 +2250,53 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		}
 
 		return list;
+	}
+	
+	/**
+	 * Resolve names of given DCIs
+	 * 
+	 * @param nodeIds node identifiers
+	 * @param dciIds DCI identifiers (length must match length of node identifiers list)
+	 * @return array of resolved DCI names
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public String[] resolveDciNames(long[] nodeIds, long[] dciIds) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_DCI_NAMES);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.length);
+		msg.setVariable(NXCPCodes.VID_NODE_LIST, nodeIds);
+		msg.setVariable(NXCPCodes.VID_DCI_LIST, dciIds);
+		sendMessage(msg);
+
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		String[] result = new String[nodeIds.length];
+		long varId = NXCPCodes.VID_DCI_LIST_BASE;
+		for(int i = 0; i < result.length; i++)
+			result[i] = response.getVariableAsString(varId++);
+		return result;
+	}
+	
+	/**
+	 * Resolve names of given DCIs
+	 * 
+	 * @param dciList DCI list
+	 * @return array of resolved DCI names
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public String[] resolveDciNames(Collection<ConditionDciInfo> dciList) throws IOException, NXCException
+	{
+		final long[] nodeIds = new long[dciList.size()];
+		final long[] dciIds = new long[dciList.size()];
+		int i = 0;
+		for(ConditionDciInfo dci : dciList)
+		{
+			nodeIds[i] = dci.getNodeId();
+			dciIds[i] = dci.getDciId();
+			i++;
+		}
+		return resolveDciNames(nodeIds, dciIds);
 	}
 
 	/**
@@ -2566,6 +2612,51 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			{
 				e.fillMessage(msg, varId);
 				varId += 10;
+			}
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_SCRIPT) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_SCRIPT, data.getScript());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_ACTIVATION_EVENT) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_ACTIVATION_EVENT, data.getActivationEvent());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_DEACTIVATION_EVENT) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_DEACTIVATION_EVENT, data.getDeactivationEvent());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_SOURCE_OBJECT) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_SOURCE_OBJECT, (int)data.getSourceObject());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_ACTIVE_STATUS) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_ACTIVE_STATUS, data.getActiveStatus());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_INACTIVE_STATUS) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_INACTIVE_STATUS, data.getInactiveStatus());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_DCI_LIST) != 0)
+		{
+			List<ConditionDciInfo> dciList = data.getDciList();
+			msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, dciList.size());
+			long varId = NXCPCodes.VID_DCI_LIST_BASE;
+			for(ConditionDciInfo dci : dciList)
+			{
+				msg.setVariableInt32(varId++, (int)dci.getDciId());
+				msg.setVariableInt32(varId++, (int)dci.getNodeId());
+				msg.setVariableInt16(varId++, dci.getFunction());
+				msg.setVariableInt16(varId++, dci.getPolls());
+				varId += 6;
 			}
 		}
 		

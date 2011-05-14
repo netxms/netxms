@@ -12,6 +12,7 @@ Require-Bundle: org.eclipse.ui,
  org.netxms.ui.eclipse.usermanager;bundle-version="1.1.0",
  org.netxms.ui.eclipse.console;bundle-version="1.1.0",
  org.netxms.ui.eclipse.nxsl;bundle-version="1.1.0",
- org.netxms.ui.eclipse.imagelibrary;bundle-version="1.1.0"
+ org.netxms.ui.eclipse.imagelibrary;bundle-version="1.1.0",
+ org.netxms.ui.eclipse.datacollection;bundle-version="1.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

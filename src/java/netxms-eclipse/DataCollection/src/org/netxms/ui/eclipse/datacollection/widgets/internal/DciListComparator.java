@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectmanager;
+package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
-import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.datacollection.widgets.DciList;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Comparator for access list elements
- *
+ * Comparator for DCI list
  */
-public class AccessListComparator extends ViewerComparator
+public class DciListComparator extends ViewerComparator
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,15 +36,26 @@ public class AccessListComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		ITableLabelProvider lp = (ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider();
-		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
-		String text1 = lp.getColumnText(e1, column);
-		String text2 = lp.getColumnText(e2, column);
-		if (text1 == null)
-			text1 = "";
-		if (text2 == null)
-			text2 = "";
-		int result = text1.compareToIgnoreCase(text2);
-		return (((SortableTableViewer) viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		int result;
+		
+		DciValue v1 = (DciValue)e1;
+		DciValue v2 = (DciValue)e2;
+
+		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
+		{
+			case DciList.COLUMN_ID:
+				result = (int)(v1.getId() - v2.getId());
+				break;
+			case DciList.COLUMN_PARAMETER:
+				result = v1.getName().compareToIgnoreCase(v2.getName());
+				break;
+			case DciList.COLUMN_DESCRIPTION:
+				result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
+				break;
+			default:
+				result = 0;
+				break;
+		}
+		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
 }

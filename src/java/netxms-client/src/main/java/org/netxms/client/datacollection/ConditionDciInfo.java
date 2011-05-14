@@ -58,6 +58,19 @@ public class ConditionDciInfo
 		function = msg.getVariableAsInteger(baseId + 2);
 		polls = msg.getVariableAsInteger(baseId + 3);
 	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param src source object
+	 */
+	public ConditionDciInfo(ConditionDciInfo src)
+	{
+		dciId = src.dciId;
+		nodeId = src.nodeId;
+		function = src.function;
+		polls = src.polls;
+	}
 
 	/**
 	 * @return the nodeId
@@ -89,5 +102,21 @@ public class ConditionDciInfo
 	public int getPolls()
 	{
 		return polls;
+	}
+
+	/**
+	 * @param function the function to set
+	 */
+	public void setFunction(int function)
+	{
+		this.function = function;
+	}
+
+	/**
+	 * @param polls the polls to set
+	 */
+	public void setPolls(int polls)
+	{
+		this.polls = polls;
 	}
 }

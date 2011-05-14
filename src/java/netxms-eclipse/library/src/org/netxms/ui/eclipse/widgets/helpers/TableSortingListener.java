@@ -26,13 +26,11 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
 /**
- * @author victor
- *
+ * Table control column selection listener used to change sorting column
  */
 public class TableSortingListener extends SelectionAdapter
 {
 	private TableViewer viewer;
-	
 	
 	/**
 	 * Constructor
@@ -41,7 +39,6 @@ public class TableSortingListener extends SelectionAdapter
 	{
 		this.viewer = viewer;
 	}
-	
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)

@@ -119,6 +119,26 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionScript"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionScript#30"
+              name="Script">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Condition">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionData"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionData#20"
+              name="Data">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Condition">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
@@ -181,6 +201,13 @@
                label="Create &amp;container..."
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_Container"
+               label="Create con&amp;dition..."
+               menubarPath="objectcreation">
+         </action>
       </objectContribution>
 
       <objectContribution
@@ -212,6 +239,13 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_ServiceRoot"
                label="Create &amp;container..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_ServiceRoot"
+               label="Create con&amp;dition..."
                menubarPath="objectcreation">
          </action>
       </objectContribution>

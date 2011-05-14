@@ -124,4 +124,14 @@ public class SortableTableViewer extends TableViewer
 	{
 		return initialized;
 	}
+	
+	/**
+	 * Disable sorting
+	 */
+	public void disableSorting()
+	{
+		for(int i = 0; i < columns.length; i++)
+			columns[i].removeSelectionListener(sortingListener);
+		getTable().setSortColumn(null);
+	}
 }
