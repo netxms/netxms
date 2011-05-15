@@ -77,13 +77,15 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private long timeFrom;
 	private long timeTo;
 	private boolean showToolTips;
-	private boolean enableZoom;
+	private boolean zoomEnabled;
 	private boolean selectionActive = false;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	private MouseMoveListener moveListener;
 	private SelectionRectangle selection = new SelectionRectangle();
 	private IPreferenceStore preferenceStore;
+	private MouseListener zoomMouseListener = null;
+	private PaintListener zoomPaintListener = null;
 	
 	/**
 	 * @param parent
@@ -95,7 +97,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		preferenceStore = Activator.getDefault().getPreferenceStore();
 		showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips");
-		enableZoom = preferenceStore.getBoolean("Chart.EnableZoom");
+		zoomEnabled = preferenceStore.getBoolean("Chart.EnableZoom");
 		setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		selection.setColor(getColorFromPreferences("Chart.Colors.Selection"));
 
@@ -167,38 +169,37 @@ public class LineChart extends Chart implements HistoricalDataChart
 			});
 		}
 		
-		if (enableZoom)
-		{
-			plotArea.addMouseListener(new MouseListener() {
-				@Override
-				public void mouseDoubleClick(MouseEvent e)
-				{
-				}
+		zoomMouseListener = new MouseListener() {
+			@Override
+			public void mouseDoubleClick(MouseEvent e)
+			{
+			}
 
-				@Override
-				public void mouseDown(MouseEvent e)
-				{
-					if (e.button == 1)
-						startSelection(e);
-				}
+			@Override
+			public void mouseDown(MouseEvent e)
+			{
+				if (e.button == 1)
+					startSelection(e);
+			}
 
-				@Override
-				public void mouseUp(MouseEvent e)
-				{
-					if (e.button == 1)
-						endSelection();
-				}
-			});
-			
-			plotArea.addPaintListener(new PaintListener() {
-				@Override
-				public void paintControl(PaintEvent e)
-				{
-					if (selectionActive)
-						selection.draw(e.gc);
-				}
-			});
-		}
+			@Override
+			public void mouseUp(MouseEvent e)
+			{
+				if (e.button == 1)
+					endSelection();
+			}
+		};
+		
+		zoomPaintListener = new PaintListener() {
+			@Override
+			public void paintControl(PaintEvent e)
+			{
+				if (selectionActive)
+					selection.draw(e.gc);
+			}
+		};
+		
+		setZoomEnabled(zoomEnabled);
 		
 		((IPlotArea)plotArea).addCustomPaintListener(new ICustomPaintListener() {
 			@Override
@@ -651,5 +652,32 @@ public class LineChart extends Chart implements HistoricalDataChart
 	public void setItemStyles(List<GraphItemStyle> itemStyles)
 	{
 		this.itemStyles = itemStyles;
+	}
+
+	/**
+	 * @return the zoomEnabled
+	 */
+	public boolean isZoomEnabled()
+	{
+		return zoomEnabled;
+	}
+
+	/**
+	 * @param zoomEnabled the zoomEnabled to set
+	 */
+	public void setZoomEnabled(boolean enableZoom)
+	{
+		this.zoomEnabled = enableZoom;
+		final Composite plotArea = getPlotArea();
+		if (enableZoom)
+		{
+			plotArea.addMouseListener(zoomMouseListener);
+			plotArea.addPaintListener(zoomPaintListener);
+		}
+		else
+		{
+			plotArea.removeMouseListener(zoomMouseListener);
+			plotArea.removePaintListener(zoomPaintListener);
+		}
 	}
 }

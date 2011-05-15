@@ -66,6 +66,7 @@ public class PerfTabGraph extends BorderedComposite
 		setLayout(new FillLayout());
 		
 		chart = new LineChart(this, SWT.NONE);
+		chart.setZoomEnabled(false);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(settings.getTitle().isEmpty() ? dci.getDescription() : settings.getTitle());
 		chart.setLegendVisible(false);

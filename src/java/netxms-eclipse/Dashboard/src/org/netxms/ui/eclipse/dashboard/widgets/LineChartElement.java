@@ -74,6 +74,7 @@ public class LineChartElement extends ElementWidget
 		setLayout(new FillLayout());
 		
 		chart = new LineChart(this, SWT.NONE);
+		chart.setZoomEnabled(false);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(config.getTitle());
 		chart.setLegendVisible(config.isShowLegend());
