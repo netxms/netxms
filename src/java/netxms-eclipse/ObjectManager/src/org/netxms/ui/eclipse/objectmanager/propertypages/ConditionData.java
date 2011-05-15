@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -27,6 +28,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -50,6 +52,7 @@ import org.netxms.client.objects.Condition;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.dialogs.ConditionDciEditDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -71,6 +74,8 @@ public class ConditionData extends PropertyPage
 	private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
+	private Button upButton;
+	private Button downButton;
 	private List<ConditionDciInfo> dciList = null;
 	private boolean isModified = false;
 
@@ -97,6 +102,7 @@ public class ConditionData extends PropertyPage
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
       final String[] columnNames = { "Pos", "Node", "Parameter", "Function" };
@@ -114,22 +120,76 @@ public class ConditionData extends PropertyPage
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
+      gridData.horizontalSpan = 2;
       viewer.getControl().setLayoutData(gridData);
-      
-      Composite buttons = new Composite(dialogArea, SWT.NONE);
+
+      /* buttons on left side */
+      Composite leftButtons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
       buttonLayout.marginWidth = 0;
+      buttonLayout.marginLeft = 0;
+      leftButtons.setLayout(buttonLayout);
+      gridData = new GridData();
+      gridData.horizontalAlignment = SWT.LEFT;
+      leftButtons.setLayoutData(gridData);
+      
+      upButton = new Button(leftButtons, SWT.PUSH);
+      upButton.setText("&Up");
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      upButton.setLayoutData(rd);
+      upButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveUp();
+			}
+      });
+      upButton.setEnabled(false);
+      
+      downButton = new Button(leftButtons, SWT.PUSH);
+      downButton.setText("&Down");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      downButton.setLayoutData(rd);
+      downButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				moveDown();
+			}
+      });
+      downButton.setEnabled(false);
+
+      /* buttons on right side */
+      Composite rightButtons = new Composite(dialogArea, SWT.NONE);
+      buttonLayout = new RowLayout();
+      buttonLayout.type = SWT.HORIZONTAL;
+      buttonLayout.pack = false;
+      buttonLayout.marginWidth = 0;
       buttonLayout.marginRight = 0;
-      buttons.setLayout(buttonLayout);
+      rightButtons.setLayout(buttonLayout);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.RIGHT;
-      buttons.setLayoutData(gridData);
+      rightButtons.setLayoutData(gridData);
 
-      addButton = new Button(buttons, SWT.PUSH);
+      addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText("&Add...");
-      RowData rd = new RowData();
+      rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
@@ -146,7 +206,7 @@ public class ConditionData extends PropertyPage
 			}
       });
 		
-      editButton = new Button(buttons, SWT.PUSH);
+      editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText("&Modify...");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -166,7 +226,7 @@ public class ConditionData extends PropertyPage
       });
       editButton.setEnabled(false);
 		
-      deleteButton = new Button(buttons, SWT.PUSH);
+      deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText("&Delete");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -201,6 +261,8 @@ public class ConditionData extends PropertyPage
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				editButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
+				upButton.setEnabled(selection.size() == 1);
+				downButton.setEnabled(selection.size() == 1);
 			}
 		});
       
@@ -221,6 +283,9 @@ public class ConditionData extends PropertyPage
 			dciList.add(dci);
 			viewer.setInput(dciList.toArray());
 			isModified = true;
+			
+			viewer.setSelection(new StructuredSelection(dci));
+			editItem();
 		}
 	}
 	
@@ -229,7 +294,18 @@ public class ConditionData extends PropertyPage
 	 */
 	private void editItem()
 	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		ConditionDciInfo dci = (ConditionDciInfo)selection.getFirstElement();
+		if (dci == null)
+			return;
 		
+		ConditionDciEditDialog dlg = new ConditionDciEditDialog(getShell(), dci, 
+				labelProvider.getColumnText(dci, COLUMN_NODE), labelProvider.getColumnText(dci, COLUMN_METRIC));
+		if (dlg.open() == Window.OK)
+		{
+			viewer.update(dci, null);
+			isModified = true;
+		}
 	}
 	
 	/**
@@ -307,5 +383,46 @@ public class ConditionData extends PropertyPage
 	{
 		applyChanges(false);
 		return true;
+	}
+	
+	/**
+	 * Move selected item up 
+	 */
+	private void moveUp()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() == 1)
+		{
+			ConditionDciInfo element = (ConditionDciInfo)selection.getFirstElement();
+			
+			int index = dciList.indexOf(element);
+			if (index > 0)
+			{
+				Collections.swap(dciList, index - 1, index);
+		      viewer.setInput(dciList.toArray());
+		      viewer.setSelection(new StructuredSelection(element));
+		      isModified = true;
+			}
+		}
+	}
+	
+	/**
+	 * Move selected item down
+	 */
+	private void moveDown()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() == 1)
+		{
+			ConditionDciInfo element = (ConditionDciInfo)selection.getFirstElement();
+			
+			int index = dciList.indexOf(element);
+			if ((index < dciList.size() - 1) && (index >= 0))
+			{
+				Collections.swap(dciList, index + 1, index);
+		      viewer.setInput(dciList.toArray());
+		      viewer.setSelection(new StructuredSelection(element));
+			}
+		}
 	}
 }

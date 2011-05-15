@@ -37,12 +37,13 @@ import org.netxms.ui.eclipse.charts.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.BorderedComposite;
 
 /**
  * Performance tab graph
  *
  */
-public class PerfTabGraph extends Composite
+public class PerfTabGraph extends BorderedComposite
 {
 	private long nodeId;
 	private PerfTabDci dci;
@@ -57,13 +58,11 @@ public class PerfTabGraph extends Composite
 	 */
 	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfTabGraphSettings settings)
 	{
-		super(parent, SWT.BORDER);
+		super(parent, SWT.NONE);
 		this.nodeId = nodeId;
 		this.dci = dci;
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		//GridLayout layout = new GridLayout();
-		//setLayout(layout);
 		setLayout(new FillLayout());
 		
 		chart = new LineChart(this, SWT.NONE);

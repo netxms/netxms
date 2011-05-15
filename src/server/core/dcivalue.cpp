@@ -262,9 +262,9 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType,
    mean = 0; \
    for(i = 0, nValueCount = 0; i < nNumValues; i++) \
    { \
-      if (ppValueList[i - 1]->GetTimeStamp() != 1) \
+      if (ppValueList[i]->GetTimeStamp() != 1) \
       { \
-         mean += (vtype)(*ppValueList[i - 1]); \
+         mean += (vtype)(*ppValueList[i]); \
          nValueCount++; \
       } \
    } \
@@ -272,9 +272,9 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType,
    dev = 0; \
    for(i = 0, nValueCount = 0; i < nNumValues; i++) \
    { \
-      if (ppValueList[i - 1]->GetTimeStamp() != 1) \
+      if (ppValueList[i]->GetTimeStamp() != 1) \
       { \
-         dev += ABS((vtype)(*ppValueList[i - 1]) - mean); \
+         dev += ABS((vtype)(*ppValueList[i]) - mean); \
          nValueCount++; \
       } \
    } \

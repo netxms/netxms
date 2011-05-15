@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
@@ -35,6 +50,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.dialogs.AddDashboardElementDlg;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditDashboardElementDlg;
+import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DashboardElementsLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -42,11 +58,15 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * @author Victor
+ * "Dashboard elements" property page for dashboard objects
  *
  */
 public class DashboardElements extends PropertyPage
 {
+	public static final int COLUMN_TYPE = 0;
+	public static final int COLUMN_SPAN = 1;
+	public static final int COLUMN_ALIGNMENT = 2;
+	
 	private Dashboard object;
 	private LabeledText columnCount;
 	private SortableTableViewer viewer;
@@ -70,45 +90,52 @@ public class DashboardElements extends PropertyPage
 			return dialogArea;
 
 		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
       columnCount = new LabeledText(dialogArea, SWT.NONE);
       columnCount.setLabel("Number of columns");
       columnCount.setText(Integer.toString(object.getNumColumns()));
+      GridData gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.horizontalSpan = 2;
+      columnCount.setLayoutData(gridData);
       
       final String[] columnNames = { "Type", "Span", "Alignment" };
-      final int[] columnWidths = { 200, 150, 200 };
+      final int[] columnWidths = { 150, 60, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      //viewer.setLabelProvider(new AttrListLabelProvider());
-      //viewer.setComparator(new AttrViewerComparator());
+      viewer.setLabelProvider(new DashboardElementsLabelProvider());
       
       elements = copyElements(object.getElements());
       viewer.setInput(elements.toArray());
       
-      GridData gridData = new GridData();
+      gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
+      gridData.horizontalSpan = 2;
       viewer.getControl().setLayoutData(gridData);
       
-      Composite buttons = new Composite(dialogArea, SWT.NONE);
+      Composite leftButtons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
       buttonLayout.marginWidth = 0;
-      buttons.setLayout(buttonLayout);
+      buttonLayout.marginLeft = 0;
+      leftButtons.setLayout(buttonLayout);
       gridData = new GridData();
-      gridData.horizontalAlignment = SWT.RIGHT;
-      buttons.setLayoutData(gridData);
+      gridData.horizontalAlignment = SWT.LEFT;
+      leftButtons.setLayoutData(gridData);
 
-      upButton = new Button(buttons, SWT.PUSH);
+      upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText("&Up");
       upButton.setEnabled(false);
       upButton.addSelectionListener(new SelectionListener() {
@@ -125,7 +152,7 @@ public class DashboardElements extends PropertyPage
 			}
       });
       
-      downButton = new Button(buttons, SWT.PUSH);
+      downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText("&Down");
       downButton.setEnabled(false);
       downButton.addSelectionListener(new SelectionListener() {
@@ -142,7 +169,18 @@ public class DashboardElements extends PropertyPage
    			}
          });
 
-      addButton = new Button(buttons, SWT.PUSH);
+      Composite rightButtons = new Composite(dialogArea, SWT.NONE);
+      buttonLayout = new RowLayout();
+      buttonLayout.type = SWT.HORIZONTAL;
+      buttonLayout.pack = false;
+      buttonLayout.marginWidth = 0;
+      buttonLayout.marginRight = 0;
+      rightButtons.setLayout(buttonLayout);
+      gridData = new GridData();
+      gridData.horizontalAlignment = SWT.RIGHT;
+      rightButtons.setLayoutData(gridData);
+
+      addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText("&Add...");
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -158,7 +196,7 @@ public class DashboardElements extends PropertyPage
 			}
 		});
 
-      editButton = new Button(buttons, SWT.PUSH);
+      editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText("&Modify...");
       editButton.addSelectionListener(new SelectionListener() {
 			@Override
@@ -174,7 +212,7 @@ public class DashboardElements extends PropertyPage
 			}
 		});
 
-      deleteButton = new Button(buttons, SWT.PUSH);
+      deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText("&Delete");
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
