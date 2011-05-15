@@ -35,6 +35,7 @@ public class ObjectSelector extends AbstractSelector
 {
 	private long objectId = 0;
 	private int objectClass = GenericObject.OBJECT_NODE;
+	private String emptySelectionName = Messages.getString("ObjectSelector.none"); //$NON-NLS-1$
 	
 	/**
 	 * @param parent
@@ -43,7 +44,7 @@ public class ObjectSelector extends AbstractSelector
 	public ObjectSelector(Composite parent, int style)
 	{
 		super(parent, style);
-		setText(Messages.getString("ObjectSelector.none")); //$NON-NLS-1$
+		setText(emptySelectionName);
 	}
 
 	/* (non-Javadoc)
@@ -65,7 +66,7 @@ public class ObjectSelector extends AbstractSelector
 			else
 			{
 				objectId = 0;
-				setText(Messages.getString("ObjectSelector.none")); //$NON-NLS-1$
+				setText(emptySelectionName);
 			}
 		}
 	}
@@ -86,7 +87,7 @@ public class ObjectSelector extends AbstractSelector
 		this.objectId = objectId;
 		if (objectId == 0)
 		{
-			setText(Messages.getString("ObjectSelector.none")); //$NON-NLS-1$
+			setText(emptySelectionName); //$NON-NLS-1$
 		}
 		else
 		{
@@ -109,5 +110,21 @@ public class ObjectSelector extends AbstractSelector
 	public void setObjectClass(int objectClass)
 	{
 		this.objectClass = objectClass;
+	}
+
+	/**
+	 * @return the emptySelectionName
+	 */
+	public String getEmptySelectionName()
+	{
+		return emptySelectionName;
+	}
+
+	/**
+	 * @param emptySelectionName the emptySelectionName to set
+	 */
+	public void setEmptySelectionName(String emptySelectionName)
+	{
+		this.emptySelectionName = emptySelectionName;
 	}
 }

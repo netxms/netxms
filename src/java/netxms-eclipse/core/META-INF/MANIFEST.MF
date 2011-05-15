@@ -28,4 +28,5 @@ Export-Package: org.netxms.client,
  org.netxms.client.situations,
  org.netxms.client.snmp,
  org.netxms.client.topology,
- org.netxms.ui.eclipse.console.resources
+ org.netxms.ui.eclipse.console.resources,
+ org.netxms.ui.eclipse.console.widgets

@@ -2263,6 +2263,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public String[] resolveDciNames(long[] nodeIds, long[] dciIds) throws IOException, NXCException
 	{
+		if (nodeIds.length == 0)
+			return new String[0];
+		
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_DCI_NAMES);
 		msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.length);
 		msg.setVariable(NXCPCodes.VID_NODE_LIST, nodeIds);

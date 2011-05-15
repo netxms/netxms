@@ -139,6 +139,15 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionEvents"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.ConditionEvents#10"
+              name="Events and Status">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Condition">
+              </instanceof></enabledWhen>
+        </page>
   </extension>
 
    <extension

@@ -70,10 +70,6 @@ public class ConditionScript extends PropertyPage
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Status calculation script");
 
-      //GridData gd = new GridData();
-      //gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
-		//label.setLayoutData(gd);
-      
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(object.getScript());
 		
