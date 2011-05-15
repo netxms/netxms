@@ -34,9 +34,9 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Base class for data comparision charts - like bar chart, pie chart, etc.
+ * Base class for data comparison charts - like bar chart, pie chart, etc.
  */
-public abstract class ComparisionChartElement extends ElementWidget
+public abstract class ComparisonChartElement extends ElementWidget
 {
 	protected DataComparisonBirtChart chart;
 	protected NXCSession session;
@@ -48,7 +48,7 @@ public abstract class ComparisionChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public ComparisionChartElement(Composite parent, String data)
+	public ComparisonChartElement(Composite parent, String data)
 	{
 		super(parent, data);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -56,6 +56,9 @@ public abstract class ComparisionChartElement extends ElementWidget
 		setLayout(new FillLayout());	
 	}
 	
+	/**
+	 * Start refresh timer
+	 */
 	protected void startRefreshTimer()
 	{
 		final Display display = getDisplay();
@@ -63,7 +66,7 @@ public abstract class ComparisionChartElement extends ElementWidget
 			@Override
 			public void run()
 			{
-				if (ComparisionChartElement.this.isDisposed())
+				if (ComparisonChartElement.this.isDisposed())
 					return;
 				
 				refreshData(getDciList());

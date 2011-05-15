@@ -41,7 +41,10 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add("Line Chart");
 		elementTypeSelector.add("Bar Chart");
 		elementTypeSelector.add("Pie Chart");
+		elementTypeSelector.add("Tube Chart");
+		elementTypeSelector.add("Status Chart");
 		elementTypeSelector.add("Status Indicator");
+		elementTypeSelector.add("Dashboard");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

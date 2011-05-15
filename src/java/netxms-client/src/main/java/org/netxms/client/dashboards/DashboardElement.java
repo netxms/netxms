@@ -29,7 +29,10 @@ public class DashboardElement
 	public static final int LINE_CHART = 1;
 	public static final int BAR_CHART = 2;
 	public static final int PIE_CHART = 3;
-	public static final int STATUS_INDICATOR = 4;
+	public static final int TUBE_CHART = 4;
+	public static final int STATUS_CHART = 5;
+	public static final int STATUS_INDICATOR = 6;
+	public static final int DASHBOARD = 7;
 	
 	public static final int FILL = 0;
 	public static final int CENTER = 1;

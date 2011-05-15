@@ -18,37 +18,43 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import java.util.Arrays;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 
 /**
  * Line chart element
  */
-public class BarChartElement extends ComparisonChartElement
+public class ObjectStatusChartElement extends ComparisonChartElement
 {
-	private BarChartConfig config;
+	private ObjectStatusChartConfig config;
+	
 	/**
 	 * @param parent
 	 * @param data
 	 */
-	public BarChartElement(Composite parent, String data)
+	public ObjectStatusChartElement(Composite parent, String data)
 	{
 		super(parent, data);
 		
 		try
 		{
-			config = BarChartConfig.createFromXml(data);
+			config = ObjectStatusChartConfig.createFromXml(data);
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			config = new BarChartConfig();
+			config = new ObjectStatusChartConfig();
 		}
 
 		chart = new DataComparisonBirtChart(this, SWT.NONE, DataComparisonChart.BAR_CHART);
@@ -59,26 +65,68 @@ public class BarChartElement extends ComparisonChartElement
 		chart.set3DModeEnabled(config.isShowIn3D());
 		chart.setTransposed(config.isTransposed());
 		chart.setTranslucent(config.isTranslucent());
-		
-		int index = 0;
-		for(DashboardDciInfo dci : config.getDciList())
+
+		for(int i = 0; i <= Severity.UNKNOWN; i++)
 		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()), 0.0);
-			int color = dci.getColorAsInt();
-			if (color != -1)
-				chart.setPaletteEntry(index++, new ChartColor(color));
+			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i)), 0.0);
+			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
 		}
 		chart.initializationComplete();
 
 		startRefreshTimer();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
 	 */
 	@Override
 	protected DashboardDciInfo[] getDciList()
 	{
-		return config.getDciList();
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#refreshData(org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo[])
+	 */
+	@Override
+	protected void refreshData(DashboardDciInfo[] dciList)
+	{
+		int[] objectCount = new int[6];
+		Arrays.fill(objectCount, 0);
+
+		GenericObject root = session.findObjectById(config.getRootObject());
+		if (root != null)
+			collectData(objectCount, root);
+
+		for(int i = 0; i < objectCount.length; i++)
+			chart.updateParameter(i, objectCount[i], false);
+		chart.refresh();
+	}
+
+	/**
+	 * @param objectCount
+	 * @param root
+	 */
+	private void collectData(int[] objectCount, GenericObject root)
+	{
+		for(GenericObject o : root.getChildsAsArray())
+		{
+			if ((o.getStatus() <= Severity.UNKNOWN) && filterObject(o))
+				objectCount[o.getStatus()]++;
+			collectData(objectCount, o);
+		}
+	}
+
+	/**
+	 * @param o
+	 * @return
+	 */
+	private boolean filterObject(GenericObject o)
+	{
+		int[] cf = config.getClassFilter();
+		for(int i = 0; i < cf.length; i++)
+			if (o.getObjectClass() == cf[i])
+				return true;
+		return false;
 	}
 }

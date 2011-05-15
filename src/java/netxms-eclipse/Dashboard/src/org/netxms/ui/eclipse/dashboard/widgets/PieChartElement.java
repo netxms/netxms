@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 /**
  * Line chart element
  */
-public class PieChartElement extends ComparisionChartElement
+public class PieChartElement extends ComparisonChartElement
 {
 	private PieChartConfig config;
 
@@ -77,7 +77,7 @@ public class PieChartElement extends ComparisionChartElement
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisionChartElement#getDciList()
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
 	 */
 	@Override
 	protected DashboardDciInfo[] getDciList()
