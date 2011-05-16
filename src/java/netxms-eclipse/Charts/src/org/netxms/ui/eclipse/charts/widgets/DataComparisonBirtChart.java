@@ -324,6 +324,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 				ps.setLabelPosition(Position.OUTSIDE_LITERAL);
 				ps.setLeaderLineStyle(LeaderLineStyle.FIXED_LENGTH_LITERAL);
 				ps.getLeaderLineAttributes().setVisible(true);
+				ps.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
+				ps.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
 				return ps;
 			case DIAL_CHART:
 				DialSeries ds = (DialSeries)DialSeriesImpl.create();
