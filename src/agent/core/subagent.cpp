@@ -253,11 +253,11 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 #ifdef __64BIT__
       _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"), 
                  m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
-                 m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
+                 CAST_FROM_POINTER(m_pSubAgentList[i].hModule, QWORD), m_pSubAgentList[i].szName);
 #else
       _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"), 
                  m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
-                 m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
+                 CAST_FROM_POINTER(m_pSubAgentList[i].hModule, DWORD), m_pSubAgentList[i].szName);
 #endif
       value->add(szBuffer);
    }

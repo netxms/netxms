@@ -4,10 +4,11 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.1.1], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [1.1.2], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
+AM_SILENT_RULES([yes])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -613,6 +614,16 @@ if test "x$CC" = "xgcc" ; then
 		])
 
 	AC_LANG_POP([C++])
+
+	AC_MSG_CHECKING(whether C compiler accepts -Wno-unused-result)
+	OLD_CPPFLGAS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -Wno-unused-result"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
 
 	if test "x$PLATFORM" = "xHP-UX"; then
 		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
