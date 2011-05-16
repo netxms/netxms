@@ -137,6 +137,8 @@ public class DashboardControl extends Composite
 				return new ObjectStatusChartElement(this, e.getData());
 			case DashboardElement.LABEL:
 				return new LabelElement(this, e.getData());
+			case DashboardElement.DASHBOARD:
+				return new EmbeddedDashboardElement(this, e.getData());
 			default:
 				return new ElementWidget(this, e.getData());
 		}
