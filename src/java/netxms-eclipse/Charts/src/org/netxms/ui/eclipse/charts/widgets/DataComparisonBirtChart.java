@@ -70,7 +70,9 @@ import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 public class DataComparisonBirtChart extends GenericBirtChart implements DataComparisonChart
 {
 	private static final String CHART_FONT_NAME = "Verdana";
-	private static final int CHART_FONT_SIZE = 9;
+	private static final int CHART_FONT_SIZE_TITLE = 9;
+	private static final int CHART_FONT_SIZE_LEGEND = 8;
+	private static final int CHART_FONT_SIZE_AXIS = 8;
 	
 	private int chartType = BAR_CHART;
 	private List<DataComparisonElement> parameters = new ArrayList<DataComparisonElement>(MAX_CHART_ITEMS);
@@ -136,6 +138,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		tc.setValue(getChartTitle());
 		tc.getFont().setSize(11);
 		tc.getFont().setName(CHART_FONT_NAME);
+		tc.getFont().setSize(CHART_FONT_SIZE_TITLE);
+		tc.getFont().setBold(false);
 		chart.getTitle().setVisible(isTitleVisible());
 		
 		// Legend
@@ -144,7 +148,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.getLegend().setPosition(positionFromInt(legendPosition));
 		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		chart.getLegend().getText().getFont().setName(CHART_FONT_NAME);
-		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE);
+		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE_LEGEND);
+		chart.getLegend().getText().getFont().setBold(false);
 		
 		// X axis
 		xAxis = chart.getPrimaryBaseAxes()[0];
@@ -158,7 +163,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Grid.Y.Color"), LineStyle.DOTTED_LITERAL, 0));
 		yAxis.setType(useLogScale ? AxisType.LOGARITHMIC_LITERAL : AxisType.LINEAR_LITERAL);
 		yAxis.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
-		yAxis.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE);
+		yAxis.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
 		
 		// Categories
 		TextDataSet categoryValues = TextDataSetImpl.create(getElementNames());
@@ -199,6 +204,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		tc.setValue(getChartTitle());
 		tc.getFont().setSize(11);
 		tc.getFont().setName(CHART_FONT_NAME);
+		tc.getFont().setSize(CHART_FONT_SIZE_TITLE);
+		tc.getFont().setBold(false);
 		chart.getTitle().setVisible(isTitleVisible());
 		
 		// Legend
@@ -207,7 +214,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.getLegend().setPosition(positionFromInt(legendPosition));
 		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		chart.getLegend().getText().getFont().setName(CHART_FONT_NAME);
-		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE);
+		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE_LEGEND);
+		chart.getLegend().getText().getFont().setBold(false);
 		
 		// Categories
       SeriesDefinition sdCategory = SeriesDefinitionImpl.create();
@@ -258,7 +266,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.getLegend().setPosition(positionFromInt(legendPosition));
 		chart.getLegend().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		chart.getLegend().getText().getFont().setName(CHART_FONT_NAME);
-		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE);
+		chart.getLegend().getText().getFont().setSize(CHART_FONT_SIZE_LEGEND);
 		
 		// Categories
       SeriesDefinition sdCategory = SeriesDefinitionImpl.create();
