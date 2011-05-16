@@ -35,6 +35,7 @@ public class DefaultPerspective implements IPerspectiveFactory
 	{
 		layout.setEditorAreaVisible(false);
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.DefaultPerspective");
+		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective");
 		
 		layout.addView("org.netxms.ui.eclipse.view.navigation.objectbrowser", IPageLayout.LEFT, 0, "");
 		layout.addView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view", IPageLayout.RIGHT, 0.25f, "org.netxms.ui.eclipse.view.navigation.objectbrowser");

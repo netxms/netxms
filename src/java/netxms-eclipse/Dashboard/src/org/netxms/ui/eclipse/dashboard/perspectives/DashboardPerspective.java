@@ -33,6 +33,10 @@ public class DashboardPerspective implements IPerspectiveFactory
 	@Override
 	public void createInitialLayout(IPageLayout layout)
 	{
-		layout.setEditorAreaVisible(false);
+		layout.setEditorAreaVisible(true);
+		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.DefaultPerspective");
+		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective");
+		
+		layout.addView("org.netxms.ui.eclipse.dashboard.views.DashboardNavigator", IPageLayout.LEFT, 0.2f, layout.getEditorArea());
 	}
 }

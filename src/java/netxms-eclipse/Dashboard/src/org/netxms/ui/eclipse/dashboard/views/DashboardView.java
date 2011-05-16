@@ -44,8 +44,6 @@ public class DashboardView extends ViewPart
 	private Dashboard dashboard;
 	private DashboardControl dbc;
 	
-	private Action actionAddElement;
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
@@ -77,14 +75,6 @@ public class DashboardView extends ViewPart
 	 */
 	private void createActions()
 	{
-		actionAddElement = new Action("&Add element...") {
-			@Override
-			public void run()
-			{
-				addElement();
-			}
-		};
-		actionAddElement.setImageDescriptor(SharedIcons.ADD_OBJECT);
 	}
 	
 	/**
@@ -105,7 +95,6 @@ public class DashboardView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(actionAddElement);
 	}
 
 	/**
@@ -116,7 +105,6 @@ public class DashboardView extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionAddElement);
 	}
 	
 	/* (non-Javadoc)
@@ -126,13 +114,5 @@ public class DashboardView extends ViewPart
 	public void setFocus()
 	{
 		dbc.setFocus();
-	}
-
-	/**
-	 * Add new dashboard element
-	 */
-	private void addElement()
-	{
-		
 	}
 }

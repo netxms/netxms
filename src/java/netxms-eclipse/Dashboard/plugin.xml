@@ -55,6 +55,13 @@
             name="Dashboard"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"
+            id="org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"
+            name="Dashboard Navigator"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.propertyPages">
@@ -68,6 +75,15 @@
             </instanceof>
          </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="org.netxms.ui.eclipse.dashboard.views.DashboardEditorPart"
+            default="false"
+            id="org.netxms.ui.eclipse.dashboard.views.DashboardEditorPart"
+            name="Dashboard">
+      </editor>
    </extension>
 
 </plugin>

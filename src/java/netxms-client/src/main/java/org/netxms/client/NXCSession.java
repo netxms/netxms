@@ -1528,18 +1528,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
-	 * Get list of top-level objects.
+	 * Get list of top-level objects matching given class filter. Class filter
+	 * may be null to ignore object class.
 	 * 
-	 * @return List of all top level objects (either without parents or with
+	 * @return List of all top matching level objects (either without parents or with
 	 *         inaccessible parents)
 	 */
-	public GenericObject[] getTopLevelObjects()
+	public GenericObject[] getTopLevelObjects(Set<Integer> classFilter)
 	{
 		HashSet<GenericObject> list = new HashSet<GenericObject>();
 		synchronized(objectList)
 		{
 			for(GenericObject object : objectList.values())
 			{
+				if ((classFilter != null) && !classFilter.contains(object.getObjectClass()))
+					continue;
+				
 				if (object.getNumberOfParents() == 0)
 				{
 					list.add(object);
@@ -1551,10 +1555,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 					while(it.hasNext())
 					{
 						Long parent = it.next();
-						if (objectList.containsKey(parent))
+						if (classFilter != null)
 						{
-							hasParents = true;
-							break;
+							GenericObject p = objectList.get(parent);
+							if ((p != null) && classFilter.contains(p.getObjectClass()))
+							{
+								hasParents = true;
+								break;
+							}
+						}
+						else
+						{
+							if (objectList.containsKey(parent))
+							{
+								hasParents = true;
+								break;
+							}
 						}
 					}
 					if (!hasParents)
@@ -1563,6 +1579,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			}
 		}
 		return list.toArray(new GenericObject[list.size()]);
+	}
+	
+	/**
+	 * Get list of top-level objects.
+	 * 
+	 * @return List of all top level objects (either without parents or with
+	 *         inaccessible parents)
+	 */
+	public GenericObject[] getTopLevelObjects()
+	{
+		return getTopLevelObjects(null);
 	}
 
 	/**
