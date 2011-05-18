@@ -21,8 +21,6 @@ package org.netxms.ui.eclipse.alarmviewer.widgets;
 import java.util.HashMap;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -36,8 +34,8 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -54,7 +52,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Alarm list widget
- *
  */
 public class AlarmList extends Composite
 {
@@ -119,24 +116,24 @@ public class AlarmList extends Composite
 		});
 
 		// Request alarm list from server
-		new ConsoleJob("Synchronize alarm list", viewPart, Activator.PLUGIN_ID, JOB_FAMILY)
-		{
+		new ConsoleJob("Synchronize alarm list", viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				alarmList = session.getAlarms(false);
-
-				new UIJob("Initialize alarm viewer") {
+				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
-						synchronized(alarmList)
+						if (!alarmViewer.getControl().isDisposed())
 						{
-							alarmViewer.setInput(alarmList.values());
+							synchronized(alarmList)
+							{
+								alarmViewer.setInput(alarmList.values());
+							}
 						}
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override
@@ -182,19 +179,15 @@ public class AlarmList extends Composite
 	 */
 	private void scheduleAlarmViewerUpdate()
 	{
-		new UIJob("Update alarm list") {
+		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
+			public void run()
 			{
-				synchronized(alarmList)
-				{
+				if (!alarmViewer.getControl().isDisposed())
 					alarmViewer.refresh();
-				}
-				return Status.OK_STATUS;
 			}
-		}.schedule();
+		});
 	}
-	
 
 	/**
 	 * Create pop-up menu for alarm list
@@ -221,7 +214,6 @@ public class AlarmList extends Composite
 			viewPart.getSite().registerContextMenu(menuMgr, alarmViewer);
 	}
 	
-
 	/**
 	 * Fill context menu
 	 * @param mgr Menu manager
@@ -231,7 +223,6 @@ public class AlarmList extends Composite
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
-	
 	/**
 	 * Change root object for alarm list
 	 * 
