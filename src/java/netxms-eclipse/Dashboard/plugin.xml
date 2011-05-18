@@ -62,6 +62,14 @@
             name="Dashboard Navigator"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView"
+            icon="icons/dashboard.png"
+            id="org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView"
+            name="Dashboard"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.propertyPages">

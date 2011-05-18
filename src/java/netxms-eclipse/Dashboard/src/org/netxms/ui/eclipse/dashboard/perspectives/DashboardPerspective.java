@@ -20,10 +20,11 @@ package org.netxms.ui.eclipse.dashboard.perspectives;
 
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
+import org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView;
+import org.netxms.ui.eclipse.dashboard.views.DashboardNavigator;
 
 /**
  * Dashboard perspective
- *
  */
 public class DashboardPerspective implements IPerspectiveFactory
 {
@@ -33,10 +34,11 @@ public class DashboardPerspective implements IPerspectiveFactory
 	@Override
 	public void createInitialLayout(IPageLayout layout)
 	{
-		layout.setEditorAreaVisible(true);
+		layout.setEditorAreaVisible(false);
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.DefaultPerspective");
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective");
 		
-		layout.addView("org.netxms.ui.eclipse.dashboard.views.DashboardNavigator", IPageLayout.LEFT, 0.2f, layout.getEditorArea());
+		layout.addView(DashboardNavigator.ID, IPageLayout.LEFT, 0, null);
+		layout.addView(DashboardDynamicView.ID, IPageLayout.RIGHT, 0.25f, DashboardNavigator.ID);
 	}
 }

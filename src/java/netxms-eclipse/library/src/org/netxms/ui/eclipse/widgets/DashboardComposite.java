@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.widgets;
 
@@ -16,19 +31,22 @@ import org.eclipse.swt.widgets.Display;
  * Composite with lightweight border (Windows 7 style)
  *
  */
-public class BorderedComposite extends Composite implements PaintListener
+public class DashboardComposite extends Composite implements PaintListener
 {
 	private static final Color BORDER_OUTER_COLOR = new Color(Display.getDefault(), 171, 173, 179);
 	private static final Color BORDER_INNER_COLOR = new Color(Display.getDefault(), 255, 255, 255);
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
 	
+	private boolean hasBorder = true;
+	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public BorderedComposite(Composite parent, int style)
+	public DashboardComposite(Composite parent, int style)
 	{
 		super(parent, style & ~SWT.BORDER);
+		hasBorder = ((style & SWT.BORDER) != 0);
 		addPaintListener(this);
 		setBackground(BACKGROUND_COLOR);
 	}
@@ -40,10 +58,13 @@ public class BorderedComposite extends Composite implements PaintListener
 	public Rectangle computeTrim(int x, int y, int width, int height)
 	{
 		Rectangle trim = super.computeTrim(x, y, width, height);
-		trim.x -= 2;
-		trim.y -= 2;
-		trim.width += 4;
-		trim.height += 4;
+		if (hasBorder)
+		{
+			trim.x -= 2;
+			trim.y -= 2;
+			trim.width += 4;
+			trim.height += 4;
+		}
 		return trim;
 	}
 
@@ -54,10 +75,13 @@ public class BorderedComposite extends Composite implements PaintListener
 	public Rectangle getClientArea()
 	{
 		Rectangle area = super.getClientArea();
-		area.x += 2;
-		area.y += 2;
-		area.width -= 4;
-		area.height -= 4;
+		if (hasBorder)
+		{
+			area.x += 2;
+			area.y += 2;
+			area.width -= 4;
+			area.height -= 4;
+		}
 		return area;
 	}
 
@@ -76,19 +100,22 @@ public class BorderedComposite extends Composite implements PaintListener
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		Point size = getSize();
-		Rectangle rect = new Rectangle(0, 0, size.x, size.y);
-		
-		rect.width--;
-		rect.height--;
-		e.gc.setForeground(BORDER_OUTER_COLOR);
-		e.gc.drawRectangle(rect);
-		
-		rect.x++;
-		rect.y++;
-		rect.width -= 2;
-		rect.height -= 2;
-		e.gc.setForeground(BORDER_INNER_COLOR);
-		e.gc.drawRectangle(rect);
+		if (hasBorder)
+		{
+			Point size = getSize();
+			Rectangle rect = new Rectangle(0, 0, size.x, size.y);
+			
+			rect.width--;
+			rect.height--;
+			e.gc.setForeground(BORDER_OUTER_COLOR);
+			e.gc.drawRectangle(rect);
+			
+			rect.x++;
+			rect.y++;
+			rect.width -= 2;
+			rect.height -= 2;
+			e.gc.setForeground(BORDER_INNER_COLOR);
+			e.gc.drawRectangle(rect);
+		}
 	}
 }

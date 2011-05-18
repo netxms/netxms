@@ -20,52 +20,60 @@ package org.netxms.ui.eclipse.dashboard.views;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Dashboard view
+ * Dynamic dashboard view - change dashboard when selection in dashboard navigator changes
  */
-public class DashboardView extends ViewPart
+public class DashboardDynamicView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardView";
+	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView";
 	
-	private NXCSession session;
-	private Dashboard dashboard;
-	private DashboardControl dbc;
+	private Dashboard dashboard = null;
+	private DashboardControl dbc = null;
+	private ISelectionService selectionService;
+	private ISelectionListener selectionListener;
+	private Composite parentComposite;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
-	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
-		dashboard = (Dashboard)session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		if (dashboard == null)
-			throw new PartInitException("Dashboard object is no longer exist or is not accessible");
-		setPartName("Dashboard: " + dashboard.getObjectName());
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		dbc = new DashboardControl(parent, SWT.NONE, dashboard, false);
+		parentComposite = parent;
+		if (dashboard != null)
+			dbc = new DashboardControl(parent, SWT.NONE, dashboard, false);
 
 		createActions();
 		contributeToActionBars();
+
+		selectionService = getSite().getWorkbenchWindow().getSelectionService();
+		selectionListener = new ISelectionListener() {
+			@Override
+			public void selectionChanged(IWorkbenchPart part, ISelection selection)
+			{
+				if ((part instanceof DashboardNavigator) && (selection instanceof IStructuredSelection) && !selection.isEmpty())
+				{
+					Object object = ((IStructuredSelection)selection).getFirstElement();
+					if (object instanceof Dashboard)
+					{
+						setObject((Dashboard)object);
+					}
+				}
+			}
+		};
+		selectionService.addSelectionListener(selectionListener);
 	}
 
 	/**
@@ -112,5 +120,18 @@ public class DashboardView extends ViewPart
 	public void setFocus()
 	{
 		dbc.setFocus();
+	}
+	
+	/**
+	 * @param object
+	 */
+	private void setObject(Dashboard object)
+	{
+		if (dbc != null)
+			dbc.dispose();
+		dashboard = object;
+		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, false);
+		parentComposite.layout();
+		setPartName("Dashboard: " + dashboard.getObjectName());
 	}
 }

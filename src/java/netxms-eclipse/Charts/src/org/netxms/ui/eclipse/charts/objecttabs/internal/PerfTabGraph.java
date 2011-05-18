@@ -37,13 +37,13 @@ import org.netxms.ui.eclipse.charts.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.widgets.BorderedComposite;
+import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
  * Performance tab graph
  *
  */
-public class PerfTabGraph extends BorderedComposite
+public class PerfTabGraph extends DashboardComposite
 {
 	private long nodeId;
 	private PerfTabDci dci;

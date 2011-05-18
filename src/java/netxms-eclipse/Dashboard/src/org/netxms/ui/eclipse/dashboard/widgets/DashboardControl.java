@@ -33,15 +33,17 @@ import org.netxms.client.objects.Dashboard;
 public class DashboardControl extends Composite
 {
 	private Dashboard dashboard;
+	private boolean embedded = false;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard)
+	public DashboardControl(Composite parent, int style, Dashboard dashboard, boolean embedded)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
+		this.embedded = embedded;
 		setBackground(new Color(getDisplay(), 255, 255, 255));
 		createContent();
 	}
@@ -53,8 +55,8 @@ public class DashboardControl extends Composite
 	{
 		GridLayout layout = new GridLayout();
 		layout.numColumns = dashboard.getNumColumns();
-		layout.marginWidth = 15;
-		layout.marginHeight = 15;
+		layout.marginWidth = embedded ? 0 : 15;
+		layout.marginHeight = embedded ? 0 : 15;
 		layout.horizontalSpacing = 10;
 		layout.verticalSpacing = 10;
 		setLayout(layout);
@@ -139,6 +141,8 @@ public class DashboardControl extends Composite
 				return new LabelElement(this, e.getData());
 			case DashboardElement.DASHBOARD:
 				return new EmbeddedDashboardElement(this, e.getData());
+			case DashboardElement.NETWORK_MAP:
+				return new NetworkMapElement(this, e.getData());
 			default:
 				return new ElementWidget(this, e.getData());
 		}

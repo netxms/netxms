@@ -609,10 +609,9 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/Ed
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DashboardElements.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/helpers/DashboardElementsLabelProvider.java -text
-src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/DashboardEditorPart.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/DashboardDynamicView.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/DashboardNavigator.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/DashboardView.java -text
-src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/helpers/DashboardEditorInput.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/BarChartElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/ComparisonChartElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/DashboardControl.java -text
@@ -1311,8 +1310,8 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetFactory.ja
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetHelper.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/AbstractSelector.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/AnimatedImage.java -text
-src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/BorderedComposite.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/CommandBox.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/DashboardComposite.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/DashboardElement.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/ImageCombo.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/LabeledText.java -text

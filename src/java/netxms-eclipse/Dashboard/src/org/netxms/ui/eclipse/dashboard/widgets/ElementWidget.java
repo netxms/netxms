@@ -20,19 +20,28 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.ui.eclipse.widgets.BorderedComposite;
+import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
  * Base class for all dashboard elements
  */
-class ElementWidget extends BorderedComposite
+class ElementWidget extends DashboardComposite
 {
+	/**
+	 * @param parent
+	 * @param style
+	 */
+	protected ElementWidget(Composite parent, int style, String data)
+	{
+		super(parent, style);
+	}
+
 	/**
 	 * @param parent
 	 * @param style
 	 */
 	protected ElementWidget(Composite parent, String data)
 	{
-		super(parent, SWT.NONE);
+		super(parent, SWT.BORDER);
 	}
 }

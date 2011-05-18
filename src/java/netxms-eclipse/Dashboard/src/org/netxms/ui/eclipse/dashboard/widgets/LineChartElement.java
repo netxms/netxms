@@ -176,8 +176,8 @@ public class LineChartElement extends ElementWidget
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
 		Point size = super.computeSize(wHint, hHint, changed);
-		if ((hHint == SWT.DEFAULT) && (size.y < 250))
-			size.y = 250;
+		if ((hHint == SWT.DEFAULT) && (size.y < 210))
+			size.y = 210;
 		return size;
 	}
 }

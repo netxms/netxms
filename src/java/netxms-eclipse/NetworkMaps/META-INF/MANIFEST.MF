@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Network Maps Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.networkmaps;singleton:=true
-Bundle-Version: 1.1.0
+Bundle-Version: 1.1.2
 Bundle-Activator: org.netxms.ui.eclipse.networkmaps.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.netxms.ui.eclipse.library;bundle-version="1.1.0",
@@ -15,4 +15,5 @@ Require-Bundle: org.netxms.ui.eclipse.library;bundle-version="1.1.0",
  org.netxms.ui.eclipse.imagelibrary;bundle-version="1.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms
+Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
+ org.netxms.ui.eclipse.networkmaps.widgets

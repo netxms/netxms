@@ -1,34 +1,44 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.dashboard.views;
 
 import java.util.HashSet;
 import java.util.Set;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.dashboard.views.helpers.DashboardEditorInput;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 
 /**
- * @author Victor
+ * Dashboard navigator
  *
  */
 public class DashboardNavigator extends ViewPart
@@ -37,8 +47,6 @@ public class DashboardNavigator extends ViewPart
 	
 	private NXCSession session;
 	private ObjectTree objectTree;
-	
-	private Action actionOpenDashboard;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -55,6 +63,8 @@ public class DashboardNavigator extends ViewPart
 		
 		createActions();
 		createPopupMenu();
+
+		getSite().setSelectionProvider(objectTree.getTreeViewer());
 	}
 	
 	/**
@@ -70,15 +80,11 @@ public class DashboardNavigator extends ViewPart
 		return ids;
 	}
 	
+	/**
+	 * Create actions
+	 */
 	private void createActions()
 	{
-		actionOpenDashboard = new Action("&Open dashboard") {
-			@Override
-			public void run()
-			{
-				openDashboard();
-			}
-		};
 	}
 
 	/**
@@ -110,7 +116,17 @@ public class DashboardNavigator extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(actionOpenDashboard);
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
 		manager.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
@@ -123,24 +139,5 @@ public class DashboardNavigator extends ViewPart
 	public void setFocus()
 	{
 		objectTree.setFocus();
-	}
-
-	/**
-	 * Open selected dashboard
-	 */
-	private void openDashboard()
-	{
-		GenericObject object = objectTree.getFirstSelectedObject2();
-		if (object instanceof Dashboard)
-		{
-			try
-			{
-				getSite().getPage().openEditor(new DashboardEditorInput((Dashboard)object), DashboardEditorPart.ID, true);
-			}
-			catch(PartInitException e)
-			{
-				MessageDialog.openError(getSite().getShell(), "Error", "Cannot open dashboard: " + e.getMessage());
-			}
-		}
 	}
 }

@@ -36,13 +36,13 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
-import org.netxms.ui.eclipse.widgets.BorderedComposite;
+import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
  * View of switch/router ports
  *
  */
-public class DeviceView extends BorderedComposite
+public class DeviceView extends DashboardComposite
 {
 	private long nodeId;
 	private NXCSession session;
