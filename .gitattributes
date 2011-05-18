@@ -620,6 +620,7 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/El
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/EmbeddedDashboardElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/LabelElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/LineChartElement.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/NetworkMapElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/ObjectStatusChartElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/PieChartElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/BarChartConfig.java -text
@@ -627,6 +628,7 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/in
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/EmbeddedDashboardConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/LabelConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/LineChartConfig.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/NetworkMapConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/ObjectStatusChartConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/PieChartConfig.java -text
 src/java/netxms-eclipse/DataCollection/.settings/org.eclipse.jdt.core.prefs -text
@@ -911,6 +913,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectTooltip.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/UnknownObject.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ZoomAction.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/widgets/NetworkMapWidget.java -text
 src/java/netxms-eclipse/OSM/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/OSM/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/OSM/build.properties -text

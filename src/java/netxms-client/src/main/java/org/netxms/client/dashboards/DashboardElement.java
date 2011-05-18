@@ -33,6 +33,7 @@ public class DashboardElement
 	public static final int STATUS_CHART = 5;
 	public static final int STATUS_INDICATOR = 6;
 	public static final int DASHBOARD = 7;
+	public static final int NETWORK_MAP = 8;
 	
 	public static final int FILL = 0;
 	public static final int CENTER = 1;
