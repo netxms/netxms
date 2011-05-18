@@ -38,6 +38,9 @@ public class ImageProvider
 
 	private List<LibraryImage> imageLibrary;
 
+	/**
+	 * 
+	 */
 	private ImageProvider()
 	{
 		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png");
@@ -45,16 +48,26 @@ public class ImageProvider
 		updateListeners = new HashSet<ImageUpdateListener>();
 	}
 
+	/**
+	 * @param listener
+	 */
 	public void addUpdateListener(final ImageUpdateListener listener)
 	{
 		updateListeners.add(listener);
 	}
 
+	/**
+	 * @param listener
+	 */
 	public void removeUpdateListener(final ImageUpdateListener listener)
 	{
 		updateListeners.remove(listener);
 	}
 
+	/**
+	 * @throws NXCException
+	 * @throws IOException
+	 */
 	public void syncMetaData() throws NXCException, IOException
 	{
 		final Display display = PlatformUI.getWorkbench().getDisplay();
@@ -77,7 +90,7 @@ public class ImageProvider
 					}
 					catch(SWTException e)
 					{
-						// TODO: log?
+						Activator.logError("Exception in ImageProvider.syncMetaData()", e);
 						cache.put(completeLibraryImage.getGuid(), missingImage);
 					}
 
@@ -88,12 +101,16 @@ public class ImageProvider
 				}
 				catch(Exception e)
 				{
-					// TODO: log
+					Activator.logError("Exception in ImageProvider.syncMetaData()", e);
 				}
 			}
 		}
 	}
 
+	/**
+	 * @param guid
+	 * @return
+	 */
 	public Image getImage(final UUID guid)
 	{
 		final Image image;
@@ -121,6 +138,9 @@ public class ImageProvider
 		return libraryIndex.get(guid);
 	}
 
+	/**
+	 * @return
+	 */
 	public List<LibraryImage> getImageLibrary()
 	{
 		return imageLibrary;

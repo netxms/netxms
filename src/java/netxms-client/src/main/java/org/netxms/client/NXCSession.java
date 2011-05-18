@@ -31,7 +31,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -373,6 +372,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 						case NXCPCodes.CMD_FILE_DATA:
 							processFileData(msg);
 							break;
+						case NXCPCodes.CMD_ABORT_FILE_TRANSFER:
+							processFileTransferError(msg);
+							break;
 						case NXCPCodes.CMD_NOTIFY:
 							processNotificationMessage(msg);
 							break;
@@ -489,6 +491,28 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				{
 					receivedFiles.notifyAll();
 				}
+			}
+		}
+		
+		/**
+		 * Process file transfer error
+		 * 
+		 * @param msg
+		 */
+		private void processFileTransferError(final NXCPMessage msg)
+		{
+			long id = msg.getMessageId();
+			NXCReceivedFile file;
+			synchronized(receivedFiles)
+			{
+				file = receivedFiles.get(id);
+				if (file == null)
+				{
+					file = new NXCReceivedFile(id);
+					receivedFiles.put(id, file);
+				}
+				file.close();
+				receivedFiles.notifyAll();
 			}
 		}
 
@@ -4339,7 +4363,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			ret.add(new LibraryImage(imageGuid, imageName, imageCategory, imageMimeType, imageProtected));
 		}
 
-		return Collections.unmodifiableList(ret);
+		return ret;
 	}
 
 	/*
@@ -4356,6 +4380,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		final File imageFile = waitForFile(msg.getMessageId(), 600000);
+		if (imageFile == null)
+			throw new NXCException(RCC.IO_ERROR);
 		return new LibraryImage(response, imageFile);
 	}
 

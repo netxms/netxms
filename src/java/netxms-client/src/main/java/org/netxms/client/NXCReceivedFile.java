@@ -113,6 +113,27 @@ public class NXCReceivedFile
 			timestamp = System.currentTimeMillis();
 		}
 	}
+	
+	/**
+	 * @param cause
+	 */
+	protected void abortTransfer()
+	{
+		if (status == OPEN)
+		{
+			try
+			{
+				stream.close();
+				status = RECEIVED;
+			}
+			catch(IOException e)
+			{
+			}
+		}
+		timestamp = System.currentTimeMillis();
+		status = FAILED;
+		exception = new IOException();
+	}
 
 	/**
 	 * @return the id

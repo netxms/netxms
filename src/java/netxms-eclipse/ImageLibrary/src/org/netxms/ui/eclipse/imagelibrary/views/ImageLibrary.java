@@ -47,6 +47,9 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
+/**
+ * Image library configurator
+ */
 public class ImageLibrary extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.imagelibrary.view.imagelibrary";
@@ -195,15 +198,9 @@ public class ImageLibrary extends ViewPart
 				{
 					refreshImages();
 				}
-				catch(NetXMSClientException e)
+				catch(Exception e)
 				{
-					// FIXME
-					e.printStackTrace();
-				}
-				catch(IOException e)
-				{
-					// FIXME
-					e.printStackTrace();
+					Activator.logError("ImageLibrary view: Exception in refresh action", e);
 				}
 			}
 		};
@@ -241,6 +238,12 @@ public class ImageLibrary extends ViewPart
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 	}
 
+	/**
+	 * @param galleryItem
+	 * @param name
+	 * @param category
+	 * @param fileName
+	 */
 	protected void editImage(final GalleryItem galleryItem, final String name, final String category, final String fileName)
 	{
 		new ConsoleJob("Update Image", this, Activator.PLUGIN_ID, null)
@@ -296,6 +299,11 @@ public class ImageLibrary extends ViewPart
 		}.start();
 	}
 
+	/**
+	 * @param name
+	 * @param category
+	 * @param fileName
+	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
 		new ConsoleJob("Upload New Image", this, Activator.PLUGIN_ID, null)
@@ -344,6 +352,9 @@ public class ImageLibrary extends ViewPart
 		}.start();
 	}
 
+	/**
+	 * 
+	 */
 	protected void deleteImage()
 	{
 		final GalleryItem[] selection = gallery.getSelection();
@@ -373,6 +384,9 @@ public class ImageLibrary extends ViewPart
 		}
 	}
 
+	/**
+	 * 
+	 */
 	private void createPopupMenu()
 	{
 		MenuManager menuManager = new MenuManager();
@@ -389,6 +403,9 @@ public class ImageLibrary extends ViewPart
 		gallery.setMenu(menu);
 	}
 
+	/**
+	 * @param manager
+	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(actionNew);
@@ -416,6 +433,9 @@ public class ImageLibrary extends ViewPart
 		}
 	}
 
+	/**
+	 * 
+	 */
 	private void contributeToActionBars()
 	{
 		IActionBars actionBars = getViewSite().getActionBars();
@@ -435,11 +455,26 @@ public class ImageLibrary extends ViewPart
 	private void refreshImages() throws NetXMSClientException, IOException
 	{
 		new ConsoleJob("Reload image library", this, Activator.PLUGIN_ID, null) {
-
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<LibraryImage> imageLibrary = session.getImageLibrary();
+				for(int i = 0; i < imageLibrary.size(); i++)
+				{
+					LibraryImage image = imageLibrary.get(i);
+					if (!image.isComplete())
+					{
+						try
+						{
+							LibraryImage completeImage = session.getImage(image.getGuid());
+							imageLibrary.set(i, completeImage);
+						}
+						catch(Exception e)
+						{
+							Activator.logError("Exception in ImageLibrary.refreshImages()", e);
+						}
+					}
+				}
 				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
@@ -459,7 +494,7 @@ public class ImageLibrary extends ViewPart
 	}
 	
 	/**
-	 * Refresh UI after retrieving imaqge library from server
+	 * Refresh UI after retrieving imaqe library from server
 	 */
 	private void refreshUI(List<LibraryImage> imageLibrary)
 	{
@@ -481,28 +516,11 @@ public class ImageLibrary extends ViewPart
 			final GalleryItem categoryItem = new GalleryItem(gallery, SWT.NONE);
 			categoryItem.setText(category);
 			final List<LibraryImage> categoryImages = categories.get(category);
-			for(LibraryImage image : categoryImages)
+			for(final LibraryImage image : categoryImages)
 			{
-				LibraryImage completeImage;
-				if (!image.isComplete())
-				{
-					try
-					{
-						completeImage = session.getImage(image.getGuid());
-					}
-					catch(Exception e)
-					{
-						// TODO: logging
-						completeImage = image;
-					}
-				}
-				else
-				{
-					completeImage = image;
-				}
 				final GalleryItem imageItem = new GalleryItem(categoryItem, SWT.NONE);
-				imageItem.setText(completeImage.getName());
-				final byte[] binaryData = completeImage.getBinaryData();
+				imageItem.setText(image.getName());
+				final byte[] binaryData = image.getBinaryData();
 				if (binaryData != null)
 				{
 					final ByteArrayInputStream stream = new ByteArrayInputStream(binaryData);
@@ -512,19 +530,18 @@ public class ImageLibrary extends ViewPart
 					}
 					catch(SWTException e)
 					{
-						// TODO: log?
-						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
-																												// as
-																												// "missing"
+						Activator.logError("Exception in ImageLibrary.refreshUI()", e);
+						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
 					}
 				}
-				imageItem.setData(completeImage);
+				else
+				{
+					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
+				}
+				imageItem.setData(image);
 			}
 		}
 
-		// if (gallery.getItemCount() > 0)
-		// {
-		// gallery.getItem(0).setExpanded(true);
-		// }
+		gallery.redraw();
 	}
 }
