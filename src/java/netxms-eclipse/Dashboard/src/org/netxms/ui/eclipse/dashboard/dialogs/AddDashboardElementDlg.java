@@ -46,6 +46,7 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add("Status Indicator");
 		elementTypeSelector.add("Dashboard");
 		elementTypeSelector.add("Network Map");
+		elementTypeSelector.add("Custom Widget");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

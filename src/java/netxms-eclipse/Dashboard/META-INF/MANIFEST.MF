@@ -15,3 +15,4 @@ Require-Bundle: org.eclipse.ui,
  org.netxms.ui.eclipse.networkmaps;bundle-version="1.1.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
+Export-Package: org.netxms.ui.eclipse.dashboard.api

@@ -84,14 +84,5 @@
          </enabledWhen>
       </page>
    </extension>
-   <extension
-         point="org.eclipse.ui.editors">
-      <editor
-            class="org.netxms.ui.eclipse.dashboard.views.DashboardEditorPart"
-            default="false"
-            id="org.netxms.ui.eclipse.dashboard.views.DashboardEditorPart"
-            name="Dashboard">
-      </editor>
-   </extension>
 
 </plugin>
