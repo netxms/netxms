@@ -3949,36 +3949,41 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	if (m_driver != NULL)
 	{
 		SNMP_Transport *snmp = createSnmpTransport();
-		VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes);
-		MutexLock(m_mutexTopoAccess, INFINITE);
-		if (vlanList != NULL)
+		if (snmp != NULL)
 		{
-			resolveVlanPorts(vlanList);
-		   SendPollerMsg(dwRqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
-			DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_szName, m_dwId);
-			if (m_vlans != NULL)
-				m_vlans->decRefCount();
-			m_vlans = vlanList;
-		}
-		else
-		{
-		   SendPollerMsg(dwRqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
-			DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_szName, m_dwId);
-			if (m_vlans != NULL)
-				m_vlans->decRefCount();
-			m_vlans = NULL;
-		}
-		MutexUnlock(m_mutexTopoAccess);
+			VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes);
+			delete snmp;
 
-		LockData();
-		DWORD oldFlags = m_dwFlags;
-		if (vlanList != NULL)
-			m_dwFlags |= NF_HAS_VLANS;
-		else
-			m_dwFlags &= ~NF_HAS_VLANS;
-		if (oldFlags != m_dwFlags)
-			Modify();
-		UnlockData();
+			MutexLock(m_mutexTopoAccess, INFINITE);
+			if (vlanList != NULL)
+			{
+				resolveVlanPorts(vlanList);
+				SendPollerMsg(dwRqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
+				DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_szName, m_dwId);
+				if (m_vlans != NULL)
+					m_vlans->decRefCount();
+				m_vlans = vlanList;
+			}
+			else
+			{
+				SendPollerMsg(dwRqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
+				DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_szName, m_dwId);
+				if (m_vlans != NULL)
+					m_vlans->decRefCount();
+				m_vlans = NULL;
+			}
+			MutexUnlock(m_mutexTopoAccess);
+
+			LockData();
+			DWORD oldFlags = m_dwFlags;
+			if (vlanList != NULL)
+				m_dwFlags |= NF_HAS_VLANS;
+			else
+				m_dwFlags &= ~NF_HAS_VLANS;
+			if (oldFlags != m_dwFlags)
+				Modify();
+			UnlockData();
+		}
 	}
 
    SendPollerMsg(dwRqId, _T("Finished topology poll for node %s\r\n"), m_szName);
