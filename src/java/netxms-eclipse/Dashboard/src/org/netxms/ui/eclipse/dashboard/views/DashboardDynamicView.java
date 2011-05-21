@@ -33,20 +33,25 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 
 /**
- * Dynamic dashboard view - change dashboard when selection in dashboard navigator changes
+ * Dynamic dashboard view - change dashboard when selection in dashboard
+ * navigator changes
  */
 public class DashboardDynamicView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView";
-	
+
 	private Dashboard dashboard = null;
 	private DashboardControl dbc = null;
 	private ISelectionService selectionService;
 	private ISelectionListener selectionListener;
 	private Composite parentComposite;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets
+	 * .Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent)
@@ -59,7 +64,8 @@ public class DashboardDynamicView extends ViewPart
 		contributeToActionBars();
 
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
-		selectionListener = new ISelectionListener() {
+		selectionListener = new ISelectionListener()
+		{
 			@Override
 			public void selectionChanged(IWorkbenchPart part, ISelection selection)
 			{
@@ -82,7 +88,7 @@ public class DashboardDynamicView extends ViewPart
 	private void createActions()
 	{
 	}
-	
+
 	/**
 	 * Contribute actions to action bar
 	 */
@@ -112,16 +118,21 @@ public class DashboardDynamicView extends ViewPart
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
 	public void setFocus()
 	{
-		dbc.setFocus();
+		if (dbc != null)
+		{
+			dbc.setFocus();
+		}
 	}
-	
+
 	/**
 	 * @param object
 	 */

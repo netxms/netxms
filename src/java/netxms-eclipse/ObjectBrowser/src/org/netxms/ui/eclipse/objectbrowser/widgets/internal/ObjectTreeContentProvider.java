@@ -3,8 +3,9 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-
+import java.util.List;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
@@ -31,6 +32,18 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object[] getChildren(Object parentElement)
 	{
+		/*
+		final GenericObject[] childsAsArray = ((GenericObject)parentElement).getChildsAsArray();
+		List<GenericObject> filteredList = new ArrayList<GenericObject>();
+		for(GenericObject genericObject : childsAsArray)
+		{
+			if (!genericObject.getObjectName().startsWith("@"))
+			{
+				filteredList.add(genericObject);
+			}
+		}
+		return filteredList.toArray();
+		*/
 		return ((GenericObject)parentElement).getChildsAsArray();
 	}
 

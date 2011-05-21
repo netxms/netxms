@@ -143,6 +143,8 @@ public class DashboardControl extends Composite
 				return new EmbeddedDashboardElement(this, e.getData());
 			case DashboardElement.NETWORK_MAP:
 				return new NetworkMapElement(this, e.getData());
+			case DashboardElement.STATUS_INDICATOR:
+				return new StatusIndicatorElement(this, e.getData());
 			case DashboardElement.CUSTOM:
 				return new CustomWidgetElement(this, e.getData());
 			default:
