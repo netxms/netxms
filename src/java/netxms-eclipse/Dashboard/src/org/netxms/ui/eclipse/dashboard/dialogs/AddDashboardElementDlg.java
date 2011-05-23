@@ -47,6 +47,7 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add("Dashboard");
 		elementTypeSelector.add("Network Map");
 		elementTypeSelector.add("Custom Widget");
+		elementTypeSelector.add("Geo Map");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

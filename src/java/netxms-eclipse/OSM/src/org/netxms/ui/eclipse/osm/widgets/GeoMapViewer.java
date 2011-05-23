@@ -146,6 +146,16 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	}
 	
 	/**
+	 * @param lat
+	 * @param lon
+	 * @param zoom
+	 */
+	public void showMap(double lat, double lon, int zoom)
+	{
+		showMap(new MapAccessor(lat, lon, zoom));
+	}
+	
+	/**
 	 * Reload current map
 	 */
 	private void reloadMap()
