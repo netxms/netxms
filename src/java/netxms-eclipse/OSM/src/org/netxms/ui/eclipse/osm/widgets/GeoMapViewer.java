@@ -27,7 +27,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -53,6 +52,7 @@ import org.netxms.ui.eclipse.osm.GeoLocationCache;
 import org.netxms.ui.eclipse.osm.GeoLocationCacheListener;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
+import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
@@ -174,37 +174,19 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		if (!accessor.isValid())
 			return;
 
-		URL url = null;
-		try
-		{
-			url = new URL(accessor.generateUrl());
-		}
-		catch(MalformedURLException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-		
-		System.out.println("URL: " + url.toString());
-		
-		final ImageDescriptor id = ImageDescriptor.createFromURL(url);
+		final Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
+		final GeoLocation centerPoint = accessor.getCenterPoint();
 		Job job = new Job("Download map image") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				Image image = id.createImage();
+				final Image[][] tiles = MapLoader.getAllTiles(mapSize, centerPoint, accessor.getZoom());
 				
-				synchronized(imageAccessSync)
-				{
-					if (currentImage != null)
-						currentImage.dispose();
-					currentImage = image;
-				}
 				new UIJob("Redraw map") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
+						drawTiles(tiles);
 						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
 						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), accessor.getZoom());
 						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
@@ -221,6 +203,44 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			siteService.schedule(job, 0, true);
 		else
 			job.schedule();
+	}
+	
+	/**
+	 * @param tiles
+	 */
+	private void drawTiles(Image[][] tiles)
+	{
+		if (currentImage != null)
+			currentImage.dispose();
+		
+		if ((tiles == null) || (tiles.length == 0))
+		{
+			currentImage = null;
+			return;
+		}
+		
+		Point size = getSize();
+		currentImage = new Image(getDisplay(), size.x, size.y);
+		GC gc = new GC(currentImage);
+		
+		int xOffset = (size.x - tiles[0].length * 256) / 2;
+		int x = xOffset;
+		int y = (size.y - tiles.length * 256) / 2;
+		for(int i = 0; i < tiles.length; i++)
+		{
+			for(int j = 0; j < tiles[i].length; j++)
+			{
+				gc.drawImage(tiles[i][j], x, y);
+				x += 256;
+				if (x >= size.x)
+				{
+					x = xOffset;
+					y += 256;
+				}
+			}
+		}
+		
+		gc.dispose();
 	}
 
 	/**
