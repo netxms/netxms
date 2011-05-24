@@ -53,6 +53,7 @@ import org.netxms.ui.eclipse.osm.GeoLocationCacheListener;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
+import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
@@ -190,7 +191,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				final Image[][] tiles = MapLoader.getAllTiles(mapSize, centerPoint, accessor.getZoom());
+				final TileSet tiles = MapLoader.getAllTiles(mapSize, centerPoint, accessor.getZoom());
 				
 				new UIJob("Redraw map") {
 					@Override
@@ -218,24 +219,25 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	/**
 	 * @param tiles
 	 */
-	private void drawTiles(Image[][] tiles)
+	private void drawTiles(TileSet tileSet)
 	{
 		if (currentImage != null)
 			currentImage.dispose();
 		
-		if ((tiles == null) || (tiles.length == 0))
+		if ((tileSet == null) || (tileSet.tiles == null) || (tileSet.tiles.length == 0))
 		{
 			currentImage = null;
 			return;
 		}
 		
+		final Image[][] tiles = tileSet.tiles;
+		
 		Point size = getSize();
 		currentImage = new Image(getDisplay(), size.x, size.y);
 		GC gc = new GC(currentImage);
 		
-		int xOffset = (size.x - tiles[0].length * 256) / 2;
-		int x = xOffset;
-		int y = (size.y - tiles.length * 256) / 2;
+		int x = tileSet.xOffset;
+		int y = tileSet.yOffset;
 		for(int i = 0; i < tiles.length; i++)
 		{
 			for(int j = 0; j < tiles[i].length; j++)
@@ -244,7 +246,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				x += 256;
 				if (x >= size.x)
 				{
-					x = xOffset;
+					x = tileSet.xOffset;
 					y += 256;
 				}
 			}

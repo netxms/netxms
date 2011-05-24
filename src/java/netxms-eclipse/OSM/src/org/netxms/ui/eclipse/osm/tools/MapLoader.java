@@ -57,6 +57,27 @@ public class MapLoader
 	}
 	
 	/**
+	 * @param x
+	 * @param z
+	 * @return
+	 */
+	private static double longitudeFromTile(int x, int z)
+	{
+		return x / Math.pow(2.0, z) * 360.0 - 180;
+	}
+	 
+	/**
+	 * @param y
+	 * @param z
+	 * @return
+	 */
+	private static double latitudeFromTile(int y, int z) 
+	{
+		double n = Math.PI - (2.0 * Math.PI * y) / Math.pow(2.0, z);
+		return Math.toDegrees(Math.atan(Math.sinh(n)));
+	}
+	
+	/**
 	 * get image for missing tile
 	 * 
 	 * @return
@@ -194,7 +215,7 @@ public class MapLoader
 	 * @param zoom
 	 * @return
 	 */
-	public static Image[][] getAllTiles(Point mapSize, GeoLocation centerPoint, int zoom)
+	public static TileSet getAllTiles(Point mapSize, GeoLocation centerPoint, int zoom)
 	{
 		if ((mapSize.x < 32) || (mapSize.y < 32))
 			return null;
@@ -219,6 +240,11 @@ public class MapLoader
 			}
 		}
 		
-		return tiles;
+		double lat = latitudeFromTile(topRight.y, zoom);
+		double lon = longitudeFromTile(bottomLeft.x, zoom);
+		Point realTopLeft = GeoLocationCache.coordinateToDisplay(new GeoLocation(lat, lon), zoom);
+		Point reqTopLeft = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), zoom);
+		
+		return new TileSet(tiles, realTopLeft.x - reqTopLeft.x, realTopLeft.y - reqTopLeft.y);
 	}
 }
