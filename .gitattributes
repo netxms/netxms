@@ -937,6 +937,7 @@ src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/Area.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapAccessor.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/MapLoader.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/QuadTree.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/TileSet.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/views/LocationMap.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/GeoMapViewer.java -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
