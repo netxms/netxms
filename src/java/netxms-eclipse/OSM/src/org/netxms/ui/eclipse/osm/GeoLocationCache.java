@@ -230,7 +230,7 @@ public class GeoLocationCache implements SessionListener
 	 * @param zoom zoom level
 	 * @return location for given point
 	 */
-	private static GeoLocation displayToCoordinates(Point point, int zoom)
+	public static GeoLocation displayToCoordinates(Point point, int zoom)
 	{
 		double longitude = (point.x *(360 / (Math.pow(2, zoom) * 256))) - 180;
 		

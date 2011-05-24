@@ -5,6 +5,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.dashboard.api.CustomDashboardElement;
@@ -25,7 +26,7 @@ public class CustomWidgetElement extends ElementWidget
 	 */
 	public CustomWidgetElement(Composite parent, String data)
 	{
-		super(parent, data);
+		super(parent, SWT.NONE, data);
 		
 		try
 		{

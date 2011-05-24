@@ -60,6 +60,7 @@ public class DashboardNavigator extends ViewPart
 		classFilter.add(GenericObject.OBJECT_DASHBOARD);
 		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, getRootObjects(classFilter), classFilter);
 		objectTree.enableFilter(false);
+		objectTree.getTreeViewer().expandToLevel(2);
 		
 		createActions();
 		createPopupMenu();
