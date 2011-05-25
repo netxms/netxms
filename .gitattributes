@@ -925,6 +925,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/widget
 src/java/netxms-eclipse/OSM/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/OSM/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/OSM/build.properties -text
+src/java/netxms-eclipse/OSM/icons/border_tile.png -text
 src/java/netxms-eclipse/OSM/icons/map.png -text
 src/java/netxms-eclipse/OSM/icons/missing_tile.png -text
 src/java/netxms-eclipse/OSM/plugin.xml -text
@@ -940,6 +941,7 @@ src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/QuadTree.java -t
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/tools/TileSet.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/views/LocationMap.java -text
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/GeoMapViewer.java -text
+src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/helpers/GeoMapZoomListener.java -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser/icons/cluster.png -text

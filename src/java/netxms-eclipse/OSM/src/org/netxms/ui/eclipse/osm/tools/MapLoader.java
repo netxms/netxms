@@ -43,6 +43,7 @@ import org.netxms.ui.eclipse.osm.GeoLocationCache;
 public class MapLoader
 {
 	private static Image missingTile = null; 
+	private static Image borderTile = null; 
 	
 	/**
 	 * @param location
@@ -90,6 +91,18 @@ public class MapLoader
 	}
 	
 	/**
+	 * get image for border tile (tile out of map boundaries)
+	 * 
+	 * @return
+	 */
+	private static Image getBorderTileImage()
+	{
+		if (borderTile == null)
+			borderTile = Activator.getImageDescriptor("icons/border_tile.png").createImage();
+		return borderTile;
+	}
+	
+	/**
 	 * @param zoom
 	 * @param x
 	 * @param y
@@ -97,6 +110,11 @@ public class MapLoader
 	 */
 	private static Image loadTile(int zoom, int x, int y)
 	{
+		// check x and y for validity
+		int maxTileNum = (1 << zoom) - 1;
+		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
+			return getBorderTileImage();
+		
 		URL url = null;
 		try
 		{

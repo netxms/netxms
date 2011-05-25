@@ -21,7 +21,9 @@ package org.netxms.ui.eclipse.osm.widgets;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -31,6 +33,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -55,12 +59,13 @@ import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
+import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapZoomListener;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
  */
-public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener
+public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener, MouseWheelListener, MouseListener, MouseMoveListener
 {
 	private static final Color MAP_BACKGROUND = new Color(Display.getDefault(), 255, 255, 255);
 	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getDefault(), 150, 240, 88);
@@ -75,7 +80,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private static final int LABEL_Y_MARGIN = 4;
 	private static final int LABEL_SPACING = 4;
 
-	private String imageAccessSync = "SYNC";
+	private static final int DRAG_JITTER = 8;
+
 	private ILabelProvider labelProvider;
 	private Image currentImage = null;
 	private Area coverage = null;
@@ -84,6 +90,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private IWorkbenchSiteProgressService siteService = null;
 	private GenericObject centerMarker = null;
 	private AnimatedImage waitingImage = null;
+	private Point dragStartPoint = null;
+	private boolean loading = false;
+	private Set<GeoMapZoomListener> zoomListeners = new HashSet<GeoMapZoomListener>(0);
 
 	private int offsetX;
 	private int offsetY;
@@ -113,8 +122,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			}
 		};
 
-		addListener(SWT.Resize, new Listener()
-		{
+		addListener(SWT.Resize, new Listener() {
 			@Override
 			public void handleEvent(Event event)
 			{
@@ -126,81 +134,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			}
 		});
 
-		final Listener listener = new Listener()
-		{
-			Point point = null;
-			private static final int JITTER = 8;
-
-			@Override
-			public void handleEvent(Event event)
-			{
-				switch(event.type)
-				{
-					case SWT.MouseDown:
-						// left button
-						if (event.button == 1)
-						{
-							point = new Point(event.x, event.y);
-						}
-						break;
-					case SWT.MouseMove:
-						if (point == null)
-						{
-							return;
-						}
-						int deltaX = point.x - event.x;
-						int deltaY = point.y - event.y;
-						if (Math.abs(deltaX) > JITTER || Math.abs(deltaY) > JITTER)
-						{
-							offsetX = deltaX;
-							offsetY = deltaY;
-						}
-						break;
-					case SWT.MouseUp:
-						if (event.button == 1)
-						{
-							if (point != null)
-							{
-								final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
-								centerXY.x += offsetX;
-								centerXY.y += offsetY;
-								final GeoLocation geoLocation = GeoLocationCache.displayToCoordinates(centerXY, accessor.getZoom());
-								accessor.setLatitude(geoLocation.getLatitude());
-								accessor.setLongitude(geoLocation.getLongitude());
-								reloadMap();
-								offsetX = 0;
-								offsetY = 0;
-							}
-							point = null;
-						}
-						break;
-				}
-			}
-		};
-		addListener(SWT.MouseDown, listener);
-		addListener(SWT.MouseUp, listener);
-		addListener(SWT.MouseMove, listener);
-		addMouseWheelListener(new MouseWheelListener()
-		{
-			@Override
-			public void mouseScrolled(MouseEvent event)
-			{
-				int zoom = accessor.getZoom();
-				if (event.count > 0)
-				{
-					zoom++;
-				}
-				else
-				{
-					zoom--;
-				}
-				accessor.setZoom(zoom);
-				reloadMap();
-			}
-		});
-
-		addDisposeListener(new DisposeListener()
-		{
+		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -209,10 +143,43 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			}
 		});
 
+		addMouseListener(this);
+		addMouseMoveListener(this);
+		addMouseWheelListener(this);
+
 		waitingImage = new AnimatedImage(this, SWT.NONE);
 		waitingImage.setVisible(false);
 
 		GeoLocationCache.getInstance().addListener(this);
+	}
+	
+	/**
+	 * Add zoom level change listener
+	 * 
+	 * @param listener
+	 */
+	public void addZoomListener(GeoMapZoomListener listener)
+	{
+		zoomListeners.add(listener);
+	}
+	
+	/**
+	 * Remove previously registered zoom change listener
+	 * 
+	 * @param listener
+	 */
+	public void removeZoomListener(GeoMapZoomListener listener)
+	{
+		zoomListeners.remove(listener);
+	}
+	
+	/**
+	 * Notify all zoom listeners
+	 */
+	private void notifyZoomListeners()
+	{
+		for(GeoMapZoomListener listener : zoomListeners)
+			listener.onZoom(accessor.getZoom());
 	}
 
 	/**
@@ -245,12 +212,11 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		accessor.setMapWidth(rect.width);
 		accessor.setMapHeight(rect.height);
 
-		synchronized(imageAccessSync)
-		{
-			if (currentImage != null)
-				currentImage.dispose();
-			currentImage = null;
-		}
+		if (currentImage != null)
+			currentImage.dispose();
+		currentImage = null;
+		
+		loading = true;
 
 		redraw();
 		waitingImage.setVisible(true);
@@ -286,6 +252,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 						waitingImage.setImage(null);
 						waitingImage.setVisible(false);
 						GeoMapViewer.this.redraw();
+						loading = false;
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -356,10 +323,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events
-	 * .PaintEvent)
+	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
 	 */
 	@Override
 	public void paintControl(PaintEvent e)
@@ -367,59 +331,53 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		final GC gc = e.gc;
 
 		int imgW, imgH;
-		synchronized(imageAccessSync)
+		if (currentImage != null)
 		{
-			if (currentImage != null)
-			{
-				gc.drawImage(currentImage, 0, 0);
-				imgW = currentImage.getImageData().width;
-				imgH = currentImage.getImageData().height;
-			}
-			else
-			{
-				imgW = -1;
-				imgH = -1;
-			}
+			gc.drawImage(currentImage, -offsetX, -offsetY);
+			imgW = currentImage.getImageData().width;
+			imgH = currentImage.getImageData().height;
+		}
+		else
+		{
+			imgW = -1;
+			imgH = -1;
 		}
 
-		/*
-		 * if ((centerMarker != null) && (imgW > 0) && (imgH > 0)) {
-		 * drawObject(gc, imgW / 2, imgH / 2, centerMarker); //int w =
-		 * centerMarker.getImageData().width; //int h =
-		 * centerMarker.getImageData().height; }
-		 */
-
-		final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
-		for(GenericObject object : objects)
+		// Draw objects and decorations if user is not dragging map
+		if (dragStartPoint == null)
 		{
-			final Point virtualXY = GeoLocationCache.coordinateToDisplay(object.getGeolocation(), accessor.getZoom());
-			final int dx = virtualXY.x - centerXY.x;
-			final int dy = virtualXY.y - centerXY.y;
-			drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, object);
+			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
+			for(GenericObject object : objects)
+			{
+				final Point virtualXY = GeoLocationCache.coordinateToDisplay(object.getGeolocation(), accessor.getZoom());
+				final int dx = virtualXY.x - centerXY.x;
+				final int dy = virtualXY.y - centerXY.y;
+				drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, object);
+			}
+	
+			final GeoLocation gl = new GeoLocation(accessor.getLatitude(), accessor.getLongitude());
+			final String text = gl.toString();
+			final Point textSize = gc.textExtent(text);
+	
+			Rectangle rect = getClientArea();
+			rect.x = 10;
+			// rect.x = rect.width - textSize.x - 20;
+			rect.y += 10;
+			rect.width = textSize.x + 10;
+			rect.height = textSize.y + 8;
+	
+			gc.setAntialias(SWT.ON);
+			gc.setBackground(INFO_BLOCK_BACKGROUND);
+			gc.setAlpha(192);
+			gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+			gc.setAlpha(255);
+			gc.setForeground(INFO_BLOCK_BORDER);
+			gc.setLineWidth(1);
+			gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+	
+			gc.setForeground(INFO_BLOCK_TEXT);
+			gc.drawText(text, rect.x + 5, rect.y + 4, true);
 		}
-
-		final GeoLocation gl = new GeoLocation(accessor.getLatitude(), accessor.getLongitude());
-		final String text = gl.toString();
-		final Point textSize = gc.textExtent(text);
-
-		Rectangle rect = getClientArea();
-		rect.x = 10;
-		// rect.x = rect.width - textSize.x - 20;
-		rect.y += 10;
-		rect.width = textSize.x + 10;
-		rect.height = textSize.y + 8;
-
-		gc.setAntialias(SWT.ON);
-		gc.setBackground(INFO_BLOCK_BACKGROUND);
-		gc.setAlpha(192);
-		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-		gc.setAlpha(255);
-		gc.setForeground(INFO_BLOCK_BORDER);
-		gc.setLineWidth(1);
-		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-
-		gc.setForeground(INFO_BLOCK_TEXT);
-		gc.drawText(text, rect.x + 5, rect.y + 4, true);
 	}
 
 	/**
@@ -510,6 +468,97 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		{
 			objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
 			redraw();
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.MouseWheelListener#mouseScrolled(org.eclipse.swt.events.MouseEvent)
+	 */
+	@Override
+	public void mouseScrolled(MouseEvent event)
+	{
+		if (loading)
+			return;
+		
+		int zoom = accessor.getZoom();
+		if (event.count > 0)
+		{
+			if (zoom < 18)
+				zoom++;
+		}
+		else
+		{
+			if (zoom > 1)
+				zoom--;
+		}
+		
+		if (zoom != accessor.getZoom())
+		{
+			accessor.setZoom(zoom);
+			reloadMap();
+			notifyZoomListeners();
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
+	 */
+	@Override
+	public void mouseDoubleClick(MouseEvent e)
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
+	 */
+	@Override
+	public void mouseDown(MouseEvent e)
+	{
+		if ((e.button == 1) && !loading) // left button, ignore if map is currently loading
+		{
+			dragStartPoint = new Point(e.x, e.y);
+			setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
+	 */
+	@Override
+	public void mouseUp(MouseEvent e)
+	{
+		if ((e.button == 1) && (dragStartPoint != null))
+		{
+			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
+			centerXY.x += offsetX;
+			centerXY.y += offsetY;
+			final GeoLocation geoLocation = GeoLocationCache.displayToCoordinates(centerXY, accessor.getZoom());
+			accessor.setLatitude(geoLocation.getLatitude());
+			accessor.setLongitude(geoLocation.getLongitude());
+			reloadMap();
+			offsetX = 0;
+			offsetY = 0;
+			dragStartPoint = null;
+			setCursor(null);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.MouseMoveListener#mouseMove(org.eclipse.swt.events.MouseEvent)
+	 */
+	@Override
+	public void mouseMove(MouseEvent e)
+	{
+		if (dragStartPoint != null)
+		{
+			int deltaX = dragStartPoint.x - e.x;
+			int deltaY = dragStartPoint.y - e.y;
+			if (Math.abs(deltaX) > DRAG_JITTER || Math.abs(deltaY) > DRAG_JITTER)
+			{
+				offsetX = deltaX;
+				offsetY = deltaY;
+				redraw();
+			}
 		}
 	}
 }

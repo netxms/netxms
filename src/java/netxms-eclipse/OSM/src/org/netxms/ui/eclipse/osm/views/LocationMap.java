@@ -36,6 +36,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
+import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapZoomListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -105,6 +106,17 @@ public class LocationMap extends ViewPart
 		mapAccessor.setZoom(zoomLevel);
 		map.showMap(mapAccessor);
 		map.setCenterMarker(object);
+		
+		map.addZoomListener(new GeoMapZoomListener() {
+			@Override
+			public void onZoom(int zoomLevel)
+			{
+				LocationMap.this.zoomLevel = zoomLevel;
+				mapAccessor.setZoom(zoomLevel);
+				actionZoomIn.setEnabled(zoomLevel < 18);
+				actionZoomOut.setEnabled(zoomLevel > 0);
+			}
+		});
 	}
 
 	/**
