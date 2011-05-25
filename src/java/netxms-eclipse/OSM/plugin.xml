@@ -11,6 +11,15 @@
             class="org.netxms.ui.eclipse.osm.views.LocationMap"
             id="org.netxms.ui.eclipse.osm.views.LocationMap">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.osm.views.WorldMap"
+            icon="icons/map.png"
+            id="org.netxms.ui.eclipse.osm.views.WorldMap"
+            name="World Map"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -57,6 +66,32 @@
       <startup
             class="org.netxms.ui.eclipse.osm.Startup">
       </startup>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open world map view"
+            id="org.netxms.ui.eclipse.osm.commands.open_world_map"
+            name="World Map">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.open_world_map"
+            label="World Map"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenWorldMap"
+               definitionId="org.netxms.ui.eclipse.osm.commands.open_world_map"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.actions.open_world_map"
+               label="World Map"
+               menubarPath="view/additions"
+               style="push"
+               tooltip="Open World Map view">
+         </action>
+      </actionSet>
    </extension>
 
 </plugin>

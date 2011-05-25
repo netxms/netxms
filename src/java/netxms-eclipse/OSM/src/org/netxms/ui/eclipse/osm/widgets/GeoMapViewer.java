@@ -88,7 +88,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private List<GenericObject> objects = new ArrayList<GenericObject>();
 	private MapAccessor accessor;
 	private IWorkbenchSiteProgressService siteService = null;
-	private GenericObject centerMarker = null;
 	private AnimatedImage waitingImage = null;
 	private Point dragStartPoint = null;
 	private boolean loading = false;
@@ -345,7 +344,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 
 		// Draw objects and decorations if user is not dragging map
 		// and map is not currently loading
-		if ((dragStartPoint == null) || !loading)
+		if ((dragStartPoint == null) && !loading)
 		{
 			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
 			for(GenericObject object : objects)
@@ -414,23 +413,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 
 		gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
 		gc.drawText(text, rect.x + LABEL_X_MARGIN + image.getImageData().width + LABEL_SPACING, rect.y + LABEL_Y_MARGIN);
-	}
-
-	/**
-	 * @return the centerMarker
-	 */
-	public GenericObject getCenterMarker()
-	{
-		return centerMarker;
-	}
-
-	/**
-	 * @param centerMarker
-	 *           the centerMarker to set
-	 */
-	public void setCenterMarker(GenericObject centerMarker)
-	{
-		this.centerMarker = centerMarker;
 	}
 
 	/*
