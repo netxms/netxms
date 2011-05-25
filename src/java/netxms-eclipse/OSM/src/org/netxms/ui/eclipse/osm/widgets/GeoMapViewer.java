@@ -344,7 +344,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		}
 
 		// Draw objects and decorations if user is not dragging map
-		if (dragStartPoint == null)
+		// and map is not currently loading
+		if ((dragStartPoint == null) || !loading)
 		{
 			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
 			for(GenericObject object : objects)
@@ -517,7 +518,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		if ((e.button == 1) && !loading) // left button, ignore if map is currently loading
 		{
 			dragStartPoint = new Point(e.x, e.y);
-			setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+			setCursor(getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
 		}
 	}
 
@@ -529,13 +530,16 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	{
 		if ((e.button == 1) && (dragStartPoint != null))
 		{
-			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
-			centerXY.x += offsetX;
-			centerXY.y += offsetY;
-			final GeoLocation geoLocation = GeoLocationCache.displayToCoordinates(centerXY, accessor.getZoom());
-			accessor.setLatitude(geoLocation.getLatitude());
-			accessor.setLongitude(geoLocation.getLongitude());
-			reloadMap();
+			if (Math.abs(offsetX) > DRAG_JITTER || Math.abs(offsetY) > DRAG_JITTER)
+			{
+				final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
+				centerXY.x += offsetX;
+				centerXY.y += offsetY;
+				final GeoLocation geoLocation = GeoLocationCache.displayToCoordinates(centerXY, accessor.getZoom());
+				accessor.setLatitude(geoLocation.getLatitude());
+				accessor.setLongitude(geoLocation.getLongitude());
+				reloadMap();
+			}
 			offsetX = 0;
 			offsetY = 0;
 			dragStartPoint = null;
