@@ -53,6 +53,7 @@ import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
 import org.netxms.ui.eclipse.osm.GeoLocationCacheListener;
 import org.netxms.ui.eclipse.osm.tools.Area;
@@ -399,7 +400,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				+ LABEL_Y_MARGIN * 2);
 
 		gc.setBackground(LABEL_BACKGROUND);
-		gc.setForeground(LABEL_BORDER);
+		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
+		gc.setLineWidth(2);
 		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 
@@ -408,9 +410,10 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		gc.fillPolygon(arrow);
 		gc.setForeground(LABEL_BACKGROUND);
 		gc.drawLine(arrow[0], arrow[1], arrow[4], arrow[5]);
-		gc.setForeground(LABEL_BORDER);
+		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		gc.drawPolyline(arrow);
 
+		gc.setForeground(LABEL_BORDER);
 		gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
 		gc.drawText(text, rect.x + LABEL_X_MARGIN + image.getImageData().width + LABEL_SPACING, rect.y + LABEL_Y_MARGIN);
 	}
