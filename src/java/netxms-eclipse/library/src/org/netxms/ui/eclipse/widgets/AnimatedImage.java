@@ -15,6 +15,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 
@@ -155,5 +156,17 @@ public class AnimatedImage extends Canvas implements PaintListener, DisposeListe
 			memGC.dispose();
 		if (image != null)
 			image.dispose();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+	 */
+	@Override
+	public Point computeSize(int wHint, int hHint, boolean changed)
+	{
+		if ((imageData == null) || (imageData.length == 0))
+			return super.computeSize(wHint, hHint, changed);
+		int bw = getBorderWidth() * 2;
+		return new Point(imageData[0].width + bw, imageData[0].height + bw);
 	}
 }

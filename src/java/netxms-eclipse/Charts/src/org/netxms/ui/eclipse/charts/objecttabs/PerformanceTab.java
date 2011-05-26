@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.charts.objecttabs;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +37,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
@@ -45,6 +46,7 @@ import org.netxms.ui.eclipse.charts.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.charts.objecttabs.internal.PerfTabGraph;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
  * Performance tab
@@ -55,7 +57,7 @@ public class PerformanceTab extends ObjectTab
 	private List<PerfTabGraph> charts = new ArrayList<PerfTabGraph>();
 	private ScrolledComposite scroller;
 	private Composite chartArea;
-	private Label labelLoading = null;
+	private AnimatedImage waitingImage = null;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -100,11 +102,18 @@ public class PerformanceTab extends ObjectTab
 			chart.dispose();
 		charts.clear();
 		
-		if ((labelLoading == null) || labelLoading.isDisposed())
+		if (waitingImage != null)
+			waitingImage.dispose();
+		waitingImage = new AnimatedImage(chartArea, SWT.NONE);
+		waitingImage.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 2, 1));
+		try
 		{
-			labelLoading = new Label(chartArea, SWT.NONE);
-			labelLoading.setText("Loading performance data...");
+			waitingImage.setImage(new URL("platform:/plugin/org.netxms.ui.eclipse.library/icons/loading.gif"));
 		}
+		catch(MalformedURLException e)
+		{
+		}
+		updateChartAreaLayout();
 		
 		Job job = new Job("Update performance tab") {
 			@Override
@@ -143,7 +152,9 @@ public class PerformanceTab extends ObjectTab
 	 */
 	private void update(final PerfTabDci[] items)
 	{
-		labelLoading.dispose();
+		waitingImage.dispose();
+		waitingImage = null;
+		scroller.setVisible(true);
 		
 		for(int i = 0; i < items.length; i++)
 		{
