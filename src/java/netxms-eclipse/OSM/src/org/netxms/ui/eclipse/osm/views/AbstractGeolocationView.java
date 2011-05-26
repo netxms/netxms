@@ -36,7 +36,7 @@ import org.netxms.client.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
-import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapZoomListener;
+import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
@@ -105,7 +105,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 		mapAccessor.setZoom(zoomLevel);
 		map.showMap(mapAccessor);
 		
-		map.addZoomListener(new GeoMapZoomListener() {
+		map.addMapListener(new GeoMapListener() {
 			@Override
 			public void onZoom(int zoomLevel)
 			{
@@ -113,6 +113,13 @@ public abstract class AbstractGeolocationView extends ViewPart
 				mapAccessor.setZoom(zoomLevel);
 				actionZoomIn.setEnabled(zoomLevel < 18);
 				actionZoomOut.setEnabled(zoomLevel > 0);
+			}
+
+			@Override
+			public void onPan(GeoLocation centerPoint)
+			{
+				mapAccessor.setLatitude(centerPoint.getLatitude());
+				mapAccessor.setLongitude(centerPoint.getLongitude());
 			}
 		});
 	}
@@ -231,5 +238,13 @@ public abstract class AbstractGeolocationView extends ViewPart
 		
 		actionZoomIn.setEnabled(zoomLevel < 18);
 		actionZoomOut.setEnabled(zoomLevel > 0);
+	}
+
+	/**
+	 * @return the mapAccessor
+	 */
+	protected MapAccessor getMapAccessor()
+	{
+		return mapAccessor;
 	}
 }

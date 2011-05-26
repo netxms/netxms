@@ -60,7 +60,7 @@ import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
-import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapZoomListener;
+import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
@@ -92,7 +92,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private AnimatedImage waitingImage = null;
 	private Point dragStartPoint = null;
 	private boolean loading = false;
-	private Set<GeoMapZoomListener> zoomListeners = new HashSet<GeoMapZoomListener>(0);
+	private Set<GeoMapListener> mapListeners = new HashSet<GeoMapListener>(0);
 
 	private int offsetX;
 	private int offsetY;
@@ -158,9 +158,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 * 
 	 * @param listener
 	 */
-	public void addZoomListener(GeoMapZoomListener listener)
+	public void addMapListener(GeoMapListener listener)
 	{
-		zoomListeners.add(listener);
+		mapListeners.add(listener);
 	}
 	
 	/**
@@ -168,18 +168,27 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 * 
 	 * @param listener
 	 */
-	public void removeZoomListener(GeoMapZoomListener listener)
+	public void removeMapListener(GeoMapListener listener)
 	{
-		zoomListeners.remove(listener);
+		mapListeners.remove(listener);
 	}
 	
 	/**
-	 * Notify all zoom listeners
+	 * Notify all listeners about zoom level change
 	 */
-	private void notifyZoomListeners()
+	private void notifyOnZoomChange()
 	{
-		for(GeoMapZoomListener listener : zoomListeners)
+		for(GeoMapListener listener : mapListeners)
 			listener.onZoom(accessor.getZoom());
+	}
+
+	/**
+	 * Notify all listeners about position change
+	 */
+	private void notifyOnPositionChange()
+	{
+		for(GeoMapListener listener : mapListeners)
+			listener.onPan(accessor.getCenterPoint());
 	}
 
 	/**
@@ -482,7 +491,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		{
 			accessor.setZoom(zoom);
 			reloadMap();
-			notifyZoomListeners();
+			notifyOnZoomChange();
 		}
 	}
 
@@ -524,6 +533,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				accessor.setLatitude(geoLocation.getLatitude());
 				accessor.setLongitude(geoLocation.getLongitude());
 				reloadMap();
+				notifyOnPositionChange();
 			}
 			offsetX = 0;
 			offsetY = 0;

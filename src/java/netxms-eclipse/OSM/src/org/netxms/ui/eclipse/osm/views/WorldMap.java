@@ -18,7 +18,11 @@
  */
 package org.netxms.ui.eclipse.osm.views;
 
+import org.eclipse.ui.IMemento;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.PartInitException;
 import org.netxms.client.GeoLocation;
+import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 
 /**
  * World map view
@@ -27,13 +31,46 @@ public class WorldMap extends AbstractGeolocationView
 {
 	public static final String ID = "org.netxms.ui.eclipse.osm.views.WorldMap";
 	
+	private GeoLocation initialLocation = new GeoLocation(0.0, 0.0);
+	private int initialZoom = 2;
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void init(IViewSite site, IMemento memento) throws PartInitException
+	{
+		if (memento.getInteger("zoom") != null)
+			initialZoom = memento.getInteger("zoom");
+		
+		Float lat = memento.getFloat("latitude");
+		Float lon = memento.getFloat("longitude");
+		if ((lat != null) && (lon != null))
+			initialLocation = new GeoLocation(lat, lon);
+		
+		super.init(site, memento);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void saveState(IMemento memento)
+	{
+		super.saveState(memento);
+		MapAccessor m = getMapAccessor();
+		memento.putFloat("latitude", (float)m.getLatitude());
+		memento.putFloat("longitude", (float)m.getLongitude());
+		memento.putInteger("zoom", m.getZoom());
+	}
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialCenterPoint()
 	 */
 	@Override
 	protected GeoLocation getInitialCenterPoint()
 	{
-		return new GeoLocation(0.0, 0.0);
+		return initialLocation;
 	}
 
 	/* (non-Javadoc)
@@ -42,6 +79,7 @@ public class WorldMap extends AbstractGeolocationView
 	@Override
 	protected int getInitialZoomLevel()
 	{
-		return 2;
+		return initialZoom;
 	}
 }
+

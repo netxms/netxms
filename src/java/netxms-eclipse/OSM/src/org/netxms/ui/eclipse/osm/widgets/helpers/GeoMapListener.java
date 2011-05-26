@@ -18,15 +18,23 @@
  */
 package org.netxms.ui.eclipse.osm.widgets.helpers;
 
+import org.netxms.client.GeoLocation;
+
 /**
- * Listener which will be notified when geo map widget zoomed
+ * Listener which will be notified when geo map widget panned or zoomed
  * by it's internal controls (mouse wheel, for example)
  */
-public interface GeoMapZoomListener
+public interface GeoMapListener
 {
 	/**
 	 * Called when zoom level changed 
 	 * @param zoomLevel new zoom level
 	 */
 	public abstract void onZoom(int zoomLevel);
+
+	/**
+	 * Called when center point changed 
+	 * @param centerPoint new center point
+	 */
+	public abstract void onPan(GeoLocation centerPoint);
 }
