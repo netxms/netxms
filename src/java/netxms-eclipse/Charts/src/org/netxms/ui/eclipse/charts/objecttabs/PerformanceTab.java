@@ -98,6 +98,7 @@ public class PerformanceTab extends ObjectTab
 	{
 		for(PerfTabGraph chart : charts)
 			chart.dispose();
+		charts.clear();
 		
 		if ((labelLoading == null) || labelLoading.isDisposed())
 		{

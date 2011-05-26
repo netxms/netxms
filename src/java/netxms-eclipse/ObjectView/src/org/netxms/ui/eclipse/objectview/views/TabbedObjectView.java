@@ -97,7 +97,9 @@ public class TabbedObjectView extends ViewPart
 			public void widgetSelected(SelectionEvent e)
 			{
 				if (e.item != null)
+				{
 					((ObjectTab)((CTabItem)e.item).getData()).selected();
+				}
 			}
 
 			@Override

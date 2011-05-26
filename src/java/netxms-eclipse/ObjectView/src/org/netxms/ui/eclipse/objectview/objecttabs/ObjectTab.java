@@ -96,10 +96,11 @@ public abstract class ObjectTab
 	protected abstract void createTabContent(Composite parent);
 	
 	/**
-	 * Called by framework when tab is selected. Default implementation do nothing.
+	 * Called by framework when tab is selected.
 	 */
 	public void selected()
 	{
+		clientArea.setFocus();
 	}
 	
 	/**

@@ -150,6 +150,7 @@ public class ObjectOverview extends ObjectTab
 	@Override
 	public void selected()
 	{
+		super.selected();
 		// I don't know why, but content lay out incorrectly if object selection
 		// changes while this tab is not active.
 		// As workaround, we force reconstruction of the content on each tab activation
