@@ -73,7 +73,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private static final Color INFO_BLOCK_BORDER = new Color(Display.getDefault(), 0, 0, 0);
 	private static final Color INFO_BLOCK_TEXT = new Color(Display.getDefault(), 0, 0, 0);
 	private static final Color LABEL_BACKGROUND = new Color(Display.getDefault(), 240, 254, 192);
-	private static final Color LABEL_BORDER = new Color(Display.getDefault(), 0, 0, 0);
+	private static final Color LABEL_TEXT = new Color(Display.getDefault(), 0, 0, 0);
 
 	private static final int LABEL_ARROW_HEIGHT = 20;
 	private static final int LABEL_ARROW_OFFSET = 10;
@@ -90,6 +90,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private MapAccessor accessor;
 	private IWorkbenchSiteProgressService siteService = null;
 	private AnimatedImage waitingImage = null;
+	private Point currentPoint;
 	private Point dragStartPoint = null;
 	private boolean loading = false;
 	private Set<GeoMapListener> mapListeners = new HashSet<GeoMapListener>(0);
@@ -356,6 +357,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		// and map is not currently loading
 		if ((dragStartPoint == null) && !loading)
 		{
+			gc.setAntialias(SWT.ON);
+			gc.setTextAntialias(SWT.ON);
+
 			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
 			for(GenericObject object : objects)
 			{
@@ -407,7 +411,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		Rectangle rect = new Rectangle(x - LABEL_ARROW_OFFSET, y - LABEL_ARROW_HEIGHT - textSize.y, textSize.x
 				+ image.getImageData().width + LABEL_X_MARGIN * 2 + LABEL_SPACING, Math.max(image.getImageData().height, textSize.y)
 				+ LABEL_Y_MARGIN * 2);
-
+		
 		gc.setBackground(LABEL_BACKGROUND);
 		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		gc.setLineWidth(2);
@@ -422,7 +426,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		gc.drawPolyline(arrow);
 
-		gc.setForeground(LABEL_BORDER);
+		gc.setForeground(LABEL_TEXT);
 		gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
 		gc.drawText(text, rect.x + LABEL_X_MARGIN + image.getImageData().width + LABEL_SPACING, rect.y + LABEL_Y_MARGIN);
 	}
@@ -514,6 +518,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			dragStartPoint = new Point(e.x, e.y);
 			setCursor(getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
 		}
+
+		currentPoint = new Point(e.x, e.y);
 	}
 
 	/* (non-Javadoc)
@@ -559,5 +565,25 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				redraw();
 			}
 		}
+	}
+
+	/**
+	 * @return the currentPoint
+	 */
+	public Point getCurrentPoint()
+	{
+		return currentPoint;
+	}
+	
+	/**
+	 * Get location at given point within widget
+	 * 
+	 * @param p widget-related coordinates
+	 * @return location (latitude/longitude) at given point
+	 */
+	public GeoLocation getLocationAtPoint(Point p)
+	{
+		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
+		return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom());
 	}
 }

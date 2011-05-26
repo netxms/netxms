@@ -18,11 +18,22 @@
  */
 package org.netxms.ui.eclipse.osm.views;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.GeoLocation;
+import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * World map view
@@ -33,6 +44,7 @@ public class WorldMap extends AbstractGeolocationView
 	
 	private GeoLocation initialLocation = new GeoLocation(0.0, 0.0);
 	private int initialZoom = 2;
+	private Action actionPlaceObject;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -80,6 +92,61 @@ public class WorldMap extends AbstractGeolocationView
 	protected int getInitialZoomLevel()
 	{
 		return initialZoom;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createActions()
+	 */
+	@Override
+	protected void createActions()
+	{
+		super.createActions();
+		
+		actionPlaceObject = new Action("Place object here...") {
+			@Override
+			public void run()
+			{
+				placeObject();
+			}
+		};
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#fillContextMenu(org.eclipse.jface.action.IMenuManager)
+	 */
+	@Override
+	protected void fillContextMenu(IMenuManager manager)
+	{
+		super.fillContextMenu(manager);
+		manager.add(new Separator());
+		manager.add(actionPlaceObject);
+	}
+	
+	/**
+	 * Place object on map at mouse position
+	 */
+	private void placeObject()
+	{
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+		if (dlg.open() == Window.OK)
+		{
+			final NXCObjectModificationData md = new NXCObjectModificationData(dlg.getSelectedObjects().get(0).getObjectId());
+			md.setGeolocation(map.getLocationAtPoint(map.getCurrentPoint()));
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			new ConsoleJob("Update object's geolocation", this, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					session.modifyObject(md);
+				}
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot update object's geolocation";
+				}
+			}.start();
+		}
 	}
 }
 

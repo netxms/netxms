@@ -47,7 +47,8 @@ public abstract class AbstractGeolocationView extends ViewPart
 {
 	public static final String JOB_FAMILY = "MapViewJob";
 	
-	private GeoMapViewer map;
+	protected GeoMapViewer map;
+	
 	private MapAccessor mapAccessor;
 	private int zoomLevel = 15;
 	private Action actionZoomIn;
@@ -127,7 +128,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	/**
 	 * Create actions
 	 */
-	private void createActions()
+	protected void createActions()
 	{
 		actionZoomIn = new Action("Zoom &in") {
 			@Override
@@ -163,7 +164,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	 * 
 	 * @param manager Menu manager for pull-down menu
 	 */
-	private void fillLocalPullDown(IMenuManager manager)
+	protected void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
@@ -174,7 +175,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	 * 
 	 * @param manager Menu manager for local toolbar
 	 */
-	private void fillLocalToolBar(IToolBarManager manager)
+	protected void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);

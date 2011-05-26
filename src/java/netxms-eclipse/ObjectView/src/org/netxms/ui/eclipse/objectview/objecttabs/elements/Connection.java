@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -69,12 +70,22 @@ public class Connection extends OverviewPageElement
 		Composite area = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		area.setLayout(layout);
+		area.setBackground(new Color(getDisplay(), 255, 255, 255));
 		
 		nodeLabel = new CLabel(area, SWT.NONE);
+		nodeLabel.setBackground(area.getBackground());
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		nodeLabel.setLayoutData(gd);
+		
+		interfaceLabel = new CLabel(area, SWT.NONE);
+		interfaceLabel.setBackground(area.getBackground());
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.horizontalIndent = 15;
+		interfaceLabel.setLayoutData(gd);
 		
 		return area;
 	}
@@ -108,6 +119,18 @@ public class Connection extends OverviewPageElement
 		else
 		{
 			nodeLabel.setText("N/A");
+		}
+		
+		long peerInterfaceId = iface.getPeerInterfaceId();
+		if (peerInterfaceId != 0)
+		{
+			GenericObject peerIface = session.findObjectById(peerInterfaceId);
+			interfaceLabel.setText((peerIface != null) ? peerIface.getObjectName() : "<" + peerInterfaceId + ">");
+			interfaceLabel.setImage(labelProvider.getImage(peerIface));
+		}
+		else
+		{
+			interfaceLabel.setText("N/A");
 		}
 	}
 

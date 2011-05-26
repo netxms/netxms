@@ -28,7 +28,6 @@ import org.netxms.client.objects.Dashboard;
 
 /**
  * Dashboard rendering control
- *
  */
 public class DashboardControl extends Composite
 {

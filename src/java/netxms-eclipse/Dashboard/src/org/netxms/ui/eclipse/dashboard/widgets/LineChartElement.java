@@ -146,7 +146,8 @@ public class LineChartElement extends ElementWidget
 					@Override
 					public void run()
 					{
-						chart.refresh();
+						if (!chart.isDisposed())
+							chart.refresh();
 						updateInProgress = false;
 					}
 				});
