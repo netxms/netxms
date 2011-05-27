@@ -64,6 +64,7 @@ import org.netxms.ui.eclipse.charts.widgets.LineChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.IAxis;
 import org.swtchart.LineStyle;
 
@@ -259,6 +260,10 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		chart.setLogScaleEnabled(settings.isLogScale());
 		setGridVisible(settings.isGridVisible());
 		chart.setLegendVisible(settings.isLegendVisible());
+		chart.setBackground(ColorConverter.colorFromInt(settings.getBackgroundColor()));
+		chart.setBackgroundInPlotArea(ColorConverter.colorFromInt(settings.getBackgroundColor()));
+		chart.getAxisSet().getXAxis(0).getGrid().setForeground(ColorConverter.colorFromInt(settings.getGridColor()));
+		chart.getAxisSet().getYAxis(0).getGrid().setForeground(ColorConverter.colorFromInt(settings.getGridColor()));
 		
 		// Data
 		items.clear();
@@ -268,6 +273,12 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			chart.addParameter(item);
 		chart.setItemStyles(Arrays.asList(settings.getItemStyles()));
 
+		if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
+		{
+			settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
+			settings.setTimeTo(new Date(System.currentTimeMillis()));
+		}
+		
 		getDataFromServer();
 
 		// Automatic refresh
