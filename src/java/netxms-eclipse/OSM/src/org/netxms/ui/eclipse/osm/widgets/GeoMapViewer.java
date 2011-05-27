@@ -255,7 +255,12 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						drawTiles(tiles);
+						if (tiles != null)
+						{
+							drawTiles(tiles);
+							tiles.dispose();
+						}
+						
 						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
 						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), accessor.getZoom());
 						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
