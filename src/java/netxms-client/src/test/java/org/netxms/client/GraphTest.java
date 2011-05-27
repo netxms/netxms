@@ -16,43 +16,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.osm.tools;
+package org.netxms.client;
 
-import org.eclipse.swt.graphics.Image;
+import java.util.List;
+import org.netxms.client.datacollection.GraphSettings;
 
 /**
- * Tile set
+ * Graph configuration test
+ *
  */
-public class TileSet
+public class GraphTest extends SessionTest
 {
-	public Image[][] tiles;
-	public int xOffset;
-	public int yOffset;
-	
-	/**
-	 * @param tiles
-	 * @param xOffset
-	 * @param yOffset
-	 */
-	public TileSet(Image[][] tiles, int xOffset, int yOffset)
+	public void testGetPredefinedGraphs() throws Exception
 	{
-		super();
-		this.tiles = tiles;
-		this.xOffset = xOffset;
-		this.yOffset = yOffset;
-	}
-	
-	/**
-	 * Dispose resources allocated for tile set
-	 */
-	public void dispose()
-	{
-		if (tiles != null)
-		{
-			for(int i = 0; i < tiles.length; i++)
-				for(int j = 0; j < tiles[i].length; j++)
-					if (!MapLoader.isInternalImage(tiles[i][j]))
-							tiles[i][j].dispose();
-		}
+		final NXCSession session = connect();
+		
+		List<GraphSettings> graphs = session.getPredefinedGraphs();
+		System.out.println(graphs.size() + " graphs retrieved");
+		for(GraphSettings gs : graphs)
+			System.out.println(">>> " + gs.getName());
+		
+		session.disconnect();
 	}
 }

@@ -265,4 +265,15 @@ public class MapLoader
 		
 		return new TileSet(tiles, realTopLeft.x - reqTopLeft.x, realTopLeft.y - reqTopLeft.y);
 	}
+	
+	/**
+	 * Returns true if given image is internally generated (not downloaded)
+	 * 
+	 * @param image
+	 * @return
+	 */
+	static boolean isInternalImage(Image image)
+	{
+		return (image == missingTile) || (image == borderTile);
+	}
 }

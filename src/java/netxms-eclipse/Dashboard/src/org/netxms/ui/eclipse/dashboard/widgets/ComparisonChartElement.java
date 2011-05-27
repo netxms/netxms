@@ -111,7 +111,8 @@ public abstract class ComparisonChartElement extends ElementWidget
 					@Override
 					public void run()
 					{
-						chart.refresh();
+						if (!chart.isDisposed())
+							chart.refresh();
 						updateInProgress = false;
 					}
 				});

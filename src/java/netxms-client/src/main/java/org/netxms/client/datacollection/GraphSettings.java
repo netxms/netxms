@@ -69,6 +69,8 @@ public class GraphSettings
 	private int autoRefreshInterval;
 	private int axisColor;
 	private int backgroundColor;
+	private int legendBackgroundColor;
+	private int plotBackgroundColor;
 	private int gridColor;
 	private int selectionColor;
 	private int textColor;
@@ -98,6 +100,8 @@ public class GraphSettings
 		autoRefreshInterval = 30000;
 		axisColor = 0x161616;
 		backgroundColor = 0xF0F0F0;
+		legendBackgroundColor = 0xFFFFFF;
+		plotBackgroundColor = 0xFFFFFF;
 		gridColor = 0xE8E8E8;
 		selectionColor = 0x800000;
 		textColor = 0x000000;
@@ -266,7 +270,7 @@ public class GraphSettings
 			{
 				int item = safeParseInt(name.substring(1), -1);
 				if ((item >= 0) && (item < MAX_GRAPH_ITEM_COUNT))
-					itemStyles[item].setColor(safeParseInt(value, 0));
+					itemStyles[item].setType(safeParseInt(value, 0));
 			}
 			else if (name.charAt(0) == 'W')	// Item line width
 			{
@@ -916,5 +920,37 @@ public class GraphSettings
 	{
 		for(GraphSettingsChangeListener l : changeListeners)
 			l.onGraphSettingsChange(this);
+	}
+
+	/**
+	 * @return the legendBackgroundColor
+	 */
+	public int getLegendBackgroundColor()
+	{
+		return legendBackgroundColor;
+	}
+
+	/**
+	 * @param legendBackgroundColor the legendBackgroundColor to set
+	 */
+	public void setLegendBackgroundColor(int legendBackgroundColor)
+	{
+		this.legendBackgroundColor = legendBackgroundColor;
+	}
+
+	/**
+	 * @return the plotBackgroundColor
+	 */
+	public int getPlotBackgroundColor()
+	{
+		return plotBackgroundColor;
+	}
+
+	/**
+	 * @param plotBackgroundColor the plotBackgroundColor to set
+	 */
+	public void setPlotBackgroundColor(int plotBackgroundColor)
+	{
+		this.plotBackgroundColor = plotBackgroundColor;
 	}
 }

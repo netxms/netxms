@@ -468,6 +468,7 @@ src/java/netxms-client/src/test/java/org/netxms/client/DataCollectionTest.java -
 src/java/netxms-client/src/test/java/org/netxms/client/EventDatabaseSyncTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/GeoLocationTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/GlobTest.java -text
+src/java/netxms-client/src/test/java/org/netxms/client/GraphTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/ImageLibraryTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/JobTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/LogTest.java -text

@@ -261,7 +261,10 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		setGridVisible(settings.isGridVisible());
 		chart.setLegendVisible(settings.isLegendVisible());
 		chart.setBackground(ColorConverter.colorFromInt(settings.getBackgroundColor()));
-		chart.setBackgroundInPlotArea(ColorConverter.colorFromInt(settings.getBackgroundColor()));
+		chart.setBackgroundInPlotArea(ColorConverter.colorFromInt(settings.getPlotBackgroundColor()));
+		chart.getLegend().setBackground(ColorConverter.colorFromInt(settings.getLegendBackgroundColor()));
+		chart.getAxisSet().getXAxis(0).getTick().setForeground(ColorConverter.colorFromInt(settings.getAxisColor()));
+		chart.getAxisSet().getYAxis(0).getTick().setForeground(ColorConverter.colorFromInt(settings.getAxisColor()));
 		chart.getAxisSet().getXAxis(0).getGrid().setForeground(ColorConverter.colorFromInt(settings.getGridColor()));
 		chart.getAxisSet().getYAxis(0).getGrid().setForeground(ColorConverter.colorFromInt(settings.getGridColor()));
 		
@@ -271,7 +274,6 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 
 		for(GraphItem item : items)
 			chart.addParameter(item);
-		chart.setItemStyles(Arrays.asList(settings.getItemStyles()));
 
 		if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
 		{
