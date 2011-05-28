@@ -90,13 +90,13 @@
       </objectContribution>
 
       <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.deployPolicy"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.installPolicy"
             objectClass="org.netxms.client.objects.AgentPolicy">
          <action
-               class="org.netxms.ui.eclipse.policymanager.actions.DeployPolicy"
+               class="org.netxms.ui.eclipse.policymanager.actions.InstallPolicy"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.policymanager.popupActions.DeployPolicy"
-               label="Deploy..."
+               id="org.netxms.ui.eclipse.policymanager.popupActions.InstallPolicy"
+               label="Install..."
                menubarPath="objectmgmt">
          </action>
       </objectContribution>

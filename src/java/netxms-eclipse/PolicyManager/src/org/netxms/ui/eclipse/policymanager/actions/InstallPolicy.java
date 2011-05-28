@@ -30,15 +30,15 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.policymanager.Activator;
+import org.netxms.ui.eclipse.policymanager.dialogs.SelectInstallTargetDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Action: deploy policy on agent
  *
  */
-public class DeployPolicy implements IObjectActionDelegate
+public class InstallPolicy implements IObjectActionDelegate
 {
 	private Shell shell;
 	private GenericObject currentObject;
@@ -58,15 +58,10 @@ public class DeployPolicy implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		// Read custom root objects
-		long[] rootObjects = null;
-		Object value = ConsoleSharedData.getProperty("PolicyManager.rootObjects");
-		if ((value != null) && (value instanceof long[]))
-		{
-			rootObjects = (long[])value;
-		}
+		final SelectInstallTargetDialog dlg = 
+			new SelectInstallTargetDialog(shell, (currentObject.getNumberOfChilds() == 0) ? 
+					SelectInstallTargetDialog.INSTALL_ON_SELECTED : SelectInstallTargetDialog.INSTALL_ON_CURRENT);
 		
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, rootObjects, ObjectSelectionDialog.createNodeSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
 			new ConsoleJob("Deploy agent policy", null, Activator.PLUGIN_ID, null) {
@@ -74,7 +69,11 @@ public class DeployPolicy implements IObjectActionDelegate
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					GenericObject[] nodeList = dlg.getSelectedObjects(GenericObject.OBJECT_NODE);
+					GenericObject[] nodeList;
+					if (dlg.getInstallMode() == SelectInstallTargetDialog.INSTALL_ON_SELECTED)
+						nodeList = dlg.getSelectedObjects();
+					else
+						nodeList = currentObject.getChildsAsArray();
 					for(int i = 0; i < nodeList.length; i++)
 						session.deployAgentPolicy(currentObject.getObjectId(), nodeList[i].getObjectId());
 				}

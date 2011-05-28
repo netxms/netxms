@@ -1111,8 +1111,9 @@ src/java/netxms-eclipse/PolicyManager/plugin.xml -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/Activator.java -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/actions/CreateAgentPolicyConfig.java -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/actions/CreatePolicyGroup.java -text
-src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/actions/DeployPolicy.java -text
+src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/actions/InstallPolicy.java -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/actions/UninstallPolicy.java -text
+src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/dialogs/SelectInstallTargetDialog.java -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/propertypages/ConfigFile.java -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/propertypages/Policy.java -text
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text

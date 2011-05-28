@@ -152,9 +152,11 @@ public class PerformanceTab extends ObjectTab
 	 */
 	private void update(final PerfTabDci[] items)
 	{
-		waitingImage.dispose();
-		waitingImage = null;
-		scroller.setVisible(true);
+		if (waitingImage != null)
+		{
+			waitingImage.dispose();
+			waitingImage = null;
+		}
 		
 		for(int i = 0; i < items.length; i++)
 		{

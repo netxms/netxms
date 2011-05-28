@@ -52,14 +52,16 @@ public class WorldMap extends AbstractGeolocationView
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException
 	{
-		if (memento.getInteger("zoom") != null)
-			initialZoom = memento.getInteger("zoom");
-		
-		Float lat = memento.getFloat("latitude");
-		Float lon = memento.getFloat("longitude");
-		if ((lat != null) && (lon != null))
-			initialLocation = new GeoLocation(lat, lon);
-		
+		if (memento != null)
+		{
+			if (memento.getInteger("zoom") != null)
+				initialZoom = memento.getInteger("zoom");
+			
+			Float lat = memento.getFloat("latitude");
+			Float lon = memento.getFloat("longitude");
+			if ((lat != null) && (lon != null))
+				initialLocation = new GeoLocation(lat, lon);
+		}		
 		super.init(site, memento);
 	}
 
