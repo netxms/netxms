@@ -94,7 +94,7 @@ void GetJobList(CSCPMessage *msg)
 	jcb.msg = msg;
 	jcb.jobCount = 0;
 	jcb.baseId = VID_JOB_LIST_BASE;
-	g_idxNodeById.forEach(JobListCallback, msg);
+	g_idxNodeById.forEach(JobListCallback, &jcb);
 	msg->SetVariable(VID_JOB_COUNT, jcb.jobCount);
 }
 

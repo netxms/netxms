@@ -8,7 +8,7 @@ AC_INIT([NetXMS], [1.1.2], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
-AM_SILENT_RULES([yes])
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_CONFIG_MACRO_DIR([m4])
 
