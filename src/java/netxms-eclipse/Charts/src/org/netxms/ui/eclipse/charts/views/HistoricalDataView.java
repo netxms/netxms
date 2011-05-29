@@ -485,10 +485,12 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
+				/*
 				for(IAxis axis : chart.getAxisSet().getYAxes())
 				{
 					axis.adjustRange();
-				}
+				}*/
+				chart.adjustYAxis();
 				chart.redraw();
 			}
 		};
@@ -502,10 +504,11 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				for(IAxis axis : chart.getAxisSet().getAxes())
+				for(IAxis axis : chart.getAxisSet().getXAxes())
 				{
 					axis.adjustRange();
 				}
+				chart.adjustYAxis();
 				chart.redraw();
 			}
 		};

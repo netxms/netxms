@@ -569,7 +569,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void refresh()
 	{
-		getAxisSet().getYAxis(0).adjustRange();
+		adjustYAxis();
 		redraw();
 	}
 
@@ -618,7 +618,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		if (updateChart)
 		{
-			getAxisSet().getYAxis(0).adjustRange();
+			adjustYAxis();
 			redraw();
 		}
 	}
@@ -679,5 +679,19 @@ public class LineChart extends Chart implements HistoricalDataChart
 			plotArea.removeMouseListener(zoomMouseListener);
 			plotArea.removePaintListener(zoomPaintListener);
 		}
+	}
+	
+	/**
+	 * Adjust Y axis
+	 */
+	public void adjustYAxis()
+	{
+		final IAxis yAxis = getAxisSet().getYAxis(0);
+		yAxis.adjustRange();
+		final Range range = yAxis.getRange();
+		if (range.lower > 0)
+			range.lower = 0;
+		range.upper++;
+		yAxis.setRange(range);
 	}
 }
