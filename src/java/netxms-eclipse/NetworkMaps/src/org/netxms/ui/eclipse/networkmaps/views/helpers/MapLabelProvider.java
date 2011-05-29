@@ -88,7 +88,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
 
-		imgNodeGeneric = Activator.getImageDescriptor("icons/objects/macserver.png").createImage();
+		imgNodeGeneric = Activator.getImageDescriptor("icons/objects/node.png").createImage();
 		imgNodeOSX = Activator.getImageDescriptor("icons/objects/macserver.png").createImage();
 		imgNodeWindows = Activator.getImageDescriptor("icons/objects/windowsserver.png").createImage();
 		imgNodeLinux = Activator.getImageDescriptor("icons/objects/linuxserver.png").createImage();
@@ -99,7 +99,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgSubnet = Activator.getImageDescriptor("icons/objects/subnet.png").createImage();
 		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
 		imgCluster = Activator.getImageDescriptor("icons/objects/cluster.png").createImage();
-		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
+		imgOther = Activator.getImageDescriptor("icons/objects/other.png").createImage();
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
 		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage();
 
