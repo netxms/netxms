@@ -139,7 +139,19 @@ public abstract class ObjectTab
 	{
 		if (tabItem == null)
 		{
-			tabItem = new CTabItem(tabFolder, SWT.NONE);
+			// Find insertion point
+			int index = tabFolder.getItemCount();
+			for(int i = 0; i < tabFolder.getItemCount(); i++)
+			{
+				ObjectTab tab = (ObjectTab)tabFolder.getItem(i).getData();
+				if (tab.getOrder() > order)
+				{
+					index = i;
+					break;
+				}
+			}
+			
+			tabItem = new CTabItem(tabFolder, SWT.NONE, index);
 			tabItem.setText(name);
 			if (icon != null)
 				tabItem.setImage(icon.createImage());

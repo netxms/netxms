@@ -40,6 +40,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -65,8 +66,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgNodePrinter;
 	private Image imgSubnet;
 	private Image imgService;
+	private Image imgCluster;
 	private Image imgOther;
 	private Image imgUnknown;
+	private Image imgResCluster;
 	private Font fontLabel;
 	private Font fontTitle;
 	private boolean showStatusIcons = true;
@@ -95,8 +98,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgNodePrinter = Activator.getImageDescriptor("icons/objects/printer.png").createImage();
 		imgSubnet = Activator.getImageDescriptor("icons/objects/subnet.png").createImage();
 		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage();
+		imgCluster = Activator.getImageDescriptor("icons/objects/cluster.png").createImage();
 		imgOther = Activator.getImageDescriptor("icons/other.png").createImage();
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage();
+		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage();
 
 		fontLabel = new Font(Display.getDefault(), "Verdana", 7, SWT.NORMAL);
 		fontTitle = new Font(Display.getDefault(), "Verdana", 10, SWT.NORMAL);
@@ -166,6 +171,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						return imgSubnet;
 					case GenericObject.OBJECT_CONTAINER:
 						return imgService;
+					case GenericObject.OBJECT_CLUSTER:
+						return imgCluster;
 					default:
 						return imgOther;
 				}
@@ -174,6 +181,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			{
 				return imgUnknown;
 			}
+		}
+		else if (element instanceof NetworkMapResource)
+		{
+			return imgResCluster;
 		}
 		return null;
 	}
@@ -189,6 +200,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 			return new ObjectFigure((NetworkMapObject)element, this);
+		if (element instanceof NetworkMapResource)
+			return new ResourceFigure((NetworkMapResource)element, this);
 		if (element instanceof NetworkMapDecoration)
 			return new DecorationFigure((NetworkMapDecoration)element, this);
 		return null;
@@ -233,10 +246,15 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgNodeSwitch.dispose();
 		imgNodeRouter.dispose();
 		imgNodePrinter.dispose();
+		
 		imgSubnet.dispose();
 		imgService.dispose();
+		imgCluster.dispose();
 		imgOther.dispose();
 		imgUnknown.dispose();
+		
+		imgResCluster.dispose();
+		
 		fontLabel.dispose();
 		fontTitle.dispose();
 		super.dispose();

@@ -421,6 +421,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/maps/NetworkMapPage.java 
 src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapDecoration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapObject.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapResource.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicyConfig.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Cluster.java -text
@@ -867,6 +868,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/link_add.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/netmap.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/node.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/atm.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/objects/cluster.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/freebsdserver.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/hsm.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/key.png -text
@@ -885,6 +887,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/objects/visa.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/windowsserver.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/other.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/quickmap.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/resources/cluster_res.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/router.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/service.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_components.gif -text
@@ -920,6 +923,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/MapLabelProvider.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectTooltip.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ResourceFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/UnknownObject.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ZoomAction.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/widgets/NetworkMapWidget.java -text
@@ -1085,6 +1089,7 @@ src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/views/helpers/TableLabelProvider.java -text
 src/java/netxms-eclipse/ObjectView/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectView/build.properties -text
+src/java/netxms-eclipse/ObjectView/icons/cluster.png -text
 src/java/netxms-eclipse/ObjectView/icons/object_details.png -text
 src/java/netxms-eclipse/ObjectView/icons/overview_tab.gif -text
 src/java/netxms-eclipse/ObjectView/icons/restart.png -text
@@ -1094,6 +1099,7 @@ src/java/netxms-eclipse/ObjectView/plugin.xml -text
 src/java/netxms-eclipse/ObjectView/schema/org.netxms.ui.eclipse.objectview.tabs.exsd -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowObjectDetailsView.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ClusterTab.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectOverview.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/ObjectTab.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/Capabilities.java -text
@@ -1103,6 +1109,8 @@ src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objectta
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/GeneralInfo.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/OverviewPageElement.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/elements/TableElement.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ClusterResourceListComparator.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/objecttabs/helpers/ClusterResourceListLabelProvider.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/TabbedObjectView.java -text
 src/java/netxms-eclipse/PolicyManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/PolicyManager/META-INF/MANIFEST.MF -text
