@@ -262,6 +262,7 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 		chart.setLegendVisible(settings.isLegendVisible());
 		chart.setBackground(ColorConverter.colorFromInt(settings.getBackgroundColor()));
 		chart.setBackgroundInPlotArea(ColorConverter.colorFromInt(settings.getPlotBackgroundColor()));
+		chart.getLegend().setForeground(ColorConverter.colorFromInt(settings.getLegendTextColor()));
 		chart.getLegend().setBackground(ColorConverter.colorFromInt(settings.getLegendBackgroundColor()));
 		chart.getAxisSet().getXAxis(0).getTick().setForeground(ColorConverter.colorFromInt(settings.getAxisColor()));
 		chart.getAxisSet().getYAxis(0).getTick().setForeground(ColorConverter.colorFromInt(settings.getAxisColor()));

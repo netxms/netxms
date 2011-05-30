@@ -691,7 +691,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		final Range range = yAxis.getRange();
 		if (range.lower > 0)
 			range.lower = 0;
-		range.upper++;
+		//range.upper++;
 		yAxis.setRange(range);
 	}
 }

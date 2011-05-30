@@ -28,7 +28,6 @@ import org.netxms.client.AccessListElement;
 
 /**
  * Settings for predefined graph
- *
  */
 public class GraphSettings
 {
@@ -69,6 +68,7 @@ public class GraphSettings
 	private int autoRefreshInterval;
 	private int axisColor;
 	private int backgroundColor;
+	private int legendTextColor;
 	private int legendBackgroundColor;
 	private int plotBackgroundColor;
 	private int gridColor;
@@ -100,6 +100,7 @@ public class GraphSettings
 		autoRefreshInterval = 30000;
 		axisColor = 0x161616;
 		backgroundColor = 0xF0F0F0;
+		legendTextColor = 0x000000;
 		legendBackgroundColor = 0xFFFFFF;
 		plotBackgroundColor = 0xFFFFFF;
 		gridColor = 0xE8E8E8;
@@ -156,6 +157,10 @@ public class GraphSettings
 		
 		for(int i = 0; i < MAX_GRAPH_ITEM_COUNT; i++)
 			itemStyles[i] = new GraphItemStyle();
+		
+		legendBackgroundColor = -1;
+		legendTextColor = -1;
+		plotBackgroundColor = -1;
 		
 		String[] elements = settings.split("\u007F");
 		for(int i = 0; i < elements.length; i++)
@@ -248,6 +253,18 @@ public class GraphSettings
 			{
 				gridColor = safeParseInt(value, 0);
 			}
+			else if (name.equals("CLF"))
+			{
+				legendTextColor = safeParseInt(value, 0);
+			}
+			else if (name.equals("CLB"))
+			{
+				legendBackgroundColor = safeParseInt(value, 0);
+			}
+			else if (name.equals("CP"))
+			{
+				plotBackgroundColor = safeParseInt(value, 0);
+			}
 			else if (name.equals("CR"))
 			{
 				rulerColor = safeParseInt(value, 0);
@@ -324,6 +341,15 @@ public class GraphSettings
 				}
 			}
 		}
+		
+		// Some colors may be not set by legacy console
+		// In that case, try to derive them from background and text colors
+		if (plotBackgroundColor == -1)
+			plotBackgroundColor = backgroundColor;
+		if (legendBackgroundColor == -1)
+			legendBackgroundColor = backgroundColor;
+		if (legendTextColor == -1)
+			legendTextColor = textColor;
 	}
 	
 	/**
@@ -952,5 +978,21 @@ public class GraphSettings
 	public void setPlotBackgroundColor(int plotBackgroundColor)
 	{
 		this.plotBackgroundColor = plotBackgroundColor;
+	}
+
+	/**
+	 * @return the legendColor
+	 */
+	public int getLegendTextColor()
+	{
+		return legendTextColor;
+	}
+
+	/**
+	 * @param legendColor the legendColor to set
+	 */
+	public void setLegendTextColor(int legendColor)
+	{
+		this.legendTextColor = legendColor;
 	}
 }
