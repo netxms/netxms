@@ -39,5 +39,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("SHOW_TRAY_ICON", true);
 		ps.setDefault("HIDE_WHEN_MINIMIZED", false);
 		ps.setDefault("SAVE_AND_RESTORE", true);
+		ps.setDefault("HTTP_PROXY_ENABLED", false);
+		ps.setDefault("HTTP_PROXY_SERVER", "");
+		ps.setDefault("HTTP_PROXY_PORT", "8000");
+		ps.setDefault("HTTP_PROXY_EXCLUSIONS", "localhost|127.0.0.1|10.*|192.168.*");
 	}
 }

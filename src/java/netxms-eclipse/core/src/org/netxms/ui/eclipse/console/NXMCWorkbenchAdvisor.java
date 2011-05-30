@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.console;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.widgets.Shell;
@@ -57,7 +58,22 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	public void initialize(IWorkbenchConfigurer configurer)
 	{
 		super.initialize(configurer);
-		configurer.setSaveAndRestore(Activator.getDefault().getPreferenceStore().getBoolean("SAVE_AND_RESTORE"));
+		
+		IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+		configurer.setSaveAndRestore(ps.getBoolean("SAVE_AND_RESTORE"));
+		
+		if (ps.getBoolean("HTTP_PROXY_ENABLED"))
+		{
+			System.setProperty("http.proxyHost", ps.getString("HTTP_PROXY_SERVER"));
+			System.setProperty("http.proxyPort", ps.getString("HTTP_PROXY_PORT"));
+			System.setProperty("http.noProxyHosts", ps.getString("HTTP_PROXY_EXCLUSIONS"));
+		}
+		else
+		{
+			System.clearProperty("http.proxyHost");
+			System.clearProperty("http.proxyPort");
+			System.clearProperty("http.noProxyHosts");
+		}
 	}
 
 	/* (non-Javadoc)

@@ -111,6 +111,11 @@
             id="org.eclipse.ui.preferencePages.Decorators">
          <keywordReference id="org.eclipse.ui.ide.appearance"/>
      </page>
+     <page
+           class="org.netxms.ui.eclipse.console.preferencepages.HttpProxyPrefs"
+           id="org.eclipse.ui.preferencePages.HttpProxy"
+           name="HTTP Proxy">
+     </page>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
