@@ -159,6 +159,12 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0,
                 &iNumIf, sizeof(LONG), 0) != SNMP_ERR_SUCCESS)
       return NULL;
+
+	// Some devices may return completely insane values here
+	// (for example, DLink DGS-3612 can return negative value)
+	// Anyway it's just a hint for initial array size
+	if ((iNumIf <= 0) || (iNumIf > 4096))
+		iNumIf = 64;
       
    // Create empty list
    pIfList = new InterfaceList(iNumIf);
