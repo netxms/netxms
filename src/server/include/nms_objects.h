@@ -177,7 +177,7 @@ struct INDEX_ELEMENT
    NetObj *object;
 };
 
-class ObjectIndex
+class NXCORE_EXPORTABLE ObjectIndex
 {
 private:
 	int m_size;
@@ -1559,12 +1559,12 @@ extern const TCHAR *g_szClassName[];
 extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
 
-extern ObjectIndex g_idxObjectById;
-extern ObjectIndex g_idxSubnetByAddr;
-extern ObjectIndex g_idxInterfaceByAddr;
-extern ObjectIndex g_idxZoneByGUID;
-extern ObjectIndex g_idxNodeById;
-extern ObjectIndex g_idxConditionById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxObjectById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
 
 
 #endif   /* _nms_objects_h_ */
