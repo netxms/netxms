@@ -28,14 +28,17 @@ import org.netxms.api.client.NetXMSClientException;
 public interface UserManager
 {
 	// User object fields
-	public static final int USER_MODIFY_LOGIN_NAME = 0x00000001;
-	public static final int USER_MODIFY_DESCRIPTION = 0x00000002;
-	public static final int USER_MODIFY_FULL_NAME = 0x00000004;
-	public static final int USER_MODIFY_FLAGS = 0x00000008;
-	public static final int USER_MODIFY_ACCESS_RIGHTS = 0x00000010;
-	public static final int USER_MODIFY_MEMBERS = 0x00000020;
-	public static final int USER_MODIFY_CERT_MAPPING = 0x00000040;
-	public static final int USER_MODIFY_AUTH_METHOD = 0x00000080;
+	public static final int USER_MODIFY_LOGIN_NAME        = 0x00000001;
+	public static final int USER_MODIFY_DESCRIPTION       = 0x00000002;
+	public static final int USER_MODIFY_FULL_NAME         = 0x00000004;
+	public static final int USER_MODIFY_FLAGS             = 0x00000008;
+	public static final int USER_MODIFY_ACCESS_RIGHTS     = 0x00000010;
+	public static final int USER_MODIFY_MEMBERS           = 0x00000020;
+	public static final int USER_MODIFY_CERT_MAPPING      = 0x00000040;
+	public static final int USER_MODIFY_AUTH_METHOD       = 0x00000080;
+	public static final int USER_MODIFY_PASSWD_LENGTH     = 0x00000100;
+	public static final int USER_MODIFY_TEMP_DISABLE      = 0x00000200;
+	public static final int USER_MODIFY_CUSTOM_ATTRIBUTES = 0x00000400;
 
 	/**
 	 * Synchronize user database

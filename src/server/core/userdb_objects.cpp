@@ -140,7 +140,7 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 
 	// Update custom attributes only if VID_NUM_CUSTOM_ATTRIBUTES exist -
 	// older client versions may not be aware of custom attributes
-	if (msg->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
+	if ((fields & USER_MODIFY_CUSTOM_ATTRIBUTES) || msg->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
 	{
 		DWORD i, varId, count;
 		TCHAR *name, *value;

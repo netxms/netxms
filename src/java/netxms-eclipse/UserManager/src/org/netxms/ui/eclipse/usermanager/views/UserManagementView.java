@@ -318,8 +318,7 @@ public class UserManagementView extends ViewPart
 		actionDeleteUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_delete.png"));
 		actionDeleteUser.setEnabled(false);
 
-		actionChangePassword = new Action()
-		{
+		actionChangePassword = new Action() {
 			@Override
 			public void run()
 			{
