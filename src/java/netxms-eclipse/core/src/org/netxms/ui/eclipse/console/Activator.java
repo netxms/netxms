@@ -48,13 +48,6 @@ public class Activator extends AbstractUIPlugin
 	// Shared data
 	private StatusLineContributionItem statusItemConnection;
 	
-	/**
-	 * The constructor
-	 */
-	public Activator()
-	{
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)

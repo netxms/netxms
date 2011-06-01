@@ -97,6 +97,10 @@ public class LoginJob implements IRunnableWithProgress
 			monitor.worked(5);
 
 			ConsoleSharedData.setSession(session);
+			
+			monitor.setTaskName(Messages.getString("LoginJob.init_extensions")); //$NON-NLS-1$
+			TweakletManager.postLogin(session);
+			monitor.worked(5);
 
 			Runnable keepAliveTimer = new KeepAliveHelper();
 			final Thread thread = new Thread(keepAliveTimer);

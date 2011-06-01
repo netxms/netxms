@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.console;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
@@ -60,6 +61,8 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	public void initialize(IWorkbenchConfigurer configurer)
 	{
 		super.initialize(configurer);
+		
+		TweakletManager.initTweaklets();
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		configurer.setSaveAndRestore(ps.getBoolean("SAVE_AND_RESTORE"));

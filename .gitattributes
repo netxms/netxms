@@ -1285,7 +1285,9 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCApplication.j
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchAdvisor.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchWindowAdvisor.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/PreferenceInitializer.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/TweakletManager.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/actions/OpenServerConsole.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/api/ConsoleTweaklet.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/LoginDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/PasswordExpiredDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages.properties -text

@@ -67,6 +67,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		configurer.setShowStatusLine(true);
 		configurer.setShowProgressIndicator(true);
 		configurer.setShowPerspectiveBar(true);
+		
+		TweakletManager.preWindowOpen(configurer);
 	}
 
 	/**
@@ -85,6 +87,8 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
 		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON"))
 			Activator.showTrayIcon();
+		
+		TweakletManager.postWindowCreate(configurer);
 	}
 
 	/**
