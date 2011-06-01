@@ -1243,6 +1243,12 @@ void ClientSession::processingThread()
 			case CMD_UPLOAD_FILE_TO_AGENT:
 				uploadFileToAgent(pMsg);
 				break;
+			case CMD_UPLOAD_FILE:
+				receiveFile(pMsg);
+				break;
+			case CMD_DELETE_FILE:
+				deleteFile(pMsg);
+				break;
 			case CMD_OPEN_CONSOLE:
 				openConsole(pMsg->GetId());
 				break;
@@ -11395,4 +11401,99 @@ void ClientSession::getVlans(CSCPMessage *request)
 	}
 
 	sendMessage(&msg);
+}
+
+
+//
+// Receive file from client
+//
+
+void ClientSession::receiveFile(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_FILES)
+   {
+		TCHAR fileName[MAX_PATH];
+
+      request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+      const TCHAR *cleanFileName = GetCleanFileName(fileName);
+
+      // Prepare for file receive
+      if (m_hCurrFile == -1)
+      {
+         _tcscpy(m_szCurrFileName, g_szDataDir);
+			_tcscat(m_szCurrFileName, DDIR_FILES);
+         _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
+         _tcscat(m_szCurrFileName, cleanFileName);
+         m_hCurrFile = _topen(m_szCurrFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+         if (m_hCurrFile != -1)
+         {
+            m_dwFileRqId = request->GetId();
+            m_dwUploadCommand = CMD_UPLOAD_FILE;
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_RESOURCE_BUSY);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+//
+// Delete file in store
+//
+
+void ClientSession::deleteFile(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_FILES)
+   {
+		TCHAR fileName[MAX_PATH];
+
+      request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+      const TCHAR *cleanFileName = GetCleanFileName(fileName);
+
+      _tcscpy(fileName, g_szDataDir);
+		_tcscat(fileName, DDIR_FILES);
+      _tcscat(fileName, FS_PATH_SEPARATOR);
+      _tcscat(fileName, cleanFileName);
+      if (_tunlink(fileName) == 0)
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   sendMessage(&msg);
 }

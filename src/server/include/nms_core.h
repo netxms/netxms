@@ -575,6 +575,8 @@ private:
 	void openConsole(DWORD rqId);
 	void closeConsole(DWORD rqId);
 	void getVlans(CSCPMessage *msg);
+	void receiveFile(CSCPMessage *request);
+	void deleteFile(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

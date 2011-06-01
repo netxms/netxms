@@ -108,7 +108,7 @@ public class ImageLibraryTest extends SessionTest
 		image.setName("testCreateImage");
 		image.setCategory("category");
 		image.setBinaryData("data".getBytes());
-		final LibraryImage createdImage = session.createImage(image);
+		final LibraryImage createdImage = session.createImage(image, null);
 
 		assertNotNull(createdImage.getGuid());
 		System.out.println("Assigned GUID: " + createdImage.getGuid().toString());
@@ -126,7 +126,7 @@ public class ImageLibraryTest extends SessionTest
 		image.setName("testModifyImage");
 		image.setCategory("category");
 		image.setBinaryData("new data".getBytes());
-		session.modifyImage(image);
+		session.modifyImage(image, null);
 		
 		session.deleteImage(image);
 		

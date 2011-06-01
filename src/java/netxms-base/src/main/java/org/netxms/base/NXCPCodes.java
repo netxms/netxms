@@ -246,8 +246,8 @@ public final class NXCPCodes
 	public static final int CMD_SITUATION_DATA          = 0x00D8;
 	public static final int CMD_SITUATION_CHANGE        = 0x00D9;
 	public static final int CMD_CREATE_MAP              = 0x00DA;
-	//public static final int CMD_WEBMAP_ADD              = 0x00DB;
-	//public static final int CMD_WEBMAP_UPDATE_PROPS     = 0x00DC;
+	public static final int CMD_UPLOAD_FILE             = 0x00DB;
+	public static final int CMD_DELETE_FILE             = 0x00DC;
 	//public static final int CMD_WEBMAP_UPDATE_DATA      = 0x00DD;
 	//public static final int CMD_WEBMAP_DELETE           = 0x00DE;
 	//public static final int CMD_WEBMAP_GET_DATA         = 0x00DF;

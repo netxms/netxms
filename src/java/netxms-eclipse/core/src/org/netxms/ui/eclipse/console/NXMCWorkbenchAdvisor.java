@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.console;
 
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
@@ -59,7 +61,7 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	{
 		super.initialize(configurer);
 		
-		IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		configurer.setSaveAndRestore(ps.getBoolean("SAVE_AND_RESTORE"));
 		
 		if (ps.getBoolean("HTTP_PROXY_ENABLED"))
@@ -67,6 +69,16 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 			System.setProperty("http.proxyHost", ps.getString("HTTP_PROXY_SERVER"));
 			System.setProperty("http.proxyPort", ps.getString("HTTP_PROXY_PORT"));
 			System.setProperty("http.noProxyHosts", ps.getString("HTTP_PROXY_EXCLUSIONS"));
+			if (ps.getBoolean("HTTP_PROXY_AUTH"))
+			{
+				Authenticator.setDefault(new Authenticator() {
+					@Override
+					protected PasswordAuthentication getPasswordAuthentication()
+					{
+						return new PasswordAuthentication(ps.getString("HTTP_PROXY_LOGIN"), ps.getString("HTTP_PROXY_PASSWORD").toCharArray());
+					}
+				});
+			}
 		}
 		else
 		{

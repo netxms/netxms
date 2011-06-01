@@ -79,5 +79,38 @@
          </action>
       </objectContribution>
    </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Upload local file to server"
+            id="org.netxms.ui.eclipse.filemanager.commands.upload_file_to_server"
+            name="Upload file to server...">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.filemanager.action_set"
+            label="File Manager Action Set"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.filemanager.actions.UploadFileToServer"
+               definitionId="org.netxms.ui.eclipse.filemanager.commands.upload_file_to_server"
+               icon="icons/upload.png"
+               id="org.netxms.ui.eclipse.filemanager.actions.upload_file_to_server"
+               label="Upload file to server..."
+               menubarPath="tools/additions"
+               tooltip="Upload local file to server&apos;s file store">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.upload_file_to_server"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+Alt+U">
+      </key>
+   </extension>
 
 </plugin>

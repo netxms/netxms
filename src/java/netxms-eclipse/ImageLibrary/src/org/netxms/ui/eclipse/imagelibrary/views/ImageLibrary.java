@@ -251,6 +251,7 @@ public class ImageLibrary extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				/* FIXME: wtf? why we have ui job inside job? */
 				new UIJob("Update Image")
 				{
 					@Override
@@ -277,7 +278,7 @@ public class ImageLibrary extends ViewPart
 								image.setCategory(category);
 							}
 
-							session.modifyImage(image);
+							session.modifyImage(image, null);	/* TODO: add progress listener */
 
 							refreshImages(); // TODO: should be changed to update
 													// single elemnt
@@ -311,6 +312,7 @@ public class ImageLibrary extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				/* FIXME: wtf? why we have ui job inside job? */
 				new UIJob("Upload New Image")
 				{
 					@Override
@@ -330,10 +332,10 @@ public class ImageLibrary extends ViewPart
 							image.setName(name);
 							image.setCategory(category);
 
-							session.createImage(image);
+							session.createImage(image, null); /* TODO: add progress listener */
 
 							refreshImages(); // TODO: should be changed to add single
-													// elemnt
+													// element
 						}
 						catch(Exception e)
 						{

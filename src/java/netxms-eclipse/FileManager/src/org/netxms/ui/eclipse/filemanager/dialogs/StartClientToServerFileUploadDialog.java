@@ -18,37 +18,34 @@
  */
 package org.netxms.ui.eclipse.filemanager.dialogs;
 
+import java.io.File;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.ServerFile;
-import org.netxms.ui.eclipse.filemanager.widgets.ServerFileSelector;
+import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Dialog for starting file upload
  */
-public class StartFileUploadDialog extends Dialog
+public class StartClientToServerFileUploadDialog extends Dialog
 {
-	private ServerFileSelector fileSelector;
+	private LocalFileSelector fileSelector;
 	private LabeledText textRemoteFile;
-	private Button checkJobOnHold;
-	private ServerFile serverFile;
+	private File localFile;
 	private String remoteFileName;
-	private boolean createJobOnHold;
 	
 	/**
 	 * 
 	 * @param parentShell
 	 */
-	public StartFileUploadDialog(Shell parentShell)
+	public StartClientToServerFileUploadDialog(Shell parentShell)
 	{
 		super(parentShell);
 	}
@@ -60,7 +57,7 @@ public class StartFileUploadDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Start File Upload");
+		newShell.setText("Upload File");
 	}
 
 	/* (non-Javadoc)
@@ -77,8 +74,8 @@ public class StartFileUploadDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 		
-		fileSelector = new ServerFileSelector(dialogArea, SWT.NONE);
-		fileSelector.setLabel("Server file");
+		fileSelector = new LocalFileSelector(dialogArea, SWT.NONE);
+		fileSelector.setLabel("Local file");
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -86,14 +83,11 @@ public class StartFileUploadDialog extends Dialog
 		fileSelector.setLayoutData(gd);
 		
 		textRemoteFile = new LabeledText(dialogArea, SWT.NONE);
-		textRemoteFile.setLabel("Remote file name (leave blank for upload to agent's file store)");
+		textRemoteFile.setLabel("Remote file name");
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		textRemoteFile.setLayoutData(gd);
-		
-		checkJobOnHold = new Button(dialogArea, SWT.CHECK);
-		checkJobOnHold.setText("Create upload job but don't start it (job will be in \"on hold\" state)");
 		
 		return dialogArea;
 	}
@@ -104,23 +98,14 @@ public class StartFileUploadDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		serverFile = fileSelector.getFile();
-		if (serverFile == null)
+		localFile = fileSelector.getFile();
+		if (localFile == null)
 		{
 			MessageDialog.openWarning(getShell(), "Warning", "Please select file for upload");
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();
-		createJobOnHold = checkJobOnHold.getSelection();
 		super.okPressed();
-	}
-
-	/**
-	 * @return the serverFile
-	 */
-	public ServerFile getServerFile()
-	{
-		return serverFile;
 	}
 
 	/**
@@ -132,10 +117,10 @@ public class StartFileUploadDialog extends Dialog
 	}
 
 	/**
-	 * @return the createJobOnHold
+	 * @return the localFile
 	 */
-	public boolean isCreateJobOnHold()
+	public File getLocalFile()
 	{
-		return createJobOnHold;
+		return localFile;
 	}
 }

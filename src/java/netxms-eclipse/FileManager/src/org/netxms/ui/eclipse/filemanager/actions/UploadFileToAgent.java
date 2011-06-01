@@ -38,7 +38,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.filemanager.Activator;
-import org.netxms.ui.eclipse.filemanager.dialogs.StartFileUploadDialog;
+import org.netxms.ui.eclipse.filemanager.dialogs.StartServerToAgentFileUploadDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -66,7 +66,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
 	 */
 	public void run(IAction action)
 	{
-		final StartFileUploadDialog dlg = new StartFileUploadDialog(shell);
+		final StartServerToAgentFileUploadDialog dlg = new StartServerToAgentFileUploadDialog(shell);
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

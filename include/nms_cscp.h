@@ -438,8 +438,8 @@ typedef struct
 #define CMD_SITUATION_DATA          0x00D8
 #define CMD_SITUATION_CHANGE        0x00D9
 #define CMD_CREATE_MAP              0x00DA
-//#define CMD_WEBMAP_ADD              0x00DB
-//#define CMD_WEBMAP_UPDATE_PROPS     0x00DC
+#define CMD_UPLOAD_FILE             0x00DB
+#define CMD_DELETE_FILE             0x00DC
 //#define CMD_WEBMAP_UPDATE_DATA      0x00DD
 //#define CMD_WEBMAP_DELETE           0x00DE
 //#define CMD_WEBMAP_GET_DATA         0x00DF

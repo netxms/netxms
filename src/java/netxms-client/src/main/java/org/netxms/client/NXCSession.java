@@ -42,6 +42,7 @@ import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.ProgressListener;
 import org.netxms.api.client.Session;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.images.ImageLibraryManager;
@@ -893,10 +894,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException
 	 * @throws NXCException
 	 */
-	protected void sendFile(final long requestId, final File file) throws IOException, NXCException
+	protected void sendFile(final long requestId, final File file, ProgressListener listener) throws IOException, NXCException
 	{
+		if (listener != null)
+			listener.setTotalWorkAmount(file.length());
 		final InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
-		sendFileStream(requestId, inputStream);
+		sendFileStream(requestId, inputStream, listener);
 		inputStream.close();
 	}
 
@@ -908,10 +911,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException
 	 * @throws NXCException
 	 */
-	protected void sendFile(final long requestId, final byte[] data) throws IOException, NXCException
+	protected void sendFile(final long requestId, final byte[] data, ProgressListener listener) throws IOException, NXCException
 	{
+		if (listener != null)
+			listener.setTotalWorkAmount(data.length);
 		final InputStream inputStream = new ByteArrayInputStream(data);
-		sendFileStream(requestId, inputStream);
+		sendFileStream(requestId, inputStream, listener);
 		inputStream.close();
 	}
 
@@ -924,13 +929,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException
 	 * @throws NXCException
 	 */
-	private void sendFileStream(final long requestId, final InputStream inputStream) throws IOException, NXCException
+	private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener) throws IOException, NXCException
 	{
 		NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
 		msg.setBinaryMessage(true);
 
 		boolean success = false;
 		final byte[] buffer = new byte[FILE_BUFFER_SIZE];
+		long bytesSent = 0;
 		while(true)
 		{
 			final int bytesRead = inputStream.read(buffer);
@@ -941,6 +947,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 			msg.setBinaryData(Arrays.copyOf(buffer, bytesRead));
 			sendMessage(msg);
+			
+			bytesSent += bytesRead;
+			if (listener != null)
+				listener.markProgress(bytesSent);
 
 			if (bytesRead < FILE_BUFFER_SIZE)
 			{
@@ -4393,7 +4403,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * .api.client.images.LibraryImage)
 	 */
 	@Override
-	public LibraryImage createImage(LibraryImage image) throws IOException, NXCException
+	public LibraryImage createImage(LibraryImage image, ProgressListener listener) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_IMAGE);
 		image.fillMessage(msg);
@@ -4402,7 +4412,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final UUID imageGuid = response.getVariableAsUUID(NXCPCodes.VID_GUID);
 		image.setGuid(imageGuid);
 
-		sendFile(msg.getMessageId(), image.getBinaryData());
+		sendFile(msg.getMessageId(), image.getBinaryData(), listener);
 		
 		waitForRCC(msg.getMessageId());
 	
@@ -4438,7 +4448,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * .api.client.images.LibraryImage)
 	 */
 	@Override
-	public void modifyImage(LibraryImage image) throws IOException, NXCException
+	public void modifyImage(LibraryImage image, ProgressListener listener) throws IOException, NXCException
 	{
 		if (image.isProtected())
 		{
@@ -4450,7 +4460,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 
-		sendFile(msg.getMessageId(), image.getBinaryData());
+		sendFile(msg.getMessageId(), image.getBinaryData(), listener);
 
 		waitForRCC(msg.getMessageId());
 	}
@@ -4641,13 +4651,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param jobOnHold
 	 *           if true, upload job will be created in "hold" status
 	 * @return ID of upload job
-	 * @throws IOException
-	 *            if socket or file I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName, boolean jobOnHold) throws IOException,
-			NXCException
+	public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName, boolean jobOnHold) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE_TO_AGENT);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
@@ -4659,14 +4666,44 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
 	}
+	
+	/**
+	 * Upload local file to server's file store
+	 *  
+	 * @param localFile local file
+	 * @param serverFileName name under which file will be stored on server
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void uploadFileToServer(File localFile, String serverFileName, ProgressListener listener) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE);
+		msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+		sendFile(msg.getMessageId(), localFile, listener);
+	}
+	
+	/**
+	 * Delete file from server's file store
+	 * 
+	 * @param serverFileName name of server file
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteServerFile(String serverFileName) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_FILE);
+		msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 
 	/**
 	 * Open server console.
 	 * 
-	 * @throws IOException
-	 *            if socket or file I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void openConsole() throws IOException, NXCException
 	{
@@ -4679,10 +4716,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	/**
 	 * Close server console.
 	 * 
-	 * @throws IOException
-	 *            if socket or file I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void closeConsole() throws IOException, NXCException
 	{
@@ -4696,13 +4731,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * Process console command on server. Output of the command delivered via
 	 * console listener.
 	 * 
-	 * @param command
-	 *           command to process
+	 * @param command command to process
 	 * @return true if console should be closed (usually after "exit" command)
-	 * @throws IOException
-	 *            if socket or file I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public boolean processConsoleCommand(String command) throws IOException, NXCException
 	{
