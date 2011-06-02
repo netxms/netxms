@@ -1409,6 +1409,9 @@ protected:
 	DWORD m_seedObject;
 	int m_layout;
 	uuid_t m_background;
+	double m_backgroundLatitude;
+	double m_backgroundLongitude;
+	int m_backgroundZoom;
 	int m_numElements;
 	NetworkMapElement **m_elements;
 	int m_numLinks;

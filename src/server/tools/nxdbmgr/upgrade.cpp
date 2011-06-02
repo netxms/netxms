@@ -262,6 +262,9 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 static BOOL H_UpgradeFromV229(int currVersion, int newVersion)
 {
 	static TCHAR batch1[] = 
+		_T("ALTER TABLE network_maps ADD bg_latitude varchar(20)\n")
+		_T("ALTER TABLE network_maps ADD bg_longitude varchar(20)\n")
+		_T("ALTER TABLE network_maps ADD bg_zoom integer\n")
 		_T("ALTER TABLE dashboard_elements ADD layout_data $SQL:TEXT\n")
 		_T("<END>");
 

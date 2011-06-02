@@ -1212,6 +1212,9 @@ CREATE TABLE network_maps
 	layout integer not null,
 	seed integer not null,
 	background varchar(36) null,
+	bg_latitude varchar(20) null,
+	bg_longitude varchar(20) null,
+	bg_zoom integer null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

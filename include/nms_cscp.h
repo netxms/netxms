@@ -863,6 +863,9 @@ typedef struct
 #define VID_NUM_VLANS               ((DWORD)382)
 #define VID_CREATE_JOB_ON_HOLD      ((DWORD)383)
 #define VID_TILE_SERVER_URL         ((DWORD)384)
+#define VID_BACKGROUND_LATITUDE     ((DWORD)385)
+#define VID_BACKGROUND_LONGITUDE    ((DWORD)386)
+#define VID_BACKGROUND_ZOOM         ((DWORD)387)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

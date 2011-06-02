@@ -48,6 +48,9 @@ NetworkMap::NetworkMap() : NetObj()
 	m_numLinks = 0;
 	m_links = NULL;
 	m_iStatus = STATUS_NORMAL;
+	m_backgroundLatitude = 0;
+	m_backgroundLongitude = 0;
+	m_backgroundZoom = 1;
 }
 
 
@@ -66,6 +69,9 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_numLinks = 0;
 	m_links = NULL;
 	m_iStatus = STATUS_NORMAL;
+	m_backgroundLatitude = 0;
+	m_backgroundLongitude = 0;
+	m_backgroundZoom = 1;
 }
 
 
@@ -122,12 +128,14 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 
 	if (isNewObject)
       _sntprintf(query, 1024,
-                 _T("INSERT INTO network_maps (id,map_type,layout,seed,background) VALUES (%d,%d,%d,%d,'%s')"),
-                 m_dwId, m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp));
+                 _T("INSERT INTO network_maps (id,map_type,layout,seed,background,bg_latitude,bg_longitude,bg_zoom) VALUES (%d,%d,%d,%d,'%s','%f','%f',%d)"),
+                 m_dwId, m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp),
+					  m_backgroundLatitude, m_backgroundLongitude, m_backgroundZoom);
    else
       _sntprintf(query, 1024,
-                 _T("UPDATE network_maps SET map_type=%d,layout=%d,seed=%d,background='%s' WHERE id=%d"),
-                 m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp), m_dwId);
+                 _T("UPDATE network_maps SET map_type=%d,layout=%d,seed=%d,background='%s',bg_latitude='%s',bg_longitude='%s',bg_zoom=%d WHERE id=%d"),
+                 m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp),
+					  m_backgroundLatitude, m_backgroundLongitude, m_backgroundZoom, m_dwId);
    if (!DBQuery(hdb, query))
 		goto fail;
 
@@ -214,7 +222,7 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 
 	   loadACLFromDB();
 
-		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,background FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,background,bg_latitude,bg_longitude,bg_zoom FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 		if (hResult == NULL)
 			return FALSE;
@@ -223,6 +231,9 @@ BOOL NetworkMap::CreateFromDB(DWORD dwId)
 		m_layout = DBGetFieldLong(hResult, 0, 1);
 		m_seedObject = DBGetFieldULong(hResult, 0, 2);
 		DBGetFieldGUID(hResult, 0, 3, m_background);
+		m_backgroundLatitude = DBGetFieldDouble(hResult, 0, 4);
+		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 5);
+		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 6);
 		DBFreeResult(hResult);
 
 	   // Load elements
@@ -313,6 +324,9 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_LAYOUT, (WORD)m_layout);
 	msg->SetVariable(VID_SEED_OBJECT, m_seedObject);
 	msg->SetVariable(VID_BACKGROUND, m_background, UUID_LENGTH);
+	msg->SetVariable(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
+	msg->SetVariable(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
+	msg->SetVariable(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
 
 	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_numElements);
 	DWORD varId = VID_ELEMENT_LIST_BASE;
@@ -351,7 +365,12 @@ DWORD NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
 
 	if (request->IsVariableExist(VID_BACKGROUND))
+	{
 		request->GetVariableBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
+		m_backgroundLatitude = request->GetVariableDouble(VID_BACKGROUND_LATITUDE);
+		m_backgroundLongitude = request->GetVariableDouble(VID_BACKGROUND_LONGITUDE);
+		m_backgroundZoom = (int)request->GetVariableShort(VID_BACKGROUND_ZOOM);
+	}
 
 	if (request->IsVariableExist(VID_NUM_ELEMENTS))
 	{
