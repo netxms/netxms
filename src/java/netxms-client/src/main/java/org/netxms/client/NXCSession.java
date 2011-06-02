@@ -191,6 +191,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private String serverTimeZone;
 	private byte[] serverChallenge = new byte[CLIENT_CHALLENGE_SIZE];
 	private boolean zoningEnabled = false;
+	private String tileServerURL;
 
 	// Objects
 	private Map<Long, GenericObject> objectList = new HashMap<Long, GenericObject>();
@@ -1153,6 +1154,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			serverId = response.getVariableAsBinary(NXCPCodes.VID_SERVER_ID);
 			serverTimeZone = response.getVariableAsString(NXCPCodes.VID_TIMEZONE);
 			serverChallenge = response.getVariableAsBinary(NXCPCodes.VID_CHALLENGE);
+			
+			tileServerURL = response.getVariableAsString(NXCPCodes.VID_TILE_SERVER_URL);
+			if (tileServerURL != null)
+			{
+				if (!tileServerURL.endsWith("/"))
+					tileServerURL = tileServerURL.concat("/");
+			}
+			else
+			{
+				tileServerURL = "http://tile.openstreetmap.org/";
+			}
 
 			// Setup encryption if required
 			if (connUseEncryption)
@@ -1331,6 +1343,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public byte[] getServerChallenge()
 	{
 		return serverChallenge;
+	}
+
+	/**
+	 * @return the tileServerURL
+	 */
+	public String getTileServerURL()
+	{
+		return tileServerURL;
 	}
 
 	/**

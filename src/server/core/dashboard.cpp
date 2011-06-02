@@ -80,9 +80,7 @@ BOOL Dashboard::CreateFromDB(DWORD dwId)
 		m_numColumns = (int)DBGetFieldLong(hResult, 0, 0);
 	DBFreeResult(hResult);
 
-	_sntprintf(query, 256, _T("SELECT element_type,element_data,")
-		                    _T("horizontal_span,vertical_span,horizontal_alignment,")
-								  _T("vertical_alignment FROM dashboard_elements ")
+	_sntprintf(query, 256, _T("SELECT element_type,element_data,layout_data FROM dashboard_elements ")
 								  _T("WHERE dashboard_id=%d ORDER BY element_id"), (int)dwId);
 	hResult = DBSelect(g_hCoreDB, query);
 	if (hResult == NULL)
@@ -94,10 +92,7 @@ BOOL Dashboard::CreateFromDB(DWORD dwId)
 		DashboardElement *e = new DashboardElement;
 		e->m_type = (int)DBGetFieldLong(hResult, i, 0);
 		e->m_data = DBGetField(hResult, i, 1, NULL, 0);
-		e->m_horizontalSpan = (int)DBGetFieldLong(hResult, i, 2);
-		e->m_verticalSpan = (int)DBGetFieldLong(hResult, i, 3);
-		e->m_horizontalAlignment = (int)DBGetFieldLong(hResult, i, 4);
-		e->m_verticalAlignment = (int)DBGetFieldLong(hResult, i, 5);
+		e->m_layout = DBGetField(hResult, i, 2, NULL, 0);
 		m_elements->add(e);
 	}
 
@@ -144,11 +139,11 @@ BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
    {
 		DashboardElement *element = m_elements->get(i);
 		String data = DBPrepareString(hdb, element->m_data);
-		int len = data.getSize() + 256;
+		String layout = DBPrepareString(hdb, element->m_layout);
+		int len = data.getSize() + layout.getSize() + 256;
 		TCHAR *eq = (TCHAR *)malloc(len * sizeof(TCHAR));
-      _sntprintf(eq, len, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,horizontal_span,vertical_span,horizontal_alignment,vertical_alignment) VALUES (%d,%d,%d,%s,%d,%d,%d,%d)"),
-		           (int)m_dwId, i, element->m_type, (const TCHAR *)data, element->m_horizontalSpan,
-					  element->m_verticalSpan, element->m_horizontalAlignment, element->m_verticalAlignment);
+      _sntprintf(eq, len, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (%d,%d,%d,%s,%s)"),
+		           (int)m_dwId, i, element->m_type, (const TCHAR *)data, (const TCHAR *)layout);
       if (!DBQuery(hdb, eq))
 		{
 			free(eq);
@@ -199,11 +194,8 @@ void Dashboard::CreateMessage(CSCPMessage *msg)
 		DashboardElement *element = m_elements->get(i);
 		msg->SetVariable(varId++, (WORD)element->m_type);
 		msg->SetVariable(varId++, CHECK_NULL_EX(element->m_data));
-		msg->SetVariable(varId++, (WORD)element->m_horizontalSpan);
-		msg->SetVariable(varId++, (WORD)element->m_verticalSpan);
-		msg->SetVariable(varId++, (WORD)element->m_horizontalAlignment);
-		msg->SetVariable(varId++, (WORD)element->m_verticalAlignment);
-		varId += 4;
+		msg->SetVariable(varId++, CHECK_NULL_EX(element->m_layout));
+		varId += 7;
 	}
 }
 
@@ -229,11 +221,8 @@ DWORD Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
 			DashboardElement *e = new DashboardElement;
 			e->m_type = (int)request->GetVariableShort(varId++);
 			e->m_data = request->GetVariableStr(varId++);
-			e->m_horizontalSpan = (int)request->GetVariableShort(varId++);
-			e->m_verticalSpan = (int)request->GetVariableShort(varId++);
-			e->m_horizontalAlignment = (int)request->GetVariableShort(varId++);
-			e->m_verticalAlignment = (int)request->GetVariableShort(varId++);
-			varId += 4;
+			e->m_layout = request->GetVariableStr(varId++);
+			varId += 7;
 			m_elements->add(e);
 		}
 	}

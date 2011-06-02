@@ -1480,6 +1480,9 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 	strURL.translate(_T("%version%"), NETXMS_VERSION_STRING);
 	msg.SetVariable(VID_CONSOLE_UPGRADE_URL, (const TCHAR *)strURL);
 
+	ConfigReadStr(_T("TileServerURL"), szBuffer, 1024, _T("http://tile.openstreetmap.org/"));
+	msg.SetVariable(VID_TILE_SERVER_URL, szBuffer);
+
    // Send response
    sendMessage(&msg);
 }

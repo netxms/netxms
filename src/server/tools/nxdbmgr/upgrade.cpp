@@ -256,6 +256,57 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V229 to V230
+//
+
+static BOOL H_UpgradeFromV229(int currVersion, int newVersion)
+{
+	static TCHAR batch1[] = 
+		_T("ALTER TABLE dashboard_elements ADD layout_data $SQL:TEXT\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch1));
+
+	DB_RESULT hResult = SQLSelect(_T("SELECT dashboard_id,element_id,horizontal_span,vertical_span,horizontal_alignment,vertical_alignment FROM dashboard_elements"));
+	if (hResult != NULL)
+	{
+		TCHAR query[1024], xml[1024];
+
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; i < count; i++)
+		{
+			_sntprintf(xml, 1024, _T("<layout><horizontalSpan>%d</horizontalSpan><verticalSpan>%d</verticalSpan><horizontalAlignment>%d</horizontalAlignment><verticalAlignment>%d</verticalAlignment></layout>"),
+			           (int)DBGetFieldLong(hResult, i, 2), (int)DBGetFieldLong(hResult, i, 3),
+						  (int)DBGetFieldLong(hResult, i, 4), (int)DBGetFieldLong(hResult, i, 5));
+			_sntprintf(query, 1024, _T("UPDATE dashboard_elements SET layout_data=%s WHERE dashboard_id=%d AND element_id=%d"),
+			           (const TCHAR *)DBPrepareString(g_hCoreDB, xml), (int)DBGetFieldLong(hResult, i, 0), (int)DBGetFieldLong(hResult, i, 1));
+			CHK_EXEC(SQLQuery(query));
+		}
+		DBFreeResult(hResult);
+	}
+	else
+	{
+		if (!g_bIgnoreErrors)
+			return FALSE;
+	}
+
+	static TCHAR batch2[] = 
+		_T("ALTER TABLE dashboard_elements DROP COLUMN horizontal_span\n")
+		_T("ALTER TABLE dashboard_elements DROP COLUMN vertical_span\n")
+		_T("ALTER TABLE dashboard_elements DROP COLUMN horizontal_alignment\n")
+		_T("ALTER TABLE dashboard_elements DROP COLUMN vertical_alignment\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch2));
+
+	CreateConfigParam(_T("TileServerURL"), _T("http://tile.openstreetmap.org/"), 1, 0);
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='230' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V228 to V229
 //
 
@@ -5249,6 +5300,7 @@ static struct
 	{ 226, 227, H_UpgradeFromV226 },
 	{ 227, 228, H_UpgradeFromV227 },
 	{ 228, 229, H_UpgradeFromV228 },
+	{ 229, 230, H_UpgradeFromV229 },
    { 0, NULL }
 };
 

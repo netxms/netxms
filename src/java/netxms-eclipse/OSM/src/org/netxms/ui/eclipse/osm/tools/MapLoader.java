@@ -34,8 +34,10 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.GeoLocation;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Map Loader - loads geographic map from tile server. Uses cached tiles when possible.
@@ -114,11 +116,12 @@ public class MapLoader
 		int maxTileNum = (1 << zoom) - 1;
 		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
 			return getBorderTileImage();
-		
+
+		final String tileServerURL = ((NXCSession)ConsoleSharedData.getSession()).getTileServerURL();
 		URL url = null;
 		try
 		{
-			url = new URL("http://tile.openstreetmap.org/" + zoom + "/" + x + "/" + y + ".png");
+			url = new URL(tileServerURL + zoom + "/" + x + "/" + y + ".png");
 		}
 		catch(MalformedURLException e)
 		{

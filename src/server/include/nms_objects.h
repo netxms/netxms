@@ -1455,13 +1455,10 @@ class DashboardElement
 public:
 	int m_type;
 	TCHAR *m_data;
-	int m_horizontalSpan;
-	int m_verticalSpan;
-	int m_horizontalAlignment;
-	int m_verticalAlignment;
+	TCHAR *m_layout;
 
-	DashboardElement() { m_data = NULL; }
-	~DashboardElement() { safe_free(m_data); }
+	DashboardElement() { m_data = NULL; m_layout = NULL; }
+	~DashboardElement() { safe_free(m_data); safe_free(m_layout); }
 };
 
 class NXCORE_EXPORTABLE Dashboard : public Container

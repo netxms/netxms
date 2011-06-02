@@ -1282,9 +1282,6 @@ CREATE TABLE dashboard_elements
 	element_id integer not null,
 	element_type integer not null,
 	element_data SQL_TEXT null,
-	horizontal_span integer not null,
-	vertical_span integer not null,
-	horizontal_alignment integer not null,
-	vertical_alignment integer not null,
+	layout_data SQL_TEXT null,
 	PRIMARY KEY(dashboard_id,element_id)
 ) TABLE_TYPE;

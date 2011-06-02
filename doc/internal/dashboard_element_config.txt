@@ -1,0 +1,24 @@
+Dashboard Element Configuration Format
+
+1. Element Data
+
+Common for all element configuration is top-level <element> tag. All inner tags are
+element type dependent.
+
+1.1. Label
+
+<element>
+	<title>label text</title>
+</element>
+
+
+2. Layout data
+
+Common for all elements.
+
+<layout>
+	<horizontalSpan>value</horizontalSpan>
+	<verticalSpan>value</verticalSpan>
+	<horizontalAlignment>value</horizontalAlignment>
+	<verticalAlignment>value</verticalAlignment>
+</layout>
