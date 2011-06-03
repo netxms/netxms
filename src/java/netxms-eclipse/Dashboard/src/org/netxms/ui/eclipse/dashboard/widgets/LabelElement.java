@@ -27,9 +27,9 @@ public class LabelElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public LabelElement(Composite parent, String data)
+	public LabelElement(Composite parent, String data, String elementLayout)
 	{
-		super(parent, data);
+		super(parent, data, elementLayout);
 		
 		try
 		{

@@ -1,48 +1,50 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.dashboard.dialogs;
+package org.netxms.ui.eclipse.dashboard.propertypages;
 
-import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author victor
- *
+ * "Layout" page for dashboard element
  */
-public class EditDashboardElementDlg extends Dialog
+public class Layout extends PropertyPage
 {
 	private Combo comboHorizontalAlign;
 	private Combo comboVerticalAlign;
 	private Spinner spinnerHorizontalSpan;
 	private Spinner spinnerVerticalSpan;
-	private Text text;
 	private DashboardElement element;
-	
-	public EditDashboardElementDlg(Shell parentShell, DashboardElement element)
-	{
-		super(parentShell);
-		this.element = element;
-	}
+	private DashboardElementLayout elementLayout;
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected Control createDialogArea(Composite parent)
+	protected Control createContents(Composite parent)
 	{
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
+		element = (DashboardElement)getElement().getAdapter(DashboardElement.class);
+		try
+		{
+			elementLayout = DashboardElementLayout.createFromXml(element.getLayout());
+		}
+		catch(Exception e)
+		{
+			elementLayout = new DashboardElementLayout();
+		}
+		
+		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -54,7 +56,7 @@ public class EditDashboardElementDlg extends Dialog
 		comboHorizontalAlign.add("CENTER");
 		comboHorizontalAlign.add("LEFT");
 		comboHorizontalAlign.add("RIGHT");
-		comboHorizontalAlign.select(element.getHorizontalAlignment());
+		comboHorizontalAlign.select(elementLayout.horizontalAlignment);
 		
 		comboVerticalAlign = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, 
 				"Vertical alignment", WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -62,7 +64,7 @@ public class EditDashboardElementDlg extends Dialog
 		comboVerticalAlign.add("CENTER");
 		comboVerticalAlign.add("TOP");
 		comboVerticalAlign.add("BOTTOM");
-		comboVerticalAlign.select(element.getVerticalAlignment());
+		comboVerticalAlign.select(elementLayout.vertcalAlignment);
 		
 		final WidgetFactory factory = new WidgetFactory() {
 			@Override
@@ -77,38 +79,36 @@ public class EditDashboardElementDlg extends Dialog
 		
 		spinnerHorizontalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
 				"Horizontal span", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		spinnerHorizontalSpan.setSelection(element.getHorizontalSpan());
+		spinnerHorizontalSpan.setSelection(elementLayout.horizontalSpan);
 
 		spinnerVerticalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
 				"Vertical span", WidgetHelper.DEFAULT_LAYOUT_DATA);
-		spinnerVerticalSpan.setSelection(element.getVerticalSpan());
-
-		text = new Text(dialogArea, SWT.BORDER | SWT.MULTI);
-		text.setText(element.getData());
-		GridData gd = new GridData();
-		gd.horizontalSpan = 2;
-		gd.verticalAlignment = SWT.FILL;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.grabExcessVerticalSpace = true;
-		gd.widthHint = 400;
-		gd.heightHint = 300;
-		text.setLayoutData(gd);
+		spinnerVerticalSpan.setSelection(elementLayout.verticalSpan);
 
 		return dialogArea;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
-	protected void okPressed()
+	public boolean performOk()
 	{
-		element.setHorizontalAlignment(comboHorizontalAlign.getSelectionIndex());
-		element.setVerticalAlignment(comboVerticalAlign.getSelectionIndex());
-		element.setHorizontalSpan(spinnerHorizontalSpan.getSelection());
-		element.setVerticalSpan(spinnerVerticalSpan.getSelection());
-		element.setData(text.getText());
-		super.okPressed();
+		elementLayout.horizontalAlignment = comboHorizontalAlign.getSelectionIndex();
+		elementLayout.vertcalAlignment = comboVerticalAlign.getSelectionIndex();
+		elementLayout.horizontalSpan = spinnerHorizontalSpan.getSelection();
+		elementLayout.verticalSpan = spinnerVerticalSpan.getSelection();
+		
+		try
+		{
+			element.setLayout(elementLayout.createXml());
+		}
+		catch(Exception e)
+		{
+			MessageDialog.openError(getShell(), "Error", "Cannot update dashboard element: data serialization error");
+			return false;
+		}
+		
+		return true;
 	}
 }

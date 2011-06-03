@@ -48,9 +48,9 @@ public abstract class ComparisonChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public ComparisonChartElement(Composite parent, String data)
+	public ComparisonChartElement(Composite parent, String data, String layout)
 	{
-		super(parent, data);
+		super(parent, data, layout);
 		session = (NXCSession)ConsoleSharedData.getSession();
 
 		setLayout(new FillLayout());	

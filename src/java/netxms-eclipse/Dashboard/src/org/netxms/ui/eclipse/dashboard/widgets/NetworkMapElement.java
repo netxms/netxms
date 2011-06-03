@@ -41,9 +41,9 @@ public class NetworkMapElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public NetworkMapElement(Composite parent, String data)
+	public NetworkMapElement(Composite parent, String data, String elementLayout)
 	{
-		super(parent, data);
+		super(parent, data, elementLayout);
 
 		try
 		{

@@ -37,9 +37,9 @@ public class BarChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-	public BarChartElement(Composite parent, String data)
+	public BarChartElement(Composite parent, String data, String layout)
 	{
-		super(parent, data);
+		super(parent, data, layout);
 		
 		try
 		{

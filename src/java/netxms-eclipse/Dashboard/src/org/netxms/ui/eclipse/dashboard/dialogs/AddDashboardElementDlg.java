@@ -70,5 +70,4 @@ public class AddDashboardElementDlg extends Dialog
 	{
 		return elementType;
 	}
-
 }

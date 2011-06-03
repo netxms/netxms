@@ -37,9 +37,9 @@ public class GeoMapElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public GeoMapElement(Composite parent, String data)
+	public GeoMapElement(Composite parent, String data, String elementLayout)
 	{
-		super(parent, data);
+		super(parent, data, elementLayout);
 
 		try
 		{

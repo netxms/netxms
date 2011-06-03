@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
@@ -27,21 +28,49 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 class ElementWidget extends DashboardComposite
 {
+	private DashboardElementLayout layout;
+	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	protected ElementWidget(Composite parent, int style, String data)
+	protected ElementWidget(Composite parent, int style, String data, String layout)
 	{
 		super(parent, style);
+		parseLayout(layout);
 	}
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	protected ElementWidget(Composite parent, String data)
+	protected ElementWidget(Composite parent, String data, String layout)
 	{
 		super(parent, SWT.BORDER);
+		parseLayout(layout);
+	}
+	
+	/**
+	 * @param xml
+	 */
+	private void parseLayout(String xml)
+	{
+		try
+		{
+			layout = DashboardElementLayout.createFromXml(xml);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			layout = new DashboardElementLayout();
+		}
+	}
+
+	/**
+	 * @return the layout
+	 */
+	public DashboardElementLayout getElementLayout()
+	{
+		return layout;
 	}
 }

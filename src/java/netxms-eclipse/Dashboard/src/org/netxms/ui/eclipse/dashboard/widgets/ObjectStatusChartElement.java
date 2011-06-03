@@ -43,9 +43,9 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-	public ObjectStatusChartElement(Composite parent, String data)
+	public ObjectStatusChartElement(Composite parent, String data, String elementLayout)
 	{
-		super(parent, data);
+		super(parent, data, elementLayout);
 		
 		try
 		{

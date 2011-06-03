@@ -46,10 +46,7 @@ public class DashboardElement
 	
 	private int type;
 	private String data;
-	private int horizontalSpan;
-	private int verticalSpan;
-	private int horizontalAlignment;
-	private int verticalAlignment;
+	private String layout;
 	
 	/**
 	 * Create dashboard element which takes 1 cell with FILL layout in both directions
@@ -61,10 +58,7 @@ public class DashboardElement
 	{
 		this.type = type;
 		this.data = data;
-		horizontalSpan = 1;
-		verticalSpan = 1;
-		horizontalAlignment = FILL;
-		verticalAlignment = FILL;
+		layout = "<layout><horizontalSpan>1</horizontalSpan><verticalSpan>1</verticalSpan><horizontalAlignment>0</horizontalAlignment><verticalAlignment>0</verticalAlignment></layout>";
 	}
 	
 	/**
@@ -77,10 +71,7 @@ public class DashboardElement
 	{
 		type = msg.getVariableAsInteger(baseId);
 		data = msg.getVariableAsString(baseId + 1);
-		horizontalSpan = msg.getVariableAsInteger(baseId + 2);
-		verticalSpan = msg.getVariableAsInteger(baseId + 3);
-		horizontalAlignment = msg.getVariableAsInteger(baseId + 4);
-		verticalAlignment = msg.getVariableAsInteger(baseId + 5);
+		layout = msg.getVariableAsString(baseId + 2);
 	}
 	
 	/**
@@ -92,10 +83,7 @@ public class DashboardElement
 	{
 		type = src.type;
 		data = src.data;
-		horizontalSpan = src.horizontalSpan;
-		verticalSpan = src.verticalSpan;
-		horizontalAlignment = src.horizontalAlignment;
-		verticalAlignment = src.verticalAlignment;
+		layout = src.layout;
 	}
 
 	/**
@@ -108,10 +96,7 @@ public class DashboardElement
 	{
 		msg.setVariableInt16(baseId, type);
 		msg.setVariable(baseId + 1, data);
-		msg.setVariableInt16(baseId + 2, horizontalSpan);
-		msg.setVariableInt16(baseId + 3, verticalSpan);
-		msg.setVariableInt16(baseId + 4, horizontalAlignment);
-		msg.setVariableInt16(baseId + 5, verticalAlignment);
+		msg.setVariable(baseId + 2, layout);
 	}
 	
 	/**
@@ -131,74 +116,26 @@ public class DashboardElement
 	}
 
 	/**
-	 * @return the horizontalSpan
-	 */
-	public int getHorizontalSpan()
-	{
-		return horizontalSpan;
-	}
-
-	/**
-	 * @param horizontalSpan the horizontalSpan to set
-	 */
-	public void setHorizontalSpan(int horizontalSpan)
-	{
-		this.horizontalSpan = horizontalSpan;
-	}
-
-	/**
-	 * @return the verticalSpan
-	 */
-	public int getVerticalSpan()
-	{
-		return verticalSpan;
-	}
-
-	/**
-	 * @param verticalSpan the verticalSpan to set
-	 */
-	public void setVerticalSpan(int verticalSpan)
-	{
-		this.verticalSpan = verticalSpan;
-	}
-
-	/**
-	 * @return the horizontalAlignment
-	 */
-	public int getHorizontalAlignment()
-	{
-		return horizontalAlignment;
-	}
-
-	/**
-	 * @param horizontalAlignment the horizontalAlignment to set
-	 */
-	public void setHorizontalAlignment(int horizontalAlignment)
-	{
-		this.horizontalAlignment = horizontalAlignment;
-	}
-
-	/**
-	 * @return the verticalAlignment
-	 */
-	public int getVerticalAlignment()
-	{
-		return verticalAlignment;
-	}
-
-	/**
-	 * @param verticalAlignment the verticalAlignment to set
-	 */
-	public void setVerticalAlignment(int verticalAlignment)
-	{
-		this.verticalAlignment = verticalAlignment;
-	}
-
-	/**
 	 * @return the type
 	 */
 	public int getType()
 	{
 		return type;
+	}
+
+	/**
+	 * @return the layout
+	 */
+	public String getLayout()
+	{
+		return layout;
+	}
+
+	/**
+	 * @param layout the layout to set
+	 */
+	public void setLayout(String layout)
+	{
+		this.layout = layout;
 	}
 }

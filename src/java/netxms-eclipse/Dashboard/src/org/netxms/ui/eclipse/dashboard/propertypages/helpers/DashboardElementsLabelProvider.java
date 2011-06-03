@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 
 /**
  * Label provider for list of dashboard elements
@@ -62,15 +63,31 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 					return "<unknown>";
 				}
 			case DashboardElements.COLUMN_SPAN:
-				return Integer.toString(de.getHorizontalSpan()) + " / " + Integer.toString(de.getVerticalSpan());
+				try
+				{
+					DashboardElementLayout layout = DashboardElementLayout.createFromXml(de.getLayout());
+					return Integer.toString(layout.horizontalSpan) + " / " + Integer.toString(layout.verticalSpan);
+				}
+				catch(Exception e)
+				{
+					return "1 / 1";
+				}
 			case DashboardElements.COLUMN_ALIGNMENT:
 				try
 				{
-					return H_ALIGH[de.getHorizontalAlignment()] + " / " + V_ALIGH[de.getVerticalAlignment()];
+					DashboardElementLayout layout = DashboardElementLayout.createFromXml(de.getLayout());
+					try
+					{
+						return H_ALIGH[layout.horizontalAlignment] + " / " + V_ALIGH[layout.vertcalAlignment];
+					}
+					catch(ArrayIndexOutOfBoundsException e)
+					{
+						return "<unknown>";
+					}
 				}
-				catch(ArrayIndexOutOfBoundsException e)
+				catch(Exception e)
 				{
-					return "<unknown>";
+					return "FILL / FILL";
 				}
 		}
 		return null;

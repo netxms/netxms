@@ -35,9 +35,9 @@ public class CustomWidgetElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public CustomWidgetElement(Composite parent, String data)
+	public CustomWidgetElement(Composite parent, String data, String elementLayout)
 	{
-		super(parent, SWT.NONE, data);
+		super(parent, SWT.NONE, data, elementLayout);
 		
 		CustomWidgetConfig config;
 		try

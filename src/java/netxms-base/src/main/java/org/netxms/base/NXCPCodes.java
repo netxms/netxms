@@ -667,6 +667,9 @@ public final class NXCPCodes
 	public static final long VID_NUM_VLANS               = 382;
 	public static final long VID_CREATE_JOB_ON_HOLD      = 383;
 	public static final long VID_TILE_SERVER_URL         = 384;
+	public static final long VID_BACKGROUND_LATITUDE     = 385;
+	public static final long VID_BACKGROUND_LONGITUDE    = 386;
+	public static final long VID_BACKGROUND_ZOOM         = 387;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

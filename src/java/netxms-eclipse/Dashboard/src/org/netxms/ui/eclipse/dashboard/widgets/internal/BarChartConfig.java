@@ -30,7 +30,7 @@ import org.simpleframework.xml.core.Persister;
 /**
  * Configuration for bar chart
  */
-@Root(name="element")
+@Root(name="element", strict=false)
 public class BarChartConfig
 {
 	@ElementArray(required=true)

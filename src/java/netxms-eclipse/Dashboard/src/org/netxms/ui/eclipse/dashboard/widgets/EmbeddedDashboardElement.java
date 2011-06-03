@@ -39,9 +39,9 @@ public class EmbeddedDashboardElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public EmbeddedDashboardElement(Composite parent, String data)
+	public EmbeddedDashboardElement(Composite parent, String data, String elementLayout)
 	{
-		super(parent, SWT.NONE, data);
+		super(parent, SWT.NONE, data, elementLayout);
 
 		try
 		{

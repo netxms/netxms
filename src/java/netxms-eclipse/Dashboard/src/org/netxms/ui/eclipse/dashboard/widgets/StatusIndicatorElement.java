@@ -25,9 +25,9 @@ public class StatusIndicatorElement extends ElementWidget
 	private Runnable refreshTimer;
 	private Font font;
 
-	protected StatusIndicatorElement(final Composite parent, final String data)
+	protected StatusIndicatorElement(final Composite parent, final String data, String elementLayout)
 	{
-		super(parent, data);
+		super(parent, data, elementLayout);
 
 		try
 		{
@@ -46,8 +46,7 @@ public class StatusIndicatorElement extends ElementWidget
 		canvas.setBackground(new Color(getDisplay(), 240, 240, 240));
 		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE);
 
-		addDisposeListener(new DisposeListener()
-		{
+		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -55,8 +54,7 @@ public class StatusIndicatorElement extends ElementWidget
 			}
 		});
 
-		canvas.addPaintListener(new PaintListener()
-		{
+		canvas.addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e)
 			{

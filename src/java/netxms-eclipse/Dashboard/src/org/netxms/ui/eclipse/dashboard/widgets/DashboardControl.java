@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 
 /**
  * Dashboard rendering control
@@ -62,15 +63,15 @@ public class DashboardControl extends Composite
 		
 		for(final DashboardElement e : dashboard.getElements())
 		{
-			ElementWidget w = createElementWidget(e);
-			GridData gd = new GridData();
-			int he = e.getHorizontalAlignment();
-			gd.grabExcessHorizontalSpace = (he == DashboardElement.FILL);
-			gd.horizontalAlignment = mapHorizontalAlignment(e.getHorizontalAlignment());
-			gd.grabExcessVerticalSpace = (e.getVerticalAlignment() == DashboardElement.FILL);
-			gd.verticalAlignment = mapVerticalAlignment(e.getVerticalAlignment());
-			gd.horizontalSpan = e.getHorizontalSpan();
-			gd.verticalSpan = e.getVerticalSpan();
+			final ElementWidget w = createElementWidget(e);
+			final DashboardElementLayout el = w.getElementLayout();
+			final GridData gd = new GridData();
+			gd.grabExcessHorizontalSpace = (el.horizontalAlignment == DashboardElement.FILL);
+			gd.horizontalAlignment = mapHorizontalAlignment(el.horizontalAlignment);
+			gd.grabExcessVerticalSpace = (el.vertcalAlignment == DashboardElement.FILL);
+			gd.verticalAlignment = mapVerticalAlignment(el.vertcalAlignment);
+			gd.horizontalSpan = el.horizontalSpan;
+			gd.verticalSpan = el.verticalSpan;
 			w.setLayoutData(gd);
 		}
 	}
@@ -129,27 +130,27 @@ public class DashboardControl extends Composite
 		switch(e.getType())
 		{
 			case DashboardElement.LINE_CHART:
-				return new LineChartElement(this, e.getData());
+				return new LineChartElement(this, e.getData(), e.getLayout());
 			case DashboardElement.BAR_CHART:
-				return new BarChartElement(this, e.getData());
+				return new BarChartElement(this, e.getData(), e.getLayout());
 			case DashboardElement.PIE_CHART:
-				return new PieChartElement(this, e.getData());
+				return new PieChartElement(this, e.getData(), e.getLayout());
 			case DashboardElement.STATUS_CHART:
-				return new ObjectStatusChartElement(this, e.getData());
+				return new ObjectStatusChartElement(this, e.getData(), e.getLayout());
 			case DashboardElement.LABEL:
-				return new LabelElement(this, e.getData());
+				return new LabelElement(this, e.getData(), e.getLayout());
 			case DashboardElement.DASHBOARD:
-				return new EmbeddedDashboardElement(this, e.getData());
+				return new EmbeddedDashboardElement(this, e.getData(), e.getLayout());
 			case DashboardElement.NETWORK_MAP:
-				return new NetworkMapElement(this, e.getData());
+				return new NetworkMapElement(this, e.getData(), e.getLayout());
 			case DashboardElement.GEO_MAP:
-				return new GeoMapElement(this, e.getData());
+				return new GeoMapElement(this, e.getData(), e.getLayout());
 			case DashboardElement.STATUS_INDICATOR:
-				return new StatusIndicatorElement(this, e.getData());
+				return new StatusIndicatorElement(this, e.getData(), e.getLayout());
 			case DashboardElement.CUSTOM:
-				return new CustomWidgetElement(this, e.getData());
+				return new CustomWidgetElement(this, e.getData(), e.getLayout());
 			default:
-				return new ElementWidget(this, e.getData());
+				return new ElementWidget(this, e.getData(), e.getLayout());
 		}
 	}
 }

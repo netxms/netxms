@@ -83,6 +83,26 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.Layout"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.Layout#0"
+            name="Layout">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.dashboards.DashboardElement">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.RawConfigurationData"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.RawConfigurationData"
+            name="Configuration">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.dashboards.DashboardElement">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
 
 </plugin>

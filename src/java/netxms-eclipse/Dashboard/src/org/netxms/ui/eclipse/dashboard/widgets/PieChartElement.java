@@ -39,9 +39,9 @@ public class PieChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-	public PieChartElement(Composite parent, String data)
+	public PieChartElement(Composite parent, String data, String elementLayout)
 	{
-		super(parent, data);
+		super(parent, data, elementLayout);
 		
 		try
 		{

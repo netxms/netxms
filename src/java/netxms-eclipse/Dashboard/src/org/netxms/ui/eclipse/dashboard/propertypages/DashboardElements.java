@@ -43,13 +43,13 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.dialogs.AddDashboardElementDlg;
-import org.netxms.ui.eclipse.dashboard.dialogs.EditDashboardElementDlg;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DashboardElementsLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -61,6 +61,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  * "Dashboard elements" property page for dashboard objects
  *
  */
+@SuppressWarnings("restriction")
 public class DashboardElements extends PropertyPage
 {
 	public static final int COLUMN_TYPE = 0;
@@ -359,6 +360,9 @@ public class DashboardElements extends PropertyPage
 		}
 	}
 	
+	/**
+	 * Edit selected element
+	 */
 	private void editElement()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -366,13 +370,17 @@ public class DashboardElements extends PropertyPage
 			return;
 		
 		DashboardElement element = (DashboardElement)selection.getFirstElement();
-		EditDashboardElementDlg dlg = new EditDashboardElementDlg(getShell(), element);
-		if (dlg.open() == Window.OK)
+		PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, element);
+		if (dlg != null)
 		{
+			dlg.open();
 			viewer.update(element, null);
 		}
 	}
 	
+	/**
+	 * Delete selected elements
+	 */
 	private void deleteElements()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();

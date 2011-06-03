@@ -56,9 +56,9 @@ public class LineChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public LineChartElement(Composite parent, String data)
+	public LineChartElement(Composite parent, String data, String elementLayout)
 	{
-		super(parent, data);
+		super(parent, data, elementLayout);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		try
