@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.console;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
@@ -32,6 +33,10 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.model.ContributionComparator;
 import org.eclipse.ui.model.IContributionService;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Workbench advisor for NetXMS console application
@@ -115,6 +120,28 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 			{
 				if (Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED"))
 					shell.setVisible(false);
+			}
+		});
+		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		session.addListener(new SessionListener() {
+			@Override
+			public void notificationHandler(final SessionNotification n)
+			{
+				if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ||
+				    (n.getCode() == SessionNotification.SERVER_SHUTDOWN))
+				{
+					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
+									"Communication Error", 
+									((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? "Connection with NetXMS server was lost" : "NetXMS server was shut down") + ". Press OK to close application.");
+							PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
+						}
+					});
+				}
 			}
 		});
 	}

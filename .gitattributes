@@ -35,7 +35,9 @@ doc/integration/HPOM_Integration.docx -text
 doc/internal/build.w64 -text
 doc/internal/db_driver_api.txt -text
 doc/internal/dci_perftab.txt -text
-doc/internal/netxms_architecture.vsd -text
+doc/internal/netxms_architecture.gxml -text
+doc/internal/netxms_architecture.png -text
+doc/internal/netxms_architecture.svg -text
 doc/manuals/client_library.doc -text
 doc/manuals/netxms_install_guide.odt -text
 doc/manuals/netxms_solution_guide.doc -text
@@ -1263,6 +1265,7 @@ src/java/netxms-eclipse/core/icons/alt_window_16.gif -text
 src/java/netxms-eclipse/core/icons/alt_window_32.gif -text
 src/java/netxms-eclipse/core/icons/information.png -text
 src/java/netxms-eclipse/core/icons/login.png -text
+src/java/netxms-eclipse/core/icons/password.png -text
 src/java/netxms-eclipse/core/icons/pview.gif -text
 src/java/netxms-eclipse/core/icons/scroll_lock.gif -text
 src/java/netxms-eclipse/core/icons/server_console.png -text
