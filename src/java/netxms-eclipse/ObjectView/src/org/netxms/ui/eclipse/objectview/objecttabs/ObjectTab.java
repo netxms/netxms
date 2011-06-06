@@ -100,6 +100,7 @@ public abstract class ObjectTab
 	 */
 	public void selected()
 	{
+		clientArea.moveAbove(null);
 		clientArea.setFocus();
 	}
 	

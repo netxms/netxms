@@ -417,4 +417,15 @@ public class ObjectTree extends Composite
 	{
 		objectTree.setInput(session);
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+	 */
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		super.setEnabled(enabled);
+		objectTree.getControl().setEnabled(enabled);
+		filterText.setEnabled(enabled);
+	}
 }
