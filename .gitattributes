@@ -1281,6 +1281,7 @@ src/java/netxms-eclipse/core/icons/status/warning.png -text
 src/java/netxms-eclipse/core/nxmc.product -text
 src/java/netxms-eclipse/core/plugin.xml -text
 src/java/netxms-eclipse/core/plugin_customization.ini -text
+src/java/netxms-eclipse/core/schema/org.netxms.ui.eclipse.tweaklets.exsd -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Activator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ExtendedContributionComparator.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginJob.java -text
