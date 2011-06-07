@@ -65,6 +65,7 @@ public class Capabilities extends TableElement
 		addFlag("isPrinter", (node.getFlags() & Node.NF_IS_PRINTER) != 0);
 		addFlag("isRouter", (node.getFlags() & Node.NF_IS_ROUTER) != 0);
 		addFlag("isSNMP", (node.getFlags() & Node.NF_IS_SNMP) != 0);
+		addFlag("isSTP", (node.getFlags() & Node.NF_IS_STP) != 0);
 		addFlag("isVRRP", (node.getFlags() & Node.NF_IS_VRRP) != 0);
 		if ((node.getFlags() & Node.NF_IS_SNMP) != 0)
 		{

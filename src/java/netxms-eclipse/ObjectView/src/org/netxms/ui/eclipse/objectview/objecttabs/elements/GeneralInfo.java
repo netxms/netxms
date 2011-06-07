@@ -76,12 +76,14 @@ public class GeneralInfo extends TableElement
 				if (((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled())
 					addPair("Zone ID", Long.toString(node.getZoneId()));
 				addPair("Primary IP Address", node.getPrimaryIP().getHostAddress());
-				if ((node.getFlags() & Node.NF_IS_NATIVE_AGENT) != 0)
+				if (node.hasAgent())
 					addPair("NetXMS Agent Version", node.getAgentVersion());
 				addPair("System Description", node.getSystemDescription(), false);
 				addPair("Platform Name", node.getPlatformName(), false);
 				addPair("SNMP sysName", node.getSnmpSysName(), false);
 				addPair("SNMP Object ID", node.getSnmpOID(), false);
+				if ((node.getFlags() & Node.NF_IS_BRIDGE) != 0)
+					addPair("Bridge Base Address", node.getBridgeBaseAddress().toString());
 				addPair("Driver", node.getDriverName(), false);
 				break;
 			case GenericObject.OBJECT_SUBNET:

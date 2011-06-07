@@ -866,6 +866,7 @@ typedef struct
 #define VID_BACKGROUND_LATITUDE     ((DWORD)385)
 #define VID_BACKGROUND_LONGITUDE    ((DWORD)386)
 #define VID_BACKGROUND_ZOOM         ((DWORD)387)
+#define VID_BRIDGE_BASE_ADDRESS     ((DWORD)388)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

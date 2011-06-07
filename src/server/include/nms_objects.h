@@ -733,6 +733,7 @@ protected:
 	LinkLayerNeighbors *m_linkLayerNeighbors;
 	VlanList *m_vlans;
 	VrrpInfo *m_vrrpInfo;
+	BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];	// Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
 	nxmap_ObjList *m_pTopology;	// For compatibility, to be removed in 1.1.x
 	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;

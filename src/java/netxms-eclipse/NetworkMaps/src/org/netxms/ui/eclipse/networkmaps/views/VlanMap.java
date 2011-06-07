@@ -102,8 +102,10 @@ public class VlanMap extends NetworkMap
 	}
 	
 	/**
-	 * @param page
-	 * @param root
+	 * Recursively collect VLAN information starting from given node
+	 * 
+	 * @param page map page
+	 * @param root root node
 	 * @throws Exception 
 	 * @throws NXCException 
 	 */
@@ -133,6 +135,8 @@ public class VlanMap extends NetworkMap
 	}
 	
 	/**
+	 * Process single member port of VLAN. Will add connected switch on other site to the map.
+	 * 
 	 * @param page
 	 * @param root
 	 * @param port

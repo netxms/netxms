@@ -303,6 +303,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 			pObject->node.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
          pMsg->GetVariableStr(VID_SYS_DESCRIPTION, pObject->node.szSysDescription, MAX_DB_STRING);
 			pObject->node.nUseIfXTable = (BYTE)pMsg->GetVariableShort(VID_USE_IFXTABLE);
+         pMsg->GetVariableBinary(VID_BRIDGE_BASE_ADDRESS, pObject->node.bridgeBaseAddress, MAC_ADDR_LENGTH);
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);

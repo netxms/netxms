@@ -670,6 +670,7 @@ public final class NXCPCodes
 	public static final long VID_BACKGROUND_LATITUDE     = 385;
 	public static final long VID_BACKGROUND_LONGITUDE    = 386;
 	public static final long VID_BACKGROUND_ZOOM         = 387;
+	public static final long VID_BRIDGE_BASE_ADDRESS     = 388;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

@@ -81,6 +81,7 @@ Node::Node()
 	m_fdb = NULL;
 	m_vlans = NULL;
 	m_driver = NULL;
+	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
 
@@ -145,6 +146,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_fdb = NULL;
 	m_vlans = NULL;
 	m_driver = NULL;
+	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 }
 
 
@@ -201,7 +203,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
                            _T("platform_name,poller_node_id,zone_guid,")
                            _T("proxy_node,snmp_proxy,required_polls,uname,")
 									_T("use_ifxtable,snmp_port,community,usm_auth_password,")
-									_T("usm_priv_password,usm_methods,snmp_sys_name")
+									_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr")
 	                        _T(" FROM nodes WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, query);
    if (hResult == NULL)
@@ -245,6 +247,11 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
 
 	m_sysName = DBGetField(hResult, 0, 23, NULL, 0);
+
+	TCHAR baseAddr[16];
+	TCHAR *value = DBGetField(hResult, 0, 24, baseAddr, 16);
+	if (value != NULL)
+		StrToBin(value, m_baseBridgeAddress, MAC_ADDR_LENGTH);
 
    DBFreeResult(hResult);
 
@@ -307,7 +314,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[4096], szIpAddr[16];
+   TCHAR szQuery[4096], szIpAddr[16], baseAddress[16];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
    BOOL bResult;
@@ -337,8 +344,9 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("agent_port,auth_method,secret,snmp_oid,proxy_node,")
                  _T("agent_version,platform_name,uname,")
                  _T("poller_node_id,zone_guid,snmp_proxy,required_polls,")
-		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,snmp_sys_name) VALUES ")
-		           _T("(%d,'%s',%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s)"),
+		           _T("use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
+					  _T("snmp_sys_name,bridge_base_addr) VALUES ")
+		           _T("(%d,'%s',%s,%d,%d,%d,%s,%d,%d,%d,%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s,'%s')"),
                  m_dwId, IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName),
 					  (int)m_wSNMPPort, m_dwFlags, m_snmpVersion, (
 					  const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
@@ -351,7 +359,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 		           m_dwPollerNode, m_zoneId, m_dwSNMPProxy, m_iRequiredPollCount, m_nUseIfXTable,
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
-					  (const TCHAR *)DBPrepareString(hdb, m_sysName));
+					  (const TCHAR *)DBPrepareString(hdb, m_sysName),
+					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress));
 	}
    else
 	{
@@ -362,7 +371,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  _T("snmp_oid=%s,uname=%s,agent_version=%s,platform_name=%s,poller_node_id=%d,")
                  _T("zone_guid=%d,proxy_node=%d,snmp_proxy=%d,")
 					  _T("required_polls=%d,use_ifxtable=%d,usm_auth_password=%s,")
-					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s WHERE id=%d"),
+					  _T("usm_priv_password=%s,usm_methods=%d,snmp_sys_name=%s,bridge_base_addr='%s' WHERE id=%d"),
                  IpToStr(m_dwIpAddr, szIpAddr), (const TCHAR *)DBPrepareString(hdb, m_primaryName), m_wSNMPPort, 
                  m_dwFlags, m_snmpVersion, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getCommunity()),
                  m_iStatusPollType, m_wAgentPort, m_wAuthMethod,
@@ -374,7 +383,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                  m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
 					  m_nUseIfXTable, (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getAuthPassword()),
 					  (const TCHAR *)DBPrepareStringA(hdb, m_snmpSecurity->getPrivPassword()), snmpMethods,
-					  (const TCHAR *)DBPrepareString(hdb, m_sysName), m_dwId);
+					  (const TCHAR *)DBPrepareString(hdb, m_sysName), 
+					  BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), m_dwId);
 	}
    bResult = DBQuery(hdb, szQuery);
 
@@ -1577,16 +1587,31 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check for bridge MIB support
-            if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
+            if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, 4096, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
             {
 					LockData();
                m_dwFlags |= NF_IS_BRIDGE;
+					memcpy(m_baseBridgeAddress, szBuffer, 6);
 					UnlockData();
+
+					// Check for Spanning Tree (IEEE 802.1d) MIB support
+					if (CheckSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), 3))
+					{
+						LockData();
+						m_dwFlags |= NF_IS_STP;
+						UnlockData();
+					}
+					else
+					{
+						LockData();
+						m_dwFlags &= ~NF_IS_STP;
+						UnlockData();
+					}
             }
             else
             {
 					LockData();
-               m_dwFlags &= ~NF_IS_BRIDGE;
+               m_dwFlags &= ~(NF_IS_BRIDGE | NF_IS_STP);
 					UnlockData();
             }
 
@@ -2699,6 +2724,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 	pMsg->SetVariable(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
 	pMsg->SetVariable(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
+	pMsg->SetVariable(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
 	if (m_lldpNodeId != NULL)
 		pMsg->SetVariable(VID_LLDP_NODE_ID, m_lldpNodeId);
 	pMsg->SetVariable(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);

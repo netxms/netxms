@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.topology.views;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -39,15 +40,20 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.topology.VlanInfo;
+import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.views.helpers.VlanLabelProvider;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -68,7 +74,9 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	private NXCSession session;
 	private SortableTableViewer vlanList;
 	private DeviceView deviceView;
+	private boolean refreshOnStartup = false;
 	
+	private Action actionRefresh; 
 	private Action actionShowVlanMap;
 	
 	/* (non-Javadoc)
@@ -82,6 +90,17 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		session = (NXCSession)ConsoleSharedData.getSession();
 		GenericObject object = session.findObjectById(nodeId);
 		setPartName("VLAN View - " + ((object != null) ? object.getObjectName() : "<" + site.getSecondaryId() + ">"));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void init(IViewSite site, IMemento memento) throws PartInitException
+	{
+		super.init(site, memento);
+		if (memento != null)
+			refreshOnStartup = true;
 	}
 
 	/* (non-Javadoc)
@@ -120,6 +139,9 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
+		
+		if (refreshOnStartup)
+			refreshVlanList();
 	}
 
 	/**
@@ -127,6 +149,14 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	 */
 	private void createActions()
 	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				refreshVlanList();
+			}
+		};
+		
 		actionShowVlanMap = new Action("Show VLAN map") {
 			@Override
 			public void run()
@@ -153,6 +183,8 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionShowVlanMap);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -161,6 +193,7 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -227,10 +260,12 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		if (vlan != null)
 		{
 			deviceView.setHighlight(vlan.getPorts());
+			actionShowVlanMap.setEnabled(true);
 		}
 		else
 		{
 			deviceView.clearHighlight(true);
+			actionShowVlanMap.setEnabled(false);
 		}
 	}
 	
@@ -253,5 +288,32 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 				MessageDialog.openError(getSite().getShell(), "Error", "Cannot open VLAN map view for VLAN " + vlan.getVlanId() + ": " + e.getLocalizedMessage());
 			}
 		}
+	}
+	
+	/**
+	 * Reload list of VLANs from server and update table view
+	 */
+	private void refreshVlanList()
+	{
+		new ConsoleJob("Reading VLAN list from node", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final List<VlanInfo> vlans = session.getVlans(nodeId);
+				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						setVlans(vlans);
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get VLAN list from node";
+			}
+		}.start();
 	}
 }

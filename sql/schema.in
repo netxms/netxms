@@ -219,6 +219,7 @@ CREATE TABLE nodes
 	uname varchar(255) null,
 	use_ifxtable integer not null,
 	snmp_sys_name varchar(127) null,
+	bridge_base_addr varchar(15) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

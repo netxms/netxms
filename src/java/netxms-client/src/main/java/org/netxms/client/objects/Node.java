@@ -19,6 +19,7 @@
 package org.netxms.client.objects;
 
 import org.netxms.base.*;
+import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
 
 /**
@@ -50,6 +51,7 @@ public class Node extends GenericObject
 	public static final int NF_IS_LLDP              = 0x00000800;
 	public static final int NF_IS_VRRP              = 0x00001000;
 	public static final int NF_IS_8021X             = 0x00002000;
+	public static final int NF_IS_STP               = 0x00004000;
 
 	// Node flags (user)
 	public static final int NF_DISABLE_SNMP         = 0x01000000;
@@ -95,6 +97,7 @@ public class Node extends GenericObject
 	private String driverName;
 	private String driverVersion;
 	private long zoneId;
+	private MacAddress bridgeBaseAddress;
 	
 	/**
 	 * @param msg
@@ -131,6 +134,7 @@ public class Node extends GenericObject
 		driverName = msg.getVariableAsString(NXCPCodes.VID_DRIVER_NAME);
 		driverVersion = msg.getVariableAsString(NXCPCodes.VID_DRIVER_VERSION);
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
+		bridgeBaseAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
 	}
 
 	/**
@@ -358,6 +362,15 @@ public class Node extends GenericObject
 	}
 
 	/**
+	 * 
+	 * @return true if node supports spanning tree MIB
+	 */
+	public boolean isSpanningTreeSupported()
+	{
+		return (flags & NF_IS_STP) != 0;
+	}
+
+	/**
 	 * @return the snmpPort
 	 */
 	public int getSnmpPort()
@@ -411,5 +424,13 @@ public class Node extends GenericObject
 	public long getZoneId()
 	{
 		return zoneId;
+	}
+
+	/**
+	 * @return the bridgeBaseAddress
+	 */
+	public MacAddress getBridgeBaseAddress()
+	{
+		return bridgeBaseAddress;
 	}
 }

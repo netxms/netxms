@@ -256,6 +256,24 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V230 to V231
+//
+
+static BOOL H_UpgradeFromV230(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE nodes ADD bridge_base_addr varchar(15)\n")
+		_T("UPDATE nodes SET bridge_base_addr='000000000000'\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='231' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V229 to V230
 //
 
@@ -5304,6 +5322,7 @@ static struct
 	{ 227, 228, H_UpgradeFromV227 },
 	{ 228, 229, H_UpgradeFromV228 },
 	{ 229, 230, H_UpgradeFromV229 },
+	{ 230, 231, H_UpgradeFromV230 },
    { 0, NULL }
 };
 

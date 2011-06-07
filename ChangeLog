@@ -2,7 +2,11 @@
 * 1.1.2
 *
 
+- Added VLAN view in management console
+- OpenStreetMap support improved; added local cache for map images
+- Added option to use alternative tile server for geo maps
 - New MIBs added: POLYCOM-RMX-MIB
+- Multiple fixes and minor improvements in management console
 
 
 *
