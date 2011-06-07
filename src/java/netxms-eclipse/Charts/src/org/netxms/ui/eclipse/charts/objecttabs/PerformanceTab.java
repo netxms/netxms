@@ -164,14 +164,17 @@ public class PerformanceTab extends ObjectTab
 			{
 				PerfTabGraphSettings settings = PerfTabGraphSettings.createFromXml(items[i].getPerfTabSettings());
 
-				PerfTabGraph chart = new PerfTabGraph(chartArea, getObject().getObjectId(), items[i], settings);
-				charts.add(chart);
-				
-				final GridData gd = new GridData();
-				gd.horizontalAlignment = SWT.FILL;
-				gd.grabExcessHorizontalSpace = true;
-				gd.heightHint = 250;
-				chart.setLayoutData(gd);
+				if (settings.isEnabled())
+				{
+					PerfTabGraph chart = new PerfTabGraph(chartArea, getObject().getObjectId(), items[i], settings);
+					charts.add(chart);
+					
+					final GridData gd = new GridData();
+					gd.horizontalAlignment = SWT.FILL;
+					gd.grabExcessHorizontalSpace = true;
+					gd.heightHint = 250;
+					chart.setLayoutData(gd);
+				}
 			}
 			catch(Exception e)
 			{
