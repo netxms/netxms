@@ -1111,14 +1111,19 @@ skip_snmp_check:
    LockData();
    if (m_dwPollerNode != 0)
    {
-      pPollerNode = FindObjectById(m_dwPollerNode);
+		DWORD id = m_dwPollerNode;
+		UnlockData();
+      pPollerNode = FindObjectById(id);
       if (pPollerNode != NULL)
       {
          if (pPollerNode->Type() != OBJECT_NODE)
             pPollerNode = NULL;
       }
    }
-   UnlockData();
+	else
+	{
+		UnlockData();
+	}
 
    // If nothing found, use management server
    if (pPollerNode == NULL)
@@ -3224,10 +3229,10 @@ void Node::unbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 
    if (bRemoveDCI)
    {
+      lockDciAccess();  // write lock
+
 		DWORD *pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
 		DWORD dwNumDeleted = 0;
-
-      lockDciAccess();  // write lock
 
       for(i = 0; i < m_dwNumItems; i++)
          if (m_ppItems[i]->getTemplateId() == dwTemplateId)
@@ -3810,7 +3815,7 @@ DWORD Node::getPerfTabDCIList(CSCPMessage *pMsg)
 {
    DWORD i, dwId, dwCount;
 
-   LockData();
+	lockDciAccess();
 
    for(i = 0, dwId = VID_SYSDCI_LIST_BASE, dwCount = 0; i < m_dwNumItems; i++)
 	{
@@ -3834,7 +3839,7 @@ DWORD Node::getPerfTabDCIList(CSCPMessage *pMsg)
 	}
    pMsg->SetVariable(VID_NUM_ITEMS, dwCount);
 
-   UnlockData();
+	unlockDciAccess();
    return RCC_SUCCESS;
 }
 
