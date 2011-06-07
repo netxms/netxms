@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-*** Copyright (C) 2003-2010 Victor Kirhenshtein
+*** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -89,10 +89,7 @@ static void ParseNewRecords(LogParser *parser, int fh)
 bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos)
 {
 	char fname[MAX_PATH], temp[MAX_PATH];
-	struct stat st;
-#ifndef _NETWARE
-	struct stat stn;
-#endif
+	struct stat st, stn;
 	size_t size;
 	int fh;
 	bool readFromStart = !readFromCurrPos;
@@ -146,7 +143,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						readFromStart = true;
 						break;
 					}
-					
+
 #ifdef _NETWARE
 					if (fgetstat(fh, &st, ST_SIZE_BIT | ST_NAME_BIT) < 0)
 					{
@@ -155,24 +152,24 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						readFromStart = true;
 						break;
 					}
-					
-					if (stricmp(st.st_name, fname))
-					{
-						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file name change: fgetstat reports \"%s\" should be \"%s\""),
-						           st.st_name, fname);
-						readFromStart = true;
-						break;
-					}
 #else					
-					if ((fstat(fh, &st) < 0) || (stat(fname, &stn) < 0))
+					if (fstat(fh, &st) < 0)
 					{
 						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: fstat(%d) or stat(%s) failed, errno=%d"), fh, fname, errno);
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: fstat(%d) failed, errno=%d"), fh, errno);
 						readFromStart = true;
 						break;
 					}
+#endif
 
+					if (stat(fname, &stn) < 0)
+					{
+						if (logger != NULL)
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: stat(%s) failed, errno=%d"), fname, errno);
+						readFromStart = true;
+						break;
+					}
+					
 					if (st.st_size != stn.st_size)
 					{
 						if (logger != NULL)
@@ -180,7 +177,6 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						readFromStart = true;
 						break;
 					}
-#endif
 						
 					if ((size_t)st.st_size != size)
 					{
