@@ -31,7 +31,6 @@ BEGIN TRANSACTION;
 #include "traps.in"
 #include "objtools.in"
 #include "scripts.in"
-#include "maps.in"
 #include "images.in"
 #endif
 

@@ -66,6 +66,7 @@ NetObj::NetObj()
       m_iStatusThresholds[i] = 80 - i * 20;
    }
 	uuid_clear(m_image);
+	m_submapId = 0;
 }
 
 
@@ -143,7 +144,7 @@ BOOL NetObj::loadCommonProperties()
                              _T("status_prop_alg,status_fixed_val,status_shift,")
                              _T("status_translation,status_single_threshold,")
                              _T("status_thresholds,comments,is_system,")
-									  _T("location_type,latitude,longitude,guid,image FROM object_properties ")
+									  _T("location_type,latitude,longitude,guid,image,submap_id FROM object_properties ")
                              _T("WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -182,6 +183,7 @@ BOOL NetObj::loadCommonProperties()
 
 			DBGetFieldGUID(hResult, 0, 17, m_guid);
 			DBGetFieldGUID(hResult, 0, 18, m_image);
+			m_submapId = DBGetFieldULong(hResult, 0, 19);
 
          bResult = TRUE;
       }
@@ -261,7 +263,7 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("status_fixed_val=%d,status_shift=%d,status_translation='%s',")
                     _T("status_single_threshold=%d,status_thresholds='%s',")
                     _T("comments=%s,is_system=%d,location_type=%d,latitude='%f',")
-						  _T("longitude='%f',guid='%s',image='%s' WHERE object_id=%d"),
+						  _T("longitude='%f',guid='%s',image='%s',submap_id=%d WHERE object_id=%d"),
                     (const TCHAR *)DBPrepareString(g_hCoreDB, m_szName), m_iStatus, m_bIsDeleted,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
@@ -269,7 +271,8 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 						  (const TCHAR *)DBPrepareString(g_hCoreDB, CHECK_NULL_EX(m_pszComments)),
 						  m_bIsSystem, m_geoLocation.getType(),
 						  m_geoLocation.getLatitude(), m_geoLocation.getLongitude(),
-						  uuid_to_string(m_guid, guid), uuid_to_string(m_image, image), m_dwId);
+						  uuid_to_string(m_guid, guid), uuid_to_string(m_image, image),
+						  (int)m_submapId, m_dwId);
       }
       else
       {
@@ -278,8 +281,8 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("inherit_access_rights,last_modified,status_calc_alg,")
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
-						  _T("location_type,latitude,longitude,guid,image) ")
-                    _T("VALUES (%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s',%s,%d,%d,'%f','%f','%s','%s')"),
+						  _T("location_type,latitude,longitude,guid,image,submap_id) ")
+                    _T("VALUES (%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s',%s,%d,%d,'%f','%f','%s','%s',%d)"),
                     m_dwId, (const TCHAR *)DBPrepareString(g_hCoreDB, m_szName), m_iStatus, m_bIsDeleted,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
@@ -287,7 +290,8 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
                     (const TCHAR *)DBPrepareString(g_hCoreDB, CHECK_NULL_EX(m_pszComments)),
 						  m_bIsSystem, m_geoLocation.getType(),
 						  m_geoLocation.getLatitude(), m_geoLocation.getLongitude(),
-						  uuid_to_string(m_guid, guid), uuid_to_string(m_image, image));
+						  uuid_to_string(m_guid, guid), uuid_to_string(m_image, image),
+						  m_submapId);
       }
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);
@@ -791,6 +795,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
    pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
 	pMsg->SetVariable(VID_IMAGE, m_image, UUID_LENGTH);
+	pMsg->SetVariable(VID_SUBMAP_ID, m_submapId);
 	pMsg->SetVariable(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
 	if (m_dwNumTrustedNodes > 0)
 		pMsg->SetVariableToInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
@@ -919,6 +924,11 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (pRequest->IsVariableExist(VID_GEOLOCATION_TYPE))
 	{
 		m_geoLocation = GeoLocation(*pRequest);
+	}
+
+	if (pRequest->IsVariableExist(VID_SUBMAP_ID))
+	{
+		m_submapId = pRequest->GetVariableLong(VID_SUBMAP_ID);
 	}
 
    Modify();

@@ -102,7 +102,6 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nms_pkg.h"
 #include "nms_topo.h"
 #include "nms_script.h"
-#include "nxcore_maps.h"
 #include "nxcore_situations.h"
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
@@ -370,8 +369,6 @@ private:
    DWORD m_dwEncryptionResult;
    CONDITION m_condEncryptionSetup;
    DWORD m_dwActiveChannels;     // Active data channels
-   DWORD m_dwMapSaveRqId;        // ID of currently active map saving request
-   nxMapSrv *m_pActiveMap;       // Map currenly being saved
 	CONSOLE_CTX m_console;			// Server console context
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
@@ -497,16 +494,6 @@ private:
    void KillSession(CSCPMessage *pRequest);
    void SendTrapLog(CSCPMessage *pRequest);
    void StartSnmpWalk(CSCPMessage *pRequest);
-   void SendMapList(DWORD dwRqId);
-   void ResolveMapName(CSCPMessage *pRequest);
-   void SaveMap(CSCPMessage *pRequest);
-   void DeleteMap(CSCPMessage *pRequest);
-   void ProcessSubmapData(CSCPMessage *pRequest);
-   void CreateMap(CSCPMessage *pRequest);
-   void RenameMap(CSCPMessage *pRequest);
-   void LoadMap(CSCPMessage *pRequest);
-   void SendSubmapBkImage(CSCPMessage *pRequest);
-   void RecvSubmapBkImage(CSCPMessage *pRequest);
    void ResolveDCINames(CSCPMessage *pRequest);
    DWORD ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName);
    void SendConfigForAgent(CSCPMessage *pRequest);

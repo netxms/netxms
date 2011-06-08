@@ -677,7 +677,6 @@ retry_db_lock:
 	ObjectsInit();
 	if (!LoadObjects())
 		return FALSE;
-	LoadMaps();
 	DbgPrintf(1, _T("Objects loaded and initialized"));
 	
 	// Initialize situations

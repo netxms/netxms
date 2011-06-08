@@ -88,6 +88,7 @@ public class GenericObject
 	private String comments;
 	private GeoLocation geolocation;
 	private UUID image;
+	private long submapId;
 	private HashSet<Long> parents = new HashSet<Long>(0);
 	private HashSet<Long> childs = new HashSet<Long>(0);
 	private HashSet<Long> trustedNodes = new HashSet<Long>(0);
@@ -143,6 +144,7 @@ public class GenericObject
 		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
 		image = msg.getVariableAsUUID(NXCPCodes.VID_IMAGE);
+		submapId = msg.getVariableAsInt64(NXCPCodes.VID_SUBMAP_ID);
 		if (image == null)
 			image = NXCommon.EMPTY_GUID;
 		
@@ -517,5 +519,13 @@ public class GenericObject
 	public UUID getImage()
 	{
 		return image;
+	}
+
+	/**
+	 * @return the submapId
+	 */
+	public long getSubmapId()
+	{
+		return submapId;
 	}
 }

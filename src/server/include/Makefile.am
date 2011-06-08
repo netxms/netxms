@@ -23,7 +23,6 @@ EXTRA_DIST = \
 	nms_users.h \
 	nxcore_jobs.h \
 	nxcore_logs.h \
-	nxcore_maps.h \
 	nxcore_situations.h \
 	nxmodule.h \
 	nxsrvapi.h \

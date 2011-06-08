@@ -1,8 +1,0 @@
-/*
-** Default network maps
-** ex: syntax=sql
-*/
-
-INSERT INTO maps (map_id,map_name,description,root_object_id)
-	VALUES (1,'Default','Default network map',1);
-INSERT INTO map_access_lists (map_id,user_id,access_rights) VALUES (1,-2147483648,1);

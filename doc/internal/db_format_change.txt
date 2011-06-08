@@ -1,4 +1,37 @@
 ***************
+* 231 ==> 232 *
+***************
+
+- Field "submap_id" added to table "object_properties"
+- Tables "maps", "map_access_lists", "submaps", "submap_object_positions", "submap_links" dropped
+
+
+***************
+* 230 ==> 231 *
+***************
+
+- Field "bridge_base_addr" added to table "nodes"
+
+
+***************
+* 229 ==> 230 *
+***************
+
+- Fields "bg_latitude", "bg_longitude", "bg_zoom" added to table "network_maps"
+- Fields "horizontal_span", "vertical_span", "horizontal_alignment", "vertical_alignment"
+  removed from table "dashboard_elements"
+- Field "layout_data" added to table "dashboard_elements"
+- Dashboards layout infornmation converted to XML and stored in single comlumn
+
+
+***************
+* 228 ==> 229 *
+***************
+
+- Added tables "dashboards" and "dashboard_elements"
+
+
+***************
 * 227 ==> 228 *
 ***************
 

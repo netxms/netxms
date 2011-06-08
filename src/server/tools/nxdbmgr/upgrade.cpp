@@ -256,6 +256,29 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V231 to V232
+//
+
+static BOOL H_UpgradeFromV231(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE object_properties ADD submap_id integer\n")
+		_T("UPDATE object_properties SET submap_id=0\n")
+		_T("DROP TABLE maps\n")
+		_T("DROP TABLE map_access_lists\n")
+		_T("DROP TABLE submaps\n")
+		_T("DROP TABLE submap_object_positions\n")
+		_T("DROP TABLE submap_links\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='232' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V230 to V231
 //
 
@@ -5323,6 +5346,7 @@ static struct
 	{ 228, 229, H_UpgradeFromV228 },
 	{ 229, 230, H_UpgradeFromV229 },
 	{ 230, 231, H_UpgradeFromV230 },
+	{ 231, 232, H_UpgradeFromV231 },
    { 0, NULL }
 };
 
@@ -5331,7 +5355,7 @@ static struct
 // Upgrade database to new version
 //
 
-void UpgradeDatabase(void)
+void UpgradeDatabase()
 {
    DB_RESULT hResult;
    LONG i, iVersion = 0;

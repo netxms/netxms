@@ -239,6 +239,7 @@ protected:
    DWORD m_dwIpAddr;          // Every object should have an IP address
 	GeoLocation m_geoLocation;
    ClientSession *m_pPollRequestor;
+	DWORD m_submapId;				// Map object which should be open on drill-down request
 
    DWORD m_dwChildCount;      // Number of child objects
    NetObj **m_pChildList;     // Array of pointers to child objects
