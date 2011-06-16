@@ -38,38 +38,39 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 public class NXCObjectModificationData
 {
 	// Modification flags
-	public static final long MODIFY_NAME               = 0x00000001L;
-	public static final long MODIFY_ACL                = 0x00000002L;
-	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x00000004L;
-	public static final long MODIFY_AUTO_APPLY         = 0x00000008L;
-	public static final long MODIFY_AUTO_BIND          = 0x00000010L;
-	public static final long MODIFY_POLICY_CONFIG      = 0x00000020L;
-	public static final long MODIFY_VERSION            = 0x00000040L;
-	public static final long MODIFY_DESCRIPTION        = 0x00000080L;
-	public static final long MODIFY_AGENT_PORT         = 0x00000100L;
-	public static final long MODIFY_AGENT_AUTH         = 0x00000200L;
-	public static final long MODIFY_SNMP_VERSION       = 0x00000400L;
-	public static final long MODIFY_SNMP_AUTH          = 0x00000800L;
-	public static final long MODIFY_AGENT_PROXY        = 0x00001000L;
-	public static final long MODIFY_SNMP_PROXY         = 0x00002000L;
-	public static final long MODIFY_TRUSTED_NODES      = 0x00004000L;
-	public static final long MODIFY_GEOLOCATION        = 0x00008000L;
-	public static final long MODIFY_PRIMARY_IP         = 0x00010000L;
-	public static final long MODIFY_SNMP_PORT          = 0x00020000L;
-	public static final long MODIFY_MAP_LAYOUT         = 0x00040000L;
-	public static final long MODIFY_MAP_BACKGROUND     = 0x00080000L;
-	public static final long MODIFY_MAP_CONTENT        = 0x00100000L;
-	public static final long MODIFY_IMAGE              = 0x00200000L;
-	public static final long MODIFY_ICMP_PROXY         = 0x00400000L;
-	public static final long MODIFY_COLUMN_COUNT       = 0x00800000L;
-	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x01000000L;
-	public static final long MODIFY_SCRIPT             = 0x02000000L;
-	public static final long MODIFY_ACTIVATION_EVENT   = 0x04000000L;
-	public static final long MODIFY_DEACTIVATION_EVENT = 0x08000000L;
-	public static final long MODIFY_SOURCE_OBJECT      = 0x10000000L;
-	public static final long MODIFY_ACTIVE_STATUS      = 0x20000000L;
-	public static final long MODIFY_INACTIVE_STATUS    = 0x40000000L;
-	public static final long MODIFY_DCI_LIST           = 0x80000000L;
+	public static final long MODIFY_NAME               = 0x000000000001L;
+	public static final long MODIFY_ACL                = 0x000000000002L;
+	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x000000000004L;
+	public static final long MODIFY_AUTO_APPLY         = 0x000000000008L;
+	public static final long MODIFY_AUTO_BIND          = 0x000000000010L;
+	public static final long MODIFY_POLICY_CONFIG      = 0x000000000020L;
+	public static final long MODIFY_VERSION            = 0x000000000040L;
+	public static final long MODIFY_DESCRIPTION        = 0x000000000080L;
+	public static final long MODIFY_AGENT_PORT         = 0x000000000100L;
+	public static final long MODIFY_AGENT_AUTH         = 0x000000000200L;
+	public static final long MODIFY_SNMP_VERSION       = 0x000000000400L;
+	public static final long MODIFY_SNMP_AUTH          = 0x000000000800L;
+	public static final long MODIFY_AGENT_PROXY        = 0x000000001000L;
+	public static final long MODIFY_SNMP_PROXY         = 0x000000002000L;
+	public static final long MODIFY_TRUSTED_NODES      = 0x000000004000L;
+	public static final long MODIFY_GEOLOCATION        = 0x000000008000L;
+	public static final long MODIFY_PRIMARY_IP         = 0x000000010000L;
+	public static final long MODIFY_SNMP_PORT          = 0x000000020000L;
+	public static final long MODIFY_MAP_LAYOUT         = 0x000000040000L;
+	public static final long MODIFY_MAP_BACKGROUND     = 0x000000080000L;
+	public static final long MODIFY_MAP_CONTENT        = 0x000000100000L;
+	public static final long MODIFY_IMAGE              = 0x000000200000L;
+	public static final long MODIFY_ICMP_PROXY         = 0x000000400000L;
+	public static final long MODIFY_COLUMN_COUNT       = 0x000000800000L;
+	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x000001000000L;
+	public static final long MODIFY_SCRIPT             = 0x000002000000L;
+	public static final long MODIFY_ACTIVATION_EVENT   = 0x000004000000L;
+	public static final long MODIFY_DEACTIVATION_EVENT = 0x000008000000L;
+	public static final long MODIFY_SOURCE_OBJECT      = 0x000010000000L;
+	public static final long MODIFY_ACTIVE_STATUS      = 0x000020000000L;
+	public static final long MODIFY_INACTIVE_STATUS    = 0x000040000000L;
+	public static final long MODIFY_DCI_LIST           = 0x000080000000L;
+	public static final long MODIFY_SUBMAP_ID          = 0x000100000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -114,6 +115,7 @@ public class NXCObjectModificationData
 	private int activeStatus;
 	private int inactiveStatus;
 	private List<ConditionDciInfo> dciList;
+	private long submapId;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -832,5 +834,22 @@ public class NXCObjectModificationData
 	{
 		this.dciList = dciList;
 		flags |= MODIFY_DCI_LIST;
+	}
+
+	/**
+	 * @return the submapId
+	 */
+	public long getSubmapId()
+	{
+		return submapId;
+	}
+
+	/**
+	 * @param submapId the submapId to set
+	 */
+	public void setSubmapId(long submapId)
+	{
+		this.submapId = submapId;
+		flags |= MODIFY_SUBMAP_ID;
 	}
 }

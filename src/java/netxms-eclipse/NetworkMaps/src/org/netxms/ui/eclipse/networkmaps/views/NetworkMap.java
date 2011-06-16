@@ -37,6 +37,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -50,6 +53,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
@@ -128,6 +132,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private Action[] actionSetAlgorithm;
 	private Action actionEnableAutomaticLayout;
 	private Action actionSaveLayout;
+	private Action actionOpenSubmap;
 	
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -175,6 +180,17 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			public void selectionChanged(SelectionChangedEvent e)
 			{
 				currentSelection = transformSelection(e.getSelection());
+
+				if ((currentSelection.size() == 1) && (analyzeSelection(currentSelection) == SELECTION_OBJECTS))
+				{
+					GenericObject object = (GenericObject)currentSelection.getFirstElement();
+					actionOpenSubmap.setEnabled(object.getSubmapId() != 0);
+				}
+				else
+				{
+					actionOpenSubmap.setEnabled(false);
+				}
+				
 				if (selectionListeners.isEmpty())
 					return;
 				
@@ -183,6 +199,14 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 				{
 					l.selectionChanged(event);
 				}
+			}
+		});
+		
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				actionOpenSubmap.run();
 			}
 		});
 
@@ -447,6 +471,15 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		};
 		actionSaveLayout.setImageDescriptor(SharedIcons.SAVE);
 		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
+		
+		actionOpenSubmap = new Action("Open s&ubmap") {
+			@Override
+			public void run()
+			{
+				openSubmap();
+			}
+		};
+		actionOpenSubmap.setEnabled(false);
 	}
 	
 	/**
@@ -562,6 +595,8 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	 */
 	protected void fillObjectContextMenu(IMenuManager manager)
 	{
+		manager.add(actionOpenSubmap);
+		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
@@ -817,5 +852,31 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		else
 			nodeStyle |= ZestStyles.NODES_NO_LAYOUT_ANIMATION;
 		viewer.getGraphControl().setNodeStyle(nodeStyle);
+	}
+	
+	/**
+	 * Open submap for currently selected object
+	 */
+	private void openSubmap()
+	{
+		if (currentSelection == null)
+			return;
+		
+		Object object = currentSelection.getFirstElement();
+		if (object instanceof GenericObject)
+		{
+			long submapId = ((GenericObject)object).getSubmapId();
+			if (submapId != 0)
+			{
+				try
+				{
+					getSite().getPage().showView(PredefinedMap.ID, Long.toString(submapId), IWorkbenchPage.VIEW_ACTIVATE);
+				}
+				catch(PartInitException e)
+				{
+					MessageDialog.openError(getSite().getShell(), "Error", "Cannot open submap view: " + e.getMessage());
+				}
+			}
+		}
 	}
 }

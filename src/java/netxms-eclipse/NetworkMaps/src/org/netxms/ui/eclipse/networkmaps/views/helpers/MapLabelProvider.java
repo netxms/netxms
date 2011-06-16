@@ -199,7 +199,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public IFigure getFigure(Object element)
 	{
 		if (element instanceof NetworkMapObject)
-			return new ObjectFigure((NetworkMapObject)element, this);
+			return new ObjectFigureIcon((NetworkMapObject)element, this);
 		if (element instanceof NetworkMapResource)
 			return new ResourceFigure((NetworkMapResource)element, this);
 		if (element instanceof NetworkMapDecoration)
@@ -366,7 +366,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public void selfStyleNode(Object element, GraphNode node)
 	{
 		IFigure figure = node.getNodeFigure();
-		if ((figure != null) && (figure instanceof ObjectFigure))
+		if ((figure != null) && (figure instanceof ObjectFigureIcon))
 		{
 			((ObjectFigure)figure).update();
 			figure.repaint();

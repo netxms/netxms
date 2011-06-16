@@ -23,7 +23,6 @@ import org.netxms.client.objects.GenericObject;
 
 /**
  * Pseudo-object placeholder for unknown objects
- *
  */
 public class UnknownObject extends GenericObject
 {

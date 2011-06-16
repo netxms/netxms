@@ -22,29 +22,31 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * "General" property page for NetMS objects 
+ * "Map Appearance" property page for NetMS objects 
  *
  */
-public class General extends PropertyPage
+public class MapAppearance extends PropertyPage
 {
-	private Text textName;
-	private String initialName;
 	private GenericObject object;
+	private ImageSelector image;
+	private ObjectSelector submap;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -64,19 +66,25 @@ public class General extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      // Object ID
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Object ID",
-                                     Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      // Image
+      image = new ImageSelector(dialogArea, SWT.NONE);
+      image.setLabel("Presentation image");
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      image.setLayoutData(gd);
+      image.setImageGuid(object.getImage(), false);
       
-		// Object class
-      WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Object class",
-                                     object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      // Submap
+      submap = new ObjectSelector(dialogArea, SWT.NONE);
+      submap.setLabel("Drill-down submap");
+      submap.setObjectClass(GenericObject.OBJECT_NETWORKMAP);
+      submap.setObjectId(object.getSubmapId());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      submap.setLayoutData(gd);
 		
-		// Object name
-      initialName = new String(object.getObjectName());
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Object name",
-      		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
 		return dialogArea;
 	}
 	
@@ -90,21 +98,20 @@ public class General extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		final String newName = new String(textName.getText());
-		new ConsoleJob("Rename object", null, Activator.PLUGIN_ID, null) {
+		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
+		data.setImage(image.getImageGuid());
+		data.setSubmapId(submap.getObjectId());
+		new ConsoleJob("Update object's map appearance", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
-				data.setName(newName);
 				((NXCSession)ConsoleSharedData.getSession()).modifyObject(data);
-				initialName = newName;
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot modify object";
+				return "Cannot modify object " + object.getObjectName();
 			}
 
 			@Override
@@ -112,11 +119,11 @@ public class General extends PropertyPage
 			{
 				if (isApply)
 				{
-					new UIJob("Update \"General\" property page") {
+					new UIJob("Update \"Map Appearance\" property page") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							General.this.setValid(true);
+							MapAppearance.this.setValid(true);
 							return Status.OK_STATUS;
 						}
 					}.schedule();

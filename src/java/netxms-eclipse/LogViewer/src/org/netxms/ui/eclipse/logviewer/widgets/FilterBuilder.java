@@ -48,6 +48,12 @@ public class FilterBuilder extends Composite
 		btnLayout.fill = true;
 		editButtons.setLayout(btnLayout);
 		
+		addButton = new Button(editButtons, SWT.PUSH);
+		addButton.setText("&Add...");
+		RowData rd = new RowData();
+		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+		addButton.setLayoutData(rd);
+		
 		Composite ctrlButtons = new Composite(this, SWT.NONE);
 		btnLayout = new RowLayout();
 		btnLayout.type = SWT.HORIZONTAL;
@@ -60,7 +66,7 @@ public class FilterBuilder extends Composite
 		
 		applyButton = new Button(ctrlButtons, SWT.PUSH);
 		applyButton.setText("&Apply");
-		RowData rd = new RowData();
+		rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
 		applyButton.setLayoutData(rd);
 		

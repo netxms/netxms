@@ -2744,6 +2744,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			}
 		}
 		
+		if ((flags & NXCObjectModificationData.MODIFY_SUBMAP_ID) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_SUBMAP_ID, (int)data.getSubmapId());
+		}
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
