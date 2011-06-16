@@ -23,19 +23,14 @@
 #include "odbcdrv.h"
 
 
+DECLARE_DRIVER_HEADER("ODBC")
+
+
 //
 // Constants
 //
 
 #define DATA_BUFFER_SIZE      65536
-
-
-//
-// API version
-//
-
-extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
-extern "C" const char EXPORT *drvName = "ODBC";
 
 
 //

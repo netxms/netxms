@@ -530,21 +530,6 @@ AC_PATH_PROG(PERL,perl,/usr/bin/env perl,$perl_possible_path)
 
 
 #--------------------------------------------------------------------
-# Initialize libtool
-#--------------------------------------------------------------------
-
-if test "x$STATIC_BUILD" = "xyes"; then
-	enable_shared=no
-	enable_static=yes
-else
-	enable_shared=yes
-	enable_static=no
-fi
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
-
-
-#--------------------------------------------------------------------
 # C/C++ capabilities
 #--------------------------------------------------------------------
 
@@ -721,6 +706,22 @@ if test "x$CXX" = "xaCC" ; then
 			])
 	fi
 fi
+
+
+#--------------------------------------------------------------------
+# Initialize libtool
+#--------------------------------------------------------------------
+
+if test "x$STATIC_BUILD" = "xyes"; then
+	enable_shared=no
+	enable_static=yes
+else
+	enable_shared=yes
+	enable_static=no
+fi
+AC_LIBTOOL_DLOPEN
+AC_PROG_LIBTOOL
+
 
 #--------------------------------------------------------------------
 # Additional include and library directories
