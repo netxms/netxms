@@ -68,6 +68,8 @@ FORCE_INTERNAL_ZLIB="no"
 FORCE_32BIT_BUILD="no"
 LDFLAGS_PREFIX=""
 LDFLAGS_SUFFIX=""
+LTINIT_CC=""
+LTINIT_CXX=""
 
 
 #--------------------------------------------------------------------
@@ -648,6 +650,8 @@ if test "x$CC" = "xgcc" ; then
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-maix32 $LDFLAGS"
+					LTINIT_CC="gcc -maix32"
+					LTINIT_CXX="g++ -maix32"
 					OBJECT_MODE=32
 					AC_MSG_RESULT(yes) 
 				], 
@@ -662,6 +666,8 @@ if test "x$CC" = "xgcc" ; then
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-maix64 $LDFLAGS"
+					LTINIT_CC="gcc -maix64"
+					LTINIT_CXX="g++ -maix64"
 					OBJECT_MODE=64
 					AC_MSG_RESULT(yes) 
 				], 
@@ -719,8 +725,25 @@ else
 	enable_shared=yes
 	enable_static=no
 fi
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
+
+if test "x$LTINIT_CC" != "x"; then
+	SAVED_CC="$CC"
+	CC="$LTINIT_CC"
+fi
+if test "x$LTINIT_CXX" != "x"; then
+	SAVED_CXX="$CXX"
+	CXX="$LTINIT_CXX"
+fi
+
+LT_PREREQ([2.4])
+LT_INIT([dlopen])
+
+if test "x$SAVED_CC" != "x"; then
+	CC="$SAVED_CC"
+fi
+if test "x$SAVED_CXX" != "x"; then
+	CXX="$SAVED_CXX"
+fi
 
 
 #--------------------------------------------------------------------
