@@ -12,7 +12,7 @@ EXTRA_DIST = \
 	sqlitedrv.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(pkglibdir)/sqlite.a $(pkglibdir)/sqlite.so ; fi
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(pkglibdir)/$(DRIVER).a $(pkglibdir)/$(DRIVER).so ; rm -f $(pkglibdir)/$(DRIVER).a ; fi
 	mkdir -p $(pkglibdir)/dbdrv
 	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/dbdrv/$(DRIVER).ddr
 	rm -f $(pkglibdir)/$(DRIVER).la	

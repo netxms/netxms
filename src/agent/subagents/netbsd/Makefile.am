@@ -11,8 +11,17 @@
 INCLUDES=-I@top_srcdir@/include
 AM_CXXFLAGS=-fpermissive 
 
-lib_LTLIBRARIES = libnsm_netbsd.la
-libnsm_netbsd_la_SOURCES = netbsd.cpp system.cpp disk.cpp net.cpp proc.cpp proc2.cpp
-libnsm_netbsd_la_LDFLAGS = -lkvm
+SUBAGENT = netbsd
+
+pkglib_LTLIBRARIES = netbsd.la
+netbsd_la_SOURCES = netbsd.cpp system.cpp disk.cpp net.cpp proc.cpp proc2.cpp
+netbsd_la_LDFLAGS = -module -avoid-version -lkvm
+netbsd_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = disk.h net.h system.h
+
+install-exec-hook:
+	mv $(pkglibdir)/$(SUBAGENT).so $(pkglibdir)/$(SUBAGENT).nsm
+	rm -f $(pkglibdir)/$(SUBAGENT).la
+	rm -f $(libdir)/libnsm_$(SUBAGENT).so
+	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(libdir)/libnsm_$(SUBAGENT).so

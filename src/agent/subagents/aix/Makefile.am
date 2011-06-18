@@ -1,12 +1,17 @@
 INCLUDES=-I@top_srcdir@/include
 
-lib_LTLIBRARIES = libnsm_aix.la
-libnsm_aix_la_SOURCES = disk.cpp main.cpp net.cpp proc.cpp system.cpp
-libnsm_aix_la_LIBADD = ../../../libnetxms/libnetxms.la
+SUBAGENT = aix
+
+pkglib_LTLIBRARIES = aix.la
+aix_la_SOURCES = disk.cpp main.cpp net.cpp proc.cpp system.cpp
+aix_la_LDFLAGS = -module -avoid-version
+aix_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = aix_subagent.h
 
 install-exec-hook:
-	rm -f $(libdir)/libnsm_aix.so.0
-	$(AR) x $(libdir)/libnsm_aix.a $(libdir)/libnsm_aix.so.0
-	(cd $(libdir) && rm -f libnsm_aix.so && $(LN_S) libnsm_aix.so.0 libnsm_aix.so)
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(pkglibdir)/$(SUBAGENT).a $(pkglibdir)/$(SUBAGENT).so ; rm -f $(pkglibdir)/$(SUBAGENT).a ; fi
+	mv $(pkglibdir)/$(SUBAGENT).so $(pkglibdir)/$(SUBAGENT).nsm
+	rm -f $(pkglibdir)/$(SUBAGENT).la
+	rm -f $(libdir)/libnsm_$(SUBAGENT).so
+	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(libdir)/libnsm_$(SUBAGENT).so

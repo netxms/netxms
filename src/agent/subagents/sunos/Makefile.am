@@ -16,7 +16,17 @@
 
 INCLUDES=-I@top_srcdir@/include
 
-lib_LTLIBRARIES = libnsm_sunos.la
-libnsm_sunos_la_SOURCES = cpu.cpp disk.cpp iostat.cpp mac_dlpi.cpp main.cpp net.cpp process.cpp system.cpp
+SUBAGENT = sunos
+
+pkglib_LTLIBRARIES = sunos.la
+sunos_la_SOURCES = cpu.cpp disk.cpp iostat.cpp mac_dlpi.cpp main.cpp net.cpp process.cpp system.cpp
+sunos_la_LDFLAGS = -module -avoid-version
+sunos_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = sunos_subagent.h
+
+install-exec-hook:
+	mv $(pkglibdir)/$(SUBAGENT).so $(pkglibdir)/$(SUBAGENT).nsm
+	rm -f $(pkglibdir)/$(SUBAGENT).la
+	rm -f $(libdir)/libnsm_$(SUBAGENT).so
+	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(libdir)/libnsm_$(SUBAGENT).so

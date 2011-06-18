@@ -1,13 +1,18 @@
 INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
-lib_LTLIBRARIES = libnxddr_pgsql.la
-libnxddr_pgsql_la_SOURCES = pgsql.cpp
-libnxddr_pgsql_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @PGSQL_LIBS@
-libnxddr_pgsql_la_LIBADD = ../../../libnetxms/libnetxms.la
+DRIVER = pgsql
+
+pkglib_LTLIBRARIES = pgsql.la
+pgsql_la_SOURCES = pgsql.cpp
+pgsql_la_LDFLAGS = -module -avoid-version
+pgsql_la_LIBADD = ../../../libnetxms/libnetxms.la @PGSQL_LIBS@
 
 EXTRA_DIST = \
 	pgsql.vcproj \
 	pgsqldrv.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_pgsql.a $(libdir)/libnxddr_pgsql.so.0 ; fi
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(pkglibdir)/$(DRIVER).a $(pkglibdir)/$(DRIVER).so ; rm -f $(pkglibdir)/$(DRIVER).a ; fi
+	mkdir -p $(pkglibdir)/dbdrv
+	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/dbdrv/$(DRIVER).ddr
+	rm -f $(pkglibdir)/$(DRIVER).la 

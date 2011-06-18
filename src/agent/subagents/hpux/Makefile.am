@@ -16,10 +16,18 @@
 
 INCLUDES=-I@top_srcdir@/include
 
-lib_LTLIBRARIES = libnsm_hpux.la
-libnsm_hpux_la_SOURCES = disk.cpp iostat.cpp main.cpp net.cpp system.cpp
-libnsm_hpux_la_CPPFLAGS = -D_PSTAT64
-libnsm_hpux_la_LIBADD = ../../../libnetxms/libnetxms.la -lnm
-libnsm_hpux_la_LDFLAGS = -lnm
+SUBAGENT = hpux
+
+pkglib_LTLIBRARIES = hpux.la
+hpux_la_SOURCES = disk.cpp iostat.cpp main.cpp net.cpp system.cpp
+hpux_la_CPPFLAGS = -D_PSTAT64
+hpux_la_LIBADD = ../../../libnetxms/libnetxms.la -lnm
+hpux_la_LDFLAGS = -module -avoid-version -lnm
 
 EXTRA_DIST = disk.h hpux.h net.h system.h
+
+install-exec-hook:
+	mv $(pkglibdir)/$(SUBAGENT).so $(pkglibdir)/$(SUBAGENT).nsm
+	rm -f $(pkglibdir)/$(SUBAGENT).la
+	rm -f $(libdir)/libnsm_$(SUBAGENT).so
+	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(libdir)/libnsm_$(SUBAGENT).so

@@ -11,8 +11,18 @@
 INCLUDES=-I@top_srcdir@/include
 AM_CXXFLAGS=-fpermissive 
 
-lib_LTLIBRARIES = libnsm_openbsd.la
-libnsm_openbsd_la_SOURCES = openbsd.cpp system.cpp disk.cpp net.cpp
-libnsm_openbsd_la_LDFLAGS = -lkvm
+SUBAGENT = openbsd
+
+pkglib_LTLIBRARIES = openbsd.la
+openbsd_la_SOURCES = openbsd.cpp system.cpp disk.cpp net.cpp
+openbsd_la_LDFLAGS = -module -avoid-version -lkvm
+openbsd_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = disk.h net.h system.h
+
+install-exec-hook:
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(pkglibdir)/$(SUBAGENT).a $(pkglibdir)/$(SUBAGENT).so ; rm -f $(pkglibdir)/$(SUBAGENT).a ; fi
+	mv $(pkglibdir)/$(SUBAGENT).so $(pkglibdir)/$(SUBAGENT).nsm
+	rm -f $(pkglibdir)/$(SUBAGENT).la
+	rm -f $(libdir)/libnsm_$(SUBAGENT).so
+	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(libdir)/libnsm_$(SUBAGENT).so

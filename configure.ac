@@ -1825,6 +1825,7 @@ AC_SUBST(PGSQL_LIBS)
 AC_SUBST(ORACLE_LIBS)
 AC_SUBST(ODBC_LIBS)
 AC_SUBST(DB2_LIBS)
+AC_SUBST(OBJECT_MODE)
 
 #--------------------------------------------------------------------
 # Shared libs versions

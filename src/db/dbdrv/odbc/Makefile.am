@@ -1,11 +1,16 @@
 INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
-lib_LTLIBRARIES = libnxddr_odbc.la
-libnxddr_odbc_la_SOURCES = odbc.cpp
-libnxddr_odbc_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @ODBC_LIBS@
-libnxddr_odbc_la_LIBADD = ../../../libnetxms/libnetxms.la
+DRIVER = odbc
+
+pkglib_LTLIBRARIES = odbc.la
+odbc_la_SOURCES = odbc.cpp
+odbc_la_LDFLAGS = -module -avoid-version
+odbc_la_LIBADD = ../../../libnetxms/libnetxms.la @ODBC_LIBS@
 
 EXTRA_DIST = odbc.vcproj odbcdrv.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_odbc.a $(libdir)/libnxddr_odbc.so.0 ; fi
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(pkglibdir)/$(DRIVER).a $(pkglibdir)/$(DRIVER).so ; rm -f $(pkglibdir)/$(DRIVER).a ; fi
+	mkdir -p $(pkglibdir)/dbdrv
+	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/dbdrv/$(DRIVER).ddr
+	rm -f $(pkglibdir)/$(DRIVER).la 

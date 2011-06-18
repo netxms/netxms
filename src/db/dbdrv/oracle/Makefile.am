@@ -1,13 +1,18 @@
 INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
-lib_LTLIBRARIES = libnxddr_oracle.la
-libnxddr_oracle_la_SOURCES = oracle.cpp
-libnxddr_oracle_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
-libnxddr_oracle_la_LIBADD = ../../../libnetxms/libnetxms.la @ORACLE_LIBS@
+DRIVER = oracle
+
+pkglib_LTLIBRARIES = oracle.la
+oracle_la_SOURCES = oracle.cpp
+oracle_la_LDFLAGS = -module -avoid-version
+oracle_la_LIBADD = ../../../libnetxms/libnetxms.la @ORACLE_LIBS@
 
 EXTRA_DIST = \
 	oracle.vcproj \
 	oracledrv.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_oracle.a $(libdir)/libnxddr_oracle.so.1 ; fi
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(pkglibdir)/$(DRIVER).a $(pkglibdir)/$(DRIVER).so ; rm -f $(pkglibdir)/$(DRIVER).a ; fi
+	mkdir -p $(pkglibdir)/dbdrv
+	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/dbdrv/$(DRIVER).ddr
+	rm -f $(pkglibdir)/$(DRIVER).la 

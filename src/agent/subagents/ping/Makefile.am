@@ -1,13 +1,17 @@
 INCLUDES=-I@top_srcdir@/include
 
-lib_LTLIBRARIES = libnsm_ping.la
-libnsm_ping_la_SOURCES = ping.cpp
-libnsm_ping_la_LDFLAGS = ../../../libnetxms/libnetxms.la
+SUBAGENT = ping
+
+pkglib_LTLIBRARIES = ping.la
+ping_la_SOURCES = ping.cpp
+ping_la_LDFLAGS = -module -avoid-version
+ping_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = ping.h ping.vcproj
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then \
-		rm -f $(libdir)/libnsm_ping.so.0 ; \
-		$(AR) x $(libdir)/libnsm_ping.a $(libdir)/libnsm_ping.so.0 ; \
-	fi
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(pkglibdir)/$(SUBAGENT).a $(pkglibdir)/$(SUBAGENT).so ; rm -f $(pkglibdir)/$(SUBAGENT).a ; fi
+	mv $(pkglibdir)/$(SUBAGENT).so $(pkglibdir)/$(SUBAGENT).nsm
+	rm -f $(pkglibdir)/$(SUBAGENT).la
+	rm -f $(libdir)/libnsm_$(SUBAGENT).so
+	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(libdir)/libnsm_$(SUBAGENT).so
