@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.1.2], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [1.1.2], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -735,7 +735,7 @@ if test "x$LTINIT_CXX" != "x"; then
 	CXX="$LTINIT_CXX"
 fi
 
-LT_PREREQ([2.4])
+LT_PREREQ([2.2])
 LT_INIT([dlopen])
 
 if test "x$SAVED_CC" != "x"; then
