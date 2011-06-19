@@ -87,6 +87,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.GraphLayoutFilter;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -133,6 +134,9 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private Action actionEnableAutomaticLayout;
 	private Action actionSaveLayout;
 	private Action actionOpenSubmap;
+	private Action actionFiguresIcons;
+	private Action actionFiguresSmallLabels;
+	private Action actionFiguresLargeLabels;
 	
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -386,6 +390,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			}
 		};
 		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
+		actionShowStatusBackground.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 	
 		actionShowStatusIcon = new Action("Show status &icon", Action.AS_CHECK_BOX) {
 			@Override
@@ -397,6 +402,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			}
 		};
 		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
+		actionShowStatusIcon.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 		
 		actionShowStatusFrame = new Action("Show status &frame", Action.AS_CHECK_BOX) {
 			@Override
@@ -408,6 +414,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			}
 		};
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
+		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 	
 		actionZoomIn = new Action("Zoom &in") {
 			@Override
@@ -480,6 +487,45 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 			}
 		};
 		actionOpenSubmap.setEnabled(false);
+		
+		actionFiguresIcons = new Action("&Icons", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				labelProvider.setObjectFigureType(ObjectFigureType.ICON);
+				viewer.refresh(true);
+				actionShowStatusBackground.setEnabled(true);
+				actionShowStatusFrame.setEnabled(true);
+				actionShowStatusIcon.setEnabled(true);
+			}
+		};
+		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
+		
+		actionFiguresSmallLabels = new Action("&Small labels", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				labelProvider.setObjectFigureType(ObjectFigureType.SMALL_LABEL);
+				viewer.refresh(true);
+				actionShowStatusBackground.setEnabled(false);
+				actionShowStatusFrame.setEnabled(false);
+				actionShowStatusIcon.setEnabled(false);
+			}
+		};
+		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.SMALL_LABEL);
+		
+		actionFiguresLargeLabels = new Action("&Large labels", Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				labelProvider.setObjectFigureType(ObjectFigureType.LARGE_LABEL);
+				viewer.refresh(true);
+				actionShowStatusBackground.setEnabled(false);
+				actionShowStatusFrame.setEnabled(false);
+				actionShowStatusIcon.setEnabled(false);
+			}
+		};
+		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
 	}
 	
 	/**
@@ -524,12 +570,18 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		for(int i = 0; i < actionZoomTo.length; i++)
 			zoom.add(actionZoomTo[i]);
 		
+		MenuManager figureType = new MenuManager("&Display objects as");
+		figureType.add(actionFiguresIcons);
+		figureType.add(actionFiguresSmallLabels);
+		figureType.add(actionFiguresLargeLabels);
+		
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(zoom);
+		manager.add(figureType);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -643,12 +695,18 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		for(int i = 0; i < actionZoomTo.length; i++)
 			zoom.add(actionZoomTo[i]);
 		
+		MenuManager figureType = new MenuManager("&Display objects as");
+		figureType.add(actionFiguresIcons);
+		figureType.add(actionFiguresSmallLabels);
+		figureType.add(actionFiguresLargeLabels);
+		
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(zoom);
+		manager.add(figureType);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());

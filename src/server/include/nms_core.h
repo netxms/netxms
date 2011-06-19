@@ -153,7 +153,6 @@ typedef void * HSNMPSESSION;
 #define IDG_GRAPH					18
 #define IDG_CERTIFICATE			19
 #define IDG_SITUATION         20
-#define IDG_MAP               21
 
 
 //

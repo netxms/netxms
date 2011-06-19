@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   22
+#define NUMBER_OF_GROUPS   21
 
 
 //
@@ -38,14 +38,14 @@ static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1000, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
-                                                   10000, 10000, 1, 1, 1, 1, 1
+                                                   10000, 10000, 1, 1, 1, 1
                                                  };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-																0xFFFFFFFE, 0xFFFFFFFE
+																0xFFFFFFFE
                                               };
 static QWORD m_qwFreeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
@@ -70,8 +70,7 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Agent Configs"),
 	_T("Graphs"),
 	_T("Certificates"),
-	_T("Situations"),
-	_T("Maps")
+	_T("Situations")
 };
 
 
@@ -79,7 +78,7 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 // Initialize ID table
 //
 
-BOOL InitIdTable(void)
+BOOL InitIdTable()
 {
    DB_RESULT hResult;
 
@@ -363,16 +362,6 @@ BOOL InitIdTable(void)
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_SITUATION] = max(m_dwFreeIdTable[IDG_SITUATION],
                                               DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
-   // Get first available map id
-   hResult = DBSelect(g_hCoreDB, _T("SELECT max(map_id) FROM maps"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         m_dwFreeIdTable[IDG_MAP] = max(m_dwFreeIdTable[IDG_MAP],
-                                        DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 
