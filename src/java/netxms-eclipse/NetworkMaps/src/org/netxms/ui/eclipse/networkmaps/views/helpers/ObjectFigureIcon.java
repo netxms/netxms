@@ -58,10 +58,7 @@ public class ObjectFigureIcon extends ObjectFigure
 		add(label, BorderLayout.BOTTOM);
 		
 		setOpaque(false);
-		setFocusTraversable(true);
 
-		setToolTip(new ObjectTooltip(object));
-		
 		updateSize();
 	}
 	

@@ -57,7 +57,7 @@ public class ObjectDecorator implements ILabelDecorator
 	public Image decorateImage(Image image, Object element)
 	{
 		int status = ((GenericObject)element).getStatus();
-		if (statusImages[status] == null)
+		if ((image == null) || (statusImages[status] == null))
 			return null;
 		DecorationOverlayIcon overlay = new DecorationOverlayIcon(image, statusImages[status], IDecoration.BOTTOM_RIGHT);
 		return overlay.createImage();

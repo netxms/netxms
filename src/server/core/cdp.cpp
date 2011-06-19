@@ -54,7 +54,7 @@ static DWORD CDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpor
 	newOid[13] = 7;	// cdpCacheDevicePort
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->Length()));
 
-   SNMP_PDU *pRespPDU;
+   SNMP_PDU *pRespPDU = NULL;
    DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 

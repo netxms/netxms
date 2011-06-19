@@ -101,7 +101,6 @@ DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response,
 	if (m_securityContext == NULL)
 		m_securityContext = new SNMP_SecurityContext();
 
-
 	// Update SNMP V3 request with cached context engine id
 	if (request->getVersion() == SNMP_VERSION_3)
 	{
@@ -219,6 +218,8 @@ retry:
       }
    }
 
+	if (rc != SNMP_ERR_SUCCESS)
+		delete_and_null(*response);
    return rc;
 }
 

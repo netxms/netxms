@@ -49,6 +49,9 @@ public abstract class ObjectFigure extends Figure
 		object = session.findObjectById(element.getObjectId());
 		if (object == null)
 			object = new UnknownObject(element.getObjectId(), session);
+
+		setFocusTraversable(true);
+		setToolTip(new ObjectTooltip(object));
 	}
 	
 	/**

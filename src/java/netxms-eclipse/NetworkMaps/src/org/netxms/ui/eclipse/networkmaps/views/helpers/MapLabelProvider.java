@@ -23,12 +23,14 @@ import org.eclipse.draw2d.ConnectionEndpointLocator;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.eclipse.zest.core.viewers.ISelfStyleProvider;
@@ -75,6 +77,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
+	private ILabelProvider workbenchLabelProvider;
+	private ObjectFigureType objectFigureType = ObjectFigureType.SMALL_LABEL;
 
 	/**
 	 * Create map label provider
@@ -83,6 +87,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		this.viewer = viewer;
 		session = (NXCSession)ConsoleSharedData.getSession();
+		workbenchLabelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 
 		statusImages = new Image[9];
 		for(int i = 0; i < statusImages.length; i++)
@@ -199,11 +204,23 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public IFigure getFigure(Object element)
 	{
 		if (element instanceof NetworkMapObject)
-			return new ObjectFigureIcon((NetworkMapObject)element, this);
+		{
+			switch(objectFigureType)
+			{
+				case SMALL_LABEL:
+					return new ObjectFigureSmallLabel((NetworkMapObject)element, this);
+				case ICON:
+					return new ObjectFigureIcon((NetworkMapObject)element, this);
+			}
+		}
 		if (element instanceof NetworkMapResource)
+		{
 			return new ResourceFigure((NetworkMapResource)element, this);
+		}
 		if (element instanceof NetworkMapDecoration)
+		{
 			return new DecorationFigure((NetworkMapDecoration)element, this);
+		}
 		return null;
 	}
 
@@ -257,6 +274,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		
 		fontLabel.dispose();
 		fontTitle.dispose();
+		
+		workbenchLabelProvider.dispose();
 		super.dispose();
 	}
 
@@ -388,5 +407,30 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public void setShowStatusFrame(boolean showStatusFrame)
 	{
 		this.showStatusFrame = showStatusFrame;
+	}
+	
+	/**
+	 * @param object
+	 * @return
+	 */
+	public Image getWorkbenchIcon(Object object)
+	{
+		return workbenchLabelProvider.getImage(object);
+	}
+
+	/**
+	 * @return the objectFigureType
+	 */
+	public ObjectFigureType getObjectFigureType()
+	{
+		return objectFigureType;
+	}
+
+	/**
+	 * @param objectFigureType the objectFigureType to set
+	 */
+	public void setObjectFigureType(ObjectFigureType objectFigureType)
+	{
+		this.objectFigureType = objectFigureType;
 	}
 }

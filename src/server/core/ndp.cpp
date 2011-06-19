@@ -40,7 +40,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, DWORD snmpVers
 	pRqPDU->bindVariable(new SNMP_Variable(eosEntryOID, oid->Length()));
 
 	WORD result = 0;
-	SNMP_PDU *pRespPDU;
+	SNMP_PDU *pRespPDU = NULL;
    DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 	if ((rcc == SNMP_ERR_SUCCESS) && (pRespPDU->getNumVariables() > 0) && (pRespPDU->getVariable(0)->GetType() == ASN_OCTET_STRING))
@@ -49,6 +49,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, DWORD snmpVers
 		pRespPDU->getVariable(0)->getRawValue(eosEntry, 128);
 		result = (((WORD)eosEntry[7]) << 8) | (WORD)eosEntry[8];	// Slot in byte 7 and port in byte 8
 	}
+	delete pRespPDU;
 	return result;
 }
 

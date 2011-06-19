@@ -96,7 +96,7 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 	newOid[oid->Length() - 4] = 6;	// lldpRemPortIdSubtype
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->Length()));
 
-	SNMP_PDU *pRespPDU;
+	SNMP_PDU *pRespPDU = NULL;
    DWORD rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
 	if (rcc == SNMP_ERR_SUCCESS)
@@ -147,6 +147,8 @@ static DWORD LLDPTopoHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transpo
 
 			nbs->addConnection(&info);
 		}
+
+		delete pRespPDU;
 	}
 	return SNMP_ERR_SUCCESS;
 }
