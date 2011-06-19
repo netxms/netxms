@@ -993,6 +993,8 @@ void Template::ValidateDCIList(DCI_CFG *cfg)
 	for(i = 0; i < dwNumDeleted; i++)
 		deleteItem(pdwDeleteList[i], false);
 
+	safe_free(pdwDeleteList);
+
 	// Create missing items
 	for(i = 0; cfg[i].pszName != NULL; i++)
 	{

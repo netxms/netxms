@@ -162,6 +162,7 @@ Node::~Node()
 	MutexDestroy(m_mutexTopoAccess);
    delete m_pAgentConnection;
    safe_free(m_pParamList);
+	safe_free(m_sysDescription);
    DestroyRoutingTable(m_pRoutingTable);
 	if (m_linkLayerNeighbors != NULL)
 		m_linkLayerNeighbors->decRefCount();
@@ -1459,6 +1460,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
                LockData();
                if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
                {
+						safe_free(m_sysDescription);
                   m_sysDescription = _tcsdup(szBuffer);
                   bHasChanges = TRUE;
                   SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
