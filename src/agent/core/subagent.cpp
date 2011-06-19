@@ -162,7 +162,23 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
    BOOL bSuccess = FALSE;
    TCHAR szErrorText[256];
 
+#if !defined(_WIN32) && !defined(_NETWARE)
+   TCHAR fullName[MAX_PATH];
+
+   if (_tcschr(szModuleName, _T('/')) == NULL)
+   {
+      // Assume that subagent name without pat given
+      // Try to load it from pkglibdir
+      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, szModuleName);
+   }
+   else
+   {
+      nx_strncpy(fullName, szModuleName, MAX_PATH);
+   }
+   hModule = DLOpen(fullName, szErrorText);
+#else
    hModule = DLOpen(szModuleName, szErrorText);
+#endif
    if (hModule != NULL)
    {
       BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *);

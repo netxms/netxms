@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -106,7 +106,20 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	driver->m_userArg = userArg;
 
    // Load driver's module
+#ifdef _WIN32
    driver->m_handle = DLOpen(module, szErrorText);
+#else
+	TCHAR fullName[MAX_PATH];
+	if (_tcschr(module, _T('/')) == NULL)
+	{
+		_sntprintf(fullName, MAX_PATH, _T("%s/dbdrv/%s"), PKGLIBDIR, module);
+	}
+	else
+	{
+		nx_strncpy(fullName, module, MAX_PATH);
+	}
+   driver->m_handle = DLOpen(fullName, szErrorText);
+#endif
    if (driver->m_handle == NULL)
    {
       if (s_writeLog)
