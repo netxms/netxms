@@ -907,6 +907,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/algori
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/dialogs/AddGroupBoxDialog.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/dialogs/CreateNetworkMapDialog.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/preferencepages/GeneralMapPreferences.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapBackground.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/IPNeighbors.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/Layer2Topology.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/NetworkMap.java -text
@@ -923,6 +924,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigureIcon.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigureSmallLabel.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectFigureType.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ObjectTooltip.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/ResourceFigure.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/helpers/UnknownObject.java -text

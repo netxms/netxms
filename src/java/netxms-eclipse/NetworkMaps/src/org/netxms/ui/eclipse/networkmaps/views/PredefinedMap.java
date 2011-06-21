@@ -43,9 +43,11 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
@@ -72,6 +74,7 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  * View for predefined map
  * 
  */
+@SuppressWarnings("restriction")
 public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap";
@@ -82,8 +85,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private Action actionAddGroupBox;
 	private Action actionAddImage;
 	private Action actionRemove;
-	private Action actionSetBackground;
-	private Action actionRemoveBackground;
+	private Action actionMapProperties;
 
 	/**
 	 * Creare predefined map view
@@ -145,7 +147,12 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		ImageProvider.getInstance().addUpdateListener(this);
 		
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
-			viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+		{
+			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
+				viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+			else
+				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+		}
 	}
 
 	/**
@@ -275,21 +282,11 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		actionRemove.setAccelerator(SWT.CTRL | 'R');
 		actionRemove.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 
-		actionSetBackground = new Action("Set &background...")
-		{
+		actionMapProperties = new Action("Map &properties") {
 			@Override
 			public void run()
 			{
-				setBackground();
-			}
-		};
-
-		actionRemoveBackground = new Action("&Remove background")
-		{
-			@Override
-			public void run()
-			{
-				removeBackground();
+				showMapProperties();
 			}
 		};
 	}
@@ -320,10 +317,9 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		manager.add(actionAddObject);
 		manager.add(createDecorationAdditionSubmenu());
 		manager.add(new Separator());
-		manager.add(actionSetBackground);
-		manager.add(actionRemoveBackground);
-		manager.add(new Separator());
 		super.fillMapContextMenu(manager);
+		manager.add(new Separator());
+		manager.add(actionMapProperties);
 	}
 
 	/*
@@ -383,10 +379,9 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 		manager.add(actionLinkObjects);
 		manager.add(createDecorationAdditionSubmenu());
 		manager.add(new Separator());
-		manager.add(actionSetBackground);
-		manager.add(actionRemoveBackground);
-		manager.add(new Separator());
 		super.fillLocalPullDown(manager);
+		manager.add(new Separator());
+		manager.add(actionMapProperties);
 	}
 
 	/*
@@ -570,51 +565,12 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	}
 
 	/**
-	 * Save background
-	 * 
-	 * @param imageGuid
-	 *           background image GUID
+	 * Show properties dialog for map object
 	 */
-	private void saveBackground(UUID imageGuid)
+	private void showMapProperties()
 	{
-		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
-		md.setMapBackground(imageGuid);
-		new ConsoleJob("Save map object " + rootObject.getObjectName(), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
-		{
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.modifyObject(md);
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot update map background on server";
-			}
-		}.start();
-	}
-
-	/**
-	 * Set new background
-	 */
-	private void setBackground()
-	{
-		ImageSelectionDialog dlg = new ImageSelectionDialog(getSite().getShell());
-		if (dlg.open() == Window.OK)
-		{
-			viewer.setBackgroundImage(dlg.getImage());
-			saveBackground(dlg.getGuid());
-		}
-	}
-
-	/**
-	 * Remove background from map
-	 */
-	private void removeBackground()
-	{
-		viewer.setBackgroundImage(null);
-		saveBackground(new UUID(0, 0));
+		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, mapObject);
+		dlg.open();
 	}
 
 	/*
@@ -654,5 +610,40 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	{
 		ImageProvider.getInstance().removeUpdateListener(this);
 		super.dispose();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#onObjectChange(org.netxms.client.objects.GenericObject)
+	 */
+	@Override
+	protected void onObjectChange(final GenericObject object)
+	{
+		super.onObjectChange(object);
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run()
+			{
+				if (object.getObjectId() == mapObject.getObjectId())
+				{
+					UUID oldBackground = mapObject.getBackground();
+					mapObject = (org.netxms.client.objects.NetworkMap)object;
+					if (!oldBackground.equals(mapObject.getBackground()) || mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
+					{
+						if (mapObject.getBackground().equals(NXCommon.EMPTY_GUID))
+						{
+							viewer.setBackgroundImage(null);
+						}
+						else if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
+						{
+							viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+						}
+						else
+						{
+							viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+						}
+					}
+				}
+			}
+		});
 	}
 }

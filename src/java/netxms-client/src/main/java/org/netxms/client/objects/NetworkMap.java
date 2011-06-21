@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
@@ -35,6 +36,8 @@ import org.netxms.client.maps.elements.NetworkMapElement;
  */
 public class NetworkMap extends GenericObject
 {
+	public static final UUID GEOMAP_BACKGROUND = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"); 
+		
 	public static final int LAYOUT_MANUAL = 0x7FFF;
 	public static final int LAYOUT_SPRING = 0;
 	public static final int LAYOUT_RADIAL = 1;
@@ -45,6 +48,8 @@ public class NetworkMap extends GenericObject
 	private int mapType;
 	private int layout;
 	private UUID background;
+	private GeoLocation backgroundLocation;
+	private int backgroundZoom;
 	private long seedObjectId;
 	private List<NetworkMapElement> elements;
 	private List<NetworkMapLink> links;
@@ -59,6 +64,8 @@ public class NetworkMap extends GenericObject
 		mapType = msg.getVariableAsInteger(NXCPCodes.VID_MAP_TYPE);
 		layout = msg.getVariableAsInteger(NXCPCodes.VID_LAYOUT);
 		background = msg.getVariableAsUUID(NXCPCodes.VID_BACKGROUND);
+		backgroundLocation = new GeoLocation(msg.getVariableAsReal(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getVariableAsReal(NXCPCodes.VID_BACKGROUND_LONGITUDE));
+		backgroundZoom = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND_ZOOM);
 		seedObjectId = msg.getVariableAsInt64(NXCPCodes.VID_SEED_OBJECT);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
@@ -132,5 +139,21 @@ public class NetworkMap extends GenericObject
 		page.addAllElements(elements);
 		page.addAllLinks(links);
 		return page;
+	}
+
+	/**
+	 * @return the backgroundLocation
+	 */
+	public GeoLocation getBackgroundLocation()
+	{
+		return backgroundLocation;
+	}
+
+	/**
+	 * @return the backgroundZoom
+	 */
+	public int getBackgroundZoom()
+	{
+		return backgroundZoom;
 	}
 }

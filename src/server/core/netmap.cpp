@@ -133,7 +133,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 					  m_backgroundLatitude, m_backgroundLongitude, m_backgroundZoom);
    else
       _sntprintf(query, 1024,
-                 _T("UPDATE network_maps SET map_type=%d,layout=%d,seed=%d,background='%s',bg_latitude='%s',bg_longitude='%s',bg_zoom=%d WHERE id=%d"),
+                 _T("UPDATE network_maps SET map_type=%d,layout=%d,seed=%d,background='%s',bg_latitude='%f',bg_longitude='%f',bg_zoom=%d WHERE id=%d"),
                  m_mapType, m_layout, m_seedObject, uuid_to_string(m_background, temp),
 					  m_backgroundLatitude, m_backgroundLongitude, m_backgroundZoom, m_dwId);
    if (!DBQuery(hdb, query))

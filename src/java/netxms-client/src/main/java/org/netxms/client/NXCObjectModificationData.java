@@ -103,6 +103,8 @@ public class NXCObjectModificationData
 	private InetAddress primaryIpAddress;
 	private int mapLayout;
 	private UUID mapBackground;
+	private GeoLocation mapBackgroundLocation;
+	private int mapBackgroundZoom;
 	private UUID image;
 	private Collection<NetworkMapElement> mapElements;
 	private Collection<NetworkMapLink> mapLinks;
@@ -631,9 +633,11 @@ public class NXCObjectModificationData
 	/**
 	 * @param mapBackground the mapBackground to set
 	 */
-	public void setMapBackground(UUID mapBackground)
+	public void setMapBackground(UUID mapBackground, GeoLocation mapBackgroundLocation, int mapBackgroundZoom)
 	{
 		this.mapBackground = mapBackground;
+		this.mapBackgroundLocation = mapBackgroundLocation;
+		this.mapBackgroundZoom = mapBackgroundZoom;
 		flags |= MODIFY_MAP_BACKGROUND;
 	}
 
@@ -851,5 +855,21 @@ public class NXCObjectModificationData
 	{
 		this.submapId = submapId;
 		flags |= MODIFY_SUBMAP_ID;
+	}
+
+	/**
+	 * @return the mapBackgroundLocation
+	 */
+	public GeoLocation getMapBackgroundLocation()
+	{
+		return mapBackgroundLocation;
+	}
+
+	/**
+	 * @return the mapBackgroundZoom
+	 */
+	public int getMapBackgroundZoom()
+	{
+		return mapBackgroundZoom;
 	}
 }

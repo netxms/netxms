@@ -44,6 +44,10 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class MapLoader
 {
+	public static final int CENTER = GeoLocationCache.CENTER;
+	public static final int TOP_LEFT = GeoLocationCache.TOP_LEFT;
+	public static final int BOTTOM_RIGHT = GeoLocationCache.BOTTOM_RIGHT;
+	
 	private static Image missingTile = null; 
 	private static Image borderTile = null; 
 	
@@ -224,7 +228,7 @@ public class MapLoader
 	 */
 	public static Rectangle calculateBoundingBox(Point mapSize, GeoLocation centerPoint, int zoom)
 	{
-		Area coverage = GeoLocationCache.calculateCoverage(mapSize, centerPoint, zoom);
+		Area coverage = GeoLocationCache.calculateCoverage(mapSize, centerPoint, CENTER, zoom);
 		Point topLeft = tileFromLocation(coverage.getxLow(), coverage.getyLow(), zoom);
 		Point bottomRight = tileFromLocation(coverage.getxHigh(), coverage.getyHigh(), zoom);
 		return new Rectangle(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
@@ -232,16 +236,16 @@ public class MapLoader
 	
 	/**
 	 * @param mapSize
-	 * @param centerPoint
+	 * @param basePoint
 	 * @param zoom
 	 * @return
 	 */
-	public static TileSet getAllTiles(Point mapSize, GeoLocation centerPoint, int zoom)
+	public static TileSet getAllTiles(Point mapSize, GeoLocation basePoint, int pointLocation, int zoom)
 	{
 		if ((mapSize.x < 32) || (mapSize.y < 32))
 			return null;
 		
-		Area coverage = GeoLocationCache.calculateCoverage(mapSize, centerPoint, zoom);
+		Area coverage = GeoLocationCache.calculateCoverage(mapSize, basePoint, pointLocation, zoom);
 		Point bottomLeft = tileFromLocation(coverage.getxLow(), coverage.getyLow(), zoom);
 		Point topRight = tileFromLocation(coverage.getxHigh(), coverage.getyHigh(), zoom);
 		

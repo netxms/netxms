@@ -2657,6 +2657,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		if ((flags & NXCObjectModificationData.MODIFY_MAP_BACKGROUND) != 0)
 		{
 			msg.setVariable(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
+			msg.setVariable(NXCPCodes.VID_BACKGROUND_LATITUDE, data.getMapBackgroundLocation().getLatitude());
+			msg.setVariable(NXCPCodes.VID_BACKGROUND_LONGITUDE, data.getMapBackgroundLocation().getLongitude());
+			msg.setVariableInt16(NXCPCodes.VID_BACKGROUND_ZOOM, data.getMapBackgroundZoom());
 		}
 
 		if ((flags & NXCObjectModificationData.MODIFY_IMAGE) != 0)

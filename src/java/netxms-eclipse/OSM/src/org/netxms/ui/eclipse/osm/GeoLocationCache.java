@@ -41,6 +41,10 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class GeoLocationCache implements SessionListener
 {
+	public static final int CENTER = 0;
+	public static final int TOP_LEFT = 1;
+	public static final int BOTTOM_RIGHT = 2;
+	
 	private static final int TILE_SIZE = 256;
 	
 	private static GeoLocationCache instance = new GeoLocationCache();
@@ -244,15 +248,31 @@ public class GeoLocationCache implements SessionListener
 	 * Calculate map coverage.
 	 * 
 	 * @param mapSize map size in pixels
-	 * @param centerPoint coordinates of map's center
+	 * @param point coordinates of map's base point
+	 * @param pointLocation location of base point: TOP-LEFT, BOTTOM-RIGHT, CENTER
 	 * @param zoom zoom level
 	 * @return area covered by map
 	 */
-	public static Area calculateCoverage(Point mapSize, GeoLocation centerPoint, int zoom)
+	public static Area calculateCoverage(Point mapSize, GeoLocation basePoint, int pointLocation, int zoom)
 	{
-		Point cp = coordinateToDisplay(centerPoint, zoom);
-		GeoLocation topLeft = displayToCoordinates(new Point(cp.x - mapSize.x / 2, cp.y - mapSize.y / 2), zoom);
-		GeoLocation bottomRight = displayToCoordinates(new Point(cp.x + mapSize.x / 2, cp.y + mapSize.y / 2), zoom);
+		Point bp = coordinateToDisplay(basePoint, zoom);
+		GeoLocation topLeft = null;
+		GeoLocation bottomRight = null;
+		switch(pointLocation)
+		{
+			case CENTER:
+				topLeft = displayToCoordinates(new Point(bp.x - mapSize.x / 2, bp.y - mapSize.y / 2), zoom);
+				bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x / 2, bp.y + mapSize.y / 2), zoom);
+				break;
+			case TOP_LEFT:
+				topLeft = displayToCoordinates(new Point(bp.x, bp.y), zoom);
+				bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x, bp.y + mapSize.y), zoom);
+				break;
+			case BOTTOM_RIGHT:
+				topLeft = displayToCoordinates(new Point(bp.x - mapSize.x, bp.y - mapSize.y), zoom);
+				bottomRight = displayToCoordinates(new Point(bp.x, bp.y), zoom);
+				break;
+		}
 		return new Area(topLeft.getLatitude(), topLeft.getLongitude(), bottomRight.getLatitude(), bottomRight.getLongitude());
 	}
 

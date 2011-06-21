@@ -248,7 +248,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
-				final TileSet tiles = MapLoader.getAllTiles(mapSize, centerPoint, accessor.getZoom());
+				final TileSet tiles = MapLoader.getAllTiles(mapSize, centerPoint, MapLoader.CENTER, accessor.getZoom());
 
 				new UIJob("Redraw map")
 				{
@@ -262,7 +262,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 						}
 						
 						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
-						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), accessor.getZoom());
+						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
 						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
 						waitingImage.setImage(null);
 						waitingImage.setVisible(false);
