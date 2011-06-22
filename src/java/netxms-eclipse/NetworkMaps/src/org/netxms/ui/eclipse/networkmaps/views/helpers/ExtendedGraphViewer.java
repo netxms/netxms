@@ -20,10 +20,10 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.Figure;
+import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.jface.action.Action;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -64,17 +64,27 @@ public class ExtendedGraphViewer extends GraphViewer
 		backgroundFigure = new BackgroundFigure();
 		backgroundFigure.setSize(10, 10);
 		getGraphControl().getRootLayer().add(backgroundFigure, 0);
-		getGraphControl().addControlListener(new ControlListener() {
+		
+		final Runnable timer = new Runnable()
+		{
 			@Override
-			public void controlResized(ControlEvent e)
+			public void run()
 			{
+				if (getGraphControl().isDisposed())
+					return;
+
+				reloadMapBackground();
 			}
-			
+		};
+		
+		getGraphControl().getRootLayer().addFigureListener(new FigureListener() {
 			@Override
-			public void controlMoved(ControlEvent e)
+			public void figureMoved(IFigure source)
 			{
-				// TODO Auto-generated method stub
-				
+				if (backgroundLocation != null)
+				{
+					getGraphControl().getDisplay().timerExec(1000, timer);
+				}
 			}
 		});
 	}
@@ -114,13 +124,22 @@ public class ExtendedGraphViewer extends GraphViewer
 		backgroundZoom = zoom;
 		backgroundFigure.setSize(10, 10);
 		getGraphControl().redraw();
-		
-		final Point mapSize = getGraphControl().getSize();
+		reloadMapBackground();
+	}
+	
+	/**
+	 * Reload map background
+	 */
+	private void reloadMapBackground()
+	{
+		final Point controlSize = getGraphControl().getSize();
+		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = getGraphControl().getRootLayer().getClientArea();
+		final Point mapSize = new Point(Math.max(controlSize.x, rootLayerSize.width), Math.max(controlSize.y, rootLayerSize.height)); 
 		ConsoleJob job = new ConsoleJob("Download map tiles", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final TileSet tiles = MapLoader.getAllTiles(mapSize, location, MapLoader.TOP_LEFT, zoom);
+				final TileSet tiles = MapLoader.getAllTiles(mapSize, backgroundLocation, MapLoader.TOP_LEFT, backgroundZoom);
 				Display.getDefault().asyncExec(new Runnable() {
 					@Override
 					public void run()
