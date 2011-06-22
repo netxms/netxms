@@ -27,9 +27,12 @@ import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -48,7 +51,8 @@ public class AbstractSelector extends Composite
 	private Label label;
 	private CLabel text;
 	private Button button;
-	private Action actionCopy; 
+	private Action actionCopy;
+	private Image scaledImage = null;
 	
 	/**
 	 * Create abstract selector.
@@ -107,6 +111,15 @@ public class AbstractSelector extends Composite
 		createContextMenu();
 		
 		text.setToolTipText(getTextToolTip());
+		
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				if (scaledImage != null)
+					scaledImage.dispose();
+			}
+		});
 	}
 	
 	/**
@@ -233,7 +246,22 @@ public class AbstractSelector extends Composite
 	 */
 	public void setImage(final Image image)
 	{
-		text.setImage(image);
+		if (scaledImage != null)
+		{
+			scaledImage.dispose();
+			scaledImage = null;
+		}
+		
+		Rectangle size = image.getBounds();
+		if ((size.width > 64) || (size.height > 64))
+		{
+			scaledImage = new Image(getDisplay(), image.getImageData().scaledTo(64, 64));
+			text.setImage(scaledImage);
+		}
+		else
+		{
+			text.setImage(image);
+		}
 	}
 
 	/**

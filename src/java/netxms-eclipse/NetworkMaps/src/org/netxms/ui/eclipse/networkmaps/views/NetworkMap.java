@@ -37,6 +37,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -81,6 +82,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
@@ -138,6 +140,7 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	private Action actionFiguresSmallLabels;
 	private Action actionFiguresLargeLabels;
 	
+	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 
@@ -148,12 +151,15 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-
+		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		String[] parts = site.getSecondaryId().split("&");
 		rootObject = session.findObjectById(Long.parseLong((parts.length > 0) ? parts[0] : site.getSecondaryId()));
 		if (rootObject == null)
 			throw new PartInitException("Root object for this map is no longer exist or is not accessible");
+		
+		viewId = site.getId() + ".";
+		viewId += (parts.length > 0) ? parts[0] : site.getSecondaryId();
 	
 		buildMapPage();
 	}
@@ -177,6 +183,16 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		viewer.setContentProvider(new MapContentProvider());
 		labelProvider = new MapLabelProvider(viewer);
 		viewer.setLabelProvider(labelProvider);
+
+		try
+		{
+			IDialogSettings settings = Activator.getDefault().getDialogSettings();
+			labelProvider.setObjectFigureType(ObjectFigureType.values()[settings.getInt(viewId + ".objectFigureType")]);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 		
 		getSite().setSelectionProvider(this);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -804,6 +820,11 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 	{
 		if (sessionListener != null)
 			session.removeListener(sessionListener);
+		if (labelProvider != null)
+		{
+			IDialogSettings settings = Activator.getDefault().getDialogSettings();
+			settings.put(viewId + ".objectFigureType", labelProvider.getObjectFigureType().ordinal());
+		}
 		super.dispose();
 	}
 	

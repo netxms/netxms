@@ -24,6 +24,8 @@ import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.jface.action.Action;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -52,6 +54,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	private Image backgroundImage = null;
 	private GeoLocation backgroundLocation;
 	private int backgroundZoom;
+	private boolean graphControlResized = false;
 	
 	/**
 	 * @param composite
@@ -73,9 +76,33 @@ public class ExtendedGraphViewer extends GraphViewer
 				if (getGraphControl().isDisposed())
 					return;
 
+				if (graphControlResized)
+				{
+					backgroundFigure.setSize(10, 10);
+					getGraphControl().getRootLayer().setSize(getGraphControl().getRootLayer().getPreferredSize());
+					graphControlResized = false;
+	System.out.println("RESIZED!!!");				
+				}
 				reloadMapBackground();
 			}
 		};
+		
+		getGraphControl().addControlListener(new ControlListener() {
+			@Override
+			public void controlResized(ControlEvent e)
+			{
+				graphControlResized = true;
+				if (backgroundLocation != null)
+				{
+					getGraphControl().getDisplay().timerExec(1000, timer);
+				}
+			}
+			
+			@Override
+			public void controlMoved(ControlEvent e)
+			{
+			}
+		});
 		
 		getGraphControl().getRootLayer().addFigureListener(new FigureListener() {
 			@Override
@@ -132,9 +159,10 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	private void reloadMapBackground()
 	{
-		final Point controlSize = getGraphControl().getSize();
+		final Rectangle controlSize = getGraphControl().getClientArea();
 		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = getGraphControl().getRootLayer().getClientArea();
-		final Point mapSize = new Point(Math.max(controlSize.x, rootLayerSize.width), Math.max(controlSize.y, rootLayerSize.height)); 
+		final Point mapSize = new Point(Math.max(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
+System.out.println("root layer= " + rootLayerSize.width + " x " + rootLayerSize.height);				
 		ConsoleJob job = new ConsoleJob("Download map tiles", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -144,6 +172,7 @@ public class ExtendedGraphViewer extends GraphViewer
 					@Override
 					public void run()
 					{
+		System.out.println("RESIZED again: " + mapSize.x + " x " + mapSize.y);				
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
 						drawTiles(tiles);
 						getGraphControl().redraw();

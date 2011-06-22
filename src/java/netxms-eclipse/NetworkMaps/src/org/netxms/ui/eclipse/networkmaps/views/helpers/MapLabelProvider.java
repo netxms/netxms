@@ -78,7 +78,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
 	private ILabelProvider workbenchLabelProvider;
-	private ObjectFigureType objectFigureType = ObjectFigureType.SMALL_LABEL;
+	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 
 	/**
 	 * Create map label provider
