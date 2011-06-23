@@ -23,6 +23,7 @@ import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
@@ -35,8 +36,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.internal.ZoomManager;
 import org.netxms.client.GeoLocation;
-import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 
@@ -54,6 +55,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	private Image backgroundImage = null;
 	private GeoLocation backgroundLocation;
 	private int backgroundZoom;
+	private IFigure zestRootLayer;
 	private boolean graphControlResized = false;
 	
 	/**
@@ -66,6 +68,11 @@ public class ExtendedGraphViewer extends GraphViewer
 		getZoomManager().setZoomLevels(zoomLevels);
 		backgroundFigure = new BackgroundFigure();
 		backgroundFigure.setSize(10, 10);
+		
+		for(Object f : getGraphControl().getRootLayer().getChildren())
+			if (f.getClass().getName().equals("org.eclipse.zest.core.widgets.internal.ZestRootLayer"))
+				zestRootLayer = (IFigure)f;
+
 		getGraphControl().getRootLayer().add(backgroundFigure, 0);
 		
 		final Runnable timer = new Runnable()
@@ -79,9 +86,7 @@ public class ExtendedGraphViewer extends GraphViewer
 				if (graphControlResized)
 				{
 					backgroundFigure.setSize(10, 10);
-					getGraphControl().getRootLayer().setSize(getGraphControl().getRootLayer().getPreferredSize());
 					graphControlResized = false;
-	System.out.println("RESIZED!!!");				
 				}
 				reloadMapBackground();
 			}
@@ -104,7 +109,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		});
 		
-		getGraphControl().getRootLayer().addFigureListener(new FigureListener() {
+		zestRootLayer.addFigureListener(new FigureListener() {
 			@Override
 			public void figureMoved(IFigure source)
 			{
@@ -160,9 +165,8 @@ public class ExtendedGraphViewer extends GraphViewer
 	private void reloadMapBackground()
 	{
 		final Rectangle controlSize = getGraphControl().getClientArea();
-		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = getGraphControl().getRootLayer().getClientArea();
+		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
 		final Point mapSize = new Point(Math.max(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
-System.out.println("root layer= " + rootLayerSize.width + " x " + rootLayerSize.height);				
 		ConsoleJob job = new ConsoleJob("Download map tiles", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -172,7 +176,14 @@ System.out.println("root layer= " + rootLayerSize.width + " x " + rootLayerSize.
 					@Override
 					public void run()
 					{
-		System.out.println("RESIZED again: " + mapSize.x + " x " + mapSize.y);				
+						final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
+						if ((mapSize.x != rootLayerSize.width) || (mapSize.y != rootLayerSize.height))
+							return;
+						
+						if (mapSize.x > rootLayerSize.width)
+							mapSize.x = rootLayerSize.width;
+						if (mapSize.y > rootLayerSize.height)
+							mapSize.y = rootLayerSize.height;
 						backgroundFigure.setSize(mapSize.x, mapSize.y);
 						drawTiles(tiles);
 						getGraphControl().redraw();
@@ -206,8 +217,8 @@ System.out.println("root layer= " + rootLayerSize.width + " x " + rootLayerSize.
 
 		final Image[][] tiles = tileSet.tiles;
 
-		Point size = getGraphControl().getSize();
-		backgroundImage = new Image(getGraphControl().getDisplay(), size.x, size.y);
+		Dimension size = backgroundFigure.getSize();
+		backgroundImage = new Image(getGraphControl().getDisplay(), size.width, size.height);
 		GC gc = new GC(backgroundImage);
 
 		int x = tileSet.xOffset;
@@ -218,7 +229,7 @@ System.out.println("root layer= " + rootLayerSize.width + " x " + rootLayerSize.
 			{
 				gc.drawImage(tiles[i][j], x, y);
 				x += 256;
-				if (x >= size.x)
+				if (x >= size.width)
 				{
 					x = tileSet.xOffset;
 					y += 256;

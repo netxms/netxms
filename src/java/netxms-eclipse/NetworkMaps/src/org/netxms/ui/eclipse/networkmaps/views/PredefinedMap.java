@@ -88,7 +88,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	private Action actionMapProperties;
 
 	/**
-	 * Creare predefined map view
+	 * Create predefined map view
 	 */
 	public PredefinedMap()
 	{

@@ -28,6 +28,9 @@ public class ImageProvider
 	private static final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
 	private static final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
 
+	/**
+	 * @return
+	 */
 	public static ImageProvider getInstance()
 	{
 		return instance;
@@ -53,6 +56,7 @@ public class ImageProvider
 	 */
 	public void addUpdateListener(final ImageUpdateListener listener)
 	{
+		System.out.println("UPDATE LISTENER: " + listener.getClass().getName());
 		updateListeners.add(listener);
 	}
 

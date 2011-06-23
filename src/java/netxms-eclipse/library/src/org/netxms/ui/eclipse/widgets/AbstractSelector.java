@@ -251,16 +251,23 @@ public class AbstractSelector extends Composite
 			scaledImage.dispose();
 			scaledImage = null;
 		}
-		
-		Rectangle size = image.getBounds();
-		if ((size.width > 64) || (size.height > 64))
+
+		if (image != null)
 		{
-			scaledImage = new Image(getDisplay(), image.getImageData().scaledTo(64, 64));
-			text.setImage(scaledImage);
+			Rectangle size = image.getBounds();
+			if ((size.width > 64) || (size.height > 64))
+			{
+				scaledImage = new Image(getDisplay(), image.getImageData().scaledTo(64, 64));
+				text.setImage(scaledImage);
+			}
+			else
+			{
+				text.setImage(image);
+			}
 		}
 		else
 		{
-			text.setImage(image);
+			text.setImage(null);
 		}
 	}
 
