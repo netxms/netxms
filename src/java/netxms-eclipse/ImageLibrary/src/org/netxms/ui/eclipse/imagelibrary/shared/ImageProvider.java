@@ -56,7 +56,6 @@ public class ImageProvider
 	 */
 	public void addUpdateListener(final ImageUpdateListener listener)
 	{
-		System.out.println("UPDATE LISTENER: " + listener.getClass().getName());
 		updateListeners.add(listener);
 	}
 
