@@ -4,7 +4,8 @@
 
 - Added VLAN view in management console
 - OpenStreetMap support improved; added local cache for map images
-- Added option to use alternative tile server for geo maps
+- Added option to use alternative tile server for geographic maps
+- Geographic maps now can be used as background for network maps
 - Implemented hierarchical maps
 - New MIBs added: POLYCOM-RMX-MIB
 - Multiple fixes and minor improvements in management console

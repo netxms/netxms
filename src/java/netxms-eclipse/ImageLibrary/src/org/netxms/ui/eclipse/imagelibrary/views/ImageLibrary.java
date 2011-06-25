@@ -33,6 +33,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.ProgressListener;
 import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -246,50 +247,50 @@ public class ImageLibrary extends ViewPart
 	 */
 	protected void editImage(final GalleryItem galleryItem, final String name, final String category, final String fileName)
 	{
-		new ConsoleJob("Update Image", this, Activator.PLUGIN_ID, null)
+		final LibraryImage image = (LibraryImage)galleryItem.getData();
+		
+		new ConsoleJob("Update image", this, Activator.PLUGIN_ID, null)
 		{
 			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-				/* FIXME: wtf? why we have ui job inside job? */
-				new UIJob("Update Image")
+				if (fileName != null)
 				{
+					final long fileSize = new File(fileName).length();
+					final FileInputStream stream = new FileInputStream(fileName);
+					byte imageData[] = new byte[(int)fileSize];
+					stream.read(imageData);
+
+					image.setBinaryData(imageData);
+				}
+
+				if (!image.isProtected())
+				{
+					image.setName(name);
+					image.setCategory(category);
+				}
+
+				session.modifyImage(image, new ProgressListener() {
+					private long prevDone = 0;
+					
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void setTotalWorkAmount(long workTotal)
 					{
-						try
-						{
-							final LibraryImage image = (LibraryImage)galleryItem.getData();
-
-							if (fileName != null)
-							{
-								// TODO: add error checking
-								final long fileSize = new File(fileName).length();
-								final FileInputStream stream = new FileInputStream(fileName);
-								byte imageData[] = new byte[(int)fileSize];
-								stream.read(imageData);
-
-								image.setBinaryData(imageData);
-							}
-
-							if (!image.isProtected())
-							{
-								image.setName(name);
-								image.setCategory(category);
-							}
-
-							session.modifyImage(image, null);	/* TODO: add progress listener */
-
-							refreshImages(); // TODO: should be changed to update
-													// single elemnt
-						}
-						catch(Exception e)
-						{
-							e.printStackTrace();
-						}
-						return Status.OK_STATUS;
+						monitor.beginTask("Update image file", (int)workTotal);
 					}
-				}.schedule();
+					
+					@Override
+					public void markProgress(long workDone)
+					{
+						monitor.worked((int)(workDone - prevDone));
+						prevDone = workDone;
+					}
+				});
+
+				ImageProvider.getInstance().syncMetaData();
+				refreshImages();	/* TODO: update single element */                      
+				
+				monitor.done();
 			}
 
 			@Override
@@ -307,43 +308,43 @@ public class ImageLibrary extends ViewPart
 	 */
 	protected void uploadNewImage(final String name, final String category, final String fileName)
 	{
-		new ConsoleJob("Upload New Image", this, Activator.PLUGIN_ID, null)
+		new ConsoleJob("Upload image file", this, Activator.PLUGIN_ID, null)
 		{
 			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-				/* FIXME: wtf? why we have ui job inside job? */
-				new UIJob("Upload New Image")
-				{
+				final LibraryImage image = new LibraryImage();
+
+				final long fileSize = new File(fileName).length();
+				final FileInputStream stream = new FileInputStream(fileName);
+				byte imageData[] = new byte[(int)fileSize];
+				stream.read(imageData);
+
+				image.setBinaryData(imageData);
+				image.setName(name);
+				image.setCategory(category);
+
+				session.createImage(image, new ProgressListener() {
+					private long prevDone = 0;
+					
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void setTotalWorkAmount(long workTotal)
 					{
-						try
-						{
-							final LibraryImage image = new LibraryImage();
-
-							// TODO: add error checking
-							final long fileSize = new File(fileName).length();
-							final FileInputStream stream = new FileInputStream(fileName);
-							byte imageData[] = new byte[(int)fileSize];
-							stream.read(imageData);
-
-							image.setBinaryData(imageData);
-							image.setName(name);
-							image.setCategory(category);
-
-							session.createImage(image, null); /* TODO: add progress listener */
-
-							refreshImages(); // TODO: should be changed to add single
-													// element
-						}
-						catch(Exception e)
-						{
-							e.printStackTrace();
-						}
-						return Status.OK_STATUS;
+						monitor.beginTask("Upload image file", (int)workTotal);
 					}
-				}.schedule();
+					
+					@Override
+					public void markProgress(long workDone)
+					{
+						monitor.worked((int)(workDone - prevDone));
+						prevDone = workDone;
+					}
+				});
+				
+				ImageProvider.getInstance().syncMetaData();
+				refreshImages();	/* TODO: update local copy */
+
+				monitor.done();
 			}
 
 			@Override
