@@ -189,7 +189,9 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 			}
 		};
 		actionFullScreen.setChecked(false);
-		actionFullScreen.setAccelerator(SWT.F11);
+		actionFullScreen.setId("org.netxms.ui.eclipse.console.actions.full_screen");
+		actionFullScreen.setActionDefinitionId("org.netxms.ui.eclipse.console.commands.full_screen");
+		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
 	}
 
 	/* (non-Javadoc)

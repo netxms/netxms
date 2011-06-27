@@ -209,5 +209,41 @@
          </enabledWhen>
       </page>
    </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+A">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+L">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+R">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Add new object to the map"
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"
+            name="Add object">
+      </command>
+      <command
+            description="Link selected objects"
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"
+            name="Link selected objects">
+      </command>
+      <command
+            description="Remove selected element(s)"
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"
+            name="Remove">
+      </command>
+   </extension>
 
 </plugin>

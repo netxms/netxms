@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
+import java.util.Comparator;
+
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.netxms.client.objects.GenericObject;
@@ -32,6 +34,20 @@ public class ObjectTreeComparator extends ViewerComparator
 	private static final int CATEGORY_CONTAINER = 10;
 	private static final int CATEGORY_OTHER = 255;
 
+	/**
+	 * Default constructor
+	 */
+	public ObjectTreeComparator()
+	{
+		super(new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2)
+			{
+				return o1.compareToIgnoreCase(o2);
+			}
+		});
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#category(java.lang.Object)
 	 */

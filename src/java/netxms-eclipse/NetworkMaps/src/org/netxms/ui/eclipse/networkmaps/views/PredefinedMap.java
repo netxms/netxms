@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -36,7 +37,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.base.NXCommon;
@@ -231,6 +232,7 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 	protected void createActions()
 	{
 		super.createActions();
+		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 
 		actionAddObject = new Action("&Add object...")
 		{
@@ -240,7 +242,10 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 				addObjectToMap();
 			}
 		};
-		actionAddObject.setAccelerator(SWT.CTRL | 'A');
+		actionAddObject.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddObject");
+		actionAddObject.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject");
+		final ActionHandler addObjectHandler = new ActionHandler(actionAddObject);
+		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
 
 		actionAddGroupBox = new Action("&Group box...")
 		{
@@ -268,8 +273,11 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 				linkSelectedObjects();
 			}
 		};
-		actionLinkObjects.setAccelerator(SWT.CTRL | 'L');
 		actionLinkObjects.setImageDescriptor(Activator.getImageDescriptor("icons/link_add.png"));
+		actionLinkObjects.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.LinkObjects");
+		actionLinkObjects.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects");
+		final ActionHandler linkObjectHandler = new ActionHandler(actionLinkObjects);
+		handlerService.activateHandler(actionLinkObjects.getActionDefinitionId(), linkObjectHandler);
 
 		actionRemove = new Action("&Remove from map")
 		{
@@ -279,8 +287,11 @@ public class PredefinedMap extends NetworkMap implements ImageUpdateListener
 				removeSelectedElements();
 			}
 		};
-		actionRemove.setAccelerator(SWT.CTRL | 'R');
 		actionRemove.setImageDescriptor(SharedIcons.DELETE_OBJECT);
+		actionRemove.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.Remove");
+		actionRemove.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove");
+		final ActionHandler removeHandler = new ActionHandler(actionRemove);
+		handlerService.activateHandler(actionRemove.getActionDefinitionId(), removeHandler);
 
 		actionMapProperties = new Action("Map &properties") {
 			@Override

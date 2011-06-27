@@ -125,6 +125,11 @@
             id="org.netxms.ui.eclipse.console.commands.open_server_console"
             name="Server Console">
       </command>
+      <command
+            description="Toggle full screen mode"
+            id="org.netxms.ui.eclipse.console.commands.full_screen"
+            name="Full Screen">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -141,6 +146,14 @@
                menubarPath="tools/additions">
          </action>
       </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.console.commands.full_screen"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F11">
+      </key>
    </extension>
 
 </plugin>
