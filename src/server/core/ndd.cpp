@@ -93,6 +93,9 @@ void LoadNetworkDeviceDrivers()
 	_tcscat(path, LDIR_NDD);
 
 	DbgPrintf(1, _T("Loading network device drivers from %s"), path);
+#ifdef _WIN32
+	SetDllDirectory(path);
+#endif
 	_TDIR *dir = _topendir(path);
 	if (dir != NULL)
 	{
@@ -112,6 +115,9 @@ void LoadNetworkDeviceDrivers()
 		}
 		_tclosedir(dir);
 	}
+#ifdef _WIN32
+	SetDllDirectory(NULL);
+#endif
 	DbgPrintf(1, _T("%d network device drivers loaded"), s_numDrivers);
 }
 

@@ -149,11 +149,7 @@ typedef int bool;
 /********** WINDOWS ********************/
 
 #ifndef _WIN32_WINNT
-#ifdef _M_IX86
-#define _WIN32_WINNT		0x0500
-#else
-#define _WIN32_WINNT		0x0501
-#endif
+#define _WIN32_WINNT		0x0502
 #endif
 
 #define WITH_IPV6               1
