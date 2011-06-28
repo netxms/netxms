@@ -874,8 +874,8 @@ public:
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
 	NXSL_Array *getParentsForNXSL();
 
-   void OpenParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
-   void CloseParamList(void) { UnlockData(); }
+   void openParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
+   void closeParamList() { UnlockData(); }
 
    AgentConnectionEx *createAgentConnection();
 	SNMP_Transport *createSnmpTransport(WORD port = 0);

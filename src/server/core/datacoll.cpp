@@ -323,7 +323,7 @@ static void UpdateParamList(NetObj *object, void *data)
 
 	NXC_AGENT_PARAM *paramList;
 	DWORD numParams;
-	((Node *)object)->OpenParamList(&numParams, &paramList);
+	((Node *)object)->openParamList(&numParams, &paramList);
 	if ((numParams > 0) && (paramList != NULL))
 	{
 		fullList->data = (NXC_AGENT_PARAM *)realloc(fullList->data, sizeof(NXC_AGENT_PARAM) * (fullList->size + numParams));
@@ -342,8 +342,8 @@ static void UpdateParamList(NetObj *object, void *data)
 				fullList->size++;
 			}
 		}
-		((Node *)object)->CloseParamList();
 	}
+	((Node *)object)->closeParamList();
 }
 
 void WriteFullParamListToMessage(CSCPMessage *pMsg)
