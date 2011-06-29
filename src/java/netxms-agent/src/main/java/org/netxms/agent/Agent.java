@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.netxms.agent.api.Parameter;
 import org.netxms.base.Glob;
@@ -45,6 +47,7 @@ public class Agent
 	// Communication data
 	private int listenPort = 4700;
 	private ServerSocket socket;
+	private Set<Session> sessions = new HashSet<Session>();
 	
 	// Supported parameters
 	List<Parameter> parameters = new ArrayList<Parameter>();
@@ -84,6 +87,7 @@ public class Agent
 			{
 				Socket client = socket.accept();
 				Session session = new Session(client);
+				sessions.add(session);
 			}
 			catch(IOException e)
 			{
@@ -93,6 +97,30 @@ public class Agent
 		socket.close();
 	}
 	
+	/**
+	 * Unregister session from session list.
+	 * 
+	 * @param session session object
+	 */
+	protected void unregisterSession(Session session)
+	{
+		sessions.remove(session);
+	}
+	
+	/**
+	 * Find parameter object by actual name passed to agent
+	 * 
+	 * @param name actual parameter's name
+	 * @return parameter object or null if not found
+	 */
+	public synchronized Parameter findParameter(String name)
+	{
+		for(Parameter p : parameters)
+			if (Glob.matchIgnoreCase(p.getName(), name))
+				return p;
+		return null;
+	}
+
 	/**
 	 * @param args
 	 */
@@ -115,19 +143,5 @@ public class Agent
 	public static Agent getInstance()
 	{
 		return instance;
-	}
-	
-	/**
-	 * Find parameter object by actual name passed to agent
-	 * 
-	 * @param name actual parameter's name
-	 * @return parameter object or null if not found
-	 */
-	public synchronized Parameter findParameter(String name)
-	{
-		for(Parameter p : parameters)
-			if (Glob.matchIgnoreCase(p.getName(), name))
-				return p;
-		return null;
 	}
 }

@@ -64,6 +64,7 @@ public class Session
 			}
 			catch(IOException e)
 			{
+				Agent.getInstance().unregisterSession(Session.this);
 				return; // Stop receiver thread if input stream cannot be obtained
 			}
 
@@ -107,6 +108,8 @@ public class Session
 			{
 			}
 			logger.info("session closed");
+
+			Agent.getInstance().unregisterSession(Session.this);
 		}
 	}
 	
