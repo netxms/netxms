@@ -67,7 +67,7 @@ public final class StatusDisplayInfo
 		Display display = Display.getDefault();
 		statusColor[Severity.NORMAL] = new Color(display, 0, 192, 0);
 		statusColor[Severity.WARNING] = new Color(display, 0, 255, 255);
-		statusColor[Severity.MINOR] = new Color(display, 255, 255, 0);
+		statusColor[Severity.MINOR] = new Color(display, 231, 226, 0);
 		statusColor[Severity.MAJOR] = new Color(display, 255, 128, 0);
 		statusColor[Severity.CRITICAL] = new Color(display, 192, 0, 0);
 		statusColor[Severity.UNKNOWN] = new Color(display, 0, 0, 128);
