@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,7 +165,8 @@ void InstallService(TCHAR *execName, TCHAR *confFile)
 		_tcscat(cmdLine, _T("\""));
 	}
    
-	service = CreateService(mgr, g_windowsServiceName, g_windowsServiceDisplayName, GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
+	service = CreateService(mgr, g_windowsServiceName, g_windowsServiceDisplayName, GENERIC_READ,
+	                        SERVICE_WIN32_OWN_PROCESS | ((g_dwFlags & AF_INTERACTIVE_SERVICE) ? SERVICE_INTERACTIVE_PROCESS : 0),
                            SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, cmdLine, NULL, NULL, NULL, NULL, NULL);
    if (service == NULL)
    {
@@ -337,7 +338,7 @@ void InstallEventSource(const TCHAR *path)
 // Remove event source
 //
 
-void RemoveEventSource(void)
+void RemoveEventSource()
 {
    TCHAR szErrorText[256], key[MAX_PATH];
 

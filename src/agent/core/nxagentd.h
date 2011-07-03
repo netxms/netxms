@@ -113,9 +113,9 @@
 #define AF_ENABLE_AUTOLOAD          0x00000100
 #define AF_ENABLE_PROXY             0x00000200
 #define AF_CENTRAL_CONFIG           0x00000400
-#define AF_ENABLE_SNMP_PROXY		0x00000800
+#define AF_ENABLE_SNMP_PROXY        0x00000800
 #define AF_SHUTDOWN                 0x00001000
-//deprecated: #define AF_RUNNING_ON_NT4           0x00002000
+#define AF_INTERACTIVE_SERVICE      0x00002000
 #define AF_REGISTER                 0x00004000
 #define AF_ENABLE_WATCHDOG          0x00008000
 #define AF_CATCH_EXCEPTIONS         0x00010000

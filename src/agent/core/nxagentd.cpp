@@ -86,7 +86,7 @@ extern const TCHAR *g_szMessages[];
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdD:e:EfhHIM:n:N:P:r:RsSUvX:W:Z:"
+#define VALID_OPTIONS   "c:CdD:e:EfhHiIM:n:N:P:r:RsSUvX:W:Z:"
 #elif defined(_NETWARE)
 #define VALID_OPTIONS   "c:CD:fhM:P:r:vZ:"
 #else
@@ -255,6 +255,7 @@ static char m_szHelpText[] =
    "   -h         : Display help and exit\n"
 #ifdef _WIN32
    "   -H         : Hide agent's window when in standalone mode\n"
+	"   -i         : Installed Windows service must be interactive\n"
    "   -I         : Install Windows service\n"
 #endif
    "   -M <addr>  : Download config from management server <addr>\n"
@@ -1302,6 +1303,9 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
          case 'H':   // Hide window
             g_dwFlags |= AF_HIDE_WINDOW;
+            break;
+         case 'i':
+            g_dwFlags |= AF_INTERACTIVE_SERVICE;
             break;
          case 'I':   // Install Windows service
             iAction = ACTION_INSTALL_SERVICE;
