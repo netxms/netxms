@@ -74,6 +74,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private static final Color INFO_BLOCK_TEXT = new Color(Display.getDefault(), 0, 0, 0);
 	private static final Color LABEL_BACKGROUND = new Color(Display.getDefault(), 240, 254, 192);
 	private static final Color LABEL_TEXT = new Color(Display.getDefault(), 0, 0, 0);
+	private static final Color BORDER_COLOR = new Color(Display.getDefault(), 128, 128, 128);
 
 	private static final int LABEL_ARROW_HEIGHT = 20;
 	private static final int LABEL_ARROW_OFFSET = 10;
@@ -418,18 +419,32 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				+ LABEL_Y_MARGIN * 2);
 		
 		gc.setBackground(LABEL_BACKGROUND);
+
+		gc.setForeground(BORDER_COLOR);
+		gc.setLineWidth(4);
+		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+		
 		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		gc.setLineWidth(2);
 		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 
+		
 		final int[] arrow = new int[] { rect.x + LABEL_ARROW_OFFSET - 4, rect.y + rect.height, x, y, rect.x + LABEL_ARROW_OFFSET + 4,
 				rect.y + rect.height };
+
+		gc.setLineWidth(4);
+		gc.setForeground(BORDER_COLOR);
+		gc.drawPolyline(arrow);
+
 		gc.fillPolygon(arrow);
 		gc.setForeground(LABEL_BACKGROUND);
+		gc.setLineWidth(2);
 		gc.drawLine(arrow[0], arrow[1], arrow[4], arrow[5]);
 		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		gc.drawPolyline(arrow);
+
 
 		gc.setForeground(LABEL_TEXT);
 		gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
