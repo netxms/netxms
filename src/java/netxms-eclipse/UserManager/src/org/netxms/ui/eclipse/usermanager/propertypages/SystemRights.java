@@ -80,6 +80,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, "View SNMP trap log");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, "Edit server configuration variables");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, "Read server files");
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_FILES, "Manage server files");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, "Access server console");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, "Control user sessions");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, "Manage users");

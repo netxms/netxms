@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.netxms.agent.api.Parameter;
+import org.netxms.agent.api.Subagent;
 import org.netxms.base.Glob;
 import org.netxms.base.NXCommon;
 import org.slf4j.Logger;
@@ -48,6 +49,9 @@ public class Agent
 	private int listenPort = 4700;
 	private ServerSocket socket;
 	private Set<Session> sessions = new HashSet<Session>();
+	
+	// Subagents
+	List<Subagent> subagents = new ArrayList<Subagent>();
 	
 	// Supported parameters
 	List<Parameter> parameters = new ArrayList<Parameter>();
@@ -119,6 +123,16 @@ public class Agent
 			if (Glob.matchIgnoreCase(p.getName(), name))
 				return p;
 		return null;
+	}
+	
+	/**
+	 * Load subagent.
+	 * 
+	 * @param jarFile subagent's jar file
+	 */
+	public void loadSubagent(String jarFile)
+	{
+		
 	}
 
 	/**

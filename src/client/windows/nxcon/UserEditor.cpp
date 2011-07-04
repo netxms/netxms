@@ -400,7 +400,6 @@ void CUserEditor::OnUserProperties()
             dlg.m_bManageAgentCfg = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
             dlg.m_bAccessFiles = (pUser->dwSystemRights & SYSTEM_ACCESS_READ_FILES) ? TRUE : FALSE;
             dlg.m_bRegisterAgents = (pUser->dwSystemRights & SYSTEM_ACCESS_REGISTER_AGENTS) ? TRUE : FALSE;
-            dlg.m_bManageMaps = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_MAPS) ? TRUE : FALSE;
             dlg.m_bManageSituations = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_SITUATIONS) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
@@ -424,7 +423,6 @@ void CUserEditor::OnUserProperties()
                                          (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
                                          (dlg.m_bAccessFiles ? SYSTEM_ACCESS_READ_FILES : 0) |
                                          (dlg.m_bRegisterAgents ? SYSTEM_ACCESS_REGISTER_AGENTS : 0) |
-                                         (dlg.m_bManageMaps ? SYSTEM_ACCESS_MANAGE_MAPS : 0) |
                                          (dlg.m_bManageSituations ? SYSTEM_ACCESS_MANAGE_SITUATIONS : 0);
                userInfo.dwNumMembers = dlg.m_dwNumMembers;
                if (userInfo.dwNumMembers > 0)
@@ -464,7 +462,6 @@ void CUserEditor::OnUserProperties()
             dlg.m_bManageAgentCfg = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
             dlg.m_bAccessFiles = (pUser->dwSystemRights & SYSTEM_ACCESS_READ_FILES) ? TRUE : FALSE;
             dlg.m_bRegisterAgents = (pUser->dwSystemRights & SYSTEM_ACCESS_REGISTER_AGENTS) ? TRUE : FALSE;
-            dlg.m_bManageMaps = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_MAPS) ? TRUE : FALSE;
             dlg.m_bManageSituations = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_SITUATIONS) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
@@ -493,7 +490,6 @@ void CUserEditor::OnUserProperties()
                                          (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
                                          (dlg.m_bAccessFiles ? SYSTEM_ACCESS_READ_FILES : 0) |
                                          (dlg.m_bRegisterAgents ? SYSTEM_ACCESS_REGISTER_AGENTS : 0) |
-                                         (dlg.m_bManageMaps ? SYSTEM_ACCESS_MANAGE_MAPS : 0) |
                                          (dlg.m_bManageSituations ? SYSTEM_ACCESS_MANAGE_SITUATIONS : 0);
                bModify = TRUE;
             }
