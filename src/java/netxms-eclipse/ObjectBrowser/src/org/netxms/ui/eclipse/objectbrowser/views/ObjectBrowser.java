@@ -26,6 +26,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
@@ -65,6 +68,7 @@ public class ObjectBrowser extends ViewPart
 	private Action actionHideUnmanaged;
 	private Action actionMoveObject;
 	private Action actionRefresh;
+	private Action actionProperties;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -83,7 +87,7 @@ public class ObjectBrowser extends ViewPart
 			rootObjects = (long[])value;
 		}
 		
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, rootObjects, null);
+		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, rootObjects, null);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -98,6 +102,16 @@ public class ObjectBrowser extends ViewPart
 		
 		objectTree.enableDragSupport();
 		getSite().setSelectionProvider(objectTree.getTreeViewer());
+		
+		objectTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				int size = ((IStructuredSelection)objectTree.getTreeViewer().getSelection()).size();
+				actionMoveObject.setEnabled(size == 1);
+				actionProperties.setEnabled(size == 1);
+			}
+		});
 	}
 	
 	/**
@@ -139,6 +153,8 @@ public class ObjectBrowser extends ViewPart
 			}
       };
       actionShowFilter.setChecked(true);
+      
+      actionProperties = new PropertyDialogAction(getSite(), objectTree.getTreeViewer());
 	}
 
 	/**
@@ -208,7 +224,7 @@ public class ObjectBrowser extends ViewPart
 		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
-		manager.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
+		manager.add(actionProperties);
 	}
 	
    /* (non-Javadoc)

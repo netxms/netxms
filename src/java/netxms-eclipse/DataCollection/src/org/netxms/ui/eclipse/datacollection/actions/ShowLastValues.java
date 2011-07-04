@@ -75,6 +75,7 @@ public class ShowLastValues implements IObjectActionDelegate
 	{
 		Object obj;
 		if ((selection instanceof IStructuredSelection) &&
+		    (((IStructuredSelection)selection).size() == 1) &&
 			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof Node))
 		{
 			node = (Node)obj;

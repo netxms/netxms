@@ -96,6 +96,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
+import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
@@ -280,6 +281,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_ZONE:
 				object = new Zone(msg, this);
+				break;
+			case GenericObject.OBJECT_NETWORKSERVICE:
+				object = new NetworkService(msg, this);
 				break;
 			default:
 				object = new GenericObject(msg, this);
@@ -2475,6 +2479,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariableInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
 				msg.setVariableInt32(NXCPCodes.VID_SEED_OBJECT, (int)data.getSeedObjectId());
 				break;
+			case GenericObject.OBJECT_NETWORKSERVICE:
+				msg.setVariableInt16(NXCPCodes.VID_SERVICE_TYPE, data.getServiceType());
+				msg.setVariableInt16(NXCPCodes.VID_IP_PROTO, data.getIpProtocol());
+				msg.setVariableInt16(NXCPCodes.VID_IP_PORT, data.getIpPort());
+				msg.setVariable(NXCPCodes.VID_SERVICE_REQUEST, data.getRequest());
+				msg.setVariable(NXCPCodes.VID_SERVICE_RESPONSE, data.getResponse());
+				break;
 		}
 
 		sendMessage(msg);
@@ -2750,6 +2761,41 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		if ((flags & NXCObjectModificationData.MODIFY_SUBMAP_ID) != 0)
 		{
 			msg.setVariableInt32(NXCPCodes.VID_SUBMAP_ID, (int)data.getSubmapId());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_SERVICE_TYPE) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_SERVICE_TYPE, data.getServiceType());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_IP_PROTOCOL) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_IP_PROTO, data.getIpProtocol());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_IP_PORT) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_IP_PORT, data.getIpPort());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_POLLER_NODE) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_POLLER_NODE_ID, (int)data.getPollerNode());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_REQUIRED_POLLS) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_REQUIRED_POLLS, data.getRequiredPolls());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_REQUEST) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_SERVICE_REQUEST, data.getRequest());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_RESPONSE) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_SERVICE_RESPONSE, data.getResponse());
 		}
 		
 		sendMessage(msg);

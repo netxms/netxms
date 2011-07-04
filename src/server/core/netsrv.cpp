@@ -236,7 +236,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
 // Delete object from database
 //
 
-BOOL NetworkService::DeleteFromDB(void)
+BOOL NetworkService::DeleteFromDB()
 {
    TCHAR szQuery[128];
    BOOL bSuccess;
@@ -367,9 +367,8 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       return;     // Service without host node, which is VERY strange
    }
 
-   SendPollerMsg(dwRqId, _T("   Starting status poll on network service %s\r\n")
-                         _T("      Current status is %s\r\n"),
-                 m_szName, g_szStatusTextSmall[m_iStatus]);
+   SendPollerMsg(dwRqId, _T("   Starting status poll on network service %s\r\n"), m_szName);
+   SendPollerMsg(dwRqId, _T("      Current service status is %s\r\n"), g_szStatusTextSmall[m_iStatus]);
 
    if (m_dwPollerNode != 0)
    {

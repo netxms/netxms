@@ -71,6 +71,14 @@ public class NXCObjectModificationData
 	public static final long MODIFY_INACTIVE_STATUS    = 0x000040000000L;
 	public static final long MODIFY_DCI_LIST           = 0x000080000000L;
 	public static final long MODIFY_SUBMAP_ID          = 0x000100000000L;
+	public static final long MODIFY_IP_ADDRESS         = 0x000200000000L;
+	public static final long MODIFY_IP_PROTOCOL        = 0x000400000000L;
+	public static final long MODIFY_IP_PORT            = 0x000800000000L;
+	public static final long MODIFY_SERVICE_TYPE       = 0x001000000000L;
+	public static final long MODIFY_POLLER_NODE        = 0x002000000000L;
+	public static final long MODIFY_REQUIRED_POLLS     = 0x004000000000L;
+	public static final long MODIFY_REQUEST            = 0x008000000000L;
+	public static final long MODIFY_RESPONSE           = 0x010000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -118,6 +126,14 @@ public class NXCObjectModificationData
 	private int inactiveStatus;
 	private List<ConditionDciInfo> dciList;
 	private long submapId;
+	private long pollerNode;
+	private int requiredPolls;
+	private int serviceType;
+	private int ipProtocol;
+	private int ipPort;
+	private int ipAddress;
+	private String request;
+	private String response;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -871,5 +887,141 @@ public class NXCObjectModificationData
 	public int getMapBackgroundZoom()
 	{
 		return mapBackgroundZoom;
+	}
+
+	/**
+	 * @return the pollerNode
+	 */
+	public long getPollerNode()
+	{
+		return pollerNode;
+	}
+
+	/**
+	 * @param pollerNode the pollerNode to set
+	 */
+	public void setPollerNode(long pollerNode)
+	{
+		this.pollerNode = pollerNode;
+		flags |= MODIFY_POLLER_NODE;
+	}
+
+	/**
+	 * @return the requiredPolls
+	 */
+	public int getRequiredPolls()
+	{
+		return requiredPolls;
+	}
+
+	/**
+	 * @param requiredPolls the requiredPolls to set
+	 */
+	public void setRequiredPolls(int requiredPolls)
+	{
+		this.requiredPolls = requiredPolls;
+		flags |= MODIFY_REQUIRED_POLLS;
+	}
+
+	/**
+	 * @return the serviceType
+	 */
+	public int getServiceType()
+	{
+		return serviceType;
+	}
+
+	/**
+	 * @param serviceType the serviceType to set
+	 */
+	public void setServiceType(int serviceType)
+	{
+		this.serviceType = serviceType;
+		flags |= MODIFY_SERVICE_TYPE;
+	}
+
+	/**
+	 * @return the ipProtocol
+	 */
+	public int getIpProtocol()
+	{
+		return ipProtocol;
+	}
+
+	/**
+	 * @param ipProtocol the ipProtocol to set
+	 */
+	public void setIpProtocol(int ipProtocol)
+	{
+		this.ipProtocol = ipProtocol;
+		flags |= MODIFY_IP_PROTOCOL;
+	}
+
+	/**
+	 * @return the ipPort
+	 */
+	public int getIpPort()
+	{
+		return ipPort;
+	}
+
+	/**
+	 * @param ipPort the ipPort to set
+	 */
+	public void setIpPort(int ipPort)
+	{
+		this.ipPort = ipPort;
+		flags |= MODIFY_IP_PORT;
+	}
+
+	/**
+	 * @return the ipAddress
+	 */
+	public int getIpAddress()
+	{
+		return ipAddress;
+	}
+
+	/**
+	 * @param ipAddress the ipAddress to set
+	 */
+	public void setIpAddress(int ipAddress)
+	{
+		this.ipAddress = ipAddress;
+		flags |= MODIFY_IP_ADDRESS;
+	}
+
+	/**
+	 * @return the request
+	 */
+	public String getRequest()
+	{
+		return request;
+	}
+
+	/**
+	 * @param request the request to set
+	 */
+	public void setRequest(String request)
+	{
+		this.request = request;
+		flags |= MODIFY_REQUEST;
+	}
+
+	/**
+	 * @return the response
+	 */
+	public String getResponse()
+	{
+		return response;
+	}
+
+	/**
+	 * @param response the response to set
+	 */
+	public void setResponse(String response)
+	{
+		this.response = response;
+		flags |= MODIFY_RESPONSE;
 	}
 }

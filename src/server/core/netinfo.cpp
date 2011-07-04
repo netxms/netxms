@@ -304,16 +304,13 @@ static InterfaceList *SysGetLocalIfList()
          // Compose result for each ip address
          for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
          {
+				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
             nx_strncpy(iface.szName, szAdapterName, MAX_OBJECT_NAME);
             memcpy(iface.bMacAddr, pInfo->Address, MAC_ADDR_LENGTH);
             iface.dwIndex = pInfo->Index;
             iface.dwIpAddr = ntohl(inet_addr(pAddr->IpAddress.String));
             iface.dwIpNetMask = ntohl(inet_addr(pAddr->IpMask.String));
             iface.dwType = pInfo->Type;
-            iface.iNumSecondary = 0;
-				iface.dwPortNumber = 0;
-				iface.dwSlotNumber = 0;
-				iface.dwBridgePortNumber = 0;
 				pIfList->add(&iface);
          }
       }

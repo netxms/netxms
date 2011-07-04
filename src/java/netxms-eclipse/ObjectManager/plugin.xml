@@ -339,6 +339,13 @@
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateNetworkService"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createNetworkService_Node"
+               label="Create network &amp;service..."
+               menubarPath="objectcreation">
+         </action>
       </objectContribution>
 
 

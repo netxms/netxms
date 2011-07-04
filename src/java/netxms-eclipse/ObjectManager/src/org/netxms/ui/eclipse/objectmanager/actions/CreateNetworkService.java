@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,30 +16,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.actions;
+package org.netxms.ui.eclipse.objectmanager.actions;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
+import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.client.objects.Template;
-import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.dialogs.CreateNetworkServiceDialog;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author Victor
+ * Create network service object
  *
  */
-public class OpenEditor implements IObjectActionDelegate
+public class CreateNetworkService implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private GenericObject object;
+	private IWorkbenchPart part;
+	private long parentId = -1;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -47,6 +51,7 @@ public class OpenEditor implements IObjectActionDelegate
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
+		part = targetPart;
 		window = targetPart.getSite().getWorkbenchWindow();
 	}
 
@@ -56,17 +61,29 @@ public class OpenEditor implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if (object != null)
-		{
-			try
+		final CreateNetworkServiceDialog dlg = new CreateNetworkServiceDialog(window.getShell());
+		if (dlg.open() != Window.OK)
+			return;
+		
+		new ConsoleJob("Create new network service", part, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				window.getActivePage().showView(DataCollectionEditor.ID, Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NETWORKSERVICE, dlg.getName(), parentId);
+				cd.setServiceType(dlg.getServiceType());
+				cd.setIpPort(dlg.getPort());
+				cd.setRequest(dlg.getRequest());
+				cd.setResponse(dlg.getResponse());
+				session.createObject(cd);
 			}
-			catch(PartInitException e)
+
+			@Override
+			protected String getErrorMessage()
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				return "Cannot create network service object \"" + dlg.getName() + "\"";
 			}
-		}
+		}.start();
 	}
 
 	/* (non-Javadoc)
@@ -75,23 +92,23 @@ public class OpenEditor implements IObjectActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if ((selection instanceof IStructuredSelection) &&
-		    (((IStructuredSelection)selection).size() == 1))
+		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
-			Object element = ((IStructuredSelection)selection).getFirstElement();
-			if ((element instanceof Node) || (element instanceof Template))
+			final Object object = ((IStructuredSelection)selection).getFirstElement();
+			if (object instanceof Node)
 			{
-				object = (GenericObject)element;
+				parentId = ((GenericObject)object).getObjectId();
 			}
 			else
 			{
-				object = null;
+				parentId = -1;
 			}
 		}
 		else
 		{
-			object = null;
+			parentId = -1;
 		}
-		action.setEnabled(object != null);
+
+		action.setEnabled(parentId != -1);
 	}
 }

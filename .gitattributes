@@ -440,6 +440,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/Interface.java -t
 src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkMap.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkMapGroup.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkMapRoot.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkService.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Node.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/PolicyGroup.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/PolicyRoot.java -text
@@ -965,6 +966,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/netmap.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/netmap_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/netmap_root.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/network.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/network_service.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/node.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/object_browser.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy.png -text
@@ -1022,6 +1024,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ConfigurationPoll.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateCondition.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateContainer.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateNetworkService.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateNode.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateZone.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/DeleteObject.java -text
@@ -1035,6 +1038,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/Unmanage.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/AttributeEditDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ConditionDciEditDialog.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNetworkServiceDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNodeDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateZoneDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/EnterIpAddressDialog.java -text

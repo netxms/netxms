@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.NetworkService;
 
 /**
  * @author Victor
@@ -47,6 +48,11 @@ public class NXCObjectCreationData
 	private int mapType;
 	private long seedObjectId;
 	private long zoneId;
+	private int serviceType;
+	private int ipProtocol;
+	private int ipPort;
+	private String request;
+	private String response;
 	
 	/**
 	 * Constructor.
@@ -78,6 +84,11 @@ public class NXCObjectCreationData
 		mapType = 0;
 		seedObjectId = 0;
 		zoneId = 0;
+		serviceType = NetworkService.CUSTOM;
+		ipProtocol = 6;
+		ipPort = 80;
+		request = "";
+		response = "";
 	}
 
 	/**
@@ -270,5 +281,85 @@ public class NXCObjectCreationData
 	public void setZoneId(long zoneId)
 	{
 		this.zoneId = zoneId;
+	}
+
+	/**
+	 * @return the serviceType
+	 */
+	public int getServiceType()
+	{
+		return serviceType;
+	}
+
+	/**
+	 * @param serviceType the serviceType to set
+	 */
+	public void setServiceType(int serviceType)
+	{
+		this.serviceType = serviceType;
+	}
+
+	/**
+	 * @return the ipProtocol
+	 */
+	public int getIpProtocol()
+	{
+		return ipProtocol;
+	}
+
+	/**
+	 * @param ipProtocol the ipProtocol to set
+	 */
+	public void setIpProtocol(int ipProtocol)
+	{
+		this.ipProtocol = ipProtocol;
+	}
+
+	/**
+	 * @return the ipPort
+	 */
+	public int getIpPort()
+	{
+		return ipPort;
+	}
+
+	/**
+	 * @param ipPort the ipPort to set
+	 */
+	public void setIpPort(int ipPort)
+	{
+		this.ipPort = ipPort;
+	}
+
+	/**
+	 * @return the request
+	 */
+	public String getRequest()
+	{
+		return request;
+	}
+
+	/**
+	 * @param request the request to set
+	 */
+	public void setRequest(String request)
+	{
+		this.request = request;
+	}
+
+	/**
+	 * @return the response
+	 */
+	public String getResponse()
+	{
+		return response;
+	}
+
+	/**
+	 * @param response the response to set
+	 */
+	public void setResponse(String response)
+	{
+		this.response = response;
 	}
 }

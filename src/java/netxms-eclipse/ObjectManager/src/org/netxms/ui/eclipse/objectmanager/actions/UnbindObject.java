@@ -89,7 +89,8 @@ public class UnbindObject implements IObjectActionDelegate
 	 */
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if (selection instanceof IStructuredSelection)
+		if ((selection instanceof IStructuredSelection) &&
+		    (((IStructuredSelection)selection).size() == 1))
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
 			if ((obj instanceof ServiceRoot) || (obj instanceof Container))
