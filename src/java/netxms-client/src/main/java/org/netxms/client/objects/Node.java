@@ -70,6 +70,11 @@ public class Node extends GenericObject
 	public static final int NDF_CPSNMP_UNREACHABLE  = 0x000000200;
 	public static final int NDF_POLLING_DISABLED    = 0x000000800;
 	
+	// ixXTable usage policy
+	public static final int IFXTABLE_DEFAULT        = 0;
+	public static final int IFXTABLE_ENABLED        = 1;
+	public static final int IFXTABLE_DISABLED       = 2;
+	
 	private int flags;
 	private int runtimeFlags;
 	private int nodeType;
@@ -98,6 +103,7 @@ public class Node extends GenericObject
 	private String driverVersion;
 	private long zoneId;
 	private MacAddress bridgeBaseAddress;
+	private int ifXTablePolicy;
 	
 	/**
 	 * @param msg
@@ -135,6 +141,7 @@ public class Node extends GenericObject
 		driverVersion = msg.getVariableAsString(NXCPCodes.VID_DRIVER_VERSION);
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 		bridgeBaseAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
+		ifXTablePolicy = msg.getVariableAsInteger(NXCPCodes.VID_USE_IFXTABLE);
 	}
 
 	/**
@@ -432,5 +439,13 @@ public class Node extends GenericObject
 	public MacAddress getBridgeBaseAddress()
 	{
 		return bridgeBaseAddress;
+	}
+
+	/**
+	 * @return the ifXTablePolicy
+	 */
+	public int getIfXTablePolicy()
+	{
+		return ifXTablePolicy;
 	}
 }

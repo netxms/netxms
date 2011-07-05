@@ -95,7 +95,7 @@ public class CreateNetworkServiceDialog extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		serviceTypeField = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, "Service type", gd);
+		serviceTypeField = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Service type", gd);
 		serviceTypeField.add("User-defined");
 		serviceTypeField.add("SSH");
 		serviceTypeField.add("POP3");

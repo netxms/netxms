@@ -79,6 +79,8 @@ public class NXCObjectModificationData
 	public static final long MODIFY_REQUIRED_POLLS     = 0x004000000000L;
 	public static final long MODIFY_REQUEST            = 0x008000000000L;
 	public static final long MODIFY_RESPONSE           = 0x010000000000L;
+	public static final long MODIFY_NODE_FLAGS         = 0x020000000000L;
+	public static final long MODIFY_IFXTABLE_POLICY    = 0x040000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -134,6 +136,8 @@ public class NXCObjectModificationData
 	private int ipAddress;
 	private String request;
 	private String response;
+	private int nodeFlags;
+	private int ifXTablePolicy;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1023,5 +1027,39 @@ public class NXCObjectModificationData
 	{
 		this.response = response;
 		flags |= MODIFY_RESPONSE;
+	}
+
+	/**
+	 * @return the nodeFlags
+	 */
+	public int getNodeFlags()
+	{
+		return nodeFlags;
+	}
+
+	/**
+	 * @param nodeFlags the nodeFlags to set
+	 */
+	public void setNodeFlags(int nodeFlags)
+	{
+		this.nodeFlags = nodeFlags;
+		flags |= MODIFY_NODE_FLAGS;
+	}
+
+	/**
+	 * @return the ifXTablePolicy
+	 */
+	public int getIfXTablePolicy()
+	{
+		return ifXTablePolicy;
+	}
+
+	/**
+	 * @param ifXTablePolicy the ifXTablePolicy to set
+	 */
+	public void setIfXTablePolicy(int ifXTablePolicy)
+	{
+		this.ifXTablePolicy = ifXTablePolicy;
+		flags |= MODIFY_IFXTABLE_POLICY;
 	}
 }

@@ -172,6 +172,26 @@
               </or>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.NetworkServicePolling"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.NetworkServicePolling#10"
+              name="Network Service">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.NetworkService">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.NodePolling"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.NodePolling#20"
+              name="Polling">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Node">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

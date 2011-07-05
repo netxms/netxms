@@ -1056,6 +1056,8 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/pr
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/General.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Location.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/MapAppearance.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/NetworkServicePolling.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/NodePolling.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/TrustedNodes.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/ZoneCommunications.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/helpers/AccessListComparator.java -text

@@ -2787,21 +2787,23 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       NetObj *pObject;
       
       dwNodeId = pRequest->GetVariableLong(VID_POLLER_NODE_ID);
-      pObject = FindObjectById(dwNodeId);
+		if (dwNodeId != 0)
+		{
+			pObject = FindObjectById(dwNodeId);
 
-      // Check if received id is a valid node id
-      if (pObject == NULL)
-      {
-         UnlockData();
-         return RCC_INVALID_OBJECT_ID;
-      }
-      if (pObject->Type() != OBJECT_NODE)
-      {
-         UnlockData();
-         return RCC_INVALID_OBJECT_ID;
-      }
-
-      m_dwPollerNode = dwNodeId;
+			// Check if received id is a valid node id
+			if (pObject == NULL)
+			{
+				UnlockData();
+				return RCC_INVALID_OBJECT_ID;
+			}
+			if (pObject->Type() != OBJECT_NODE)
+			{
+				UnlockData();
+				return RCC_INVALID_OBJECT_ID;
+			}
+		}
+		m_dwPollerNode = dwNodeId;
    }
 
    // Change listen port of native agent
