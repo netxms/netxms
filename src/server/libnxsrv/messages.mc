@@ -812,4 +812,10 @@ Language=English
 Failed to load dashboard object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_SMSDRV_INVALID_OPTION
+Language=English
+Invalid option %1 passed to SMS driver
+.
+
 ;#endif

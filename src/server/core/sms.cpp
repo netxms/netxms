@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,8 +58,20 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
-      if (!m_DrvSendMsg(pMsg->szRcpt, pMsg->szText))
-         PostEvent(EVENT_SMS_FAILURE, g_dwMgmtNode, "s", pMsg->szRcpt);
+		int tries = 3;
+		do
+		{
+			if (m_DrvSendMsg(pMsg->szRcpt, pMsg->szText))
+				break;
+			DbgPrintf(3, _T("Failed to send SMS (will%s retry)"), (tries > 1) ? _T("") : _T(" not"));
+		}
+		while(--tries > 0);
+
+		if (tries == 0)
+		{
+			DbgPrintf(3, _T("Failed to send SMS (complete failure)")); 
+			PostEvent(EVENT_SMS_FAILURE, g_dwMgmtNode, "s", pMsg->szRcpt);
+		}
 
       free(pMsg);
    }

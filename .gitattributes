@@ -1454,6 +1454,13 @@ src/server/netxmsd/netxmsd.vcproj -text
 src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/generic/pdumode.cpp -text
 src/server/smsdrv/nxagent/nxagent.vcproj -text
+src/server/smsdrv/portech/Makefile.am -text
+src/server/smsdrv/portech/README.txt -text
+src/server/smsdrv/portech/main.cpp -text
+src/server/smsdrv/portech/net.cpp -text
+src/server/smsdrv/portech/pdumode.cpp -text
+src/server/smsdrv/portech/portech.h -text
+src/server/smsdrv/portech/portech.vcproj -text
 src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/nxadm.vcproj -text
 src/server/tools/nxap/Makefile.am -text

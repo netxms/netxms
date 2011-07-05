@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Generic SMS driver
+** SMS driver for Portech MV-37x VoIP GSM gateways
 ** Copyright (C) 2003-2010 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 **
 **/
 
-#include "main.h"
+#include "portech.h"
 
 static bool SMSPack7BitChars(const char* input, char* output, int* outputLength, const int maxOutputLen)
 {
@@ -29,7 +29,7 @@ static bool SMSPack7BitChars(const char* input, char* output, int* outputLength,
 	int i;
 	unsigned char octet;
 	int used = 0;
-	const int inputLength = strlen(input);
+	const int inputLength = (int)strlen(input);
 
 	for (i = 0; i < inputLength; i++)
 	{
@@ -64,7 +64,7 @@ bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduB
 	char payload[bufferSize];
 	char payloadHex[bufferSize*2 + 1];
 	int payloadSize = 0;
-	int phoneLength = strlen(phoneNumber);
+	int phoneLength = (int)strlen(phoneNumber);
 	int numberFormat = 0x91; // International format
 	int i;
 
