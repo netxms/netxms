@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.1.2], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.1.3], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -581,7 +581,7 @@ if test "x$CC" = "xgcc" ; then
 	AC_LANG_PUSH([C++])
 
 	AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
-	OLD_CXXFLGAS="$CXXFLAGS"
+	OLD_CXXFLAGS="$CXXFLAGS"
 	CXXFLAGS="$CXXFLAGS -fno-rtti"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 		[ AC_MSG_RESULT(yes) ], 
@@ -591,7 +591,7 @@ if test "x$CC" = "xgcc" ; then
 		])
 
 	AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
-	OLD_CXXFLGAS="$CXXFLAGS"
+	OLD_CXXFLAGS="$CXXFLAGS"
 	CXXFLAGS="$CXXFLAGS -fno-exceptions"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 		[ AC_MSG_RESULT(yes) ], 
@@ -603,7 +603,7 @@ if test "x$CC" = "xgcc" ; then
 	AC_LANG_POP([C++])
 
 	AC_MSG_CHECKING(whether C compiler accepts -Wno-unused-result)
-	OLD_CPPFLGAS="$CPPFLAGS"
+	OLD_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS -Wno-unused-result"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 		[ AC_MSG_RESULT(yes) ], 
