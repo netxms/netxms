@@ -68,7 +68,7 @@ Source: "..\..\..\x64\Release\netxmsd.pdb"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\..\x64\Release\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\mysql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
-Source: "..\..\..\x64\Release\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+;Source: "..\..\..\x64\Release\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\generic.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -160,8 +160,8 @@ Source: "Files-x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT
 Source: "Files-x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\lib\ndd\Microsoft.VC80.CRT"; Flags: ignoreversion; Components: server
 Source: "Files-x64\Microsoft.VC80.MFC\*"; DestDir: "{app}\bin\Microsoft.VC80.MFC"; Flags: ignoreversion; Components: server console
 Source: "Files-x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
-Source: "Files-x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files-x64\libintl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+;Source: "Files-x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+;Source: "Files-x64\libintl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files-x64\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files-x64\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
 Source: "Files-x64\oraociei11.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle

@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Management Console
-AppVerName=NetXMS Management Console 1.1.2
-AppVersion=1.1.2
+AppVerName=NetXMS Management Console 1.1.3
+AppVersion=1.1.3
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName={pf}\NetXMS Management Console
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\GPL.txt
-OutputBaseFilename=netxms-console-1.1.2
+OutputBaseFilename=netxms-console-1.1.3
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -86,6 +86,9 @@ Name: "{group}\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Components: con
 Name: "{group}\{cm:UninstallProgram,NetXMS Management Console}"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Tasks: desktopicon; Components: console
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Tasks: quicklaunchicon; Components: console
+
+[Run]
+Filename: "cmd.exe"; Parameters: "/c del {app}\bin\*.manifest"; WorkingDir: "{app}\bin"; StatusMsg: "Removing old manifest files..."; Flags: runhidden
 
 [Code]
 Var

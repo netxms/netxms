@@ -225,9 +225,16 @@ void CreateObjectImageList(void)
 	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_VPNC));
 	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONDITION));
 	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CLUSTER));
-	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy
-	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy group
-	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy root
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // show unsupported classes as containers
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
 
    // Create normal (32x32) image list
    if (g_pObjectNormalImageList != NULL)
@@ -250,9 +257,16 @@ void CreateObjectImageList(void)
 	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_VPNC));
 	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONDITION));
 	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CLUSTER));
-	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy
-	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy group
-	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy root
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // show unsupported classes as containers
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
 }
 
 

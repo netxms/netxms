@@ -1283,6 +1283,7 @@ Global
 		{7D0A15A1-7F6E-480D-9926-13BB6DAA0E10}.Release|Win32.ActiveCfg = Release|Win32
 		{7D0A15A1-7F6E-480D-9926-13BB6DAA0E10}.Release|Win32.Build.0 = Release|Win32
 		{7D0A15A1-7F6E-480D-9926-13BB6DAA0E10}.Release|x64.ActiveCfg = Release|x64
+		{7D0A15A1-7F6E-480D-9926-13BB6DAA0E10}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
