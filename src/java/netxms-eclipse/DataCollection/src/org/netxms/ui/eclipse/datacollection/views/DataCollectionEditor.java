@@ -49,6 +49,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
@@ -643,15 +644,13 @@ public class DataCollectionEditor extends ViewPart
 				dciConfig.copyItems(dciConfig.getNodeId(), dciList);
 				dciConfig.close();
 				dciConfig.open();
-				new UIJob("Update DCI list")
-				{
+				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
+					public void run()
 					{
 						viewer.setInput(dciConfig.getItems());
-						return Status.OK_STATUS;
 					}
-				}.schedule();
+				});
 			}
 
 			@Override
@@ -668,7 +667,7 @@ public class DataCollectionEditor extends ViewPart
 	@SuppressWarnings("unchecked")
 	private void copyItems(final boolean doMove)
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeAndTemplateSelectionFilter());
 		if (dlg.open() != Window.OK)
 			return;
 
@@ -684,19 +683,19 @@ public class DataCollectionEditor extends ViewPart
 			{
 				for(GenericObject o : dlg.getSelectedObjects(GenericObject.OBJECT_NODE))
 					dciConfig.copyItems(o.getObjectId(), dciList);
+				for(GenericObject o : dlg.getSelectedObjects(GenericObject.OBJECT_TEMPLATE))
+					dciConfig.copyItems(o.getObjectId(), dciList);
 				if (doMove)
 				{
 					for(long id : dciList)
 						dciConfig.deleteItem(id);
-					new UIJob("Update DCI list")
-					{
+					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							viewer.setInput(dciConfig.getItems());
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}
 

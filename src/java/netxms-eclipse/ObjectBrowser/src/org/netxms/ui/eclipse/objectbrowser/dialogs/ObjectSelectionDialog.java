@@ -76,6 +76,41 @@ public class ObjectSelectionDialog extends Dialog
 	 * 
 	 * @return Class filter for node selection
 	 */
+	public static Set<Integer> createTemplateSelectionFilter()
+	{
+		HashSet<Integer> classFilter = new HashSet<Integer>(3);
+		classFilter.add(GenericObject.OBJECT_TEMPLATEROOT);
+		classFilter.add(GenericObject.OBJECT_TEMPLATEGROUP);
+		classFilter.add(GenericObject.OBJECT_TEMPLATE);
+		return classFilter;
+	}
+
+	/**
+	 * Create filter for node selection - it allows node objects and possible
+	 * parents - subnets and containers.
+	 * 
+	 * @return Class filter for node selection
+	 */
+	public static Set<Integer> createNodeAndTemplateSelectionFilter()
+	{
+		HashSet<Integer> classFilter = new HashSet<Integer>(8);
+		classFilter.add(GenericObject.OBJECT_NETWORK);
+		classFilter.add(GenericObject.OBJECT_SUBNET);
+		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
+		classFilter.add(GenericObject.OBJECT_CONTAINER);
+		classFilter.add(GenericObject.OBJECT_NODE);
+		classFilter.add(GenericObject.OBJECT_TEMPLATEROOT);
+		classFilter.add(GenericObject.OBJECT_TEMPLATEGROUP);
+		classFilter.add(GenericObject.OBJECT_TEMPLATE);
+		return classFilter;
+	}
+
+	/**
+	 * Create filter for node selection - it allows node objects and possible
+	 * parents - subnets and containers.
+	 * 
+	 * @return Class filter for node selection
+	 */
 	public static Set<Integer> createContainerSelectionFilter()
 	{
 		HashSet<Integer> classFilter = new HashSet<Integer>(2);

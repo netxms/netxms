@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.TrayItem;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.Session;
@@ -106,12 +107,22 @@ public class AlarmNotifier
 						severityFlag = SWT.ICON_WARNING;
 					}
 					
-					final ToolTip tip = new ToolTip(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), SWT.BALLOON | severityFlag);
-					tip.setText("NetXMS Alarm (" + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")");
-					tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId())) + ": " + alarm.getMessage());
-					tip.setAutoHide(true);
-					trayIcon.setToolTip(tip);
-					tip.setVisible(true);
+					IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+					if (window == null)
+					{
+						IWorkbenchWindow[] wl = PlatformUI.getWorkbench().getWorkbenchWindows();
+						if (wl.length > 0)
+							window = wl[0];
+					}
+					if (window != null)
+					{
+						final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
+						tip.setText("NetXMS Alarm (" + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")");
+						tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId())) + ": " + alarm.getMessage());
+						tip.setAutoHide(true);
+						trayIcon.setToolTip(tip);
+						tip.setVisible(true);
+					}
 					return Status.OK_STATUS;
 				}
 			}.schedule();
