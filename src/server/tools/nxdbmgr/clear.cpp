@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,7 +92,8 @@ BOOL ClearDatabase()
 	if (!ValidateDatabase())
 		return FALSE;
 
-	if (!GetYesNo(_T("\n\nWARNING!!!\nThis operation will clear all configuration and collected data from database.\nAre you sure?")))
+	WriteToTerminal(_T("\n\n\x1b[1mWARNING!!!\x1b[0m\n"));
+	if (!GetYesNo(_T("This operation will clear all configuration and collected data from database.\nAre you sure?")))
 		return FALSE;
 
 	BOOL success = FALSE;

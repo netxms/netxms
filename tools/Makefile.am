@@ -12,6 +12,7 @@ EXTRA_DIST = \
 	create_apkg.sh \
 	create_bin_apkg.sh \
 	create_ssa_list.sh \
+	create_table_list.pl \
 	mc.pl \
 	mc.rule flex_bison.rule \
 	nwmkimp.pl \

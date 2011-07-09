@@ -366,6 +366,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tables.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\unlock.cpp"
 				>
 			</File>
@@ -413,6 +417,54 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="Schema Files"
+			>
+			<File
+				RelativePath="..\..\..\..\sql\schema.in"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Generating list of database tables"
+						CommandLine="..\..\..\..\tools\create_table_list.pl ..\..\..\..\sql\schema.in &gt; tables.cpp"
+						Outputs="tables.cpp"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Generating list of database tables"
+						CommandLine="..\..\..\..\tools\create_table_list.pl ..\..\..\..\sql\schema.in &gt; tables.cpp"
+						Outputs="tables.cpp"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Generating list of database tables"
+						CommandLine="..\..\..\..\tools\create_table_list.pl ..\..\..\..\sql\schema.in &gt; tables.cpp"
+						Outputs="tables.cpp"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Generating list of database tables"
+						CommandLine="..\..\..\..\tools\create_table_list.pl ..\..\..\..\sql\schema.in &gt; tables.cpp"
+						Outputs="tables.cpp"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
