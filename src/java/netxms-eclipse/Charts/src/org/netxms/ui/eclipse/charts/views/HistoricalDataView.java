@@ -34,6 +34,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -183,6 +184,25 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 				if (object != null)
 				{
 					setPartName(object.getObjectName() + ": " + item.getDescription());
+				}
+			}
+			else if (items.size() > 1)
+			{
+				long nodeId = items.get(0).getNodeId();
+				for(GraphItem item : items)
+					if (item.getNodeId() != nodeId)
+					{
+						nodeId = -1;
+						break;
+					}
+				if (nodeId != -1)
+				{
+					// All DCIs from same node, set title to "host name"
+					GenericObject object = session.findObjectById(nodeId);
+					if (object != null)
+					{
+						setPartName(object.getObjectName() + ": historical data");
+					}
 				}
 			}
 		}
@@ -425,10 +445,17 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 			@Override
 			public void run()
 			{
-				settings.setLogScale(!settings.isLogScale());
+				try
+				{
+					chart.setLogScaleEnabled(!settings.isLogScale());
+					settings.setLogScale(!settings.isLogScale());
+					chart.redraw();
+				}
+				catch(IllegalStateException e)
+				{
+					MessageDialog.openError(getSite().getShell(), "Error", "Cannot switch to logarithmic scale: " + e.getLocalizedMessage());
+				}
 				setChecked(settings.isLogScale());
-				chart.setLogScaleEnabled(settings.isLogScale());
-				chart.redraw();
 			}
 		};
 		actionLogScale.setText("&Logarithmic scale");

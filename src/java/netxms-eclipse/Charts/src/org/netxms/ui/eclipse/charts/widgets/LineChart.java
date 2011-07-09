@@ -374,6 +374,35 @@ public class LineChart extends Chart implements HistoricalDataChart
 		timeFrom = from.getTime();
 		timeTo = to.getTime();
 		getAxisSet().getXAxis(0).setRange(new Range(timeFrom, timeTo));
+		
+		int seconds = (int)((timeTo - timeFrom) / 1000);
+		String formatString;
+		int angle;
+		if (seconds <= 600)
+		{
+			formatString = "HH:mm:ss";
+			angle = 0;
+		}
+		else if (seconds <= 86400)
+		{
+			formatString = "HH:mm";
+			angle = 0;
+		}
+		else if (seconds <= 86400 * 7)
+		{
+			formatString = "E HH:mm";
+			angle = 0;
+		}
+		else
+		{
+			formatString = "MMM.dd HH:mm";
+			angle = 45;
+		}
+		
+		IAxisTick xTick = getAxisSet().getXAxis(0).getTick();
+		DateFormat format = new SimpleDateFormat(formatString);
+		xTick.setFormat(format);
+		xTick.setTickLabelAngle(angle);
 	}
 	
 	/**

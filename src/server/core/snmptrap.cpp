@@ -418,7 +418,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", 162, "SNMPTrapReceiver", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", 162, _T("SNMPTrapReceiver"), WSAGetLastError());
       closesocket(hSocket);
       return THREAD_OK;
    }
