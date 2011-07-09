@@ -16,3 +16,5 @@ install-exec-hook:
 	mkdir -p $(pkglibdir)/dbdrv
 	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/dbdrv/$(DRIVER).ddr
 	rm -f $(pkglibdir)/$(DRIVER).la 
+	rm -f $(libdir)/libnxddr_$(DRIVER).so*
+	ln -s $(pkglibdir)/dbdrv/$(DRIVER).ddr $(libdir)/libnxddr_$(DRIVER).so
