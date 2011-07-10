@@ -1428,6 +1428,7 @@ src/server/core/isc.cpp -text
 src/server/core/lln.cpp -text
 src/server/core/ndp.cpp -text
 src/server/core/nxcore.vcproj -text
+src/server/core/stp.cpp -text
 src/server/core/upload_job.cpp -text
 src/server/drivers/Makefile.am -text
 src/server/drivers/baystack/Makefile.am -text

@@ -677,6 +677,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\stp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\subnet.cpp"
 				>
 			</File>
