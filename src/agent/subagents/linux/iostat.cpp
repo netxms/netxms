@@ -1,7 +1,6 @@
-/* $Id$ */
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004 - 2008 NetXMS Team
+** Copyright (C) 2004 - 2011 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,6 +73,12 @@ static bool IsRealDevice(const char *name)
 	char path[MAX_PATH];
 
 	snprintf(path, MAX_PATH, "/sys/block/%s", name);
+	
+	// Replace / by ! in device name
+	for(int i = 11; path[i] != 0; i++)
+		if (path[i] == '/')
+			path[i] = '!';
+
 	return access(path, 0) == 0;
 }
 
