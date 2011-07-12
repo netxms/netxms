@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,6 @@ import org.swtchart.LineStyle;
 
 /**
  * History graph view
- *
  */
 public class HistoricalDataView extends ViewPart implements ISelectionProvider, GraphSettingsChangeListener
 {
@@ -80,11 +79,13 @@ public class HistoricalDataView extends ViewPart implements ISelectionProvider, 
 	
 	private static final int[] presetUnits = { GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
 		GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
-		GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY
+		GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, 
+		GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, 
+		GraphSettings.TIME_UNIT_DAY
 	};
-	private static final int[] presetRanges = { 10, 30, 1, 2, 4, 1, 7, 31, 365 };
+	private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
 	private static final String[] presetNames = { "10 minutes", "30 minutes", "hour", "2 hours", "4 hours",
-	                                              "day", "week", "month", "year" };
+	                                              "12 hours", "day", "2 days", "5 days", "week", "month", "year" };
 
 	private static final String KEY_AUTO_REFRESH = "autoRefresh";
 	private static final String KEY_REFRESH_INTERVAL = "refreshInterval";
