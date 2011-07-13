@@ -665,6 +665,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\smclp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\sms.cpp"
 				>
 			</File>
@@ -852,6 +856,10 @@
 			</File>
 			<File
 				RelativePath="..\include\nxcore_situations.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\nxcore_smclp.h"
 				>
 			</File>
 			<File

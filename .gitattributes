@@ -1428,6 +1428,7 @@ src/server/core/isc.cpp -text
 src/server/core/lln.cpp -text
 src/server/core/ndp.cpp -text
 src/server/core/nxcore.vcproj -text
+src/server/core/smclp.cpp -text
 src/server/core/stp.cpp -text
 src/server/core/upload_job.cpp -text
 src/server/drivers/Makefile.am -text
@@ -1446,6 +1447,7 @@ src/server/drivers/lib/avaya-ers/Makefile.am -text
 src/server/drivers/lib/avaya-ers/avaya-ers.vcproj -text
 src/server/drivers/lib/cisco/cisco.vcproj -text
 src/server/include/Makefile.am -text
+src/server/include/nxcore_smclp.h -text
 src/server/libnxsrv/apinfo.cpp -text
 src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/libnxsrv/ndd.cpp -text

@@ -21,3 +21,36 @@
 **/
 
 #include "nxcore.h"
+
+
+//
+// STP port table walker's callback
+//
+
+static DWORD STPPortListHandler(DWORD snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+	int state = var->GetValueAsInt();
+	if ((state != 2) && (state != 5))
+		return SNMP_ERR_SUCCESS;  // port state not "blocked" or "forwarding"
+
+	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
+	SNMP_ObjectId *oid = var->GetName();
+
+	return SNMP_ERR_SUCCESS;
+}
+
+
+//
+// Add STP-discovered neighbors
+//
+
+void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs)
+{
+	if (!(node->getFlags() & NF_IS_STP))
+		return;
+
+	DbgPrintf(5, _T("STP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
+	nbs->setData(node);
+	node->CallSnmpEnumerate(_T(".1.3.6.1.2.1.17.2.15.1.3"), STPPortListHandler, nbs);
+	DbgPrintf(5, _T("STP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
+}

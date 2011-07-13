@@ -24,6 +24,7 @@ EXTRA_DIST = \
 	nxcore_jobs.h \
 	nxcore_logs.h \
 	nxcore_situations.h \
+	nxcore_smclp.h \
 	nxmodule.h \
 	nxsrvapi.h \
    nddrv.h
