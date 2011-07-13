@@ -129,6 +129,15 @@ BOOL APCInterface::Open(void)
    {
       bRet = TRUE;
       SetConnected();
+		
+		// Query model and set as device name
+		char buffer[MAX_RESULT_LENGTH];
+   	m_serial.Write("\x01", 1);
+		if (ReadLineFromSerial(buffer, MAX_RESULT_LENGTH))
+		{
+			StrStrip(buffer);
+			SetName(buffer);
+		}
    }
    else
    {
