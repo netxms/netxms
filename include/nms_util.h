@@ -424,6 +424,33 @@ public:
 	void decRefCount();
 };
 
+
+//
+// Network connection
+//
+
+class LIBNETXMS_EXPORTABLE SocketConnection
+{
+protected:
+	SOCKET m_socket;
+	char m_data[4096];
+	int m_dataPos;
+
+public:
+	SocketConnection();
+	virtual ~SocketConnection();
+
+	bool connectTCP(const TCHAR *hostName, WORD port, DWORD timeout);
+	void disconnect();
+
+	bool canRead(DWORD timeout);
+	int read(char *pBuff, int nSize);
+	bool waitForText(const char *text, int timeout);
+	
+	int write(const char *pBuff, int nSize);
+	bool writeLine(SOCKET m_socket, const char *line);
+};
+
 #endif   /* __cplusplus */
 
 
