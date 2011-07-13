@@ -448,7 +448,9 @@ public:
 	bool waitForText(const char *text, int timeout);
 	
 	int write(const char *pBuff, int nSize);
-	bool writeLine(SOCKET m_socket, const char *line);
+	bool writeLine(const char *line);
+
+	static SocketConnection *createTCPConnection(const TCHAR *hostName, WORD port, DWORD timeout);
 };
 
 #endif   /* __cplusplus */

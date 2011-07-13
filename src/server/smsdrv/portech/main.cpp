@@ -90,27 +90,27 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *options)
 // Login to unit
 //
 
-static bool DoLogin(SOCKET nSd)
+static bool DoLogin(SocketConnection *conn)
 {
-	if (!NetWaitForText(nSd, "username: ", 2000))
+	if (!conn->waitForText("username: ", 2000))
 		return false;
 
-	if (!NetWriteLine(nSd, s_login))
+	if (!conn->writeLine(s_login))
 		return false;
 
-	if (!NetWaitForText(nSd, "password: ", 2000))
+	if (!conn->waitForText("password: ", 2000))
 		return false;
 
-	if (!NetWriteLine(nSd, s_password))
+	if (!conn->writeLine(s_password))
 		return false;
 
-	if (!NetWaitForText(nSd, "]", 2000))
+	if (!conn->waitForText("]", 2000))
 		return false;
 
-	if (!NetWriteLine(nSd, "module"))
+	if (!conn->writeLine("module"))
 		return false;
 
-	if (!NetWaitForText(nSd, "got!! press 'ctrl-x' to release module", 2000))
+	if (!conn->waitForText("got!! press 'ctrl-x' to release module", 2000))
 		return false;
 
 	return true;
@@ -121,12 +121,12 @@ static bool DoLogin(SOCKET nSd)
 // Logout from unit
 //
 
-static void DoLogout(SOCKET nSd)
+static void DoLogout(SocketConnection *conn)
 {
-	if (NetWrite(nSd, "\x18", 1) > 0)
+	if (conn->write("\x18", 1) > 0)
 	{
-		if (NetWaitForText(nSd, "]", 5000))
-			NetWriteLine(nSd, "logout");
+		if (conn->waitForText("]", 5000))
+			conn->writeLine("logout");
 	}
 }
 
@@ -137,25 +137,25 @@ static void DoLogout(SOCKET nSd)
 
 #define __chk(x) if (!(x)) { return FALSE; }
 
-static BOOL SendText(SOCKET nSd, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	char szTmp[128];
 	
 	DbgPrintf(3, _T("Sending SMS (text mode): rcpt=\"%s\" text=\"%s\""), pszPhoneNumber, pszText);
 	
-	__chk(NetWriteLine(nSd, "ATZ"));	// init modem
-	__chk(NetWaitForText(nSd, "OK", 2000));
+	__chk(conn->writeLine("ATZ"));	// init modem
+	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
-	__chk(NetWrite(nSd, "\r\n", 2));		// empty string, otherwise ATE0 may fail
-	__chk(NetWriteLine(nSd, "ATE0"));	// disable echo
-	__chk(NetWaitForText(nSd, "OK", 2000));
+	__chk(conn->write("\r\n", 2));		// empty string, otherwise ATE0 may fail
+	__chk(conn->writeLine("ATE0"));	// disable echo
+	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
-	__chk(NetWriteLine(nSd, "AT+CMGF=1"));	// text mode
-	__chk(NetWaitForText(nSd, "OK", 2000));
+	__chk(conn->writeLine("AT+CMGF=1"));	// text mode
+	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS: AT+CMGF=1 sent"));
 
 #ifdef UNICODE
@@ -166,8 +166,8 @@ static BOOL SendText(SOCKET nSd, const TCHAR *pszPhoneNumber, const TCHAR *pszTe
 #else
 	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
 #endif
-	__chk(NetWriteLine(nSd, szTmp));	// set number
-	__chk(NetWaitForText(nSd, ">", 2000));
+	__chk(conn->writeLine(szTmp));	// set number
+	__chk(conn->waitForText(">", 2000));
 
 #ifdef UNICODE
 	char mbText[161];
@@ -177,9 +177,9 @@ static BOOL SendText(SOCKET nSd, const TCHAR *pszPhoneNumber, const TCHAR *pszTe
 #else
 	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pszText, 0x1A);
 #endif
-	__chk(NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0); // send text, end with ^Z
-	__chk(NetWaitForText(nSd, "+CMGS", 5000));
-	__chk(NetWaitForText(nSd, "OK", 2000));
+	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0); // send text, end with ^Z
+	__chk(conn->waitForText("+CMGS", 5000));
+	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS sent successfully"));
 
 	return TRUE;
@@ -190,7 +190,7 @@ static BOOL SendText(SOCKET nSd, const TCHAR *pszPhoneNumber, const TCHAR *pszTe
 // Send SMS in PDU mode
 //
 
-static BOOL SendPDU(SOCKET nSd, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	const int bufferSize = 512;
 	char szTmp[bufferSize];
@@ -210,32 +210,32 @@ static BOOL SendPDU(SOCKET nSd, const TCHAR *pszPhoneNumber, const TCHAR *pszTex
 	nx_strncpy(text, pszText, bufferSize);
 #endif
 
-	__chk(NetWriteLine(nSd, "ATZ"));	// init modem
-	__chk(NetWaitForText(nSd, "OK", 2000));
+	__chk(conn->writeLine("ATZ"));	// init modem
+	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
-	__chk(NetWrite(nSd, "\r\n", 2));		// empty string, otherwise ATE0 may fail
-	__chk(NetWriteLine(nSd, "ATE0"));	// disable echo
-	__chk(NetWaitForText(nSd, "OK", 2000));
+	__chk(conn->write("\r\n", 2));		// empty string, otherwise ATE0 may fail
+	__chk(conn->writeLine("ATE0"));	// disable echo
+	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
-	__chk(NetWriteLine(nSd, "AT+CMGF=0"));	// text mode
-	__chk(NetWaitForText(nSd, "OK", 2000));
+	__chk(conn->writeLine("AT+CMGF=0"));	// text mode
+	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS: AT+CMGF=0 sent"));
 
 	char pduBuffer[bufferSize];
 	SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize);
 
 	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", strlen(pduBuffer) / 2 - 1);
-	__chk(NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0);
+	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
 	DbgPrintf(4, _T("SMS: %hs sent"), szTmp);
 
 	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pduBuffer, 0x1A);
-	__chk(NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0);
-	__chk(NetWaitForText(nSd, "+CMGS", 10000));
-	__chk(NetWaitForText(nSd, "OK", 2000));
+	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
+	__chk(conn->waitForText("+CMGS", 10000));
+	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS sent successfully"));
 
 	return TRUE;
@@ -248,21 +248,22 @@ static BOOL SendPDU(SOCKET nSd, const TCHAR *pszPhoneNumber, const TCHAR *pszTex
 
 extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
-	SOCKET nSd;
+	SocketConnection *conn;
 	BOOL success = FALSE;
 
 	if ((pszPhoneNumber == NULL) || (pszText == NULL))
 		return FALSE;
 
-	nSd = NetConnectTCP(s_hostName, 23, 10000);
-	if (nSd != INVALID_SOCKET)
+	conn = SocketConnection::createTCPConnection(s_hostName, 23, 10000);
+	if (conn != NULL)
 	{
-		if (DoLogin(nSd))
+		if (DoLogin(conn))
 		{
-			success = (s_mode == OM_PDU) ? SendPDU(nSd, pszPhoneNumber, pszText) : SendText(nSd, pszPhoneNumber, pszText);
+			success = (s_mode == OM_PDU) ? SendPDU(conn, pszPhoneNumber, pszText) : SendText(conn, pszPhoneNumber, pszText);
 		}
-		DoLogout(nSd);
-		NetClose(nSd);
+		DoLogout(conn);
+		conn->disconnect();
+		delete conn;
 	}
 	return success;
 }

@@ -31,12 +31,6 @@
 // Functions
 //
 
-SOCKET NetConnectTCP(const TCHAR *hostName, unsigned short nPort, DWORD dwTimeout);
-void NetClose(SOCKET nSocket);
-bool NetWaitForText(SOCKET nSocket, const char *text, int timeout);
-int NetWrite(SOCKET nSocket, const char *pBuff, int nSize);
-bool NetWriteLine(SOCKET nSocket, const char *line);
-
 bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer, const int pduBufferSize);
 
 #endif

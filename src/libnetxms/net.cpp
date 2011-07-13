@@ -22,6 +22,26 @@
 
 #include "libnetxms.h"
 
+
+/**
+ * Helper fuction to create connected SocketConnection object.
+ *
+ * @param hostName host name or IP address
+ * @param port port number
+ * @param timeout connection timeout in milliseconds
+ * @return connected SocketConnection object or NULL on connection failure
+ */
+SocketConnection *SocketConnection::createTCPConnection(const TCHAR *hostName, WORD port, DWORD timeout)
+{
+	SocketConnection *s = new SocketConnection;
+	if (!s->connectTCP(hostName, port, timeout))
+	{
+		delete s;
+		s = NULL;
+	}
+	return s;
+}
+
 /**
  * Default constructor
  */
@@ -46,7 +66,7 @@ SocketConnection::~SocketConnection()
  * @param hostName host name or IP address
  * @param port port number
  * @param timeout connection timeout in milliseconds
- * @return socket handle or INVALID_SOCKET if connection attempt was unsuccessful
+ * @return true if connection attempt was successful
  */
 bool SocketConnection::connectTCP(const TCHAR *hostName, unsigned short port, DWORD timeout)
 {
@@ -109,7 +129,7 @@ int SocketConnection::write(const char *pBuff, int nSize)
 /**
  * Write line to socket (send CR/LF pair after data block
  */
-bool SocketConnection::writeLine(SOCKET m_socket, const char *line)
+bool SocketConnection::writeLine(const char *line)
 {
 	if (write(line, (int)strlen(line)) <= 0)
 		return false;

@@ -573,6 +573,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\net.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\nxcp.cpp"
 				>
 			</File>
