@@ -168,6 +168,7 @@ static TCHAR *m_pszMasterServerList = NULL;
 static TCHAR *m_pszSubagentList = NULL;
 static TCHAR *m_pszExtParamList = NULL;
 static TCHAR *m_pszShExtParamList = NULL;
+static TCHAR *m_pszParamProviderList = NULL;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
@@ -210,9 +211,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ExecTimeout", CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "ExternalParameterShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
+   { "ExternalParametersProvider", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
    { "FullCrashDumps", CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
-   { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList }, // Old name for MasterServers, deprecated
    { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
@@ -963,6 +964,21 @@ BOOL Initialize()
       free(m_pszShExtParamList);
    }
 
+   // Parse external parameters providers list
+   if (m_pszParamProviderList != NULL)
+   {
+      for(pItem = pEnd = m_pszParamProviderList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, '\n');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddParametersProvider(pItem))
+            nxlog_write(MSG_ADD_PARAM_PROVIDER_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(m_pszParamProviderList);
+   }
+
    ThreadSleep(1);
 
    // If StartupDelay is greater than zero, then wait
@@ -987,6 +1003,8 @@ BOOL Initialize()
          printf("\n");
       }
    }
+
+	StartParamProvidersPoller();
 
    // Agent start time
    g_tmAgentStartTime = time(NULL);

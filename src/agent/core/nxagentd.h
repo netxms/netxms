@@ -362,6 +362,12 @@ DWORD ExecAction(const TCHAR *pszAction, StringList *pArgs);
 DWORD ExecuteCommand(TCHAR *pszCommand, StringList *pArgs, pid_t *pid);
 DWORD ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);
 
+void StartParamProvidersPoller();
+bool AddParametersProvider(const TCHAR *line);
+LONG GetParametersValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
+void ListParametersFromExtProviders(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+void ListParametersFromExtProviders(StringList *list);
+
 BOOL WaitForProcess(const TCHAR *name);
 
 DWORD UpgradeAgent(TCHAR *pszPkgFile);

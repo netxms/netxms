@@ -296,4 +296,10 @@ Language=English
 Failed to save agent's registry to file %1: %2
 .
 
+MessageId=
+SymbolicName=MSG_ADD_PARAM_PROVIDER_FAILED
+Language=English
+Unable to add external parameters provider "%1"
+.
+
 ;#endif

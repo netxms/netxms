@@ -305,7 +305,7 @@ static BOOL SubAgentInit(Config *config)
 // Called by master agent at unload
 //
 
-static void SubAgentShutdown(void)
+static void SubAgentShutdown()
 {
 	int i;
 

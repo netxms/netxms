@@ -1,7 +1,7 @@
 INCLUDES=-I@top_srcdir@/include
 
 bin_PROGRAMS = nxagentd
-nxagentd_SOURCES = messages.c actions.cpp comm.cpp config.cpp exec.cpp \
+nxagentd_SOURCES = messages.c actions.cpp comm.cpp config.cpp epp.cpp exec.cpp \
                    getparam.cpp nxagentd.cpp policy.cpp push.cpp register.cpp \
                    session.cpp snmpproxy.cpp static_subagents.cpp \
                    subagent.cpp sysinfo.cpp tools.cpp trap.cpp upgrade.cpp \

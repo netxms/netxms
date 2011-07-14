@@ -495,10 +495,6 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
 	{
 #endif
 
-#ifdef _NETWARE
-	/* TODO: add NetWare code here */
-	iStatus = SYSINFO_RC_UNSUPPORTED;
-#else // UNIX or Windows
 		{
 			POPEN_WORKER_DATA *data;
 
@@ -522,7 +518,6 @@ LONG H_ExternalParameter(const TCHAR *pszCmd, const TCHAR *pszArg, TCHAR *pValue
 			ConditionSet(data->released);	// Allow worker to destroy data
 		   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter (shell exec): execution status %d"), iStatus);
 		}
-#endif
 
 #ifdef _WIN32
 	}
