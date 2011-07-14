@@ -22,6 +22,7 @@ android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.jav
 android/src/console/src/org/netxms/ui/android/service/ClientConnectorService.java -text
 android/src/console/src/org/netxms/ui/android/service/tasks/ConnectTask.java -text
 contrib/backgrounds/.keep -text
+contrib/integration/HP_EVA/hp_eva_collect_data.pl -text
 contrib/logo.jpg -text
 contrib/mibs/BAY-STACK-MIB.txt -text
 contrib/mibs/S5-AGENT-MIB.txt -text

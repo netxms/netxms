@@ -2,6 +2,7 @@
 * 1.1.4
 *
 
+- Added integration script for HP EVA disk arrays
 - Fixed some problems with database export/import
 - Fixed issues: #328
 
