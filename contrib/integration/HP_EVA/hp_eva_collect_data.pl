@@ -60,16 +60,63 @@ sub process_element
 	local *IN;
 	open(IN, "<element.txt") || return 1;
 
-	my @path;
-	my $path = "";
+	my %refCount = ();
 	while(<IN>)
 	{
 		chomp;
 		my $line = $_;
-		if ($line =~ /\s*([a-zA-Z0-9]+)\s\.+\:\s(.*)/)
+		if (!($line =~ /\s*[a-zA-Z0-9]+\s\.+\:\s.*/))
 		{
-			my $element = $path . "." . $1 . "(" . $instance . ")";
-			$PARAMETERS{$element} = $2;
+			if ($line =~ /\s+(.*)/)
+			{
+				if ($refCount{$1} == undef)
+				{
+					$refCount{$1} = 1;
+				}
+				else
+				{
+					$refCount{$1}++;
+				}
+			}
+		}
+	}
+	close(IN);
+
+	while(($key, $value) = each(%refCount))
+	{ 
+		if ($value > 1)
+		{
+			$refCount{$key} = 0;
+		}
+		else
+		{
+			$refCount{$key} = -1;
+		}
+	}
+
+	open(IN, "<element.txt") || return 1;
+
+	my @path;
+	my $path = "";
+	my $currentLevel = -1;
+	while(<IN>)
+	{
+		chomp;
+		my $line = $_;
+		if ($line =~ /(\s*)([a-zA-Z0-9]+)\s\.+\:\s(.*)/)
+		{
+			my $level = length($1) / 2 - 1;
+			if ($level != $currentLevel)
+			{
+				$currentLevel = $level;
+				$path = $path[0];
+				for(my $i = 1; $i <= $level; $i++)
+				{
+					$path = $path . "." . $path[$i];
+				}
+			}
+			my $element = $path . "." . $2;
+			$PARAMETERS{$element} = $3;
 		}
 		else
 		{
@@ -78,18 +125,27 @@ sub process_element
 				my $level = length($1) / 2;
 				if ($level == 0 && $2 eq "object")
 				{
-					$path[0] = $prefix;
-					$path = $prefix;
+					$path[0] = $prefix . "[" . $instance . "]";
+					$path = $path[0];
 				}
 				else
 				{
-					$path[$level] = $2;
+					if ($refCount{$2} == -1)
+					{
+						$path[$level] = $2;
+					}
+					else
+					{
+						$refCount{$2}++;
+						$path[$level] = $2 . "[" . $refCount{$2} . "]";
+					}
 					$path = $path[0];
 					for(my $i = 1; $i <= $level; $i++)
 					{
 						$path = $path . "." . $path[$i];
 					}
 				}
+				$currentLevel = $level;
 			}
 		}
 	}
@@ -141,7 +197,7 @@ collect_elements_data("controllers.txt", "CONTROLLER", "EVA.Controller");
 collect_elements_data("diskshelfs.txt", "DISKSHELF", "EVA.DiskShelf");
 collect_elements_data("disks.txt", "DISK", "EVA.Disk");
 
-while (($key, $value) = each(%PARAMETERS))
+while(($key, $value) = each(%PARAMETERS))
 {
 	print $key . "=" . $value . "\n";
 }

@@ -141,6 +141,8 @@ void ParamProvider::poll()
 	delete m_parameters;
 	m_parameters = parameters;
 	unlock();
+
+	m_lastPollTime = time(NULL);
 }
 
 /**
