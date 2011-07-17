@@ -322,6 +322,7 @@ public:
 
 	const TCHAR *get(const TCHAR *key);
 	DWORD getULong(const TCHAR *key, DWORD defaultValue);
+	bool getBoolean(const TCHAR *key, bool defaultValue);
 
 	void remove(const TCHAR *key);
 	void clear();

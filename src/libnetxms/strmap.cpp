@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -199,6 +199,18 @@ DWORD StringMap::getULong(const TCHAR *key, DWORD defaultValue)
 	if (value == NULL)
 		return defaultValue;
 	return _tcstoul(value, NULL, 0);
+}
+
+bool StringMap::getBoolean(const TCHAR *key, bool defaultValue)
+{
+	const TCHAR *value = get(key);
+	if (value == NULL)
+		return defaultValue;
+	if (!_tcsicmp(value, _T("false")))
+		return false;
+	if (!_tcsicmp(value, _T("true")))
+		return true;
+	return (_tcstoul(value, NULL, 0) != 0) ? true : false;
 }
 
 

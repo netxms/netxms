@@ -66,7 +66,6 @@ bool NetworkDeviceDriver::isDeviceSupported(const TCHAR *oid)
 	return true;
 }
 
-
 /**
  * Do additional checks on the device required by driver.
  * Driver can set device's custom attributes from within

@@ -38,6 +38,7 @@ public:
 	virtual const TCHAR *getVersion();
 
 	virtual bool isDeviceSupported(const TCHAR *oid);
+	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable);
 };
 
