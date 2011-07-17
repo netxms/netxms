@@ -13,6 +13,7 @@ mibsdir=$(pkgdatadir)/mibs
 mibs_DATA = \
 	ARCADA-MIB.txt \
 	ASTERISK-MIB.txt \
+	ATM-TC-MIB.txt \
 	BAY-STACK-MIB.txt \
 	BGP4-MIB.txt \
 	BN-IF-EXTENSIONS-MIB.txt \
@@ -46,6 +47,7 @@ mibs_DATA = \
 	DIGIUM-MIB.txt \
 	DS1-MIB.txt \
 	DS3-MIB.txt \
+	DVMRP-MIB.txt \
 	EMBEDDED-NGX-MIB.txt \
 	ENTITY-MIB.txt \
 	FIBRE-CHANNEL-FE-MIB.txt \
@@ -58,9 +60,11 @@ mibs_DATA = \
 	IEEE8021-PAE-MIB.txt \
 	IEEE802dot11-MIB.txt \
 	IF-MIB.txt \
+	IGMP-MIB.txt \
 	INET-ADDRESS-MIB.txt \
 	IP-MIB.txt \
 	IPMROUTE-STD-MIB.txt \
+	IPV6-TC.txt \
 	LLDP-MIB.txt \
 	LLDP-V2-MIB.txt \
 	LLDP-V2-TC-MIB.txt \
@@ -98,6 +102,8 @@ mibs_DATA = \
 	Printer-MIB.txt \
 	Q-BRIDGE-MIB.txt \
 	RAPID-CITY.txt \
+	RAPID-CITY-BAY-STACK.txt \
+	RC-MLT-MIB.txt \
 	RFC-1215.txt \
 	RFC1155-SMI.txt \
 	RFC-1212.txt \
