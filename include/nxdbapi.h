@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Server Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** DB Library
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -79,6 +79,9 @@ typedef db_driver_t * DB_DRIVER;
 struct db_handle_t;
 typedef db_handle_t * DB_HANDLE;
 
+struct db_statement_t;
+typedef db_statement_t * DB_STATEMENT;
+
 struct db_result_t;
 typedef db_result_t * DB_RESULT;
 
@@ -99,17 +102,28 @@ void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver);
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
                                        const TCHAR *login, const TCHAR *password, TCHAR *errorText);
 void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
+
+DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepare(DB_HANDLE hConn, const TCHAR *szQuery);
+DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
+void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt);
+void DBBind(DB_STATEMENT hStmt, int pos, int type, void *buffer, int size);
+void DBBind(DB_STATEMENT hStmt, int pos, TCHAR *value);
+void DBBind(DB_STATEMENT hStmt, int pos, DWORD value);
+BOOL LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt);
+BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText);
+DB_RESULT LIBNXDB_EXPORTABLE DBSelectPrepared(DB_STATEMENT hStmt);
+DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *errorText);
+
 BOOL LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery);
 BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
+
 DB_RESULT LIBNXDB_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery);
 DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
-DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *szQuery);
-DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
-BOOL LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult);
 int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_RESULT hResult);
 BOOL LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize);
-int LIBNXDB_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult);
-BOOL LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize);
+int LIBNXDB_EXPORTABLE DBGetNumRows(DB_RESULT hResult);
+void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult);
+
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
                                       TCHAR *pszBuffer, int nBufLen);
 char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn,
@@ -124,6 +138,14 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
                                              int *pnArray, int nSize, int nDefault);
 BOOL LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow,
                                         int iColumn, uuid_t guid);
+
+DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *szQuery);
+DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
+BOOL LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult);
+int LIBNXDB_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult);
+BOOL LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize);
+void LIBNXDB_EXPORTABLE DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
+
 TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize);
 LONG LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_ASYNC_RESULT hResult, int iColumn);
 DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn);
@@ -131,9 +153,7 @@ INT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncInt64(DB_ASYNC_RESULT hResult, int iColu
 QWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iColumn);
 double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_ASYNC_RESULT hResult, int iColumn);
 DWORD LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iColumn);
-int LIBNXDB_EXPORTABLE DBGetNumRows(DB_RESULT hResult);
-void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult);
-void LIBNXDB_EXPORTABLE DBFreeAsyncResult(DB_HANDLE hConn, DB_ASYNC_RESULT hResult);
+
 BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn);
 BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn);
 BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn);

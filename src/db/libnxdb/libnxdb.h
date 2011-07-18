@@ -52,9 +52,14 @@ struct db_driver_t
 	void *m_userArg;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
+	DBDRV_STATEMENT (* m_fpDrvPrepare)(const WCHAR *, WCHAR *);
+	void (* m_fpDrvFreeStatement)(DBDRV_STATEMENT);
+	void (* m_fpDrvBind)(DBDRV_STATEMENT, int, int, void *, int);
+	DWORD (* m_fpDrvExecute)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *);
 	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
 	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	DBDRV_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
+	DBDRV_RESULT (* m_fpDrvSelectPrepared)(DBDRV_CONNECTION, DBDRV_STATEMENT, DWORD *, WCHAR *);
 	BOOL (* m_fpDrvFetch)(DBDRV_ASYNC_RESULT);
 	LONG (* m_fpDrvGetFieldLength)(DBDRV_RESULT, int, int);
 	LONG (* m_fpDrvGetFieldLengthAsync)(DBDRV_RESULT, int);
@@ -92,6 +97,19 @@ struct db_handle_t
    char *m_login;
    char *m_password;
    char *m_dbName;
+};
+
+
+//
+// prepared statement
+//
+
+struct db_statement_t
+{
+	DB_DRIVER m_driver;
+	DB_HANDLE m_connection;
+	DBDRV_STATEMENT m_statement;
+	TCHAR *m_query;
 };
 
 
