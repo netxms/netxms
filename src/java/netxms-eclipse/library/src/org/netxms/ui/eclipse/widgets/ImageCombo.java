@@ -162,7 +162,7 @@ public class ImageCombo extends Composite {
         this.imageLabel = new Label(this.comboComposite, SWT.NONE);
         this.imageLabel.setLayoutData(new TableWrapData());
 
-        this.text = new Text(this.comboComposite, SWT.READ_ONLY);
+        this.text = new Text(this.comboComposite, textStyle);
         this.text.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
         this.comboComposite.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_ARROW));

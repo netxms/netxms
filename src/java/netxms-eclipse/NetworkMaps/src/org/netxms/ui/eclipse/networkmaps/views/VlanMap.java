@@ -150,12 +150,19 @@ public class VlanMap extends NetworkMap
 			Node peerNode = (Node)session.findObjectById(iface.getPeerNodeId(), Node.class);
 			if ((peerNode != null) && ((peerNode.getFlags() & Node.NF_IS_BRIDGE) != 0))
 			{
-				long nodeElementId = collectVlanInfo(page, peerNode);
-				if (nodeElementId != -1)
+				try
 				{
-					Interface peerIf = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
-					page.addLink(new NetworkMapLink(null, NetworkMapLink.NORMAL, rootElementId, nodeElementId,
-							       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???"));
+					long nodeElementId = collectVlanInfo(page, peerNode);
+					if (nodeElementId != -1)
+					{
+						Interface peerIf = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+						page.addLink(new NetworkMapLink(null, NetworkMapLink.NORMAL, rootElementId, nodeElementId,
+								       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???"));
+					}
+				}
+				catch(NXCException e)
+				{
+					// Ignore NetXMS errors for remote bridges 
 				}
 			}
 		}
