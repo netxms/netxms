@@ -1292,8 +1292,7 @@ CREATE TABLE slm_checks
      name varchar(63) not null,
      type integer default 1 not null, -- 1 - threshold, 2 - script
      content SQL_TEXT, -- if type == 2
-     threshold_id integer default 0 not null, -- if type == 1; refers
-to thresholds.id
+     threshold_id integer default 0 not null, -- if type == 1; refers to thresholds.id
      state integer not null,
      reason varchar(255) not null,
      PRIMARY KEY(check_id)
@@ -1306,13 +1305,12 @@ to thresholds.id
 
 CREATE TABLE slm_check_templates
 (
-     template_id integer not null,
+     id integer not null,
      name varchar(63) not null,
      type integer default 1 not null, -- 1 - threshold, 2 - script
      content SQL_TEXT, -- if type == 2
-     threshold_id integer default 0 not null, -- if type == 1; refers
-to thresholds.id
-     PRIMARY KEY(tpl_id)
+     threshold_id integer default 0 not null, -- if type == 1; refers to thresholds.id
+     PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 

@@ -129,7 +129,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				}
 				free(utf8query);
 			}
-			DBFreeAsyncResult(g_hCoreDB, hResult);
+			DBFreeAsyncResult(hResult);
 
 			if (success)
 			{
