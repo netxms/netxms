@@ -52,9 +52,9 @@ struct db_driver_t
 	void *m_userArg;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
-	DBDRV_STATEMENT (* m_fpDrvPrepare)(const WCHAR *, WCHAR *);
+	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
 	void (* m_fpDrvFreeStatement)(DBDRV_STATEMENT);
-	void (* m_fpDrvBind)(DBDRV_STATEMENT, int, int, void *, int);
+	void (* m_fpDrvBind)(DBDRV_STATEMENT, int, int, int, void *, int);
 	DWORD (* m_fpDrvExecute)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *);
 	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
 	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);

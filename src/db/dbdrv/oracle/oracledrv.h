@@ -62,6 +62,12 @@ typedef struct
 
 typedef struct
 {
+	ORACLE_CONN *connection;
+	OCIStmt *handleStmt;
+} ORACLE_STATEMENT;
+
+typedef struct
+{
 	int nRows;
 	int nCols;
 	WCHAR **pData;

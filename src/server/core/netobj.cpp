@@ -139,6 +139,7 @@ BOOL NetObj::loadCommonProperties()
    BOOL bResult = FALSE;
 
    // Load access options
+	/*
    _sntprintf(szQuery, 1024, _T("SELECT name,status,is_deleted,")
                              _T("inherit_access_rights,last_modified,status_calc_alg,")
                              _T("status_prop_alg,status_fixed_val,status_shift,")
@@ -147,48 +148,64 @@ BOOL NetObj::loadCommonProperties()
 									  _T("location_type,latitude,longitude,guid,image,submap_id FROM object_properties ")
                              _T("WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         DBGetField(hResult, 0, 0, m_szName, MAX_OBJECT_NAME);
-         m_iStatus = DBGetFieldLong(hResult, 0, 1);
-         m_bIsDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
-         m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? TRUE : FALSE;
-         m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
-         m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 5);
-         m_iStatusPropAlg = DBGetFieldLong(hResult, 0, 6);
-         m_iFixedStatus = DBGetFieldLong(hResult, 0, 7);
-         m_iStatusShift = DBGetFieldLong(hResult, 0, 8);
-         DBGetFieldByteArray(hResult, 0, 9, m_iStatusTranslation, 4, STATUS_WARNING);
-         m_iStatusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
-         DBGetFieldByteArray(hResult, 0, 11, m_iStatusThresholds, 4, 50);
-         safe_free(m_pszComments);
-         m_pszComments = DBGetField(hResult, 0, 12, NULL, 0);
-         m_bIsSystem = DBGetFieldLong(hResult, 0, 13) ? TRUE : FALSE;
+	*/
 
-			int locType = DBGetFieldLong(hResult, 0, 14);
-			if (locType != GL_UNSET)
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
+	                          _T("SELECT name,status,is_deleted,")
+                             _T("inherit_access_rights,last_modified,status_calc_alg,")
+                             _T("status_prop_alg,status_fixed_val,status_shift,")
+                             _T("status_translation,status_single_threshold,")
+                             _T("status_thresholds,comments,is_system,")
+									  _T("location_type,latitude,longitude,guid,image,submap_id FROM object_properties ")
+                             _T("WHERE object_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, &m_dwId);
+		hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) > 0)
 			{
-				TCHAR lat[32], lon[32];
+				DBGetField(hResult, 0, 0, m_szName, MAX_OBJECT_NAME);
+				m_iStatus = DBGetFieldLong(hResult, 0, 1);
+				m_bIsDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
+				m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? TRUE : FALSE;
+				m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
+				m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 5);
+				m_iStatusPropAlg = DBGetFieldLong(hResult, 0, 6);
+				m_iFixedStatus = DBGetFieldLong(hResult, 0, 7);
+				m_iStatusShift = DBGetFieldLong(hResult, 0, 8);
+				DBGetFieldByteArray(hResult, 0, 9, m_iStatusTranslation, 4, STATUS_WARNING);
+				m_iStatusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
+				DBGetFieldByteArray(hResult, 0, 11, m_iStatusThresholds, 4, 50);
+				safe_free(m_pszComments);
+				m_pszComments = DBGetField(hResult, 0, 12, NULL, 0);
+				m_bIsSystem = DBGetFieldLong(hResult, 0, 13) ? TRUE : FALSE;
 
-				DBGetField(hResult, 0, 15, lat, 32);
-				DBGetField(hResult, 0, 16, lon, 32);
-				m_geoLocation = GeoLocation(locType, lat, lon);
+				int locType = DBGetFieldLong(hResult, 0, 14);
+				if (locType != GL_UNSET)
+				{
+					TCHAR lat[32], lon[32];
+
+					DBGetField(hResult, 0, 15, lat, 32);
+					DBGetField(hResult, 0, 16, lon, 32);
+					m_geoLocation = GeoLocation(locType, lat, lon);
+				}
+				else
+				{
+					m_geoLocation = GeoLocation();
+				}
+
+				DBGetFieldGUID(hResult, 0, 17, m_guid);
+				DBGetFieldGUID(hResult, 0, 18, m_image);
+				m_submapId = DBGetFieldULong(hResult, 0, 19);
+
+				bResult = TRUE;
 			}
-			else
-			{
-				m_geoLocation = GeoLocation();
-			}
-
-			DBGetFieldGUID(hResult, 0, 17, m_guid);
-			DBGetFieldGUID(hResult, 0, 18, m_image);
-			m_submapId = DBGetFieldULong(hResult, 0, 19);
-
-         bResult = TRUE;
-      }
-      DBFreeResult(hResult);
-   }
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
 
 	// Load custom attributes
 	if (bResult)

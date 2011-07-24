@@ -178,9 +178,14 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    fpDrvInit = (BOOL (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvInit"));
    driver->m_fpDrvConnect = (DBDRV_CONNECTION (*)(const char *, const char *, const char *, const char *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvConnect"));
    driver->m_fpDrvDisconnect = (void (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, _T("DrvDisconnect"));
+	driver->m_fpDrvPrepare = (DBDRV_STATEMENT (*)(DBDRV_CONNECTION, const WCHAR *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepare"));
+	driver->m_fpDrvFreeStatement = (void (*)(DBDRV_STATEMENT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvFreeStatement"));
+	driver->m_fpDrvBind = (void (*)(DBDRV_STATEMENT, int, int, int, void *, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvBind"));
+	driver->m_fpDrvExecute = (DWORD (*)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvExecute"));
    driver->m_fpDrvQuery = (DWORD (*)(DBDRV_CONNECTION, const WCHAR *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvQuery"));
    driver->m_fpDrvSelect = (DBDRV_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvSelect"));
    driver->m_fpDrvAsyncSelect = (DBDRV_ASYNC_RESULT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvAsyncSelect"));
+	driver->m_fpDrvSelectPrepared = (DBDRV_RESULT (*)(DBDRV_CONNECTION, DBDRV_STATEMENT, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvSelectPrepared"));
    driver->m_fpDrvFetch = (BOOL (*)(DBDRV_ASYNC_RESULT))DLGetSymbolAddrEx(driver->m_handle, _T("DrvFetch"));
    driver->m_fpDrvGetFieldLength = (LONG (*)(DBDRV_RESULT, int, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetFieldLength"));
    driver->m_fpDrvGetFieldLengthAsync = (LONG (*)(DBDRV_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, _T("DrvGetFieldLengthAsync"));
@@ -200,8 +205,9 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    driver->m_fpDrvPrepareStringA = (char* (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepareStringA"));
    driver->m_fpDrvPrepareStringW = (WCHAR* (*)(const WCHAR *))DLGetSymbolAddrEx(driver->m_handle, _T("DrvPrepareStringW"));
    if ((fpDrvInit == NULL) || (driver->m_fpDrvConnect == NULL) || (driver->m_fpDrvDisconnect == NULL) ||
+	    (driver->m_fpDrvPrepare == NULL) || (driver->m_fpDrvBind == NULL) || (driver->m_fpDrvFreeStatement == NULL) ||
        (driver->m_fpDrvQuery == NULL) || (driver->m_fpDrvSelect == NULL) || (driver->m_fpDrvGetField == NULL) ||
-       (driver->m_fpDrvGetNumRows == NULL) || (driver->m_fpDrvFreeResult == NULL) || 
+       (driver->m_fpDrvGetNumRows == NULL) || (driver->m_fpDrvFreeResult == NULL) || (driver->m_fpDrvSelectPrepared == NULL) ||
        (driver->m_fpDrvUnload == NULL) || (driver->m_fpDrvAsyncSelect == NULL) || (driver->m_fpDrvFetch == NULL) ||
        (driver->m_fpDrvFreeAsyncResult == NULL) || (driver->m_fpDrvGetFieldAsync == NULL) ||
        (driver->m_fpDrvBegin == NULL) || (driver->m_fpDrvCommit == NULL) || (driver->m_fpDrvRollback == NULL) ||

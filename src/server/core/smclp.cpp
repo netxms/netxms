@@ -59,10 +59,10 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
 	{
 		if (m_conn->waitForText("username:", m_timeout))
 		{
-			m_conn->writeLine(login);
+//			m_conn->writeLine(login);
 			if (m_conn->waitForText("password:", m_timeout))
 			{
-				m_conn->writeLine(password);
+//				m_conn->writeLine(password);
 				if (m_conn->waitForText("-> ", m_timeout))
 				{
 					success = true;

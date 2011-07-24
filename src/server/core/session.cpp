@@ -1615,7 +1615,7 @@ void ClientSession::sendEventDB(DWORD dwRqId)
                sendMessage(&msg);
                msg.DeleteAllVariables();
             }
-            DBFreeAsyncResult(g_hCoreDB, hResult);
+            DBFreeAsyncResult(hResult);
          }
 
          // End-of-list indicator
@@ -2022,7 +2022,7 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
          msg.SetVariable(dwId++, szBuffer);
          msg.SetVariable(dwId++, (DWORD)0);	// Do not send parameters
       }
-      DBFreeAsyncResult(g_hCoreDB, hResult);
+      DBFreeAsyncResult(hResult);
 
       // Send remaining records with End-Of-Sequence notification
       msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
@@ -5051,7 +5051,7 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
             msg.SetVariable(VID_PACKAGE_ID, (DWORD)0);
             sendMessage(&msg);
 
-            DBFreeAsyncResult(g_hCoreDB, hResult);
+            DBFreeAsyncResult(hResult);
          }
          else
          {
@@ -7079,7 +7079,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
          msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 6, szBuffer, 1024));
          msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 7, szBuffer, 1024));
       }
-      DBFreeAsyncResult(g_hCoreDB, hResult);
+      DBFreeAsyncResult(hResult);
 
       // Send remaining records with End-Of-Sequence notification
       msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
@@ -7207,7 +7207,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 4, szBuffer, 256));
             msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 5, szBuffer, 4096));
          }
-         DBFreeAsyncResult(g_hCoreDB, hResult);
+         DBFreeAsyncResult(hResult);
 
          // Send remaining records with End-Of-Sequence notification
          msg.SetVariable(VID_NUM_RECORDS, dwNumRows);

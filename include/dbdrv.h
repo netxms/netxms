@@ -30,7 +30,7 @@
 // API version
 //
 
-#define DBDRV_API_VERSION           11
+#define DBDRV_API_VERSION           12
 
 
 //
@@ -77,5 +77,21 @@ typedef void * DBDRV_ASYNC_RESULT;
 #define DBERR_CONNECTION_LOST       1
 #define DBERR_INVALID_HANDLE        2
 #define DBERR_OTHER_ERROR           255
+
+
+//
+// C and SQL types for parameter binding
+//
+
+#define DB_CTYPE_STRING    0
+#define DB_CTYPE_INT32     1
+#define DB_CTYPE_UINT32    2
+#define DB_CTYPE_INT64     3
+#define DB_CTYPE_UINT64    4
+#define DB_CTYPE_DOUBLE    5
+
+#define DB_SQLTYPE_VARCHAR 0
+#define DB_SQLTYPE_INTEGER 1
+
 
 #endif   /* _dbdrv_h_ */

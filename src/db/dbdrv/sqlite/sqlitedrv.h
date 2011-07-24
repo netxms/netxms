@@ -70,16 +70,8 @@ typedef struct
 typedef struct
 {
    sqlite3 *pdb;
-   sqlite3_stmt *pvm;
-   THREAD hThread;
    MUTEX mutexQueryLock;
-   CONDITION condCommand;
-   CONDITION condResult;
-   int nCommand;              // Command given to worker thread
-   int nResult;               // Command execution result
-   WCHAR *pszErrorText;       // Buffer for placing error message
-   const char *pszQuery;      // Query to execute
-   SQLITE_RESULT *pResult;    // Result of sync SELECT
+   sqlite3_stmt *pvm;
    int nNumCols;              // Number of columns in async result
 } SQLITE_CONN;
 

@@ -1229,7 +1229,7 @@ CREATE TABLE business_services
      service_id integer not null,
      name varchar(63) not null,
      parent_id integer default 0 not null,
-     status integer default 0 not null, -- 1 - up, 0 - down
+     status integer default 0 not null, // 1 - up, 0 - down
      PRIMARY KEY(service_id)
 ) TABLE_TYPE;
 
@@ -1290,9 +1290,9 @@ CREATE TABLE slm_checks
 (
      check_id integer not null,
      name varchar(63) not null,
-     type integer default 1 not null, -- 1 - threshold, 2 - script
-     content SQL_TEXT, -- if type == 2
-     threshold_id integer default 0 not null, -- if type == 1; refers to thresholds.id
+     type integer default 1 not null, // 1 - threshold, 2 - script
+     content SQL_TEXT, // if type == 2
+     threshold_id integer default 0 not null, // if type == 1; refers to thresholds.id
      state integer not null,
      reason varchar(255) not null,
      PRIMARY KEY(check_id)
@@ -1307,9 +1307,9 @@ CREATE TABLE slm_check_templates
 (
      id integer not null,
      name varchar(63) not null,
-     type integer default 1 not null, -- 1 - threshold, 2 - script
-     content SQL_TEXT, -- if type == 2
-     threshold_id integer default 0 not null, -- if type == 1; refers to thresholds.id
+     type integer default 1 not null, // 1 - threshold, 2 - script
+     content SQL_TEXT, // if type == 2
+     threshold_id integer default 0 not null, // if type == 1; refers to thresholds.id
      PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1321,7 +1321,7 @@ CREATE TABLE slm_check_templates
 CREATE TABLE node_links
 (
      nodelink_id integer not null,
-     node_id integer not null, -- refers to node.id
+     node_id integer not null, // refers to node.id
      PRIMARY KEY(nodelink_id)
 ) TABLE_TYPE;
 
@@ -1347,9 +1347,9 @@ CREATE TABLE slm_agreements
      agreement_id integer not null,
      service_id integer not null,
      org_id integer not null,
-     uptime varchar(63) not null, -- required uptime, numeric(10,2) ?
-     period integer not null, -- 1 - day, 2 - month
-     start_date integer not null, -- date in YYYYMMDD format
+     uptime varchar(63) not null, // required uptime, numeric(10,2) ?
+     period integer not null, // 1 - day, 2 - month
+     start_date integer not null, // date in YYYYMMDD format
      notes varchar(255),
      PRIMARY KEY(agreement_id)
 ) TABLE_TYPE;

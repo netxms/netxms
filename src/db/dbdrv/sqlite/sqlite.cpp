@@ -1,6 +1,6 @@
 /* 
 ** SQLite Database Driver
-** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2005-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,143 +26,21 @@ DECLARE_DRIVER_HEADER("SQLITE")
 
 
 //
-// SELECT callback
+// Get error message from connection
 //
 
-static int SelectCallback(void *pArg, int nCols, char **ppszData, char **ppszNames)
+static void GetErrorMessage(sqlite3 *hdb, WCHAR *errorText)
 {
-   int i, nPos, nMaxCol;
+	if (errorText == NULL)
+		return;
 
-   if (((SQLITE_RESULT *)pArg)->nCols == 0)
-   {
-      ((SQLITE_RESULT *)pArg)->nCols = nCols;
-      nMaxCol = nCols;
-   }
-   else
-   {
-      nMaxCol = min(((SQLITE_RESULT *)pArg)->nCols, nCols);
-   }
-
-	// Store column names
-	if ((((SQLITE_RESULT *)pArg)->ppszNames == NULL) && (nCols > 0) && (ppszNames != NULL))
-	{
-		((SQLITE_RESULT *)pArg)->ppszNames = (char **)malloc(sizeof(char *) * nCols);
-		for(i = 0; i < nCols; i++)
-			((SQLITE_RESULT *)pArg)->ppszNames[i] = strdup(ppszNames[i]);
-	}
-
-   nPos = ((SQLITE_RESULT *)pArg)->nRows * ((SQLITE_RESULT *)pArg)->nCols;
-   ((SQLITE_RESULT *)pArg)->nRows++;
-   ((SQLITE_RESULT *)pArg)->ppszData = (char **)realloc(((SQLITE_RESULT *)pArg)->ppszData,
-         sizeof(char *) * ((SQLITE_RESULT *)pArg)->nCols * ((SQLITE_RESULT *)pArg)->nRows);
-
-   for(i = 0; i < nMaxCol; i++, nPos++)
-      ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup(CHECK_NULL_EX(ppszData[i]));
-   for(; i < ((SQLITE_RESULT *)pArg)->nCols; i++, nPos++)
-      ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup("");
-   return 0;
-}
-
-
-//
-// Worker thread
-//
-
-static THREAD_RESULT THREAD_CALL SQLiteWorkerThread(void *pArg)
-{
-   SQLITE_CONN *pConn = (SQLITE_CONN *)pArg;
-   const char *pszTail;
-   BOOL bRun = TRUE;
-
-   // Wait for requests
-   do
-   {
-      ConditionWait(pConn->condCommand, INFINITE);
-      switch(pConn->nCommand)
-      {
-         case SQLITE_DRV_OPEN:
-            pConn->nResult = sqlite3_open_v2(pConn->pszQuery, &pConn->pdb,
-				                                 SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, 0);
-            if (pConn->nResult == SQLITE_OK)
-            {
-               sqlite3_busy_timeout(pConn->pdb, 30000);  // 30 sec. busy timeout
-            }
-            break;
-         case SQLITE_DRV_CLOSE:
-            if (pConn->pdb != NULL)
-            {
-               pConn->nResult = sqlite3_close(pConn->pdb);
-               if (pConn->nResult == SQLITE_OK)
-                  pConn->pdb = NULL;
-            }
-            bRun = FALSE;
-            break;
-         case SQLITE_DRV_QUERY:
-            pConn->nResult = sqlite3_exec(pConn->pdb, pConn->pszQuery, NULL, NULL, NULL);
-            break;
-         case SQLITE_DRV_SELECT:
-            pConn->pResult = (SQLITE_RESULT *)malloc(sizeof(SQLITE_RESULT));
-            memset(pConn->pResult, 0, sizeof(SQLITE_RESULT));
-            pConn->nResult = sqlite3_exec(pConn->pdb, pConn->pszQuery,
-                                          SelectCallback, pConn->pResult, NULL);
-            if (pConn->nResult != SQLITE_OK)
-            {
-               safe_free(pConn->pResult->ppszData);
-               free(pConn->pResult);
-               pConn->pResult = NULL;
-            }
-            break;
-         case SQLITE_DRV_PREPARE:
-            pConn->nResult = sqlite3_prepare(pConn->pdb, pConn->pszQuery, -1,
-                                             &pConn->pvm, &pszTail);
-            break;
-         case SQLITE_DRV_STEP:
-            pConn->nResult = sqlite3_step(pConn->pvm);
-            if (pConn->nResult == SQLITE_ROW)
-               pConn->nNumCols = sqlite3_column_count(pConn->pvm);
-            break;
-         case SQLITE_DRV_FINALIZE:
-            pConn->nResult = sqlite3_finalize(pConn->pvm);
-            if (pConn->nResult == SQLITE_OK)
-               pConn->pvm = NULL;
-            break;
-         default:    // Unknown command
-            pConn->nResult = SQLITE_ERROR;
-            break;
-      }
-      
-      if (pConn->pszErrorText != NULL)
-      {
-      	if (pConn->nResult == SQLITE_OK)
-      	{
-      		*pConn->pszErrorText = 0;
-      	}
-      	else
-      	{
-				MultiByteToWideChar(CP_UTF8, 0, sqlite3_errmsg(pConn->pdb), -1, pConn->pszErrorText, DBDRV_MAX_ERROR_TEXT);
-				pConn->pszErrorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-				RemoveTrailingCRLFW(pConn->pszErrorText);
-			}
-      }
-      	
-      ConditionSet(pConn->condResult);
-   } while(bRun);
-   return THREAD_OK;
-}
-
-
-//
-// Execute command by worker thread
-//
-
-static int ExecCommand(SQLITE_CONN *pConn, int nCmd, const char *pszQuery, WCHAR *errorText)
-{
-   pConn->pszQuery = pszQuery;
-   pConn->nCommand = nCmd;
-   pConn->pszErrorText = errorText;
-   ConditionSet(pConn->condCommand);
-   ConditionWait(pConn->condResult, INFINITE);
-   return pConn->nResult;
+#if UNICODE_UCS2
+	wcsncpy(errorText, (const WCHAR *)sqlite3_errmsg16(hdb), DBDRV_MAX_ERROR_TEXT);
+#else
+	MultiByteToWideChar(CP_UTF8, 0, sqlite3_errmsg(hdb), -1, pConn->pszErrorText, DBDRV_MAX_ERROR_TEXT);
+#endif
+	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+	RemoveTrailingCRLFW(errorText);
 }
 
 
@@ -259,46 +137,142 @@ extern "C" void EXPORT DrvUnload()
 
 
 //
+// Connect to database
+//
+
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
+                                              const char *password, const char *database, WCHAR *errorText)
+{
+   SQLITE_CONN *pConn;
+	sqlite3 *hdb;
+
+   if (sqlite3_open_v2(database, &hdb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) == SQLITE_OK)
+   {
+      sqlite3_busy_timeout(hdb, 30000);  // 30 sec. busy timeout
+
+		// Create new handle
+		pConn = (SQLITE_CONN *)malloc(sizeof(SQLITE_CONN));
+		memset(pConn, 0, sizeof(SQLITE_CONN));
+		pConn->pdb = hdb;
+		pConn->mutexQueryLock = MutexCreate();
+   }
+	else
+	{
+		GetErrorMessage(hdb, errorText);
+		pConn = NULL;
+		sqlite3_close(hdb);
+	}
+   return (DBDRV_CONNECTION)pConn;
+}
+
+
+//
 // Disconnect from database
 //
 
 extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 {
-   if (hConn != NULL)
-   {
-      ExecCommand(hConn, SQLITE_DRV_CLOSE, NULL, NULL);
-      ThreadJoin(hConn->hThread);
-      ConditionDestroy(hConn->condCommand);
-      ConditionDestroy(hConn->condResult);
-      MutexDestroy(hConn->mutexQueryLock);
-      free(hConn);
-   }
+   if (hConn == NULL)
+		return;
+
+	sqlite3_close(hConn->pdb);
+   MutexDestroy(hConn->mutexQueryLock);
+   free(hConn);
 }
 
 
 //
-// Connect to database
+// Prepare statement
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *pszLogin,
-                                              const char *pszPassword, const char *pszDatabase, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
-   SQLITE_CONN *pConn;
+   char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   MutexLock(hConn->mutexQueryLock, INFINITE);
+	sqlite3_stmt *stmt;
+	if (sqlite3_prepare_v2(hConn->pdb, pszQueryUTF8, -1, &stmt, NULL) != SQLITE_OK)
+   {
+		GetErrorMessage(hConn->pdb, errorText);
+		stmt = NULL;
+   }
+   MutexUnlock(hConn->mutexQueryLock);
+   free(pszQueryUTF8);
+   return stmt;
+}
 
-	// Create new handle
-	pConn = (SQLITE_CONN *)malloc(sizeof(SQLITE_CONN));
-	memset(pConn, 0, sizeof(SQLITE_CONN));
-	pConn->mutexQueryLock = MutexCreate();
-	pConn->condCommand = ConditionCreate(FALSE);
-	pConn->condResult = ConditionCreate(FALSE);
-	pConn->hThread = ThreadCreateEx(SQLiteWorkerThread, 0, pConn);
 
-	if (ExecCommand(pConn, SQLITE_DRV_OPEN, pszDatabase, errorText) != SQLITE_OK)
+//
+// Bind parameter to statement
+//
+
+extern "C" void EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int cType, void *buffer, int size)
+{
+	switch(cType)
 	{
-		DrvDisconnect(pConn);
-		pConn = NULL;
+		case DB_CTYPE_STRING:
+#if UNICODE_UCS2
+			sqlite3_bind_text16(stmt, pos, buffer, wcslen((WCHAR *)buffer) * sizeof(WCHAR), SQLITE_STATIC);
+#else
+			char *utf8String = UTF8StringFromWideString((WCHAR *)buffer);
+			sqlite3_bind_text(stmt, pos, utf8String, strlen(utf8String), free);
+#endif
+			break;
+		case DB_CTYPE_INT32:
+		case DB_CTYPE_UINT32:
+			sqlite3_bind_int(stmt, pos, *((int *)buffer));
+			break;
+		case DB_CTYPE_INT64:
+		case DB_CTYPE_UINT64:
+			sqlite3_bind_int64(stmt, pos, *((sqlite3_int64 *)buffer));
+			break;
+		case DB_CTYPE_DOUBLE:
+			sqlite3_bind_double(stmt, pos, *((double *)buffer));
+			break;
+		default:
+			break;
 	}
-   return (DBDRV_CONNECTION)pConn;
+}
+
+
+//
+// Execute prepared statement
+//
+
+extern "C" DWORD EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR *errorText)
+{
+	DWORD result;
+
+	MutexLock(hConn->mutexQueryLock, INFINITE);
+	if (sqlite3_reset(stmt) == SQLITE_OK)
+	{
+		int rc = sqlite3_step(stmt);
+		if ((rc == SQLITE_DONE) || (rc ==SQLITE_ROW))
+		{
+			result = DBERR_SUCCESS;
+		}
+		else
+		{
+			GetErrorMessage(hConn->pdb, errorText);
+			result = DBERR_OTHER_ERROR;
+		}
+	}
+	else
+	{
+		GetErrorMessage(hConn->pdb, errorText);
+		result = DBERR_OTHER_ERROR;
+	}
+	MutexUnlock(hConn->mutexQueryLock);
+	return result;
+}
+
+
+//
+// Destroy prepared statement
+//
+
+extern "C" void EXPORT DrvFreeStatement(sqlite3_stmt *stmt)
+{
+	sqlite3_finalize(stmt);
 }
 
 
@@ -308,12 +282,20 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *p
 
 static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, WCHAR *errorText)
 {
-   BOOL bResult;
+   DWORD result;
 
    MutexLock(pConn->mutexQueryLock, INFINITE);
-   bResult = (ExecCommand(pConn, SQLITE_DRV_QUERY, pszQuery, errorText) == SQLITE_OK);
+   if (sqlite3_exec(pConn->pdb, pszQuery, NULL, NULL, NULL) == SQLITE_OK)
+	{
+		result = DBERR_SUCCESS;
+	}
+	else
+	{
+		GetErrorMessage(pConn->pdb, errorText);
+		result = DBERR_OTHER_ERROR;
+	}
    MutexUnlock(pConn->mutexQueryLock);
-   return bResult ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+   return result;
 }
 
 
@@ -334,24 +316,155 @@ extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, WCHAR *er
 
 
 //
+// SELECT callback
+//
+
+static int SelectCallback(void *pArg, int nCols, char **ppszData, char **ppszNames)
+{
+   int i, nPos, nMaxCol;
+
+   if (((SQLITE_RESULT *)pArg)->nCols == 0)
+   {
+      ((SQLITE_RESULT *)pArg)->nCols = nCols;
+      nMaxCol = nCols;
+   }
+   else
+   {
+      nMaxCol = min(((SQLITE_RESULT *)pArg)->nCols, nCols);
+   }
+
+	// Store column names
+	if ((((SQLITE_RESULT *)pArg)->ppszNames == NULL) && (nCols > 0) && (ppszNames != NULL))
+	{
+		((SQLITE_RESULT *)pArg)->ppszNames = (char **)malloc(sizeof(char *) * nCols);
+		for(i = 0; i < nCols; i++)
+			((SQLITE_RESULT *)pArg)->ppszNames[i] = strdup(ppszNames[i]);
+	}
+
+   nPos = ((SQLITE_RESULT *)pArg)->nRows * ((SQLITE_RESULT *)pArg)->nCols;
+   ((SQLITE_RESULT *)pArg)->nRows++;
+   ((SQLITE_RESULT *)pArg)->ppszData = (char **)realloc(((SQLITE_RESULT *)pArg)->ppszData,
+         sizeof(char *) * ((SQLITE_RESULT *)pArg)->nCols * ((SQLITE_RESULT *)pArg)->nRows);
+
+   for(i = 0; i < nMaxCol; i++, nPos++)
+      ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup(CHECK_NULL_EX(ppszData[i]));
+   for(; i < ((SQLITE_RESULT *)pArg)->nCols; i++, nPos++)
+      ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup("");
+   return 0;
+}
+
+
+//
+// Free SELECT results
+//
+
+extern "C" void EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
+{
+   int i, nCount;
+
+   if (hResult != NULL)
+   {
+      if (hResult->ppszData != NULL)
+      {
+         nCount = hResult->nRows * hResult->nCols;
+         for(i = 0; i < nCount; i++)
+            safe_free(hResult->ppszData[i]);
+         free(hResult->ppszData);
+
+         for(i = 0; i < hResult->nCols; i++)
+            safe_free(hResult->ppszNames[i]);
+         free(hResult->ppszNames);
+      }
+      free(hResult);
+   }
+}
+
+
+//
 // Perform SELECT query
 //
 
 extern "C" DBDRV_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-   DBDRV_RESULT pResult = NULL;
-   char *pszQueryUTF8;
+   char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   MutexLock(hConn->mutexQueryLock, INFINITE);
-   if (ExecCommand(hConn, SQLITE_DRV_SELECT, pszQueryUTF8, errorText) == SQLITE_OK)
+	SQLITE_RESULT *result = (SQLITE_RESULT *)malloc(sizeof(SQLITE_RESULT));
+   memset(result, 0, sizeof(SQLITE_RESULT));
+
+	MutexLock(hConn->mutexQueryLock, INFINITE);
+   if (sqlite3_exec(hConn->pdb, pszQueryUTF8, SelectCallback, result, NULL) != SQLITE_OK)
    {
-      pResult = hConn->pResult;
+		GetErrorMessage(hConn->pdb, errorText);
+		DrvFreeResult(result);
+		result = NULL;
    }
    MutexUnlock(hConn->mutexQueryLock);
-   free(pszQueryUTF8);
-   *pdwError = (pResult != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
-   return pResult;
+
+	free(pszQueryUTF8);
+   *pdwError = (result != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+   return result;
+}
+
+
+//
+// Perform SELECT query using prepared statement
+//
+
+extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
+{
+   SQLITE_RESULT *result = (SQLITE_RESULT *)malloc(sizeof(SQLITE_RESULT));
+   memset(result, 0, sizeof(SQLITE_RESULT));
+
+   MutexLock(hConn->mutexQueryLock, INFINITE);
+	if (sqlite3_reset(stmt) == SQLITE_OK)
+	{
+		int nCols = sqlite3_column_count(stmt);
+		char **cnames = (char **)malloc(sizeof(char *) * nCols * 2);	// column names + values
+		char **values = &cnames[nCols];
+		bool firstRow = true;
+		while(1)
+		{
+			int rc = sqlite3_step(stmt);
+			if (((rc == SQLITE_DONE) || (rc ==SQLITE_ROW)) && firstRow)
+			{
+				firstRow = false;
+				for(int i = 0; i < nCols; i++)
+					cnames[i] = (char *)sqlite3_column_name(stmt, i);
+			}
+
+			if (rc == SQLITE_ROW)
+			{
+				for(int i = 0; i < nCols; i++)
+					values[i] = (char *)sqlite3_column_text(stmt, i);
+				SelectCallback(result, nCols, values, cnames);
+			}
+			else if (rc == SQLITE_DONE)
+			{
+				*pdwError = DBERR_SUCCESS;
+				break;
+			}
+			else
+			{
+				GetErrorMessage(hConn->pdb, errorText);
+				*pdwError = DBERR_OTHER_ERROR;
+				break;
+			}
+		}
+	}
+	else
+	{
+		GetErrorMessage(hConn->pdb, errorText);
+		*pdwError = DBERR_OTHER_ERROR;
+	}
+	MutexUnlock(hConn->mutexQueryLock);
+
+	if (*pdwError != DBERR_SUCCESS)
+	{
+		DrvFreeResult(result);
+		result = NULL;
+	}
+
+	return result;
 }
 
 
@@ -393,9 +506,9 @@ extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn
 // Get number of rows in result
 //
 
-extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT hResult)
+extern "C" int EXPORT DrvGetNumRows(SQLITE_RESULT *hResult)
 {
-   return ((SQLITE_RESULT *)hResult)->nRows;
+   return hResult->nRows;
 }
 
 
@@ -403,9 +516,9 @@ extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT hResult)
 // Get column count in query result
 //
 
-extern "C" int EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCount(SQLITE_RESULT *hResult)
 {
-	return (hResult != NULL) ? ((SQLITE_RESULT *)hResult)->nCols : 0;
+	return (hResult != NULL) ? hResult->nCols : 0;
 }
 
 
@@ -413,41 +526,15 @@ extern "C" int EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
 // Get column name in query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnName(SQLITE_RESULT *hResult, int column)
 {
    char *pszRet = NULL;
 
-   if ((column >= 0) && (column < ((SQLITE_RESULT *)hResult)->nCols))
+   if ((column >= 0) && (column < hResult->nCols))
    {	
-		pszRet = ((SQLITE_RESULT *)hResult)->ppszNames[column];
+		pszRet = hResult->ppszNames[column];
    }
    return pszRet;
-}
-
-
-//
-// Free SELECT results
-//
-
-extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT hResult)
-{
-   int i, nCount;
-
-   if (hResult != NULL)
-   {
-      if (((SQLITE_RESULT *)hResult)->ppszData != NULL)
-      {
-         nCount = ((SQLITE_RESULT *)hResult)->nRows * ((SQLITE_RESULT *)hResult)->nCols;
-         for(i = 0; i < nCount; i++)
-            safe_free(((SQLITE_RESULT *)hResult)->ppszData[i]);
-         free(((SQLITE_RESULT *)hResult)->ppszData);
-
-         for(i = 0; i < ((SQLITE_RESULT *)hResult)->nCols; i++)
-            safe_free(((SQLITE_RESULT *)hResult)->ppszNames[i]);
-         free(((SQLITE_RESULT *)hResult)->ppszNames);
-      }
-      free(hResult);
-   }
 }
 
 
@@ -455,25 +542,26 @@ extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    DBDRV_ASYNC_RESULT hResult;
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock, INFINITE);
-   if (ExecCommand(hConn, SQLITE_DRV_PREPARE, pszQueryUTF8, errorText) == SQLITE_OK)
+	if (sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &hConn->pvm, NULL) == SQLITE_OK)
    {
       hResult = hConn;
+		*pdwError = DBERR_SUCCESS;
    }
    else
    {
+		GetErrorMessage(hConn->pdb, errorText);
       MutexUnlock(hConn->mutexQueryLock);
       hResult = NULL;
+		*pdwError = DBERR_OTHER_ERROR;
    }
    free(pszQueryUTF8);
-   *pdwError = (hResult != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
    return hResult;
 }
 
@@ -484,7 +572,15 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *p
 
 extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT hResult)
 {
-   return hResult ? (ExecCommand((SQLITE_CONN *)hResult, SQLITE_DRV_STEP, NULL, NULL) == SQLITE_ROW) : FALSE;
+	if (hResult == NULL)
+		return FALSE;
+
+	if (sqlite3_step(((SQLITE_CONN *)hResult)->pvm) == SQLITE_ROW)
+	{
+		((SQLITE_CONN *)hResult)->nNumCols = sqlite3_column_count(((SQLITE_CONN *)hResult)->pvm);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 
@@ -504,8 +600,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(DBDRV_RESULT hResult, int iColumn)
 // Get field from current row in async query result
 //
 
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColumn,
-                                          WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
    char *pszData;
    WCHAR *pwszRet = NULL;
@@ -558,7 +653,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DBDRV_ASYNC_RESULT hResult)
 {
    if (hResult != NULL)
    {
-      ExecCommand((SQLITE_CONN *)hResult, SQLITE_DRV_FINALIZE, NULL, NULL);
+		sqlite3_finalize(((SQLITE_CONN *)hResult)->pvm);
       MutexUnlock(((SQLITE_CONN *)hResult)->mutexQueryLock);
    }
 }
