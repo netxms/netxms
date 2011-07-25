@@ -84,6 +84,13 @@ typedef struct
 
 
 //
+// Prepared statement structure
+//
+
+
+
+
+//
 // Result buffer structure
 //
 

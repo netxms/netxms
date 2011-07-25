@@ -283,6 +283,104 @@ extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 
 
 //
+// Prepare statement
+//
+
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
+{
+   long iResult;
+	SQLHSTMT stmt;
+
+   MutexLock(pConn->mutexQuery, INFINITE);
+
+   // Allocate statement handle
+   iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &stmt);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+   {
+      // Prepare statement
+      if (m_useUnicode)
+      {
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+		   iResult = SQLPrepareW(stmt, (SQLWCHAR *)pwszQuery, SQL_NTS);
+#else
+			SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
+		   iResult = SQLPrepareW(stmt, temp, SQL_NTS);
+		   free(temp);
+#endif      
+		}
+		else
+		{
+			char *temp = MBStringFromWideString(pwszQuery);
+		   iResult = SQLPrepareA(stmt, (SQLCHAR *)temp, SQL_NTS);
+		   free(temp);
+		}
+	   if ((iResult != SQL_SUCCESS) && 
+          (iResult != SQL_SUCCESS_WITH_INFO))
+      {
+         GetSQLErrorInfo(SQL_HANDLE_STMT, stmt, errorText);
+	      SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+			stmt = NULL;
+      }
+   }
+   else
+   {
+      GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+		stmt = NULL;
+   }
+
+   MutexUnlock(pConn->mutexQuery);
+   return stmt;
+}
+
+
+//
+// Bind parameter to statement
+//
+
+extern "C" void EXPORT DrvBind(SQLHSTMT stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+{
+	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE };
+	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
+	SQLBindParameter(stmt, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType], 0, 0, buffer, 0, NULL);
+}
+
+
+//
+// Execute prepared statement
+//
+
+extern "C" DWORD EXPORT DrvExecute(ODBCDRV_CONN *pConn, SQLHSTMT stmt, NETXMS_WCHAR *errorText)
+{
+   DWORD dwResult;
+
+   MutexLock(pConn->mutexQuery, INFINITE);
+	long rc = SQLExecute(stmt);
+   if ((rc == SQL_SUCCESS) || 
+       (rc == SQL_SUCCESS_WITH_INFO) || 
+       (rc == SQL_NO_DATA))
+   {
+      dwResult = DBERR_SUCCESS;
+   }
+   else
+   {
+      dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt, errorText);
+   }
+   MutexUnlock(pConn->mutexQuery);
+	return dwResult;
+}
+
+
+//
+// Destroy prepared statement
+//
+
+extern "C" void EXPORT DrvFreeStatement(SQLHSTMT stmt)
+{
+	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+}
+
+
+//
 // Perform non-SELECT query
 //
 
@@ -337,6 +435,84 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, N
 
 
 //
+// Process results of SELECT query
+//
+
+static ODBCDRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
+{
+   // Allocate result buffer and determine column info
+   ODBCDRV_QUERY_RESULT *pResult = (ODBCDRV_QUERY_RESULT *)malloc(sizeof(ODBCDRV_QUERY_RESULT));
+   short wNumCols;
+   SQLNumResultCols(stmt, &wNumCols);
+   pResult->iNumCols = wNumCols;
+   pResult->iNumRows = 0;
+   pResult->pValues = NULL;
+
+   BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
+
+	// Get column names
+	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
+	for(int i = 0; i < (int)pResult->iNumCols; i++)
+	{
+		char name[256];
+		SQLSMALLINT len;
+
+		iResult = SQLColAttributeA(stmt, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, name, 256, &len, NULL); 
+		if ((iResult == SQL_SUCCESS) || 
+			 (iResult == SQL_SUCCESS_WITH_INFO))
+		{
+			name[len] = 0;
+			pResult->columnNames[i] = strdup(name);
+		}
+		else
+		{
+			pResult->columnNames[i] = strdup("");
+		}
+	}
+
+   // Fetch all data
+   long iCurrValue = 0;
+   while(iResult = SQLFetch(stmt), 
+         (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+   {
+      pResult->iNumRows++;
+      pResult->pValues = (NETXMS_WCHAR **)realloc(pResult->pValues, 
+                  sizeof(NETXMS_WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
+      for(i = 1; i <= pResult->iNumCols; i++)
+      {
+		   SQLLEN iDataSize;
+
+			pDataBuffer[0] = 0;
+         iResult = SQLGetData(stmt, (short)i, m_useUnicode ? SQL_C_WCHAR : SQL_C_CHAR,
+                              pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
+			if (iDataSize != SQL_NULL_DATA)
+			{
+				if (m_useUnicode)
+				{
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+         		pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
+#else
+            	pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
+#endif
+				}
+				else
+				{
+         		pResult->pValues[iCurrValue++] = WideStringFromMBString((const char *)pDataBuffer);
+				}
+			}
+			else
+			{
+				pResult->pValues[iCurrValue++] = wcsdup(L"");
+			}
+      }
+   }
+
+   free(pDataBuffer);
+	return pResult;
+}
+
+
+//
 // Perform SELECT query
 //
 
@@ -344,11 +520,6 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwsz
 {
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
-   short wNumCols;
-   SQLLEN iDataSize;
-   BYTE *pDataBuffer;
-
-   pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
 
    MutexLock(pConn->mutexQuery, INFINITE);
 
@@ -376,70 +547,8 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwsz
 	   if ((iResult == SQL_SUCCESS) || 
           (iResult == SQL_SUCCESS_WITH_INFO))
       {
-         // Allocate result buffer and determine column info
-         pResult = (ODBCDRV_QUERY_RESULT *)malloc(sizeof(ODBCDRV_QUERY_RESULT));
-         SQLNumResultCols(pConn->sqlStatement, &wNumCols);
-         pResult->iNumCols = wNumCols;
-         pResult->iNumRows = 0;
-         pResult->pValues = NULL;
-         iCurrValue = 0;
-
-			// Get column names
-			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
-			for(i = 0; i < pResult->iNumCols; i++)
-			{
-				char name[256];
-				SQLSMALLINT len;
-
-				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
-				                           SQL_DESC_NAME, name, 256, &len, NULL); 
-				if ((iResult == SQL_SUCCESS) || 
-					 (iResult == SQL_SUCCESS_WITH_INFO))
-				{
-					name[len] = 0;
-					pResult->columnNames[i] = strdup(name);
-				}
-				else
-				{
-					pResult->columnNames[i] = strdup("");
-				}
-			}
-
-         // Fetch all data
-         while(iResult = SQLFetch(pConn->sqlStatement), 
-               (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-         {
-            pResult->iNumRows++;
-            pResult->pValues = (NETXMS_WCHAR **)realloc(pResult->pValues, 
-                        sizeof(NETXMS_WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
-            for(i = 1; i <= pResult->iNumCols; i++)
-            {
-               pDataBuffer[0] = 0;
-               iResult = SQLGetData(pConn->sqlStatement, (short)i,
-                                    m_useUnicode ? SQL_C_WCHAR : SQL_C_CHAR,
-                                    pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
-					if (iDataSize != SQL_NULL_DATA)
-					{
-						if (m_useUnicode)
-						{
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-               		pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
-#else
-	               	pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
-#endif
-						}
-						else
-						{
-               		pResult->pValues[iCurrValue++] = WideStringFromMBString((const char *)pDataBuffer);
-						}
-					}
-					else
-					{
-						pResult->pValues[iCurrValue++] = wcsdup(L"");
-					}
-            }
-         }
-         *pdwError = DBERR_SUCCESS;
+			pResult = ProcessSelectResults(pConn->sqlStatement);
+		   *pdwError = DBERR_SUCCESS;
       }
       else
       {
@@ -453,8 +562,32 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwsz
    }
 
    MutexUnlock(pConn->mutexQuery);
-   free(pDataBuffer);
    return pResult;
+}
+
+
+//
+// Perform SELECT query using prepared statement
+//
+
+extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ODBCDRV_CONN *pConn, SQLHSTMT stmt, DWORD *pdwError, NETXMS_WCHAR *errorText)
+{
+   ODBCDRV_QUERY_RESULT *pResult = NULL;
+
+   MutexLock(pConn->mutexQuery, INFINITE);
+	long rc = SQLExecute(stmt);
+   if ((rc == SQL_SUCCESS) || 
+       (rc == SQL_SUCCESS_WITH_INFO))
+   {
+		pResult = ProcessSelectResults(stmt);
+	   *pdwError = DBERR_SUCCESS;
+   }
+   else
+   {
+      *pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt, errorText);
+   }
+   MutexUnlock(pConn->mutexQuery);
+	return pResult;
 }
 
 

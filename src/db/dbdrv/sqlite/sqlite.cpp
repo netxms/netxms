@@ -223,15 +223,23 @@ extern "C" void EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int cTy
 		case DB_CTYPE_INT32:
 		case DB_CTYPE_UINT32:
 			sqlite3_bind_int(stmt, pos, *((int *)buffer));
+			if (allocType == DB_BIND_DYNAMIC)
+				safe_free(buffer);
 			break;
 		case DB_CTYPE_INT64:
 		case DB_CTYPE_UINT64:
 			sqlite3_bind_int64(stmt, pos, *((sqlite3_int64 *)buffer));
+			if (allocType == DB_BIND_DYNAMIC)
+				safe_free(buffer);
 			break;
 		case DB_CTYPE_DOUBLE:
 			sqlite3_bind_double(stmt, pos, *((double *)buffer));
+			if (allocType == DB_BIND_DYNAMIC)
+				safe_free(buffer);
 			break;
 		default:
+			if (allocType == DB_BIND_DYNAMIC)
+				safe_free(buffer);
 			break;
 	}
 }
