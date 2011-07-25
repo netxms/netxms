@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.netxms.base.CompatTools;
+
 /**
  * MAC address representation
  *
@@ -48,7 +50,7 @@ public class MacAddress
 	{
 		if (src != null)
 		{
-			value = Arrays.copyOf(src, 6);
+			value = CompatTools.arrayCopy(src, 6);
 		}
 		else
 		{
@@ -141,6 +143,6 @@ public class MacAddress
 	 */
 	public byte[] getValue()
 	{
-		return Arrays.copyOf(value, 6);
+		return CompatTools.arrayCopy(value, 6);
 	}
 }

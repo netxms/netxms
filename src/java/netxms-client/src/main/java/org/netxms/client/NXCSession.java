@@ -29,7 +29,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -55,6 +54,7 @@ import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
+import org.netxms.base.CompatTools;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPDataInputStream;
 import org.netxms.base.NXCPException;
@@ -950,7 +950,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setEndOfFile(true);
 			}
 
-			msg.setBinaryData(Arrays.copyOf(buffer, bytesRead));
+			msg.setBinaryData(CompatTools.arrayCopy(buffer, bytesRead));
 			sendMessage(msg);
 			
 			bytesSent += bytesRead;
@@ -1490,7 +1490,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public void syncMissingObjects(long[] objects, boolean syncComments) throws IOException, NXCException
 	{
-		final long[] syncList = Arrays.copyOf(objects, objects.length);
+		final long[] syncList = CompatTools.arrayCopy(objects, objects.length);
 		int count = syncList.length;
 		synchronized(objectList)
 		{

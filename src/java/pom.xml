@@ -10,7 +10,7 @@
   <url>http://www.netxms.org</url>
 
   <properties>
-    <projectversion>1.1.3</projectversion>
+    <projectversion>1.1.4</projectversion>
   </properties>
 
   <modules>

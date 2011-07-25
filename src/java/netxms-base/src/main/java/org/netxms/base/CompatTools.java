@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2010 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,37 @@
  */
 package org.netxms.base;
 
-import java.util.UUID;
-
 /**
- * Common constants
+ * Compatibility tools, mostly for Android platform
  *
  */
-public final class NXCommon
+public class CompatTools
 {
-	// Version information
-	public static final String VERSION = "1.1.4";
-	
-	public static final UUID EMPTY_GUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+	/**
+	 * Create copy of byte array
+	 * 
+	 * @param source
+	 * @param newLength
+	 * @return
+	 */
+	public static byte[] arrayCopy(byte[] source, int newLength)
+	{
+      byte[] dst = new byte[newLength];
+      System.arraycopy(source, 0, dst, 0, Math.min(source.length, newLength));
+      return dst;
+	}
+
+	/**
+	 * Create copy of long array
+	 * 
+	 * @param source
+	 * @param newLength
+	 * @return
+	 */
+	public static long[] arrayCopy(long[] source, int newLength)
+	{
+      long[] dst = new long[newLength];
+      System.arraycopy(source, 0, dst, 0, Math.min(source.length, newLength));
+      return dst;
+	}
 }
