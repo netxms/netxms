@@ -80,6 +80,15 @@ typedef void * DBDRV_ASYNC_RESULT;
 
 
 //
+// DB binding buffer allocation types
+//
+
+#define DB_BIND_STATIC     0
+#define DB_BIND_TRANSIENT  1
+#define DB_BIND_DYNAMIC    2
+
+
+//
 // C and SQL types for parameter binding
 //
 

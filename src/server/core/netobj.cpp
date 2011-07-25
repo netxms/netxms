@@ -134,22 +134,9 @@ BOOL NetObj::DeleteFromDB()
 
 BOOL NetObj::loadCommonProperties()
 {
-   DB_RESULT hResult;
-   TCHAR szQuery[1024];
    BOOL bResult = FALSE;
 
    // Load access options
-	/*
-   _sntprintf(szQuery, 1024, _T("SELECT name,status,is_deleted,")
-                             _T("inherit_access_rights,last_modified,status_calc_alg,")
-                             _T("status_prop_alg,status_fixed_val,status_shift,")
-                             _T("status_translation,status_single_threshold,")
-                             _T("status_thresholds,comments,is_system,")
-									  _T("location_type,latitude,longitude,guid,image,submap_id FROM object_properties ")
-                             _T("WHERE object_id=%d"), m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-	*/
-
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
 	                          _T("SELECT name,status,is_deleted,")
                              _T("inherit_access_rights,last_modified,status_calc_alg,")
@@ -160,8 +147,8 @@ BOOL NetObj::loadCommonProperties()
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, &m_dwId);
-		hResult = DBSelectPrepared(hStmt);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
 			if (DBGetNumRows(hResult) > 0)
@@ -210,29 +197,38 @@ BOOL NetObj::loadCommonProperties()
 	// Load custom attributes
 	if (bResult)
 	{
-		_sntprintf(szQuery, 1024, _T("SELECT attr_name,attr_value FROM object_custom_attributes WHERE object_id=%d"), m_dwId);
-		hResult = DBSelect(g_hCoreDB, szQuery);
-		if (hResult != NULL)
+		hStmt = DBPrepare(g_hCoreDB, _T("SELECT attr_name,attr_value FROM object_custom_attributes WHERE object_id=?"));
+		if (hStmt != NULL)
 		{
-			int i, count;
-			TCHAR *name, *value;
-			
-		   count = DBGetNumRows(hResult);
-		   for(i = 0; i < count; i++)
-		   {
-		   	name = DBGetField(hResult, i, 0, NULL, 0);
-		   	if (name != NULL)
-		   	{
-					DecodeSQLString(name);
-					value = DBGetField(hResult, i, 1, NULL, 0);
-					if (value != NULL)
-					{
-						DecodeSQLString(value);
-						m_customAttributes.setPreallocated(name, value);
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+			DB_RESULT hResult = DBSelectPrepared(hStmt);
+			if (hResult != NULL)
+			{
+				int i, count;
+				TCHAR *name, *value;
+				
+				count = DBGetNumRows(hResult);
+				for(i = 0; i < count; i++)
+				{
+		   		name = DBGetField(hResult, i, 0, NULL, 0);
+		   		if (name != NULL)
+		   		{
+						DecodeSQLString(name);
+						value = DBGetField(hResult, i, 1, NULL, 0);
+						if (value != NULL)
+						{
+							DecodeSQLString(value);
+							m_customAttributes.setPreallocated(name, value);
+						}
 					}
 				}
+				DBFreeResult(hResult);
 			}
-		   DBFreeResult(hResult);
+			else
+			{
+				bResult = FALSE;
+			}
+			DBFreeStatement(hStmt);
 		}
 		else
 		{

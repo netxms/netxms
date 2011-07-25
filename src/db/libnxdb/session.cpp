@@ -943,29 +943,44 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
 // Bind parameter (generic)
 //
 
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int size)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
-	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, buffer, size);
+	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, buffer, allocType);
 }
 
 
 //
-// Bind string parameher
+// Bind wrappers for different input types
 //
 
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, TCHAR *value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType)
 {
-	DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value, (int)_tcslen(value));
+	DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, (void *)value, allocType);
 }
 
-
-//
-// Bind integer parameter
-//
-
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, DWORD *value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, LONG value)
 {
-	DBBind(hStmt, pos, sqlType, DB_CTYPE_UINT32, value, sizeof(DWORD));
+	DBBind(hStmt, pos, sqlType, DB_CTYPE_INT32, &value, DB_BIND_TRANSIENT);
+}
+
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, DWORD value)
+{
+	DBBind(hStmt, pos, sqlType, DB_CTYPE_UINT32, &value, DB_BIND_TRANSIENT);
+}
+
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT64 value)
+{
+	DBBind(hStmt, pos, sqlType, DB_CTYPE_INT64, &value, DB_BIND_TRANSIENT);
+}
+
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, QWORD value)
+{
+	DBBind(hStmt, pos, sqlType, DB_CTYPE_UINT64, &value, DB_BIND_TRANSIENT);
+}
+
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, double value)
+{
+	DBBind(hStmt, pos, sqlType, DB_CTYPE_DOUBLE, &value, DB_BIND_TRANSIENT);
 }
 
 
