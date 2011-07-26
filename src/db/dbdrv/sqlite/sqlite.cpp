@@ -37,7 +37,7 @@ static void GetErrorMessage(sqlite3 *hdb, WCHAR *errorText)
 #if UNICODE_UCS2
 	wcsncpy(errorText, (const WCHAR *)sqlite3_errmsg16(hdb), DBDRV_MAX_ERROR_TEXT);
 #else
-	MultiByteToWideChar(CP_UTF8, 0, sqlite3_errmsg(hdb), -1, pConn->pszErrorText, DBDRV_MAX_ERROR_TEXT);
+	MultiByteToWideChar(CP_UTF8, 0, sqlite3_errmsg(hdb), -1, errorText, DBDRV_MAX_ERROR_TEXT);
 #endif
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	RemoveTrailingCRLFW(errorText);
@@ -214,10 +214,12 @@ extern "C" void EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int cTy
 			sqlite3_bind_text16(stmt, pos, buffer, wcslen((WCHAR *)buffer) * sizeof(WCHAR), 
 				(allocType == DB_BIND_STATIC) ? SQLITE_STATIC : ((allocType == DB_BIND_DYNAMIC) ? free : SQLITE_TRANSIENT));
 #else
-			char *utf8String = UTF8StringFromWideString((WCHAR *)buffer);
-			sqlite3_bind_text(stmt, pos, utf8String, strlen(utf8String), free);
-			if (allocType == DB_BIND_DYNAMIC)
-				safe_free(buffer);
+			{
+				char *utf8String = UTF8StringFromWideString((WCHAR *)buffer);
+				sqlite3_bind_text(stmt, pos, utf8String, strlen(utf8String), free);
+				if (allocType == DB_BIND_DYNAMIC)
+					safe_free(buffer);
+			}
 #endif
 			break;
 		case DB_CTYPE_INT32:
