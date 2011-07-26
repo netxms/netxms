@@ -87,7 +87,12 @@ typedef struct
 // Prepared statement structure
 //
 
-
+typedef struct
+{
+	SQLHSTMT handle;
+	Array *buffers;
+	ODBCDRV_CONN *connection;
+} ODBCDRV_STATEMENT;
 
 
 //
