@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.os.AsyncTask;
 
@@ -19,6 +21,8 @@ public class ConnectTask extends AsyncTask<String, String, NXCSession>
 	private ClientConnectorService service;
 	private Exception exception;
 	private Map<Long, Alarm> alarms;
+	
+	private static final int NOTIFY_CONN_STATUS = 1;
 	
 	/**
 	 * Create connect task.
@@ -40,8 +44,9 @@ public class ConnectTask extends AsyncTask<String, String, NXCSession>
 		try
 		{
 			session.connect();
-			session.subscribe(NXCSession.CHANNEL_ALARMS);
+			session.subscribe(NXCSession.CHANNEL_ALARMS+NXCSession.CHANNEL_OBJECTS);
 			alarms = session.getAlarms(false);
+			service.showNotification(NOTIFY_CONN_STATUS, service.getString(R.string.notify_connected, session.getServerAddress()));
 		}
 		catch(Exception e)
 		{

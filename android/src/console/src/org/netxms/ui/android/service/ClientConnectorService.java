@@ -3,14 +3,18 @@
  */
 package org.netxms.ui.android.service;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
+import org.netxms.ui.android.main.AlarmBrowser;
 import org.netxms.ui.android.main.HomeScreen;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import android.app.Notification;
@@ -43,6 +47,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private NXCSession session = null;
 	private boolean connectionInProgress = false;
 	private Map<Long, Alarm> alarms = null;
+	private AlarmBrowser alarmBrowser = null;
 	
    /**
     * Class for clients to access.  Because we know this service always
@@ -116,7 +121,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * 
 	 * @param text
 	 */
-	private void showNotification(int id, String text)
+	public void showNotification(int id, String text)
 	{
 		Notification n = new Notification(android.R.drawable.stat_notify_sdcard, text, System.currentTimeMillis());
 		n.defaults = Notification.DEFAULT_ALL;
@@ -136,6 +141,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	private void hideNotification(int id)
 	{
 		notificationManager.cancel(id);
+	}
+	
+	public void clearNotifications()
+	{
+		notificationManager.cancelAll();
 	}
 	
 	/**
@@ -167,7 +177,6 @@ public class ClientConnectorService extends Service implements SessionListener
 			this.session = session;
 			this.alarms = alarms;
 			session.addListener(this);
-			showNotification(NOTIFY_CONN_STATUS, getString(R.string.notify_connected, session.getServerAddress()));
 		}
 	}
 	
@@ -203,6 +212,15 @@ public class ClientConnectorService extends Service implements SessionListener
 			{
 				alarms.put(alarm.getId(), alarm);
 				showNotification(NOTIFY_ALARM, alarm.getMessage());
+				long[] list = {alarm.getSourceObjectId()};
+				try {
+					session.syncMissingObjects(list,false);			
+				} 
+				catch (NXCException e) {} catch (IOException e) {}
+			}
+			if (this.alarmBrowser != null)
+			{
+				alarmBrowser.runOnUiThread(new Runnable(){ public void run() { alarmBrowser.refreshList(); } });
 			}
 		}
 	}
@@ -218,6 +236,10 @@ public class ClientConnectorService extends Service implements SessionListener
 			if (alarms != null)
 			{
 				alarms.remove(id);
+			}
+			if (this.alarmBrowser != null)
+			{
+				alarmBrowser.runOnUiThread(new Runnable(){ public void run() { alarmBrowser.refreshList(); } });
 			}
 		}
 	}
@@ -261,5 +283,35 @@ public class ClientConnectorService extends Service implements SessionListener
 				a = new Alarm[0];
 		}
 		return a;
+	}
+	
+	public GenericObject findObjectById(long id) 
+	{
+		GenericObject obj = session.findObjectById(id);
+		// if we don't have object - probably we never synced it (initial alarm viewer run?)
+		// try to retreive it
+		if (obj == null)
+		{
+			long[] list = {id};
+			try {
+				session.syncMissingObjects(list,false);
+				obj = session.findObjectById(id);
+			} 
+			catch (NXCException e) {} catch (IOException e) {}
+		}
+		return obj;
+	}
+	
+	public void TeminateAlarm(long id)
+	{
+		try {
+			session.terminateAlarm(id);
+		} catch (NXCException e) {}
+		  catch (IOException e) {}
+	}
+	
+	public void registerAlarmBrowser(AlarmBrowser browser)
+	{
+		this.alarmBrowser=browser;
 	}
 }

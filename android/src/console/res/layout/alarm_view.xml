@@ -3,7 +3,27 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:orientation="vertical"
   android:layout_width="fill_parent"
-  android:layout_height="fill_parent">
-	<TextView android:text="@string/alarms_title" android:id="@+id/AlarmTitle" android:layout_width="fill_parent" android:layout_height="wrap_content"></TextView>
-	<ListView android:id="@+id/AlarmList" android:layout_width="fill_parent" android:layout_height="fill_parent"></ListView>
+  android:layout_height="fill_parent"
+>
+	<TextView android:text="@string/alarms_title" 
+		android:id="@+id/AlarmTitle" 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:textSize="20sp" 
+		android:textColor="#ffffff" 
+		android:background="#2b3c8e" 
+		android:paddingTop="2sp" 
+		android:paddingBottom="2sp" 
+		android:paddingLeft="5sp" 
+		android:paddingRight="5sp" 
+	>
+	</TextView>
+	<ListView 
+			android:id="@+id/AlarmList" 
+			android:layout_width="fill_parent" 
+			android:textColor="#000000"
+			android:background="#ffffff"
+  			android:layout_height="fill_parent"
+  	>
+  	</ListView>
 </LinearLayout>

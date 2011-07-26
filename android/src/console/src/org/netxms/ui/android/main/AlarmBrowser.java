@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main;
 
+import org.netxms.client.events.Alarm;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
 import org.netxms.ui.android.service.ClientConnectorService;
@@ -13,6 +14,12 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 
 /**
@@ -36,9 +43,12 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 		
 		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
-		listView = (ListView)findViewById(R.id.AlarmList);
+		// keeps current list of alarms as datasource for listview
 		adapter = new AlarmListAdapter(this);
+
+		listView = (ListView)findViewById(R.id.AlarmList);
 		listView.setAdapter(adapter);
+		registerForContextMenu(listView);
 	}
 
 	/* (non-Javadoc)
@@ -48,6 +58,10 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
+		// make sure adapter can read required additional data
+		adapter.setService(service);
+		// remember this activity in service, so that service can send updates
+		service.registerAlarmBrowser(this);
 		refreshList();
 	}
 
@@ -57,14 +71,40 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 	@Override
 	public void onServiceDisconnected(ComponentName name)
 	{
+		adapter.setService(null);
 	}
 
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,ContextMenuInfo menuInfo)
+	{
+		android.view.MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.alarm_actions, menu);
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		// get selected item
+		AdapterView.AdapterContextMenuInfo info =
+				(AdapterContextMenuInfo) item.getMenuInfo();
+		Alarm al = (Alarm) adapter.getItem(info.position);
+
+		// process menu selection
+		switch (item.getItemId()) {
+			case R.id.terminate:
+				adapter.terminateItem(al.getId());
+				refreshList();
+				return true;
+			default:
+				return super.onContextItemSelected(item);
+		}
+	}
 	/**
 	 * Refresh alarm list
 	 */
-	private void refreshList()
+	public void refreshList()
 	{
 		adapter.setAlarms(service.getAlarms());
+		adapter.notifyDataSetChanged();
 	}
 
 	/* (non-Javadoc)
@@ -73,6 +113,7 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 	@Override
 	protected void onDestroy()
 	{
+		service.registerAlarmBrowser(null);
 		unbindService(this);
 		super.onDestroy();
 	}

@@ -4,8 +4,11 @@ import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -14,10 +17,11 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 
-public class HomeScreen extends Activity implements OnItemClickListener
+public class HomeScreen extends Activity implements OnItemClickListener, ServiceConnection
 {
 	public static final int ACTIVITY_ALARMS = 1;
 	public static final int ACTIVITY_DASHBOARDS = 2;
+	private ClientConnectorService service;
 	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -29,6 +33,7 @@ public class HomeScreen extends Activity implements OnItemClickListener
 		setContentView(R.layout.homescreen);
 
 		startService(new Intent(this, ClientConnectorService.class));
+		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
 		GridView gridview = (GridView)findViewById(R.id.ActivityList);
 		gridview.setAdapter(new ActivityListAdapter(this));
@@ -58,6 +63,14 @@ public class HomeScreen extends Activity implements OnItemClickListener
 			case R.id.settings:
 				startActivity(new Intent(this, ConsolePreferences.class));
 				return true;
+			case R.id.disconnect:
+				if (!(service == null)) 
+				{
+					service.clearNotifications();
+					service.stopSelf();
+					System.exit(0);
+				}
+				return true;
 			default:
 				return super.onOptionsItemSelected(item);
 		}
@@ -77,5 +90,20 @@ public class HomeScreen extends Activity implements OnItemClickListener
 			default:
 				break;
 		}
+	}
+	
+	@Override
+	public void onServiceConnected(ComponentName name, IBinder binder)
+	{
+		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
+		// make sure adapter can read required data
+	}
+
+	/* (non-Javadoc)
+	 * @see android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
+	 */
+	@Override
+	public void onServiceDisconnected(ComponentName name)
+	{
 	}
 }
