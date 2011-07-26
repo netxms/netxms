@@ -17,6 +17,18 @@
 			android:layout_width="fill_parent" 
 			android:layout_height="wrap_content">
 	</TextView>
+	<TextView android:id="@+id/MainScreenStatus" 
+			android:text="@string/main_title" 
+			android:textSize="18sp" 
+			android:textColor="#ffffff" 
+			android:background="#2b3c8e" 
+			android:paddingTop="2sp" 
+			android:paddingBottom="2sp" 
+			android:paddingLeft="5sp" 
+			android:paddingRight="5sp" 
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content">
+	</TextView>
 	<GridView android:id="@+id/ActivityList" 
 			android:background="#ffffff"
 			android:numColumns="auto_fit"

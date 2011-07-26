@@ -16,12 +16,15 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
+import android.widget.TextView;
 
 public class HomeScreen extends Activity implements OnItemClickListener, ServiceConnection
 {
 	public static final int ACTIVITY_ALARMS = 1;
 	public static final int ACTIVITY_DASHBOARDS = 2;
+	
 	private ClientConnectorService service;
+	private TextView statusText; 
 	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -39,6 +42,8 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 		gridview.setAdapter(new ActivityListAdapter(this));
 
 		gridview.setOnItemClickListener(this);
+
+		statusText = (TextView)findViewById(R.id.MainScreenStatus);
 	}
 
 	/* (non-Javadoc)
@@ -92,11 +97,16 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.content.ServiceConnection#onServiceConnected(android.content.ComponentName, android.os.IBinder)
+	 */
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
-		// make sure adapter can read required data
+		// remember this activity in service, so that service can send updates
+		service.registerHomeScreen(this);
+		statusText.setText(service.getConnectionStatus());
 	}
 
 	/* (non-Javadoc)
@@ -105,5 +115,13 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 	@Override
 	public void onServiceDisconnected(ComponentName name)
 	{
+	}
+	
+	/**
+	 * @param text
+	 */
+	public void setStatusText(String text)
+	{
+		statusText.setText(text);
 	}
 }

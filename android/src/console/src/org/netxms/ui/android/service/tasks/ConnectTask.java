@@ -41,17 +41,24 @@ public class ConnectTask extends AsyncTask<String, String, NXCSession>
 	protected NXCSession doInBackground(String... params)
 	{
 		NXCSession session = new NXCSession(params[0], params[1], params[2]);
+		service.setConnectionStatus("step 1");
 		try
 		{
+service.setConnectionStatus("step 2");
 			session.connect();
-			session.subscribe(NXCSession.CHANNEL_ALARMS+NXCSession.CHANNEL_OBJECTS);
+service.setConnectionStatus("step 3");
+			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
+service.setConnectionStatus("step 4");
 			alarms = session.getAlarms(false);
+service.setConnectionStatus("step 5");
 			service.showNotification(NOTIFY_CONN_STATUS, service.getString(R.string.notify_connected, session.getServerAddress()));
+			service.setConnectionStatus("connected to " + session.getServerAddress());
 		}
 		catch(Exception e)
 		{
 			session = null;
 			exception = e;
+			service.setConnectionStatus("Connect failed: " + e.getLocalizedMessage());
 		}
 		return session;
 	}

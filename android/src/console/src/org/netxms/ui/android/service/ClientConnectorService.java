@@ -46,7 +46,9 @@ public class ClientConnectorService extends Service implements SessionListener
 	private NotificationManager notificationManager;
 	private NXCSession session = null;
 	private boolean connectionInProgress = false;
+	private String connectionStatus = "disconnected";
 	private Map<Long, Alarm> alarms = null;
+	private HomeScreen homeScreen = null;
 	private AlarmBrowser alarmBrowser = null;
 	
    /**
@@ -143,6 +145,9 @@ public class ClientConnectorService extends Service implements SessionListener
 		notificationManager.cancel(id);
 	}
 	
+	/**
+	 * Clear all notifications
+	 */
 	public void clearNotifications()
 	{
 		notificationManager.cancelAll();
@@ -158,6 +163,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			if ((session == null) && !connectionInProgress)
 			{
 				connectionInProgress = true;
+				setConnectionStatus("connecting...");
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 				new ConnectTask(this).execute(sp.getString("connection.server", ""), sp.getString("connection.login", ""), sp.getString("connection.password", ""));
 			}
@@ -213,14 +219,25 @@ public class ClientConnectorService extends Service implements SessionListener
 				alarms.put(alarm.getId(), alarm);
 				showNotification(NOTIFY_ALARM, alarm.getMessage());
 				long[] list = {alarm.getSourceObjectId()};
-				try {
-					session.syncMissingObjects(list,false);			
+				try
+				{
+					session.syncMissingObjects(list, false);			
 				} 
-				catch (NXCException e) {} catch (IOException e) {}
+				catch (NXCException e) 
+				{
+				} 
+				catch (IOException e) 
+				{
+				}
 			}
 			if (this.alarmBrowser != null)
 			{
-				alarmBrowser.runOnUiThread(new Runnable(){ public void run() { alarmBrowser.refreshList(); } });
+				alarmBrowser.runOnUiThread(new Runnable() { 
+					public void run() 
+					{ 
+						alarmBrowser.refreshList(); 
+					} 
+				});
 			}
 		}
 	}
@@ -285,6 +302,10 @@ public class ClientConnectorService extends Service implements SessionListener
 		return a;
 	}
 	
+	/**
+	 * @param id
+	 * @return
+	 */
 	public GenericObject findObjectById(long id) 
 	{
 		GenericObject obj = session.findObjectById(id);
@@ -302,16 +323,59 @@ public class ClientConnectorService extends Service implements SessionListener
 		return obj;
 	}
 	
-	public void TeminateAlarm(long id)
+	/**
+	 * @param id
+	 */
+	public void teminateAlarm(long id)
 	{
-		try {
+		try 
+		{
 			session.terminateAlarm(id);
-		} catch (NXCException e) {}
-		  catch (IOException e) {}
+		} 
+		catch (NXCException e) 
+		{	
+		}
+		catch (IOException e) 
+		{
+		}
 	}
 	
+	public void registerHomeScreen(HomeScreen homeScreen)
+	{
+		this.homeScreen = homeScreen;
+	}
+
+	/**
+	 * @param browser
+	 */
 	public void registerAlarmBrowser(AlarmBrowser browser)
 	{
-		this.alarmBrowser=browser;
+		this.alarmBrowser = browser;
+	}
+
+	/**
+	 * @return the connectionStatus
+	 */
+	public String getConnectionStatus()
+	{
+		return connectionStatus;
+	}
+
+	/**
+	 * @param connectionStatus the connectionStatus to set
+	 */
+	public void setConnectionStatus(final String connectionStatus)
+	{
+		this.connectionStatus = connectionStatus;
+		if (homeScreen != null)
+		{
+			homeScreen.runOnUiThread(new Runnable() {
+				@Override
+				public void run()
+				{
+					homeScreen.setStatusText(connectionStatus);
+				}
+			});
+		}
 	}
 }

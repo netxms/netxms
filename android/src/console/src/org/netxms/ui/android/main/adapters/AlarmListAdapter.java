@@ -81,7 +81,7 @@ public class AlarmListAdapter extends BaseAdapter
 	}
 	
 	public void terminateItem(long id){
-		service.TeminateAlarm(id);
+		service.teminateAlarm(id);
 	}
 
 	/* (non-Javadoc)
