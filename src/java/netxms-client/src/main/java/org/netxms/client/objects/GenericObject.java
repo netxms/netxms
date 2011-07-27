@@ -292,7 +292,7 @@ public class GenericObject
 		synchronized(parents)
 		{
 			final Iterator<Long> it = parents.iterator();
-			for(int i = 0; it.hasNext(); i++)
+			while(it.hasNext())
 			{
 				long id = it.next();
 				if (id == objectId)
@@ -339,7 +339,7 @@ public class GenericObject
 		synchronized(parents)
 		{
 			final Iterator<Long> it = parents.iterator();
-			for(int i = 0; it.hasNext(); i++)
+			while(it.hasNext())
 			{
 				long id = it.next();
 				if (id == objectId)
