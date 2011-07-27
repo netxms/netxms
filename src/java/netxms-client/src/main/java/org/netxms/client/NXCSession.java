@@ -55,6 +55,7 @@ import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserGroup;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.base.CompatTools;
+import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPDataInputStream;
 import org.netxms.base.NXCPException;
@@ -1139,6 +1140,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	@Override
 	public void connect() throws IOException, UnknownHostException, NetXMSClientException
 	{
+		Logger.info("NXCSession.connect", "Connecting to " + connAddress + ":" + connPort);
 		try
 		{
 			connSocket = new Socket(connAddress, connPort);
@@ -1147,12 +1149,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			housekeeperThread = new HousekeeperThread();
 
 			// get server information
+			Logger.debug("NXCSession.connect", "connection established, retrieving server info");
 			NXCPMessage request = newMessage(NXCPCodes.CMD_GET_SERVER_INFO);
 			sendMessage(request);
 			NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 
 			if (response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
+			{
+				Logger.warning("NXCSession.connect", "connection failed, server protocol version is " + response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION));
 				throw new NXCException(RCC.BAD_PROTOCOL);
+			}
 
 			serverVersion = response.getVariableAsString(NXCPCodes.VID_SERVER_VERSION);
 			serverId = response.getVariableAsBinary(NXCPCodes.VID_SERVER_ID);
@@ -1177,6 +1183,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			}
 
 			// Login to server
+			Logger.debug("NXCSession.connect", "Connected to server version " + serverVersion + ", trying to login");
 			request = newMessage(NXCPCodes.CMD_LOGIN);
 			request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
 			request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
@@ -1187,13 +1194,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			sendMessage(request);
 			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
 			int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
+			Logger.debug("NXCSession.connect", "CMD_LOGIN_RESP received, RCC=" + rcc);
 			if (rcc != RCC.SUCCESS)
+			{
+				Logger.warning("NXCSession.connect", "Login failed, RCC=" + rcc);
 				throw new NXCException(rcc);
+			}
 			userId = response.getVariableAsInteger(NXCPCodes.VID_USER_ID);
 			userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
 			passwordExpired = response.getVariableAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
 			zoningEnabled = response.getVariableAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
 
+			Logger.info("NXCSession.connect", "succesfully connected and logged in, userId=" + userId);
 			isConnected = true;
 		}
 		finally

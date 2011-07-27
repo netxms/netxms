@@ -165,7 +165,6 @@ public class NXCPMsgWaitQueue
 				actualTimeout -= System.currentTimeMillis() - startTime;
 			}
 		}
-		
 		return msg;
 	}
 
