@@ -11,8 +11,9 @@
 
   <properties>
     <projectversion>1.1.4</projectversion>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-
+  
   <modules>
     <module>netxms-base</module>
     <module>netxms-client-api</module>
