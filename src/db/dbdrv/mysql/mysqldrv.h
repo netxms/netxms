@@ -52,6 +52,31 @@ typedef struct
 
 
 //
+// Structure of prepared statement
+//
+
+typedef struct
+{
+	MYSQL_STMT *statement;
+	MYSQL_BIND *bindings;
+	Array *buffers;
+	int paramCount;
+} MYSQL_STATEMENT;
+
+
+//
+// Structure of synchronous SELECT result
+//
+
+typedef struct
+{
+	MYSQL_RES *resultSet;
+	bool isPreparedStatement;
+
+} MYSQL_RESULT;
+
+
+//
 // Structure of asynchronous SELECT result
 //
 
