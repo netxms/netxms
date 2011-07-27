@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.base.Logger;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -16,6 +17,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.AlarmBrowser;
 import org.netxms.ui.android.main.HomeScreen;
+import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -71,6 +73,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void onCreate()
 	{
 		super.onCreate();
+		
+		Logger.setLoggingFacility(new AndroidLoggingFacility());
 		
 		notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		showNotification(1, "NetXMS service started");
@@ -256,7 +260,12 @@ public class ClientConnectorService extends Service implements SessionListener
 			}
 			if (this.alarmBrowser != null)
 			{
-				alarmBrowser.runOnUiThread(new Runnable(){ public void run() { alarmBrowser.refreshList(); } });
+				alarmBrowser.runOnUiThread(new Runnable() {
+					public void run() 
+					{ 
+						alarmBrowser.refreshList(); 
+					} 
+				});
 			}
 		}
 	}

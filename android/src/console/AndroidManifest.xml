@@ -32,5 +32,5 @@
                   android:label="@string/settings">
         </activity>
     </application>
-<uses-sdk android:minSdkVersion="8"></uses-sdk>
+<uses-sdk android:targetSdkVersion="8" android:minSdkVersion="7"></uses-sdk>
 </manifest> 

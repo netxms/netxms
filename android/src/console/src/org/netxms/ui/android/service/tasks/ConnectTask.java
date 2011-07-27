@@ -7,19 +7,22 @@ import java.util.Map;
 
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
-import android.os.AsyncTask;
+import android.util.Log;
 
 /**
  * Connect task
  *
  */
-public class ConnectTask extends AsyncTask<String, String, NXCSession>
+public class ConnectTask extends Thread
 {
+	private static final String TAG = "nxclient.ConnectTask";
+	
 	private ClientConnectorService service;
-	private Exception exception;
+	private String server;
+	private String login;
+	private String password;
 	private Map<Long, Alarm> alarms;
 	
 	private static final int NOTIFY_CONN_STATUS = 1;
@@ -34,44 +37,46 @@ public class ConnectTask extends AsyncTask<String, String, NXCSession>
 		this.service = service;
 	}
 	
+	/**
+	 * Execute task
+	 * 
+	 * @param server
+	 * @param login
+	 * @param password
+	 */
+	public void execute(String server, String login, String password)
+	{
+		this.server = server;
+		this.login = login;
+		this.password = password;
+		start();
+	}
+	
 	/* (non-Javadoc)
-	 * @see android.os.AsyncTask#doInBackground(Params[])
+	 * @see java.lang.Thread#run()
 	 */
 	@Override
-	protected NXCSession doInBackground(String... params)
+	public void run()
 	{
-		NXCSession session = new NXCSession(params[0], params[1], params[2]);
-		service.setConnectionStatus("step 1");
+		NXCSession session = new NXCSession(server, login, password);
+		service.setConnectionStatus("connecting...");
 		try
 		{
-service.setConnectionStatus("step 2");
+			Log.d(TAG, "calling session.connect()");
 			session.connect();
-service.setConnectionStatus("step 3");
+			Log.d(TAG, "calling session.subscribe()");
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
-service.setConnectionStatus("step 4");
 			alarms = session.getAlarms(false);
-service.setConnectionStatus("step 5");
 			service.showNotification(NOTIFY_CONN_STATUS, service.getString(R.string.notify_connected, session.getServerAddress()));
 			service.setConnectionStatus("connected to " + session.getServerAddress());
+			service.onConnect(session, alarms);
 		}
 		catch(Exception e)
 		{
+			Log.d(TAG, "Exception on connect attempt", e);
 			session = null;
-			exception = e;
 			service.setConnectionStatus("Connect failed: " + e.getLocalizedMessage());
-		}
-		return session;
-	}
-
-	/* (non-Javadoc)
-	 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-	 */
-	@Override
-	protected void onPostExecute(NXCSession result)
-	{
-		if (result != null)
-			service.onConnect(result, alarms);
-		else
 			service.onDisconnect();
+		}
 	}
 }

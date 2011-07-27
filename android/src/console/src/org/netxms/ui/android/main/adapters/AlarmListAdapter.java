@@ -90,14 +90,15 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
-		TextView message,source;
-		LinearLayout view; 
+		TextView message, source;
+		LinearLayout view, texts; 
 		ImageView severity;
 		Alarm al;
 		GenericObject obj;
 		
 		if (convertView == null)
-		{	// new alarm, create fields
+		{	
+			// new alarm, create fields
 			message = new TextView(context); 
 			message.setPadding(5, 2, 5, 2);
 			
@@ -107,26 +108,32 @@ public class AlarmListAdapter extends BaseAdapter
 			source = new TextView(context);
 			source.setPadding(5, 2, 5, 2);
 			
+			texts = new LinearLayout(context);
+			texts.setOrientation(LinearLayout.VERTICAL);
+			texts.addView(source);
+			texts.addView(message);
+			
 			view = new LinearLayout(context);
 			view.addView(severity);
-			view.addView(source);
-			view.addView(message);
+			view.addView(texts);
 		}
 		else
 		{	// get reference to existing alarm
 			view = (LinearLayout)convertView;
-			severity = (ImageView) view.getChildAt(0);
-			source = (TextView) view.getChildAt(1);
-			message = (TextView) view.getChildAt(2);
+			severity = (ImageView)view.getChildAt(0);
+			source = (TextView)view.getChildAt(1);
+			message = (TextView)view.getChildAt(2);
 		}
 
 		// get node name
 		al = alarms[position];
 		obj = service.findObjectById(al.getSourceObjectId());
-		if (obj == null) {
+		if (obj == null) 
+		{
 			source.setText("<Unknown>");
 		}
-		else {
+		else 
+		{
 			source.setText(obj.getObjectName());			
 		}
 
@@ -135,5 +142,4 @@ public class AlarmListAdapter extends BaseAdapter
 		
 		return view;
 	}
-
 }
