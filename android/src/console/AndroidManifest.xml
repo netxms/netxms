@@ -31,6 +31,9 @@
         <activity android:name="org.netxms.ui.android.main.ConsolePreferences"
                   android:label="@string/settings">
         </activity>
-    </application>
+        <activity android:name="org.netxms.ui.android.main.NodeBrowser"
+                  android:label="@string/settings">
+        </activity>
+</application>
 <uses-sdk android:targetSdkVersion="8" android:minSdkVersion="7"></uses-sdk>
 </manifest> 

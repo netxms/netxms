@@ -22,6 +22,8 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 {
 	public static final int ACTIVITY_ALARMS = 1;
 	public static final int ACTIVITY_DASHBOARDS = 2;
+	public static final int ACTIVITY_NODES = 3;
+	
 	
 	private ClientConnectorService service;
 	private TextView statusText; 
@@ -91,6 +93,9 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 		{
 			case ACTIVITY_ALARMS:
 				startActivity(new Intent(this, AlarmBrowser.class));
+				break;
+			case ACTIVITY_NODES:
+				startActivity(new Intent(this, NodeBrowser.class));
 				break;
 			default:
 				break;

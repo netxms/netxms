@@ -3,7 +3,6 @@
  */
 package org.netxms.ui.android.main.adapters;
 
-import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
@@ -20,10 +19,10 @@ import android.widget.TextView;
  * 
  */
 
-public class AlarmListAdapter extends BaseAdapter
+public class NodeListAdapter extends BaseAdapter
 {
 	private Context context;
-	private Alarm[] alarms = new Alarm[0];
+	private GenericObject[] currentNodes = new GenericObject[0];
 	private ClientConnectorService service;
 
 	private static final int[] imageId = { R.drawable.normal, R.drawable.warning, R.drawable.minor, R.drawable.major,
@@ -33,7 +32,7 @@ public class AlarmListAdapter extends BaseAdapter
 	 * 
 	 * @param context
 	 */
-	public AlarmListAdapter(Context context)
+	public NodeListAdapter(Context context)
 	{
 		this.context = context;
 	}
@@ -43,9 +42,9 @@ public class AlarmListAdapter extends BaseAdapter
 	 * 
 	 * @param alarms
 	 */
-	public void setAlarms(Alarm[] alarms)
+	public void setNodes(GenericObject[] nodes)
 	{
-		this.alarms = alarms;
+		this.currentNodes = nodes;
 	}
 
 	public void setService(ClientConnectorService service)
@@ -61,7 +60,7 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public int getCount()
 	{
-		return alarms.length;
+		return currentNodes.length;
 	}
 
 	/*
@@ -72,7 +71,7 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public Object getItem(int position)
 	{
-		return alarms[position];
+		return currentNodes[position];
 	}
 
 	/*
@@ -83,12 +82,17 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public long getItemId(int position)
 	{
-		return alarms[position].getId();
+		return currentNodes[position].getObjectId();
 	}
 
-	public void terminateItem(long id)
+	public void unmanageObject(long id)
 	{
-		service.teminateAlarm(id);
+		service.unmanageObject(id);
+	}
+
+	public void manageObject(long id)
+	{
+		service.manageObject(id);
 	}
 
 	/*
@@ -100,57 +104,61 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
-		TextView message, source;
+		TextView nodeName;
 		LinearLayout view, texts;
-		ImageView severity;
-		Alarm al;
-		GenericObject obj;
+		ImageView severity, type;
+		GenericObject node;
 
 		if (convertView == null)
 		{
 			// new alarm, create fields
-			message = new TextView(context);
-			message.setPadding(5, 2, 5, 2);
+			nodeName = new TextView(context);
+			nodeName.setPadding(5, 2, 5, 2);
 
 			severity = new ImageView(context);
 			severity.setPadding(5, 5, 5, 2);
-
-			source = new TextView(context);
-			source.setPadding(5, 2, 5, 2);
+			type = new ImageView(context);
+			type.setPadding(5, 5, 5, 2);
 
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
-			texts.addView(source);
-			texts.addView(message);
+			texts.addView(nodeName);
 
 			view = new LinearLayout(context);
 			view.addView(severity);
+			view.addView(type);
 			view.addView(texts);
 		}
 		else
 		{ // get reference to existing alarm
 			view = (LinearLayout)convertView;
 			severity = (ImageView)view.getChildAt(0);
-			texts = (LinearLayout)view.getChildAt(1);
-			source = (TextView)texts.getChildAt(0);
-			message = (TextView)texts.getChildAt(1);
+			type = (ImageView)view.getChildAt(1);
+			texts = (LinearLayout)view.getChildAt(2);
+			nodeName = (TextView)texts.getChildAt(0);
 		}
 
 		// get node name
-		al = alarms[position];
-		obj = service.findObjectById(al.getSourceObjectId());
-		if (obj == null)
+		node = currentNodes[position];
+		if (node == null)
 		{
-			source.setText("<Unknown>");
+			nodeName.setText("<Unknown>");
 		}
 		else
 		{
-			source.setText(obj.getObjectName());
+			nodeName.setText(node.getObjectName());
+			if (node.getObjectClass() == GenericObject.OBJECT_CONTAINER)
+			{
+				type.setImageResource(R.drawable.container);
+			}
+			if (node.getObjectClass() == GenericObject.OBJECT_NODE)
+			{
+				type.setImageResource(R.drawable.node_small);
+			}
+
 		}
 
-		message.setText(al.getMessage());
-		severity.setImageResource(AlarmListAdapter.imageId[al.getCurrentSeverity()]);
-
+		severity.setImageResource(NodeListAdapter.imageId[node.getStatus()]);
 		return view;
 	}
 }

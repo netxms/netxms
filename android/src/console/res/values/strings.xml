@@ -27,4 +27,8 @@
 <string name="disconnect">Disconnect &amp; Exit</string>
 <string name="alarm_terminate">Terminate Alarm</string>
 <string name="cancel">Cancel</string>
+<string name="nodes_title">Nodes</string>
+<string name="home_screen_nodes">Nodes</string>
+<string name="unmanage">Unmanage</string>
+<string name="manage">Manage</string>
 </resources>

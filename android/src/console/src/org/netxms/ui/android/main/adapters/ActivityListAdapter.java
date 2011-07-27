@@ -6,7 +6,6 @@ package org.netxms.ui.android.main.adapters;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.HomeScreen;
 import org.netxms.ui.android.main.views.ActivityListElement;
-
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,16 +15,16 @@ import android.widget.LinearLayout.LayoutParams;
 
 /**
  * Adapter for list of activities displayed on home screen
- *
+ * 
  */
 public class ActivityListAdapter extends BaseAdapter
 {
-	private static final int[] activityId = { HomeScreen.ACTIVITY_ALARMS, HomeScreen.ACTIVITY_DASHBOARDS };
-	private static final int[] imageId = { R.drawable.alarm, R.drawable.dashboard }; 
-	private static final int[] textId = { R.string.home_screen_alarms, R.string.home_screen_dashboards }; 
-	
+	private static final int[] activityId = { HomeScreen.ACTIVITY_ALARMS, HomeScreen.ACTIVITY_NODES };
+	private static final int[] imageId = { R.drawable.alarm, R.drawable.node };
+	private static final int[] textId = { R.string.home_screen_alarms, R.string.home_screen_nodes };
+
 	private Context context;
-	
+
 	/**
 	 * Create activity list adapter.
 	 * 
@@ -35,8 +34,10 @@ public class ActivityListAdapter extends BaseAdapter
 	{
 		this.context = context;
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see android.widget.Adapter#getCount()
 	 */
 	@Override
@@ -45,7 +46,9 @@ public class ActivityListAdapter extends BaseAdapter
 		return activityId.length;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see android.widget.Adapter#getItem(int)
 	 */
 	@Override
@@ -54,7 +57,9 @@ public class ActivityListAdapter extends BaseAdapter
 		return null;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see android.widget.Adapter#getItemId(int)
 	 */
 	@Override
@@ -63,8 +68,11 @@ public class ActivityListAdapter extends BaseAdapter
 		return activityId[position];
 	}
 
-	/* (non-Javadoc)
-	 * @see android.widget.Adapter#getView(int, android.view.View, android.view.ViewGroup)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.Adapter#getView(int, android.view.View,
+	 * android.view.ViewGroup)
 	 */
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
@@ -72,10 +80,10 @@ public class ActivityListAdapter extends BaseAdapter
 		ActivityListElement view;
 		if (convertView == null)
 		{
-		   view = new ActivityListElement(context, imageId[position], textId[position]);
-		   view.setLayoutParams(new GridView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-		} 
-		else 
+			view = new ActivityListElement(context, imageId[position], textId[position]);
+			view.setLayoutParams(new GridView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+		}
+		else
 		{
 			view = (ActivityListElement)convertView;
 		}
