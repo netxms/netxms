@@ -12,11 +12,13 @@ import org.netxms.base.Logger;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.AlarmBrowser;
 import org.netxms.ui.android.main.HomeScreen;
+import org.netxms.ui.android.main.LastValues;
 import org.netxms.ui.android.main.NodeBrowser;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
@@ -54,6 +56,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	private HomeScreen homeScreen = null;
 	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
+	private LastValues lastValues = null;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -288,7 +291,6 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
-	
 	private void processObjectUpdate(GenericObject object)
 	{
 		synchronized(mutex)
@@ -313,7 +315,7 @@ public class ClientConnectorService extends Service implements SessionListener
 					}
 				});
 			}
-			
+
 		}
 	}
 
@@ -449,7 +451,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
-	public void setObjectMgmtState(long id,boolean state)
+	public void setObjectMgmtState(long id, boolean state)
 	{
 		try
 		{
@@ -460,6 +462,22 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 		catch(IOException e)
 		{
+		}
+	}
+
+	public DciValue[] getLastValues(long objectId)
+	{
+		try
+		{
+			return session.getLastValues(objectId);
+		}
+		catch(NXCException e)
+		{
+			return new DciValue[0];
+		}
+		catch(IOException e)
+		{
+			return new DciValue[0];
 		}
 	}
 
@@ -482,6 +500,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void registerNodeBrowser(NodeBrowser browser)
 	{
 		this.nodeBrowser = browser;
+	}
+
+	/**
+	 * @param browser
+	 */
+	public void registerLastValues(LastValues browser)
+	{
+		this.lastValues = browser;
 	}
 
 	/**

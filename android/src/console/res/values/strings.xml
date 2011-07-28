@@ -31,4 +31,5 @@
 <string name="home_screen_nodes">Nodes</string>
 <string name="unmanage">Unmanage</string>
 <string name="manage">Manage</string>
+<string name="last_values_title">Last Values</string>
 </resources>

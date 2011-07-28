@@ -34,7 +34,8 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	private NodeListAdapter adapter;
 	private long initialParent = 2;
 	private GenericObject currentParent = null;
-	private Stack<GenericObject> containerPath = new Stack<GenericObject>(); 
+	private Stack<GenericObject> containerPath = new Stack<GenericObject>();
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -66,14 +67,19 @@ public class NodeBrowser extends Activity implements ServiceConnection
 				}
 				if (obj.getObjectClass() == GenericObject.OBJECT_NODE)
 				{
-					//public DciValue[] getLastValues(final long nodeId) throws IOException, NXCException
-					//	public String[] resolveDciNames(Collection<ConditionDciInfo> dciList) throws IOException, NXCException
-					
+					showLastValues(obj.getObjectId());
 				}
 			}
 		});
 
 		registerForContextMenu(listView);
+	}
+
+	public void showLastValues(long objectId)
+	{
+		Intent newIntent = new Intent(this, LastValues.class);
+		newIntent.putExtra("objectId", objectId);
+		startActivity(newIntent);
 	}
 
 	/*
@@ -136,9 +142,9 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		}
 	}
 
-
 	@Override
-	public void onBackPressed() {
+	public void onBackPressed()
+	{
 		if (this.currentParent == null)
 		{
 			super.onBackPressed();
@@ -147,19 +153,19 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		if (this.currentParent.getObjectId() == this.initialParent)
 		{
 			super.onBackPressed();
-			return;			
+			return;
 		}
 		if (containerPath.empty())
 		{
 			super.onBackPressed();
-			return;						
+			return;
 		}
-		
+
 		this.currentParent = containerPath.pop();
 		this.refreshList();
 		return;
 	}
-	
+
 	/**
 	 * Refresh node list
 	 */

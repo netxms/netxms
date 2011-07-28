@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<TextView android:text="@string/last_values_title" android:id="@+id/LastValuesTitle"
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:textSize="20sp" android:textColor="#ffffff"
+		android:background="#2b3c8e" android:paddingTop="2sp"
+		android:paddingBottom="2sp" android:paddingLeft="5sp"
+		android:paddingRight="5sp">
+	</TextView>
+	<TextView android:text="" android:id="@+id/NodeName"
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:textSize="16sp" android:textColor="#ffffff"
+		android:background="#2b3c8e" android:paddingTop="2sp"
+		android:paddingBottom="2sp" android:paddingLeft="5sp"
+		android:paddingRight="5sp"></TextView>
+	<ListView android:id="@+id/ValueList" android:layout_width="fill_parent"
+		android:textColor="#000000" android:background="#ffffff"
+		android:layout_height="fill_parent">
+	</ListView>
+</LinearLayout>

@@ -31,10 +31,10 @@ public class NodeListAdapter extends BaseAdapter
 		R.drawable.minor, 		//	STATUS_MINOR          = 2;
 		R.drawable.major,			//	STATUS_MAJOR          = 3;
 		R.drawable.critical,		//	STATUS_CRITICAL       = 4;
-		R.drawable.unknown, 		//		STATUS_UNKNOWN        = 5;
-		R.drawable.unmanaged,	//		STATUS_UNMANAGED      = 6;
-		R.drawable.disabled,		//		STATUS_DISABLED       = 7;
-		R.drawable.testing		//		STATUS_TESTING        = 8;
+		R.drawable.unknown, 		// STATUS_UNKNOWN        = 5;
+		R.drawable.unmanaged,	//	STATUS_UNMANAGED      = 6;
+		R.drawable.disabled,		//	STATUS_DISABLED       = 7;
+		R.drawable.testing		//	STATUS_TESTING        = 8;
 	};
 
 	/**
@@ -120,7 +120,7 @@ public class NodeListAdapter extends BaseAdapter
 
 		if (convertView == null)
 		{
-			// new alarm, create fields
+			// new object, create fields
 			nodeName = new TextView(context);
 			nodeName.setPadding(5, 2, 5, 2);
 
@@ -139,7 +139,7 @@ public class NodeListAdapter extends BaseAdapter
 			view.addView(texts);
 		}
 		else
-		{ // get reference to existing alarm
+		{ // get reference to existing object
 			view = (LinearLayout)convertView;
 			severity = (ImageView)view.getChildAt(0);
 			type = (ImageView)view.getChildAt(1);
@@ -147,7 +147,7 @@ public class NodeListAdapter extends BaseAdapter
 			nodeName = (TextView)texts.getChildAt(0);
 		}
 
-		// get node name
+		// get object name
 		node = currentNodes[position];
 		if (node == null)
 		{

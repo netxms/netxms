@@ -32,8 +32,11 @@
                   android:label="@string/settings">
         </activity>
         <activity android:name="org.netxms.ui.android.main.NodeBrowser"
-                  android:label="@string/settings">
+                  android:label="@string/nodes_title">
         </activity>
+        <activity android:name="org.netxms.ui.android.main.LastValues"
+                  android:label="@string/last_values_title">
+        </activity>        
 </application>
 <uses-sdk android:targetSdkVersion="8" android:minSdkVersion="7"></uses-sdk>
 </manifest> 
