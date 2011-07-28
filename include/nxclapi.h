@@ -576,6 +576,14 @@ enum
 
 
 //
+// Object sync flags
+//
+
+#define OBJECT_SYNC_SEND_UPDATES    0x0001
+#define OBJECT_SYNC_DUAL_CONFIRM    0x0002
+
+
+//
 // User/group flags
 //
 

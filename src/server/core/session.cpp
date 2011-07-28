@@ -1900,11 +1900,12 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
 	DWORD numObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
 	DWORD *objects = (DWORD *)malloc(sizeof(DWORD) * numObjects);
 	pRequest->GetVariableInt32Array(VID_OBJECT_LIST, numObjects, objects);
+	DWORD options = pRequest->GetVariableShort(VID_FLAGS);
 
    MutexLock(m_mutexSendObjects, INFINITE);
 
    // Prepare message
-   msg.SetCode(CMD_OBJECT);
+	msg.SetCode((options & OBJECT_SYNC_SEND_UPDATES) ? CMD_OBJECT_UPDATE : CMD_OBJECT);
 
    // Send objects, one per message
    for(DWORD i = 0; i < numObjects; i++)
@@ -1925,6 +1926,13 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
 
    MutexUnlock(m_mutexSendObjects);
 	safe_free(objects);
+
+	if (options & OBJECT_SYNC_DUAL_CONFIRM)
+	{
+		msg.SetCode(CMD_REQUEST_COMPLETED);
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      sendMessage(&msg);
+	}
 }
 
 

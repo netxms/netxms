@@ -138,6 +138,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public static final int CHANNEL_SNMP_TRAPS = 0x0010;
 	public static final int CHANNEL_AUDIT_LOG = 0x0020;
 	public static final int CHANNEL_SITUATIONS = 0x0040;
+	
+	// Object sync options
+	public static final int OBJECT_SYNC_NOTIFY = 0x0001;
+	public static final int OBJECT_SYNC_WAIT = 0x0002;
 
 	// Configuration import options
 	public static final int CFG_IMPORT_REPLACE_EVENT_BY_CODE = 0x0001;
@@ -1466,41 +1470,67 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 
 	/**
-	 * Synchronizes selected object set with the server.
+	 * Synchronizes selected object set with the server. 
 	 * 
-	 * @param objects
-	 *           identifiers of objects need to be synchronized
-	 * @param syncComments
-	 *           if true, comments for objects will be synchronized as well
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @param objects identifiers of objects need to be synchronized
+	 * @param syncComments if true, comments for objects will be synchronized as well
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void syncObjectSet(long[] objects, boolean syncComments) throws IOException, NXCException
 	{
+		syncObjectSet(objects, syncComments, 0);
+	}
+
+	/**
+	 * Synchronizes selected object set with the server. The following options are accepted:
+	 *    OBJECT_SYNC_NOTIFY - send object update notification for each received object
+	 *    OBJECT_SYNC_WAIT   - wait until all requested objects received
+	 * 
+	 * @param objects identifiers of objects need to be synchronized
+	 * @param syncComments if true, comments for objects will be synchronized as well
+	 * @param options sync options (see above)
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void syncObjectSet(long[] objects, boolean syncComments, int options) throws IOException, NXCException
+	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SELECTED_OBJECTS);
 		msg.setVariableInt16(NXCPCodes.VID_SYNC_COMMENTS, syncComments ? 1 : 0);
+		msg.setVariableInt16(NXCPCodes.VID_FLAGS, options);
 		msg.setVariableInt32(NXCPCodes.VID_NUM_OBJECTS, objects.length);
 		msg.setVariable(NXCPCodes.VID_OBJECT_LIST, objects);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+
+		if ((options & OBJECT_SYNC_WAIT) != 0)
+			waitForRCC(msg.getMessageId());
 	}
 
 	/**
-	 * Synchronize only those objects from given set which are not synchronized
-	 * yet.
+	 * Synchronize only those objects from given set which are not synchronized yet.
 	 * 
-	 * @param objects
-	 *           identifiers of objects need to be synchronized
-	 * @param syncComments
-	 *           if true, comments for objects will be synchronized as well
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @param objects identifiers of objects need to be synchronized
+	 * @param syncComments if true, comments for objects will be synchronized as well
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void syncMissingObjects(long[] objects, boolean syncComments) throws IOException, NXCException
+	{
+		syncMissingObjects(objects, syncComments, 0);
+	}
+
+	/**
+	 * Synchronize only those objects from given set which are not synchronized yet.
+	 * Accepts all options which are valid for syncObjectSet.
+	 * 
+	 * @param objects identifiers of objects need to be synchronized
+	 * @param syncComments if true, comments for objects will be synchronized as well
+	 * @param options sync options (see comments for syncObjectSet)
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void syncMissingObjects(long[] objects, boolean syncComments, int options) throws IOException, NXCException
 	{
 		final long[] syncList = CompatTools.arrayCopy(objects, objects.length);
 		int count = syncList.length;
@@ -1517,9 +1547,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		}
 
 		if (count > 0)
-			syncObjectSet(syncList, syncComments);
+			syncObjectSet(syncList, syncComments, options);
 	}
-
+	
 	/**
 	 * Find NetXMS object by it's identifier.
 	 * 
