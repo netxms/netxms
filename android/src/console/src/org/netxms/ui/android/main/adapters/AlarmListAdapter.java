@@ -86,6 +86,9 @@ public class AlarmListAdapter extends BaseAdapter
 		return alarms[position].getId();
 	}
 
+	/**
+	 * @param id
+	 */
 	public void terminateItem(long id)
 	{
 		service.teminateAlarm(id);
@@ -109,14 +112,16 @@ public class AlarmListAdapter extends BaseAdapter
 		if (convertView == null)
 		{
 			// new alarm, create fields
-			message = new TextView(context);
-			message.setPadding(5, 2, 5, 2);
-
 			severity = new ImageView(context);
 			severity.setPadding(5, 5, 5, 2);
 
 			source = new TextView(context);
 			source.setPadding(5, 2, 5, 2);
+			source.setTextColor(0xFF404040);
+
+			message = new TextView(context);
+			message.setPadding(5, 2, 5, 2);
+			message.setTextColor(0xFF404040);
 
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
@@ -128,7 +133,8 @@ public class AlarmListAdapter extends BaseAdapter
 			view.addView(texts);
 		}
 		else
-		{ // get reference to existing alarm
+		{ 
+			// get reference to existing alarm
 			view = (LinearLayout)convertView;
 			severity = (ImageView)view.getChildAt(0);
 			texts = (LinearLayout)view.getChildAt(1);

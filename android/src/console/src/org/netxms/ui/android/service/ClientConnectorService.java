@@ -143,7 +143,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void showNotification(int id, String text)
 	{
 		Notification n = new Notification(android.R.drawable.stat_notify_sdcard, text, System.currentTimeMillis());
-		n.defaults = Notification.DEFAULT_ALL;
+		n.defaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_LIGHTS;
 
 		Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
 		PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -291,6 +291,9 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	/**
+	 * @param object
+	 */
 	private void processObjectUpdate(GenericObject object)
 	{
 		synchronized(mutex)
@@ -400,6 +403,10 @@ public class ClientConnectorService extends Service implements SessionListener
 		return obj;
 	}
 
+	/**
+	 * @param parent
+	 * @return
+	 */
 	public GenericObject[] findChilds(GenericObject parent)
 	{
 		// protect from null pointer exception
@@ -451,6 +458,10 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	/**
+	 * @param id
+	 * @param state
+	 */
 	public void setObjectMgmtState(long id, boolean state)
 	{
 		try

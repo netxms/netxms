@@ -74,6 +74,9 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 		adapter.setService(null);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View, android.view.ContextMenu.ContextMenuInfo)
+	 */
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v,ContextMenuInfo menuInfo)
 	{
@@ -81,15 +84,20 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 		inflater.inflate(R.menu.alarm_actions, menu);
 	}
 	
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
+	 */
 	@Override
-	public boolean onContextItemSelected(MenuItem item) {
+	public boolean onContextItemSelected(MenuItem item)
+	{
 		// get selected item
 		AdapterView.AdapterContextMenuInfo info =
 				(AdapterContextMenuInfo) item.getMenuInfo();
 		Alarm al = (Alarm) adapter.getItem(info.position);
 
 		// process menu selection
-		switch (item.getItemId()) {
+		switch (item.getItemId())
+		{
 			case R.id.terminate:
 				adapter.terminateItem(al.getId());
 				refreshList();
@@ -98,6 +106,7 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 				return super.onContextItemSelected(item);
 		}
 	}
+	
 	/**
 	 * Refresh alarm list
 	 */

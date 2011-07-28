@@ -20,10 +20,10 @@
 	</TextView>
 	<ListView 
 			android:id="@+id/AlarmList" 
-			android:layout_width="fill_parent" 
-			android:textColor="#000000"
-			android:background="#ffffff"
+			android:layout_width="fill_parent"
   			android:layout_height="fill_parent"
+			android:background="#ffffff"
+			android:cacheColorHint="#ffffff" 
   	>
   	</ListView>
 </LinearLayout>
