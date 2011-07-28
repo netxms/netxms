@@ -266,7 +266,7 @@ static BOOL SMSDriverSendPDU(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 			char szTmp2[128];
 			snprintf(szTmp2, 128, "AT+CSCA=%s\r\n", szTmp + 9);
 			szTmp2[127] = '\0';
-			m_serial.Write(szTmp2, strlen(szTmp2)); // set SMSC
+			m_serial.Write(szTmp2, (int)strlen(szTmp2)); // set SMSC
 			m_serial.Read(szTmp, 128); // read OK
 			DbgPrintf(4, _T("SMS send: %hs sent, got {%hs}"), szTmp2, szTmp);
 		}

@@ -97,7 +97,7 @@ DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
                {
 						int rawLen = (dwBufferSize - 1) / 2;
 						BYTE *raw = (BYTE *)malloc(rawLen);
-						rawLen = pVar->getRawValue(raw, rawLen);
+						rawLen = (int)pVar->getRawValue(raw, rawLen);
 						BinToStr(raw, rawLen, (TCHAR *)pValue);
 						free(raw);
                }

@@ -1,5 +1,5 @@
 /* 
-** Microsoft SQL Server Database Driver
+** MS SQL Database Driver
 ** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -22,91 +22,82 @@
 
 #include "mssqldrv.h"
 
+#undef EXPORT
+#define EXPORT __declspec(dllexport)
+
+DECLARE_DRIVER_HEADER("MSSQL")
+
 
 //
 // Constants
 //
 
-#define CONNECT_TIMEOUT    30
+#define DATA_BUFFER_SIZE      65536
 
 
 //
-// DB library error handler
+// Convert ODBC state to NetXMS database error code and get error text
 //
 
-static int ErrorHandler(PDBPROCESS hProcess, int severity, int dberr,
-                        int oserr, const char *dberrstr, const char *oserrstr)
+static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
 {
-   MSDB_CONN *pConn;
+   SQLRETURN nRet;
+   SQLSMALLINT nChars;
+   DWORD dwError;
+   char szState[16];
 
-   if (hProcess != NULL)
+	// Get state information and convert it to NetXMS database error code
+   nRet = SQLGetDiagFieldA(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
+   if (nRet == SQL_SUCCESS)
    {
-      pConn = (MSDB_CONN *)dbgetuserdata(hProcess);
-      if (pConn != NULL)
+      if ((!strcmp(szState, "08003")) ||     // Connection does not exist
+          (!strcmp(szState, "08S01")) ||     // Communication link failure
+          (!strcmp(szState, "HYT00")) ||     // Timeout expired
+          (!strcmp(szState, "HYT01")))       // Connection timeout expired
       {
-			nx_strncpy(pConn->szErrorText, dberrstr, DBDRV_MAX_ERROR_TEXT);
-			RemoveTrailingCRLF(pConn->szErrorText);
-         if (dbdead(hProcess))
-            pConn->bProcessDead = TRUE;
+         dwError = DBERR_CONNECTION_LOST;
       }
-   }
-   return INT_CANCEL;
-}
-
-
-//
-// Re-establish connection to server
-//
-
-static BOOL Reconnect(MSDB_CONN *pConn)
-{
-   LOGINREC *loginrec;
-   PDBPROCESS hProcess;
-   BOOL bResult = FALSE;
-
-   loginrec = dblogin();
-   if (!strcmp(pConn->szLogin, "*"))
-   {
-      DBSETLSECURE(loginrec);
+      else
+      {
+         dwError = DBERR_OTHER_ERROR;
+      }
    }
    else
    {
-      DBSETLUSER(loginrec, pConn->szLogin);
-      DBSETLPWD(loginrec, pConn->szPassword);
-   }
-   DBSETLAPP(loginrec, "NetXMS");
-   DBSETLTIME(loginrec, CONNECT_TIMEOUT);
-   hProcess = dbopen(loginrec, pConn->szHost);
-
-   if ((hProcess != NULL) && (pConn->szDatabase[0] != 0))
-   {
-      dbsetuserdata(hProcess, NULL);
-      if (dbuse(hProcess, pConn->szDatabase) != SUCCEED)
-      {
-         dbclose(hProcess);
-         hProcess = NULL;
-      }
+      dwError = DBERR_OTHER_ERROR;
    }
 
-   if (hProcess != NULL)
-   {
-      dbclose(pConn->hProcess);
-      pConn->hProcess = hProcess;
-      pConn->bProcessDead = FALSE;
-      dbsetuserdata(hProcess, pConn);
-      bResult = TRUE;
+	// Get error message
+	if (errorText != NULL)
+	{
+		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
+		if (nRet == SQL_SUCCESS)
+		{
+			RemoveTrailingCRLFW(errorText);
+		}
+		else
+		{
+			wcscpy(errorText, L"Unable to obtain description for this error");
+		}
    }
-
-   return bResult;
+   
+   return dwError;
 }
 
 
 //
-// API version
+// Clear any pending result sets on given statement
 //
 
-extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
-extern "C" const char EXPORT *drvName = "MSSQL";
+static void ClearPendingResults(SQLHSTMT stmt)
+{
+	while(1)
+	{
+		SQLRETURN rc = SQLMoreResults(stmt);
+		if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
+			break;
+	}
+}
 
 
 //
@@ -115,33 +106,16 @@ extern "C" const char EXPORT *drvName = "MSSQL";
 
 extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
-	int len = (int)wcslen(str) + 4;   // + two quotes, N prefix, and \0 at the end
+	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
 	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
-	wcscpy(out, L"N'");
+	out[0] = L'\'';
 
 	const WCHAR *src = str;
 	int outPos;
-	for(outPos = 2; *src != NULL; src++)
+	for(outPos = 1; *src != NULL; src++)
 	{
-		long chval = *src;
-		if (chval < 32)
-		{
-			WCHAR buffer[32];
-
-			_snwprintf(buffer, 32, L"'+nchar(%ld)+N'", chval);
-			int l = (int)wcslen(buffer);
-
-			len += l;
-			if (len >= bufferSize)
-			{
-				bufferSize += 128;
-				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
-			}
-			memcpy(&out[outPos], buffer, l * sizeof(WCHAR));
-			outPos += l;
-		}
-		else if (*src == L'\'')
+		if (*src == L'\'')
 		{
 			len++;
 			if (len >= bufferSize)
@@ -165,33 +139,16 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 
 extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 {
-	int len = (int)strlen(str) + 4;   // + two quotes, N prefix, and \0 at the end
+	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
 	char *out = (char *)malloc(bufferSize);
-	strcpy(out, "N'");
+	out[0] = '\'';
 
 	const char *src = str;
 	int outPos;
-	for(outPos = 2; *src != NULL; src++)
+	for(outPos = 1; *src != NULL; src++)
 	{
-		long chval = (long)(*((unsigned char *)src));
-		if (chval < 32)
-		{
-			char buffer[32];
-
-			snprintf(buffer, 32, "'+nchar(%ld)+N'", chval);
-			int l = (int)strlen(buffer);
-
-			len += l;
-			if (len >= bufferSize)
-			{
-				bufferSize += 128;
-				out = (char *)realloc(out, bufferSize);
-			}
-			memcpy(&out[outPos], buffer, l);
-			outPos += l;
-		}
-		else if (*src == '\'')
+		if (*src == '\'')
 		{
 			len++;
 			if (len >= bufferSize)
@@ -220,14 +177,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 
 extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
-   BOOL bResult = FALSE;
-
-   if (dbinit() != NULL)
-   {
-      dberrhandle(ErrorHandler);
-      bResult = TRUE;
-   }
-   return bResult;
+   return TRUE;
 }
 
 
@@ -244,63 +194,78 @@ extern "C" void EXPORT DrvUnload()
 // Connect to database
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
-                                              const char *password, const char *database, WCHAR *errorText)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, char *pszPassword, char *pszDatabase, WCHAR *errorText)
 {
-   LOGINREC *loginrec;
-   MSDB_CONN *pConn = NULL;
-   PDBPROCESS hProcess;
+   long iResult;
+   MSSQL_CONN *pConn;
 
-   loginrec = dblogin();
-   if (!strcmp(login, "*"))
-   {
-      DBSETLSECURE(loginrec);
-   }
-   else
-   {
-      DBSETLUSER(loginrec, login);
-      DBSETLPWD(loginrec, password);
-   }
-   DBSETLAPP(loginrec, "NetXMS");
-   DBSETLTIME(loginrec, CONNECT_TIMEOUT);
-   hProcess = dbopen(loginrec, host);
+   // Allocate our connection structure
+   pConn = (MSSQL_CONN *)malloc(sizeof(MSSQL_CONN));
 
-   if (hProcess != NULL)
-   {
-      dbsetuserdata(hProcess, NULL);
-
-      // Change to specified database
-      if (database != NULL)
-      {
-         if (dbuse(hProcess, database) != SUCCEED)
-         {
-				wcscpy(errorText, L"Cannot switch to database");
-            dbclose(hProcess);
-            hProcess = NULL;
-         }
-      }
-      
-      if (hProcess != NULL)
-      {
-         pConn = (MSDB_CONN *)malloc(sizeof(MSDB_CONN));
-         pConn->hProcess = hProcess;
-         pConn->mutexQueryLock = MutexCreate();
-         pConn->bProcessDead = FALSE;
-         nx_strncpy(pConn->szHost, host, MAX_CONN_STRING);
-         nx_strncpy(pConn->szLogin, login, MAX_CONN_STRING);
-         nx_strncpy(pConn->szPassword, password, MAX_CONN_STRING);
-         nx_strncpy(pConn->szDatabase, CHECK_NULL_EX(database), MAX_CONN_STRING);
-			pConn->szErrorText[0] = 0;
-
-         dbsetuserdata(hProcess, pConn);
-      }
-   }
-	else
+   // Allocate environment
+   iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
+	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
-		wcscpy(errorText, L"Cannot connect to database server");
+		wcscpy(errorText, L"Cannot allocate environment handle");
+		goto connect_failure_0;
 	}
 
+   // Set required ODBC version
+	iResult = SQLSetEnvAttr(pConn->sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
+	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		wcscpy(errorText, L"Call to SQLSetEnvAttr failed");
+      goto connect_failure_1;
+	}
+
+	// Allocate connection handle, set timeout
+	iResult = SQLAllocHandle(SQL_HANDLE_DBC, pConn->sqlEnv, &pConn->sqlConn); 
+	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		wcscpy(errorText, L"Cannot allocate connection handle");
+      goto connect_failure_1;
+	}
+	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER *)15, 0);
+	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
+
+	// Connect to the server
+	SQLSMALLINT outLen;
+	char connectString[1024];
+
+	if (!strcmp(pszLogin, "*"))
+	{
+		snprintf(connectString, 1024, "DRIVER={SQL Server Native Client};SERVER=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS",
+			      pszHost, pszDatabase);
+	}
+	else
+	{
+		snprintf(connectString, 1024, "DRIVER={SQL Server Native Client 10.0};SERVER=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS",
+		         pszHost, pszLogin, pszPassword, pszDatabase);
+	}
+	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+
+	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+	{
+		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+      goto connect_failure_2;
+	}
+
+   // Create mutex
+   pConn->mutexQuery = MutexCreate();
+
+   // Success
    return (DBDRV_CONNECTION)pConn;
+
+   // Handle failures
+connect_failure_2:
+   SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
+
+connect_failure_1:
+   SQLFreeHandle(SQL_HANDLE_ENV, pConn->sqlEnv);
+
+connect_failure_0:
+   free(pConn);
+   return NULL;
 }
 
 
@@ -308,63 +273,136 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 // Disconnect from database
 //
 
-extern "C" void EXPORT DrvDisconnect(MSDB_CONN *pConn)
+extern "C" void EXPORT DrvDisconnect(MSSQL_CONN *pConn)
 {
-   if (pConn != NULL)
-   {
-      dbclose(pConn->hProcess);
-      MutexDestroy(pConn->mutexQueryLock);
-      free(pConn);
-   }
+   MutexLock(pConn->mutexQuery, INFINITE);
+   MutexUnlock(pConn->mutexQuery);
+   SQLDisconnect(pConn->sqlConn);
+   SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
+   SQLFreeHandle(SQL_HANDLE_ENV, pConn->sqlEnv);
+   MutexDestroy(pConn->mutexQuery);
+   free(pConn);
 }
 
 
 //
-// Execute query
+// Prepare statement
 //
 
-static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
-   BOOL bResult;
+   long iResult;
+	SQLHSTMT stmt;
+	MSSQL_STATEMENT *result;
 
-   dbcmd(pConn->hProcess, pszQuery);
-   if (dbsqlexec(pConn->hProcess) == SUCCEED)
+   MutexLock(pConn->mutexQuery, INFINITE);
+
+   // Allocate statement handle
+   iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &stmt);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
-      bResult = TRUE;
+      // Prepare statement
+	   iResult = SQLPrepareW(stmt, (SQLWCHAR *)pwszQuery, SQL_NTS);
+	   if ((iResult == SQL_SUCCESS) || 
+          (iResult == SQL_SUCCESS_WITH_INFO))
+		{
+			result = (MSSQL_STATEMENT *)malloc(sizeof(MSSQL_STATEMENT));
+			result->handle = stmt;
+			result->buffers = new Array(0, 16, true);
+			result->connection = pConn;
+		}
+		else
+      {
+         GetSQLErrorInfo(SQL_HANDLE_STMT, stmt, errorText);
+	      SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+			result = NULL;
+      }
    }
    else
    {
-      if (pConn->bProcessDead)
-      {
-         if (Reconnect(pConn))
-         {
-            bResult = (dbsqlexec(pConn->hProcess) == SUCCEED);
-         }
-         else
-         {
-            bResult = FALSE;
-         }
-      }
-      else
-      {
-         bResult = FALSE;
-      }
+      GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+		result = NULL;
    }
 
-	if (errorText != NULL)
-	{
-		if (bResult)
-		{
-			*errorText = 0;
-		}
-		else
-		{
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pConn->szErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
-			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-		}
-	}
+   MutexUnlock(pConn->mutexQuery);
+   return result;
+}
 
-   return bResult;
+
+//
+// Bind parameter to statement
+//
+
+extern "C" void EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+{
+	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE };
+	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
+	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
+
+	int length = (int)wcslen((WCHAR *)buffer) + 1;
+
+	SQLPOINTER sqlBuffer;
+	switch(allocType)
+	{
+		case DB_BIND_STATIC:
+			sqlBuffer = buffer;
+			break;
+		case DB_BIND_DYNAMIC:
+			sqlBuffer = buffer;
+			stmt->buffers->add(sqlBuffer);
+			break;
+		case DB_BIND_TRANSIENT:
+			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)length : bufferSize[cType]);
+			stmt->buffers->add(sqlBuffer);
+			break;
+		default:
+			return;	// Invalid call
+	}
+	SQLBindParameter(stmt->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType],
+	                 (cType == DB_CTYPE_STRING) ? length : 0, 0, sqlBuffer, 0, NULL);
+}
+
+
+//
+// Execute prepared statement
+//
+
+extern "C" DWORD EXPORT DrvExecute(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, WCHAR *errorText)
+{
+   DWORD dwResult;
+
+   MutexLock(pConn->mutexQuery, INFINITE);
+	long rc = SQLExecute(stmt->handle);
+   if ((rc == SQL_SUCCESS) || 
+       (rc == SQL_SUCCESS_WITH_INFO) || 
+       (rc == SQL_NO_DATA))
+   {
+		ClearPendingResults(stmt->handle);
+      dwResult = DBERR_SUCCESS;
+   }
+   else
+   {
+		dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt->handle, errorText);
+   }
+   MutexUnlock(pConn->mutexQuery);
+	return dwResult;
+}
+
+
+//
+// Destroy prepared statement
+//
+
+extern "C" void EXPORT DrvFreeStatement(MSSQL_STATEMENT *stmt)
+{
+	if (stmt == NULL)
+		return;
+
+	MutexLock(stmt->connection->mutexQuery, INFINITE);
+	SQLFreeHandle(SQL_HANDLE_STMT, stmt->handle);
+	MutexUnlock(stmt->connection->mutexQuery);
+	delete stmt->buffers;
+	free(stmt);
 }
 
 
@@ -372,27 +410,105 @@ static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery, WCHAR *errorText)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(MSSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
-   DWORD dwError;
-   char *pszQueryUTF8;
+   long iResult;
+   DWORD dwResult;
 
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   MutexLock(pConn->mutexQueryLock, INFINITE);
-   
-   if (ExecuteQuery(pConn, pszQueryUTF8, errorText))
+   MutexLock(pConn->mutexQuery, INFINITE);
+
+   // Allocate statement handle
+   iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
-      if (dbresults(pConn->hProcess) == SUCCEED)
-         while(dbnextrow(pConn->hProcess) != NO_MORE_ROWS);
-      dwError = DBERR_SUCCESS;
+      // Execute statement
+	   iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+	   if ((iResult == SQL_SUCCESS) || 
+          (iResult == SQL_SUCCESS_WITH_INFO) || 
+          (iResult == SQL_NO_DATA))
+      {
+         dwResult = DBERR_SUCCESS;
+      }
+      else
+      {
+         dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
+      }
+      SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
    }
    else
    {
-      dwError = pConn->bProcessDead ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+      dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
    }
-   MutexUnlock(pConn->mutexQueryLock);
-   free(pszQueryUTF8);
-   return dwError;
+
+   MutexUnlock(pConn->mutexQuery);
+   return dwResult;
+}
+
+
+//
+// Process results of SELECT query
+//
+
+static MSSQL_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
+{
+   // Allocate result buffer and determine column info
+   MSSQL_QUERY_RESULT *pResult = (MSSQL_QUERY_RESULT *)malloc(sizeof(MSSQL_QUERY_RESULT));
+   short wNumCols;
+   SQLNumResultCols(stmt, &wNumCols);
+   pResult->iNumCols = wNumCols;
+   pResult->iNumRows = 0;
+   pResult->pValues = NULL;
+
+   BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
+
+	// Get column names
+	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
+	for(int i = 0; i < (int)pResult->iNumCols; i++)
+	{
+		char name[256];
+		SQLSMALLINT len;
+
+		SQLRETURN iResult = SQLColAttributeA(stmt, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, name, 256, &len, NULL); 
+		if ((iResult == SQL_SUCCESS) || 
+			 (iResult == SQL_SUCCESS_WITH_INFO))
+		{
+			name[len] = 0;
+			pResult->columnNames[i] = strdup(name);
+		}
+		else
+		{
+			pResult->columnNames[i] = strdup("");
+		}
+	}
+
+   // Fetch all data
+   long iCurrValue = 0;
+	SQLRETURN iResult;
+   while(iResult = SQLFetch(stmt), 
+         (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+   {
+      pResult->iNumRows++;
+      pResult->pValues = (WCHAR **)realloc(pResult->pValues, 
+                  sizeof(WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
+      for(int i = 1; i <= (int)pResult->iNumCols; i++)
+      {
+		   SQLLEN iDataSize;
+
+			pDataBuffer[0] = 0;
+         iResult = SQLGetData(stmt, (short)i, SQL_C_WCHAR, pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
+			if (iDataSize != SQL_NULL_DATA)
+			{
+      		pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
+			}
+			else
+			{
+				pResult->pValues[iCurrValue++] = wcsdup(L"");
+			}
+      }
+   }
+
+   free(pDataBuffer);
+	return pResult;
 }
 
 
@@ -400,109 +516,62 @@ extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery, WCHAR *erro
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-   MSDB_QUERY_RESULT *pResult = NULL;
-   int i, iCurrPos, iLen, *piColTypes;
-   void *pData;
-   char *pszQueryUTF8;
-	LPCSTR name;
+   MSSQL_QUERY_RESULT *pResult = NULL;
 
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   MutexLock(pConn->mutexQueryLock, INFINITE);
+   MutexLock(pConn->mutexQuery, INFINITE);
 
-   if (ExecuteQuery(pConn, pszQueryUTF8, errorText))
+   // Allocate statement handle
+   SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
-      // Process query results
-      if (dbresults(pConn->hProcess) == SUCCEED)
+      // Execute statement
+      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+	   if ((iResult == SQL_SUCCESS) || 
+          (iResult == SQL_SUCCESS_WITH_INFO))
       {
-         pResult = (MSDB_QUERY_RESULT *)malloc(sizeof(MSDB_QUERY_RESULT));
-         pResult->iNumRows = 0;
-         pResult->iNumCols = dbnumcols(pConn->hProcess);
-         pResult->pValues = NULL;
-			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
-
-         // Determine column names and types
-         piColTypes = (int *)malloc(pResult->iNumCols * sizeof(int));
-         for(i = 0; i < pResult->iNumCols; i++)
-			{
-            piColTypes[i] = dbcoltype(pConn->hProcess, i + 1);
-				name = dbcolname(pConn->hProcess, i + 1);
-				pResult->columnNames[i] = strdup(CHECK_NULL_A(name));
-			}
-
-         // Retrieve data
-         iCurrPos = 0;
-         while(dbnextrow(pConn->hProcess) != NO_MORE_ROWS)
-         {
-            pResult->iNumRows++;
-            pResult->pValues = (char **)realloc(pResult->pValues, 
-                                                sizeof(char *) * pResult->iNumRows * pResult->iNumCols);
-            for(i = 1; i <= pResult->iNumCols; i++, iCurrPos++)
-            {
-               pData = (void *)dbdata(pConn->hProcess, i);
-               if (pData != NULL)
-               {
-                  switch(piColTypes[i - 1])
-                  {
-                     case SQLCHAR:
-                     case SQLTEXT:
-                     case SQLBINARY:
-                        iLen = dbdatlen(pConn->hProcess, i);
-                        pResult->pValues[iCurrPos] = (char *)malloc(iLen + 1);
-                        if (iLen > 0)
-                           memcpy(pResult->pValues[iCurrPos], (char *)pData, iLen);
-                        pResult->pValues[iCurrPos][iLen] = 0;
-                        break;
-                     case SQLINT1:
-                        pResult->pValues[iCurrPos] = (char *)malloc(4);
-                        if (pData)
-                           _snprintf_s(pResult->pValues[iCurrPos], 4, _TRUNCATE, "%d", *((char *)pData));
-                        break;
-                     case SQLINT2:
-                        pResult->pValues[iCurrPos] = (char *)malloc(8);
-                        _snprintf_s(pResult->pValues[iCurrPos], 8, _TRUNCATE, "%d", *((short *)pData));
-                        break;
-                     case SQLINT4:
-                        pResult->pValues[iCurrPos] = (char *)malloc(16);
-                        _snprintf_s(pResult->pValues[iCurrPos], 16, _TRUNCATE, "%d", *((LONG *)pData));
-                        break;
-                     case SQLFLT4:
-                        pResult->pValues[iCurrPos] = (char *)malloc(32);
-                        _snprintf_s(pResult->pValues[iCurrPos], 32, _TRUNCATE, "%f", *((float *)pData));
-                        break;
-                     case SQLFLT8:
-                        pResult->pValues[iCurrPos] = (char *)malloc(32);
-                        _snprintf_s(pResult->pValues[iCurrPos], 32, _TRUNCATE, "%f", *((double *)pData));
-                        break;
-                     default:    // Unknown data type
-                        pResult->pValues[iCurrPos] = (char *)malloc(2);
-                        pResult->pValues[iCurrPos][0] = 0;
-                        break;
-                  }
-               }
-               else
-               {
-                  pResult->pValues[iCurrPos] = (char *)malloc(2);
-                  pResult->pValues[iCurrPos][0] = 0;
-               }
-            }
-         }
+			pResult = ProcessSelectResults(pConn->sqlStatement);
+		   *pdwError = DBERR_SUCCESS;
       }
-   }
-
-   if (pResult != NULL)
-   {
-      *pdwError = DBERR_SUCCESS;
+      else
+      {
+         *pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
+      }
+      SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
    }
    else
    {
-      *pdwError = pConn->bProcessDead ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+      *pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
    }
 
-   MutexUnlock(pConn->mutexQueryLock);
-   free(pszQueryUTF8);
-   return (DBDRV_RESULT)pResult;
+   MutexUnlock(pConn->mutexQuery);
+   return pResult;
+}
+
+
+//
+// Perform SELECT query using prepared statement
+//
+
+extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+{
+   MSSQL_QUERY_RESULT *pResult = NULL;
+
+   MutexLock(pConn->mutexQuery, INFINITE);
+	long rc = SQLExecute(stmt->handle);
+   if ((rc == SQL_SUCCESS) || 
+       (rc == SQL_SUCCESS_WITH_INFO))
+   {
+		pResult = ProcessSelectResults(stmt->handle);
+	   *pdwError = DBERR_SUCCESS;
+   }
+   else
+   {
+		*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt->handle, errorText);
+   }
+   MutexUnlock(pConn->mutexQuery);
+	return pResult;
 }
 
 
@@ -510,12 +579,17 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWO
 // Get field length from result
 //
 
-extern "C" LONG EXPORT DrvGetFieldLength(MSDB_QUERY_RESULT *pResult, int iRow, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLength(MSSQL_QUERY_RESULT *pResult, int iRow, int iColumn)
 {
-   if ((iRow < 0) || (iRow >= pResult->iNumRows) ||
-       (iColumn < 0) || (iColumn >= pResult->iNumCols))
-      return -1;
-   return strlen(pResult->pValues[iRow * pResult->iNumCols + iColumn]);
+   LONG nLen = -1;
+
+   if (pResult != NULL)
+   {
+      if ((iRow < pResult->iNumRows) && (iRow >= 0) &&
+          (iColumn < pResult->iNumCols) && (iColumn >= 0))
+         nLen = (LONG)wcslen(pResult->pValues[iRow * pResult->iNumCols + iColumn]);
+   }
+   return nLen;
 }
 
 
@@ -523,16 +597,21 @@ extern "C" LONG EXPORT DrvGetFieldLength(MSDB_QUERY_RESULT *pResult, int iRow, i
 // Get field value from result
 //
 
-extern "C" WCHAR EXPORT *DrvGetField(MSDB_QUERY_RESULT *pResult, int iRow, int iColumn,
+extern "C" WCHAR EXPORT *DrvGetField(MSSQL_QUERY_RESULT *pResult, int iRow, int iColumn,
                                      WCHAR *pBuffer, int nBufSize)
 {
-   if ((iRow < 0) || (iRow >= pResult->iNumRows) ||
-       (iColumn < 0) || (iColumn >= pResult->iNumCols))
-      return NULL;
-   MultiByteToWideChar(CP_ACP, 0, pResult->pValues[iRow * pResult->iNumCols + iColumn],
-                       -1, pBuffer, nBufSize);
-   pBuffer[nBufSize - 1] = 0;
-   return pBuffer;
+   WCHAR *pValue = NULL;
+
+   if (pResult != NULL)
+   {
+      if ((iRow < pResult->iNumRows) && (iRow >= 0) &&
+          (iColumn < pResult->iNumCols) && (iColumn >= 0))
+      {
+         wcsncpy_s(pBuffer, nBufSize, pResult->pValues[iRow * pResult->iNumCols + iColumn], _TRUNCATE);
+         pValue = pBuffer;
+      }
+   }
+   return pValue;
 }
 
 
@@ -540,7 +619,7 @@ extern "C" WCHAR EXPORT *DrvGetField(MSDB_QUERY_RESULT *pResult, int iRow, int i
 // Get number of rows in result
 //
 
-extern "C" int EXPORT DrvGetNumRows(MSDB_QUERY_RESULT *pResult)
+extern "C" int EXPORT DrvGetNumRows(MSSQL_QUERY_RESULT *pResult)
 {
    return (pResult != NULL) ? pResult->iNumRows : 0;
 }
@@ -550,7 +629,7 @@ extern "C" int EXPORT DrvGetNumRows(MSDB_QUERY_RESULT *pResult)
 // Get column count in query result
 //
 
-extern "C" int EXPORT DrvGetColumnCount(MSDB_QUERY_RESULT *pResult)
+extern "C" int EXPORT DrvGetColumnCount(MSSQL_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->iNumCols : 0;
 }
@@ -560,7 +639,7 @@ extern "C" int EXPORT DrvGetColumnCount(MSDB_QUERY_RESULT *pResult)
 // Get column name in query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnName(MSDB_QUERY_RESULT *pResult, int column)
+extern "C" const char EXPORT *DrvGetColumnName(MSSQL_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
@@ -570,19 +649,21 @@ extern "C" const char EXPORT *DrvGetColumnName(MSDB_QUERY_RESULT *pResult, int c
 // Free SELECT results
 //
 
-extern "C" void EXPORT DrvFreeResult(MSDB_QUERY_RESULT *pResult)
+extern "C" void EXPORT DrvFreeResult(MSSQL_QUERY_RESULT *pResult)
 {
    if (pResult != NULL)
    {
       int i, iNumValues;
 
-      iNumValues = pResult->iNumRows * pResult->iNumCols;
+      iNumValues = pResult->iNumCols * pResult->iNumRows;
       for(i = 0; i < iNumValues; i++)
-         free(pResult->pValues[i]);
+         safe_free(pResult->pValues[i]);
       safe_free(pResult->pValues);
+
 		for(i = 0; i < pResult->iNumCols; i++)
 			safe_free(pResult->columnNames[i]);
 		safe_free(pResult->columnNames);
+
       free(pResult);
    }
 }
@@ -592,50 +673,68 @@ extern "C" void EXPORT DrvFreeResult(MSDB_QUERY_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQuery,
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSSQL_CONN *pConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError, WCHAR *errorText)
 {
-   MSDB_ASYNC_QUERY_RESULT *pResult = NULL;
-   char *pszQueryUTF8;
-	LPCSTR name;
-   int i;
+   MSSQL_ASYNC_QUERY_RESULT *pResult = NULL;
+   long iResult;
+   short wNumCols;
+	int i;
 
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   MutexLock(pConn->mutexQueryLock, INFINITE);
-   
-   if (ExecuteQuery(pConn, pszQueryUTF8, errorText))
+   MutexLock(pConn->mutexQuery, INFINITE);
+
+   // Allocate statement handle
+   iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
-      // Prepare query results for processing
-      if (dbresults(pConn->hProcess) == SUCCEED)
+      // Execute statement
+      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
       {
-         // Fill in result information structure
-         pResult = (MSDB_ASYNC_QUERY_RESULT *)malloc(sizeof(MSDB_ASYNC_QUERY_RESULT));
-         pResult->pConnection = pConn;
+         // Allocate result buffer and determine column info
+         pResult = (MSSQL_ASYNC_QUERY_RESULT *)malloc(sizeof(MSSQL_ASYNC_QUERY_RESULT));
+         SQLNumResultCols(pConn->sqlStatement, &wNumCols);
+         pResult->iNumCols = wNumCols;
+         pResult->pConn = pConn;
          pResult->bNoMoreRows = FALSE;
-         pResult->iNumCols = dbnumcols(pConn->hProcess);
-         pResult->piColTypes = (int *)malloc(sizeof(int) * pResult->iNumCols);
+
+			// Get column names
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
-
-         // Determine column names and types
-         for(i = 0; i < pResult->iNumCols; i++)
+			for(i = 0; i < pResult->iNumCols; i++)
 			{
-            pResult->piColTypes[i] = dbcoltype(pConn->hProcess, i + 1);
-				name = dbcolname(pConn->hProcess, i + 1);
-				pResult->columnNames[i] = strdup(CHECK_NULL_A(name));
-			}
-      }
-   }
+				char name[256];
+				SQLSMALLINT len;
 
-   if (pResult != NULL)
-   {
-      *pdwError = DBERR_SUCCESS;
+				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
+				                           SQL_DESC_NAME, name, 256, &len, NULL); 
+				if ((iResult == SQL_SUCCESS) || 
+					 (iResult == SQL_SUCCESS_WITH_INFO))
+				{
+					name[len] = 0;
+					pResult->columnNames[i] = strdup(name);
+				}
+				else
+				{
+					pResult->columnNames[i] = strdup("");
+				}
+			}
+
+			*pdwError = DBERR_SUCCESS;
+      }
+      else
+      {
+         *pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
+         // Free statement handle if query failed
+         SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+      }
    }
    else
    {
-      *pdwError = pConn->bProcessDead ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
-      MutexUnlock(pConn->mutexQueryLock);
+      *pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
    }
-   free(pszQueryUTF8);
+
+   if (pResult == NULL) // Unlock mutex if query has failed
+      MutexUnlock(pConn->mutexQuery);
    return pResult;
 }
 
@@ -644,25 +743,20 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pws
 // Fetch next result line from asynchronous SELECT results
 //
 
-extern "C" BOOL EXPORT DrvFetch(MSDB_ASYNC_QUERY_RESULT *pResult)
+extern "C" BOOL EXPORT DrvFetch(MSSQL_ASYNC_QUERY_RESULT *pResult)
 {
-   BOOL success = TRUE;
-   
-   if (pResult == NULL)
+   BOOL bResult = FALSE;
+
+   if (pResult != NULL)
    {
-      success = FALSE;
-   }
-   else
-   {
-      // Try to fetch next row from server
-      if (dbnextrow(pResult->pConnection->hProcess) == NO_MORE_ROWS)
-      {
+      long iResult;
+
+      iResult = SQLFetch(pResult->pConn->sqlStatement);
+      bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
+      if (!bResult)
          pResult->bNoMoreRows = TRUE;
-         success = FALSE;
-         MutexUnlock(pResult->pConnection->mutexQueryLock);
-      }
    }
-   return success;
+   return bResult;
 }
 
 
@@ -670,29 +764,25 @@ extern "C" BOOL EXPORT DrvFetch(MSDB_ASYNC_QUERY_RESULT *pResult)
 // Get field length from async query result
 //
 
-extern "C" LONG EXPORT DrvGetFieldLengthAsync(MSDB_ASYNC_QUERY_RESULT *result, int column)
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(MSSQL_ASYNC_QUERY_RESULT *pResult, int iColumn)
 {
-	if ((result == NULL) || (column < 0) || (column >= result->iNumCols))
-      return -1;
+   LONG nLen = -1;
 
-   switch(result->piColTypes[column])
+   if (pResult != NULL)
    {
-      case SQLCHAR:
-      case SQLTEXT:
-      case SQLBINARY:
-         return dbdatlen(result->pConnection->hProcess, column + 1);
-      case SQLINT1:
-         return 4;
-      case SQLINT2:
-         return 6;
-      case SQLINT4:
-         return 12;
-      case SQLFLT4:
-         return 30;
-      case SQLFLT8:
-			return 20;
-	}
-	return 0;
+      if ((iColumn < pResult->iNumCols) && (iColumn >= 0))
+		{
+			SQLLEN dataSize;
+			char temp[1];
+		   long rc = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
+		                        temp, 0, &dataSize);
+			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+			{
+				nLen = (LONG)dataSize;
+			}
+		}
+   }
+   return nLen;
 }
 
 
@@ -700,11 +790,11 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(MSDB_ASYNC_QUERY_RESULT *result, i
 // Get field from current row in async query result
 //
 
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(MSDB_ASYNC_QUERY_RESULT *pResult, int iColumn,
-                                          WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(MSSQL_ASYNC_QUERY_RESULT *pResult,
+                                          int iColumn, WCHAR *pBuffer, int iBufSize)
 {
-   void *pData;
-   int nLen;
+   SQLLEN iDataSize;
+   long iResult;
 
    // Check if we have valid result handle
    if (pResult == NULL)
@@ -714,45 +804,17 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(MSDB_ASYNC_QUERY_RESULT *pResult, int 
    if (pResult->bNoMoreRows)
       return NULL;
 
-   // Now get column data
-   pData = (void *)dbdata(pResult->pConnection->hProcess, iColumn + 1);
-   if (pData != NULL)
+   if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
    {
-      switch(pResult->piColTypes[iColumn])
-      {
-         case SQLCHAR:
-         case SQLTEXT:
-         case SQLBINARY:
-            nLen = MultiByteToWideChar(CP_ACP, 0, (char *)pData,
-                                       dbdatlen(pResult->pConnection->hProcess, iColumn + 1),
-                                       pBuffer, iBufSize);
-            pBuffer[nLen] = 0;
-            break;
-         case SQLINT1:
-            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%d", *((char *)pData));
-            break;
-         case SQLINT2:
-            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%d", *((short *)pData));
-            break;
-         case SQLINT4:
-            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%d", *((LONG *)pData));
-            break;
-         case SQLFLT4:
-            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%f", *((float *)pData));
-            break;
-         case SQLFLT8:
-            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%f", *((double *)pData));
-            break;
-         default:    // Unknown data type
-            pBuffer[0] = 0;
-            break;
-      }
+	   iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
+	                        pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
+      if (((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO)) || (iDataSize == SQL_NULL_DATA))
+         pBuffer[0] = 0;
    }
    else
    {
       pBuffer[0] = 0;
    }
-   
    return pBuffer;
 }
 
@@ -761,7 +823,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(MSDB_ASYNC_QUERY_RESULT *pResult, int 
 // Get column count in async query result
 //
 
-extern "C" int EXPORT DrvGetColumnCountAsync(MSDB_ASYNC_QUERY_RESULT *pResult)
+extern "C" int EXPORT DrvGetColumnCountAsync(MSSQL_ASYNC_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->iNumCols : 0;
 }
@@ -771,7 +833,7 @@ extern "C" int EXPORT DrvGetColumnCountAsync(MSDB_ASYNC_QUERY_RESULT *pResult)
 // Get column name in async query result
 //
 
-extern "C" const char EXPORT *DrvGetColumnNameAsync(MSDB_ASYNC_QUERY_RESULT *pResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameAsync(MSSQL_ASYNC_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
@@ -781,26 +843,12 @@ extern "C" const char EXPORT *DrvGetColumnNameAsync(MSDB_ASYNC_QUERY_RESULT *pRe
 // Destroy result of async query
 //
 
-extern "C" void EXPORT DrvFreeAsyncResult(MSDB_ASYNC_QUERY_RESULT *pResult)
+extern "C" void EXPORT DrvFreeAsyncResult(MSSQL_ASYNC_QUERY_RESULT *pResult)
 {
    if (pResult != NULL)
    {
-      // Check if all result rows fetchef
-      if (!pResult->bNoMoreRows)
-      {
-         // Fetch remaining rows
-         while(dbnextrow(pResult->pConnection->hProcess) != NO_MORE_ROWS);
-
-         // Now we are ready for next query, so unlock query mutex
-         MutexUnlock(pResult->pConnection->mutexQueryLock);
-      }
-
-      // Free allocated memory
-      if (pResult->piColTypes != NULL)
-         free(pResult->piColTypes);
-		for(int i = 0; i < pResult->iNumCols; i++)
-			safe_free(pResult->columnNames[i]);
-		safe_free(pResult->columnNames);
+      SQLFreeHandle(SQL_HANDLE_STMT, pResult->pConn->sqlStatement);
+      MutexUnlock(pResult->pConn->mutexQuery);
       free(pResult);
    }
 }
@@ -810,9 +858,26 @@ extern "C" void EXPORT DrvFreeAsyncResult(MSDB_ASYNC_QUERY_RESULT *pResult)
 // Begin transaction
 //
 
-extern "C" DWORD EXPORT DrvBegin(MSDB_CONN *pConn)
+extern "C" DWORD EXPORT DrvBegin(MSSQL_CONN *pConn)
 {
-   return DrvQuery(pConn, L"BEGIN TRANSACTION", NULL);
+   SQLRETURN nRet;
+   DWORD dwResult;
+
+	if (pConn == NULL)
+      return DBERR_INVALID_HANDLE;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+   nRet = SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
+   if ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO))
+   {
+      dwResult = DBERR_SUCCESS;
+   }
+   else
+   {
+      dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, NULL);
+   }
+	MutexUnlock(pConn->mutexQuery);
+   return dwResult;
 }
 
 
@@ -820,9 +885,18 @@ extern "C" DWORD EXPORT DrvBegin(MSDB_CONN *pConn)
 // Commit transaction
 //
 
-extern "C" DWORD EXPORT DrvCommit(MSDB_CONN *pConn)
+extern "C" DWORD EXPORT DrvCommit(MSSQL_CONN *pConn)
 {
-   return DrvQuery(pConn, L"COMMIT", NULL);
+   SQLRETURN nRet;
+
+	if (pConn == NULL)
+      return DBERR_INVALID_HANDLE;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+   nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_COMMIT);
+   SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+	MutexUnlock(pConn->mutexQuery);
+   return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 
@@ -830,9 +904,18 @@ extern "C" DWORD EXPORT DrvCommit(MSDB_CONN *pConn)
 // Rollback transaction
 //
 
-extern "C" DWORD EXPORT DrvRollback(MSDB_CONN *pConn)
+extern "C" DWORD EXPORT DrvRollback(MSSQL_CONN *pConn)
 {
-   return DrvQuery(pConn, L"ROLLBACK", NULL);
+   SQLRETURN nRet;
+
+	if (pConn == NULL)
+      return DBERR_INVALID_HANDLE;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+   nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_ROLLBACK);
+   SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+	MutexUnlock(pConn->mutexQuery);
+   return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 
@@ -840,13 +923,9 @@ extern "C" DWORD EXPORT DrvRollback(MSDB_CONN *pConn)
 // DLL Entry point
 //
 
-#ifdef _WIN32
-
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
-
-#endif

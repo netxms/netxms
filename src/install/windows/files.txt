@@ -2,7 +2,6 @@ Additional files required for installation:
 
 DBGHELP.DLL
 LIBMYSQL.DLL
-NTWDBLIB.DLL (32 bit only)
 LIBPQ.DLL
 LIBEAY32.DLL
 SSLEAY32.DLL

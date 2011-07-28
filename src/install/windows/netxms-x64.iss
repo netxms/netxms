@@ -10,6 +10,7 @@ Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixe
 Name: "console"; Description: "Administrator's Console"; Types: full
 Name: "tools"; Description: "Command Line Tools"; Types: full
 Name: "server"; Description: "NetXMS Server"; Types: full compact
+Name: "server\mssql"; Description: "Microsoft SQL Server 2008 Native Client"; Types: full
 Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
 Name: "server\pgsql"; Description: "PostgreSQL Client Library"; Types: full
 Name: "server\oracle"; Description: "Oracle Instant Client"; Types: full
@@ -67,10 +68,16 @@ Source: "..\..\..\x64\Release\netxmsd.exe"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\..\x64\Release\netxmsd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\mysql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\x64\Release\mssql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\x64\Release\odbc.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 ;Source: "..\..\..\x64\Release\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+;Source: "..\..\..\x64\Release\pgsql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\x64\Release\sqlite.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\x64\Release\oracle.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\generic.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\generic.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\nxagent.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -159,6 +166,7 @@ Source: "..\..\webui\nxhttpd\static\images\status\*.png"; DestDir: "{app}\var\ww
 Source: "Files-x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion; Components: base
 Source: "Files-x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\lib\ndd\Microsoft.VC80.CRT"; Flags: ignoreversion; Components: server
 Source: "Files-x64\Microsoft.VC80.MFC\*"; DestDir: "{app}\bin\Microsoft.VC80.MFC"; Flags: ignoreversion; Components: server console
+Source: "Files-x64\sqlncli.msi"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\mssql
 Source: "Files-x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 ;Source: "Files-x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 ;Source: "Files-x64\libintl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql

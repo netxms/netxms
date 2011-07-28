@@ -1,6 +1,6 @@
 /* 
-** Microsoft SQL Server Database Driver
-** Copyright (C) 2004 Victor Kirhenshtein
+** MS SQL Database Driver
+** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,74 +16,77 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: mssqldrv.h
+** File: mssqldrv.h
 **
 **/
 
 #ifndef _mssqldrv_h_
 #define _mssqldrv_h_
 
-#define _CRT_SECURE_NO_WARNINGS
-
-#ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
-#define EXPORT __declspec(dllexport)
-#define DBNTWIN32
-#else
-#define EXPORT
-#endif   /* _WIN32 */
-
 #include <stdio.h>
+#include <string.h>
 #include <dbdrv.h>
 #include <nms_util.h>
-#include <sqlfront.h>
-#include <sqldb.h>
 
-#define MAX_CONN_STRING    128
+#include <sql.h>
+#include <sqlext.h>
+#include <sqltypes.h>
 
-
-//
-// Connection handle structure
-//
-
-typedef struct
-{
-   PDBPROCESS hProcess;
-   MUTEX mutexQueryLock;
-   BOOL bProcessDead;
-   char szHost[MAX_CONN_STRING];
-   char szLogin[MAX_CONN_STRING];
-   char szPassword[MAX_CONN_STRING];
-   char szDatabase[MAX_CONN_STRING];
-	TCHAR szErrorText[DBDRV_MAX_ERROR_TEXT];
-} MSDB_CONN;
+#define _SQLNCLI_ODBC_
+#include <sqlncli.h>
 
 
 //
-// Query results structure
+// Driver connection handle structure
 //
 
 typedef struct
 {
-   int iNumRows;
-   int iNumCols;
-   char **pValues;
+   MUTEX mutexQuery;
+   SQLHENV sqlEnv;
+   SQLHDBC sqlConn;
+   SQLHSTMT sqlStatement;
+} MSSQL_CONN;
+
+
+//
+// Prepared statement structure
+//
+
+typedef struct
+{
+	SQLHSTMT handle;
+	Array *buffers;
+	MSSQL_CONN *connection;
+} MSSQL_STATEMENT;
+
+
+//
+// Result buffer structure
+//
+
+typedef struct
+{
+   long iNumRows;
+   long iNumCols;
+   WCHAR **pValues;
 	char **columnNames;
-} MSDB_QUERY_RESULT;
+} MSSQL_QUERY_RESULT;
 
 
 //
-// Asynchronous query results structure
+// Async result buffer structure
 //
 
 typedef struct
 {
-   MSDB_CONN *pConnection;
+   long iNumCols;
+   MSSQL_CONN *pConn;
    BOOL bNoMoreRows;
-   int iNumCols;
-   int *piColTypes;
 	char **columnNames;
-} MSDB_ASYNC_QUERY_RESULT;
+} MSSQL_ASYNC_QUERY_RESULT;
+
 
 #endif   /* _mssqldrv_h_ */
