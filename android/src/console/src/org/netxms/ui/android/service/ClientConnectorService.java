@@ -449,14 +449,18 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
-	public void unmanageObject(long id)
+	public void setObjectMgmtState(long id,boolean state)
 	{
-		// unmanage
-	}
-
-	public void manageObject(long id)
-	{
-		// unmanage
+		try
+		{
+			session.setObjectManaged(id, state);
+		}
+		catch(NXCException e)
+		{
+		}
+		catch(IOException e)
+		{
+		}
 	}
 
 	public void registerHomeScreen(HomeScreen homeScreen)

@@ -64,10 +64,16 @@ public class NodeBrowser extends Activity implements ServiceConnection
 					currentParent = obj;
 					refreshList();
 				}
+				if (obj.getObjectClass() == GenericObject.OBJECT_NODE)
+				{
+					//public DciValue[] getLastValues(final long nodeId) throws IOException, NXCException
+					//	public String[] resolveDciNames(Collection<ConditionDciInfo> dciList) throws IOException, NXCException
+					
+				}
 			}
 		});
 
-//		registerForContextMenu(listView);
+		registerForContextMenu(listView);
 	}
 
 	/*

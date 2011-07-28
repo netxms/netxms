@@ -96,12 +96,12 @@ public class NodeListAdapter extends BaseAdapter
 
 	public void unmanageObject(long id)
 	{
-		service.unmanageObject(id);
+		service.setObjectMgmtState(id,false);
 	}
 
 	public void manageObject(long id)
 	{
-		service.manageObject(id);
+		service.setObjectMgmtState(id,true);
 	}
 
 	/*
