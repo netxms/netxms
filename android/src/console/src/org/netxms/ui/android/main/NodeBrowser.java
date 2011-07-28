@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.android.main;
 
+import java.util.Stack;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.NodeListAdapter;
@@ -33,7 +34,7 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	private NodeListAdapter adapter;
 	private long initialParent = 2;
 	private GenericObject currentParent = null;
-
+	private Stack<GenericObject> containerPath = new Stack<GenericObject>(); 
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -59,13 +60,14 @@ public class NodeBrowser extends Activity implements ServiceConnection
 				GenericObject obj = (GenericObject)adapter.getItem(position);
 				if (obj.getObjectClass() == GenericObject.OBJECT_CONTAINER)
 				{
+					containerPath.push(currentParent);
 					currentParent = obj;
 					refreshList();
 				}
 			}
 		});
 
-		registerForContextMenu(listView);
+//		registerForContextMenu(listView);
 	}
 
 	/*
@@ -128,11 +130,30 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		}
 	}
 
-	public void onClick(View v)
-	{
 
+	@Override
+	public void onBackPressed() {
+		if (this.currentParent == null)
+		{
+			super.onBackPressed();
+			return;
+		}
+		if (this.currentParent.getObjectId() == this.initialParent)
+		{
+			super.onBackPressed();
+			return;			
+		}
+		if (containerPath.empty())
+		{
+			super.onBackPressed();
+			return;						
+		}
+		
+		this.currentParent = containerPath.pop();
+		this.refreshList();
+		return;
 	}
-
+	
 	/**
 	 * Refresh node list
 	 */

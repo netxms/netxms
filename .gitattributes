@@ -10,11 +10,15 @@ android/src/console/res/drawable/alarm.png -text
 android/src/console/res/drawable/container.png -text
 android/src/console/res/drawable/critical.png -text
 android/src/console/res/drawable/dashboard.png -text
+android/src/console/res/drawable/disabled.gif -text
 android/src/console/res/drawable/major.png -text
 android/src/console/res/drawable/minor.png -text
 android/src/console/res/drawable/node.png -text
 android/src/console/res/drawable/node_small.png -text
 android/src/console/res/drawable/normal.png -text
+android/src/console/res/drawable/testing.png -text
+android/src/console/res/drawable/unknown.gif -text
+android/src/console/res/drawable/unmanaged.gif -text
 android/src/console/res/drawable/warning.png -text
 android/src/console/res/layout/alarm_view.xml -text
 android/src/console/res/layout/homescreen.xml -text

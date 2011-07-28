@@ -25,8 +25,17 @@ public class NodeListAdapter extends BaseAdapter
 	private GenericObject[] currentNodes = new GenericObject[0];
 	private ClientConnectorService service;
 
-	private static final int[] imageId = { R.drawable.normal, R.drawable.warning, R.drawable.minor, R.drawable.major,
-			R.drawable.critical };
+	private static final int[] imageId = { 
+		R.drawable.normal, 		// STATUS_NORMAL         = 0;
+		R.drawable.warning, 		//	STATUS_WARNING        = 1;
+		R.drawable.minor, 		//	STATUS_MINOR          = 2;
+		R.drawable.major,			//	STATUS_MAJOR          = 3;
+		R.drawable.critical,		//	STATUS_CRITICAL       = 4;
+		R.drawable.unknown, 		//		STATUS_UNKNOWN        = 5;
+		R.drawable.unmanaged,	//		STATUS_UNMANAGED      = 6;
+		R.drawable.disabled,		//		STATUS_DISABLED       = 7;
+		R.drawable.testing		//		STATUS_TESTING        = 8;
+	};
 
 	/**
 	 * 

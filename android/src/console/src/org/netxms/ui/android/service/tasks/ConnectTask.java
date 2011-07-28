@@ -67,10 +67,7 @@ public class ConnectTask extends Thread
 			session.connect();
 			Log.d(TAG, "calling session.subscribe()");
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
-			// !!!! TEMPORARY !!!
-			service.setConnectionStatus("syncing objects... ");
-			session.syncObjects();
-			// !!!!!!!!!!!!!!!!!!
+
 			alarms = session.getAlarms(false);
 			service.showNotification(NOTIFY_CONN_STATUS, service.getString(R.string.notify_connected, session.getServerAddress()));
 			service.setConnectionStatus("connected to " + session.getServerAddress());

@@ -4,6 +4,7 @@
 package org.netxms.ui.android.service;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
@@ -238,7 +239,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				long[] list = { alarm.getSourceObjectId() };
 				try
 				{
-					session.syncMissingObjects(list, false);
+					if (session.findObjectById(list[0]) == null)
+						session.syncObjectSet(list, false, NXCSession.OBJECT_SYNC_NOTIFY);
 				}
 				catch(NXCException e)
 				{
@@ -286,6 +288,35 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	
+	private void processObjectUpdate(GenericObject object)
+	{
+		synchronized(mutex)
+		{
+			if (this.alarmBrowser != null)
+			{
+				alarmBrowser.runOnUiThread(new Runnable()
+				{
+					public void run()
+					{
+						alarmBrowser.refreshList();
+					}
+				});
+			}
+			if (this.nodeBrowser != null)
+			{
+				nodeBrowser.runOnUiThread(new Runnable()
+				{
+					public void run()
+					{
+						nodeBrowser.refreshList();
+					}
+				});
+			}
+			
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -308,6 +339,10 @@ public class ClientConnectorService extends Service implements SessionListener
 			case NXCNotification.ALARM_DELETED:
 			case NXCNotification.ALARM_TERMINATED:
 				processAlarmDelete(((Alarm)n.getObject()).getId());
+				break;
+			case NXCNotification.OBJECT_CHANGED:
+			case NXCNotification.OBJECT_SYNC_COMPLETED:
+				processObjectUpdate((GenericObject)n.getObject());
 				break;
 			default:
 				break;
@@ -351,8 +386,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			long[] list = { id };
 			try
 			{
-				session.syncMissingObjects(list, false);
-				obj = session.findObjectById(id);
+				session.syncObjectSet(list, false, NXCSession.OBJECT_SYNC_NOTIFY);
 			}
 			catch(NXCException e)
 			{
@@ -366,6 +400,35 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	public GenericObject[] findChilds(GenericObject parent)
 	{
+		// protect from null pointer exception
+		if (parent == null)
+			return new GenericObject[0];
+
+		// Make sure we request sync of all childs that are known but not synced
+		// yet.
+		// So that even if we don't have some, we'll get them later
+		// Also request notifications, to redraw views on data arrival
+		Iterator<Long> childs = parent.getChilds();
+		long child;
+		long[] list = new long[1];
+		while(childs.hasNext())
+		{
+			child = childs.next();
+			if (session.findObjectById(child) == null)
+			{
+				list[0] = child;
+				try
+				{
+					session.syncObjectSet(list, false, NXCSession.OBJECT_SYNC_NOTIFY);
+				}
+				catch(NXCException e)
+				{
+				}
+				catch(IOException e)
+				{
+				}
+			}
+		}
 		return parent.getChildsAsArray();
 	}
 
