@@ -372,14 +372,49 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 	switch(allocType)
 	{
 		case DB_BIND_STATIC:
+#if defined(_WIN32) || defined(UNICODE_UCS2)
 			sqlBuffer = buffer;
+#else
+			if (cType == DB_CTYPE_STRING)
+			{
+				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+				stmt->buffers->add(sqlBuffer);
+			}
+			else
+			{
+				sqlBuffer = buffer;
+			}
+#endif
 			break;
 		case DB_BIND_DYNAMIC:
+#if defined(_WIN32) || defined(UNICODE_UCS2)
 			sqlBuffer = buffer;
-			stmt->buffers->add(buffer);
+#else
+			if (cType == DB_CTYPE_STRING)
+			{
+				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+				free(buffer);
+			}
+			else
+			{
+				sqlBuffer = buffer;
+			}
+#endif
+			stmt->buffers->add(sqlBuffer);
 			break;
 		case DB_BIND_TRANSIENT:
+#if defined(_WIN32) || defined(UNICODE_UCS2)
 			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)length : bufferSize[cType]);
+#else
+			if (cType == DB_CTYPE_STRING)
+			{
+				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+			}
+			else
+			{
+				sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+			}
+#endif
 			stmt->buffers->add(sqlBuffer);
 			break;
 		default:
