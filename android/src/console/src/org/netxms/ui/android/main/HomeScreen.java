@@ -45,7 +45,7 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 
 		gridview.setOnItemClickListener(this);
 
-		statusText = (TextView)findViewById(R.id.MainScreenStatus);
+		statusText = (TextView)findViewById(R.id.ScreenTitleSecondary);
 	}
 
 	/* (non-Javadoc)

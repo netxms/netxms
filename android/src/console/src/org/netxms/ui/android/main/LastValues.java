@@ -41,6 +41,9 @@ public class LastValues extends Activity implements ServiceConnection
 
 		this.nodeId = this.getIntent().getLongExtra("objectId", 0);
 
+		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
+		title.setText(R.string.last_values_title);
+
 		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 		// keeps current list of values as datasource for listview
 		adapter = new LastValuesAdapter(this);
@@ -91,8 +94,8 @@ public class LastValues extends Activity implements ServiceConnection
 	{
 		if (this.node != null)
 		{
-			TextView curNode = (TextView)findViewById(R.id.NodeName);
-			curNode.setText(node.getObjectName());
+			TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
+			title.setText(getString(R.string.last_values_title) + ": " + node.getObjectName());
 		}
 
 		adapter.setValues(service.getLastValues(this.nodeId));

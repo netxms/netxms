@@ -20,7 +20,7 @@ import android.widget.LinearLayout.LayoutParams;
 public class ActivityListAdapter extends BaseAdapter
 {
 	private static final int[] activityId = { HomeScreen.ACTIVITY_ALARMS, HomeScreen.ACTIVITY_NODES };
-	private static final int[] imageId = { R.drawable.alarm, R.drawable.node };
+	private static final int[] imageId = { R.drawable.alarms, R.drawable.nodes };
 	private static final int[] textId = { R.string.home_screen_alarms, R.string.home_screen_nodes };
 
 	private Context context;

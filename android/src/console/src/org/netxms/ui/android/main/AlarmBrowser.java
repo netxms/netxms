@@ -19,6 +19,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 
@@ -41,6 +42,9 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.alarm_view);
 		
+		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
+		title.setText(R.string.alarms_title);
+
 		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
 		// keeps current list of alarms as datasource for listview

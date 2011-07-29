@@ -1,17 +1,25 @@
 * text=auto !eol
 android/src/console/AndroidManifest.xml -text
 android/src/console/default.properties -text
+android/src/console/res/drawable-hdpi/alarms.png -text
 android/src/console/res/drawable-hdpi/ic_menu_preferences.png -text
 android/src/console/res/drawable-hdpi/icon.png -text
+android/src/console/res/drawable-hdpi/nodes.png -text
+android/src/console/res/drawable-ldpi/alarms.png -text
 android/src/console/res/drawable-ldpi/icon.png -text
+android/src/console/res/drawable-ldpi/nodes.png -text
+android/src/console/res/drawable-mdpi/alarms.png -text
 android/src/console/res/drawable-mdpi/ic_menu_preferences.png -text
 android/src/console/res/drawable-mdpi/icon.png -text
+android/src/console/res/drawable-mdpi/nodes.png -text
 android/src/console/res/drawable/alarm.png -text
 android/src/console/res/drawable/bw_gradient.xml -text
 android/src/console/res/drawable/container.png -text
 android/src/console/res/drawable/critical.png -text
 android/src/console/res/drawable/dashboard.png -text
 android/src/console/res/drawable/disabled.gif -text
+android/src/console/res/drawable/header_background.xml -text
+android/src/console/res/drawable/home_screen_background.xml -text
 android/src/console/res/drawable/major.png -text
 android/src/console/res/drawable/minor.png -text
 android/src/console/res/drawable/node.png -text
@@ -25,6 +33,8 @@ android/src/console/res/layout/alarm_view.xml -text
 android/src/console/res/layout/homescreen.xml -text
 android/src/console/res/layout/last_values.xml -text
 android/src/console/res/layout/node_view.xml -text
+android/src/console/res/layout/screen_header_full.xml -text
+android/src/console/res/layout/screen_header_small.xml -text
 android/src/console/res/menu/alarm_actions.xml -text
 android/src/console/res/menu/main_menu.xml -text
 android/src/console/res/menu/node_actions.xml -text

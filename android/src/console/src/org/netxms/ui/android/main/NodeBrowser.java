@@ -51,6 +51,9 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.node_view);
+		
+		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
+		title.setText(R.string.nodes_title);
 
 		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
@@ -239,7 +242,7 @@ public class NodeBrowser extends Activity implements ServiceConnection
 			return;
 		}
 
-		TextView curPath = (TextView)findViewById(R.id.NodePath);
+		TextView curPath = (TextView)findViewById(R.id.ScreenTitleSecondary);
 		curPath.setText(currentParent.getObjectName());
 		adapter.setNodes(service.findChilds(this.currentParent));
 		adapter.notifyDataSetChanged();
