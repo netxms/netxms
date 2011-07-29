@@ -3,11 +3,9 @@
  */
 package org.netxms.ui.android.main;
 
-import java.util.Stack;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.LastValuesAdapter;
-import org.netxms.ui.android.main.adapters.NodeListAdapter;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -15,12 +13,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.TextView;
 

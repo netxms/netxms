@@ -5,6 +5,7 @@ package org.netxms.ui.android.service;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
@@ -15,6 +16,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.AlarmBrowser;
 import org.netxms.ui.android.main.HomeScreen;
@@ -57,6 +59,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
 	private LastValues lastValues = null;
+
+	private List<ObjectTool> objectTools = null;
 
 	/**
 	 * Class for clients to access. Because we know this service always runs in
@@ -490,6 +494,41 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			return new DciValue[0];
 		}
+	}
+	
+	public void loadTools()
+	{
+		 try
+		{
+			this.objectTools = session.getObjectTools();
+		}
+		catch(NXCException e)
+		{
+			this.objectTools = null;
+		}
+		catch(IOException e)
+		{
+			this.objectTools = null;
+		} 
+	}
+	
+	public void executeAction(long objectId, String action)
+	{
+		try
+		{
+			session.executeAction(objectId, action);
+		}
+		catch(NXCException e)
+		{
+		}
+		catch(IOException e)
+		{
+		}
+	}
+	
+	public List<ObjectTool> getTools()
+	{
+		return this.objectTools;
 	}
 
 	public void registerHomeScreen(HomeScreen homeScreen)
