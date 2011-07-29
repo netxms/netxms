@@ -33,4 +33,5 @@
 <string name="manage">Manage</string>
 <string name="last_values_title">Last Values</string>
 <string name="tools">Tools</string>
+<string name="current_console_version">Build: 1.1.4.1</string>
 </resources>
