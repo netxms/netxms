@@ -65,15 +65,15 @@ private:
 	TCHAR m_szName[MAX_EVENT_NAME];
    TCHAR *m_pszMessageText;
    TCHAR *m_pszMessageTemplate;
-   DWORD m_dwNumParameters;
-   TCHAR **m_ppszParameters;
    time_t m_tTimeStamp;
 	TCHAR *m_pszUserTag;
 	TCHAR *m_pszCustomMessage;
+	Array m_parameters;
+	StringList m_parameterNames;
 
 public:
    Event();
-   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, va_list args);
+   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args);
    ~Event();
 
    QWORD getId() { return m_qwId; }
@@ -94,11 +94,17 @@ public:
    void expandMessageText();
    TCHAR *expandText(const TCHAR *szTemplate, const TCHAR *pszAlarmMsg = NULL);
 
-   DWORD getParametersCount() { return m_dwNumParameters; }
-   const TCHAR *getParameter(DWORD index) { return (index < m_dwNumParameters) ? m_ppszParameters[index] : NULL; }
-   DWORD getParameterAsULong(DWORD index) { return (index < m_dwNumParameters) ? _tcstoul(m_ppszParameters[index], NULL, 0) : 0; }
-   QWORD getParameterAsUInt64(DWORD index) { return (index < m_dwNumParameters) ? _tcstoull(m_ppszParameters[index], NULL, 0) : 0; }
-   
+   DWORD getParametersCount() { return m_parameters.size(); }
+   const TCHAR *getParameter(int index) { return (TCHAR *)m_parameters.get(index); }
+   DWORD getParameterAsULong(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
+   QWORD getParameterAsUInt64(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
+
+	const TCHAR *getNamedParameter(const TCHAR *name) { return getParameter(m_parameterNames.getIndexIgnoreCase(name)); }
+   DWORD getNamedParameterAsULong(const TCHAR *name) { return getParameterAsULong(m_parameterNames.getIndexIgnoreCase(name)); }
+   QWORD getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.getIndexIgnoreCase(name)); }
+
+	void addParameter(const TCHAR *name, const TCHAR *value);
+
    const TCHAR *getCustomMessage() { return CHECK_NULL_EX(m_pszCustomMessage); }
    void setCustomMessage(const TCHAR *message) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (message != NULL) ? _tcsdup(message) : NULL; }
 };
@@ -195,6 +201,7 @@ public:
 BOOL InitEventSubsystem(void);
 void ShutdownEventSubsystem(void);
 BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...);
+BOOL PostEventWithNames(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, const TCHAR **names, ...);
 BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...);
 BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
                  const char *pszFormat, ...);

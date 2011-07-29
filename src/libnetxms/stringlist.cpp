@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -151,4 +151,27 @@ void StringList::add(double value)
 
 	_sntprintf(buffer, 64, _T("%f"), value);
 	add(buffer);
+}
+
+
+//
+// Get index of given value. Returns zero-based index ot -1 
+// if given value not found in the list. If list contains duplicate values,
+// index of first occurence will be returned.
+//
+
+int StringList::getIndex(const TCHAR *value)
+{
+	for(int i = 0; i < m_count; i++)
+		if ((m_values[i] != NULL) && !_tcscmp(m_values[i], value))
+			return i;
+	return -1;
+}
+
+int StringList::getIndexIgnoreCase(const TCHAR *value)
+{
+	for(int i = 0; i < m_count; i++)
+		if ((m_values[i] != NULL) && !_tcsicmp(m_values[i], value))
+			return i;
+	return -1;
 }

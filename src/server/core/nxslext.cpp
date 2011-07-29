@@ -231,6 +231,32 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 
 //
+// Get event's named parameter
+// First argument: event object
+// Second argument: parameter's name
+// Returns parameter's value or null
+//
+
+static int F_GetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslEventClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	Event *e = (Event *)object->getData();
+	const TCHAR *value = e->getNamedParameter(argv[1]->getValueAsCString());
+	*ppResult = (value != NULL) ? new NXSL_Value(value) : new NXSL_Value;
+	return 0;
+}
+
+
+//
 // Post event
 // Syntax:
 //    PostEvent(node, event, tag, ...)
@@ -298,6 +324,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
+   { _T("GetEventParameter"), F_GetEventParameter, 2 },
    { _T("GetInterfaceName"), F_GetInterfaceName, 2 },
    { _T("GetNodeParents"), F_GetNodeParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },

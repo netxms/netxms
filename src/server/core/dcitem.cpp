@@ -757,6 +757,9 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 
 void DCItem::checkThresholds(ItemValue &value)
 {
+	const TCHAR *paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance") };
+	const TCHAR *paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue") };
+
    DWORD i, iResult, dwInterval;
    ItemValue checkValue;
 	time_t now = time(NULL);
@@ -767,16 +770,17 @@ void DCItem::checkThresholds(ItemValue &value)
       switch(iResult)
       {
          case THRESHOLD_REACHED:
-            PostEvent(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd", m_szName,
-                      m_szDescription, m_ppThresholdList[i]->getStringValue(), 
-                      (const TCHAR *)checkValue, m_dwId, m_szInstance, 0);
+            PostEventWithNames(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd",
+					paramNamesReach, m_szName, m_szDescription, m_ppThresholdList[i]->getStringValue(), 
+               (const TCHAR *)checkValue, m_dwId, m_szInstance, 0);
 				m_ppThresholdList[i]->setLastEventTimestamp();
             if (!m_processAllThresholds)
                i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
-            PostEvent(m_ppThresholdList[i]->getRearmEventCode(), m_pNode->Id(), "ssis", m_szName, 
-                      m_szDescription, m_dwId, m_szInstance);
+            PostEventWithNames(m_ppThresholdList[i]->getRearmEventCode(), m_pNode->Id(), "ssisss",
+					paramNamesRearm, m_szName, m_szDescription, m_dwId, m_szInstance, 
+					m_ppThresholdList[i]->getStringValue(), (const TCHAR *)checkValue);
             break;
          case NO_ACTION:
             if (m_ppThresholdList[i]->isReached())

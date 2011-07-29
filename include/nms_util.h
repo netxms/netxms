@@ -358,6 +358,8 @@ public:
 	void clear();
 	int getSize() { return m_count; }
 	const TCHAR *getValue(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
+	int getIndex(const TCHAR *value);
+	int getIndexIgnoreCase(const TCHAR *value);
 };
 
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,13 +55,12 @@ Event::Event()
    m_dwSeverity = 0;
    m_dwSource = 0;
    m_dwFlags = 0;
-   m_dwNumParameters = 0;
-   m_ppszParameters = NULL;
    m_pszMessageText = NULL;
    m_pszMessageTemplate = NULL;
    m_tTimeStamp = 0;
 	m_pszUserTag = NULL;
 	m_pszCustomMessage = NULL;
+	m_parameters.setOwner(true);
 }
 
 
@@ -69,7 +68,7 @@ Event::Event()
 // Construct event from template
 //
 
-Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, va_list args)
+Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args)
 {
 	_tcscpy(m_szName, pTemplate->szName);
    m_tTimeStamp = time(NULL);
@@ -82,50 +81,50 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTa
    m_pszMessageText = NULL;
 	m_pszUserTag = (pszUserTag != NULL) ? _tcsdup(pszUserTag) : NULL;
 	m_pszCustomMessage = NULL;
+	m_parameters.setOwner(true);
 
    // Create parameters
    if (szFormat != NULL)
    {
-      DWORD i;
+		int count = (int)strlen(szFormat);
+		TCHAR *buffer;
 
-      m_dwNumParameters = (DWORD)strlen(szFormat);
-      m_ppszParameters = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumParameters);
-
-      for(i = 0; i < m_dwNumParameters; i++)
+      for(int i = 0; i < count; i++)
       {
          switch(szFormat[i])
          {
             case 's':
-               m_ppszParameters[i] = _tcsdup(va_arg(args, TCHAR *));
+					m_parameters.add(_tcsdup(va_arg(args, TCHAR *)));
                break;
             case 'd':
-               m_ppszParameters[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               _sntprintf(m_ppszParameters[i], 16, _T("%d"), va_arg(args, LONG));
+               buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
+               _sntprintf(buffer, 16, _T("%d"), va_arg(args, LONG));
+					m_parameters.add(buffer);
                break;
             case 'D':
-               m_ppszParameters[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
-               _sntprintf(m_ppszParameters[i], 32, INT64_FMT, va_arg(args, INT64));
+               buffer = (TCHAR *)malloc(32 * sizeof(TCHAR));
+               _sntprintf(buffer, 32, INT64_FMT, va_arg(args, INT64));
+					m_parameters.add(buffer);
                break;
             case 'x':
             case 'i':
-               m_ppszParameters[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               _sntprintf(m_ppszParameters[i], 16, _T("0x%08X"), va_arg(args, DWORD));
+               buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
+               _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, DWORD));
+					m_parameters.add(buffer);
                break;
             case 'a':
-               m_ppszParameters[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               IpToStr(va_arg(args, DWORD), m_ppszParameters[i]);
+               buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
+               IpToStr(va_arg(args, DWORD), buffer);
+					m_parameters.add(buffer);
                break;
             default:
-               m_ppszParameters[i] = (TCHAR *)malloc(64 * sizeof(TCHAR));
-               _sntprintf(m_ppszParameters[i], 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), szFormat[i], va_arg(args, DWORD));
+               buffer = (TCHAR *)malloc(64 * sizeof(TCHAR));
+               _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), szFormat[i], va_arg(args, DWORD));
+					m_parameters.add(buffer);
                break;
          }
+			m_parameterNames.add(((names != NULL) && (names[i] != NULL)) ? names[i] : _T(""));
       }
-   }
-   else
-   {
-      m_dwNumParameters = 0;
-      m_ppszParameters = NULL;
    }
 
    m_pszMessageTemplate = _tcsdup(pTemplate->pszMessageTemplate);
@@ -142,14 +141,6 @@ Event::~Event()
    safe_free(m_pszMessageTemplate);
 	safe_free(m_pszUserTag);
 	safe_free(m_pszCustomMessage);
-   if (m_ppszParameters != NULL)
-   {
-      DWORD i;
-
-      for(i = 0; i < m_dwNumParameters; i++)
-         safe_free(m_ppszParameters[i]);
-      free(m_ppszParameters);
-   }
 }
 
 
@@ -328,13 +319,13 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
                      szBuffer[1] = 0;
                   }
                   dwParam = _tcstoul(szBuffer, NULL, 10);
-                  if ((dwParam > 0) && (dwParam <= m_dwNumParameters))
+						if ((dwParam > 0) && (dwParam <= (DWORD)m_parameters.size()))
                   {
-                     dwParam--;
-                     dwSize += (DWORD)_tcslen(m_ppszParameters[dwParam]);
+							const TCHAR *value = (TCHAR *)m_parameters.get(dwParam - 1);
+                     dwSize += (DWORD)_tcslen(value);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], m_ppszParameters[dwParam]);
-                     dwPos += (DWORD)_tcslen(m_ppszParameters[dwParam]);
+                     _tcscpy(&pText[dwPos], value);
+                     dwPos += (DWORD)_tcslen(value);
                   }
                   break;
 					case '[':	// Script
@@ -420,6 +411,33 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 							}
 						}
 						break;
+					case '<':	// Named parameter
+						for(i = 0, pCurr++; (*pCurr != '>') && (*pCurr != 0) && (i < 255); pCurr++)
+						{
+							scriptName[i++] = *pCurr;
+						}
+						if (*pCurr == 0)	// no terminating >
+						{
+							pCurr--;
+						}
+						else
+						{
+							scriptName[i] = 0;
+							StrStrip(scriptName);
+							int index = m_parameterNames.getIndexIgnoreCase(scriptName);
+							if (index != -1)
+							{
+								const TCHAR *temp = (TCHAR *)m_parameters.get(index);
+								if (temp != NULL)
+								{
+									dwSize += (DWORD)_tcslen(temp);
+									pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+									_tcscpy(&pText[dwPos], temp);
+									dwPos += (DWORD)_tcslen(temp);
+								}
+							}
+						}
+						break;
                default:    // All other characters are invalid, ignore
                   break;
             }
@@ -456,6 +474,17 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 
 
 //
+// Add new parameter to event
+//
+
+void Event::addParameter(const TCHAR *name, const TCHAR *value)
+{
+	m_parameters.add(_tcsdup(value));
+	m_parameterNames.add(name);
+}
+
+
+//
 // Fill message with event data
 //
 
@@ -472,9 +501,9 @@ void Event::prepareMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(dwId++, (WORD)m_dwSeverity);
 	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszMessageText));
 	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszUserTag));
-	pMsg->SetVariable(dwId++, m_dwNumParameters);
-	for(DWORD i = 0; i < m_dwNumParameters; i++)
-		pMsg->SetVariable(dwId++, m_ppszParameters[i]);
+	pMsg->SetVariable(dwId++, (DWORD)m_parameters.size());
+	for(int i = 0; i < m_parameters.size(); i++)
+		pMsg->SetVariable(dwId++, (TCHAR *)m_parameters.get(i));
 }
 
 
@@ -521,7 +550,7 @@ static BOOL LoadEvents()
 // Inilialize event handling subsystem
 //
 
-BOOL InitEventSubsystem(void)
+BOOL InitEventSubsystem()
 {
    BOOL bSuccess;
 
@@ -554,7 +583,7 @@ BOOL InitEventSubsystem(void)
 // Shutdown event subsystem
 //
 
-void ShutdownEventSubsystem(void)
+void ShutdownEventSubsystem()
 {
    delete g_pEventQueue;
    delete g_pEventPolicy;
@@ -580,7 +609,7 @@ void ShutdownEventSubsystem(void)
 // Reload event templates from database
 //
 
-void ReloadEvents(void)
+void ReloadEvents()
 {
    DWORD i;
 
@@ -672,12 +701,13 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
 //        x - Hex integer
 //        a - IP address
 //        i - Object ID
+// names - names for parameters
 // PostEventEx will put events to specified queue, and PostEvent to system
 // event queue. Both functions uses RealPostEvent to do real job.
 //
 
 static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
-                          const TCHAR *pszUserTag, const char *pszFormat, va_list args)
+                          const TCHAR *pszUserTag, const char *pszFormat, const TCHAR **names, va_list args)
 {
    EVENT_TEMPLATE *pEventTemplate;
    Event *pEvent;
@@ -692,7 +722,7 @@ static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
       if (pEventTemplate != NULL)
       {
          // Template found, create new event
-         pEvent = new Event(pEventTemplate, dwSourceId, pszUserTag, pszFormat, args);
+         pEvent = new Event(pEventTemplate, dwSourceId, pszUserTag, pszFormat, names, args);
 
          // Add new event to queue
          pQueue->Put(pEvent);
@@ -711,7 +741,18 @@ BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...)
    BOOL bResult;
 
    va_start(args, pszFormat);
-   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, NULL, pszFormat, args);
+   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, NULL, pszFormat, NULL, args);
+   va_end(args);
+   return bResult;
+}
+
+BOOL PostEventWithNames(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, const TCHAR **names, ...)
+{
+   va_list args;
+   BOOL bResult;
+
+   va_start(args, names);
+   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, NULL, pszFormat, names, args);
    va_end(args);
    return bResult;
 }
@@ -722,19 +763,18 @@ BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, const TCHAR *pszUserT
    BOOL bResult;
 
    va_start(args, pszFormat);
-   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, pszUserTag, pszFormat, args);
+   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, pszUserTag, pszFormat, NULL, args);
    va_end(args);
    return bResult;
 }
 
-BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
-                 const char *pszFormat, ...)
+BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
 
    va_start(args, pszFormat);
-   bResult = RealPostEvent(pQueue, dwEventCode, dwSourceId, NULL, pszFormat, args);
+   bResult = RealPostEvent(pQueue, dwEventCode, dwSourceId, NULL, pszFormat, NULL, args);
    va_end(args);
    return bResult;
 }

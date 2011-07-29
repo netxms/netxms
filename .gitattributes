@@ -7,6 +7,7 @@ android/src/console/res/drawable-ldpi/icon.png -text
 android/src/console/res/drawable-mdpi/ic_menu_preferences.png -text
 android/src/console/res/drawable-mdpi/icon.png -text
 android/src/console/res/drawable/alarm.png -text
+android/src/console/res/drawable/bw_gradient.xml -text
 android/src/console/res/drawable/container.png -text
 android/src/console/res/drawable/critical.png -text
 android/src/console/res/drawable/dashboard.png -text
