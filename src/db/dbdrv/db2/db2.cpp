@@ -93,7 +93,7 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 			buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 			ucs2_to_ucs4(buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 #endif
-			RemoveTrailingCRLF(errorText);
+			RemoveTrailingCRLFW(errorText);
 		}
 		else
 		{
@@ -118,7 +118,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 
 	const WCHAR *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		if (*src == L'\'')
 		{
@@ -151,7 +151,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 
 	const char *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		if (*src == '\'')
 		{
