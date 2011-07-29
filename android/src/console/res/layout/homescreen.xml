@@ -31,6 +31,7 @@
 	</TextView>
 	<GridView android:id="@+id/ActivityList" 
 			android:background="#ffffff"
+			android:cacheColorHint="#ffffff" 
 			android:numColumns="auto_fit"
 			android:columnWidth="80dp"
 			android:gravity="center"

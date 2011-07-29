@@ -123,6 +123,7 @@ public class NodeListAdapter extends BaseAdapter
 			// new object, create fields
 			nodeName = new TextView(context);
 			nodeName.setPadding(5, 2, 5, 2);
+			nodeName.setTextColor(0xFF404040);
 
 			severity = new ImageView(context);
 			severity.setPadding(5, 5, 5, 2);

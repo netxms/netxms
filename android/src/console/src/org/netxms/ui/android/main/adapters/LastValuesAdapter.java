@@ -4,14 +4,12 @@
 package org.netxms.ui.android.main.adapters;
 
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -45,6 +43,9 @@ public class LastValuesAdapter extends BaseAdapter
 		this.currentValues = values;
 	}
 
+	/**
+	 * @param service
+	 */
 	public void setService(ClientConnectorService service)
 	{
 		this.service = service;
@@ -99,16 +100,28 @@ public class LastValuesAdapter extends BaseAdapter
 		{
 			itemName = new TextView(context);
 			itemName.setPadding(5, 2, 5, 2);
+			itemName.setTextColor(0xFF404040);
+			itemName.setGravity(Gravity.LEFT);
+			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			lp.gravity = Gravity.LEFT;
+			itemName.setLayoutParams(lp);
 
 			itemValue = new TextView(context);
 			itemValue.setPadding(5, 2, 5, 2);
+			itemValue.setTextColor(0xFF404040);
+			itemValue.setGravity(Gravity.RIGHT);
+			lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			lp.gravity = Gravity.RIGHT;
+			itemValue.setLayoutParams(lp);
 
 			view = new LinearLayout(context);
+			//view.setWeightSum((float)1.0);
 			view.addView(itemName);
 			view.addView(itemValue);
 		}
 		else
-		{ // get reference to existing view
+		{ 
+			// get reference to existing view
 			view = (LinearLayout)convertView;
 			itemName = (TextView)view.getChildAt(0);
 			itemValue = (TextView)view.getChildAt(1);
@@ -123,7 +136,7 @@ public class LastValuesAdapter extends BaseAdapter
 		}
 		else
 		{
-			itemName.setText(item.getName());
+			itemName.setText(item.getDescription());
 			itemValue.setText(item.getValue());
 		}
 
