@@ -94,11 +94,17 @@ public class NodeListAdapter extends BaseAdapter
 		return currentNodes[position].getObjectId();
 	}
 
+	/**
+	 * @param id
+	 */
 	public void unmanageObject(long id)
 	{
 		service.setObjectMgmtState(id,false);
 	}
 
+	/**
+	 * @param id
+	 */
 	public void manageObject(long id)
 	{
 		service.setObjectMgmtState(id,true);
@@ -140,7 +146,8 @@ public class NodeListAdapter extends BaseAdapter
 			view.addView(texts);
 		}
 		else
-		{ // get reference to existing object
+		{ 
+			// get reference to existing object
 			view = (LinearLayout)convertView;
 			severity = (ImageView)view.getChildAt(0);
 			type = (ImageView)view.getChildAt(1);
@@ -165,7 +172,6 @@ public class NodeListAdapter extends BaseAdapter
 			{
 				type.setImageResource(R.drawable.node_small);
 			}
-
 		}
 
 		severity.setImageResource(NodeListAdapter.imageId[node.getStatus()]);

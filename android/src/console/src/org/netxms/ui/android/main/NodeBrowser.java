@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.NodeListAdapter;
@@ -21,7 +22,6 @@ import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -80,6 +80,9 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		registerForContextMenu(listView);
 	}
 
+	/**
+	 * @param objectId
+	 */
 	public void showLastValues(long objectId)
 	{
 		Intent newIntent = new Intent(this, LastValues.class);
@@ -117,32 +120,45 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		adapter.setService(null);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View, android.view.ContextMenu.ContextMenuInfo)
+	 */
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
 	{
 		android.view.MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.node_actions, menu);
+		
+		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
+		GenericObject object = (GenericObject)adapter.getItem(info.position);
 
-		// add available tools to context menu
-		List<ObjectTool> tools = service.getTools();
-		if (tools != null)
+		if (object instanceof Node)
 		{
-			Iterator<ObjectTool> tl = tools.iterator();
-			ObjectTool tool;
-			while(tl.hasNext())
+			// add available tools to context menu
+			List<ObjectTool> tools = service.getTools();
+			if (tools != null)
 			{
-				tool = tl.next();
-				if (tool.getType() == tool.TYPE_ACTION || tool.getType() == tool.TYPE_SERVER_COMMAND)
+				Iterator<ObjectTool> tl = tools.iterator();
+				ObjectTool tool;
+				while(tl.hasNext())
 				{
-					menu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
+					tool = tl.next();
+					if ((tool.getType() == ObjectTool.TYPE_ACTION || tool.getType() == ObjectTool.TYPE_SERVER_COMMAND) &&
+					    tool.isApplicableForNode((Node)object))
+					{
+						menu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
+					}
 				}
 			}
 		}
-		
+			
 		// don't forget about 'cancel' item :)
 		menu.add(R.string.cancel);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
+	 */
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
