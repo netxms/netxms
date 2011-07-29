@@ -21,7 +21,11 @@ package org.netxms.ui.eclipse.objectview.objecttabs;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -44,6 +48,7 @@ public class ObjectOverview extends ObjectTab
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
 	
 	private Set<OverviewPageElement> elements = new HashSet<OverviewPageElement>();
+	private ScrolledComposite scroller;
 	private Composite viewArea;
 	private Composite leftColumn;
 	private Composite rightColumn;
@@ -54,12 +59,24 @@ public class ObjectOverview extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		viewArea = new Composite(parent, SWT.NONE);
-		viewArea.setBackground(BACKGROUND_COLOR);
+		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
+		scroller.setExpandVertical(true);
+		scroller.setExpandHorizontal(true);
+		scroller.getVerticalBar().setIncrement(20);
+		scroller.addControlListener(new ControlAdapter() {
+			public void controlResized(ControlEvent e)
+			{
+				Rectangle r = scroller.getClientArea();
+				scroller.setMinSize(viewArea.computeSize(r.width, SWT.DEFAULT));
+			}
+		});
 		
+		viewArea = new Composite(scroller, SWT.NONE);
+		viewArea.setBackground(BACKGROUND_COLOR);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		viewArea.setLayout(layout);
+		scroller.setContent(viewArea);
 		
 		leftColumn = new Composite(viewArea, SWT.NONE);
 		leftColumn.setLayout(createColumnLayout());
@@ -114,6 +131,7 @@ public class ObjectOverview extends ObjectTab
 		gd.exclude = false;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.verticalAlignment = SWT.TOP;
 		element.setLayoutData(gd);
 		elements.add(element);
 	}
@@ -133,6 +151,9 @@ public class ObjectOverview extends ObjectTab
 		}
 		viewArea.layout(true, true);
 		viewArea.setRedraw(true);
+		
+		Rectangle r = scroller.getClientArea();
+		scroller.setMinSize(viewArea.computeSize(r.width, SWT.DEFAULT));
 	}
 
 	/* (non-Javadoc)

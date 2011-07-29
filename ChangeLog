@@ -6,7 +6,7 @@
 - New MIBs added: ATM-TC-MIB, DVMRP-MIB, IGMP-MIB, IPV6-TC,
   RAPID-CITY-BAY-STACK, RC-MLT-MIB
 - Fixed some problems with database export/import
-- Fixed issues: #328
+- Fixed issues: #328, #329
 
 
 *

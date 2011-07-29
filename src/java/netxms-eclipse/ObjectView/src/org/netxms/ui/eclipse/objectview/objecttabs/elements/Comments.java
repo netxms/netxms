@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -53,7 +54,7 @@ public class Comments extends OverviewPageElement
 	@Override
 	protected Control createClientArea(Composite parent)
 	{
-		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY);
+		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY | SWT.WRAP);
 		comments.setBackground(BACKGROUND_COLOR);
 		if (getObject() != null)
 			comments.setText(getObject().getComments());

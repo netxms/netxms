@@ -161,7 +161,7 @@ public class GeoLocation
 		NumberFormat nf = NumberFormat.getIntegerInstance();
 		nf.setMinimumIntegerDigits(2);
 		sb.append(nf.format(getIntegerDegree(pos)));
-		sb.append("° ");
+		sb.append("\u00b0 ");
 		sb.append(nf.format(getIntegerMinutes(pos)));
 		sb.append("' ");
 
@@ -225,7 +225,7 @@ public class GeoLocation
 		{
 		}
 		
-		Pattern p = Pattern.compile((isLat ? "([NS]*)" : "([EW]*)") + "\\s*([0-9]+(?:\\.[0-9]+)*)°?\\s*([0-9]+(?:\\.[0-9]+)*)?\\'?\\s*([0-9]+(?:\\.[0-9]+)*)?\\\"?\\s*" + (isLat ? "([NS]*)" : "([EW]*)"));
+		Pattern p = Pattern.compile((isLat ? "([NS]*)" : "([EW]*)") + "\\s*([0-9]+(?:\\.[0-9]+)*)\u00b0?\\s*([0-9]+(?:\\.[0-9]+)*)?\\'?\\s*([0-9]+(?:\\.[0-9]+)*)?\\\"?\\s*" + (isLat ? "([NS]*)" : "([EW]*)"));
 		Matcher m = p.matcher(in);
 		if (m.matches())
 		{
