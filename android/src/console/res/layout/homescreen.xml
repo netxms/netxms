@@ -8,6 +8,8 @@
 	<include layout="@layout/screen_header_full" />
 	<GridView android:id="@+id/ActivityList" 
 			android:background="@drawable/home_screen_background"
+			android:listSelector="@drawable/home_screen_selection"
+			android:drawSelectorOnTop="true"
 			android:numColumns="auto_fit"
 			android:gravity="center"
 			android:stretchMode="columnWidth"

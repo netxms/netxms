@@ -12,7 +12,6 @@ android/src/console/res/drawable-mdpi/alarms.png -text
 android/src/console/res/drawable-mdpi/ic_menu_preferences.png -text
 android/src/console/res/drawable-mdpi/icon.png -text
 android/src/console/res/drawable-mdpi/nodes.png -text
-android/src/console/res/drawable/alarm.png -text
 android/src/console/res/drawable/bw_gradient.xml -text
 android/src/console/res/drawable/container.png -text
 android/src/console/res/drawable/critical.png -text
@@ -20,9 +19,9 @@ android/src/console/res/drawable/dashboard.png -text
 android/src/console/res/drawable/disabled.gif -text
 android/src/console/res/drawable/header_background.xml -text
 android/src/console/res/drawable/home_screen_background.xml -text
+android/src/console/res/drawable/home_screen_selection.xml -text
 android/src/console/res/drawable/major.png -text
 android/src/console/res/drawable/minor.png -text
-android/src/console/res/drawable/node.png -text
 android/src/console/res/drawable/node_small.png -text
 android/src/console/res/drawable/normal.png -text
 android/src/console/res/drawable/testing.png -text

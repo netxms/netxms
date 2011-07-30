@@ -64,6 +64,7 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		listView.setAdapter(adapter);
 		listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
+			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
 				GenericObject obj = (GenericObject)adapter.getItem(position);
@@ -203,6 +204,9 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		return super.onContextItemSelected(item);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onBackPressed()
+	 */
 	@Override
 	public void onBackPressed()
 	{
