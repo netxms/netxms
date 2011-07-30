@@ -247,9 +247,30 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		}
 
 		TextView curPath = (TextView)findViewById(R.id.ScreenTitleSecondary);
-		curPath.setText(currentParent.getObjectName());
+		curPath.setText(getFullPath());
 		adapter.setNodes(service.findChilds(this.currentParent));
 		adapter.notifyDataSetChanged();
+	}
+	
+	/**
+	 * Get full path to current position in object tree
+	 * 
+	 * @return
+	 */
+	private String getFullPath()
+	{
+		StringBuilder sb = new StringBuilder();
+		for(GenericObject o : containerPath)
+		{
+			sb.append('/');
+			sb.append(o.getObjectName());
+		}
+		if (currentParent != null)
+		{
+			sb.append('/');
+			sb.append(currentParent.getObjectName());
+		}
+		return sb.toString();
 	}
 
 	/*
