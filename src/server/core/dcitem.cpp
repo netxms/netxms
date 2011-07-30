@@ -757,7 +757,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 
 void DCItem::checkThresholds(ItemValue &value)
 {
-	const TCHAR *paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance") };
+	const TCHAR *paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent") };
 	const TCHAR *paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue") };
 
    DWORD i, iResult, dwInterval;
@@ -792,9 +792,9 @@ void DCItem::checkThresholds(ItemValue &value)
 						dwInterval = (DWORD)m_ppThresholdList[i]->getRepeatInterval();
 					if ((dwInterval != 0) && (m_ppThresholdList[i]->getLastEventTimestamp() + (time_t)dwInterval < now))
 					{
-						PostEvent(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd", m_szName,
-									 m_szDescription, m_ppThresholdList[i]->getStringValue(), 
-									 (const TCHAR *)checkValue, m_dwId, m_szInstance, 1);
+						PostEventWithNames(m_ppThresholdList[i]->getEventCode(), m_pNode->Id(), "ssssisd", 
+							paramNamesReach, m_szName, m_szDescription, m_ppThresholdList[i]->getStringValue(), 
+							(const TCHAR *)checkValue, m_dwId, m_szInstance, 1);
 						m_ppThresholdList[i]->setLastEventTimestamp();
 					}
 
