@@ -267,7 +267,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			// Execute statement
-			SQLWCHAR *temp = UCS2StringFromMBString(pwszQuery);
+			SQLWCHAR *temp = UCS2StringFromMBString(query);
 			iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
 			free(temp);
 			if ((iResult != SQL_SUCCESS) && 
