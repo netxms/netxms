@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -939,6 +939,7 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
 	free(hStmt);
 }
 
+
 //
 // Bind parameter (generic)
 //
@@ -947,18 +948,25 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 {
 #ifdef UNICODE
 #define wBuffer buffer
+#define realAllocType allocType
 #else
 	void *wBuffer;
-	if (cType == DB_SQLTYPE_VARCHAR)
+	int realAllocType = allocType;
+	if (cType == DB_CTYPE_STRING)
 	{
 		wBuffer = (void *)WideStringFromMBString((char *)buffer);
+		if (allocType == DB_BIND_DYNAMIC)
+			free(buffer);
+		realAllocType = DB_BIND_DYNAMIC;
 	}
 	else
 	{
 		wBuffer = buffer;
 	}
 #endif
-	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, allocType);
+	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
+#undef wBuffer
+#undef realAllocType
 }
 
 
