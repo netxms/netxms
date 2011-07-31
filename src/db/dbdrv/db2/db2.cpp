@@ -214,7 +214,7 @@ extern "C" void EXPORT DrvUnload()
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
-		char *pszPassword, char *pszDatabase, NETXMS_WCHAR *errorText)
+                                              char *pszPassword, char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
 {
 	long iResult;
 	DB2DRV_CONN *pConn;
@@ -257,6 +257,35 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 		goto connect_failure_2;
 	}
 
+	// Set current schema
+	if ((schema != NULL) && (schema[0] != 0))
+	{
+		char query[256];
+		snprintf(query, 256, "SET CURRENT SCHEMA = '%s'", schema);
+
+		iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+		{
+			// Execute statement
+			SQLWCHAR *temp = UCS2StringFromMBString(pwszQuery);
+			iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
+			free(temp);
+			if ((iResult != SQL_SUCCESS) && 
+				 (iResult != SQL_SUCCESS_WITH_INFO) && 
+				 (iResult != SQL_NO_DATA))
+			{
+				GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
+				goto connect_failure_3;
+			}
+			SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+		}
+		else
+		{
+			GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+			goto connect_failure_2;
+		}
+	}
+
 	// Create mutex
 	pConn->mutexQuery = MutexCreate();
 
@@ -264,6 +293,9 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 	return (DBDRV_CONNECTION)pConn;
 
 	// Handle failures
+connect_failure_3:
+	SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+
 connect_failure_2:
 	SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
 

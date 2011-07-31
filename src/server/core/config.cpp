@@ -42,6 +42,7 @@ TCHAR g_szDbServer[MAX_PATH] = _T("127.0.0.1");
 TCHAR g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
 TCHAR g_szDbPassword[MAX_DB_PASSWORD] = _T("");
 TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
+TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 
 
 //
@@ -61,6 +62,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
+   { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
    { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },

@@ -141,7 +141,7 @@ extern "C" void EXPORT DrvUnload()
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
-                                              const char *password, const char *database, WCHAR *errorText)
+                                              const char *password, const char *database, const char *schema,  WCHAR *errorText)
 {
    SQLITE_CONN *pConn;
 	sqlite3 *hdb;

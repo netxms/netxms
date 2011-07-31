@@ -28,6 +28,7 @@ static TCHAR m_server[256];
 static TCHAR m_login[256];
 static TCHAR m_password[256];
 static TCHAR m_dbName[256];
+static TCHAR m_schema[256];
 
 static int m_basePoolSize;
 static int m_maxPoolSize;
@@ -52,7 +53,7 @@ static void DBConnectionPoolPopulate()
 	MutexLock(m_poolAccessMutex, INFINITE);
 	for (int i = 0; i < m_basePoolSize; i++)
 	{
-		m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, errorText);
+		m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
 	}
 	MutexUnlock(m_poolAccessMutex);
 }
@@ -89,7 +90,7 @@ static void DBConnectionPoolShrink()
  * Start connection pool
  */
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
-																const TCHAR *login, const TCHAR *password,
+																const TCHAR *login, const TCHAR *password, const TCHAR *schema,
 																int basePoolSize, int maxPoolSize, int cooldownTime,
 																DB_HANDLE fallback)
 {
@@ -98,6 +99,7 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 	nx_strncpy(m_dbName, CHECK_NULL_EX(dbName), 256);
 	nx_strncpy(m_login, CHECK_NULL_EX(login), 256);
 	nx_strncpy(m_password, CHECK_NULL_EX(password), 256);
+	nx_strncpy(m_schema, CHECK_NULL_EX(schema), 256);
 
 	m_basePoolSize = basePoolSize;
 	m_currentPoolSize = basePoolSize;
@@ -174,7 +176,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 			if (m_dbHandles[i] == NULL)
 			{
 				TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-				m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, errorText);
+				m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
 				m_currentPoolSize++;
 
 				handle = m_dbHandles[i];

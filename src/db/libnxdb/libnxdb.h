@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -50,7 +50,7 @@ struct db_driver_t
 	MUTEX m_mutexReconnect;
 	HMODULE m_handle;
 	void *m_userArg;
-	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, WCHAR *);
+	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
 	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
 	void (* m_fpDrvFreeStatement)(DBDRV_STATEMENT);
@@ -97,6 +97,7 @@ struct db_handle_t
    char *m_login;
    char *m_password;
    char *m_dbName;
+   char *m_schema;
 };
 
 

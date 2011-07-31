@@ -396,7 +396,7 @@ static BOOL CreateSQLiteDB(WIZARD_CFG_INFO *pc)
    _sntprintf(szBaseDir, MAX_PATH, _T("%s\\database"), pc->m_szInstallDir);
    SetCurrentDirectory(szBaseDir);
    DeleteFile(pc->m_szDBName);
-	hConn = DBConnect(pc->m_dbDriver, NULL, pc->m_szDBName, NULL, NULL, dbErrorText);
+	hConn = DBConnect(pc->m_dbDriver, NULL, pc->m_szDBName, NULL, NULL, NULL, dbErrorText);
    if (hConn != NULL)
    {
       DBDisconnect(hConn);
@@ -430,7 +430,7 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database server as DBA"));
 		hConn = DBConnect(pc->m_dbDriver, pc->m_szDBServer, 
                         (pc->m_iDBEngine == DB_ENGINE_PGSQL) ? _T("template1") : NULL,
-                        pc->m_szDBALogin, pc->m_szDBAPassword, dbErrorText);
+                        pc->m_szDBALogin, pc->m_szDBAPassword, NULL, dbErrorText);
       if (hConn != NULL)
       {
          PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, TRUE, 0);
@@ -507,7 +507,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
 		TCHAR dbErrorText[DBDRV_MAX_ERROR_TEXT];
 
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database"));
-		hConn = DBConnect(pc->m_dbDriver, pc->m_szDBServer, pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword, dbErrorText);
+		hConn = DBConnect(pc->m_dbDriver, pc->m_szDBServer, pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword, NULL, dbErrorText);
       bResult = (hConn != NULL);
       if (!bResult)
 			_sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("Unable to connect to database: %s"), dbErrorText);

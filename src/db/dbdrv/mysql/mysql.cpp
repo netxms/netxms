@@ -204,7 +204,7 @@ extern "C" void EXPORT DrvUnload()
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost, const char *szLogin, const char *szPassword,
-															 const char *szDatabase, WCHAR *errorText)
+															 const char *szDatabase, const char *schema, WCHAR *errorText)
 {
 	MYSQL *pMySQL;
 	MYSQL_CONN *pConn;

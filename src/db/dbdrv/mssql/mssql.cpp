@@ -194,7 +194,8 @@ extern "C" void EXPORT DrvUnload()
 // Connect to database
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, char *pszPassword, char *pszDatabase, WCHAR *errorText)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login, const char *password, 
+															 const char *database, const char *schema, WCHAR *errorText)
 {
    long iResult;
    MSSQL_CONN *pConn;
@@ -232,15 +233,15 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin, cha
 	SQLSMALLINT outLen;
 	char connectString[1024];
 
-	if (!strcmp(pszLogin, "*"))
+	if (!strcmp(login, "*"))
 	{
 		snprintf(connectString, 1024, "DRIVER={SQL Server Native Client};SERVER=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS",
-			      pszHost, pszDatabase);
+			      host, database);
 	}
 	else
 	{
 		snprintf(connectString, 1024, "DRIVER={SQL Server Native Client 10.0};SERVER=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS",
-		         pszHost, pszLogin, pszPassword, pszDatabase);
+		         host, login, password, database);
 	}
 	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 

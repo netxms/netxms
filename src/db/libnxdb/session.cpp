@@ -28,23 +28,24 @@
 // Connect to database
 //
 
-DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *pszServer, const TCHAR *pszDBName,
-                                       const TCHAR *pszLogin, const TCHAR *pszPassword, TCHAR *errorText)
+DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
+                                       const TCHAR *login, const TCHAR *password, const TCHAR *schema, TCHAR *errorText)
 {
    DBDRV_CONNECTION hDrvConn;
    DB_HANDLE hConn = NULL;
 
-	__DBDbgPrintf(8, _T("DBConnect: server=%s db=%s login=%s"), pszServer, pszDBName, pszLogin);
+	__DBDbgPrintf(8, _T("DBConnect: server=%s db=%s login=%s schema=%s"), server, dbName, login, CHECK_NULL(schema));
 #ifdef UNICODE
-	char *mbServer = (pszServer == NULL) ? NULL : MBStringFromWideString(pszServer);
-	char *mbDatabase = (pszDBName == NULL) ? NULL : MBStringFromWideString(pszDBName);
-	char *mbLogin = (pszLogin == NULL) ? NULL : MBStringFromWideString(pszLogin);
-	char *mbPassword = (pszPassword == NULL) ? NULL : MBStringFromWideString(pszPassword);
+	char *mbServer = (server == NULL) ? NULL : MBStringFromWideString(server);
+	char *mbDatabase = (dbName == NULL) ? NULL : MBStringFromWideString(dbName);
+	char *mbLogin = (login == NULL) ? NULL : MBStringFromWideString(login);
+	char *mbPassword = (password == NULL) ? NULL : MBStringFromWideString(password);
+	char *mbSchema = (schema == NULL) ? NULL : MBStringFromWideString(schema);
 	errorText[0] = 0;
-   hDrvConn = driver->m_fpDrvConnect(mbServer, mbLogin, mbPassword, mbDatabase, errorText);
+   hDrvConn = driver->m_fpDrvConnect(mbServer, mbLogin, mbPassword, mbDatabase, mbSchema, errorText);
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
-   hDrvConn = driver->m_fpDrvConnect(pszServer, pszLogin, pszPassword, pszDBName, wcErrorText);
+   hDrvConn = driver->m_fpDrvConnect(server, login, password, dbName, schema, wcErrorText);
 	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
@@ -63,11 +64,13 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *pszServer,
          hConn->m_login = mbLogin;
          hConn->m_password = mbPassword;
          hConn->m_server = mbServer;
+         hConn->m_schema = mbSchema;
 #else
-         hConn->m_dbName = (pszDBName == NULL) ? NULL : _tcsdup(pszDBName);
-         hConn->m_login = (pszLogin == NULL) ? NULL : _tcsdup(pszLogin);
-         hConn->m_password = (pszPassword == NULL) ? NULL : _tcsdup(pszPassword);
-         hConn->m_server = (pszServer == NULL) ? NULL : _tcsdup(pszServer);
+         hConn->m_dbName = (dbName == NULL) ? NULL : _tcsdup(dbName);
+         hConn->m_login = (login == NULL) ? NULL : _tcsdup(login);
+         hConn->m_password = (password == NULL) ? NULL : _tcsdup(password);
+         hConn->m_server = (server == NULL) ? NULL : _tcsdup(server);
+         hConn->m_schema = (schema == NULL) ? NULL : _tcsdup(schema);
 #endif
 		   __DBDbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
       }
@@ -106,6 +109,7 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
    safe_free(hConn->m_login);
    safe_free(hConn->m_password);
    safe_free(hConn->m_server);
+   safe_free(hConn->m_schema);
    free(hConn);
 }
 
@@ -123,7 +127,7 @@ static void DBReconnect(DB_HANDLE hConn)
    for(nCount = 0; ; nCount++)
    {
 		hConn->m_connection = hConn->m_driver->m_fpDrvConnect(hConn->m_server, hConn->m_login,
-                                                            hConn->m_password, hConn->m_dbName, errorText);
+                                                            hConn->m_password, hConn->m_dbName, hConn->m_schema, errorText);
       if (hConn->m_connection != NULL)
          break;
       if (nCount == 0)

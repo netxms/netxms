@@ -22,13 +22,7 @@
 
 #include "oracledrv.h"
 
-
-//
-// API version
-//
-
-extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
-extern "C" const char EXPORT *drvName = "ORACLE";
+DECLARE_DRIVER_HEADER("ORACLE")
 
 
 //
@@ -193,8 +187,8 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 // Connect to database
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *pszLogin, const char *pszPassword, 
-                                              const char *pszDatabase, WCHAR *errorText)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login, const char *password, 
+                                              const char *database, const char *schema, WCHAR *errorText)
 {
 	ORACLE_CONN *pConn;
 	UCS2CHAR *pwszStr;
@@ -209,7 +203,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *p
 		{
 			OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleError, OCI_HTYPE_ERROR, 0, NULL);
 			OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleServer, OCI_HTYPE_SERVER, 0, NULL);
-			pwszStr = UCS2StringFromMBString(pszHost);
+			pwszStr = UCS2StringFromMBString(host);
 			if (OCIServerAttach(pConn->handleServer, pConn->handleError,
 			                    (text *)pwszStr, (sb4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_DEFAULT) == OCI_SUCCESS)
 			{
@@ -221,11 +215,11 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *p
 				
 				// Initialize session handle
 				OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleSession, OCI_HTYPE_SESSION, 0, NULL);
-				pwszStr = UCS2StringFromMBString(pszLogin);
+				pwszStr = UCS2StringFromMBString(login);
 				OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
 				           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_USERNAME, pConn->handleError);
 				free(pwszStr);
-				pwszStr = UCS2StringFromMBString(pszPassword);
+				pwszStr = UCS2StringFromMBString(password);
 				OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
 				           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_PASSWORD, pConn->handleError);
 
@@ -238,6 +232,14 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *pszHost, const char *p
 					pConn->mutexQueryLock = MutexCreate();
 					pConn->nTransLevel = 0;
 					pConn->szLastError[0] = 0;
+
+					if ((schema != NULL) && (schema[0] != 0))
+					{
+						free(pwszStr);
+						pwszStr = UCS2StringFromMBString(schema);
+						OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
+									  (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
+					}
 				}
 				else
 				{

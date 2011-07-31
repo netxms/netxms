@@ -100,7 +100,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver);
 
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
-                                       const TCHAR *login, const TCHAR *password, TCHAR *errorText);
+                                       const TCHAR *login, const TCHAR *password, const TCHAR *schema, TCHAR *errorText);
 void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
 
 DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepare(DB_HANDLE hConn, const TCHAR *szQuery);
@@ -175,7 +175,7 @@ TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
-																const TCHAR *login, const TCHAR *password,
+																const TCHAR *login, const TCHAR *password, const TCHAR *schema,
 																int basePoolSize, int maxPoolSize, int cooldownTime,
 																DB_HANDLE fallback);
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown();

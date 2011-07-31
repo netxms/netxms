@@ -28,6 +28,9 @@
 
 DECLARE_DRIVER_HEADER("PGSQL")
 
+extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn);
+static BOOL UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
+
 
 //
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
@@ -175,7 +178,7 @@ extern "C" void EXPORT DrvUnload()
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost,	const char *szLogin,	const char *szPassword, 
-															 const char *szDatabase, WCHAR *errorText)
+															 const char *szDatabase, const char *schema, WCHAR *errorText)
 {
 	PG_CONN *pConn;
 
@@ -214,6 +217,17 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost,	const char *sz
 
    		pConn->mutexQueryLock = MutexCreate();
          pConn->pFetchBuffer = NULL;
+
+			if ((schema != NULL) && (schema[0] != 0))
+			{
+				char query[256];
+				snprintf(query, 256, "SET search_path=%s", schema);
+				if (!UnsafeDrvQuery(pConn, query, errorText))
+				{
+					DrvDisconnect(pConn);
+					pConn = NULL;
+				}
+			}
 		}
 	}
 	else

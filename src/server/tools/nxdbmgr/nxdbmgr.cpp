@@ -62,6 +62,7 @@ static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
 static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
 static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
+static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
@@ -72,6 +73,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
+   { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T("DataDirectory"), CT_IGNORE, 0, 0, 0, 0, NULL },
    { _T("DumpDirectory"), CT_IGNORE, 0, 0, 0, 0, NULL },
@@ -607,7 +609,7 @@ int main(int argc, char *argv[])
    }
 
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   g_hCoreDB = DBConnect(driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, errorText);
+   g_hCoreDB = DBConnect(driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
    if (g_hCoreDB == NULL)
    {
 		_tprintf(_T("Unable to connect to database %s@%s as %s: %s\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
