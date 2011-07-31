@@ -73,6 +73,18 @@ typedef struct
 
 
 //
+// Prepared statement structure
+//
+
+typedef struct
+{
+	SQLHSTMT handle;
+	Array *buffers;
+	DB2DRV_CONN *connection;
+} DB2DRV_STATEMENT;
+
+
+//
 // Result buffer structure
 //
 

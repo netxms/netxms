@@ -945,7 +945,20 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
-	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, buffer, allocType);
+#ifdef UNICODE
+#define wBuffer buffer
+#else
+	void *wBuffer;
+	if (cType == DB_SQLTYPE_VARCHAR)
+	{
+		wBuffer = (void *)WideStringFromMBString((char *)buffer);
+	}
+	else
+	{
+		wBuffer = buffer;
+	}
+#endif
+	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, allocType);
 }
 
 

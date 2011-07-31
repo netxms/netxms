@@ -108,6 +108,23 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 
 
 //
+// Clear any pending result sets on given statement
+//
+
+static void ClearPendingResults(SQLHSTMT statement)
+{
+	while(1)
+	{
+		SQLRETURN rc = SQLMoreResults(statement);
+		if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
+		{
+			break;
+		}
+	}
+}
+
+
+//
 // Prepare string for using in SQL query - enclose in quotes and escape as needed
 //
 
@@ -280,6 +297,172 @@ extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
 	free(pConn);
 }
 
+//
+// Prepare statement
+//
+
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
+{
+	long iResult;
+	SQLHSTMT statement;
+	DB2DRV_STATEMENT *result;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+
+	// Allocate statement handle
+	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &statement);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+	{
+		// Prepare statement
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+		iResult = SQLPrepareW(statement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+#else
+		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
+		iResult = SQLPrepareW(statement, temp, SQL_NTS);
+		free(temp);
+#endif
+		if ((iResult == SQL_SUCCESS) ||
+				(iResult == SQL_SUCCESS_WITH_INFO))
+		{
+			result = (DB2DRV_STATEMENT *)malloc(sizeof(DB2DRV_STATEMENT));
+			result->handle = statement;
+			result->buffers = new Array(0, 16, true);
+			result->connection = pConn;
+		}
+		else
+		{
+			GetSQLErrorInfo(SQL_HANDLE_STMT, statement, errorText);
+			SQLFreeHandle(SQL_HANDLE_STMT, statement);
+			result = NULL;
+		}
+	}
+	else
+	{
+		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+		result = NULL;
+	}
+
+	MutexUnlock(pConn->mutexQuery);
+	return result;
+}
+
+
+//
+// Bind parameter to statement
+//
+
+extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType, int cType, void *buffer, int allocType)
+{
+	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE };
+	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
+	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
+
+	int length = (int)wcslen((WCHAR *)buffer) + 1;
+
+	printf("### length = %d\n", length);
+
+	SQLPOINTER sqlBuffer;
+	switch(allocType)
+	{
+		case DB_BIND_STATIC:
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+			sqlBuffer = buffer;
+#else
+			if (cType == DB_CTYPE_STRING)
+			{
+				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+				statement->buffers->add(sqlBuffer);
+			}
+			else
+			{
+				sqlBuffer = buffer;
+			}
+#endif
+			break;
+		case DB_BIND_DYNAMIC:
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+			sqlBuffer = buffer;
+#else
+			if (cType == DB_CTYPE_STRING)
+			{
+				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+				free(buffer);
+			}
+			else
+			{
+				sqlBuffer = buffer;
+			}
+#endif
+			statement->buffers->add(sqlBuffer);
+			break;
+		case DB_BIND_TRANSIENT:
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)length : bufferSize[cType]);
+#else
+			if (cType == DB_CTYPE_STRING)
+			{
+				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+			}
+			else
+			{
+				sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+			}
+#endif
+			statement->buffers->add(sqlBuffer);
+			break;
+		default:
+			return;	// Invalid call
+	}
+	SQLBindParameter(statement->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType],
+	                 (cType == DB_CTYPE_STRING) ? length : 0, 0, sqlBuffer, 0, NULL);
+}
+
+
+//
+// Execute prepared statement
+//
+
+extern "C" DWORD EXPORT DrvExecute(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *statement, NETXMS_WCHAR *errorText)
+{
+	DWORD dwResult;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+	long rc = SQLExecute(statement->handle);
+	if (
+		(rc == SQL_SUCCESS) ||
+		(rc == SQL_SUCCESS_WITH_INFO) ||
+		(rc == SQL_NO_DATA))
+	{
+		ClearPendingResults(statement->handle);
+		dwResult = DBERR_SUCCESS;
+	}
+	else
+	{
+		dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, statement->handle, errorText);
+	}
+	MutexUnlock(pConn->mutexQuery);
+	return dwResult;
+}
+
+
+//
+// Destroy prepared statement
+//
+
+extern "C" void EXPORT DrvFreeStatement(DB2DRV_STATEMENT *statement)
+{
+	if (statement == NULL)
+	{
+		return;
+	}
+
+	MutexLock(statement->connection->mutexQuery, INFINITE);
+	SQLFreeHandle(SQL_HANDLE_STMT, statement->handle);
+	MutexUnlock(statement->connection->mutexQuery);
+	delete statement->buffers;
+	free(statement);
+}
+
 
 //
 // Perform non-SELECT query
@@ -324,6 +507,76 @@ extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NE
 
 	MutexUnlock(pConn->mutexQuery);
 	return dwResult;
+}
+
+
+//
+// Process results of SELECT query
+//
+
+static DB2DRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
+{
+	// Allocate result buffer and determine column info
+	DB2DRV_QUERY_RESULT *pResult = (DB2DRV_QUERY_RESULT *)malloc(sizeof(DB2DRV_QUERY_RESULT));
+	short wNumCols;
+	SQLNumResultCols(statement, &wNumCols);
+	pResult->iNumCols = wNumCols;
+	pResult->iNumRows = 0;
+	pResult->pValues = NULL;
+
+	BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
+
+	// Get column names
+	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
+	for(int i = 0; i < (int)pResult->iNumCols; i++)
+	{
+		UCS2CHAR name[256];
+		SQLSMALLINT len;
+
+		SQLRETURN iResult = SQLColAttributeW(statement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, (SQLPOINTER)name, 256, &len, NULL); 
+		if (
+			(iResult == SQL_SUCCESS) || 
+			(iResult == SQL_SUCCESS_WITH_INFO))
+		{
+			name[len] = 0;
+			pResult->columnNames[i] = MBStringFromUCS2String(name);
+		}
+		else
+		{
+			pResult->columnNames[i] = strdup("");
+		}
+	}
+
+	// Fetch all data
+	long iCurrValue = 0;
+	SQLRETURN iResult;
+	while(iResult = SQLFetch(statement), (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+	{
+		pResult->iNumRows++;
+		pResult->pValues = (NETXMS_WCHAR **)realloc(pResult->pValues, sizeof(NETXMS_WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
+		for(int i = 1; i <= (int)pResult->iNumCols; i++)
+		{
+			SQLLEN iDataSize;
+
+			pDataBuffer[0] = 0;
+			iResult = SQLGetData(statement, (short)i, SQL_C_WCHAR, pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
+			if (iDataSize != SQL_NULL_DATA)
+			{
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+				pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
+#else
+				pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
+#endif
+			}
+			else
+			{
+				pResult->pValues[iCurrValue++] = wcsdup(L"");
+			}
+		}
+	}
+
+	free(pDataBuffer);
+	return pResult;
 }
 
 
@@ -429,6 +682,32 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQ
 
 	MutexUnlock(pConn->mutexQuery);
 	free(pDataBuffer);
+	return pResult;
+}
+
+
+//
+// Perform SELECT query using prepared statement
+//
+
+extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *statement, DWORD *pdwError, NETXMS_WCHAR *errorText)
+{
+	DB2DRV_QUERY_RESULT *pResult = NULL;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+	long rc = SQLExecute(statement->handle);
+	if (
+		(rc == SQL_SUCCESS) ||
+		(rc == SQL_SUCCESS_WITH_INFO))
+	{
+		pResult = ProcessSelectResults(statement->handle);
+		*pdwError = DBERR_SUCCESS;
+	}
+	else
+	{
+		*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, statement->handle, errorText);
+	}
+	MutexUnlock(pConn->mutexQuery);
 	return pResult;
 }
 
