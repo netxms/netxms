@@ -20,20 +20,14 @@
 
 #include "db2drv.h"
 
+DECLARE_DRIVER_HEADER("DB2")
+
 
 //
 // Constants
 //
 
 #define DATA_BUFFER_SIZE      65536
-
-
-//
-// API version
-//
-
-extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
-extern "C" const char EXPORT *drvName = "DB2";
 
 
 //
