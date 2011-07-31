@@ -1027,7 +1027,7 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
 
-	DWORD dwResult = hConn->m_driver->m_fpDrvExecute(hStmt->m_connection, hStmt->m_statement, wcErrorText);
+	DWORD dwResult = hConn->m_driver->m_fpDrvExecute(hConn->m_connection, hStmt->m_statement, wcErrorText);
    if (dwResult == DBERR_CONNECTION_LOST)
    {
       DBReconnect(hConn);
