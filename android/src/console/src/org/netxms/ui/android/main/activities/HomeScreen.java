@@ -1,4 +1,4 @@
-package org.netxms.ui.android.main;
+package org.netxms.ui.android.main.activities;
 
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
@@ -23,7 +23,6 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 	public static final int ACTIVITY_ALARMS = 1;
 	public static final int ACTIVITY_DASHBOARDS = 2;
 	public static final int ACTIVITY_NODES = 3;
-	
 	
 	private ClientConnectorService service;
 	private TextView statusText; 

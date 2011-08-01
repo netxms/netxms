@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.android.main;
+package org.netxms.ui.android.main.activities;
 
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
@@ -62,10 +62,7 @@ public class LastValues extends Activity implements ServiceConnection
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
-		// make sure adapter can read required additional data
 		adapter.setService(service);
-		// remember this activity in service, so that service can send updates
-		service.registerLastValues(this);
 		if (this.nodeId > 0)
 		{
 			this.node = service.findObjectById(nodeId);

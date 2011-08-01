@@ -12,7 +12,6 @@ import android.util.Log;
 
 /**
  * Connect task
- * 
  */
 public class ConnectTask extends Thread
 {
@@ -27,8 +26,6 @@ public class ConnectTask extends Thread
 	private static final int NOTIFY_CONN_STATUS = 1;
 
 	/**
-	 * Create connect task.
-	 * 
 	 * @param service
 	 */
 	public ConnectTask(ClientConnectorService service)
@@ -59,7 +56,7 @@ public class ConnectTask extends Thread
 	@Override
 	public void run()
 	{
-		NXCSession session = new NXCSession(server, login, password);
+		final NXCSession session = new NXCSession(server, login, password);
 		service.setConnectionStatus("connecting...");
 		try
 		{
@@ -77,7 +74,6 @@ public class ConnectTask extends Thread
 		catch(Exception e)
 		{
 			Log.d(TAG, "Exception on connect attempt", e);
-			session = null;
 			service.setConnectionStatus("Connect failed: " + e.getLocalizedMessage());
 			service.onDisconnect();
 		}

@@ -39,11 +39,11 @@ android/src/console/res/menu/main_menu.xml -text
 android/src/console/res/menu/node_actions.xml -text
 android/src/console/res/values/strings.xml -text
 android/src/console/res/xml/preferences.xml -text
-android/src/console/src/org/netxms/ui/android/main/AlarmBrowser.java -text
-android/src/console/src/org/netxms/ui/android/main/ConsolePreferences.java -text
-android/src/console/src/org/netxms/ui/android/main/HomeScreen.java -text
-android/src/console/src/org/netxms/ui/android/main/LastValues.java -text
-android/src/console/src/org/netxms/ui/android/main/NodeBrowser.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/AlarmBrowser.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/ConsolePreferences.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/HomeScreen.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/LastValues.java -text
+android/src/console/src/org/netxms/ui/android/main/activities/NodeBrowser.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/ActivityListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/AlarmListAdapter.java -text
 android/src/console/src/org/netxms/ui/android/main/adapters/LastValuesAdapter.java -text
@@ -52,6 +52,7 @@ android/src/console/src/org/netxms/ui/android/main/views/ActivityListElement.jav
 android/src/console/src/org/netxms/ui/android/service/ClientConnectorService.java -text
 android/src/console/src/org/netxms/ui/android/service/helpers/AndroidLoggingFacility.java -text
 android/src/console/src/org/netxms/ui/android/service/tasks/ConnectTask.java -text
+android/src/console/src/org/netxms/ui/android/service/tasks/ExecActionTask.java -text
 contrib/backgrounds/.keep -text
 contrib/integration/HP_EVA/hp_eva_collect_data.pl -text
 contrib/logo.jpg -text

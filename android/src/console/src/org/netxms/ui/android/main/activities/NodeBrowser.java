@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.android.main;
+package org.netxms.ui.android.main.activities;
 
 import java.util.Iterator;
 import java.util.List;
@@ -13,7 +13,10 @@ import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.NodeListAdapter;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -193,17 +196,17 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	{
 		// get selected item
 		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-		GenericObject obj = (GenericObject)adapter.getItem(info.position);
+		final GenericObject object = (GenericObject)adapter.getItem(info.position);
 
 		// process menu selection
 		switch(item.getItemId())
 		{
 			case R.id.unmanage:
-				adapter.unmanageObject(obj.getObjectId());
+				adapter.unmanageObject(object.getObjectId());
 				refreshList();
 				return true;
 			case R.id.manage:
-				adapter.manageObject(obj.getObjectId());
+				adapter.manageObject(object.getObjectId());
 				refreshList();
 				return true;
 			default:
@@ -213,14 +216,29 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		List<ObjectTool> tools = service.getTools();
 		if (tools != null)
 		{
-			Iterator<ObjectTool> tl = tools.iterator();
-			ObjectTool tool;
-			while(tl.hasNext())
+			for(final ObjectTool tool : tools)
 			{
-				tool = tl.next();
 				if ((int)tool.getId() == item.getItemId())
 				{
-					service.executeAction(obj.getObjectId(), tool.getData());
+					if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+					{	
+						new AlertDialog.Builder(this)
+							.setIcon(android.R.drawable.ic_dialog_alert)
+							.setTitle(R.string.confirm_tool_execution)
+							.setMessage(tool.getConfirmationText())
+							.setCancelable(true)
+							.setPositiveButton(R.string.yes, new OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which)
+								{
+									service.executeAction(object.getObjectId(), tool.getData());
+								}
+							})
+							.setNegativeButton(R.string.no, null)
+							.show();
+						return true;
+					}
+					service.executeAction(object.getObjectId(), tool.getData());
 					return true;
 				}
 			}

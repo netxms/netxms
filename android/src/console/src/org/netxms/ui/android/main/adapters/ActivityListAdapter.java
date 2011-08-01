@@ -4,7 +4,7 @@
 package org.netxms.ui.android.main.adapters;
 
 import org.netxms.ui.android.R;
-import org.netxms.ui.android.main.HomeScreen;
+import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.views.ActivityListElement;
 import android.content.Context;
 import android.view.View;

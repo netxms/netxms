@@ -34,4 +34,7 @@
 <string name="last_values_title">Last Values</string>
 <string name="tools">Tools</string>
 <string name="current_console_version">Build: 1.1.4.1</string>
+<string name="confirm_tool_execution">Confirm Execution</string>
+<string name="yes">Yes</string>
+<string name="no">No</string>
 </resources>

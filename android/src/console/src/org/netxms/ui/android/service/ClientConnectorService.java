@@ -18,12 +18,12 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.R;
-import org.netxms.ui.android.main.AlarmBrowser;
-import org.netxms.ui.android.main.HomeScreen;
-import org.netxms.ui.android.main.LastValues;
-import org.netxms.ui.android.main.NodeBrowser;
+import org.netxms.ui.android.main.activities.AlarmBrowser;
+import org.netxms.ui.android.main.activities.HomeScreen;
+import org.netxms.ui.android.main.activities.NodeBrowser;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
+import org.netxms.ui.android.service.tasks.ExecActionTask;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -36,6 +36,7 @@ import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.widget.Toast;
 
 /**
  * Background communication service for NetXMS client.
@@ -58,7 +59,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	private HomeScreen homeScreen = null;
 	private AlarmBrowser alarmBrowser = null;
 	private NodeBrowser nodeBrowser = null;
-	private LastValues lastValues = null;
 
 	private List<ObjectTool> objectTools = null;
 
@@ -240,33 +240,24 @@ public class ClientConnectorService extends Service implements SessionListener
 		synchronized(mutex)
 		{
 			if (alarms != null)
-			{
 				alarms.put(alarm.getId(), alarm);
-				showNotification(NOTIFY_ALARM, alarm.getMessage());
-				long[] list = { alarm.getSourceObjectId() };
-				try
-				{
-					if (session.findObjectById(list[0]) == null)
-						session.syncObjectSet(list, false, NXCSession.OBJECT_SYNC_NOTIFY);
-				}
-				catch(NXCException e)
-				{
-				}
-				catch(IOException e)
-				{
-				}
-			}
-			if (this.alarmBrowser != null)
-			{
-				alarmBrowser.runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
-						alarmBrowser.refreshList();
-					}
-				});
-			}
 		}
+		
+		syncObjectIfMissing(alarm.getSourceObjectId());
+
+		if (alarmBrowser != null)
+		{
+			alarmBrowser.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					alarmBrowser.refreshList();
+				}
+			});
+		}
+
+		GenericObject object = session.findObjectById(alarm.getSourceObjectId());
+		showNotification(NOTIFY_ALARM, ((object != null) ? object.getObjectName() : "<unknown>") + ": " + alarm.getMessage());
 	}
 
 	/**
@@ -279,19 +270,42 @@ public class ClientConnectorService extends Service implements SessionListener
 		synchronized(mutex)
 		{
 			if (alarms != null)
-			{
 				alarms.remove(id);
-			}
-			if (this.alarmBrowser != null)
+		}
+
+		if (alarmBrowser != null)
+		{
+			alarmBrowser.runOnUiThread(new Runnable()
 			{
-				alarmBrowser.runOnUiThread(new Runnable()
+				public void run()
 				{
-					public void run()
+					alarmBrowser.refreshList();
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Sync object with given ID if it is missing
+	 * @param objectId
+	 */
+	private void syncObjectIfMissing(final long objectId)
+	{
+		if (session.findObjectById(objectId) == null)
+		{
+			new Thread("Background object sync") {
+				@Override
+				public void run()
+				{
+					try
 					{
-						alarmBrowser.refreshList();
+						session.syncObjectSet(new long[] { objectId }, false, NXCSession.OBJECT_SYNC_NOTIFY);
 					}
-				});
-			}
+					catch(Exception e)
+					{
+					}
+				}
+			}.start();
 		}
 	}
 
@@ -322,7 +336,6 @@ public class ClientConnectorService extends Service implements SessionListener
 					}
 				});
 			}
-
 		}
 	}
 
@@ -417,8 +430,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		if (parent == null)
 			return new GenericObject[0];
 
-		// Make sure we request sync of all childs that are known but not synced
-		// yet.
+		// Make sure we request sync of all childs that are known but not synced yet.
 		// So that even if we don't have some, we'll get them later
 		// Also request notifications, to redraw views on data arrival
 		Iterator<Long> childs = parent.getChilds();
@@ -480,57 +492,59 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	/**
+	 * @param objectId
+	 * @return
+	 */
 	public DciValue[] getLastValues(long objectId)
 	{
 		try
 		{
 			return session.getLastValues(objectId);
 		}
-		catch(NXCException e)
-		{
-			return new DciValue[0];
-		}
-		catch(IOException e)
+		catch(Exception e)
 		{
 			return new DciValue[0];
 		}
 	}
 	
+	/**
+	 * 
+	 */
 	public void loadTools()
 	{
 		 try
 		{
 			this.objectTools = session.getObjectTools();
 		}
-		catch(NXCException e)
+		catch(Exception e)
 		{
 			this.objectTools = null;
 		}
-		catch(IOException e)
-		{
-			this.objectTools = null;
-		} 
 	}
 	
+	/**
+	 * Execute agent action. Communication with server will be done in separate worker thread.
+	 * 
+	 * @param objectId
+	 * @param action
+	 */
 	public void executeAction(long objectId, String action)
 	{
-		try
-		{
-			session.executeAction(objectId, action);
-		}
-		catch(NXCException e)
-		{
-		}
-		catch(IOException e)
-		{
-		}
+		new ExecActionTask().execute(new Object[] { session, objectId, action, this });
 	}
 	
+	/**
+	 * @return
+	 */
 	public List<ObjectTool> getTools()
 	{
 		return this.objectTools;
 	}
 
+	/**
+	 * @param homeScreen
+	 */
 	public void registerHomeScreen(HomeScreen homeScreen)
 	{
 		this.homeScreen = homeScreen;
@@ -553,14 +567,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * @param browser
-	 */
-	public void registerLastValues(LastValues browser)
-	{
-		this.lastValues = browser;
-	}
-
-	/**
 	 * @return the connectionStatus
 	 */
 	public String getConnectionStatus()
@@ -577,8 +583,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		this.connectionStatus = connectionStatus;
 		if (homeScreen != null)
 		{
-			homeScreen.runOnUiThread(new Runnable()
-			{
+			homeScreen.runOnUiThread(new Runnable() {
 				@Override
 				public void run()
 				{
@@ -586,5 +591,23 @@ public class ClientConnectorService extends Service implements SessionListener
 				}
 			});
 		}
+	}
+
+	/**
+	 * @return the session
+	 */
+	public NXCSession getSession()
+	{
+		return session;
+	}
+	
+	/**
+	 * Show toast with given text
+	 * 
+	 * @param text message text
+	 */
+	public void showToast(final String text)
+	{
+		Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 	}
 }

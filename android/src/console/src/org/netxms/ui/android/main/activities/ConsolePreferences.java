@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.android.main;
+package org.netxms.ui.android.main.activities;
 
 import org.netxms.ui.android.R;
 import android.os.Bundle;

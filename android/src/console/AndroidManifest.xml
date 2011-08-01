@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      android:versionCode="1" package="org.netxms.ui.android" android:versionName="1.1.4">
+      package="org.netxms.ui.android" android:versionName="1.1.4" android:versionCode="2">
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -17,25 +17,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
     	</service>
-        <activity android:name="org.netxms.ui.android.main.HomeScreen"
-                  android:label="@string/app_name"
-                  android:launchMode="singleTop">
+        <activity android:label="@string/app_name"
+                  android:launchMode="singleTop" android:name=".main.activities.HomeScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="org.netxms.ui.android.main.AlarmBrowser"
+        <activity android:name=".main.activities.AlarmBrowser"
                   android:label="@string/alarms_title">
         </activity>
-        <activity android:name="org.netxms.ui.android.main.ConsolePreferences"
+        <activity android:name=".main.activities.ConsolePreferences"
                   android:label="@string/settings">
         </activity>
-        <activity android:name="org.netxms.ui.android.main.NodeBrowser"
-                  android:label="@string/nodes_title">
+        <activity android:label="@string/nodes_title" android:name=".main.activities.NodeBrowser">
         </activity>
-        <activity android:name="org.netxms.ui.android.main.LastValues"
-                  android:label="@string/last_values_title">
+        <activity android:label="@string/last_values_title" android:name=".main.activities.LastValues">
         </activity>        
 </application>
 <uses-sdk android:targetSdkVersion="8" android:minSdkVersion="8"></uses-sdk>
