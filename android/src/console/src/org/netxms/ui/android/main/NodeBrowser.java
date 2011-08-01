@@ -40,6 +40,7 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	private long initialParent = 2;
 	private GenericObject currentParent = null;
 	private Stack<GenericObject> containerPath = new Stack<GenericObject>();
+	private long[] savedPath = null;
 
 	/*
 	 * (non-Javadoc)
@@ -62,8 +63,7 @@ public class NodeBrowser extends Activity implements ServiceConnection
 
 		listView = (ListView)findViewById(R.id.NodeList);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-		{
+		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
@@ -82,6 +82,20 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		});
 
 		registerForContextMenu(listView);
+		
+		// Restore saved state
+		if (savedInstanceState != null)
+			savedPath = savedInstanceState.getLongArray("currentPath");
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
+	 */
+	@Override
+	protected void onSaveInstanceState(Bundle outState)
+	{
+		outState.putLongArray("currentPath", getFullPathAsId());
+		super.onSaveInstanceState(outState);
 	}
 
 	/**
@@ -104,10 +118,24 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
 		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
-		// make sure adapter can read required additional data
 		adapter.setService(service);
-		// remember this activity in service, so that service can send updates
 		service.registerNodeBrowser(this);
+
+		// Restore to saved path if available
+		if ((savedPath != null) && (savedPath.length > 0))
+		{			
+			for(int i = 0; i < savedPath.length - 1; i++)
+			{
+				GenericObject object = service.findObjectById(savedPath[i]);
+				if (object == null)
+					break;
+				containerPath.push(object);
+			}
+			
+			currentParent = service.findObjectById(savedPath[savedPath.length - 1]);
+		}
+		savedPath = null;
+		
 		refreshList();
 	}
 
@@ -155,9 +183,6 @@ public class NodeBrowser extends Activity implements ServiceConnection
 				}
 			}
 		}
-			
-		// don't forget about 'cancel' item :)
-		menu.add(R.string.cancel);
 	}
 
 	/* (non-Javadoc)
@@ -271,6 +296,24 @@ public class NodeBrowser extends Activity implements ServiceConnection
 			sb.append(currentParent.getObjectName());
 		}
 		return sb.toString();
+	}
+
+	/**
+	 * Get full path to current position in object tree, as object identifiers
+	 * 
+	 * @return
+	 */
+	private long[] getFullPathAsId()
+	{
+		long[] path = new long[containerPath.size() + ((currentParent != null) ? 1 : 0)];
+		int i = 0;
+		for(GenericObject o : containerPath)
+			path[i++] = o.getObjectId();
+
+		if (currentParent != null)
+			path[i++] = currentParent.getObjectId();
+
+		return path;
 	}
 
 	/*
