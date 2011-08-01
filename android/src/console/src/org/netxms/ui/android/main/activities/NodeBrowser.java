@@ -6,6 +6,8 @@ package org.netxms.ui.android.main.activities;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
+
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
@@ -19,8 +21,10 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -77,7 +81,7 @@ public class NodeBrowser extends Activity implements ServiceConnection
 					currentParent = obj;
 					refreshList();
 				}
-				if (obj.getObjectClass() == GenericObject.OBJECT_NODE)
+				else if (obj.getObjectClass() == GenericObject.OBJECT_NODE)
 				{
 					showLastValues(obj.getObjectId());
 				}
@@ -222,10 +226,13 @@ public class NodeBrowser extends Activity implements ServiceConnection
 				{
 					if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
 					{	
+						String message = tool.getConfirmationText()
+								.replaceAll("%OBJECT_NAME%", object.getObjectName())
+								.replaceAll("%OBJECT_IP_ADDR%", object.getPrimaryIP().getHostAddress());
 						new AlertDialog.Builder(this)
 							.setIcon(android.R.drawable.ic_dialog_alert)
 							.setTitle(R.string.confirm_tool_execution)
-							.setMessage(tool.getConfirmationText())
+							.setMessage(message)
 							.setCancelable(true)
 							.setPositiveButton(R.string.yes, new OnClickListener() {
 								@Override
@@ -291,8 +298,9 @@ public class NodeBrowser extends Activity implements ServiceConnection
 
 		TextView curPath = (TextView)findViewById(R.id.ScreenTitleSecondary);
 		curPath.setText(getFullPath());
-		adapter.setNodes(service.findChilds(this.currentParent));
+		adapter.setNodes(currentParent.getChildsAsArray());
 		adapter.notifyDataSetChanged();
+		new SyncMissingObjectsTask(currentParent.getObjectId()).execute(new Object[] { currentParent.getChildIdList() });
 	}
 	
 	/**
@@ -345,5 +353,43 @@ public class NodeBrowser extends Activity implements ServiceConnection
 		service.registerNodeBrowser(null);
 		unbindService(this);
 		super.onDestroy();
+	}
+	
+	/**
+	 * Internal task for synching missing objects
+	 */
+	private class SyncMissingObjectsTask extends AsyncTask<Object, Void, Exception>
+	{
+		private long currentRoot;
+		
+		protected SyncMissingObjectsTask(long currentRoot)
+		{
+			this.currentRoot = currentRoot;
+		}
+		
+		@Override
+		protected Exception doInBackground(Object... params)
+		{
+			try
+			{
+				service.getSession().syncMissingObjects((long[])params[0], false, NXCSession.OBJECT_SYNC_WAIT);
+			}
+			catch(Exception e)
+			{
+				Log.d("nxclient/SyncMissingObjectsTask", "Exception while executing service.getSession().syncMissingObjects", e);
+				return e;
+			}
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Exception result)
+		{
+			if ((result == null) && (NodeBrowser.this.currentParent.getObjectId() == currentRoot))
+			{
+				adapter.setNodes(currentParent.getChildsAsArray());				
+				adapter.notifyDataSetChanged();
+			}
+		}
 	}
 }

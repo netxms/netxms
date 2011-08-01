@@ -4,7 +4,6 @@
 package org.netxms.ui.android.service;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.netxms.api.client.SessionListener;
@@ -418,43 +417,6 @@ public class ClientConnectorService extends Service implements SessionListener
 			}
 		}
 		return obj;
-	}
-
-	/**
-	 * @param parent
-	 * @return
-	 */
-	public GenericObject[] findChilds(GenericObject parent)
-	{
-		// protect from null pointer exception
-		if (parent == null)
-			return new GenericObject[0];
-
-		// Make sure we request sync of all childs that are known but not synced yet.
-		// So that even if we don't have some, we'll get them later
-		// Also request notifications, to redraw views on data arrival
-		Iterator<Long> childs = parent.getChilds();
-		long child;
-		long[] list = new long[1];
-		while(childs.hasNext())
-		{
-			child = childs.next();
-			if (session.findObjectById(child) == null)
-			{
-				list[0] = child;
-				try
-				{
-					session.syncObjectSet(list, false, NXCSession.OBJECT_SYNC_NOTIFY);
-				}
-				catch(NXCException e)
-				{
-				}
-				catch(IOException e)
-				{
-				}
-			}
-		}
-		return parent.getChildsAsArray();
 	}
 
 	/**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -391,6 +391,42 @@ public class GenericObject
 			}
 		}
 		return list.toArray(new GenericObject[list.size()]);
+	}
+	
+	/**
+	 * Return identifiers of all child objects
+	 * 
+	 * @return
+	 */
+	public long[] getChildIdList()
+	{
+		long[] list;
+		synchronized(childs)
+		{
+			list = new long[childs.size()];
+			int i = 0;
+			for(Long id : childs)
+				list[i++] = id;
+		}
+		return list;
+	}
+	
+	/**
+	 * Return identifiers of all parent objects
+	 * 
+	 * @return
+	 */
+	public long[] getParentIdList()
+	{
+		long[] list;
+		synchronized(parents)
+		{
+			list = new long[parents.size()];
+			int i = 0;
+			for(Long id : parents)
+				list[i++] = id;
+		}
+		return list;
 	}
 	
 	/**

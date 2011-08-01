@@ -3,6 +3,12 @@
  */
 package org.netxms.ui.android.main.adapters;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
@@ -23,11 +29,11 @@ import android.widget.TextView;
 public class AlarmListAdapter extends BaseAdapter
 {
 	private Context context;
-	private Alarm[] alarms = new Alarm[0];
+	private List<Alarm> alarms = new ArrayList<Alarm>(0);
 	private ClientConnectorService service;
 
-	private static final int[] imageId = { R.drawable.normal, R.drawable.warning, R.drawable.minor, R.drawable.major,
-			R.drawable.critical };
+	private static final int[] imageId = { R.drawable.normal, R.drawable.warning, R.drawable.minor, 
+	                                       R.drawable.major, R.drawable.critical };
 
 	/**
 	 * 
@@ -45,9 +51,28 @@ public class AlarmListAdapter extends BaseAdapter
 	 */
 	public void setAlarms(Alarm[] alarms)
 	{
-		this.alarms = alarms;
+		this.alarms = Arrays.asList(alarms);
+		Collections.sort(this.alarms, new Comparator<Alarm>() {
+			@Override
+			public int compare(Alarm object1, Alarm object2)
+			{
+				int rc = object2.getCurrentSeverity() - object1.getCurrentSeverity();
+				if (rc == 0)
+				{
+					rc = (int)(object1.getSourceObjectId() - object2.getSourceObjectId());
+					if (rc == 0)
+					{
+						rc = object1.getState() - object2.getState();
+					}
+				}
+				return rc;
+			}
+		});
 	}
 
+	/**
+	 * @param service
+	 */
 	public void setService(ClientConnectorService service)
 	{
 		this.service = service;
@@ -61,7 +86,7 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public int getCount()
 	{
-		return alarms.length;
+		return alarms.size();
 	}
 
 	/*
@@ -72,7 +97,7 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public Object getItem(int position)
 	{
-		return alarms[position];
+		return alarms.get(position);
 	}
 
 	/*
@@ -83,7 +108,7 @@ public class AlarmListAdapter extends BaseAdapter
 	@Override
 	public long getItemId(int position)
 	{
-		return alarms[position].getId();
+		return alarms.get(position).getId();
 	}
 
 	/**
@@ -106,8 +131,6 @@ public class AlarmListAdapter extends BaseAdapter
 		TextView message, source;
 		LinearLayout view, texts;
 		ImageView severity;
-		Alarm al;
-		GenericObject obj;
 
 		if (convertView == null)
 		{
@@ -143,19 +166,19 @@ public class AlarmListAdapter extends BaseAdapter
 		}
 
 		// get node name
-		al = alarms[position];
-		obj = service.findObjectById(al.getSourceObjectId());
-		if (obj == null)
+		Alarm alarm = alarms.get(position);
+		GenericObject object = service.findObjectById(alarm.getSourceObjectId());
+		if (object == null)
 		{
 			source.setText("<Unknown>");
 		}
 		else
 		{
-			source.setText(obj.getObjectName());
+			source.setText(object.getObjectName());
 		}
 
-		message.setText(al.getMessage());
-		severity.setImageResource(AlarmListAdapter.imageId[al.getCurrentSeverity()]);
+		message.setText(alarm.getMessage());
+		severity.setImageResource(AlarmListAdapter.imageId[alarm.getCurrentSeverity()]);
 
 		return view;
 	}

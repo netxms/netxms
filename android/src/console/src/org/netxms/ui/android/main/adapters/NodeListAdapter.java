@@ -3,6 +3,11 @@
  */
 package org.netxms.ui.android.main.adapters;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
@@ -16,13 +21,11 @@ import android.widget.TextView;
 
 /**
  * Adapter for alarm list
- * 
  */
-
 public class NodeListAdapter extends BaseAdapter
 {
 	private Context context;
-	private GenericObject[] currentNodes = new GenericObject[0];
+	private List<GenericObject> objectList = new ArrayList<GenericObject>(0);
 	private ClientConnectorService service;
 
 	private static final int[] imageId = { 
@@ -51,11 +54,25 @@ public class NodeListAdapter extends BaseAdapter
 	 * 
 	 * @param alarms
 	 */
-	public void setNodes(GenericObject[] nodes)
+	public void setNodes(GenericObject[] objects)
 	{
-		this.currentNodes = nodes;
+		objectList = Arrays.asList(objects);
+		Collections.sort(objectList, new Comparator<GenericObject>() {
+			@Override
+			public int compare(GenericObject object1, GenericObject object2)
+			{
+				int category1 = (object1.getObjectClass() == GenericObject.OBJECT_CONTAINER) ? 0 : 1;
+				int category2 = (object2.getObjectClass() == GenericObject.OBJECT_CONTAINER) ? 0 : 1;
+				if (category1 != category2)
+					return category1 - category2;
+				return object1.getObjectName().compareToIgnoreCase(object2.getObjectName());
+			}
+		});
 	}
 
+	/**
+	 * @param service
+	 */
 	public void setService(ClientConnectorService service)
 	{
 		this.service = service;
@@ -69,7 +86,7 @@ public class NodeListAdapter extends BaseAdapter
 	@Override
 	public int getCount()
 	{
-		return currentNodes.length;
+		return objectList.size();
 	}
 
 	/*
@@ -80,7 +97,7 @@ public class NodeListAdapter extends BaseAdapter
 	@Override
 	public Object getItem(int position)
 	{
-		return currentNodes[position];
+		return objectList.get(position);
 	}
 
 	/*
@@ -91,7 +108,7 @@ public class NodeListAdapter extends BaseAdapter
 	@Override
 	public long getItemId(int position)
 	{
-		return currentNodes[position].getObjectId();
+		return objectList.get(position).getObjectId();
 	}
 
 	/**
@@ -99,7 +116,7 @@ public class NodeListAdapter extends BaseAdapter
 	 */
 	public void unmanageObject(long id)
 	{
-		service.setObjectMgmtState(id,false);
+		service.setObjectMgmtState(id, false);
 	}
 
 	/**
@@ -107,7 +124,7 @@ public class NodeListAdapter extends BaseAdapter
 	 */
 	public void manageObject(long id)
 	{
-		service.setObjectMgmtState(id,true);
+		service.setObjectMgmtState(id, true);
 	}
 
 	/*
@@ -156,7 +173,7 @@ public class NodeListAdapter extends BaseAdapter
 		}
 
 		// get object name
-		node = currentNodes[position];
+		node = objectList.get(position);
 		if (node == null)
 		{
 			nodeName.setText("<Unknown>");

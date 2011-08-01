@@ -3,6 +3,12 @@
  */
 package org.netxms.ui.android.main.adapters;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
@@ -22,7 +28,7 @@ public class LastValuesAdapter extends BaseAdapter
 {
 	private Context context;
 	private ClientConnectorService service = null;
-	private DciValue[] currentValues = new DciValue[0];
+	private List<DciValue> currentValues = new ArrayList<DciValue>(0);
 
 	/**
 	 * 
@@ -40,7 +46,14 @@ public class LastValuesAdapter extends BaseAdapter
 	 */
 	public void setValues(DciValue[] values)
 	{
-		this.currentValues = values;
+		currentValues = Arrays.asList(values);
+		Collections.sort(currentValues, new Comparator<DciValue>() {
+			@Override
+			public int compare(DciValue object1, DciValue object2)
+			{
+				return object1.getDescription().compareToIgnoreCase(object2.getDescription());
+			}
+		});
 	}
 
 	/**
@@ -59,7 +72,7 @@ public class LastValuesAdapter extends BaseAdapter
 	@Override
 	public int getCount()
 	{
-		return currentValues.length;
+		return currentValues.size();
 	}
 
 	/*
@@ -70,7 +83,7 @@ public class LastValuesAdapter extends BaseAdapter
 	@Override
 	public Object getItem(int position)
 	{
-		return currentValues[position];
+		return currentValues.get(position);
 	}
 
 	/*
@@ -128,7 +141,7 @@ public class LastValuesAdapter extends BaseAdapter
 		}
 
 		// get node current name/value pair
-		DciValue item = currentValues[position];
+		DciValue item = currentValues.get(position);
 		if (item == null)
 		{
 			itemName.setText("<Unknown>");
