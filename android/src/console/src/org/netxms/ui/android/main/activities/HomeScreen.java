@@ -1,5 +1,6 @@
 package org.netxms.ui.android.main.activities;
 
+import org.netxms.base.NXCommon;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
 import org.netxms.ui.android.service.ClientConnectorService;
@@ -45,6 +46,9 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 		gridview.setOnItemClickListener(this);
 
 		statusText = (TextView)findViewById(R.id.ScreenTitleSecondary);
+		
+		TextView buildName = (TextView)findViewById(R.id.MainScreenVersion);
+		buildName.setText(getString(R.string.version) + " " + NXCommon.VERSION + "." + getString(R.string.build_number));
 	}
 
 	/* (non-Javadoc)
