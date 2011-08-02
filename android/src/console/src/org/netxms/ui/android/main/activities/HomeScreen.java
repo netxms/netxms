@@ -48,7 +48,7 @@ public class HomeScreen extends Activity implements OnItemClickListener, Service
 		statusText = (TextView)findViewById(R.id.ScreenTitleSecondary);
 		
 		TextView buildName = (TextView)findViewById(R.id.MainScreenVersion);
-		buildName.setText(getString(R.string.version) + " " + NXCommon.VERSION + "." + getString(R.string.build_number));
+		buildName.setText(getString(R.string.version) + " " + NXCommon.VERSION + " (" + getString(R.string.build_number) + ")");
 	}
 
 	/* (non-Javadoc)
