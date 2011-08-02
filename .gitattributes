@@ -1,4 +1,5 @@
 * text=auto !eol
+android/src/console/.externalToolBuilders/Build[!!-~]Number[!!-~]Generator.launch -text
 android/src/console/AndroidManifest.xml -text
 android/src/console/default.properties -text
 android/src/console/res/drawable-hdpi/alarms.png -text
