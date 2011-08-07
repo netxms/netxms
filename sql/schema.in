@@ -1400,3 +1400,23 @@ CREATE TABLE persons
 	status integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+
+/*
+** Job history
+*/
+
+CREATE TABLE job_history
+(
+	id integer not null,
+	time_created integer not null,
+	time_started integer not null,
+	time_finished integer not null,
+	job_type varchar(127) null,
+	description varchar(255) null,
+	node_id integer not null,
+	user_id integer not null,
+	status integer not null,
+	failure_message varchar(255) null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;

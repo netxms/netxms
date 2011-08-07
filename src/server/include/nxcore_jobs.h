@@ -72,6 +72,9 @@ private:
 	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
 	static void sendNotification(ClientSession *session, void *arg);
 
+	void createHistoryRecord();
+	void updateHistoryRecord(bool onStart);
+
 protected:
 	virtual bool run();
 	virtual bool onCancel();

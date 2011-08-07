@@ -256,6 +256,42 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V233 to V234
+//
+
+static BOOL H_UpgradeFromV233(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE job_history (")
+	                     _T("id integer not null,")
+	                     _T("time_created integer not null,")
+	                     _T("time_started integer not null,")
+	                     _T("time_finished integer not null,")
+	                     _T("job_type varchar(127) null,")
+	                     _T("description varchar(255) null,")
+	                     _T("node_id integer not null,")
+	                     _T("user_id integer not null,")
+	                     _T("status integer not null,")
+	                     _T("failure_message varchar(255) null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateConfigParam(_T("JobHistoryRetentionTime"), _T("90"), 1, 0));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET description=")
+	                  _T("'Generated when threshold check is rearmed for specific data collection item.#0D#0A")
+	                  _T("Parameters:#0D#0A")
+	                  _T("   1) Parameter name#0D#0A")
+	                  _T("   2) Item description#0D#0A")
+	                  _T("   3) Data collection item ID#0D#0A")
+	                  _T("   4) Instance#0D#0A")
+	                  _T("   5) Threshold value#0D#0A")
+	                  _T("   6) Actual value' WHERE event_code=18")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='234' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V232 to V233
 //
 
@@ -5450,6 +5486,7 @@ static struct
 	{ 230, 231, H_UpgradeFromV230 },
 	{ 231, 232, H_UpgradeFromV231 },
 	{ 232, 233, H_UpgradeFromV232 },
+	{ 233, 234, H_UpgradeFromV233 },
    { 0, NULL }
 };
 

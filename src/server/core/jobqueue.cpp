@@ -106,7 +106,7 @@ void ServerJobQueue::jobCompleted(ServerJob *job)
 		if (m_jobList[i] == job)
 		{
 			if ((job->getStatus() == JOB_COMPLETED) ||
-				 (job->getStatus() == JOB_CANCEL_PENDING))
+				 (job->getStatus() == JOB_CANCELLED))
 			{
 				// Delete and remove from list
 				delete job;

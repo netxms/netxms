@@ -59,6 +59,7 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DW
 	m_lastNotification = 0;
 	m_notificationLock = MutexCreate();
 	m_blockNextJobsOnFailure = false;
+	createHistoryRecord();
 }
 
 
@@ -157,6 +158,7 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 {
 	ServerJob *job = (ServerJob *)arg;
 	DbgPrintf(4, _T("Job %d started"), job->m_id);
+	job->updateHistoryRecord(true);
 
 	if (job->run())
 	{
@@ -164,12 +166,15 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 	}
 	else
 	{
-		if (job->m_status != JOB_CANCEL_PENDING)
+		if (job->m_status == JOB_CANCEL_PENDING)
+			job->changeStatus(JOB_CANCELLED);
+		else
 			job->changeStatus(JOB_FAILED);
 	}
 	job->m_workerThread = INVALID_THREAD_HANDLE;
 
-	DbgPrintf(4, _T("Job %d finished, status=%s"), job->m_id, (job->m_status == JOB_COMPLETED) ? _T("COMPLETED") : ((job->m_status == JOB_CANCEL_PENDING) ? _T("CANCELLED") : _T("FAILED")));
+	DbgPrintf(4, _T("Job %d finished, status=%s"), job->m_id, (job->m_status == JOB_COMPLETED) ? _T("COMPLETED") : ((job->m_status == JOB_CANCELLED) ? _T("CANCELLED") : _T("FAILED")));
+	job->updateHistoryRecord(false);
 
 	if (job->m_owningQueue != NULL)
 		job->m_owningQueue->jobCompleted(job);
@@ -300,4 +305,64 @@ void ServerJob::fillMessage(CSCPMessage *msg)
 		msg->SetVariable(VID_FAILURE_MESSAGE, (m_failureMessage != NULL) ? m_failureMessage : _T("Internal error"));
 	else
 		msg->SetVariable(VID_FAILURE_MESSAGE, CHECK_NULL_EX(m_failureMessage));
+}
+
+
+//
+// Create record in job history table
+//
+
+void ServerJob::createHistoryRecord()
+{
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	
+	DB_STATEMENT hStmt = DBPrepare(hdb, 
+		_T("INSERT INTO job_history (id,time_created,time_started,time_finished,job_type,")
+		_T("description,node_id,user_id,status) VALUES (?,?,0,0,?,?,?,?,?)"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC);
+		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_description), DB_BIND_STATIC);
+		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_remoteNode);
+		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_userId);
+		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_status);
+		DBExecute(hStmt);
+		DBFreeStatement(hStmt);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
+}
+
+
+//
+// Update job history record
+//
+
+void ServerJob::updateHistoryRecord(bool onStart)
+{
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	
+	DB_STATEMENT hStmt = DBPrepare(hdb, 
+		onStart ? 
+			_T("UPDATE job_history SET time_started=?,status=? WHERE id=?") : 
+			_T("UPDATE job_history SET time_finished=?,status=?,failure_message=? WHERE id=?"));
+	
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
+		if (onStart)
+		{
+			DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_failureMessage), DB_BIND_STATIC);
+			DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+		}
+		else
+		{
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+		}
+		DBExecute(hStmt);
+		DBFreeStatement(hStmt);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
 }
