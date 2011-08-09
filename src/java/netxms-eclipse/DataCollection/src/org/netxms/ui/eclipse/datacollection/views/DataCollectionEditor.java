@@ -378,6 +378,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
+				convertToTemplate();
 			}
 		};
 		actionConvert.setText("Convert to &template item...");
@@ -703,6 +704,76 @@ public class DataCollectionEditor extends ViewPart
 			protected String getErrorMessage()
 			{
 				return "Cannot copy data collection item from " + object.getObjectName();
+			}
+		}.start();
+	}
+
+	/**
+	 * Convert selected item(s) to template items
+	 */
+	@SuppressWarnings("unchecked")
+	private void convertToTemplate()
+	{
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createTemplateSelectionFilter());
+		if (dlg.open() != Window.OK)
+			return;
+		
+		GenericObject[] objects = dlg.getSelectedObjects(GenericObject.OBJECT_TEMPLATE);
+		if (objects.length == 0)
+			return;
+		final Template template = (Template)objects[0];
+		
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		Iterator<DataCollectionItem> it = selection.iterator();
+		final long[] dciList = new long[selection.size()];
+		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
+			dciList[i] = it.next().getId();
+		
+		new ConsoleJob("Convert data collection items for " + object.getObjectName() + " to template items", this, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				monitor.beginTask("Concert DCIs to template DCIs", 4);
+				
+				boolean needApply = true;
+				for(long id : template.getChildIdList())
+				{
+					if (id == dciConfig.getNodeId())
+					{
+						needApply = false;
+						break;
+					}
+				}
+				monitor.worked(1);
+				
+				dciConfig.copyItems(template.getObjectId(), dciList);
+				for(long id : dciList)
+					dciConfig.deleteItem(id);
+				dciConfig.close();
+				monitor.worked(1);
+						
+				if (needApply)
+				{
+					session.applyTemplate(template.getObjectId(), dciConfig.getNodeId());
+				}
+				Thread.sleep(750);
+				monitor.worked(1);
+				
+				dciConfig.open();
+				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						viewer.setInput(dciConfig.getItems());
+					}
+				});
+				monitor.done();
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot convert data collection item for " + object.getObjectName() + " to template item";
 			}
 		}.start();
 	}

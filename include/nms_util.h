@@ -355,6 +355,7 @@ public:
 	void add(INT64 value);
 	void add(QWORD value);
 	void add(double value);
+	void replace(int index, const TCHAR *value);
 	void clear();
 	int getSize() { return m_count; }
 	const TCHAR *getValue(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
@@ -385,6 +386,7 @@ public:
 
 	int add(void *object);
 	void *get(int index) { return ((index >= 0) && (index < m_size)) ? m_data[index] : NULL; }
+	void replace(int index, void *object);
 	void remove(int index);
 	void clear();
 

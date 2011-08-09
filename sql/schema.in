@@ -1414,6 +1414,7 @@ CREATE TABLE job_history
 	time_finished integer not null,
 	job_type varchar(127) null,
 	description varchar(255) null,
+	additional_info varchar(255) null,
 	node_id integer not null,
 	user_id integer not null,
 	status integer not null,

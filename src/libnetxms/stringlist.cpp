@@ -155,6 +155,20 @@ void StringList::add(double value)
 
 
 //
+// Replace string at given position
+//
+
+void StringList::replace(int index, const TCHAR *value)
+{
+	if ((index < 0) || (index >= m_count))
+		return;
+
+	safe_free(m_values[index]);
+	m_values[index] = _tcsdup(value);
+}
+
+
+//
 // Get index of given value. Returns zero-based index ot -1 
 // if given value not found in the list. If list contains duplicate values,
 // index of first occurence will be returned.

@@ -39,6 +39,9 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 
 	m_localFile = _tcsdup(localFile);
 	m_remoteFile = (remoteFile != NULL) ? _tcsdup(remoteFile) : NULL;
+
+	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, CHECK_NULL(m_remoteFile));
+	m_info = _tcsdup(buffer);
 }
 
 
@@ -51,6 +54,7 @@ FileUploadJob::~FileUploadJob()
 	m_node->DecRefCount();
 	safe_free(m_localFile);
 	safe_free(m_remoteFile);
+	safe_free(m_info);
 }
 
 
@@ -94,4 +98,14 @@ void FileUploadJob::uploadCallback(INT64 size, void *arg)
 		((FileUploadJob *)arg)->markProgress((int)(size * _LL(100) / ((FileUploadJob *)arg)->m_fileSize));
 	else
 		((FileUploadJob *)arg)->markProgress(100);
+}
+
+
+//
+// Get additional info for logging
+//
+
+const TCHAR *FileUploadJob::getAdditionalInfo()
+{
+	return m_info;
 }

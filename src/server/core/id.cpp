@@ -36,7 +36,7 @@
 
 static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, FIRST_USER_EVENT_ID, 1, 1, 
-                                                   1000, 1, 0x80000000,
+                                                   1, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
                                                    10000, 10000, 1, 1, 1, 1
                                                  };
@@ -55,7 +55,7 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Events"),
    _T("Data Collection Items"),
    _T("SNMP Trap"),
-   _T("--Images"),
+   _T("Jobs"),
    _T("Actions"),
    _T("Event Groups"),
    _T("Data Collection Thresholds"),
@@ -206,6 +206,15 @@ BOOL InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_ITEM] = max(1, DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available server job id
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM job_history"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_JOB] = max(1, DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 
@@ -397,7 +406,7 @@ DWORD CreateUniqueId(int iGroup)
 // Create unique ID for event log record
 //
 
-QWORD CreateUniqueEventId(void)
+QWORD CreateUniqueEventId()
 {
    QWORD qwId;
 

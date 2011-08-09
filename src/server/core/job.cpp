@@ -31,19 +31,12 @@ void UnregisterJob(DWORD jobId);
 
 
 //
-// Static members
-//
-
-DWORD ServerJob::s_freeId = 1;
-
-
-//
 // Constructor
 //
 
 ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node, DWORD userId, bool createOnHold)
 {
-	m_id = s_freeId++;
+	m_id = CreateUniqueId(IDG_JOB);
 	m_userId = userId;
 	m_type = _tcsdup(CHECK_NULL(type));
 	m_description = _tcsdup(CHECK_NULL(description));
@@ -345,24 +338,36 @@ void ServerJob::updateHistoryRecord(bool onStart)
 	
 	DB_STATEMENT hStmt = DBPrepare(hdb, 
 		onStart ? 
-			_T("UPDATE job_history SET time_started=?,status=? WHERE id=?") : 
-			_T("UPDATE job_history SET time_finished=?,status=?,failure_message=? WHERE id=?"));
+			_T("UPDATE job_history SET time_started=?,status=?,description=?,additional_info=? WHERE id=?") : 
+			_T("UPDATE job_history SET time_finished=?,status=?,description=?,additional_info=?,failure_message=? WHERE id=?"));
 	
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_description), DB_BIND_STATIC);
+		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, getAdditionalInfo(), DB_BIND_TRANSIENT);
 		if (onStart)
 		{
-			DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_failureMessage), DB_BIND_STATIC);
-			DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+			DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
 		}
 		else
 		{
-			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+			DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_failureMessage), DB_BIND_STATIC);
+			DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
 		}
 		DBExecute(hStmt);
 		DBFreeStatement(hStmt);
 	}
 	DBConnectionPoolReleaseConnection(hdb);
+}
+
+
+//
+// Get additional info for logging
+//
+
+const TCHAR *ServerJob::getAdditionalInfo()
+{
+	return _T("");
 }

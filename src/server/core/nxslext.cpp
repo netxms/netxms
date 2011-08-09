@@ -257,6 +257,32 @@ static int F_GetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 
 
 //
+// Set event's named parameter
+// First argument: event object
+// Second argument: parameter's name
+// Third argument: new value
+//
+
+static int F_SetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslEventClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	if (!argv[1]->isString() || !argv[2]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	Event *e = (Event *)object->getData();
+	e->setNamedParameter(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
+	*ppResult = new NXSL_Value;
+	return 0;
+}
+
+
+//
 // Post event
 // Syntax:
 //    PostEvent(node, event, tag, ...)

@@ -70,6 +70,22 @@ int Array::add(void *object)
 
 
 //
+// Replace object at given index
+//
+
+void Array::replace(int index, void *object)
+{
+	if ((index < 0) || (index >= m_size))
+		return;
+
+	if (m_objectOwner)
+		destroyObject(m_data[index]);
+
+	m_data[index] = object;
+}
+
+
+//
 // Remove element at given index
 //
 

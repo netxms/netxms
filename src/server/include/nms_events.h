@@ -104,6 +104,7 @@ public:
    QWORD getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.getIndexIgnoreCase(name)); }
 
 	void addParameter(const TCHAR *name, const TCHAR *value);
+	void setNamedParameter(const TCHAR *name, const TCHAR *value);
 
    const TCHAR *getCustomMessage() { return CHECK_NULL_EX(m_pszCustomMessage); }
    void setCustomMessage(const TCHAR *message) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (message != NULL) ? _tcsdup(message) : NULL; }

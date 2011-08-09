@@ -485,6 +485,26 @@ void Event::addParameter(const TCHAR *name, const TCHAR *value)
 
 
 //
+// Set value of named parameter
+//
+
+void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
+{
+	int index = m_parameterNames.getIndexIgnoreCase(name);
+	if (index != -1)
+	{
+		m_parameters.replace(index, _tcsdup(value));
+		m_parameterNames.replace(index, name);
+	}
+	else
+	{
+		m_parameters.add(_tcsdup(value));
+		m_parameterNames.add(name);
+	}
+}
+
+
+//
 // Fill message with event data
 //
 

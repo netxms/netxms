@@ -68,7 +68,6 @@ private:
 	CSCPMessage m_notificationMessage;
 	bool m_blockNextJobsOnFailure;
 
-	static DWORD s_freeId;
 	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
 	static void sendNotification(ClientSession *session, void *arg);
 
@@ -78,6 +77,7 @@ private:
 protected:
 	virtual bool run();
 	virtual bool onCancel();
+	virtual const TCHAR *getAdditionalInfo();
 
 	void notifyClients(bool isStatusChange);
 	void changeStatus(ServerJobStatus newStatus);
@@ -168,9 +168,11 @@ protected:
 	Node *m_node;
 	TCHAR *m_localFile;
 	TCHAR *m_remoteFile;
+	TCHAR *m_info;
 	INT64 m_fileSize;
 
 	virtual bool run();
+	virtual const TCHAR *getAdditionalInfo();
 	static void uploadCallback(INT64 size, void *arg);
 
 public:

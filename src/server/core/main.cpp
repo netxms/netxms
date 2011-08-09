@@ -653,6 +653,9 @@ retry_db_lock:
 		return FALSE;
 	DbgPrintf(2, _T("ID table created"));
 
+	// Update status for unfinished jobs in job history
+	DBQuery(g_hCoreDB, _T("UPDATE job_history SET status=4,failure_message='Aborted due to server shutdown or crash' WHERE status NOT IN (3,4,5)"));
+
 	// Load and compile scripts
 	LoadScripts();
 

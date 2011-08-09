@@ -138,7 +138,7 @@ typedef void * HSNMPSESSION;
 #define IDG_EVENT             2
 #define IDG_ITEM              3
 #define IDG_SNMP_TRAP         4
-//#define IDG_IMAGE             5
+#define IDG_JOB               5
 #define IDG_ACTION            6
 #define IDG_EVENT_GROUP       7
 #define IDG_THRESHOLD         8
