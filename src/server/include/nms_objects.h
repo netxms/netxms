@@ -28,6 +28,7 @@
 #include <geolocation.h>
 #include "nxcore_jobs.h"
 #include "nms_topo.h"
+#include "nxcore_reports.h"
 
 
 //
@@ -81,6 +82,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define BUILTIN_OID_POLICYROOT      5
 #define BUILTIN_OID_NETWORKMAPROOT  6
 #define BUILTIN_OID_DASHBOARDROOT   7
+#define BUILTIN_OID_REPORTROOT      8
 
 
 //
@@ -1490,6 +1492,65 @@ public:
 
 
 //
+// Report root
+//
+
+class NXCORE_EXPORTABLE ReportRoot : public UniversalRoot
+{
+public:
+   ReportRoot();
+   virtual ~ReportRoot();
+
+   virtual int Type() { return OBJECT_REPORTROOT; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+};
+
+
+//
+// Report group object
+//
+
+class NXCORE_EXPORTABLE ReportGroup : public Container
+{
+public:
+   ReportGroup() : Container() { }
+   ReportGroup(const TCHAR *pszName) : Container(pszName, 0) { }
+   virtual ~ReportGroup() { }
+
+   virtual int Type() { return OBJECT_REPORTGROUP; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+};
+
+
+//
+// Report object
+//
+
+class NXCORE_EXPORTABLE Report : public NetObj
+{
+protected:
+	ObjectArray<ReportParameter> *m_parameters;
+
+public:
+   Report();
+   virtual ~Report();
+
+   virtual int Type() { return OBJECT_REPORT; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB();
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	TCHAR *loadDefinition();
+	bool updateDefinition(const TCHAR *definition);
+};
+
+
+//
 // Container category information
 //
 
@@ -1553,6 +1614,7 @@ extern TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot;
 extern PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot;
 extern NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot;
 extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
+extern ReportRoot NXCORE_EXPORTABLE *g_pReportRoot;
 
 extern DWORD NXCORE_EXPORTABLE g_dwMgmtNode;
 extern DWORD g_dwNumCategories;

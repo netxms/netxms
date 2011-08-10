@@ -27,8 +27,7 @@
 // Service root class default constructor
 //
 
-ServiceRoot::ServiceRoot()
-            :UniversalRoot()
+ServiceRoot::ServiceRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_SERVICEROOT;
    _tcscpy(m_szName, _T("All Services"));
@@ -48,8 +47,7 @@ ServiceRoot::~ServiceRoot()
 // Template root class default constructor
 //
 
-TemplateRoot::TemplateRoot()
-             :UniversalRoot()
+TemplateRoot::TemplateRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_TEMPLATEROOT;
    _tcscpy(m_szName, _T("Templates"));
@@ -80,8 +78,7 @@ void TemplateRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 // Policy root class default constructor
 //
 
-PolicyRoot::PolicyRoot()
-           :UniversalRoot()
+PolicyRoot::PolicyRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_POLICYROOT;
    _tcscpy(m_szName, _T("Policies"));
@@ -112,8 +109,7 @@ void PolicyRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 // Network maps root class default constructor
 //
 
-NetworkMapRoot::NetworkMapRoot()
-               :UniversalRoot()
+NetworkMapRoot::NetworkMapRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_NETWORKMAPROOT;
    _tcscpy(m_szName, _T("Network Maps"));
@@ -141,11 +137,10 @@ void NetworkMapRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 
 
 //
-// Network maps root class default constructor
+// Dashboard tree root class default constructor
 //
 
-DashboardRoot::DashboardRoot()
-              :UniversalRoot()
+DashboardRoot::DashboardRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_DASHBOARDROOT;
    _tcscpy(m_szName, _T("Dashboards"));
@@ -167,6 +162,37 @@ DashboardRoot::~DashboardRoot()
 //
 
 void DashboardRoot::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   m_iStatus = STATUS_NORMAL;
+}
+
+
+//
+// Report tree root class default constructor
+//
+
+ReportRoot::ReportRoot() : UniversalRoot()
+{
+   m_dwId = BUILTIN_OID_REPORTROOT;
+   _tcscpy(m_szName, _T("Reports"));
+	m_iStatus = STATUS_NORMAL;
+}
+
+
+//
+// Report tree root class destructor
+//
+
+ReportRoot::~ReportRoot()
+{
+}
+
+
+//
+// Redefined status calculation for report tree root
+//
+
+void ReportRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }

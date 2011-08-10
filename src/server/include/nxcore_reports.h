@@ -16,13 +16,37 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: netxmsdb.h
+** File: nxcore_reports.h
 **
 **/
 
-#ifndef _netxmsdb_h
-#define _netxmsdb_h
+#ifndef _nxcore_reports_h_
+#define _nxcore_reports_h_
 
-#define DB_FORMAT_VERSION   235
+
+//
+// Report parameter
+//
+
+class ReportParameter
+{
+private:
+	TCHAR *m_name;
+	TCHAR *m_description;
+	TCHAR *m_defaultValue;
+	int m_dataType;
+
+public:
+	ReportParameter(CSCPMessage *msg, DWORD baseId);
+	ReportParameter(DB_RESULT hResult, int row);
+	~ReportParameter();
+
+	const TCHAR *getName() { return m_name; }
+	const TCHAR *getDescription() { return m_description; }
+	const TCHAR *getDefaultValue() { return m_defaultValue; }
+	int getDataType() { return m_dataType; }
+
+	void fillMessage(CSCPMessage *msg, DWORD baseId);
+};
 
 #endif

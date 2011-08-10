@@ -818,4 +818,16 @@ Language=English
 Invalid option %1 passed to SMS driver
 .
 
+MessageId=
+SymbolicName=MSG_RG_LOAD_FAILED
+Language=English
+Failed to load report group object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_REPORT_LOAD_FAILED
+Language=English
+Failed to load report object with id %1 from database
+.
+
 ;#endif

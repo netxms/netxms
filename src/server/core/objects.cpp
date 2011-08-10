@@ -35,6 +35,7 @@ TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot = NULL;
 PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
 NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
 DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
+ReportRoot NXCORE_EXPORTABLE *g_pReportRoot = NULL;
 
 DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 DWORD g_dwNumCategories = 0;
@@ -56,7 +57,7 @@ const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Inte
                                _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
                                _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
                                _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"), 
-                               _T("Dashboard") };
+                               _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report") };
 
 
 //
@@ -206,6 +207,10 @@ void ObjectsInit()
    g_pDashboardRoot = new DashboardRoot;
    NetObjInsert(g_pDashboardRoot, FALSE);
    
+	// Create "Report Root" object
+   g_pReportRoot = new ReportRoot;
+   NetObjInsert(g_pReportRoot, FALSE);
+   
 	DbgPrintf(1, _T("Built-in objects created"));
 
    // Start template update applying thread
@@ -271,6 +276,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_NETWORKMAP:
 			case OBJECT_DASHBOARDROOT:
 			case OBJECT_DASHBOARD:
+			case OBJECT_REPORTROOT:
+			case OBJECT_REPORTGROUP:
+			case OBJECT_REPORT:
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
@@ -367,6 +375,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_NETWORKMAP:
 		case OBJECT_DASHBOARDROOT:
 		case OBJECT_DASHBOARD:
+		case OBJECT_REPORTROOT:
+		case OBJECT_REPORTGROUP:
+		case OBJECT_REPORT:
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
@@ -755,7 +766,8 @@ static void LinkChildObjectsCallback(NetObj *object, void *data)
 		 (object->Type() == OBJECT_TEMPLATEGROUP) ||
 		 (object->Type() == OBJECT_POLICYGROUP) ||
 		 (object->Type() == OBJECT_NETWORKMAPGROUP) ||
-		 (object->Type() == OBJECT_DASHBOARD))
+		 (object->Type() == OBJECT_DASHBOARD) ||
+		 (object->Type() == OBJECT_REPORTGROUP))
 	{
 		((Container *)object)->linkChildObjects();
 	}
@@ -803,6 +815,7 @@ BOOL LoadObjects()
 	g_pPolicyRoot->LoadFromDB();
 	g_pMapRoot->LoadFromDB();
 	g_pDashboardRoot->LoadFromDB();
+	g_pReportRoot->LoadFromDB();
 
    // Load zones
    if (g_dwFlags & AF_ENABLE_ZONING)
@@ -1242,6 +1255,30 @@ BOOL LoadObjects()
          {
             delete pd;
             nxlog_write(MSG_DASHBOARD_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Load report group objects
+   DbgPrintf(2, _T("Loading report groups..."));
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_REPORTGROUP);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         ReportGroup *pGroup = new ReportGroup;
+         if (pGroup->CreateFromDB(dwId))
+         {
+            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pGroup;
+            nxlog_write(MSG_RG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
