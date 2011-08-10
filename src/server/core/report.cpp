@@ -45,6 +45,18 @@ Report::Report() : NetObj()
 
 
 //
+// Constructor
+//
+
+Report::Report(const TCHAR *name) : NetObj()
+{
+   m_iStatus = STATUS_NORMAL;
+	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	m_parameters = new ObjectArray<ReportParameter>(8, 8, true);
+}
+
+
+//
 // Destructor
 //
 
@@ -208,6 +220,11 @@ BOOL Report::CreateFromDB(DWORD dwId)
 void Report::CreateMessage(CSCPMessage *msg)
 {
 	NetObj::CreateMessage(msg);
+
+	msg->SetVariable(VID_NUM_PARAMETERS, (DWORD)m_parameters->size());
+	DWORD varId = VID_PARAM_LIST_BASE;
+	for(int i = 0; i < m_parameters->size(); i++, varId += 10)
+		m_parameters->get(i)->fillMessage(msg, varId);
 }
 
 
@@ -220,5 +237,60 @@ DWORD Report::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
+	if (request->IsVariableExist(VID_NUM_PARAMETERS))
+	{
+		m_parameters->clear();
+		int count = request->GetVariableLong(VID_NUM_PARAMETERS);
+		DWORD varId = VID_PARAM_LIST_BASE;
+		for(int i = 0; i < count; i++, varId += 10)
+			m_parameters->add(new ReportParameter(request, varId));
+	}
+
 	return NetObj::ModifyFromMessage(request, TRUE);
+}
+
+
+//
+// Load definition from database
+//
+
+TCHAR *Report::loadDefinition()
+{
+	TCHAR *value = NULL;
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT definition FROM reports WHERE id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			value = DBGetField(hResult, 0, 0, NULL, 0);
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
+	return value;
+}
+
+
+//
+// Update report's definition
+//
+
+bool Report::updateDefinition(const TCHAR *definition)
+{
+	bool success = false;
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE reports SET definition=? WHERE id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, definition, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
+		success = DBExecute(hStmt) ? true : false;
+		DBFreeStatement(hStmt);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
+	return success;
 }

@@ -1481,6 +1481,12 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
          if (iChildClass == OBJECT_NODE)
             return TRUE;
          break;
+      case OBJECT_REPORTROOT:
+      case OBJECT_REPORTGROUP:
+         if ((iChildClass == OBJECT_REPORTGROUP) || 
+             (iChildClass == OBJECT_REPORT))
+            return TRUE;
+         break;
       case -1:    // Creating object without parent
          if (iChildClass == OBJECT_NODE)
             return TRUE;   // OK only for nodes, because parent subnet will be created automatically

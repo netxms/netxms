@@ -1533,6 +1533,7 @@ protected:
 
 public:
    Report();
+   Report(const TCHAR *name);
    virtual ~Report();
 
    virtual int Type() { return OBJECT_REPORT; }

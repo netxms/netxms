@@ -3869,6 +3869,15 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 									pObject = NULL;
 								}
 								break;
+							case OBJECT_REPORTGROUP:
+								pObject = new ReportGroup(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								pObject->calculateCompoundStatus();	// Force status change to NORMAL
+								break;
+							case OBJECT_REPORT:
+								pObject = new Report(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								break;
 							default:
 								break;
 						}

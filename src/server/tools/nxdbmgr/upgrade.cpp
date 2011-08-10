@@ -5513,7 +5513,7 @@ static struct
 	{ 231, 232, H_UpgradeFromV231 },
 	{ 232, 233, H_UpgradeFromV232 },
 	{ 233, 234, H_UpgradeFromV233 },
-	{ 234, 235, H_UpgradeFromV233 },
+	{ 234, 235, H_UpgradeFromV234 },
    { 0, NULL }
 };
 

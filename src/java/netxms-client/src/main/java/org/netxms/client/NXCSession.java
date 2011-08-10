@@ -101,6 +101,9 @@ import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
+import org.netxms.client.objects.Report;
+import org.netxms.client.objects.ReportGroup;
+import org.netxms.client.objects.ReportRoot;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
@@ -289,6 +292,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_NETWORKSERVICE:
 				object = new NetworkService(msg, this);
+				break;
+			case GenericObject.OBJECT_REPORTROOT:
+				object = new ReportRoot(msg, this);
+				break;
+			case GenericObject.OBJECT_REPORTGROUP:
+				object = new ReportGroup(msg, this);
+				break;
+			case GenericObject.OBJECT_REPORT:
+				object = new Report(msg, this);
 				break;
 			default:
 				object = new GenericObject(msg, this);

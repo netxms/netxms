@@ -25,6 +25,15 @@
 
 
 //
+// report parameter data types
+//
+
+#define RPT_DT_STRING      0
+#define RPT_DT_TIMESTAMP   1
+#define RPT_DT_INTEGER     2
+
+
+//
 // Report parameter
 //
 
