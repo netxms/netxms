@@ -1260,6 +1260,29 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+   // Load report objects
+   DbgPrintf(2, _T("Loading reports..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM reports"));
+   if (hResult != 0)
+   {
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         Report *rpt = new Report;
+         if (rpt->CreateFromDB(dwId))
+         {
+            NetObjInsert(rpt, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete rpt;
+            nxlog_write(MSG_REPORT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load report group objects
    DbgPrintf(2, _T("Loading report groups..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_REPORTGROUP);

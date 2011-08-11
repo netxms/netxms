@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
