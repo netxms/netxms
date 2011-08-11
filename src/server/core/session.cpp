@@ -11197,6 +11197,16 @@ void ClientSession::executeReport(CSCPMessage *request)
 		{
 			if (object->Type() == OBJECT_REPORT)
 			{
+				StringList *parameters = new StringList;
+
+				int count = request->GetVariableLong(VID_NUM_PARAMETERS);
+				DWORD varId = VID_PARAM_LIST_BASE;
+				for(int i = 0; i < count; i++)
+					parameters->addPreallocated(request->GetVariableStr(varId++));
+
+				DWORD jobId = ((Report *)object)->execute(parameters, m_dwUserId);
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				msg.SetVariable(VID_JOB_ID, jobId);
 			}
 			else
 			{

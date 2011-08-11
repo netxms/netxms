@@ -653,6 +653,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\report_job.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rootobj.cpp"
 				>
 			</File>

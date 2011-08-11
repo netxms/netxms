@@ -75,7 +75,7 @@ void StringList::addPreallocated(TCHAR *value)
 		m_allocated += ALLOCATION_STEP;
 		m_values = (TCHAR **)realloc(m_values, sizeof(TCHAR *) * m_allocated);
 	}
-	m_values[m_count++] = value;
+	m_values[m_count++] = (value != NULL) ? value : _tcsdup(_T(""));
 }
 
 

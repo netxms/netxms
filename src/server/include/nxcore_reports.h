@@ -58,4 +58,24 @@ public:
 	void fillMessage(CSCPMessage *msg, DWORD baseId);
 };
 
+
+//
+// Report execution job
+//
+
+class Report;
+
+class ReportJob : public ServerJob
+{
+protected:
+	TCHAR *m_definition;
+	StringList *m_parameters;
+
+	virtual bool run();
+
+public:
+	ReportJob(Report *report, StringList *parameters, DWORD userId);
+	virtual ~ReportJob();
+};
+
 #endif

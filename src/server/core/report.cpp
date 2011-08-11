@@ -294,3 +294,16 @@ bool Report::updateDefinition(const TCHAR *definition)
 	DBConnectionPoolReleaseConnection(hdb);
 	return success;
 }
+
+
+//
+// Start report execution
+// Returns assigned job ID
+//
+
+DWORD Report::execute(StringList *parameters, DWORD userId)
+{
+	ReportJob *job = new ReportJob(this, parameters, userId);
+	AddJob(job);
+	return job->getId();
+}

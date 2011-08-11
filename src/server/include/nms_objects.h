@@ -1548,6 +1548,8 @@ public:
 
 	TCHAR *loadDefinition();
 	bool updateDefinition(const TCHAR *definition);
+
+	DWORD execute(StringList *parameters, DWORD userId);
 };
 
 
