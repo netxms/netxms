@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.1.3" useFeatures="false" includeLaunchers="true">
+<product name="NetXMS Management Console" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.1.4" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <text>
@@ -32,7 +32,6 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>
@@ -149,6 +148,7 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.netxms.ui.eclipse.objectview"/>
       <plugin id="org.netxms.ui.eclipse.osm"/>
       <plugin id="org.netxms.ui.eclipse.policymanager"/>
+      <plugin id="org.netxms.ui.eclipse.reporter"/>
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
       <plugin id="org.netxms.ui.eclipse.serviceview"/>

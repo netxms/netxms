@@ -440,10 +440,10 @@ typedef struct
 #define CMD_CREATE_MAP              0x00DA
 #define CMD_UPLOAD_FILE             0x00DB
 #define CMD_DELETE_FILE             0x00DC
-//#define CMD_WEBMAP_UPDATE_DATA      0x00DD
-//#define CMD_WEBMAP_DELETE           0x00DE
-//#define CMD_WEBMAP_GET_DATA         0x00DF
-//#define CMD_WEBMAP_GET_LIST         0x00E0
+#define CMD_GET_REPORT_DEFINITION   0x00DD
+#define CMD_SET_REPORT_DEFINITION   0x00DE
+#define CMD_EXECUTE_REPORT          0x00DF
+#define CMD_GET_REPORT_RESULTS      0x00E0
 #define CMD_CONFIG_SET_CLOB         0x00E1
 #define CMD_CONFIG_GET_CLOB         0x00E2
 #define CMD_RENAME_MAP              0x00E3
@@ -868,6 +868,7 @@ typedef struct
 #define VID_BACKGROUND_ZOOM         ((DWORD)387)
 #define VID_BRIDGE_BASE_ADDRESS     ((DWORD)388)
 #define VID_SUBMAP_ID               ((DWORD)389)
+#define VID_REPORT_DEFINITION       ((DWORD)390)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

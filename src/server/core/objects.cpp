@@ -1288,12 +1288,13 @@ BOOL LoadObjects()
    DbgPrintf(2, _T("Linking objects..."));
 	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
 
-   // Link childs to _T("Service Root" and "Template Root") objects
+   // Link childs to root objects
    g_pServiceRoot->LinkChildObjects();
    g_pTemplateRoot->LinkChildObjects();
    g_pPolicyRoot->LinkChildObjects();
    g_pMapRoot->LinkChildObjects();
 	g_pDashboardRoot->LinkChildObjects();
+	g_pReportRoot->LinkChildObjects();
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;

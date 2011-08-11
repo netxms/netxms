@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.dashboard.actions;
+package org.netxms.ui.eclipse.reporter.actions;
 
+import java.io.File;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -28,19 +29,19 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Dashboard;
-import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.client.objects.ReportGroup;
+import org.netxms.client.objects.ReportRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
+import org.netxms.ui.eclipse.reporter.Activator;
+import org.netxms.ui.eclipse.reporter.dialogs.CreateReportDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Create dashboard object
+ * Create report object
  *
  */
-public class CreateDashboard implements IObjectActionDelegate
+public class CreateReport implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private IWorkbenchPart part;
@@ -62,23 +63,26 @@ public class CreateDashboard implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Dashboard");
+		final CreateReportDialog dlg = new CreateReportDialog(window.getShell());
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create dashboard", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Create report object", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
-				session.createObject(cd);
+				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_REPORT, dlg.getObjectName(), parentId);
+				long reportId = session.createObject(cd);
+				File definitionFile = dlg.getDefinitionFile();
+				if (definitionFile != null)
+					session.setReportDefinition(reportId, definitionFile);
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create dashboard object \"" + dlg.getObjectName() + "\"";
+				return "Cannot create report object \"" + dlg.getObjectName() + "\"";
 			}
 		}.start();
 	}
@@ -92,7 +96,7 @@ public class CreateDashboard implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
-			if ((object instanceof Dashboard) || (object instanceof DashboardRoot))
+			if ((object instanceof ReportGroup) || (object instanceof ReportRoot))
 			{
 				parentId = ((GenericObject)object).getObjectId();
 			}

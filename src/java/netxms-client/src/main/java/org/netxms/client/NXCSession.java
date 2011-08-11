@@ -22,6 +22,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -4939,10 +4940,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @param nodeId
 	 *           node object ID
 	 * @return list of VLANs
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public List<VlanInfo> getVlans(long nodeId) throws IOException, NXCException
 	{
@@ -4967,5 +4966,85 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	public boolean isObjectsSynchronized()
 	{
 		return objectsSynchronized;
+	}
+	
+	/**
+	 * Get content of report definition file
+	 * 
+	 * @param reportId report object ID
+	 * @return content of report definition file
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public String getReportDefinition(long reportId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_REPORT_DEFINITION);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsString(NXCPCodes.VID_REPORT_DEFINITION);
+	}
+	
+	/**
+	 * Set report definition.
+	 * 
+	 * @param reportId report object ID
+	 * @param definition report definition
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void setReportDefinition(long reportId, String definition) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_REPORT_DEFINITION);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
+		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, definition);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Set report definition from file.
+	 * 
+	 * @param reportId report object ID
+	 * @param file file containing report definition
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws FileNotFoundException if given file does not exist or inaccessible
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void setReportDefinition(long reportId, File file) throws IOException, FileNotFoundException, NXCException
+	{
+		byte[] buffer = new byte[(int)file.length()];
+		FileInputStream in = new FileInputStream(file);
+		try
+		{
+			in.read(buffer);
+		}
+		finally
+		{
+			in.close();
+		}
+		setReportDefinition(reportId, new String(buffer));
+	}
+	
+	/**
+	 * Execute report.
+	 * 
+	 * @param reportId report object ID
+	 * @param parameters report parameters
+	 * @return job ID
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long executeReport(long reportId, String[] parameters) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_REPORT);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.length);
+		long varId = NXCPCodes.VID_PARAM_LIST_BASE;
+		for(int i = 0; i < parameters.length; i++)
+			msg.setVariable(varId++, parameters[i]);
+		sendMessage(msg);
+		NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
 	}
 }

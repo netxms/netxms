@@ -1023,6 +1023,9 @@ src/java/netxms-eclipse/ObjectBrowser/icons/object_browser.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy_root.gif -text
+src/java/netxms-eclipse/ObjectBrowser/icons/report.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/report_group.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/report_root.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/status/critical.png -text
@@ -1185,6 +1188,14 @@ src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/ac
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/dialogs/SelectInstallTargetDialog.java -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/propertypages/ConfigFile.java -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/propertypages/Policy.java -text
+src/java/netxms-eclipse/Reporter/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/Reporter/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/Reporter/build.properties -text
+src/java/netxms-eclipse/Reporter/plugin.xml -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/Activator.java -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/CreateReport.java -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/CreateReportGroup.java -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/dialogs/CreateReportDialog.java -text
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SNMP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SNMP/build.properties -text
