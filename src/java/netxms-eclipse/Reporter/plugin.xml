@@ -41,6 +41,29 @@
                menubarPath="objectcreation">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.reporter.actions.popup.object.Report"
+            objectClass="org.netxms.client.objects.Report">
+         <action
+               class="org.netxms.ui.eclipse.reporter.actions.OpenReport"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.reporter.popupActions.OpenReport"
+               label="&amp;Open report"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.reporter.views.ReportView"
+            icon="icons/report.png"
+            id="org.netxms.ui.eclipse.reporter.views.ReportView"
+            name="Report"
+            restorable="true">
+      </view>
    </extension>
 
 </plugin>

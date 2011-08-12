@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #define EXPORT __declspec(dllexport)
+#define HAVE_PQFFORMAT 1
 #else
 #define EXPORT
 #endif   /* _WIN32 */
@@ -43,5 +44,11 @@ typedef struct
 	PGresult *pFetchBuffer;
 	MUTEX mutexQueryLock;
 } PG_CONN;
+
+typedef struct
+{
+	PG_CONN *connection;
+	char name[64];
+} PG_STATEMENT;
 
 #endif   /* _pgsqldrv_h_ */

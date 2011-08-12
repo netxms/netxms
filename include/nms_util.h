@@ -680,7 +680,13 @@ extern "C"
 	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
    const TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(const TCHAR *line, TCHAR *buffer);
 	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
-   int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch);
+   int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch);
+   int LIBNETXMS_EXPORTABLE NumCharsW(const WCHAR *pszStr, WCHAR ch);
+#ifdef UNICODE
+#define NumChars NumCharsW
+#else
+#define NumChars NumCharsA
+#endif
 	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str);
 	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str);
 #ifdef UNICODE

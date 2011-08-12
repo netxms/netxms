@@ -255,14 +255,166 @@ extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
 
 
 //
+// Convert query from NetXMS portable format to native PostgreSQL format
+//
+
+static char *ConvertQuery(WCHAR *query)
+{
+	char *srcQuery = UTF8StringFromWideString(query);
+	int count = NumCharsA(srcQuery, '?');
+	if (count == 0)
+		return srcQuery;
+
+	char *dstQuery = (char *)malloc(strlen(srcQuery) + count * 2 + 1);
+	bool inString = false;
+	int pos = 1;
+	char *src, *dst;
+	for(src = srcQuery, dst = dstQuery; *src != 0; src++)
+	{
+		switch(*src)
+		{
+			case '\'':
+				*dst++ = *src;
+				inString = !inString;
+				break;
+			case '\\':
+				*dst++ = *src++;
+				*dst++ = *src;
+				break;
+			case '?':
+				if (inString)
+				{
+					*dst++ = '?';
+				}
+				else
+				{
+					*dst++ = '$';
+					if (pos < 10)
+					{
+						*dst++ = pos + '0';
+					}
+					else
+					{
+						*dst++ = pos / 10 + '0';
+						*dst++ = pos % 10 + '0';
+					}
+				}
+				break;
+			default:
+				*dst++ = *src;
+				break;
+		}
+	}
+	*dst = 0;
+	free(srcQuery);
+	return dstQuery;
+}
+
+
+//
+// Prepare statement
+//
+
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+{
+	if ((pConn == NULL) || (pwszQuery == NULL))
+		return NULL;
+
+	char *pszQueryUTF8 = ConvertQuery(pwszQuery);
+	PG_STATEMENT *hStmt = (PG_STATEMENT *)malloc(sizeof(PG_STATEMENT));
+	hStmt->connection = pConn;
+	snprintf(hStmt->name, 64, "stmt_%p", hStmt);
+
+	MutexLock(hStmt->connection->mutexQueryLock, INFINITE);
+	PGresult	*pResult = PQprepare(pConn->pHandle, hStmt->name, pszQueryUTF8, 0, NULL);
+	MutexUnlock(hStmt->connection->mutexQueryLock);
+	if ((pResult == NULL) || (PQresultStatus(pResult) != PGRES_COMMAND_OK))
+	{
+		free(hStmt);
+		hStmt = NULL;
+	}
+	if (pResult != NULL)
+		PQclear(pResult);
+	free(pszQueryUTF8);
+	return hStmt;
+}
+
+
+//
+// Bind parameter to prepared statement
+//
+
+extern "C" void EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+{
+}
+
+
+//
+// Execute prepared statement
+//
+
+extern "C" DWORD EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR *errorText)
+{
+	if ((pConn == NULL) || (hStmt == NULL))
+		return DBERR_INVALID_HANDLE;
+
+	MutexLock(pConn->mutexQueryLock, INFINITE);
+	PGresult	*pResult = PQexecPrepared(pConn->pHandle, hStmt->name, hStmt->pcount, hStmt->buffers, NULL, NULL, 0);
+	MutexUnlock(pConn->mutexQueryLock);
+
+	if (pResult == NULL)
+	{
+		if (errorText != NULL)
+			wcsncpy(errorText, L"Internal error (pResult is NULL in DrvExecute)", DBDRV_MAX_ERROR_TEXT);
+		return DBERR_OTHER_ERROR;
+	}
+
+	if (PQresultStatus(pResult) != PGRES_COMMAND_OK)
+	{
+		if (errorText != NULL)
+		{
+			MultiByteToWideChar(CP_UTF8, 0, PQerrorMessage(pConn->pHandle), -1, errorText, DBDRV_MAX_ERROR_TEXT);
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			RemoveTrailingCRLFW(errorText);
+		}
+		PQclear(pResult);
+		return (PQstatus(pConn->pHandle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+	}
+
+	PQclear(pResult);
+	if (errorText != NULL)
+		*errorText = 0;
+   return DBERR_SUCCESS;
+}
+
+
+//
+// Destroy prepared statement
+//
+
+extern "C" void EXPORT DrvFreeStatement(PG_STATEMENT *hStmt)
+{
+	if (hStmt == NULL)
+		return;
+
+	char query[256];
+	snprintf(query, 256, "DEALLOCATE %s", hStmt->name);
+
+	MutexLock(hStmt->connection->mutexQueryLock, INFINITE);
+	UnsafeDrvQuery(hStmt->connection, query, NULL);
+	MutexUnlock(hStmt->connection->mutexQueryLock);
+
+	free(hStmt);
+}
+
+
+//
 // Perform non-SELECT query
 //
 
 static BOOL UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText)
 {
-	PGresult	*pResult;
-
-	pResult = PQexec(pConn->pHandle, szQuery);
+	PGresult	*pResult = PQexec(pConn->pHandle, szQuery);
 
 	if (pResult == NULL)
 	{
@@ -292,11 +444,10 @@ static BOOL UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText
 extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
-   char *pszQueryUTF8;
 
 	if ((pConn != NULL) && (pwszQuery != NULL))
 	{
-      pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+      char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 		MutexLock(pConn->mutexQueryLock, INFINITE);
 		if (UnsafeDrvQuery(pConn, pszQueryUTF8, errorText))
       {
