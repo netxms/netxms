@@ -1651,7 +1651,9 @@ static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
 
    // Day of week
    ExtractWord(pszCurr, szValue);
-   TranslateStr(szValue, _T("7"), _T("0"));
+	for(int i = 0; szValue[i] != 0; i++)
+		if (szValue[i] == _T('7'))
+			szValue[i] = _T('0');
    return MatchScheduleElement(szValue, pCurrTime->tm_wday);
 }
 

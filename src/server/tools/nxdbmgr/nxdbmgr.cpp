@@ -229,16 +229,16 @@ BOOL SQLQuery(const TCHAR *pszQuery)
 
 BOOL SQLBatch(const TCHAR *pszBatch)
 {
+	String batch(pszBatch);
    TCHAR *pszBuffer, *pszQuery, *ptr;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    BOOL bRet = TRUE;
 
-   pszBuffer = _tcsdup(pszBatch);
-   TranslateStr(pszBuffer, _T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   TranslateStr(pszBuffer, _T("$SQL:TEXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   TranslateStr(pszBuffer, _T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+   batch.translate(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   batch.translate(_T("$SQL:TEXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
+   batch.translate(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
 
-   pszQuery = pszBuffer;
+   pszQuery = pszBuffer = batch.getBuffer();
    while(1)
    {
       ptr = _tcschr(pszQuery, _T('\n'));

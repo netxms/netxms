@@ -83,6 +83,7 @@ void Report::calculateCompoundStatus(BOOL bForcedRecalc)
 BOOL Report::SaveToDB(DB_HANDLE hdb)
 {
 	TCHAR query[1024];
+	DB_STATEMENT hStmt;
 
 	LockData();
 
@@ -113,7 +114,7 @@ BOOL Report::SaveToDB(DB_HANDLE hdb)
 		goto fail;
 
    // Save parameters
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM report_parameters WHERE report_id=?"));
+   hStmt = DBPrepare(hdb, _T("DELETE FROM report_parameters WHERE report_id=?"));
 	if (hStmt == NULL)
 		goto fail;
 

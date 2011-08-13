@@ -43,18 +43,15 @@ BOOL MigrateMaps();
 
 static BOOL CreateTable(const TCHAR *pszQuery)
 {
-   TCHAR *pszBuffer;
    BOOL bResult;
+	String query(pszQuery);
 
-   pszBuffer = (TCHAR *)malloc(_tcslen(pszQuery) * sizeof(TCHAR) + 256);
-   _tcscpy(pszBuffer, pszQuery);
-   TranslateStr(pszBuffer, _T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   TranslateStr(pszBuffer, _T("$SQL:TEXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   TranslateStr(pszBuffer, _T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+   query.translate(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   query.translate(_T("$SQL:TEXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
+   query.translate(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
    if (g_iSyntax == DB_SYNTAX_MYSQL)
-      _tcscat(pszBuffer, g_pszTableSuffix);
-   bResult = SQLQuery(pszBuffer);
-   free(pszBuffer);
+      query += g_pszTableSuffix;
+   bResult = SQLQuery(query);
    return bResult;
 }
 

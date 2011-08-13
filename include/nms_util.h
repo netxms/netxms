@@ -264,6 +264,7 @@ public:
 	String(const String &src);
    ~String();
 
+	TCHAR *getBuffer() { return m_pszBuffer; }
    void setBuffer(TCHAR *pszBuffer);
 
    const String& operator =(const TCHAR *pszStr);
@@ -699,7 +700,7 @@ extern "C"
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
 #endif
    BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
-   void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
+   /* deprecated */ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
    const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName);
    void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
 	BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize);

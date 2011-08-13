@@ -17,7 +17,8 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			ndd.cpp ndp.cpp netinfo.cpp netmap.cpp netobj.cpp \
 			netsrv.cpp node.cpp np.cpp nxsl_classes.cpp nxslext.cpp \
 			objects.cpp objtools.cpp package.cpp poll.cpp \
-			radius.cpp report.cpp rootobj.cpp script.cpp session.cpp \
+			radius.cpp report.cpp report_job.cpp rootobj.cpp \
+			rptparam.cpp script.cpp session.cpp \
 			situation.cpp smclp.cpp sms.cpp snmp.cpp snmptrap.cpp \
 			subnet.cpp syncer.cpp syslogd.cpp template.cpp \
 			tools.cpp tracert.cpp uniroot.cpp upload_job.cpp \
