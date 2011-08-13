@@ -638,61 +638,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQ
 			(iResult == SQL_SUCCESS) || 
 			(iResult == SQL_SUCCESS_WITH_INFO))
 		{
-			// Allocate result buffer and determine column info
-			pResult = (DB2DRV_QUERY_RESULT *)malloc(sizeof(DB2DRV_QUERY_RESULT));
-			SQLNumResultCols(pConn->sqlStatement, &wNumCols);
-			pResult->iNumCols = wNumCols;
-			pResult->iNumRows = 0;
-			pResult->pValues = NULL;
-			iCurrValue = 0;
-
-			// Get column names
-			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
-			for(i = 0; i < pResult->iNumCols; i++)
-			{
-				SQLWCHAR name[256];
-				SQLSMALLINT len;
-
-				iResult = SQLColAttributeW(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
-						SQL_DESC_NAME, name, 256, &len, NULL); 
-				if ((iResult == SQL_SUCCESS) || 
-						(iResult == SQL_SUCCESS_WITH_INFO))
-				{
-					name[len] = 0;
-					pResult->columnNames[i] = MBStringFromUCS2String(name);
-				}
-				else
-				{
-					pResult->columnNames[i] = strdup("");
-				}
-			}
-
-			// Fetch all data
-			while(iResult = SQLFetch(pConn->sqlStatement), 
-					(iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-			{
-				pResult->iNumRows++;
-				pResult->pValues = (NETXMS_WCHAR **)realloc(pResult->pValues, 
-						sizeof(NETXMS_WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
-				for(i = 1; i <= pResult->iNumCols; i++)
-				{
-					pDataBuffer[0] = 0;
-					iResult = SQLGetData(pConn->sqlStatement, (short)i, SQL_C_WCHAR,
-							pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
-					if (iDataSize != SQL_NULL_DATA)
-					{
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-						pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
-#else
-						pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
-#endif
-					}
-					else
-					{
-						pResult->pValues[iCurrValue++] = wcsdup(L"");
-					}
-				}
-			}
+			pResult = ProcessSelectResults(pConn->sqlStatement);
 			*pdwError = DBERR_SUCCESS;
 		}
 		else
