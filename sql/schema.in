@@ -1433,19 +1433,3 @@ CREATE TABLE reports
 	definition SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
-
-
-/*
-** Report parameters
-*/
-
-CREATE TABLE report_parameters
-(
-	report_id integer not null,
-	param_id integer not null,
-	name varchar(127) not null,
-	description SQL_TEXT null,
-	data_type integer not null,
-	default_value varchar(255) null,
-	PRIMARY KEY(report_id,param_id)
-) TABLE_TYPE;

@@ -25,41 +25,6 @@
 
 
 //
-// report parameter data types
-//
-
-#define RPT_DT_STRING      0
-#define RPT_DT_TIMESTAMP   1
-#define RPT_DT_INTEGER     2
-
-
-//
-// Report parameter
-//
-
-class ReportParameter
-{
-private:
-	TCHAR *m_name;
-	TCHAR *m_description;
-	TCHAR *m_defaultValue;
-	int m_dataType;
-
-public:
-	ReportParameter(CSCPMessage *msg, DWORD baseId);
-	ReportParameter(DB_RESULT hResult, int row);
-	~ReportParameter();
-
-	const TCHAR *getName() { return m_name; }
-	const TCHAR *getDescription() { return m_description; }
-	const TCHAR *getDefaultValue() { return m_defaultValue; }
-	int getDataType() { return m_dataType; }
-
-	void fillMessage(CSCPMessage *msg, DWORD baseId);
-};
-
-
-//
 // Report execution job
 //
 

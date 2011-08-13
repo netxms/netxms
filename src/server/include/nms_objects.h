@@ -1528,9 +1528,6 @@ public:
 
 class NXCORE_EXPORTABLE Report : public NetObj
 {
-protected:
-	ObjectArray<ReportParameter> *m_parameters;
-
 public:
    Report();
    Report(const TCHAR *name);

@@ -40,7 +40,6 @@ void ReportGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 Report::Report() : NetObj()
 {
    m_iStatus = STATUS_NORMAL;
-	m_parameters = new ObjectArray<ReportParameter>(8, 8, true);
 }
 
 
@@ -52,7 +51,6 @@ Report::Report(const TCHAR *name) : NetObj()
 {
    m_iStatus = STATUS_NORMAL;
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
-	m_parameters = new ObjectArray<ReportParameter>(8, 8, true);
 }
 
 
@@ -62,7 +60,6 @@ Report::Report(const TCHAR *name) : NetObj()
 
 Report::~Report()
 {
-	delete m_parameters;
 }
 
 
@@ -113,41 +110,6 @@ BOOL Report::SaveToDB(DB_HANDLE hdb)
 	if (!saveACLToDB(hdb))
 		goto fail;
 
-   // Save parameters
-   hStmt = DBPrepare(hdb, _T("DELETE FROM report_parameters WHERE report_id=?"));
-	if (hStmt == NULL)
-		goto fail;
-
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-   if (!DBExecute(hStmt))
-	{
-		DBFreeStatement(hStmt);
-		goto fail;
-	}
-	DBFreeStatement(hStmt);
-
-	hStmt = DBPrepare(hdb, _T("INSERT INTO report_parameters (report_id,param_id,name,description,data_type,default_value) VALUES (?,?,?,?,?,?)"));
-	if (hStmt == NULL)
-		goto fail;
-
-	for(int i = 0; i < m_parameters->size(); i++)
-	{
-		ReportParameter *p = m_parameters->get(i);
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)i);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, p->getName(), DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(p->getDescription()), DB_BIND_STATIC);
-		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)p->getDataType());
-		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(p->getDefaultValue()), DB_BIND_STATIC);
-		if (!DBExecute(hStmt))
-		{
-			DBFreeStatement(hStmt);
-			goto fail;
-		}
-	}
-
-	DBFreeStatement(hStmt);
-
 	UnlockData();
 	return TRUE;
 
@@ -166,8 +128,6 @@ BOOL Report::DeleteFromDB()
 	TCHAR query[256];
 
 	_sntprintf(query, 256, _T("DELETE FROM reports WHERE id=%d"), m_dwId);
-	QueueSQLRequest(query);
-	_sntprintf(query, 256, _T("DELETE FROM report_parameters WHERE report_id=%d"), m_dwId);
 	QueueSQLRequest(query);
 	return TRUE;
 }
@@ -190,22 +150,6 @@ BOOL Report::CreateFromDB(DWORD dwId)
    if (!m_bIsDeleted)
    {
 	   loadACLFromDB();
-
-	   // Load parameters
-      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT name,description,data_type,default_value FROM report_parameters WHERE report_id=? ORDER BY param_id"));
-		if (hStmt != NULL)
-		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-			DB_RESULT hResult = DBSelectPrepared(hStmt);
-			if (hResult != NULL)
-			{
-				int count = DBGetNumRows(hResult);
-				for(int i = 0; i < count; i++)
-					m_parameters->add(new ReportParameter(hResult, i));
-				DBFreeResult(hResult);
-			}
-			DBFreeStatement(hStmt);
-		}
 	}
 
 	m_iStatus = STATUS_NORMAL;
@@ -221,11 +165,6 @@ BOOL Report::CreateFromDB(DWORD dwId)
 void Report::CreateMessage(CSCPMessage *msg)
 {
 	NetObj::CreateMessage(msg);
-
-	msg->SetVariable(VID_NUM_PARAMETERS, (DWORD)m_parameters->size());
-	DWORD varId = VID_PARAM_LIST_BASE;
-	for(int i = 0; i < m_parameters->size(); i++, varId += 10)
-		m_parameters->get(i)->fillMessage(msg, varId);
 }
 
 
@@ -237,15 +176,6 @@ DWORD Report::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
 		LockData();
-
-	if (request->IsVariableExist(VID_NUM_PARAMETERS))
-	{
-		m_parameters->clear();
-		int count = request->GetVariableLong(VID_NUM_PARAMETERS);
-		DWORD varId = VID_PARAM_LIST_BASE;
-		for(int i = 0; i < count; i++, varId += 10)
-			m_parameters->add(new ReportParameter(request, varId));
-	}
 
 	return NetObj::ModifyFromMessage(request, TRUE);
 }

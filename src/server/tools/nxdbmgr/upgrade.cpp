@@ -263,15 +263,6 @@ static BOOL H_UpgradeFromV234(int currVersion, int newVersion)
 								_T("definition $SQL:TEXT null,")
 	                     _T("PRIMARY KEY(id))")));
 
-	CHK_EXEC(CreateTable(_T("CREATE TABLE report_parameters (")
-	                     _T("report_id integer not null,")
-	                     _T("param_id integer not null,")
-	                     _T("name varchar(127) not null,")
-								_T("description $SQL:TEXT null,")
-	                     _T("data_type integer not null,")
-	                     _T("default_value varchar(255) null,")
-	                     _T("PRIMARY KEY(report_id,param_id))")));
-
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='235' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }

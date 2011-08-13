@@ -661,10 +661,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\rptparam.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\script.cpp"
 				>
 			</File>
