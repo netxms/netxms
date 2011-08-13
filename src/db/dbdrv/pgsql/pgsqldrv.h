@@ -49,6 +49,9 @@ typedef struct
 {
 	PG_CONN *connection;
 	char name[64];
+	int pcount;		// Number of parameters
+	int allocated;	// Allocated buffers
+	char **buffers;	
 } PG_STATEMENT;
 
 #endif   /* _pgsqldrv_h_ */
