@@ -612,18 +612,12 @@ static DB2DRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 
 extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
-	long i, iResult, iCurrValue;
 	DB2DRV_QUERY_RESULT *pResult = NULL;
-	short wNumCols;
-	SQLLEN iDataSize;
-	BYTE *pDataBuffer;
-
-	pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
 
 	MutexLock(pConn->mutexQuery, INFINITE);
 
 	// Allocate statement handle
-	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+	long iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
@@ -653,7 +647,6 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQ
 	}
 
 	MutexUnlock(pConn->mutexQuery);
-	free(pDataBuffer);
 	return pResult;
 }
 
