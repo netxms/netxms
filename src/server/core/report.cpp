@@ -40,6 +40,7 @@ void ReportGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 Report::Report() : NetObj()
 {
    m_iStatus = STATUS_NORMAL;
+	m_definition = NULL;
 }
 
 
@@ -51,6 +52,7 @@ Report::Report(const TCHAR *name) : NetObj()
 {
    m_iStatus = STATUS_NORMAL;
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	m_definition = NULL;
 }
 
 
@@ -60,6 +62,7 @@ Report::Report(const TCHAR *name) : NetObj()
 
 Report::~Report()
 {
+	safe_free(m_definition);
 }
 
 
@@ -102,10 +105,27 @@ BOOL Report::SaveToDB(DB_HANDLE hdb)
 
 	if (isNewObject)
 	{
-      _sntprintf(query, 1024, _T("INSERT INTO reports (id,definition) VALUES (%d,'!--empty--!')"), m_dwId);
-		if (!DBQuery(hdb, query))
+      hStmt = DBPrepare(hdb, _T("INSERT INTO reports (id,definition) VALUES (?,?)"));
+		if (hStmt == NULL)
 			goto fail;
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 2, DB_SQLTYPE_TEXT, CHECK_NULL_EX(m_definition), DB_BIND_STATIC);
 	}
+	else
+	{
+      hStmt = DBPrepare(hdb, _T("UPDATE reports SET definition=? WHERE id=?"));
+		if (hStmt == NULL)
+			goto fail;
+		DBBind(hStmt, 1, DB_SQLTYPE_TEXT, CHECK_NULL_EX(m_definition), DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
+	}
+
+	if (!DBExecute(hStmt))
+	{
+		DBFreeStatement(hStmt);
+		goto fail;
+	}
+	DBFreeStatement(hStmt);
 
 	if (!saveACLToDB(hdb))
 		goto fail;
@@ -149,6 +169,26 @@ BOOL Report::CreateFromDB(DWORD dwId)
 
    if (!m_bIsDeleted)
    {
+		DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT definition FROM reports WHERE id=?"));
+		if (hStmt == NULL)
+			return FALSE;
+
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult == NULL)
+		{
+			DBFreeStatement(hStmt);
+			return FALSE;
+		}
+
+		if (DBGetNumRows(hResult) > 0)
+		{
+			safe_free(m_definition);
+			m_definition = DBGetField(hResult, 0, 0, NULL, 0);
+		}
+		DBFreeResult(hResult);
+		DBFreeStatement(hStmt);
+
 	   loadACLFromDB();
 	}
 
@@ -165,6 +205,7 @@ BOOL Report::CreateFromDB(DWORD dwId)
 void Report::CreateMessage(CSCPMessage *msg)
 {
 	NetObj::CreateMessage(msg);
+	msg->SetVariable(VID_REPORT_DEFINITION, CHECK_NULL_EX(m_definition));
 }
 
 
@@ -177,53 +218,13 @@ DWORD Report::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
+	if (request->IsVariableExist(VID_REPORT_DEFINITION))
+	{
+		safe_free(m_definition);
+		m_definition = request->GetVariableStr(VID_REPORT_DEFINITION);
+	}
+
 	return NetObj::ModifyFromMessage(request, TRUE);
-}
-
-
-//
-// Load definition from database
-//
-
-TCHAR *Report::loadDefinition()
-{
-	TCHAR *value = NULL;
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT definition FROM reports WHERE id=?"));
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
-		{
-			value = DBGetField(hResult, 0, 0, NULL, 0);
-			DBFreeResult(hResult);
-		}
-		DBFreeStatement(hStmt);
-	}
-	DBConnectionPoolReleaseConnection(hdb);
-	return value;
-}
-
-
-//
-// Update report's definition
-//
-
-bool Report::updateDefinition(const TCHAR *definition)
-{
-	bool success = false;
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE reports SET definition=? WHERE id=?"));
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, definition, DB_BIND_STATIC);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
-		success = DBExecute(hStmt) ? true : false;
-		DBFreeStatement(hStmt);
-	}
-	DBConnectionPoolReleaseConnection(hdb);
-	return success;
 }
 
 
@@ -232,7 +233,7 @@ bool Report::updateDefinition(const TCHAR *definition)
 // Returns assigned job ID
 //
 
-DWORD Report::execute(StringList *parameters, DWORD userId)
+DWORD Report::execute(StringMap *parameters, DWORD userId)
 {
 	ReportJob *job = new ReportJob(this, parameters, userId);
 	AddJob(job);

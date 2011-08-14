@@ -1528,6 +1528,9 @@ public:
 
 class NXCORE_EXPORTABLE Report : public NetObj
 {
+protected:
+	TCHAR *m_definition;
+
 public:
    Report();
    Report(const TCHAR *name);
@@ -1543,10 +1546,9 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-	TCHAR *loadDefinition();
-	bool updateDefinition(const TCHAR *definition);
+	const TCHAR *getDefinition() { return CHECK_NULL_EX(m_definition); }
 
-	DWORD execute(StringList *parameters, DWORD userId);
+	DWORD execute(StringMap *parameters, DWORD userId);
 };
 
 

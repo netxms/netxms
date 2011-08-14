@@ -564,8 +564,6 @@ private:
 	void getVlans(CSCPMessage *msg);
 	void receiveFile(CSCPMessage *request);
 	void deleteFile(CSCPMessage *request);
-	void getReportDefinition(CSCPMessage *msg);
-	void setReportDefinition(CSCPMessage *msg);
 	void executeReport(CSCPMessage *msg);
 	void getReportResults(CSCPMessage *msg);
 

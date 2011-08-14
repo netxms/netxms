@@ -103,5 +103,6 @@ typedef void * DBDRV_ASYNC_RESULT;
 #define DB_SQLTYPE_INTEGER 1
 #define DB_SQLTYPE_BIGINT  2
 #define DB_SQLTYPE_DOUBLE  3
+#define DB_SQLTYPE_TEXT    4
 
 #endif   /* _dbdrv_h_ */

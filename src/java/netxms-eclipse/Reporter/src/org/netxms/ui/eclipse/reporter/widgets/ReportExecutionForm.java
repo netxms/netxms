@@ -19,7 +19,11 @@
 package org.netxms.ui.eclipse.reporter.widgets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -40,9 +44,10 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Report;
-import org.netxms.client.reports.ReportParameter;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
+import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportDefinition;
+import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -55,6 +60,7 @@ public class ReportExecutionForm extends Composite
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private List<Control> fields = new ArrayList<Control>();
+	private List<ReportParameter> parameters;
 	
 	/**
 	 * @param parent
@@ -87,6 +93,7 @@ public class ReportExecutionForm extends Composite
 		
 		final Composite paramArea = toolkit.createComposite(section);
 		layout = new TableWrapLayout();
+		layout.numColumns = 2;
 		paramArea.setLayout(layout);
 		section.setClient(paramArea);
 		createParamEntryFields(paramArea);
@@ -122,19 +129,35 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void createParamEntryFields(Composite parent)
 	{
-		for(ReportParameter p : report.getParameters())
+		try
 		{
-			toolkit.createLabel(parent, p.getName(), SWT.WRAP);
-			switch(p.getDataType())
+			final ReportDefinition definition = ReportDefinition.createFromXml(report.getDefinition());
+			parameters = definition.getParameters();
+			for(ReportParameter p : parameters)
 			{
-				case ReportParameter.DT_STRING:
-					Text text = toolkit.createText(parent, p.getDefaultValue());
-					fields.add(text);
-					break;
-				default:
-					toolkit.createLabel(parent, "ERROR: field type " + p.getDataType() + " not implemented", SWT.WRAP);
-					break;
+				toolkit.createLabel(parent, p.getDisplayName());
+				Control control;
+				switch(p.getDataType())
+				{
+					case ReportParameter.INTEGER:
+						control = toolkit.createText(parent, p.getDefaultValue());
+						break;
+					default:		// everything else as string
+						control = toolkit.createText(parent, p.getDefaultValue());
+						break;
+				}
+				
+				TableWrapData td = new TableWrapData();
+				td.align = TableWrapData.FILL;
+				td.grabHorizontal = true;
+				control.setLayoutData(td);
+				fields.add(control);
 			}
+		}
+		catch(Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -143,12 +166,18 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void executeReport()
 	{
+		final Map<String, String> execParameters = new HashMap<String, String>(parameters.size());
+		for(int i = 0; i < parameters.size(); i++)
+		{
+			execParameters.put(parameters.get(i).getName(), ((Text)fields.get(i)).getText());
+		}
+		
 		new ConsoleJob("Execute report", workbenchPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				final long jobId = session.executeReport(report.getObjectId(), new String[0]);
+				final long jobId = session.executeReport(report.getObjectId(), execParameters);
 				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()

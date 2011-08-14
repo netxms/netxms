@@ -18,19 +18,16 @@
  */
 package org.netxms.client.objects;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.reports.ReportParameter;
 
 /**
  * Report
  */
 public class Report extends GenericObject
 {
-	private List<ReportParameter> parameters;
+	private String definition;
 	
 	/**
 	 * @param msg
@@ -39,15 +36,7 @@ public class Report extends GenericObject
 	public Report(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_PARAMETERS);
-		parameters = new ArrayList<ReportParameter>(count);
-		long varId = NXCPCodes.VID_PARAM_LIST_BASE;
-		for(int i = 0; i < count; i++)
-		{
-			parameters.add(new ReportParameter(msg, varId));
-			varId += 10;
-		}
+		definition = msg.getVariableAsString(NXCPCodes.VID_REPORT_DEFINITION);
 	}
 
 	/* (non-Javadoc)
@@ -60,13 +49,10 @@ public class Report extends GenericObject
 	}
 
 	/**
-	 * Get report's parameters. This method returns reference to internal
-	 * parameters list, so it should not be modified by caller.
-	 * 
-	 * @return the parameters
+	 * @return the definition
 	 */
-	public List<ReportParameter> getParameters()
+	public String getDefinition()
 	{
-		return parameters;
+		return definition;
 	}
 }

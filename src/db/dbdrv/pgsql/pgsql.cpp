@@ -298,6 +298,7 @@ static char *ConvertQuery(WCHAR *query)
 						*dst++ = pos / 10 + '0';
 						*dst++ = pos % 10 + '0';
 					}
+					pos++;
 				}
 				break;
 			default:

@@ -1231,12 +1231,6 @@ void ClientSession::processingThread()
 			case CMD_GET_VLANS:
 				getVlans(pMsg);
 				break;
-			case CMD_GET_REPORT_DEFINITION:
-				getReportDefinition(pMsg);
-				break;
-			case CMD_SET_REPORT_DEFINITION:
-				setReportDefinition(pMsg);
-				break;
 			case CMD_EXECUTE_REPORT:
 				executeReport(pMsg);
 				break;
@@ -11091,95 +11085,6 @@ void ClientSession::deleteFile(CSCPMessage *request)
 
 
 //
-// Get report definition
-//
-
-void ClientSession::getReportDefinition(CSCPMessage *request)
-{
-	CSCPMessage msg;
-
-	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
-
-	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
-	if (object != NULL)
-	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-		{
-			if (object->Type() == OBJECT_REPORT)
-			{
-				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				TCHAR *value = ((Report *)object)->loadDefinition();
-				msg.SetVariable(VID_REPORT_DEFINITION, CHECK_NULL_EX(value));
-			}
-			else
-			{
-				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-			}
-		}
-		else
-		{
-			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-		}
-	}
-	else
-	{
-		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
-	}
-
-	sendMessage(&msg);
-}
-
-
-//
-// Set report definition
-//
-
-void ClientSession::setReportDefinition(CSCPMessage *request)
-{
-	CSCPMessage msg;
-
-	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
-
-	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
-	if (object != NULL)
-	{
-		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
-		{
-			if (object->Type() == OBJECT_REPORT)
-			{
-				TCHAR *value = request->GetVariableStr(VID_REPORT_DEFINITION);
-				if (value != NULL)
-				{
-					((Report *)object)->updateDefinition(value);
-					free(value);
-				}
-				else
-				{
-					msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
-				}
-			}
-			else
-			{
-				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-			}
-		}
-		else
-		{
-			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-		}
-	}
-	else
-	{
-		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
-	}
-
-	sendMessage(&msg);
-}
-
-
-//
 // Execute report
 //
 
@@ -11197,12 +11102,16 @@ void ClientSession::executeReport(CSCPMessage *request)
 		{
 			if (object->Type() == OBJECT_REPORT)
 			{
-				StringList *parameters = new StringList;
+				StringMap *parameters = new StringMap;
 
 				int count = request->GetVariableLong(VID_NUM_PARAMETERS);
 				DWORD varId = VID_PARAM_LIST_BASE;
 				for(int i = 0; i < count; i++)
-					parameters->addPreallocated(request->GetVariableStr(varId++));
+				{
+					TCHAR *name = request->GetVariableStr(varId++);
+					TCHAR *value = request->GetVariableStr(varId++);
+					parameters->setPreallocated(name, value);
+				}
 
 				DWORD jobId = ((Report *)object)->execute(parameters, m_dwUserId);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);

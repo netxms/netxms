@@ -18,6 +18,10 @@
  */
 package org.netxms.client;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.List;
@@ -81,6 +85,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_RESPONSE           = 0x010000000000L;
 	public static final long MODIFY_NODE_FLAGS         = 0x020000000000L;
 	public static final long MODIFY_IFXTABLE_POLICY    = 0x040000000000L;
+	public static final long MODIFY_REPORT_DEFINITION  = 0x080000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -138,6 +143,7 @@ public class NXCObjectModificationData
 	private String response;
 	private int nodeFlags;
 	private int ifXTablePolicy;
+	private String reportDefinition;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1061,5 +1067,44 @@ public class NXCObjectModificationData
 	{
 		this.ifXTablePolicy = ifXTablePolicy;
 		flags |= MODIFY_IFXTABLE_POLICY;
+	}
+
+	/**
+	 * @return the reportDefinition
+	 */
+	public String getReportDefinition()
+	{
+		return reportDefinition;
+	}
+
+	/**
+	 * @param reportDefinition the reportDefinition to set
+	 */
+	public void setReportDefinition(String reportDefinition)
+	{
+		this.reportDefinition = reportDefinition;
+		flags |= MODIFY_REPORT_DEFINITION;
+	}
+
+	/**
+	 * Set report definition from file.
+	 * 
+	 * @param file file containing report definition
+	 * @throws IOException if file I/O error occurs
+	 * @throws FileNotFoundException if given file does not exist or inaccessible
+	 */
+	public void setReportDefinition(File file) throws IOException, FileNotFoundException
+	{
+		byte[] buffer = new byte[(int)file.length()];
+		FileInputStream in = new FileInputStream(file);
+		try
+		{
+			in.read(buffer);
+		}
+		finally
+		{
+			in.close();
+		}
+		setReportDefinition(new String(buffer));
 	}
 }

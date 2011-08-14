@@ -34,12 +34,12 @@ class ReportJob : public ServerJob
 {
 protected:
 	TCHAR *m_definition;
-	StringList *m_parameters;
+	StringMap *m_parameters;
 
 	virtual bool run();
 
 public:
-	ReportJob(Report *report, StringList *parameters, DWORD userId);
+	ReportJob(Report *report, StringMap *parameters, DWORD userId);
 	virtual ~ReportJob();
 };
 

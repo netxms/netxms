@@ -27,11 +27,11 @@
 // Constructor
 //
 
-ReportJob::ReportJob(Report *report, StringList *parameters, DWORD userId) 
+ReportJob::ReportJob(Report *report, StringMap *parameters, DWORD userId) 
 	: ServerJob(_T("EXECUTE_REPORT"), _T("Execute report"), g_dwMgmtNode, userId, false)
 {
 	m_parameters = parameters;
-	m_definition = report->loadDefinition();
+	m_definition = _tcsdup(report->getDefinition());
 
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Execute report %s"), report->Name());
@@ -56,11 +56,14 @@ ReportJob::~ReportJob()
 
 bool ReportJob::run()
 {
-	if ((m_definition == NULL) || (m_definition[0] == 0) || !_tcscmp(m_definition, _T("!--empty--!")))
+	if ((m_definition == NULL) || (m_definition[0] == 0))
 	{
 		setFailureMessage(_T("Report definition is missing or invalid"));
 		return false;
 	}
 
 	// TODO: execute report here
+
+
+	return true;
 }

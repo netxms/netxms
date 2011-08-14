@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.netxms.api.client.NetXMSClientException;
@@ -2863,6 +2864,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariableInt16(NXCPCodes.VID_USE_IFXTABLE, data.getIfXTablePolicy());
 		}
 		
+		if ((flags & NXCObjectModificationData.MODIFY_REPORT_DEFINITION) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, data.getReportDefinition());
+		}
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
@@ -2915,6 +2921,33 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		NXCObjectModificationData data = new NXCObjectModificationData(objectId);
 		data.setACL(acl);
 		data.setInheritAccessRights(inheritAccessRights);
+		modifyObject(data);
+	}
+
+	/**
+	 * Change report's definition (wrapper for modifyObject())
+	 * 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void setReportDefinition(final long objectId, final String definition) throws IOException, NXCException
+	{
+		NXCObjectModificationData data = new NXCObjectModificationData(objectId);
+		data.setReportDefinition(definition);
+		modifyObject(data);
+	}
+
+	/**
+	 * Change report's definition (wrapper for modifyObject())
+	 * 
+	 * @throws FileNotFoundException if given file does not exist or is inaccessible
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void setReportDefinition(final long objectId, final File file) throws FileNotFoundException, IOException, NXCException
+	{
+		NXCObjectModificationData data = new NXCObjectModificationData(objectId);
+		data.setReportDefinition(file);
 		modifyObject(data);
 	}
 
@@ -4969,64 +5002,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 	
 	/**
-	 * Get content of report definition file
-	 * 
-	 * @param reportId report object ID
-	 * @return content of report definition file
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public String getReportDefinition(long reportId) throws IOException, NXCException
-	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_REPORT_DEFINITION);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
-		sendMessage(msg);
-		final NXCPMessage response = waitForRCC(msg.getMessageId());
-		return response.getVariableAsString(NXCPCodes.VID_REPORT_DEFINITION);
-	}
-	
-	/**
-	 * Set report definition.
-	 * 
-	 * @param reportId report object ID
-	 * @param definition report definition
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public void setReportDefinition(long reportId, String definition) throws IOException, NXCException
-	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_REPORT_DEFINITION);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
-		msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, definition);
-		sendMessage(msg);
-		waitForRCC(msg.getMessageId());
-	}
-
-	/**
-	 * Set report definition from file.
-	 * 
-	 * @param reportId report object ID
-	 * @param file file containing report definition
-	 * @throws IOException if socket or file I/O error occurs
-	 * @throws FileNotFoundException if given file does not exist or inaccessible
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public void setReportDefinition(long reportId, File file) throws IOException, FileNotFoundException, NXCException
-	{
-		byte[] buffer = new byte[(int)file.length()];
-		FileInputStream in = new FileInputStream(file);
-		try
-		{
-			in.read(buffer);
-		}
-		finally
-		{
-			in.close();
-		}
-		setReportDefinition(reportId, new String(buffer));
-	}
-	
-	/**
 	 * Execute report.
 	 * 
 	 * @param reportId report object ID
@@ -5035,14 +5010,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException if socket or file I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public long executeReport(long reportId, String[] parameters) throws IOException, NXCException
+	public long executeReport(long reportId, Map<String, String> parameters) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_REPORT);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
-		msg.setVariableInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.length);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
 		long varId = NXCPCodes.VID_PARAM_LIST_BASE;
-		for(int i = 0; i < parameters.length; i++)
-			msg.setVariable(varId++, parameters[i]);
+		for(Entry<String, String> e : parameters.entrySet())
+		{
+			msg.setVariable(varId++, e.getKey());
+			msg.setVariable(varId++, e.getValue());
+		}
 		sendMessage(msg);
 		NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
