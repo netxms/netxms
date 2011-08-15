@@ -69,6 +69,7 @@
 #define DFILE_COMPILED_MIB    _T("\\mibs\\netxms.mib")
 #define DDIR_IMAGES           _T("\\images")
 #define DDIR_FILES            _T("\\files")
+#define DDIR_REPORTS          _T("\\reports")
 
 #else    /* _WIN32 */
 
@@ -103,6 +104,7 @@
 #define DFILE_COMPILED_MIB    _T("/mibs/netxms.mib")
 #define DDIR_IMAGES           _T("/images")
 #define DDIR_FILES            _T("/files")
+#define DDIR_REPORTS          _T("/reports")
 
 #endif   /* _WIN32 */
 

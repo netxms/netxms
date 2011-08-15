@@ -67,3 +67,14 @@ bool ReportJob::run()
 
 	return true;
 }
+
+
+//
+// Build name of data file
+//
+
+TCHAR *ReportJob::buildDataFileName(DWORD jobId, TCHAR *buffer, size_t bufferSize)
+{
+	_sntprintf(buffer, bufferSize, _T("%s") DDIR_REPORTS FS_PATH_SEPARATOR _T("job_%u"), g_szDataDir, jobId);
+	return buffer;
+}

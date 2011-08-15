@@ -41,6 +41,9 @@ protected:
 public:
 	ReportJob(Report *report, StringMap *parameters, DWORD userId);
 	virtual ~ReportJob();
+
+	TCHAR *buildDataFileName(TCHAR *buffer, size_t bufferSize) { return ReportJob::buildDataFileName(getId(), buffer, bufferSize); }
+	static TCHAR *buildDataFileName(DWORD jobId, TCHAR *buffer, size_t bufferSize);
 };
 
 #endif
