@@ -1433,6 +1433,9 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/helpers/Dashbo
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/helpers/TableSortingListener.java -text
 src/java/package.sh -text
 src/java/pom.xml -text
+src/java/report-generator/pom.xml -text
+src/java/report-generator/src/main/java/org/netxms/report/Exporter.java -text
+src/java/report-generator/src/main/java/org/netxms/report/Generator.java -text
 src/libexpat/Changes -text
 src/libexpat/MANIFEST -text
 src/libexpat/Makefile.am -text
