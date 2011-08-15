@@ -247,6 +247,18 @@ static BOOL CheckDataDir()
 		}
 	}
 
+	// Create directory for reports if does't exists
+	_tcscpy(szBuffer, g_szDataDir);
+	_tcscat(szBuffer, DDIR_REPORTS);
+	if (MKDIR(szBuffer) == -1)
+	{
+		if (errno != EEXIST)
+		{
+			nxlog_write(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
+			return FALSE;
+		}
+	}
+
 #undef MKDIR
 
 	return TRUE;
