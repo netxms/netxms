@@ -80,6 +80,7 @@ doc/internal/dci_perftab.txt -text
 doc/internal/netxms_architecture.gxml -text
 doc/internal/netxms_architecture.png -text
 doc/internal/netxms_architecture.svg -text
+doc/internal/report_definition.docx -text
 doc/manuals/client_library.doc -text
 doc/manuals/netxms_install_guide.odt -text
 doc/manuals/netxms_solution_guide.doc -text
@@ -1190,8 +1191,9 @@ src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/pr
 src/java/netxms-eclipse/Reporter/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Reporter/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/Reporter/build.properties -text
-src/java/netxms-eclipse/Reporter/icons/execute.png -text
+src/java/netxms-eclipse/Reporter/icons/execute.gif -text
 src/java/netxms-eclipse/Reporter/icons/report.png -text
+src/java/netxms-eclipse/Reporter/icons/schedule.png -text
 src/java/netxms-eclipse/Reporter/plugin.xml -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/Activator.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/CreateReport.java -text
@@ -1199,7 +1201,10 @@ src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/Crea
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/OpenReport.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/dialogs/CreateReportDialog.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/views/ReportView.java -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/FieldEditor.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/ReportExecutionForm.java -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/StringFieldEditor.java -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/TimestampFieldEditor.java -text
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SNMP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SNMP/build.properties -text

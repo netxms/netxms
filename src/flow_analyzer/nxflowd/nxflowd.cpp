@@ -55,6 +55,7 @@ static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
 static TCHAR s_dbServer[MAX_PATH] = _T("localhost");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
+static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
 static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
 static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
@@ -66,6 +67,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
    { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
+   { "DBSchema", CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_listenAddress },
    { "ListenPortTCP", CT_LONG, 0, 0, 0, 0, &g_tcpPort },
@@ -156,7 +158,7 @@ bool Initialize()
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	for(int i = 0; ; i++)
 	{
-		g_dbConnection = DBConnect(g_dbDriverHandle, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, errorText);
+		g_dbConnection = DBConnect(g_dbDriverHandle, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
 		if ((g_dbConnection != NULL) || (i == 5))
 			break;
 		ThreadSleep(5);

@@ -22,17 +22,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
@@ -59,7 +53,7 @@ public class ReportExecutionForm extends Composite
 	private Report report;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
-	private List<Control> fields = new ArrayList<Control>();
+	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
 	private List<ReportParameter> parameters;
 	
 	/**
@@ -85,7 +79,7 @@ public class ReportExecutionForm extends Composite
 		
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Parameters");
-		section.setDescription("Please provide parameters necessary to run this report in fields below");
+		section.setDescription("Provide parameters necessary to run this report in fields below");
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -100,6 +94,7 @@ public class ReportExecutionForm extends Composite
 		
 		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Actions");
+		section.setDescription("Select desired action from the list below");
 		td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
@@ -111,13 +106,23 @@ public class ReportExecutionForm extends Composite
 		section.setClient(actionArea);
 		
 		ImageHyperlink link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
-		link.setImage(Activator.getImageDescriptor("icons/execute.png").createImage());
+		link.setImage(Activator.getImageDescriptor("icons/execute.gif").createImage());
 		link.setText("Execute report");
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
 				executeReport();
+			}
+		});
+		
+		link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
+		link.setImage(Activator.getImageDescriptor("icons/schedule.png").createImage());
+		link.setText("Schedule report execution");
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
 			}
 		});
 	}
@@ -135,23 +140,26 @@ public class ReportExecutionForm extends Composite
 			parameters = definition.getParameters();
 			for(ReportParameter p : parameters)
 			{
-				toolkit.createLabel(parent, p.getDisplayName());
-				Control control;
+				FieldEditor editor;
 				switch(p.getDataType())
 				{
 					case ReportParameter.INTEGER:
-						control = toolkit.createText(parent, p.getDefaultValue());
+						editor = new StringFieldEditor(p, toolkit, parent);
+						break;
+					case ReportParameter.TIMESTAMP:
+						editor = new TimestampFieldEditor(p, toolkit, parent);
 						break;
 					default:		// everything else as string
-						control = toolkit.createText(parent, p.getDefaultValue());
+						editor = new StringFieldEditor(p, toolkit, parent);
 						break;
 				}
 				
 				TableWrapData td = new TableWrapData();
 				td.align = TableWrapData.FILL;
 				td.grabHorizontal = true;
-				control.setLayoutData(td);
-				fields.add(control);
+				td.colspan = p.getColumnSpan();
+				editor.setLayoutData(td);
+				fields.add(editor);
 			}
 		}
 		catch(Exception e)
@@ -169,7 +177,7 @@ public class ReportExecutionForm extends Composite
 		final Map<String, String> execParameters = new HashMap<String, String>(parameters.size());
 		for(int i = 0; i < parameters.size(); i++)
 		{
-			execParameters.put(parameters.get(i).getName(), ((Text)fields.get(i)).getText());
+			execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
 		}
 		
 		new ConsoleJob("Execute report", workbenchPart, Activator.PLUGIN_ID, null) {
