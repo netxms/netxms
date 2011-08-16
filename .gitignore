@@ -255,6 +255,7 @@ src/nxscript/.deps
 src/nxscript/.libs
 src/nxscript/Makefile
 src/nxscript/Makefile.in
+src/nxscript/nxscript
 src/private
 src/server/Makefile
 src/server/Makefile.in
@@ -292,6 +293,8 @@ src/server/drivers/lib/cisco/.deps
 src/server/drivers/lib/cisco/.libs
 src/server/drivers/lib/cisco/Makefile
 src/server/drivers/lib/cisco/Makefile.in
+src/server/include/Makefile
+src/server/include/Makefile.in
 src/server/include/messages.h
 src/server/libnxsrv/*.bin
 src/server/libnxsrv/.deps
@@ -335,6 +338,7 @@ src/server/tools/nxap/.deps
 src/server/tools/nxap/.libs
 src/server/tools/nxap/Makefile
 src/server/tools/nxap/Makefile.in
+src/server/tools/nxap/nxap
 src/server/tools/nxconfig/Makefile
 src/server/tools/nxconfig/Makefile.in
 src/server/tools/nxconfig/res/Makefile
@@ -344,10 +348,12 @@ src/server/tools/nxdbmgr/.libs
 src/server/tools/nxdbmgr/Makefile
 src/server/tools/nxdbmgr/Makefile.in
 src/server/tools/nxdbmgr/nxdbmgr
+src/server/tools/nxdbmgr/tables.cpp
 src/server/tools/nxencpasswd/.deps
 src/server/tools/nxencpasswd/.libs
 src/server/tools/nxencpasswd/Makefile
 src/server/tools/nxencpasswd/Makefile.in
+src/server/tools/nxencpasswd/nxencpasswd
 src/server/tools/nxget/.deps
 src/server/tools/nxget/.libs
 src/server/tools/nxget/Makefile
@@ -398,13 +404,19 @@ src/tools/nxcptest/.deps
 src/tools/nxcptest/.libs
 src/tools/nxcptest/Makefile
 src/tools/nxcptest/Makefile.in
+src/tools/nxcptest/nxcptest
 src/tools/nxdevcfg/.deps
 src/tools/nxdevcfg/.libs
 src/tools/nxdevcfg/Makefile
 src/tools/nxdevcfg/Makefile.in
+src/tools/nxdevcfg/nxdevcfg
 src/webui/Makefile
 src/webui/Makefile.in
+src/webui/nxhttpd/.deps
 src/webui/nxhttpd/MSG00001.bin
+src/webui/nxhttpd/Makefile
+src/webui/nxhttpd/Makefile.in
+src/webui/nxhttpd/messages.c
 src/webui/nxhttpd/messages.h
 src/webui/nxhttpd/static/Makefile
 src/webui/nxhttpd/static/Makefile.in
@@ -422,6 +434,7 @@ src/webui/nxhttpd/static/images/objects/Makefile
 src/webui/nxhttpd/static/images/objects/Makefile.in
 src/webui/nxhttpd/static/images/status/Makefile
 src/webui/nxhttpd/static/images/status/Makefile.in
+src/zlib/.deps
 src/zlib/Makefile
 src/zlib/Makefile.in
 /stamp-h1
