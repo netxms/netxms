@@ -19,8 +19,6 @@
 package org.netxms.ui.eclipse.reporter.views;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -40,7 +38,6 @@ public class ReportView extends ViewPart
 	
 	private NXCSession session;
 	private Report report;
-	private CTabFolder tabFolder;
 	private ReportExecutionForm executionForm;
 
 	/* (non-Javadoc)
@@ -63,19 +60,8 @@ public class ReportView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		tabFolder = new CTabFolder(parent, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
-		tabFolder.setUnselectedImageVisible(true);
-		tabFolder.setSimple(true);
-		
-		executionForm = new ReportExecutionForm(tabFolder, SWT.NONE, report);
+		executionForm = new ReportExecutionForm(parent, SWT.NONE, report);
 		executionForm.setWorkbenchPart(this);
-		
-		CTabItem item = new CTabItem(tabFolder, SWT.NONE);
-		item.setText("Execute");
-		item.setControl(executionForm);
-
-		item = new CTabItem(tabFolder, SWT.NONE);
-		item.setText("Results");
 	}
 
 	/* (non-Javadoc)
@@ -84,7 +70,6 @@ public class ReportView extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		tabFolder.setFocus();
+		executionForm.setFocus();
 	}
-
 }

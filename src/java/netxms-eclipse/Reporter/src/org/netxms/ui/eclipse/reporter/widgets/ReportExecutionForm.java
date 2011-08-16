@@ -24,8 +24,11 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
@@ -38,11 +41,14 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Report;
+import org.netxms.client.objects.ReportRoot;
+import org.netxms.client.reports.ReportResult;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportDefinition;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Report execution widget. Provides form with report-specific parameters.
@@ -55,6 +61,7 @@ public class ReportExecutionForm extends Composite
 	private ScrolledForm form;
 	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
 	private List<ReportParameter> parameters;
+	private SortableTableViewer resultList;
 	
 	/**
 	 * @param parent
@@ -67,22 +74,26 @@ public class ReportExecutionForm extends Composite
 		
 		setLayout(new FillLayout());
 		
+		/* FORM */
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
 		form.setText(report.getObjectName());
 		
 		TableWrapLayout layout = new TableWrapLayout();
+		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
 		
 		if (!report.getComments().isEmpty())
 			toolkit.createLabel(form.getBody(), report.getComments(), SWT.WRAP);
 		
+		/* Parameters section */
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Parameters");
 		section.setDescription("Provide parameters necessary to run this report in fields below");
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
+		td.colspan = 2;
 		section.setLayoutData(td);
 		
 		final Composite paramArea = toolkit.createComposite(section);
@@ -92,6 +103,7 @@ public class ReportExecutionForm extends Composite
 		section.setClient(paramArea);
 		createParamEntryFields(paramArea);
 		
+		/* Action section */
 		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Actions");
 		section.setDescription("Select desired action from the list below");
@@ -125,6 +137,23 @@ public class ReportExecutionForm extends Composite
 			{
 			}
 		});
+
+		/* results section */
+		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
+		section.setText("Results");
+		section.setDescription("The following execution results are available for rendering");
+		td = new TableWrapData();
+		td.align = TableWrapData.FILL;
+		td.grabHorizontal = true;
+		section.setLayoutData(td);
+		
+		final Composite resultArea = toolkit.createComposite(section);
+		layout = new TableWrapLayout();
+		resultArea.setLayout(layout);
+		section.setClient(resultArea);
+		createResultsSection(resultArea);
+		
+		refreshResultList();
 	}
 
 	/**
@@ -170,6 +199,38 @@ public class ReportExecutionForm extends Composite
 	}
 	
 	/**
+	 * Create "Results" section's content
+	 * 
+	 * @param parent parent composite
+	 */
+	private void createResultsSection(Composite parent)
+	{
+		GridLayout layout = new GridLayout();
+		parent.setLayout(layout);
+		
+		final String[] names = { "Job ID", "Execution Time" };
+		final int[] widths = { 90, 160 };
+		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		resultList.getControl().setLayoutData(gd);
+		resultList.setContentProvider(new ArrayContentProvider());
+
+		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(Activator.getImageDescriptor("icons/pdf.png").createImage());
+		link.setText("Render to PDF");
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
+	}
+	
+	/**
 	 * Execute report
 	 */
 	private void executeReport()
@@ -210,5 +271,36 @@ public class ReportExecutionForm extends Composite
 	public void setWorkbenchPart(IWorkbenchPart workbenchPart)
 	{
 		this.workbenchPart = workbenchPart;
+	}
+	
+	/**
+	 * Refresh result list
+	 */
+	private void refreshResultList()
+	{
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Refresh result list for report " + report.getObjectName(), workbenchPart, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final List<ReportResult> results = session.getReportResults(report.getObjectId());
+				getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (ReportExecutionForm.this.isDisposed())
+							return;
+						
+						resultList.setInput(results.toArray());
+					}
+				});
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot get result list for report " + report.getObjectName();
+			}
+		};
 	}
 }
