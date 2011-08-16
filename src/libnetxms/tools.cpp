@@ -1808,3 +1808,27 @@ void RefCountObject::decRefCount()
 		MutexUnlock(m_mutex);
 	}
 }
+
+
+//
+// mkstemp() implementation for Windows
+
+#ifdef _WIN32
+
+int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl)
+{
+	char *name = _mktemp(tmpl);
+	if (name == NULL)
+		return -1;
+	return _open(name, O_RDWR | O_BINARY | O_CREAT | O_EXCL| _O_SHORT_LIVED, _S_IREAD | _S_IWRITE);
+}
+
+int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl)
+{
+	WCHAR *name = _wmktemp(tmpl);
+	if (name == NULL)
+		return -1;
+	return _wopen(name, O_RDWR | O_BINARY | O_CREAT | O_EXCL| _O_SHORT_LIVED, _S_IREAD | _S_IWRITE);
+}
+
+#endif

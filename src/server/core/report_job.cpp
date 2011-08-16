@@ -22,6 +22,11 @@
 
 #include "nxcore.h"
 
+#ifdef _WIN32
+#define write _write
+#define close _close
+#endif
+
 
 //
 // Constructor
@@ -62,7 +67,6 @@ bool ReportJob::run()
 		return false;
 	}
 
-	// TODO: execute report here
 	// g_szConfigFile
 	// tmp-xml-file
 	// buildDataFileName
@@ -73,8 +77,18 @@ bool ReportJob::run()
 #else
 	definition = (char *)m_definition;
 #endif
-	char definitionFileName[] = "/tmp/nxreport.XXXXXX";
-	int fd = mkstemp(definitionFileName);
+
+#ifdef _WIN32
+	TCHAR definitionFileName[MAX_PATH] = _T("C:\\");
+	GetTempPath(MAX_PATH - 32, definitionFileName);
+	if (definitionFileName[_tcslen(definitionFileName) - 1] == _T('\\'))
+		_tcscat(definitionFileName, _T("nxreport.XXXXXX"));
+	else
+		_tcscat(definitionFileName, _T("\\nxreport.XXXXXX"));
+#else
+	TCHAR definitionFileName[] = _T("/tmp/nxreport.XXXXXX");
+#endif
+	int fd = _tmkstemp(definitionFileName);
 
 	// dump report definition
 	write(fd, definition, strlen(definition));
@@ -83,13 +97,12 @@ bool ReportJob::run()
 	// dump all variables
 	for(int i = 0; i < (int)m_parameters->getSize(); i++)
 	{
-		const char *key, *value;
 #ifdef UNICODE
-		key = UTF8StringFromWideString(m_parameters->getKeyByIndex(i));
-		value = UTF8StringFromWideString(m_parameters->getValueByIndex(i));
+		char *key = UTF8StringFromWideString(m_parameters->getKeyByIndex(i));
+		char *value = UTF8StringFromWideString(m_parameters->getValueByIndex(i));
 #else
-		key = m_parameters->getKeyByIndex(i);
-		value = m_parameters->getValueByIndex(i);
+		const char *key = m_parameters->getKeyByIndex(i);
+		const char *value = m_parameters->getValueByIndex(i);
 #endif
 		write(fd, key, strlen(key));
 		write(fd, "=", 1);
@@ -112,16 +125,16 @@ bool ReportJob::run()
 	TCHAR destFileName[256];
 	buildDataFileName(getId(), destFileName, 256);
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("%s -cp %s") FS_PATH_SEPARATOR _T("report-generator.jar org.netxms.report.Generator %s %hs %s"),
+	_sntprintf(buffer, 1024, _T("%s -cp %s") FS_PATH_SEPARATOR _T("report-generator.jar org.netxms.report.Generator %s %s %s"),
 			g_szJavaPath,
 			g_szDataDir,
 			g_szConfigFile,
 			definitionFileName,
 			destFileName);
 
-	bool ret = system(buffer) == 0;
+	bool ret = (_tsystem(buffer) == 0);
 
-	unlink(definitionFileName);
+	_tunlink(definitionFileName);
 
 	return ret;
 }

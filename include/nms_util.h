@@ -904,6 +904,16 @@ void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(void (*writer)(const TCHAR *,
 void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text);
 void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...);
 
+#ifdef _WIN32
+int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl);
+int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl);
+#ifdef UNICODE
+#define _tmkstemp wmkstemp
+#else
+#define _tmkstemp mkstemp
+#endif
+#endif
+
 #ifdef __cplusplus
 }
 #endif

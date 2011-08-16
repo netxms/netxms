@@ -239,6 +239,7 @@
 #define _topendir wopendir
 #define _treaddir wreaddir
 #define _tclosedir wclosedir
+#define _tmkstemp wmkstemp
 #define _ERR_error_tstring ERR_error_string_W
 
 #define _TDIR     DIRW
@@ -309,6 +310,7 @@
 #define _topendir opendir
 #define _treaddir readdir
 #define _tclosedir closedir
+#define _tmkstemp mkstemp
 #define _ERR_error_tstring ERR_error_string
 
 #define _TDIR     DIR
