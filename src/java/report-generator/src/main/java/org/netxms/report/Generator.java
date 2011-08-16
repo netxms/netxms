@@ -1,15 +1,20 @@
 package org.netxms.report;
 
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperReport;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -17,10 +22,11 @@ import java.util.Properties;
 @SuppressWarnings({"ProhibitedExceptionThrown"})
 public class Generator {
 
-    private final Map<String, Object> parameters = new HashMap<String, Object>(0);
+    private final Map<String, String> rawParameters = new HashMap<String, String>(0);
     private String configFileName;
     private String sourceFileName;
     private String destinationFileName;
+    private String reportDefinition;
 
     private Properties config;
     private static final String CONFIG_JDBCURL = "JDBCUrl";
@@ -47,13 +53,14 @@ public class Generator {
     }
 
     private static void help() {
-        System.out.println("Usage: <config> <source> <destination> [param1=INT:value] [param2=LIST:1,2,3] [param3=string_value]");
+        System.out.println("Usage: <config> <source> <destination>");
     }
 
     @SuppressWarnings({"ProhibitedExceptionDeclared"})
     private void run(final String[] args) throws Exception {
         parseCommandLine(args);
         loadConfig();
+        loadDefinitionAndParameters();
 
         Class.forName(config.getProperty(CONFIG_JDBCDRIVER));
         Connection connection = null;
@@ -76,6 +83,40 @@ public class Generator {
         }
     }
 
+    private void loadDefinitionAndParameters() throws IOException, UnsupportedEncodingException {
+        Reader reader = null;
+        try {
+            reader = new InputStreamReader(new FileInputStream(sourceFileName), "UTF-8");
+            final BufferedReader bufferedReader = new BufferedReader(reader);
+
+            boolean inBody = true;
+            final StringBuilder builder = new StringBuilder(4096);
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                if (inBody) {
+                    if (line.startsWith("###")) {
+                        inBody = false;
+                    } else {
+                        builder.append(line).append('\n');
+                    }
+                } else {
+                    final int position = line.indexOf('=');
+                    if (position != -1) {
+                        final String key = line.substring(0, position);
+                        final String value = line.substring(position + 1);
+                        rawParameters.put(key, value);
+                    }
+                }
+                line = bufferedReader.readLine();
+            }
+            reportDefinition = builder.toString();
+        } finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
+    }
+
     private void loadConfig() throws IOException {
         config = new Properties();
         FileInputStream inStream = null;
@@ -93,31 +134,24 @@ public class Generator {
         configFileName = args[0];
         sourceFileName = args[1];
         destinationFileName = args[2];
+    }
 
-        for (final String arg : Arrays.copyOfRange(args, 3, args.length)) {
-            final String[] keyValue = arg.split("=");
-            if (keyValue.length == 2) {
-                final String[] typeValue = keyValue[1].split(":");
-                if (typeValue.length == 2) {
-                    final String type = typeValue[0];
-                    final String key = keyValue[0];
-                    final String rawValue = typeValue[1];
-
-                    if ("INT".equals(type)) {
-                        parameters.put(key, Integer.valueOf(rawValue));
-                    } else if ("LIST".equals(type)) {
-                        final String[] listElements = rawValue.split(",");
-                        parameters.put(key, Arrays.asList(listElements));
-                    } else {
-                        parameters.put(key, rawValue);
-                    }
+    private void generate(final Connection connection) throws JRException, UnsupportedEncodingException {
+        //final JasperReport report = JasperCompileManager.compileReport(sourceFileName);
+        final JasperReport report = JasperCompileManager.compileReport(new ByteArrayInputStream(reportDefinition.getBytes("utf-8")));
+        final Map<String, Object> parameters = new HashMap<String, Object>(rawParameters.size());
+        for (final JRParameter parameter : report.getParameters()) {
+            final String name = parameter.getName();
+            final String rawParameter = rawParameters.get(name);
+            if (rawParameter != null) {
+                final Class valueClass = parameter.getValueClass();
+                if (Integer.class.equals(valueClass)) {
+                    parameters.put(name, Integer.valueOf(rawParameter));
+                } else {
+                    parameters.put(name, rawParameter);
                 }
             }
         }
-    }
-
-    private void generate(final Connection connection) throws JRException {
-        final JasperReport report = JasperCompileManager.compileReport(sourceFileName);
         JasperFillManager.fillReportToFile(report, destinationFileName, parameters, connection);
     }
 }
