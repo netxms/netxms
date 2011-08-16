@@ -43,6 +43,7 @@ TCHAR g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
 TCHAR g_szDbPassword[MAX_DB_PASSWORD] = _T("");
 TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
+TCHAR g_szJavaPath[MAX_DB_NAME] = _T("java");
 
 
 //
@@ -72,6 +73,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask },
+   { _T("JavaPath"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaPath },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

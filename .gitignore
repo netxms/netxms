@@ -21,11 +21,15 @@ contrib/mibs/netxms.mib
 /m4
 /private
 /release
+sql/Makefile
+sql/Makefile.in
+sql/dbinit_db2.sql
 sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
 sql/dbinit_oracle.sql
 sql/dbinit_pgsql.sql
 sql/dbinit_sqlite.sql
+sql/dbschema_db2.sql
 sql/dbschema_mssql.sql
 sql/dbschema_mysql.sql
 sql/dbschema_oracle.sql

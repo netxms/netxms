@@ -63,9 +63,67 @@ bool ReportJob::run()
 	}
 
 	// TODO: execute report here
+	// g_szConfigFile
+	// tmp-xml-file
+	// buildDataFileName
 
+	char *definition;
+#ifdef UNICODE
+	definition = UTF8StringFromWideString(m_definition);
+#else
+	definition = (char *)m_definition;
+#endif
+	char definitionFileName[] = "/tmp/nxreport.XXXXXX";
+	int fd = mkstemp(definitionFileName);
 
-	return true;
+	// dump report definition
+	write(fd, definition, strlen(definition));
+	write(fd, "\n### END OF REPORT DEFINITION\n", 29);
+
+	// dump all variables
+	for(int i = 0; i < (int)m_parameters->getSize(); i++)
+	{
+		const char *key, *value;
+#ifdef UNICODE
+		key = UTF8StringFromWideString(m_parameters->getKeyByIndex(i));
+		value = UTF8StringFromWideString(m_parameters->getValueByIndex(i));
+#else
+		key = m_parameters->getKeyByIndex(i);
+		value = m_parameters->getValueByIndex(i);
+#endif
+		write(fd, key, strlen(key));
+		write(fd, "=", 1);
+		write(fd, value, strlen(value));
+		write(fd, "\n", 1);
+
+#ifdef UNICODE
+		safe_free(key);
+		safe_free(value);
+#endif
+	}
+
+	close(fd);
+
+#ifdef UNICODE
+	safe_free(definition);
+#endif
+
+	// launch report generator
+	TCHAR destFileName[256];
+	buildDataFileName(getId(), destFileName, 256);
+	TCHAR buffer[1024];
+	_sntprintf(buffer, 1024, _T("%s -cp %s") FS_PATH_SEPARATOR _T("report-generator.jar org.netxms.report.Generator %s %hs %s"),
+			g_szJavaPath,
+			g_szDataDir,
+			g_szConfigFile,
+			definitionFileName,
+			destFileName);
+
+	bool ret = system(buffer) == 0;
+
+	unlink(definitionFileName);
+
+	return ret;
 }
 
 
