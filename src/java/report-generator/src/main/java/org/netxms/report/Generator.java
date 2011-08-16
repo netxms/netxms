@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+@SuppressWarnings({"ProhibitedExceptionThrown"})
 public class Generator {
 
     private final Map<String, Object> parameters = new HashMap<String, Object>(0);
@@ -23,7 +24,7 @@ public class Generator {
 
     private Properties config;
     private static final String CONFIG_JDBCURL = "JDBCUrl";
-    private static final String CONFIG_DBLOGIN = "DBLogin";
+    private static final String CONFIG_DBUSER = "DBUser";
     private static final String CONFIG_DBPASSWORD = "DBPassword";
     private static final String CONFIG_JDBCDRIVER = "JDBCDriver";
 
@@ -58,7 +59,15 @@ public class Generator {
         Connection connection = null;
         try {
             //noinspection CallToDriverManagerGetConnection
-            connection = DriverManager.getConnection(config.getProperty(CONFIG_JDBCURL), config.getProperty(CONFIG_DBLOGIN), config.getProperty(CONFIG_DBPASSWORD));
+            final String url = config.getProperty(CONFIG_JDBCURL);
+            final String user = config.getProperty(CONFIG_DBUSER);
+            final String password = config.getProperty(CONFIG_DBPASSWORD);
+
+            if (url == null) {
+                throw new RuntimeException(CONFIG_JDBCURL + " not found in config file");
+            }
+
+            connection = DriverManager.getConnection(url, user, password);
             generate(connection);
         } finally {
             if (connection != null) {
