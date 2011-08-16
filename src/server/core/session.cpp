@@ -161,6 +161,8 @@ DEFINE_THREAD_STARTER(findNodeConnection)
 DEFINE_THREAD_STARTER(findMacAddress)
 DEFINE_THREAD_STARTER(processConsoleCommand)
 DEFINE_THREAD_STARTER(sendMib)
+DEFINE_THREAD_STARTER(getReportResults)
+DEFINE_THREAD_STARTER(renderReport)
 
 
 //
@@ -1235,7 +1237,10 @@ void ClientSession::processingThread()
 				executeReport(pMsg);
 				break;
 			case CMD_GET_REPORT_RESULTS:
-				getReportResults(pMsg);
+				CALL_IN_NEW_THREAD(getReportResults, pMsg);
+				break;
+			case CMD_RENDER_REPORT:
+				CALL_IN_NEW_THREAD(renderReport, pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -11154,6 +11159,37 @@ void ClientSession::getReportResults(CSCPMessage *request)
 		{
 			if (object->Type() == OBJECT_REPORT)
 			{
+				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+				DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT job_id,generated FROM report_results WHERE report_id=?"));
+				if (hStmt != NULL)
+				{
+					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, object->Id());
+					DB_RESULT hResult = DBSelectPrepared(hStmt);
+					if (hResult != NULL)
+					{
+						int count = DBGetNumRows(hResult);
+						msg.SetVariable(VID_NUM_ROWS, (DWORD)count);
+
+						DWORD varId = VID_ROW_DATA_BASE;
+						for(int i = 0; i < count; i++)
+						{
+							msg.SetVariable(varId++, DBGetFieldULong(hResult, i, 0));
+							msg.SetVariable(varId++, DBGetFieldULong(hResult, i, 1));
+							varId += 8;
+						}
+						DBFreeResult(hResult);
+					}
+					else
+					{
+						msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+					}
+					DBFreeStatement(hStmt);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+				}
+				DBConnectionPoolReleaseConnection(hdb);
 			}
 			else
 			{
@@ -11169,6 +11205,23 @@ void ClientSession::getReportResults(CSCPMessage *request)
 	{
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Render report execution results into document
+//
+
+void ClientSession::renderReport(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
 
 	sendMessage(&msg);
 }

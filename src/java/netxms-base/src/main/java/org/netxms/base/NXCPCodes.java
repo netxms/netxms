@@ -249,7 +249,7 @@ public final class NXCPCodes
 	public static final int CMD_UPLOAD_FILE             = 0x00DB;
 	public static final int CMD_DELETE_FILE             = 0x00DC;
 	//public static final int CMD_GET_REPORT_DEFINITION   = 0x00DD;
-	//public static final int CMD_SET_REPORT_DEFINITION   = 0x00DE;
+	public static final int CMD_RENDER_REPORT           = 0x00DE;
 	public static final int CMD_EXECUTE_REPORT          = 0x00DF;
 	public static final int CMD_GET_REPORT_RESULTS      = 0x00E0;
 	public static final int CMD_CONFIG_SET_CLOB         = 0x00E1;

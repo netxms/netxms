@@ -440,8 +440,8 @@ typedef struct
 #define CMD_CREATE_MAP              0x00DA
 #define CMD_UPLOAD_FILE             0x00DB
 #define CMD_DELETE_FILE             0x00DC
-//#define CMD_GET_REPORT_DEFINITION   0x00DD
-//#define CMD_SET_REPORT_DEFINITION   0x00DE
+//#define CMD_GET_REPORT_RESULTS      0x00DD
+#define CMD_RENDER_REPORT           0x00DE
 #define CMD_EXECUTE_REPORT          0x00DF
 #define CMD_GET_REPORT_RESULTS      0x00E0
 #define CMD_CONFIG_SET_CLOB         0x00E1

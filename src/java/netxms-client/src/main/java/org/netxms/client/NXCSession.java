@@ -114,6 +114,7 @@ import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.reports.ReportResult;
 import org.netxms.client.situations.Situation;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpUsmCredential;
@@ -5024,5 +5025,30 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		sendMessage(msg);
 		NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
+	}
+	
+	/**
+	 * Get list of report execution results. Results returned are ready for rendering.
+	 * 
+	 * @param reportId report object ID
+	 * @return list of report execution results
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<ReportResult> getReportResults(long reportId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_REPORT);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
+		sendMessage(msg);
+		NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ROWS);
+		List<ReportResult> results = new ArrayList<ReportResult>(count);
+		long varId = NXCPCodes.VID_ROW_DATA_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			results.add(new ReportResult(response, varId));
+			varId += 10;
+		}
+		return results;
 	}
 }

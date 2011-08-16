@@ -393,6 +393,8 @@ private:
 	DECLARE_THREAD_STARTER(findMacAddress)
 	DECLARE_THREAD_STARTER(processConsoleCommand)
 	DECLARE_THREAD_STARTER(sendMib)
+	DECLARE_THREAD_STARTER(getReportResults)
+	DECLARE_THREAD_STARTER(renderReport)
 
    void readThread();
    void writeThread();
@@ -566,6 +568,7 @@ private:
 	void deleteFile(CSCPMessage *request);
 	void executeReport(CSCPMessage *msg);
 	void getReportResults(CSCPMessage *msg);
+	void renderReport(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
