@@ -253,6 +253,23 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V235 to V236
+//
+
+static BOOL H_UpgradeFromV235(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE report_results (")
+	                     _T("report_id integer not null,")
+	                     _T("generated integer not null,")
+	                     _T("job_id integer not null,")
+	                     _T("PRIMARY KEY(report_id,job_id))")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='236' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V234 to V235
 //
 
@@ -5502,6 +5519,7 @@ static struct
 	{ 232, 233, H_UpgradeFromV232 },
 	{ 233, 234, H_UpgradeFromV233 },
 	{ 234, 235, H_UpgradeFromV234 },
+	{ 235, 236, H_UpgradeFromV235 },
    { 0, NULL }
 };
 

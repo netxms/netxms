@@ -1433,3 +1433,16 @@ CREATE TABLE reports
 	definition SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+
+/*
+** Report Results
+*/
+
+CREATE TABLE report_results
+(
+	report_id integer not null,
+	generated integer not null,
+	job_id integer not null,
+	PRIMARY KEY(report_id, job_id)
+) TABLE_TYPE;
