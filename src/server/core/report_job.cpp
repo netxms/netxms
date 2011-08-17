@@ -39,7 +39,7 @@ ReportJob::ReportJob(Report *report, StringMap *parameters, DWORD userId)
 	m_definition = _tcsdup(report->getDefinition());
 
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("Execute report %s"), report->Name());
+	_sntprintf(buffer, 1024, _T("Execute report \"%s\""), report->Name());
 	setDescription(buffer);
 }
 
@@ -71,13 +71,6 @@ bool ReportJob::run()
 	// tmp-xml-file
 	// buildDataFileName
 
-	char *definition;
-#ifdef UNICODE
-	definition = UTF8StringFromWideString(m_definition);
-#else
-	definition = (char *)m_definition;
-#endif
-
 #ifdef _WIN32
 	TCHAR definitionFileName[MAX_PATH] = _T("C:\\");
 	GetTempPath(MAX_PATH - 32, definitionFileName);
@@ -89,6 +82,19 @@ bool ReportJob::run()
 	TCHAR definitionFileName[] = _T("/tmp/nxreport.XXXXXX");
 #endif
 	int fd = _tmkstemp(definitionFileName);
+	if (fd == -1)
+	{
+		DbgPrintf(4, _T("ReportJob: call to mkstemp() failed, definitionFileName=\"%s\""), definitionFileName);
+		setFailureMessage(_T("Cannot create report definition file"));
+		return false;
+	}
+
+	char *definition;
+#ifdef UNICODE
+	definition = UTF8StringFromWideString(m_definition);
+#else
+	definition = (char *)m_definition;
+#endif
 
 	// dump report definition
 	write(fd, definition, strlen(definition));
@@ -125,13 +131,14 @@ bool ReportJob::run()
 	TCHAR destFileName[256];
 	buildDataFileName(getId(), destFileName, 256);
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("%s -cp %s") FS_PATH_SEPARATOR _T("report-generator.jar org.netxms.report.Generator %s %s %s"),
+	_sntprintf(buffer, 1024, _T("\"%s\" -cp \"%s") FS_PATH_SEPARATOR _T("report-generator.jar\" org.netxms.report.Generator \"%s\" \"%s\" \"%s\""),
 			g_szJavaPath,
 			g_szDataDir,
 			g_szConfigFile,
 			definitionFileName,
 			destFileName);
 
+	DbgPrintf(6, _T("ReportJob: executing command '%s'"), buffer);
 	bool ret = (_tsystem(buffer) == 0);
 
 	_tunlink(definitionFileName);

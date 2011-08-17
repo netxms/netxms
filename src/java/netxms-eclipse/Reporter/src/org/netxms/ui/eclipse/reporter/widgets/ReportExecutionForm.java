@@ -41,13 +41,13 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Report;
-import org.netxms.client.objects.ReportRoot;
 import org.netxms.client.reports.ReportResult;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportDefinition;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -208,10 +208,24 @@ public class ReportExecutionForm extends Composite
 		GridLayout layout = new GridLayout();
 		parent.setLayout(layout);
 		
+		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(SharedIcons.REFRESH.createImage());
+		link.setText("Refresh");
+		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				refreshResultList();
+			}
+		});
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.RIGHT;
+		link.setLayoutData(gd);
+		
 		final String[] names = { "Job ID", "Execution Time" };
 		final int[] widths = { 90, 160 };
 		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER);
-		GridData gd = new GridData();
+		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -219,7 +233,7 @@ public class ReportExecutionForm extends Composite
 		resultList.getControl().setLayoutData(gd);
 		resultList.setContentProvider(new ArrayContentProvider());
 
-		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(Activator.getImageDescriptor("icons/pdf.png").createImage());
 		link.setText("Render to PDF");
 		link.addHyperlinkListener(new HyperlinkAdapter() {
