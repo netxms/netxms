@@ -62,13 +62,13 @@ THREAD_RESULT THREAD_CALL ServiceLevelMonitoring(void *pArg)
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 		NetObj* curObject;
-
+/*
 		for (int i = 0; i < g_pBizServiceRoot->m_dwChildCount; i++)
 		{
 			curObject = g_pBizServiceRoot->m_pChildList[i];
 			curObject->calculateCompoundStatus();
 		}
-
+*/
 		DBConnectionPoolReleaseConnection(hdb);
 	}
 
