@@ -1227,46 +1227,7 @@ CREATE TABLE dashboard_elements
 CREATE TABLE business_services
 (
      service_id integer not null,
-     name varchar(63) not null,
-     parent_id integer default 0 not null,
-     status integer default 0 not null, // 1 - up, 0 - down
      PRIMARY KEY(service_id)
-) TABLE_TYPE;
-
-
-/*
-** SLA business service - subservices relationship
-*/
-
-CREATE TABLE business_subservices
-(
-     service_id integer not null,
-     subservice_id integer not null,
-     PRIMARY KEY(service_id,subservice_id)
-) TABLE_TYPE;
-
-
-/*
-** SLA business service - node links relationship
-*/
-
-CREATE TABLE business_service_node_links
-(
-     service_id integer not null,
-     node_link_id integer not null,
-     PRIMARY KEY(service_id,node_link_id)
-) TABLE_TYPE;
-
-
-/*
-** SLA business service - checks relationship
-*/
-
-CREATE TABLE business_service_checks
-(
-     service_id integer not null,
-     check_id integer not null,
-     PRIMARY KEY(service_id,check_id)
 ) TABLE_TYPE;
 
 
@@ -1289,11 +1250,10 @@ CREATE TABLE business_service_templates
 CREATE TABLE slm_checks
 (
      check_id integer not null,
-     name varchar(63) not null,
      type integer default 1 not null, // 1 - threshold, 2 - script
      content SQL_TEXT, // if type == 2
      threshold_id integer default 0 not null, // if type == 1; refers to thresholds.id
-     state integer not null,
+     state integer not null,   // 1 - check ok, 0 - check failed
      reason varchar(255) not null,
      PRIMARY KEY(check_id)
 ) TABLE_TYPE;

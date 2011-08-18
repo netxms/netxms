@@ -160,6 +160,10 @@ typedef void * NXC_SESSION;
 #define OBJECT_REPORTROOT           24
 #define OBJECT_REPORTGROUP          25
 #define OBJECT_REPORT               26
+#define OBJECT_BIZSERVICEROOT		27
+#define OBJECT_BIZSERVICE			28
+#define OBJECT_NODELINK				29
+#define OBJECT_SLMCHECK				30
 
 
 //

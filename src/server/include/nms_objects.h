@@ -83,7 +83,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define BUILTIN_OID_NETWORKMAPROOT  6
 #define BUILTIN_OID_DASHBOARDROOT   7
 #define BUILTIN_OID_REPORTROOT      8
-
+#define BUILTIN_OID_BIZSERVICEROOT	9
 
 //
 // Node runtime (dynamic) flags
@@ -1551,6 +1551,104 @@ public:
 	DWORD execute(StringMap *parameters, DWORD userId);
 };
 
+//
+// Node link object for biz service (actually is a node)
+//
+
+class NXCORE_EXPORTABLE NodeLink : public NetObj
+{
+protected:
+	Node* m_node;
+
+public:
+	NodeLink();
+	NodeLink(const TCHAR *name);
+	virtual ~NodeLink();
+
+	virtual int Type() { return OBJECT_NODELINK; }
+	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+	virtual BOOL DeleteFromDB();
+	virtual BOOL CreateFromDB(DWORD dwId);
+
+	virtual void CreateMessage(CSCPMessage *pMsg);
+	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+};
+
+//
+// SLM check object
+//
+
+class NXCORE_EXPORTABLE SlmCheck : public NetObj
+{
+protected:
+	Threshold* m_threshold;
+	enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
+	TCHAR* m_script;
+	BOOL m_state;
+	TCHAR m_reason[256];
+
+public:
+	SlmCheck();
+	SlmCheck(const TCHAR *name);
+	virtual ~SlmCheck();
+
+	virtual int Type() { return OBJECT_SLMCHECK; }
+	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+	virtual BOOL DeleteFromDB();
+	virtual BOOL CreateFromDB(DWORD dwId);
+
+	virtual void CreateMessage(CSCPMessage *pMsg);
+	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	void setReason(const TCHAR* reason) { nx_strncpy(m_reason, reason, 255); }
+	const TCHAR* getReason() const { return m_reason; }
+};
+
+
+//
+// Business service root
+//
+
+class NXCORE_EXPORTABLE BizServiceRoot : public UniversalRoot
+{
+public:
+	BizServiceRoot();
+	virtual ~BizServiceRoot();
+
+	virtual int Type() { return OBJECT_BIZSERVICEROOT; }
+	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+};
+
+
+//
+// Business service object
+//
+
+class NXCORE_EXPORTABLE BizService : public Container
+{
+protected:
+
+public:
+	BizService();
+	BizService(const TCHAR *name);
+	virtual ~BizService();
+
+	virtual int Type() { return OBJECT_BIZSERVICE; }
+	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+	virtual BOOL DeleteFromDB();
+	virtual BOOL CreateFromDB(DWORD dwId);
+
+	virtual void CreateMessage(CSCPMessage *pMsg);
+	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+};
+
+
 
 //
 // Container category information
@@ -1617,6 +1715,7 @@ extern PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot;
 extern NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot;
 extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
 extern ReportRoot NXCORE_EXPORTABLE *g_pReportRoot;
+extern BizServiceRoot NXCORE_EXPORTABLE *g_pBizServiceRoot;
 
 extern DWORD NXCORE_EXPORTABLE g_dwMgmtNode;
 extern DWORD g_dwNumCategories;

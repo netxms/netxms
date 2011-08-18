@@ -36,6 +36,7 @@ PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
 NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
 DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
 ReportRoot NXCORE_EXPORTABLE *g_pReportRoot = NULL;
+BizServiceRoot NXCORE_EXPORTABLE *g_pBizServiceRoot = NULL;
 
 DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 DWORD g_dwNumCategories = 0;
@@ -57,7 +58,9 @@ const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Inte
                                _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
                                _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
                                _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"), 
-                               _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report") };
+                               _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
+							   _T("BizServiceRoot"), _T("BizService"), _T("NodeLink"), _T("SlmCheck")
+};
 
 
 //
@@ -210,6 +213,10 @@ void ObjectsInit()
 	// Create "Report Root" object
    g_pReportRoot = new ReportRoot;
    NetObjInsert(g_pReportRoot, FALSE);
+
+   // Create "Service Root" object
+   g_pBizServiceRoot = new BizServiceRoot;
+   NetObjInsert(g_pBizServiceRoot, FALSE);
    
 	DbgPrintf(1, _T("Built-in objects created"));
 
@@ -279,6 +286,10 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_REPORTROOT:
 			case OBJECT_REPORTGROUP:
 			case OBJECT_REPORT:
+			case OBJECT_BIZSERVICEROOT:
+			case OBJECT_BIZSERVICE:
+			case OBJECT_SLMCHECK:
+			case OBJECT_NODELINK:
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
@@ -378,6 +389,10 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_REPORTROOT:
 		case OBJECT_REPORTGROUP:
 		case OBJECT_REPORT:
+		case OBJECT_BIZSERVICEROOT:
+		case OBJECT_BIZSERVICE:
+		case OBJECT_SLMCHECK:
+		case OBJECT_NODELINK:
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
@@ -767,7 +782,8 @@ static void LinkChildObjectsCallback(NetObj *object, void *data)
 		 (object->Type() == OBJECT_POLICYGROUP) ||
 		 (object->Type() == OBJECT_NETWORKMAPGROUP) ||
 		 (object->Type() == OBJECT_DASHBOARD) ||
-		 (object->Type() == OBJECT_REPORTGROUP))
+		 (object->Type() == OBJECT_REPORTGROUP) ||
+		 (object->Type() == OBJECT_BIZSERVICE))
 	{
 		((Container *)object)->linkChildObjects();
 	}
@@ -816,6 +832,7 @@ BOOL LoadObjects()
 	g_pMapRoot->LoadFromDB();
 	g_pDashboardRoot->LoadFromDB();
 	g_pReportRoot->LoadFromDB();
+	g_pBizServiceRoot->LoadFromDB();
 
    // Load zones
    if (g_dwFlags & AF_ENABLE_ZONING)
@@ -1108,7 +1125,7 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
-   // Load agent policies
+   // Load network maps
    DbgPrintf(2, _T("Loading network maps..."));
    hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM network_maps"));
    if (hResult != NULL)
@@ -1307,6 +1324,31 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+   // Loading service objects
+   DbgPrintf(2, _T("Loading business services..."));
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_BIZSERVICE);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+	   dwNumRows = DBGetNumRows(hResult);
+	   for(i = 0; i < dwNumRows; i++)
+	   {
+		   dwId = DBGetFieldULong(hResult, i, 0);
+		   BizService *pGroup = new BizService;
+		   if (pGroup->CreateFromDB(dwId))
+		   {
+			   NetObjInsert(pGroup, FALSE);  // Insert into indexes
+		   }
+		   else     // Object load failed
+		   {
+			   delete pGroup;
+			   /* FIXME nxlog_write(MSG_BS_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId); */
+			   DbgPrintf(1, _T("Failed to load business services"));
+		   }
+	   }
+	   DBFreeResult(hResult);
+   }
+
    // Link childs to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
 	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
@@ -1318,6 +1360,7 @@ BOOL LoadObjects()
    g_pMapRoot->LinkChildObjects();
 	g_pDashboardRoot->LinkChildObjects();
 	g_pReportRoot->LinkChildObjects();
+	g_pBizServiceRoot->LinkChildObjects();
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;
@@ -1328,6 +1371,7 @@ BOOL LoadObjects()
    g_pTemplateRoot->calculateCompoundStatus();
    g_pPolicyRoot->calculateCompoundStatus();
    g_pMapRoot->calculateCompoundStatus();
+   g_pBizServiceRoot->calculateCompoundStatus();
 
    // Recalculate status for zone objects
    if (g_dwFlags & AF_ENABLE_ZONING)

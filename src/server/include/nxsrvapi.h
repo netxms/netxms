@@ -155,6 +155,11 @@
 #define SG_RAW_RESULT     0x0004
 #define SG_HSTRING_RESULT 0x0008
 
+//
+// SLM flags
+//
+
+#define SLM_ENABLED			(0x0001)
 
 //
 // Win32 service and syslog constants
