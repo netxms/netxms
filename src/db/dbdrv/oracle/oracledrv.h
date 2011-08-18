@@ -64,6 +64,9 @@ typedef struct
 {
 	ORACLE_CONN *connection;
 	OCIStmt *handleStmt;
+	OCIError *handleError;
+	Array *bindings;
+	Array *buffers;
 } ORACLE_STATEMENT;
 
 typedef struct

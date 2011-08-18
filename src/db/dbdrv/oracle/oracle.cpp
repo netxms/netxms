@@ -292,6 +292,76 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 
 
 //
+// Convert query from NetXMS portable format to native Oracle format
+//
+
+static UCS2CHAR *ConvertQuery(WCHAR *query)
+{
+#if UNICODE_UCS4
+	UCS2CHAR *srcQuery = UCS2StringFromUCS4String(query);
+#else
+	UCS2CHAR *srcQuery = query;
+#endif
+	int count = NumCharsW(query, L'?');
+	if (count == 0)
+	{
+#if UNICODE_UCS4
+		return srcQuery;
+#else
+		return wcsdup(query);
+#endif
+	}
+
+	UCS2CHAR *dstQuery = (UCS2CHAR *)malloc((ucs2_strlen(srcQuery) + count * 2 + 1) * sizeof(UCS2CHAR));
+	bool inString = false;
+	int pos = 1;
+	UCS2CHAR *src, *dst;
+	for(src = srcQuery, dst = dstQuery; *src != 0; src++)
+	{
+		switch(*src)
+		{
+			case '\'':
+				*dst++ = *src;
+				inString = !inString;
+				break;
+			case '\\':
+				*dst++ = *src++;
+				*dst++ = *src;
+				break;
+			case '?':
+				if (inString)
+				{
+					*dst++ = '?';
+				}
+				else
+				{
+					*dst++ = ':';
+					if (pos < 10)
+					{
+						*dst++ = pos + '0';
+					}
+					else
+					{
+						*dst++ = pos / 10 + '0';
+						*dst++ = pos % 10 + '0';
+					}
+					pos++;
+				}
+				break;
+			default:
+				*dst++ = *src;
+				break;
+		}
+	}
+	*dst = 0;
+#if UNICODE_UCS4
+	free(srcQuery);
+#endif
+	return dstQuery;
+}
+
+
+//
 // Prepare statement
 //
 
@@ -300,11 +370,7 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 	ORACLE_STATEMENT *stmt = NULL;
 	OCIStmt *handleStmt;
 
-#if UNICODE_UCS4
-	UCS2CHAR *ucs2Query = UCS2StringFromUCS4String(pwszQuery);
-#else
-	UCS2CHAR *ucs2Query = pwszQuery;
-#endif
+	UCS2CHAR *ucs2Query = ConvertQuery(pwszQuery);
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
@@ -313,6 +379,9 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 		stmt = (ORACLE_STATEMENT *)malloc(sizeof(ORACLE_STATEMENT));
 		stmt->connection = pConn;
 		stmt->handleStmt = handleStmt;
+		stmt->bindings = new Array(8, 8, false);
+		stmt->buffers = new Array(8, 8, true);
+		OCIHandleAlloc(pConn->handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
 	}
 	else
 	{
@@ -326,9 +395,7 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 	}
 	MutexUnlock(pConn->mutexQueryLock);
 
-#if UNICODE_UCS4
 	free(ucs2Query);
-#endif
 	return stmt;
 }
 
@@ -339,6 +406,52 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 
 extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
+	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
+	static ub2 oracleType[] = { SQLT_STR, SQLT_INT, SQLT_UIN, SQLT_INT, SQLT_UIN, SQLT_FLT };
+
+	OCIBind *handleBind = (OCIBind *)stmt->bindings->get(pos - 1);
+	void *sqlBuffer;
+	if (cType == DB_CTYPE_STRING)
+	{
+#if UNICODE_UCS4
+		sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+		stmt->buffers->set(pos - 1, sqlBuffer);
+		if (allocType == DB_BIND_DYNAMIC)
+			free(buffer);
+#else
+		sqlBuffer = buffer;
+		if (allocType == DB_BIND_DYNAMIC)
+			stmt->buffers->set(pos - 1, sqlBuffer);
+#endif
+
+		OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
+		             (ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+						 (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
+		             NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+	}
+	else
+	{
+		switch(allocType)
+		{
+			case DB_BIND_STATIC:
+				sqlBuffer = buffer;
+				break;
+			case DB_BIND_DYNAMIC:
+				sqlBuffer = buffer;
+				stmt->buffers->set(pos - 1, buffer);
+				break;
+			case DB_BIND_TRANSIENT:
+				sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+				stmt->buffers->set(pos - 1, sqlBuffer);
+				break;
+			default:
+				return;	// Invalid call
+		}
+
+		OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, bufferSize[cType],
+		             oracleType[cType], NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+	}
+	stmt->bindings->set(pos - 1, handleBind);
 }
 
 
@@ -382,8 +495,11 @@ extern "C" void EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
 		return;
 
 	MutexLock(stmt->connection->mutexQueryLock, INFINITE);
-	OCIStmtRelease(stmt->handleStmt, stmt->connection->handleError, NULL, 0, OCI_DEFAULT);
+	OCIStmtRelease(stmt->handleStmt, stmt->handleError, NULL, 0, OCI_DEFAULT);
+	OCIHandleFree(stmt->handleError, OCI_HTYPE_ERROR);
 	MutexUnlock(stmt->connection->mutexQueryLock);
+	delete stmt->bindings;
+	delete stmt->buffers;
 	free(stmt);
 }
 
@@ -482,6 +598,9 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 
 				// Data size
 				OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
+				/* FIXME: find a way to determine real CLOB size */
+				if (nWidth == 4000)
+					nWidth = 32737;  // CLOB up to 32K
 				pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
 				handleDefine = NULL;
 				if ((nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,

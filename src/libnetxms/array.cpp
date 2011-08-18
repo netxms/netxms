@@ -70,7 +70,40 @@ int Array::add(void *object)
 
 
 //
-// Replace object at given index
+// Set object at given index. If index is within array bounds, object at this position will be replaced,
+// otherwise array will be expanded as required. Other new positions created during expansion will
+// be filled with NULL values.
+//
+
+void Array::set(int index, void *object)
+{
+	if (index < 0)
+		return;
+
+	if (index < m_size)
+	{
+		if (m_objectOwner)
+			destroyObject(m_data[index]);
+	}
+	else
+	{
+		// Expand array
+		if (index >= m_allocated)
+		{
+			m_allocated += m_grow * ((index - m_allocated) / m_grow + 1);
+			m_data = (void **)realloc(m_data, sizeof(void *) * m_allocated);
+		}
+		memset(&m_data[m_size], 0, sizeof(void *) * (index - m_size));
+		m_size = index + 1;
+	}
+
+	m_data[index] = object;
+}
+
+
+//
+// Replace object at given index. If index is beyond array bounds,
+// this method will do nothing.
 //
 
 void Array::replace(int index, void *object)

@@ -950,6 +950,9 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
+	if (pos <= 0)
+		return;
+
 #ifdef UNICODE
 #define wBuffer buffer
 #define realAllocType allocType

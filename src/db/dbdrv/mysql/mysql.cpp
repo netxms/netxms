@@ -313,7 +313,7 @@ extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int
 {
 	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
 
-	if ((pos < 1) || (pos >= hStmt->paramCount))
+	if (pos >= hStmt->paramCount)
 		return;
 	MYSQL_BIND *b = &hStmt->bindings[pos - 1];
 

@@ -387,6 +387,7 @@ public:
 
 	int add(void *object);
 	void *get(int index) { return ((index >= 0) && (index < m_size)) ? m_data[index] : NULL; }
+	void set(int index, void *object);
 	void replace(int index, void *object);
 	void remove(int index);
 	void clear();
@@ -406,8 +407,10 @@ public:
 	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { }
 	virtual ~ObjectArray() { }
 
-	int add(T *object) { return Array::add(object); }
+	int add(T *object) { return Array::add((void *)object); }
 	T *get(int index) { return (T*)Array::get(index); }
+	void set(int index, T *object) { Array::set(index, (void *)object); }
+	void replace(int index, T *object) { Array::replace(index, (void *)object); }
 };
 
 
