@@ -58,8 +58,14 @@ void SaveObjects(DB_HANDLE hdb)
 		else if (object->IsModified())
 		{
 		   DBBegin(hdb);
-			object->SaveToDB(hdb);
-		   DBCommit(hdb);
+			if (object->SaveToDB(hdb))
+			{
+				DBCommit(hdb);
+			}
+			else
+			{
+				DBRollback(hdb);
+			}
 		}
    }
 

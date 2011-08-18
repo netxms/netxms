@@ -130,6 +130,7 @@ BOOL Report::SaveToDB(DB_HANDLE hdb)
 	if (!saveACLToDB(hdb))
 		goto fail;
 
+	m_bIsModified = FALSE;
 	UnlockData();
 	return TRUE;
 
