@@ -262,7 +262,6 @@ BOOL SQLBatch(const TCHAR *pszBatch)
       ptr++;
       pszQuery = ptr;
    }
-   free(pszBuffer);
    return bRet;
 }
 

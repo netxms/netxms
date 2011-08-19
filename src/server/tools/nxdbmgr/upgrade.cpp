@@ -253,6 +253,26 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V236 to V237
+//
+
+static BOOL H_UpgradeFromV236(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE business_services DROP COLUMN name\n")
+		_T("ALTER TABLE business_services DROP COLUMN parent_id\n")
+		_T("ALTER TABLE business_services DROP COLUMN status\n")
+		_T("ALTER TABLE slm_checks DROP COLUMN name\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='237' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V235 to V236
 //
 
@@ -334,21 +354,6 @@ static BOOL H_UpgradeFromV232(int currVersion, int newVersion)
 	                     _T("parent_id integer default 0 not null,")
 	                     _T("status integer default 0 not null,")
 	                     _T("PRIMARY KEY(service_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE business_subservices (")
-	                     _T("service_id integer not null,")
-	                     _T("subservice_id integer not null,")
-	                     _T("PRIMARY KEY(service_id,subservice_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE business_service_node_links (")
-	                     _T("service_id integer not null,")
-	                     _T("node_link_id integer not null,")
-	                     _T("PRIMARY KEY(service_id,node_link_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE business_service_checks (")
-	                     _T("service_id integer not null,")
-	                     _T("check_id integer not null,")
-	                     _T("PRIMARY KEY(service_id,check_id))")));
 
 	CHK_EXEC(CreateTable(_T("CREATE TABLE business_service_templates (")
 	                     _T("service_id integer not null,")
@@ -5520,6 +5525,7 @@ static struct
 	{ 233, 234, H_UpgradeFromV233 },
 	{ 234, 235, H_UpgradeFromV234 },
 	{ 235, 236, H_UpgradeFromV235 },
+	{ 236, 237, H_UpgradeFromV236 },
    { 0, NULL }
 };
 
