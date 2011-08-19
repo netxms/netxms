@@ -1646,6 +1646,10 @@ public:
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	bool isReadyForPolling();
+	void lockForPolling();
+	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
 };
 
 

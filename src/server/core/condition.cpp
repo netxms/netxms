@@ -370,7 +370,7 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 // Lock for polling
 //
 
-void Condition::LockForPoll(void)
+void Condition::LockForPoll()
 {
    IncRefCount();
    m_bQueuedForPolling = TRUE;
@@ -381,7 +381,7 @@ void Condition::LockForPoll(void)
 // This method should be callsed by poller thread when poll finish
 //
 
-void Condition::EndPoll(void)
+void Condition::EndPoll()
 {
    LockData();
    m_bQueuedForPolling = FALSE;

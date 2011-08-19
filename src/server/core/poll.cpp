@@ -47,6 +47,7 @@ Queue g_routePollQueue;
 Queue g_discoveryPollQueue;
 Queue g_nodePollerQueue;
 Queue g_conditionPollerQueue;
+Queue g_businessServicePollerQueue;
 
 
 //
@@ -550,6 +551,39 @@ static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
 
 
 //
+// Business service poll thread
+//
+
+static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
+{
+   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
+
+   // Initialize state info
+   m_pPollerState[(long)arg].iType = 'B';
+   SetPollerState((long)arg, _T("init"));
+
+   // Wait two minutes to give configuration pollers chance to run first
+   ThreadSleep(120);
+
+   // Main loop
+   while(!IsShutdownInProgress())
+   {
+      SetPollerState((long)arg, _T("wait"));
+		BizService *service = (BizService *)g_businessServicePollerQueue.GetOrBlock();
+      if (service == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), service->Name(), service->Id());
+      SetPollerState((long)arg, szBuffer);
+		service->poll(NULL, 0, CAST_FROM_POINTER(arg, int));
+      service->DecRefCount();
+   }
+   SetPollerState((long)arg, _T("finished"));
+   return THREAD_OK;
+}
+
+
+//
 // Check address range
 //
 
@@ -725,6 +759,17 @@ static void QueueForPolling(NetObj *object, void *data)
 				}
 			}
 			break;
+		case OBJECT_BIZSERVICE:
+			{
+				BizService *service = (BizService *)object;
+				if (service->isReadyForPolling())
+				{
+					service->IncRefCount();
+					service->lockForPolling();
+					g_businessServicePollerQueue.Put(service);
+				}
+			}
+			break;
 		default:
 			break;
 	}
@@ -740,7 +785,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    DWORD dwWatchdogId;
    int i, iCounter, iNumStatusPollers, iNumConfigPollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
-   int iNumConditionPollers, iNumTopologyPollers;
+   int iNumConditionPollers, iNumTopologyPollers, iNumBusinessServicePollers;
 
    // Read configuration
    iNumConditionPollers = ConfigReadInt(_T("NumberOfConditionPollers"), 10);
@@ -749,9 +794,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    iNumRoutePollers = ConfigReadInt(_T("NumberOfRoutingTablePollers"), 10);
    iNumDiscoveryPollers = ConfigReadInt(_T("NumberOfDiscoveryPollers"), 1);
    iNumTopologyPollers = ConfigReadInt(_T("NumberOfTopologyPollers"), 10);
+   iNumBusinessServicePollers = ConfigReadInt(_T("NumberOfBusinessServicePollers"), 10);
    m_iNumPollers = iNumStatusPollers + iNumConfigPollers + 
                    iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers + 
-						 iNumTopologyPollers + 1;
+						 iNumTopologyPollers + iNumBusinessServicePollers + 1;
    DbgPrintf(2, _T("PollManager: %d pollers to start"), m_iNumPollers);
 
    // Prepare static data
@@ -780,6 +826,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    // Start topology pollers
    for(i = 0; i < iNumTopologyPollers; i++, nIndex++)
       ThreadCreate(TopologyPoller, 0, CAST_TO_POINTER(nIndex, void *));
+
+   // Start business service pollers
+   for(i = 0; i < iNumBusinessServicePollers; i++, nIndex++)
+      ThreadCreate(BusinessServicePoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    // Start active discovery poller
    ThreadCreate(ActiveDiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
@@ -812,6 +862,8 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    g_discoveryPollQueue.Clear();
    g_routePollQueue.Clear();
    g_conditionPollerQueue.Clear();
+	g_topologyPollQueue.Clear();
+	g_businessServicePollerQueue.Clear();
    for(i = 0; i < iNumStatusPollers; i++)
       g_statusPollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumConfigPollers; i++)
@@ -822,6 +874,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
       g_discoveryPollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumConditionPollers; i++)
       g_conditionPollerQueue.Put(INVALID_POINTER_VALUE);
+   for(i = 0; i < iNumTopologyPollers; i++)
+      g_topologyPollQueue.Put(INVALID_POINTER_VALUE);
+   for(i = 0; i < iNumBusinessServicePollers; i++)
+      g_businessServicePollerQueue.Put(INVALID_POINTER_VALUE);
 
    DbgPrintf(1, _T("PollManager: main thread terminated"));
    return THREAD_OK;
