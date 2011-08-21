@@ -32,7 +32,9 @@
 BizService::BizService()
      :Container()
 {
-	m_busy = FALSE;
+	m_dwId = 0;
+	m_busy = false;
+	m_lastPollTime = time_t(0);
 	_tcscpy(m_szName, _T("Default"));
 }
 
@@ -46,6 +48,7 @@ BizService::BizService(const TCHAR *name)
 {
 	m_dwId = 0;
 	m_busy = false;
+	m_lastPollTime = time_t(0);
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 }
 
@@ -58,15 +61,20 @@ BizService::~BizService()
 {
 }
 
+//
+// Calculate status for compound object based on childs status
+//
+
 void BizService::calculateCompoundStatus(BOOL bForcedRecalc /*= FALSE*/)
 {
 	int i, iCount, iMostCriticalStatus;
+	int iOldStatus = m_iStatus;
 
+	// Calculate own status by selecting the most critical status of the kids
 	LockChildList(FALSE);
-
 	for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < int(m_dwChildCount); i++)
 	{
-		int iChildStatus = m_pChildList[i]->PropagatedStatus();
+		int iChildStatus = m_pChildList[i]->Status();
 		if ((iChildStatus < STATUS_UNKNOWN) &&
 			(iChildStatus > iMostCriticalStatus))
 		{
@@ -75,8 +83,17 @@ void BizService::calculateCompoundStatus(BOOL bForcedRecalc /*= FALSE*/)
 		}
 	}
 	m_iStatus = (iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN;
-
 	UnlockChildList();
+
+	// Cause parent object(s) to recalculate it's status
+	if ((iOldStatus != m_iStatus) || bForcedRecalc)
+	{
+		LockParentList(FALSE);
+		for(i = 0; i < int(m_dwParentCount); i++)
+			m_pParentList[i]->calculateCompoundStatus();
+		UnlockParentList();
+		Modify();   /* LOCK? */
+	}
 }
 
 //
@@ -219,22 +236,33 @@ DWORD BizService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
+bool BizService::isReadyForPolling()
+{
+	return time(NULL) - m_lastPollTime > g_dwSlmPollingInterval && !m_busy;
+}
+
+void BizService::lockForPolling()
+{
+	m_busy = true;
+}
+
 //
-// A callback for poller
+// A callback for poller threads
 //
 
 void BizService::poll( ClientSession *pSession, DWORD dwRqId, int nPoller )
 {
+	m_lastPollTime = time(NULL);
+
+	// Loop through the kids and execute their either scripts or thresholds
 	for (int i = 0; i < int(m_dwChildCount); i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
 			((SlmCheck*)m_pChildList[i])->execute();
 	}
 
-	LockParentList(FALSE);
-	for(int i = 0; i < int(m_dwParentCount); i++)
-		m_pParentList[i]->calculateCompoundStatus();
-	UnlockParentList();
+	// Set the status based on what the kids' been up to
+	this->calculateCompoundStatus();
 
 	m_busy = false;
 }

@@ -33,12 +33,10 @@ SlmCheck::SlmCheck()
 :NetObj()
 {
 	_tcscpy(m_szName, _T("Default"));
-	m_state = FALSE;
 	m_script = NULL;
 	m_threshold = NULL;
 	m_reason[0] = _T('\0');
 }
-
 
 //
 // Constructor for new check object
@@ -48,7 +46,6 @@ SlmCheck::SlmCheck(const TCHAR *name)
 :NetObj()
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
-	m_state = FALSE;
 	m_script = NULL;
 	m_threshold = NULL;
 	m_reason[0] = _T('\0');
@@ -65,15 +62,6 @@ SlmCheck::~SlmCheck()
 	safe_free_and_null(m_script);
 }
 
-void SlmCheck::calculateCompoundStatus(BOOL bForcedRecalc /*= FALSE*/)
-{
-	/*
-	if (m_script == NULL && m_threshold == NULL)
-		m_iStatus = STATUS_UNKNOWN;
-	else
-		m_iStatus = STATUS_NORMAL;
-	*/
-}
 
 //
 // Create object from database data
@@ -91,7 +79,7 @@ BOOL SlmCheck::CreateFromDB(DWORD id)
 	if (!loadCommonProperties())
 		return FALSE;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT type,content,threshold_id,state,reason FROM slm_checks WHERE check_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT type,content,threshold_id,reason FROM slm_checks WHERE check_id=?"));
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from slm_checks"));
@@ -117,8 +105,7 @@ BOOL SlmCheck::CreateFromDB(DWORD id)
 	m_type		= SlmCheck::CheckType(DBGetFieldLong(hResult, 0, 0));
 	m_script = DBGetField(hResult, 0, 1, NULL, script_length);
 	thresholdId = DBGetFieldLong(hResult, 0, 2);
-	m_state		= DBGetFieldLong(hResult, 0, 3);
-	DBGetField(hResult, 0, 4, m_reason, 255);
+	DBGetField(hResult, 0, 3, m_reason, 255);
 
 	if (thresholdId > 0)
 	{
@@ -171,9 +158,9 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	}
 	DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO slm_checks (check_id,type,content,threshold_id,state,reason) ")
+	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO slm_checks (check_id,type,content,threshold_id,reason) ")
 											  _T("VALUES (?,?,?,?,?,?)") :
-											  _T("UPDATE slm_checks SET check_id=?,type=?,content=?,threshold_id=?,state=?,reason=? ")
+											  _T("UPDATE slm_checks SET check_id=?,type=?,content=?,threshold_id=?,reason=? ")
 											  _T("WHERE service_id=?"));
 	if (hStmt == NULL)	
 		goto finish;
@@ -181,10 +168,9 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DWORD(m_type));
 	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, DWORD(m_state));
-	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
+	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
 	if (!bNewObject)
-		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_dwId);
 	
 	if (!DBExecute(hStmt))
 	{
@@ -260,26 +246,28 @@ DWORD SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 void SlmCheck::execute()
 {
-	NXSL_ServerEnv pEnv;
+	NXSL_ServerEnv *pEnv;
 	NXSL_Value *pValue;
+
+	pEnv = new NXSL_ServerEnv;
 
 	switch (m_type)
 	{
 	case check_script:
-		if (m_pCompiledScript->run(&pEnv, 0, NULL) == 0)
+		if (m_pCompiledScript->run(pEnv, 0, NULL) == 0)
 		{
 			pValue = m_pCompiledScript->getResult();
 			m_iStatus = pValue->getValueAsInt32() == 0 ? STATUS_NORMAL : STATUS_CRITICAL;
-			DbgPrintf(9, _T("%s/%ld ret value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
+			DbgPrintf(9, _T("SlmCheck::execute: %s/%ld ret value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
 		}
 		else
 		{
-			DbgPrintf(4, _T("%s/%ld nxsl run() failed, %s"),  m_szName, (long)m_dwId, m_pCompiledScript->getErrorText());
+			DbgPrintf(4, _T("SlmCheck::execute: %s/%ld nxsl run() failed, %s"),  m_szName, (long)m_dwId, m_pCompiledScript->getErrorText());
 		}
 		break;
 	case check_threshold:
 	default:
-		DbgPrintf(4, _T("execute() called for undefined check type, check %s/%ld"), m_szName, (long)m_dwId);
+		DbgPrintf(4, _T("SlmCheck::execute() called for undefined check type, check %s/%ld"), m_szName, (long)m_dwId);
 		m_iStatus = STATUS_UNKNOWN;
 		break;
 	}

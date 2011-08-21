@@ -30,7 +30,7 @@
 //
 
 NodeLink::NodeLink()
-:NetObj()
+:Container()
 {
 	_tcscpy(m_szName, _T("Default"));
 }
@@ -41,7 +41,7 @@ NodeLink::NodeLink()
 //
 
 NodeLink::NodeLink(const TCHAR *name)
-:NetObj()
+:Container()
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 }
@@ -121,7 +121,6 @@ BOOL NodeLink::CreateFromDB(DWORD id)
 BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
-	TCHAR szQuery[QUERY_LENGTH];
 
 	LockData();
 
@@ -142,21 +141,18 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 	}
 	DBFreeStatement(hStmt);
 
-	if (bNewObject)
-		nx_strncpy(szQuery, _T("INSERT INTO node_links (node_id, nodelink_id) VALUES (?, ?)"), QUERY_LENGTH);
-	else
-		nx_strncpy(szQuery, _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"), QUERY_LENGTH);
-	hStmt = DBPrepare(g_hCoreDB, szQuery);
+	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO node_links (node_id,nodelink_id) VALUES (?,?)") :
+											  _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
 	if (hStmt == NULL)	
 	{
-		DbgPrintf(4, _T("Cannot prepare %s from node_links"), bNewObject ? _T("insert") : _T("update"));
+		// DbgPrintf(4, _T("Cannot prepare %s from node_links"), bNewObject ? _T("insert") : _T("update"));
 		return FALSE;
 	}
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_node == NULL ? 0 : m_node->Id());
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
 	if (!DBExecute(hStmt))
 	{
-		DbgPrintf(4, _T("Cannot execute %s on node_links"), bNewObject ? _T("insert") : _T("update"));
+		// DbgPrintf(4, _T("Cannot execute %s on node_links"), bNewObject ? _T("insert") : _T("update"));
 		DBFreeStatement(hStmt);
 		return FALSE;
 	}

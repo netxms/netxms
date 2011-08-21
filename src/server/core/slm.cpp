@@ -60,9 +60,9 @@ THREAD_RESULT THREAD_CALL ServiceLevelMonitoring(void *pArg)
 			break;      // Shutdown has arrived
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-		NetObj* curObject;
 /*
+		NetObj* curObject;
+
 		for (int i = 0; i < g_pBizServiceRoot->m_dwChildCount; i++)
 		{
 			curObject = g_pBizServiceRoot->m_pChildList[i];

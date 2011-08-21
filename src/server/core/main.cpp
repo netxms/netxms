@@ -121,6 +121,7 @@ DWORD g_dwTopologyPollingInterval;
 DWORD g_dwConditionPollingInterval;
 DWORD g_dwPingSize;
 DWORD g_dwAuditFlags;
+DWORD g_dwSlmPollingInterval;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
 TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
 int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
@@ -278,6 +279,7 @@ static void LoadGlobalConfig()
 	g_dwRoutingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
 	g_dwTopologyPollingInterval = ConfigReadInt(_T("TopologyPollingInterval"), 1800);
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
+	g_dwSlmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
 	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
 		g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
 	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))

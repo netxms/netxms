@@ -52,7 +52,6 @@ extern DWORD g_dwRoutingTableUpdateInterval;
 extern DWORD g_dwTopologyPollingInterval;
 extern DWORD g_dwConditionPollingInterval;
 
-
 //
 // Constants
 //
@@ -1555,7 +1554,7 @@ public:
 // Node link object for biz service (actually is a node)
 //
 
-class NXCORE_EXPORTABLE NodeLink : public NetObj
+class NXCORE_EXPORTABLE NodeLink : public Container
 {
 protected:
 	Node* m_node;
@@ -1586,7 +1585,6 @@ protected:
 	Threshold* m_threshold;
 	enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
 	TCHAR* m_script;
-	BOOL m_state;
 	TCHAR m_reason[256];
 	NXSL_Program *m_pCompiledScript;
 
@@ -1596,7 +1594,6 @@ public:
 	virtual ~SlmCheck();
 
 	virtual int Type() { return OBJECT_SLMCHECK; }
-	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
 	virtual BOOL DeleteFromDB();
@@ -1634,6 +1631,7 @@ class NXCORE_EXPORTABLE BizService : public Container
 {
 protected:
 	bool m_busy;
+	time_t m_lastPollTime;
 
 public:
 	BizService();
@@ -1650,8 +1648,8 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-	bool isReadyForPolling() { return !m_busy; }
-	void lockForPolling() { m_busy = true; }
+	bool isReadyForPolling();
+	void lockForPolling();
 	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
 };
 

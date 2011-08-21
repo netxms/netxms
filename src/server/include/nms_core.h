@@ -790,6 +790,7 @@ extern DWORD g_dwLockTimeout;
 extern DWORD g_dwAgentCommandTimeout;
 extern DWORD g_dwThresholdRepeatInterval;
 extern int g_nRequiredPolls;
+extern DWORD g_dwSlmPollingInterval;
 
 extern TCHAR g_szDbDriver[];
 extern TCHAR g_szDbDrvParams[];
