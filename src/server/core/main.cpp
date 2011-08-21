@@ -121,7 +121,6 @@ DWORD g_dwTopologyPollingInterval;
 DWORD g_dwConditionPollingInterval;
 DWORD g_dwPingSize;
 DWORD g_dwAuditFlags;
-DWORD g_dwSlmFlags;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
 TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
 int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
@@ -313,7 +312,7 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
 
 	if (ConfigReadInt(_T("EnableSlm"), 1))
-		g_dwSlmFlags |= SLM_ENABLED;
+		g_dwFlags |= AF_ENABLE_SLM;
 	
 	if (g_szDataDir[0] == 0)
 	{
@@ -740,8 +739,6 @@ retry_db_lock:
 	ThreadCreate(WatchdogThread, 0, NULL);
 	ThreadCreate(NodePoller, 0, NULL);
 	ThreadCreate(JobManagerThread, 0, NULL);
-	if (g_dwSlmFlags & SLM_ENABLED)
-		ThreadCreate(ServiceLevelMonitoring, 0, NULL);
 	m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
 	m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
 	m_thPollManager = ThreadCreateEx(PollManager, 0, NULL);

@@ -1588,6 +1588,7 @@ protected:
 	TCHAR* m_script;
 	BOOL m_state;
 	TCHAR m_reason[256];
+	NXSL_Program *m_pCompiledScript;
 
 public:
 	SlmCheck();
@@ -1604,6 +1605,7 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
+	void execute();
 	void setReason(const TCHAR* reason) { nx_strncpy(m_reason, reason, 255); }
 	const TCHAR* getReason() const { return m_reason; }
 };
@@ -1631,6 +1633,7 @@ public:
 class NXCORE_EXPORTABLE BizService : public Container
 {
 protected:
+	bool m_busy;
 
 public:
 	BizService();
@@ -1647,11 +1650,10 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-	bool isReadyForPolling();
-	void lockForPolling();
+	bool isReadyForPolling() { return !m_busy; }
+	void lockForPolling() { m_busy = true; }
 	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
 };
-
 
 
 //

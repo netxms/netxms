@@ -421,6 +421,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\bizservice.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\bridge.cpp"
 				>
 			</File>
@@ -617,6 +621,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\nodelink.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\np.cpp"
 				>
 			</File>
@@ -677,7 +685,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\slm_objects.cpp"
+				RelativePath=".\slmcheck.cpp"
 				>
 			</File>
 			<File
