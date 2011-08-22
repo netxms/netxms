@@ -25,6 +25,8 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IBaseLabelProvider;
+import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -46,6 +48,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportDefinition;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
+import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportResultLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -232,6 +235,7 @@ public class ReportExecutionForm extends Composite
 		gd.grabExcessVerticalSpace = true;
 		resultList.getControl().setLayoutData(gd);
 		resultList.setContentProvider(new ArrayContentProvider());
+		resultList.setLabelProvider(new ReportResultLabelProvider());
 
 		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(Activator.getImageDescriptor("icons/pdf.png").createImage());
@@ -240,10 +244,15 @@ public class ReportExecutionForm extends Composite
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				renderReport();
 			}
 		});
 	}
 	
+	private void renderReport()
+	{
+	}
+
 	/**
 	 * Execute report
 	 */
@@ -315,6 +324,6 @@ public class ReportExecutionForm extends Composite
 			{
 				return "Cannot get result list for report " + report.getObjectName();
 			}
-		};
+		}.start();
 	}
 }

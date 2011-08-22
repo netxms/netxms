@@ -1207,6 +1207,7 @@ src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/Fiel
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/ReportExecutionForm.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/StringFieldEditor.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/TimestampFieldEditor.java -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/helpers/ReportResultLabelProvider.java -text
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SNMP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SNMP/build.properties -text
