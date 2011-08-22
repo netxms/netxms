@@ -65,7 +65,7 @@ public class ReportExecutionForm extends Composite
 	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
 	private List<ReportParameter> parameters;
 	private SortableTableViewer resultList;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -74,21 +74,21 @@ public class ReportExecutionForm extends Composite
 	{
 		super(parent, style);
 		this.report = report;
-		
+
 		setLayout(new FillLayout());
-		
+
 		/* FORM */
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
 		form.setText(report.getObjectName());
-		
+
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
-		
+
 		if (!report.getComments().isEmpty())
 			toolkit.createLabel(form.getBody(), report.getComments(), SWT.WRAP);
-		
+
 		/* Parameters section */
 		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Parameters");
@@ -98,14 +98,14 @@ public class ReportExecutionForm extends Composite
 		td.grabHorizontal = true;
 		td.colspan = 2;
 		section.setLayoutData(td);
-		
+
 		final Composite paramArea = toolkit.createComposite(section);
 		layout = new TableWrapLayout();
 		layout.numColumns = 2;
 		paramArea.setLayout(layout);
 		section.setClient(paramArea);
 		createParamEntryFields(paramArea);
-		
+
 		/* Action section */
 		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
 		section.setText("Actions");
@@ -114,27 +114,29 @@ public class ReportExecutionForm extends Composite
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
 		section.setLayoutData(td);
-		
+
 		final Composite actionArea = toolkit.createComposite(section);
 		layout = new TableWrapLayout();
 		actionArea.setLayout(layout);
 		section.setClient(actionArea);
-		
+
 		ImageHyperlink link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
 		link.setImage(Activator.getImageDescriptor("icons/execute.gif").createImage());
 		link.setText("Execute report");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
+		link.addHyperlinkListener(new HyperlinkAdapter()
+		{
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
 				executeReport();
 			}
 		});
-		
+
 		link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
 		link.setImage(Activator.getImageDescriptor("icons/schedule.png").createImage());
 		link.setText("Schedule report execution");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
+		link.addHyperlinkListener(new HyperlinkAdapter()
+		{
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
@@ -149,13 +151,13 @@ public class ReportExecutionForm extends Composite
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
 		section.setLayoutData(td);
-		
+
 		final Composite resultArea = toolkit.createComposite(section);
 		layout = new TableWrapLayout();
 		resultArea.setLayout(layout);
 		section.setClient(resultArea);
 		createResultsSection(resultArea);
-		
+
 		refreshResultList();
 	}
 
@@ -181,11 +183,11 @@ public class ReportExecutionForm extends Composite
 					case ReportParameter.TIMESTAMP:
 						editor = new TimestampFieldEditor(p, toolkit, parent);
 						break;
-					default:		// everything else as string
+					default: // everything else as string
 						editor = new StringFieldEditor(p, toolkit, parent);
 						break;
 				}
-				
+
 				TableWrapData td = new TableWrapData();
 				td.align = TableWrapData.FILL;
 				td.grabHorizontal = true;
@@ -200,21 +202,23 @@ public class ReportExecutionForm extends Composite
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Create "Results" section's content
 	 * 
-	 * @param parent parent composite
+	 * @param parent
+	 *           parent composite
 	 */
 	private void createResultsSection(Composite parent)
 	{
 		GridLayout layout = new GridLayout();
 		parent.setLayout(layout);
-		
+
 		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(SharedIcons.REFRESH.createImage());
 		link.setText("Refresh");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
+		link.addHyperlinkListener(new HyperlinkAdapter()
+		{
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
@@ -224,7 +228,7 @@ public class ReportExecutionForm extends Composite
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.RIGHT;
 		link.setLayoutData(gd);
-		
+
 		final String[] names = { "Job ID", "Execution Time" };
 		final int[] widths = { 90, 160 };
 		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER);
@@ -240,7 +244,8 @@ public class ReportExecutionForm extends Composite
 		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(Activator.getImageDescriptor("icons/pdf.png").createImage());
 		link.setText("Render to PDF");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
+		link.addHyperlinkListener(new HyperlinkAdapter()
+		{
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
@@ -248,7 +253,7 @@ public class ReportExecutionForm extends Composite
 			}
 		});
 	}
-	
+
 	private void renderReport()
 	{
 	}
@@ -263,19 +268,21 @@ public class ReportExecutionForm extends Composite
 		{
 			execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
 		}
-		
-		new ConsoleJob("Execute report", workbenchPart, Activator.PLUGIN_ID, null) {
+
+		new ConsoleJob("Execute report", workbenchPart, Activator.PLUGIN_ID, null)
+		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				final long jobId = session.executeReport(report.getObjectId(), execParameters);
-				getDisplay().asyncExec(new Runnable() {
+				getDisplay().asyncExec(new Runnable()
+				{
 					@Override
 					public void run()
 					{
-						MessageDialog.openInformation(getShell(), "Report Execution", 
-								"Report " + report.getObjectName() + " execution started successfully. Job ID is " + jobId + ".");
+						MessageDialog.openInformation(getShell(), "Report Execution", "Report " + report.getObjectName()
+								+ " execution started successfully. Job ID is " + jobId + ".");
 					}
 				});
 			}
@@ -289,36 +296,39 @@ public class ReportExecutionForm extends Composite
 	}
 
 	/**
-	 * @param workbenchPart the workbenchPart to set
+	 * @param workbenchPart
+	 *           the workbenchPart to set
 	 */
 	public void setWorkbenchPart(IWorkbenchPart workbenchPart)
 	{
 		this.workbenchPart = workbenchPart;
 	}
-	
+
 	/**
 	 * Refresh result list
 	 */
 	private void refreshResultList()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Refresh result list for report " + report.getObjectName(), workbenchPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Refresh result list for report " + report.getObjectName(), workbenchPart, Activator.PLUGIN_ID, null)
+		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<ReportResult> results = session.getReportResults(report.getObjectId());
-				getDisplay().asyncExec(new Runnable() {
+				getDisplay().asyncExec(new Runnable()
+				{
 					@Override
 					public void run()
 					{
 						if (ReportExecutionForm.this.isDisposed())
 							return;
-						
+
 						resultList.setInput(results.toArray());
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
