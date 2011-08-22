@@ -84,6 +84,7 @@ src/agent/subagents/linux/Makefile
 src/agent/subagents/linux/Makefile.in
 src/agent/subagents/logwatch/Makefile
 src/agent/subagents/logwatch/Makefile.in
+src/agent/subagents/netbsd/.deps
 src/agent/subagents/netbsd/Makefile
 src/agent/subagents/netbsd/Makefile.in
 src/agent/subagents/odbcquery/Makefile

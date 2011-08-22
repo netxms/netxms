@@ -11225,7 +11225,37 @@ void ClientSession::renderReport(CSCPMessage *request)
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(request->GetId());
 
-	msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
+	DWORD jobId = request->GetVariableLong(VID_JOB_ID);
 
+	TCHAR reportFileName[256];
+	TCHAR outputFileName[256];
+
+	// duplicate code in ReportJob::buildDataFileName
+	_sntprintf(reportFileName, 256, _T("%s") DDIR_REPORTS FS_PATH_SEPARATOR _T("job_%u"), g_szDataDir, jobId);
+	_sntprintf(outputFileName, 256, _T("%s") DDIR_REPORTS FS_PATH_SEPARATOR _T("job_%u.pdf"), g_szDataDir, jobId);
+
+   // TODO: add type handling
+	TCHAR buffer[1024];
+	_sntprintf(buffer, 1024, _T("%s -cp %s") FS_PATH_SEPARATOR _T("report-generator.jar org.netxms.report.Exporter %s %s"),
+			g_szJavaPath,
+			g_szDataDir,
+			reportFileName,
+			outputFileName);
+
+	int ret = _tsystem(buffer);
+
+	if (ret == 0)
+	{
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+	}
 	sendMessage(&msg);
+
+	if (ret == 0)
+	{
+		sendFile(outputFileName, request->GetId());
+	}
 }

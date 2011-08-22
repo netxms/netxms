@@ -141,6 +141,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 	BOOL ret = FALSE;
+	DB_RESULT hResult = NULL;
 
 	LockData();
 
@@ -150,7 +151,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	if (hStmt == NULL)
 		goto finish;
 	DBBind(hStmt, 0, DB_SQLTYPE_INTEGER, m_dwId);
-	DB_RESULT hResult = DBSelectPrepared(hStmt);
+	hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
 	{
 		bNewObject = (DBGetNumRows(hResult) <= 0);

@@ -33,13 +33,14 @@ class Report;
 class ReportJob : public ServerJob
 {
 protected:
+	DWORD m_reportId;
 	TCHAR *m_definition;
 	StringMap *m_parameters;
 
 	virtual bool run();
 
 public:
-	ReportJob(Report *report, StringMap *parameters, DWORD userId);
+	ReportJob(Report *report, DWORD reportId, StringMap *parameters, DWORD userId);
 	virtual ~ReportJob();
 
 	TCHAR *buildDataFileName(TCHAR *buffer, size_t bufferSize) { return ReportJob::buildDataFileName(getId(), buffer, bufferSize); }

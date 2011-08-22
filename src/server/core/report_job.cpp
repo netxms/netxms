@@ -32,9 +32,10 @@
 // Constructor
 //
 
-ReportJob::ReportJob(Report *report, StringMap *parameters, DWORD userId) 
+ReportJob::ReportJob(Report *report, DWORD reportId, StringMap *parameters, DWORD userId)
 	: ServerJob(_T("EXECUTE_REPORT"), _T("Execute report"), g_dwMgmtNode, userId, false)
 {
+	m_reportId = reportId;
 	m_parameters = parameters;
 	m_definition = _tcsdup(report->getDefinition());
 
@@ -139,11 +140,39 @@ bool ReportJob::run()
 			destFileName);
 
 	DbgPrintf(6, _T("ReportJob: executing command '%s'"), buffer);
-	bool ret = (_tsystem(buffer) == 0);
+	int ret = _tsystem(buffer);
+	DbgPrintf(6, _T("ReportJob: command return code: %d"), ret);
+
+	if (ret != 0) {
+		switch (WEXITSTATUS(ret))
+		{
+			case 1:
+				setFailureMessage(_T("Internal error: report generator started with invalid parameters"));
+				break;
+			case 2:
+				setFailureMessage(_T("Exception in report generator"));
+				break;
+			default:
+				setFailureMessage(_T("Report generator failed to start"));
+				break;
+		}
+	}
 
 	_tunlink(definitionFileName);
 
-	return ret;
+	TCHAR query[4096];
+	_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO report_results (report_id,generated,job_id) VALUES (%d, %d, %d)"),
+                       m_reportId, time(NULL), getId());
+	if (DBQuery(g_hCoreDB, query))
+	{
+		return ret == 0;
+	}
+	else
+	{
+		setFailureMessage(_T("Database Error"));
+	}
+
+	return false;
 }
 
 
