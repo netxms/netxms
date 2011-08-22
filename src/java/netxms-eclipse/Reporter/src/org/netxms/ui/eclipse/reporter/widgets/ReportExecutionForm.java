@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.reporter.widgets;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +28,7 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.IBaseLabelProvider;
-import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -249,13 +251,65 @@ public class ReportExecutionForm extends Composite
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				renderReport();
+				final ReportResult firstElement = (ReportResult)((IStructuredSelection)resultList.getSelection()).getFirstElement();
+				if (firstElement != null)
+				{
+					renderReport(firstElement.getJobId());
+				}
 			}
 		});
 	}
 
-	private void renderReport()
+	private void renderReport(final long jobId)
 	{
+		new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null)
+		{
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				final byte[] blob = session.renderReport(jobId);
+
+				// TODO: fix this
+				final File tempFile = File.createTempFile("nxreport", ".pdf");
+				FileOutputStream stream = null;
+				try
+				{
+					stream = new FileOutputStream(tempFile);
+					stream.write(blob);
+				}
+				finally
+				{
+					if (stream != null)
+					{
+						stream.close();
+					}
+				}
+
+				getDisplay().asyncExec(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						try
+						{
+							// TODO: win32 only
+							Runtime.getRuntime().exec("rundll32 SHELL32.DLL,ShellExec_RunDLL " + tempFile.getAbsolutePath());
+						}
+						catch(IOException e)
+						{
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot execute report " + report.getObjectName();
+			}
+		}.start();
 	}
 
 	/**

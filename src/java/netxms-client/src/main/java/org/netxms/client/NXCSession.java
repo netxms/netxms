@@ -5037,7 +5037,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 */
 	public List<ReportResult> getReportResults(long reportId) throws IOException, NXCException
 	{
-		final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_REPORT);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_REPORT_RESULTS);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
 		sendMessage(msg);
 		NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -5050,5 +5050,57 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			varId += 10;
 		}
 		return results;
+	}
+	
+	/**
+	 * Render report into desired format
+	 * 
+	 * @param jobId
+	 * @return report's blob
+	 * @throws IOException
+	 * @throws NXCException
+	 */
+	public byte[] renderReport(long jobId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENDER_REPORT);
+		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
+		sendMessage(msg);
+		NXCPMessage response = waitForRCC(msg.getMessageId());
+
+		final File file = waitForFile(msg.getMessageId(), 600000);
+		if (file == null)
+		{
+			throw new NXCException(RCC.IO_ERROR);
+		}
+		
+		byte[] binaryData = new byte[(int)file.length()];
+		InputStream in = null;
+		try
+		{
+			in = new FileInputStream(file);
+			in.read(binaryData);
+		}
+		catch(Exception e)
+		{
+			// TODO: error handling
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (in != null)
+				{
+					in.close();
+				}
+				file.delete();
+			}
+			catch(Exception e)
+			{
+				// TODO: logging
+			}
+		}
+
+		return binaryData;
 	}
 }
