@@ -236,7 +236,7 @@ DWORD Report::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 
 DWORD Report::execute(StringMap *parameters, DWORD userId)
 {
-	ReportJob *job = new ReportJob(this, m_dwId, parameters, userId);
+	ReportJob *job = new ReportJob(this, parameters, userId);
 	AddJob(job);
 	return job->getId();
 }
