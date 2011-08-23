@@ -32,10 +32,10 @@
 // Constructor
 //
 
-ReportJob::ReportJob(Report *report, DWORD reportId, StringMap *parameters, DWORD userId)
+ReportJob::ReportJob(Report *report, StringMap *parameters, DWORD userId)
 	: ServerJob(_T("EXECUTE_REPORT"), _T("Execute report"), g_dwMgmtNode, userId, false)
 {
-	m_reportId = reportId;
+	m_report = report;
 	m_parameters = parameters;
 	m_definition = _tcsdup(report->getDefinition());
 
@@ -162,7 +162,7 @@ bool ReportJob::run()
 
 	TCHAR query[4096];
 	_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO report_results (report_id,generated,job_id) VALUES (%d, %d, %d)"),
-                       m_reportId, time(NULL), getId());
+                       m_report->getId(), time(NULL), getId());
 	if (DBQuery(g_hCoreDB, query))
 	{
 		return ret == 0;
