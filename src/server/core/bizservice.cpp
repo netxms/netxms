@@ -262,10 +262,7 @@ void BizService::poll( ClientSession *pSession, DWORD dwRqId, int nPoller )
 	}
 
 	// Set the status based on what the kids' been up to
-	this->calculateCompoundStatus();
+	calculateCompoundStatus();
 
 	m_busy = false;
 }
-
-
-

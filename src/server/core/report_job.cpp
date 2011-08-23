@@ -143,8 +143,9 @@ bool ReportJob::run()
 	int ret = _tsystem(buffer);
 	DbgPrintf(6, _T("ReportJob: command return code: %d"), ret);
 
-	if (ret != 0) {
-		switch (WEXITSTATUS(ret))
+	if (ret != 0) 
+	{
+		switch(WEXITSTATUS(ret))
 		{
 			case 1:
 				setFailureMessage(_T("Internal error: report generator started with invalid parameters"));

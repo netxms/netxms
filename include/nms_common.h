@@ -159,6 +159,8 @@ typedef int bool;
 #define FS_PATH_SEPARATOR       _T("\\")
 #define FS_PATH_SEPARATOR_CHAR  _T('\\')
 
+#define WEXITSTATUS(x)          (x)
+
 #if _MSC_VER > 1300
 #define HAVE_SCPRINTF           1
 #define HAVE_VSCPRINTF          1
