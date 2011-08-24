@@ -18,17 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 
-import java.util.Map.Entry;
-
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes;
+import org.netxms.client.objects.ClusterResource;
+import org.netxms.ui.eclipse.objectmanager.propertypages.ClusterResources;
 
 /**
- * Label provider for custom attributes list elements
+ * Label provider for cluster resource list elements
  */
-public class AttrListLabelProvider extends LabelProvider implements ITableLabelProvider
+public class ResourceListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -42,22 +41,18 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		if (!(element instanceof Entry))
+		if (!(element instanceof ClusterResource))
 			return null;
 
-		Object obj;
 		switch(columnIndex)
 		{
-			case CustomAttributes.COLUMN_NAME:
-				obj = ((Entry)element).getKey();
-				return (obj instanceof String) ? (String)obj : null;
-			case CustomAttributes.COLUMN_VALUE:
-				obj = ((Entry)element).getValue();
-				return (obj instanceof String) ? (String)obj : null;
+			case ClusterResources.COLUMN_NAME:
+				return ((ClusterResource)element).getName();
+			case ClusterResources.COLUMN_IP_ADDRESS:
+				return ((ClusterResource)element).getVirtualAddress().getHostAddress();
 		}
 		return null;
 	}

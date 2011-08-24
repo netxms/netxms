@@ -192,6 +192,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.ClusterResources"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.ClusterResources#10"
+              name="Cluster Resources">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Cluster">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
