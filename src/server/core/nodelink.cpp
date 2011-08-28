@@ -33,6 +33,7 @@ NodeLink::NodeLink()
 :Container()
 {
 	_tcscpy(m_szName, _T("Default"));
+	m_node = NULL;
 }
 
 
@@ -41,9 +42,9 @@ NodeLink::NodeLink()
 //
 
 NodeLink::NodeLink(const TCHAR *name)
-:Container()
+:Container(name, 0)
 {
-	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	m_node = NULL;
 }
 
 
@@ -196,8 +197,7 @@ BOOL NodeLink::DeleteFromDB()
 void NodeLink::CreateMessage(CSCPMessage *pMsg)
 {
 	NetObj::CreateMessage(pMsg);
-	// pMsg->SetVariable(VID_ID, m_dwId);
-	// pMsg->SetVariable(VID_STATUS, m_svcStatus);
+	pMsg->SetVariable(VID_NODELINK_NODE_ID, m_node->Id());
 }
 
 
@@ -210,8 +210,12 @@ DWORD NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
-	// if (pRequest->IsVariableExist(VID_STATUS))
-	//	m_svcStatus = pRequest->GetVariableLong(VID_STATUS);
+	if (pRequest->IsVariableExist(VID_NODELINK_NODE_ID))
+	{
+		safe_delete_and_null(m_node);
+		m_node = new Node;
+		m_node->CreateFromDB(pRequest->GetVariableLong(VID_NODELINK_NODE_ID));
+	}
 
 	return NetObj::ModifyFromMessage(pRequest, TRUE);
 }

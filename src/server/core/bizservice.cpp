@@ -216,8 +216,7 @@ BOOL BizService::DeleteFromDB()
 void BizService::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
-   // pMsg->SetVariable(VID_ID, m_dwId);
-   // pMsg->SetVariable(VID_STATUS, m_svcStatus);
+   // Calling just a base method should do fine
 }
 
 
@@ -230,8 +229,7 @@ DWORD BizService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (!bAlreadyLocked)
       LockData();
 
-	// if (pRequest->IsVariableExist(VID_STATUS))
-	//	m_svcStatus = pRequest->GetVariableLong(VID_STATUS);
+   // ... and here too
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }

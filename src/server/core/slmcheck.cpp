@@ -220,8 +220,10 @@ BOOL SlmCheck::DeleteFromDB()
 void SlmCheck::CreateMessage(CSCPMessage *pMsg)
 {
 	NetObj::CreateMessage(pMsg);
-	// pMsg->SetVariable(VID_ID, m_dwId);
-	// pMsg->SetVariable(VID_STATUS, m_svcStatus);
+	pMsg->SetVariable(VID_SLMCHECK_TYPE, DWORD(m_type));
+	pMsg->SetVariable(VID_SLMCHECK_SCRIPT, m_script ? m_script : NULL);
+	pMsg->SetVariable(VID_SLMCHECK_REASON, m_reason);
+	pMsg->SetVariable(VID_SLMCHECK_THR_ID, m_threshold ? m_threshold->getId() : 0);
 }
 
 
@@ -234,8 +236,18 @@ DWORD SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
-	// if (pRequest->IsVariableExist(VID_STATUS))
-	//	m_svcStatus = pRequest->GetVariableLong(VID_STATUS);
+	if (pRequest->IsVariableExist(VID_SLMCHECK_TYPE))
+		m_type = CheckType(pRequest->GetVariableLong(VID_SLMCHECK_TYPE));
+	if (pRequest->IsVariableExist(VID_SLMCHECK_SCRIPT))
+		m_script = pRequest->GetVariableStr(VID_SLMCHECK_SCRIPT);
+	if (pRequest->IsVariableExist(VID_SLMCHECK_REASON))
+		pRequest->GetVariableStr(VID_SLMCHECK_REASON, m_reason, sizeof(m_reason));
+	if (pRequest->IsVariableExist(VID_SLMCHECK_THR_ID))
+	{
+		DWORD thresholdId = pRequest->GetVariableLong(VID_SLMCHECK_THR_ID);
+		// Load threshold
+		// ...
+	}
 
 	return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
