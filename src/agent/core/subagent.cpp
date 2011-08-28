@@ -167,7 +167,7 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
 
    if (_tcschr(szModuleName, _T('/')) == NULL)
    {
-      // Assume that subagent name without pat given
+      // Assume that subagent name without path given
       // Try to load it from pkglibdir
       _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, szModuleName);
    }
