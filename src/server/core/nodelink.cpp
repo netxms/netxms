@@ -33,7 +33,7 @@ NodeLink::NodeLink()
 :Container()
 {
 	_tcscpy(m_szName, _T("Default"));
-	m_node = NULL;
+	m_nodeId = 0;
 }
 
 
@@ -44,7 +44,7 @@ NodeLink::NodeLink()
 NodeLink::NodeLink(const TCHAR *name)
 :Container(name, 0)
 {
-	m_node = NULL;
+	m_nodeId = 0;
 }
 
 
@@ -54,12 +54,42 @@ NodeLink::NodeLink(const TCHAR *name)
 
 NodeLink::~NodeLink()
 {
-	safe_delete_and_null(m_node);
 }
+
+//
+// Calculate status for compound object based on childs status
+// ! Copy/paste from BizService::calculateCompoundStatus()
+//
 
 void NodeLink::calculateCompoundStatus(BOOL bForcedRecalc /*= FALSE*/)
 {
-	m_iStatus = STATUS_NORMAL;
+	int i, iCount, iMostCriticalStatus;
+	int iOldStatus = m_iStatus;
+
+	// Calculate own status by selecting the most critical status of the kids
+	LockChildList(FALSE);
+	for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < int(m_dwChildCount); i++)
+	{
+		int iChildStatus = m_pChildList[i]->Status();
+		if ((iChildStatus < STATUS_UNKNOWN) &&
+			(iChildStatus > iMostCriticalStatus))
+		{
+			iMostCriticalStatus = iChildStatus;
+			iCount++;
+		}
+	}
+	m_iStatus = (iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN;
+	UnlockChildList();
+
+	// Cause parent object(s) to recalculate it's status
+	if ((iOldStatus != m_iStatus) || bForcedRecalc)
+	{
+		LockParentList(FALSE);
+		for(i = 0; i < int(m_dwParentCount); i++)
+			m_pParentList[i]->calculateCompoundStatus();
+		UnlockParentList();
+		Modify();   /* LOCK? */
+	}
 }
 
 //
@@ -69,7 +99,6 @@ void NodeLink::calculateCompoundStatus(BOOL bForcedRecalc /*= FALSE*/)
 BOOL NodeLink::CreateFromDB(DWORD id)
 {
 	const int script_length = 1024;
-	DWORD nodeId;
 	m_dwId = id;
 
 	if (!loadCommonProperties())
@@ -98,11 +127,13 @@ BOOL NodeLink::CreateFromDB(DWORD id)
 		return FALSE;
 	}
 
-	nodeId	= DBGetFieldLong(hResult, 0, 0);
-	if (nodeId > 0)
+	m_nodeId	= DBGetFieldLong(hResult, 0, 0);
+	if (m_nodeId <= 0)
 	{
-		m_node = new Node;
-		m_node->CreateFromDB(nodeId);
+		DBFreeResult(hResult);
+		DBFreeStatement(hStmt);
+		DbgPrintf(4, _T("Cannot load nodelink object %ld - node id is missing"), (long)m_dwId);
+		return FALSE;
 	}
 
 	DBFreeResult(hResult);
@@ -149,7 +180,7 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 		// DbgPrintf(4, _T("Cannot prepare %s from node_links"), bNewObject ? _T("insert") : _T("update"));
 		return FALSE;
 	}
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_node == NULL ? 0 : m_node->Id());
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_nodeId);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
 	if (!DBExecute(hStmt))
 	{
@@ -197,7 +228,7 @@ BOOL NodeLink::DeleteFromDB()
 void NodeLink::CreateMessage(CSCPMessage *pMsg)
 {
 	NetObj::CreateMessage(pMsg);
-	pMsg->SetVariable(VID_NODELINK_NODE_ID, m_node->Id());
+	pMsg->SetVariable(VID_NODELINK_NODE_ID, m_nodeId);
 }
 
 
@@ -212,10 +243,25 @@ DWORD NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 	if (pRequest->IsVariableExist(VID_NODELINK_NODE_ID))
 	{
-		safe_delete_and_null(m_node);
-		m_node = new Node;
-		m_node->CreateFromDB(pRequest->GetVariableLong(VID_NODELINK_NODE_ID));
+		m_nodeId = pRequest->GetVariableLong(VID_NODELINK_NODE_ID);
 	}
 
 	return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+//
+// Execute underlying checks for this node link
+//
+
+void NodeLink::execute()
+{
+	DbgPrintf(9, _T("NodeLink::execute() started for id %ld"), long(m_dwId));
+
+	for (int i = 0; i < int(m_dwChildCount); i++)
+	{
+		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
+			((SlmCheck*)m_pChildList[i])->execute();
+	}
+
+	DbgPrintf(9, _T("NodeLink::execute() finished for id %ld"), long(m_dwId));
 }

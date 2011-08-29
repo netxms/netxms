@@ -1557,7 +1557,7 @@ public:
 class NXCORE_EXPORTABLE NodeLink : public Container
 {
 protected:
-	Node* m_node;
+	DWORD m_nodeId;
 
 public:
 	NodeLink();
@@ -1573,6 +1573,8 @@ public:
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	void execute();
 };
 
 //

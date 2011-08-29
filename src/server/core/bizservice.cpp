@@ -257,6 +257,8 @@ void BizService::poll( ClientSession *pSession, DWORD dwRqId, int nPoller )
 	{
 		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
 			((SlmCheck*)m_pChildList[i])->execute();
+		else if (m_pChildList[i]->Type() == OBJECT_NODELINK)
+			((NodeLink*)m_pChildList[i])->execute();
 	}
 
 	// Set the status based on what the kids' been up to

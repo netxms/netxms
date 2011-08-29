@@ -681,10 +681,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\slm.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\slmcheck.cpp"
 				>
 			</File>
