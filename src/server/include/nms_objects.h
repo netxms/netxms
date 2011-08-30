@@ -82,7 +82,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define BUILTIN_OID_NETWORKMAPROOT  6
 #define BUILTIN_OID_DASHBOARDROOT   7
 #define BUILTIN_OID_REPORTROOT      8
-#define BUILTIN_OID_BIZSERVICEROOT	9
+#define BUILTIN_OID_BusinessServiceROOT	9
 
 //
 // Node runtime (dynamic) flags
@@ -1550,8 +1550,9 @@ public:
 	DWORD execute(StringMap *parameters, DWORD userId);
 };
 
+
 //
-// Node link object for biz service (actually is a node)
+// Node link object for business service
 //
 
 class NXCORE_EXPORTABLE NodeLink : public Container
@@ -1577,6 +1578,7 @@ public:
 	void execute();
 };
 
+
 //
 // SLM check object
 //
@@ -1584,11 +1586,13 @@ public:
 class NXCORE_EXPORTABLE SlmCheck : public NetObj
 {
 protected:
-	Threshold* m_threshold;
+	Threshold *m_threshold;
 	enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
-	TCHAR* m_script;
-	TCHAR m_reason[256];
+	TCHAR *m_script;
 	NXSL_Program *m_pCompiledScript;
+	TCHAR m_reason[256];
+
+	void setScript(const TCHAR *script);
 
 public:
 	SlmCheck();
@@ -1605,8 +1609,8 @@ public:
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void execute();
-	void setReason(const TCHAR* reason) { nx_strncpy(m_reason, reason, 255); }
-	const TCHAR* getReason() const { return m_reason; }
+	void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }
+	const TCHAR *getReason() { return m_reason; }
 };
 
 
@@ -1614,13 +1618,13 @@ public:
 // Business service root
 //
 
-class NXCORE_EXPORTABLE BizServiceRoot : public UniversalRoot
+class NXCORE_EXPORTABLE BusinessServiceRoot : public UniversalRoot
 {
 public:
-	BizServiceRoot();
-	virtual ~BizServiceRoot();
+	BusinessServiceRoot();
+	virtual ~BusinessServiceRoot();
 
-	virtual int Type() { return OBJECT_BIZSERVICEROOT; }
+	virtual int Type() { return OBJECT_BUSINESSSERVICEROOT; }
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1629,18 +1633,18 @@ public:
 // Business service object
 //
 
-class NXCORE_EXPORTABLE BizService : public Container
+class NXCORE_EXPORTABLE BusinessService : public Container
 {
 protected:
 	bool m_busy;
 	time_t m_lastPollTime;
 
 public:
-	BizService();
-	BizService(const TCHAR *name);
-	virtual ~BizService();
+	BusinessService();
+	BusinessService(const TCHAR *name);
+	virtual ~BusinessService();
 
-	virtual int Type() { return OBJECT_BIZSERVICE; }
+	virtual int Type() { return OBJECT_BUSINESSSERVICE; }
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
@@ -1721,7 +1725,7 @@ extern PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot;
 extern NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot;
 extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
 extern ReportRoot NXCORE_EXPORTABLE *g_pReportRoot;
-extern BizServiceRoot NXCORE_EXPORTABLE *g_pBizServiceRoot;
+extern BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot;
 
 extern DWORD NXCORE_EXPORTABLE g_dwMgmtNode;
 extern DWORD g_dwNumCategories;

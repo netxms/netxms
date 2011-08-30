@@ -869,11 +869,12 @@ typedef struct
 #define VID_BRIDGE_BASE_ADDRESS     ((DWORD)388)
 #define VID_SUBMAP_ID               ((DWORD)389)
 #define VID_REPORT_DEFINITION       ((DWORD)390)
-#define VID_SLMCHECK_TYPE			((DWORD)391)
-#define VID_SLMCHECK_THR_ID			((DWORD)392)
-#define VID_SLMCHECK_SCRIPT			((DWORD)393)
-#define VID_SLMCHECK_REASON			((DWORD)394)
-#define VID_NODELINK_NODE_ID		((DWORD)395)
+#define VID_SLMCHECK_TYPE           ((DWORD)391)
+#define VID_REASON                  ((DWORD)392)
+#define VID_NODE_ID                 ((DWORD)393)
+
+// Base variabe for single threshold in message
+#define VID_THRESHOLD_BASE          ((DWORD)0x00800000)
 
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((DWORD)0x10000000)

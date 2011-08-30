@@ -36,7 +36,7 @@ PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
 NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
 DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
 ReportRoot NXCORE_EXPORTABLE *g_pReportRoot = NULL;
-BizServiceRoot NXCORE_EXPORTABLE *g_pBizServiceRoot = NULL;
+BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot = NULL;
 
 DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 DWORD g_dwNumCategories = 0;
@@ -59,7 +59,7 @@ const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Inte
                                _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
                                _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"), 
                                _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
-							   _T("BizServiceRoot"), _T("BizService"), _T("NodeLink"), _T("SlmCheck")
+							   _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"), _T("SlmCheck")
 };
 
 
@@ -215,8 +215,8 @@ void ObjectsInit()
    NetObjInsert(g_pReportRoot, FALSE);
 
    // Create "Service Root" object
-   g_pBizServiceRoot = new BizServiceRoot;
-   NetObjInsert(g_pBizServiceRoot, FALSE);
+   g_pBusinessServiceRoot = new BusinessServiceRoot;
+   NetObjInsert(g_pBusinessServiceRoot, FALSE);
    
 	DbgPrintf(1, _T("Built-in objects created"));
 
@@ -286,8 +286,8 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_REPORTROOT:
 			case OBJECT_REPORTGROUP:
 			case OBJECT_REPORT:
-			case OBJECT_BIZSERVICEROOT:
-			case OBJECT_BIZSERVICE:
+			case OBJECT_BUSINESSSERVICEROOT:
+			case OBJECT_BUSINESSSERVICE:
 			case OBJECT_SLMCHECK:
 			case OBJECT_NODELINK:
             break;
@@ -389,8 +389,8 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_REPORTROOT:
 		case OBJECT_REPORTGROUP:
 		case OBJECT_REPORT:
-		case OBJECT_BIZSERVICEROOT:
-		case OBJECT_BIZSERVICE:
+		case OBJECT_BUSINESSSERVICEROOT:
+		case OBJECT_BUSINESSSERVICE:
 		case OBJECT_SLMCHECK:
 		case OBJECT_NODELINK:
 			break;
@@ -783,7 +783,8 @@ static void LinkChildObjectsCallback(NetObj *object, void *data)
 		 (object->Type() == OBJECT_NETWORKMAPGROUP) ||
 		 (object->Type() == OBJECT_DASHBOARD) ||
 		 (object->Type() == OBJECT_REPORTGROUP) ||
-		 (object->Type() == OBJECT_BIZSERVICE))
+		 (object->Type() == OBJECT_BUSINESSSERVICE) ||
+		 (object->Type() == OBJECT_NODELINK))
 	{
 		((Container *)object)->linkChildObjects();
 	}
@@ -832,7 +833,7 @@ BOOL LoadObjects()
 	g_pMapRoot->LoadFromDB();
 	g_pDashboardRoot->LoadFromDB();
 	g_pReportRoot->LoadFromDB();
-	g_pBizServiceRoot->LoadFromDB();
+	g_pBusinessServiceRoot->LoadFromDB();
 
    // Load zones
    if (g_dwFlags & AF_ENABLE_ZONING)
@@ -1326,7 +1327,7 @@ BOOL LoadObjects()
 
    // Loading service objects
    DbgPrintf(2, _T("Loading business services..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_BIZSERVICE);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
@@ -1334,7 +1335,7 @@ BOOL LoadObjects()
 	   for(i = 0; i < dwNumRows; i++)
 	   {
 		   dwId = DBGetFieldULong(hResult, i, 0);
-		   BizService *pGroup = new BizService;
+		   BusinessService *pGroup = new BusinessService;
 		   if (pGroup->CreateFromDB(dwId))
 		   {
 			   NetObjInsert(pGroup, FALSE);  // Insert into indexes
@@ -1360,7 +1361,7 @@ BOOL LoadObjects()
    g_pMapRoot->LinkChildObjects();
 	g_pDashboardRoot->LinkChildObjects();
 	g_pReportRoot->LinkChildObjects();
-	g_pBizServiceRoot->LinkChildObjects();
+	g_pBusinessServiceRoot->LinkChildObjects();
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;
@@ -1371,7 +1372,7 @@ BOOL LoadObjects()
    g_pTemplateRoot->calculateCompoundStatus();
    g_pPolicyRoot->calculateCompoundStatus();
    g_pMapRoot->calculateCompoundStatus();
-   g_pBizServiceRoot->calculateCompoundStatus();
+   g_pBusinessServiceRoot->calculateCompoundStatus();
 
    // Recalculate status for zone objects
    if (g_dwFlags & AF_ENABLE_ZONING)
@@ -1394,23 +1395,6 @@ BOOL LoadObjects()
 		pTemplate->unhide();
 	}
 	pTemplate->ValidateSystemTemplate();
-
-	/*
-	TODO: probably system templates must be removed completely
-
-	pTemplate = FindTemplateByName(_T("@System.SNMP"));
-	if (pTemplate == NULL)
-	{
-		pTemplate = new Template(_T("@System.SNMP"));
-		pTemplate->SetSystemFlag(TRUE);
-      NetObjInsert(pTemplate, TRUE);
-		g_pTemplateRoot->AddChild(pTemplate);
-		pTemplate->AddParent(g_pTemplateRoot);
-		pTemplate->calculateCompoundStatus();
-		pTemplate->Unhide();
-	}
-	pTemplate->ValidateSystemTemplate();
-	*/
 
    return TRUE;
 }
@@ -1553,6 +1537,21 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
       case OBJECT_REPORTGROUP:
          if ((iChildClass == OBJECT_REPORTGROUP) || 
              (iChildClass == OBJECT_REPORT))
+            return TRUE;
+         break;
+		case OBJECT_BUSINESSSERVICEROOT:
+			if ((iChildClass == OBJECT_BUSINESSSERVICE) || 
+			    (iChildClass == OBJECT_NODELINK))
+            return TRUE;
+         break;
+		case OBJECT_BUSINESSSERVICE:
+			if ((iChildClass == OBJECT_BUSINESSSERVICE) || 
+			    (iChildClass == OBJECT_NODELINK) ||
+			    (iChildClass == OBJECT_SLMCHECK))
+            return TRUE;
+         break;
+		case OBJECT_NODELINK:
+			if (iChildClass == OBJECT_SLMCHECK)
             return TRUE;
          break;
       case -1:    // Creating object without parent

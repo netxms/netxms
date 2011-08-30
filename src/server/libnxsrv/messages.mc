@@ -830,4 +830,16 @@ Language=English
 Failed to load report object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile script for service check object %1 "%2": %3
+.
+
+MessageId=
+SymbolicName=MSG_SLMCHECK_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute script for service check object %1 "%2": %3
+.
+
 ;#endif

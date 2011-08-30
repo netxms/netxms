@@ -29,26 +29,26 @@
 // SLM check default constructor
 //
 
-SlmCheck::SlmCheck()
-:NetObj()
+SlmCheck::SlmCheck() : NetObj()
 {
 	_tcscpy(m_szName, _T("Default"));
 	m_script = NULL;
+	m_pCompiledScript = NULL;
 	m_threshold = NULL;
-	m_reason[0] = _T('\0');
+	m_reason[0] = 0;
 }
 
 //
 // Constructor for new check object
 //
 
-SlmCheck::SlmCheck(const TCHAR *name)
-:NetObj()
+SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_script = NULL;
+	m_pCompiledScript = NULL;
 	m_threshold = NULL;
-	m_reason[0] = _T('\0');
+	m_reason[0] = 0;
 }
 
 
@@ -58,8 +58,9 @@ SlmCheck::SlmCheck(const TCHAR *name)
 
 SlmCheck::~SlmCheck()
 {
-	safe_delete_and_null(m_threshold);
-	safe_free_and_null(m_script);
+	delete m_threshold;
+	safe_free(m_script);
+	delete m_pCompiledScript;
 }
 
 
@@ -69,10 +70,7 @@ SlmCheck::~SlmCheck()
 
 BOOL SlmCheck::CreateFromDB(DWORD id)
 {
-	const int script_length = 1024;
 	DWORD thresholdId;
-	const int errorMsgLen = 512;
-	TCHAR errorMsg[errorMsgLen];
 
 	m_dwId = id;
 
@@ -102,10 +100,10 @@ BOOL SlmCheck::CreateFromDB(DWORD id)
 		return FALSE;
 	}
 
-	m_type		= SlmCheck::CheckType(DBGetFieldLong(hResult, 0, 0));
-	m_script = DBGetField(hResult, 0, 1, NULL, script_length);
-	thresholdId = DBGetFieldLong(hResult, 0, 2);
-	DBGetField(hResult, 0, 3, m_reason, 255);
+	m_type = SlmCheck::CheckType(DBGetFieldLong(hResult, 0, 0));
+	m_script = DBGetField(hResult, 0, 1, NULL, 0);
+	thresholdId = DBGetFieldULong(hResult, 0, 2);
+	DBGetField(hResult, 0, 3, m_reason, 256);
 
 	if (thresholdId > 0)
 	{
@@ -115,12 +113,12 @@ BOOL SlmCheck::CreateFromDB(DWORD id)
 	// Compile script if there is one
 	if (m_type == check_script && m_script != NULL)
 	{
-		m_pCompiledScript = (NXSL_Program*)NXSLCompile(m_script, errorMsg, errorMsgLen);
+		const int errorMsgLen = 512;
+		TCHAR errorMsg[errorMsgLen];
+
+		m_pCompiledScript = NXSLCompile(m_script, errorMsg, errorMsgLen);
 		if (m_pCompiledScript == NULL)
-		{
-			DbgPrintf(2, _T("Check %s/%ld script compilation failed - %s"), 
-				m_szName, (long)m_dwId, errorMsg); 
-		}
+			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, errorMsg);
 	}
 
 	DBFreeResult(hResult);
@@ -221,9 +219,10 @@ void SlmCheck::CreateMessage(CSCPMessage *pMsg)
 {
 	NetObj::CreateMessage(pMsg);
 	pMsg->SetVariable(VID_SLMCHECK_TYPE, DWORD(m_type));
-	pMsg->SetVariable(VID_SLMCHECK_SCRIPT, m_script ? m_script : NULL);
-	pMsg->SetVariable(VID_SLMCHECK_REASON, m_reason);
-	pMsg->SetVariable(VID_SLMCHECK_THR_ID, m_threshold ? m_threshold->getId() : 0);
+	pMsg->SetVariable(VID_SCRIPT, m_script ? m_script : NULL);
+	pMsg->SetVariable(VID_REASON, m_reason);
+	if (m_threshold != NULL)
+		m_threshold->createMessage(pMsg, VID_THRESHOLD_BASE);
 }
 
 
@@ -238,18 +237,55 @@ DWORD SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 	if (pRequest->IsVariableExist(VID_SLMCHECK_TYPE))
 		m_type = CheckType(pRequest->GetVariableLong(VID_SLMCHECK_TYPE));
-	if (pRequest->IsVariableExist(VID_SLMCHECK_SCRIPT))
-		m_script = pRequest->GetVariableStr(VID_SLMCHECK_SCRIPT);
-	if (pRequest->IsVariableExist(VID_SLMCHECK_REASON))
-		pRequest->GetVariableStr(VID_SLMCHECK_REASON, m_reason, sizeof(m_reason));
-	if (pRequest->IsVariableExist(VID_SLMCHECK_THR_ID))
+
+	if (pRequest->IsVariableExist(VID_SCRIPT))
 	{
-		DWORD thresholdId = pRequest->GetVariableLong(VID_SLMCHECK_THR_ID);
-		// Load threshold
-		// ...
+		TCHAR *script = pRequest->GetVariableStr(VID_SCRIPT);
+		setScript(script);
+		safe_free(script);
+	}
+
+	if (pRequest->IsVariableExist(VID_THRESHOLD_BASE))
+	{
+		if (m_threshold == NULL)
+			m_threshold = new Threshold;
+		m_threshold->updateFromMessage(pRequest, VID_THRESHOLD_BASE);
 	}
 
 	return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+
+//
+// Set check script
+//
+
+void SlmCheck::setScript(const TCHAR *script)
+{
+	if (script != NULL)
+	{
+		safe_free(m_script);
+		delete m_pCompiledScript;
+		m_script = _tcsdup(script);
+		if (m_script != NULL)
+		{
+			TCHAR error[256];
+
+			m_pCompiledScript = NXSLCompile(m_script, error, 256);
+			if (m_pCompiledScript == NULL)
+				nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, error);
+		}
+		else
+		{
+			m_pCompiledScript = NULL;
+		}
+	}
+	else
+	{
+		delete_and_null(m_pCompiledScript);
+		safe_free_and_null(m_script);
+	}
+	Modify();
 }
 
 

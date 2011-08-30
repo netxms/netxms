@@ -89,6 +89,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
@@ -2870,6 +2871,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			msg.setVariable(NXCPCodes.VID_REPORT_DEFINITION, data.getReportDefinition());
 		}
 		
+		if ((flags & NXCObjectModificationData.MODIFY_CLUSTER_RESOURCES) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_NUM_RESOURCES, data.getResourceList().size());
+			long varId = NXCPCodes.VID_RESOURCE_LIST_BASE;
+			for(ClusterResource r : data.getResourceList())
+			{
+				msg.setVariableInt32(varId++, (int)r.getId());
+				msg.setVariable(varId++, r.getName());
+				msg.setVariable(varId++, r.getVirtualAddress());
+				varId += 7;
+			}
+		}
+		
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
@@ -5065,7 +5079,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENDER_REPORT);
 		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
 		sendMessage(msg);
-		NXCPMessage response = waitForRCC(msg.getMessageId());
+		waitForRCC(msg.getMessageId());
 
 		final File file = waitForFile(msg.getMessageId(), 600000);
 		if (file == null)

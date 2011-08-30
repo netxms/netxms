@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1233,6 +1233,10 @@ int main(int argc, char *argv[])
 	TCHAR *eptr;
 #ifdef _WIN32
    TCHAR szModuleName[MAX_PATH];
+   HKEY hKey;
+   DWORD dwSize;
+#else
+   char *pszEnv;
 #endif
 
    InitThreadLibrary();
@@ -1252,6 +1256,25 @@ int main(int argc, char *argv[])
    // of a dot, as set by system's regional settings.
 #ifdef _WIN32
    setlocale(LC_ALL, "C");
+#endif
+
+   // Check for alternate config file location
+#ifdef _WIN32
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Agent"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      dwSize = MAX_PATH * sizeof(TCHAR);
+      RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)g_szConfigFile, &dwSize);
+      RegQueryValueEx(hKey, _T("ConfigIncludeDir"), NULL, NULL, (BYTE *)g_szConfigIncludeDir, &dwSize);
+      RegCloseKey(hKey);
+   }
+#else
+   pszEnv = _tgetenv(_T("NXAGENTD_CONFIG"));
+   if (pszEnv != NULL)
+      nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
+
+	pszEnv = _tgetenv(_T("NXAGENTD_CONFIG_D"));
+   if (pszEnv != NULL)
+      nx_strncpy(g_szConfigIncludeDir, pszEnv, MAX_PATH);
 #endif
 
    // Parse command line

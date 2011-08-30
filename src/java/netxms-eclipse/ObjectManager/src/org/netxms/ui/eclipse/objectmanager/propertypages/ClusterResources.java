@@ -109,7 +109,7 @@ public class ClusterResources extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				
+				addResource();
 			}
       });
 		
@@ -128,7 +128,7 @@ public class ClusterResources extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				
+				editResource();
 			}
       });
       
@@ -147,7 +147,7 @@ public class ClusterResources extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				
+				deleteResource();
 			}
       });
       
@@ -172,4 +172,32 @@ public class ClusterResources extends PropertyPage
       return dialogArea;
 	}
 
+	/**
+	 * Add new cluster resource
+	 */
+	private void addResource()
+	{
+		
+	}
+	
+	/**
+	 * Edit currently selected resource
+	 */
+	private void editResource()
+	{
+		
+	}
+	
+	/**
+	 * Delete currently selected resource(s)
+	 */
+	private void deleteResource()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		for(Object o : selection.toList())
+		{
+			resources.remove(o);
+		}
+		viewer.setInput(resources.toArray());
+	}
 }

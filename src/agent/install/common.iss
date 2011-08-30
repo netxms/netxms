@@ -1,6 +1,14 @@
 [Dirs]
 Name: "{app}\etc"
+Name: "{app}\etc\nxagentd.conf.d"
 Name: "{app}\var"
+
+[Registry]
+Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty
+Root: HKLM; Subkey: "Software\NetXMS\Agent"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"
+Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "ConfigFile"; ValueData: "{app}\etc\nxagentd.conf"
+Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "ConfigIncludeDir"; ValueData: "{app}\etc\nxagentd.conf.d"
 
 [Run]
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" ""{code:GetMasterServer}"" {{syslog} ""{app}\var"" {code:GetSubagentList}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden

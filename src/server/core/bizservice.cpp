@@ -16,21 +16,20 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: bizservice.cpp
+** File: BusinessService.cpp
 **
 **/
 
 #include "nxcore.h"
-#include "nms_objects.h"
 
 #define QUERY_LENGTH		(512)
+
 
 //
 // Service default constructor
 //
 
-BizService::BizService()
-     :Container()
+BusinessService::BusinessService() : Container()
 {
 	m_dwId = 0;
 	m_busy = false;
@@ -43,8 +42,7 @@ BizService::BizService()
 // Constructor for new service object
 //
 
-BizService::BizService(const TCHAR *name)
-     :Container(name, 0)
+BusinessService::BusinessService(const TCHAR *name) : Container(name, 0)
 {
 	m_dwId = 0;
 	m_busy = false;
@@ -57,15 +55,16 @@ BizService::BizService(const TCHAR *name)
 // Service class destructor
 //
 
-BizService::~BizService()
+BusinessService::~BusinessService()
 {
 }
+
 
 //
 // Calculate status for compound object based on childs status
 //
 
-void BizService::calculateCompoundStatus(BOOL bForcedRecalc /*= FALSE*/)
+void BusinessService::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	int i, iCount, iMostCriticalStatus;
 	int iOldStatus = m_iStatus;
@@ -96,11 +95,12 @@ void BizService::calculateCompoundStatus(BOOL bForcedRecalc /*= FALSE*/)
 	}
 }
 
+
 //
 // Create object from database data
 //
 
-BOOL BizService::CreateFromDB(DWORD id)
+BOOL BusinessService::CreateFromDB(DWORD id)
 {
 	m_dwId = id;
 
@@ -146,7 +146,7 @@ BOOL BizService::CreateFromDB(DWORD id)
 // Save service to database
 //
 
-BOOL BizService::SaveToDB(DB_HANDLE hdb)
+BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 
@@ -193,7 +193,7 @@ BOOL BizService::SaveToDB(DB_HANDLE hdb)
 // Delete object from database
 //
 
-BOOL BizService::DeleteFromDB()
+BOOL BusinessService::DeleteFromDB()
 {
    TCHAR szQuery[QUERY_LENGTH];
    BOOL bSuccess;
@@ -213,7 +213,7 @@ BOOL BizService::DeleteFromDB()
 // Create CSCP message with object's data
 //
 
-void BizService::CreateMessage(CSCPMessage *pMsg)
+void BusinessService::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
    // Calling just a base method should do fine
@@ -224,7 +224,7 @@ void BizService::CreateMessage(CSCPMessage *pMsg)
 // Modify object from message
 //
 
-DWORD BizService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+DWORD BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
@@ -234,21 +234,32 @@ DWORD BizService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
-bool BizService::isReadyForPolling()
+
+//
+// Check if service is ready for poll
+//
+
+bool BusinessService::isReadyForPolling()
 {
 	return time(NULL) - m_lastPollTime > g_dwSlmPollingInterval && !m_busy;
 }
 
-void BizService::lockForPolling()
+
+//
+// Lock service for polling
+//
+
+void BusinessService::lockForPolling()
 {
 	m_busy = true;
 }
+
 
 //
 // A callback for poller threads
 //
 
-void BizService::poll( ClientSession *pSession, DWORD dwRqId, int nPoller )
+void BusinessService::poll( ClientSession *pSession, DWORD dwRqId, int nPoller )
 {
 	m_lastPollTime = time(NULL);
 

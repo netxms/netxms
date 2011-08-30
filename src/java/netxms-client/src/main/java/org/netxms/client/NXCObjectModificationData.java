@@ -32,6 +32,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.client.objects.ClusterResource;
 
 /**
  * @author Victor
@@ -86,6 +87,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_NODE_FLAGS         = 0x020000000000L;
 	public static final long MODIFY_IFXTABLE_POLICY    = 0x040000000000L;
 	public static final long MODIFY_REPORT_DEFINITION  = 0x080000000000L;
+	public static final long MODIFY_CLUSTER_RESOURCES  = 0x100000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -144,6 +146,7 @@ public class NXCObjectModificationData
 	private int nodeFlags;
 	private int ifXTablePolicy;
 	private String reportDefinition;
+	private List<ClusterResource> resourceList;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1106,5 +1109,22 @@ public class NXCObjectModificationData
 			in.close();
 		}
 		setReportDefinition(new String(buffer));
+	}
+
+	/**
+	 * @return the resourceList
+	 */
+	public List<ClusterResource> getResourceList()
+	{
+		return resourceList;
+	}
+
+	/**
+	 * @param resourceList the resourceList to set
+	 */
+	public void setResourceList(List<ClusterResource> resourceList)
+	{
+		this.resourceList = resourceList;
+		flags |= MODIFY_CLUSTER_RESOURCES;
 	}
 }

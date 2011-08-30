@@ -3889,8 +3889,8 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								pObject = new Report(szObjectName);
 								NetObjInsert(pObject, TRUE);
 								break;
-							case OBJECT_BIZSERVICE:
-								pObject = new BizService(szObjectName);
+							case OBJECT_BUSINESSSERVICE:
+								pObject = new BusinessService(szObjectName);
 								NetObjInsert(pObject, TRUE);
 								break;
 							default:
