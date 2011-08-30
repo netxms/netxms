@@ -145,8 +145,6 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 
 	LockData();
 
-	saveCommonProperties(hdb);
-   
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT service_id FROM business_services WHERE service_id=?"));
 	if (hStmt == NULL)
 		return FALSE;

@@ -21,9 +21,9 @@
 **/
 
 #include "nxcore.h"
-#include "nms_objects.h"
 
 #define QUERY_LENGTH		(512)
+
 
 //
 // SLM check default constructor
@@ -148,7 +148,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT check_id FROM slm_checks WHERE check_id=?"));
 	if (hStmt == NULL)
 		goto finish;
-	DBBind(hStmt, 0, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 	hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
 	{

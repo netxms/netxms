@@ -854,4 +854,10 @@ Language=English
 Failed to load node link object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_SERVICE_CHECK_LOAD_FAILED
+Language=English
+Failed to load service check object with id %1 from database
+.
+
 ;#endif

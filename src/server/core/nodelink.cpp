@@ -153,15 +153,13 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 
 	LockData();
 
-	saveCommonProperties(hdb);
-
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT nodelink_id FROM node_links WHERE nodelink_id=?"));
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from node_links"));
 		return FALSE;
 	}
-	DBBind(hStmt, 0, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
 	{

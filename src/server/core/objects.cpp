@@ -1373,6 +1373,29 @@ BOOL LoadObjects()
 	   DBFreeResult(hResult);
    }
 
+   // Load service check objects
+   DbgPrintf(2, _T("Loading service checks..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM slm_checks"));
+   if (hResult != 0)
+   {
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         SlmCheck *check = new SlmCheck;
+         if (check->CreateFromDB(dwId))
+         {
+            NetObjInsert(check, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete check;
+            nxlog_write(MSG_SERVICE_CHECK_LOAD_FAILED, NXLOG_ERROR, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Link childs to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
 	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
