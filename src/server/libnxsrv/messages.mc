@@ -842,4 +842,16 @@ Language=English
 Failed to execute script for service check object %1 "%2": %3
 .
 
+MessageId=
+SymbolicName=MSG_BUSINESS_SERVICE_LOAD_FAILED
+Language=English
+Failed to load business service object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_NODE_LINK_LOAD_FAILED
+Language=English
+Failed to load node link object with id %1 from database
+.
+
 ;#endif

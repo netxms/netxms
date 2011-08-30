@@ -101,7 +101,7 @@ BOOL NodeLink::CreateFromDB(DWORD id)
 	const int script_length = 1024;
 	m_dwId = id;
 
-	if (!loadCommonProperties())
+	if (!Container::CreateFromDB(id))
 		return FALSE;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT node_id FROM node_links WHERE nodelink_id=?"));
@@ -138,9 +138,6 @@ BOOL NodeLink::CreateFromDB(DWORD id)
 
 	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
-
-	// Load access list
-	loadACLFromDB();
 
 	return TRUE;
 }
@@ -195,7 +192,7 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 	// Unlock object and clear modification flag
 	m_bIsModified = FALSE;
 	UnlockData();
-	return TRUE;
+	return Container::SaveToDB(hdb);
 }
 
 
@@ -208,7 +205,7 @@ BOOL NodeLink::DeleteFromDB()
 	TCHAR szQuery[QUERY_LENGTH];
 	BOOL bSuccess;
 
-	bSuccess = NetObj::DeleteFromDB();
+	bSuccess = Container::DeleteFromDB();
 	if (bSuccess)
 	{
 		_sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM node_links WHERE nodelink_id=%d"), m_dwId);

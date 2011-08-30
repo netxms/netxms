@@ -34,12 +34,12 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
-import org.netxms.ui.eclipse.slm.dialogs.CreateNodeLinkDialog;
+import org.netxms.ui.eclipse.slm.dialogs.CreateServiceCheckDialog;
 
 /**
  * Create node link object
  */
-public class CreateNodeLink implements IObjectActionDelegate
+public class CreateServiceCheck implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private IWorkbenchPart part;
@@ -61,24 +61,23 @@ public class CreateNodeLink implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateNodeLinkDialog dlg = new CreateNodeLinkDialog(window.getShell());
+		final CreateServiceCheckDialog dlg = new CreateServiceCheckDialog(window.getShell());
 		if (dlg.open() != Window.OK)
 			return;
 		
-		new ConsoleJob("Create new node link object", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Create new service check object", part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODELINK, dlg.getName(), parentId);
-				cd.setLinkedNodeId(dlg.getNodeId());
+				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_SLMCHECK, dlg.getName(), parentId);
 				session.createObject(cd);
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create node link object \"" + dlg.getName() + "\"";
+				return "Cannot create service check object \"" + dlg.getName() + "\"";
 			}
 		}.start();
 	}

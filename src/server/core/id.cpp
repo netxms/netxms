@@ -173,6 +173,14 @@ BOOL InitIdTable()
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM reports"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_NETWORK_OBJECT] = max(m_dwFreeIdTable[IDG_NETWORK_OBJECT],
+                                                   DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(object_id) FROM deleted_objects"));
    if (hResult != NULL)
    {

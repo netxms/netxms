@@ -168,7 +168,7 @@ BOOL Dashboard::DeleteFromDB()
    TCHAR query[256];
    BOOL success;
 
-   success = NetObj::DeleteFromDB();
+   success = Container::DeleteFromDB();
    if (success)
    {
       _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dashboards WHERE id=%d"), (int)m_dwId);

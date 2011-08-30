@@ -100,9 +100,7 @@ void BusinessService::calculateCompoundStatus(BOOL bForcedRecalc)
 
 BOOL BusinessService::CreateFromDB(DWORD id)
 {
-	m_dwId = id;
-
-	if (!loadCommonProperties())
+	if (!Container::CreateFromDB(id))
 		return FALSE;
 
 	// now it doesn't make any sense but hopefully will do in the future
@@ -132,9 +130,6 @@ BOOL BusinessService::CreateFromDB(DWORD id)
 
 	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
-
-	// Load access list
-	loadACLFromDB();
 
 	return TRUE;
 }
@@ -182,7 +177,8 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 	// Unlock object and clear modification flag
 	m_bIsModified = FALSE;
 	UnlockData();
-	return TRUE;
+
+	return Container::SaveToDB(hdb);
 }
 
 
@@ -195,7 +191,7 @@ BOOL BusinessService::DeleteFromDB()
    TCHAR szQuery[QUERY_LENGTH];
    BOOL bSuccess;
 
-   bSuccess = NetObj::DeleteFromDB();
+   bSuccess = Container::DeleteFromDB();
    if (bSuccess)
    {
       _sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM business_services WHERE id=%d"), m_dwId);

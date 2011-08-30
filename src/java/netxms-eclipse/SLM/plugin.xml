@@ -8,10 +8,10 @@
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessServiceRoot"
             objectClass="org.netxms.client.objects.BusinessServiceRoot">
          <action
-               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
+               class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheck"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessServiceRoot"
-               label="Create &amp;business service..."
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_BusinessServiceRoot"
+               label="Create service &amp;check..."
                menubarPath="objectcreation">
          </action>
          <action
@@ -21,16 +21,23 @@
                label="Create node &amp;link..."
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessServiceRoot"
+               label="Create &amp;business service..."
+               menubarPath="objectcreation">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessService"
             objectClass="org.netxms.client.objects.BusinessService">
          <action
-               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
+               class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheck"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessService"
-               label="Create &amp;business service..."
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_BusinessService"
+               label="Create service &amp;check..."
                menubarPath="objectcreation">
          </action>
          <action
@@ -38,6 +45,13 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNodeLink_BusinessService"
                label="Create node &amp;link..."
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessService"
+               label="Create &amp;business service..."
                menubarPath="objectcreation">
          </action>
       </objectContribution>

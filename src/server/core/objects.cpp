@@ -1325,7 +1325,7 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
-   // Loading service objects
+   // Loading business service objects
    DbgPrintf(2, _T("Loading business services..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -1335,16 +1335,39 @@ BOOL LoadObjects()
 	   for(i = 0; i < dwNumRows; i++)
 	   {
 		   dwId = DBGetFieldULong(hResult, i, 0);
-		   BusinessService *pGroup = new BusinessService;
-		   if (pGroup->CreateFromDB(dwId))
+		   BusinessService *service = new BusinessService;
+		   if (service->CreateFromDB(dwId))
 		   {
-			   NetObjInsert(pGroup, FALSE);  // Insert into indexes
+			   NetObjInsert(service, FALSE);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
-			   delete pGroup;
-			   /* FIXME nxlog_write(MSG_BS_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId); */
-			   DbgPrintf(1, _T("Failed to load business services"));
+			   delete service;
+			   nxlog_write(MSG_BUSINESS_SERVICE_LOAD_FAILED, NXLOG_ERROR, "d", dwId);
+		   }
+	   }
+	   DBFreeResult(hResult);
+   }
+
+   // Loading business service objects
+   DbgPrintf(2, _T("Loading node links..."));
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_NODELINK);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+	   dwNumRows = DBGetNumRows(hResult);
+	   for(i = 0; i < dwNumRows; i++)
+	   {
+		   dwId = DBGetFieldULong(hResult, i, 0);
+		   NodeLink *nl = new NodeLink;
+		   if (nl->CreateFromDB(dwId))
+		   {
+			   NetObjInsert(nl, FALSE);  // Insert into indexes
+		   }
+		   else     // Object load failed
+		   {
+			   delete nl;
+			   nxlog_write(MSG_NODE_LINK_LOAD_FAILED, NXLOG_ERROR, "d", dwId);
 		   }
 	   }
 	   DBFreeResult(hResult);
