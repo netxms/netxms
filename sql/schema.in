@@ -1249,13 +1249,13 @@ CREATE TABLE business_service_templates
 
 CREATE TABLE slm_checks
 (
-     check_id integer not null,
-     type integer default 1 not null, // 1 - threshold, 2 - script
-     content SQL_TEXT, // if type == 2
-     threshold_id integer default 0 not null, // if type == 1; refers to thresholds.id
-     reason varchar(255) not null,
-     is_template integer default 0 not null 
-     PRIMARY KEY(check_id)
+     id integer not null,
+     type integer not null, // 1 - threshold, 2 - script
+     content SQL_TEXT null, // if type == 2
+     threshold_id integer not null, // if type == 1; refers to thresholds.id
+     reason varchar(255) null,
+     is_template integer not null, 
+     PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1267,18 +1267,6 @@ CREATE TABLE node_links
      nodelink_id integer not null,
      node_id integer not null, // refers to node.id
      PRIMARY KEY(nodelink_id)
-) TABLE_TYPE;
-
-
-/*
-** SLA node link - service check relationship
-*/
-
-CREATE TABLE node_link_checks
-(
-     nodelink_id integer not null,
-     check_id integer not null,
-     PRIMARY KEY(nodelink_id,check_id)
 ) TABLE_TYPE;
 
 
@@ -1306,6 +1294,7 @@ CREATE TABLE slm_agreements
 CREATE TABLE slm_tickets
 (
      ticket_id integer not null,
+     service_id integer not null,
      check_id integer not null,
      create_timestamp integer not null,
      close_timestamp integer not null,
@@ -1323,7 +1312,8 @@ CREATE TABLE slm_service_history
      record_id integer not null,
      service_id integer not null,
      change_timestamp integer not null,
-     new_status integer not null
+     new_status integer not null,
+	 PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
 

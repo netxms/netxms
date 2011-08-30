@@ -3905,6 +3905,10 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 									pObject = NULL;
 								}
 								break;
+							case OBJECT_SLMCHECK:
+								pObject = new SlmCheck(szObjectName);
+								NetObjInsert(pObject, TRUE);
+								break;
 							default:
 								break;
 						}

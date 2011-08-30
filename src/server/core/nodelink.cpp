@@ -61,7 +61,7 @@ NodeLink::~NodeLink()
 // ! Copy/paste from BizService::calculateCompoundStatus()
 //
 
-void NodeLink::calculateCompoundStatus(BOOL bForcedRecalc /*= FALSE*/)
+void NodeLink::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	int i, iCount, iMostCriticalStatus;
 	int iOldStatus = m_iStatus;

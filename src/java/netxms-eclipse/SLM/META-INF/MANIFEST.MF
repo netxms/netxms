@@ -9,6 +9,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.netxms.ui.eclipse.console;bundle-version="1.1.4",
  org.netxms.ui.eclipse.library;bundle-version="1.1.4",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.1.4"
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="1.1.4",
+ org.netxms.ui.eclipse.nxsl;bundle-version="1.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

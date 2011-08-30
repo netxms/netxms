@@ -253,6 +253,51 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V237 to V238
+//
+
+static BOOL H_UpgradeFromV237(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("DROP TABLE slm_check_templates\n")
+		_T("DROP TABLE node_link_checks\n")
+		_T("DROP TABLE slm_checks\n")
+		_T("DROP TABLE slm_tickets\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_checks (")
+	                     _T("id integer not null,")
+	                     _T("type integer not null,")
+								_T("content $SQL:TEXT null,")
+	                     _T("threshold_id integer not null,")
+	                     _T("reason varchar(255) null,")
+	                     _T("is_template integer not null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_tickets (")
+	                     _T("ticket_id integer not null,")
+	                     _T("service_id integer not null,")
+	                     _T("check_id integer not null,")
+	                     _T("create_timestamp integer not null,")
+	                     _T("close_timestamp integer not null,")
+	                     _T("reason varchar(255) null,")
+	                     _T("PRIMARY KEY(ticket_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_service_history (")
+	                     _T("record_id integer not null,")
+	                     _T("service_id integer not null,")
+	                     _T("change_timestamp integer not null,")
+	                     _T("new_status integer not null,")
+	                     _T("PRIMARY KEY(record_id))")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='238' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V236 to V237
 //
 
@@ -5526,6 +5571,7 @@ static struct
 	{ 234, 235, H_UpgradeFromV234 },
 	{ 235, 236, H_UpgradeFromV235 },
 	{ 236, 237, H_UpgradeFromV236 },
+	{ 237, 238, H_UpgradeFromV237 },
    { 0, NULL }
 };
 

@@ -33,11 +33,13 @@ long SlmCheck::ticketId = -1;
 SlmCheck::SlmCheck() : NetObj()
 {
 	_tcscpy(m_szName, _T("Default"));
+	m_type = SlmCheck::check_script;
 	m_script = NULL;
 	m_pCompiledScript = NULL;
 	m_threshold = NULL;
 	m_reason[0] = 0;
 }
+
 
 //
 // Constructor for new check object
@@ -46,6 +48,7 @@ SlmCheck::SlmCheck() : NetObj()
 SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	m_type = SlmCheck::check_script;
 	m_script = NULL;
 	m_pCompiledScript = NULL;
 	m_threshold = NULL;
@@ -78,7 +81,7 @@ BOOL SlmCheck::CreateFromDB(DWORD id)
 	if (!loadCommonProperties())
 		return FALSE;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT type,content,threshold_id,reason FROM slm_checks WHERE check_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT type,content,threshold_id,reason FROM slm_checks WHERE id=?"));
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from slm_checks"));
@@ -146,7 +149,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 
 	saveCommonProperties(hdb);
    
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT check_id FROM slm_checks WHERE check_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM slm_checks WHERE id=?"));
 	if (hStmt == NULL)
 		goto finish;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -158,19 +161,20 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	}
 	DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO slm_checks (check_id,type,content,threshold_id,reason) ")
-											  _T("VALUES (?,?,?,?,?)") :
-											  _T("UPDATE slm_checks SET check_id=?,type=?,content=?,threshold_id=?,reason=? ")
-											  _T("WHERE check_id=?"));
+	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template) ")
+											  _T("VALUES (?,?,?,?,?,?)") :
+											  _T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=? ")
+											  _T("WHERE id=?"));
 	if (hStmt == NULL)	
 		goto finish;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DWORD(m_type));
-	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, CHECK_NULL_EX(m_script), DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
 	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)0);
 	if (!bNewObject)
-		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_dwId);
 	
 	if (!DBExecute(hStmt))
 	{
@@ -178,7 +182,6 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 		goto finish;
 	}
 
-	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
 
 	saveACLToDB(hdb);
@@ -204,7 +207,7 @@ BOOL SlmCheck::DeleteFromDB()
 	bSuccess = NetObj::DeleteFromDB();
 	if (bSuccess)
 	{
-		_sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM slm_checks WHERE check_id=%d"), m_dwId);
+		_sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM slm_checks WHERE id=%d"), m_dwId);
 		QueueSQLRequest(szQuery);
 	}
 
@@ -220,7 +223,7 @@ void SlmCheck::CreateMessage(CSCPMessage *pMsg)
 {
 	NetObj::CreateMessage(pMsg);
 	pMsg->SetVariable(VID_SLMCHECK_TYPE, DWORD(m_type));
-	pMsg->SetVariable(VID_SCRIPT, m_script ? m_script : NULL);
+	pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->SetVariable(VID_REASON, m_reason);
 	if (m_threshold != NULL)
 		m_threshold->createMessage(pMsg, VID_THRESHOLD_BASE);

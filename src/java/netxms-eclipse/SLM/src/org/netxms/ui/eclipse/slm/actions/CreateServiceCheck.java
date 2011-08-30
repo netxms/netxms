@@ -29,8 +29,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.BusinessService;
-import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.NodeLink;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
@@ -91,7 +91,7 @@ public class CreateServiceCheck implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
-			if ((object instanceof BusinessService) || (object instanceof BusinessServiceRoot))
+			if ((object instanceof BusinessService) || (object instanceof NodeLink))
 			{
 				parentId = ((GenericObject)object).getObjectId();
 			}

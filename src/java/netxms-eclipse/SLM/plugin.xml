@@ -8,13 +8,6 @@
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessServiceRoot"
             objectClass="org.netxms.client.objects.BusinessServiceRoot">
          <action
-               class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheck"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_BusinessServiceRoot"
-               label="Create service &amp;check..."
-               menubarPath="objectcreation">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.slm.actions.CreateNodeLink"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNodeLink_BusinessServiceRoot"
@@ -55,6 +48,30 @@
                menubarPath="objectcreation">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.NodeLink"
+            objectClass="org.netxms.client.objects.NodeLink">
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheck"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_NodeLink"
+               label="Create service &amp;check..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
    </extension>
-
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.slm.propertypages.ServiceCheckScript"
+            id="org.netxms.ui.eclipse.slm.propertypages.ServiceCheckScript#10"
+            name="Script">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.ServiceCheck">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
 </plugin>
