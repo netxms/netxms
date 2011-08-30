@@ -158,9 +158,9 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	DBFreeStatement(hStmt);
 
 	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO slm_checks (check_id,type,content,threshold_id,reason) ")
-											  _T("VALUES (?,?,?,?,?,?)") :
+											  _T("VALUES (?,?,?,?,?)") :
 											  _T("UPDATE slm_checks SET check_id=?,type=?,content=?,threshold_id=?,reason=? ")
-											  _T("WHERE service_id=?"));
+											  _T("WHERE check_id=?"));
 	if (hStmt == NULL)	
 		goto finish;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
