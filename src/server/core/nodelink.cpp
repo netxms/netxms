@@ -29,8 +29,7 @@
 // NodeLink default constructor
 //
 
-NodeLink::NodeLink()
-:Container()
+NodeLink::NodeLink() : Container()
 {
 	_tcscpy(m_szName, _T("Default"));
 	m_nodeId = 0;
@@ -41,9 +40,9 @@ NodeLink::NodeLink()
 // Constructor for new nodelink object
 //
 
-NodeLink::NodeLink(const TCHAR *name)
-:Container(name, 0)
+NodeLink::NodeLink(const TCHAR *name) : Container(name, 0)
 {
+	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_nodeId = 0;
 }
 
@@ -55,6 +54,7 @@ NodeLink::NodeLink(const TCHAR *name)
 NodeLink::~NodeLink()
 {
 }
+
 
 //
 // Calculate status for compound object based on childs status
@@ -188,8 +188,6 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 		DBFreeStatement(hStmt);
 		return FALSE;
 	}
-
-	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
 
 	saveACLToDB(hdb);
@@ -228,7 +226,7 @@ BOOL NodeLink::DeleteFromDB()
 void NodeLink::CreateMessage(CSCPMessage *pMsg)
 {
 	NetObj::CreateMessage(pMsg);
-	pMsg->SetVariable(VID_NODELINK_NODE_ID, m_nodeId);
+	pMsg->SetVariable(VID_NODE_ID, m_nodeId);
 }
 
 
@@ -241,9 +239,9 @@ DWORD NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (!bAlreadyLocked)
 		LockData();
 
-	if (pRequest->IsVariableExist(VID_NODELINK_NODE_ID))
+	if (pRequest->IsVariableExist(VID_NODE_ID))
 	{
-		m_nodeId = pRequest->GetVariableLong(VID_NODELINK_NODE_ID);
+		m_nodeId = pRequest->GetVariableLong(VID_NODE_ID);
 	}
 
 	return NetObj::ModifyFromMessage(pRequest, TRUE);
@@ -257,11 +255,13 @@ void NodeLink::execute()
 {
 	DbgPrintf(9, _T("NodeLink::execute() started for id %ld"), long(m_dwId));
 
+   LockChildList(FALSE);
 	for (int i = 0; i < int(m_dwChildCount); i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
 			((SlmCheck*)m_pChildList[i])->execute();
 	}
+   UnlockChildList();
 
 	DbgPrintf(9, _T("NodeLink::execute() finished for id %ld"), long(m_dwId));
 }

@@ -569,7 +569,7 @@ static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-		BizService *service = (BizService *)g_businessServicePollerQueue.GetOrBlock();
+		BusinessService *service = (BusinessService *)g_businessServicePollerQueue.GetOrBlock();
       if (service == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -759,9 +759,9 @@ static void QueueForPolling(NetObj *object, void *data)
 				}
 			}
 			break;
-		case OBJECT_BIZSERVICE:
+		case OBJECT_BUSINESSSERVICE:
 			{
-				BizService *service = (BizService *)object;
+				BusinessService *service = (BusinessService *)object;
 				if (service->isReadyForPolling())
 				{
 					service->IncRefCount();

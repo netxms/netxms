@@ -475,6 +475,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapO
 src/java/netxms-client/src/main/java/org/netxms/client/maps/elements/NetworkMapResource.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/AgentPolicyConfig.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/BusinessService.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/BusinessServiceRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Cluster.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ClusterResource.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ClusterSyncNetwork.java -text
@@ -490,11 +492,13 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkMapGroup.j
 src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkMapRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/NetworkService.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Node.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/NodeLink.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/PolicyGroup.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/PolicyRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Report.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ReportGroup.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ReportRoot.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/ServiceCheck.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ServiceRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Subnet.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Template.java -text
@@ -1008,6 +1012,7 @@ src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/GeoMapViewer.j
 src/java/netxms-eclipse/OSM/src/org/netxms/ui/eclipse/osm/widgets/helpers/GeoMapListener.java -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
+src/java/netxms-eclipse/ObjectBrowser/icons/business_service.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/cluster.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/condition.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/container.png -text
@@ -1020,6 +1025,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/netmap_root.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/network.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/network_service.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/node.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/node_link.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/object_browser.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy_group.png -text
@@ -1028,6 +1034,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/report.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/report_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/report_root.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/service_check.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/status/critical.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/status/disabled.gif -text
@@ -1212,6 +1219,13 @@ src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/Repo
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/StringFieldEditor.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/TimestampFieldEditor.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/helpers/ReportResultLabelProvider.java -text
+src/java/netxms-eclipse/SLM/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/SLM/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/SLM/build.properties -text
+src/java/netxms-eclipse/SLM/plugin.xml -text
+src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/Activator.java -text
+src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/actions/CreateBusinessService.java -text
+src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/dialogs/CreateBusinessServiceDialog.java -text
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SNMP/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SNMP/build.properties -text

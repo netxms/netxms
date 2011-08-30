@@ -88,6 +88,8 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
+import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Condition;
@@ -102,11 +104,13 @@ import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.Report;
 import org.netxms.client.objects.ReportGroup;
 import org.netxms.client.objects.ReportRoot;
+import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
@@ -305,6 +309,18 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				break;
 			case GenericObject.OBJECT_REPORT:
 				object = new Report(msg, this);
+				break;
+			case GenericObject.OBJECT_BUSINESSSERVICEROOT:
+				object = new BusinessServiceRoot(msg, this);
+				break;
+			case GenericObject.OBJECT_BUSINESSSERVICE:
+				object = new BusinessService(msg, this);
+				break;
+			case GenericObject.OBJECT_NODELINK:
+				object = new NodeLink(msg, this);
+				break;
+			case GenericObject.OBJECT_SLMCHECK:
+				object = new ServiceCheck(msg, this);
 				break;
 			default:
 				object = new GenericObject(msg, this);

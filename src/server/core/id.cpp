@@ -35,7 +35,7 @@
 //
 
 static MUTEX m_mutexTableAccess;
-static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, FIRST_USER_EVENT_ID, 1, 1, 
+static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 100, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
                                                    10000, 10000, 1, 1, 1, 1

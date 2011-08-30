@@ -152,6 +152,7 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
       <plugin id="org.netxms.ui.eclipse.serviceview"/>
+      <plugin id="org.netxms.ui.eclipse.slm"/>
       <plugin id="org.netxms.ui.eclipse.snmp"/>
       <plugin id="org.netxms.ui.eclipse.topology"/>
       <plugin id="org.netxms.ui.eclipse.usermanager"/>

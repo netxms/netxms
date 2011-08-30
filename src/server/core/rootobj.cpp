@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 ServiceRoot::ServiceRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_SERVICEROOT;
-   _tcscpy(m_szName, _T("All Services"));
+   _tcscpy(m_szName, _T("Infrastructure Services"));
 }
 
 
@@ -202,11 +202,10 @@ void ReportRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 // Biz service tree root class default constructor
 //
 
-BizServiceRoot::BizServiceRoot() : 
-	UniversalRoot()
+BusinessServiceRoot::BusinessServiceRoot() : UniversalRoot()
 {
-	m_dwId = BUILTIN_OID_BIZSERVICEROOT;
-	_tcscpy(m_szName, _T("Services"));
+	m_dwId = BUILTIN_OID_BUSINESSSERVICEROOT;
+	_tcscpy(m_szName, _T("Business Services"));
 	m_iStatus = STATUS_NORMAL;
 }
 
@@ -214,15 +213,6 @@ BizServiceRoot::BizServiceRoot() :
 // Biz service root class destructor
 //
 
-BizServiceRoot::~BizServiceRoot()
+BusinessServiceRoot::~BusinessServiceRoot()
 {
-}
-
-//
-// Redefined status calculation 
-//
-
-void BizServiceRoot::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-   m_iStatus = STATUS_NORMAL;
 }

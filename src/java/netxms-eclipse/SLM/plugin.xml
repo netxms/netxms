@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessServiceRoot"
+            objectClass="org.netxms.client.objects.BusinessServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessServiceRoot"
+               label="Create &amp;business service..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessService"
+            objectClass="org.netxms.client.objects.BusinessService">
+         <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessService"
+               label="Create &amp;business service..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

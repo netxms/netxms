@@ -361,7 +361,7 @@ bool Container::isSuitableForNode(Node *node)
 
 			_sntprintf(buffer, 1024, _T("Container::%s::%d"), m_szName, m_dwId);
 			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_bindFilter->getErrorText(), m_dwId);
-			nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_bindFilter->getErrorText());
+			nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, m_bindFilter->getErrorText());
 		}
 	}
 	UnlockData();

@@ -31,7 +31,6 @@
 
 BusinessService::BusinessService() : Container()
 {
-	m_dwId = 0;
 	m_busy = false;
 	m_lastPollTime = time_t(0);
 	_tcscpy(m_szName, _T("Default"));
@@ -44,7 +43,6 @@ BusinessService::BusinessService() : Container()
 
 BusinessService::BusinessService(const TCHAR *name) : Container(name, 0)
 {
-	m_dwId = 0;
 	m_busy = false;
 	m_lastPollTime = time_t(0);
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
@@ -177,7 +175,6 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 		return FALSE;
 	}
 
-	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
 
 	saveACLToDB(hdb);
@@ -259,11 +256,12 @@ void BusinessService::lockForPolling()
 // A callback for poller threads
 //
 
-void BusinessService::poll( ClientSession *pSession, DWORD dwRqId, int nPoller )
+void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
 	m_lastPollTime = time(NULL);
 
 	// Loop through the kids and execute their either scripts or thresholds
+   LockChildList(FALSE);
 	for (int i = 0; i < int(m_dwChildCount); i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
@@ -271,6 +269,7 @@ void BusinessService::poll( ClientSession *pSession, DWORD dwRqId, int nPoller )
 		else if (m_pChildList[i]->Type() == OBJECT_NODELINK)
 			((NodeLink*)m_pChildList[i])->execute();
 	}
+   UnlockChildList();
 
 	// Set the status based on what the kids' been up to
 	calculateCompoundStatus();

@@ -131,6 +131,13 @@ public class ObjectAdapterFactory implements IAdapterFactory
 								return Activator.getImageDescriptor("icons/report_group.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_REPORTROOT:
 								return Activator.getImageDescriptor("icons/report_root.gif"); //$NON-NLS-1$
+							case GenericObject.OBJECT_BUSINESSSERVICEROOT:
+							case GenericObject.OBJECT_BUSINESSSERVICE:
+								return Activator.getImageDescriptor("icons/business_service.png"); //$NON-NLS-1$
+							case GenericObject.OBJECT_NODELINK:
+								return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
+							case GenericObject.OBJECT_SLMCHECK:
+								return Activator.getImageDescriptor("icons/service_check.gif"); //$NON-NLS-1$
 							default:
 								return null;
 						}

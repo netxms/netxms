@@ -74,15 +74,15 @@ extern DWORD g_dwConditionPollingInterval;
 // Built-in object IDs
 //
 
-#define BUILTIN_OID_NETWORK         1
-#define BUILTIN_OID_SERVICEROOT     2
-#define BUILTIN_OID_TEMPLATEROOT    3
-#define BUILTIN_OID_ZONE0           4
-#define BUILTIN_OID_POLICYROOT      5
-#define BUILTIN_OID_NETWORKMAPROOT  6
-#define BUILTIN_OID_DASHBOARDROOT   7
-#define BUILTIN_OID_REPORTROOT      8
-#define BUILTIN_OID_BusinessServiceROOT	9
+#define BUILTIN_OID_NETWORK               1
+#define BUILTIN_OID_SERVICEROOT           2
+#define BUILTIN_OID_TEMPLATEROOT          3
+#define BUILTIN_OID_ZONE0                 4
+#define BUILTIN_OID_POLICYROOT            5
+#define BUILTIN_OID_NETWORKMAPROOT        6
+#define BUILTIN_OID_DASHBOARDROOT         7
+#define BUILTIN_OID_REPORTROOT            8
+#define BUILTIN_OID_BUSINESSSERVICEROOT   9
 
 //
 // Node runtime (dynamic) flags
@@ -1625,7 +1625,6 @@ public:
 	virtual ~BusinessServiceRoot();
 
 	virtual int Type() { return OBJECT_BUSINESSSERVICEROOT; }
-	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 

@@ -302,23 +302,26 @@ void SlmCheck::execute()
 
 	switch (m_type)
 	{
-	case check_script:
-		if (m_pCompiledScript->run(pEnv, 0, NULL) == 0)
-		{
-			pValue = m_pCompiledScript->getResult();
-			m_iStatus = pValue->getValueAsInt32() == 0 ? STATUS_NORMAL : STATUS_CRITICAL;
-			DbgPrintf(9, _T("SlmCheck::execute: %s/%ld ret value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
-		}
-		else
-		{
-			DbgPrintf(4, _T("SlmCheck::execute: %s/%ld nxsl run() failed, %s"),  m_szName, (long)m_dwId, m_pCompiledScript->getErrorText());
-		}
-		break;
-	case check_threshold:
-	default:
-		DbgPrintf(4, _T("SlmCheck::execute() called for undefined check type, check %s/%ld"), m_szName, (long)m_dwId);
-		m_iStatus = STATUS_UNKNOWN;
-		break;
+		case check_script:
+			if (m_pCompiledScript->run(pEnv, 0, NULL) == 0)
+			{
+				pValue = m_pCompiledScript->getResult();
+				m_iStatus = pValue->getValueAsInt32() == 0 ? STATUS_NORMAL : STATUS_CRITICAL;
+				DbgPrintf(9, _T("SlmCheck::execute: %s/%ld ret value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
+			}
+			else
+			{
+				TCHAR buffer[1024];
+
+				_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_szName, m_dwId);
+				PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_dwId);
+				nxlog_write(MSG_SLMCHECK_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, m_pCompiledScript->getErrorText());
+			}
+			break;
+		case check_threshold:
+		default:
+			DbgPrintf(4, _T("SlmCheck::execute() called for undefined check type, check %s/%ld"), m_szName, (long)m_dwId);
+			m_iStatus = STATUS_UNKNOWN;
+			break;
 	}
 }
-
