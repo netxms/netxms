@@ -2560,6 +2560,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariable(NXCPCodes.VID_SERVICE_REQUEST, data.getRequest());
 				msg.setVariable(NXCPCodes.VID_SERVICE_RESPONSE, data.getResponse());
 				break;
+			case GenericObject.OBJECT_NODELINK:
+				msg.setVariableInt32(NXCPCodes.VID_NODE_ID, (int)data.getLinkedNodeId());
+				break;
 		}
 
 		sendMessage(msg);

@@ -40,10 +40,10 @@ NodeLink::NodeLink() : Container()
 // Constructor for new nodelink object
 //
 
-NodeLink::NodeLink(const TCHAR *name) : Container(name, 0)
+NodeLink::NodeLink(const TCHAR *name, DWORD nodeId) : Container(name, 0)
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
-	m_nodeId = 0;
+	m_nodeId = nodeId;
 }
 
 

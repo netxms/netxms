@@ -3746,7 +3746,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    int iClass, iServiceType;
    TCHAR szObjectName[MAX_OBJECT_NAME];
    TCHAR *pszRequest, *pszResponse, *pszComments;
-   DWORD dwIpAddr, zoneId;
+   DWORD dwIpAddr, zoneId, nodeId;
    WORD wIpProto, wIpPort;
    BOOL bParentAlwaysValid = FALSE;
 
@@ -3892,6 +3892,18 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 							case OBJECT_BUSINESSSERVICE:
 								pObject = new BusinessService(szObjectName);
 								NetObjInsert(pObject, TRUE);
+								break;
+							case OBJECT_NODELINK:
+								nodeId = pRequest->GetVariableLong(VID_NODE_ID);
+								if (nodeId > 0)
+								{
+									pObject = new NodeLink(szObjectName, nodeId);
+									NetObjInsert(pObject, TRUE);
+								}
+								else
+								{
+									pObject = NULL;
+								}
 								break;
 							default:
 								break;

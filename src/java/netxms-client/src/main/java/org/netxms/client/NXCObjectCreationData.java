@@ -53,6 +53,7 @@ public class NXCObjectCreationData
 	private int ipPort;
 	private String request;
 	private String response;
+	private long linkedNodeId;
 	
 	/**
 	 * Constructor.
@@ -89,6 +90,7 @@ public class NXCObjectCreationData
 		ipPort = 80;
 		request = "";
 		response = "";
+		linkedNodeId = 0;
 	}
 
 	/**
@@ -361,5 +363,21 @@ public class NXCObjectCreationData
 	public void setResponse(String response)
 	{
 		this.response = response;
+	}
+
+	/**
+	 * @return the linkedNodeId
+	 */
+	public long getLinkedNodeId()
+	{
+		return linkedNodeId;
+	}
+
+	/**
+	 * @param linkedNodeId the linkedNodeId to set
+	 */
+	public void setLinkedNodeId(long linkedNodeId)
+	{
+		this.linkedNodeId = linkedNodeId;
 	}
 }

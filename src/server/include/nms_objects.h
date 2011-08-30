@@ -1562,7 +1562,7 @@ protected:
 
 public:
 	NodeLink();
-	NodeLink(const TCHAR *name);
+	NodeLink(const TCHAR *name, DWORD nodeId);
 	virtual ~NodeLink();
 
 	virtual int Type() { return OBJECT_NODELINK; }
