@@ -1254,24 +1254,9 @@ CREATE TABLE slm_checks
      content SQL_TEXT, // if type == 2
      threshold_id integer default 0 not null, // if type == 1; refers to thresholds.id
      reason varchar(255) not null,
+     is_template integer default 0 not null 
      PRIMARY KEY(check_id)
 ) TABLE_TYPE;
-
-
-/*
-** SLA service check templates
-*/
-
-CREATE TABLE slm_check_templates
-(
-     id integer not null,
-     name varchar(63) not null,
-     type integer default 1 not null, // 1 - threshold, 2 - script
-     content SQL_TEXT, // if type == 2
-     threshold_id integer default 0 not null, // if type == 1; refers to thresholds.id
-     PRIMARY KEY(id)
-) TABLE_TYPE;
-
 
 /*
 ** SLA node links
@@ -1326,6 +1311,19 @@ CREATE TABLE slm_tickets
      close_timestamp integer not null,
      reason varchar(255) not null,
      PRIMARY KEY(ticket_id)
+) TABLE_TYPE;
+
+
+/*
+** SLA service change log
+*/
+
+CREATE TABLE slm_service_history
+(
+     record_id integer not null,
+     service_id integer not null,
+     change_timestamp integer not null,
+     new_status integer not null
 ) TABLE_TYPE;
 
 
