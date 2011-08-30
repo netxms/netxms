@@ -155,7 +155,7 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT service_id FROM business_services WHERE service_id=?"));
 	if (hStmt == NULL)
 		return FALSE;
-	DBBind(hStmt, 0, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
 	{
