@@ -1591,6 +1591,7 @@ protected:
 	TCHAR *m_script;
 	NXSL_Program *m_pCompiledScript;
 	TCHAR m_reason[256];
+	static long ticketId;
 
 	void setScript(const TCHAR *script);
 
@@ -1609,6 +1610,7 @@ public:
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void execute();
+	BOOL insertTicket();
 	void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }
 	const TCHAR *getReason() { return m_reason; }
 };

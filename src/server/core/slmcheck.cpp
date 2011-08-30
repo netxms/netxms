@@ -24,6 +24,7 @@
 
 #define QUERY_LENGTH		(512)
 
+long SlmCheck::ticketId = -1;
 
 //
 // SLM check default constructor
@@ -297,17 +298,21 @@ void SlmCheck::execute()
 {
 	NXSL_ServerEnv *pEnv;
 	NXSL_Value *pValue;
+	DWORD oldStatus;
 
 	pEnv = new NXSL_ServerEnv;
 
 	switch (m_type)
 	{
 		case check_script:
+			oldStatus = m_iStatus;
 			if (m_pCompiledScript->run(pEnv, 0, NULL) == 0)
 			{
 				pValue = m_pCompiledScript->getResult();
 				m_iStatus = pValue->getValueAsInt32() == 0 ? STATUS_NORMAL : STATUS_CRITICAL;
 				DbgPrintf(9, _T("SlmCheck::execute: %s/%ld ret value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
+				if (m_iStatus == STATUS_CRITICAL && m_iStatus != oldStatus)
+					insertTicket();
 			}
 			else
 			{
@@ -324,4 +329,50 @@ void SlmCheck::execute()
 			m_iStatus = STATUS_UNKNOWN;
 			break;
 	}
+}
+
+//
+// Insert ticket for this check into slm_tickets
+//
+
+BOOL SlmCheck::insertTicket()
+{
+	DB_RESULT hResult;
+	DB_STATEMENT hStmt;
+
+	if (m_iStatus == STATUS_NORMAL)
+		return FALSE;
+
+	if (SlmCheck::ticketId < 0) // not initialized yet
+	{
+		hResult = DBSelect(g_hCoreDB, _T("SELECT max(ticket_id) FROM slm_tickets"));
+		if (hResult == NULL)
+			return FALSE;
+		SlmCheck::ticketId = DBGetNumRows(hResult) > 0 ? DBGetFieldLong(hResult, 0, 0) : 0;
+		DBFreeResult(hResult);
+	}
+
+	SlmCheck::ticketId++;
+
+	hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO slm_tickets (ticket_id,check_id,create_timestamp,close_timestamp,reason) ")
+					_T("VALUES (?,?,?,0,'-')"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, SlmCheck::ticketId);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DWORD(time(NULL)));
+		if (!DBExecute(hStmt))
+		{
+			DBFreeStatement(hStmt);
+			return FALSE;
+		}
+		DbgPrintf(9, _T("SlmCheck::insertTicket() ok with id %ld"), SlmCheck::ticketId);
+	}
+	else
+	{
+		return FALSE;
+	}
+
+	DBFreeStatement(hStmt);
+	return TRUE;
 }
