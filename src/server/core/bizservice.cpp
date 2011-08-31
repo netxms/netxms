@@ -24,6 +24,7 @@
 
 #define QUERY_LENGTH		(512)
 
+long BusinessService::logRecordId = -1;
 
 //
 // Service default constructor
@@ -91,6 +92,9 @@ void BusinessService::calculateCompoundStatus(BOOL bForcedRecalc)
 		UnlockParentList();
 		Modify();   /* LOCK? */
 	}
+
+	if (iOldStatus != m_iStatus)
+		addHistoryRecord();
 }
 
 
@@ -269,4 +273,48 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	calculateCompoundStatus();
 
 	m_busy = false;
+}
+
+//
+// Add a record to slm_service_history table
+//
+
+BOOL BusinessService::addHistoryRecord()
+{
+	DB_RESULT hResult;
+	DB_STATEMENT hStmt;
+
+	if (BusinessService::logRecordId < 0)
+	{
+		hResult = DBSelect(g_hCoreDB, _T("SELECT max(record_id) FROM slm_service_history"));
+		if (hResult == NULL)
+			return FALSE;
+		BusinessService::logRecordId = DBGetNumRows(hResult) > 0 ? DBGetFieldLong(hResult, 0, 0) : 0;
+		DBFreeResult(hResult);
+	}
+
+	BusinessService::logRecordId++;
+
+	hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO slm_service_history (record_id,service_id,change_timestamp,new_status) ")
+		_T("VALUES (?,?,?,?)"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, BusinessService::logRecordId);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DWORD(time(NULL)));
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, DWORD(m_iStatus));
+		if (!DBExecute(hStmt))
+		{
+			DBFreeStatement(hStmt);
+			return FALSE;
+		}
+		DbgPrintf(9, _T("BusinessService::addHistoryRecord() ok with id %ld"), BusinessService::logRecordId);
+	}
+	else
+	{
+		return FALSE;
+	}
+
+	DBFreeStatement(hStmt);
+	return TRUE;
 }

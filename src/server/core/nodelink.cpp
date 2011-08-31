@@ -260,3 +260,12 @@ void NodeLink::execute()
 
 	DbgPrintf(9, _T("NodeLink::execute() finished for id %ld"), long(m_dwId));
 }
+
+//
+// Apply templates from the upper level to this nodelink
+//
+
+BOOL NodeLink::applyTemplates()
+{
+	return TRUE;
+}

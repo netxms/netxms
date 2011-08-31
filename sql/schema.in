@@ -1296,6 +1296,7 @@ CREATE TABLE slm_tickets
      ticket_id integer not null,
      service_id integer not null,
      check_id integer not null,
+     parent_id integer not null,
      create_timestamp integer not null,
      close_timestamp integer not null,
      reason varchar(255) not null,

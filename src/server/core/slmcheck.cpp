@@ -38,6 +38,7 @@ SlmCheck::SlmCheck() : NetObj()
 	m_pCompiledScript = NULL;
 	m_threshold = NULL;
 	m_reason[0] = 0;
+	m_isTemplate = false;
 }
 
 
@@ -53,6 +54,7 @@ SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 	m_pCompiledScript = NULL;
 	m_threshold = NULL;
 	m_reason[0] = 0;
+	m_isTemplate = false;
 }
 
 
@@ -357,13 +359,14 @@ BOOL SlmCheck::insertTicket()
 
 	SlmCheck::ticketId++;
 
-	hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO slm_tickets (ticket_id,check_id,create_timestamp,close_timestamp,reason) ")
-					_T("VALUES (?,?,?,0,'-')"));
+	hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO slm_tickets (ticket_id,check_id,parent_id,create_timestamp,close_timestamp,reason) ")
+					_T("VALUES (?,?,?,?,0,'-')"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, SlmCheck::ticketId);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DWORD(time(NULL)));
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwParentCount > 0 ? m_pParentList[0]->Id() : 0); // How to handle mutiple parents?
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, DWORD(time(NULL)));
 		if (!DBExecute(hStmt))
 		{
 			DBFreeStatement(hStmt);

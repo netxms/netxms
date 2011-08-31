@@ -1576,6 +1576,7 @@ public:
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void execute();
+	BOOL applyTemplates();
 };
 
 
@@ -1591,6 +1592,8 @@ protected:
 	TCHAR *m_script;
 	NXSL_Program *m_pCompiledScript;
 	TCHAR m_reason[256];
+	bool m_isTemplate;
+
 	static long ticketId;
 
 	void setScript(const TCHAR *script);
@@ -1612,6 +1615,7 @@ public:
 	void execute();
 	BOOL insertTicket();
 	void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }
+	bool isTemplate() const { return m_isTemplate; }
 	const TCHAR *getReason() { return m_reason; }
 };
 
@@ -1640,6 +1644,8 @@ protected:
 	bool m_busy;
 	time_t m_lastPollTime;
 
+	static long logRecordId;
+
 public:
 	BusinessService();
 	BusinessService(const TCHAR *name);
@@ -1658,6 +1664,7 @@ public:
 	bool isReadyForPolling();
 	void lockForPolling();
 	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+	BOOL addHistoryRecord();
 };
 
 
