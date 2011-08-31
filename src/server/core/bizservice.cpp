@@ -34,6 +34,7 @@ BusinessService::BusinessService() : Container()
 {
 	m_busy = false;
 	m_lastPollTime = time_t(0);
+	m_lastPollStatus = STATUS_UNKNOWN;
 	_tcscpy(m_szName, _T("Default"));
 }
 
@@ -46,6 +47,7 @@ BusinessService::BusinessService(const TCHAR *name) : Container(name, 0)
 {
 	m_busy = false;
 	m_lastPollTime = time_t(0);
+	m_lastPollStatus = STATUS_UNKNOWN;
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 }
 
@@ -211,7 +213,9 @@ BOOL BusinessService::DeleteFromDB()
 void BusinessService::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
-   // Calling just a base method should do fine
+   pMsg->SetVariable(VID_UPTIME_DAY, m_uptimeDay);
+   pMsg->SetVariable(VID_UPTIME_WEEK, m_uptimeWeek);
+   pMsg->SetVariable(VID_UPTIME_MONTH, m_uptimeMonth);
 }
 
 
@@ -223,8 +227,6 @@ DWORD BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLoc
 {
    if (!bAlreadyLocked)
       LockData();
-
-   // ... and here too
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
@@ -273,8 +275,12 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	// Set the status based on what the kids' been up to
 	calculateCompoundStatus();
 
-	m_busy = false;
+	// Update uptime counters
+	updateUptimeStats();
+
+	m_lastPollStatus = m_iStatus;
 	DbgPrintf(5, _T("Finished polling of business service %s [%d]"), m_szName, (int)m_dwId);
+	m_busy = false;
 }
 
 
@@ -320,4 +326,128 @@ BOOL BusinessService::addHistoryRecord()
 
 	DBFreeStatement(hStmt);
 	return TRUE;
+}
+
+//
+// Initialize uptime statistics (daily, weekly, monthly) by examining slm_service_history
+//
+
+void BusinessService::initUptimeStats()
+{
+	m_uptimeDay		= getUptimeFromDBFor(DAY, &m_downtimeDay);
+	m_uptimeWeek	= getUptimeFromDBFor(WEEK, &m_downtimeWeek);
+	m_uptimeMonth	= getUptimeFromDBFor(MONTH, &m_downtimeMonth);
+}
+
+
+double BusinessService::getUptimeFromDBFor(Period period, LONG *downtime)
+{
+	time_t beginTime;
+	LONG timediffTillNow	= BusinessService::getSecondsSinceBeginningOf(period, &beginTime);
+	double percentage = 0.;
+
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT change_timestamp,new_status FROM slm_service_history ")
+											  _T("WHERE service_id=? AND change_timestamp>?"));
+	if (hStmt != NULL)
+	{
+		time_t changeTimestamp, prevChangeTimestamp;
+		int newStatus;
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, INT64(beginTime));
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult == NULL)
+		{
+			DBFreeStatement(hStmt);
+			return percentage;
+		}
+		int numRows = DBGetNumRows(hResult);
+		*downtime = 0;
+		prevChangeTimestamp = beginTime;
+		if (numRows > 0) // if <= 0 then assume zero downtime
+		{
+			for (int i = 0; i < numRows; i++)
+			{
+				changeTimestamp = DBGetFieldLong(hResult, i, 0);
+				newStatus = DBGetFieldLong(hResult, i, 1);
+				if (newStatus == STATUS_NORMAL)
+					*downtime += LONG(changeTimestamp - prevChangeTimestamp);
+				else 
+					prevChangeTimestamp = changeTimestamp;
+			}
+			if (newStatus == STATUS_CRITICAL) // the service is still down, add period till now
+				*downtime += LONG(time(NULL) - prevChangeTimestamp);
+			DBFreeResult(hResult);
+			DBFreeStatement(hStmt);
+		}
+		percentage = 100. - *downtime * 100 / timediffTillNow;
+	}
+	
+	return percentage;
+}
+
+//
+// Update uptime counters 
+//
+
+void BusinessService::updateUptimeStats()
+{
+	LONG timediffTillNow;
+	LONG downtimeBetweenPolls = 0;
+
+	if (m_iStatus == STATUS_CRITICAL && m_lastPollStatus == STATUS_CRITICAL)
+		downtimeBetweenPolls = LONG(time(NULL) - m_lastPollTime);		
+
+	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(DAY, NULL);
+	m_downtimeDay += downtimeBetweenPolls;
+	if (timediffTillNow < m_prevDiffDay)
+		m_downtimeDay = 0;
+	m_uptimeDay = 100 - m_downtimeDay * 100 / timediffTillNow;
+	m_prevDiffDay = timediffTillNow;
+
+	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(WEEK, NULL);
+	m_downtimeWeek += downtimeBetweenPolls;
+	if (timediffTillNow < m_prevDiffWeek)
+		m_downtimeWeek = 0;
+	m_uptimeWeek = 100 - m_downtimeWeek * 100 / timediffTillNow;
+	m_prevDiffWeek = timediffTillNow;
+
+	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(MONTH, NULL);
+	m_downtimeMonth += downtimeBetweenPolls;
+	if (timediffTillNow < m_prevDiffMonth)
+		m_downtimeMonth = 0;
+	m_uptimeMonth = 100 - m_downtimeMonth * 100 / timediffTillNow;
+	m_prevDiffMonth = timediffTillNow;
+}
+
+/* static */ LONG BusinessService::getSecondsSinceBeginningOf(Period period, time_t *beginTime /* = NULL */)
+{
+	time_t curTime = time(NULL);
+	struct tm *tms;
+	struct tm tmBuffer;
+
+#if HAVE_LOCALTIME_R
+	tms = localtime_r(&curTime, &tmBuffer);
+#else
+	tms = localtime(&curTime);
+	memcpy((void*)&tmBuffer, (void*)tms, sizeof(struct tm));
+#endif
+
+	tmBuffer.tm_hour = 0;
+	tmBuffer.tm_min = 0;
+	tmBuffer.tm_sec = 0;
+	if (period == MONTH)
+		tmBuffer.tm_mday = 1;
+	time_t beginTimeL = mktime(&tmBuffer);
+	if (period == WEEK)
+	{
+		if (tmBuffer.tm_wday == 0)
+			tmBuffer.tm_wday = 7;
+		tmBuffer.tm_wday--;
+		beginTimeL -= 3600 * 24 * tmBuffer.tm_wday;
+	}
+
+	if (beginTime != NULL)
+		*beginTime = beginTimeL;
+
+	return LONG(curTime - beginTimeL);
 }

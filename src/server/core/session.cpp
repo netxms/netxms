@@ -3899,6 +3899,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								{
 									pObject = new NodeLink(szObjectName, nodeId);
 									NetObjInsert(pObject, TRUE);
+									((NodeLink*)pObject)->applyTemplates();
 								}
 								else
 								{

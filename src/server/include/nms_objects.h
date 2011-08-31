@@ -1644,11 +1644,29 @@ public:
 
 class NXCORE_EXPORTABLE BusinessService : public Container
 {
+	enum Period { DAY, WEEK, MONTH };
+
 protected:
 	bool m_busy;
 	time_t m_lastPollTime;
+	int m_lastPollStatus;
+	double m_uptimeDay;
+	double m_uptimeWeek;
+	double m_uptimeMonth;
+	LONG m_downtimeDay;
+	LONG m_downtimeWeek;
+	LONG m_downtimeMonth;
+	LONG m_prevDiffDay;
+	LONG m_prevDiffWeek;
+	LONG m_prevDiffMonth;
 
 	static LONG logRecordId;
+	static LONG BusinessService::getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
+
+	BOOL addHistoryRecord();
+	void initUptimeStats();
+	void updateUptimeStats();
+	double getUptimeFromDBFor(Period period, LONG *downtime);
 
 public:
 	BusinessService();
@@ -1668,7 +1686,6 @@ public:
 	bool isReadyForPolling();
 	void lockForPolling();
 	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
-	BOOL addHistoryRecord();
 };
 
 

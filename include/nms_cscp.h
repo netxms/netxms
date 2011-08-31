@@ -872,6 +872,9 @@ typedef struct
 #define VID_SLMCHECK_TYPE           ((DWORD)391)
 #define VID_REASON                  ((DWORD)392)
 #define VID_NODE_ID                 ((DWORD)393)
+#define VID_UPTIME_DAY				((DWORD)394)
+#define VID_UPTIME_WEEK				((DWORD)395)
+#define VID_UPTIME_MONTH			((DWORD)396)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)
