@@ -22,9 +22,6 @@
 
 #include "nxcore.h"
 
-#define QUERY_LENGTH		(512)
-
-LONG SlmCheck::ticketId = -1;
 
 //
 // SLM check default constructor
@@ -39,6 +36,7 @@ SlmCheck::SlmCheck() : NetObj()
 	m_threshold = NULL;
 	m_reason[0] = 0;
 	m_isTemplate = false;
+	m_currentTicketId = 0;
 }
 
 
@@ -55,6 +53,7 @@ SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 	m_threshold = NULL;
 	m_reason[0] = 0;
 	m_isTemplate = false;
+	m_currentTicketId = 0;
 }
 
 
@@ -203,13 +202,14 @@ finish:
 
 BOOL SlmCheck::DeleteFromDB()
 {
-	TCHAR szQuery[QUERY_LENGTH];
 	BOOL bSuccess;
 
 	bSuccess = NetObj::DeleteFromDB();
 	if (bSuccess)
 	{
-		_sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM slm_checks WHERE id=%d"), m_dwId);
+		TCHAR szQuery[256];
+
+		_sntprintf(szQuery, 256, _T("DELETE FROM slm_checks WHERE id=%d"), m_dwId);
 		QueueSQLRequest(szQuery);
 	}
 
@@ -303,6 +303,7 @@ void SlmCheck::execute()
 {
 	NXSL_ServerEnv *pEnv;
 	NXSL_Value *pValue;
+	NXSL_VariableSystem *pGlobals = NULL;
 	DWORD oldStatus;
 
 	pEnv = new NXSL_ServerEnv;
@@ -311,13 +312,17 @@ void SlmCheck::execute()
 	{
 		case check_script:
 			oldStatus = m_iStatus;
-			if (m_pCompiledScript->run(pEnv, 0, NULL) == 0)
+			m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
+			if (m_pCompiledScript->run(pEnv, 0, NULL, NULL, &pGlobals) == 0)
 			{
 				pValue = m_pCompiledScript->getResult();
-				m_iStatus = pValue->getValueAsInt32() == 0 ? STATUS_NORMAL : STATUS_CRITICAL;
-				DbgPrintf(9, _T("SlmCheck::execute: %s/%ld ret value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
-				if (m_iStatus == STATUS_CRITICAL && m_iStatus != oldStatus)
-					insertTicket();
+				m_iStatus = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
+				if (m_iStatus == STATUS_CRITICAL)
+				{
+					NXSL_Variable *reason = pGlobals->find(_T("$reason"));
+					setReason((reason != NULL) ? reason->getValue()->getValueAsCString() : _T("Check script returns error"));
+				}
+				DbgPrintf(6, _T("SlmCheck::execute: %s/%ld ret value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
 			}
 			else
 			{
@@ -334,51 +339,92 @@ void SlmCheck::execute()
 			m_iStatus = STATUS_UNKNOWN;
 			break;
 	}
+
+	LockData();
+	if (m_iStatus != oldStatus)
+	{
+		if (m_iStatus == STATUS_CRITICAL)
+			insertTicket();
+		else
+			closeTicket();
+		Modify();
+	}
+	UnlockData();
+
+	delete pGlobals;
 }
+
 
 //
 // Insert ticket for this check into slm_tickets
 //
 
-BOOL SlmCheck::insertTicket()
+bool SlmCheck::insertTicket()
 {
-	DB_RESULT hResult;
-	DB_STATEMENT hStmt;
+	DbgPrintf(4, _T("SlmCheck::insertTicket() called for %s [%d], reason='%s'"), m_szName, (int)m_dwId, m_reason);
 
 	if (m_iStatus == STATUS_NORMAL)
-		return FALSE;
+		return false;
 
-	if (SlmCheck::ticketId < 0) // not initialized yet
-	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT max(ticket_id) FROM slm_tickets"));
-		if (hResult == NULL)
-			return FALSE;
-		SlmCheck::ticketId = DBGetNumRows(hResult) > 0 ? DBGetFieldLong(hResult, 0, 0) : 0;
-		DBFreeResult(hResult);
-	}
+	m_currentTicketId = CreateUniqueId(IDG_SLM_TICKET);
 
-	SlmCheck::ticketId++;
-
-	hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO slm_tickets (ticket_id,check_id,parent_id,create_timestamp,close_timestamp,reason) ")
-					_T("VALUES (?,?,?,?,0,'-')"));
+	bool success = false;
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO slm_tickets (ticket_id,check_id,service_id,create_timestamp,close_timestamp,reason) VALUES (?,?,?,?,0,?)"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, SlmCheck::ticketId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_currentTicketId);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwParentCount > 0 ? m_pParentList[0]->Id() : 0); // How to handle mutiple parents?
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, DWORD(time(NULL)));
-		if (!DBExecute(hStmt))
-		{
-			DBFreeStatement(hStmt);
-			return FALSE;
-		}
-		DbgPrintf(9, _T("SlmCheck::insertTicket() ok with id %ld"), SlmCheck::ticketId);
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, getOwnerId());
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_TRANSIENT);
+		success = DBExecute(hStmt) ? true : false;
+		DBFreeStatement(hStmt);
 	}
-	else
-	{
-		return FALSE;
-	}
+	DBConnectionPoolReleaseConnection(hdb);
+	return success;
+}
 
-	DBFreeStatement(hStmt);
-	return TRUE;
+
+//
+// Close current ticket
+//
+
+void SlmCheck::closeTicket()
+{
+	DbgPrintf(4, _T("SlmCheck::closeTicket() called for %s [%d], ticketId=%d"), m_szName, (int)m_dwId, (int)m_currentTicketId);
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE slm_tickets SET close_timestamp=? WHERE ticket_id=?"));
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (DWORD)time(NULL));
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_currentTicketId);
+		DBExecute(hStmt);
+		DBFreeStatement(hStmt);
+	}
+	DBConnectionPoolReleaseConnection(hdb);
+	m_currentTicketId = 0;
+}
+
+
+//
+// Get ID of owning SLM object (business service or node link)
+//
+
+DWORD SlmCheck::getOwnerId()
+{
+	DWORD ownerId = 0;
+
+	LockParentList(FALSE);
+	for(DWORD i = 0; i < m_dwParentCount; i++)
+	{
+		if ((m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICE) ||
+		    (m_pParentList[i]->Type() == OBJECT_NODELINK))
+		{
+			ownerId = m_pParentList[i]->Id();
+			break;
+		}
+	}
+	UnlockParentList();
+	return ownerId;
 }

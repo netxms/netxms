@@ -92,6 +92,7 @@ void NodeLink::calculateCompoundStatus(BOOL bForcedRecalc)
 	}
 }
 
+
 //
 // Create object from database data
 //
@@ -242,24 +243,28 @@ DWORD NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
+
 //
 // Execute underlying checks for this node link
 //
 
 void NodeLink::execute()
 {
-	DbgPrintf(9, _T("NodeLink::execute() started for id %ld"), long(m_dwId));
+	DbgPrintf(6, _T("NodeLink::execute() started for %s [%ld]"), m_szName, (long)m_dwId);
 
    LockChildList(FALSE);
 	for (int i = 0; i < int(m_dwChildCount); i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
-			((SlmCheck*)m_pChildList[i])->execute();
+			((SlmCheck *)m_pChildList[i])->execute();
 	}
    UnlockChildList();
 
-	DbgPrintf(9, _T("NodeLink::execute() finished for id %ld"), long(m_dwId));
+	calculateCompoundStatus();
+
+	DbgPrintf(6, _T("NodeLink::execute() finished for %s [%ld]"), m_szName, (long)m_dwId);
 }
+
 
 //
 // Apply templates from the upper level to this nodelink

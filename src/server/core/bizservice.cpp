@@ -256,6 +256,7 @@ void BusinessService::lockForPolling()
 
 void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
+	DbgPrintf(5, _T("Started polling of business service %s [%d]"), m_szName, (int)m_dwId);
 	m_lastPollTime = time(NULL);
 
 	// Loop through the kids and execute their either scripts or thresholds
@@ -263,9 +264,9 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	for (int i = 0; i < int(m_dwChildCount); i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
-			((SlmCheck*)m_pChildList[i])->execute();
+			((SlmCheck *)m_pChildList[i])->execute();
 		else if (m_pChildList[i]->Type() == OBJECT_NODELINK)
-			((NodeLink*)m_pChildList[i])->execute();
+			((NodeLink *)m_pChildList[i])->execute();
 	}
    UnlockChildList();
 
@@ -273,7 +274,9 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	calculateCompoundStatus();
 
 	m_busy = false;
+	DbgPrintf(5, _T("Finished polling of business service %s [%d]"), m_szName, (int)m_dwId);
 }
+
 
 //
 // Add a record to slm_service_history table

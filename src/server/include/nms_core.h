@@ -147,7 +147,7 @@ typedef void * HSNMPSESSION;
 #define IDG_ALARM             11
 #define IDG_ALARM_NOTE        12
 #define IDG_PACKAGE           13
-//#define IDG_LPP               14
+#define IDG_SLM_TICKET        14
 #define IDG_OBJECT_TOOL       15
 #define IDG_SCRIPT            16
 #define IDG_AGENT_CONFIG      17

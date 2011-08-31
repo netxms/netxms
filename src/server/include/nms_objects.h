@@ -1593,10 +1593,13 @@ protected:
 	NXSL_Program *m_pCompiledScript;
 	TCHAR m_reason[256];
 	bool m_isTemplate;
-
-	static LONG ticketId;
+	DWORD m_currentTicketId;
 
 	void setScript(const TCHAR *script);
+	DWORD getOwnerId();
+	bool insertTicket();
+	void closeTicket();
+	void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }
 
 public:
 	SlmCheck();
@@ -1613,8 +1616,6 @@ public:
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void execute();
-	BOOL insertTicket();
-	void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }
 	bool isTemplate() const { return m_isTemplate; }
 	const TCHAR *getReason() { return m_reason; }
 };

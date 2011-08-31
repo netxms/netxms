@@ -64,7 +64,7 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Alarms"),
    _T("Alarm Notes"),
    _T("Packages"),
-   _T("--Log Processing Policies"),
+   _T("SLM Ticket"),
    _T("Object Tools"),
    _T("Scripts"),
    _T("Agent Configs"),
@@ -387,6 +387,16 @@ BOOL InitIdTable()
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_SITUATION] = max(m_dwFreeIdTable[IDG_SITUATION],
                                               DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available SLM ticket id
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(ticket_id) FROM slm_tickets"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_SLM_TICKET] = max(m_dwFreeIdTable[IDG_SLM_TICKET],
+                                               DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

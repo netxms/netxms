@@ -419,9 +419,17 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 		if (allocType == DB_BIND_DYNAMIC)
 			free(buffer);
 #else
-		sqlBuffer = buffer;
-		if (allocType == DB_BIND_DYNAMIC)
+		if (allocType == DB_BIND_TRANSIENT)
+		{
+			sqlBuffer = wcsdup((WCHAR *)buffer);
 			stmt->buffers->set(pos - 1, sqlBuffer);
+		}
+		else
+		{
+			sqlBuffer = buffer;
+			if (allocType == DB_BIND_DYNAMIC)
+				stmt->buffers->set(pos - 1, sqlBuffer);
+		}
 #endif
 
 		OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
