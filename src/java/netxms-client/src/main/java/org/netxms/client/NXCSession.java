@@ -42,6 +42,8 @@ import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.api.client.ProgressListener;
 import org.netxms.api.client.Session;
@@ -1656,6 +1658,57 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			}
 		}
 
+		return result;
+	}
+	
+	/**
+	 * Find object by name. If multiple objects with same name exist,
+	 * it is not determined what object will be returned. Name comparison
+	 * is case-insensitive. 
+	 * 
+	 * @param name object name to find
+	 * @return object with matching name or null
+	 */
+	public GenericObject findObjectByName(final String name)
+	{
+		GenericObject result = null;
+		synchronized(objectList)
+		{
+			for(GenericObject object : objectList.values())
+			{
+				if (object.getObjectName().equalsIgnoreCase(name))
+				{
+					result = object;
+					break;
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Find object by name using regular expression. If multiple objects with same name exist,
+	 * it is not determined what object will be returned. Name comparison is case-insensitive. 
+	 * 
+	 * @param pattern regular expression for matching object name
+	 * @return object with matching name or null
+	 */
+	public GenericObject findObjectByNamePattern(final String pattern)
+	{
+		GenericObject result = null;
+		Matcher matcher = Pattern.compile(pattern).matcher("");
+		synchronized(objectList)
+		{
+			for(GenericObject object : objectList.values())
+			{
+				matcher.reset(object.getObjectName());
+				if (matcher.matches())
+				{
+					result = object;
+					break;
+				}
+			}
+		}
 		return result;
 	}
 
