@@ -47,12 +47,12 @@ public class ResourceListComparator extends ViewerComparator
 				break;
 			case ClusterResources.COLUMN_IP_ADDRESS:
 				byte[] addr1 = ((ClusterResource)e1).getVirtualAddress().getAddress();
-				byte[] addr2 = ((ClusterResource)e1).getVirtualAddress().getAddress();
+				byte[] addr2 = ((ClusterResource)e2).getVirtualAddress().getAddress();
 
 				result = 0;
 				for(int i = 0; (i < addr1.length) && (result == 0); i++)
 				{
-					result = addr1[i] - addr2[i];
+					result = Integer.signum(addr1[i] - addr2[i]);
 				}
 				break;
 			default:

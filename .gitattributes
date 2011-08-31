@@ -1084,6 +1084,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/ac
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ChangeIpAddress.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ChangeZone.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/ConfigurationPoll.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateCluster.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateCondition.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateContainer.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/CreateNetworkService.java -text
@@ -1103,6 +1104,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/di
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNetworkServiceDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateNodeDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/CreateZoneDialog.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/EditClusterResourceDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/EnterIpAddressDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/ZoneSelectionDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AccessControl.java -text

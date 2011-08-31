@@ -31,7 +31,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Business service object creation dialog
- *
  */
 public class CreateBusinessServiceDialog extends Dialog
 {

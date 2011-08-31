@@ -5,12 +5,15 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -22,11 +25,18 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.dialogs.EditClusterResourceDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.ResourceListComparator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.ResourceListLabelProvider;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -72,7 +82,9 @@ public class ClusterResources extends PropertyPage
       viewer.setLabelProvider(new ResourceListLabelProvider());
       viewer.setComparator(new ResourceListComparator());
       
-      resources = new ArrayList(object.getResources());
+      resources = new ArrayList<ClusterResource>(object.getResources().size());
+      for(ClusterResource r : object.getResources())
+      	resources.add(new ClusterResource(r));
       viewer.setInput(resources.toArray());
       
       GridData gridData = new GridData();
@@ -177,7 +189,23 @@ public class ClusterResources extends PropertyPage
 	 */
 	private void addResource()
 	{
-		
+		EditClusterResourceDialog dlg = new EditClusterResourceDialog(getShell(), null);
+		if (dlg.open() == Window.OK)
+		{
+			// Find free resource ID
+			long id = 1;
+			for(ClusterResource r : resources)
+			{
+				if (r.getId() >= id)
+					id = r.getId() + 1;
+			}
+					
+			ClusterResource r = new ClusterResource(id, dlg.getName(), dlg.getAddress());
+			resources.add(r);
+			viewer.setInput(resources.toArray());
+			viewer.setSelection(new StructuredSelection(r));
+			isModified = true;
+		}
 	}
 	
 	/**
@@ -185,7 +213,19 @@ public class ClusterResources extends PropertyPage
 	 */
 	private void editResource()
 	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
 		
+		ClusterResource r = (ClusterResource)selection.getFirstElement();
+		EditClusterResourceDialog dlg = new EditClusterResourceDialog(getShell(), r);
+		if (dlg.open() == Window.OK)
+		{
+			r.setName(dlg.getName());
+			r.setVirtualAddress(dlg.getAddress());
+			viewer.update(r, null);
+			isModified = true;
+		}
 	}
 	
 	/**
@@ -194,10 +234,79 @@ public class ClusterResources extends PropertyPage
 	private void deleteResource()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
 		for(Object o : selection.toList())
 		{
 			resources.remove(o);
 		}
 		viewer.setInput(resources.toArray());
+		isModified = true;
+	}
+
+	/**
+	 * Apply changes
+	 * 
+	 * @param isApply true if update operation caused by "Apply" button
+	 */
+	protected void applyChanges(final boolean isApply)
+	{
+		if (!isModified)
+			return;		// Nothing to apply
+		
+		if (isApply)
+			setValid(false);
+		
+		new ConsoleJob("Update cluster resource list", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+				md.setResourceList(resources);
+				((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+				isModified = false;
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot update cluster resource list";
+			}
+
+			@Override
+			protected void jobFinalize()
+			{
+				if (isApply)
+				{
+					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							ClusterResources.this.setValid(true);
+						}
+					});
+				}
+			}
+		}.start();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
+	 */
+	@Override
+	protected void performApply()
+	{
+		applyChanges(true);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 */
+	@Override
+	public boolean performOk()
+	{
+		applyChanges(false);
+		return true;
 	}
 }

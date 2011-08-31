@@ -251,6 +251,13 @@
                menubarPath="objectbinding">
          </action>
          <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateCluster"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_Container"
+               label="Create cl&amp;uster..."
+               menubarPath="objectcreation">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNode_Container"
@@ -289,6 +296,13 @@
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject_ServiceRoot"
                label="Bind..."
                menubarPath="objectbinding">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateCluster"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_ServiceRoot"
+               label="Create cl&amp;uster..."
+               menubarPath="objectcreation">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNode"

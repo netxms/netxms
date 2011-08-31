@@ -350,7 +350,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 // Delete object from database
 //
 
-BOOL Cluster::DeleteFromDB(void)
+BOOL Cluster::DeleteFromDB()
 {
    TCHAR szQuery[256];
    BOOL bSuccess;

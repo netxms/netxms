@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -26,27 +28,30 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.objects.ClusterResource;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Zone object creation dialog
- *
+ * Cluster resource editing dialog
  */
-public class CreateZoneDialog extends Dialog
+public class EditClusterResourceDialog extends Dialog
 {
+	private ClusterResource resource;
+	
 	private LabeledText nameField;
-	private LabeledText zoneIdField;
+	private LabeledText addressField;
 	
 	private String name;
-	private long zoneId;
+	private InetAddress address;
 	
 	/**
 	 * @param parentShell
 	 */
-	public CreateZoneDialog(Shell parentShell)
+	public EditClusterResourceDialog(Shell parentShell, ClusterResource resource)
 	{
 		super(parentShell);
+		this.resource = resource;
 	}
 
 	/* (non-Javadoc)
@@ -56,9 +61,9 @@ public class CreateZoneDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create Zone Object");
+		newShell.setText((resource != null) ? "Edit Cluster Resource" : "Create Cluster Resource");
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
 	 */
@@ -74,7 +79,7 @@ public class CreateZoneDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name");
+		nameField.setLabel("Resource Name");
 		nameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -82,13 +87,19 @@ public class CreateZoneDialog extends Dialog
 		gd.widthHint = 300;
 		nameField.setLayoutData(gd);
 		
-		zoneIdField = new LabeledText(dialogArea, SWT.NONE);
-		zoneIdField.setLabel("Zone ID");
-		zoneIdField.getTextControl().setTextLimit(12);
+		addressField = new LabeledText(dialogArea, SWT.NONE);
+		addressField.setLabel("Virtual IP Address");
+		addressField.getTextControl().setTextLimit(32);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		zoneIdField.setLayoutData(gd);
+		addressField.setLayoutData(gd);
+		
+		if (resource != null)
+		{
+			nameField.setText(resource.getName());
+			addressField.setText(resource.getVirtualAddress().getHostAddress());
+		}
 		
 		return dialogArea;
 	}
@@ -101,16 +112,11 @@ public class CreateZoneDialog extends Dialog
 	{
 		try
 		{
-			zoneId = Long.parseLong(zoneIdField.getText());
+			address = InetAddress.getByName(addressField.getText().trim());
 		}
-		catch(NumberFormatException e)
+		catch(UnknownHostException e)
 		{
-			MessageDialog.openWarning(getShell(), "Warning", "Zone ID must be positive integer");
-			return;
-		}
-		if (zoneId <= 0)
-		{
-			MessageDialog.openWarning(getShell(), "Warning", "Zone ID must be positive integer");
+			MessageDialog.openWarning(getShell(), "Warning", "Please enter valid IP address");
 			return;
 		}
 		
@@ -133,10 +139,10 @@ public class CreateZoneDialog extends Dialog
 	}
 
 	/**
-	 * @return the zoneId
+	 * @return the address
 	 */
-	public long getZoneId()
+	public InetAddress getAddress()
 	{
-		return zoneId;
+		return address;
 	}
 }

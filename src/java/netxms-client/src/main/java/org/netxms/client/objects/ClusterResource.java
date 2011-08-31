@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * This class represents single cluster resource
- *
  */
 public class ClusterResource
 {
@@ -45,6 +44,34 @@ public class ClusterResource
 		name = msg.getVariableAsString(baseId + 1);
 		virtualAddress = msg.getVariableAsInetAddress(baseId + 2);
 		currentOwner = msg.getVariableAsInt64(baseId + 3);
+	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param src source object
+	 */
+	public ClusterResource(ClusterResource src)
+	{
+		id = src.id;
+		name = src.name;
+		virtualAddress = src.virtualAddress;
+		currentOwner = src.currentOwner;
+	}
+	
+	/**
+	 * Create new cluster resource object.
+	 * 
+	 * @param id
+	 * @param name
+	 * @param virtualAddress
+	 */
+	public ClusterResource(long id, String name, InetAddress virtualAddress)
+	{
+		this.id = id;
+		this.name = name;
+		this.virtualAddress = virtualAddress;
+		this.currentOwner = 0;
 	}
 
 	/**
@@ -77,5 +104,21 @@ public class ClusterResource
 	public long getCurrentOwner()
 	{
 		return currentOwner;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+
+	/**
+	 * @param virtualAddress the virtualAddress to set
+	 */
+	public void setVirtualAddress(InetAddress virtualAddress)
+	{
+		this.virtualAddress = virtualAddress;
 	}
 }
