@@ -1577,6 +1577,8 @@ public:
 
 	void execute();
 	BOOL applyTemplates();
+
+	DWORD getNodeId() { return m_nodeId; }
 };
 
 
@@ -1597,6 +1599,7 @@ protected:
 
 	void setScript(const TCHAR *script);
 	DWORD getOwnerId();
+	NXSL_Value *getNodeObjectForNXSL();
 	bool insertTicket();
 	void closeTicket();
 	void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }

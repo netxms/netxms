@@ -162,10 +162,9 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	}
 	DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template) ")
-											  _T("VALUES (?,?,?,?,?,?)") :
-											  _T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=? ")
-											  _T("WHERE id=?"));
+	hStmt = DBPrepare(g_hCoreDB, bNewObject ? 
+		_T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template) VALUES (?,?,?,?,?,?)") :
+		_T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=? WHERE id=?"));
 	if (hStmt == NULL)	
 		goto finish;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -173,7 +172,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, CHECK_NULL_EX(m_script), DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
 	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)0);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)(m_isTemplate ? 1 : 0));
 	if (!bNewObject)
 		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_dwId);
 	
@@ -313,6 +312,7 @@ void SlmCheck::execute()
 		case check_script:
 			oldStatus = m_iStatus;
 			m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
+			m_pCompiledScript->setGlobalVariable(_T("$node"), getNodeObjectForNXSL());
 			if (m_pCompiledScript->run(pEnv, 0, NULL, NULL, &pGlobals) == 0)
 			{
 				pValue = m_pCompiledScript->getResult();
@@ -322,7 +322,7 @@ void SlmCheck::execute()
 					NXSL_Variable *reason = pGlobals->find(_T("$reason"));
 					setReason((reason != NULL) ? reason->getValue()->getValueAsCString() : _T("Check script returns error"));
 				}
-				DbgPrintf(6, _T("SlmCheck::execute: %s/%ld ret value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
+				DbgPrintf(6, _T("SlmCheck::execute: %s [%ld] return value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
 			}
 			else
 			{
@@ -427,4 +427,38 @@ DWORD SlmCheck::getOwnerId()
 	}
 	UnlockParentList();
 	return ownerId;
+}
+
+
+//
+// Get related node object for use in NXSL script
+// Will return NXSL_Value of type NULL if there are no associated node
+//
+
+NXSL_Value *SlmCheck::getNodeObjectForNXSL()
+{
+	NXSL_Value *value = NULL;
+	DWORD nodeId = 0;
+
+	LockParentList(FALSE);
+	for(DWORD i = 0; i < m_dwParentCount; i++)
+	{
+		if (m_pParentList[i]->Type() == OBJECT_NODELINK)
+		{
+			nodeId = ((NodeLink *)m_pParentList[i])->getNodeId();
+			break;
+		}
+	}
+	UnlockParentList();
+
+	if (nodeId != 0)
+	{
+		NetObj *node = FindObjectById(nodeId);
+		if (node->Type() == OBJECT_NODE)
+		{
+			value = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
+		}
+	}
+
+	return (value != NULL) ? value : new NXSL_Value;
 }
