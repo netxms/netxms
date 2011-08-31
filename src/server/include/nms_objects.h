@@ -1594,7 +1594,7 @@ protected:
 	TCHAR m_reason[256];
 	bool m_isTemplate;
 
-	static long ticketId;
+	static LONG ticketId;
 
 	void setScript(const TCHAR *script);
 
@@ -1644,7 +1644,7 @@ protected:
 	bool m_busy;
 	time_t m_lastPollTime;
 
-	static long logRecordId;
+	static LONG logRecordId;
 
 public:
 	BusinessService();

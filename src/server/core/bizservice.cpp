@@ -24,7 +24,7 @@
 
 #define QUERY_LENGTH		(512)
 
-long BusinessService::logRecordId = -1;
+LONG BusinessService::logRecordId = -1;
 
 //
 // Service default constructor

@@ -24,7 +24,7 @@
 
 #define QUERY_LENGTH		(512)
 
-long SlmCheck::ticketId = -1;
+LONG SlmCheck::ticketId = -1;
 
 //
 // SLM check default constructor
