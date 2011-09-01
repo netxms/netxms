@@ -86,4 +86,18 @@ public interface DataComparisonChart extends DataChart
 	 * @return "transposed" flag
 	 */
 	public abstract boolean isTransposed();
+	
+	/**
+	 * Set data label visibility status
+	 * 
+	 * @param visible true to make data labels visible
+	 */
+	public abstract void setLabelsVisible(boolean visible);
+	
+	/**
+	 * Get data label visibility status
+	 * 
+	 * @return data label visibility status
+	 */
+	public abstract boolean isLabelsVisible();
 }

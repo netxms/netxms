@@ -581,6 +581,7 @@ public class DataComparisonView extends ViewPart
 	private void setChartType(int newType)
 	{
 		chartType = newType;
+		chart.setLabelsVisible(chartType == DataComparisonChart.PIE_CHART);
 		chart.setChartType(newType);
 		actionHorizontal.setEnabled(chart.hasAxes());
 		actionVertical.setEnabled(chart.hasAxes());

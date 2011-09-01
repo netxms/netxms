@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.charts.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
@@ -80,6 +79,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	private Axis yAxis = null;
 	private Series valueSeries = null;
 	private boolean transposed = false;
+	private boolean labelsVisible = false;
 	
 	/**
 	 * @param parent
@@ -89,6 +89,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		super(parent, style);
 		this.chartType = chartType;
+		if (chartType == PIE_CHART)
+			labelsVisible = true;
 	}
 
 	/* (non-Javadoc)
@@ -307,6 +309,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 				bs.setTranslucent(translucent);
 				if (chartType == TUBE_CHART)
 					bs.setRiser(RiserType.TUBE_LITERAL);
+				bs.getLabel().setVisible(labelsVisible);
 				return bs;
 			case PIE_CHART:
 				PieSeries ps = (PieSeries)PieSeriesImpl.create();
@@ -321,11 +324,15 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 					ps.setRatio(1);
 				}
 				ps.setTranslucent(translucent);
-				ps.setLabelPosition(Position.OUTSIDE_LITERAL);
-				ps.setLeaderLineStyle(LeaderLineStyle.FIXED_LENGTH_LITERAL);
-				ps.getLeaderLineAttributes().setVisible(true);
-				ps.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
-				ps.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
+				ps.getLabel().setVisible(labelsVisible);
+				if (labelsVisible)
+				{
+					ps.setLabelPosition(Position.OUTSIDE_LITERAL);
+					ps.setLeaderLineStyle(LeaderLineStyle.FIXED_LENGTH_LITERAL);
+					ps.getLeaderLineAttributes().setVisible(true);
+					ps.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
+					ps.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
+				}
 				return ps;
 			case DIAL_CHART:
 				DialSeries ds = (DialSeries)DialSeriesImpl.create();
@@ -527,5 +534,25 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	public boolean hasAxes()
 	{
 		return chartType == BAR_CHART;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#setLabelsVisible(boolean)
+	 */
+	@Override
+	public void setLabelsVisible(boolean visible)
+	{
+		labelsVisible = visible;
+		if (getChart() != null)
+			recreateChart();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#isLabelsVisible()
+	 */
+	@Override
+	public boolean isLabelsVisible()
+	{
+		return labelsVisible;
 	}
 }

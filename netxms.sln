@@ -1296,11 +1296,13 @@ Global
 		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Win32
 		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Debug|Win32.ActiveCfg = Debug|Win32
 		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Debug|Win32.Build.0 = Debug|Win32
-		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Debug|x64.ActiveCfg = Debug|Win32
+		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Debug|x64.ActiveCfg = Debug|x64
+		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Debug|x64.Build.0 = Debug|x64
 		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Release|Win32
 		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Release|Win32.ActiveCfg = Release|Win32
 		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Release|Win32.Build.0 = Release|Win32
-		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Release|x64.ActiveCfg = Release|Win32
+		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Release|x64.ActiveCfg = Release|x64
+		{500DE9BF-6FC1-4ACB-91A9-308BA1D37F37}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Layout;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.ui.eclipse.objectview.objecttabs.elements.AvailabilityChart;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Commands;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
@@ -99,6 +100,7 @@ public class ObjectOverview extends ObjectTab
 
 		addElement(new GeneralInfo(leftColumn, getObject()));
 		addElement(new Commands(leftColumn, getObject()));
+		addElement(new AvailabilityChart(leftColumn, getObject()));
 		addElement(new Comments(leftColumn, getObject()));
 		addElement(new Capabilities(rightColumn, getObject()));
 		addElement(new Connection(rightColumn, getObject()));
