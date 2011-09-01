@@ -44,7 +44,7 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpor
    VlanList *vlanList = (VlanList *)pArg;
 
    DWORD dwNameLen = pVar->GetName()->Length();
-	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt(), VLAN_PRM_SLOTPORT);
+	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt(), VLAN_PRM_IFINDEX);
 
    // Get VLAN name
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
@@ -78,9 +78,7 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpor
       return dwResult;
 	}
 
-	DWORD slotSize = CAST_FROM_POINTER(vlanList->getData(), DWORD);
 	DWORD ifIndex = 0;
-
 	for(int i = 0; i < 256; i++)
 	{
 		BYTE mask = 0x80;
@@ -88,9 +86,7 @@ static DWORD HandlerVlanList(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 		{
 			if (portMask[i] & mask)
 			{
-				DWORD slot = ifIndex / slotSize + 1;
-				DWORD port = ifIndex % slotSize;
-				vlan->add(slot, port);
+				vlan->add(ifIndex);
 			}
 			mask >>= 1;
 			ifIndex++;
@@ -108,7 +104,6 @@ VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes)
 {
 	VlanList *list = new VlanList();
 	DWORD slotSize = getSlotSize(attributes);
-	list->setData(CAST_TO_POINTER(slotSize, void *));
 	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 	{
 		delete_and_null(list);

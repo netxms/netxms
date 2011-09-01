@@ -1542,6 +1542,7 @@ src/server/drivers/lib/Makefile.am -text
 src/server/drivers/lib/avaya-ers/Makefile.am -text
 src/server/drivers/lib/avaya-ers/avaya-ers.vcproj -text
 src/server/drivers/lib/cisco/cisco.vcproj -text
+src/server/drivers/netscreen/netscreen.vcproj -text
 src/server/include/Makefile.am -text
 src/server/include/nxcore_smclp.h -text
 src/server/libnxsrv/apinfo.cpp -text

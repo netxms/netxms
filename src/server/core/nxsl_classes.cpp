@@ -159,6 +159,14 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(pNode->getPlatformName());
    }
+   else if (!_tcscmp(pszAttr, _T("snmpSysName")))
+   {
+      pValue = new NXSL_Value(pNode->getSysName());
+   }
+   else if (!_tcscmp(pszAttr, _T("sysDescription")))
+   {
+      pValue = new NXSL_Value(pNode->getSysDescription());
+   }
 	else
 	{
 		const TCHAR *attrValue = pNode->GetCustomAttribute(pszAttr);

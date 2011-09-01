@@ -803,6 +803,7 @@ public:
 	const TCHAR *getPlatformName() { return m_szPlatformName; }
    const TCHAR *getObjectId() { return m_szObjectId; }
 	const TCHAR *getSysName() { return CHECK_NULL_EX(m_sysName); }
+	const TCHAR *getSysDescription() { return CHECK_NULL_EX(m_sysDescription); }
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
 
    BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }

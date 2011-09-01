@@ -69,7 +69,8 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
 {
 	DWORD slotSize;
 	
-	if (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.74"), 20))	// 56xx
+	if (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.74"), 20) ||	// 56xx
+	    !_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.65"), 20))	// 5530-24TFD
 	{
 		slotSize = 128;
 	}
