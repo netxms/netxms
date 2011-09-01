@@ -443,6 +443,9 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		}
 	}
 	
+	/**
+	 * @param e
+	 */
 	private void updateDialRegions(DataComparisonElement e)
 	{
 		DialSeries s = (DialSeries)e.getSeries();

@@ -147,6 +147,7 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.netxms.ui.eclipse.objecttools"/>
       <plugin id="org.netxms.ui.eclipse.objectview"/>
       <plugin id="org.netxms.ui.eclipse.osm"/>
+      <plugin id="org.netxms.ui.eclipse.perfview"/>
       <plugin id="org.netxms.ui.eclipse.policymanager"/>
       <plugin id="org.netxms.ui.eclipse.reporter"/>
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>

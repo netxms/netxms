@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Historical Data Chart"
+            allowMultiple="true"
+            icon="icons/chart_line.png"
+            class="org.netxms.ui.eclipse.perfview.views.HistoricalDataView"
+            id="org.netxms.ui.eclipse.perfview.views.HistoryGraph">
+      </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"
+            icon="icons/graph_tree.png"
+            id="org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"
+            name="Graphs"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.perfview.views.DataComparisonView"
+            icon="icons/chart_bar.png"
+            id="org.netxms.ui.eclipse.perfview.views.DataComparisionView"
+            name="Last Values Chart"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.perfview.views.StatusView"
+            icon="icons/status_view.png"
+            id="org.netxms.ui.eclipse.perfview.views.StatusIndicatorView"
+            name="Status"
+            restorable="true">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.graph_DciValue"
+            objectClass="org.netxms.client.datacollection.DciValue">
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowStatusIndicator"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowStatusIndicator"
+               label="Status Indicator"
+               icon="icons/chart_status.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
+               icon="icons/chart_pie.png"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart"
+               label="Pie Chart"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowBarChart"
+               icon="icons/chart_bar.png"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart"
+               label="Bar Chart"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryGraph"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph"
+               label="Line Chart"
+               icon="icons/chart_line.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.perfview.actions.popup.dci.graph_DataCollectionItem"
+            objectClass="org.netxms.client.datacollection.DataCollectionItem">
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowStatusIndicator"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowStatusIndicator"
+               label="Status Indicator"
+               icon="icons/chart_status.png"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
+               icon="icons/chart_pie.png"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart"
+               label="Pie Chart"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowBarChart"
+               icon="icons/chart_bar.png"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowBarChart"
+               label="Bar Chart"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowHistoryGraph"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph"
+               label="Line Chart"
+               icon="icons/chart_line.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.perfview.propertypages.PerfTab"
+            id="org.netxms.ui.eclipse.perfview.propertypages.PerfTab#100"
+            name="Performance Tab">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.perfview.propertypages.General"
+            id="org.netxms.ui.eclipse.perfview.propertypages.General"
+            name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.datacollection.GraphSettings">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Open predefined graphs navigation view"
+            id="org.netxms.ui.eclipse.perfview.commands.open_predef_graph_tree"
+            name="Predefined Graphs">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.predefined_graphs"
+            label="Graphs"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.OpenPredefinedGraphsTree"
+               definitionId="org.netxms.ui.eclipse.perfview.commands.open_predef_graph_tree"
+               icon="icons/graph_tree.png"
+               id="org.netxms.ui.eclipse.perfview.action.open_predef_graph_tree"
+               label="Predefined Graphs"
+               menubarPath="view/primary"
+               style="push"
+               toolbarPath="view/additions">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.perfview.objecttabs.PerformanceTab"
+            icon="icons/chart_line.png"
+            name="Performance"
+            order="30">
+      </tab>
+   </extension>
+
+</plugin>
