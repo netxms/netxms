@@ -1661,7 +1661,7 @@ protected:
 	LONG m_prevDiffMonth;
 
 	static LONG logRecordId;
-	static LONG BusinessService::getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
+	static LONG getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
 	BOOL addHistoryRecord();
 	void initUptimeStats();
