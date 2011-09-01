@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.1.3], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.1.4], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -1956,6 +1956,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/lib/Makefile
 	src/server/drivers/lib/avaya-ers/Makefile
 	src/server/drivers/lib/cisco/Makefile
+	src/server/drivers/netscreen/Makefile
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
