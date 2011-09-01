@@ -54,7 +54,7 @@ const TCHAR *NetscreenDriver::getVersion()
  */
 bool NetscreenDriver::isDeviceSupported(const TCHAR *oid)
 {
-	return _tcsncmp(oid, _T(".1.3.6.1.4.1.2272"), 17) == 0;
+	return _tcsncmp(oid, _T(".1.3.6.1.4.1.3224.1"), 19) == 0;
 }
 
 /**
@@ -70,6 +70,46 @@ void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Stri
 }
 
 /**
+ * Handler for interface enumeration
+ */
+static DWORD HandlerIfList(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Transport *transport, void *arg)
+{
+	InterfaceList *ifList = (InterfaceList *)arg;
+
+   DWORD nameLen = varbind->GetName()->Length();
+	DWORD oidName[MAX_OID_LEN];
+	memcpy(oidName, varbind->GetName()->GetValue(), nameLen * sizeof(DWORD));
+
+	NX_INTERFACE_INFO iface;
+	memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
+	iface.dwIndex = varbind->GetValueAsUInt();
+
+	oidName[10] = 2;	// nsIfName
+	DWORD rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.szName, MAX_DB_STRING, SG_STRING_RESULT);
+	if (rc != SNMP_ERR_SUCCESS)
+		return rc;
+	nx_strncpy(iface.szDescription, iface.szName, MAX_DB_STRING);
+
+	oidName[10] = 11;	// nsIfMAC
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.bMacAddr, 6, SG_RAW_RESULT);
+	if (rc != SNMP_ERR_SUCCESS)
+		return rc;
+
+	oidName[10] = 6;	// nsIfIp
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.dwIpAddr, sizeof(DWORD), 0);
+	if (rc != SNMP_ERR_SUCCESS)
+		return rc;
+
+	oidName[10] = 7;	// nsIfNetmask
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.dwIpNetMask, sizeof(DWORD), 0);
+	if (rc != SNMP_ERR_SUCCESS)
+		return rc;
+
+	ifList->add(&iface);
+	return SNMP_ERR_SUCCESS;
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
@@ -78,11 +118,11 @@ void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Stri
 InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, useAliases, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
-
-
+	InterfaceList *ifList = new InterfaceList;
+	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList, FALSE) != SNMP_ERR_SUCCESS)
+	{
+		delete_and_null(ifList);
+	}
 	return ifList;
 }
 

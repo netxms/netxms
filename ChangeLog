@@ -4,6 +4,7 @@
 
 - Implemented named parameters for events
 - Added integration script for HP EVA disk arrays
+- Added driver for Netscreen firewalls
 - New MIBs added: ATM-TC-MIB, CISCO-BRIDGE-EXT-MIB, CISCO-IF-EXTENSION-MIB,
   CISCO-L2L3-INTERFACE-CONFIG-MIB, CISCO-PRIVATE-VLAN-MIB,
   CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB, DVMRP-MIB, IGMP-MIB, IPV6-TC,
