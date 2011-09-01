@@ -18,12 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
+import java.text.NumberFormat;
+
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -94,6 +98,20 @@ public class GeneralInfo extends TableElement
 			case GenericObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;
 				addPair("Zone ID", Long.toString(zone.getZoneId()));
+				break;
+			case GenericObject.OBJECT_BUSINESSSERVICE:
+				BusinessService service = (BusinessService)object;
+				NumberFormat nf = NumberFormat.getNumberInstance();
+				nf.setMinimumFractionDigits(3);
+				nf.setMaximumFractionDigits(3);
+				addPair("Uptime for day", nf.format(service.getUptimeForDay()) + "%");
+				addPair("Uptime for week", nf.format(service.getUptimeForWeek()) + "%");
+				addPair("Uptime for month", nf.format(service.getUptimeForMonth()) + "%");
+				break;
+			case GenericObject.OBJECT_NODELINK:
+				Node linkedNode = (Node)((NXCSession)ConsoleSharedData.getSession()).findObjectById(((NodeLink)object).getNodeId(), Node.class);
+				if (linkedNode != null)
+					addPair("Linked node", linkedNode.getObjectName());
 				break;
 			default:
 				break;

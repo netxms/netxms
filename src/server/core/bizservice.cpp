@@ -26,6 +26,7 @@
 
 LONG BusinessService::logRecordId = -1;
 
+
 //
 // Service default constructor
 //
@@ -328,6 +329,7 @@ BOOL BusinessService::addHistoryRecord()
 	return TRUE;
 }
 
+
 //
 // Initialize uptime statistics (daily, weekly, monthly) by examining slm_service_history
 //
@@ -385,6 +387,7 @@ double BusinessService::getUptimeFromDBFor(Period period, LONG *downtime)
 	return percentage;
 }
 
+
 //
 // Update uptime counters 
 //
@@ -419,7 +422,12 @@ void BusinessService::updateUptimeStats()
 	m_prevDiffMonth = timediffTillNow;
 }
 
-/* static */ LONG BusinessService::getSecondsSinceBeginningOf(Period period, time_t *beginTime /* = NULL */)
+
+//
+// Calculate number of seconds since the beginning of given period
+//
+
+LONG BusinessService::getSecondsSinceBeginningOf(Period period, time_t *beginTime)
 {
 	time_t curTime = time(NULL);
 	struct tm *tms;

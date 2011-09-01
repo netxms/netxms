@@ -676,6 +676,9 @@ public final class NXCPCodes
 	public static final long VID_SLMCHECK_TYPE           = 391;
 	public static final long VID_REASON                  = 392;
 	public static final long VID_NODE_ID                 = 393;
+	public static final long VID_UPTIME_DAY              = 394;
+	public static final long VID_UPTIME_WEEK             = 395;
+	public static final long VID_UPTIME_MONTH            = 396;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
