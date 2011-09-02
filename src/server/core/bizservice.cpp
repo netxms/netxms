@@ -35,7 +35,8 @@ BusinessService::BusinessService() : Container()
 {
 	m_busy = false;
 	m_lastPollTime = time_t(0);
-	m_lastPollStatus = STATUS_UNKNOWN;
+	m_lastPollStatus = m_prevUptimeUpdateStatus = STATUS_UNKNOWN;
+	m_prevUptimeUpdateTime = time(NULL);
 	_tcscpy(m_szName, _T("Default"));
 	m_uptimeDay = 100.0;
 	m_uptimeWeek = 100.0;
@@ -57,7 +58,8 @@ BusinessService::BusinessService(const TCHAR *name) : Container(name, 0)
 {
 	m_busy = false;
 	m_lastPollTime = time_t(0);
-	m_lastPollStatus = STATUS_UNKNOWN;
+	m_lastPollStatus = m_prevUptimeUpdateStatus = STATUS_UNKNOWN;
+	m_prevUptimeUpdateTime = time(NULL);
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_uptimeDay = 100.0;
 	m_uptimeWeek = 100.0;
@@ -101,7 +103,8 @@ void BusinessService::calculateCompoundStatus(BOOL bForcedRecalc)
 			iCount++;
 		}
 	}
-	m_iStatus = (iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN;
+	// Set status and update uptime counters
+	setStatus((iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN);
 	UnlockChildList();
 
 	// Cause parent object(s) to recalculate it's status
@@ -114,11 +117,8 @@ void BusinessService::calculateCompoundStatus(BOOL bForcedRecalc)
 		Modify();   /* LOCK? */
 	}
 
-	if (iOldStatus != m_iStatus)
+	if (iOldStatus != STATUS_UNKNOWN && iOldStatus != m_iStatus)
 		addHistoryRecord();
-
-	// Update uptime counters
-	updateUptimeStats();
 }
 
 
@@ -302,6 +302,15 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	m_busy = false;
 }
 
+//
+// Set service status - use this instead of direct assignment;
+//
+
+void BusinessService::setStatus(int newStatus)
+{
+	m_iStatus = newStatus;
+	updateUptimeStats();	
+}
 
 //
 // Add a record to slm_service_history table
@@ -357,8 +366,8 @@ void BusinessService::initUptimeStats()
 	m_uptimeDay = getUptimeFromDBFor(DAY, &m_downtimeDay);
 	m_uptimeWeek = getUptimeFromDBFor(WEEK, &m_downtimeWeek);
 	m_uptimeMonth = getUptimeFromDBFor(MONTH, &m_downtimeMonth);
+	DbgPrintf(7, _T("++++ BusinessService::initUptimeStats() %lf %lf %lf"), m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 }
-
 
 //
 // Calculate uptime for given period using data in database
@@ -403,6 +412,7 @@ double BusinessService::getUptimeFromDBFor(Period period, LONG *downtime)
 				*downtime += LONG(time(NULL) - prevChangeTimestamp);
 		}
 		percentage = 100.0 - (double)(*downtime * 100) / (double)getSecondsInPeriod(period);
+		DbgPrintf(7, _T("++++ BusinessService::getUptimeFromDBFor(), downtime %ld"), *downtime);
 
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
@@ -420,6 +430,7 @@ void BusinessService::updateUptimeStats()
 {
 	LONG timediffTillNow;
 	LONG downtimeBetweenPolls = 0;
+	time_t curTime = time(NULL);
 
 	LockData();
 
@@ -427,8 +438,11 @@ void BusinessService::updateUptimeStats()
 	double prevUptimeWeek = m_uptimeWeek;
 	double prevUptimeMonth = m_uptimeMonth;
 
-	if (m_iStatus == STATUS_CRITICAL && m_lastPollStatus == STATUS_CRITICAL)
-		downtimeBetweenPolls = LONG(time(NULL) - m_lastPollTime);		
+	if (m_iStatus == STATUS_CRITICAL && m_prevUptimeUpdateStatus == STATUS_CRITICAL)
+	{
+		downtimeBetweenPolls = LONG(curTime - m_prevUptimeUpdateTime);		
+		DbgPrintf(7, _T("++++ BusinessService::updateUptimeStats() both statuses critical"));
+	}
 
 	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(DAY, NULL);
 	m_downtimeDay += downtimeBetweenPolls;
@@ -436,6 +450,8 @@ void BusinessService::updateUptimeStats()
 		m_downtimeDay = 0;
 	m_uptimeDay = 100.0 - (double)(m_downtimeDay * 100) / (double)BusinessService::getSecondsInPeriod(DAY);
 	m_prevDiffDay = timediffTillNow;
+	DbgPrintf(7, _T("++++ BusinessService::updateUptimeStats() m_downtimeDay %ld, timediffTillNow %ld, downtimeBetweenPolls %ld"), 
+				m_downtimeDay, timediffTillNow, downtimeBetweenPolls);
 
 	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(WEEK, NULL);
 	m_downtimeWeek += downtimeBetweenPolls;
@@ -456,6 +472,11 @@ void BusinessService::updateUptimeStats()
 		Modify();
 	}
 	UnlockData();
+	
+	m_prevUptimeUpdateStatus = m_iStatus;
+	m_prevUptimeUpdateTime = curTime;
+	
+	DbgPrintf(7, _T("++++ BusinessService::updateUptimeStats() %lf %lf %lf"), m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 }
 
 

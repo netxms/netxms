@@ -1650,7 +1650,9 @@ class NXCORE_EXPORTABLE BusinessService : public Container
 protected:
 	bool m_busy;
 	time_t m_lastPollTime;
+	time_t m_prevUptimeUpdateTime;
 	int m_lastPollStatus;
+	int m_prevUptimeUpdateStatus;
 	double m_uptimeDay;
 	double m_uptimeWeek;
 	double m_uptimeMonth;
@@ -1688,6 +1690,7 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
+	virtual void setStatus(int newStatus);
 	bool isReadyForPolling();
 	void lockForPolling();
 	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
