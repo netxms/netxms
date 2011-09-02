@@ -402,7 +402,7 @@ double BusinessService::getUptimeFromDBFor(Period period, LONG *downtime)
 			if (newStatus == STATUS_CRITICAL) // the service is still down, add period till now
 				*downtime += LONG(time(NULL) - prevChangeTimestamp);
 		}
-		percentage = 100.0 - (double)(*downtime * 100) / (double)getSecsInPeriod(period);
+		percentage = 100.0 - (double)(*downtime * 100) / (double)getSecondsInPeriod(period);
 
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
@@ -434,21 +434,21 @@ void BusinessService::updateUptimeStats()
 	m_downtimeDay += downtimeBetweenPolls;
 	if (timediffTillNow < m_prevDiffDay)
 		m_downtimeDay = 0;
-	m_uptimeDay = 100.0 - (double)(m_downtimeDay * 100) / (double)BusinessService::getSecsInPeriod(DAY);
+	m_uptimeDay = 100.0 - (double)(m_downtimeDay * 100) / (double)BusinessService::getSecondsInPeriod(DAY);
 	m_prevDiffDay = timediffTillNow;
 
 	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(WEEK, NULL);
 	m_downtimeWeek += downtimeBetweenPolls;
 	if (timediffTillNow < m_prevDiffWeek)
 		m_downtimeWeek = 0;
-	m_uptimeWeek = 100.0 - (double)(m_downtimeWeek * 100) / (double)BusinessService::getSecsInPeriod(WEEK);
+	m_uptimeWeek = 100.0 - (double)(m_downtimeWeek * 100) / (double)BusinessService::getSecondsInPeriod(WEEK);
 	m_prevDiffWeek = timediffTillNow;
 
 	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(MONTH, NULL);
 	m_downtimeMonth += downtimeBetweenPolls;
 	if (timediffTillNow < m_prevDiffMonth)
 		m_downtimeMonth = 0;
-	m_uptimeMonth = 100.0 - (double)(m_downtimeMonth * 100) / (double)BusinessService::getSecsInPeriod(MONTH);
+	m_uptimeMonth = 100.0 - (double)(m_downtimeMonth * 100) / (double)BusinessService::getSecondsInPeriod(MONTH);
 	m_prevDiffMonth = timediffTillNow;
 
 	if ((prevUptimeDay != m_uptimeDay) || (prevUptimeWeek != m_uptimeWeek) || (prevUptimeMonth != m_uptimeMonth))
@@ -496,17 +496,18 @@ LONG BusinessService::getSecondsSinceBeginningOf(Period period, time_t *beginTim
 	return LONG(curTime - beginTimeL);
 }
 
+
 //
 // Calculate number of seconds in the current month
 //
 
-/* static */ LONG BusinessService::getSecsInMonth()
+LONG BusinessService::getSecondsInMonth()
 {
 	time_t curTime = time(NULL);
 	struct tm *tms;
-	struct tm tmBuffer;
 
 #if HAVE_LOCALTIME_R
+	struct tm tmBuffer;
 	tms = localtime_r(&curTime, &tmBuffer);
 #else
 	tms = localtime(&curTime);
@@ -523,4 +524,3 @@ LONG BusinessService::getSecondsSinceBeginningOf(Period period, time_t *beginTim
 		
 	return LONG(days * 24 * 3600);
 }
-

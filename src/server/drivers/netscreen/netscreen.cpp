@@ -118,11 +118,38 @@ static DWORD HandlerIfList(DWORD snmpVersion, SNMP_Variable *varbind, SNMP_Trans
 InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
+	InterfaceList *stdIfList = NetworkDeviceDriver::getInterfaces(snmp, attributes, 0, false);
+	if (stdIfList == NULL)
+		return NULL;
+
 	InterfaceList *ifList = new InterfaceList;
-	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpEnumerate(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList, FALSE) == SNMP_ERR_SUCCESS)
+	{
+		// Fix interface indexes
+		for(int i = 0; i < ifList->getSize(); i++)
+		{
+			NX_INTERFACE_INFO *iface = ifList->get(i);
+			int j;
+			for(j = 0; j < stdIfList->getSize(); j++)
+			{
+				if (!_tcscmp(iface->szName, stdIfList->get(j)->szName))
+				{
+					iface->dwIndex = stdIfList->get(j)->dwIndex;
+					break;
+				}
+			}
+			if (j == stdIfList->getSize())
+			{
+				// Interface nt found in standard interface list (usually tunnel interface)
+				iface->dwIndex += 32768;
+			}
+		}
+	}
+	else
 	{
 		delete_and_null(ifList);
 	}
+	delete stdIfList;
 	return ifList;
 }
 
