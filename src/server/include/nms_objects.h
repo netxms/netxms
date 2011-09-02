@@ -1662,6 +1662,10 @@ protected:
 	LONG m_prevDiffMonth;
 
 	static LONG logRecordId;
+	static const LONG secsInDay = 3600 * 24;
+	static const LONG secsInWeek = 3600 * 24 * 7;
+	static LONG getSecsInMonth();
+	static LONG getSecsInPeriod(Period period) { return period == MONTH ? getSecsInMonth() : (period == WEEK ? secsInWeek : secsInDay); }
 	static LONG getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
 	BOOL addHistoryRecord();
