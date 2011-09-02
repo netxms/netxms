@@ -34,8 +34,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Dialog for entering IP address
- *
+ * Dialog for selecting zone
  */
 public class ZoneSelectionDialog extends Dialog
 {
@@ -77,7 +76,7 @@ public class ZoneSelectionDialog extends Dialog
 
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
       objectSelector.setLabel("Zone object");
-      objectSelector.setObjectClass(GenericObject.OBJECT_ZONE);
+      objectSelector.setObjectClass(Zone.class);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

@@ -40,6 +40,7 @@ public class SharedIcons
 	public static ImageDescriptor EDIT;
 	public static ImageDescriptor EXPAND;
 	public static ImageDescriptor EXPAND_ALL;
+	public static ImageDescriptor FIND;
 	public static ImageDescriptor PASTE;
 	public static ImageDescriptor REFRESH;
 	public static ImageDescriptor SAVE;
@@ -64,6 +65,7 @@ public class SharedIcons
 		EDIT = Activator.getImageDescriptor("icons/edit.png");
 		EXPAND = Activator.getImageDescriptor("icons/expand.png");
 		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png");
+		FIND = Activator.getImageDescriptor("icons/find.gif");
 		PASTE = Activator.getImageDescriptor("icons/paste.gif");
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif");
 		SAVE = Activator.getImageDescriptor("icons/save.gif");

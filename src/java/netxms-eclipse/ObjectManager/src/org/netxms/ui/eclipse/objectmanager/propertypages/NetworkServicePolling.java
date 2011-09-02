@@ -30,8 +30,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.NetworkService;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -111,7 +111,7 @@ public class NetworkServicePolling extends PropertyPage
 		pollerNode = new ObjectSelector(dialogArea, SWT.NONE);
 		pollerNode.setLabel("Poller node");
 		pollerNode.setEmptySelectionName("<default>");
-		pollerNode.setObjectClass(GenericObject.OBJECT_NODE);
+		pollerNode.setObjectClass(Node.class);
 		pollerNode.setObjectId(object.getPollerNode());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

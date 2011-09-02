@@ -26,7 +26,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -87,7 +87,7 @@ public class CreateNodeLinkDialog extends Dialog
 		
 		nodeField = new ObjectSelector(dialogArea, SWT.NONE);
 		nodeField.setLabel("Node");
-		nodeField.setObjectClass(GenericObject.OBJECT_NODE);
+		nodeField.setObjectClass(Node.class);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

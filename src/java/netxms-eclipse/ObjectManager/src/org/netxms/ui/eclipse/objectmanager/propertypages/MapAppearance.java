@@ -31,6 +31,7 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -40,7 +41,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Map Appearance" property page for NetMS objects 
- *
  */
 public class MapAppearance extends PropertyPage
 {
@@ -78,7 +78,7 @@ public class MapAppearance extends PropertyPage
       // Submap
       submap = new ObjectSelector(dialogArea, SWT.NONE);
       submap.setLabel("Drill-down submap");
-      submap.setObjectClass(GenericObject.OBJECT_NETWORKMAP);
+      submap.setObjectClass(NetworkMap.class);
       submap.setObjectId(object.getSubmapId());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

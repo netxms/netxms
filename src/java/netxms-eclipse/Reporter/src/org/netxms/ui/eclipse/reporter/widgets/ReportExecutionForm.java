@@ -185,6 +185,9 @@ public class ReportExecutionForm extends Composite
 					case ReportParameter.TIMESTAMP:
 						editor = new TimestampFieldEditor(p, toolkit, parent);
 						break;
+					case ReportParameter.OBJECT_ID:
+						editor = new ObjectFieldEditor(p, toolkit, parent);
+						break;
 					default: // everything else as string
 						editor = new StringFieldEditor(p, toolkit, parent);
 						break;

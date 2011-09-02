@@ -40,6 +40,7 @@ import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -50,7 +51,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Dialog for creating new node
- *
  */
 public class CreateNodeDialog extends Dialog
 {
@@ -177,7 +177,7 @@ public class CreateNodeDialog extends Dialog
 		
 		agentProxySelector = new ObjectSelector(dialogArea, SWT.NONE);
 		agentProxySelector.setLabel("Proxy for NetXMS agent");
-		agentProxySelector.setObjectClass(GenericObject.OBJECT_NODE);
+		agentProxySelector.setObjectClass(Node.class);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -185,7 +185,7 @@ public class CreateNodeDialog extends Dialog
 		
 		snmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE);
 		snmpProxySelector.setLabel("Proxy for SNMP");
-		snmpProxySelector.setObjectClass(GenericObject.OBJECT_NODE);
+		snmpProxySelector.setObjectClass(Node.class);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -195,7 +195,7 @@ public class CreateNodeDialog extends Dialog
 		{
 			zoneSelector = new ObjectSelector(dialogArea, SWT.NONE);
 			zoneSelector.setLabel("Zone");
-			zoneSelector.setObjectClass(GenericObject.OBJECT_ZONE);
+			zoneSelector.setObjectClass(Zone.class);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;

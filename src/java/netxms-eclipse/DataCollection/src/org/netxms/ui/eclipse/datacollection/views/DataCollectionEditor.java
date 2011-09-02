@@ -682,9 +682,9 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				for(GenericObject o : dlg.getSelectedObjects(GenericObject.OBJECT_NODE))
+				for(GenericObject o : dlg.getSelectedObjects(Node.class))
 					dciConfig.copyItems(o.getObjectId(), dciList);
-				for(GenericObject o : dlg.getSelectedObjects(GenericObject.OBJECT_TEMPLATE))
+				for(GenericObject o : dlg.getSelectedObjects(Template.class))
 					dciConfig.copyItems(o.getObjectId(), dciList);
 				if (doMove)
 				{
@@ -718,7 +718,7 @@ public class DataCollectionEditor extends ViewPart
 		if (dlg.open() != Window.OK)
 			return;
 		
-		GenericObject[] objects = dlg.getSelectedObjects(GenericObject.OBJECT_TEMPLATE);
+		GenericObject[] objects = dlg.getSelectedObjects(Template.class);
 		if (objects.length == 0)
 			return;
 		final Template template = (Template)objects[0];

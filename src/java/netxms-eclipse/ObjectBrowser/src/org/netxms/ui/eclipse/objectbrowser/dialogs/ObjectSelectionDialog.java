@@ -258,10 +258,10 @@ public class ObjectSelectionDialog extends Dialog
 	/**
 	 * Get selected objects of given type
 	 * 
-	 * @param typeFilter
+	 * @param classFilter 
 	 * @return
 	 */
-	public GenericObject[] getSelectedObjects(int type)
+	public GenericObject[] getSelectedObjects(Class<? extends GenericObject> classFilter)
 	{
 		if (selectedObjects == null)
 			return new GenericObject[0];
@@ -271,7 +271,7 @@ public class ObjectSelectionDialog extends Dialog
 		for(int i = 0; i < selectedObjects.length; i++)
 		{
 			GenericObject object = session.findObjectById(selectedObjects[i]);
-			if (object.getObjectClass() == type)
+			if (classFilter.isInstance(object))
 				resultSet.add(object);
 		}
 		return resultSet.toArray(new GenericObject[resultSet.size()]);

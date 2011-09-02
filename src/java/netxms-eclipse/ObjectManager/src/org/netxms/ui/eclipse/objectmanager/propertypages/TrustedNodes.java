@@ -47,6 +47,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -56,7 +57,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  *"Trusted nodes" property page for NetXMS objects
- *
  */
 public class TrustedNodes extends PropertyPage
 {
@@ -131,7 +131,7 @@ public class TrustedNodes extends PropertyPage
 				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
 				if (dlg.open() == Window.OK)
 				{
-					GenericObject[] nodes = dlg.getSelectedObjects(GenericObject.OBJECT_NODE);
+					GenericObject[] nodes = dlg.getSelectedObjects(Node.class);
 			      for(int i = 0; i < nodes.length; i++)
 			      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
 			      viewer.setInput(trustedNodes.values().toArray());

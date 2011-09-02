@@ -22,6 +22,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -34,7 +35,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 public class ObjectSelector extends AbstractSelector
 {
 	private long objectId = 0;
-	private int objectClass = GenericObject.OBJECT_NODE;
+	private Class<? extends GenericObject> objectClass = Node.class;
 	private String emptySelectionName = Messages.getString("ObjectSelector.none"); //$NON-NLS-1$
 	
 	/**
@@ -99,7 +100,7 @@ public class ObjectSelector extends AbstractSelector
 	/**
 	 * @return the objectClass
 	 */
-	public int getObjectClass()
+	public Class<? extends GenericObject> getObjectClass()
 	{
 		return objectClass;
 	}
@@ -107,7 +108,7 @@ public class ObjectSelector extends AbstractSelector
 	/**
 	 * @param objectClass the objectClass to set
 	 */
-	public void setObjectClass(int objectClass)
+	public void setObjectClass(Class<? extends GenericObject> objectClass)
 	{
 		this.objectClass = objectClass;
 	}

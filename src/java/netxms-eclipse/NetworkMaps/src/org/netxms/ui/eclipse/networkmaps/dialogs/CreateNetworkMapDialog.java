@@ -30,13 +30,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Dialog for creating new container object
- *
+ * Dialog for creating new network map object
  */
 public class CreateNetworkMapDialog extends Dialog
 {
@@ -107,7 +106,7 @@ public class CreateNetworkMapDialog extends Dialog
       
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE);
       seedObjectSelector.setLabel("Seed node");
-      seedObjectSelector.setObjectClass(GenericObject.OBJECT_NODE);
+      seedObjectSelector.setObjectClass(Node.class);
       seedObjectSelector.setEnabled(false);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
