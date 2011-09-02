@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: BusinessService.cpp
+** File: bizservice.cpp
 **
 **/
 
@@ -37,6 +37,15 @@ BusinessService::BusinessService() : Container()
 	m_lastPollTime = time_t(0);
 	m_lastPollStatus = STATUS_UNKNOWN;
 	_tcscpy(m_szName, _T("Default"));
+	m_uptimeDay = 100.0;
+	m_uptimeWeek = 100.0;
+	m_uptimeMonth = 100.0;
+	m_downtimeDay = 0;
+	m_downtimeWeek = 0;
+	m_downtimeMonth = 0;
+	m_prevDiffDay = 0;
+	m_prevDiffWeek = 0;
+	m_prevDiffMonth = 0;
 }
 
 
@@ -50,6 +59,15 @@ BusinessService::BusinessService(const TCHAR *name) : Container(name, 0)
 	m_lastPollTime = time_t(0);
 	m_lastPollStatus = STATUS_UNKNOWN;
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	m_uptimeDay = 100.0;
+	m_uptimeWeek = 100.0;
+	m_uptimeMonth = 100.0;
+	m_downtimeDay = 0;
+	m_downtimeWeek = 0;
+	m_downtimeMonth = 0;
+	m_prevDiffDay = 0;
+	m_prevDiffWeek = 0;
+	m_prevDiffMonth = 0;
 }
 
 
@@ -98,6 +116,9 @@ void BusinessService::calculateCompoundStatus(BOOL bForcedRecalc)
 
 	if (iOldStatus != m_iStatus)
 		addHistoryRecord();
+
+	// Update uptime counters
+	updateUptimeStats();
 }
 
 
@@ -133,10 +154,10 @@ BOOL BusinessService::CreateFromDB(DWORD id)
 		return FALSE;
 	}
 
-	// m_svcStatus	= DBGetFieldULong(hResult, 0, 0);
-
 	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
+
+	initUptimeStats();
 
 	return TRUE;
 }
@@ -276,9 +297,6 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	// Set the status based on what the kids' been up to
 	calculateCompoundStatus();
 
-	// Update uptime counters
-	updateUptimeStats();
-
 	m_lastPollStatus = m_iStatus;
 	DbgPrintf(5, _T("Finished polling of business service %s [%d]"), m_szName, (int)m_dwId);
 	m_busy = false;
@@ -342,6 +360,10 @@ void BusinessService::initUptimeStats()
 }
 
 
+//
+// Calculate uptime for given period using data in database
+//
+
 double BusinessService::getUptimeFromDBFor(Period period, LONG *downtime)
 {
 	time_t beginTime;
@@ -355,7 +377,7 @@ double BusinessService::getUptimeFromDBFor(Period period, LONG *downtime)
 		time_t changeTimestamp, prevChangeTimestamp;
 		int newStatus;
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, INT64(beginTime));
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (DWORD)beginTime);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult == NULL)
 		{

@@ -63,9 +63,9 @@ SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 
 SlmCheck::~SlmCheck()
 {
-	safe_delete_and_null(m_threshold);
+	delete m_threshold;
 	safe_free(m_script);
-	safe_delete_and_null(m_pCompiledScript);
+	delete m_pCompiledScript;
 }
 
 
@@ -270,7 +270,7 @@ void SlmCheck::setScript(const TCHAR *script)
 	if (script != NULL)
 	{
 		safe_free(m_script);
-		safe_delete_and_null(m_pCompiledScript);
+		delete m_pCompiledScript;
 		m_script = _tcsdup(script);
 		if (m_script != NULL)
 		{
@@ -300,39 +300,44 @@ void SlmCheck::setScript(const TCHAR *script)
 
 void SlmCheck::execute()
 {
-	NXSL_ServerEnv *pEnv;
-	NXSL_Value *pValue;
-	NXSL_VariableSystem *pGlobals = NULL;
 	DWORD oldStatus;
-
-	pEnv = new NXSL_ServerEnv;
 
 	switch (m_type)
 	{
 		case check_script:
 			oldStatus = m_iStatus;
-			if (m_pCompiledScript == NULL)
-				break;
-			m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
-			m_pCompiledScript->setGlobalVariable(_T("$node"), getNodeObjectForNXSL());
-			if (m_pCompiledScript->run(pEnv, 0, NULL, NULL, &pGlobals) == 0)
+			if (m_pCompiledScript != NULL)
 			{
-				pValue = m_pCompiledScript->getResult();
-				m_iStatus = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
-				if (m_iStatus == STATUS_CRITICAL)
+				NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
+				NXSL_VariableSystem *pGlobals = NULL;
+
+				m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
+				m_pCompiledScript->setGlobalVariable(_T("$node"), getNodeObjectForNXSL());
+				if (m_pCompiledScript->run(pEnv, 0, NULL, NULL, &pGlobals) == 0)
 				{
-					NXSL_Variable *reason = pGlobals->find(_T("$reason"));
-					setReason((reason != NULL) ? reason->getValue()->getValueAsCString() : _T("Check script returns error"));
+					NXSL_Value *pValue = m_pCompiledScript->getResult();
+					m_iStatus = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
+					if (m_iStatus == STATUS_CRITICAL)
+					{
+						NXSL_Variable *reason = pGlobals->find(_T("$reason"));
+						setReason((reason != NULL) ? reason->getValue()->getValueAsCString() : _T("Check script returns error"));
+					}
+					DbgPrintf(6, _T("SlmCheck::execute: %s [%ld] return value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
 				}
-				DbgPrintf(6, _T("SlmCheck::execute: %s [%ld] return value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
+				else
+				{
+					TCHAR buffer[1024];
+
+					_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_szName, m_dwId);
+					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_dwId);
+					nxlog_write(MSG_SLMCHECK_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, m_pCompiledScript->getErrorText());
+					m_iStatus = STATUS_UNKNOWN;
+				}
+				delete pGlobals;
 			}
 			else
 			{
-				TCHAR buffer[1024];
-
-				_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_szName, m_dwId);
-				PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_dwId);
-				nxlog_write(MSG_SLMCHECK_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, m_pCompiledScript->getErrorText());
+				m_iStatus = STATUS_UNKNOWN;
 			}
 			break;
 		case check_threshold:
@@ -352,9 +357,6 @@ void SlmCheck::execute()
 		Modify();
 	}
 	UnlockData();
-
-	if (pGlobals != NULL)
-		delete pGlobals;
 }
 
 

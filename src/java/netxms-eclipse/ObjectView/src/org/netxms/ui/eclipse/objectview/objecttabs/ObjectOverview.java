@@ -147,9 +147,16 @@ public class ObjectOverview extends ObjectTab
 		viewArea.setRedraw(false);
 		for(OverviewPageElement element : elements)
 		{
-			element.setVisible(element.isApplicableForObject(object));
+			if (element.isApplicableForObject(object))
+			{
+				element.setVisible(true);
+				element.setObject(object);
+			}
+			else
+			{
+				element.setVisible(false);
+			}
 			((GridData)element.getLayoutData()).exclude = !element.isVisible();
-			element.setObject(object);
 		}
 		viewArea.layout(true, true);
 		viewArea.setRedraw(true);

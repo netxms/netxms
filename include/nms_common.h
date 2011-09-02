@@ -865,7 +865,6 @@ typedef struct tagICMPHDR
 //
 
 #define delete_and_null(x) { delete x; x = NULL; }
-#define safe_delete_and_null(x) { if ((x) != NULL) { delete x; x = NULL; } }
 
 
 //
