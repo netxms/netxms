@@ -354,9 +354,9 @@ BOOL BusinessService::addHistoryRecord()
 
 void BusinessService::initUptimeStats()
 {
-	m_uptimeDay		= getUptimeFromDBFor(DAY, &m_downtimeDay);
-	m_uptimeWeek	= getUptimeFromDBFor(WEEK, &m_downtimeWeek);
-	m_uptimeMonth	= getUptimeFromDBFor(MONTH, &m_downtimeMonth);
+	m_uptimeDay = getUptimeFromDBFor(DAY, &m_downtimeDay);
+	m_uptimeWeek = getUptimeFromDBFor(WEEK, &m_downtimeWeek);
+	m_uptimeMonth = getUptimeFromDBFor(MONTH, &m_downtimeMonth);
 }
 
 
@@ -368,7 +368,7 @@ double BusinessService::getUptimeFromDBFor(Period period, LONG *downtime)
 {
 	time_t beginTime;
 	LONG timediffTillNow	= BusinessService::getSecondsSinceBeginningOf(period, &beginTime);
-	double percentage = 0.;
+	double percentage = 0;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT change_timestamp,new_status FROM slm_service_history ")
 											  _T("WHERE service_id=? AND change_timestamp>?"));
@@ -384,26 +384,28 @@ double BusinessService::getUptimeFromDBFor(Period period, LONG *downtime)
 			DBFreeStatement(hStmt);
 			return percentage;
 		}
+
 		int numRows = DBGetNumRows(hResult);
 		*downtime = 0;
 		prevChangeTimestamp = beginTime;
-		if (numRows > 0) // if <= 0 then assume zero downtime
+		if (numRows > 0) // if <= 0 then assume zero downtime   FIXME: it can be 100% downtime
 		{
 			for (int i = 0; i < numRows; i++)
 			{
 				changeTimestamp = DBGetFieldLong(hResult, i, 0);
 				newStatus = DBGetFieldLong(hResult, i, 1);
 				if (newStatus == STATUS_NORMAL)
-					*downtime += LONG(changeTimestamp - prevChangeTimestamp);
+					*downtime += (LONG)(changeTimestamp - prevChangeTimestamp);
 				else 
 					prevChangeTimestamp = changeTimestamp;
 			}
 			if (newStatus == STATUS_CRITICAL) // the service is still down, add period till now
 				*downtime += LONG(time(NULL) - prevChangeTimestamp);
-			DBFreeResult(hResult);
-			DBFreeStatement(hStmt);
 		}
-		percentage = 100. - *downtime * 100 / timediffTillNow;
+		percentage = 100.0 - (double)(*downtime * 100) / (double)timediffTillNow;
+
+		DBFreeResult(hResult);
+		DBFreeStatement(hStmt);
 	}
 	
 	return percentage;
@@ -426,21 +428,21 @@ void BusinessService::updateUptimeStats()
 	m_downtimeDay += downtimeBetweenPolls;
 	if (timediffTillNow < m_prevDiffDay)
 		m_downtimeDay = 0;
-	m_uptimeDay = 100 - m_downtimeDay * 100 / timediffTillNow;
+	m_uptimeDay = 100.0 - (double)(m_downtimeDay * 100) / (double)timediffTillNow;
 	m_prevDiffDay = timediffTillNow;
 
 	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(WEEK, NULL);
 	m_downtimeWeek += downtimeBetweenPolls;
 	if (timediffTillNow < m_prevDiffWeek)
 		m_downtimeWeek = 0;
-	m_uptimeWeek = 100 - m_downtimeWeek * 100 / timediffTillNow;
+	m_uptimeWeek = 100.0 - (double)(m_downtimeWeek * 100) / (double)timediffTillNow;
 	m_prevDiffWeek = timediffTillNow;
 
 	timediffTillNow = BusinessService::getSecondsSinceBeginningOf(MONTH, NULL);
 	m_downtimeMonth += downtimeBetweenPolls;
 	if (timediffTillNow < m_prevDiffMonth)
 		m_downtimeMonth = 0;
-	m_uptimeMonth = 100 - m_downtimeMonth * 100 / timediffTillNow;
+	m_uptimeMonth = 100.0 - (double)(m_downtimeMonth * 100) / (double)timediffTillNow;
 	m_prevDiffMonth = timediffTillNow;
 }
 
