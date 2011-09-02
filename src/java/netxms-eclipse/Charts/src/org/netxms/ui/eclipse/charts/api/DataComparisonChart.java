@@ -100,4 +100,18 @@ public interface DataComparisonChart extends DataChart
 	 * @return data label visibility status
 	 */
 	public abstract boolean isLabelsVisible();
+	
+	/**
+	 * Set rotation angle for chart types where it applicable (like pie chart)
+	 * 
+	 * @param angle rotation angle
+	 */
+	public abstract void setRotation(double angle);
+	
+	/**
+	 * Get currently set rotation angle
+	 * 
+	 * @return currently set rotation angle
+	 */
+	public abstract double getRotation();
 }

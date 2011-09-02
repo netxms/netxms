@@ -42,7 +42,6 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
 
 /**
  * Object overview tab
- *
  */
 public class ObjectOverview extends ObjectTab
 {

@@ -93,11 +93,12 @@ public class AvailabilityChart extends OverviewPageElement
 		chart.setChartTitle(title);
 		chart.setLegendVisible(false);
 		chart.setLabelsVisible(false);
+		chart.setRotation(225.0);
 		
 		chart.addParameter(new GraphItem(0, 0, 0, 0, "Up", "Up"), 100);
 		chart.addParameter(new GraphItem(0, 0, 0, 0, "Down", "Down"), 0);
-		chart.setPaletteEntry(0, new ChartColor(7, 120, 24));
-		chart.setPaletteEntry(1, new ChartColor(255, 128, 0));
+		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
+		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();
 		
 		GridData gd = new GridData();

@@ -80,6 +80,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	private Series valueSeries = null;
 	private boolean transposed = false;
 	private boolean labelsVisible = false;
+	private double rotation = 0.0;
 	
 	/**
 	 * @param parent
@@ -313,9 +314,10 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 				return bs;
 			case PIE_CHART:
 				PieSeries ps = (PieSeries)PieSeriesImpl.create();
+				ps.setRotation(rotation);
 				if (is3DModeEnabled())
 				{
-					ps.setExplosion(5);
+					ps.setExplosion(3);
 					ps.setRatio(0.4);
 				}
 				else
@@ -554,5 +556,25 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	public boolean isLabelsVisible()
 	{
 		return labelsVisible;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#setRotation(double)
+	 */
+	@Override
+	public void setRotation(double angle)
+	{
+		rotation = angle;
+		if (getChart() != null)
+			recreateChart();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#getRotation()
+	 */
+	@Override
+	public double getRotation()
+	{
+		return rotation;
 	}
 }
