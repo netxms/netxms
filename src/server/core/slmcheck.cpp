@@ -63,9 +63,9 @@ SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 
 SlmCheck::~SlmCheck()
 {
-	delete m_threshold;
+	safe_delete_and_null(m_threshold);
 	safe_free(m_script);
-	delete m_pCompiledScript;
+	safe_delete_and_null(m_pCompiledScript);
 }
 
 
@@ -270,7 +270,7 @@ void SlmCheck::setScript(const TCHAR *script)
 	if (script != NULL)
 	{
 		safe_free(m_script);
-		delete m_pCompiledScript;
+		safe_delete_and_null(m_pCompiledScript);
 		m_script = _tcsdup(script);
 		if (m_script != NULL)
 		{
@@ -311,6 +311,8 @@ void SlmCheck::execute()
 	{
 		case check_script:
 			oldStatus = m_iStatus;
+			if (m_pCompiledScript == NULL)
+				break;
 			m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
 			m_pCompiledScript->setGlobalVariable(_T("$node"), getNodeObjectForNXSL());
 			if (m_pCompiledScript->run(pEnv, 0, NULL, NULL, &pGlobals) == 0)
@@ -351,7 +353,8 @@ void SlmCheck::execute()
 	}
 	UnlockData();
 
-	delete pGlobals;
+	if (pGlobals != NULL)
+		delete pGlobals;
 }
 
 
