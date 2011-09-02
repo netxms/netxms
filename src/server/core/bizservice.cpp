@@ -421,6 +421,12 @@ void BusinessService::updateUptimeStats()
 	LONG timediffTillNow;
 	LONG downtimeBetweenPolls = 0;
 
+	LockData();
+
+	double prevUptimeDay = m_uptimeDay;
+	double prevUptimeWeek = m_uptimeWeek;
+	double prevUptimeMonth = m_uptimeMonth;
+
 	if (m_iStatus == STATUS_CRITICAL && m_lastPollStatus == STATUS_CRITICAL)
 		downtimeBetweenPolls = LONG(time(NULL) - m_lastPollTime);		
 
@@ -444,6 +450,12 @@ void BusinessService::updateUptimeStats()
 		m_downtimeMonth = 0;
 	m_uptimeMonth = 100.0 - (double)(m_downtimeMonth * 100) / (double)timediffTillNow;
 	m_prevDiffMonth = timediffTillNow;
+
+	if ((prevUptimeDay != m_uptimeDay) || (prevUptimeWeek != m_uptimeWeek) || (prevUptimeMonth != m_uptimeMonth))
+	{
+		Modify();
+	}
+	UnlockData();
 }
 
 
