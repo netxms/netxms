@@ -70,7 +70,6 @@ public class AvailabilityChart extends OverviewPageElement
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
-		//layout.makeColumnsEqualWidth = true;
 		clientArea.setLayout(layout);
 		
 		dayChart = createChart(clientArea, "Today");
@@ -103,7 +102,7 @@ public class AvailabilityChart extends OverviewPageElement
 		
 		GridData gd = new GridData();
 		gd.widthHint = 250;
-		gd.heightHint = 200;
+		gd.heightHint = 190;
 		chart.setLayoutData(gd);
 		return chart;
 	}

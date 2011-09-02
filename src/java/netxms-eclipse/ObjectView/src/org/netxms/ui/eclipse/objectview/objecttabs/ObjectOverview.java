@@ -31,6 +31,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Layout;
+import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCListener;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.AvailabilityChart;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
@@ -39,6 +42,7 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Connection;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.GeneralInfo;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Object overview tab
@@ -47,6 +51,7 @@ public class ObjectOverview extends ObjectTab
 {
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
 	
+	private NXCListener sessionListener = null;
 	private Set<OverviewPageElement> elements = new HashSet<OverviewPageElement>();
 	private ScrolledComposite scroller;
 	private Composite viewArea;
@@ -103,6 +108,28 @@ public class ObjectOverview extends ObjectTab
 		addElement(new Comments(leftColumn, getObject()));
 		addElement(new Capabilities(rightColumn, getObject()));
 		addElement(new Connection(rightColumn, getObject()));
+		
+		sessionListener = new NXCListener() {
+			@Override
+			public void notificationHandler(SessionNotification n)
+			{
+				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+				{
+					final GenericObject object = (GenericObject)n.getObject();
+					if (object.getObjectId() == getObject().getObjectId())
+					{
+						getViewPart().getSite().getShell().getDisplay().asyncExec(new Runnable() {
+							@Override
+							public void run()
+							{
+								changeObject(object);
+							}
+						});
+					}
+				}
+			}
+		};
+		ConsoleSharedData.getSession().addListener(sessionListener);
 	}
 	
 	/**
@@ -170,6 +197,8 @@ public class ObjectOverview extends ObjectTab
 	@Override
 	public void dispose()
 	{
+		if (sessionListener != null)
+			ConsoleSharedData.getSession().removeListener(sessionListener);
 		super.dispose();
 	}
 
