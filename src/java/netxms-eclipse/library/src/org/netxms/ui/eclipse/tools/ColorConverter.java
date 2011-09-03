@@ -22,6 +22,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 
 /**
@@ -30,6 +31,9 @@ import org.eclipse.ui.PlatformUI;
  */
 public class ColorConverter
 {
+	public static final Color WHITE = new Color(Display.getDefault(), 255, 255, 255);
+	public static final Color BLACK = new Color(Display.getDefault(), 0, 0, 0);
+	
 	/**
 	 * Create integer value from Red/Green/Blue
 	 * 
@@ -88,5 +92,29 @@ public class ColorConverter
 	public static int getColorFromPreferencesAsInt(IPreferenceStore store, final String name)
 	{
 		return rgbToInt(PreferenceConverter.getColor(store, name));
+	}
+	
+	private static float lerp(float start, float end, float amount)
+	{
+		float difference = end - start;
+		float adjusted = difference * amount;
+		return start + adjusted;
+	}
+	
+	/**
+	 * Adjust given color in the direction of another color by given amount.
+	 * For example, to make color 50% lighter:
+	 * adjustColor(color, new Color(color.getDevice(), 255, 255, 255), 0.5f);
+	 * 
+	 * @param color
+	 * @param direction
+	 * @param amount
+	 * @return
+	 */
+	public static Color adjustColor(Color color, Color direction, float amount)
+	{
+		float sr = color.getRed(), sg = color.getGreen(), sb = color.getBlue();
+		float dr = direction.getRed(), dg = direction.getGreen(), db = direction.getBlue();
+		return new Color(color.getDevice(), (int)lerp(sr, dr, amount), (int)lerp(sg, dg, amount), (int)lerp(sb, db, amount));
 	}
 }

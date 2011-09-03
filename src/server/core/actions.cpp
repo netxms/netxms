@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ static void SendActionDBUpdate(ClientSession *pSession, void *pArg)
 // Destroy action list
 //
 
-static void DestroyActionList(void)
+static void DestroyActionList()
 {
    DWORD i;
 
@@ -129,7 +129,7 @@ BOOL InitActions()
 // Cleanup action-related stuff
 //
 
-void CleanupActions(void)
+void CleanupActions()
 {
    DestroyActionList();
    RWLockDestroy(m_rwlockActionListAccess);
