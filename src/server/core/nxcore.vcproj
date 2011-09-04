@@ -709,6 +709,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\svccontainer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\syncer.cpp"
 				>
 			</File>

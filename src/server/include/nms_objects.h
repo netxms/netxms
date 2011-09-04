@@ -1552,36 +1552,6 @@ public:
 };
 
 
-//
-// Node link object for business service
-//
-
-class NXCORE_EXPORTABLE NodeLink : public Container
-{
-protected:
-	DWORD m_nodeId;
-
-public:
-	NodeLink();
-	NodeLink(const TCHAR *name, DWORD nodeId);
-	virtual ~NodeLink();
-
-	virtual int Type() { return OBJECT_NODELINK; }
-	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual BOOL DeleteFromDB();
-	virtual BOOL CreateFromDB(DWORD dwId);
-
-	virtual void CreateMessage(CSCPMessage *pMsg);
-	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
-	void execute();
-	BOOL applyTemplates();
-
-	DWORD getNodeId() { return m_nodeId; }
-};
-
 
 //
 // SLM check object
@@ -1624,34 +1594,16 @@ public:
 	const TCHAR *getReason() { return m_reason; }
 };
 
-
 //
-// Business service root
-//
-
-class NXCORE_EXPORTABLE BusinessServiceRoot : public UniversalRoot
-{
-public:
-	BusinessServiceRoot();
-	virtual ~BusinessServiceRoot();
-
-	virtual int Type() { return OBJECT_BUSINESSSERVICEROOT; }
-};
-
-
-//
-// Business service object
+// Service container - common logic for BusinessService, NodeLink and BusinessServiceRoot
 //
 
-class NXCORE_EXPORTABLE BusinessService : public Container
+class NXCORE_EXPORTABLE ServiceContainer: public Container 
 {
 	enum Period { DAY, WEEK, MONTH };
 
 protected:
-	bool m_busy;
-	time_t m_lastPollTime;
 	time_t m_prevUptimeUpdateTime;
-	int m_lastPollStatus;
 	int m_prevUptimeUpdateStatus;
 	double m_uptimeDay;
 	double m_uptimeWeek;
@@ -1670,10 +1622,45 @@ protected:
 	static LONG getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? secondsInWeek : secondsInDay); }
 	static LONG getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
+	void initServiceContainer();
 	BOOL addHistoryRecord();
 	void initUptimeStats();
 	void updateUptimeStats();
 	double getUptimeFromDBFor(Period period, LONG *downtime);
+
+public:
+	ServiceContainer();
+	ServiceContainer(const TCHAR *pszName, DWORD dwCategory);
+	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+	virtual void setStatus(int newStatus);
+};
+
+//
+// Business service root
+//
+
+class NXCORE_EXPORTABLE BusinessServiceRoot : public UniversalRoot
+{
+public:
+	BusinessServiceRoot();
+	virtual ~BusinessServiceRoot();
+
+	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) { UniversalRoot::calculateCompoundStatus(bForcedRecalc); }
+	virtual BOOL SaveToDB(DB_HANDLE hdb) { return UniversalRoot::SaveToDB(hdb); }
+	virtual int Type() { return OBJECT_BUSINESSSERVICEROOT; }
+};
+
+
+//
+// Business service object
+//
+
+class NXCORE_EXPORTABLE BusinessService : public ServiceContainer
+{
+protected:
+	bool m_busy;
+	time_t m_lastPollTime;
+	int m_lastPollStatus;
 
 public:
 	BusinessService();
@@ -1690,10 +1677,39 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-	virtual void setStatus(int newStatus);
 	bool isReadyForPolling();
 	void lockForPolling();
 	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+};
+
+//
+// Node link object for business service
+//
+
+class NXCORE_EXPORTABLE NodeLink : public ServiceContainer
+{
+protected:
+	DWORD m_nodeId;
+
+public:
+	NodeLink();
+	NodeLink(const TCHAR *name, DWORD nodeId);
+	virtual ~NodeLink();
+
+	virtual int Type() { return OBJECT_NODELINK; }
+	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+	virtual BOOL DeleteFromDB();
+	virtual BOOL CreateFromDB(DWORD dwId);
+
+	virtual void CreateMessage(CSCPMessage *pMsg);
+	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	void execute();
+	BOOL applyTemplates();
+
+	DWORD getNodeId() { return m_nodeId; }
 };
 
 

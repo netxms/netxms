@@ -29,7 +29,7 @@
 // NodeLink default constructor
 //
 
-NodeLink::NodeLink() : Container()
+NodeLink::NodeLink()
 {
 	_tcscpy(m_szName, _T("Default"));
 	m_nodeId = 0;
@@ -40,7 +40,8 @@ NodeLink::NodeLink() : Container()
 // Constructor for new nodelink object
 //
 
-NodeLink::NodeLink(const TCHAR *name, DWORD nodeId) : Container(name, 0)
+NodeLink::NodeLink(const TCHAR *name, DWORD nodeId) 
+: ServiceContainer(name, 0)
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_nodeId = nodeId;
@@ -63,35 +64,9 @@ NodeLink::~NodeLink()
 
 void NodeLink::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-	int i, iCount, iMostCriticalStatus;
-	int iOldStatus = m_iStatus;
+	ServiceContainer::calculateCompoundStatus(bForcedRecalc);
 
-	// Calculate own status by selecting the most critical status of the kids
-	LockChildList(FALSE);
-	for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < int(m_dwChildCount); i++)
-	{
-		int iChildStatus = m_pChildList[i]->Status();
-		if ((iChildStatus < STATUS_UNKNOWN) &&
-			(iChildStatus > iMostCriticalStatus))
-		{
-			iMostCriticalStatus = iChildStatus;
-			iCount++;
-		}
-	}
-	m_iStatus = (iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN;
-	UnlockChildList();
-
-	// Cause parent object(s) to recalculate it's status
-	if ((iOldStatus != m_iStatus) || bForcedRecalc)
-	{
-		LockParentList(FALSE);
-		for(i = 0; i < int(m_dwParentCount); i++)
-			m_pParentList[i]->calculateCompoundStatus();
-		UnlockParentList();
-		Modify();   /* LOCK? */
-	}
 }
-
 
 //
 // Create object from database data
