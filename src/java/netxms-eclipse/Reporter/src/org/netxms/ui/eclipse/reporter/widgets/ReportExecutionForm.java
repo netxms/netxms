@@ -382,6 +382,7 @@ public class ReportExecutionForm extends Composite
 							return;
 
 						resultList.setInput(results.toArray());
+						ReportExecutionForm.this.layout();
 					}
 				});
 			}

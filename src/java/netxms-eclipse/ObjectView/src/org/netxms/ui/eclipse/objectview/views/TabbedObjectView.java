@@ -64,8 +64,8 @@ public class TabbedObjectView extends ViewPart
 	private CTabFolder tabFolder;
 	private Font headerFont;
 	private List<ObjectTab> tabs;
-	private ISelectionService selectionService;
-	private ISelectionListener selectionListener;
+	private ISelectionService selectionService = null;
+	private ISelectionListener selectionListener = null;
 	private Action actionRefresh;
 
 	/* (non-Javadoc)
@@ -275,7 +275,8 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
-		selectionService.removeSelectionListener(selectionListener);
+		if ((selectionService != null) && (selectionListener != null))
+			selectionService.removeSelectionListener(selectionListener);
 		for(final ObjectTab tab : tabs)
 		{
 			tab.dispose();
