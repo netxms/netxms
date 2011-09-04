@@ -116,7 +116,7 @@ public class ObjectOverview extends ObjectTab
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
 					final GenericObject object = (GenericObject)n.getObject();
-					if ((object != null) && (object.getObjectId() == getObject().getObjectId()))
+					if ((object != null) && (getObject() != null) && (object.getObjectId() == getObject().getObjectId()))
 					{
 						getViewPart().getSite().getShell().getDisplay().asyncExec(new Runnable() {
 							@Override
