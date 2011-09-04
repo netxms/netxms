@@ -19,9 +19,11 @@
 package org.netxms.ui.eclipse.reporter.widgets;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
@@ -257,62 +260,75 @@ public class ReportExecutionForm extends Composite
 				final ReportResult firstElement = (ReportResult)((IStructuredSelection)resultList.getSelection()).getFirstElement();
 				if (firstElement != null)
 				{
-					renderReport(firstElement.getJobId());
+					renderReport(firstElement.getJobId(), firstElement.getExecutionTime());
 				}
 			}
 		});
 	}
 
-	private void renderReport(final long jobId)
+	private void renderReport(final long jobId, Date executeTime)
 	{
-		new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null)
+		StringBuilder nameTemplate = new StringBuilder();
+		nameTemplate.append(report.getObjectName());
+		nameTemplate.append(" ");
+		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executeTime));
+		nameTemplate.append(".pdf");
+
+		FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
+		fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
+		fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" });
+		fileDialog.setFileName(nameTemplate.toString());
+		final String fileName = fileDialog.open();
+
+		if (fileName != null)
 		{
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+			new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null)
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				final byte[] blob = session.renderReport(jobId);
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+					final File reportFile = session.renderReport(jobId);
 
-				// TODO: fix this
-				final File tempFile = File.createTempFile("nxreport", ".pdf");
-				FileOutputStream stream = null;
-				try
-				{
-					stream = new FileOutputStream(tempFile);
-					stream.write(blob);
-				}
-				finally
-				{
-					if (stream != null)
+					// save
+					FileInputStream inputStream = null;
+					FileOutputStream outputStream = null;
+					try
 					{
-						stream.close();
+						inputStream = new FileInputStream(reportFile);
+						outputStream = new FileOutputStream(fileName);
+
+						byte[] buffer = new byte[1024];
+						int size = 0;
+						do
+						{
+							size = inputStream.read(buffer);
+							if (size > 0)
+							{
+								outputStream.write(buffer, 0, size);
+							}
+						} while(size == buffer.length);
+					}
+					finally
+					{
+						if (inputStream != null)
+						{
+							inputStream.close();
+						}
+						if (outputStream != null)
+						{
+							outputStream.close();
+						}
 					}
 				}
 
-				getDisplay().asyncExec(new Runnable()
+				@Override
+				protected String getErrorMessage()
 				{
-					@Override
-					public void run()
-					{
-						try
-						{
-							// TODO: win32 only
-							Runtime.getRuntime().exec("rundll32 SHELL32.DLL,ShellExec_RunDLL " + tempFile.getAbsolutePath());
-						}
-						catch(IOException e)
-						{
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return "Cannot execute report " + report.getObjectName();
-			}
-		}.start();
+					return "Cannot execute report " + report.getObjectName();
+				}
+			}.start();
+		}
 	}
 
 	/**

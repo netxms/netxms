@@ -5142,11 +5142,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * Render report into desired format
 	 * 
 	 * @param jobId
-	 * @return report's blob
+	 * @return report's File object
 	 * @throws IOException
 	 * @throws NXCException
 	 */
-	public byte[] renderReport(long jobId) throws IOException, NXCException
+	public File renderReport(final long jobId) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENDER_REPORT);
 		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
@@ -5158,35 +5158,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		{
 			throw new NXCException(RCC.IO_ERROR);
 		}
-		
-		byte[] binaryData = new byte[(int)file.length()];
-		InputStream in = null;
-		try
-		{
-			in = new FileInputStream(file);
-			in.read(binaryData);
-		}
-		catch(Exception e)
-		{
-			// TODO: error handling
-			e.printStackTrace();
-		}
-		finally
-		{
-			try
-			{
-				if (in != null)
-				{
-					in.close();
-				}
-				file.delete();
-			}
-			catch(Exception e)
-			{
-				// TODO: logging
-			}
-		}
 
-		return binaryData;
+		return file;
 	}
 }
