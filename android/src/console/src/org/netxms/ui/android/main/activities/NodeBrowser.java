@@ -6,21 +6,17 @@ package org.netxms.ui.android.main.activities;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
-
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.NodeListAdapter;
-import org.netxms.ui.android.service.ClientConnectorService;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -39,9 +35,8 @@ import android.widget.TextView;
  * Node browser
  * 
  */
-public class NodeBrowser extends Activity implements ServiceConnection
+public class NodeBrowser extends AbstractClientActivity
 {
-	private ClientConnectorService service;
 	private ListView listView;
 	private NodeListAdapter adapter;
 	private long initialParent = 2;
@@ -49,21 +44,16 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	private Stack<GenericObject> containerPath = new Stack<GenericObject>();
 	private long[] savedPath = null;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
 	 */
 	@Override
-	protected void onCreate(Bundle savedInstanceState)
+	protected void onCreateStep2(Bundle savedInstanceState)
 	{
-		super.onCreate(savedInstanceState);
 		setContentView(R.layout.node_view);
 		
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.nodes_title);
-
-		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
 		// keeps current list of nodes as datasource for listview
 		adapter = new NodeListAdapter(this);
@@ -75,7 +65,7 @@ public class NodeBrowser extends Activity implements ServiceConnection
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
 				GenericObject obj = (GenericObject)adapter.getItem(position);
-				if (obj.getObjectClass() == GenericObject.OBJECT_CONTAINER)
+				if ((obj.getObjectClass() == GenericObject.OBJECT_CONTAINER) || (obj.getObjectClass() == GenericObject.OBJECT_CLUSTER))
 				{
 					containerPath.push(currentParent);
 					currentParent = obj;
@@ -124,7 +114,8 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
-		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
+		super.onServiceConnected(name, binder);
+		
 		adapter.setService(service);
 		service.registerNodeBrowser(this);
 
@@ -156,6 +147,7 @@ public class NodeBrowser extends Activity implements ServiceConnection
 	@Override
 	public void onServiceDisconnected(ComponentName name)
 	{
+		super.onServiceDisconnected(name);
 		adapter.setService(null);
 	}
 

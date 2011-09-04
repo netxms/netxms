@@ -37,4 +37,14 @@
 <string name="confirm_tool_execution">Confirm Execution</string>
 <string name="yes">Yes</string>
 <string name="no">No</string>
+<string name="status_normal">Normal</string>
+<string name="status_warning">Warning</string>
+<string name="status_minor">Minor</string>
+<string name="status_major">Major</string>
+<string name="status_critical">Critical</string>
+<string name="status_unmanaged">Unmanaged</string>
+<string name="status_unknown">Unknown</string>
+<string name="status_disabled">Disabled</string>
+<string name="status_testing">Testing</string>
+<string name="alarm_acknowledge">Acknowledge Alarm</string>
 </resources>

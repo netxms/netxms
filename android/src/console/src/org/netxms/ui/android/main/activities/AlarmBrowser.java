@@ -6,12 +6,7 @@ package org.netxms.ui.android.main.activities;
 import org.netxms.client.events.Alarm;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.AlarmListAdapter;
-import org.netxms.ui.android.service.ClientConnectorService;
-
-import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.ContextMenu;
@@ -27,25 +22,21 @@ import android.widget.ListView;
  * Alarm browser
  *
  */
-public class AlarmBrowser extends Activity implements ServiceConnection
+public class AlarmBrowser extends AbstractClientActivity
 {
-	private ClientConnectorService service;
 	private ListView listView;
 	private AlarmListAdapter adapter;
 	
 	/* (non-Javadoc)
-	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
 	 */
 	@Override
-	protected void onCreate(Bundle savedInstanceState)
+	protected void onCreateStep2(Bundle savedInstanceState)
 	{
-		super.onCreate(savedInstanceState);
 		setContentView(R.layout.alarm_view);
 		
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.alarms_title);
-
-		bindService(new Intent(this, ClientConnectorService.class), this, 0);
 
 		// keeps current list of alarms as datasource for listview
 		adapter = new AlarmListAdapter(this);
@@ -61,10 +52,8 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
-		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
-		// make sure adapter can read required additional data
+		super.onServiceConnected(name, binder);
 		adapter.setService(service);
-		// remember this activity in service, so that service can send updates
 		service.registerAlarmBrowser(this);
 		refreshList();
 	}
@@ -75,6 +64,7 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 	@Override
 	public void onServiceDisconnected(ComponentName name)
 	{
+		super.onServiceDisconnected(name);
 		adapter.setService(null);
 	}
 
@@ -102,6 +92,10 @@ public class AlarmBrowser extends Activity implements ServiceConnection
 		// process menu selection
 		switch (item.getItemId())
 		{
+			case R.id.acknowledge:
+				adapter.acknowledgeItem(al.getId());
+				refreshList();
+				return true;
 			case R.id.terminate:
 				adapter.terminateItem(al.getId());
 				refreshList();

@@ -12,6 +12,8 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -28,16 +30,27 @@ public class NodeListAdapter extends BaseAdapter
 	private List<GenericObject> objectList = new ArrayList<GenericObject>(0);
 	private ClientConnectorService service;
 
-	private static final int[] imageId = { 
-		R.drawable.normal, 		// STATUS_NORMAL         = 0;
-		R.drawable.warning, 		//	STATUS_WARNING        = 1;
-		R.drawable.minor, 		//	STATUS_MINOR          = 2;
-		R.drawable.major,			//	STATUS_MAJOR          = 3;
-		R.drawable.critical,		//	STATUS_CRITICAL       = 4;
-		R.drawable.unknown, 		// STATUS_UNKNOWN        = 5;
-		R.drawable.unmanaged,	//	STATUS_UNMANAGED      = 6;
-		R.drawable.disabled,		//	STATUS_DISABLED       = 7;
-		R.drawable.testing		//	STATUS_TESTING        = 8;
+	private static final int[] statusImageId = { 
+		R.drawable.status_normal,     // STATUS_NORMAL         = 0;
+		R.drawable.status_warning,    // STATUS_WARNING        = 1;
+		R.drawable.status_minor,      // STATUS_MINOR          = 2;
+		R.drawable.status_major,      // STATUS_MAJOR          = 3;
+		R.drawable.status_critical,   // STATUS_CRITICAL       = 4;
+		R.drawable.status_unknown,    // STATUS_UNKNOWN        = 5;
+		R.drawable.status_unmanaged,	// STATUS_UNMANAGED      = 6;
+		R.drawable.status_disabled,   // STATUS_DISABLED       = 7;
+		R.drawable.status_testing     // STATUS_TESTING        = 8;
+	};
+	private static final int[] statusTextId = {
+		R.string.status_normal,     // STATUS_NORMAL         = 0;
+		R.string.status_warning,    // STATUS_WARNING        = 1;
+		R.string.status_minor,      // STATUS_MINOR          = 2;
+		R.string.status_major,      // STATUS_MAJOR          = 3;
+		R.string.status_critical,   // STATUS_CRITICAL       = 4;
+		R.string.status_unknown,    // STATUS_UNKNOWN        = 5;
+		R.string.status_unmanaged,	// STATUS_UNMANAGED      = 6;
+		R.string.status_disabled,   // STATUS_DISABLED       = 7;
+		R.string.status_testing     // STATUS_TESTING        = 8;
 	};
 
 	/**
@@ -136,62 +149,79 @@ public class NodeListAdapter extends BaseAdapter
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
-		TextView nodeName;
+		TextView objectName;
+		TextView objectStatus;
 		LinearLayout view, texts;
-		ImageView severity, type;
-		GenericObject node;
+		ImageView objectIcon;
 
 		if (convertView == null)
 		{
 			// new object, create fields
-			nodeName = new TextView(context);
-			nodeName.setPadding(5, 2, 5, 2);
-			nodeName.setTextColor(0xFF404040);
+			objectName = new TextView(context);
+			objectName.setPadding(5, 2, 5, 2);
+			objectName.setTextColor(0xFF404040);
+			objectName.setTextSize(objectName.getTextSize() * 1.1f);
 
-			severity = new ImageView(context);
-			severity.setPadding(5, 5, 5, 2);
-			type = new ImageView(context);
-			type.setPadding(5, 5, 5, 2);
+			objectStatus = new TextView(context);
+			objectStatus.setPadding(5, 2, 5, 2);
+			objectStatus.setTextColor(0xFF404040);
+
+			objectIcon = new ImageView(context);
+			objectIcon.setPadding(5, 5, 5, 2);
 
 			texts = new LinearLayout(context);
 			texts.setOrientation(LinearLayout.VERTICAL);
-			texts.addView(nodeName);
+			texts.addView(objectName);
+			texts.addView(objectStatus);
 
 			view = new LinearLayout(context);
-			view.addView(severity);
-			view.addView(type);
+			view.addView(objectIcon);
 			view.addView(texts);
 		}
 		else
 		{ 
 			// get reference to existing object
 			view = (LinearLayout)convertView;
-			severity = (ImageView)view.getChildAt(0);
-			type = (ImageView)view.getChildAt(1);
-			texts = (LinearLayout)view.getChildAt(2);
-			nodeName = (TextView)texts.getChildAt(0);
+			objectIcon = (ImageView)view.getChildAt(0);
+			texts = (LinearLayout)view.getChildAt(1);
+			objectName = (TextView)texts.getChildAt(0);
+			objectStatus = (TextView)texts.getChildAt(1);
 		}
 
-		// get object name
-		node = objectList.get(position);
-		if (node == null)
+		// set fields in view
+		int objectIconId = R.drawable.object_unknown;
+		GenericObject object = objectList.get(position);
+		if (object == null)
 		{
-			nodeName.setText("<Unknown>");
+			objectName.setText("<Unknown>");
+			objectStatus.setText("Unknown");
 		}
 		else
 		{
-			nodeName.setText(node.getObjectName());
-			if (node.getObjectClass() == GenericObject.OBJECT_CONTAINER)
+			objectName.setText(object.getObjectName());
+			objectStatus.setText(statusTextId[object.getStatus()]);
+			switch(object.getObjectClass())
 			{
-				type.setImageResource(R.drawable.container);
-			}
-			if (node.getObjectClass() == GenericObject.OBJECT_NODE)
-			{
-				type.setImageResource(R.drawable.node_small);
+				case GenericObject.OBJECT_CONTAINER:
+					objectIconId = R.drawable.object_container;
+					break;
+				case GenericObject.OBJECT_NODE:
+					objectIconId = R.drawable.object_node;
+					break;
+				case GenericObject.OBJECT_CLUSTER:
+					objectIconId = R.drawable.object_cluster;
+					break;
 			}
 		}
+		
+		Drawable[] layers = new Drawable[2];
+		layers[0] = parent.getResources().getDrawable(objectIconId);
+		layers[1] = parent.getResources().getDrawable(NodeListAdapter.statusImageId[object.getStatus()]);
+		LayerDrawable drawable = new LayerDrawable(layers);
+		drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(), 
+				layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);
+		objectIcon.setImageDrawable(drawable);
 
-		severity.setImageResource(NodeListAdapter.imageId[node.getStatus()]);
 		return view;
 	}
 }

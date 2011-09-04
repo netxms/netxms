@@ -3,16 +3,13 @@
  */
 package org.netxms.ui.android.service;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.base.Logger;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objecttools.ObjectTool;
@@ -33,8 +30,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -45,11 +44,12 @@ public class ClientConnectorService extends Service implements SessionListener
 {
 	public static final String ACTION_RECONNECT = "org.netxms.ui.android.ACTION_RECONNECT";
 
-	private static final int NOTIFY_CONN_STATUS = 1;
 	private static final int NOTIFY_ALARM = 1;
+	private static final String TAG = "nxclient.ClientConnectorService";
 
 	private String mutex = "MUTEX";
 	private Binder binder = new ClientConnectorBinder();
+	private Handler uiThreadHandler;
 	private NotificationManager notificationManager;
 	private NXCSession session = null;
 	private boolean connectionInProgress = false;
@@ -84,9 +84,10 @@ public class ClientConnectorService extends Service implements SessionListener
 		super.onCreate();
 
 		Logger.setLoggingFacility(new AndroidLoggingFacility());
-
+		uiThreadHandler = new Handler(getMainLooper());
 		notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-		showNotification(1, "NetXMS service started");
+
+		showToast("NetXMS service started");
 
 		BroadcastReceiver receiver = new BroadcastReceiver()
 		{
@@ -99,7 +100,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			}
 		};
 		registerReceiver(receiver, new IntentFilter(Intent.ACTION_TIME_TICK));
-
+		
 		reconnect();
 	}
 
@@ -111,7 +112,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
-		if ((intent.getAction() != null) && intent.getAction().equals(ACTION_RECONNECT))
+		if ((intent != null) && (intent.getAction() != null) && intent.getAction().equals(ACTION_RECONNECT))
 			reconnect();
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -173,7 +174,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		notificationManager.cancelAll();
 	}
-
+	
 	/**
 	 * Reconnect to server if needed
 	 */
@@ -221,7 +222,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			{
 				session.removeListener(this);
 				hideNotification(NOTIFY_ALARM);
-				showNotification(NOTIFY_CONN_STATUS, getString(R.string.notify_disconnected));
+				showToast(getString(R.string.notify_disconnected));
 			}
 			connectionInProgress = false;
 			session = null;
@@ -285,27 +286,58 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 	
 	/**
+	 * Synchronize information about specific object in background
+	 * 
+	 * @param objectId object ID
+	 */
+	private void doBackgroundObjectSync(final long objectId)
+	{
+		new Thread("Background object sync") {
+			@Override
+			public void run()
+			{
+				try
+				{
+					session.syncObjectSet(new long[] { objectId }, false, NXCSession.OBJECT_SYNC_NOTIFY);
+				}
+				catch(Exception e)
+				{
+					Log.d(TAG, "Exception in doBackgroundObjectSync", e);
+				}
+			}
+		}.start();
+	}
+	
+	/**
 	 * Sync object with given ID if it is missing
 	 * @param objectId
 	 */
 	private void syncObjectIfMissing(final long objectId)
 	{
-		if (session.findObjectById(objectId) == null)
+		if ((session != null) && (session.findObjectById(objectId) == null))
 		{
-			new Thread("Background object sync") {
-				@Override
-				public void run()
-				{
-					try
-					{
-						session.syncObjectSet(new long[] { objectId }, false, NXCSession.OBJECT_SYNC_NOTIFY);
-					}
-					catch(Exception e)
-					{
-					}
-				}
-			}.start();
+			doBackgroundObjectSync(objectId);
 		}
+	}
+
+	/**
+	 * @param objectId
+	 * @return
+	 */
+	public GenericObject findObjectById(long objectId)
+	{
+		// we can't search without active session
+		if (session == null)
+			return null;
+
+		GenericObject object = session.findObjectById(objectId);
+		// if we don't have object - probably we never synced it
+		// request object synchronization in that case
+		if (object == null)
+		{
+			doBackgroundObjectSync(objectId);
+		}
+		return object;
 	}
 
 	/**
@@ -353,6 +385,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			case SessionNotification.CONNECTION_BROKEN:
 			case SessionNotification.SERVER_SHUTDOWN:
 				onDisconnect();
+				break;
 			case NXCNotification.NEW_ALARM:
 			case NXCNotification.ALARM_CHANGED:
 				processAlarmChange((Alarm)n.getObject());
@@ -390,33 +423,16 @@ public class ClientConnectorService extends Service implements SessionListener
 
 	/**
 	 * @param id
-	 * @return
 	 */
-	public GenericObject findObjectById(long id)
+	public void acknowledgeAlarm(long id)
 	{
-		// we can't search without active session
-		if (session == null)
-			return null;
-
-		GenericObject obj = session.findObjectById(id);
-		// if we don't have object - probably we never synced it (initial alarm
-		// viewer run?)
-		// try to retreive it
-		if (obj == null)
+		try
 		{
-			long[] list = { id };
-			try
-			{
-				session.syncObjectSet(list, false, NXCSession.OBJECT_SYNC_NOTIFY);
-			}
-			catch(NXCException e)
-			{
-			}
-			catch(IOException e)
-			{
-			}
+			session.acknowledgeAlarm(id);
 		}
-		return obj;
+		catch(Exception e)
+		{
+		}
 	}
 
 	/**
@@ -428,10 +444,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			session.terminateAlarm(id);
 		}
-		catch(NXCException e)
-		{
-		}
-		catch(IOException e)
+		catch(Exception e)
 		{
 		}
 	}
@@ -446,30 +459,11 @@ public class ClientConnectorService extends Service implements SessionListener
 		{
 			session.setObjectManaged(id, state);
 		}
-		catch(NXCException e)
-		{
-		}
-		catch(IOException e)
+		catch(Exception e)
 		{
 		}
 	}
 
-	/**
-	 * @param objectId
-	 * @return
-	 */
-	public DciValue[] getLastValues(long objectId)
-	{
-		try
-		{
-			return session.getLastValues(objectId);
-		}
-		catch(Exception e)
-		{
-			return new DciValue[0];
-		}
-	}
-	
 	/**
 	 * 
 	 */
@@ -570,6 +564,12 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void showToast(final String text)
 	{
-		Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+		uiThreadHandler.post(new Runnable() {
+			@Override
+			public void run()
+			{
+				Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 }

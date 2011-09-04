@@ -3,49 +3,41 @@
  */
 package org.netxms.ui.android.main.activities;
 
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.LastValuesAdapter;
-import org.netxms.ui.android.service.ClientConnectorService;
-import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.ListView;
 import android.widget.TextView;
 
 /**
- * Node browser
- * 
+ * Last values view
  */
-public class LastValues extends Activity implements ServiceConnection
+public class LastValues extends AbstractClientActivity
 {
-	private ClientConnectorService service;
 	private ListView listView;
 	private LastValuesAdapter adapter;
 	private long nodeId = 0;
 	private GenericObject node = null;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
 	 */
 	@Override
-	protected void onCreate(Bundle savedInstanceState)
+	protected void onCreateStep2(Bundle savedInstanceState)
 	{
-		super.onCreate(savedInstanceState);
 		setContentView(R.layout.last_values);
 
-		this.nodeId = this.getIntent().getLongExtra("objectId", 0);
+		nodeId = getIntent().getLongExtra("objectId", 0);
 
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 		title.setText(R.string.last_values_title);
 
-		bindService(new Intent(this, ClientConnectorService.class), this, 0);
-		// keeps current list of values as datasource for listview
 		adapter = new LastValuesAdapter(this);
 
 		listView = (ListView)findViewById(R.id.ValueList);
@@ -61,13 +53,11 @@ public class LastValues extends Activity implements ServiceConnection
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder)
 	{
-		service = ((ClientConnectorService.ClientConnectorBinder)binder).getService();
-		adapter.setService(service);
-		if (this.nodeId > 0)
+		super.onServiceConnected(name, binder);
+		if (nodeId > 0)
 		{
-			this.node = service.findObjectById(nodeId);
+			node = service.findObjectById(nodeId);
 		}
-
 		refreshList();
 	}
 
@@ -81,7 +71,7 @@ public class LastValues extends Activity implements ServiceConnection
 	@Override
 	public void onServiceDisconnected(ComponentName name)
 	{
-		adapter.setService(null);
+		super.onServiceDisconnected(name);
 	}
 
 	/**
@@ -89,14 +79,12 @@ public class LastValues extends Activity implements ServiceConnection
 	 */
 	public void refreshList()
 	{
-		if (this.node != null)
+		if (node != null)
 		{
 			TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
 			title.setText(getString(R.string.last_values_title) + ": " + node.getObjectName());
 		}
-
-		adapter.setValues(service.getLastValues(this.nodeId));
-		adapter.notifyDataSetChanged();
+		new LoadDataTask(nodeId).execute();
 	}
 
 	/*
@@ -110,5 +98,42 @@ public class LastValues extends Activity implements ServiceConnection
 		service.registerNodeBrowser(null);
 		unbindService(this);
 		super.onDestroy();
+	}
+	
+	/**
+	 * Internal task for loading DCI data
+	 */
+	private class LoadDataTask extends AsyncTask<Object, Void, DciValue[]>
+	{
+		private long nodeId;
+		
+		protected LoadDataTask(long nodeId)
+		{
+			this.nodeId = nodeId;
+		}
+		
+		@Override
+		protected DciValue[] doInBackground(Object... params)
+		{
+			try
+			{
+				return service.getSession().getLastValues(nodeId);
+			}
+			catch(Exception e)
+			{
+				Log.d("nxclient/LastValues", "Exception while executing LoadDataTask.doInBackground", e);
+				return null;
+			}
+		}
+
+		@Override
+		protected void onPostExecute(DciValue[] result)
+		{
+			if ((result != null) && (LastValues.this.nodeId == nodeId))
+			{
+				adapter.setValues(result);			
+				adapter.notifyDataSetChanged();
+			}
+		}
 	}
 }

@@ -32,8 +32,8 @@ public class AlarmListAdapter extends BaseAdapter
 	private List<Alarm> alarms = new ArrayList<Alarm>(0);
 	private ClientConnectorService service;
 
-	private static final int[] imageId = { R.drawable.normal, R.drawable.warning, R.drawable.minor, 
-	                                       R.drawable.major, R.drawable.critical };
+	private static final int[] imageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor, 
+	                                       R.drawable.status_major, R.drawable.status_critical };
 
 	/**
 	 * 
@@ -109,6 +109,14 @@ public class AlarmListAdapter extends BaseAdapter
 	public long getItemId(int position)
 	{
 		return alarms.get(position).getId();
+	}
+
+	/**
+	 * @param id
+	 */
+	public void acknowledgeItem(long id)
+	{
+		service.acknowledgeAlarm(id);
 	}
 
 	/**

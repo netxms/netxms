@@ -8,9 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.android.service.ClientConnectorService;
 import android.content.Context;
 import android.view.Gravity;
 import android.view.View;
@@ -27,7 +25,6 @@ import android.widget.TextView;
 public class LastValuesAdapter extends BaseAdapter
 {
 	private Context context;
-	private ClientConnectorService service = null;
 	private List<DciValue> currentValues = new ArrayList<DciValue>(0);
 
 	/**
@@ -54,14 +51,6 @@ public class LastValuesAdapter extends BaseAdapter
 				return object1.getDescription().compareToIgnoreCase(object2.getDescription());
 			}
 		});
-	}
-
-	/**
-	 * @param service
-	 */
-	public void setService(ClientConnectorService service)
-	{
-		this.service = service;
 	}
 
 	/*

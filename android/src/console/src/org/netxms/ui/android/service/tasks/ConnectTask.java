@@ -23,8 +23,6 @@ public class ConnectTask extends Thread
 	private String password;
 	private Map<Long, Alarm> alarms;
 
-	private static final int NOTIFY_CONN_STATUS = 1;
-
 	/**
 	 * @param service
 	 */
@@ -66,7 +64,7 @@ public class ConnectTask extends Thread
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
 
 			alarms = session.getAlarms(false);
-			service.showNotification(NOTIFY_CONN_STATUS, service.getString(R.string.notify_connected, session.getServerAddress()));
+			service.showToast(service.getString(R.string.notify_connected, session.getServerAddress()));
 			service.setConnectionStatus("connected to " + session.getServerAddress());
 			service.onConnect(session, alarms);
 			service.loadTools();
