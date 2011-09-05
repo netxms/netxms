@@ -88,10 +88,12 @@ public class NXCObjectModificationData
 	public static final long MODIFY_IFXTABLE_POLICY    = 0x040000000000L;
 	public static final long MODIFY_REPORT_DEFINITION  = 0x080000000000L;
 	public static final long MODIFY_CLUSTER_RESOURCES  = 0x100000000000L;
+	public static final long MODIFY_PRIMARY_NAME       = 0x200000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
 	private String name;
+	private String primaryName;
 	private AccessListElement[] acl;
 	private boolean inheritAccessRights;
 	private Map<String, String> customAttributes;
@@ -1126,5 +1128,22 @@ public class NXCObjectModificationData
 	{
 		this.resourceList = resourceList;
 		flags |= MODIFY_CLUSTER_RESOURCES;
+	}
+
+	/**
+	 * @return the primaryName
+	 */
+	public String getPrimaryName()
+	{
+		return primaryName;
+	}
+
+	/**
+	 * @param primaryName the primaryName to set
+	 */
+	public void setPrimaryName(String primaryName)
+	{
+		this.primaryName = primaryName;
+		flags |= MODIFY_PRIMARY_NAME;
 	}
 }

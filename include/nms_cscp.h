@@ -875,6 +875,7 @@ typedef struct
 #define VID_UPTIME_DAY              ((DWORD)394)
 #define VID_UPTIME_WEEK             ((DWORD)395)
 #define VID_UPTIME_MONTH            ((DWORD)396)
+#define VID_PRIMARY_NAME            ((DWORD)397)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

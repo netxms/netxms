@@ -760,6 +760,7 @@ protected:
    void checkInterfaceNames(InterfaceList *pIfList);
 	void checkSubnetBinding(InterfaceList *pIfList);
 	void checkAgentPolicyBinding(AgentConnection *conn);
+	void updatePrimaryIpAddr();
 
 	void ApplySystemTemplates();
 	void ApplyUserTemplates();
@@ -814,6 +815,7 @@ public:
 									DWORD slot = 0, DWORD port = 0, bool physPort = false);
    void deleteInterface(Interface *pInterface);
 
+	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
    void changeIPAddress(DWORD dwIpAddr);
 	void changeZone(DWORD newZone);
 

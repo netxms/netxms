@@ -528,6 +528,7 @@ enum
 #define OBJ_UPDATE_AUTO_APPLY       ((QWORD)_ULL(0x0800000000))
 #define OBJ_UPDATE_AUTO_BIND        ((QWORD)_ULL(0x1000000000))
 #define OBJ_UPDATE_SNMP_PORT        ((QWORD)_ULL(0x2000000000))
+#define OBJ_UPDATE_PRIMARY_NAME     ((QWORD)_ULL(0x4000000000))
 
 
 //
@@ -1092,6 +1093,7 @@ struct __nxc_object_iface
 
 struct __nxc_object_node
 {
+	TCHAR szPrimaryName[MAX_DNS_NAME];
    DWORD dwFlags;
 	DWORD dwRuntimeFlags;
    DWORD dwNodeType;
@@ -1251,6 +1253,7 @@ typedef struct
    QWORD qwFlags;
    DWORD dwObjectId;
    const TCHAR *pszName;
+	const TCHAR *pszPrimaryName;
    int iAgentPort;
    int iAuthType;
    const TCHAR *pszSecret;
@@ -1518,6 +1521,7 @@ typedef struct
    {
       struct
       {
+			const TCHAR *pszPrimaryName;
          DWORD dwIpAddr;
          DWORD dwNetMask;
          DWORD dwCreationFlags;

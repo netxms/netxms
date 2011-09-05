@@ -79,6 +79,7 @@ public class GeneralInfo extends TableElement
 				Node node = (Node)object;
 				if (((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled())
 					addPair("Zone ID", Long.toString(node.getZoneId()));
+				addPair("Primary Host Name", node.getPrimaryName());
 				addPair("Primary IP Address", node.getPrimaryIP().getHostAddress());
 				if (node.hasAgent())
 					addPair("NetXMS Agent Version", node.getAgentVersion());

@@ -608,6 +608,17 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   4) DCI Origin code#0D#0A' CONCAT
 		'   5) DCI Origin name'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_IP_ADDRESS_CHANGED, 'SYS_IP_ADDRESS_CHANGED',
+		EVENT_SEVERITY_WARNING, 1,
+		'Primary IP address changed from %2 to %1',
+		'Generated when primary IP address changed (usually because of primary name change or DNS change).#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) New IP address#0D#0A' CONCAT
+		'   2) Old IP address#0D#0A' CONCAT
+		'   3) Primary host name'
+	);
 
 
 /*

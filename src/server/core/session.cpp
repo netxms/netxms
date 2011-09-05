@@ -3744,7 +3744,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    CSCPMessage msg;
    NetObj *pObject, *pParent;
    int iClass, iServiceType;
-   TCHAR szObjectName[MAX_OBJECT_NAME];
+   TCHAR szObjectName[MAX_OBJECT_NAME], nodePrimaryName[MAX_DNS_NAME];
    TCHAR *pszRequest, *pszResponse, *pszComments;
    DWORD dwIpAddr, zoneId, nodeId;
    WORD wIpProto, wIpPort;
@@ -3761,7 +3761,16 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    pParent = FindObjectById(pRequest->GetVariableLong(VID_PARENT_ID));
    if (iClass == OBJECT_NODE)
    {
-      dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+		if (pRequest->IsVariableExist(VID_PRIMARY_NAME))
+		{
+			pRequest->GetVariableStr(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
+			dwIpAddr = ntohl(ResolveHostName(nodePrimaryName));
+		}
+		else
+		{
+			dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+			IpToStr(dwIpAddr, nodePrimaryName);
+		}
       if ((pParent == NULL) && (dwIpAddr != 0))
       {
          pParent = FindSubnetForNode(zoneId, dwIpAddr);
@@ -3805,6 +3814,10 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 															 pRequest->GetVariableLong(VID_SNMP_PROXY),
 															 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
 															 zoneId);
+								if (pObject != NULL)
+								{
+									((Node *)pObject)->setPrimaryName(nodePrimaryName);
+								}
 								break;
 							case OBJECT_CONTAINER:
 								pObject = new Container(szObjectName, pRequest->GetVariableLong(VID_CATEGORY));

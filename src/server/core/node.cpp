@@ -27,8 +27,7 @@
 // Node class default constructor
 //
 
-Node::Node()
-     :Template()
+Node::Node() : Template()
 {
 	m_primaryName[0] = 0;
    m_iStatus = STATUS_UNKNOWN;
@@ -89,8 +88,7 @@ Node::Node()
 // Constructor for new node object
 //
 
-Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone)
-     :Template()
+Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone) : Template()
 {
 	IpToStr(dwAddr, m_primaryName);
    m_iStatus = STATUS_UNKNOWN;
@@ -1333,6 +1331,28 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 
 
 //
+// Update primary IP address from primary name
+//
+
+void Node::updatePrimaryIpAddr()
+{
+	if (m_primaryName[0] == 0)
+		return;
+
+	DWORD ipAddr = ntohl(ResolveHostName(m_primaryName));
+	if ((ipAddr != m_dwIpAddr) && (ipAddr != INADDR_ANY) && (ipAddr != INADDR_NONE))
+	{
+		TCHAR buffer1[32], buffer2[32];
+
+		DbgPrintf(4, _T("IP address for node %s [%d] changed from %s to %s"), 
+			m_szName, (int)m_dwId, IpToStr(m_dwIpAddr, buffer1), IpToStr(ipAddr, buffer2));
+		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_dwId, "aa", ipAddr, m_dwIpAddr);
+		m_dwIpAddr = ipAddr;
+	}
+}
+
+
+//
 // Walker callback for print MIB
 //
 
@@ -1387,6 +1407,8 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
    }
    else
    {
+		updatePrimaryIpAddr();
+
       // Check node's capabilities
       SetPollerInfo(nPoller, _T("capability check"));
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
@@ -2710,6 +2732,7 @@ void Node::queueItemsForPolling(Queue *pPollerQueue)
 void Node::CreateMessage(CSCPMessage *pMsg)
 {
    Template::CreateMessage(pMsg);
+	pMsg->SetVariable(VID_PRIMARY_NAME, m_primaryName);
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
    pMsg->SetVariable(VID_AGENT_PORT, m_wAgentPort);
@@ -2778,7 +2801,20 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       }
 
       m_dwIpAddr = dwIpAddr;
+
+		// Update primary name if it is not set with the same message
+		if (!pRequest->IsVariableExist(VID_PRIMARY_NAME))
+		{
+			IpToStr(m_dwIpAddr, m_primaryName);
+		}
    }
+
+   // Change primary IP address
+   if (pRequest->IsVariableExist(VID_PRIMARY_NAME))
+   {
+		pRequest->GetVariableStr(VID_PRIMARY_NAME, m_primaryName, MAX_DNS_NAME);
+		m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+	}
 
    // Poller node ID
    if (pRequest->IsVariableExist(VID_POLLER_NODE_ID))

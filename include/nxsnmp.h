@@ -645,9 +645,9 @@ private:
    DWORD m_dwBufferPos;
    BYTE *m_pBuffer;
 
-   DWORD preParsePDU(void);
+   DWORD preParsePDU();
    int recvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
-   void clearBuffer(void);
+   void clearBuffer();
 
 public:
    SNMP_UDPTransport();

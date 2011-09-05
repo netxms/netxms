@@ -41,6 +41,7 @@ public class NXCObjectCreationData
 	private long parentId;
 	private String comments;
 	private int creationFlags;
+	private String primaryName;
 	private InetAddress ipAddress;
 	private InetAddress ipNetMask;
 	private long agentProxyId;
@@ -78,6 +79,7 @@ public class NXCObjectCreationData
 		{
 		}
 		
+		primaryName = null;
 		comments = null;
 		creationFlags = 0;
 		agentProxyId = 0;
@@ -379,5 +381,21 @@ public class NXCObjectCreationData
 	public void setLinkedNodeId(long linkedNodeId)
 	{
 		this.linkedNodeId = linkedNodeId;
+	}
+
+	/**
+	 * @return the primaryName
+	 */
+	public String getPrimaryName()
+	{
+		return primaryName;
+	}
+
+	/**
+	 * @param primaryName the primaryName to set
+	 */
+	public void setPrimaryName(String primaryName)
+	{
+		this.primaryName = primaryName;
 	}
 }

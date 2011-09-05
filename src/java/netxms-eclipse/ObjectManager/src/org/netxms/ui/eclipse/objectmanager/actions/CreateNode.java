@@ -72,9 +72,9 @@ public class CreateNode implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODE, dlg.getName(), parentId);
+				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_NODE, dlg.getObjectName(), parentId);
 				cd.setCreationFlags(dlg.getCreationFlags());
-				cd.setIpAddress(dlg.getIpAddress());
+				cd.setPrimaryName(dlg.getHostName());
 				cd.setAgentProxyId(dlg.getAgentProxy());
 				cd.setSnmpProxyId(dlg.getSnmpProxy());
 				cd.setZoneId(dlg.getZoneId());
@@ -84,7 +84,7 @@ public class CreateNode implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot create node object \"" + dlg.getName() + "\"";
+				return "Cannot create node object \"" + dlg.getObjectName() + "\"";
 			}
 		}.start();
 	}

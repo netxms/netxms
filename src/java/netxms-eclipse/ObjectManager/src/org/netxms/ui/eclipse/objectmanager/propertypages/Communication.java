@@ -21,6 +21,8 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FormAttachment;
@@ -39,7 +41,6 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.widgets.IPAddressSelector;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -53,7 +54,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class Communication extends PropertyPage
 {
 	private Node node;
-	private IPAddressSelector primaryIpAddress;
+	private LabeledText primaryName;
 	private LabeledText agentPort;
 	private LabeledText agentSharedSecret;
 	private Combo agentAuthMethod;
@@ -67,6 +68,7 @@ public class Communication extends PropertyPage
 	private LabeledText snmpAuthName;
 	private LabeledText snmpAuthPassword;
 	private LabeledText snmpPrivPassword;
+	private boolean primaryNameChanged = false;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -92,13 +94,20 @@ public class Communication extends PropertyPage
 		GridLayout generalGroupLayout = new GridLayout();
 		generalGroup.setLayout(generalGroupLayout);
 		
-		primaryIpAddress = new IPAddressSelector(generalGroup, SWT.NONE);
-		primaryIpAddress.setLabel("Primary IP address");
-		primaryIpAddress.setNode(node);
+		primaryName = new LabeledText(generalGroup, SWT.NONE);
+		primaryName.setLabel("Primary host name");
+		primaryName.setText(node.getPrimaryName());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		primaryIpAddress.setLayoutData(gd);
+		primaryName.setLayoutData(gd);
+		primaryName.getTextControl().addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				primaryNameChanged = true;
+			}
+		});
 		
 		// Agent
 		Group agentGroup = new Group(dialogArea, SWT.NONE);
@@ -327,12 +336,22 @@ public class Communication extends PropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (isApply)
-			setValid(false);
-		
 		final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
 		
-		md.setPrimaryIpAddress(primaryIpAddress.getAddress());
+		if (primaryNameChanged)
+		{
+			// Validate primary name
+			final String hostName = primaryName.getText().trim();
+			if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$"))
+			{
+				MessageDialog.openWarning(getShell(), "Warning", "String \"" + hostName + "\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name");
+				return false;
+			}
+			md.setPrimaryName(hostName);
+		}
+			
+		if (isApply)
+			setValid(false);
 		
 		try
 		{

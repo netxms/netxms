@@ -110,6 +110,7 @@
 #define EVENT_DCI_UNSUPPORTED             53
 #define EVENT_DCI_DISABLED                54
 #define EVENT_DCI_ACTIVE                  55
+#define EVENT_IP_ADDRESS_CHANGED          56
 
 #define EVENT_SNMP_UNMATCHED_TRAP         500
 #define EVENT_SNMP_COLD_START             501

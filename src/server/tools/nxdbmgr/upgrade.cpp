@@ -253,6 +253,23 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V238 to V239
+//
+
+static BOOL H_UpgradeFromV238(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES ")
+		_T("(56,'SYS_IP_ADDRESS_CHANGED',1,1,'Primary IP address changed from %2 to %1',")
+		_T("'Generated when primary IP address changed (usually because of primary name change or DNS change).#0D#0A")
+		_T("Parameters:#0D#0A   1) New IP address#0D#0A   2) Old IP address#0D#0A   3) Primary host name')")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='239' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V237 to V238
 //
 
@@ -5572,6 +5589,7 @@ static struct
 	{ 235, 236, H_UpgradeFromV235 },
 	{ 236, 237, H_UpgradeFromV236 },
 	{ 237, 238, H_UpgradeFromV237 },
+	{ 238, 239, H_UpgradeFromV238 },
    { 0, NULL }
 };
 

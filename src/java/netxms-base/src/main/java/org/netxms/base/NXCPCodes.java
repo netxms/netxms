@@ -679,6 +679,7 @@ public final class NXCPCodes
 	public static final long VID_UPTIME_DAY              = 394;
 	public static final long VID_UPTIME_WEEK             = 395;
 	public static final long VID_UPTIME_MONTH            = 396;
+	public static final long VID_PRIMARY_NAME            = 397;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

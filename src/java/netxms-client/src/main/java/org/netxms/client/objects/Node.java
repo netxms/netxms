@@ -75,6 +75,7 @@ public class Node extends GenericObject
 	public static final int IFXTABLE_ENABLED        = 1;
 	public static final int IFXTABLE_DISABLED       = 2;
 	
+	private String primaryName;
 	private int flags;
 	private int runtimeFlags;
 	private int nodeType;
@@ -112,6 +113,7 @@ public class Node extends GenericObject
 	{
 		super(msg, session);
 
+		primaryName = msg.getVariableAsString(NXCPCodes.VID_PRIMARY_NAME);
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		runtimeFlags = msg.getVariableAsInteger(NXCPCodes.VID_RUNTIME_FLAGS);
 		nodeType = msg.getVariableAsInteger(NXCPCodes.VID_NODE_TYPE);
@@ -447,5 +449,13 @@ public class Node extends GenericObject
 	public int getIfXTablePolicy()
 	{
 		return ifXTablePolicy;
+	}
+
+	/**
+	 * @return the primaryName
+	 */
+	public String getPrimaryName()
+	{
+		return primaryName;
 	}
 }

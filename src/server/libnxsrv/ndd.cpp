@@ -96,8 +96,7 @@ static DWORD HandlerIndex(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *
 // Handler for enumerating IP addresses
 //
 
-static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
-                           SNMP_Transport *pTransport, void *pArg)
+static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    DWORD dwIndex, dwNetMask, dwNameLen, dwResult;
    DWORD oidName[MAX_OID_LEN];
@@ -107,7 +106,15 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
    oidName[dwNameLen - 5] = 3;  // Retrieve network mask for this IP
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwNetMask, sizeof(DWORD), 0);
    if (dwResult != SNMP_ERR_SUCCESS)
-      return dwResult;
+	{
+		TCHAR buffer[1024];
+		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"), 
+			pTransport, SNMPConvertOIDToText(dwNameLen, oidName, buffer, 1024), (int)dwResult);
+		// Continue walk even if we get error for some IP address
+		// For example, some Cisco ASA versions reports IP when walking, but does not
+		// allow to SNMP GET appropriate entry
+      return SNMP_ERR_SUCCESS;
+	}
 
    oidName[dwNameLen - 5] = 2;  // Retrieve interface index for this IP
    dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(DWORD), 0);
@@ -116,6 +123,7 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
 		InterfaceList *ifList = (InterfaceList *)pArg;
 
 		for(int i = 0; i < ifList->getSize(); i++)
+		{
          if (ifList->get(i)->dwIndex == dwIndex)
          {
             if (ifList->get(i)->dwIpAddr != 0)
@@ -135,7 +143,15 @@ static DWORD HandlerIpAddr(DWORD dwVersion, SNMP_Variable *pVar,
 				}
             break;
          }
+		}
    }
+	else
+	{
+		TCHAR buffer[1024];
+		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET %s failed (error %d)"), 
+			pTransport, SNMPConvertOIDToText(dwNameLen, oidName, buffer, 1024), (int)dwResult);
+		dwResult = SNMP_ERR_SUCCESS;	// continue walk
+	}
    return dwResult;
 }
 
@@ -154,10 +170,15 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
    InterfaceList *pIfList = NULL;
    BOOL bSuccess = FALSE;
 
+	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p,%d,%s)"), snmp, useAliases, useIfXTable ? _T("true") : _T("false"));
+
    // Get number of interfaces
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0,
                 &iNumIf, sizeof(LONG), 0) != SNMP_ERR_SUCCESS)
+	{
+		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET .1.3.6.1.2.1.2.1.0 failed"), snmp);
       return NULL;
+	}
 
 	// Some devices may return completely insane values here
 	// (for example, DLink DGS-3612 can return negative value)
@@ -274,13 +295,22 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       {
          bSuccess = TRUE;
       }
+		else
+		{
+			DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.4.20.1.1 failed"), snmp);
+		}
    }
+	else
+	{
+		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.2.2.1.1 failed"), snmp);
+	}
 
    if (!bSuccess)
    {
       delete_and_null(pIfList);
    }
 
+	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifLIst=%p"), snmp, pIfList);
    return pIfList;
 }
 

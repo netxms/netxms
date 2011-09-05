@@ -137,7 +137,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 27;
+	public static final int CLIENT_PROTOCOL_VERSION = 28;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -2596,6 +2596,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		switch(data.getObjectClass())
 		{
 			case GenericObject.OBJECT_NODE:
+				if (data.getPrimaryName() != null)
+					msg.setVariable(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
 				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
 				msg.setVariable(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
 				msg.setVariableInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
@@ -2954,6 +2956,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 				msg.setVariable(varId++, r.getVirtualAddress());
 				varId += 7;
 			}
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_PRIMARY_NAME) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
 		}
 		
 		sendMessage(msg);

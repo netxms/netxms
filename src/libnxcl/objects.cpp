@@ -279,6 +279,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 			pObject->iface.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
          break;
       case OBJECT_NODE:
+			pMsg->GetVariableStr(VID_PRIMARY_NAME, pObject->node.szPrimaryName, MAX_DNS_NAME);
          pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
          pObject->node.dwRuntimeFlags = pMsg->GetVariableLong(VID_RUNTIME_FLAGS);
          pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
@@ -842,6 +843,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
    msg.SetVariable(VID_OBJECT_ID, pUpdate->dwObjectId);
    if (pUpdate->qwFlags & OBJ_UPDATE_NAME)
       msg.SetVariable(VID_OBJECT_NAME, pUpdate->pszName);
+   if (pUpdate->qwFlags & OBJ_UPDATE_PRIMARY_NAME)
+      msg.SetVariable(VID_PRIMARY_NAME, pUpdate->pszPrimaryName);
    if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_PORT)
       msg.SetVariable(VID_AGENT_PORT, (WORD)pUpdate->iAgentPort);
    if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_AUTH)
@@ -1057,6 +1060,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
    switch(pCreateInfo->iClass)
    {
       case OBJECT_NODE:
+			if (pCreateInfo->cs.node.pszPrimaryName != NULL)
+				msg.SetVariable(VID_PRIMARY_NAME, pCreateInfo->cs.node.pszPrimaryName);
          msg.SetVariable(VID_IP_ADDRESS, pCreateInfo->cs.node.dwIpAddr);
          msg.SetVariable(VID_IP_NETMASK, pCreateInfo->cs.node.dwNetMask);
          msg.SetVariable(VID_CREATION_FLAGS, pCreateInfo->cs.node.dwCreationFlags);

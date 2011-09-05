@@ -5,6 +5,9 @@
 - Implemented named parameters for events
 - Added integration script for HP EVA disk arrays
 - Added driver for Netscreen firewalls
+- Usage of DNS names instead of IP address for defining primary
+  communication address is now supported (for better support of nodes with
+  dynamic IPs)
 - New MIBs added: ATM-TC-MIB, CISCO-BRIDGE-EXT-MIB, CISCO-IF-EXTENSION-MIB,
   CISCO-L2L3-INTERFACE-CONFIG-MIB, CISCO-PRIVATE-VLAN-MIB,
   CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB, DVMRP-MIB, IGMP-MIB, IPV6-TC,

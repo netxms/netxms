@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
@@ -56,8 +55,8 @@ public class CreateNodeDialog extends Dialog
 {
 	private NXCSession session;
 	
-	private LabeledText nameField;
-	private LabeledText ipAddrField;
+	private LabeledText objectNameField;
+	private LabeledText hostNameField;
 	private Button checkUnmanaged;
 	private Button checkDisableAgent;
 	private Button checkDisableSNMP;
@@ -66,8 +65,8 @@ public class CreateNodeDialog extends Dialog
 	private ObjectSelector snmpProxySelector;
 	private ObjectSelector zoneSelector;
 	
-	private String name;
-	private InetAddress ipAddress;
+	private String objectName;
+	private String hostName;
 	private int creationFlags;
 	private long agentProxy;
 	private long snmpProxy;
@@ -107,14 +106,14 @@ public class CreateNodeDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		nameField = new LabeledText(dialogArea, SWT.NONE);
-		nameField.setLabel("Name");
-		nameField.getTextControl().setTextLimit(255);
+		objectNameField = new LabeledText(dialogArea, SWT.NONE);
+		objectNameField.setLabel("Name");
+		objectNameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
-		nameField.setLayoutData(gd);
+		objectNameField.setLayoutData(gd);
 		
 		final Composite ipAddrGroup = new Composite(dialogArea, SWT.NONE);
 		layout = new GridLayout();
@@ -127,13 +126,13 @@ public class CreateNodeDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		ipAddrGroup.setLayoutData(gd);
 		
-		ipAddrField = new LabeledText(ipAddrGroup, SWT.NONE);
-		ipAddrField.setLabel("Primary IP address");
-		ipAddrField.getTextControl().setTextLimit(255);
+		hostNameField = new LabeledText(ipAddrGroup, SWT.NONE);
+		hostNameField.setLabel("Primary host name or IP address");
+		hostNameField.getTextControl().setTextLimit(255);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		ipAddrField.setLayoutData(gd);
+		hostNameField.setLayoutData(gd);
 		
 		final Button resolve = new Button(ipAddrGroup, SWT.PUSH);
 		resolve.setText("&Resolve");
@@ -211,19 +210,19 @@ public class CreateNodeDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		try
+		// Validate primary name
+		hostName = hostNameField.getText().trim();
+		if (hostName.isEmpty())
+			hostName = objectNameField.getText().trim();
+		if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$"))
 		{
-			ipAddress = InetAddress.getByName(ipAddrField.getText());
-		}
-		catch(UnknownHostException e)
-		{
-			MessageDialog.openWarning(getShell(), "Warning", "Invalid IP address or host name");
+			MessageDialog.openWarning(getShell(), "Warning", "String \"" + hostName + "\" is not a valid host name or IP address. Please enter valid host name or IP address as primary host name");
 			return;
 		}
 		
-		name = nameField.getText().trim();
-		if (name.isEmpty())
-			name = ipAddrField.getText();
+		objectName = objectNameField.getText().trim();
+		if (objectName.isEmpty())
+			objectName = hostName;
 		
 		creationFlags = 0;
 		if (checkUnmanaged.getSelection())
@@ -255,7 +254,7 @@ public class CreateNodeDialog extends Dialog
 	 */
 	private void resolveName()
 	{
-		final String name = nameField.getText();
+		final String name = objectNameField.getText();
 		new ConsoleJob("Resolve host name", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -265,7 +264,7 @@ public class CreateNodeDialog extends Dialog
 					@Override
 					public void run()
 					{
-						ipAddrField.setText(addr.getHostAddress());
+						hostNameField.setText(addr.getHostAddress());
 					}
 				});
 			}
@@ -281,17 +280,17 @@ public class CreateNodeDialog extends Dialog
 	/**
 	 * @return the name
 	 */
-	public String getName()
+	public String getObjectName()
 	{
-		return name;
+		return objectName;
 	}
 
 	/**
-	 * @return the ipAddress
+	 * @return the hostName
 	 */
-	public InetAddress getIpAddress()
+	public String getHostName()
 	{
-		return ipAddress;
+		return hostName;
 	}
 
 	/**
