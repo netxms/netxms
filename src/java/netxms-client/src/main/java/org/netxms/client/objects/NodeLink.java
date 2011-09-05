@@ -25,7 +25,7 @@ import org.netxms.client.NXCSession;
 /**
  * Node link object
  */
-public class NodeLink extends GenericObject
+public class NodeLink extends ServiceContainer
 {
 	private long nodeId;
 	

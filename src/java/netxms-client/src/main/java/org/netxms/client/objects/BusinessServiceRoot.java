@@ -24,7 +24,7 @@ import org.netxms.client.NXCSession;
 /**
  * Root object for business services tree
  */
-public class BusinessServiceRoot extends GenericObject
+public class BusinessServiceRoot extends ServiceContainer
 {
 	/**
 	 * @param msg

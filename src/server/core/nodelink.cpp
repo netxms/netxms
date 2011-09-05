@@ -29,7 +29,7 @@
 // NodeLink default constructor
 //
 
-NodeLink::NodeLink()
+NodeLink::NodeLink() : ServiceContainer()
 {
 	_tcscpy(m_szName, _T("Default"));
 	m_nodeId = 0;
@@ -40,8 +40,7 @@ NodeLink::NodeLink()
 // Constructor for new nodelink object
 //
 
-NodeLink::NodeLink(const TCHAR *name, DWORD nodeId) 
-: ServiceContainer(name, 0)
+NodeLink::NodeLink(const TCHAR *name, DWORD nodeId) : ServiceContainer(name)
 {
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_nodeId = nodeId;
@@ -58,17 +57,6 @@ NodeLink::~NodeLink()
 
 
 //
-// Calculate status for compound object based on childs status
-// ! Copy/paste from BizService::calculateCompoundStatus()
-//
-
-void NodeLink::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-	ServiceContainer::calculateCompoundStatus(bForcedRecalc);
-
-}
-
-//
 // Create object from database data
 //
 
@@ -77,7 +65,7 @@ BOOL NodeLink::CreateFromDB(DWORD id)
 	const int script_length = 1024;
 	m_dwId = id;
 
-	if (!Container::CreateFromDB(id))
+	if (!ServiceContainer::CreateFromDB(id))
 		return FALSE;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT node_id FROM node_links WHERE nodelink_id=?"));
@@ -166,7 +154,7 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 	// Unlock object and clear modification flag
 	m_bIsModified = FALSE;
 	UnlockData();
-	return Container::SaveToDB(hdb);
+	return ServiceContainer::SaveToDB(hdb);
 }
 
 
@@ -179,7 +167,7 @@ BOOL NodeLink::DeleteFromDB()
 	TCHAR szQuery[QUERY_LENGTH];
 	BOOL bSuccess;
 
-	bSuccess = Container::DeleteFromDB();
+	bSuccess = ServiceContainer::DeleteFromDB();
 	if (bSuccess)
 	{
 		_sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM node_links WHERE nodelink_id=%d"), m_dwId);
@@ -196,7 +184,7 @@ BOOL NodeLink::DeleteFromDB()
 
 void NodeLink::CreateMessage(CSCPMessage *pMsg)
 {
-	NetObj::CreateMessage(pMsg);
+	ServiceContainer::CreateMessage(pMsg);
 	pMsg->SetVariable(VID_NODE_ID, m_nodeId);
 }
 
@@ -215,7 +203,7 @@ DWORD NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_nodeId = pRequest->GetVariableLong(VID_NODE_ID);
 	}
 
-	return NetObj::ModifyFromMessage(pRequest, TRUE);
+	return ServiceContainer::ModifyFromMessage(pRequest, TRUE);
 }
 
 

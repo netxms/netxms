@@ -196,23 +196,3 @@ void ReportRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
-
-
-//
-// Biz service tree root class default constructor
-//
-
-BusinessServiceRoot::BusinessServiceRoot() : UniversalRoot()
-{
-	m_dwId = BUILTIN_OID_BUSINESSSERVICEROOT;
-	_tcscpy(m_szName, _T("Business Services"));
-	m_iStatus = STATUS_NORMAL;
-}
-
-//
-// Biz service root class destructor
-//
-
-BusinessServiceRoot::~BusinessServiceRoot()
-{
-}

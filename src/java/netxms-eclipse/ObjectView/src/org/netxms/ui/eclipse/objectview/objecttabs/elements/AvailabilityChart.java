@@ -29,8 +29,8 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
@@ -69,7 +69,7 @@ public class AvailabilityChart extends OverviewPageElement
 	@Override
 	void onObjectChange()
 	{
-		BusinessService service = (BusinessService)getObject();
+		ServiceContainer service = (ServiceContainer)getObject();
 		
 		dayChart.updateParameter(0, service.getUptimeForDay(), false);
 		dayChart.updateParameter(1, 100.0 - service.getUptimeForDay(), true);
@@ -173,6 +173,6 @@ public class AvailabilityChart extends OverviewPageElement
 	@Override
 	public boolean isApplicableForObject(GenericObject object)
 	{
-		return object instanceof BusinessService;
+		return object instanceof ServiceContainer;
 	}
 }

@@ -28,7 +28,7 @@
 // Service default constructor
 //
 
-BusinessService::BusinessService()
+BusinessService::BusinessService() : ServiceContainer()
 {
 	m_busy = false;
 	m_lastPollTime = time_t(0);
@@ -41,8 +41,7 @@ BusinessService::BusinessService()
 // Constructor for new service object
 //
 
-BusinessService::BusinessService(const TCHAR *name) 
-: ServiceContainer(name, 0)
+BusinessService::BusinessService(const TCHAR *name) : ServiceContainer(name)
 {
 	m_busy = false;
 	m_lastPollTime = time_t(0);
@@ -61,22 +60,12 @@ BusinessService::~BusinessService()
 
 
 //
-// Calculate status for compound object based on childs status
-//
-
-void BusinessService::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-	ServiceContainer::calculateCompoundStatus(bForcedRecalc);
-}
-
-
-//
 // Create object from database data
 //
 
 BOOL BusinessService::CreateFromDB(DWORD id)
 {
-	if (!Container::CreateFromDB(id))
+	if (!ServiceContainer::CreateFromDB(id))
 		return FALSE;
 
 	// now it doesn't make any sense but hopefully will do in the future
@@ -104,8 +93,6 @@ BOOL BusinessService::CreateFromDB(DWORD id)
 
 	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
-
-	initUptimeStats();
 
 	return TRUE;
 }
@@ -152,7 +139,7 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 	m_bIsModified = FALSE;
 	UnlockData();
 
-	return Container::SaveToDB(hdb);
+	return ServiceContainer::SaveToDB(hdb);
 }
 
 
@@ -165,7 +152,7 @@ BOOL BusinessService::DeleteFromDB()
    TCHAR szQuery[QUERY_LENGTH];
    BOOL bSuccess;
 
-   bSuccess = Container::DeleteFromDB();
+   bSuccess = ServiceContainer::DeleteFromDB();
    if (bSuccess)
    {
       _sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM business_services WHERE id=%d"), m_dwId);
@@ -182,10 +169,7 @@ BOOL BusinessService::DeleteFromDB()
 
 void BusinessService::CreateMessage(CSCPMessage *pMsg)
 {
-   NetObj::CreateMessage(pMsg);
-   pMsg->SetVariable(VID_UPTIME_DAY, m_uptimeDay);
-   pMsg->SetVariable(VID_UPTIME_WEEK, m_uptimeWeek);
-   pMsg->SetVariable(VID_UPTIME_MONTH, m_uptimeMonth);
+   ServiceContainer::CreateMessage(pMsg);
 }
 
 
@@ -198,7 +182,7 @@ DWORD BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLoc
    if (!bAlreadyLocked)
       LockData();
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return ServiceContainer::ModifyFromMessage(pRequest, TRUE);
 }
 
 
@@ -249,4 +233,3 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	DbgPrintf(5, _T("Finished polling of business service %s [%d]"), m_szName, (int)m_dwId);
 	m_busy = false;
 }
-

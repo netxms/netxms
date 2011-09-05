@@ -1552,7 +1552,6 @@ public:
 };
 
 
-
 //
 // SLM check object
 //
@@ -1594,11 +1593,12 @@ public:
 	const TCHAR *getReason() { return m_reason; }
 };
 
+
 //
 // Service container - common logic for BusinessService, NodeLink and BusinessServiceRoot
 //
 
-class NXCORE_EXPORTABLE ServiceContainer: public Container 
+class NXCORE_EXPORTABLE ServiceContainer : public Container 
 {
 	enum Period { DAY, WEEK, MONTH };
 
@@ -1630,24 +1630,37 @@ protected:
 
 public:
 	ServiceContainer();
-	ServiceContainer(const TCHAR *pszName, DWORD dwCategory);
+	ServiceContainer(const TCHAR *pszName);
+
+	virtual BOOL CreateFromDB(DWORD dwId);
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+	virtual BOOL DeleteFromDB();
+
+	virtual void CreateMessage(CSCPMessage *pMsg);
+	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 	virtual void setStatus(int newStatus);
 };
+
 
 //
 // Business service root
 //
 
-class NXCORE_EXPORTABLE BusinessServiceRoot : public UniversalRoot
+class NXCORE_EXPORTABLE BusinessServiceRoot : public ServiceContainer
 {
 public:
 	BusinessServiceRoot();
 	virtual ~BusinessServiceRoot();
 
-	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) { UniversalRoot::calculateCompoundStatus(bForcedRecalc); }
-	virtual BOOL SaveToDB(DB_HANDLE hdb) { return UniversalRoot::SaveToDB(hdb); }
 	virtual int Type() { return OBJECT_BUSINESSSERVICEROOT; }
+
+	virtual BOOL SaveToDB(DB_HANDLE hdb);
+   void LoadFromDB();
+
+   void LinkChildObjects();
+   void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 };
 
 
@@ -1668,11 +1681,10 @@ public:
 	virtual ~BusinessService();
 
 	virtual int Type() { return OBJECT_BUSINESSSERVICE; }
-	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
+	virtual BOOL CreateFromDB(DWORD dwId);
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
 	virtual BOOL DeleteFromDB();
-	virtual BOOL CreateFromDB(DWORD dwId);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -1681,6 +1693,7 @@ public:
 	void lockForPolling();
 	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
 };
+
 
 //
 // Node link object for business service
@@ -1697,7 +1710,6 @@ public:
 	virtual ~NodeLink();
 
 	virtual int Type() { return OBJECT_NODELINK; }
-	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL SaveToDB(DB_HANDLE hdb);
 	virtual BOOL DeleteFromDB();

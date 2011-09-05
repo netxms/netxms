@@ -26,21 +26,20 @@
 
 LONG ServiceContainer::logRecordId = -1;
 
+
 //
 // Constructor for service service object
 //
 
-ServiceContainer::ServiceContainer()
+ServiceContainer::ServiceContainer() : Container()
 {
 	initServiceContainer();
 }
 
-ServiceContainer::ServiceContainer(const TCHAR *pszName, DWORD dwCategory)
-:Container(pszName, dwCategory)
+ServiceContainer::ServiceContainer(const TCHAR *pszName) : Container(pszName, 0)
 {
 	initServiceContainer();
 }
-
 
 void ServiceContainer::initServiceContainer()
 {
@@ -56,6 +55,67 @@ void ServiceContainer::initServiceContainer()
 	m_prevDiffWeek = 0;
 	m_prevDiffMonth = 0;
 }
+
+
+//
+// Create object from database data
+//
+
+BOOL ServiceContainer::CreateFromDB(DWORD id)
+{
+	if (!Container::CreateFromDB(id))
+		return FALSE;
+
+	initUptimeStats();
+	return TRUE;
+}
+
+
+//
+// Save object to database
+//
+
+BOOL ServiceContainer::SaveToDB(DB_HANDLE hdb)
+{
+	return Container::SaveToDB(hdb);
+}
+
+
+//
+// Delete object from database
+//
+
+BOOL ServiceContainer::DeleteFromDB()
+{
+	return Container::DeleteFromDB();
+}
+
+
+//
+// Create CSCP message with object's data
+//
+
+void ServiceContainer::CreateMessage(CSCPMessage *pMsg)
+{
+   Container::CreateMessage(pMsg);
+   pMsg->SetVariable(VID_UPTIME_DAY, m_uptimeDay);
+   pMsg->SetVariable(VID_UPTIME_WEEK, m_uptimeWeek);
+   pMsg->SetVariable(VID_UPTIME_MONTH, m_uptimeMonth);
+}
+
+
+//
+// Modify object from message
+//
+
+DWORD ServiceContainer::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   if (!bAlreadyLocked)
+      LockData();
+
+   return Container::ModifyFromMessage(pRequest, TRUE);
+}
+
 
 //
 // Calculate status for compound object based on childs status
@@ -96,6 +156,7 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 		addHistoryRecord();
 }
 
+
 //
 // Set service status - use this instead of direct assignment;
 //
@@ -105,6 +166,7 @@ void ServiceContainer::setStatus(int newStatus)
 	m_iStatus = newStatus;
 	updateUptimeStats();	
 }
+
 
 //
 // Add a record to slm_service_history table
