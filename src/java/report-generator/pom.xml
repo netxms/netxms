@@ -114,6 +114,11 @@
 	    <artifactId>sqljdbc</artifactId>
 	    <version>3.0.1301.101</version>
 	</dependency>
+	<dependency>
+	    <groupId>com.ibm</groupId>
+	    <artifactId>db2jcc</artifactId>
+	    <version>9.7.4</version>
+	</dependency>
     </dependencies>
                                
     <reporting>
