@@ -39,7 +39,6 @@ SlmCheck::SlmCheck() : NetObj()
 	m_currentTicketId = 0;
 }
 
-
 //
 // Constructor for new check object
 //
@@ -56,6 +55,21 @@ SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 	m_currentTicketId = 0;
 }
 
+//
+// Used to create a new object from a check template
+//
+
+SlmCheck::SlmCheck(const SlmCheck *check)
+{
+	nx_strncpy(m_szName, check->m_szName, MAX_OBJECT_NAME);
+	m_type		= check->m_type;
+	m_script = (m_type == check_script) ? _tcsdup(check->m_script) : NULL;
+	m_threshold = NULL;
+	m_reason[0] = 0;
+	m_isTemplate = false;
+	m_currentTicketId = check->m_currentTicketId;
+	compileScript();
+}
 
 //
 // Service class destructor
@@ -68,6 +82,22 @@ SlmCheck::~SlmCheck()
 	delete m_pCompiledScript;
 }
 
+//
+// Compile script if there is one
+//
+
+void SlmCheck::compileScript()
+{
+	if (m_type == check_script && m_script != NULL)
+	{
+		const int errorMsgLen = 512;
+		TCHAR errorMsg[errorMsgLen];
+
+		m_pCompiledScript = NXSLCompile(m_script, errorMsg, errorMsgLen);
+		if (m_pCompiledScript == NULL)
+			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, errorMsg);
+	}
+}
 
 //
 // Create object from database data
@@ -115,16 +145,7 @@ BOOL SlmCheck::CreateFromDB(DWORD id)
 		// FIXME: load threshold
 	}
 
-	// Compile script if there is one
-	if (m_type == check_script && m_script != NULL)
-	{
-		const int errorMsgLen = 512;
-		TCHAR errorMsg[errorMsgLen];
-
-		m_pCompiledScript = NXSLCompile(m_script, errorMsg, errorMsgLen);
-		if (m_pCompiledScript == NULL)
-			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, errorMsg);
-	}
+	compileScript();
 
 	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);

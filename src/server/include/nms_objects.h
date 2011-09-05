@@ -362,6 +362,11 @@ public:
    void SetCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
    void DeleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
 
+   NetObj** getChildList() { return m_pChildList; }
+   DWORD getChildCount() { return m_dwChildCount; }
+   NetObj** getParentList() { return m_pParentList; }
+   DWORD getParentCount() { return m_dwParentCount; }
+
    // Debug methods
    const TCHAR *ParentList(TCHAR *szBuffer);
    const TCHAR *ChildList(TCHAR *szBuffer);
@@ -1575,10 +1580,12 @@ protected:
 	bool insertTicket();
 	void closeTicket();
 	void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }
+	void compileScript();
 
 public:
 	SlmCheck();
 	SlmCheck(const TCHAR *name);
+	SlmCheck(const SlmCheck *check);
 	virtual ~SlmCheck();
 
 	virtual int Type() { return OBJECT_SLMCHECK; }

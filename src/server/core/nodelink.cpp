@@ -235,5 +235,21 @@ void NodeLink::execute()
 
 BOOL NodeLink::applyTemplates()
 {
+	for (int i = 0; i < int(m_dwParentCount); i++)
+	{
+		ServiceContainer *parent = (ServiceContainer*)m_pParentList[i];
+		if (parent->Type() != OBJECT_BUSINESSSERVICE)
+			continue;
+		for (int k = 0; k < int(parent->getChildCount()); k++)
+		{
+			if ((parent->getChildList())[k]->Type() == OBJECT_SLMCHECK && 
+				((SlmCheck*)parent->getChildList()[k])->isTemplate())
+			{
+				SlmCheck *autoCreated = new SlmCheck((SlmCheck*)parent->getChildList()[k]);
+				linkObject(autoCreated);
+			}
+		}
+	}
+
 	return TRUE;
 }
