@@ -11266,13 +11266,33 @@ void ClientSession::renderReport(CSCPMessage *request)
 
    // TODO: add type handling
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("%s -cp %s") FS_PATH_SEPARATOR _T("report-generator.jar org.netxms.report.Exporter %s %s"),
+	_sntprintf(buffer, 1024, _T("\"%s\" -cp \"%s") FS_PATH_SEPARATOR _T("report-generator.jar\" org.netxms.report.Exporter \"%s\" \"%s\""),
 			g_szJavaPath,
 			g_szDataDir,
 			reportFileName,
 			outputFileName);
 
+#ifdef _WIN32
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+   memset(&si, 0, sizeof(STARTUPINFO));
+   si.cb = sizeof(STARTUPINFO);
+   si.dwFlags = 0;
+
+	int ret = 127;
+	if (CreateProcess(NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+	{
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		DWORD ec;
+		GetExitCodeProcess(pi.hProcess, &ec);
+		ret = (int)ec;
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+	}
+#else
 	int ret = _tsystem(buffer);
+#endif
 
 	if (ret == 0)
 	{

@@ -155,6 +155,7 @@ public class ReportExecutionForm extends Composite
 		td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
+		td.grabVertical = true;
 		section.setLayoutData(td);
 
 		final Composite resultArea = toolkit.createComposite(section);
@@ -266,6 +267,12 @@ public class ReportExecutionForm extends Composite
 		});
 	}
 
+	/**
+	 * Render report
+	 * 
+	 * @param jobId
+	 * @param executeTime
+	 */
 	private void renderReport(final long jobId, Date executeTime)
 	{
 		StringBuilder nameTemplate = new StringBuilder();
@@ -325,7 +332,7 @@ public class ReportExecutionForm extends Composite
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot execute report " + report.getObjectName();
+					return "Cannot render report " + report.getObjectName() + " job " + jobId;
 				}
 			}.start();
 		}
@@ -398,7 +405,7 @@ public class ReportExecutionForm extends Composite
 							return;
 
 						resultList.setInput(results.toArray());
-						ReportExecutionForm.this.layout();
+						ReportExecutionForm.this.getParent().layout(true, true);
 					}
 				});
 			}

@@ -140,7 +140,27 @@ bool ReportJob::run()
 			destFileName);
 
 	DbgPrintf(6, _T("ReportJob: executing command '%s'"), buffer);
+#ifdef _WIN32
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+   memset(&si, 0, sizeof(STARTUPINFO));
+   si.cb = sizeof(STARTUPINFO);
+   si.dwFlags = 0;
+
+	int ret = 127;
+	if (CreateProcess(NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+	{
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		DWORD ec;
+		GetExitCodeProcess(pi.hProcess, &ec);
+		ret = (int)ec;
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+	}
+#else
 	int ret = _tsystem(buffer);
+#endif
 	DbgPrintf(6, _T("ReportJob: command return code: %d"), ret);
 
 	if (ret != 0) 
@@ -163,7 +183,7 @@ bool ReportJob::run()
 
 	TCHAR query[4096];
 	_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO report_results (report_id,generated,job_id) VALUES (%d, %d, %d)"),
-                       m_report->Id(), time(NULL), getId());
+                       m_report->Id(), (int)time(NULL), getId());
 	if (DBQuery(g_hCoreDB, query))
 	{
 		return ret == 0;

@@ -30,7 +30,7 @@ public class Generator {
 
     private Properties config;
     private static final String CONFIG_JDBCURL = "JDBCUrl";
-    private static final String CONFIG_DBUSER = "DBUser";
+    private static final String CONFIG_DBLOGIN = "DBLogin";
     private static final String CONFIG_DBPASSWORD = "DBPassword";
     private static final String CONFIG_JDBCDRIVER = "JDBCDriver";
 
@@ -67,7 +67,7 @@ public class Generator {
         try {
             //noinspection CallToDriverManagerGetConnection
             final String url = config.getProperty(CONFIG_JDBCURL);
-            final String user = config.getProperty(CONFIG_DBUSER);
+            final String user = config.getProperty(CONFIG_DBLOGIN);
             final String password = config.getProperty(CONFIG_DBPASSWORD);
 
             if (url == null) {
