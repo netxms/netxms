@@ -13,17 +13,16 @@ libnxcore_la_SOURCES =  acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			dcivalue.cpp debug.cpp ef.cpp email.cpp entirenet.cpp \
 			epp.cpp events.cpp evproc.cpp fdb.cpp hk.cpp id.cpp \
 			import.cpp index.cpp interface.cpp isc.cpp job.cpp \
-			jobmgr.cpp jobqueue.cpp \
-			layer2.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
-			loghandle.cpp logs.cpp main.cpp modules.cpp \
-			ndd.cpp ndp.cpp netinfo.cpp netmap.cpp netobj.cpp \
-			netsrv.cpp node.cpp nodelink.cpp np.cpp \
-			nxsl_classes.cpp nxslext.cpp \
+			jobmgr.cpp jobqueue.cpp layer2.cpp lln.cpp lldp.cpp \
+			locks.cpp logfilter.cpp loghandle.cpp logs.cpp \
+			main.cpp modules.cpp ndd.cpp ndp.cpp netinfo.cpp \
+			netmap.cpp netobj.cpp netsrv.cpp node.cpp \
+			nodelink.cpp np.cpp nxsl_classes.cpp nxslext.cpp \
 			objects.cpp objtools.cpp package.cpp poll.cpp \
 			radius.cpp report.cpp report_job.cpp rootobj.cpp \
 			script.cpp session.cpp situation.cpp slmcheck.cpp \
-			smclp.cpp sms.cpp snmp.cpp snmptrap.cpp \
-			subnet.cpp syncer.cpp syslogd.cpp template.cpp \
+			smclp.cpp sms.cpp snmp.cpp snmptrap.cpp subnet.cpp \
+			svccontainer.cpp syncer.cpp syslogd.cpp template.cpp \
 			tools.cpp tracert.cpp uniroot.cpp upload_job.cpp \
 			userdb.cpp userdb_objects.cpp vpnconn.cpp \
 			vrrp.cpp watchdog.cpp zone.cpp
