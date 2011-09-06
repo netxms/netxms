@@ -503,6 +503,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/objects/Report.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ReportGroup.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ReportRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ServiceCheck.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/objects/ServiceContainer.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/ServiceRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Subnet.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/objects/Template.java -text
