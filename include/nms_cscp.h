@@ -440,7 +440,7 @@ typedef struct
 #define CMD_CREATE_MAP              0x00DA
 #define CMD_UPLOAD_FILE             0x00DB
 #define CMD_DELETE_FILE             0x00DC
-//#define CMD_GET_REPORT_RESULTS      0x00DD
+#define CMD_DELETE_REPORT_RESULTS   0x00DD
 #define CMD_RENDER_REPORT           0x00DE
 #define CMD_EXECUTE_REPORT          0x00DF
 #define CMD_GET_REPORT_RESULTS      0x00E0
@@ -876,6 +876,9 @@ typedef struct
 #define VID_UPTIME_WEEK             ((DWORD)395)
 #define VID_UPTIME_MONTH            ((DWORD)396)
 #define VID_PRIMARY_NAME            ((DWORD)397)
+#define VID_NUM_RESULTS             ((DWORD)398)
+#define VID_RESULT_ID_LIST          ((DWORD)399)
+#define VID_RENDER_FORMAT           ((DWORD)400)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

@@ -35,6 +35,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbenchPart;
@@ -48,6 +49,7 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Report;
+import org.netxms.client.reports.ReportRenderFormat;
 import org.netxms.client.reports.ReportResult;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
@@ -240,7 +242,7 @@ public class ReportExecutionForm extends Composite
 
 		final String[] names = { "Job ID", "Execution Time" };
 		final int[] widths = { 90, 160 };
-		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER);
+		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
@@ -261,8 +263,20 @@ public class ReportExecutionForm extends Composite
 				final ReportResult firstElement = (ReportResult)((IStructuredSelection)resultList.getSelection()).getFirstElement();
 				if (firstElement != null)
 				{
-					renderReport(firstElement.getJobId(), firstElement.getExecutionTime());
+					renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.PDF);
 				}
+			}
+		});
+
+		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
+		link.setImage(SharedIcons.DELETE_OBJECT.createImage());
+		link.setText("Delete");
+		link.addHyperlinkListener(new HyperlinkAdapter()
+		{
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+				deleteResults();
 			}
 		});
 	}
@@ -273,13 +287,14 @@ public class ReportExecutionForm extends Composite
 	 * @param jobId
 	 * @param executeTime
 	 */
-	private void renderReport(final long jobId, Date executeTime)
+	private void renderReport(final long jobId, Date executeTime, final ReportRenderFormat format)
 	{
 		StringBuilder nameTemplate = new StringBuilder();
 		nameTemplate.append(report.getObjectName());
 		nameTemplate.append(" ");
 		nameTemplate.append(new SimpleDateFormat("ddMMyyyy HHmm").format(executeTime));
-		nameTemplate.append(".pdf");
+		nameTemplate.append(".");
+		nameTemplate.append(format.getExtension());
 
 		FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
 		fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
@@ -295,7 +310,7 @@ public class ReportExecutionForm extends Composite
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					final File reportFile = session.renderReport(jobId);
+					final File reportFile = session.renderReport(jobId, format);
 
 					// save
 					FileInputStream inputStream = null;
@@ -315,6 +330,17 @@ public class ReportExecutionForm extends Composite
 								outputStream.write(buffer, 0, size);
 							}
 						} while(size == buffer.length);
+						
+						outputStream.close();
+						outputStream = null;
+						
+						getDisplay().asyncExec(new Runnable() {
+							@Override
+							public void run()
+							{
+								openReport(fileName, format);
+							}
+						});
 					}
 					finally
 					{
@@ -414,6 +440,66 @@ public class ReportExecutionForm extends Composite
 			protected String getErrorMessage()
 			{
 				return "Cannot get result list for report " + report.getObjectName();
+			}
+		}.start();
+	}
+	
+	/**
+	 * Open rendered report in appropriate external program (like PDF viewer)
+	 * 
+	 * @param fileName rendered report file
+	 */
+	private void openReport(String fileName, ReportRenderFormat format)
+	{
+		final Program p = Program.findProgram(format.getExtension());
+		if (p != null)
+		{
+			p.execute(fileName);
+		}
+		else
+		{
+			MessageDialog.openError(getShell(), "Error", "Report was rendered successfully, but external viewer cannot be opened");
+		}
+	}
+	
+	/**
+	 * Delete selected report results
+	 */
+	private void deleteResults()
+	{
+		IStructuredSelection selection = (IStructuredSelection)resultList.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		if (!MessageDialog.openConfirm(getShell(), "Delete Report Results", "Do you really want to delete selected results?"))
+			return;
+		
+		final List<Long> resultIdList = new ArrayList<Long>(selection.size());
+		for(Object o : selection.toList())
+		{
+			resultIdList.add(((ReportResult)o).getJobId());
+		}
+		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		new ConsoleJob("Delete report execution results", workbenchPart, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				session.deleteReportResults(report.getObjectId(), resultIdList);
+				getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (!ReportExecutionForm.this.isDisposed())
+							refreshResultList();
+					}
+				});
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return null;
 			}
 		}.start();
 	}

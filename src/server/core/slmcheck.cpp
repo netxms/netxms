@@ -39,6 +39,7 @@ SlmCheck::SlmCheck() : NetObj()
 	m_currentTicketId = 0;
 }
 
+
 //
 // Constructor for new check object
 //
@@ -55,19 +56,20 @@ SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 	m_currentTicketId = 0;
 }
 
+
 //
 // Used to create a new object from a check template
 //
 
-SlmCheck::SlmCheck(const SlmCheck *check)
+SlmCheck::SlmCheck(const SlmCheck *check)  : NetObj()
 {
 	nx_strncpy(m_szName, check->m_szName, MAX_OBJECT_NAME);
-	m_type		= check->m_type;
-	m_script = (m_type == check_script) ? _tcsdup(check->m_script) : NULL;
+	m_type = check->m_type;
+	m_script = ((m_type == check_script) && (check->m_script != NULL)) ? _tcsdup(check->m_script) : NULL;
 	m_threshold = NULL;
 	m_reason[0] = 0;
 	m_isTemplate = false;
-	m_currentTicketId = check->m_currentTicketId;
+	m_currentTicketId = 0;
 	compileScript();
 }
 
@@ -81,6 +83,7 @@ SlmCheck::~SlmCheck()
 	safe_free(m_script);
 	delete m_pCompiledScript;
 }
+
 
 //
 // Compile script if there is one
@@ -98,6 +101,7 @@ void SlmCheck::compileScript()
 			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, errorMsg);
 	}
 }
+
 
 //
 // Create object from database data

@@ -394,6 +394,7 @@ private:
 	DECLARE_THREAD_STARTER(processConsoleCommand)
 	DECLARE_THREAD_STARTER(sendMib)
 	DECLARE_THREAD_STARTER(getReportResults)
+	DECLARE_THREAD_STARTER(deleteReportResults)
 	DECLARE_THREAD_STARTER(renderReport)
 
    void readThread();
@@ -568,6 +569,7 @@ private:
 	void deleteFile(CSCPMessage *request);
 	void executeReport(CSCPMessage *msg);
 	void getReportResults(CSCPMessage *msg);
+	void deleteReportResults(CSCPMessage *msg);
 	void renderReport(CSCPMessage *request);
 
 public:

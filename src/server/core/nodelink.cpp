@@ -240,7 +240,7 @@ BOOL NodeLink::applyTemplates()
 		ServiceContainer *parent = (ServiceContainer*)m_pParentList[i];
 		if (parent->Type() != OBJECT_BUSINESSSERVICE)
 			continue;
-		for (int k = 0; k < int(parent->getChildCount()); k++)
+		for(int k = 0; k < (int)parent->getChildCount(); k++)
 		{
 			if ((parent->getChildList())[k]->Type() == OBJECT_SLMCHECK && 
 				((SlmCheck*)parent->getChildList()[k])->isTemplate())

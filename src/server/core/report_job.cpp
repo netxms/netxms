@@ -130,7 +130,7 @@ bool ReportJob::run()
 
 	// launch report generator
 	TCHAR destFileName[256];
-	buildDataFileName(getId(), destFileName, 256);
+	buildDataFileName(destFileName, 256);
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("\"%s\" -cp \"%s") FS_PATH_SEPARATOR _T("report-generator.jar\" org.netxms.report.Generator \"%s\" \"%s\" \"%s\""),
 			g_szJavaPath,
@@ -201,8 +201,8 @@ bool ReportJob::run()
 // Build name of data file
 //
 
-TCHAR *ReportJob::buildDataFileName(DWORD jobId, TCHAR *buffer, size_t bufferSize)
+TCHAR *ReportJob::buildDataFileName(DWORD jobId, const TCHAR *suffix, TCHAR *buffer, size_t bufferSize)
 {
-	_sntprintf(buffer, bufferSize, _T("%s") DDIR_REPORTS FS_PATH_SEPARATOR _T("job_%u"), g_szDataDir, jobId);
+	_sntprintf(buffer, bufferSize, _T("%s") DDIR_REPORTS FS_PATH_SEPARATOR _T("job_%u%s"), g_szDataDir, jobId, (suffix != NULL) ? suffix : _T(""));
 	return buffer;
 }

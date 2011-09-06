@@ -162,6 +162,7 @@ DEFINE_THREAD_STARTER(findMacAddress)
 DEFINE_THREAD_STARTER(processConsoleCommand)
 DEFINE_THREAD_STARTER(sendMib)
 DEFINE_THREAD_STARTER(getReportResults)
+DEFINE_THREAD_STARTER(deleteReportResults)
 DEFINE_THREAD_STARTER(renderReport)
 
 
@@ -1238,6 +1239,9 @@ void ClientSession::processingThread()
 				break;
 			case CMD_GET_REPORT_RESULTS:
 				CALL_IN_NEW_THREAD(getReportResults, pMsg);
+				break;
+			case CMD_DELETE_REPORT_RESULTS:
+				CALL_IN_NEW_THREAD(deleteReportResults, pMsg);
 				break;
 			case CMD_RENDER_REPORT:
 				CALL_IN_NEW_THREAD(renderReport, pMsg);
@@ -11245,6 +11249,79 @@ void ClientSession::getReportResults(CSCPMessage *request)
 
 
 //
+// Delete report execution results
+//
+
+void ClientSession::deleteReportResults(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+	if (object != NULL)
+	{
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		{
+			if (object->Type() == OBJECT_REPORT)
+			{
+				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+				DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM report_results WHERE report_id=? AND job_id=?"));
+				if (hStmt != NULL)
+				{
+					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, object->Id());
+					int count = request->GetVariableLong(VID_NUM_RESULTS);
+					if (count > 0)
+					{
+						DWORD *idList = (DWORD *)malloc(sizeof(DWORD) * count);
+						request->GetVariableInt32Array(VID_RESULT_ID_LIST, (DWORD)count, idList);
+						for(int i = 0; i < count; i++)
+						{
+							DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, idList[i]);
+							if (DBExecute(hStmt))
+							{
+								TCHAR fileName[MAX_PATH];
+
+								ReportJob::buildDataFileName(idList[i], NULL, fileName, MAX_PATH);
+								_tremove(fileName);
+								ReportJob::buildDataFileName(idList[i], _T(".pdf"), fileName, MAX_PATH);
+								_tremove(fileName);
+								ReportJob::buildDataFileName(idList[i], _T(".html"), fileName, MAX_PATH);  /* FIXME: is it really .html? */
+								_tremove(fileName);
+							}
+						}
+						free(idList);
+					}
+					DBFreeStatement(hStmt);
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+				}
+				DBConnectionPoolReleaseConnection(hdb);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
 // Render report execution results into document
 //
 
@@ -11256,13 +11333,13 @@ void ClientSession::renderReport(CSCPMessage *request)
 	msg.SetId(request->GetId());
 
 	DWORD jobId = request->GetVariableLong(VID_JOB_ID);
+	DWORD format = request->GetVariableLong(VID_RENDER_FORMAT);
 
-	TCHAR reportFileName[256];
-	TCHAR outputFileName[256];
+	TCHAR reportFileName[MAX_PATH];
+	TCHAR outputFileName[MAX_PATH];
 
-	// duplicate code in ReportJob::buildDataFileName
-	_sntprintf(reportFileName, 256, _T("%s") DDIR_REPORTS FS_PATH_SEPARATOR _T("job_%u"), g_szDataDir, jobId);
-	_sntprintf(outputFileName, 256, _T("%s") DDIR_REPORTS FS_PATH_SEPARATOR _T("job_%u.pdf"), g_szDataDir, jobId);
+	ReportJob::buildDataFileName(jobId, NULL, reportFileName, MAX_PATH);
+	ReportJob::buildDataFileName(jobId, _T(".pdf"), outputFileName, MAX_PATH);
 
    // TODO: add type handling
 	TCHAR buffer[1024];

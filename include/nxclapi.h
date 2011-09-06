@@ -649,6 +649,14 @@ enum
 
 
 //
+// Report rendering formats
+//
+
+#define REPORT_FORMAT_PDF           1
+#define REPORT_FORMAT_HTML          2
+
+
+//
 // Data sources
 //
 

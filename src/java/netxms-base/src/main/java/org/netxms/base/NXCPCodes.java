@@ -248,7 +248,7 @@ public final class NXCPCodes
 	public static final int CMD_CREATE_MAP              = 0x00DA;
 	public static final int CMD_UPLOAD_FILE             = 0x00DB;
 	public static final int CMD_DELETE_FILE             = 0x00DC;
-	//public static final int CMD_GET_REPORT_DEFINITION   = 0x00DD;
+	public static final int CMD_DELETE_REPORT_RESULTS   = 0x00DD;
 	public static final int CMD_RENDER_REPORT           = 0x00DE;
 	public static final int CMD_EXECUTE_REPORT          = 0x00DF;
 	public static final int CMD_GET_REPORT_RESULTS      = 0x00E0;
@@ -680,6 +680,9 @@ public final class NXCPCodes
 	public static final long VID_UPTIME_WEEK             = 395;
 	public static final long VID_UPTIME_MONTH            = 396;
 	public static final long VID_PRIMARY_NAME            = 397;
+	public static final long VID_NUM_RESULTS             = 398;
+	public static final long VID_RESULT_ID_LIST          = 399;
+	public static final long VID_RENDER_FORMAT           = 400;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

@@ -17,42 +17,40 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */package org.netxms.client.reports;
 
-import java.util.Date;
-import org.netxms.base.NXCPMessage;
-
 /**
- * Result of report execution
+ * Formats for report rendering
  */
-public class ReportResult
+public enum ReportRenderFormat
 {
-	private long jobId;
-	private Date executionTime;
+	PDF(1, "pdf"),
+	HTML(2, "html");
+	
+	private final int code;
+	private final String extension; 
 	
 	/**
-	 * Create report result object from NXCP message
-	 * 
-	 * @param msg NXCP message
-	 * @param baseId base variable ID
+	 * @param code
+	 * @param extenstion
 	 */
-	public ReportResult(NXCPMessage msg, long baseId)
+	ReportRenderFormat(int code, String extenstion)
 	{
-		jobId = msg.getVariableAsInt64(baseId);
-		executionTime = msg.getVariableAsDate(baseId + 1);
+		this.code = code;
+		this.extension = extenstion;
 	}
 
 	/**
-	 * @return the jobId
+	 * @return the code
 	 */
-	public long getJobId()
+	public int getCode()
 	{
-		return jobId;
+		return code;
 	}
 
 	/**
-	 * @return the executionTime
+	 * @return the extension
 	 */
-	public Date getExecutionTime()
+	public String getExtension()
 	{
-		return executionTime;
+		return extension;
 	}
 }

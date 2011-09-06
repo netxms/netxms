@@ -121,6 +121,7 @@ import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.reports.ReportRenderFormat;
 import org.netxms.client.reports.ReportResult;
 import org.netxms.client.situations.Situation;
 import org.netxms.client.snmp.SnmpTrap;
@@ -5146,6 +5147,25 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 	
 	/**
+	 * Delete report execution results. Logged in user must have CONTROL access right on
+	 * report object to perform this operation. 
+	 * 
+	 * @param reportId report object ID
+	 * @param resultIdList result identifiers to be deleted
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteReportResults(long reportId, Collection<Long> resultIdList) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_REPORT_RESULTS);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)reportId);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_RESULTS, resultIdList.size());
+		msg.setVariable(NXCPCodes.VID_RESULT_ID_LIST, resultIdList.toArray(new Long[resultIdList.size()]));
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
 	 * Render report into desired format
 	 * 
 	 * @param jobId
@@ -5153,10 +5173,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @throws IOException
 	 * @throws NXCException
 	 */
-	public File renderReport(final long jobId) throws IOException, NXCException
+	public File renderReport(final long jobId, ReportRenderFormat format) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENDER_REPORT);
 		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
+		msg.setVariableInt32(NXCPCodes.VID_RENDER_FORMAT, format.getCode());
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 
