@@ -58,6 +58,7 @@ import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportParameter;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportResultLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
+import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -72,6 +73,7 @@ public class ReportExecutionForm extends Composite
 	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
 	private List<ReportParameter> parameters;
 	private SortableTableViewer resultList;
+	private ImageCache imageCache;
 
 	/**
 	 * @param parent
@@ -82,6 +84,7 @@ public class ReportExecutionForm extends Composite
 		super(parent, style);
 		this.report = report;
 
+		imageCache = new ImageCache(this);
 		setLayout(new FillLayout());
 
 		/* FORM */
@@ -128,7 +131,7 @@ public class ReportExecutionForm extends Composite
 		section.setClient(actionArea);
 
 		ImageHyperlink link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
-		link.setImage(Activator.getImageDescriptor("icons/execute.gif").createImage());
+		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/execute.gif")));
 		link.setText("Execute report");
 		link.addHyperlinkListener(new HyperlinkAdapter()
 		{
@@ -140,7 +143,7 @@ public class ReportExecutionForm extends Composite
 		});
 
 		link = toolkit.createImageHyperlink(actionArea, SWT.WRAP);
-		link.setImage(Activator.getImageDescriptor("icons/schedule.png").createImage());
+		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/schedule.png")));
 		link.setText("Schedule report execution");
 		link.addHyperlinkListener(new HyperlinkAdapter()
 		{
@@ -194,6 +197,9 @@ public class ReportExecutionForm extends Composite
 					case ReportParameter.OBJECT_ID:
 						editor = new ObjectFieldEditor(p, toolkit, parent);
 						break;
+					case ReportParameter.OBJECT_LIST:
+						editor = new ObjectListFieldEditor(p, toolkit, parent);
+						break;
 					default: // everything else as string
 						editor = new StringFieldEditor(p, toolkit, parent);
 						break;
@@ -226,7 +232,7 @@ public class ReportExecutionForm extends Composite
 		parent.setLayout(layout);
 
 		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(SharedIcons.REFRESH.createImage());
+		link.setImage(SharedIcons.IMG_REFRESH);
 		link.setText("Refresh");
 		link.addHyperlinkListener(new HyperlinkAdapter()
 		{
@@ -253,7 +259,7 @@ public class ReportExecutionForm extends Composite
 		resultList.setLabelProvider(new ReportResultLabelProvider());
 
 		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(Activator.getImageDescriptor("icons/pdf.png").createImage());
+		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/pdf.png")));
 		link.setText("Render to PDF");
 		link.addHyperlinkListener(new HyperlinkAdapter()
 		{
@@ -269,7 +275,7 @@ public class ReportExecutionForm extends Composite
 		});
 
 		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(SharedIcons.DELETE_OBJECT.createImage());
+		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		link.setText("Delete");
 		link.addHyperlinkListener(new HyperlinkAdapter()
 		{

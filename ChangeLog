@@ -12,6 +12,7 @@
   CISCO-L2L3-INTERFACE-CONFIG-MIB, CISCO-PRIVATE-VLAN-MIB,
   CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB, DVMRP-MIB, IGMP-MIB, IPV6-TC,
   RAPID-CITY-BAY-STACK, RC-MLT-MIB
+- Mobile client for Android introduced
 - Fixed some problems with database export/import
 - Fixed issues: #328, #329, #330
 

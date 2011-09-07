@@ -96,7 +96,7 @@ public class ObjectFieldEditor extends FieldEditor
 		text.setText(EMPTY_SELECTION_TEXT);
 		
 		final ImageHyperlink selectionLink = toolkit.createImageHyperlink(content, SWT.NONE);
-		selectionLink.setImage(SharedIcons.FIND.createImage());
+		selectionLink.setImage(SharedIcons.IMG_FIND);
 		selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
 			/* (non-Javadoc)
 			 * @see org.eclipse.ui.forms.events.HyperlinkAdapter#linkActivated(org.eclipse.ui.forms.events.HyperlinkEvent)

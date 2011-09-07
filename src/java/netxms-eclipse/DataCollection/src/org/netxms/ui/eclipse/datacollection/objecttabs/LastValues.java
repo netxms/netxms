@@ -22,7 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
+import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
  */
 public class LastValues extends ObjectTab
 {
-	private LastValuesView dataView;
+	private LastValuesWidget dataView;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -39,7 +39,7 @@ public class LastValues extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		dataView = new LastValuesView(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab");
+		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, (Node)getObject(), "LastValuesTab");
 		dataView.setAutoRefreshEnabled(true);
 	}
 

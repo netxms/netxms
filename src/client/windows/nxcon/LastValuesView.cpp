@@ -311,7 +311,7 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
 				{
 					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT _T(" M"), i64 / 1000000);
 				}
-				else if (i64 <= 10000)
+				else if (i64 <= -10000)
 				{
 					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT _T(" K"), i64 / 1000);
 				}

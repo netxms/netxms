@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
+import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -44,16 +44,16 @@ public class LastValuesComparator extends ViewerComparator
 
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
 		{
-			case LastValuesView.COLUMN_ID:
+			case LastValuesWidget.COLUMN_ID:
 				result = (int)(v1.getId() - v2.getId());
 				break;
-			case LastValuesView.COLUMN_DESCRIPTION:
+			case LastValuesWidget.COLUMN_DESCRIPTION:
 				result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
 				break;
-			case LastValuesView.COLUMN_VALUE:
+			case LastValuesWidget.COLUMN_VALUE:
 				result = v1.getValue().compareToIgnoreCase(v2.getValue());
 				break;
-			case LastValuesView.COLUMN_TIMESTAMP:
+			case LastValuesWidget.COLUMN_TIMESTAMP:
 				result = v1.getTimestamp().compareTo(v2.getTimestamp());
 				break;
 			default:

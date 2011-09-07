@@ -52,11 +52,11 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	{
 		super();
 
-		severityImages[Severity.NORMAL] = StatusDisplayInfo.getStatusImageDescriptor(Severity.NORMAL).createImage();
-		severityImages[Severity.WARNING] = StatusDisplayInfo.getStatusImageDescriptor(Severity.WARNING).createImage();
-		severityImages[Severity.MINOR] = StatusDisplayInfo.getStatusImageDescriptor(Severity.MINOR).createImage();
-		severityImages[Severity.MAJOR] = StatusDisplayInfo.getStatusImageDescriptor(Severity.MAJOR).createImage();
-		severityImages[Severity.CRITICAL] = StatusDisplayInfo.getStatusImageDescriptor(Severity.CRITICAL).createImage();
+		severityImages[Severity.NORMAL] = StatusDisplayInfo.getStatusImage(Severity.NORMAL);
+		severityImages[Severity.WARNING] = StatusDisplayInfo.getStatusImage(Severity.WARNING);
+		severityImages[Severity.MINOR] = StatusDisplayInfo.getStatusImage(Severity.MINOR);
+		severityImages[Severity.MAJOR] = StatusDisplayInfo.getStatusImage(Severity.MAJOR);
+		severityImages[Severity.CRITICAL] = StatusDisplayInfo.getStatusImage(Severity.CRITICAL);
 
 		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
 		stateImages[1] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
@@ -120,9 +120,6 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	@Override
 	public void dispose()
 	{
-		for(int i = 0; i < severityImages.length; i++)
-			severityImages[i].dispose();
-
 		for(int i = 0; i < stateImages.length; i++)
 			stateImages[i].dispose();
 	}

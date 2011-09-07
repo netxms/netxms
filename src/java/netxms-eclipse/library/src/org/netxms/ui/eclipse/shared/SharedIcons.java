@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.shared;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Image;
 import org.netxms.ui.eclipse.library.Activator;
 
 /**
@@ -47,6 +48,26 @@ public class SharedIcons
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
 	
+	public static Image IMG_ADD_OBJECT;
+	public static Image IMG_ALARM;
+	public static Image IMG_CHECKBOX_OFF;
+	public static Image IMG_CHECKBOX_ON;
+	public static Image IMG_CLEAR_LOG;
+	public static Image IMG_COLLAPSE;
+	public static Image IMG_COLLAPSE_ALL;
+	public static Image IMG_COPY;
+	public static Image IMG_CUT;
+	public static Image IMG_DELETE_OBJECT;
+	public static Image IMG_EDIT;
+	public static Image IMG_EXPAND;
+	public static Image IMG_EXPAND_ALL;
+	public static Image IMG_FIND;
+	public static Image IMG_PASTE;
+	public static Image IMG_REFRESH;
+	public static Image IMG_SAVE;
+	public static Image IMG_ZOOM_IN;
+	public static Image IMG_ZOOM_OUT;
+	
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
@@ -71,5 +92,25 @@ public class SharedIcons
 		SAVE = Activator.getImageDescriptor("icons/save.gif");
 		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png");
 		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png");
+
+		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
+		IMG_ALARM = ALARM.createImage();
+		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();
+		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage();
+		IMG_CLEAR_LOG = CLEAR_LOG.createImage();
+		IMG_COLLAPSE = COLLAPSE.createImage();
+		IMG_COLLAPSE_ALL = COLLAPSE_ALL.createImage();
+		IMG_COPY = COPY.createImage();
+		IMG_CUT = CUT.createImage();
+		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();
+		IMG_EDIT = EDIT.createImage();
+		IMG_EXPAND = EXPAND.createImage();
+		IMG_EXPAND_ALL = EXPAND_ALL.createImage();
+		IMG_FIND = FIND.createImage();
+		IMG_PASTE = PASTE.createImage();
+		IMG_REFRESH = REFRESH.createImage();
+		IMG_SAVE = SAVE.createImage();
+		IMG_ZOOM_IN = ZOOM_IN.createImage();
+		IMG_ZOOM_OUT = ZOOM_OUT.createImage();
 	}
 }

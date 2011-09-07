@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.views;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -34,7 +35,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.datacollection.widgets.LastValuesView;
+import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -47,9 +48,10 @@ public class LastValues extends ViewPart
 	
 	private NXCSession session;
 	private Node node;
-	private LastValuesView dataView;
+	private LastValuesWidget dataView;
 	private Action actionRefresh;
 	private Action actionAutoUpdate;
+	private Action actionUseMultipliers;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -74,7 +76,7 @@ public class LastValues extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		dataView = new LastValuesView(this, parent, SWT.NONE, node, "LastValuesView");
+		dataView = new LastValuesWidget(this, parent, SWT.NONE, node, "LastValuesWidget");
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -116,6 +118,15 @@ public class LastValues extends ViewPart
 			}
 		};
 		actionAutoUpdate.setChecked(dataView.isAutoRefreshEnabled());
+		
+		actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				dataView.setUseMultipliers(!dataView.areMultipliersUsed());
+			}
+		};
+		actionUseMultipliers.setChecked(dataView.areMultipliersUsed());
 	}
 	
 	/**
@@ -137,6 +148,8 @@ public class LastValues extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionAutoUpdate);
+		manager.add(actionUseMultipliers);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
