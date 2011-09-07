@@ -59,10 +59,10 @@ public class ReportParameter
 	@Attribute
 	private String javaClass;
 	
-	@Element(name="parameterDescription")
+	@Element(name="parameterDescription", required=false)
 	private String description;
 	
-	@Element(name="defaultValueExpression")
+	@Element(name="defaultValueExpression", required=false)
 	private String defaultValue;
 	
 	@ElementMap(entry="property", key="name", value="value", inline=true, attribute=true)
@@ -107,7 +107,7 @@ public class ReportParameter
 	 */
 	public String getDescription()
 	{
-		return description;
+		return (description != null) ? description : name;
 	}
 
 	/**

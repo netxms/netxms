@@ -67,13 +67,13 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
    { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
+   { _T("JavaPath"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaPath },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLibDir },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask },
-   { _T("JavaPath"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaPath },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
