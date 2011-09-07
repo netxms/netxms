@@ -99,7 +99,8 @@ bool ReportJob::run()
 
 	// dump report definition
 	write(fd, definition, strlen(definition));
-	write(fd, "\n### END OF REPORT DEFINITION\n", 29);
+	char marker[] = "\n### END OF REPORT DEFINITION\n";
+	write(fd, marker, strlen(marker));
 
 	// dump all variables
 	for(int i = 0; i < (int)m_parameters->getSize(); i++)
