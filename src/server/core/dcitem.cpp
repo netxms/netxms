@@ -1022,11 +1022,6 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 
    m_dwErrorCount = 0;
 
-   // Save raw value into database
-   _sntprintf(szQuery, MAX_LINE_SIZE + 128, _T("UPDATE raw_dci_values SET raw_value=%s,last_poll_time=%ld WHERE item_id=%d"),
-              (const TCHAR *)DBPrepareString(g_hCoreDB, pszOriginalValue), (long)tmTimeStamp, m_dwId);
-   QueueSQLRequest(szQuery);
-
    // Create new ItemValue object and transform it as needed
    pValue = new ItemValue(pszOriginalValue, (DWORD)tmTimeStamp);
    if (m_tPrevValueTimeStamp == 0)
@@ -1036,9 +1031,16 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
    m_prevRawValue = rawValue;
    m_tPrevValueTimeStamp = tmTimeStamp;
 
+	String escValue = DBPrepareString(g_hCoreDB, pValue->String());
+
+   // Save raw value into database
+   _sntprintf(szQuery, MAX_LINE_SIZE + 128, _T("UPDATE raw_dci_values SET raw_value=%s,transformed_value=%s,last_poll_time=%ld WHERE item_id=%d"),
+              (const TCHAR *)DBPrepareString(g_hCoreDB, pszOriginalValue), (const TCHAR *)escValue, (long)tmTimeStamp, m_dwId);
+   QueueSQLRequest(szQuery);
+
    // Save transformed value to database
-   _sntprintf(szQuery, MAX_LINE_SIZE + 128, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (%d,%ld,%s)"),
-	           m_pNode->Id(), m_dwId, (long)tmTimeStamp, (const TCHAR *)DBPrepareString(g_hCoreDB, pValue->String()));
+	_sntprintf(szQuery, MAX_LINE_SIZE + 128, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (%d,%ld,%s)"),
+	           m_pNode->Id(), m_dwId, (long)tmTimeStamp, (const TCHAR *)escValue);
    QueueSQLRequest(szQuery);
 
    // Check thresholds and add value to cache

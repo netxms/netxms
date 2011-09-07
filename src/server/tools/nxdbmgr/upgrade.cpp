@@ -253,6 +253,18 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V239 to V240
+//
+
+static BOOL H_UpgradeFromV239(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE raw_dci_values ADD transformed_value varchar(255)")));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='240' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V238 to V239
 //
 
@@ -5590,6 +5602,7 @@ static struct
 	{ 236, 237, H_UpgradeFromV236 },
 	{ 237, 238, H_UpgradeFromV237 },
 	{ 238, 239, H_UpgradeFromV238 },
+	{ 239, 240, H_UpgradeFromV239 },
    { 0, NULL }
 };
 
