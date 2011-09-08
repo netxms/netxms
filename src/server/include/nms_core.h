@@ -386,6 +386,7 @@ private:
 	DECLARE_THREAD_STARTER(SendSyslog)
 	DECLARE_THREAD_STARTER(createObject)
 	DECLARE_THREAD_STARTER(getServerFile)
+	DECLARE_THREAD_STARTER(getAgentFile)
 	DECLARE_THREAD_STARTER(queryServerLog)
 	DECLARE_THREAD_STARTER(getServerLogQueryData)
 	DECLARE_THREAD_STARTER(executeAction)
@@ -536,6 +537,7 @@ private:
 	void getConfigCLOB(CSCPMessage *pRequest);
 	void registerAgent(CSCPMessage *pRequest);
 	void getServerFile(CSCPMessage *pRequest);
+	void getAgentFile(CSCPMessage *pRequest);
 	void testDCITransformation(CSCPMessage *pRequest);
 	void sendJobList(DWORD dwRqId);
 	void cancelJob(CSCPMessage *pRequest);

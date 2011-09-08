@@ -286,6 +286,8 @@ private:
    void getTable(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void action(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg);
    DWORD upgrade(CSCPMessage *pRequest);
    DWORD setupProxyConnection(CSCPMessage *pRequest);
 

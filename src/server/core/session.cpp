@@ -154,6 +154,7 @@ DEFINE_THREAD_STARTER(SendEventLog)
 DEFINE_THREAD_STARTER(SendSyslog)
 DEFINE_THREAD_STARTER(createObject)
 DEFINE_THREAD_STARTER(getServerFile)
+DEFINE_THREAD_STARTER(getAgentFile)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(getServerLogQueryData)
 DEFINE_THREAD_STARTER(executeAction)
@@ -1146,6 +1147,9 @@ void ClientSession::processingThread()
 				break;
 			case CMD_GET_SERVER_FILE:
 				CALL_IN_NEW_THREAD(getServerFile, pMsg);
+				break;
+			case CMD_GET_AGENT_FILE:
+				CALL_IN_NEW_THREAD(getAgentFile, pMsg);
 				break;
 			case CMD_TEST_DCI_TRANSFORMATION:
 				testDCITransformation(pMsg);
@@ -9722,6 +9726,49 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 	else
 	{
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   sendMessage(&msg);
+}
+
+
+//
+// Get file from agent
+//
+
+void ClientSession::getAgentFile(CSCPMessage *request)
+{
+   CSCPMessage msg;
+	TCHAR remoteFile[MAX_PATH], localFile[MAX_PATH];
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+	if (object != NULL)
+	{
+		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		{
+			if (object->Type() == OBJECT_NODE)
+			{
+				request->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
+				FileDownloadJob::buildServerFileName(object->Id(), remoteFile, localFile, MAX_PATH);
+				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, this, request->GetId());
+				msg.SetVariable(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
    sendMessage(&msg);

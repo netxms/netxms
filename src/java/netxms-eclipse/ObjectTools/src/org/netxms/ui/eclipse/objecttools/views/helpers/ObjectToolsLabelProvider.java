@@ -38,10 +38,11 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		"Agent Table", 
 		"URL",
 		"Local Command",
-		"Server Command"
+		"Server Command",
+		"Download File"
 	};
 	
-	private Image[] toolTypeImages = new Image[7];
+	private Image[] toolTypeImages = new Image[toolTypes.length];
 	
 	/**
 	 * The constructor
@@ -55,6 +56,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		toolTypeImages[4] = Activator.getImageDescriptor("icons/url.gif").createImage();
 		toolTypeImages[5] = Activator.getImageDescriptor("icons/console.png").createImage();
 		toolTypeImages[6] = Activator.getImageDescriptor("icons/console.png").createImage();
+		toolTypeImages[7] = Activator.getImageDescriptor("icons/file_download.png").createImage();
 	}
 	
 	/* (non-Javadoc)

@@ -19,8 +19,10 @@
 package org.netxms.ui.eclipse.objecttools;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.ISources;
@@ -56,6 +59,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -199,6 +203,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				break;
 			case ObjectTool.TYPE_URL:
 				break;
+			case ObjectTool.TYPE_FILE_DOWNLOAD:
+				executeFileDownload(node, tool);
+				break;
 		}
 	}
 	
@@ -304,6 +311,52 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			}
 		};
 		job.setUser(false);
+		job.start();
+	}
+
+	/**
+	 * @param node
+	 * @param tool
+	 */
+	private void executeFileDownload(final Node node, final ObjectTool tool)
+	{
+		String temp = tool.getData();
+		temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
+		temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
+		final String fileName = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
+		
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		
+		ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot download file " + fileName + " from node " + node.getObjectName();
+			}
+
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				final File file = session.downloadFileFromAgent(node.getObjectId(), fileName);
+				Display.getDefault().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+						try
+						{
+							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8");
+							FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+							view.showFile(file);
+						}
+						catch(Exception e)
+						{
+							MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+						}
+					}
+				});
+			}
+		};
 		job.start();
 	}
 }

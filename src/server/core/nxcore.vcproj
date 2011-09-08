@@ -497,6 +497,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\download_job.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ef.cpp"
 				>
 			</File>

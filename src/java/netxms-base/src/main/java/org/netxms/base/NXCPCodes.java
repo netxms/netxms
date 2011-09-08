@@ -281,6 +281,8 @@ public final class NXCPCodes
 	public static final int CMD_HOLD_JOB                = 0x00FB;
 	public static final int CMD_UNHOLD_JOB              = 0x00FC;
 	public static final int CMD_CHANGE_ZONE             = 0x00FD;
+	public static final int CMD_GET_AGENT_FILE          = 0x00FE;
+	public static final int CMD_GET_FILE_DETAILS        = 0x00FF;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME              = 1;
@@ -683,6 +685,7 @@ public final class NXCPCodes
 	public static final long VID_NUM_RESULTS             = 398;
 	public static final long VID_RESULT_ID_LIST          = 399;
 	public static final long VID_RENDER_FORMAT           = 400;
+	public static final long VID_FILE_OFFSET             = 401;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

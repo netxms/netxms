@@ -454,6 +454,12 @@ void CommSession::processingThread()
             case CMD_TRANSFER_FILE:
                recvFile(pMsg, &msg);
                break;
+            case CMD_GET_AGENT_FILE:
+               getLocalFile(pMsg, &msg);
+               break;
+            case CMD_GET_FILE_DETAILS:
+               getFileDetails(pMsg, &msg);
+               break;
             case CMD_UPGRADE_AGENT:
                msg.SetVariable(VID_RCC, upgrade(pMsg));
                break;
@@ -718,6 +724,59 @@ void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
    {
       pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
    }
+}
+
+
+//
+// Send local file to server
+//
+
+void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+	if (m_bMasterServer)
+	{
+		TCHAR fileName[MAX_PATH];
+		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+		sendFile(pRequest->GetId(), fileName, pRequest->GetVariableLong(VID_FILE_OFFSET));
+		pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
+	}
+	else
+	{
+		pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+	}
+}
+
+
+//
+// Get local file details
+//
+
+void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+	if (m_bMasterServer)
+	{
+		TCHAR fileName[MAX_PATH];
+#ifdef _WIN32
+		struct _stat fs;
+#else
+		struct stat fs;
+#endif
+
+		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+		if (_tstat(fileName, &fs) == 0)
+		{
+			pMsg->SetVariable(VID_FILE_SIZE, (QWORD)fs.st_size);
+			pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
+		}
+		else
+		{
+			pMsg->SetVariable(VID_RCC, ERR_FILE_STAT_FAILED);
+		}
+	}
+	else
+	{
+		pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+	}
 }
 
 

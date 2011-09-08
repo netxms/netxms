@@ -35,6 +35,7 @@ public class ObjectTool
 	public static final int TYPE_URL            = 4;
 	public static final int TYPE_LOCAL_COMMAND  = 5;
 	public static final int TYPE_SERVER_COMMAND = 6;
+	public static final int TYPE_FILE_DOWNLOAD  = 7;
 	
 	public static final int REQUIRES_SNMP         = 0x00000001;
 	public static final int REQUIRES_AGENT        = 0x00000002;

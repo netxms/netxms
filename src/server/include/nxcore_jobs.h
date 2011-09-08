@@ -182,6 +182,37 @@ public:
 
 
 //
+// File download job
+//
+
+class FileDownloadJob : public ServerJob
+{
+private:
+	Node *m_node;
+	ClientSession *m_session;
+	DWORD m_requestId;
+	TCHAR *m_localFile;
+	TCHAR *m_remoteFile;
+	TCHAR *m_info;
+	INT64 m_fileSize;
+	SOCKET m_socket;
+
+protected:
+	virtual bool run();
+	virtual bool onCancel();
+	virtual const TCHAR *getAdditionalInfo();
+
+	static void progressCallback(size_t size, void *arg);
+
+public:
+	FileDownloadJob(Node *node, const TCHAR *remoteName, ClientSession *session, DWORD requestId);
+	virtual ~FileDownloadJob();
+
+	static TCHAR *buildServerFileName(DWORD nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
+};
+
+
+//
 // Agent policy deployment job
 //
 

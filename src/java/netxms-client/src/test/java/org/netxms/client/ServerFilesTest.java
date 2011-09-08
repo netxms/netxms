@@ -18,6 +18,8 @@
  */
 package org.netxms.client;
 
+import java.io.File;
+
 /**
  * Test functionality related to server file store
  *
@@ -32,6 +34,16 @@ public class ServerFilesTest extends SessionTest
 		for(ServerFile f : files)
 			System.out.println(f.getName() + " size=" + f.getSize() + " modified: " + f.getModifyicationTime().toString());
 
+		session.disconnect();
+	}
+	
+	public void testAgentFileDownload() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		File file = session.downloadFileFromAgent(11, "D:\\TEMP\\SyslogGen.pdf");
+		System.out.println("*** Downloaded file: " + file.getAbsolutePath());
+		
 		session.disconnect();
 	}
 }

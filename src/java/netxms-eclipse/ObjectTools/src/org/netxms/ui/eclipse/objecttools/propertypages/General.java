@@ -114,6 +114,9 @@ public class General extends PropertyPage
 			case ObjectTool.TYPE_URL:
 				textData.setLabel("URL");
 				break;
+			case ObjectTool.TYPE_FILE_DOWNLOAD:
+				textData.setLabel("Remote file name");
+				break;
 			case ObjectTool.TYPE_TABLE_SNMP:
 				textData.setLabel("Title");
 				

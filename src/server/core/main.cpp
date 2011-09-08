@@ -237,6 +237,18 @@ static BOOL CheckDataDir()
 		}
 	}
 
+	// Create directory for shared file store if does't exists
+	_tcscpy(szBuffer, g_szDataDir);
+	_tcscat(szBuffer, DDIR_SHARED_FILES);
+	if (MKDIR(szBuffer) == -1)
+	{
+		if (errno != EEXIST)
+		{
+			nxlog_write(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
+			return FALSE;
+		}
+	}
+
 	// Create directory for file store if does't exists
 	_tcscpy(szBuffer, g_szDataDir);
 	_tcscat(szBuffer, DDIR_FILES);

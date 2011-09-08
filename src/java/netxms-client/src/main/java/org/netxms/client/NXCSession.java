@@ -4952,6 +4952,26 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	}
 	
 	/**
+	 * Download file from remote host via agent.
+	 * 
+	 * @param nodeId node object ID
+	 * @param remoteFileName fully qualified file name on remote system
+	 * @return handle to local copy of remote file
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public File downloadFileFromAgent(long nodeId, String remoteFileName) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariable(NXCPCodes.VID_FILE_NAME, remoteFileName);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());	// first confirmation - server job started
+		waitForRCC(msg.getMessageId());	// second confirmation - file downloaded to server
+		return waitForFile(msg.getMessageId(), 3600000);
+	}
+	
+	/**
 	 * Delete file from server's file store
 	 * 
 	 * @param serverFileName name of server file

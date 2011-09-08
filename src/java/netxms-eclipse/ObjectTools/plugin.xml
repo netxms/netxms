@@ -47,6 +47,14 @@
             name="Object Tools"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.FileViewer"
+            icon="icons/file_download.png"
+            id="org.netxms.ui.eclipse.objecttools.views.FileViewer"
+            name="File Viewer"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

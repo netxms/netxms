@@ -473,6 +473,8 @@ typedef struct
 #define CMD_HOLD_JOB                0x00FB
 #define CMD_UNHOLD_JOB              0x00FC
 #define CMD_CHANGE_ZONE             0x00FD
+#define CMD_GET_AGENT_FILE          0x00FE
+#define CMD_GET_FILE_DETAILS        0x00FF
 
 
 //
@@ -879,6 +881,7 @@ typedef struct
 #define VID_NUM_RESULTS             ((DWORD)398)
 #define VID_RESULT_ID_LIST          ((DWORD)399)
 #define VID_RENDER_FORMAT           ((DWORD)400)
+#define VID_FILE_OFFSET             ((DWORD)401)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

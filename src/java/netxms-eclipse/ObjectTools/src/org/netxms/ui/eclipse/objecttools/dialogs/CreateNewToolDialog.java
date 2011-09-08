@@ -32,7 +32,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "Create new tool" dialog
- *
  */
 public class CreateNewToolDialog extends Dialog
 {

@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXSL Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.nxsl;singleton:=true
-Bundle-Version: 1.1.0
+Bundle-Version: 1.1.5
 Bundle-Activator: org.netxms.ui.eclipse.nxsl.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.netxms.ui.eclipse.library;bundle-version="1.1.0",
+ org.netxms.ui.eclipse.library;bundle-version="1.1.4",
  org.eclipse.jface.text;bundle-version="3.5.2",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.6.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
