@@ -60,7 +60,7 @@ public class ImageCache implements DisposeListener
 	public Image add(ImageDescriptor descriptor)
 	{
 		Image image = cache.get(descriptor);
-		if (image != null)
+		if (image == null)
 		{
 			image = descriptor.createImage();
 			cache.put(descriptor, image);

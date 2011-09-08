@@ -13,6 +13,7 @@
   CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB, DVMRP-MIB, IGMP-MIB, IPV6-TC,
   RAPID-CITY-BAY-STACK, RC-MLT-MIB
 - Mobile client for Android introduced
+- Many small improvements in management console
 - Fixed some problems with database export/import
 - Fixed issues: #328, #329, #330
 

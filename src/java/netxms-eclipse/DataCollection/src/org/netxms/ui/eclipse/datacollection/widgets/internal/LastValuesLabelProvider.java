@@ -91,35 +91,47 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 			case DataCollectionItem.DT_INT64:
 			case DataCollectionItem.DT_UINT:
 			case DataCollectionItem.DT_UINT64:
-				long i = Long.parseLong(element.getValue());
-				if ((i >= 10000000000L) || (i <= -10000000000L))
+				try
 				{
-					return Long.toString(i / 1000000000L) + " G";
+					long i = Long.parseLong(element.getValue());
+					if ((i >= 10000000000L) || (i <= -10000000000L))
+					{
+						return Long.toString(i / 1000000000L) + " G";
+					}
+					if ((i >= 10000000) || (i <= -10000000))
+					{
+						return Long.toString(i / 1000000) + " M";
+					}
+					if ((i >= 10000) || (i <= -10000))
+					{
+						return Long.toString(i / 1000) + " K";
+					}
 				}
-				if ((i >= 10000000) || (i <= -10000000))
+				catch(NumberFormatException e)
 				{
-					return Long.toString(i / 1000000) + " M";
-				}
-				if ((i >= 10000) || (i <= -10000))
-				{
-					return Long.toString(i / 1000) + " K";
 				}
 				return element.getValue();
 			case DataCollectionItem.DT_FLOAT:
-				double d = Double.parseDouble(element.getValue());
-				NumberFormat nf = NumberFormat.getNumberInstance();
-				nf.setMaximumFractionDigits(2);
-				if ((d >= 10000000000.0) || (d <= -10000000000.0))
+				try
 				{
-					return nf.format(d / 1000000000.0) + " G";
+					double d = Double.parseDouble(element.getValue());
+					NumberFormat nf = NumberFormat.getNumberInstance();
+					nf.setMaximumFractionDigits(2);
+					if ((d >= 10000000000.0) || (d <= -10000000000.0))
+					{
+						return nf.format(d / 1000000000.0) + " G";
+					}
+					if ((d >= 10000000) || (d <= -10000000))
+					{
+						return nf.format(d / 1000000) + " M";
+					}
+					if ((d >= 10000) || (d <= -10000))
+					{
+						return nf.format(d / 1000) + " K";
+					}
 				}
-				if ((d >= 10000000) || (d <= -10000000))
+				catch(NumberFormatException e)
 				{
-					return nf.format(d / 1000000) + " M";
-				}
-				if ((d >= 10000) || (d <= -10000))
-				{
-					return nf.format(d / 1000) + " K";
 				}
 				return element.getValue();
 			default:

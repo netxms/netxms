@@ -720,7 +720,33 @@ public class LineChart extends Chart implements HistoricalDataChart
 		final Range range = yAxis.getRange();
 		if (range.lower > 0)
 			range.lower = 0;
-		//range.upper++;
+		range.upper = adjustRange(range.upper);
 		yAxis.setRange(range);
+	}
+	
+	/**
+	 * Adjust upper border of current range
+	 * 
+	 * @param upper
+	 * @return
+	 */
+	private double adjustRange(double upper)
+	{
+		double adjustedUpper = upper;
+      for(double d = 0.00001; d < 10000000000000000000.0; d *= 10)
+		{
+         if ((upper >= d) && (upper <= d * 10))
+         {
+         	adjustedUpper -= adjustedUpper % d;
+         	adjustedUpper += d;
+
+            // For integer values, Y axis step cannot be less than 1
+            //if (d < 1)
+            //   d = 1;
+
+            break;
+         }
+		}
+      return adjustedUpper;
 	}
 }
