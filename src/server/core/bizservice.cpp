@@ -244,11 +244,22 @@ void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArr
 	LockChildList(FALSE);
 	for(DWORD i = 0; i < m_dwChildCount; i++)
 	{
-		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
+		if ((m_pChildList[i]->Type() == OBJECT_SLMCHECK) &&
+          ((SlmCheck *)m_pChildList[i])->isTemplate())
 		{
 			m_pChildList[i]->IncRefCount();
 			templates->add((SlmCheck *)m_pChildList[i]);
 		}
 	}
 	UnlockChildList();
+
+	LockParentList(FALSE);
+	for(DWORD i = 0; i < m_dwParentCount; i++)
+	{
+		if (m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICE)
+		{
+			((BusinessService *)m_pParentList[i])->getApplicableTemplates(target, templates);
+		}
+	}
+	UnlockParentList();
 }
