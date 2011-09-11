@@ -24,6 +24,24 @@
 
 
 //
+// Static data
+//
+
+NXSL_VariableSystem SlmCheck::m_nxslConstants;
+
+
+//
+// Initialize static members
+//
+
+void SlmCheck::init()
+{
+	m_nxslConstants.create(_T("OK"), new NXSL_Value((LONG)0));
+	m_nxslConstants.create(_T("FAIL"), new NXSL_Value((LONG)1));
+}
+
+
+//
 // SLM check default constructor
 //
 
@@ -403,7 +421,7 @@ void SlmCheck::execute()
 
 				m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
 				m_pCompiledScript->setGlobalVariable(_T("$node"), getNodeObjectForNXSL());
-				if (m_pCompiledScript->run(pEnv, 0, NULL, NULL, &pGlobals) == 0)
+				if (m_pCompiledScript->run(pEnv, 0, NULL, NULL, &pGlobals, &m_nxslConstants) == 0)
 				{
 					NXSL_Value *pValue = m_pCompiledScript->getResult();
 					m_iStatus = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;

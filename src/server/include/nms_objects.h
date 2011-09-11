@@ -1562,6 +1562,8 @@ public:
 class NXCORE_EXPORTABLE SlmCheck : public NetObj
 {
 protected:
+	static NXSL_VariableSystem m_nxslConstants;
+
 	Threshold *m_threshold;
 	enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
 	TCHAR *m_script;
@@ -1586,6 +1588,8 @@ public:
 	SlmCheck(const TCHAR *name, bool isTemplate);
 	SlmCheck(SlmCheck *tmpl);
 	virtual ~SlmCheck();
+
+	static void init();
 
 	virtual int Type() { return OBJECT_SLMCHECK; }
 

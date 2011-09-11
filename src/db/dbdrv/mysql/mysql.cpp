@@ -288,6 +288,8 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery
 			result->paramCount = (int)mysql_stmt_param_count(stmt);
 			result->bindings = (MYSQL_BIND *)malloc(sizeof(MYSQL_BIND) * result->paramCount);
 			memset(result->bindings, 0, sizeof(MYSQL_BIND) * result->paramCount);
+			result->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * result->paramCount);
+			memset(result->lengthFields, 0, sizeof(unsigned long) * result->paramCount);
 			result->buffers = new Array(result->paramCount, 16, true);
 		}
 		else
@@ -323,8 +325,9 @@ extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int
 		hStmt->buffers->add(b->buffer);
 		if (allocType == DB_BIND_DYNAMIC)
 			free(buffer);
-		b->buffer_length = strlen((char *)b->buffer);
-		b->length = &b->buffer_length;
+		b->buffer_length = strlen((char *)b->buffer) + 1;
+		hStmt->lengthFields[pos - 1] = b->buffer_length - 1;
+		b->length = &hStmt->lengthFields[pos - 1];
 		b->buffer_type = MYSQL_TYPE_STRING;
 	}
 	else
@@ -376,7 +379,7 @@ extern "C" DWORD EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, WC
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 
-	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings))
+	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
 		if (mysql_stmt_execute(hStmt->statement) == 0)
 		{
@@ -419,6 +422,7 @@ extern "C" void EXPORT DrvFreeStatement(MYSQL_STATEMENT *hStmt)
 	mysql_stmt_close(hStmt->statement);
 	delete hStmt->buffers;
 	safe_free(hStmt->bindings);
+	safe_free(hStmt->lengthFields);
 	free(hStmt);
 }
 
@@ -535,7 +539,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STATEM
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 
-	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings))
+	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
 		if (mysql_stmt_execute(hStmt->statement) == 0)
 		{

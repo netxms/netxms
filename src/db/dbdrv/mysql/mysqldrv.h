@@ -59,6 +59,7 @@ typedef struct
 {
 	MYSQL_STMT *statement;
 	MYSQL_BIND *bindings;
+	unsigned long *lengthFields;
 	Array *buffers;
 	int paramCount;
 } MYSQL_STATEMENT;
@@ -72,7 +73,6 @@ typedef struct
 {
 	MYSQL_RES *resultSet;
 	bool isPreparedStatement;
-
 } MYSQL_RESULT;
 
 

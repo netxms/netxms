@@ -215,11 +215,14 @@ void ObjectsInit()
    g_pReportRoot = new ReportRoot;
    NetObjInsert(g_pReportRoot, FALSE);
 
-   // Create "Service Root" object
+   // Create "Business Service Root" object
    g_pBusinessServiceRoot = new BusinessServiceRoot;
    NetObjInsert(g_pBusinessServiceRoot, FALSE);
    
 	DbgPrintf(1, _T("Built-in objects created"));
+
+	// Initialize service checks
+	SlmCheck::init();
 
    // Start template update applying thread
    ThreadCreate(ApplyTemplateThread, 0, NULL);
