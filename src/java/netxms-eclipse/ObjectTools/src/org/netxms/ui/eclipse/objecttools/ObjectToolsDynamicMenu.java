@@ -320,24 +320,19 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 */
 	private void executeFileDownload(final Node node, final ObjectTool tool)
 	{
-		String temp = tool.getData();
-		temp = temp.replace("%OBJECT_IP_ADDR%", node.getPrimaryIP().getHostAddress());
-		temp = temp.replace("%OBJECT_NAME%", node.getObjectName());
-		final String fileName = temp.replace("%OBJECT_ID%", Long.toString(node.getObjectId()));
-		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
 		ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot download file " + fileName + " from node " + node.getObjectName();
+				return "Cannot download file " + tool.getData() + " from node " + node.getObjectName();
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final File file = session.downloadFileFromAgent(node.getObjectId(), fileName);
+				final File file = session.downloadFileFromAgent(node.getObjectId(), tool.getData());
 				Display.getDefault().asyncExec(new Runnable() {
 					@Override
 					public void run()
@@ -345,7 +340,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 						final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 						try
 						{
-							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8");
+							String secondaryId = Long.toString(node.getObjectId()) + "&" + URLEncoder.encode(tool.getData(), "UTF-8");
 							FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
 							view.showFile(file);
 						}

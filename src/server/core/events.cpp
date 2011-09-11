@@ -170,17 +170,25 @@ void Event::expandMessageText()
 
 TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 {
+	return Event::expandText(this, m_dwSource, pszTemplate, pszAlarmMsg);
+}
+
+TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
+{
    const TCHAR *pCurr;
    DWORD dwPos, dwSize, dwParam;
+	DWORD sourceId = (event != NULL) ? event->getSourceId() : sourceObject;
    NetObj *pObject;
    struct tm *lt;
    TCHAR *pText, szBuffer[4], scriptName[256];
 	int i;
 
-   pObject = FindObjectById(m_dwSource);
-   if (pObject == NULL)    // Normally shouldn't happen
+   pObject = FindObjectById(sourceId);
+   if (pObject == NULL)
    {
-      pObject = g_pEntireNet;
+      pObject = FindObjectById(g_dwMgmtNode);
+		if (pObject == NULL)
+			pObject = g_pEntireNet;
    }
    dwSize = (DWORD)_tcslen(pszTemplate) + 1;
    pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
@@ -215,45 +223,62 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
                case 'i':   // Source object identifier
                   dwSize += 10;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _sntprintf(&pText[dwPos], 11, _T("0x%08X"), m_dwSource);
+                  _sntprintf(&pText[dwPos], 11, _T("0x%08X"), sourceId);
                   dwPos = (DWORD)_tcslen(pText);
                   break;
                case 't':   // Event's timestamp
                   dwSize += 32;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  lt = localtime(&m_tTimeStamp);
+						if (event != NULL)
+						{
+							lt = localtime(&event->m_tTimeStamp);
+						}
+						else
+						{
+							time_t t = time(NULL);
+							lt = localtime(&t);
+						}
                   _tcsftime(&pText[dwPos], 32, _T("%d-%b-%Y %H:%M:%S"), lt);
                   dwPos = (DWORD)_tcslen(pText);
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
                   dwSize += 16;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _sntprintf(&pText[dwPos], 16, _T("%lu"), m_tTimeStamp);
+						_sntprintf(&pText[dwPos], 16, _T("%lu"), (unsigned long)((event != NULL) ? event->m_tTimeStamp : time(NULL)));
                   dwPos = (DWORD)_tcslen(pText);
                   break;
                case 'c':   // Event code
                   dwSize += 16;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _sntprintf(&pText[dwPos], 16, _T("%u"), m_dwCode);
+						_sntprintf(&pText[dwPos], 16, _T("%u"), (unsigned int)((event != NULL) ? event->m_dwCode : 0));
                   dwPos = (DWORD)_tcslen(pText);
                   break;
                case 'N':   // Event name
-                  dwSize += (DWORD)_tcslen(m_szName);
-                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _tcscpy(&pText[dwPos], m_szName);
-                  dwPos += (DWORD)_tcslen(m_szName);
+						if (event != NULL)
+						{
+							dwSize += (DWORD)_tcslen(event->m_szName);
+							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+							_tcscpy(&pText[dwPos], event->m_szName);
+							dwPos += (DWORD)_tcslen(event->m_szName);
+						}
                   break;
                case 's':   // Severity code
-                  dwSize += 3;
-                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _sntprintf(&pText[dwPos], 4, _T("%d"), (int)m_dwSeverity);
-                  dwPos = (DWORD)_tcslen(pText);
+						if (event != NULL)
+						{
+							dwSize += 3;
+							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+							_sntprintf(&pText[dwPos], 4, _T("%d"), (int)event->m_dwSeverity);
+							dwPos = (DWORD)_tcslen(pText);
+						}
                   break;
                case 'S':   // Severity text
-                  dwSize += (DWORD)_tcslen(g_szStatusTextSmall[m_dwSeverity]);
-                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _tcscpy(&pText[dwPos], g_szStatusTextSmall[m_dwSeverity]);
-                  dwPos += (DWORD)_tcslen(g_szStatusTextSmall[m_dwSeverity]);
+						if (event != NULL)
+						{
+							dwSize += (DWORD)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
+							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+							_tcscpy(&pText[dwPos], g_szStatusTextSmall[event->m_dwSeverity]);
+							dwPos += (DWORD)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
+						}
                   break;
                case 'v':   // NetXMS server version
                   dwSize += (DWORD)_tcslen(NETXMS_VERSION_STRING);
@@ -262,21 +287,21 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
                   dwPos += (DWORD)_tcslen(NETXMS_VERSION_STRING);
                   break;
                case 'm':
-                  if (m_pszMessageText != NULL)
+                  if ((event != NULL) && (event->m_pszMessageText != NULL))
                   {
-                     dwSize += (DWORD)_tcslen(m_pszMessageText);
+                     dwSize += (DWORD)_tcslen(event->m_pszMessageText);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], m_pszMessageText);
-                     dwPos += (DWORD)_tcslen(m_pszMessageText);
+                     _tcscpy(&pText[dwPos], event->m_pszMessageText);
+                     dwPos += (DWORD)_tcslen(event->m_pszMessageText);
                   }
                   break;
                case 'M':	// Custom message (usually set by matching script in EPP)
-                  if (m_pszCustomMessage != NULL)
+                  if ((event != NULL) && (event->m_pszCustomMessage != NULL))
                   {
-                     dwSize += (DWORD)_tcslen(m_pszCustomMessage);
+                     dwSize += (DWORD)_tcslen(event->m_pszCustomMessage);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], m_pszCustomMessage);
-                     dwPos += (DWORD)_tcslen(m_pszCustomMessage);
+                     _tcscpy(&pText[dwPos], event->m_pszCustomMessage);
+                     dwPos += (DWORD)_tcslen(event->m_pszCustomMessage);
                   }
                   break;
                case 'A':   // Associated alarm message
@@ -289,12 +314,12 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
                   }
                   break;
                case 'u':	// User tag
-                  if (m_pszUserTag != NULL)
+                  if ((event != NULL) && (event->m_pszUserTag != NULL))
                   {
-                     dwSize += (DWORD)_tcslen(m_pszUserTag);
+                     dwSize += (DWORD)_tcslen(event->m_pszUserTag);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], m_pszUserTag);
-                     dwPos += (DWORD)_tcslen(m_pszUserTag);
+                     _tcscpy(&pText[dwPos], event->m_pszUserTag);
+                     dwPos += (DWORD)_tcslen(event->m_pszUserTag);
                   }
                   break;
                case '0':
@@ -307,26 +332,29 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
                case '7':
                case '8':
                case '9':
-                  szBuffer[0] = *pCurr;
-                  if (isdigit(*(pCurr + 1)))
-                  {
-                     pCurr++;
-                     szBuffer[1] = *pCurr;
-                     szBuffer[2] = 0;
-                  }
-                  else
-                  {
-                     szBuffer[1] = 0;
-                  }
-                  dwParam = _tcstoul(szBuffer, NULL, 10);
-						if ((dwParam > 0) && (dwParam <= (DWORD)m_parameters.size()))
-                  {
-							const TCHAR *value = (TCHAR *)m_parameters.get(dwParam - 1);
-                     dwSize += (DWORD)_tcslen(value);
-	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], value);
-                     dwPos += (DWORD)_tcslen(value);
-                  }
+						if (event != NULL)
+						{
+							szBuffer[0] = *pCurr;
+							if (isdigit(*(pCurr + 1)))
+							{
+								pCurr++;
+								szBuffer[1] = *pCurr;
+								szBuffer[2] = 0;
+							}
+							else
+							{
+								szBuffer[1] = 0;
+							}
+							dwParam = _tcstoul(szBuffer, NULL, 10);
+							if ((dwParam > 0) && (dwParam <= (DWORD)event->m_parameters.size()))
+							{
+								const TCHAR *value = (TCHAR *)event->m_parameters.get(dwParam - 1);
+								dwSize += (DWORD)_tcslen(value);
+								pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+								_tcscpy(&pText[dwPos], value);
+								dwPos += (DWORD)_tcslen(value);
+							}
+						}
                   break;
 					case '[':	// Script
 						for(i = 0, pCurr++; (*pCurr != ']') && (*pCurr != 0) && (i < 255); pCurr++)
@@ -352,7 +380,7 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 								pEnv = new NXSL_ServerEnv;
 								if (pObject->Type() == OBJECT_NODE)
 									script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
-								script->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, this)));
+								script->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)) : new NXSL_Value);
 								if (pszAlarmMsg != NULL)
 									script->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(pszAlarmMsg));
 
@@ -369,21 +397,21 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 											_tcscpy(&pText[dwPos], temp);
 											dwPos += (DWORD)_tcslen(temp);
 											DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s executed successfully"),
-														 m_dwCode, pszTemplate, scriptName);
+												(int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName);
 										}
 									}
 								}
 								else
 								{
 									DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
-												 m_dwCode, pszTemplate, scriptName, script->getErrorText());
-									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName,
-												 script->getErrorText(), 0);
+												 (int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName, script->getErrorText());
+									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
 								}
 							}
 							else
 							{
-								DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Cannot find script %s"), m_dwCode, pszTemplate, scriptName);
+								DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Cannot find script %s"),
+									(int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName);
 							}
 							g_pScriptLibrary->unlock();
 						}
@@ -412,28 +440,31 @@ TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
 						}
 						break;
 					case '<':	// Named parameter
-						for(i = 0, pCurr++; (*pCurr != '>') && (*pCurr != 0) && (i < 255); pCurr++)
+						if (event != NULL)
 						{
-							scriptName[i++] = *pCurr;
-						}
-						if (*pCurr == 0)	// no terminating >
-						{
-							pCurr--;
-						}
-						else
-						{
-							scriptName[i] = 0;
-							StrStrip(scriptName);
-							int index = m_parameterNames.getIndexIgnoreCase(scriptName);
-							if (index != -1)
+							for(i = 0, pCurr++; (*pCurr != '>') && (*pCurr != 0) && (i < 255); pCurr++)
 							{
-								const TCHAR *temp = (TCHAR *)m_parameters.get(index);
-								if (temp != NULL)
+								scriptName[i++] = *pCurr;
+							}
+							if (*pCurr == 0)	// no terminating >
+							{
+								pCurr--;
+							}
+							else
+							{
+								scriptName[i] = 0;
+								StrStrip(scriptName);
+								int index = event->m_parameterNames.getIndexIgnoreCase(scriptName);
+								if (index != -1)
 								{
-									dwSize += (DWORD)_tcslen(temp);
-									pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-									_tcscpy(&pText[dwPos], temp);
-									dwPos += (DWORD)_tcslen(temp);
+									const TCHAR *temp = (TCHAR *)event->m_parameters.get(index);
+									if (temp != NULL)
+									{
+										dwSize += (DWORD)_tcslen(temp);
+										pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+										_tcscpy(&pText[dwPos], temp);
+										dwPos += (DWORD)_tcslen(temp);
+									}
 								}
 							}
 						}

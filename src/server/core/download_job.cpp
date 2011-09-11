@@ -38,13 +38,14 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, ClientSess
 
 	m_requestId = requestId;
 
-	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("Download file %s@%s"), remoteFile, node->Name());
-	setDescription(buffer);
+	m_remoteFile = Event::expandText(NULL, node->Id(), remoteFile, NULL);
 
-	buildServerFileName(node->Id(), remoteFile, buffer, 1024);
+	TCHAR buffer[1024];
+	buildServerFileName(node->Id(), m_remoteFile, buffer, 1024);
 	m_localFile = _tcsdup(buffer);
-	m_remoteFile = _tcsdup(remoteFile);
+
+	_sntprintf(buffer, 1024, _T("Download file %s@%s"), m_remoteFile, node->Name());
+	setDescription(buffer);
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, m_remoteFile);
 	m_info = _tcsdup(buffer);

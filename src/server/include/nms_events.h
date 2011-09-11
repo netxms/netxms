@@ -93,6 +93,7 @@ public:
 
    void expandMessageText();
    TCHAR *expandText(const TCHAR *szTemplate, const TCHAR *pszAlarmMsg = NULL);
+   static TCHAR *expandText(Event *event, DWORD sourceObject, const TCHAR *szTemplate, const TCHAR *pszAlarmMsg);
 
    DWORD getParametersCount() { return m_parameters.size(); }
    const TCHAR *getParameter(int index) { return (TCHAR *)m_parameters.get(index); }
