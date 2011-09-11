@@ -25,6 +25,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.ServiceCheck;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -137,7 +138,7 @@ public class ObjectAdapterFactory implements IAdapterFactory
 							case GenericObject.OBJECT_NODELINK:
 								return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
 							case GenericObject.OBJECT_SLMCHECK:
-								return Activator.getImageDescriptor("icons/service_check.gif"); //$NON-NLS-1$
+								return Activator.getImageDescriptor(((ServiceCheck)object).isTemplate() ? "icons/service_check_template.gif" : "icons/service_check.gif"); //$NON-NLS-1$
 							default:
 								return null;
 						}

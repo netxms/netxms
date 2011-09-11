@@ -32,6 +32,7 @@ public class ObjectTreeComparator extends ViewerComparator
 {
 	// Categories
 	private static final int CATEGORY_CONTAINER = 10;
+	private static final int CATEGORY_NODELINK = 100;
 	private static final int CATEGORY_OTHER = 255;
 
 	/**
@@ -58,8 +59,11 @@ public class ObjectTreeComparator extends ViewerComparator
 			return (int)((GenericObject)element).getObjectId();
 		if ((((GenericObject)element).getObjectClass() == GenericObject.OBJECT_CONTAINER) ||
 		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_TEMPLATEGROUP) ||
-		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_POLICYGROUP))
+		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_POLICYGROUP) ||
+		    (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_BUSINESSSERVICE))
 			return CATEGORY_CONTAINER;
+		if (((GenericObject)element).getObjectClass() == GenericObject.OBJECT_NODELINK)
+				return CATEGORY_NODELINK;
 		return CATEGORY_OTHER;
 	}
 

@@ -1000,6 +1000,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/report_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/report_root.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service_check.gif -text
+src/java/netxms-eclipse/ObjectBrowser/icons/service_check_template.gif -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/status/critical.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/status/disabled.gif -text
