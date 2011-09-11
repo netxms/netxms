@@ -65,5 +65,18 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.reporter.propertypages.ReportDefinition"
+            id="org.netxms.ui.eclipse.reporter.propertypages.ReportDefinition#10"
+            name="Report Definition">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Report">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
 
 </plugin>

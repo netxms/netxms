@@ -1205,6 +1205,7 @@ src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/Crea
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/CreateReportGroup.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/actions/OpenReport.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/dialogs/CreateReportDialog.java -text
+src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/propertypages/ReportDefinition.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/views/ReportView.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/FieldEditor.java -text
 src/java/netxms-eclipse/Reporter/src/org/netxms/ui/eclipse/reporter/widgets/ObjectFieldEditor.java -text

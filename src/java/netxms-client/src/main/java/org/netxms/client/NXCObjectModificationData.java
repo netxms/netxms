@@ -1108,7 +1108,8 @@ public class NXCObjectModificationData
 		}
 		finally
 		{
-			in.close();
+			if (in != null)
+				in.close();
 		}
 		setReportDefinition(new String(buffer));
 	}
