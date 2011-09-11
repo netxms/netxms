@@ -459,7 +459,7 @@ void NetObj::DeleteParent(NetObj *pObject)
 void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
 {
 	DWORD currId = ((NetObj *)data)->Id();
-	if ((object->Id() != currId) && !object->IsDeleted())
+	if ((object->Id() != currId) && !object->isDeleted())
 		object->OnObjectDelete(currId);
 }
 
@@ -497,7 +497,7 @@ void NetObj::deleteObject()
    for(i = 0; i < m_dwChildCount; i++)
    {
       m_pChildList[i]->DeleteParent(this);
-      if (m_pChildList[i]->IsOrphaned())
+      if (m_pChildList[i]->isOrphaned())
 			m_pChildList[i]->deleteObject();
    }
    free(m_pChildList);
@@ -618,7 +618,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
             LockChildList(FALSE);
             for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < m_dwChildCount; i++)
             {
-               iChildStatus = m_pChildList[i]->PropagatedStatus();
+               iChildStatus = m_pChildList[i]->getPropagatedStatus();
                if ((iChildStatus < STATUS_UNKNOWN) && 
                    (iChildStatus > iMostCriticalStatus))
                {
@@ -636,7 +636,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
             LockChildList(FALSE);
             for(i = 0, iCount = 0; i < m_dwChildCount; i++)
             {
-               iChildStatus = m_pChildList[i]->PropagatedStatus();
+               iChildStatus = m_pChildList[i]->getPropagatedStatus();
                if (iChildStatus < STATUS_UNKNOWN)
                {
                   while(iChildStatus >= 0)
@@ -955,6 +955,15 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 
 //
+// Post-modify hook
+//
+
+void NetObj::postModify()
+{
+}
+
+
+//
 // Get rights to object for specific user
 //
 
@@ -1202,7 +1211,7 @@ void NetObj::unhide()
 // Return status propagated to parent
 //
 
-int NetObj::PropagatedStatus(void)
+int NetObj::getPropagatedStatus()
 {
    int iStatus;
 

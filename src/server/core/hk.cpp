@@ -74,7 +74,7 @@ static void DeleteEmptySubnets()
 	for(int i = 0; i < subnets->size(); i++)
 	{
 		NetObj *object = subnets->get(i);
-		if (object->IsEmpty())
+		if (object->isEmpty())
 		{
          PostEvent(EVENT_SUBNET_DELETED, object->Id(), NULL);
 			object->deleteObject();

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -401,7 +401,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 // Initialize mailer subsystem
 //
 
-void InitMailer(void)
+void InitMailer()
 {
    m_pMailerQueue = new Queue;
    m_hThread = ThreadCreateEx(MailerThread, 0, NULL);
@@ -412,7 +412,7 @@ void InitMailer(void)
 // Shutdown mailer
 //
 
-void ShutdownMailer(void)
+void ShutdownMailer()
 {
    m_pMailerQueue->Clear();
    m_pMailerQueue->Put(INVALID_POINTER_VALUE);

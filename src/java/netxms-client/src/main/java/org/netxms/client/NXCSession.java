@@ -2619,6 +2619,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 			case GenericObject.OBJECT_NODELINK:
 				msg.setVariableInt32(NXCPCodes.VID_NODE_ID, (int)data.getLinkedNodeId());
 				break;
+			case GenericObject.OBJECT_SLMCHECK:
+				msg.setVariableInt16(NXCPCodes.VID_IS_TEMPLATE, data.isTemplate() ? 1 : 0);
+				break;
 		}
 
 		sendMessage(msg);

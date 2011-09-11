@@ -1255,7 +1255,9 @@ CREATE TABLE slm_checks
      content SQL_TEXT null, // if type == 2
      threshold_id integer not null, // if type == 1; refers to thresholds.id
      reason varchar(255) null,
-     is_template integer not null, 
+     is_template integer not null,
+     template_id integer not null,  // template check ID
+     current_ticket integer not null,
      PRIMARY KEY(id)
 ) TABLE_TYPE;
 

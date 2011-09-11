@@ -27,6 +27,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.NodeLink;
+import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
@@ -50,7 +51,8 @@ public class GeneralInfo extends TableElement
 	@Override
 	protected void fillTable()
 	{
-		GenericObject object = getObject();
+		final GenericObject object = getObject();
+		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
 		addPair("ID", Long.toString(object.getObjectId()));
 		if (object.getGuid() != null)
@@ -69,7 +71,7 @@ public class GeneralInfo extends TableElement
 					addPair("Slot/Port", Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort()));
 				if (!iface.getPrimaryIP().isAnyLocalAddress())
 				{
-					if (((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled())
+					if (session.isZoningEnabled())
 						addPair("Zone ID", Long.toString(iface.getZoneId()));
 					addPair("IP Address", iface.getPrimaryIP().getHostAddress());
 					addPair("IP Subnet Mask", iface.getSubnetMask().getHostAddress());
@@ -77,7 +79,7 @@ public class GeneralInfo extends TableElement
 				break;
 			case GenericObject.OBJECT_NODE:
 				Node node = (Node)object;
-				if (((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled())
+				if (session.isZoningEnabled())
 					addPair("Zone ID", Long.toString(node.getZoneId()));
 				addPair("Primary Host Name", node.getPrimaryName());
 				addPair("Primary IP Address", node.getPrimaryIP().getHostAddress());
@@ -93,7 +95,7 @@ public class GeneralInfo extends TableElement
 				break;
 			case GenericObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;
-				if (((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled())
+				if (session.isZoningEnabled())
 					addPair("Zone ID", Long.toString(subnet.getZoneId()));
 				break;
 			case GenericObject.OBJECT_ZONE:
@@ -101,7 +103,7 @@ public class GeneralInfo extends TableElement
 				addPair("Zone ID", Long.toString(zone.getZoneId()));
 				break;
 			case GenericObject.OBJECT_NODELINK:
-				Node linkedNode = (Node)((NXCSession)ConsoleSharedData.getSession()).findObjectById(((NodeLink)object).getNodeId(), Node.class);
+				Node linkedNode = (Node)session.findObjectById(((NodeLink)object).getNodeId(), Node.class);
 				if (linkedNode != null)
 					addPair("Linked node", linkedNode.getObjectName());
 			case GenericObject.OBJECT_BUSINESSSERVICE:
@@ -113,6 +115,16 @@ public class GeneralInfo extends TableElement
 				addPair("Uptime for day", nf.format(service.getUptimeForDay()) + "%");
 				addPair("Uptime for week", nf.format(service.getUptimeForWeek()) + "%");
 				addPair("Uptime for month", nf.format(service.getUptimeForMonth()) + "%");
+				break;
+			case GenericObject.OBJECT_SLMCHECK:
+				ServiceCheck check = (ServiceCheck)object;
+				addPair("Is template", check.isTemplate() ? "Yes" : "No");
+				if (check.getTemplateId() != 0)
+				{
+					ServiceCheck tmpl = (ServiceCheck)session.findObjectById(check.getTemplateId(), ServiceCheck.class);
+					if (tmpl != null)
+						addPair("Template", tmpl.getObjectName());
+				}
 				break;
 			default:
 				break;

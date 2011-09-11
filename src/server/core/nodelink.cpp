@@ -230,26 +230,63 @@ void NodeLink::execute()
 
 
 //
-// Apply templates from the upper level to this nodelink
+// Apply single template check to this nodelink
 //
 
-BOOL NodeLink::applyTemplates()
+void NodeLink::applyTemplate(SlmCheck *tmpl)
 {
-	for (int i = 0; i < int(m_dwParentCount); i++)
+	// Check if we already have check created from this template
+	SlmCheck *check = NULL;
+	LockChildList(FALSE);
+	for(DWORD i = 0; i < m_dwChildCount; i++)
 	{
-		ServiceContainer *parent = (ServiceContainer*)m_pParentList[i];
-		if (parent->Type() != OBJECT_BUSINESSSERVICE)
-			continue;
-		for(int k = 0; k < (int)parent->getChildCount(); k++)
+		if ((m_pChildList[i]->Type() == OBJECT_SLMCHECK) &&
+		    (((SlmCheck *)m_pChildList[i])->getTemplateId() == tmpl->Id()))
 		{
-			if ((parent->getChildList())[k]->Type() == OBJECT_SLMCHECK && 
-				((SlmCheck*)parent->getChildList()[k])->isTemplate())
-			{
-				SlmCheck *autoCreated = new SlmCheck((SlmCheck*)parent->getChildList()[k]);
-				linkObject(autoCreated);
-			}
+			check = (SlmCheck *)m_pChildList[i];
+			break;
 		}
 	}
+	UnlockChildList();
 
-	return TRUE;
+	if (check == NULL)
+	{
+		check = new SlmCheck(tmpl);
+		check->AddParent(this);
+		AddChild(check);
+		NetObjInsert(check, TRUE);
+		check->unhide();
+	}
+	else
+	{
+		check->updateFromTemplate(tmpl);
+	}
+}
+
+
+//
+// Apply templates from the upper levels to this nodelink
+//
+
+void NodeLink::applyTemplates()
+{
+	ObjectArray<SlmCheck> templates;
+
+	LockParentList(FALSE);
+	for(DWORD i = 0; i < m_dwParentCount; i++)
+	{
+		if (m_pParentList[i]->Type() != OBJECT_BUSINESSSERVICE)
+			continue;
+
+		BusinessService *parent = (BusinessService *)m_pParentList[i];
+		parent->getApplicableTemplates(this, &templates);
+	}
+	UnlockParentList();
+
+	for(int j = 0; j < templates.size(); j++)
+	{
+		SlmCheck *tmpl = templates.get(j);
+		applyTemplate(tmpl);
+		tmpl->DecRefCount();
+	}
 }

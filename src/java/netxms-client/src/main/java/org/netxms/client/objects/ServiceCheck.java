@@ -32,6 +32,8 @@ public class ServiceCheck extends GenericObject
 	public static final int CHECK_TYPE_THRESHOLD = 2;
 	
 	private int checkType;
+	private boolean template;
+	private long templateId;
 	private String script;
 	private Threshold threshold;
 	private String failureReason;
@@ -44,6 +46,8 @@ public class ServiceCheck extends GenericObject
 	{
 		super(msg, session);
 		checkType = msg.getVariableAsInteger(NXCPCodes.VID_SLMCHECK_TYPE);
+		template = msg.getVariableAsBoolean(NXCPCodes.VID_IS_TEMPLATE);
+		templateId = msg.getVariableAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		script = msg.getVariableAsString(NXCPCodes.VID_SCRIPT); 
 		threshold = new Threshold(msg, NXCPCodes.VID_THRESHOLD_BASE);
 		failureReason = msg.getVariableAsString(NXCPCodes.VID_REASON);
@@ -88,5 +92,21 @@ public class ServiceCheck extends GenericObject
 	public String getFailureReason()
 	{
 		return failureReason;
+	}
+
+	/**
+	 * @return the template
+	 */
+	public boolean isTemplate()
+	{
+		return template;
+	}
+
+	/**
+	 * @return the templateId
+	 */
+	public long getTemplateId()
+	{
+		return templateId;
 	}
 }

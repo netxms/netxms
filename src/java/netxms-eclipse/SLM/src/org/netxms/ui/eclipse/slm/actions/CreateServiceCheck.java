@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.slm.Activator;
 import org.netxms.ui.eclipse.slm.dialogs.CreateServiceCheckDialog;
 
 /**
- * Create node link object
+ * Create service check object
  */
 public class CreateServiceCheck implements IObjectActionDelegate
 {
@@ -71,6 +71,7 @@ public class CreateServiceCheck implements IObjectActionDelegate
 			{
 				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(GenericObject.OBJECT_SLMCHECK, dlg.getName(), parentId);
+				cd.setTemplate(false);
 				session.createObject(cd);
 			}
 

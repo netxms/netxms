@@ -217,7 +217,7 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
 	// Loop through the kids and execute their either scripts or thresholds
    LockChildList(FALSE);
-	for (int i = 0; i < int(m_dwChildCount); i++)
+	for (DWORD i = 0; i < m_dwChildCount; i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
 			((SlmCheck *)m_pChildList[i])->execute();
@@ -232,4 +232,23 @@ void BusinessService::poll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	m_lastPollStatus = m_iStatus;
 	DbgPrintf(5, _T("Finished polling of business service %s [%d]"), m_szName, (int)m_dwId);
 	m_busy = false;
+}
+
+
+//
+// Get template checks applicable for given target
+//
+
+void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates)
+{
+	LockChildList(FALSE);
+	for(DWORD i = 0; i < m_dwChildCount; i++)
+	{
+		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
+		{
+			m_pChildList[i]->IncRefCount();
+			templates->add((SlmCheck *)m_pChildList[i]);
+		}
+	}
+	UnlockChildList();
 }

@@ -55,6 +55,7 @@ public class NXCObjectCreationData
 	private String request;
 	private String response;
 	private long linkedNodeId;
+	private boolean template;
 	
 	/**
 	 * Constructor.
@@ -93,6 +94,7 @@ public class NXCObjectCreationData
 		request = "";
 		response = "";
 		linkedNodeId = 0;
+		template = false;
 	}
 
 	/**
@@ -397,5 +399,21 @@ public class NXCObjectCreationData
 	public void setPrimaryName(String primaryName)
 	{
 		this.primaryName = primaryName;
+	}
+
+	/**
+	 * @return the template
+	 */
+	public boolean isTemplate()
+	{
+		return template;
+	}
+
+	/**
+	 * @param template the template to set
+	 */
+	public void setTemplate(boolean template)
+	{
+		this.template = template;
 	}
 }

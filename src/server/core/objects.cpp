@@ -50,6 +50,7 @@ ObjectIndex g_idxInterfaceByAddr;
 ObjectIndex g_idxZoneByGUID;
 ObjectIndex g_idxNodeById;
 ObjectIndex g_idxConditionById;
+ObjectIndex g_idxServiceCheckById;
 
 const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
                                _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
@@ -260,7 +261,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
       }
    }
 	g_idxObjectById.put(pObject->Id(), pObject);
-   if (!pObject->IsDeleted())
+   if (!pObject->isDeleted())
    {
       switch(pObject->Type())
       {
@@ -288,7 +289,6 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_REPORT:
 			case OBJECT_BUSINESSSERVICEROOT:
 			case OBJECT_BUSINESSSERVICE:
-			case OBJECT_SLMCHECK:
 			case OBJECT_NODELINK:
             break;
          case OBJECT_NODE:
@@ -348,6 +348,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_CONDITION:
 				g_idxConditionById.put(pObject->Id(), pObject);
             break;
+			case OBJECT_SLMCHECK:
+				g_idxServiceCheckById.put(pObject->Id(), pObject);
+            break;
          default:
             nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
             break;
@@ -391,7 +394,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_REPORT:
 		case OBJECT_BUSINESSSERVICEROOT:
 		case OBJECT_BUSINESSSERVICE:
-		case OBJECT_SLMCHECK:
 		case OBJECT_NODELINK:
 			break;
       case OBJECT_NODE:
@@ -450,6 +452,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
       case OBJECT_CONDITION:
 			g_idxConditionById.remove(pObject->Id());
+         break;
+      case OBJECT_SLMCHECK:
+			g_idxServiceCheckById.remove(pObject->Id());
          break;
       default:
          nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
@@ -858,7 +863,7 @@ BOOL LoadObjects()
             pZone = new Zone;
             if (pZone->CreateFromDB(dwId))
             {
-               if (!pZone->IsDeleted())
+               if (!pZone->isDeleted())
                   g_pEntireNet->AddZone(pZone);
                NetObjInsert(pZone, FALSE);  // Insert into indexes
             }
@@ -913,7 +918,7 @@ BOOL LoadObjects()
          pSubnet = new Subnet;
          if (pSubnet->CreateFromDB(dwId))
          {
-            if (!pSubnet->IsDeleted())
+            if (!pSubnet->isDeleted())
             {
                if (g_dwFlags & AF_ENABLE_ZONING)
                {
@@ -1433,7 +1438,7 @@ BOOL LoadObjects()
 	if (pTemplate == NULL)
 	{
 		pTemplate = new Template(_T("@System.Agent"));
-		pTemplate->SetSystemFlag(TRUE);
+		pTemplate->setSystemFlag(TRUE);
       NetObjInsert(pTemplate, TRUE);
 		g_pTemplateRoot->AddChild(pTemplate);
 		pTemplate->AddParent(g_pTemplateRoot);
@@ -1482,7 +1487,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
                  object->Id(), object->Name(), g_szClassName[object->Type()],
                  IpToStr(object->IpAddr(), dd->buffer),
                  g_szStatusTextSmall[object->Status()],
-                 object->IsModified(), object->IsDeleted());
+                 object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
                  object->ParentList(dd->buffer), object->ChildList(&dd->buffer[4096]));
 	time_t t = object->TimeStamp();

@@ -2198,7 +2198,7 @@ void Node::ApplySystemTemplates()
 
 static void ApplyTemplate(NetObj *object, void *node)
 {
-   if ((object->Type() == OBJECT_TEMPLATE) && !object->IsDeleted())
+   if ((object->Type() == OBJECT_TEMPLATE) && !object->isDeleted())
    {
       Template *pTemplate = (Template *)object;
 		if (pTemplate->isApplicable((Node *)node))
@@ -2236,7 +2236,7 @@ void Node::ApplyUserTemplates()
 
 static void UpdateContainerBinding(NetObj *object, void *node)
 {
-   if ((object->Type() == OBJECT_CONTAINER) && !object->IsDeleted())
+   if ((object->Type() == OBJECT_CONTAINER) && !object->isDeleted())
    {
       Container *pContainer = (Container *)object;
 		if (pContainer->isSuitableForNode((Node *)node))

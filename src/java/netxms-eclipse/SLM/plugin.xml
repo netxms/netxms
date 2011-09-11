@@ -27,6 +27,13 @@
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.BusinessService"
             objectClass="org.netxms.client.objects.BusinessService">
          <action
+               class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheckTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheckTemplate_BusinessService"
+               label="Create service check &amp;template..."
+               menubarPath="objectcreation">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheck"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_BusinessService"

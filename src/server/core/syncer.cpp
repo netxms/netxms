@@ -41,7 +41,7 @@ void SaveObjects(DB_HANDLE hdb)
 	for(int i = 0; i < objects->size(); i++)
    {
    	NetObj *object = objects->get(i);
-      if (object->IsDeleted())
+      if (object->isDeleted())
       {
          if (object->RefCount() == 0)
          {
@@ -55,7 +55,7 @@ void SaveObjects(DB_HANDLE hdb)
                       object->Id(), object->RefCount());
          }
       }
-		else if (object->IsModified())
+		else if (object->isModified())
 		{
 		   DBBegin(hdb);
 			if (object->SaveToDB(hdb))

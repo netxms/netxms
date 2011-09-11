@@ -2378,7 +2378,13 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
 
          // If allowed, change object and set completion code
          if (dwResult == RCC_SUCCESS)
+			{
             dwResult = pObject->ModifyFromMessage(pRequest);
+	         if (dwResult == RCC_SUCCESS)
+				{
+					pObject->postModify();
+				}
+			}
          msg.SetVariable(VID_RCC, dwResult);
 
 			if (dwResult == RCC_SUCCESS)
@@ -3920,7 +3926,6 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								{
 									pObject = new NodeLink(szObjectName, nodeId);
 									NetObjInsert(pObject, TRUE);
-									((NodeLink*)pObject)->applyTemplates();
 								}
 								else
 								{
@@ -3928,7 +3933,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								}
 								break;
 							case OBJECT_SLMCHECK:
-								pObject = new SlmCheck(szObjectName);
+								pObject = new SlmCheck(szObjectName, pRequest->GetVariableShort(VID_IS_TEMPLATE) ? true : false);
 								NetObjInsert(pObject, TRUE);
 								break;
 							default:
@@ -3946,6 +3951,10 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								if (pParent->Type() == OBJECT_CLUSTER)
 								{
 									((Cluster *)pParent)->ApplyToNode((Node *)pObject);
+								}
+								if (pObject->Type() == OBJECT_NODELINK)
+								{
+									((NodeLink *)pObject)->applyTemplates();
 								}
 							}
 							
@@ -10297,7 +10306,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 
 	DWORD objectId = request->GetVariableLong(VID_OBJECT_ID);
 	NetObj *object = FindObjectById(objectId);
-	if ((object != NULL) && !object->IsDeleted())
+	if ((object != NULL) && !object->isDeleted())
 	{
 		if (object->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{

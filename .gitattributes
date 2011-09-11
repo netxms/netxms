@@ -1217,6 +1217,7 @@ src/java/netxms-eclipse/SLM/build.properties -text
 src/java/netxms-eclipse/SLM/plugin.xml -text
 src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/Activator.java -text
 src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/actions/CreateBusinessService.java -text
+src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/actions/CreateServiceCheckTemplate.java -text
 src/java/netxms-eclipse/SLM/src/org/netxms/ui/eclipse/slm/dialogs/CreateBusinessServiceDialog.java -text
 src/java/netxms-eclipse/SNMP/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SNMP/META-INF/MANIFEST.MF -text

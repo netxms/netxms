@@ -36,6 +36,7 @@ SlmCheck::SlmCheck() : NetObj()
 	m_threshold = NULL;
 	m_reason[0] = 0;
 	m_isTemplate = false;
+	m_templateId = 0;
 	m_currentTicketId = 0;
 }
 
@@ -44,15 +45,17 @@ SlmCheck::SlmCheck() : NetObj()
 // Constructor for new check object
 //
 
-SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
+SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : NetObj()
 {
+   m_bIsHidden = TRUE;
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 	m_type = SlmCheck::check_script;
 	m_script = NULL;
 	m_pCompiledScript = NULL;
 	m_threshold = NULL;
 	m_reason[0] = 0;
-	m_isTemplate = false;
+	m_isTemplate = isTemplate;
+	m_templateId = 0;
 	m_currentTicketId = 0;
 }
 
@@ -61,17 +64,20 @@ SlmCheck::SlmCheck(const TCHAR *name) : NetObj()
 // Used to create a new object from a check template
 //
 
-SlmCheck::SlmCheck(const SlmCheck *check)  : NetObj()
+SlmCheck::SlmCheck(SlmCheck *tmpl) : NetObj()
 {
-	nx_strncpy(m_szName, check->m_szName, MAX_OBJECT_NAME);
-	m_type = check->m_type;
-	m_script = ((m_type == check_script) && (check->m_script != NULL)) ? _tcsdup(check->m_script) : NULL;
+   m_bIsHidden = TRUE;
+	nx_strncpy(m_szName, tmpl->m_szName, MAX_OBJECT_NAME);
+	m_type = tmpl->m_type;
+	m_script = ((m_type == check_script) && (tmpl->m_script != NULL)) ? _tcsdup(tmpl->m_script) : NULL;
 	m_threshold = NULL;
 	m_reason[0] = 0;
 	m_isTemplate = false;
+	m_templateId = tmpl->Id();
 	m_currentTicketId = 0;
 	compileScript();
 }
+
 
 //
 // Service class destructor
@@ -82,6 +88,35 @@ SlmCheck::~SlmCheck()
 	delete m_threshold;
 	safe_free(m_script);
 	delete m_pCompiledScript;
+}
+
+
+//
+// Update this check from a check template
+//
+
+void SlmCheck::updateFromTemplate(SlmCheck *tmpl)
+{
+	LockData();
+	tmpl->LockData();
+	DbgPrintf(4, _T("Updating service check %s [%d] from service check template template %s [%d]"), m_szName, m_dwId, tmpl->Name(), tmpl->Id());
+
+	delete m_threshold;
+	safe_free(m_script);
+	delete m_pCompiledScript;
+
+	nx_strncpy(m_szName, tmpl->m_szName, MAX_OBJECT_NAME);
+	m_type = tmpl->m_type;
+	m_script = ((m_type == check_script) && (tmpl->m_script != NULL)) ? _tcsdup(tmpl->m_script) : NULL;
+	m_threshold = NULL;
+	m_reason[0] = 0;
+	m_isTemplate = false;
+	compileScript();
+
+	tmpl->UnlockData();
+
+	Modify();
+	UnlockData();
 }
 
 
@@ -116,7 +151,7 @@ BOOL SlmCheck::CreateFromDB(DWORD id)
 	if (!loadCommonProperties())
 		return FALSE;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT type,content,threshold_id,reason FROM slm_checks WHERE id=?"));
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT type,content,threshold_id,template_id,current_ticket,is_template,reason FROM slm_checks WHERE id=?"));
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from slm_checks"));
@@ -142,7 +177,10 @@ BOOL SlmCheck::CreateFromDB(DWORD id)
 	m_type = SlmCheck::CheckType(DBGetFieldLong(hResult, 0, 0));
 	m_script = DBGetField(hResult, 0, 1, NULL, 0);
 	thresholdId = DBGetFieldULong(hResult, 0, 2);
-	DBGetField(hResult, 0, 3, m_reason, 256);
+	m_templateId = DBGetFieldULong(hResult, 0, 3);
+	m_currentTicketId = DBGetFieldULong(hResult, 0, 4);
+	m_isTemplate = DBGetFieldLong(hResult, 0, 5) ? true : false;
+	DBGetField(hResult, 0, 6, m_reason, 256);
 
 	if (thresholdId > 0)
 	{
@@ -188,8 +226,8 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	DBFreeStatement(hStmt);
 
 	hStmt = DBPrepare(g_hCoreDB, bNewObject ? 
-		_T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template) VALUES (?,?,?,?,?,?)") :
-		_T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=? WHERE id=?"));
+		_T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template,template_id,current_ticket) VALUES (?,?,?,?,?,?,?,?)") :
+		_T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
 	if (hStmt == NULL)	
 		goto finish;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -198,8 +236,10 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
 	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)(m_isTemplate ? 1 : 0));
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_templateId);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_currentTicketId);
 	if (!bNewObject)
-		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_dwId);
 	
 	if (!DBExecute(hStmt))
 	{
@@ -251,6 +291,8 @@ void SlmCheck::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_SLMCHECK_TYPE, DWORD(m_type));
 	pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->SetVariable(VID_REASON, m_reason);
+	pMsg->SetVariable(VID_TEMPLATE_ID, m_templateId);
+	pMsg->SetVariable(VID_IS_TEMPLATE, (WORD)(m_isTemplate ? 1 : 0));
 	if (m_threshold != NULL)
 		m_threshold->createMessage(pMsg, VID_THRESHOLD_BASE);
 }
@@ -283,6 +325,26 @@ DWORD SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	}
 
 	return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+
+//
+// Post-modify hook
+//
+
+static void UpdateFromTemplateCallback(NetObj *object, void *data)
+{
+	SlmCheck *check = (SlmCheck *)object;
+	SlmCheck *tmpl = (SlmCheck *)data;
+
+	if (check->getTemplateId() == tmpl->Id())
+		check->updateFromTemplate(tmpl);
+}
+
+void SlmCheck::postModify()
+{
+	if (m_isTemplate)
+		g_idxServiceCheckById.forEach(UpdateFromTemplateCallback, this);
 }
 
 
@@ -325,6 +387,9 @@ void SlmCheck::setScript(const TCHAR *script)
 
 void SlmCheck::execute()
 {
+	if (m_isTemplate)
+		return;
+
 	DWORD oldStatus;
 
 	switch (m_type)
@@ -491,4 +556,20 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 	}
 
 	return (value != NULL) ? value : new NXSL_Value;
+}
+
+
+//
+// Object deletion handler
+//
+
+void SlmCheck::OnObjectDelete(DWORD objectId)
+{
+	// Delete itself if object curemtly being deleted is
+	// a template used to create this check
+	if (objectId == m_templateId)
+	{
+		DbgPrintf(4, _T("SlmCheck %s [%d] delete itself because of template deletion"), m_szName, (int)m_dwId);
+		deleteObject();
+	}
 }

@@ -302,17 +302,17 @@ public:
    DWORD Id() { return m_dwId; }
    const TCHAR *Name() { return m_szName; }
    int Status() { return m_iStatus; }
-   int PropagatedStatus(void);
+   int getPropagatedStatus();
    DWORD TimeStamp() { return m_dwTimeStamp; }
 	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
 
-   BOOL IsModified(void) { return m_bIsModified; }
-   BOOL IsDeleted(void) { return m_bIsDeleted; }
-   BOOL IsOrphaned(void) { return m_dwParentCount == 0 ? TRUE : FALSE; }
-   BOOL IsEmpty(void) { return m_dwChildCount == 0 ? TRUE : FALSE; }
+   BOOL isModified() { return m_bIsModified; }
+   BOOL isDeleted() { return m_bIsDeleted; }
+   BOOL isOrphaned() { return m_dwParentCount == 0 ? TRUE : FALSE; }
+   BOOL isEmpty() { return m_dwChildCount == 0 ? TRUE : FALSE; }
 	
-	BOOL IsSystem() { return m_bIsSystem; }
-	void SetSystemFlag(BOOL bFlag) { m_bIsSystem = bFlag; }
+	BOOL isSystem() { return m_bIsSystem; }
+	void setSystemFlag(BOOL bFlag) { m_bIsSystem = bFlag; }
 
    DWORD RefCount();
    void IncRefCount();
@@ -348,6 +348,7 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void postModify();
 
    void CommentsToMessage(CSCPMessage *pMsg);
 
@@ -361,11 +362,6 @@ public:
    void SetCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
    void SetCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
    void DeleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
-
-   NetObj** getChildList() { return m_pChildList; }
-   DWORD getChildCount() { return m_dwChildCount; }
-   NetObj** getParentList() { return m_pParentList; }
-   DWORD getParentCount() { return m_dwParentCount; }
 
    // Debug methods
    const TCHAR *ParentList(TCHAR *szBuffer);
@@ -1572,7 +1568,10 @@ protected:
 	NXSL_Program *m_pCompiledScript;
 	TCHAR m_reason[256];
 	bool m_isTemplate;
+	DWORD m_templateId;
 	DWORD m_currentTicketId;
+
+   virtual void OnObjectDelete(DWORD objectId);
 
 	void setScript(const TCHAR *script);
 	DWORD getOwnerId();
@@ -1584,8 +1583,8 @@ protected:
 
 public:
 	SlmCheck();
-	SlmCheck(const TCHAR *name);
-	SlmCheck(const SlmCheck *check);
+	SlmCheck(const TCHAR *name, bool isTemplate);
+	SlmCheck(SlmCheck *tmpl);
 	virtual ~SlmCheck();
 
 	virtual int Type() { return OBJECT_SLMCHECK; }
@@ -1596,9 +1595,13 @@ public:
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void postModify();
 
 	void execute();
-	bool isTemplate() const { return m_isTemplate; }
+	void updateFromTemplate(SlmCheck *tmpl);
+
+	bool isTemplate() { return m_isTemplate; }
+	DWORD getTemplateId() { return m_templateId; }
 	const TCHAR *getReason() { return m_reason; }
 };
 
@@ -1701,6 +1704,8 @@ public:
 	bool isReadyForPolling();
 	void lockForPolling();
 	void poll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+
+	void getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates);
 };
 
 
@@ -1712,6 +1717,8 @@ class NXCORE_EXPORTABLE NodeLink : public ServiceContainer
 {
 protected:
 	DWORD m_nodeId;
+
+	void applyTemplate(SlmCheck *tmpl);
 
 public:
 	NodeLink();
@@ -1728,7 +1735,7 @@ public:
 	virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void execute();
-	BOOL applyTemplates();
+	void applyTemplates();
 
 	DWORD getNodeId() { return m_nodeId; }
 };
@@ -1814,6 +1821,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxServiceCheckById;
 
 
 #endif   /* _nms_objects_h_ */
