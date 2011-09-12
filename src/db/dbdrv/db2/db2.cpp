@@ -423,7 +423,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
 			break;
 		case DB_BIND_TRANSIENT:
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)length : bufferSize[cType]);
+			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
 #else
 			if (cType == DB_CTYPE_STRING)
 			{

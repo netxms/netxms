@@ -353,7 +353,7 @@ extern "C" void EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int 
 			stmt->buffers->add(sqlBuffer);
 			break;
 		case DB_BIND_TRANSIENT:
-			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)length : bufferSize[cType]);
+			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
 			stmt->buffers->add(sqlBuffer);
 			break;
 		default:
