@@ -216,6 +216,15 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 
 #endif
 
+#if !HAVE_WCSDUP
+
+WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src)
+{
+	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
+}
+
+#endif
+
 
 //
 // Match string against pattern with * and ? metasymbols

@@ -862,6 +862,10 @@ extern "C"
 	QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
 
+#if !HAVE_WCSDUP
+	WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src);
+#endif
+
 #ifdef _WIN32
 #ifdef UNICODE
     DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);

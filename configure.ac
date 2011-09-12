@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.1.4], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.1.5], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -245,6 +245,29 @@ AC_ARG_WITH(db2,
 		unset DB2_LIB_DIR
 	fi
 	COMPONENTS="$COMPONENTS db2"
+	DBDRIVER_SELECTED="yes"
+fi ])
+
+AC_ARG_WITH(informix,
+[AS_HELP_STRING(--with-informix,build Informix database driver)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		if test -x "$withval/lib/cli" ; then
+			LD_RUN_PATH="${withval}/lib/cli${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}/lib/cli"
+			if test -x "$withval/lib/esql" ; then
+				LD_RUN_PATH="${withval}/lib/esql${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+				LDFLAGS="$LDFLAGS -L${withval}/lib/esql"
+			fi
+		else
+			LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}"
+		fi
+		if test -x "$withval/incl/cli" ; then
+			CPPFLAGS="$CPPFLAGS -I${withval}/incl/cli"
+		fi
+	fi
+	COMPONENTS="$COMPONENTS informix"
 	DBDRIVER_SELECTED="yes"
 fi ])
 
@@ -1785,6 +1808,17 @@ if test $? = 0; then
 fi
 
 #--------------------------------------------------------------------
+# Informix
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "informix"
+if test $? = 0; then
+	AC_CHECK_HEADER(infxcli.h,,AC_MSG_ERROR([*** Cannot find infxcli.h - check your Informix client installation ***]))
+	AC_CHECK_LIB(ifcli, SQLAllocHandle, [INFORMIX_LIBS="-lifcli"],
+		[AC_MSG_ERROR(libifcli is required for Informix support)])
+fi
+
+#--------------------------------------------------------------------
 # nxhttpd
 #--------------------------------------------------------------------
 
@@ -2123,4 +2157,7 @@ if test "x${ODBC_LIBS}" != "x"; then
 fi
 if test "x${DB2_LIBS}" != "x"; then
 	echo "DB2 libs                : ${DB2_LIBS}"
+fi
+if test "x${INFORMIX_LIBS}" != "x"; then
+	echo "Informix libs           : ${INFORMIX_LIBS}"
 fi

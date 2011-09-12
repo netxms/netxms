@@ -44,20 +44,20 @@
 #include <nms_util.h>
 
 #ifndef _WIN32
-
-#if HAVE_WCHAR_H
-#define NETXMS_WCHAR		wchar_t
-#else		/* HAVE_WCHAR_T */
-#define NETXMS_WCHAR		WCHAR
-#endif	/* HAVE_WCHAR_T */
 #undef WCHAR
-
-#else		/* _WIN32 */
-#define NETXMS_WCHAR		WCHAR
+#undef TCHAR
+#define WCHAR _I_hate_Informix_WCHAR
+#define TCHAR _I_hate_Informix_TCHAR
 #endif
 
-//#define __BOOL // disable BOOL typedef
 #include <infxcli.h>
+
+#ifndef _WIN32
+#undef WCHAR
+#undef TCHAR
+#define WCHAR wchar_t
+#define TCHAR char
+#endif
 
 
 //
@@ -93,7 +93,7 @@ typedef struct
 {
    long iNumRows;
    long iNumCols;
-   NETXMS_WCHAR **pValues;
+   WCHAR **pValues;
 	char **columnNames;
 } INFORMIX_QUERY_RESULT;
 

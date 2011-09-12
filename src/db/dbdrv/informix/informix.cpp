@@ -34,7 +34,7 @@ DECLARE_DRIVER_HEADER("INFORMIX")
 // Convert INFORMIX state to NetXMS database error code and get error text
 //
 
-static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_WCHAR *errorText)
+static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
 {
 	SQLRETURN nRet;
 	SQLSMALLINT nChars;
@@ -45,23 +45,12 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 	nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, buffer, 16, &nChars);
 	if (nRet == SQL_SUCCESS)
 	{
-#if UNICODE_UCS2
 		if (
 			(!wcscmp(buffer, L"08003")) ||	// Connection does not exist
 			(!wcscmp(buffer, L"08S01")) ||	// Communication link failure
 			(!wcscmp(buffer, L"HYT00")) ||	// Timeout expired
 			(!wcscmp(buffer, L"HYT01")) ||	// Connection timeout expired
 			(!wcscmp(buffer, L"08506")))	// SQL30108N: A connection failed but has been re-established.
-#else
-		char state[16];
-		ucs2_to_mb(buffer, -1, state, 16);
-		if (
-			(!strcmp(state, "08003")) ||	// Connection does not exist
-			(!strcmp(state, "08S01")) ||	// Communication link failure
-			(!strcmp(state, "HYT00")) ||	// Timeout expired
-			(!strcmp(state, "HYT01")) ||	// Connection timeout expired
-			(!strcmp(state, "08506")))	// SQL30108N: A connection failed but has been re-established.
-#endif
 		{
 			dwError = DBERR_CONNECTION_LOST;
 		}
@@ -78,17 +67,9 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 	// Get error message
 	if (errorText != NULL)
 	{
-#if UNICODE_UCS2
 		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
-#else
-		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, buffer, DBDRV_MAX_ERROR_TEXT, &nChars);
-#endif
 		if (nRet == SQL_SUCCESS)
 		{
-#if UNICODE_UCS4
-			buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-			ucs2_to_ucs4(buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
-#endif
 			RemoveTrailingCRLFW(errorText);
 		}
 		else
@@ -214,7 +195,7 @@ extern "C" void EXPORT DrvUnload()
 // Schema name is ignored
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, WCHAR *errorText)
 {
 	long iResult;
 	INFORMIX_CONN *pConn;
@@ -297,7 +278,7 @@ extern "C" void EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
 // Prepare statement
 //
 
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	long iResult;
 	SQLHSTMT statement;
@@ -310,15 +291,8 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, NETXMS_WCHAR 
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Prepare statement
-#if defined(_WIN32) || defined(UNICODE_UCS2)
 		iResult = SQLPrepareW(statement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-#else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-		iResult = SQLPrepareW(statement, temp, SQL_NTS);
-		free(temp);
-#endif
-		if ((iResult == SQL_SUCCESS) ||
-				(iResult == SQL_SUCCESS_WITH_INFO))
+		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			result = (INFORMIX_STATEMENT *)malloc(sizeof(INFORMIX_STATEMENT));
 			result->handle = statement;
@@ -361,49 +335,14 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
 	switch(allocType)
 	{
 		case DB_BIND_STATIC:
-#if defined(_WIN32) || defined(UNICODE_UCS2)
 			sqlBuffer = buffer;
-#else
-			if (cType == DB_CTYPE_STRING)
-			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
-				statement->buffers->add(sqlBuffer);
-			}
-			else
-			{
-				sqlBuffer = buffer;
-			}
-#endif
 			break;
 		case DB_BIND_DYNAMIC:
-#if defined(_WIN32) || defined(UNICODE_UCS2)
 			sqlBuffer = buffer;
-#else
-			if (cType == DB_CTYPE_STRING)
-			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
-				free(buffer);
-			}
-			else
-			{
-				sqlBuffer = buffer;
-			}
-#endif
 			statement->buffers->add(sqlBuffer);
 			break;
 		case DB_BIND_TRANSIENT:
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)length : bufferSize[cType]);
-#else
-			if (cType == DB_CTYPE_STRING)
-			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
-			}
-			else
-			{
-				sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
-			}
-#endif
+			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
 			statement->buffers->add(sqlBuffer);
 			break;
 		default:
@@ -418,7 +357,7 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
 // Execute prepared statement
 //
 
-extern "C" DWORD EXPORT DrvExecute(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, NETXMS_WCHAR *errorText)
+extern "C" DWORD EXPORT DrvExecute(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, WCHAR *errorText)
 {
 	DWORD dwResult;
 
@@ -464,7 +403,7 @@ extern "C" void EXPORT DrvFreeStatement(INFORMIX_STATEMENT *statement)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(INFORMIX_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	long iResult;
 	DWORD dwResult;
@@ -476,13 +415,7 @@ extern "C" DWORD EXPORT DrvQuery(INFORMIX_CONN *pConn, NETXMS_WCHAR *pwszQuery, 
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-#if defined(_WIN32) || defined(UNICODE_UCS2)
 		iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-#else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-		iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
-		free(temp);
-#endif      
 		if (
 			(iResult == SQL_SUCCESS) || 
 			(iResult == SQL_SUCCESS_WITH_INFO) || 
@@ -526,7 +459,7 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
 	for(int i = 0; i < (int)pResult->iNumCols; i++)
 	{
-		UCS2CHAR name[256];
+		WCHAR name[256];
 		SQLSMALLINT len;
 
 		SQLRETURN iResult = SQLColAttributeW(statement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, (SQLPOINTER)name, 256, &len, NULL); 
@@ -535,7 +468,7 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 			(iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			name[len] = 0;
-			pResult->columnNames[i] = MBStringFromUCS2String(name);
+			pResult->columnNames[i] = MBStringFromWideString(name);
 		}
 		else
 		{
@@ -549,7 +482,7 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 	while(iResult = SQLFetch(statement), (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		pResult->iNumRows++;
-		pResult->pValues = (NETXMS_WCHAR **)realloc(pResult->pValues, sizeof(NETXMS_WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
+		pResult->pValues = (WCHAR **)realloc(pResult->pValues, sizeof(WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
 		for(int i = 1; i <= (int)pResult->iNumCols; i++)
 		{
 			SQLLEN iDataSize;
@@ -558,11 +491,7 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 			iResult = SQLGetData(statement, (short)i, SQL_C_WCHAR, pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
 			if (iDataSize != SQL_NULL_DATA)
 			{
-#if defined(_WIN32) || defined(UNICODE_UCS2)
 				pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
-#else
-				pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
-#endif
 			}
 			else
 			{
@@ -580,7 +509,7 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 // Perform SELECT query
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	INFORMIX_QUERY_RESULT *pResult = NULL;
 
@@ -591,13 +520,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, NETXMS_WCHAR *pws
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-#if defined(_WIN32) || defined(UNICODE_UCS2)
 		iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-#else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-		iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
-		free(temp);
-#endif
 		if (
 			(iResult == SQL_SUCCESS) || 
 			(iResult == SQL_SUCCESS_WITH_INFO))
@@ -625,7 +548,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, NETXMS_WCHAR *pws
 // Perform SELECT query using prepared statement
 //
 
-extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, DWORD *pdwError, WCHAR *errorText)
 {
 	INFORMIX_QUERY_RESULT *pResult = NULL;
 
@@ -671,10 +594,10 @@ extern "C" LONG EXPORT DrvGetFieldLength(INFORMIX_QUERY_RESULT *pResult, int iRo
 // Get field value from result
 //
 
-extern "C" NETXMS_WCHAR EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn,
-		NETXMS_WCHAR *pBuffer, int nBufSize)
+extern "C" WCHAR EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn,
+		WCHAR *pBuffer, int nBufSize)
 {
-	NETXMS_WCHAR *pValue = NULL;
+	WCHAR *pValue = NULL;
 
 	if (pResult != NULL)
 	{
@@ -756,8 +679,8 @@ extern "C" void EXPORT DrvFreeResult(INFORMIX_QUERY_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-		DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery,
+		DWORD *pdwError, WCHAR *errorText)
 {
 	INFORMIX_ASYNC_QUERY_RESULT *pResult = NULL;
 	long iResult;
@@ -771,13 +694,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, NETXMS
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-#if defined(_WIN32) || defined(UNICODE_UCS2)
 		iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-#else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-		iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
-		free(temp);
-#endif
 		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			// Allocate result buffer and determine column info
@@ -801,7 +718,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, NETXMS
 					(iResult == SQL_SUCCESS_WITH_INFO))
 				{
 					name[len] = 0;
-					pResult->columnNames[i] = MBStringFromUCS2String(name);
+					pResult->columnNames[i] = MBStringFromWideString(name);
 				}
 				else
 				{
@@ -883,8 +800,8 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(INFORMIX_ASYNC_QUERY_RESULT *pResu
 // Get field from current row in async query result
 //
 
-extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult,
-		int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult,
+		int iColumn, WCHAR *pBuffer, int iBufSize)
 {
 	SQLLEN iDataSize;
 	long iResult;
@@ -903,17 +820,8 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pR
 
 	if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
 	{
-#if defined(_WIN32) || defined(UNICODE_UCS2)
 		iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
 				pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
-#else
-		SQLWCHAR *tempBuff = (SQLWCHAR *)malloc(iBufSize * sizeof(SQLWCHAR));
-		iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
-				tempBuff, iBufSize * sizeof(SQLWCHAR), &iDataSize);
-		ucs2_to_ucs4(tempBuff, -1, pBuffer, iBufSize);
-		pBuffer[iBufSize - 1] = 0;
-		free(tempBuff);
-#endif
 		if (((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO)) || (iDataSize == SQL_NULL_DATA))
 		{
 			pBuffer[0] = 0;
