@@ -216,7 +216,7 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 
 #endif
 
-#if !HAVE_WCSDUP
+#if !HAVE_WCSDUP && !defined(_WIN32)
 
 WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src)
 {
