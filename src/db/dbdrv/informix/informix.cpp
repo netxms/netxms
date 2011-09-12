@@ -211,6 +211,7 @@ extern "C" void EXPORT DrvUnload()
 //
 // Connect to database
 // pszHost should be set to INFORMIX source name, and pszDatabase is ignored
+// Schema name is ignored
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
@@ -257,35 +258,6 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 		goto connect_failure_2;
 	}
 
-	// Set current schema
-	if ((schema != NULL) && (schema[0] != 0))
-	{
-		char query[256];
-		snprintf(query, 256, "SET CURRENT SCHEMA = '%s'", schema);
-
-		iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
-		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-		{
-			// Execute statement
-			SQLWCHAR *temp = UCS2StringFromMBString(query);
-			iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
-			free(temp);
-			if ((iResult != SQL_SUCCESS) && 
-				 (iResult != SQL_SUCCESS_WITH_INFO) && 
-				 (iResult != SQL_NO_DATA))
-			{
-				GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
-				goto connect_failure_3;
-			}
-			SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
-		}
-		else
-		{
-			GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
-			goto connect_failure_2;
-		}
-	}
-
 	// Create mutex
 	pConn->mutexQuery = MutexCreate();
 
@@ -293,9 +265,6 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 	return (DBDRV_CONNECTION)pConn;
 
 	// Handle failures
-connect_failure_3:
-	SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
-
 connect_failure_2:
 	SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
 
