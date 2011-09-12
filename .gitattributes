@@ -295,6 +295,7 @@ src/db/dbdrv/db2/Makefile.am -text
 src/db/dbdrv/db2/db2.cpp -text
 src/db/dbdrv/db2/db2.vcproj -text
 src/db/dbdrv/db2/db2drv.h -text
+src/db/dbdrv/informix/informix.vcproj -text
 src/db/dbdrv/mssql/mssql.vcproj -text
 src/db/dbdrv/mysql/mysql.vcproj -text
 src/db/dbdrv/odbc/odbc.vcproj -text

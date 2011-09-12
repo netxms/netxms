@@ -314,7 +314,7 @@ AC_ARG_ENABLE(64bit,
 
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
-	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2"
+	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
@@ -502,6 +502,11 @@ fi
 check_substr "$COMPONENTS" "db2"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS db2"
+fi
+
+check_substr "$COMPONENTS" "informix"
+if test $? = 0; then
+	DB_DRIVERS="$DB_DRIVERS informix"
 fi
 
 
@@ -1825,6 +1830,7 @@ AC_SUBST(PGSQL_LIBS)
 AC_SUBST(ORACLE_LIBS)
 AC_SUBST(ODBC_LIBS)
 AC_SUBST(DB2_LIBS)
+AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(OBJECT_MODE)
 
 #--------------------------------------------------------------------
@@ -1927,13 +1933,14 @@ AC_CONFIG_FILES([
 	src/client/windows/nxuilib/sounds/Makefile
 	src/db/Makefile
 	src/db/dbdrv/Makefile
+	src/db/dbdrv/db2/Makefile
+	src/db/dbdrv/informix/Makefile
 	src/db/dbdrv/odbc/Makefile
 	src/db/dbdrv/mssql/Makefile
 	src/db/dbdrv/mysql/Makefile
+	src/db/dbdrv/oracle/Makefile
 	src/db/dbdrv/pgsql/Makefile
 	src/db/dbdrv/sqlite/Makefile
-	src/db/dbdrv/oracle/Makefile
-	src/db/dbdrv/db2/Makefile
 	src/db/libnxdb/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
