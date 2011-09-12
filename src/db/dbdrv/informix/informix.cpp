@@ -214,8 +214,7 @@ extern "C" void EXPORT DrvUnload()
 // Schema name is ignored
 //
 
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
-                                              char *pszPassword, char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, NETXMS_WCHAR *errorText)
 {
 	long iResult;
 	INFORMIX_CONN *pConn;
@@ -249,9 +248,11 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER *)15, 0);
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
 
-	// Connect to the datasource 
-	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS,
-			(SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
+	// Connect to the database 
+	SQLSMALLINT outLen;
+	char connectString[1024];
+	snprintf(connectString, 1024, "HostName=%s;UID=%s;PWD=%s;DB=%s", host, login, password, database);
+	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
