@@ -196,8 +196,7 @@ extern "C" void EXPORT DrvUnload()
 
 //
 // Connect to database
-// pszHost should be set to INFORMIX source name, and pszDatabase is ignored
-// Schema name is ignored
+// database should be set to INFORMIX source name. Host and schema are ignored
 //
 
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, WCHAR *errorText)
@@ -237,7 +236,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *pas
 	// Connect to the database 
 	SQLSMALLINT outLen;
 	char connectString[1024];
-	snprintf(connectString, 1024, "DSN=%s;HOST=%s;UID=%s;PWD=%s", database, host, login, password);
+	snprintf(connectString, 1024, "DSN=%s;LogonID=%s;Password=%s", database, login, password);
 	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
