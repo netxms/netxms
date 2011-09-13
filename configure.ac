@@ -1814,8 +1814,8 @@ fi
 check_substr "$COMPONENTS" "informix"
 if test $? = 0; then
 	AC_CHECK_HEADER(infxcli.h,,AC_MSG_ERROR([*** Cannot find infxcli.h - check your Informix client installation ***]))
-	AC_CHECK_LIB(ifcli, SQLAllocHandle, [INFORMIX_LIBS="-lifcli"],
-		[AC_MSG_ERROR(libifcli is required for Informix support)])
+	AC_CHECK_LIB(thcli, SQLAllocHandle, [INFORMIX_LIBS="-lthcli"],
+		[AC_MSG_ERROR(libthcli is required for Informix support)])
 fi
 
 #--------------------------------------------------------------------

@@ -236,7 +236,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *pas
 	// Connect to the database 
 	SQLSMALLINT outLen;
 	char connectString[1024];
-	snprintf(connectString, 1024, "DSN=%s;LogonID=%s;Password=%s", database, login, password);
+	snprintf(connectString, 1024, "DSN=%s;UID=%s;PWD=%s", database, login, password);
 	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
@@ -332,8 +332,6 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
 	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
 
 	int length = (int)wcslen((WCHAR *)buffer) + 1;
-
-	printf("### length = %d\n", length);
 
 	SQLPOINTER sqlBuffer;
 	switch(allocType)
@@ -457,22 +455,22 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 	pResult->iNumRows = 0;
 	pResult->pValues = NULL;
 
-	BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
+	BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE * sizeof(wchar_t));
 
 	// Get column names
 	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
 	for(int i = 0; i < (int)pResult->iNumCols; i++)
 	{
-		WCHAR name[256];
+		char name[256];
 		SQLSMALLINT len;
 
-		SQLRETURN iResult = SQLColAttributeW(statement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, (SQLPOINTER)name, 256, &len, NULL); 
+		SQLRETURN iResult = SQLColAttribute(statement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, (SQLPOINTER)name, 256, &len, NULL); 
 		if (
 			(iResult == SQL_SUCCESS) || 
 			(iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			name[len] = 0;
-			pResult->columnNames[i] = MBStringFromWideString(name);
+			pResult->columnNames[i] = strdup(name);
 		}
 		else
 		{
@@ -824,8 +822,10 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult,
 
 	if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
 	{
-		iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
-				pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
+		// At least on HP-UX driver expects length in chars, not bytes
+		// otherwise it crashes
+		// TODO: check other platforms
+		iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR, pBuffer, iBufSize, &iDataSize);
 		if (((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO)) || (iDataSize == SQL_NULL_DATA))
 		{
 			pBuffer[0] = 0;
