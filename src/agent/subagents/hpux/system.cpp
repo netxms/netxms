@@ -409,6 +409,51 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
+//
+// Handler for Process.VMSize(*) parameter
+//
+
+LONG H_ProcessDetails(const char *pszParam, const char *pArg, char *pValue)
+{
+	INT64 value = 0;
+	struct pst_status *pst;
+	int i, nCount, nTotal;
+	char szArg[256];
+	LONG nRet = SYSINFO_RC_ERROR;
+
+	if (!AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg)))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	pst = GetProcessList(&nCount);
+	if (pst != NULL)
+	{
+		for (i = 0, nTotal = 0; i < nCount; i++)
+		{
+			if (!strcasecmp(pst[i].pst_ucomm, szArg))
+			{
+				value += 
+					pst[i].pst_vtsize + /* text */
+					+ pst[i].pst_vdsize + /* data */
+					+ pst[i].pst_vssize + /* stack */
+					+ pst[i].pst_vshmsize + /* shared memory */
+					+ pst[i].pst_vmmsize + /* mem-mapped files */
+					+ pst[i].pst_vusize + /* U-Area & K-Stack */
+					+ pst[i].pst_viosize; /* I/O dev mapping */ 
+				break;
+			}
+		}
+		free(pst);
+		if (i == nCount) // not found
+			nRet = SYSINFO_RC_ERROR;
+		else
+		{
+			ret_int64(pValue, value);
+			nRet = SYSINFO_RC_SUCCESS;
+		}
+	}
+
+	return nRet;
+}
 
 //
 // Handler for System.ProcessList enum

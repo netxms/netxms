@@ -126,6 +126,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 	{ "Process.Count(*)",             H_ProcessCount,    NULL,
 		DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
+	{ "Process.VMSize(*)",            H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_VMSIZE, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_VMSIZE },
 
 	{ "System.ConnectedUsers",        H_ConnectedUsers,  NULL,
 		DCI_DT_UINT,	DCIDESC_SYSTEM_CONNECTEDUSERS },

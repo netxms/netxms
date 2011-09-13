@@ -50,6 +50,7 @@ LONG H_Hostname(const char *, const char *, char *);
 LONG H_CpuLoad(const char *, const char *, char *);
 LONG H_CpuUsage(const char *, const char *, char *);
 LONG H_ProcessCount(const char *, const char *, char *);
+LONG H_ProcessDetails(const char *, const char *, char *);
 LONG H_SysProcessCount(const char *, const char *, char *);
 LONG H_MemoryInfo(const char *, const char *, char *);
 LONG H_SourcePkgSupport(const char *, const char *, char *);
