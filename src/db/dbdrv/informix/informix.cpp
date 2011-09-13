@@ -39,18 +39,18 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *
 	SQLRETURN nRet;
 	SQLSMALLINT nChars;
 	DWORD dwError;
-	SQLWCHAR buffer[DBDRV_MAX_ERROR_TEXT];
+	SQLWCHAR sqlState[32];
 
 	// Get state information and convert it to NetXMS database error code
-	nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, buffer, 16, &nChars);
+	nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, sqlState, 16, &nChars);
 	if (nRet == SQL_SUCCESS)
 	{
 		if (
-			(!wcscmp(buffer, L"08003")) ||	// Connection does not exist
-			(!wcscmp(buffer, L"08S01")) ||	// Communication link failure
-			(!wcscmp(buffer, L"HYT00")) ||	// Timeout expired
-			(!wcscmp(buffer, L"HYT01")) ||	// Connection timeout expired
-			(!wcscmp(buffer, L"08506")))	// SQL30108N: A connection failed but has been re-established.
+			(!wcscmp(sqlState, L"08003")) ||	// Connection does not exist
+			(!wcscmp(sqlState, L"08S01")) ||	// Communication link failure
+			(!wcscmp(sqlState, L"HYT00")) ||	// Timeout expired
+			(!wcscmp(sqlState, L"HYT01")) ||	// Connection timeout expired
+			(!wcscmp(sqlState, L"08506")))	// SQL30108N: A connection failed but has been re-established.
 		{
 			dwError = DBERR_CONNECTION_LOST;
 		}
@@ -67,14 +67,19 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *
 	// Get error message
 	if (errorText != NULL)
 	{
-		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
+		errorText[0] = L'[';
+		wcscpy(&errorText[1], sqlState);
+		int pos = (int)wcslen(errorText);
+		errorText[pos++] = L']';
+		errorText[pos++] = L' ';
+		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, &errorText[pos], DBDRV_MAX_ERROR_TEXT - pos, &nChars);
 		if (nRet == SQL_SUCCESS)
 		{
 			RemoveTrailingCRLFW(errorText);
 		}
 		else
 		{
-			wcscpy(errorText, L"Unable to obtain description for this error");
+			wcscpy(&errorText[pos], L"Unable to obtain description for this error");
 		}
 	}
 
