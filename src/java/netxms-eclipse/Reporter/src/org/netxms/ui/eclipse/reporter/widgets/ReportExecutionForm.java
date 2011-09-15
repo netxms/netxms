@@ -336,11 +336,12 @@ public class ReportExecutionForm extends Composite
 								outputStream.write(buffer, 0, size);
 							}
 						} while(size == buffer.length);
-						
+
 						outputStream.close();
 						outputStream = null;
-						
-						getDisplay().asyncExec(new Runnable() {
+
+						getDisplay().asyncExec(new Runnable()
+						{
 							@Override
 							public void run()
 							{
@@ -375,10 +376,13 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void executeReport()
 	{
-		final Map<String, String> execParameters = new HashMap<String, String>(parameters.size());
-		for(int i = 0; i < parameters.size(); i++)
+		final Map<String, String> execParameters = new HashMap<String, String>();
+		if (parameters != null)
 		{
-			execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
+			for(int i = 0; i < parameters.size(); i++)
+			{
+				execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
+			}
 		}
 
 		new ConsoleJob("Execute report", workbenchPart, Activator.PLUGIN_ID, null)
@@ -449,11 +453,12 @@ public class ReportExecutionForm extends Composite
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Open rendered report in appropriate external program (like PDF viewer)
 	 * 
-	 * @param fileName rendered report file
+	 * @param fileName
+	 *           rendered report file
 	 */
 	private void openReport(String fileName, ReportRenderFormat format)
 	{
@@ -467,7 +472,7 @@ public class ReportExecutionForm extends Composite
 			MessageDialog.openError(getShell(), "Error", "Report was rendered successfully, but external viewer cannot be opened");
 		}
 	}
-	
+
 	/**
 	 * Delete selected report results
 	 */
@@ -476,23 +481,25 @@ public class ReportExecutionForm extends Composite
 		IStructuredSelection selection = (IStructuredSelection)resultList.getSelection();
 		if (selection.size() == 0)
 			return;
-		
+
 		if (!MessageDialog.openConfirm(getShell(), "Delete Report Results", "Do you really want to delete selected results?"))
 			return;
-		
+
 		final List<Long> resultIdList = new ArrayList<Long>(selection.size());
 		for(Object o : selection.toList())
 		{
 			resultIdList.add(((ReportResult)o).getJobId());
 		}
-		
+
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Delete report execution results", workbenchPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Delete report execution results", workbenchPart, Activator.PLUGIN_ID, null)
+		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.deleteReportResults(report.getObjectId(), resultIdList);
-				getDisplay().asyncExec(new Runnable() {
+				getDisplay().asyncExec(new Runnable()
+				{
 					@Override
 					public void run()
 					{
