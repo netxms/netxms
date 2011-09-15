@@ -8,7 +8,16 @@ element type dependent.
 1.1. Label
 
 <element>
-	<title>label text</title>
+	<title>label text</title> <!-- required -->
+	<foreground>0x000000</foreground> <!-- optional -->
+	<background>0xFFFFFF</background> <!-- optional -->
+</element>
+
+1.2. Dashboard
+
+<element>
+	<objectId></objectId> <!-- required -->
+	<title></title> <!-- optional -->
 </element>
 
 
