@@ -260,6 +260,8 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 			{
 				changeTimestamp = DBGetFieldLong(hResult, i, 0);
 				newStatus = DBGetFieldLong(hResult, i, 1);
+				if (newStatus == STATUS_UNKNOWN) // Malawi hotfix - ignore unknown status
+					continue;
 				if (newStatus == STATUS_NORMAL)
 					*downtime += (LONG)(changeTimestamp - prevChangeTimestamp);
 				else 
