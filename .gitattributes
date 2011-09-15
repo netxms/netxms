@@ -1,4 +1,5 @@
 * text=auto !eol
+android/keystore/keystore -text
 android/src/console/.externalToolBuilders/Build[!!-~]Number[!!-~]Generator.launch -text
 android/src/console/.externalToolBuilders/run.exe -text
 android/src/console/AndroidManifest.xml -text
