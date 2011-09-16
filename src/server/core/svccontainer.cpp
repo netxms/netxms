@@ -126,6 +126,8 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	int i, iCount, iMostCriticalStatus;
 	int iOldStatus = m_iStatus;
 
+	DbgPrintf(7, _T("#### CalculateCompoundStatus for id %d"), m_dwId);
+
 	// Calculate own status by selecting the most critical status of the kids
 	LockChildList(FALSE);
 	for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < int(m_dwChildCount); i++)
@@ -141,6 +143,16 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	// Set status and update uptime counters
 	setStatus((iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN);
 	UnlockChildList();
+
+	// A hack to make service root to recalculate uptime properly
+	for(i = 0; iOldStatus == m_iStatus && i < int(m_dwParentCount); i++)
+	{
+		if (m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICEROOT)
+		{
+			((BusinessServiceRoot*)m_pParentList[i])->updateUptimeStats();
+			break;
+		}
+	}
 
 	// Cause parent object(s) to recalculate it's status
 	if ((iOldStatus != m_iStatus) || bForcedRecalc)
@@ -240,8 +252,6 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 		_T("WHERE service_id=? AND change_timestamp>?"));
 	if (hStmt != NULL)
 	{
-		time_t changeTimestamp, prevChangeTimestamp;
-		int newStatus;
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (DWORD)beginTime);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
@@ -251,25 +261,27 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 			return percentage;
 		}
 
+		time_t changeTimestamp, prevChangeTimestamp = beginTime;
+		int newStatus = STATUS_UNKNOWN, i, realRows;
 		int numRows = DBGetNumRows(hResult);
 		*downtime = 0;
-		prevChangeTimestamp = beginTime;
-		if (numRows > 0) // if <= 0 then assume zero downtime   FIXME: it can be 100% downtime
+		for (i = 0, realRows = 0; i < numRows; i++)
 		{
-			for (int i = 0; i < numRows; i++)
-			{
-				changeTimestamp = DBGetFieldLong(hResult, i, 0);
-				newStatus = DBGetFieldLong(hResult, i, 1);
-				if (newStatus == STATUS_UNKNOWN) // Malawi hotfix - ignore unknown status
-					continue;
-				if (newStatus == STATUS_NORMAL)
-					*downtime += (LONG)(changeTimestamp - prevChangeTimestamp);
-				else 
-					prevChangeTimestamp = changeTimestamp;
-			}
-			if (newStatus == STATUS_CRITICAL) // the service is still down, add period till now
-				*downtime += LONG(time(NULL) - prevChangeTimestamp);
+			changeTimestamp = DBGetFieldLong(hResult, i, 0);
+			newStatus = DBGetFieldLong(hResult, i, 1);
+			if (newStatus == STATUS_UNKNOWN) // Malawi hotfix - ignore unknown status
+				continue;
+			if (newStatus == STATUS_NORMAL)
+				*downtime += (LONG)(changeTimestamp - prevChangeTimestamp);
+			else 
+				prevChangeTimestamp = changeTimestamp;
+			realRows++;
 		}
+		if (newStatus == STATUS_CRITICAL) // the service is still down, add period till now
+			*downtime += LONG(time(NULL) - prevChangeTimestamp);
+		// now rows for period && critical status -> downtime from beginning till now
+		if (realRows == 0 && m_iStatus == STATUS_CRITICAL)  
+			*downtime = timediffTillNow;
 		percentage = 100.0 - (double)(*downtime * 100) / (double)getSecondsInPeriod(period);
 		DbgPrintf(7, _T("++++ ServiceContainer::getUptimeFromDBFor(), downtime %ld"), *downtime);
 
