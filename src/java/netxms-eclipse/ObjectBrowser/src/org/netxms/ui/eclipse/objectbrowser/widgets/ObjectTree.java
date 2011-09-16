@@ -111,17 +111,7 @@ public class ObjectTree extends Composite
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
-				filter.setFilterString(filterText.getText());
-				objectTree.refresh(false);
-				GenericObject obj = filter.getLastMatch();
-				if (obj != null)
-				{
-					objectTree.setSelection(new StructuredSelection(obj), true);
-					GenericObject parent = filter.getParent(obj);
-					if (parent != null)
-						objectTree.expandToLevel(parent, 1);
-					objectTree.reveal(obj);
-				}
+				onFilterModify();
 			}
 		});
 		
@@ -325,6 +315,7 @@ public class ObjectTree extends Composite
 	public void setFilter(final String text)
 	{
 		filterText.setText(text);
+		onFilterModify();
 	}
 
 	/**
@@ -427,5 +418,25 @@ public class ObjectTree extends Composite
 		super.setEnabled(enabled);
 		objectTree.getControl().setEnabled(enabled);
 		filterText.setEnabled(enabled);
+	}
+
+	private void onFilterModify()
+	{
+		final String text = filterText.getText();
+		filter.setFilterString(text);
+		objectTree.refresh(false);
+		if (!text.isEmpty())
+		{
+			objectTree.expandAll();
+		}
+		GenericObject obj = filter.getLastMatch();
+		if (obj != null)
+		{
+			objectTree.setSelection(new StructuredSelection(obj), true);
+			GenericObject parent = filter.getParent(obj);
+			if (parent != null)
+				objectTree.expandToLevel(parent, 1);
+			objectTree.reveal(obj);
+		}
 	}
 }
