@@ -420,6 +420,9 @@ public class ObjectTree extends Composite
 		filterText.setEnabled(enabled);
 	}
 
+	/**
+	 * 
+	 */
 	private void onFilterModify()
 	{
 		final String text = filterText.getText();
@@ -438,5 +441,39 @@ public class ObjectTree extends Composite
 				objectTree.expandToLevel(parent, 1);
 			objectTree.reveal(obj);
 		}
+	}
+
+	/**
+	 * @return the hideUnmanaged
+	 */
+	public boolean isHideUnmanaged()
+	{
+		return filter.isHideUnmanaged();
+	}
+
+	/**
+	 * @param hideUnmanaged the hideUnmanaged to set
+	 */
+	public void setHideUnmanaged(boolean hideUnmanaged)
+	{
+		filter.setHideUnmanaged(hideUnmanaged);
+		onFilterModify();
+	}
+
+	/**
+	 * @return the hideTemplateChecks
+	 */
+	public boolean isHideTemplateChecks()
+	{
+		return filter.isHideTemplateChecks();
+	}
+
+	/**
+	 * @param hideTemplateChecks the hideTemplateChecks to set
+	 */
+	public void setHideTemplateChecks(boolean hideTemplateChecks)
+	{
+		filter.setHideTemplateChecks(hideTemplateChecks);
+		onFilterModify();
 	}
 }

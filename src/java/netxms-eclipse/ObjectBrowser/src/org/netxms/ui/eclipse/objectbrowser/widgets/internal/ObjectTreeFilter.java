@@ -27,7 +27,9 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.ServiceCheck;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -37,6 +39,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ObjectTreeFilter extends ViewerFilter
 {
 	private String filterString = null;
+	private boolean hideUnmanaged = false;
+	private boolean hideTemplateChecks = false;
 	private Map<Long, GenericObject> objectList = null;
 	private GenericObject lastMatch = null;
 	private long[] rootObjects = null;
@@ -81,6 +85,12 @@ public class ObjectTreeFilter extends ViewerFilter
 			if (!classFilter.contains(((GenericObject)element).getObjectClass()))
 				return false;
 		}
+		
+		if (hideUnmanaged && (((GenericObject)element).getStatus() == Severity.UNMANAGED))
+			return false;
+		
+		if (hideTemplateChecks && (element instanceof ServiceCheck) && ((ServiceCheck)element).isTemplate())
+			return false;
 		
 		if (objectList == null)
 			return true;
@@ -198,5 +208,37 @@ public class ObjectTreeFilter extends ViewerFilter
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * @return the hideUnmanaged
+	 */
+	public boolean isHideUnmanaged()
+	{
+		return hideUnmanaged;
+	}
+
+	/**
+	 * @param hideUnmanaged the hideUnmanaged to set
+	 */
+	public void setHideUnmanaged(boolean hideUnmanaged)
+	{
+		this.hideUnmanaged = hideUnmanaged;
+	}
+
+	/**
+	 * @return the hideTemplateChecks
+	 */
+	public boolean isHideTemplateChecks()
+	{
+		return hideTemplateChecks;
+	}
+
+	/**
+	 * @param hideTemplateChecks the hideTemplateChecks to set
+	 */
+	public void setHideTemplateChecks(boolean hideTemplateChecks)
+	{
+		this.hideTemplateChecks = hideTemplateChecks;
 	}
 }

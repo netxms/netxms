@@ -37,7 +37,10 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.IMemento;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -66,10 +69,46 @@ public class ObjectBrowser extends ViewPart
 	private ObjectTree objectTree;
 	private Action actionShowFilter;
 	private Action actionHideUnmanaged;
+	private Action actionHideTemplateChecks;
 	private Action actionMoveObject;
 	private Action actionRefresh;
 	private Action actionProperties;
+	private boolean initHideUnmanaged = false;
+	private boolean initHideTemplateChecks = false;
+	private boolean initShowFilter = true;
 	
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void init(IViewSite site, IMemento memento) throws PartInitException
+	{
+		super.init(site, memento);
+		if (memento != null)
+		{
+			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false);
+			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false);
+			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true);
+		}
+	}
+
+	private static boolean safeCast(Boolean b, boolean defval)
+	{
+		return (b != null) ? b : defval;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void saveState(IMemento memento)
+	{
+		super.saveState(memento);
+		memento.putBoolean("ObjectBrowser.hideUnmanaged", objectTree.isHideUnmanaged());
+		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks());
+		memento.putBoolean("ObjectBrowser.showFilter", objectTree.isFilterEnabled());
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
@@ -94,6 +133,10 @@ public class ObjectBrowser extends ViewPart
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
 		objectTree.setLayoutData(fd);
+		
+		objectTree.setHideTemplateChecks(initHideTemplateChecks);
+		objectTree.setHideUnmanaged(initHideUnmanaged);
+		objectTree.enableFilter(initShowFilter);
 		
 		createActions();
 		createMenu();
@@ -135,24 +178,38 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-      actionHideUnmanaged = new Action("&Hide unmanaged objects", SWT.TOGGLE) //$NON-NLS-1$
+      actionHideUnmanaged = new Action("&Hide unmanaged objects", SWT.TOGGLE)
       {
 			@Override
 			public void run()
 			{
+				objectTree.setHideUnmanaged(!objectTree.isHideUnmanaged());
+		      actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 			}
       };
-      actionHideUnmanaged.setChecked(false);
+      actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
+
+      actionHideTemplateChecks = new Action("Hide check templates", SWT.TOGGLE)
+      {
+			@Override
+			public void run()
+			{
+				objectTree.setHideTemplateChecks(!objectTree.isHideTemplateChecks());
+		      actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
+			}
+      };
+      actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
       actionShowFilter = new Action("Show &filter", SWT.TOGGLE) //$NON-NLS-1$
       {
 			@Override
 			public void run()
 			{
-				objectTree.enableFilter(isChecked());
+				objectTree.enableFilter(!objectTree.isFilterEnabled());
+				actionShowFilter.setChecked(objectTree.isFilterEnabled());
 			}
       };
-      actionShowFilter.setChecked(true);
+      actionShowFilter.setChecked(objectTree.isFilterEnabled());
       
       actionProperties = new PropertyDialogAction(getSite(), objectTree.getTreeViewer());
 	}
@@ -165,6 +222,7 @@ public class ObjectBrowser extends ViewPart
       IMenuManager manager = getViewSite().getActionBars().getMenuManager();
       manager.add(actionShowFilter);
       manager.add(actionHideUnmanaged);
+      manager.add(actionHideTemplateChecks);
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       manager.add(new Separator());
       manager.add(actionRefresh);
