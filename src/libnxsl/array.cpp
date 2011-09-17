@@ -98,6 +98,18 @@ NXSL_Value *NXSL_Array::get(int index)
 
 
 //
+// Get element by internal position (used by iterator)
+//
+
+NXSL_Value *NXSL_Array::getByPosition(int position)
+{
+	if ((position < 0) || (position >= m_size))
+		return NULL;
+	return m_data[position].value;
+}
+
+
+//
 // Set element
 //
 

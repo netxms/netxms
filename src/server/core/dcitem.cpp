@@ -98,6 +98,65 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 
 
 //
+// Internal implementation of GetDCIValueByName and GetDCIValueByDescription
+//
+
+static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	NXSL_Object *object;
+	Node *node;
+	DCItem *dci;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	node = (Node *)object->getData();
+	dci = byName ? node->getItemByName(argv[1]->getValueAsCString()) : node->getItemByDescription(argv[1]->getValueAsCString());
+	if (dci != NULL)
+	{
+		*ppResult = dci->getValueForNXSL(F_LAST, 1);
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+	}
+
+	return 0;
+}
+
+
+//
+// Get DCI value from within transformation script
+// First argument is a node object (passed to script via $node variable),
+// and second is DCI name
+//
+
+static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return GetDciValueExImpl(true, argc, argv, ppResult);
+}
+
+
+//
+// Get DCI value from within transformation script
+// First argument is a node object (passed to script via $node variable),
+// and second is DCI description
+//
+
+static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	return GetDciValueExImpl(false, argc, argv, ppResult);
+}
+
+
+//
 // Find DCI by name
 //
 
@@ -160,7 +219,9 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { _T("FindDCIByName"), F_FindDCIByName, 2 },
    { _T("FindDCIByDescription"), F_FindDCIByDescription, 2 },
    { _T("GetDCIObject"), F_GetDCIObject, 2 },
-   { _T("GetDCIValue"), F_GetDCIValue, 2 }
+   { _T("GetDCIValue"), F_GetDCIValue, 2 },
+   { _T("GetDCIValueByName"), F_GetDCIValueByName, 2 },
+   { _T("GetDCIValueByDescription"), F_GetDCIValueByDescription, 2 }
 };
 
 void RegisterDCIFunctions(NXSL_Environment *pEnv)

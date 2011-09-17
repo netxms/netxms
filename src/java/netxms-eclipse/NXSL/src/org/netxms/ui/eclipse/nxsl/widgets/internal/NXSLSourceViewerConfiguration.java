@@ -55,7 +55,7 @@ public class NXSLSourceViewerConfiguration extends SourceViewerConfiguration
 	};
 	
 	private static final String[] nxslKeywords = { 
-		"break", "classof", "continue", "do", "else", "exit", "for", "if", "ilike",
+		"break", "classof", "continue", "do", "else", "exit", "for", "foreach", "if", "ilike",
       "imatch", "int32", "int64", "like", "match", "print", "println", "real",
       "return", "string", "sub", "typeof", "uint32", "uint64", "use", "while" };
 	

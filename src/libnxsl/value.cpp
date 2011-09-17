@@ -109,6 +109,11 @@ NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
          m_value.pArray = pValue->m_value.pArray;
 			m_value.pArray->incRefCount();
       }
+      else if (m_nDataType == NXSL_DT_ITERATOR)
+      {
+         m_value.pIterator = pValue->m_value.pIterator;
+			m_value.pIterator->incRefCount();
+      }
       else
       {
          memcpy(&m_value, &pValue->m_value, sizeof(m_value));
@@ -147,6 +152,16 @@ NXSL_Value::NXSL_Value(NXSL_Array *pArray)
    m_nDataType = NXSL_DT_ARRAY;
    m_value.pArray = pArray;
 	pArray->incRefCount();
+   m_pszValStr = NULL;
+   m_bStringIsValid = FALSE;
+	m_name = NULL;
+}
+
+NXSL_Value::NXSL_Value(NXSL_Iterator *pIterator)
+{
+   m_nDataType = NXSL_DT_ITERATOR;
+   m_value.pIterator = pIterator;
+	pIterator->incRefCount();
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
 	m_name = NULL;
@@ -265,15 +280,21 @@ NXSL_Value::~NXSL_Value()
 {
 	safe_free(m_name);
    safe_free(m_pszValStr);
-   if (m_nDataType == NXSL_DT_OBJECT)
-   {
-		delete m_value.pObject;
-	}
-   else if (m_nDataType == NXSL_DT_ARRAY)
+   switch(m_nDataType)
 	{
-		m_value.pArray->decRefCount();
-		if (m_value.pArray->isUnused())
-			delete m_value.pArray;
+		case NXSL_DT_OBJECT:
+			delete m_value.pObject;
+			break;
+		case NXSL_DT_ARRAY:
+			m_value.pArray->decRefCount();
+			if (m_value.pArray->isUnused())
+				delete m_value.pArray;
+			break;
+		case NXSL_DT_ITERATOR:
+			m_value.pIterator->decRefCount();
+			if (m_value.pIterator->isUnused())
+				delete m_value.pIterator;
+			break;
 	}
 }
 

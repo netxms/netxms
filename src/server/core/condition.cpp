@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -231,7 +231,7 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
 // Delete object from database
 //
 
-BOOL Condition::DeleteFromDB(void)
+BOOL Condition::DeleteFromDB()
 {
    TCHAR szQuery[128];
    BOOL bSuccess;
@@ -431,6 +431,14 @@ void Condition::check()
    }
    dwNumValues = m_dwDCICount;
    UnlockData();
+
+	// Create array from values
+	NXSL_Array *array = new NXSL_Array;
+	for(i = 0; i < dwNumValues; i++)
+	{
+		array->set(i + 1, new NXSL_Value(ppValueList[i]));
+	}
+   m_pCompiledScript->setGlobalVariable(_T("$values"), new NXSL_Value(array));
 
    DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""),
              m_dwId, m_szName);

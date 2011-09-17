@@ -42,12 +42,13 @@
 #define NXSL_DT_NULL       0
 #define NXSL_DT_OBJECT     1
 #define NXSL_DT_ARRAY      2
-#define NXSL_DT_STRING     3
-#define NXSL_DT_REAL       4
-#define NXSL_DT_INT32      5
-#define NXSL_DT_INT64      6
-#define NXSL_DT_UINT32     7
-#define NXSL_DT_UINT64     8
+#define NXSL_DT_ITERATOR   3
+#define NXSL_DT_STRING     4
+#define NXSL_DT_REAL       5
+#define NXSL_DT_INT32      6
+#define NXSL_DT_INT64      7
+#define NXSL_DT_UINT32     8
+#define NXSL_DT_UINT64     9
 
 
 //
@@ -148,6 +149,37 @@ public:
 
 	void set(int index, NXSL_Value *value);
 	NXSL_Value *get(int index);
+	NXSL_Value *getByPosition(int position);
+
+	int size() { return m_size; }
+};
+
+
+//
+// Iterator for arrays
+//
+
+class LIBNXSL_EXPORTABLE NXSL_Iterator
+{
+private:
+	int m_refCount;
+	TCHAR *m_variable;
+	NXSL_Array *m_array;
+	int m_position;
+
+public:
+	NXSL_Iterator(const TCHAR *variable, NXSL_Array *array);
+	~NXSL_Iterator();
+
+	const TCHAR *getVariableName() { return m_variable; }
+
+	void incRefCount() { m_refCount++; }
+	void decRefCount() { m_refCount--; }
+	BOOL isUnused() { return m_refCount < 1; }
+
+	NXSL_Value *next();
+
+	static int createIterator(NXSL_Stack *stack);
 };
 
 
@@ -172,6 +204,7 @@ protected:
       double dReal;
       NXSL_Object *pObject;
 		NXSL_Array *pArray;
+		NXSL_Iterator *pIterator;
    } m_value;
 
    void updateNumber();
@@ -189,6 +222,7 @@ public:
    NXSL_Value(const NXSL_Value *);
    NXSL_Value(NXSL_Object *pObject);
    NXSL_Value(NXSL_Array *pArray);
+   NXSL_Value(NXSL_Iterator *pIterator);
    NXSL_Value(LONG nValue);
    NXSL_Value(INT64 nValue);
    NXSL_Value(DWORD uValue);
@@ -213,6 +247,7 @@ public:
    bool isObject() { return (m_nDataType == NXSL_DT_OBJECT); }
 	bool isObject(const TCHAR *className);
    bool isArray() { return (m_nDataType == NXSL_DT_ARRAY); }
+   bool isIterator() { return (m_nDataType == NXSL_DT_ITERATOR); }
    bool isString() { return (m_nDataType >= NXSL_DT_STRING); }
    bool isNumeric() { return (m_nDataType > NXSL_DT_STRING); }
    bool isReal() { return (m_nDataType == NXSL_DT_REAL); }
@@ -230,6 +265,7 @@ public:
    double getValueAsReal();
    NXSL_Object *getValueAsObject() { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.pObject : NULL; }
    NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.pArray : NULL; }
+   NXSL_Iterator *getValueAsIterator() { return (m_nDataType == NXSL_DT_ITERATOR) ? m_value.pIterator : NULL; }
 
    void concatenate(const TCHAR *pszString, DWORD dwLen);
    
@@ -452,8 +488,8 @@ protected:
    void error(int nError);
    NXSL_Value *matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
-   NXSL_Variable *findOrCreateVariable(TCHAR *pszName);
-	NXSL_Variable *createVariable(TCHAR *pszName);
+   NXSL_Variable *findOrCreateVariable(const TCHAR *pszName);
+	NXSL_Variable *createVariable(const TCHAR *pszName);
 
    DWORD getFunctionAddress(const TCHAR *pszName);
    void relocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);

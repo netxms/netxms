@@ -164,6 +164,8 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 		Modify();   /* LOCK? */
 	}
 
+	DbgPrintf(6, _T("ServiceContainer::calculateCompoundStatus(%s [%d]): old_status=%d new_status=%d"), m_szName, m_dwId, iOldStatus, m_iStatus);
+
 	if (iOldStatus != STATUS_UNKNOWN && iOldStatus != m_iStatus)
 		addHistoryRecord();
 }

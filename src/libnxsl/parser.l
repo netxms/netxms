@@ -45,6 +45,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"FALSE"    return T_FALSE;
 <INITIAL>"false"    return T_FALSE;
 <INITIAL>"for"		return T_FOR;
+<INITIAL>"foreach"	return T_FOREACH;
 <INITIAL>"if"		return T_IF;
 <INITIAL>"ilike"	return T_ILIKE;
 <INITIAL>"imatch"	return T_IMATCH;

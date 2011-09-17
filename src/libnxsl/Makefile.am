@@ -2,8 +2,8 @@ INCLUDES=-I@top_srcdir@/include
 
 lib_LTLIBRARIES = libnxsl.la
 libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
-                     array.cpp class.cpp compiler.cpp \
-		     env.cpp functions.cpp instruction.cpp lexer.cpp \
+                     array.cpp class.cpp compiler.cpp env.cpp functions.cpp \
+                     instruction.cpp iterator.cpp lexer.cpp \
 		     library.cpp main.cpp program.cpp stack.cpp value.cpp \
 		     variable.cpp
 libnxsl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)

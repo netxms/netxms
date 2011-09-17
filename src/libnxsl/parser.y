@@ -46,6 +46,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_EXIT
 %token T_FALSE
 %token T_FOR
+%token T_FOREACH
 %token T_IF
 %token T_NULL
 %token T_PRINT
@@ -477,6 +478,7 @@ BuiltinStatement:
 |	DoStatement
 |	WhileStatement
 |	ForStatement
+|	ForEachStatement
 |	SwitchStatement
 |	ArrayStatement
 |	T_BREAK ';'
@@ -602,6 +604,29 @@ ForStatement:
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr()));
 	pScript->resolveLastJump(OPCODE_JZ);
 	pCompiler->closeBreakLevel(pScript);
+}
+;
+
+ForEachStatement:
+	T_FOREACH '(' T_IDENTIFIER 
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
+	free($3);
+}
+	':' Expression ')'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_FOREACH));
+	pCompiler->pushAddr(pScript->getCodeSize());
+	pCompiler->newBreakLevel();
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEXT));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+}
+	StatementOrBlock
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr()));
+	pScript->resolveLastJump(OPCODE_JZ);
+	pCompiler->closeBreakLevel(pScript);
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, 1));
 }
 ;
 

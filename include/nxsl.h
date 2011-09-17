@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -71,6 +71,7 @@
 #define NXSL_ERR_NOT_ARRAY                24
 #define NXSL_ERR_ASSIGNMENT_TO_CONSTANT   25
 #define NXSL_ERR_NAMED_PARAM_REQUIERED    26
+#define NXSL_ERR_NOT_ITERATOR					27
 
 
 //

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -50,7 +50,7 @@ static const char *m_szCommandMnemonic[] =
    "BITNOT", "CAST", "AGET", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",
    "IMATCH", "CASE", "ARRAY", "EGET",
-	"ESET", "ASET", "NAME"
+	"ESET", "ASET", "NAME", "FOREACH", "NEXT"
 };
 
 
@@ -557,7 +557,7 @@ void NXSL_Program::setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)
 // Find variable or create if does not exist
 //
 
-NXSL_Variable *NXSL_Program::findOrCreateVariable(TCHAR *pszName)
+NXSL_Variable *NXSL_Program::findOrCreateVariable(const TCHAR *pszName)
 {
    NXSL_Variable *pVar;
 
@@ -582,7 +582,7 @@ NXSL_Variable *NXSL_Program::findOrCreateVariable(TCHAR *pszName)
 // Create variable if it does not exist, otherwise return NULL
 //
 
-NXSL_Variable *NXSL_Program::createVariable(TCHAR *pszName)
+NXSL_Variable *NXSL_Program::createVariable(const TCHAR *pszName)
 {
    NXSL_Variable *pVar = NULL;
 
@@ -719,9 +719,7 @@ void NXSL_Program::execute()
 					{
 						if (pValue->isInteger())
 						{
-							NXSL_Value *element;
-
-							element = array->getValueAsArray()->get(pValue->getValueAsInt32());
+							NXSL_Value *element = array->getValueAsArray()->get(pValue->getValueAsInt32());
 							m_pDataStack->push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
 						}
 						else
@@ -1077,6 +1075,42 @@ void NXSL_Program::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
+		case OPCODE_FOREACH:
+			nRet = NXSL_Iterator::createIterator(m_pDataStack);
+			if (nRet != 0)
+			{
+				error(nRet);
+			}
+			break;
+		case OPCODE_NEXT:
+			pValue = (NXSL_Value *)m_pDataStack->peek();
+			if (pValue != NULL)
+			{
+				if (pValue->isIterator())
+				{
+					NXSL_Iterator *it = pValue->getValueAsIterator();
+					NXSL_Value *next = it->next();
+					m_pDataStack->push(new NXSL_Value((LONG)((next != NULL) ? 1 : 0)));
+					NXSL_Variable *var = findOrCreateVariable(it->getVariableName());
+					if (!var->isConstant())
+					{
+						var->setValue((next != NULL) ? new NXSL_Value(next) : new NXSL_Value);
+					}
+					else
+					{
+						error(NXSL_ERR_ASSIGNMENT_TO_CONSTANT);
+					}
+				}
+				else
+				{
+	            error(NXSL_ERR_NOT_ITERATOR);
+				}
+			}
+			else
+			{
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+			}
+			break;
       default:
          break;
    }

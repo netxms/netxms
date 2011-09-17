@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -106,6 +106,8 @@ typedef void *yyscan_t;
 #define OPCODE_SET_ELEMENT    50
 #define OPCODE_SET_ATTRIBUTE  51
 #define OPCODE_NAME           52
+#define OPCODE_FOREACH        53
+#define OPCODE_NEXT           54
 
 
 //
