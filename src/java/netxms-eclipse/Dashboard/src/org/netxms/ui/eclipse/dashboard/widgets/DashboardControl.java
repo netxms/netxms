@@ -18,11 +18,17 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
@@ -33,7 +39,10 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 public class DashboardControl extends Composite
 {
 	private Dashboard dashboard;
+	private List<DashboardElement> elements;
 	private boolean embedded = false;
+	private boolean editMode = false;
+	private boolean modified = false;
 	
 	/**
 	 * @param parent
@@ -44,6 +53,7 @@ public class DashboardControl extends Composite
 		super(parent, style);
 		this.dashboard = dashboard;
 		this.embedded = embedded;
+		elements = new ArrayList<DashboardElement>(dashboard.getElements());
 		setBackground(new Color(getDisplay(), 255, 255, 255));
 		createContent();
 	}
@@ -63,16 +73,7 @@ public class DashboardControl extends Composite
 		
 		for(final DashboardElement e : dashboard.getElements())
 		{
-			final ElementWidget w = createElementWidget(e);
-			final DashboardElementLayout el = w.getElementLayout();
-			final GridData gd = new GridData();
-			gd.grabExcessHorizontalSpace = (el.horizontalAlignment == DashboardElement.FILL);
-			gd.horizontalAlignment = mapHorizontalAlignment(el.horizontalAlignment);
-			gd.grabExcessVerticalSpace = (el.vertcalAlignment == DashboardElement.FILL);
-			gd.verticalAlignment = mapVerticalAlignment(el.vertcalAlignment);
-			gd.horizontalSpan = el.horizontalSpan;
-			gd.verticalSpan = el.verticalSpan;
-			w.setLayoutData(gd);
+			createElementWidget(e);
 		}
 	}
 	
@@ -127,30 +128,120 @@ public class DashboardControl extends Composite
 	 */
 	private ElementWidget createElementWidget(DashboardElement e)
 	{
+		ElementWidget w;
 		switch(e.getType())
 		{
 			case DashboardElement.LINE_CHART:
-				return new LineChartElement(this, e.getData(), e.getLayout());
+				w = new LineChartElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.BAR_CHART:
-				return new BarChartElement(this, e.getData(), e.getLayout());
+				w = new BarChartElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.PIE_CHART:
-				return new PieChartElement(this, e.getData(), e.getLayout());
+				w = new PieChartElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.STATUS_CHART:
-				return new ObjectStatusChartElement(this, e.getData(), e.getLayout());
+				w = new ObjectStatusChartElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.LABEL:
-				return new LabelElement(this, e.getData(), e.getLayout());
+				w = new LabelElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.DASHBOARD:
-				return new EmbeddedDashboardElement(this, e.getData(), e.getLayout());
+				w = new EmbeddedDashboardElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.NETWORK_MAP:
-				return new NetworkMapElement(this, e.getData(), e.getLayout());
+				w = new NetworkMapElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.GEO_MAP:
-				return new GeoMapElement(this, e.getData(), e.getLayout());
+				w = new GeoMapElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.STATUS_INDICATOR:
-				return new StatusIndicatorElement(this, e.getData(), e.getLayout());
+				w = new StatusIndicatorElement(this, e.getData(), e.getLayout());
+				break;
 			case DashboardElement.CUSTOM:
-				return new CustomWidgetElement(this, e.getData(), e.getLayout());
+				w = new CustomWidgetElement(this, e.getData(), e.getLayout());
+				break;
 			default:
-				return new ElementWidget(this, e.getData(), e.getLayout());
+				w = new ElementWidget(this, e.getData(), e.getLayout());
+				break;
 		}
+
+		final DashboardElementLayout el = w.getElementLayout();
+		final GridData gd = new GridData();
+		gd.grabExcessHorizontalSpace = (el.horizontalAlignment == DashboardElement.FILL);
+		gd.horizontalAlignment = mapHorizontalAlignment(el.horizontalAlignment);
+		gd.grabExcessVerticalSpace = (el.vertcalAlignment == DashboardElement.FILL);
+		gd.verticalAlignment = mapVerticalAlignment(el.vertcalAlignment);
+		gd.horizontalSpan = el.horizontalSpan;
+		gd.verticalSpan = el.verticalSpan;
+		w.setLayoutData(gd);
+		
+		return w;
+	}
+
+	/**
+	 * @return the editMode
+	 */
+	public boolean isEditMode()
+	{
+		return editMode;
+	}
+
+	/**
+	 * @param editMode the editMode to set
+	 */
+	public void setEditMode(boolean editMode)
+	{
+		this.editMode = editMode;
+		for(Control c : getChildren())
+		{
+			if (c instanceof ElementWidget)
+			{
+				((ElementWidget)c).setEditMode(editMode);
+			}
+		}
+	}
+	
+	/**
+	 * @param element
+	 */
+	@SuppressWarnings("restriction")
+	private void addElement(DashboardElement element)
+	{
+		PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, element);
+		if (dlg.open() == Window.CANCEL)
+			return;	// element creation cancelled
+		
+		elements.add(element);
+		createElementWidget(element);
+		layout(true, true);
+		modified = true;
+	}
+	
+	/**
+	 * Add alarm browser widget to dashboard
+	 */
+	public void addAlarmBrowser()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.LABEL, "<element>\n\t<title>Label</title>\n</element>");
+		addElement(e);
+	}
+	
+	/**
+	 * Add label widget to dashboard
+	 */
+	public void addLabel()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.LABEL, "<element>\n\t<title>Label</title>\n</element>");
+		addElement(e);
+	}
+	
+	/**
+	 * Add pie chart widget to dashboard
+	 */
+	public void addPieChart()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.PIE_CHART, "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
+		addElement(e);
 	}
 }

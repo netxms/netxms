@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
@@ -26,9 +28,11 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
 /**
  * Base class for all dashboard elements
  */
-class ElementWidget extends DashboardComposite
+class ElementWidget extends DashboardComposite implements ControlListener
 {
 	private DashboardElementLayout layout;
+	private boolean editMode = false;
+	private EditPaneWidget editPane = null;
 	
 	/**
 	 * @param parent
@@ -38,6 +42,7 @@ class ElementWidget extends DashboardComposite
 	{
 		super(parent, style);
 		parseLayout(layout);
+		addControlListener(this);
 	}
 
 	/**
@@ -48,6 +53,7 @@ class ElementWidget extends DashboardComposite
 	{
 		super(parent, SWT.BORDER);
 		parseLayout(layout);
+		addControlListener(this);
 	}
 	
 	/**
@@ -72,5 +78,58 @@ class ElementWidget extends DashboardComposite
 	public DashboardElementLayout getElementLayout()
 	{
 		return layout;
+	}
+
+	/**
+	 * @return the editMode
+	 */
+	public boolean isEditMode()
+	{
+		return editMode;
+	}
+
+	/**
+	 * @param editMode the editMode to set
+	 */
+	public void setEditMode(boolean editMode)
+	{
+		this.editMode = editMode;
+		if (editMode)
+		{			
+			editPane = new EditPaneWidget(this);
+			editPane.setLocation(0,  0);
+			editPane.setSize(getSize());
+			editPane.moveAbove(null);
+		}
+		else
+		{
+			if (editPane != null)
+			{
+				editPane.dispose();
+				editPane = null;
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.ControlListener#controlMoved(org.eclipse.swt.events.ControlEvent)
+	 */
+	@Override
+	public void controlMoved(ControlEvent e)
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.ControlListener#controlResized(org.eclipse.swt.events.ControlEvent)
+	 */
+	@Override
+	public void controlResized(ControlEvent e)
+	{
+		if (editPane != null)
+		{
+			editPane.setLocation(0,  0);
+			editPane.setSize(getSize());
+			editPane.moveAbove(null);
+		}
 	}
 }

@@ -18,8 +18,10 @@
  */
 package org.netxms.ui.eclipse.dashboard.views;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -30,6 +32,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Dashboard view
@@ -41,6 +44,10 @@ public class DashboardView extends ViewPart
 	private NXCSession session;
 	private Dashboard dashboard;
 	private DashboardControl dbc;
+	private Action actionEditMode;
+	private Action actionAddAlarmBrowser;
+	private Action actionAddLabel;
+	private Action actionAddPieChart;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -73,6 +80,40 @@ public class DashboardView extends ViewPart
 	 */
 	private void createActions()
 	{
+		actionEditMode = new Action("Edit mode", Action.AS_CHECK_BOX) {
+			@Override
+			public void run()
+			{
+				dbc.setEditMode(!dbc.isEditMode());
+				actionEditMode.setChecked(dbc.isEditMode());
+			}
+		};
+		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
+		actionEditMode.setChecked(dbc.isEditMode());
+		
+		actionAddAlarmBrowser = new Action("Add &alarm browser") {
+			@Override
+			public void run()
+			{
+				dbc.addAlarmBrowser();
+			}
+		};
+		
+		actionAddLabel = new Action("Add &label") {
+			@Override
+			public void run()
+			{
+				dbc.addLabel();
+			}
+		};
+		
+		actionAddPieChart = new Action("Add &pie chart") {
+			@Override
+			public void run()
+			{
+				dbc.addPieChart();
+			}
+		};
 	}
 	
 	/**
@@ -93,6 +134,11 @@ public class DashboardView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionEditMode);
+		manager.add(new Separator());
+		manager.add(actionAddAlarmBrowser);
+		manager.add(actionAddLabel);
+		manager.add(actionAddPieChart);
 	}
 
 	/**
@@ -103,6 +149,7 @@ public class DashboardView extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionEditMode);
 	}
 	
 	/* (non-Javadoc)

@@ -103,6 +103,11 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties"
+            name="Label">
+      </page>
    </extension>
 
 </plugin>
