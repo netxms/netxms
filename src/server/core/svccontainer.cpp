@@ -281,7 +281,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 		}
 		if (newStatus == STATUS_CRITICAL) // the service is still down, add period till now
 			*downtime += LONG(time(NULL) - prevChangeTimestamp);
-		// now rows for period && critical status -> downtime from beginning till now
+		// no rows for period && critical status -> downtime from beginning till now
 		if (realRows == 0 && m_iStatus == STATUS_CRITICAL)  
 			*downtime = timediffTillNow;
 		percentage = 100.0 - (double)(*downtime * 100) / (double)getSecondsInPeriod(period);
