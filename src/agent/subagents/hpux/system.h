@@ -51,6 +51,7 @@ LONG H_CpuUsage(const char *, const char *, char *);
 LONG H_ProcessCount(const char *, const char *, char *);
 LONG H_ProcessInfo(const char *, const char *, char *);
 LONG H_SysProcessCount(const char *, const char *, char *);
+LONG H_SysThreadCount(const char *, const char *, char *);
 LONG H_MemoryInfo(const char *, const char *, char *);
 LONG H_SourcePkgSupport(const char *, const char *, char *);
 LONG H_ConnectedUsers(const char *, const char *, char *);

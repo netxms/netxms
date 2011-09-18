@@ -85,6 +85,36 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 
 
 //
+// Handler for System.ThreadCount parameter
+//
+
+LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue)
+{
+	LONG nRet;
+	struct pst_status *pList;
+	int i, nProcCount, nThreadCount;
+
+	pList = GetProcessList(&nProcCount);
+	if (pList != NULL)
+	{
+		for(i = 0, nThreadCount = 0; i < nProcCount; i++)
+		{
+			nThreadCount += pList[i].pst_nlwps;
+		}
+		free(pList);
+		ret_uint(pValue, nThreadCount);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
+	}
+
+	return nRet;
+}
+
+
+//
 // Handler for Process.Count(*) parameter
 //
 
