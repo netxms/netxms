@@ -62,8 +62,7 @@ static void SubAgentShutdown()
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ "Agent.SourcePackageSupport",	H_SourcePkg,		NULL,
-		DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+	{ "Agent.SourcePackageSupport", H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
 	{ "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
 		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
@@ -124,27 +123,24 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
 		DCI_DT_INT,		DCIDESC_NET_IP6_FORWARDING },
 
-	{ "Process.Count(*)",             H_ProcessCount,    NULL,
-		DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
-	{ "Process.VMSize(*)",            H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_VMSIZE, const char *),
-		DCI_DT_INT64,	DCIDESC_PROCESS_VMSIZE },
+	{ "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
+   { "Process.IO.ReadOp(*)", H_ProcessInfo, (char *)PROCINFO_IO_READ_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_READOP },
+   { "Process.IO.WriteOp(*)", H_ProcessInfo, (char *)PROCINFO_IO_WRITE_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_WRITEOP },
+   { "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, DCIDESC_PROCESS_KERNELTIME },
+   { "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, DCIDESC_PROCESS_PAGEFAULTS },
+   { "Process.Threads(*)", H_ProcessInfo, (char *)PROCINFO_THREADS, DCI_DT_UINT64, DCIDESC_PROCESS_THREADS },
+   { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
+   { "Process.VMSize(*)", H_ProcessInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
+   { "Process.WkSet(*)", H_ProcessInfo, (char *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 
-	{ "System.ConnectedUsers",        H_ConnectedUsers,  NULL,
-		DCI_DT_UINT,	DCIDESC_SYSTEM_CONNECTEDUSERS },
-	{ "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
-	{ "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG5 },
-	{ "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG15 },
-	{ "System.CPU.Usage",             H_CpuUsage,        (char *)0,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE },
-	{ "System.CPU.Usage5",            H_CpuUsage,        (char *)5,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5 },
-	{ "System.CPU.Usage15",           H_CpuUsage,        (char *)15,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15 },
-	{ "System.Hostname",              H_Hostname,        NULL,
-		DCI_DT_STRING,	DCIDESC_SYSTEM_HOSTNAME },
+	{ "System.ConnectedUsers", H_ConnectedUsers, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CONNECTEDUSERS },
+	{ "System.CPU.LoadAvg", H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
+	{ "System.CPU.LoadAvg5", H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
+	{ "System.CPU.LoadAvg15", H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
+	{ "System.CPU.Usage", H_CpuUsage, (char *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
+	{ "System.CPU.Usage5", H_CpuUsage, (char *)5, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
+	{ "System.CPU.Usage15", H_CpuUsage, (char *)15, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
+	{ "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.IO.BytesReadRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
 	{ "System.IO.BytesReadRate(*)", H_IOStats, (const char *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
 	{ "System.IO.BytesWriteRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
@@ -191,12 +187,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
 	{ "System.Memory.Virtual.UsedPerc", H_MemoryInfo,    (char *)VIRTUAL_USED_PCT,
 		DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
-	{ "System.ProcessCount",          H_SysProcessCount, NULL,
-		DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
-	{ "System.Uname",                 H_Uname,           NULL,
-		DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
-	{ "System.Uptime",                H_Uptime,          NULL,
-		DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME }
+		
+	{ "System.ProcessCount", H_SysProcessCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
+	{ "System.Uname", H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+	{ "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {

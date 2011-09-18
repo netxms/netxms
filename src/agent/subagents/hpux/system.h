@@ -42,6 +42,23 @@ enum
 	VIRTUAL_TOTAL
 };
 
+
+//
+// Types for Process.XXX() parameters
+//
+
+#define PROCINFO_IO_READ_B       1
+#define PROCINFO_IO_READ_OP      2
+#define PROCINFO_IO_WRITE_B      3
+#define PROCINFO_IO_WRITE_OP     4
+#define PROCINFO_KTIME           5
+#define PROCINFO_PF              6
+#define PROCINFO_UTIME           7
+#define PROCINFO_VMSIZE          8
+#define PROCINFO_WKSET           9
+#define PROCINFO_THREADS         10
+
+
 LONG H_ProcessList(const char *, const char *, StringList *);
 LONG H_Uptime(const char *, const char *, char *);
 LONG H_Uname(const char *, const char *, char *);

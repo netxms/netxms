@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for GNU/Linux
 ** Copyright (C) 2004 Alex Kirhenshtein

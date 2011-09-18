@@ -288,7 +288,7 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 						case INFOTYPE_SUM:
 							qwValue += qwCurrVal;
 							break;
-                }
+					}
 				}
 				nCount++;
 			}

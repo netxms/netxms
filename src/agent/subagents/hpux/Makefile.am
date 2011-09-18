@@ -19,7 +19,7 @@ INCLUDES=-I@top_srcdir@/include
 SUBAGENT = hpux
 
 pkglib_LTLIBRARIES = hpux.la
-hpux_la_SOURCES = disk.cpp iostat.cpp main.cpp net.cpp system.cpp
+hpux_la_SOURCES = disk.cpp iostat.cpp main.cpp net.cpp proc.cpp system.cpp
 hpux_la_CPPFLAGS = -D_PSTAT64
 hpux_la_LIBADD = ../../../libnetxms/libnetxms.la -lnm
 hpux_la_LDFLAGS = -module -avoid-version -lnm
