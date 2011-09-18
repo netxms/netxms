@@ -14,8 +14,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
 /**
- * @author victor
- *
+ * Edit pane widget for dashboard elements
  */
 public class EditPaneWidget extends Canvas implements PaintListener
 {

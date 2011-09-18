@@ -31,7 +31,7 @@ import org.simpleframework.xml.core.Persister;
  * Configuration for pie chart
  */
 @Root(name="element")
-public class PieChartConfig
+public class PieChartConfig extends DashboardElementConfig
 {
 	@ElementArray(required=true)
 	private DashboardDciInfo[] dciList = new DashboardDciInfo[0];
@@ -64,12 +64,10 @@ public class PieChartConfig
 		return serializer.read(PieChartConfig.class, xml);
 	}
 	
-	/**
-	 * Create XML document from object
-	 * 
-	 * @return XML document
-	 * @throws Exception if the schema for the object is not valid
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
 	 */
+	@Override
 	public String createXml() throws Exception
 	{
 		Serializer serializer = new Persister();

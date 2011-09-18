@@ -31,7 +31,7 @@ import org.simpleframework.xml.core.Persister;
  * Configuration for bar chart
  */
 @Root(name="element", strict=false)
-public class BarChartConfig
+public class BarChartConfig extends DashboardElementConfig
 {
 	@ElementArray(required=true)
 	private DashboardDciInfo[] dciList = new DashboardDciInfo[0];
@@ -67,12 +67,10 @@ public class BarChartConfig
 		return serializer.read(BarChartConfig.class, xml);
 	}
 	
-	/**
-	 * Create XML document from object
-	 * 
-	 * @return XML document
-	 * @throws Exception if the schema for the object is not valid
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
 	 */
+	@Override
 	public String createXml() throws Exception
 	{
 		Serializer serializer = new Persister();

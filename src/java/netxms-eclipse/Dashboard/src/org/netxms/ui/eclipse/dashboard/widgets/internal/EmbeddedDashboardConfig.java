@@ -29,7 +29,7 @@ import org.simpleframework.xml.core.Persister;
  * Configuration for label
  */
 @Root(name="element")
-public class EmbeddedDashboardConfig
+public class EmbeddedDashboardConfig extends DashboardElementConfig
 {
 	@Element(required=true)
 	private long objectId = 0;
@@ -50,12 +50,10 @@ public class EmbeddedDashboardConfig
 		return serializer.read(EmbeddedDashboardConfig.class, xml);
 	}
 	
-	/**
-	 * Create XML document from object
-	 * 
-	 * @return XML document
-	 * @throws Exception if the schema for the object is not valid
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
 	 */
+	@Override
 	public String createXml() throws Exception
 	{
 		Serializer serializer = new Persister();

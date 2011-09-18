@@ -107,7 +107,28 @@
             class="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties"
             id="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties"
             name="Label">
+         <enabledWhen>
+            <adapt
+                  type="org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig">
+               <instanceof
+                     value="org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig">
+               </instanceof>
+            </adapt>
+         </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="org.netxms.client.dashboards.DashboardElement"
+            class="org.netxms.ui.eclipse.dashboard.DashboardElementAdapterFactory">
+         <adapter
+               type="org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig">
+         </adapter>
+         <adapter
+               type="org.eclipse.ui.model.IWorkbenchAdapter">
+         </adapter>
+      </factory>
    </extension>
 
 </plugin>

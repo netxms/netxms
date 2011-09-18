@@ -30,7 +30,7 @@ import org.simpleframework.xml.core.Persister;
  * Configuration for line chart
  */
 @Root(name="element")
-public class LineChartConfig
+public class LineChartConfig extends DashboardElementConfig
 {
 	@ElementArray(required=true)
 	private DashboardDciInfo[] dciList = new DashboardDciInfo[0];
@@ -54,12 +54,10 @@ public class LineChartConfig
 		return serializer.read(LineChartConfig.class, xml);
 	}
 	
-	/**
-	 * Create XML document from object
-	 * 
-	 * @return XML document
-	 * @throws Exception if the schema for the object is not valid
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
 	 */
+	@Override
 	public String createXml() throws Exception
 	{
 		Serializer serializer = new Persister();

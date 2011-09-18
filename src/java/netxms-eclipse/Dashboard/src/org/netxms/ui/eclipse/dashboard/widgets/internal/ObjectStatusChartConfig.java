@@ -32,7 +32,7 @@ import org.simpleframework.xml.core.Persister;
  * Configuration for bar chart
  */
 @Root(name="element")
-public class ObjectStatusChartConfig
+public class ObjectStatusChartConfig extends DashboardElementConfig
 {
 	@Element(required=true)
 	private long rootObject = 0;
@@ -71,12 +71,10 @@ public class ObjectStatusChartConfig
 		return serializer.read(ObjectStatusChartConfig.class, xml);
 	}
 	
-	/**
-	 * Create XML document from object
-	 * 
-	 * @return XML document
-	 * @throws Exception if the schema for the object is not valid
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
 	 */
+	@Override
 	public String createXml() throws Exception
 	{
 		Serializer serializer = new Persister();

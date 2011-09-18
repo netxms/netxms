@@ -9,7 +9,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 @Root(name = "element")
-public class StatusIndicatorConfig
+public class StatusIndicatorConfig extends DashboardElementConfig
 {
 
 	@ElementArray(required = true)
@@ -33,13 +33,10 @@ public class StatusIndicatorConfig
 		return serializer.read(StatusIndicatorConfig.class, xml);
 	}
 
-	/**
-	 * Create XML document from object
-	 * 
-	 * @return XML document
-	 * @throws Exception
-	 *            if the schema for the object is not valid
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
 	 */
+	@Override
 	public String createXml() throws Exception
 	{
 		Serializer serializer = new Persister();
