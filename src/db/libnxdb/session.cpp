@@ -34,7 +34,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
    DBDRV_CONNECTION hDrvConn;
    DB_HANDLE hConn = NULL;
 
-	__DBDbgPrintf(8, _T("DBConnect: server=%s db=%s login=%s schema=%s"), server, dbName, login, CHECK_NULL(schema));
+	__DBDbgPrintf(8, _T("DBConnect: server=%s db=%s login=%s schema=%s"), CHECK_NULL(server), CHECK_NULL(dbName), CHECK_NULL(login), CHECK_NULL(schema));
 #ifdef UNICODE
 	char *mbServer = (server == NULL) ? NULL : MBStringFromWideString(server);
 	char *mbDatabase = (dbName == NULL) ? NULL : MBStringFromWideString(dbName);

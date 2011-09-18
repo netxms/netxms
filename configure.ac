@@ -35,7 +35,6 @@ PLATFORM=`uname -s`
 COMPONENTS=""
 DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
-ENABLE_UNSTABLE="no"
 ENABLE_DEBUG="no"
 STATIC_BUILD="no"
 DBDRIVER_SELECTED="no"
@@ -50,7 +49,6 @@ MODULES="libnetxms tools install"
 STATIC_SUBAGENT_LIST=""
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
-UNSTABLE_SUBAGENT_DIRS=""
 SERVER_TOOLS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
@@ -317,12 +315,6 @@ AC_ARG_ENABLE(unicode,
 	CPPFLAGS="$CPPFLAGS -DUNICODE"
 ])
 
-AC_ARG_ENABLE(unstable,
-[AS_HELP_STRING(--enable-unstable,build experimental/unstable components)],
-[
-	ENABLE_UNSTABLE="yes"
-])
-
 AC_ARG_ENABLE(debug,
 [AS_HELP_STRING(--enable-debug,enable additional debugging functionality)],
 [
@@ -339,12 +331,11 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="libexpat libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript tools webui"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
 	CLIENT_COMPONENTS="nxalarm nxevent nxlexer nxpush nxsms scilexer windows"
-	UNSTABLE_SUBAGENT_DIRS="odbcquery"
 	SERVER_TOOLS="nxconfig"
 )
 
@@ -459,9 +450,6 @@ check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
 	MODULES="$MODULES libnxlp db agent"
-	if test "x$ENABLE_UNSTABLE" = "xyes"; then
-		UNSTABLE_SUBAGENT_DIRS="odbcquery"
-	fi
 
 	case "$PLATFORM" in
 		Linux)
@@ -515,6 +503,7 @@ fi
 check_substr "$COMPONENTS" "odbc"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS odbc"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS odbcquery"
 fi
 
 check_substr "$COMPONENTS" "oracle"
@@ -530,6 +519,7 @@ fi
 check_substr "$COMPONENTS" "informix"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS informix"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS informix"
 fi
 
 
@@ -1858,7 +1848,6 @@ AC_SUBST(CLIENT_COMPONENTS)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
-AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
 AC_SUBST(MYSQL_LIBS)
 AC_SUBST(PGSQL_LIBS)
 AC_SUBST(ORACLE_LIBS)
@@ -1928,24 +1917,25 @@ AC_CONFIG_FILES([
 	src/agent/core/Makefile
 	src/agent/install/Makefile
 	src/agent/subagents/Makefile
-	src/agent/subagents/linux/Makefile
-	src/agent/subagents/sunos/Makefile
 	src/agent/subagents/aix/Makefile
-	src/agent/subagents/hpux/Makefile
+	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/freebsd/Makefile
-	src/agent/subagents/openbsd/Makefile
-	src/agent/subagents/netbsd/Makefile
+	src/agent/subagents/hpux/Makefile
+	src/agent/subagents/informix/Makefile
 	src/agent/subagents/ipso/Makefile
+	src/agent/subagents/linux/Makefile
+	src/agent/subagents/logwatch/Makefile
+	src/agent/subagents/netbsd/Makefile
+	src/agent/subagents/odbcquery/Makefile
+	src/agent/subagents/openbsd/Makefile
+	src/agent/subagents/ping/Makefile
+	src/agent/subagents/portCheck/Makefile
+	src/agent/subagents/sms/Makefile
+	src/agent/subagents/sunos/Makefile
+	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
-	src/agent/subagents/portCheck/Makefile
-	src/agent/subagents/ping/Makefile
-	src/agent/subagents/sms/Makefile
-	src/agent/subagents/ups/Makefile
-	src/agent/subagents/ecs/Makefile
-	src/agent/subagents/odbcquery/Makefile
-	src/agent/subagents/logwatch/Makefile
 	src/client/Makefile
 	src/client/install/Makefile
 	src/client/nxalarm/Makefile

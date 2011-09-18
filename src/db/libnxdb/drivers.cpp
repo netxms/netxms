@@ -140,7 +140,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
 
 	// Check name
-	driverName = (const char *)DLGetSymbolAddr(driver->m_handle, _T("drvName"), NULL);
+	driverName = *((const char **)DLGetSymbolAddr(driver->m_handle, _T("drvName"), NULL));
 	if (driverName == NULL)
 	{
 		if (s_writeLog)

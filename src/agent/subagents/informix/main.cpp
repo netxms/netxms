@@ -111,9 +111,9 @@ static BOOL SubAgentInit(Config *config)
 	static NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("Id"),					CT_STRING,	0, 0, MAX_STR, 0,	info.id },	
-		{ _T("DSN"),				CT_STRING,	0, 0, MAX_STR, 0,	info.dsn },	
-		{ _T("UserName"),			CT_STRING,	0, 0, MAX_USERNAME, 0,	info.username },	
-		{ _T("Password"),			CT_STRING,	0, 0, MAX_PASSWORD, 0,	info.password },
+		{ _T("DBName"),				CT_STRING,	0, 0, MAX_STR, 0,	info.dsn },	
+		{ _T("DBLogin"),			CT_STRING,	0, 0, MAX_USERNAME, 0,	info.username },	
+		{ _T("DBPassword"),			CT_STRING,	0, 0, MAX_PASSWORD, 0,	info.password },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
