@@ -111,19 +111,14 @@ static BOOL SubAgentInit(Config *config)
 	static NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("Id"),					CT_STRING,	0, 0, MAX_STR, 0,	info.id },	
-		{ _T("Name"),				CT_STRING,	0, 0, MAX_STR, 0,	info.name },	
-		{ _T("Server"),				CT_STRING,	0, 0, MAX_STR, 0,	info.server },	
+		{ _T("DSN"),				CT_STRING,	0, 0, MAX_STR, 0,	info.dsn },	
 		{ _T("UserName"),			CT_STRING,	0, 0, MAX_USERNAME, 0,	info.username },	
 		{ _T("Password"),			CT_STRING,	0, 0, MAX_PASSWORD, 0,	info.password },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
 	// Init db driver
-#ifdef _WIN32
 	g_driverHandle = DBLoadDriver(_T("informix.ddr"), NULL, TRUE, NULL, NULL);
-#else
-	g_driverHandle = DBLoadDriver(LIBDIR "/libnxddr_informix.so", NULL, TRUE, NULL, NULL);
-#endif
 	if (g_driverHandle == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load db driver"), MYNAMESTR);
@@ -135,21 +130,39 @@ static BOOL SubAgentInit(Config *config)
 		g_shutdownCondition = ConditionCreate(TRUE);
 	}
 
+	// Load configuration from "informix" section to allow simple configuration
+	// of one database without XML includes
+	memset(&info, 0, sizeof(info));
+	g_dbCount = -1;
+	if (config->parseTemplate(_T("INFORMIX"), configTemplate))
+	{
+		if (info.dsn[0] != 0)
+		{
+			if (info.id[0] == 0)
+				_tcscpy(info.id, info.dsn);
+			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(info));
+			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
+		}
+	}
+
 	// Load configuration
-	for (g_dbCount = -1, i = 1; result && i <= MAX_DATABASES; i++)
+	for(i = 1; result && i <= MAX_DATABASES; i++)
 	{
 		TCHAR section[MAX_STR];
-		memset((void*)&info, 0, sizeof(info));
+		memset(&info, 0, sizeof(info));
 		_sntprintf(section, MAX_STR, _T("informix/databases/database#%d"), i);
 		if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
 		{
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration template"), MYNAMESTR);
 			return FALSE;
 		}
-		if (info.name[0] != _T('\0'))
-			memcpy((void*)&g_dbInfo[++g_dbCount], (void*)&info, sizeof(info));
-		else
+		if (info.dsn[0] == 0)
 			continue;
+		
+		if (info.id[0] == 0)
+			_tcscpy(info.id, info.dsn);
+		memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(info));
+
 		if (info.username[0] == '\0' || info.password[0] == '\0')
 		{
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username and/or password for "), MYNAMESTR);
@@ -183,7 +196,7 @@ static BOOL SubAgentInit(Config *config)
 // Shutdown handler
 //
 
-static void SubAgentShutdown(void)
+static void SubAgentShutdown()
 {
 	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: shutting down"), MYNAMESTR);
 	ConditionSet(g_shutdownCondition);
@@ -219,7 +232,7 @@ THREAD_RESULT THREAD_CALL queryThread(void* arg)
 
 	while (true)
 	{
-		db.handle = DBConnect(g_driverHandle, db.name, db.server, db.username, db.password, NULL, errorText);
+		db.handle = DBConnect(g_driverHandle, NULL, db.dsn, db.username, db.password, NULL, errorText);
 		if (db.handle != NULL)
 		{
 			AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to DB"), MYNAMESTR);
@@ -343,7 +356,7 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("INFORMIX"), _T("1.0.0"),
+	_T("INFORMIX"), NETXMS_VERSION_STRING,
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), m_parameters,
 	0,	NULL,

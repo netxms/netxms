@@ -17,7 +17,7 @@
 
 #define MAX_STR				(255)
 #define MAX_QUERY			(8192)
-#define MYNAMESTR			_T("informix")
+#define MYNAMESTR			_T("INFORMIX")
 #define DB_NULLARG_MAGIC	_T("1099")
 
 
@@ -35,8 +35,7 @@
 typedef struct 
 {
 	TCHAR id[MAX_STR];				// this is how client addresses the database
-	TCHAR name[MAX_STR];
-	TCHAR server[MAX_STR];
+	TCHAR dsn[MAX_STR];
 	char username[MAX_USERNAME];
 	char password[MAX_PASSWORD];
 	THREAD queryThreadHandle;
