@@ -21,16 +21,9 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-
-#include <locale.h>
-#include <sys/utsname.h>
-#include <sys/statvfs.h>
 #include <sys/pstat.h>
-#include <sys/dk.h>
-#include <utmpx.h>
-#include <utmp.h>
-
 #include "system.h"
+#include "hpux.h"
 
 
 //
@@ -138,7 +131,7 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 //    <cmdline>  - command line
 //
 
-LONG H_ProcessDetails(const char *pszParam, const char *pArg, char *pValue)
+LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szBuffer[256] = "";
@@ -164,12 +157,12 @@ LONG H_ProcessDetails(const char *pszParam, const char *pArg, char *pValue)
 
 	AgentGetParameterArg(pszParam, 1, szBuffer, sizeof(szBuffer));
 
-	pList = GetProcessList(&nCount);
+	pList = GetProcessList(&nProcCount);
 	if (pList != NULL)
 	{
 		for(i = 0, qwValue = 0, nCount = 0; i < nProcCount; i++)
 		{
-			if (!strcmp(pList[i].pi_comm, szBuffer))
+			if (!strcmp(pList[i].pst_ucomm, szBuffer))
 			{
 				switch(CAST_FROM_POINTER(pArg, int))
 				{
@@ -194,13 +187,13 @@ LONG H_ProcessDetails(const char *pszParam, const char *pArg, char *pValue)
 						qwCurrVal = pList[i].pst_utime * 1000;
 						break;
 					case PROCINFO_VMSIZE:
-						qwCurrVal = (pst[i].pst_vtsize  /* text */
-								+ pst[i].pst_vdsize  /* data */
-								+ pst[i].pst_vssize  /* stack */
-								+ pst[i].pst_vshmsize  /* shared memory */
-								+ pst[i].pst_vmmsize  /* mem-mapped files */
-								+ pst[i].pst_vusize  /* U-Area & K-Stack */
-								+ pst[i].pst_viosize) /* I/O dev mapping */ 
+						qwCurrVal = (pList[i].pst_vtsize  /* text */
+								+ pList[i].pst_vdsize  /* data */
+								+ pList[i].pst_vssize  /* stack */
+								+ pList[i].pst_vshmsize  /* shared memory */
+								+ pList[i].pst_vmmsize  /* mem-mapped files */
+								+ pList[i].pst_vusize  /* U-Area & K-Stack */
+								+ pList[i].pst_viosize) /* I/O dev mapping */ 
 							* getpagesize();
 						break;
 					case PROCINFO_WKSET:
@@ -244,37 +237,9 @@ LONG H_ProcessDetails(const char *pszParam, const char *pArg, char *pValue)
 		nRet = SYSINFO_RC_ERROR;
 	}	
 
-
-
-	if (pst != NULL)
-	{
-		for (i = 0, nTotal = 0; i < nCount; i++)
-		{
-			if (!strcasecmp(pst[i].pst_ucomm, szArg))
-			{
-				value += 
-					pst[i].pst_vtsize + /* text */
-					+ pst[i].pst_vdsize + /* data */
-					+ pst[i].pst_vssize + /* stack */
-					+ pst[i].pst_vshmsize + /* shared memory */
-					+ pst[i].pst_vmmsize + /* mem-mapped files */
-					+ pst[i].pst_vusize + /* U-Area & K-Stack */
-					+ pst[i].pst_viosize; /* I/O dev mapping */ 
-				break;
-			}
-		}
-		free(pst);
-		if (i == nCount) // not found
-			nRet = SYSINFO_RC_ERROR;
-		else
-		{
-			ret_int64(pValue, value);
-			nRet = SYSINFO_RC_SUCCESS;
-		}
-	}
-
 	return nRet;
 }
+
 
 //
 // Handler for System.ProcessList enum
