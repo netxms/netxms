@@ -13,9 +13,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.ConditionInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -24,6 +22,7 @@ public class StatusIndicatorElement extends ElementWidget
 	private StatusIndicatorConfig config;
 	private Runnable refreshTimer;
 	private Font font;
+	private boolean greenState = false;
 
 	protected StatusIndicatorElement(final Composite parent, final String data, String elementLayout)
 	{
@@ -46,7 +45,8 @@ public class StatusIndicatorElement extends ElementWidget
 		canvas.setBackground(new Color(getDisplay(), 240, 240, 240));
 		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE);
 
-		addDisposeListener(new DisposeListener() {
+		addDisposeListener(new DisposeListener()
+		{
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
@@ -54,7 +54,8 @@ public class StatusIndicatorElement extends ElementWidget
 			}
 		});
 
-		canvas.addPaintListener(new PaintListener() {
+		canvas.addPaintListener(new PaintListener()
+		{
 			@Override
 			public void paintControl(PaintEvent e)
 			{
@@ -69,22 +70,10 @@ public class StatusIndicatorElement extends ElementWidget
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 
-		final ConditionInfo[] conditions = config.getConditionList();
-		for(ConditionInfo condition : conditions)
-		{
-			final GenericObject object = session.findObjectById(condition.getId());
-			if (object instanceof Condition)
-			{
-				if (((Condition)object).getStatus() != Condition.STATUS_NORMAL)
-				{
-					condition.setActive(true);
-				}
-				else
-				{
-					condition.setActive(false);
-				}
-			}
-		}
+		final GenericObject object = session.findObjectById(config.getObjectId());
+
+		//greenState = object.getStatus() == GenericObject.STATUS_NORMAL;
+		greenState = !greenState;
 
 		redraw();
 	}
@@ -103,10 +92,10 @@ public class StatusIndicatorElement extends ElementWidget
 				}
 
 				refreshData();
-				display.timerExec(30000, this);
+				display.timerExec(1000, this);
 			}
 		};
-		display.timerExec(30000, refreshTimer);
+		display.timerExec(1000, refreshTimer);
 		refreshData();
 	}
 
@@ -122,25 +111,20 @@ public class StatusIndicatorElement extends ElementWidget
 		int yOffset = yMargin;
 		int size = 36;
 
-		//final Color bgColor = new Color(getDisplay(), 255, 255, 255);
 		final Color bgColor = canvas.getBackground();
-		
+
 		final Color redColors[] = { new Color(getDisplay(), 134, 0, 0), new Color(getDisplay(), 192, 0, 0) };
 		final Color greenColors[] = { new Color(getDisplay(), 0, 134, 0), new Color(getDisplay(), 0, 192, 0) };
 
-		final ConditionInfo[] conditions = config.getConditionList();
-		for(ConditionInfo condition : conditions)
+		if (greenState)
 		{
-			if (condition.isActive())
-			{
-				drawElement(e, xMargin, yOffset, size, bgColor, redColors, condition.getName());
-			}
-			else
-			{
-				drawElement(e, xMargin, yOffset, size, bgColor, greenColors, condition.getName());
-			}
-			yOffset += yMargin + size;
+			drawElement(e, xMargin, yOffset, size, bgColor, greenColors, config.getTitle());
 		}
+		else
+		{
+			drawElement(e, xMargin, yOffset, size, bgColor, redColors, config.getTitle());
+		}
+
 		redColors[0].dispose();
 		redColors[1].dispose();
 		greenColors[0].dispose();

@@ -3,7 +3,6 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 import java.io.StringWriter;
 import java.io.Writer;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -11,15 +10,14 @@ import org.simpleframework.xml.core.Persister;
 @Root(name = "element")
 public class StatusIndicatorConfig extends DashboardElementConfig
 {
-
-	@ElementArray(required = true)
-	private ConditionInfo[] conditionList = new ConditionInfo[0];
+	@Element
+	private long objectId = 0;
 
 	@Element(required = false)
 	private String title = "";
 
 	/**
-	 * Create line chart settings object from XML document
+	 * Create status indicator settings object from XML document
 	 * 
 	 * @param xml
 	 *           XML document
@@ -33,8 +31,12 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 		return serializer.read(StatusIndicatorConfig.class, xml);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig
+	 * #createXml()
 	 */
 	@Override
 	public String createXml() throws Exception
@@ -46,20 +48,20 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 	}
 
 	/**
-	 * @return the conditions
+	 * @return the objectId
 	 */
-	public ConditionInfo[] getConditionList()
+	public long getObjectId()
 	{
-		return conditionList;
+		return objectId;
 	}
 
 	/**
-	 * @param conditions
-	 *           the conditions to set
+	 * @param objectId
+	 *           the objectId to set
 	 */
-	public void setConditionList(ConditionInfo[] conditionList)
+	public void setObjectId(long objectId)
 	{
-		this.conditionList = conditionList;
+		this.objectId = objectId;
 	}
 
 	/**

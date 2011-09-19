@@ -27,14 +27,6 @@
             name="Last Values Chart"
             restorable="true">
       </view>
-      <view
-            allowMultiple="true"
-            class="org.netxms.ui.eclipse.perfview.views.StatusView"
-            icon="icons/status_view.png"
-            id="org.netxms.ui.eclipse.perfview.views.StatusIndicatorView"
-            name="Status"
-            restorable="true">
-      </view>
    </extension>
 
    <extension
