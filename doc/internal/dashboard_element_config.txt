@@ -20,6 +20,19 @@ element type dependent.
 	<title></title> <!-- optional -->
 </element>
 
+1.3. Line chart
+
+<element>
+	<dciList length="1">
+		<dci nodeId="0" dciId="0">  <!-- nodeId and dciId - required -->
+			<name></name> <!-- optional -->
+			<color>0x000000</color> <!-- optional -->
+			<lineWidth>2</lineWidth> <!-- optional -->
+		</dci>
+	</dciList>
+	<title></title>
+	<showLegend></showLegend>
+</element>
 
 2. Layout data
 
