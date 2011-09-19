@@ -20,6 +20,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class StatusIndicatorElement extends ElementWidget
 {
 	private StatusIndicatorConfig config;
+	private Canvas canvas;
 	private Runnable refreshTimer;
 	private Font font;
 	private boolean greenState = false;
@@ -41,7 +42,7 @@ public class StatusIndicatorElement extends ElementWidget
 		final FillLayout layout = new FillLayout();
 		setLayout(layout);
 
-		final Canvas canvas = new Canvas(this, SWT.NONE);
+		canvas = new Canvas(this, SWT.NONE);
 		canvas.setBackground(new Color(getDisplay(), 240, 240, 240));
 		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE);
 
@@ -66,6 +67,9 @@ public class StatusIndicatorElement extends ElementWidget
 		startRefreshTimer();
 	}
 
+	/**
+	 * 
+	 */
 	protected void refreshData()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -75,7 +79,7 @@ public class StatusIndicatorElement extends ElementWidget
 		//greenState = object.getStatus() == GenericObject.STATUS_NORMAL;
 		greenState = !greenState;
 
-		redraw();
+		canvas.redraw();
 	}
 
 	protected void startRefreshTimer()
