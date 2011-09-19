@@ -337,14 +337,14 @@ bool getParametersFromDB( int dbIndex )
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("Informix.Sessions.Count(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Sessions: Number of sessions opened") },
-	{ _T("Informix.Databases.Owner(*)"), getParameters, "X", DCI_DT_STRING, _T("Informix/Databases: Database owner") },
-	{ _T("Informix.Databases.Created(*)"), getParameters, "X", DCI_DT_STRING, _T("Informix/Databases: Creation date") },
-	{ _T("Informix.Databases.Logged(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Databases: Is logged") },
-	{ _T("Informix.Dbspaces.PageSize(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Page size") },
-	{ _T("Informix.Dbspaces.PagesUsed(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages used in dbspace") },
-	{ _T("Informix.Dbspaces.PagesFree(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages free in dbspace") },
-	{ _T("Informix.Dbspaces.PctFree(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Percentage of free space in dbspace") },
+	{ _T("Informix.Session.Count(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Sessions: Number of sessions opened") },
+	{ _T("Informix.Database.Owner(*)"), getParameters, "X", DCI_DT_STRING, _T("Informix/Databases: Database owner") },
+	{ _T("Informix.Database.Created(*)"), getParameters, "X", DCI_DT_STRING, _T("Informix/Databases: Creation date") },
+	{ _T("Informix.Database.Logged(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Databases: Is logged") },
+	{ _T("Informix.Dbspace.PageSize(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Page size") },
+	{ _T("Informix.Dbspace.Pages.Used(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages used in dbspace") },
+	{ _T("Informix.Dbspace.Pages.Free(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages free in dbspace") },
+	{ _T("Informix.Dbspace.Pages.FreePerc(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Percentage of free space in dbspace") },
 };
 
 /*
