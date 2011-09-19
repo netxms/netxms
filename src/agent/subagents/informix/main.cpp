@@ -29,7 +29,7 @@ DBParameterGroup g_paramGroup[] = {
 		1100, _T("Informix.Dbspaces."),
 			_T("select name ValueName,sum(chksize) PageSize,sum(chksize)-sum(nfree) PagesUsed,")
 			_T("sum(nfree) PagesFree,round((sum(nfree))/(sum(chksize))*100,2) PctFree from sysdbspaces d,syschunks c ")
-			_T("where d.dbsnum=c.dbsnum	group by 1 order by 1"),
+			_T("where d.dbsnum=c.dbsnum	group by name order by name"),
 			5, { NULL }, 0
 	}, 
 	0
