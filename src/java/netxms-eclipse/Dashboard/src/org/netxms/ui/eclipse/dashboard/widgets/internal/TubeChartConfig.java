@@ -18,48 +18,44 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
-import java.io.StringWriter;
-import java.io.Writer;
-
-import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Abstract base class for all dashboard element configs
+ * Configuration for bar chart
  */
-@Root(name="element", strict=false)
-public abstract class DashboardElementConfig
+public class TubeChartConfig extends ComparisonChartConfig
 {
-	private DashboardElementLayout layout;
+	@Element(required=false)
+	private boolean transposed = false;
 	
 	/**
-	 * Create XML from configuration.
+	 * Create line chart settings object from XML document
 	 * 
-	 * @return XML document
-	 * @throws Exception if the schema for the object is not valid
+	 * @param xml XML document
+	 * @return deserialized object
+	 * @throws Exception if the object cannot be fully deserialized
 	 */
-	public String createXml() throws Exception
+	public static TubeChartConfig createFromXml(final String xml) throws Exception
 	{
 		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
+		return serializer.read(TubeChartConfig.class, xml);
+	}
+	
+	/**
+	 * @return the transposed
+	 */
+	public boolean isTransposed()
+	{
+		return transposed;
 	}
 
 	/**
-	 * @return the layout
+	 * @param transposed the transposed to set
 	 */
-	public DashboardElementLayout getLayout()
+	public void setTransposed(boolean transposed)
 	{
-		return layout;
-	}
-
-	/**
-	 * @param layout the layout to set
-	 */
-	public void setLayout(DashboardElementLayout layout)
-	{
-		this.layout = layout;
+		this.transposed = transposed;
 	}
 }

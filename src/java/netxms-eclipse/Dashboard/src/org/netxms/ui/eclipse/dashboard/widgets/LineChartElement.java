@@ -26,10 +26,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
@@ -56,14 +56,14 @@ public class LineChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public LineChartElement(Composite parent, String data, String elementLayout)
+	public LineChartElement(DashboardControl parent, DashboardElement element)
 	{
-		super(parent, data, elementLayout);
+		super(parent, element);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		try
 		{
-			config = LineChartConfig.createFromXml(data);
+			config = LineChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{

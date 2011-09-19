@@ -18,29 +18,14 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
-import java.io.StringWriter;
-import java.io.Writer;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
-import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for line chart
  */
-@Root(name="element")
-public class LineChartConfig extends DashboardElementConfig
+public class LineChartConfig extends AbstractChartConfig
 {
-	@ElementArray(required=true)
-	private DashboardDciInfo[] dciList = new DashboardDciInfo[0];
-
-	@Element(required=false)
-	private String title = "";
-	
-	@Element(required=false)
-	private boolean showLegend = false;
-
 	/**
 	 * Create line chart settings object from XML document
 	 * 
@@ -52,65 +37,5 @@ public class LineChartConfig extends DashboardElementConfig
 	{
 		Serializer serializer = new Persister();
 		return serializer.read(LineChartConfig.class, xml);
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
-	@Override
-	public String createXml() throws Exception
-	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title)
-	{
-		this.title = title;
-	}
-
-	/**
-	 * @return the dciList
-	 */
-	public DashboardDciInfo[] getDciList()
-	{
-		return dciList;
-	}
-
-	/**
-	 * @param dciList the dciList to set
-	 */
-	public void setDciList(DashboardDciInfo[] dciList)
-	{
-		this.dciList = dciList;
-	}
-
-	/**
-	 * @return the showLegend
-	 */
-	public boolean isShowLegend()
-	{
-		return showLegend;
-	}
-
-	/**
-	 * @param showLegend the showLegend to set
-	 */
-	public void setShowLegend(boolean showLegend)
-	{
-		this.showLegend = showLegend;
 	}
 }

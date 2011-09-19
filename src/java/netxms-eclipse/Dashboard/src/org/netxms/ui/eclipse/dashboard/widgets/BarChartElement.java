@@ -19,7 +19,7 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
@@ -37,13 +37,13 @@ public class BarChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-	public BarChartElement(Composite parent, String data, String layout)
+	public BarChartElement(DashboardControl parent, DashboardElement element)
 	{
-		super(parent, data, layout);
+		super(parent, element);
 		
 		try
 		{
-			config = BarChartConfig.createFromXml(data);
+			config = BarChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{

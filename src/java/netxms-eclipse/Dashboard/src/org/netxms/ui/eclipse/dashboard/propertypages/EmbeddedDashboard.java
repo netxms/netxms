@@ -24,37 +24,40 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 
 /**
- * Label configuration page
+ * embedded dashboard element properties
  */
-public class LabelProperties extends PropertyPage
+public class EmbeddedDashboard extends PropertyPage
 {
-	private LabelConfig config;
-	private LabeledText title; 
-
+	private EmbeddedDashboardConfig config;
+	private ObjectSelector objectSelector;
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		config = (LabelConfig)getElement().getAdapter(LabelConfig.class);
+		config = (EmbeddedDashboardConfig)getElement().getAdapter(EmbeddedDashboardConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
-		title = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-		title.setLabel("Title");
-		title.setText(config.getTitle());
+		objectSelector = new ObjectSelector(dialogArea, SWT.NONE);
+		objectSelector.setLabel("Dashboard object");
+		objectSelector.setObjectClass(Dashboard.class);
+		objectSelector.setObjectId(config.getObjectId());
+		
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		title.setLayoutData(gd);
+		objectSelector.setLayoutData(gd);
 		
 		return dialogArea;
 	}
@@ -65,7 +68,7 @@ public class LabelProperties extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		config.setTitle(title.getText());
+		config.setObjectId(objectSelector.getObjectId());
 		return true;
 	}
 }

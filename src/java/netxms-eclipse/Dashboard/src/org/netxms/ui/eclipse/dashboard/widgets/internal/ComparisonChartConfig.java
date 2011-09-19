@@ -18,48 +18,48 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
-import java.io.StringWriter;
-import java.io.Writer;
-
-import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.Element;
 
 /**
- * Abstract base class for all dashboard element configs
+ * Common base class for comparison chart configs
  */
-@Root(name="element", strict=false)
-public abstract class DashboardElementConfig
+public abstract class ComparisonChartConfig extends AbstractChartConfig
 {
-	private DashboardElementLayout layout;
+	@Element(required = false)
+	private boolean showIn3D = false;
 	
+	@Element(required = false)
+	private boolean translucent = false;
+
 	/**
-	 * Create XML from configuration.
-	 * 
-	 * @return XML document
-	 * @throws Exception if the schema for the object is not valid
+	 * @return the showIn3D
 	 */
-	public String createXml() throws Exception
+	public boolean isShowIn3D()
 	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
+		return showIn3D;
 	}
 
 	/**
-	 * @return the layout
+	 * @param showIn3D the showIn3D to set
 	 */
-	public DashboardElementLayout getLayout()
+	public void setShowIn3D(boolean showIn3D)
 	{
-		return layout;
+		this.showIn3D = showIn3D;
 	}
 
 	/**
-	 * @param layout the layout to set
+	 * @return the translucent
 	 */
-	public void setLayout(DashboardElementLayout layout)
+	public boolean isTranslucent()
 	{
-		this.layout = layout;
+		return translucent;
+	}
+
+	/**
+	 * @param translucent the translucent to set
+	 */
+	public void setTranslucent(boolean translucent)
+	{
+		this.translucent = translucent;
 	}
 }

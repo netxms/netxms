@@ -21,6 +21,8 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -51,6 +53,8 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.dialogs.AddDashboardElementDlg;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DashboardElementsLabelProvider;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -370,11 +374,29 @@ public class DashboardElements extends PropertyPage
 			return;
 		
 		DashboardElement element = (DashboardElement)selection.getFirstElement();
-		PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, element);
-		if (dlg != null)
+		DashboardElementConfig config = (DashboardElementConfig)AdapterManager.getDefault().getAdapter(element, DashboardElementConfig.class);
+		if (config != null)
 		{
-			dlg.open();
-			viewer.update(element, null);
+			try
+			{
+				config.setLayout(DashboardElementLayout.createFromXml(element.getLayout()));
+				
+				PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
+				if (dlg.open() == Window.CANCEL)
+					return;	// element creation cancelled
+				
+				element.setData(config.createXml());
+				element.setLayout(config.getLayout().createXml());
+				viewer.update(element, null);
+			}
+			catch(Exception e)
+			{
+				MessageDialog.openError(getShell(), "Internal Error", "Internal error: " + e.getMessage());
+			}
+		}
+		else
+		{
+			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
 		}
 	}
 	

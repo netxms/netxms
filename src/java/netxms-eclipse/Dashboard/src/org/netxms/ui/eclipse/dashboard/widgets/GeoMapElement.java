@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
 import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
 
@@ -37,13 +37,13 @@ public class GeoMapElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public GeoMapElement(Composite parent, String data, String elementLayout)
+	public GeoMapElement(DashboardControl parent, DashboardElement element)
 	{
-		super(parent, data, elementLayout);
+		super(parent, element);
 
 		try
 		{
-			config = GeoMapConfig.createFromXml(data);
+			config = GeoMapConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{

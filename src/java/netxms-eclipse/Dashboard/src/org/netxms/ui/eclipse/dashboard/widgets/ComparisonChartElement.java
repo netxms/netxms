@@ -22,10 +22,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
@@ -48,9 +48,9 @@ public abstract class ComparisonChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public ComparisonChartElement(Composite parent, String data, String layout)
+	public ComparisonChartElement(DashboardControl parent, DashboardElement element)
 	{
-		super(parent, data, layout);
+		super(parent, element);
 		session = (NXCSession)ConsoleSharedData.getSession();
 
 		setLayout(new FillLayout());	

@@ -31,6 +31,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 
 /**
  * Adapter factory for dashboard elements
@@ -117,7 +118,7 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 					case DashboardElement.STATUS_INDICATOR:
 						return StatusIndicatorConfig.createFromXml(element.getData());
 					case DashboardElement.TUBE_CHART:
-						return null;
+						return TubeChartConfig.createFromXml(element.getData());
 					default:
 						return null;
 				}

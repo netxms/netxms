@@ -89,31 +89,38 @@
             name="Layout">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.client.dashboards.DashboardElement">
-            </instanceof>
-         </enabledWhen>
-      </page>
-      <page
-            class="org.netxms.ui.eclipse.dashboard.propertypages.RawConfigurationData"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.RawConfigurationData"
-            name="Configuration">
-         <enabledWhen>
-            <instanceof
-                  value="org.netxms.client.dashboards.DashboardElement">
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig">
             </instanceof>
          </enabledWhen>
       </page>
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.LabelProperties#0"
             name="Label">
          <enabledWhen>
-            <adapt
-                  type="org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig">
-               <instanceof
-                     value="org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig">
-               </instanceof>
-            </adapt>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.DataSources"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.DataSources#0"
+            name="Data Sources">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.EmbeddedDashboard"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.EmbeddedDashboard#0"
+            name="Dashboard">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig">
+            </instanceof>
          </enabledWhen>
       </page>
    </extension>

@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
@@ -41,13 +41,13 @@ public class NetworkMapElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public NetworkMapElement(Composite parent, String data, String elementLayout)
+	public NetworkMapElement(DashboardControl parent, DashboardElement element)
 	{
-		super(parent, data, elementLayout);
+		super(parent, element);
 
 		try
 		{
-			config = NetworkMapConfig.createFromXml(data);
+			config = NetworkMapConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{

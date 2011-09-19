@@ -21,8 +21,8 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -43,13 +43,13 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-	public ObjectStatusChartElement(Composite parent, String data, String elementLayout)
+	public ObjectStatusChartElement(DashboardControl parent, DashboardElement element)
 	{
-		super(parent, data, elementLayout);
+		super(parent, element);
 		
 		try
 		{
-			config = ObjectStatusChartConfig.createFromXml(data);
+			config = ObjectStatusChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{

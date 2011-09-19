@@ -10,9 +10,9 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -25,13 +25,13 @@ public class StatusIndicatorElement extends ElementWidget
 	private Font font;
 	private boolean greenState = false;
 
-	protected StatusIndicatorElement(final Composite parent, final String data, String elementLayout)
+	protected StatusIndicatorElement(final DashboardControl parent, DashboardElement element)
 	{
-		super(parent, data, elementLayout);
+		super(parent, element);
 
 		try
 		{
-			config = StatusIndicatorConfig.createFromXml(data);
+			config = StatusIndicatorConfig.createFromXml(element.getData());
 		}
 		catch(final Exception e)
 		{
@@ -73,12 +73,8 @@ public class StatusIndicatorElement extends ElementWidget
 	protected void refreshData()
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-
 		final GenericObject object = session.findObjectById(config.getObjectId());
-
-		//greenState = object.getStatus() == GenericObject.STATUS_NORMAL;
-		greenState = !greenState;
-
+		greenState = object.getStatus() == GenericObject.STATUS_NORMAL;
 		canvas.redraw();
 	}
 

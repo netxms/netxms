@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.api.DashboardElementCreationData;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 
@@ -33,16 +33,16 @@ public class CustomWidgetElement extends ElementWidget
 {
 	/**
 	 * @param parent
-	 * @param data
+	 * @param element
 	 */
-	public CustomWidgetElement(Composite parent, String data, String elementLayout)
+	public CustomWidgetElement(DashboardControl parent, DashboardElement element)
 	{
-		super(parent, SWT.NONE, data, elementLayout);
+		super(parent, SWT.NONE, element);
 		
 		CustomWidgetConfig config;
 		try
 		{
-			config = CustomWidgetConfig.createFromXml(data);
+			config = CustomWidgetConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
@@ -54,6 +54,6 @@ public class CustomWidgetElement extends ElementWidget
 		setLayout(layout);
 
 		IAdapterManager adapterManager = Platform.getAdapterManager();
-		adapterManager.loadAdapter(new DashboardElementCreationData(this, data), config.getClassName());
+		adapterManager.loadAdapter(new DashboardElementCreationData(this, element.getData()), config.getClassName());
 	}
 }

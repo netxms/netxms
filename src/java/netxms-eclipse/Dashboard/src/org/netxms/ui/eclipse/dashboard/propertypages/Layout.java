@@ -1,9 +1,23 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -11,7 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -25,7 +39,7 @@ public class Layout extends PropertyPage
 	private Combo comboVerticalAlign;
 	private Spinner spinnerHorizontalSpan;
 	private Spinner spinnerVerticalSpan;
-	private DashboardElement element;
+	private DashboardElementConfig elementConfig;
 	private DashboardElementLayout elementLayout;
 
 	/* (non-Javadoc)
@@ -34,15 +48,8 @@ public class Layout extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		element = (DashboardElement)getElement().getAdapter(DashboardElement.class);
-		try
-		{
-			elementLayout = DashboardElementLayout.createFromXml(element.getLayout());
-		}
-		catch(Exception e)
-		{
-			elementLayout = new DashboardElementLayout();
-		}
+		elementConfig = (DashboardElementConfig)getElement().getAdapter(DashboardElementConfig.class);
+		elementLayout = elementConfig.getLayout();
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -98,16 +105,6 @@ public class Layout extends PropertyPage
 		elementLayout.vertcalAlignment = comboVerticalAlign.getSelectionIndex();
 		elementLayout.horizontalSpan = spinnerHorizontalSpan.getSelection();
 		elementLayout.verticalSpan = spinnerVerticalSpan.getSelection();
-		
-		try
-		{
-			element.setLayout(elementLayout.createXml());
-		}
-		catch(Exception e)
-		{
-			MessageDialog.openError(getShell(), "Error", "Cannot update dashboard element: data serialization error");
-			return false;
-		}
 		
 		return true;
 	}

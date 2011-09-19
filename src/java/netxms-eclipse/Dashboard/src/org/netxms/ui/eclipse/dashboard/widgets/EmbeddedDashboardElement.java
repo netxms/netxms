@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -39,13 +39,13 @@ public class EmbeddedDashboardElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public EmbeddedDashboardElement(Composite parent, String data, String elementLayout)
+	public EmbeddedDashboardElement(DashboardControl parent, DashboardElement element)
 	{
-		super(parent, SWT.NONE, data, elementLayout);
+		super(parent, SWT.NONE, element);
 
 		try
 		{
-			config = EmbeddedDashboardConfig.createFromXml(data);
+			config = EmbeddedDashboardConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{

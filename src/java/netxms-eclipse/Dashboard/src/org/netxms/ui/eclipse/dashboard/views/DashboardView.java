@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.views;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -25,19 +26,21 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
  * Dashboard view
  */
-public class DashboardView extends ViewPart
+public class DashboardView extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardView";
 	
@@ -45,9 +48,15 @@ public class DashboardView extends ViewPart
 	private Dashboard dashboard;
 	private DashboardControl dbc;
 	private Action actionEditMode;
+	private Action actionSave;
 	private Action actionAddAlarmBrowser;
 	private Action actionAddLabel;
+	private Action actionAddBarChart;
 	private Action actionAddPieChart;
+	private Action actionAddTubeChart;
+	private Action actionAddLineChart;
+	private Action actionAddDashboard;
+	private Action actionAddStatusIndicator;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -70,6 +79,21 @@ public class DashboardView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		dbc = new DashboardControl(parent, SWT.NONE, dashboard, false);
+		dbc.setModifyListener(new DashboardModifyListener() {
+			@Override
+			public void save()
+			{
+				actionSave.setEnabled(false);
+				firePropertyChange(PROP_DIRTY);
+			}
+			
+			@Override
+			public void modify()
+			{
+				actionSave.setEnabled(true);
+				firePropertyChange(PROP_DIRTY);
+			}
+		});
 
 		createActions();
 		contributeToActionBars();
@@ -80,6 +104,16 @@ public class DashboardView extends ViewPart
 	 */
 	private void createActions()
 	{
+		actionSave = new Action("&Save") {
+			@Override
+			public void run()
+			{
+				dbc.saveDashboard(DashboardView.this);
+			}
+		};
+		actionSave.setImageDescriptor(SharedIcons.SAVE);
+		actionSave.setEnabled(false);
+		
 		actionEditMode = new Action("Edit mode", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -107,11 +141,51 @@ public class DashboardView extends ViewPart
 			}
 		};
 		
+		actionAddBarChart = new Action("Add &bar chart") {
+			@Override
+			public void run()
+			{
+				dbc.addBarChart();
+			}
+		};
+
 		actionAddPieChart = new Action("Add &pie chart") {
 			@Override
 			public void run()
 			{
 				dbc.addPieChart();
+			}
+		};
+
+		actionAddTubeChart = new Action("Add &tube chart") {
+			@Override
+			public void run()
+			{
+				dbc.addTubeChart();
+			}
+		};
+
+		actionAddLineChart = new Action("Add &line chart") {
+			@Override
+			public void run()
+			{
+				dbc.addLineChart();
+			}
+		};
+
+		actionAddDashboard = new Action("Add embedded &dashboard") {
+			@Override
+			public void run()
+			{
+				dbc.addEmbeddedDashboard();
+			}
+		};
+
+		actionAddStatusIndicator = new Action("Add &status indicator") {
+			@Override
+			public void run()
+			{
+				dbc.addStatusIndicator();
 			}
 		};
 	}
@@ -135,10 +209,16 @@ public class DashboardView extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionEditMode);
+		manager.add(actionSave);
 		manager.add(new Separator());
 		manager.add(actionAddAlarmBrowser);
 		manager.add(actionAddLabel);
+		manager.add(actionAddLineChart);
+		manager.add(actionAddBarChart);
 		manager.add(actionAddPieChart);
+		manager.add(actionAddTubeChart);
+		manager.add(actionAddStatusIndicator);
+		manager.add(actionAddDashboard);
 	}
 
 	/**
@@ -150,6 +230,7 @@ public class DashboardView extends ViewPart
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionEditMode);
+		manager.add(actionSave);
 	}
 	
 	/* (non-Javadoc)
@@ -159,5 +240,49 @@ public class DashboardView extends ViewPart
 	public void setFocus()
 	{
 		dbc.setFocus();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+	 */
+	@Override
+	public void doSave(IProgressMonitor monitor)
+	{
+		dbc.saveDashboard(this);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+	 */
+	@Override
+	public void doSaveAs()
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isDirty()
+	 */
+	@Override
+	public boolean isDirty()
+	{
+		return dbc.isModified();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+	 */
+	@Override
+	public boolean isSaveAsAllowed()
+	{
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+	 */
+	@Override
+	public boolean isSaveOnCloseNeeded()
+	{
+		return true;
 	}
 }

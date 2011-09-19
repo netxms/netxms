@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
@@ -30,6 +30,9 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 class ElementWidget extends DashboardComposite implements ControlListener
 {
+	protected DashboardElement element;
+	
+	private DashboardControl dbc;
 	private DashboardElementLayout layout;
 	private boolean editMode = false;
 	private EditPaneWidget editPane = null;
@@ -38,10 +41,12 @@ class ElementWidget extends DashboardComposite implements ControlListener
 	 * @param parent
 	 * @param style
 	 */
-	protected ElementWidget(Composite parent, int style, String data, String layout)
+	protected ElementWidget(DashboardControl parent, int style, DashboardElement element)
 	{
 		super(parent, style);
-		parseLayout(layout);
+		dbc = parent;
+		this.element = element;
+		parseLayout(element.getLayout());
 		addControlListener(this);
 	}
 
@@ -49,10 +54,12 @@ class ElementWidget extends DashboardComposite implements ControlListener
 	 * @param parent
 	 * @param style
 	 */
-	protected ElementWidget(Composite parent, String data, String layout)
+	protected ElementWidget(DashboardControl parent, DashboardElement element)
 	{
 		super(parent, SWT.BORDER);
-		parseLayout(layout);
+		dbc = parent;
+		this.element = element;
+		parseLayout(element.getLayout());
 		addControlListener(this);
 	}
 	
@@ -96,7 +103,7 @@ class ElementWidget extends DashboardComposite implements ControlListener
 		this.editMode = editMode;
 		if (editMode)
 		{			
-			editPane = new EditPaneWidget(this);
+			editPane = new EditPaneWidget(this, dbc, element);
 			editPane.setLocation(0,  0);
 			editPane.setSize(getSize());
 			editPane.moveAbove(null);

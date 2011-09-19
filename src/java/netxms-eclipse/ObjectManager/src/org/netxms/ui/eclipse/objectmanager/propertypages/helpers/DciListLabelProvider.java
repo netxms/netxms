@@ -31,8 +31,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.propertypages.ConditionData;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 

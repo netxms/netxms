@@ -19,8 +19,13 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.core.internal.runtime.AdapterManager;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -28,21 +33,33 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
+import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Dashboard rendering control
  */
+@SuppressWarnings("restriction")
 public class DashboardControl extends Composite
 {
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
+	private Map<DashboardElement, ElementWidget> elementWidgets = new HashMap<DashboardElement, ElementWidget>();
 	private boolean embedded = false;
 	private boolean editMode = false;
 	private boolean modified = false;
+	private DashboardModifyListener modifyListener = null;
 	
 	/**
 	 * @param parent
@@ -132,37 +149,40 @@ public class DashboardControl extends Composite
 		switch(e.getType())
 		{
 			case DashboardElement.LINE_CHART:
-				w = new LineChartElement(this, e.getData(), e.getLayout());
+				w = new LineChartElement(this, e);
 				break;
 			case DashboardElement.BAR_CHART:
-				w = new BarChartElement(this, e.getData(), e.getLayout());
+				w = new BarChartElement(this, e);
+				break;
+			case DashboardElement.TUBE_CHART:
+				w = new TubeChartElement(this, e);
 				break;
 			case DashboardElement.PIE_CHART:
-				w = new PieChartElement(this, e.getData(), e.getLayout());
+				w = new PieChartElement(this, e);
 				break;
 			case DashboardElement.STATUS_CHART:
-				w = new ObjectStatusChartElement(this, e.getData(), e.getLayout());
+				w = new ObjectStatusChartElement(this, e);
 				break;
 			case DashboardElement.LABEL:
-				w = new LabelElement(this, e.getData(), e.getLayout());
+				w = new LabelElement(this, e);
 				break;
 			case DashboardElement.DASHBOARD:
-				w = new EmbeddedDashboardElement(this, e.getData(), e.getLayout());
+				w = new EmbeddedDashboardElement(this, e);
 				break;
 			case DashboardElement.NETWORK_MAP:
-				w = new NetworkMapElement(this, e.getData(), e.getLayout());
+				w = new NetworkMapElement(this, e);
 				break;
 			case DashboardElement.GEO_MAP:
-				w = new GeoMapElement(this, e.getData(), e.getLayout());
+				w = new GeoMapElement(this, e);
 				break;
 			case DashboardElement.STATUS_INDICATOR:
-				w = new StatusIndicatorElement(this, e.getData(), e.getLayout());
+				w = new StatusIndicatorElement(this, e);
 				break;
 			case DashboardElement.CUSTOM:
-				w = new CustomWidgetElement(this, e.getData(), e.getLayout());
+				w = new CustomWidgetElement(this, e);
 				break;
 			default:
-				w = new ElementWidget(this, e.getData(), e.getLayout());
+				w = new ElementWidget(this, e);
 				break;
 		}
 
@@ -175,6 +195,8 @@ public class DashboardControl extends Composite
 		gd.horizontalSpan = el.horizontalSpan;
 		gd.verticalSpan = el.verticalSpan;
 		w.setLayoutData(gd);
+		
+		elementWidgets.put(e, w);
 		
 		return w;
 	}
@@ -203,19 +225,88 @@ public class DashboardControl extends Composite
 	}
 	
 	/**
+	 * Delete element
+	 * 
 	 * @param element
 	 */
-	@SuppressWarnings("restriction")
+	void deleteElement(DashboardElement element)
+	{
+		elements.remove(element);
+		ElementWidget w = elementWidgets.get(element);
+		if (w != null)
+		{
+			elementWidgets.remove(element);
+			w.dispose();
+			layout(true, true);
+		}
+	}
+	
+	/**
+	 * Edit element
+	 * 
+	 * @param element
+	 */
+	void editElement(DashboardElement element)
+	{
+		DashboardElementConfig config = (DashboardElementConfig)AdapterManager.getDefault().getAdapter(element, DashboardElementConfig.class);
+		if (config != null)
+		{
+			try
+			{
+				config.setLayout(DashboardElementLayout.createFromXml(element.getLayout()));
+				
+				PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
+				if (dlg.open() == Window.CANCEL)
+					return;	// element creation cancelled
+				
+				element.setData(config.createXml());
+				element.setLayout(config.getLayout().createXml());
+				layout(true, true);
+				setModified();
+			}
+			catch(Exception e)
+			{
+				MessageDialog.openError(getShell(), "Internal Error", "Internal error: " + e.getMessage());
+			}
+		}
+		else
+		{
+			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
+		}
+	}
+	
+	/**
+	 * @param element
+	 */
 	private void addElement(DashboardElement element)
 	{
-		PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, element);
-		if (dlg.open() == Window.CANCEL)
-			return;	// element creation cancelled
-		
-		elements.add(element);
-		createElementWidget(element);
-		layout(true, true);
-		modified = true;
+		DashboardElementConfig config = (DashboardElementConfig)AdapterManager.getDefault().getAdapter(element, DashboardElementConfig.class);
+		if (config != null)
+		{
+			try
+			{
+				config.setLayout(DashboardElementLayout.createFromXml(element.getLayout()));
+				
+				PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
+				if (dlg.open() == Window.CANCEL)
+					return;	// element creation cancelled
+				
+				element.setData(config.createXml());
+				element.setLayout(config.getLayout().createXml());
+				elements.add(element);
+				createElementWidget(element);
+				layout(true, true);
+				setModified();
+			}
+			catch(Exception e)
+			{
+				MessageDialog.openError(getShell(), "Internal Error", "Internal error: " + e.getMessage());
+			}
+		}
+		else
+		{
+			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
+		}
 	}
 	
 	/**
@@ -243,5 +334,121 @@ public class DashboardControl extends Composite
 	{
 		DashboardElement e = new DashboardElement(DashboardElement.PIE_CHART, "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
 		addElement(e);
+	}
+
+	/**
+	 * Add bar chart widget to dashboard
+	 */
+	public void addBarChart()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.BAR_CHART, "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
+		addElement(e);
+	}
+
+	/**
+	 * Add tube chart widget to dashboard
+	 */
+	public void addTubeChart()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.TUBE_CHART, "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
+		addElement(e);
+	}
+
+	/**
+	 * Add tube chart widget to dashboard
+	 */
+	public void addLineChart()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.LINE_CHART, "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
+		addElement(e);
+	}
+
+	/**
+	 * Add embedded dashboard widget to dashboard
+	 */
+	public void addEmbeddedDashboard()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.DASHBOARD, "<element><objectId>0</objectId></element>");
+		addElement(e);
+	}
+
+	/**
+	 * Add status indicator widget to dashboard
+	 */
+	public void addStatusIndicator()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.STATUS_INDICATOR, "<element><objectId>0</objectId></element>");
+		addElement(e);
+	}
+
+	/**
+	 * Save dashboard layout
+	 * 
+	 * @param viewPart
+	 */
+	public void saveDashboard(IViewPart viewPart)
+	{
+		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
+		md.setDashboardElements(new ArrayList<DashboardElement>(elements));
+		new ConsoleJob("Save dashboard layout", viewPart, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+				session.modifyObject(md);
+				Display.getDefault().asyncExec(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (isDisposed())
+							return;
+						
+						modified = false;
+						if (modifyListener != null)
+							modifyListener.save();
+					}
+				});
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot save dashboard " + dashboard.getObjectName();
+			}
+		}.start();
+	}
+	
+	/**
+	 * Set modified flag
+	 */
+	private void setModified()
+	{
+		modified = true;
+		if (modifyListener != null)
+			modifyListener.modify();
+	}
+
+	/**
+	 * @return the modifyListener
+	 */
+	public DashboardModifyListener getModifyListener()
+	{
+		return modifyListener;
+	}
+
+	/**
+	 * @param modifyListener the modifyListener to set
+	 */
+	public void setModifyListener(DashboardModifyListener modifyListener)
+	{
+		this.modifyListener = modifyListener;
+	}
+
+	/**
+	 * @return the modified
+	 */
+	public boolean isModified()
+	{
+		return modified;
 	}
 }

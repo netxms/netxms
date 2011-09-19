@@ -18,17 +18,13 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
-import java.io.StringWriter;
-import java.io.Writer;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for label
  */
-@Root(name="element")
 public class LabelConfig extends DashboardElementConfig
 {
 	@Element(required=true)
@@ -53,18 +49,6 @@ public class LabelConfig extends DashboardElementConfig
 		return serializer.read(LabelConfig.class, xml);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
-	@Override
-	public String createXml() throws Exception
-	{
-		Serializer serializer = new Persister();
-		Writer writer = new StringWriter();
-		serializer.write(this, writer);
-		return writer.toString();
-	}
-
 	/**
 	 * @return the title
 	 */
