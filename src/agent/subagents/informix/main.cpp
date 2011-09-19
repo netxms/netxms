@@ -16,19 +16,19 @@ THREAD_RESULT THREAD_CALL queryThread(void *arg);
 
 DBParameterGroup g_paramGroup[] = {
 	{
-		1100, _T("Informix.Sessions."),
+		1100, _T("Informix.Session."),
 		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, count(*) Count from syssessions"),
 		2, { NULL }, 0
 	}, 
 	{
-		1100, _T("Informix.Databases."),
+		1100, _T("Informix.Database."),
 			_T("select name ValueName, owner Owner, is_logging Logged, created Created from sysdatabases"),
 			4, { NULL }, 0
-	}, 
+	},
 	{
-		1100, _T("Informix.Dbspaces."),
-			_T("select name ValueName,sum(chksize) PageSize,sum(chksize)-sum(nfree) PagesUsed,")
-			_T("sum(nfree) PagesFree,round((sum(nfree))/(sum(chksize))*100,2) PctFree from sysdbspaces d,syschunks c ")
+		1100, _T("Informix.Dbspace.Pages."),
+			_T("select name ValueName,sum(chksize) PageSize,sum(chksize)-sum(nfree) Used,")
+			_T("sum(nfree) Free,round((sum(nfree))/(sum(chksize))*100,2) FreePerc from sysdbspaces d,syschunks c ")
 			_T("where d.dbsnum=c.dbsnum	group by name order by name"),
 			5, { NULL }, 0
 	}, 
@@ -341,7 +341,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Informix.Database.Owner(*)"), getParameters, "X", DCI_DT_STRING, _T("Informix/Databases: Database owner") },
 	{ _T("Informix.Database.Created(*)"), getParameters, "X", DCI_DT_STRING, _T("Informix/Databases: Creation date") },
 	{ _T("Informix.Database.Logged(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Databases: Is logged") },
-	{ _T("Informix.Dbspace.PageSize(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Page size") },
+	{ _T("Informix.Dbspace.Pages.PageSize(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Page size") },
 	{ _T("Informix.Dbspace.Pages.Used(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages used in dbspace") },
 	{ _T("Informix.Dbspace.Pages.Free(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages free in dbspace") },
 	{ _T("Informix.Dbspace.Pages.FreePerc(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Percentage of free space in dbspace") },
