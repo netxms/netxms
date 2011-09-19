@@ -95,7 +95,10 @@ public class TrustedNodes extends PropertyPage
       
       GenericObject[] nodes = object.getTrustedNodes();
       for(int i = 0; i < nodes.length; i++)
-      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
+      {
+      	if (nodes[i] != null)
+      		trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
+      }
       viewer.setInput(nodes);
       
       GridData gridData = new GridData();
