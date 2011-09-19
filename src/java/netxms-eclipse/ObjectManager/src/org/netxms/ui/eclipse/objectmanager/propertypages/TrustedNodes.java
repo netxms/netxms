@@ -99,7 +99,7 @@ public class TrustedNodes extends PropertyPage
       	if (nodes[i] != null)
       		trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
       }
-      viewer.setInput(nodes);
+      viewer.setInput(trustedNodes.values().toArray());
       
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
