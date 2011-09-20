@@ -35,11 +35,12 @@ DBParameterGroup g_paramGroup[] = {
 	0
 };
 
+
 //
 // Handler functions
 //
 
-LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
+LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
 {
 	LONG ret = SYSINFO_RC_UNSUPPORTED;
 	TCHAR dbId[MAX_STR];
@@ -140,7 +141,7 @@ static BOOL SubAgentInit(Config *config)
 		{
 			if (info.id[0] == 0)
 				_tcscpy(info.id, info.dsn);
-			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(info));
+			memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
 			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
 		}
 	}
@@ -161,7 +162,7 @@ static BOOL SubAgentInit(Config *config)
 		
 		if (info.id[0] == 0)
 			_tcscpy(info.id, info.dsn);
-		memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(info));
+		memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
 
 		if (info.username[0] == '\0' || info.password[0] == '\0')
 		{
@@ -221,7 +222,7 @@ static int getInformixVersion(DB_HANDLE handle)
 // Thread for SQL queries
 //
 
-THREAD_RESULT THREAD_CALL queryThread(void* arg)
+THREAD_RESULT THREAD_CALL queryThread(void *arg)
 {
 	int dbIndex = CAST_FROM_POINTER(arg, int);
 	DatabaseInfo& db = g_dbInfo[dbIndex];
@@ -230,7 +231,7 @@ THREAD_RESULT THREAD_CALL queryThread(void* arg)
 	QWORD startTimeMs;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
-	while (true)
+	while(true)
 	{
 		db.handle = DBConnect(g_driverHandle, NULL, db.dsn, db.username, db.password, NULL, errorText);
 		if (db.handle != NULL)
@@ -337,14 +338,22 @@ bool getParametersFromDB( int dbIndex )
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("Informix.Session.Count(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Sessions: Number of sessions opened") },
-	{ _T("Informix.Database.Owner(*)"), getParameters, "X", DCI_DT_STRING, _T("Informix/Databases: Database owner") },
-	{ _T("Informix.Database.Created(*)"), getParameters, "X", DCI_DT_STRING, _T("Informix/Databases: Creation date") },
-	{ _T("Informix.Database.Logged(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Databases: Is logged") },
-	{ _T("Informix.Dbspace.Pages.PageSize(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Page size") },
-	{ _T("Informix.Dbspace.Pages.Used(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages used in dbspace") },
-	{ _T("Informix.Dbspace.Pages.Free(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages free in dbspace") },
-	{ _T("Informix.Dbspace.Pages.FreePerc(*)"), getParameters, "X", DCI_DT_INT, _T("Informix/Dbspaces: Percentage of free space in dbspace") },
+	{ _T("Informix.Session.Count"), H_DatabaseParameter, "S", DCI_DT_INT, _T("Informix/Sessions: Number of sessions opened") },
+	{ _T("Informix.Session.Count(*)"), H_DatabaseParameter, "M", DCI_DT_INT, _T("Informix/Sessions: Number of sessions opened") },
+	{ _T("Informix.Database.Owner"), H_DatabaseParameter, "S", DCI_DT_STRING, _T("Informix/Databases: Database owner") },
+	{ _T("Informix.Database.Owner(*)"), H_DatabaseParameter, "M", DCI_DT_STRING, _T("Informix/Databases: Database owner") },
+	{ _T("Informix.Database.Created"), H_DatabaseParameter, "S", DCI_DT_STRING, _T("Informix/Databases: Creation date") },
+	{ _T("Informix.Database.Created(*)"), H_DatabaseParameter, "M", DCI_DT_STRING, _T("Informix/Databases: Creation date") },
+	{ _T("Informix.Database.Logged"), H_DatabaseParameter, "S", DCI_DT_INT, _T("Informix/Databases: Is logged") },
+	{ _T("Informix.Database.Logged(*)"), H_DatabaseParameter, "M", DCI_DT_INT, _T("Informix/Databases: Is logged") },
+	{ _T("Informix.Dbspace.Pages.PageSize"), H_DatabaseParameter, "S", DCI_DT_INT, _T("Informix/Dbspaces: Page size") },
+	{ _T("Informix.Dbspace.Pages.PageSize(*)"), H_DatabaseParameter, "M", DCI_DT_INT, _T("Informix/Dbspaces: Page size") },
+	{ _T("Informix.Dbspace.Pages.Used"), H_DatabaseParameter, "S", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages used in dbspace") },
+	{ _T("Informix.Dbspace.Pages.Used(*)"), H_DatabaseParameter, "M", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages used in dbspace") },
+	{ _T("Informix.Dbspace.Pages.Free"), H_DatabaseParameter, "S", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages free in dbspace") },
+	{ _T("Informix.Dbspace.Pages.Free(*)"), H_DatabaseParameter, "M", DCI_DT_INT, _T("Informix/Dbspaces: Number of pages free in dbspace") },
+	{ _T("Informix.Dbspace.Pages.FreePerc"), H_DatabaseParameter, "S", DCI_DT_INT, _T("Informix/Dbspaces: Percentage of free space in dbspace") },
+	{ _T("Informix.Dbspace.Pages.FreePerc(*)"), H_DatabaseParameter, "M", DCI_DT_INT, _T("Informix/Dbspaces: Percentage of free space in dbspace") },
 };
 
 /*

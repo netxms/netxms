@@ -39,6 +39,8 @@ public class Layout extends PropertyPage
 	private Combo comboVerticalAlign;
 	private Spinner spinnerHorizontalSpan;
 	private Spinner spinnerVerticalSpan;
+	private Spinner spinnerWidthHint;
+	private Spinner spinnerHeightHint;
 	private DashboardElementConfig elementConfig;
 	private DashboardElementLayout elementLayout;
 
@@ -92,6 +94,18 @@ public class Layout extends PropertyPage
 				"Vertical span", WidgetHelper.DEFAULT_LAYOUT_DATA);
 		spinnerVerticalSpan.setSelection(elementLayout.verticalSpan);
 
+		spinnerWidthHint = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
+				"Width hint", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		spinnerWidthHint.setMinimum(-1);
+		spinnerWidthHint.setMaximum(8192);
+		spinnerWidthHint.setSelection(elementLayout.widthHint);
+
+		spinnerHeightHint = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
+				"Height hint", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		spinnerHeightHint.setMinimum(-1);
+		spinnerHeightHint.setMaximum(8192);
+		spinnerHeightHint.setSelection(elementLayout.heightHint);
+
 		return dialogArea;
 	}
 
@@ -105,7 +119,8 @@ public class Layout extends PropertyPage
 		elementLayout.vertcalAlignment = comboVerticalAlign.getSelectionIndex();
 		elementLayout.horizontalSpan = spinnerHorizontalSpan.getSelection();
 		elementLayout.verticalSpan = spinnerVerticalSpan.getSelection();
-		
+		elementLayout.widthHint = spinnerWidthHint.getSelection();
+		elementLayout.heightHint = spinnerHeightHint.getSelection();
 		return true;
 	}
 }

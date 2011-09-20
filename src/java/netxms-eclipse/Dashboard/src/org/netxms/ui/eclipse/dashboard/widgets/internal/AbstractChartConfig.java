@@ -6,7 +6,6 @@ import org.simpleframework.xml.ElementArray;
 
 public abstract class AbstractChartConfig extends DashboardElementConfig
 {
-
 	@ElementArray(required = true)
 	private DashboardDciInfo[] dciList = new DashboardDciInfo[0];
 	@Element(required = false)
@@ -15,11 +14,6 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	private int legendPosition = GraphSettings.POSITION_RIGHT;
 	@Element(required = false)
 	private boolean showLegend = true;
-
-	public AbstractChartConfig()
-	{
-		super();
-	}
 
 	/**
 	 * @return the title

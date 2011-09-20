@@ -53,6 +53,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.dialogs.AddDashboardElementDlg;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DashboardElementsLabelProvider;
+import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -357,7 +358,29 @@ public class DashboardElements extends PropertyPage
 		AddDashboardElementDlg dlg = new AddDashboardElementDlg(getShell());
 		if (dlg.open() == Window.OK)
 		{
-			DashboardElement element = new DashboardElement(dlg.getElementType(), "<element>\n</element>\n");
+			String config;
+			switch(dlg.getElementType())
+			{
+				case DashboardElement.BAR_CHART:
+				case DashboardElement.PIE_CHART:
+				case DashboardElement.TUBE_CHART:
+					config = DashboardControl.DEFAULT_CHART_CONFIG;
+					break;
+				case DashboardElement.LINE_CHART:
+					config = DashboardControl.DEFAULT_LINE_CHART_CONFIG;
+					break;
+				case DashboardElement.LABEL:
+					config = DashboardControl.DEFAULT_LABEL_CONFIG;
+					break;
+				case DashboardElement.STATUS_INDICATOR:
+				case DashboardElement.DASHBOARD:
+					config = DashboardControl.DEFAULT_OBJECT_REFERENCE_CONFIG;
+					break;
+				default:
+					config = "<element></element>";
+					break;
+			}
+			DashboardElement element = new DashboardElement(dlg.getElementType(), config);
 			elements.add(element);
 			viewer.setInput(elements.toArray());
 			viewer.setSelection(new StructuredSelection(element));

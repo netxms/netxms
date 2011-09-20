@@ -53,6 +53,11 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 @SuppressWarnings("restriction")
 public class DashboardControl extends Composite
 {
+	public static final String DEFAULT_CHART_CONFIG = "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>"; 
+	public static final String DEFAULT_LINE_CHART_CONFIG = "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";
+	public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element><objectId>0</objectId></element>";
+	public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>"; 
+			
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
 	private Map<DashboardElement, ElementWidget> elementWidgets = new HashMap<DashboardElement, ElementWidget>();
@@ -194,6 +199,8 @@ public class DashboardControl extends Composite
 		gd.verticalAlignment = mapVerticalAlignment(el.vertcalAlignment);
 		gd.horizontalSpan = el.horizontalSpan;
 		gd.verticalSpan = el.verticalSpan;
+		gd.widthHint = el.widthHint;
+		gd.heightHint = el.heightHint;
 		w.setLayoutData(gd);
 		
 		elementWidgets.put(e, w);
@@ -314,7 +321,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addAlarmBrowser()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.LABEL, "<element>\n\t<title>Label</title>\n</element>");
+		DashboardElement e = new DashboardElement(DashboardElement.LABEL, DEFAULT_OBJECT_REFERENCE_CONFIG);
 		addElement(e);
 	}
 	
@@ -323,7 +330,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addLabel()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.LABEL, "<element>\n\t<title>Label</title>\n</element>");
+		DashboardElement e = new DashboardElement(DashboardElement.LABEL, DEFAULT_LABEL_CONFIG);
 		addElement(e);
 	}
 	
@@ -332,7 +339,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addPieChart()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.PIE_CHART, "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
+		DashboardElement e = new DashboardElement(DashboardElement.PIE_CHART, DEFAULT_CHART_CONFIG);
 		addElement(e);
 	}
 
@@ -341,7 +348,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addBarChart()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.BAR_CHART, "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
+		DashboardElement e = new DashboardElement(DashboardElement.BAR_CHART, DEFAULT_CHART_CONFIG);
 		addElement(e);
 	}
 
@@ -350,7 +357,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addTubeChart()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.TUBE_CHART, "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
+		DashboardElement e = new DashboardElement(DashboardElement.TUBE_CHART, DEFAULT_CHART_CONFIG);
 		addElement(e);
 	}
 
@@ -359,7 +366,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addLineChart()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.LINE_CHART, "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>");
+		DashboardElement e = new DashboardElement(DashboardElement.LINE_CHART, DEFAULT_LINE_CHART_CONFIG);
 		addElement(e);
 	}
 
@@ -368,7 +375,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addEmbeddedDashboard()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.DASHBOARD, "<element><objectId>0</objectId></element>");
+		DashboardElement e = new DashboardElement(DashboardElement.DASHBOARD, DEFAULT_OBJECT_REFERENCE_CONFIG);
 		addElement(e);
 	}
 
@@ -377,7 +384,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addStatusIndicator()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.STATUS_INDICATOR, "<element><objectId>0</objectId></element>");
+		DashboardElement e = new DashboardElement(DashboardElement.STATUS_INDICATOR, DEFAULT_OBJECT_REFERENCE_CONFIG);
 		addElement(e);
 	}
 

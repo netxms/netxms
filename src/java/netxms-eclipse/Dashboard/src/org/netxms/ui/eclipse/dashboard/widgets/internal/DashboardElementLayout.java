@@ -43,6 +43,12 @@ public class DashboardElementLayout
 	@Element(required=false)
 	public int vertcalAlignment = DashboardElement.FILL;
 
+	@Element(required=false)
+	public int widthHint = -1;
+	
+	@Element(required=false)
+	public int heightHint = -1;
+	
 	/**
 	 * @param xml
 	 * @return
