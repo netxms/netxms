@@ -55,6 +55,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private Action actionAddPieChart;
 	private Action actionAddTubeChart;
 	private Action actionAddLineChart;
+	private Action actionAddAvailabilityChart;
 	private Action actionAddDashboard;
 	private Action actionAddStatusIndicator;
 	
@@ -173,6 +174,14 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 
+		actionAddAvailabilityChart = new Action("Add a&vailability chart") {
+			@Override
+			public void run()
+			{
+				dbc.addAvailabilityChart();
+			}
+		};
+
 		actionAddDashboard = new Action("Add embedded &dashboard") {
 			@Override
 			public void run()
@@ -218,6 +227,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		manager.add(actionAddPieChart);
 		manager.add(actionAddTubeChart);
 		manager.add(actionAddStatusIndicator);
+		manager.add(actionAddAvailabilityChart);
 		manager.add(actionAddDashboard);
 	}
 

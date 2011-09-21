@@ -24,14 +24,12 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.GenericObject;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
-import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for bar chart
  */
-@Root(name="element")
 public class ObjectStatusChartConfig extends DashboardElementConfig
 {
 	@Element(required=true)

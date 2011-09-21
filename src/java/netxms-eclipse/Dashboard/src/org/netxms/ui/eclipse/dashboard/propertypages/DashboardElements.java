@@ -369,9 +369,13 @@ public class DashboardElements extends PropertyPage
 				case DashboardElement.LINE_CHART:
 					config = DashboardControl.DEFAULT_LINE_CHART_CONFIG;
 					break;
+				case DashboardElement.AVAILABLITY_CHART:
+					config = DashboardControl.DEFAULT_AVAILABILITY_CHART_CONFIG;
+					break;
 				case DashboardElement.LABEL:
 					config = DashboardControl.DEFAULT_LABEL_CONFIG;
 					break;
+				case DashboardElement.ALARM_VIEWER:
 				case DashboardElement.STATUS_INDICATOR:
 				case DashboardElement.DASHBOARD:
 					config = DashboardControl.DEFAULT_OBJECT_REFERENCE_CONFIG;

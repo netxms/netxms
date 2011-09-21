@@ -19,9 +19,9 @@
 package org.netxms.ui.eclipse.dashboard;
 
 import org.eclipse.core.runtime.IAdapterFactory;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
@@ -41,8 +41,7 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 	@SuppressWarnings("rawtypes")
 	private static final Class[] supportedClasses = 
 	{
-		DashboardElementConfig.class,
-		IWorkbenchAdapter.class
+		DashboardElementConfig.class
 	};
 
 	/* (non-Javadoc)
@@ -65,35 +64,6 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 		if (!(adaptableObject instanceof DashboardElement))
 			return null;
 		
-		if (adapterType == IWorkbenchAdapter.class)
-		{
-			return new IWorkbenchAdapter() {
-				@Override
-				public Object getParent(Object o)
-				{
-					return null;
-				}
-				
-				@Override
-				public String getLabel(Object o)
-				{
-					return Integer.toString(((DashboardElement)o).getType());
-				}
-				
-				@Override
-				public ImageDescriptor getImageDescriptor(Object object)
-				{
-					return null;
-				}
-				
-				@Override
-				public Object[] getChildren(Object o)
-				{
-					return null;
-				}
-			};
-		}
-		
 		if (adapterType == DashboardElementConfig.class)
 		{
 			DashboardElement element = (DashboardElement)adaptableObject;
@@ -101,6 +71,10 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 			{
 				switch(element.getType())
 				{
+					case DashboardElement.ALARM_VIEWER:
+						return AlarmViewerConfig.createFromXml(element.getData());
+					case DashboardElement.AVAILABLITY_CHART:
+						return AvailabilityChartConfig.createFromXml(element.getData());
 					case DashboardElement.BAR_CHART:
 						return BarChartConfig.createFromXml(element.getData());
 					case DashboardElement.DASHBOARD:

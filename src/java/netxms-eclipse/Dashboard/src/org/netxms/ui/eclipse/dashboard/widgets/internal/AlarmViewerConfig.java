@@ -25,37 +25,31 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Configuration for status indicator widget
+ * Configuration for alarm viewer widget
  */
-public class StatusIndicatorConfig extends DashboardElementConfig
+public class AlarmViewerConfig extends DashboardElementConfig
 {
-	@Element
+	@Element(required=true)
 	private long objectId = 0;
 
-	@Element(required = false)
+	@Element(required=false)
 	private String title = "";
 
 	/**
-	 * Create status indicator settings object from XML document
+	 * Create line chart settings object from XML document
 	 * 
-	 * @param xml
-	 *           XML document
+	 * @param xml XML document
 	 * @return deserialized object
-	 * @throws Exception
-	 *            if the object cannot be fully deserialized
+	 * @throws Exception if the object cannot be fully deserialized
 	 */
-	public static StatusIndicatorConfig createFromXml(final String xml) throws Exception
+	public static AlarmViewerConfig createFromXml(final String xml) throws Exception
 	{
 		Serializer serializer = new Persister();
-		return serializer.read(StatusIndicatorConfig.class, xml);
+		return serializer.read(AlarmViewerConfig.class, xml);
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig
-	 * #createXml()
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
 	 */
 	@Override
 	public String createXml() throws Exception
@@ -67,23 +61,6 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 	}
 
 	/**
-	 * @return the objectId
-	 */
-	public long getObjectId()
-	{
-		return objectId;
-	}
-
-	/**
-	 * @param objectId
-	 *           the objectId to set
-	 */
-	public void setObjectId(long objectId)
-	{
-		this.objectId = objectId;
-	}
-
-	/**
 	 * @return the title
 	 */
 	public String getTitle()
@@ -92,11 +69,26 @@ public class StatusIndicatorConfig extends DashboardElementConfig
 	}
 
 	/**
-	 * @param title
-	 *           the title to set
+	 * @param title the title to set
 	 */
 	public void setTitle(String title)
 	{
 		this.title = title;
+	}
+
+	/**
+	 * @return the objectId
+	 */
+	public long getObjectId()
+	{
+		return objectId;
+	}
+
+	/**
+	 * @param objectId the objectId to set
+	 */
+	public void setObjectId(long objectId)
+	{
+		this.objectId = objectId;
 	}
 }

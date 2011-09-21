@@ -21,14 +21,12 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 import java.io.StringWriter;
 import java.io.Writer;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for custom widget
  */
-@Root(name="element", strict=false)
 public class CustomWidgetConfig extends DashboardElementConfig
 {
 	@Element(required=true)

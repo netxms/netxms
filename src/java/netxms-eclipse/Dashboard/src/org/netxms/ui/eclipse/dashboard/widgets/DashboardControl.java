@@ -55,7 +55,8 @@ public class DashboardControl extends Composite
 {
 	public static final String DEFAULT_CHART_CONFIG = "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>"; 
 	public static final String DEFAULT_LINE_CHART_CONFIG = "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";
-	public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element><objectId>0</objectId></element>";
+	public static final String DEFAULT_AVAILABILITY_CHART_CONFIG = "<element>\n\t<objectId>9</objectId>\n\t<showIn3D>true</showIn3D>\n</element>";
+	public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element>\n\t<objectId>0</objectId>\n</element>";
 	public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>"; 
 			
 	private Dashboard dashboard;
@@ -167,6 +168,9 @@ public class DashboardControl extends Composite
 				break;
 			case DashboardElement.STATUS_CHART:
 				w = new ObjectStatusChartElement(this, e);
+				break;
+			case DashboardElement.AVAILABLITY_CHART:
+				w = new AvailabilityChartElement(this, e);
 				break;
 			case DashboardElement.LABEL:
 				w = new LabelElement(this, e);
@@ -321,7 +325,7 @@ public class DashboardControl extends Composite
 	 */
 	public void addAlarmBrowser()
 	{
-		DashboardElement e = new DashboardElement(DashboardElement.LABEL, DEFAULT_OBJECT_REFERENCE_CONFIG);
+		DashboardElement e = new DashboardElement(DashboardElement.ALARM_VIEWER, DEFAULT_OBJECT_REFERENCE_CONFIG);
 		addElement(e);
 	}
 	
@@ -358,6 +362,15 @@ public class DashboardControl extends Composite
 	public void addTubeChart()
 	{
 		DashboardElement e = new DashboardElement(DashboardElement.TUBE_CHART, DEFAULT_CHART_CONFIG);
+		addElement(e);
+	}
+
+	/**
+	 * Add availability chart widget to dashboard
+	 */
+	public void addAvailabilityChart()
+	{
+		DashboardElement e = new DashboardElement(DashboardElement.AVAILABLITY_CHART, DEFAULT_AVAILABILITY_CHART_CONFIG);
 		addElement(e);
 	}
 

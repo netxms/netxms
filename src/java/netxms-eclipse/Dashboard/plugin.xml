@@ -123,6 +123,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.AvailabilityChart"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.AvailabilityChart#0"
+            name="Availability Chart">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">
@@ -131,9 +141,6 @@
             class="org.netxms.ui.eclipse.dashboard.DashboardElementAdapterFactory">
          <adapter
                type="org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig">
-         </adapter>
-         <adapter
-               type="org.eclipse.ui.model.IWorkbenchAdapter">
          </adapter>
       </factory>
    </extension>
