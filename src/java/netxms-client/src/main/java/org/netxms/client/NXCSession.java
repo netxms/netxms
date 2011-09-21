@@ -377,7 +377,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 									objectList.put(obj.getObjectId(), obj);
 							}
 							if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
-								sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj));
+								sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
 							break;
 						case NXCPCodes.CMD_OBJECT_LIST_END:
 							completeSync(syncObjects);

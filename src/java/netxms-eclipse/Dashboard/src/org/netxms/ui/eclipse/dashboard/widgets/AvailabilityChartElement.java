@@ -114,7 +114,16 @@ public class AvailabilityChartElement extends ElementWidget implements DisposeLi
 	public void notificationHandler(SessionNotification n)
 	{
 		if ((n.getCode() == NXCNotification.OBJECT_CHANGED) &&
-		    (n.getSubCode() == config.getObjectId()))
-			refreshChart();
+		    (n.getSubCode() == config.getObjectId()) &&
+		    !isDisposed())
+		{
+			getDisplay().asyncExec(new Runnable() {
+				@Override
+				public void run()
+				{
+					refreshChart();
+				}
+			});
+		}
 	}
 }
