@@ -76,8 +76,11 @@ public class TimestampFieldEditor extends FieldEditor
 		datePicker = new DateTime(area, SWT.DATE | SWT.DROP_DOWN);
 		datePicker.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
 
-		timePicker = new DateTime(area, SWT.TIME);
-		timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
+		if (parameter.getDataType() == ReportParameter.TIMESTAMP)
+		{
+			timePicker = new DateTime(area, SWT.TIME);
+			timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
+		}
 	}
 
 	/* (non-Javadoc)
@@ -88,8 +91,19 @@ public class TimestampFieldEditor extends FieldEditor
 	{
 		final Calendar c = Calendar.getInstance();
 		c.clear();
-		c.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(),
-				timePicker.getHours(), timePicker.getMinutes(), timePicker.getSeconds());
+		switch(parameter.getDataType())
+		{
+			case ReportParameter.TIMESTAMP:
+				c.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(),
+						timePicker.getHours(), timePicker.getMinutes(), timePicker.getSeconds());
+				break;
+			case ReportParameter.START_DATE:
+				c.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), 0, 0, 0);
+				break;
+			case ReportParameter.END_DATE:
+				c.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDay(), 23, 59, 59);
+				break;
+		}
 		return Long.toString(c.getTimeInMillis() / 1000);
 	}
 }

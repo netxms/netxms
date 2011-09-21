@@ -38,6 +38,8 @@ public class ReportParameter
 	public static final int USER_ID = 3;
 	public static final int OBJECT_LIST = 4;
 	public static final int TIMESTAMP = 5;
+	public static final int START_DATE = 6;
+	public static final int END_DATE = 7;
 	
 	private static final Map<String, Integer> TYPE_MAP;
 	
@@ -48,6 +50,8 @@ public class ReportParameter
 		TYPE_MAP.put("java.lang.String", STRING);
 		TYPE_MAP.put("java.util.Date", TIMESTAMP);
 		TYPE_MAP.put("timestamp", TIMESTAMP);
+		TYPE_MAP.put("startDate", START_DATE);
+		TYPE_MAP.put("endDate", END_DATE);
 		TYPE_MAP.put("object", OBJECT_ID);
 		TYPE_MAP.put("objectList", OBJECT_LIST);
 		TYPE_MAP.put("user", USER_ID);
