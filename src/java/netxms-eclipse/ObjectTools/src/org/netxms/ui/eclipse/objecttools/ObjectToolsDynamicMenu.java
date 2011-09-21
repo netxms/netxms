@@ -59,6 +59,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.api.ObjectToolHandler;
 import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -136,7 +137,25 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		int added = 0;
 		for(int i = 0; i < tools.length; i++)
 		{
-			if (tools[i].isApplicableForNode(node))
+			boolean allowed;
+			if (tools[i].getType() == ObjectTool.TYPE_INTERNAL)
+			{
+				ObjectToolHandler handler = ObjectToolsCache.findHandler(tools[i].getData());
+				if (handler != null)
+				{
+					allowed = handler.canExecuteOnNode(node, tools[i]);
+				}
+				else
+				{
+					allowed = false;
+				}
+			}
+			else
+			{
+				allowed = true;
+			}
+			
+			if (allowed && tools[i].isApplicableForNode(node))
 			{
 				String[] path = tools[i].getName().split("\\-\\>");
 			
@@ -191,6 +210,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	{
 		switch(tool.getType())
 		{
+			case ObjectTool.TYPE_INTERNAL:
+				executeInternalTool(node, tool);
+				break;
 			case ObjectTool.TYPE_LOCAL_COMMAND:
 				executeLocalCommand(node, tool);
 				break;
@@ -353,5 +375,22 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			}
 		};
 		job.start();
+	}
+
+	/**
+	 * @param node
+	 * @param tool
+	 */
+	private void executeInternalTool(final Node node, final ObjectTool tool)
+	{
+		ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
+		if (handler != null)
+		{
+			handler.execute(node, tool);
+		}
+		else
+		{
+			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot execute object tool: handler not defined");
+		}
 	}
 }

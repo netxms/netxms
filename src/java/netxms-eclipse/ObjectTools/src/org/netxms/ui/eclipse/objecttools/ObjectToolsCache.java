@@ -22,8 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.netxms.api.client.SessionNotification;
@@ -31,6 +35,7 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.objecttools.api.ObjectToolHandler;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -40,6 +45,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ObjectToolsCache
 {
 	private static Map<Long, ObjectTool> objectTools = new HashMap<Long, ObjectTool>();
+	private static Map<String, ObjectToolHandler> handlers = new HashMap<String, ObjectToolHandler>();
 	private static NXCSession session = null;
 	
 	/**
@@ -50,6 +56,7 @@ public class ObjectToolsCache
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
+		registerHandlers();
 		reload();
 		
 		session.addListener(new NXCListener() {
@@ -67,6 +74,29 @@ public class ObjectToolsCache
 				}
 			}
 		});
+	}
+	
+	/**
+	 * Register object tool handlers
+	 */
+	private static void registerHandlers()
+	{
+		// Read all registered extensions and create tabs
+		final IExtensionRegistry reg = Platform.getExtensionRegistry();
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objecttools.toolhandlers");
+		for(int i = 0; i < elements.length; i++)
+		{
+			try
+			{
+				final ObjectToolHandler handler = (ObjectToolHandler)elements[i].createExecutableExtension("class");
+				handlers.put(elements[i].getAttribute("id"), handler);
+			}
+			catch(CoreException e)
+			{
+				e.printStackTrace();
+				// TODO: add logging
+			}
+		}
 	}
 
 	/**
@@ -157,5 +187,16 @@ public class ObjectToolsCache
 			tool = objectTools.get(toolId);
 		}
 		return tool;
+	}
+	
+	/**
+	 * Find handler for "internal" tool
+	 * 
+	 * @param toolId
+	 * @return
+	 */
+	public static ObjectToolHandler findHandler(String toolId)
+	{
+		return handlers.get(toolId);
 	}
 }

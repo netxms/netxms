@@ -1121,6 +1121,7 @@ src/java/netxms-eclipse/ObjectTools/icons/table.gif -text
 src/java/netxms-eclipse/ObjectTools/icons/tools.png -text
 src/java/netxms-eclipse/ObjectTools/icons/url.gif -text
 src/java/netxms-eclipse/ObjectTools/plugin.xml -text
+src/java/netxms-eclipse/ObjectTools/schema/org.netxms.ui.eclipse.objecttools.toolhandlers.exsd -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/Activator.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsAdapterFactory.java -text
 src/java/netxms-eclipse/ObjectTools/src/org/netxms/ui/eclipse/objecttools/ObjectToolsCache.java -text
