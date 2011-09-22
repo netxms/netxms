@@ -52,6 +52,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.dialogs.AddDashboardElementDlg;
+import org.netxms.ui.eclipse.dashboard.dialogs.EditElementXmlDlg;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DashboardElementsLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
@@ -78,6 +79,7 @@ public class DashboardElements extends PropertyPage
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
+	private Button editXmlButton;
 	private Button deleteButton;
 	private Button upButton;
 	private Button downButton;
@@ -203,12 +205,28 @@ public class DashboardElements extends PropertyPage
 		});
 
       editButton = new Button(rightButtons, SWT.PUSH);
-      editButton.setText("&Modify...");
+      editButton.setText("&Edit...");
       editButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				editElement();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+
+      editXmlButton = new Button(rightButtons, SWT.PUSH);
+      editXmlButton.setText("Edit &XML...");
+      editXmlButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				editElementXml();
 			}
 			
 			@Override
@@ -424,6 +442,24 @@ public class DashboardElements extends PropertyPage
 		else
 		{
 			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
+		}
+	}
+	
+	/**
+	 * Edit selected element's configuration directly as XML
+	 */
+	private void editElementXml()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		DashboardElement element = (DashboardElement)selection.getFirstElement();
+		EditElementXmlDlg dlg = new EditElementXmlDlg(getShell(), element.getData());
+		if (dlg.open() == Window.OK)
+		{
+			element.setData(dlg.getValue());
+			viewer.update(element, null);
 		}
 	}
 	

@@ -636,6 +636,7 @@ src/java/netxms-eclipse/Dashboard/icons/ep_edit.png -text
 src/java/netxms-eclipse/Dashboard/icons/ep_left.png -text
 src/java/netxms-eclipse/Dashboard/icons/ep_right.png -text
 src/java/netxms-eclipse/Dashboard/icons/server_stats.png -text
+src/java/netxms-eclipse/Dashboard/icons/xml.gif -text
 src/java/netxms-eclipse/Dashboard/plugin.xml -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/Activator.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/CreateDashboard.java -text
@@ -643,6 +644,7 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/actions/Op
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/api/CustomDashboardElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/api/DashboardElementCreationData.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/AddDashboardElementDlg.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/dialogs/EditElementXmlDlg.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectives/DashboardPerspective.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AvailabilityChart.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DashboardElements.java -text

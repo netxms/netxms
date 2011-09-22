@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 
 /**
@@ -45,6 +46,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 	private DashboardControl dbc;
 	private DashboardElement element;
 	private Action actionEdit;
+	private Action actionEditXml;
 	private Action actionDelete;
 	
 	/**
@@ -88,6 +90,15 @@ public class EditPaneWidget extends Canvas implements PaintListener
 		};
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
+		actionEditXml = new Action("Edit &XML") {
+			@Override
+			public void run()
+			{
+				dbc.editElementXml(element);
+			}
+		};
+		actionEditXml.setImageDescriptor(Activator.getImageDescriptor("icons/xml.gif"));
+		
 		actionDelete = new Action("&Delete") {
 			@Override
 			public void run()
@@ -126,6 +137,7 @@ public class EditPaneWidget extends Canvas implements PaintListener
 	protected void fillContextMenu(IMenuManager mgr)
 	{
 		mgr.add(actionEdit);
+		mgr.add(actionEditXml);
 		mgr.add(actionDelete);
 	}
 }

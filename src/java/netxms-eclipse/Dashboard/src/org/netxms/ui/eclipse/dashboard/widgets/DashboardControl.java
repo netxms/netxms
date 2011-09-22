@@ -41,6 +41,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.dashboard.dialogs.EditElementXmlDlg;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
@@ -283,6 +284,22 @@ public class DashboardControl extends Composite
 		else
 		{
 			MessageDialog.openError(getShell(), "Internal Error", "Internal error: no adapter for dashboard element");
+		}
+	}
+	
+	/**
+	 * Edit element XML
+	 * 
+	 * @param element
+	 */
+	void editElementXml(DashboardElement element)
+	{
+		EditElementXmlDlg dlg = new EditElementXmlDlg(getShell(), element.getData());
+		if (dlg.open() == Window.OK)
+		{
+			element.setData(dlg.getValue());
+			layout(true, true);
+			setModified();
 		}
 	}
 	
