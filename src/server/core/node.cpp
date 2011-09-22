@@ -1419,8 +1419,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
           (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
       {
 	      SendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
-         pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
-                                          m_wAuthMethod, m_szSharedSecret);
+         pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
          setAgentProxy(pAgentConn);
          DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_szName);
          if (pAgentConn->connect(g_pServerKey))

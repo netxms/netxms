@@ -72,6 +72,7 @@ NetworkMap::NetworkMap(int type, DWORD seed) : NetObj()
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
+	m_bIsHidden = TRUE;
 }
 
 

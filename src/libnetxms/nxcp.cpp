@@ -389,15 +389,27 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuf
    }
 
    // Receive rest of message from the network
+	// Buffer is empty now
+	nxcpBuffer->dwBufSize = 0;
+	nxcpBuffer->dwBufPos = 0;
    do
    {
-      iErr = RecvEx(hSocket, nxcpBuffer->szBuffer, CSCP_TEMP_BUF_SIZE, 0, dwTimeout);
+		iErr = RecvEx(hSocket, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufSize], 
+		              CSCP_TEMP_BUF_SIZE - nxcpBuffer->dwBufSize, 0, dwTimeout);
       if (iErr <= 0)
          return (iErr == -2) ? 3 : iErr;
 
-      if (dwBytesRead == 0 &&
-		  iErr >= (sizeof(((CSCP_MESSAGE *)(nxcpBuffer->szBuffer))->dwSize))) // New message?
+		if (dwBytesRead == 0) // New message?
       {
+			if ((iErr + nxcpBuffer->dwBufSize) < CSCP_HEADER_SIZE)
+			{
+				// Header not received completely
+				nxcpBuffer->dwBufSize += iErr;
+				continue;
+			}
+			iErr += nxcpBuffer->dwBufSize;
+			nxcpBuffer->dwBufSize = 0;
+
          dwMsgSize = ntohl(((CSCP_MESSAGE *)(nxcpBuffer->szBuffer))->dwSize);
          if (dwMsgSize > *bufferSize)
          {
@@ -421,7 +433,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuf
          memcpy(((char *)(*msgBuffer)) + dwBytesRead, nxcpBuffer->szBuffer, dwBytesToCopy);
       dwBytesRead += dwBytesToCopy;
    }
-   while(dwBytesRead < dwMsgSize);
+	while((dwBytesRead < dwMsgSize) || (dwBytesRead < CSCP_HEADER_SIZE));
    
    // Check if we have something left in buffer
    if (dwBytesToCopy < (DWORD)iErr)
