@@ -7,6 +7,7 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
@@ -24,6 +25,12 @@ public class StatusIndicatorElement extends ElementWidget
 	private Runnable refreshTimer;
 	private Font font;
 	private boolean greenState = false;
+	private int xSize;
+	private int ySize;
+
+	private static final int MARGIN_X = 16;
+	private static final int MARGIN_Y = 16;
+	private static final int CIRCLE_SIZE = 36;
 
 	protected StatusIndicatorElement(final DashboardControl parent, DashboardElement element)
 	{
@@ -46,6 +53,8 @@ public class StatusIndicatorElement extends ElementWidget
 		canvas.setBackground(new Color(getDisplay(), 240, 240, 240));
 		font = new Font(getDisplay(), "Verdana", 12, SWT.NONE);
 
+		calcSize(parent);
+
 		addDisposeListener(new DisposeListener()
 		{
 			@Override
@@ -67,6 +76,16 @@ public class StatusIndicatorElement extends ElementWidget
 		startRefreshTimer();
 	}
 
+	private void calcSize(final DashboardControl parent)
+	{
+		final GC gc = new GC(parent);
+		gc.setFont(font);
+		final Point textExtent = gc.textExtent(config.getTitle());
+		gc.dispose();
+		xSize = (MARGIN_X * 3) + CIRCLE_SIZE + textExtent.x;
+		ySize = (MARGIN_Y * 2) + CIRCLE_SIZE;
+	}
+
 	/**
 	 * 
 	 */
@@ -74,7 +93,14 @@ public class StatusIndicatorElement extends ElementWidget
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final GenericObject object = session.findObjectById(config.getObjectId());
-		greenState = object.getStatus() == GenericObject.STATUS_NORMAL;
+		if (object != null)
+		{
+			greenState = object.getStatus() == GenericObject.STATUS_NORMAL;
+		}
+		else
+		{
+			greenState = false;
+		}
 		canvas.redraw();
 	}
 
@@ -106,11 +132,6 @@ public class StatusIndicatorElement extends ElementWidget
 		Canvas canvas = (Canvas)e.widget;
 		canvas.drawBackground(e.gc, 0, 0, 100, 100);
 
-		int xMargin = 16;
-		int yMargin = 16;
-		int yOffset = yMargin;
-		int size = 36;
-
 		final Color bgColor = canvas.getBackground();
 
 		final Color redColors[] = { new Color(getDisplay(), 134, 0, 0), new Color(getDisplay(), 192, 0, 0) };
@@ -118,11 +139,11 @@ public class StatusIndicatorElement extends ElementWidget
 
 		if (greenState)
 		{
-			drawElement(e, xMargin, yOffset, size, bgColor, greenColors, config.getTitle());
+			drawElement(e, MARGIN_X, MARGIN_Y, CIRCLE_SIZE, bgColor, greenColors, config.getTitle());
 		}
 		else
 		{
-			drawElement(e, xMargin, yOffset, size, bgColor, redColors, config.getTitle());
+			drawElement(e, MARGIN_X, MARGIN_Y, CIRCLE_SIZE, bgColor, redColors, config.getTitle());
 		}
 
 		redColors[0].dispose();
@@ -145,5 +166,11 @@ public class StatusIndicatorElement extends ElementWidget
 		e.gc.setFont(font);
 		final Point textExtent = e.gc.textExtent(label);
 		e.gc.drawText(label, (xMargin * 2) + size, yOffset + (size / 2) - (textExtent.y / 2));
+	}
+
+	@Override
+	public Point computeSize(int wHint, int hHint, boolean changed)
+	{
+		return new Point(xSize, ySize);
 	}
 }
