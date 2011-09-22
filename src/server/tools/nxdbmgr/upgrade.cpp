@@ -300,6 +300,121 @@ static BOOL H_UpgradeFromV238(int currVersion, int newVersion)
 
 
 //
+// Upgrade from V232 to V238
+//
+
+static BOOL H_UpgradeFromV232toV238(int currVersion, int newVersion)
+{
+	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_checks (")
+	                     _T("id integer not null,")
+	                     _T("type integer not null,")
+								_T("content $SQL:TEXT null,")
+	                     _T("threshold_id integer not null,")
+	                     _T("reason varchar(255) null,")
+	                     _T("is_template integer not null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_tickets (")
+	                     _T("ticket_id integer not null,")
+	                     _T("service_id integer not null,")
+	                     _T("check_id integer not null,")
+	                     _T("create_timestamp integer not null,")
+	                     _T("close_timestamp integer not null,")
+	                     _T("reason varchar(255) null,")
+	                     _T("PRIMARY KEY(ticket_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_service_history (")
+	                     _T("record_id integer not null,")
+	                     _T("service_id integer not null,")
+	                     _T("change_timestamp integer not null,")
+	                     _T("new_status integer not null,")
+	                     _T("PRIMARY KEY(record_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE report_results (")
+	                     _T("report_id integer not null,")
+	                     _T("generated integer not null,")
+	                     _T("job_id integer not null,")
+	                     _T("PRIMARY KEY(report_id,job_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE reports (")
+	                     _T("id integer not null,")
+								_T("definition $SQL:TEXT null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE job_history (")
+	                     _T("id integer not null,")
+	                     _T("time_created integer not null,")
+	                     _T("time_started integer not null,")
+	                     _T("time_finished integer not null,")
+	                     _T("job_type varchar(127) null,")
+	                     _T("description varchar(255) null,")
+								_T("additional_info varchar(255) null,")
+	                     _T("node_id integer not null,")
+	                     _T("user_id integer not null,")
+	                     _T("status integer not null,")
+	                     _T("failure_message varchar(255) null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE business_services (")
+	                     _T("service_id integer not null,")
+	                     _T("PRIMARY KEY(service_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE business_service_templates (")
+	                     _T("service_id integer not null,")
+	                     _T("template_id integer not null,")
+	                     _T("PRIMARY KEY(service_id,template_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE node_links (")
+	                     _T("nodelink_id integer not null,")
+	                     _T("node_id integer not null,")
+	                     _T("PRIMARY KEY(nodelink_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_agreements (")
+	                     _T("agreement_id integer not null,")
+	                     _T("service_id integer not null,")
+	                     _T("org_id integer not null,")
+	                     _T("uptime varchar(63) not null,")
+	                     _T("period integer not null,")
+	                     _T("start_date integer not null,")
+	                     _T("notes varchar(255),")
+	                     _T("PRIMARY KEY(agreement_id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE organizations (")
+	                     _T("id integer not null,")
+	                     _T("parent_id integer not null,")
+	                     _T("org_type integer not null,")
+	                     _T("name varchar(63) not null,")
+	                     _T("description varchar(255),")
+	                     _T("manager integer not null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateTable(_T("CREATE TABLE persons (")
+	                     _T("id integer not null,")
+	                     _T("org_id integer not null,")
+	                     _T("first_name varchar(63),")
+	                     _T("last_name varchar(63),")
+	                     _T("title varchar(255),")
+	                     _T("status integer not null,")
+	                     _T("PRIMARY KEY(id))")));
+
+	CHK_EXEC(CreateConfigParam(_T("JobHistoryRetentionTime"), _T("90"), 1, 0));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET description=")
+	                  _T("'Generated when threshold check is rearmed for specific data collection item.#0D#0A")
+	                  _T("Parameters:#0D#0A")
+	                  _T("   1) Parameter name#0D#0A")
+	                  _T("   2) Item description#0D#0A")
+	                  _T("   3) Data collection item ID#0D#0A")
+	                  _T("   4) Instance#0D#0A")
+	                  _T("   5) Threshold value#0D#0A")
+	                  _T("   6) Actual value' WHERE event_code=18")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='238' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V237 to V238
 //
 
@@ -5613,7 +5728,7 @@ static struct
 	{ 229, 230, H_UpgradeFromV229 },
 	{ 230, 231, H_UpgradeFromV230 },
 	{ 231, 232, H_UpgradeFromV231 },
-	{ 232, 233, H_UpgradeFromV232 },
+	{ 232, 238, H_UpgradeFromV232toV238 },
 	{ 233, 234, H_UpgradeFromV233 },
 	{ 234, 235, H_UpgradeFromV234 },
 	{ 235, 236, H_UpgradeFromV235 },

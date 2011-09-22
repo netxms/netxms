@@ -2,7 +2,10 @@
 * 1.1.5
 *
 
-- NXSL: added "foreach" operator
+- Added "foreach" operator in NXSL
+- New NXSL functions: GetDCIValueByName, GetDCIValueByDescription
+- Dashboard configuration in console improved
+- Database upgrade bug fixed
 
 
 *
