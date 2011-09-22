@@ -82,6 +82,17 @@ static void CheckNA(UPS_PARAMETER *p, int nType)
 
 
 //
+// Constructor
+//
+
+APCInterface::APCInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
+{
+	if (m_portSpeed == 0)
+		m_portSpeed = 2400;
+}
+
+
+//
 // Query parameter from device
 //
 
@@ -111,7 +122,7 @@ void APCInterface::QueryParameter(const char *pszRq, UPS_PARAMETER *p, int nType
 // Open device
 //
 
-BOOL APCInterface::Open(void)
+BOOL APCInterface::Open()
 {
    char szLine[256];
    BOOL bRet;
@@ -120,7 +131,7 @@ BOOL APCInterface::Open(void)
       return FALSE;
 
    m_serial.SetTimeout(1000);
-   m_serial.Set(2400, 8, NOPARITY, ONESTOPBIT);
+   m_serial.Set(m_portSpeed, 8, NOPARITY, ONESTOPBIT);
 
    // Turn on "smart" mode
    m_serial.Write("Y", 1);

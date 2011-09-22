@@ -103,7 +103,7 @@ static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 
 //
 // Add device from configuration file parameter
-// Parameter value should be <device_id>:<port>:<protocol>
+// Parameter value should be <device_id>:<port>:<protocol>:<name>
 //
 
 static BOOL AddDeviceFromConfig(TCHAR *pszStr)

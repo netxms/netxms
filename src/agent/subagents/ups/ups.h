@@ -143,20 +143,20 @@ public:
 
    LONG GetParameter(int nParam, TCHAR *pszValue);
 
-   virtual void QueryModel(void);
-   virtual void QueryFirmwareVersion(void);
-   virtual void QueryMfgDate(void);
-   virtual void QuerySerialNumber(void);
-   virtual void QueryTemperature(void);
-   virtual void QueryBatteryVoltage(void);
-   virtual void QueryNominalBatteryVoltage(void);
-   virtual void QueryBatteryLevel(void);
-   virtual void QueryInputVoltage(void);
-   virtual void QueryOutputVoltage(void);
-   virtual void QueryLineFrequency(void);
-   virtual void QueryPowerLoad(void);
-   virtual void QueryEstimatedRuntime(void);
-   virtual void QueryOnlineStatus(void);
+   virtual void QueryModel();
+   virtual void QueryFirmwareVersion();
+   virtual void QueryMfgDate();
+   virtual void QuerySerialNumber();
+   virtual void QueryTemperature();
+   virtual void QueryBatteryVoltage();
+   virtual void QueryNominalBatteryVoltage();
+   virtual void QueryBatteryLevel();
+   virtual void QueryInputVoltage();
+   virtual void QueryOutputVoltage();
+   virtual void QueryLineFrequency();
+   virtual void QueryPowerLoad();
+   virtual void QueryEstimatedRuntime();
+   virtual void QueryOnlineStatus();
 };
 
 
@@ -168,14 +168,18 @@ class SerialInterface : public UPSInterface
 {
 protected:
    Serial m_serial;
+	int m_portSpeed;
+	int m_dataBits;
+	int m_parity;
+	int m_stopBits;
 
-   virtual BOOL Open(void);
-   virtual void Close(void);
+   virtual BOOL Open();
+   virtual void Close();
 
    BOOL ReadLineFromSerial(char *pszBuffer, int nBufLen);
 
 public:
-   SerialInterface(TCHAR *pszDevice) : UPSInterface(pszDevice) { }
+   SerialInterface(TCHAR *pszDevice);
 };
 
 
@@ -186,30 +190,30 @@ public:
 class APCInterface : public SerialInterface
 {
 protected:
-   virtual BOOL Open(void);
-   virtual BOOL ValidateConnection(void);
+   virtual BOOL Open();
+   virtual BOOL ValidateConnection();
 
    void QueryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep);
 
 public:
-   APCInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
+   APCInterface(TCHAR *pszDevice);
 
-   virtual const TCHAR *Type(void) { return _T("APC"); }
+   virtual const TCHAR *Type() { return _T("APC"); }
 
-   virtual void QueryModel(void);
-   virtual void QueryFirmwareVersion(void);
-   virtual void QueryMfgDate(void);
-   virtual void QuerySerialNumber(void);
-   virtual void QueryTemperature(void);
-   virtual void QueryBatteryVoltage(void);
-   virtual void QueryNominalBatteryVoltage(void);
-   virtual void QueryBatteryLevel(void);
-   virtual void QueryInputVoltage(void);
-   virtual void QueryOutputVoltage(void);
-   virtual void QueryLineFrequency(void);
-   virtual void QueryPowerLoad(void);
-   virtual void QueryEstimatedRuntime(void);
-   virtual void QueryOnlineStatus(void);
+   virtual void QueryModel();
+   virtual void QueryFirmwareVersion();
+   virtual void QueryMfgDate();
+   virtual void QuerySerialNumber();
+   virtual void QueryTemperature();
+   virtual void QueryBatteryVoltage();
+   virtual void QueryNominalBatteryVoltage();
+   virtual void QueryBatteryLevel();
+   virtual void QueryInputVoltage();
+   virtual void QueryOutputVoltage();
+   virtual void QueryLineFrequency();
+   virtual void QueryPowerLoad();
+   virtual void QueryEstimatedRuntime();
+   virtual void QueryOnlineStatus();
 };
 
 
@@ -229,17 +233,17 @@ protected:
    BYTE m_data[BCMXCP_BUFFER_SIZE];
    BCMXCP_METER_MAP_ENTRY m_map[BCMXCP_MAP_SIZE];
 
-   virtual BOOL Open(void);
-   virtual BOOL ValidateConnection(void);
+   virtual BOOL Open();
+   virtual BOOL ValidateConnection();
 
    BOOL SendReadCommand(BYTE nCommand);
    int RecvData(int nCommand);
    void ReadParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam);
 
 public:
-   BCMXCPInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
+   BCMXCPInterface(TCHAR *pszDevice);
 
-   virtual const TCHAR *Type(void) { return _T("BCMXCP"); }
+   virtual const TCHAR *Type() { return _T("BCMXCP"); }
 
    virtual void QueryTemperature(void);
    virtual void QueryLineFrequency(void);
@@ -270,7 +274,7 @@ protected:
 	int ge2kva;
 
 public:
-   MicrodowellInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
+   MicrodowellInterface(TCHAR *pszDevice);
 
    virtual const TCHAR *Type(void) { return _T("MICRODOWELL"); }
 

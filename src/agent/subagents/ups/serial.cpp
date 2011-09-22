@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,69 @@
 **/
 
 #include "ups.h"
+
+
+//
+// Create serial interface
+//
+
+SerialInterface::SerialInterface(TCHAR *device) : UPSInterface(device)
+{
+	m_portSpeed = 0;
+	m_dataBits = 8;
+	m_parity = NOPARITY;
+	m_stopBits = ONESTOPBIT;
+	
+	TCHAR *p;
+	if ((p = _tcschr(m_pszDevice, _T(','))) != NULL)
+	{
+		*p = 0; p++;
+		int tmp = _tcstol(p, NULL, 10);
+		if (tmp != 0)
+		{
+			m_portSpeed = tmp;
+			
+			if ((p = _tcschr(p, _T(','))) != NULL)
+			{
+				*p = 0; p++;
+				tmp = _tcstol(p, NULL, 10);
+				if (tmp >= 5 && tmp <= 8)
+				{
+					m_dataBits = tmp;
+					
+					// parity
+					if ((p = _tcschr(p, _T(','))) != NULL)
+					{
+						*p = 0; p++;
+						switch (tolower(*p))
+						{
+							case _T('n'): // none
+								m_parity = NOPARITY;
+								break;
+							case _T('o'): // odd
+								m_parity = ODDPARITY;
+								break;
+							case _T('e'): // even
+								m_parity = EVENPARITY;
+								break;
+						}
+						
+						// stop bits
+						if ((p = _tcschr(p, _T(','))) != NULL)
+						{
+							*p = 0; p++;
+							
+							if (*p == _T('2'))
+							{
+								m_stopBits = TWOSTOPBITS;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 
 //
@@ -53,7 +116,7 @@ BOOL SerialInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
 // Open communication to UPS
 //
 
-BOOL SerialInterface::Open(void)
+BOOL SerialInterface::Open()
 {
    return m_serial.Open(m_pszDevice);
 }
@@ -63,7 +126,7 @@ BOOL SerialInterface::Open(void)
 // Close communications with UPS
 //
 
-void SerialInterface::Close(void)
+void SerialInterface::Close()
 {
    m_serial.Close();
    UPSInterface::Close();

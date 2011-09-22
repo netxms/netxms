@@ -26,6 +26,17 @@
 
 
 //
+// Constructor
+//
+
+MicrodowellInterface::MicrodowellInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
+{
+	if (m_portSpeed == 0)
+		m_portSpeed = 19200;
+}
+
+
+//
 // Prepare and send data packet
 //
 BOOL MicrodowellInterface::SendCmd(const char *cmd, int cmdLen, char *ret, int *retLen)
@@ -81,7 +92,7 @@ BOOL MicrodowellInterface::SendCmd(const char *cmd, int cmdLen, char *ret, int *
 // Open device
 //
 
-BOOL MicrodowellInterface::Open(void)
+BOOL MicrodowellInterface::Open()
 {
    BOOL bRet = FALSE;
 
@@ -89,7 +100,7 @@ BOOL MicrodowellInterface::Open(void)
       return FALSE;
 
    m_serial.SetTimeout(1000);
-   m_serial.Set(19200, 8, NOPARITY, ONESTOPBIT);
+   m_serial.Set(m_portSpeed, 8, NOPARITY, ONESTOPBIT);
 
 	char buff[512];
 	int len;

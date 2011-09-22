@@ -227,6 +227,17 @@ static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, char *pszValu
 
 
 //
+// Constructor
+//
+
+BCMXCPInterface::BCMXCPInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
+{
+	if (m_portSpeed == 0)
+		m_portSpeed = 19200;
+}
+
+
+//
 // Send read command to device
 //
 
@@ -335,7 +346,7 @@ int BCMXCPInterface::RecvData(int nCommand)
 // Open device
 //
 
-BOOL BCMXCPInterface::Open(void)
+BOOL BCMXCPInterface::Open()
 {
    BOOL bRet = FALSE;
    TCHAR szBuffer[256];
@@ -344,7 +355,7 @@ BOOL BCMXCPInterface::Open(void)
    if (SerialInterface::Open())
    {
       m_serial.SetTimeout(1000);
-      m_serial.Set(19200, 8, NOPARITY, ONESTOPBIT);
+      m_serial.Set(m_portSpeed, 8, NOPARITY, ONESTOPBIT);
 
       // Send two escapes
       m_serial.Write("\x1D\x1D", 2);
