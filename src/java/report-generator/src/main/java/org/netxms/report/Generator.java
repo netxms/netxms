@@ -61,21 +61,29 @@ public class Generator {
         parseCommandLine(args);
         loadConfig();
         loadDefinitionAndParameters();
+        final JasperReport report = prepare();
 
-        Class.forName(config.getProperty(CONFIG_JDBCDRIVER));
+        final String dataSourceName;
+        if (report.getPropertiesMap().containsProperty("netxms.datasource")) {
+            dataSourceName = '-' + report.getProperty("netxms.datasource");
+        } else {
+            dataSourceName = "";
+        }
+
+        Class.forName(config.getProperty(CONFIG_JDBCDRIVER + dataSourceName));
         Connection connection = null;
         try {
             //noinspection CallToDriverManagerGetConnection
-            final String url = config.getProperty(CONFIG_JDBCURL);
-            final String user = config.getProperty(CONFIG_DBLOGIN);
-            final String password = config.getProperty(CONFIG_DBPASSWORD);
+            final String url = config.getProperty(CONFIG_JDBCURL + dataSourceName);
+            final String user = config.getProperty(CONFIG_DBLOGIN + dataSourceName);
+            final String password = config.getProperty(CONFIG_DBPASSWORD + dataSourceName);
 
             if (url == null) {
-                throw new RuntimeException(CONFIG_JDBCURL + " not found in config file");
+                throw new RuntimeException(CONFIG_JDBCURL + dataSourceName + " not found in config file");
             }
 
             connection = DriverManager.getConnection(url, user, password);
-            generate(connection);
+            generate(connection, report);
         } finally {
             if (connection != null) {
                 connection.close();
@@ -136,9 +144,7 @@ public class Generator {
         destinationFileName = args[2];
     }
 
-    private void generate(final Connection connection) throws JRException, UnsupportedEncodingException {
-        //final JasperReport report = JasperCompileManager.compileReport(sourceFileName);
-        final JasperReport report = JasperCompileManager.compileReport(new ByteArrayInputStream(reportDefinition.getBytes("utf-8")));
+    private void generate(final Connection connection, final JasperReport report) throws JRException, UnsupportedEncodingException {
         final Map<String, Object> parameters = new HashMap<String, Object>(rawParameters.size());
         for (final JRParameter parameter : report.getParameters()) {
             final String name = parameter.getName();
@@ -154,4 +160,9 @@ public class Generator {
         }
         JasperFillManager.fillReportToFile(report, destinationFileName, parameters, connection);
     }
+
+    private JasperReport prepare() throws JRException, UnsupportedEncodingException {
+        return JasperCompileManager.compileReport(new ByteArrayInputStream(reportDefinition.getBytes("utf-8")));
+    }
+
 }
