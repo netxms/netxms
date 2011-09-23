@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2010 Victor Kirhenshtein
+ ** Copyright (C) 2004-2011 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 // Constants
 //
 
-#define MAX_CPU_COUNT   64
+#define MAX_CPU_COUNT   256
 
 
 //
@@ -52,6 +52,7 @@ static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
 	int i;
 	uint_t *pData;
 
+	kstat_lock();
 	for(i = 0, pData = pValues; i < m_nCPUCount; i++, pData += CPU_STATES)
 	{
 		kp = kstat_lookup(kc, "cpu_stat", m_nInstanceMap[i], NULL);
@@ -61,9 +62,13 @@ static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
 			{
 				memcpy(pData, ((cpu_stat_t *)kp->ks_data)->cpu_sysinfo.cpu, sizeof(uint_t) * CPU_STATES);
 			}
-			else printf("read failed\n");
+			else 
+			{
+				AgentWriteDebugLog(6, "SunOS: kstat_read failed in ReadCPUTimes");
+			}
 		}
 	}
+	kstat_unlock();
 }
 
 
@@ -83,9 +88,11 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 	uint_t nSum, nSysSum, nSysCurrIdle, nSysLastIdle;
 
 	// Open kstat
+	kstat_lock();
 	kc = kstat_open();
 	if (kc == NULL)
 	{
+		kstat_unlock();
 		AgentWriteLog(EVENTLOG_ERROR_TYPE,
 				"SunOS: Unable to open kstat() context (%s), CPU statistics will not be collected", 
 				strerror(errno));
@@ -114,6 +121,8 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 			j++;
 		m_nInstanceMap[i] = j++;
 	}
+
+	kstat_unlock();
 
 	// Initialize data
 	memset(m_dwUsage, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
@@ -208,7 +217,9 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 	free(pnLastTimes);
 	free(pnCurrTimes);
 	free(pdwHistory);
+	kstat_lock();
 	kstat_close(kc);
+	kstat_unlock();
 	AgentWriteDebugLog(1, "CPU stat collector thread stopped");
 	return THREAD_OK;
 }
@@ -292,10 +303,3 @@ LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue)
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-	$Log: not supported by cvs2svn $
-
-*/

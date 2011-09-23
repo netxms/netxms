@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2010 Victor Kirhenshtein
+ ** Copyright (C) 2004-2011 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -124,6 +124,9 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 
 THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg);
 THREAD_RESULT THREAD_CALL IOStatCollector(void *arg);
+
+void kstat_lock();
+void kstat_unlock();
 
 
 //

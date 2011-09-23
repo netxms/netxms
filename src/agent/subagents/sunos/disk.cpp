@@ -79,21 +79,3 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.4  2007/09/27 10:33:46  alk
-...
-
-Revision 1.3  2007/09/27 09:20:41  alk
-DISK_* params fixed in all subagents
-
-Revision 1.2  2006/05/15 22:11:22  alk
-+ Net.Interface.Link() workaround; trying kstat() first, then
-IFF_RUNNING it kstat's link_up failed.
-- code reformated
-
-
-*/

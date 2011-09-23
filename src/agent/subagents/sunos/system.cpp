@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2010 Victor Kirhenshtein
+ ** Copyright (C) 2004-2011 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 	hz = sysconf(_SC_CLK_TCK);
 
 	// Open kstat
+	kstat_lock();
 	kc = kstat_open();
 	if (kc != NULL)
 	{
@@ -97,6 +98,7 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 		}
 		kstat_close(kc);
 	}
+	kstat_unlock();
 
 	return nRet;
 }
@@ -124,7 +126,7 @@ LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue)
 	LONG nRet = SYSINFO_RC_ERROR;
 	static char *szParam[] = { "avenrun_1min", "avenrun_5min", "avenrun_15min" };
 
-	// Open kstat
+	kstat_lock();
 	kc = kstat_open();
 	if (kc != NULL)
 	{
@@ -143,6 +145,7 @@ LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue)
 		}
 		kstat_close(kc);
 	}
+	kstat_unlock();
 
 	return nRet;
 }
@@ -201,7 +204,7 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 	kstat_named_t *kn;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	// Open kstat
+	kstat_lock();
 	kc = kstat_open();
 	if (kc != NULL)
 	{
@@ -267,6 +270,7 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 		}
 		kstat_close(kc);
 	}
+	kstat_unlock();
 
 	return nRet;
 }

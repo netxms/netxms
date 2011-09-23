@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2010 Victor Kirhenshtein
+ ** Copyright (C) 2004-2011 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -304,6 +304,7 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 		nInstance = atoi(ptr);
 
 		// Open kstat
+		kstat_lock();
 		kc = kstat_open();
 		if (kc != NULL)
 		{
@@ -348,6 +349,7 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 			}
 			kstat_close(kc);
 		}
+		kstat_unlock();
 	}
 
 	return nRet;

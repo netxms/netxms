@@ -1,6 +1,6 @@
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004-2010 Victor Kirhenshtein
+ ** Copyright (C) 2004-2011 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -82,8 +82,8 @@ static void ProcessDeviceStats(const char *dev, kstat_io_t *kio)
 	if (s_data[i].dev[0] == 0)
 	{
 		// new device
-		strcpy(s_data[i].dev, dev);
 		AgentWriteDebugLog(5, "SunOS: device %s added to I/O stat collection", dev);
+		strcpy(s_data[i].dev, dev);
 	}
 	else
 	{
@@ -140,7 +140,9 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 	kstat_t *kp;
 	kstat_io_t kio;
 
+	kstat_lock();
 	kc = kstat_open();
+	kstat_unlock();
 	if (kc == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, "SunOS::IOStatCollector: call to kstat_open failed (%s), I/O statistic will not be collected", strerror(errno));
@@ -152,6 +154,7 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 
 	while(!g_bShutdown)
 	{
+		kstat_lock();
 		kstat_chain_update(kc);
 		for(kp = kc->kc_chain; kp != NULL; kp = kp->ks_next)
 		{
@@ -161,6 +164,7 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 				ProcessDeviceStats(kp->ks_name, &kio);
 			}
 		}
+		kstat_unlock();
 		CalculateTotals();
 		s_currSlot++;
 		if (s_currSlot == HISTORY_SIZE)
@@ -169,7 +173,9 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 	}
 
 	AgentWriteDebugLog(1, "SunOS: I/O stat collector thread stopped");
+	kstat_lock();
 	kstat_close(kc);
+	kstat_unlock();
 	return THREAD_OK;
 }
 

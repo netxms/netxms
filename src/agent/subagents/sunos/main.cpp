@@ -60,8 +60,24 @@ BOOL g_bShutdown = FALSE;
 // Static data
 //
 
-static THREAD m_cpuStatThread = INVALID_THREAD_HANDLE;
-static THREAD m_ioStatThread = INVALID_THREAD_HANDLE;
+static THREAD s_cpuStatThread = INVALID_THREAD_HANDLE;
+static THREAD s_ioStatThread = INVALID_THREAD_HANDLE;
+static MUTEX s_kstatLock = INVALID_MUTEX_HANDLE;
+
+
+//
+// Lock access to kstat API
+//
+
+void kstat_lock()
+{
+	MutexLock(s_kstatLock, INFINITE);
+}
+
+void kstat_unlock()
+{
+	MutexUnlock(s_kstatLock);
+}
 
 
 //
@@ -81,8 +97,9 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 
 static BOOL SubAgentInit(Config *config)
 {
-	m_cpuStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
-	m_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
+	s_cpuStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
+	s_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
+	s_kstatLock = MutexCreate();
 
 	return TRUE;
 }
@@ -95,8 +112,9 @@ static BOOL SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
 	g_bShutdown = TRUE;
-	ThreadJoin(m_cpuStatThread);
-	ThreadJoin(m_ioStatThread);
+	ThreadJoin(s_cpuStatThread);
+	ThreadJoin(s_ioStatThread);
+	MutexDestroy(s_kstatLock);
 }
 
 
