@@ -35,13 +35,6 @@
             id="org.netxms.ui.eclipse.perfview.actions.popup.dci.graph_DciValue"
             objectClass="org.netxms.client.datacollection.DciValue">
          <action
-               class="org.netxms.ui.eclipse.perfview.actions.ShowStatusIndicator"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowStatusIndicator"
-               label="Status Indicator"
-               icon="icons/chart_status.png"
-               menubarPath="additions">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
                icon="icons/chart_pie.png"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowPieChart"
@@ -66,13 +59,6 @@
       <objectContribution
             id="org.netxms.ui.eclipse.perfview.actions.popup.dci.graph_DataCollectionItem"
             objectClass="org.netxms.client.datacollection.DataCollectionItem">
-         <action
-               class="org.netxms.ui.eclipse.perfview.actions.ShowStatusIndicator"
-               id="org.netxms.ui.eclipse.perfview.popupActions.ShowStatusIndicator"
-               label="Status Indicator"
-               icon="icons/chart_status.png"
-               menubarPath="additions">
-         </action>
          <action
                class="org.netxms.ui.eclipse.perfview.actions.ShowPieChart"
                icon="icons/chart_pie.png"
