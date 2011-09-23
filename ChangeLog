@@ -6,6 +6,7 @@
 - New NXSL functions: GetDCIValueByName, GetDCIValueByDescription
 - Dashboard configuration in console improved
 - Database upgrade bug fixed
+- Solaris support improved
 
 
 *

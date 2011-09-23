@@ -354,7 +354,7 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 	TCHAR buffer[16];
 
 	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), IpToStr(ipAddr, buffer), ifIndex);
-	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) &&
+	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) && ((ipAddr & 0xFF000000) != 0x7F000000) &&
 	    (FindNodeByIP(node->getZoneId(), ipAddr) == NULL) && !IsClusterIP(node->getZoneId(), ipAddr) && 
 		 (g_nodePollerQueue.find(CAST_TO_POINTER(ipAddr, void *), PollerQueueElementComparator) == NULL))
    {

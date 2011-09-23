@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
 ** NetXMS UPS management subagent
 ** Copyright (C) 2006 Alex Kirhenshtein
@@ -100,7 +98,7 @@ BOOL MicrodowellInterface::Open()
       return FALSE;
 
    m_serial.SetTimeout(1000);
-   m_serial.Set(m_portSpeed, 8, NOPARITY, ONESTOPBIT);
+   m_serial.Set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
 
 	char buff[512];
 	int len;

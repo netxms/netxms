@@ -355,7 +355,7 @@ BOOL BCMXCPInterface::Open()
    if (SerialInterface::Open())
    {
       m_serial.SetTimeout(1000);
-      m_serial.Set(m_portSpeed, 8, NOPARITY, ONESTOPBIT);
+      m_serial.Set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
 
       // Send two escapes
       m_serial.Write("\x1D\x1D", 2);

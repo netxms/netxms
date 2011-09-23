@@ -90,13 +90,12 @@ void InitLocalNetInfo()
          {
             DLClose(m_hSubAgent);
             m_hSubAgent = NULL;
-            nxlog_write(MSG_PLATFORM_SUBAGENT_NOT_LOADED, EVENTLOG_ERROR_TYPE,
+            nxlog_write(MSG_PLATFORM_SUBAGENT_NOT_LOADED, NXLOG_ERROR,
                      "ss", szName, _T("Subagent doesn't provide any usable parameters"));
          }
          else
          {
-            nxlog_write(MSG_PLATFORM_SUBAGENT_LOADED,
-                     EVENTLOG_INFORMATION_TYPE, "s", szName);
+            nxlog_write(MSG_PLATFORM_SUBAGENT_LOADED, NXLOG_INFO, "s", szName);
          }
       }
       else

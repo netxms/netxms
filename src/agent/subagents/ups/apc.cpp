@@ -131,7 +131,7 @@ BOOL APCInterface::Open()
       return FALSE;
 
    m_serial.SetTimeout(1000);
-   m_serial.Set(m_portSpeed, 8, NOPARITY, ONESTOPBIT);
+   m_serial.Set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
 
    // Turn on "smart" mode
    m_serial.Write("Y", 1);
