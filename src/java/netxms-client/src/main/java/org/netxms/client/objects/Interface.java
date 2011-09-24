@@ -65,6 +65,29 @@ public class Interface extends GenericObject
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 	}
+	
+	/**
+	 * Get parent node object.
+	 * 
+	 * @return parent node object or null if it is not exist or inaccessible
+	 */
+	public Node getParentNode()
+	{
+		Node node = null;
+		synchronized(parents)
+		{
+			for(Long id : parents)
+			{
+				GenericObject object = session.findObjectById(id);
+				if (object instanceof Node)
+				{
+					node = (Node)object;
+					break;
+				}
+			}
+		}
+		return node;
+	}
 
 	/**
 	 * @return Interface subnet mask

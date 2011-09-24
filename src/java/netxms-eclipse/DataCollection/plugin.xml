@@ -102,6 +102,18 @@
                menubarPath="objectcreation">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Interface"
+            objectClass="org.netxms.client.objects.Interface">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.CreateInterfraceDci"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.CreateInterfaceDci#Interface"
+               label="Create data collection items..."
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
    </extension>
 
   <extension

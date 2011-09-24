@@ -82,7 +82,7 @@ public class GenericObject
 	public static final int STATUS_TESTING        = 8;
 	
 	// Associated client session
-	private NXCSession session = null;
+	protected NXCSession session = null;
 	
 	// Generic object attributes
 	private long objectId = 0;
@@ -96,13 +96,13 @@ public class GenericObject
 	private GeoLocation geolocation;
 	private UUID image;
 	private long submapId;
-	private HashSet<Long> parents = new HashSet<Long>(0);
-	private HashSet<Long> childs = new HashSet<Long>(0);
 	private HashSet<Long> trustedNodes = new HashSet<Long>(0);
-	private Map<String, String> customAttributes = new HashMap<String, String>(0);
-	
 	private boolean inheritAccessRights = true;
 	private HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
+
+	protected HashSet<Long> parents = new HashSet<Long>(0);
+	protected HashSet<Long> childs = new HashSet<Long>(0);
+	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
 
 	/**
 	 * Create dummy object of GENERIC class
