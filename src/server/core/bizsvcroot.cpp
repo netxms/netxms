@@ -122,22 +122,3 @@ void BusinessServiceRoot::LinkChildObjects()
    }
 }
 
-//
-// Recalculate uptime for each service in the tree 
-//
-
-void BusinessServiceRoot::recalculateAllUptimes( time_t currentTime )
-{
-	updateUptimeStats(currentTime);
-
-	LockChildList(TRUE);
-
-	for (int i = 0; i < int(m_dwChildCount); i++)
-	{
-		NetObj *child = m_pChildList[i];
-		if (child->Type() == OBJECT_BUSINESSSERVICE || child->Type() == OBJECT_NODELINK)
-			((ServiceContainer*)child)->updateUptimeStats(currentTime);
-	}
-
-	UnlockChildList();
-}

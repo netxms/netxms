@@ -34,7 +34,7 @@ THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg)
 
 	while (TRUE)
 	{
-		g_pBusinessServiceRoot->recalculateAllUptimes(time(NULL));
+		g_pBusinessServiceRoot->updateUptimeStats(time(NULL), TRUE);
 		if (SleepAndCheckForShutdown(calcInterval))
 			break;
 	}

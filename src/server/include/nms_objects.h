@@ -1656,7 +1656,7 @@ public:
 
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 	virtual void setStatus(int newStatus);
-	void updateUptimeStats(time_t currentTime = 0);
+	void updateUptimeStats(time_t currentTime = 0, BOOL updateChilds = FALSE);
 };
 
 
@@ -1677,8 +1677,6 @@ public:
 
    void LinkChildObjects();
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
-
-   void recalculateAllUptimes(time_t currentTime);
 };
 
 

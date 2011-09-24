@@ -144,17 +144,6 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	setStatus((iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN);
 	UnlockChildList();
 
-	// A hack to make service root to recalculate uptime properly
-	/*
-	for(i = 0; iOldStatus == m_iStatus && i < int(m_dwParentCount); i++)
-	{
-		if (m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICEROOT)
-		{
-			((BusinessServiceRoot*)m_pParentList[i])->updateUptimeStats();
-			break;
-		}
-	}*/
-
 	// Cause parent object(s) to recalculate it's status
 	if ((iOldStatus != m_iStatus) || bForcedRecalc)
 	{
@@ -179,7 +168,6 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 void ServiceContainer::setStatus(int newStatus)
 {
 	m_iStatus = newStatus;
-	// updateUptimeStats();	
 }
 
 
@@ -295,12 +283,11 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 	return percentage;
 }
 
-
 //
 // Update uptime counters 
 //
 
-void ServiceContainer::updateUptimeStats(time_t currentTime /* = 0*/)
+void ServiceContainer::updateUptimeStats(time_t currentTime /* = 0*/, BOOL updateChilds /* = FALSE */)
 {
 	LONG timediffTillNow;
 	LONG downtimeBetweenPolls = 0;
@@ -353,6 +340,18 @@ void ServiceContainer::updateUptimeStats(time_t currentTime /* = 0*/)
 	m_prevUptimeUpdateTime = currentTime;
 
 	DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() [%d] %lf %lf %lf"), int(m_dwId), m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
+
+	if (updateChilds)
+	{
+		LockChildList(TRUE);
+		for (int i = 0; i < int(m_dwChildCount); i++)
+		{
+			NetObj *child = m_pChildList[i];
+			if (child->Type() == OBJECT_BUSINESSSERVICE || child->Type() == OBJECT_NODELINK)
+				((ServiceContainer*)child)->updateUptimeStats(currentTime, TRUE);
+		}
+		UnlockChildList();
+	}
 }
 
 
