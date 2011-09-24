@@ -97,7 +97,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
 THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg);
 THREAD_RESULT THREAD_CALL BeaconPoller(void *pArg);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *arg);
-THREAD_RESULT THREAD_CALL ServiceLevelMonitoring(void *arg);
+THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg);
 
 
 //
@@ -792,6 +792,9 @@ retry_db_lock:
 #ifdef WITH_IPV6
 	ThreadCreate(ClientListenerIPv6, 0, NULL);
 #endif
+
+	// Start uptime calculator for SLM
+	ThreadCreate(UptimeCalculator, 0, NULL);
 
 	g_dwFlags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));

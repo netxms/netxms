@@ -145,6 +145,7 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	UnlockChildList();
 
 	// A hack to make service root to recalculate uptime properly
+	/*
 	for(i = 0; iOldStatus == m_iStatus && i < int(m_dwParentCount); i++)
 	{
 		if (m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICEROOT)
@@ -152,7 +153,7 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 			((BusinessServiceRoot*)m_pParentList[i])->updateUptimeStats();
 			break;
 		}
-	}
+	}*/
 
 	// Cause parent object(s) to recalculate it's status
 	if ((iOldStatus != m_iStatus) || bForcedRecalc)
@@ -178,7 +179,7 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 void ServiceContainer::setStatus(int newStatus)
 {
 	m_iStatus = newStatus;
-	updateUptimeStats();	
+	// updateUptimeStats();	
 }
 
 
@@ -299,11 +300,13 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 // Update uptime counters 
 //
 
-void ServiceContainer::updateUptimeStats()
+void ServiceContainer::updateUptimeStats(time_t currentTime /* = 0*/)
 {
 	LONG timediffTillNow;
 	LONG downtimeBetweenPolls = 0;
-	time_t curTime = time(NULL);
+
+	if (currentTime == 0)
+		currentTime = time(NULL);
 
 	LockData();
 
@@ -313,7 +316,7 @@ void ServiceContainer::updateUptimeStats()
 
 	if (m_iStatus == STATUS_CRITICAL && m_prevUptimeUpdateStatus == STATUS_CRITICAL)
 	{
-		downtimeBetweenPolls = LONG(curTime - m_prevUptimeUpdateTime);		
+		downtimeBetweenPolls = LONG(currentTime - m_prevUptimeUpdateTime);		
 		DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() both statuses critical"));
 	}
 
@@ -347,9 +350,9 @@ void ServiceContainer::updateUptimeStats()
 	UnlockData();
 
 	m_prevUptimeUpdateStatus = m_iStatus;
-	m_prevUptimeUpdateTime = curTime;
+	m_prevUptimeUpdateTime = currentTime;
 
-	DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() %lf %lf %lf"), m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
+	DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() [%d] %lf %lf %lf"), int(m_dwId), m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 }
 
 
