@@ -55,6 +55,15 @@
                menubarPath="datacollection">
          </action>
          <action
+               class="org.netxms.ui.eclipse.datacollection.actions.RemoveTemplate"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.RemoveTemplate"
+               label="&amp;Remove..."
+               menubarPath="objectbinding"
+               style="push"
+               tooltip="Remove template from node(s)">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.datacollection.actions.ApplyTemplate"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ApplyTemplate"

@@ -710,6 +710,7 @@ src/java/netxms-eclipse/DataCollection/icons/disabled.gif -text
 src/java/netxms-eclipse/DataCollection/icons/edit.png -text
 src/java/netxms-eclipse/DataCollection/icons/last_values.png -text
 src/java/netxms-eclipse/DataCollection/icons/new.png -text
+src/java/netxms-eclipse/DataCollection/icons/question.png -text
 src/java/netxms-eclipse/DataCollection/icons/unsupported.gif -text
 src/java/netxms-eclipse/DataCollection/plugin.xml -text
 src/java/netxms-eclipse/DataCollection/src/org/netxms/ui/eclipse/datacollection/Activator.java -text
