@@ -11,7 +11,7 @@ Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "Conf
 Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "ConfigIncludeDir"; ValueData: "{app}\etc\nxagentd.conf.d"
 
 [Run]
-Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" ""{code:GetMasterServer}"" {{syslog} ""{app}\var"" {code:GetSubagentList}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
+Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" ""{code:GetMasterServer}"" {{syslog} ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" {code:GetSubagentList}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" {code:GetCentralConfigOption} {code:GetCustomCmdLine} -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing service..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting service..."; Flags: runhidden
 

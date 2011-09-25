@@ -1184,8 +1184,8 @@ static void ExitHandler(int nSig)
 // Create configuration file
 //
 
-static int CreateConfig(TCHAR *pszServer, TCHAR *pszLogFile, TCHAR *pszFileStore,
-                        int iNumSubAgents, TCHAR **ppszSubAgentList)
+static int CreateConfig(const TCHAR *pszServer, const TCHAR *pszLogFile, const TCHAR *pszFileStore,
+                        const TCHAR *configIncludeDir, int iNumSubAgents, TCHAR **ppszSubAgentList)
 {
    FILE *fp;
    time_t currTime;
@@ -1200,8 +1200,8 @@ static int CreateConfig(TCHAR *pszServer, TCHAR *pszLogFile, TCHAR *pszFileStore
       currTime = time(NULL);
       _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by agent installer at %s#\n\n"),
                 _tctime(&currTime));
-      _ftprintf(fp, _T("MasterServers = %s\nLogFile = %s\nFileStore = %s\n"),
-                pszServer, pszLogFile, pszFileStore);
+      _ftprintf(fp, _T("MasterServers = %s\nConfigIncludeDir = %s\nLogFile = %s\nFileStore = %s\n"),
+                pszServer, configIncludeDir, pszLogFile, pszFileStore);
       for(i = 0; i < iNumSubAgents; i++)
          _ftprintf(fp, _T("SubAgent = %s\n"), ppszSubAgentList[i]);
       fclose(fp);
@@ -1568,8 +1568,8 @@ int main(int argc, char *argv[])
 			break;
       case ACTION_CREATE_CONFIG:
          iExitCode = CreateConfig(CHECK_NULL(argv[optind]), CHECK_NULL(argv[optind + 1]),
-                                  CHECK_NULL(argv[optind + 2]), argc - optind - 3,
-                                  &argv[optind + 3]);
+                                  CHECK_NULL(argv[optind + 2]), CHECK_NULL(argv[optind + 3]),
+											 argc - optind - 4, &argv[optind + 4]);
          break;
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:
