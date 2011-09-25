@@ -172,7 +172,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_DELETE_USER_VARIABLE"),
       _T("CMD_ADM_MESSAGE"),
       _T("CMD_ADM_REQUEST"),
-      _T("CMD_CHANGE_IP_ADDR"),
+      _T("-- 0x0081"),
       _T("CMD_REQUEST_SESSION_KEY"),
       _T("CMD_ENCRYPTED_MESSAGE"),
       _T("CMD_SESSION_KEY"),

@@ -475,7 +475,6 @@ private:
    void CopyUserVariable(CSCPMessage *pRequest);
    void EnumUserVariables(CSCPMessage *pRequest);
    void DeleteUserVariable(CSCPMessage *pRequest);
-   void changeObjectIP(CSCPMessage *pRequest);
    void changeObjectZone(CSCPMessage *pRequest);
    void GetAgentConfig(CSCPMessage *pRequest);
    void UpdateAgentConfig(CSCPMessage *pRequest);

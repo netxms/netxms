@@ -962,9 +962,6 @@ void ClientSession::processingThread()
          case CMD_COPY_USER_VARIABLE:
             CopyUserVariable(pMsg);
             break;
-         case CMD_CHANGE_IP_ADDR:
-            changeObjectIP(pMsg);
-            break;
          case CMD_CHANGE_ZONE:
             changeObjectZone(pMsg);
             break;
@@ -5880,62 +5877,6 @@ void ClientSession::CopyUserVariable(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   // Send response
-   sendMessage(&msg);
-}
-
-
-//
-// Change object's IP address
-//
-
-void ClientSession::changeObjectIP(CSCPMessage *pRequest)
-{
-   CSCPMessage msg;
-   NetObj *pObject;
-   DWORD dwIpAddr;
-
-   // Prepare response message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(pRequest->GetId());
-
-   // Get object id and check prerequisites
-   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
-   if (pObject != NULL)
-   {
-      if (pObject->Type() == OBJECT_NODE)
-      {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
-         {
-            dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
-
-            // Check if we already have object with given IP
-				if ((FindNodeByIP(((Node *)pObject)->getZoneId(), dwIpAddr) == NULL) &&
-                (FindSubnetByIP(((Node *)pObject)->getZoneId(), dwIpAddr) == NULL))
-            {
-               ((Node *)pObject)->changeIPAddress(dwIpAddr);
-               msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            }
-            else
-            {
-               msg.SetVariable(VID_RCC, RCC_ADDRESS_IN_USE);
-            }
-         }
-         else
-         {
-            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-         }
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-      }
-   }
-   else
-   {
-      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send response
