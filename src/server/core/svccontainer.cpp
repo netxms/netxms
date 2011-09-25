@@ -229,6 +229,7 @@ void ServiceContainer::initUptimeStats()
 	DbgPrintf(7, _T("++++ ServiceContainer::initUptimeStats() id=%d %lf %lf %lf"), m_dwId, m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 }
 
+
 //
 // Calculate uptime for given period using data in database
 //
@@ -282,6 +283,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 
 	return percentage;
 }
+
 
 //
 // Update uptime counters 

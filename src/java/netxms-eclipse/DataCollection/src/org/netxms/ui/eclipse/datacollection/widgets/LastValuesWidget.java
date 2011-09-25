@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,9 +32,12 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
@@ -44,10 +47,12 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesComparator;
+import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesFilter;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -66,8 +71,11 @@ public class LastValuesWidget extends Composite
 	private final ViewPart viewPart;
 	private Node node;
 	private NXCSession session;
+	private boolean filterEnabled = false;
+	private FilterText filterText;
 	private SortableTableViewer dataViewer;
 	private LastValuesLabelProvider labelProvider;
+	private LastValuesFilter filter;
 	private boolean autoRefreshEnabled = false;
 	private int autoRefreshInterval = 30000;	// in milliseconds
 	private Runnable refreshTimer;
@@ -103,15 +111,36 @@ public class LastValuesWidget extends Composite
 			}
 		};
 		
+		setLayout(new FormLayout());
+		
+		// Create filter area
+		filterText = new FilterText(this, SWT.NONE);
+		filterText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				onFilterModify();
+			}
+		});
+		filterText.setCloseAction(new Action() {
+			@Override
+			public void run()
+			{
+				enableFilter(false);
+			}
+		});
+		
 		// Setup table columns
 		final String[] names = { "ID", "Description", "Value", "Timestamp" };
 		final int[] widths = { 70, 250, 150, 100 };
 		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
 		labelProvider = new LastValuesLabelProvider();
+		filter = new LastValuesFilter();
 		dataViewer.setLabelProvider(labelProvider);
 		dataViewer.setContentProvider(new ArrayContentProvider());
 		dataViewer.setComparator(new LastValuesComparator());
+		dataViewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(dataViewer, ds, configPrefix);
 		
 		actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
@@ -124,13 +153,6 @@ public class LastValuesWidget extends Composite
 
 		createPopupMenu();
 
-		addListener(SWT.Resize, new Listener() {
-			public void handleEvent(Event e)
-			{
-				dataViewer.getControl().setBounds(LastValuesWidget.this.getClientArea());
-			}
-		});
-		
 		dataViewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -142,6 +164,21 @@ public class LastValuesWidget extends Composite
 			}
 		});
 
+		// Setup layout
+		FormData fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(filterText);
+		fd.right = new FormAttachment(100, 0);
+		fd.bottom = new FormAttachment(100, 0);
+		dataViewer.getTable().setLayoutData(fd);
+		
+		fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(0, 0);
+		fd.right = new FormAttachment(100, 0);
+		filterText.setLayoutData(fd);
+		
+		// Finalise widget creation
 		getDataFromServer();
 		
 		try
@@ -157,6 +194,12 @@ public class LastValuesWidget extends Composite
 		else
 			labelProvider.setUseMultipliers(true);
 		actionUseMultipliers.setChecked(areMultipliersUsed());
+		
+		// Set initial focus to filter input line
+		if (filterEnabled)
+			filterText.setFocus();
+		else
+			enableFilter(false);	// Will hide filter area correctly
 	}
 	
 	/**
@@ -221,7 +264,8 @@ public class LastValuesWidget extends Composite
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						dataViewer.setInput(data);
+						if (!isDisposed())
+							dataViewer.setInput(data);
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -304,5 +348,63 @@ public class LastValuesWidget extends Composite
 				dataViewer.refresh(true);
 			}
 		}
+	}
+
+	/**
+	 * Enable or disable filter
+	 * 
+	 * @param enable New filter state
+	 */
+	public void enableFilter(boolean enable)
+	{
+		filterEnabled = enable;
+		filterText.setVisible(filterEnabled);
+		FormData fd = (FormData)dataViewer.getTable().getLayoutData();
+		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+		layout();
+		if (enable)
+			filterText.setFocus();
+		else
+			setFilter("");
+	}
+
+	/**
+	 * @return the filterEnabled
+	 */
+	public boolean isFilterEnabled()
+	{
+		return filterEnabled;
+	}
+
+	/**
+	 * Set filter text
+	 * 
+	 * @param text New filter text
+	 */
+	public void setFilter(final String text)
+	{
+		filterText.setText(text);
+		onFilterModify();
+	}
+
+	/**
+	 * Handler for filter modification
+	 */
+	private void onFilterModify()
+	{
+		final String text = filterText.getText();
+		filter.setFilterString(text);
+		dataViewer.refresh(false);
+	}
+	
+	/**
+	 * Set action to be executed when user press "Close" button in object filter.
+	 * Default implementation will hide filter area without notifying parent.
+	 * 
+	 * @param action
+	 */
+	public void setFilterCloseAction(Action action)
+	{
+		filterText.setCloseAction(action);
 	}
 }

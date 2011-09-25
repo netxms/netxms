@@ -156,7 +156,7 @@ public final class NXCPCodes
 	public static final int CMD_DELETE_USER_VARIABLE     = 0x007E;
 	public static final int CMD_ADM_MESSAGE              = 0x007F;
 	public static final int CMD_ADM_REQUEST              = 0x0080;
-	public static final int CMD_CHANGE_IP_ADDR           = 0x0081;
+	//public static final int CMD_CHANGE_IP_ADDR           = 0x0081;
 	public static final int CMD_REQUEST_SESSION_KEY      = 0x0082;
 	public static final int CMD_ENCRYPTED_MESSAGE        = 0x0083;
 	public static final int CMD_SESSION_KEY              = 0x0084;

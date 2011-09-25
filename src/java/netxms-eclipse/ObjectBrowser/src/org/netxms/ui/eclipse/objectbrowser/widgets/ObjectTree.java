@@ -25,6 +25,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -41,13 +42,9 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
@@ -62,10 +59,10 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeFilter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
- * @author victor
- *
+ * Object tree control
  */
 public class ObjectTree extends Composite
 {
@@ -76,9 +73,7 @@ public class ObjectTree extends Composite
 
 	private boolean filterEnabled = true;
 	private TreeViewer objectTree;
-	private Composite filterArea;
-	private Label filterLabel;
-	private Text filterText;
+	private FilterText filterText;
 	private ObjectTreeFilter filter;
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
 	private NXCListener sessionListener = null;
@@ -100,13 +95,7 @@ public class ObjectTree extends Composite
 		setLayout(formLayout);
 		
 		// Create filter area
-		filterArea = new Composite(this, SWT.NONE);
-		
-		filterLabel = new Label(filterArea, SWT.NONE);
-		filterLabel.setText(Messages.getString("ObjectTree.filter")); //$NON-NLS-1$
-		
-		filterText = new Text(filterArea, SWT.BORDER);
-		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		filterText = new FilterText(this, SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
@@ -114,8 +103,13 @@ public class ObjectTree extends Composite
 				onFilterModify();
 			}
 		});
-		
-		filterArea.setLayout(new GridLayout(2, false));
+		filterText.setCloseAction(new Action() {
+			@Override
+			public void run()
+			{
+				enableFilter(false);
+			}
+		});
 		
 		// Create object tree control
 		objectTree = new TreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE) | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
@@ -185,7 +179,7 @@ public class ObjectTree extends Composite
 		// Setup layout
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(filterArea);
+		fd.top = new FormAttachment(filterText);
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
 		objectTree.getTree().setLayoutData(fd);
@@ -194,7 +188,7 @@ public class ObjectTree extends Composite
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
-		filterArea.setLayoutData(fd);
+		filterText.setLayoutData(fd);
 		
 		// Add client library listener
 		sessionListener = new NXCListener() {
@@ -237,7 +231,10 @@ public class ObjectTree extends Composite
 		});
 		
 		// Set initial focus to filter input line
-		filterText.setFocus();
+		if (filterEnabled)
+			filterText.setFocus();
+		else
+			enableFilter(false);	// Will hide filter area correctly
 	}
 	
 	/**
@@ -291,11 +288,13 @@ public class ObjectTree extends Composite
 	public void enableFilter(boolean enable)
 	{
 		filterEnabled = enable;
-		filterArea.setVisible(filterEnabled);
+		filterText.setVisible(filterEnabled);
 		FormData fd = (FormData)objectTree.getTree().getLayoutData();
-		fd.top = enable ? new FormAttachment(filterArea) : new FormAttachment(0, 0);
+		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
 		layout();
-		if (!enable)
+		if (enable)
+			filterText.setFocus();
+		else
 			setFilter("");
 	}
 
@@ -421,7 +420,7 @@ public class ObjectTree extends Composite
 	}
 
 	/**
-	 * 
+	 * Handler for filter modification
 	 */
 	private void onFilterModify()
 	{
@@ -475,5 +474,16 @@ public class ObjectTree extends Composite
 	{
 		filter.setHideTemplateChecks(hideTemplateChecks);
 		onFilterModify();
+	}
+	
+	/**
+	 * Set action to be executed when user press "Close" button in object filter.
+	 * Default implementation will hide filter area without notifying parent.
+	 * 
+	 * @param action
+	 */
+	public void setFilterCloseAction(Action action)
+	{
+		filterText.setCloseAction(action);
 	}
 }

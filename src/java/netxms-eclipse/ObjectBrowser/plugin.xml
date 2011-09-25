@@ -24,6 +24,11 @@
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
       </command>
+      <command
+            description="Toggle Object Filter"
+            id="org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"
+            name="Toggle Object Filter">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -48,6 +53,12 @@
             commandId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="F3">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"
+            contextId="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F2">
       </key>
    </extension>
 
@@ -75,5 +86,13 @@
             Decorate NetXMS objects (nodes, containers, etc.) with current status indicators
          </description>
     </decorator>
+  </extension>
+  <extension
+        point="org.eclipse.ui.contexts">
+     <context
+           id="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
+           name="Object Browser"
+           parentId="org.eclipse.ui.contexts.window">
+     </context>
   </extension>
 </plugin>

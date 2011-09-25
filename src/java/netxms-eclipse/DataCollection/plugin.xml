@@ -187,5 +187,47 @@
             order="20">
       </tab>
    </extension>
+   <extension
+         point="org.eclipse.ui.viewActions">
+      <viewContribution
+            id="org.netxms.ui.eclipse.datacollection.viewContribution.ShowFilter#TabbedObjectView.LastValues"
+            targetID="org.netxms.ui.eclipse.objectview.view.tabbed_object_view">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValuesFilter"
+               definitionId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.actions.ShowLastValuesFilter"
+               label="Show DCI &amp;filter"
+               menubarPath="additions"
+               style="toggle"
+               tooltip="Show/hide DCI filter">
+         </action>
+      </viewContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Toggle DCI Filter"
+            id="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
+            name="Toggle DCI Filter">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
+            contextId="org.netxms.ui.eclipse.datacollection.context.LastValues"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F2">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.datacollection.context.LastValues"
+            name="Last Values List"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
 
 </plugin>

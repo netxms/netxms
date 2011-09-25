@@ -31,6 +31,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -43,6 +44,11 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -50,7 +56,9 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
@@ -64,11 +72,13 @@ import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.DciComparator;
-import org.netxms.ui.eclipse.datacollection.DciLabelProvider;
+import org.netxms.ui.eclipse.datacollection.views.helpers.DciFilter;
+import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -91,10 +101,14 @@ public class DataCollectionEditor extends ViewPart
 	public static final int COLUMN_STATUS = 7;
 	public static final int COLUMN_TEMPLATE = 8;
 
+	private boolean filterEnabled = false;
+	private Composite content;
+	private FilterText filterText;
 	private SortableTableViewer viewer;
 	private NXCSession session;
 	private GenericObject object;
 	private DataCollectionConfiguration dciConfig = null;
+	private DciFilter filter;
 	private Action actionCreate;
 	private Action actionEdit;
 	private Action actionDelete;
@@ -104,6 +118,7 @@ public class DataCollectionEditor extends ViewPart
 	private Action actionDuplicate;
 	private Action actionActivate;
 	private Action actionDisable;
+	private Action actionShowFilter;
 	private RefreshAction actionRefresh;
 
 	/* (non-Javadoc)
@@ -126,12 +141,34 @@ public class DataCollectionEditor extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+		content = new Composite(parent, SWT.NONE);
+		content.setLayout(new FormLayout());
+		
+		// Create filter area
+		filterText = new FilterText(content, SWT.NONE);
+		filterText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				onFilterModify();
+			}
+		});
+		filterText.setCloseAction(new Action() {
+			@Override
+			public void run()
+			{
+				enableFilter(false);
+			}
+		});
+		
 		final String[] names = { "ID", "Origin", "Description", "Parameter", "Data Type", "Polling Interval", "Retention Time", "Status", "Template" };
 		final int[] widths = { 60, 100, 250, 200, 90, 90, 90, 100, 150 };
-		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+		viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DciLabelProvider());
 		viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
+		filter = new DciFilter();
+		viewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "DataCollectionEditor");
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
@@ -181,9 +218,25 @@ public class DataCollectionEditor extends ViewPart
 			}
 		});
 
-		makeActions();
+		// Setup layout
+		FormData fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(filterText);
+		fd.right = new FormAttachment(100, 0);
+		fd.bottom = new FormAttachment(100, 0);
+		viewer.getTable().setLayoutData(fd);
+		
+		fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(0, 0);
+		fd.right = new FormAttachment(100, 0);
+		filterText.setLayoutData(fd);
+		
+		createActions();
 		contributeToActionBars();
 		createPopupMenu();
+		
+		filterText.setCloseAction(actionShowFilter);
 
 		// Request server to open data collection configuration
 		Job job = new Job("Open data collection configuration for " + object.getObjectName())
@@ -226,6 +279,26 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 		scheduleJob(job);
+		
+		// Set initial focus to filter input line
+		if (filterEnabled)
+			filterText.setFocus();
+		else
+			enableFilter(false);	// Will hide filter area correctly
+		
+		activateContext();
+	}
+	
+	/**
+	 * Activate context
+	 */
+	private void activateContext()
+	{
+		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+		if (contextService != null)
+		{
+			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues");
+		}
 	}
 	
 	/**
@@ -257,6 +330,8 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionShowFilter);
+		manager.add(new Separator());
 		manager.add(actionCreate);
 		manager.add(actionEdit);
 		manager.add(actionDelete);
@@ -309,8 +384,10 @@ public class DataCollectionEditor extends ViewPart
 	/**
 	 * Create actions
 	 */
-	private void makeActions()
+	private void createActions()
 	{
+		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+		
 		actionRefresh = new RefreshAction()
 		{
 			@Override
@@ -418,6 +495,20 @@ public class DataCollectionEditor extends ViewPart
 		actionDisable.setText("D&isable");
 		actionDisable.setImageDescriptor(Activator.getImageDescriptor("icons/disabled.gif"));
 		actionDisable.setEnabled(false);
+
+		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
+      {
+			@Override
+			public void run()
+			{
+				enableFilter(!filterEnabled);
+				actionShowFilter.setChecked(filterEnabled);
+			}
+      };
+      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter");
+		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
+		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 	}
 
 	/**
@@ -776,5 +867,38 @@ public class DataCollectionEditor extends ViewPart
 				return "Cannot convert data collection item for " + object.getObjectName() + " to template item";
 			}
 		}.start();
+	}
+
+	/**
+	 * Enable or disable filter
+	 * 
+	 * @param enable New filter state
+	 */
+	private void enableFilter(boolean enable)
+	{
+		filterEnabled = enable;
+		filterText.setVisible(filterEnabled);
+		FormData fd = (FormData)viewer.getTable().getLayoutData();
+		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+		content.layout();
+		if (enable)
+		{
+			filterText.setFocus();
+		}
+		else
+		{
+			filterText.setText("");
+			onFilterModify();
+		}
+	}
+
+	/**
+	 * Handler for filter modification
+	 */
+	private void onFilterModify()
+	{
+		final String text = filterText.getText();
+		filter.setFilterString(text);
+		viewer.refresh(false);
 	}
 }

@@ -33,6 +33,7 @@ public class SharedIcons
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
 	public static ImageDescriptor CLEAR_LOG;
+	public static ImageDescriptor CLOSE;
 	public static ImageDescriptor COLLAPSE;
 	public static ImageDescriptor COLLAPSE_ALL;
 	public static ImageDescriptor COPY;
@@ -53,6 +54,7 @@ public class SharedIcons
 	public static Image IMG_CHECKBOX_OFF;
 	public static Image IMG_CHECKBOX_ON;
 	public static Image IMG_CLEAR_LOG;
+	public static Image IMG_CLOSE;
 	public static Image IMG_COLLAPSE;
 	public static Image IMG_COLLAPSE_ALL;
 	public static Image IMG_COPY;
@@ -78,6 +80,7 @@ public class SharedIcons
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png");
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png");
 		CLEAR_LOG = Activator.getImageDescriptor("icons/clear_log.gif");
+		CLOSE = Activator.getImageDescriptor("icons/close.gif");
 		COLLAPSE = Activator.getImageDescriptor("icons/collapse.png");
 		COLLAPSE_ALL = Activator.getImageDescriptor("icons/collapseall.png");
 		COPY = Activator.getImageDescriptor("icons/copy.gif");
@@ -98,6 +101,7 @@ public class SharedIcons
 		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage();
 		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage();
 		IMG_CLEAR_LOG = CLEAR_LOG.createImage();
+		IMG_CLOSE = CLOSE.createImage();
 		IMG_COLLAPSE = COLLAPSE.createImage();
 		IMG_COLLAPSE_ALL = COLLAPSE_ALL.createImage();
 		IMG_COPY = COPY.createImage();

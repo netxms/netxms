@@ -61,8 +61,9 @@ public class ObjectSelectionDialog extends Dialog
 	 */
 	public static Set<Integer> createNodeSelectionFilter()
 	{
-		HashSet<Integer> classFilter = new HashSet<Integer>(5);
+		HashSet<Integer> classFilter = new HashSet<Integer>(6);
 		classFilter.add(GenericObject.OBJECT_NETWORK);
+		classFilter.add(GenericObject.OBJECT_ZONE);
 		classFilter.add(GenericObject.OBJECT_SUBNET);
 		classFilter.add(GenericObject.OBJECT_SERVICEROOT);
 		classFilter.add(GenericObject.OBJECT_CONTAINER);

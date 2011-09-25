@@ -22,6 +22,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -30,6 +31,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
@@ -52,6 +55,7 @@ public class LastValues extends ViewPart
 	private Action actionRefresh;
 	private Action actionAutoUpdate;
 	private Action actionUseMultipliers;
+	private Action actionShowFilter;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -86,8 +90,24 @@ public class LastValues extends ViewPart
 		
 		createActions();
 		contributeToActionBars();
+		
+		dataView.setFilterCloseAction(actionShowFilter);
+		
+		activateContext();
 	}
 
+	/**
+	 * Activate context
+	 */
+	private void activateContext()
+	{
+		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+		if (contextService != null)
+		{
+			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues");
+		}
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
@@ -102,6 +122,8 @@ public class LastValues extends ViewPart
 	 */
 	private void createActions()
 	{
+		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+		
 		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
@@ -127,6 +149,20 @@ public class LastValues extends ViewPart
 			}
 		};
 		actionUseMultipliers.setChecked(dataView.areMultipliersUsed());
+
+		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
+      {
+			@Override
+			public void run()
+			{
+				dataView.enableFilter(!dataView.isFilterEnabled());
+				actionShowFilter.setChecked(dataView.isFilterEnabled());
+			}
+      };
+      actionShowFilter.setChecked(dataView.isFilterEnabled());
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter");
+		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
+		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 	}
 	
 	/**
@@ -147,6 +183,7 @@ public class LastValues extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionShowFilter);
 		manager.add(actionAutoUpdate);
 		manager.add(actionUseMultipliers);
 		manager.add(new Separator());

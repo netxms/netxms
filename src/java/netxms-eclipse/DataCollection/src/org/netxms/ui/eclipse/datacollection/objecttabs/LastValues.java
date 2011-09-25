@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.datacollection.objecttabs;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.contexts.IContextService;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
@@ -68,5 +69,27 @@ public class LastValues extends ObjectTab
 	public void refresh()
 	{
 		dataView.refresh();
+	}
+
+	/**
+	 * @param enabled
+	 */
+	public void setFilterEnabled(boolean enabled)
+	{
+		dataView.enableFilter(enabled);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+	 */
+	@Override
+	public void selected()
+	{
+		super.selected();
+		IContextService contextService = (IContextService)getViewPart().getSite().getService(IContextService.class);
+		if (contextService != null)
+		{
+			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues");
+		}
 	}
 }

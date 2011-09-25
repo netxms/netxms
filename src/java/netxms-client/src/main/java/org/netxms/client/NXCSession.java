@@ -26,7 +26,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -3047,29 +3046,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		NXCObjectModificationData data = new NXCObjectModificationData(objectId);
 		data.setReportDefinition(file);
 		modifyObject(data);
-	}
-
-	/**
-	 * Change primary IP address of a node. This operation separated from
-	 * modifyObject() API because it forces immediate configuration poll for
-	 * given node on server side.
-	 * 
-	 * @param nodeId
-	 *           ID of node object
-	 * @param addr
-	 *           New IP address
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
-	 */
-	public void changeNodeIpAddress(final long nodeId, final InetAddress addr) throws IOException, NXCException
-	{
-		NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_IP_ADDR);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		msg.setVariable(NXCPCodes.VID_IP_ADDRESS, addr);
-		sendMessage(msg);
-		waitForRCC(msg.getMessageId());
 	}
 
 	/**

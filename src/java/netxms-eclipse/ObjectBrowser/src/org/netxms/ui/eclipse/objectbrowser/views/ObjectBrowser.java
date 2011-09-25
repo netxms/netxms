@@ -26,6 +26,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -41,7 +42,9 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
@@ -155,6 +158,21 @@ public class ObjectBrowser extends ViewPart
 				actionProperties.setEnabled(size == 1);
 			}
 		});
+		objectTree.setFilterCloseAction(actionShowFilter);
+		
+		activateContext();
+	}
+	
+	/**
+	 * Activate context
+	 */
+	private void activateContext()
+	{
+		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+		if (contextService != null)
+		{
+			contextService.activateContext("org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser");
+		}
 	}
 	
 	/**
@@ -162,6 +180,8 @@ public class ObjectBrowser extends ViewPart
 	 */
 	private void createActions()
 	{
+		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+		
 		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
@@ -178,7 +198,7 @@ public class ObjectBrowser extends ViewPart
 			}
 		};
 		
-      actionHideUnmanaged = new Action("&Hide unmanaged objects", SWT.TOGGLE)
+      actionHideUnmanaged = new Action("&Hide unmanaged objects", Action.AS_CHECK_BOX)
       {
 			@Override
 			public void run()
@@ -189,7 +209,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 
-      actionHideTemplateChecks = new Action("Hide check templates", SWT.TOGGLE)
+      actionHideTemplateChecks = new Action("Hide check templates", Action.AS_CHECK_BOX)
       {
 			@Override
 			public void run()
@@ -200,7 +220,7 @@ public class ObjectBrowser extends ViewPart
       };
       actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
-      actionShowFilter = new Action("Show &filter", SWT.TOGGLE) //$NON-NLS-1$
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
       {
 			@Override
 			public void run()
@@ -210,6 +230,9 @@ public class ObjectBrowser extends ViewPart
 			}
       };
       actionShowFilter.setChecked(objectTree.isFilterEnabled());
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter");
+		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
+		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
       
       actionProperties = new PropertyDialogAction(getSite(), objectTree.getTreeViewer());
 	}

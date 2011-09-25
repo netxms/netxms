@@ -21,17 +21,25 @@ package org.netxms.ui.eclipse.objectview.views;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.CTabFolder;
@@ -46,6 +54,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.objects.GenericObject;
@@ -67,7 +76,8 @@ public class TabbedObjectView extends ViewPart
 	private ISelectionService selectionService = null;
 	private ISelectionListener selectionListener = null;
 	private Action actionRefresh;
-
+	private Set<ISelectionChangedListener> selectionChangeListeners = new HashSet<ISelectionChangedListener>();
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
@@ -96,9 +106,18 @@ public class TabbedObjectView extends ViewPart
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
+				ObjectTab tab = null;
 				if (e.item != null)
 				{
-					((ObjectTab)((CTabItem)e.item).getData()).selected();
+					tab = (ObjectTab)((CTabItem)e.item).getData(); 
+					tab.selected();
+				}
+				
+				final ISelection selection = (tab != null) ? new StructuredSelection(tab) : new StructuredSelection(); 
+				final SelectionChangedEvent event = new SelectionChangedEvent(getSite().getSelectionProvider(), selection);
+				for(ISelectionChangedListener l : selectionChangeListeners)
+				{
+					l.selectionChanged(event);
 				}
 			}
 
@@ -131,6 +150,36 @@ public class TabbedObjectView extends ViewPart
 		
 		createActions();
 		contributeToActionBars();
+		
+		getSite().setSelectionProvider(new ISelectionProvider() {
+			@Override
+			public void setSelection(ISelection selection)
+			{
+			}
+			
+			@Override
+			public void removeSelectionChangedListener(ISelectionChangedListener listener)
+			{
+				selectionChangeListeners.remove(listener);
+			}
+			
+			@Override
+			public ISelection getSelection()
+			{
+				CTabItem item = tabFolder.getSelection();
+				if (item != null)
+				{
+					return new StructuredSelection(item.getData());
+				}
+				return new StructuredSelection();
+			}
+			
+			@Override
+			public void addSelectionChangedListener(ISelectionChangedListener listener)
+			{
+				selectionChangeListeners.add(listener);
+			}
+		});
 	}
 	
 	/**
@@ -163,6 +212,8 @@ public class TabbedObjectView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 	
@@ -275,6 +326,7 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
+		getSite().setSelectionProvider(null);
 		if ((selectionService != null) && (selectionListener != null))
 			selectionService.removeSelectionListener(selectionListener);
 		for(final ObjectTab tab : tabs)

@@ -339,13 +339,6 @@
                label="Change zone..."
                menubarPath="objectmgmt">
          </action>
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.ChangeIpAddress"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeIpAddress"
-               label="Change IP address..."
-               menubarPath="objectmgmt">
-         </action>
          <menu
                id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
                label="&amp;Poll"
