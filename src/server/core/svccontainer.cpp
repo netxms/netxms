@@ -222,10 +222,12 @@ BOOL ServiceContainer::addHistoryRecord()
 
 void ServiceContainer::initUptimeStats()
 {
+	LockData();
 	m_prevUptimeUpdateStatus = m_iStatus;
 	m_uptimeDay = getUptimeFromDBFor(DAY, &m_downtimeDay);
 	m_uptimeWeek = getUptimeFromDBFor(WEEK, &m_downtimeWeek);
 	m_uptimeMonth = getUptimeFromDBFor(MONTH, &m_downtimeMonth);
+	UnlockData();
 	DbgPrintf(7, _T("++++ ServiceContainer::initUptimeStats() id=%d %lf %lf %lf"), m_dwId, m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 }
 
@@ -241,7 +243,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, LONG *downtime)
 	double percentage = 0;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT change_timestamp,new_status FROM slm_service_history ")
-		_T("WHERE service_id=? AND change_timestamp>?"));
+	                                          _T("WHERE service_id=? AND change_timestamp>?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);

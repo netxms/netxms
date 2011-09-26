@@ -4105,7 +4105,9 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
              ((pParent->Type() == OBJECT_TEMPLATE) && (!bBind)) ||
              ((pParent->Type() == OBJECT_CLUSTER) && (!bBind)) ||
 				 ((pParent->Type() == OBJECT_TEMPLATEGROUP) && (pChild->Type() == OBJECT_TEMPLATE)) ||
-				 ((pParent->Type() == OBJECT_TEMPLATEROOT) && (pChild->Type() == OBJECT_TEMPLATE)))
+				 ((pParent->Type() == OBJECT_TEMPLATEROOT) && (pChild->Type() == OBJECT_TEMPLATE)) ||
+				 ((pParent->Type() == OBJECT_BUSINESSSERVICE) && (pChild->Type() == OBJECT_BUSINESSSERVICE)) ||
+				 ((pParent->Type() == OBJECT_BUSINESSSERVICEROOT) && (pChild->Type() == OBJECT_BUSINESSSERVICE)))
          {
             if (bBind)
             {
@@ -4116,6 +4118,11 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                   pChild->AddParent(pParent);
                   pParent->calculateCompoundStatus();
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+						if ((pParent->Type() == OBJECT_BUSINESSSERVICEROOT) || (pParent->Type() == OBJECT_BUSINESSSERVICE))
+						{
+							((ServiceContainer *)pParent)->initUptimeStats();
+						}
                }
                else
                {
@@ -4138,6 +4145,10 @@ void ClientSession::changeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
 						((Node *)pChild)->setRecheckCapsFlag();
 						((Node *)pChild)->forceConfigurationPoll();
                }
+					else if ((pParent->Type() == OBJECT_BUSINESSSERVICEROOT) || (pParent->Type() == OBJECT_BUSINESSSERVICE))
+					{
+						((ServiceContainer *)pParent)->initUptimeStats();
+					}
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
             }
          }

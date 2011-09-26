@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.views;
 
+import java.util.Set;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -47,6 +49,8 @@ import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
@@ -69,11 +73,14 @@ public class ObjectBrowser extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.view.navigation.objectbrowser"; //$NON-NLS-1$
 	
+	private enum SubtreeType { NETWORK, INFRASTRUCTURE, TEMPLATES, DASHBOARDS, MAPS, BUSINESS_SERVICES };
+	
 	private ObjectTree objectTree;
 	private Action actionShowFilter;
 	private Action actionHideUnmanaged;
 	private Action actionHideTemplateChecks;
 	private Action actionMoveObject;
+	private Action actionMoveBusinessService;
 	private Action actionRefresh;
 	private Action actionProperties;
 	private boolean initHideUnmanaged = false;
@@ -194,7 +201,15 @@ public class ObjectBrowser extends ViewPart
 			@Override
 			public void run()
 			{
-				moveObject();
+				moveObject(SubtreeType.INFRASTRUCTURE);
+			}
+		};
+		
+		actionMoveBusinessService = new Action("&Move to another service") {
+			@Override
+			public void run()
+			{
+				moveObject(SubtreeType.BUSINESS_SERVICES);
 			}
 		};
 		
@@ -295,8 +310,10 @@ public class ObjectBrowser extends ViewPart
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
-		if (isValidSelectionForMove())
+		if (isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
 			manager.add(actionMoveObject);
+		if (isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
+			manager.add(actionMoveBusinessService);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
@@ -331,7 +348,7 @@ public class ObjectBrowser extends ViewPart
 	 * 
 	 * @return true if current selection is valid for moving object
 	 */
-	private boolean isValidSelectionForMove()
+	private boolean isValidSelectionForMove(SubtreeType subtree)
 	{
 		TreeItem[] selection = objectTree.getTreeControl().getSelection();
 		if (selection.length != 1)
@@ -343,28 +360,51 @@ public class ObjectBrowser extends ViewPart
 		final Object currentObject = selection[0].getData();
 		final Object parentObject = selection[0].getParentItem().getData();
 		
-		return (((currentObject instanceof Node) ||
-	            (currentObject instanceof Cluster) ||
-		         (currentObject instanceof Subnet) ||
-	            (currentObject instanceof Condition) ||
-		         (currentObject instanceof Container)) &&
-		        ((parentObject instanceof Container) ||
-		         (parentObject instanceof ServiceRoot)));
+		switch(subtree)
+		{
+			case INFRASTRUCTURE:
+				return ((currentObject instanceof Node) ||
+		            (currentObject instanceof Cluster) ||
+			         (currentObject instanceof Subnet) ||
+		            (currentObject instanceof Condition) ||
+			         (currentObject instanceof Container)) &&
+			        ((parentObject instanceof Container) ||
+			         (parentObject instanceof ServiceRoot));
+			case BUSINESS_SERVICES:
+				return (currentObject instanceof BusinessService) &&
+				       ((parentObject instanceof BusinessService) ||
+						  (parentObject instanceof BusinessServiceRoot));
+			default:
+				return false;
+		}
 	}
 	
 	/**
 	 * Move selected object to another container
 	 */
-	private void moveObject()
+	private void moveObject(SubtreeType subtree)
 	{
-		if (!isValidSelectionForMove())
+		if (!isValidSelectionForMove(subtree))
 			return;
 		
 		TreeItem[] selection = objectTree.getTreeControl().getSelection();
 		final Object currentObject = selection[0].getData();
 		final Object parentObject = selection[0].getParentItem().getData();
 		
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createContainerSelectionFilter());
+		Set<Integer> filter;
+		switch(subtree)
+		{
+			case INFRASTRUCTURE:
+				filter = ObjectSelectionDialog.createContainerSelectionFilter();
+				break;
+			case BUSINESS_SERVICES:
+				filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
+				break;
+			default:
+				filter = null;
+				break;
+		}
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, filter);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{

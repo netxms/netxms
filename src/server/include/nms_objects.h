@@ -1640,7 +1640,6 @@ protected:
 
 	void initServiceContainer();
 	BOOL addHistoryRecord();
-	void initUptimeStats();
 	double getUptimeFromDBFor(Period period, LONG *downtime);
 
 public:
@@ -1656,6 +1655,8 @@ public:
 
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 	virtual void setStatus(int newStatus);
+
+	void initUptimeStats();
 	void updateUptimeStats(time_t currentTime = 0, BOOL updateChilds = FALSE);
 };
 

@@ -121,6 +121,19 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
+	 * Create filter for business service selection.
+	 * 
+	 * @return Class filter for node selection
+	 */
+	public static Set<Integer> createBusinessServiceSelectionFilter()
+	{
+		HashSet<Integer> classFilter = new HashSet<Integer>(2);
+		classFilter.add(GenericObject.OBJECT_BUSINESSSERVICEROOT);
+		classFilter.add(GenericObject.OBJECT_BUSINESSSERVICE);
+		return classFilter;
+	}
+
+	/**
 	 * Create object selection dialog.
 	 * 
 	 * @param parentShell parent shell
