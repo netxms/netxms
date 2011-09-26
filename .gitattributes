@@ -1595,6 +1595,7 @@ src/server/libnxsrv/ndd.cpp -text
 src/server/libnxsrv/snmp.cpp -text
 src/server/libnxsrv/vlan.cpp -text
 src/server/netxmsd/netxmsd.vcproj -text
+src/server/smsdrv/dbemu/dbemu.vcproj -text
 src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/generic/pdumode.cpp -text
 src/server/smsdrv/nxagent/nxagent.vcproj -text
