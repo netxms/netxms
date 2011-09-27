@@ -45,7 +45,7 @@ static void StartStage(const TCHAR *pszMsg)
       safe_free(m_pszStageMsg);
       m_pszStageMsg = _tcsdup(pszMsg);
    }
-   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-68s"), m_pszStageMsg, stdout);
+   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-67s"), m_pszStageMsg, stdout);
 #ifndef _WIN32
    fflush(stdout);
 #endif
@@ -74,7 +74,7 @@ static void EndStage()
    {
       nCode = 0;
    }
-   WriteToTerminalEx(_T("  \x1b[37;1m[\x1b[%d;1m%s\x1b[37;1m]\x1b[0m\n"), nColor[nCode], pszStatus[nCode]);
+   WriteToTerminalEx(_T(" \x1b[37;1m[\x1b[%d;1m%s\x1b[37;1m]\x1b[0m\n"), nColor[nCode], pszStatus[nCode]);
 }
 
 

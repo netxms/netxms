@@ -338,17 +338,12 @@ src/install/windows/files/Microsoft.VC80.MFC/mfc80.dll -text
 src/install/windows/files/Microsoft.VC80.MFC/mfc80u.dll -text
 src/install/windows/files/Microsoft.VC80.MFC/mfcm80.dll -text
 src/install/windows/files/Microsoft.VC80.MFC/mfcm80u.dll -text
-src/install/windows/files/comerr32.dll -text
 src/install/windows/files/dbghelp.dll -text
-src/install/windows/files/gssapi32.dll -text
-src/install/windows/files/k5sprt32.dll -text
-src/install/windows/files/krb5_32.dll -text
 src/install/windows/files/libeay32.dll -text
 src/install/windows/files/libiconv-2.dll -text
 src/install/windows/files/libintl-8.dll -text
-src/install/windows/files/libmySQL.dll -text
+src/install/windows/files/libmysql.dll -text svneol=unset#unset
 src/install/windows/files/libpq.dll -text
-src/install/windows/files/msvcr71.dll -text
 src/install/windows/files/oci.dll -text
 src/install/windows/files/oraociei11.dll -text
 src/install/windows/files/sqlncli.msi -text
