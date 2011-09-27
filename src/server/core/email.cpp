@@ -381,7 +381,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 			}
 			else
 			{
-				PostEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsss", dwResult, 
+				PostEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsmm", dwResult, 
 							 m_szErrorText[dwResult], pEnvelope->szRcptAddr, pEnvelope->szSubject);
 				free(pEnvelope->pszText);
 				free(pEnvelope);

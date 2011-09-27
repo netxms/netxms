@@ -355,7 +355,9 @@ static TCHAR *FormatMessageUX(DWORD dwMsgId, TCHAR **ppStrings)
 // wType  - Message type (see ReportEvent() for details)
 // format - Parameter format string, each parameter represented by one character.
 //          The following format characters can be used:
-//             s - String
+//             s - String (multibyte or UNICODE, depending on build)
+//             m - multibyte string
+//             u - UNICODE string
 //             d - Decimal integer
 //             x - Hex integer
 //             e - System error code (will appear in log as textual description)
@@ -393,6 +395,20 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
          {
             case 's':
                strings[numStrings] = _tcsdup(va_arg(args, TCHAR *));
+               break;
+            case 'm':
+#ifdef UNICODE
+					strings[numStrings] = WideStringFromMBString(va_arg(args, char *));
+#else
+               strings[numStrings] = strdup(va_arg(args, char *));
+#endif
+               break;
+            case 'u':
+#ifdef UNICODE
+               strings[numStrings] = wcsdup(va_arg(args, WCHAR *));
+#else
+					strings[numStrings] = MBStringFromWideString(va_arg(args, WCHAR *));
+#endif
                break;
             case 'd':
                strings[numStrings] = (TCHAR *)malloc(16 * sizeof(TCHAR));

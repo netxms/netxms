@@ -96,6 +96,20 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTa
             case 's':
 					m_parameters.add(_tcsdup(va_arg(args, TCHAR *)));
                break;
+            case 'm':	// multibyte string
+#ifdef UNICODE
+					m_parameters.add(WideStringFromMBString(va_arg(args, char *)));
+#else
+					m_parameters.add(strdup(va_arg(args, char *)));
+#endif
+               break;
+            case 'u':	// UNICODE string
+#ifdef UNICODE
+					m_parameters.add(wcsdup(va_arg(args, WCHAR *)));
+#else
+					m_parameters.add(MBStringFromWideString(va_arg(args, WCHAR *)));
+#endif
+               break;
             case 'd':
                buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
                _sntprintf(buffer, 16, _T("%d"), va_arg(args, LONG));
