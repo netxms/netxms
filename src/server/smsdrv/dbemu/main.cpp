@@ -88,6 +88,10 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 		}	
 		bRet = true;
 	}
+	else
+	{
+		DbgPrintf(1, _T("%s: Unable to load configuration"), MYNAMESTR);
+	}
 
 finish:
 	return bRet;
@@ -103,11 +107,16 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	{
 		DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, pszPhoneNumber, DB_BIND_STATIC);
 		DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, realText, DB_BIND_STATIC);
-		if (!(bRet = DBExecute(dbs)))
-			DbgPrintf(1, _T("%s: Cannot execute"), MYNAMESTR);
+		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+		if (!(bRet = DBExecuteEx(dbs, errorText)))
+			DbgPrintf(1, _T("%s: Cannot execute: %s"), MYNAMESTR, errorText);
 		else
 			DbgPrintf(9, _T("%s: sent sms '%s' to %s"), MYNAMESTR, realText, pszPhoneNumber);
 		DBFreeStatement(dbs);
+	}
+	else
+	{
+		DbgPrintf(1, _T("%s: Cannot prepare '%s'"), MYNAMESTR, s_sqlTemplate);
 	}
 
 	return bRet;
