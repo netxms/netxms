@@ -23,13 +23,13 @@
 
 #include "dbemu.h"
 
-static TCHAR s_dbDriver[MAX_STR];
-static TCHAR s_dbName[MAX_DBPARAM_LEN];
-static TCHAR s_dbUsername[MAX_DBPARAM_LEN];
-static TCHAR s_dbPassword[MAX_DBPARAM_LEN];
-static TCHAR s_dbServer[MAX_DBPARAM_LEN];
-static TCHAR s_dbSchema[MAX_DBPARAM_LEN];
-static TCHAR s_sqlTemplate[MAX_STR];
+static TCHAR s_dbDriver[MAX_PATH];
+static TCHAR s_dbName[MAX_DB_NAME];
+static TCHAR s_dbUsername[MAX_DB_LOGIN];
+static TCHAR s_dbPassword[MAX_DB_PASSWORD];
+static TCHAR s_dbServer[MAX_PATH];
+static TCHAR s_dbSchema[MAX_DB_NAME];
+static TCHAR s_sqlTemplate[1024];
 static DB_DRIVER s_driver;
 static DB_HANDLE s_dbh;
 
@@ -38,13 +38,13 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 	BOOL bRet = false;
 	static NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("DBDriver"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbDriver },	
-		{ _T("DBName"),				CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbName },	
-		{ _T("DBLogin"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbUsername },	
-		{ _T("DBPassword"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbPassword },
-		{ _T("DBServer"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbServer },	
-		{ _T("DBSchema"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbSchema },	
-		{ _T("QueryTemplate"),		CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_sqlTemplate },	
+		{ _T("DBDriver"), CT_STRING, 0, 0, sizeof(s_dbDriver) / sizeof(TCHAR), 0, s_dbDriver },	
+		{ _T("DBName"), CT_STRING, 0, 0, sizeof(s_dbName) / sizeof(TCHAR), 0, s_dbName },	
+		{ _T("DBLogin"), CT_STRING, 0, 0, sizeof(s_dbUsername) / sizeof(TCHAR), 0,	s_dbUsername },	
+		{ _T("DBPassword"), CT_STRING, 0, 0, sizeof(s_dbPassword) / sizeof(TCHAR), 0,	s_dbPassword },
+		{ _T("DBServer"), CT_STRING, 0, 0, sizeof(s_dbServer) / sizeof(TCHAR), 0, s_dbServer },	
+		{ _T("DBSchema"), CT_STRING, 0, 0, sizeof(s_dbSchema) / sizeof(TCHAR), 0, s_dbSchema },	
+		{ _T("QueryTemplate"), CT_STRING, 0, 0, sizeof(s_sqlTemplate) / sizeof(TCHAR), 0, s_sqlTemplate },	
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
@@ -65,12 +65,6 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 	Config *config = new Config();
 	if (config->loadIniConfig(configFile, _T("SMSDbEmu")) && config->parseTemplate(_T("SMSDbEmu"), configTemplate))
 	{
-		if (!DBInit(0, 0))
-		{
-			DbgPrintf(1, _T("%s: Unable to initialize database library"), MYNAMESTR);
-			goto finish;
-		}
-
 		s_driver = DBLoadDriver(s_dbDriver, NULL, TRUE, NULL, NULL);
 		if (s_driver == NULL)
 		{
@@ -88,10 +82,6 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 		}	
 		bRet = true;
 	}
-	else
-	{
-		DbgPrintf(1, _T("%s: Unable to load configuration"), MYNAMESTR);
-	}
 
 finish:
 	return bRet;
@@ -100,23 +90,17 @@ finish:
 extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	BOOL bRet = false;
-	TCHAR *realText = EscapeStringForXML(pszText, -1);
 
 	DB_STATEMENT dbs = DBPrepare(s_dbh, s_sqlTemplate);
 	if (dbs != NULL)
 	{
 		DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, pszPhoneNumber, DB_BIND_STATIC);
-		DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, realText, DB_BIND_STATIC);
-		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-		if (!(bRet = DBExecuteEx(dbs, errorText)))
-			DbgPrintf(1, _T("%s: Cannot execute: %s"), MYNAMESTR, errorText);
+		DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, pszText, DB_BIND_STATIC);
+		if (!(bRet = DBExecute(dbs)))
+			DbgPrintf(1, _T("%s: Cannot execute"), MYNAMESTR);
 		else
-			DbgPrintf(9, _T("%s: sent sms '%s' to %s"), MYNAMESTR, realText, pszPhoneNumber);
+			DbgPrintf(8, _T("%s: sent sms '%s' to %s"), MYNAMESTR, pszText, pszPhoneNumber);
 		DBFreeStatement(dbs);
-	}
-	else
-	{
-		DbgPrintf(1, _T("%s: Cannot prepare '%s'"), MYNAMESTR, s_sqlTemplate);
 	}
 
 	return bRet;
