@@ -74,16 +74,16 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 		s_dbh = DBConnect(s_driver, s_dbServer, s_dbName, s_dbUsername, s_dbPassword, s_dbSchema, errorText);
-		if (s_dbh == NULL)
-		{
+		if (s_dbh == NULL) // Do not fail, just report
 			DbgPrintf(1, _T("%s: Unable to connect to database %s@%s as %s: %s"), MYNAMESTR, s_dbName, s_dbServer, s_dbUsername, errorText);
-			DBUnloadDriver(s_driver);
-			goto finish;
-		}	
+
 		bRet = true;
 	}
 
 finish:
+	if (!bRet && s_driver != NULL)
+		DBUnloadDriver(s_driver);
+
 	return bRet;
 }
 
@@ -91,16 +91,27 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 {
 	BOOL bRet = false;
 
-	DB_STATEMENT dbs = DBPrepare(s_dbh, s_sqlTemplate);
-	if (dbs != NULL)
+	if (s_dbh == NULL)
 	{
-		DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, pszPhoneNumber, DB_BIND_STATIC);
-		DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, pszText, DB_BIND_STATIC);
-		if (!(bRet = DBExecute(dbs)))
-			DbgPrintf(1, _T("%s: Cannot execute"), MYNAMESTR);
-		else
-			DbgPrintf(8, _T("%s: sent sms '%s' to %s"), MYNAMESTR, pszText, pszPhoneNumber);
-		DBFreeStatement(dbs);
+		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+		s_dbh = DBConnect(s_driver, s_dbServer, s_dbName, s_dbUsername, s_dbPassword, s_dbSchema, errorText);
+		if (s_dbh == NULL)
+			DbgPrintf(1, _T("%s: Unable to connect to database %s@%s as %s: %s"), MYNAMESTR, s_dbName, s_dbServer, s_dbUsername, errorText);
+	}
+
+	if (s_dbh != NULL)
+	{
+		DB_STATEMENT dbs = DBPrepare(s_dbh, s_sqlTemplate);
+		if (dbs != NULL)
+		{
+			DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, pszPhoneNumber, DB_BIND_STATIC);
+			DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, pszText, DB_BIND_STATIC);
+			if (!(bRet = DBExecute(dbs)))
+				DbgPrintf(1, _T("%s: Cannot execute"), MYNAMESTR);
+			else
+				DbgPrintf(8, _T("%s: sent sms '%s' to %s"), MYNAMESTR, pszText, pszPhoneNumber);
+			DBFreeStatement(dbs);
+		}
 	}
 
 	return bRet;
