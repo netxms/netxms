@@ -115,6 +115,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private Action actionCopy;
 	private Action actionPaste;
 	private Action actionDelete;
+	private Action actionEnableRule;
+	private Action actionDisableRule;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -295,6 +297,22 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		};
 		actionPaste.setImageDescriptor(SharedIcons.PASTE);
 		actionPaste.setEnabled(false);
+		
+		actionEnableRule = new Action("E&nable") {
+			@Override
+			public void run()
+			{
+				enableRules(true);
+			}
+		};
+
+		actionDisableRule = new Action("D&isable") {
+			@Override
+			public void run()
+			{
+				enableRules(false);
+			}
+		};
 	}
 	
 	/**
@@ -322,6 +340,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		manager.add(new Separator());
 		manager.add(actionHorizontal);
 		manager.add(actionVertical);
+		manager.add(new Separator());
+		manager.add(actionEnableRule);
+		manager.add(actionDisableRule);
 		manager.add(new Separator());
 		manager.add(actionInsertBefore);
 		manager.add(actionInsertAfter);
@@ -945,12 +966,24 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	}
 
 	/**
+	 * Enable selected rules
+	 */
+	private void enableRules(boolean enabled)
+	{
+		for(RuleEditor e : selection)
+			e.enableRule(enabled);
+	}
+
+	/**
 	 * Fill context menu for rule
 	 * 
 	 * @param manager menu manager
 	 */
 	public void fillRuleContextMenu(IMenuManager manager)
 	{
+		manager.add(actionEnableRule);
+		manager.add(actionDisableRule);
+		manager.add(new Separator());
 		manager.add(actionInsertBefore);
 		manager.add(actionInsertAfter);
 		manager.add(new Separator());

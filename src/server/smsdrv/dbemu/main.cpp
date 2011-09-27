@@ -23,43 +23,43 @@
 
 #include "dbemu.h"
 
-static TCHAR dbDriver[MAX_STR];
-static TCHAR dbName[MAX_DBPARAM_LEN];
-static TCHAR dbUsername[MAX_DBPARAM_LEN];
-static TCHAR dbPassword[MAX_DBPARAM_LEN];
-static TCHAR dbServer[MAX_DBPARAM_LEN];
-static TCHAR dbSchema[MAX_DBPARAM_LEN];
-static TCHAR sqlTemplate[MAX_STR];
-
-TCHAR *configFile;
-DB_HANDLE dbh;
+static TCHAR s_dbDriver[MAX_STR];
+static TCHAR s_dbName[MAX_DBPARAM_LEN];
+static TCHAR s_dbUsername[MAX_DBPARAM_LEN];
+static TCHAR s_dbPassword[MAX_DBPARAM_LEN];
+static TCHAR s_dbServer[MAX_DBPARAM_LEN];
+static TCHAR s_dbSchema[MAX_DBPARAM_LEN];
+static TCHAR s_sqlTemplate[MAX_STR];
+static DB_DRIVER s_driver;
+static DB_HANDLE s_dbh;
 
 extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 {
 	BOOL bRet = false;
-	NX_CFG_TEMPLATE configTemplate[] = 
+	static NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("DBDriver"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	dbDriver },	
-		{ _T("DBName"),				CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	dbName },	
-		{ _T("DBLogin"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	dbUsername },	
-		{ _T("DBPassword"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	dbPassword },
-		{ _T("DBServer"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	dbServer },	
-		{ _T("DBSchema"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	dbSchema },	
-		{ _T("SqlTemplate"),		CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	sqlTemplate },	
+		{ _T("DBDriver"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbDriver },	
+		{ _T("DBName"),				CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbName },	
+		{ _T("DBLogin"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbUsername },	
+		{ _T("DBPassword"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbPassword },
+		{ _T("DBServer"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbServer },	
+		{ _T("DBSchema"),			CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_dbSchema },	
+		{ _T("QueryTemplate"),		CT_STRING,	0, 0, MAX_DBPARAM_LEN, 0,	s_sqlTemplate },	
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
+	const TCHAR *configFile;
 	if (pszInitArgs == NULL || *pszInitArgs == 0)
 	{
 #ifdef _WIN32
-		configFile = _tcsdup(_T("\\smsdbemu.conf"));
+		configFile = _T("C:\\smsdbemu.conf");
 #else
-		configFile = _tcsdup(_T("/etc/smsdbemu.conf"));
+		configFile = _T("/etc/smsdbemu.conf");
 #endif
 	}
 	else
 	{
-		configFile = _tcsdup(pszInitArgs);
+		configFile = pszInitArgs;
 	}
 
 	Config *config = new Config();
@@ -71,19 +71,19 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 			goto finish;
 		}
 
-		DB_DRIVER driver = DBLoadDriver(dbDriver, NULL, TRUE, NULL, NULL);
-		if (driver == NULL)
+		s_driver = DBLoadDriver(s_dbDriver, NULL, TRUE, NULL, NULL);
+		if (s_driver == NULL)
 		{
-			DbgPrintf(1, _T("%s: Unable to load and initialize database driver \"%s\""), MYNAMESTR, dbDriver);
+			DbgPrintf(1, _T("%s: Unable to load and initialize database driver \"%s\""), MYNAMESTR, s_dbDriver);
 			goto finish;
 		}
 
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-		dbh = DBConnect(driver, dbServer, dbName, dbUsername, dbPassword, dbSchema, errorText);
-		if (dbh == NULL)
+		s_dbh = DBConnect(s_driver, s_dbServer, s_dbName, s_dbUsername, s_dbPassword, s_dbSchema, errorText);
+		if (s_dbh == NULL)
 		{
-			DbgPrintf(1, _T("%s: Unable to connect to database %s@%s as %s: %s"), MYNAMESTR, dbName, dbServer, dbUsername, errorText);
-			DBUnloadDriver(driver);
+			DbgPrintf(1, _T("%s: Unable to connect to database %s@%s as %s: %s"), MYNAMESTR, s_dbName, s_dbServer, s_dbUsername, errorText);
+			DBUnloadDriver(s_driver);
 			goto finish;
 		}	
 		bRet = true;
@@ -98,7 +98,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	BOOL bRet = false;
 	TCHAR *realText = EscapeStringForXML(pszText, -1);
 
-	DB_STATEMENT dbs = DBPrepare(dbh, sqlTemplate);
+	DB_STATEMENT dbs = DBPrepare(s_dbh, s_sqlTemplate);
 	if (dbs != NULL)
 	{
 		DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, pszPhoneNumber, DB_BIND_STATIC);
@@ -116,7 +116,8 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 
 extern "C" void EXPORT SMSDriverUnload()
 {
-	DBDisconnect(dbh);
+	DBDisconnect(s_dbh);
+	DBUnloadDriver(s_driver);
 }
 
 

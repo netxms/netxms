@@ -1507,6 +1507,10 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
 
             pAgentConn->disconnect();
          }
+			else
+			{
+	         DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect"), m_szName);
+			}
          delete pAgentConn;
          DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_szName);
       }
@@ -3122,14 +3126,15 @@ AgentConnectionEx *Node::createAgentConnection()
        (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
 
-   conn = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort,
-                                m_wAuthMethod, m_szSharedSecret);
+   DbgPrintf(6, _T("Node::createAgentConnection(%s [%d])"), m_szName, (int)m_dwId);
+   conn = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
    {
       delete conn;
       conn = NULL;
    }
+	DbgPrintf(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_szName, (int)m_dwId, conn);
    return conn;
 }
 

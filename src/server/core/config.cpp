@@ -200,6 +200,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
 			{
 				DBGetField(hResult, 0, 0, szBuffer, iBufSize);
 				DecodeSQLString(szBuffer);
+				DbgPrintf(8, _T("ConfigReadStr: name=%s value=\"%s\""), szVar, szBuffer);
 				bSuccess = TRUE;
 			}
 		   DBFreeResult(hResult);

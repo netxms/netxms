@@ -402,4 +402,14 @@ public class EventProcessingPolicyRule
 	{
 		this.situationAttributes = situationAttributes;
 	}
+	
+	/**
+	 * Check rule's DISABLED flag
+	 * 
+	 * @return true if DISABLED flag set
+	 */
+	public boolean isDisabled()
+	{
+		return (flags & DISABLED) != 0;
+	}
 }

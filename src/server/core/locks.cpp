@@ -75,6 +75,7 @@ BOOL InitLocks(DWORD *pdwIpAddr, TCHAR *pszInfo)
 
    // Check current database lock status
    ConfigReadStr(_T("DBLockStatus"), szBuffer, 256, _T("ERROR"));
+	DbgPrintf(6, _T("DBLockStatus=\"%s\""), szBuffer);
    if (!_tcscmp(szBuffer, _T("UNLOCKED")))
    {
       IpToStr(GetLocalIpAddr(), szBuffer);

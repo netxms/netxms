@@ -51,7 +51,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * "Actions" property page for EPP rule
- *
  */
 public class RuleServerActions extends PropertyPage
 {

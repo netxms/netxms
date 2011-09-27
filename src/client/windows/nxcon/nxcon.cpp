@@ -2878,10 +2878,7 @@ void CConsoleApp::ChangeNodeAddress(DWORD dwNodeId)
 
    if (dlg.DoModal() == IDOK)
    {
-      dwResult = DoRequestArg3(NXCChangeNodeIP, g_hSession, (void *)dwNodeId,
-                               (void *)dlg.m_dwIpAddr, _T("Changing node's IP address..."));
-      if (dwResult != RCC_SUCCESS)
-         ErrorBox(dwResult, _T("Error changing IP address for node: %s"));
+      ErrorBox(RCC_NOT_IMPLEMENTED, _T("Error changing IP address for node: %s"));
    }
 }
 

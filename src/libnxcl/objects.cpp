@@ -1750,26 +1750,6 @@ void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
 
 
 //
-// Change node's IP address
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCChangeNodeIP(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwIpAddr)
-{
-   DWORD dwRqId;
-   CSCPMessage msg;
-
-   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
-
-   msg.SetCode(CMD_CHANGE_IP_ADDR);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
-   msg.SetVariable(VID_IP_ADDRESS, dwIpAddr);
-   ((NXCL_Session *)hSession)->SendMsg(&msg);
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId, 300000);
-}
-
-
-//
 // Read agent's configuration file
 //
 

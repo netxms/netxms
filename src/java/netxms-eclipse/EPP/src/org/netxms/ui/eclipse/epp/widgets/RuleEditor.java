@@ -61,7 +61,8 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 public class RuleEditor extends Composite
 {
 	private static final Color BACKGROUND_COLOR = new Color(Display.getDefault(), 255, 255, 255);
-	private static final Color TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 225, 233, 241);
+	private static final Color NORMAL_TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 225, 233, 241);
+	private static final Color DISABLED_TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 202, 227, 206);
 	private static final Color SELECTED_TITLE_BACKGROUND_COLOR = new Color(Display.getDefault(), 245, 249, 104);
 	private static final Color RULE_BORDER_COLOR = new Color(Display.getDefault(), 153, 180, 209);
 	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getDefault(), 198,214,172);
@@ -78,11 +79,13 @@ public class RuleEditor extends Composite
 	private boolean verticalLayout = false;
 	private Composite leftPanel;
 	private Label ruleNumberLabel;
+	private Composite header;
 	private Label headerLabel;
 	private Composite mainArea;
 	private DashboardElement condition;
 	private DashboardElement action;
 	private Label expandButton;
+	private Label editButton;
 	private boolean modified = false;
 	private boolean selected = false;
 	
@@ -210,7 +213,7 @@ public class RuleEditor extends Composite
 		};
 		
 		leftPanel = new Composite(this, SWT.NONE);
-		leftPanel.setBackground(TITLE_BACKGROUND_COLOR);
+		leftPanel.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
 		leftPanel.addMouseListener(mouseListener);
 		
 		GridLayout layout = new GridLayout();
@@ -228,7 +231,7 @@ public class RuleEditor extends Composite
 		ruleNumberLabel = new Label(leftPanel, SWT.NONE);
 		ruleNumberLabel.setText(Integer.toString(ruleNumber));
 		ruleNumberLabel.setFont(editor.getBoldFont());
-		ruleNumberLabel.setBackground(TITLE_BACKGROUND_COLOR);
+		ruleNumberLabel.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
 		ruleNumberLabel.setForeground(TITLE_COLOR);
 		ruleNumberLabel.setAlignment(SWT.CENTER);
 		ruleNumberLabel.addMouseListener(mouseListener);
@@ -271,8 +274,8 @@ public class RuleEditor extends Composite
 	 */
 	private void createHeader()
 	{
-		Composite header = new Composite(this, SWT.NONE);
-		header.setBackground(TITLE_BACKGROUND_COLOR);
+		header = new Composite(this, SWT.NONE);
+		header.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
@@ -284,8 +287,11 @@ public class RuleEditor extends Composite
 		header.setLayoutData(gd);
 		
 		headerLabel = new Label(header, SWT.NONE);
-		headerLabel.setText(rule.getComments());
-		headerLabel.setBackground(TITLE_BACKGROUND_COLOR);
+		if (rule.isDisabled())
+			headerLabel.setText(rule.getComments() + " (disabled)");
+		else
+			headerLabel.setText(rule.getComments());
+		headerLabel.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
 		headerLabel.setForeground(TITLE_COLOR);
 		headerLabel.setFont(editor.getNormalFont());
 		gd = new GridData();
@@ -311,8 +317,8 @@ public class RuleEditor extends Composite
 			}
 		});
 		
-		Label editButton = new Label(header, SWT.NONE);
-		editButton.setBackground(TITLE_BACKGROUND_COLOR);
+		editButton = new Label(header, SWT.NONE);
+		editButton.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
 		editButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		editButton.setImage(editor.getImageEdit());
 		editButton.setToolTipText("Edit rule");
@@ -342,7 +348,7 @@ public class RuleEditor extends Composite
 		});
 		
 		expandButton = new Label(header, SWT.NONE);
-		expandButton.setBackground(TITLE_BACKGROUND_COLOR);
+		expandButton.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
 		expandButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		expandButton.setImage(collapsed ? editor.getImageExpand() : editor.getImageCollapse());
 		expandButton.setToolTipText(collapsed ? "Expand rule" : "Collapse rule");
@@ -786,7 +792,13 @@ public class RuleEditor extends Composite
 			dlg.open();
 			if (modified)
 			{
-				headerLabel.setText(rule.getComments());
+				if (rule.isDisabled())
+					headerLabel.setText(rule.getComments() + " (disabled)");
+				else
+					headerLabel.setText(rule.getComments());
+				
+				updateBackground();
+				
 				condition.replaceClientArea();
 				action.replaceClientArea();
 				editor.updateEditorAreaLayout();
@@ -867,9 +879,49 @@ public class RuleEditor extends Composite
 	public void setSelected(boolean selected)
 	{
 		this.selected = selected;
-		leftPanel.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : TITLE_BACKGROUND_COLOR);
+		leftPanel.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR));
 		for(Control c : leftPanel.getChildren())
-			c.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : TITLE_BACKGROUND_COLOR);
+			c.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR));
 		leftPanel.redraw();
+	}
+	
+	/**
+	 * Enable or disable rule
+	 * 
+	 * @param enabled true to enable rule
+	 */
+	public void enableRule(boolean enabled)
+	{
+		if (enabled == !rule.isDisabled())
+			return;
+		
+		if (enabled)
+		{
+			rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.DISABLED);
+			headerLabel.setText(rule.getComments());
+		}
+		else
+		{
+			rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.DISABLED);
+			headerLabel.setText(rule.getComments() + " (disabled)");
+		}
+		
+		modified = true;
+		updateBackground();
+		editor.setModified(true);
+	}
+	
+	/**
+	 * Update background color after rule status change
+	 */
+	private void updateBackground()
+	{
+		leftPanel.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR));
+		for(Control c : leftPanel.getChildren())
+			c.setBackground(selected ? SELECTED_TITLE_BACKGROUND_COLOR : (rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR));
+		header.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
+		headerLabel.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
+		expandButton.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
+		editButton.setBackground(rule.isDisabled() ? DISABLED_TITLE_BACKGROUND_COLOR : NORMAL_TITLE_BACKGROUND_COLOR);
 	}
 }
