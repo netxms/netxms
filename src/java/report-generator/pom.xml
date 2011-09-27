@@ -4,7 +4,7 @@
     <groupId>org.netxms</groupId>
     <artifactId>report-generator</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>1.1.5</version>
     <name>ReportGenerator</name>
     <url>http://www.netxms.org</url>
 

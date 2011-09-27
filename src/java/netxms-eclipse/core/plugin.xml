@@ -58,14 +58,14 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="NetXMS Cortex Management Console">
+            name="NetXMS Management Console">
          <property
                name="appName"
-               value="NetXMS Cortex Management Console">
+               value="NetXMS Management Console">
          </property>
          <property
                name="aboutText"
-               value="NetXMS Cortex Management Console&#x0A;&#x0A;Version 1.1.1&#x0A;Copyright (c) 2003-2011 Raden Solutions&#x0A;&#x0A;Version 1.1.1">
+               value="NetXMS Management Console&#x0A;&#x0A;Version 1.1.5&#x0A;Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein">
          </property>
          <property
                name="preferenceCustomization"

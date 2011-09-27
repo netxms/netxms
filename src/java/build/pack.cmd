@@ -1,5 +1,5 @@
 @echo off
-set version=1.1.4
+set version=1.1.5
 
 cd win32.win32.x86
 zip -r nxmc-%version%-win32-x86.zip nxmc

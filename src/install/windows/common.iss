@@ -2,7 +2,7 @@
 [Icons]
 Name: "{group}\Alarm Notifier"; Filename: "{app}\bin\nxnotify.exe"; Components: console
 Name: "{group}\Alarm Viewer"; Filename: "{app}\bin\nxav.exe"; Components: console
-Name: "{group}\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Components: console
+Name: "{group}\NetXMS Console"; Filename: "{app}\bin\nxmc.exe"; Components: console
 Name: "{group}\Recompile MIB Files"; Filename: "{app}\bin\nxmibc.exe"; Parameters: "-P -z -d ""{app}\var\mibs"" -o ""{app}\var\mibs\netxms.mib"""; Components: console
 Name: "{group}\Server Configuration Wizard"; Filename: "{app}\bin\nxconfig.exe"; Components: server
 Name: "{group}\Server Console"; Filename: "{app}\bin\nxadm.exe"; Parameters: "-i"; Components: server
@@ -38,6 +38,7 @@ Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; St
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-nxhttpd-config {code:GetMasterServer}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating web server's configuration file..."; Components: websrv
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-c ""{app}\etc\nxhttpd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing web server service..."; Flags: runhidden; Components: websrv
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting web server service..."; Flags: runhidden; Components: websrv
+Filename: "{app}\bin\nxmc.exe"; Parameters: "-clean -initialize"; WorkingDir: "{app}\bin"; StatusMsg: "Initializing management console..."; Flags: waituntilterminated; Components: console
 
 [UninstallRun]
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-S"; StatusMsg: "Stopping web server service..."; RunOnceId: "StopWebService"; Flags: runhidden; Components: websrv
