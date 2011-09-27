@@ -26,7 +26,7 @@ Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "Con
 
 [Run]
 Filename: "cmd.exe"; Parameters: "/c del {app}\bin\*.manifest"; WorkingDir: "{app}\bin"; StatusMsg: "Removing old manifest files..."; Flags: runhidden
-Filename: "msiexec.exe"; Parameters: "/i {app}\var\sqlncli.msi"; WorkingDir: "{app}\bin"; StatusMsg: "Installing Microsoft SQL Native Client..."; Flags: waituntilterminated
+Filename: "msiexec.exe"; Parameters: "/i {app}\var\sqlncli.msi"; WorkingDir: "{app}\bin"; StatusMsg: "Installing Microsoft SQL Native Client..."; Flags: waituntilterminated; Components: server\mssql
 Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\var\mibs"" -o ""{app}\var\mibs\netxms.mib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-agent-config"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's configuration file..."; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server

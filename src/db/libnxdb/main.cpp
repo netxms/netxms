@@ -71,6 +71,7 @@ void __DBDbgPrintf(int level, const TCHAR *format, ...)
 void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list))
 {
 	s_dbgPrintCb = cb;
+	__DBDbgPrintf(1, _T("Debug callback set for DB library"));
 }
 
 
