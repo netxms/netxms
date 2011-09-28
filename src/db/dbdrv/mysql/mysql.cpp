@@ -61,7 +61,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 
 	const WCHAR *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		switch(*src)
 		{
@@ -128,7 +128,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 
 	const char *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		switch(*src)
 		{

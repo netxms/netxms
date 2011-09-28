@@ -127,7 +127,7 @@ extern "C" NETXMS_WCHAR EXPORT *DrvPrepareStringW(const NETXMS_WCHAR *str)
 
 	const NETXMS_WCHAR *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		if (*src == L'\'')
 		{
@@ -160,7 +160,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 
 	const char *src = str;
 	int outPos;
-	for(outPos = 1; *src != NULL; src++)
+	for(outPos = 1; *src != 0; src++)
 	{
 		if (*src == '\'')
 		{
@@ -367,7 +367,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
 	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
 
-	int length = (int)wcslen((WCHAR *)buffer) + 1;
+	int length = (int)wcslen((NETXMS_WCHAR *)buffer) + 1;
 
 	SQLPOINTER sqlBuffer;
 	switch(allocType)
@@ -378,7 +378,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 #else
 			if (cType == DB_CTYPE_STRING)
 			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+				sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
 				stmt->buffers->add(sqlBuffer);
 			}
 			else
@@ -393,7 +393,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 #else
 			if (cType == DB_CTYPE_STRING)
 			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+				sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
 				free(buffer);
 			}
 			else
@@ -409,7 +409,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 #else
 			if (cType == DB_CTYPE_STRING)
 			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+				sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
 			}
 			else
 			{
