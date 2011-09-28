@@ -305,6 +305,7 @@ public:
    int getPropagatedStatus();
    DWORD TimeStamp() { return m_dwTimeStamp; }
 	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
+	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
 
    BOOL isModified() { return m_bIsModified; }
    BOOL isDeleted() { return m_bIsDeleted; }

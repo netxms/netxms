@@ -61,6 +61,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    {
       pValue = new NXSL_Value((LONG)object->Type());
    }
+   else if (!_tcscmp(pszAttr, _T("comments")))
+   {
+      pValue = new NXSL_Value(object->getComments());
+   }
 	else
 	{
 		const TCHAR *attrValue = object->GetCustomAttribute(pszAttr);
@@ -166,6 +170,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("sysDescription")))
    {
       pValue = new NXSL_Value(pNode->getSysDescription());
+   }
+   else if (!_tcscmp(pszAttr, _T("comments")))
+   {
+      pValue = new NXSL_Value(pNode->getComments());
    }
 	else
 	{

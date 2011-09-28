@@ -23,6 +23,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -32,6 +33,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -47,6 +49,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private NXCSession session;
 	private Dashboard dashboard;
 	private DashboardControl dbc;
+	private Composite parentComposite;
+	private DashboardModifyListener dbcModifyListener;
+	private RefreshAction actionRefresh;
 	private Action actionEditMode;
 	private Action actionSave;
 	private Action actionAddAlarmBrowser;
@@ -79,8 +84,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+		parentComposite = parent;
 		dbc = new DashboardControl(parent, SWT.NONE, dashboard, false);
-		dbc.setModifyListener(new DashboardModifyListener() {
+		dbcModifyListener = new DashboardModifyListener() {
 			@Override
 			public void save()
 			{
@@ -94,7 +100,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 				actionSave.setEnabled(true);
 				firePropertyChange(PROP_DIRTY);
 			}
-		});
+		};
+		dbc.setModifyListener(dbcModifyListener);
 
 		createActions();
 		contributeToActionBars();
@@ -105,6 +112,20 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	 */
 	private void createActions()
 	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				if (dbc.isModified())
+				{
+					if (!MessageDialog.openConfirm(getSite().getShell(), "Refresh Dashboard", 
+							"This will destroy all unsaved changes. Are you sure?"))
+						return;
+				}
+				rebuildDashboard(true);
+			}
+		};
+		
 		actionSave = new Action("&Save") {
 			@Override
 			public void run()
@@ -121,6 +142,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			{
 				dbc.setEditMode(!dbc.isEditMode());
 				actionEditMode.setChecked(dbc.isEditMode());
+				if (!dbc.isEditMode())
+					rebuildDashboard(false);
 			}
 		};
 		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
@@ -229,6 +252,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		manager.add(actionAddStatusIndicator);
 		manager.add(actionAddAvailabilityChart);
 		manager.add(actionAddDashboard);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -241,6 +266,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	{
 		manager.add(actionEditMode);
 		manager.add(actionSave);
+		manager.add(actionRefresh);
 	}
 	
 	/* (non-Javadoc)
@@ -293,6 +319,47 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
-		return true;
+		return dbc.isModified();
+	}
+
+	/**
+	 * Rebuild current dashboard
+	 * 
+	 * @param reload if true, dashboard object will be reloaded and all unsaved changes
+	 * will be lost
+	 */
+	private void rebuildDashboard(boolean reload)
+	{
+		if (dashboard == null)
+			return;
+		
+		if (dbc != null)
+			dbc.dispose();
+		
+		if (reload)
+		{
+			dashboard = (Dashboard)((NXCSession)ConsoleSharedData.getSession()).findObjectById(dashboard.getObjectId(), Dashboard.class);
+
+			if (dashboard != null)
+			{
+				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, false);
+				parentComposite.layout(true, true);
+				setPartName("Dashboard: " + dashboard.getObjectName());
+				dbc.setModifyListener(dbcModifyListener);
+			}
+			else
+			{
+				dbc = null;
+			}
+		}
+		else
+		{
+			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, dbc.getElements(), dbc.isModified());
+			parentComposite.layout(true, true);
+			dbc.setModifyListener(dbcModifyListener);
+		}
+
+		actionSave.setEnabled(dbc.isModified());
+		firePropertyChange(PROP_DIRTY);
 	}
 }

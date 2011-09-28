@@ -77,8 +77,21 @@ public class DashboardControl extends Composite
 		super(parent, style);
 		this.dashboard = dashboard;
 		this.embedded = embedded;
-		elements = new ArrayList<DashboardElement>(dashboard.getElements());
-		setBackground(new Color(getDisplay(), 255, 255, 255));
+		this.elements = new ArrayList<DashboardElement>(dashboard.getElements());
+		createContent();
+	}
+
+	/**
+	 * @param parent
+	 * @param style
+	 */
+	public DashboardControl(Composite parent, int style, Dashboard dashboard, List<DashboardElement> elements, boolean modified)
+	{
+		super(parent, style);
+		this.dashboard = dashboard;
+		this.embedded = false;
+		this.modified = modified;
+		this.elements = new ArrayList<DashboardElement>(elements);
 		createContent();
 	}
 
@@ -87,6 +100,8 @@ public class DashboardControl extends Composite
 	 */
 	private void createContent()
 	{
+		setBackground(new Color(getDisplay(), 255, 255, 255));
+		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = dashboard.getNumColumns();
 		layout.marginWidth = embedded ? 0 : 15;
@@ -95,7 +110,7 @@ public class DashboardControl extends Composite
 		layout.verticalSpacing = 10;
 		setLayout(layout);
 		
-		for(final DashboardElement e : dashboard.getElements())
+		for(final DashboardElement e : elements)
 		{
 			createElementWidget(e);
 		}
@@ -251,6 +266,7 @@ public class DashboardControl extends Composite
 			w.dispose();
 			layout(true, true);
 		}
+		setModified();
 	}
 	
 	/**
@@ -487,5 +503,13 @@ public class DashboardControl extends Composite
 	public boolean isModified()
 	{
 		return modified;
+	}
+
+	/**
+	 * @return the elements
+	 */
+	public List<DashboardElement> getElements()
+	{
+		return elements;
 	}
 }

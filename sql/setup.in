@@ -268,6 +268,12 @@ INSERT INTO user_groups (id,name,system_access,flags,description,guid)
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,-2147483647,2047);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,-2147483647,2047);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (3,-2147483647,2047);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (4,-2147483647,2047);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,-2147483647,2047);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,-2147483647,2047);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,-2147483647,2047);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (8,-2147483647,2047);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,-2147483647,2047);
 
 
 /*

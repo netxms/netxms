@@ -29,8 +29,11 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Dynamic dashboard view - change dashboard when selection in dashboard
@@ -45,6 +48,7 @@ public class DashboardDynamicView extends ViewPart
 	private ISelectionService selectionService;
 	private ISelectionListener selectionListener;
 	private Composite parentComposite;
+	private RefreshAction actionRefresh;
 
 	/*
 	 * (non-Javadoc)
@@ -87,6 +91,13 @@ public class DashboardDynamicView extends ViewPart
 	 */
 	private void createActions()
 	{
+		actionRefresh = new RefreshAction() {
+			@Override
+			public void run()
+			{
+				rebuildDashboard();
+			}
+		};
 	}
 
 	/**
@@ -107,6 +118,7 @@ public class DashboardDynamicView extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionRefresh);
 	}
 
 	/**
@@ -117,6 +129,7 @@ public class DashboardDynamicView extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionRefresh);
 	}
 
 	/*
@@ -144,5 +157,28 @@ public class DashboardDynamicView extends ViewPart
 		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, false);
 		parentComposite.layout();
 		setPartName("Dashboard: " + dashboard.getObjectName());
+	}
+	
+	/**
+	 * Rebuild current dashboard
+	 */
+	private void rebuildDashboard()
+	{
+		if (dashboard == null)
+			return;
+		
+		if (dbc != null)
+			dbc.dispose();
+		dashboard = (Dashboard)((NXCSession)ConsoleSharedData.getSession()).findObjectById(dashboard.getObjectId(), Dashboard.class);
+		if (dashboard != null)
+		{
+			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, false);
+			parentComposite.layout();
+			setPartName("Dashboard: " + dashboard.getObjectName());
+		}
+		else
+		{
+			dbc = null;
+		}
 	}
 }

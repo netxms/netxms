@@ -681,6 +681,8 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/perspectiv
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/AvailabilityChart.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/DashboardElements.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/Layout.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/ObjectStatusChart.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/StatusIndicator.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/propertypages/helpers/DashboardElementsLabelProvider.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/DashboardDynamicView.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/views/DashboardNavigator.java -text
