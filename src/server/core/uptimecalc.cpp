@@ -32,7 +32,7 @@ THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg)
 
 	DbgPrintf(1, _T("UptimeCalculator thread started"));
 
-	while (TRUE)
+	while(TRUE)
 	{
 		g_pBusinessServiceRoot->updateUptimeStats(time(NULL), TRUE);
 		if (SleepAndCheckForShutdown(calcInterval))

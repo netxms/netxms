@@ -115,14 +115,15 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 
-	LockData();
-
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT nodelink_id FROM node_links WHERE nodelink_id=?"));
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from node_links"));
 		return FALSE;
 	}
+
+	LockData();
+
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
@@ -136,14 +137,14 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 											  _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
 	if (hStmt == NULL)	
 	{
-		// DbgPrintf(4, _T("Cannot prepare %s from node_links"), bNewObject ? _T("insert") : _T("update"));
+		UnlockData();
 		return FALSE;
 	}
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_nodeId);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
+	UnlockData();
 	if (!DBExecute(hStmt))
 	{
-		// DbgPrintf(4, _T("Cannot execute %s on node_links"), bNewObject ? _T("insert") : _T("update"));
 		DBFreeStatement(hStmt);
 		return FALSE;
 	}
@@ -151,7 +152,7 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 
 	saveACLToDB(hdb);
 
-	// Unlock object and clear modification flag
+	LockData();
 	m_bIsModified = FALSE;
 	UnlockData();
 	return ServiceContainer::SaveToDB(hdb);

@@ -184,6 +184,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
       while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
       {
          iResp = GetSMTPResponse(hSocket, szBuffer, &nBufPos);
+			DbgPrintf(8, _T("SMTP RESPONSE: %03d (state=%d)"), iResp, iState);
          if (iResp > 0)
          {
             switch(iState)
@@ -349,8 +350,6 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 
 static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 {
-   MAIL_ENVELOPE *pEnvelope;
-   DWORD dwResult;
    static const TCHAR *m_szErrorText[] =
    {
       _T("Sent successfully"),
@@ -359,21 +358,25 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
       _T("SMTP conversation failure")
    };
 
+	DbgPrintf(1, _T("SMTP mailer thread started"));
    while(1)
    {
-      pEnvelope = (MAIL_ENVELOPE *)m_pMailerQueue->GetOrBlock();
+      MAIL_ENVELOPE *pEnvelope = (MAIL_ENVELOPE *)m_pMailerQueue->GetOrBlock();
       if (pEnvelope == INVALID_POINTER_VALUE)
          break;
+
+		DbgPrintf(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->szRcptAddr);
 
       ConfigReadStr(_T("SMTPServer"), m_szSmtpServer, MAX_PATH, _T("localhost"));
       ConfigReadStrA(_T("SMTPFromAddr"), m_szFromAddr, MAX_PATH, "netxms@localhost");
       ConfigReadStrA(_T("SMTPFromName"), m_szFromName, MAX_PATH, "NetXMS Server");
       m_wSmtpPort = (WORD)ConfigReadInt(_T("SMTPPort"), 25);
 
-      dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
+      DWORD dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
       if (dwResult != SMTP_ERR_SUCCESS)
 		{
 			pEnvelope->nRetryCount--;
+			DbgPrintf(6, _T("SMTP(%p): Failed to send e-mail, remaining retries: %d"), pEnvelope, pEnvelope->nRetryCount);
 			if (pEnvelope->nRetryCount > 0)
 			{
 				// Try posting again
@@ -391,6 +394,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 		{
 			free(pEnvelope->pszText);
 			free(pEnvelope);
+			DbgPrintf(6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
 		}
    }
    return THREAD_OK;

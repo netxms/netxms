@@ -347,7 +347,7 @@ void ServiceContainer::updateUptimeStats(time_t currentTime /* = 0*/, BOOL updat
 
 	if (updateChilds)
 	{
-		LockChildList(TRUE);
+		LockChildList(FALSE);
 		for (int i = 0; i < int(m_dwChildCount); i++)
 		{
 			NetObj *child = m_pChildList[i];

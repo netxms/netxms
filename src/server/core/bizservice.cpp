@@ -106,11 +106,12 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 
-	LockData();
-
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT service_id FROM business_services WHERE service_id=?"));
 	if (hStmt == NULL)
 		return FALSE;
+
+	LockData();
+
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
@@ -122,9 +123,14 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 
 	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO business_services (service_id) VALUES (?)") :
 											  _T("UPDATE business_services SET service_id=service_id WHERE service_id=?"));
-	if (hStmt == NULL)	
+	if (hStmt == NULL)
+	{
+		UnlockData();
 		return FALSE;
+	}
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+	UnlockData();
+
 	if (!DBExecute(hStmt))
 	{
 		DBFreeStatement(hStmt);
@@ -135,7 +141,7 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 
 	saveACLToDB(hdb);
 
-	// Unlock object and clear modification flag
+	LockData();
 	m_bIsModified = FALSE;
 	UnlockData();
 
