@@ -4,6 +4,7 @@
 
 - Added "foreach" operator in NXSL
 - New NXSL functions: GetDCIValueByName, GetDCIValueByDescription
+- New attribute "comments" in NXSL classes "Node" and "NetObj"
 - Dashboard configuration in console improved
 - Database upgrade bug fixed
 - Solaris support improved
