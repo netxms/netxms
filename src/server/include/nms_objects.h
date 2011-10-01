@@ -1476,6 +1476,7 @@ class NXCORE_EXPORTABLE Dashboard : public Container
 {
 protected:
 	int m_numColumns;
+	DWORD m_options;
 	ObjectArray<DashboardElement> *m_elements;
 
 public:

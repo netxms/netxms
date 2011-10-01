@@ -76,6 +76,7 @@ public class DashboardElements extends PropertyPage
 	
 	private Dashboard object;
 	private LabeledText columnCount;
+	private Button checkEqualWidth;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -110,8 +111,16 @@ public class DashboardElements extends PropertyPage
       GridData gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
-      gridData.horizontalSpan = 2;
+      //gridData.horizontalSpan = 2;
       columnCount.setLayoutData(gridData);
+      
+      checkEqualWidth = new Button(dialogArea, SWT.CHECK);
+      checkEqualWidth.setText("Make columns equal width");
+      checkEqualWidth.setSelection((object.getOptions() & Dashboard.EQUAL_WIDTH_COLUMNS) != 0);
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      checkEqualWidth.setLayoutData(gridData);
       
       final String[] columnNames = { "Type", "Span", "Alignment" };
       final int[] columnWidths = { 150, 60, 150 };
@@ -308,9 +317,14 @@ public class DashboardElements extends PropertyPage
 			return false;
 		}
 		
+		int options = 0;
+		if (checkEqualWidth.getSelection())
+			options |= Dashboard.EQUAL_WIDTH_COLUMNS;
+		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setDashboardElements(elements);
 		md.setColumnCount(numColumns);
+		md.setDashboardOptions(options);
 		
 		if (isApply)
 			setValid(false);

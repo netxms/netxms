@@ -69,7 +69,6 @@ public class DataSources extends PropertyPage
 	private Button upButton;
 	private Button downButton;
 	private List<DashboardDciInfo> dciList = null;
-	private boolean isModified = false;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -273,7 +272,6 @@ public class DataSources extends PropertyPage
 			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
 			dciList.add(dci);
 			viewer.setInput(dciList.toArray());
-			isModified = true;
 			
 			viewer.setSelection(new StructuredSelection(dci));
 		}
@@ -308,7 +306,6 @@ public class DataSources extends PropertyPage
 		for(Object o : selection.toList())
 			dciList.remove(o);
       viewer.setInput(dciList.toArray());
-      isModified = true;
 	}
 
 	/**
@@ -327,7 +324,6 @@ public class DataSources extends PropertyPage
 				Collections.swap(dciList, index - 1, index);
 		      viewer.setInput(dciList.toArray());
 		      viewer.setSelection(new StructuredSelection(element));
-		      isModified = true;
 			}
 		}
 	}

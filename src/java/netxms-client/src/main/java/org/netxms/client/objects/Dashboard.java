@@ -31,7 +31,10 @@ import org.netxms.client.dashboards.DashboardElement;
  */
 public class Dashboard extends GenericObject
 {
+	public static final int EQUAL_WIDTH_COLUMNS = 0x0001;
+	
 	private int numColumns;
+	private int options;
 	private List<DashboardElement> elements;
 
 	/**
@@ -42,6 +45,7 @@ public class Dashboard extends GenericObject
 	{
 		super(msg, session);
 		numColumns = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
+		options = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<DashboardElement>(count);
@@ -76,5 +80,13 @@ public class Dashboard extends GenericObject
 	public String getObjectClassName()
 	{
 		return "Dashboard";
+	}
+
+	/**
+	 * @return the options
+	 */
+	public int getOptions()
+	{
+		return options;
 	}
 }

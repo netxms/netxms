@@ -108,6 +108,7 @@ public class DashboardControl extends Composite
 		layout.marginHeight = embedded ? 0 : 15;
 		layout.horizontalSpacing = 10;
 		layout.verticalSpacing = 10;
+		layout.makeColumnsEqualWidth = (dashboard.getOptions() & Dashboard.EQUAL_WIDTH_COLUMNS) != 0;
 		setLayout(layout);
 		
 		for(final DashboardElement e : elements)

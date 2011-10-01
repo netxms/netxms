@@ -1202,6 +1202,7 @@ CREATE TABLE dashboards
 (
 	id integer not null,
 	num_columns integer not null,
+	options integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1229,18 +1230,6 @@ CREATE TABLE business_services
 (
      service_id integer not null,
      PRIMARY KEY(service_id)
-) TABLE_TYPE;
-
-
-/*
-** SLA business service - templates relationship
-*/
-
-CREATE TABLE business_service_templates
-(
-     service_id integer not null,
-     template_id integer not null,
-     PRIMARY KEY(service_id,template_id)
 ) TABLE_TYPE;
 
 

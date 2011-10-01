@@ -228,7 +228,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	mbInitParameters[1023] = 0;
    if (!fpDrvInit(mbInitParameters))
 #else
-   if (!fpDrvInit(initParameters))
+   if (!fpDrvInit(CHECK_NULL_EX(initParameters)))
 #endif
    {
       if (s_writeLog)

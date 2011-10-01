@@ -31,6 +31,7 @@ Dashboard::Dashboard() : Container()
 	m_elements = new ObjectArray<DashboardElement>();
 	m_elements->setOwner(true);
 	m_numColumns = 1;
+	m_options = 0;
 	m_iStatus = STATUS_NORMAL;
 }
 
@@ -42,6 +43,7 @@ Dashboard::Dashboard(const TCHAR *name) : Container(name, 0)
 	m_elements = new ObjectArray<DashboardElement>();
 	m_elements->setOwner(true);
 	m_numColumns = 1;
+	m_options = 0;
 	m_iStatus = STATUS_NORMAL;
 }
 
@@ -72,12 +74,15 @@ BOOL Dashboard::CreateFromDB(DWORD dwId)
 	m_iStatus = STATUS_NORMAL;
 
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT num_columns FROM dashboards WHERE id=%d"), (int)dwId);
+	_sntprintf(query, 256, _T("SELECT num_columns,options FROM dashboards WHERE id=%d"), (int)dwId);
 	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 	if (hResult == NULL)
 		return FALSE;
 	if (DBGetNumRows(hResult) > 0)
+	{
 		m_numColumns = (int)DBGetFieldLong(hResult, 0, 0);
+		m_options = DBGetFieldULong(hResult, 0, 1);
+	}
 	DBFreeResult(hResult);
 
 	_sntprintf(query, 256, _T("SELECT element_type,element_data,layout_data FROM dashboard_elements ")
@@ -122,12 +127,12 @@ BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
 
 	if (isNewObject)
       _sntprintf(query, 256,
-                 _T("INSERT INTO dashboards (id,num_columns) VALUES (%d,%d)"),
-					  (int)m_dwId, m_numColumns);
+                 _T("INSERT INTO dashboards (id,num_columns,options) VALUES (%d,%d,%d)"),
+					  (int)m_dwId, m_numColumns, (int)m_options);
    else
       _sntprintf(query, 256,
-                 _T("UPDATE dashboards SET num_columns=%d WHERE id=%d"),
-					  m_numColumns, (int)m_dwId);
+                 _T("UPDATE dashboards SET num_columns=%d,options=%d WHERE id=%d"),
+					  m_numColumns, (int)m_options, (int)m_dwId);
    if (!DBQuery(hdb, query))
 		goto fail;
 
@@ -186,6 +191,7 @@ void Dashboard::CreateMessage(CSCPMessage *msg)
 {
 	Container::CreateMessage(msg);
 	msg->SetVariable(VID_NUM_COLUMNS, (WORD)m_numColumns);
+	msg->SetVariable(VID_FLAGS, m_options);
 	msg->SetVariable(VID_NUM_ELEMENTS, (DWORD)m_elements->size());
 
 	DWORD varId = VID_ELEMENT_LIST_BASE;
@@ -209,6 +215,9 @@ DWORD Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
 
 	if (request->IsVariableExist(VID_NUM_COLUMNS))
 		m_numColumns = (int)request->GetVariableShort(VID_NUM_COLUMNS);
+
+	if (request->IsVariableExist(VID_FLAGS))
+		m_options = (int)request->GetVariableLong(VID_FLAGS);
 
 	if (request->IsVariableExist(VID_NUM_ELEMENTS))
 	{

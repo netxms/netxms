@@ -253,6 +253,24 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Upgrade from V241 to V242
+//
+
+static BOOL H_UpgradeFromV241(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("DROP TABLE business_service_templates\n")
+		_T("ALTER TABLE dashboards ADD options integer\n")
+		_T("UPDATE dashboards SET options=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='242' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V240 to V241
 //
 
@@ -5737,6 +5755,7 @@ static struct
 	{ 238, 239, H_UpgradeFromV238 },
 	{ 239, 240, H_UpgradeFromV239 },
 	{ 240, 241, H_UpgradeFromV240 },
+	{ 241, 242, H_UpgradeFromV241 },
    { 0, NULL }
 };
 

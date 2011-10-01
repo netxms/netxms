@@ -1058,6 +1058,15 @@ public class NXCObjectModificationData
 	}
 
 	/**
+	 * @param nodeFlags the nodeFlags to set
+	 */
+	public void setDashboardOptions(int options)
+	{
+		this.nodeFlags = options;
+		flags |= MODIFY_NODE_FLAGS;
+	}
+
+	/**
 	 * @return the ifXTablePolicy
 	 */
 	public int getIfXTablePolicy()
