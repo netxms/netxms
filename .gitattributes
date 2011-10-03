@@ -105,6 +105,7 @@ images/f9105c54-8dcf-483a-b387-b4587dfd3cba -text
 include/netxms_isc.h -text
 include/nxdbapi.h -text
 include/nxlpapi.h -text
+reports/IP[!!-~]Inventory.jrxml -text
 sdk/install/netxms-sdk.iss -text
 sdk/openssl/lib/x64/libeay32.lib -text
 sdk/openssl/lib/x64/ssleay32.lib -text
