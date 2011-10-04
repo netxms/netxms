@@ -184,7 +184,13 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 	if (m_fileContent == NULL)
 		return false;  // Policy cannot be deployed
 
-	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (DWORD)_tcslen(m_fileContent) * sizeof(TCHAR));
+#ifdef UNICODE
+	char *fd = MBStringFromWideString(m_fileContent);
+	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)fd, (DWORD)strlen(fd));
+	free(fd);
+#else
+	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (DWORD)strlen(m_fileContent));
+#endif
 	return true;
 }
 
