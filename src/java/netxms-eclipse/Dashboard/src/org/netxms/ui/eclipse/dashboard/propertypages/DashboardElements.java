@@ -412,8 +412,14 @@ public class DashboardElements extends PropertyPage
 				case DashboardElement.DASHBOARD:
 					config = DashboardControl.DEFAULT_OBJECT_REFERENCE_CONFIG;
 					break;
+				case DashboardElement.NETWORK_MAP:
+					config = DashboardControl.DEFAULT_NETWORK_MAP_CONFIG;
+					break;
+				case DashboardElement.GEO_MAP:
+					config = DashboardControl.DEFAULT_GEO_MAP_CONFIG;
+					break;
 				default:
-					config = "<element></element>";
+					config = "<element>\n</element>";
 					break;
 			}
 			DashboardElement element = new DashboardElement(dlg.getElementType(), config);

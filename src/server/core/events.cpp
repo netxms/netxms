@@ -197,6 +197,9 @@ TCHAR *Event::expandText(Event *event, DWORD sourceObject, const TCHAR *pszTempl
    TCHAR *pText, szBuffer[4], scriptName[256];
 	int i;
 
+	DbgPrintf(8, _T("Event::expandText(event=%p sourceObject=%d template='%s' alarmMsg='%s')"),
+	          event, (int)sourceObject, CHECK_NULL(pszTemplate), CHECK_NULL(pszAlarmMsg));
+
    pObject = FindObjectById(sourceId);
    if (pObject == NULL)
    {

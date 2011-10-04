@@ -29,8 +29,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
- * @author victor
- *
+ * Dashboard label element
  */
 public class LabelElement extends ElementWidget
 {

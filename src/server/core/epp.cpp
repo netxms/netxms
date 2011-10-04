@@ -354,6 +354,8 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
       if (MatchSource(pEvent->getSourceId()) && MatchEvent(pEvent->getCode()) &&
           MatchSeverity(pEvent->getSeverity()) && MatchScript(pEvent))
       {
+			DbgPrintf(6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), pEvent->getId(), (int)m_dwId);
+
          // Generate alarm if requested
          if (m_dwFlags & RF_GENERATE_ALARM)
             GenerateAlarm(pEvent);
@@ -407,12 +409,10 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 
 void EPRule::GenerateAlarm(Event *pEvent)
 {
-   TCHAR *pszAckKey;
-
    // Terminate alarms with key == our ack_key
 	if (m_iAlarmSeverity == SEVERITY_TERMINATE)
 	{
-		pszAckKey = pEvent->expandText(m_szAlarmKey);
+		TCHAR *pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
 			g_alarmMgr.TerminateByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false);
 		free(pszAckKey);
@@ -660,7 +660,7 @@ EventPolicy::~EventPolicy()
 // Clear existing policy
 //
 
-void EventPolicy::Clear(void)
+void EventPolicy::Clear()
 {
    DWORD i;
 
@@ -675,7 +675,7 @@ void EventPolicy::Clear(void)
 // Load event processing policy from database
 //
 
-BOOL EventPolicy::LoadFromDB(void)
+BOOL EventPolicy::LoadFromDB()
 {
    DB_RESULT hResult;
    BOOL bSuccess = FALSE;
@@ -707,7 +707,7 @@ BOOL EventPolicy::LoadFromDB(void)
 // Save event processing policy to database
 //
 
-void EventPolicy::SaveToDB(void)
+void EventPolicy::SaveToDB()
 {
    DWORD i;
 
@@ -733,10 +733,14 @@ void EventPolicy::ProcessEvent(Event *pEvent)
 {
    DWORD i;
 
+	DbgPrintf(7, _T("EPP: processing event ") UINT64_FMT, pEvent->getId());
    ReadLock();
    for(i = 0; i < m_dwNumRules; i++)
       if (m_ppRuleList[i]->ProcessEvent(pEvent))
+		{
+			DbgPrintf(7, _T("EPP: got \"stop processing\" flag for event ") UINT64_FMT _T(" at rule %d"), pEvent->getId(), i + 1);
          break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
+		}
    Unlock();
 }
 

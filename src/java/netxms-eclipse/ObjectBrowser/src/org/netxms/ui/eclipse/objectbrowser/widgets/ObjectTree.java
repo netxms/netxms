@@ -427,10 +427,6 @@ public class ObjectTree extends Composite
 		final String text = filterText.getText();
 		filter.setFilterString(text);
 		objectTree.refresh(false);
-		if (!text.isEmpty())
-		{
-			objectTree.expandAll();
-		}
 		GenericObject obj = filter.getLastMatch();
 		if (obj != null)
 		{

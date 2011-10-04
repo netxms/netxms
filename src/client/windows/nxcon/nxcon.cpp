@@ -2393,6 +2393,7 @@ void CConsoleApp::CreateNode(DWORD dwParent)
          dlg.m_pParentObject = NULL;
    if (dlg.DoModal() == IDOK)
    {
+		memset(&ci, 0, sizeof(NXC_OBJECT_CREATE_INFO));
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_NODE;
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);

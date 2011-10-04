@@ -1,0 +1,1459 @@
+--
+-- FILE NAME = ES-1000.MIB
+-- CONTENTS  = MIB Definition for ES-1000 Fibre Channel Enterprise Connectivity Switch
+--
+
+ES-1000-MIB DEFINITIONS ::= BEGIN
+
+   IMPORTS
+      enterprises, Counter
+         FROM RFC1155-SMI
+      OBJECT-TYPE
+         FROM RFC-1212
+      TRAP-TYPE
+         FROM RFC-1215
+      DisplayString
+         FROM SNMPv2-TC;
+
+   --
+   -- Enterprise Specific Object Identifiers
+   --
+
+   mcData         OBJECT IDENTIFIER ::= { enterprises 289 }
+   -- Product lines or generic product information
+   -- common      OBJECT IDENTIFIER ::= { mcData 1 }
+   commDev        OBJECT IDENTIFIER ::= { mcData 2 } -- communication devices
+
+   -- Fibre Channel product lines
+   fibreChannel   OBJECT IDENTIFIER ::= { commDev 1 }
+   fcSwitch       OBJECT IDENTIFIER ::= { fibreChannel 1 }
+   es-1000        OBJECT IDENTIFIER ::= { fcSwitch 3 }
+
+   -- textual conventions
+
+   TruthValue ::= INTEGER {
+      yes (1),
+      no (2)
+   }
+
+   Es1000SysOperStatus ::= INTEGER {
+      operational       (1),
+      redundant-failure (2),
+      minor-failure     (3),
+      major-failure     (4),
+      not-operational   (5)
+   }
+
+   Es1000SysState ::= INTEGER {
+      online         (1),
+      coming-online  (2),
+      offline        (3),
+      going-offline  (4)
+   }
+
+   Es1000CompCode ::= INTEGER {
+      comp-ctp             (2),     -- Control Processor
+      comp-fan             (5),     -- Fan
+      comp-power           (6),     -- Power supply
+      comp-thermal         (13),    -- Thermal Sensor
+      comp-gbic-none       (16),     -- No GBIC Present
+      comp-gbic-cu-db9     (17),    -- Copper DB9 GBIC
+      comp-gbic-cu-hssdc   (18),     -- Copper HSSDC GBIC
+      comp-gbic-opt-lw-1g  (19),     -- Optical Long Wave 1G GBIC
+      comp-gbic-serial-id  (20),     -- Serial ID GBIC
+      comp-gbic-opt-sw-1g  (21),    -- Optical Short Wave 1G GBIC
+      comp-gbic-opt-lw-2g  (22),    -- Optical Long Wave 2G GBIC
+      comp-gbic-opt-sw-2g  (23)     -- Optical Short Wave 2G GBIC
+   }
+
+   Es1000CompPosition ::= INTEGER (1..9)
+   Es1000CompStatus ::= INTEGER {
+      active      (1),
+      update-busy (2),
+      failed      (3)
+   }
+
+   Es1000PortCount ::= INTEGER (1..9)
+   Es1000PortIndex ::= INTEGER (1..9)
+   Es1000PortNumber ::= INTEGER (0..8)
+
+   Es1000PortPhyState ::= INTEGER {
+      psNotInstalled          (1),
+      psAvailable             (2),
+      psBlocked               (3),
+      psUnavailable           (4),
+      psLinkFailure           (5),
+      psLinkFailLOL           (6),
+      psIntDiags              (7),
+      psExtLoop               (8),
+      psPortFail              (9),
+      psSR                    (10),
+      psLR                    (11),
+   
+      psPortBypassedLipF7     (12), -- H_port only
+      psPortBypassedLipF8     (13), -- H_port only
+      psPortBypassedOSError   (14), -- H_port and B_Port
+      psPortBypassedCRCError  (15), -- H_port and B_Port
+      psLinkFailLOSync        (16), -- H_port and B_port
+      psLinkFailLOSignal      (17), -- H_port and B_port
+      psTxFault               (18), -- H_port and B_port
+      psTimeout               (19), -- B_port only
+      psProtocolError         (20), -- B_port only
+      psRxOLS                 (21), -- B_port only
+      psRxNOS                 (22), -- B_port only
+      psRxLR                  (23), -- B_port only
+      psBBCredit              (24), -- B_port only
+      psFatalError            (25)
+   }
+
+   Es1000PortStatus ::= INTEGER {
+      online   (1),
+      offline  (2),
+      testing  (3),
+      faulty   (4)
+   }
+
+   Es1000PortAdmStatus ::= INTEGER {
+      online   (1),
+      offline  (2),
+      testing  (3)
+   }
+
+   Es1000LoopStatus ::= INTEGER {
+      loop-DOWN            (1),     -- DOWN
+      loop-LIP             (2),     -- LIP   
+      loop-LISM            (3),     -- LISM  
+      loop-LIFA            (4),     -- LIFA  
+      loop-LIPA            (5),     -- LIPA  
+      loop-LIHA            (6),     -- LIHA  
+      loop-LISA            (7),     -- LISA  
+      loop-LIRP            (8),     -- LIRP  
+      loop-LILP            (9),     -- LILP  
+      loop-FAN             (10),    -- FAN   
+      loop-ACTIVE          (11),    -- ACTIVE
+      loop-READY           (12)     -- READY 
+   }
+
+   Es1000LoopMasterWWN ::= OCTET STRING (SIZE (8))
+   
+   Es1000LoopPortALPA ::= OCTET STRING (SIZE (0..126))
+
+   -- Groups in ES-1000 MIB
+
+   es1000Sys      OBJECT IDENTIFIER ::= { es-1000 1 }
+
+   es1000Comp     OBJECT IDENTIFIER ::= { es-1000 2 }
+
+   es1000Port     OBJECT IDENTIFIER ::= { es-1000 3 }
+   
+   es1000Loop     OBJECT IDENTIFIER ::= { es-1000 4 }
+
+   es1000Acct     OBJECT IDENTIFIER ::= { es-1000 5 }
+
+   -- reserved    OBJECT IDENTIFIER ::= { es-1000 6 }
+   -- reserved    OBJECT IDENTIFIER ::= { es-1000 7 }
+   -- reserved    OBJECT IDENTIFIER ::= { es-1000 8 }
+   -- reserved    OBJECT IDENTIFIER ::= { es-1000 9 }
+
+   --
+   -- the System Group
+   --
+
+   es1000SysCurrentDate   OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "The current date information."
+   ::= { es1000Sys 1 }
+
+   es1000SysBootDate      OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "The date and time of the last IPL."
+   ::= { es1000Sys 2 }
+
+   es1000SysFirmwareVersion OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "The current version of the firmware."
+   ::= { es1000Sys 3 }
+
+   es1000SysTypeNum       OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies ASCII type
+    number for the unit (ex. 001000)."
+   ::= { es1000Sys 4 }
+
+   es1000SysModelNum      OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies ASCII
+    model number for the unit (ex. 001)."
+   ::= { es1000Sys 5 }
+
+   es1000SysMfg           OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies ASCII
+    manufacturer for the unit (ex. MCD)."
+   ::= { es1000Sys 6 }
+
+   es1000SysPlantOfMfg    OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies ASCII plant
+    of manufacturer for the unit (ex. 01)."
+   ::= { es1000Sys 7 }
+
+   es1000SysSeqNum        OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies ASCII
+    sequence number for the unit (ex. 000000000001)."
+   ::= { es1000Sys 8 }
+
+   es1000SysEcLevel       OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies ASCII EC level
+    ID for the unit (format: xyymmdd, x=millennium)."
+   ::= { es1000Sys 9 }
+
+   es1000SysOemSerialNum  OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..64))
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies ASCII OEM
+    serial number for the unit (format: xyymmdd, x=millennium)."
+   ::= { es1000Sys 10 }
+
+   es1000SysOperStatus    OBJECT-TYPE
+      SYNTAX               Es1000SysOperStatus
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "The current operational status
+    of the switch. The values are defined as follows:
+    operational(1), redundant-failure(2), minor-failure(3),
+    major-failure(4), and not-operational(5)."
+   ::= { es1000Sys 11 }
+
+   es1000SysState         OBJECT-TYPE
+      SYNTAX               Es1000SysState
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "If the edOperStatus of the switch is
+    operational, the switch will be in one of the four states:
+    online(1), coming-online(2), offline(3), and going-offline(4)."
+   ::= { es1000Sys 12 }
+
+   es1000SysAdmStatus     OBJECT-TYPE
+      SYNTAX               INTEGER {
+                              online  (1),
+                              offline (2)
+                           }
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired administrative status
+    of the switch. A management station may place the switch
+    in a desired state by setting this object accordingly.
+    The desired administrative status are online(1) and offline(2).
+    Online means setting the switch to be accessible by an external
+    Fibre Channel port, and offline means setting the switch to be
+    inaccessible."
+   ::= { es1000Sys 13 }
+
+   --
+   -- End of System Group
+   --
+
+   --
+   -- Fibre Channel Component Group
+   -- This group contains Component information of each Fibre Channel Component.
+   --
+
+   es1000CompTable        OBJECT-TYPE
+      SYNTAX               SEQUENCE OF Es1000CompEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "A table that contains one entry for each component."
+   ::= { es1000Comp 1 }
+
+   es1000CompEntry        OBJECT-TYPE
+      SYNTAX               Es1000CompEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "An entry containing the service parameters of the component."
+
+      INDEX                { es1000CompCode,
+                             es1000CompPosition }
+   ::= { es1000CompTable 1 }
+
+   Es1000CompEntry ::= SEQUENCE {
+      es1000CompCode         Es1000CompCode,
+      es1000CompPosition     Es1000CompPosition,
+      es1000CompStatus       Es1000CompStatus
+   }
+
+   es1000CompCode         OBJECT-TYPE
+      SYNTAX               Es1000CompCode
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "Component.
+    A hardware unit of the product. Each component defined
+    in this MIB has a fixed COMPONENT code, except for port
+    components which vary based on the installed GBIC.
+    The values are defined as follows:
+    comp-ctp(2), comp-fan(5), comp-power(6), comp-thermal(13),
+    comp-gbic-none(16), comp-gbic-cu-db9(17),
+    comp-gbic-cu-hssdc(18), comp-gbic-opt-lw-1g(19),
+    comp-gbic-serial(20), comp-gbic-opt-sw-1g(21),
+    comp-gbic-opt-lw-2g(22), comp-gbic-opt-sw-2g(23)"
+   ::= { es1000CompEntry 1 }
+
+   es1000CompPosition     OBJECT-TYPE
+      SYNTAX               Es1000CompPosition
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the position
+    of the component. CTP components start from 1 to 1, fans
+    from 1 to 6, power supplies from 1 to 2, thermal sensors
+    from 1 to 1, port GBICs from 1 to 9."
+   ::= { es1000CompEntry 2 }
+
+   es1000CompStatus       OBJECT-TYPE
+      SYNTAX               Es1000CompStatus
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the operational
+    status of the component. The active(1) state indicates that the
+    current component is active. The update-busy(2) state indicates
+    that the component is in the updating process. The failed(3) state
+    indicates the current component is failed."
+   ::= { es1000CompEntry 3 }
+
+
+   --
+   -- End of Fibre Channel Component Group
+   --
+
+   --
+   -- Fibre Channel Port Group
+   -- This group contains information about each Fibre Channel port.
+   --
+
+   es1000PortBportCount   OBJECT-TYPE
+      SYNTAX               Es1000PortCount
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "The number of physical B_Ports available."
+   ::= { es1000Port 1 }
+
+   es1000PortHportCount   OBJECT-TYPE
+      SYNTAX               Es1000PortCount
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "The number of physical H_Ports available."
+   ::= { es1000Port 2 }
+
+   --
+   -- B_Port Table
+   --
+   es1000PortBportTable   OBJECT-TYPE
+      SYNTAX               SEQUENCE OF Es1000PortBportEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "A table that contains one entry
+    for each B_Port."
+   ::= { es1000Port 3 }
+
+   es1000PortBportEntry   OBJECT-TYPE
+      SYNTAX               Es1000PortBportEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "An entry containing the information for the B_Port."
+      INDEX                { es1000PortBportIndex }
+   ::= { es1000PortBportTable 1 }
+
+   Es1000PortBportEntry ::= SEQUENCE {
+      es1000PortBportIndex         Es1000PortIndex,
+      es1000PortBportNumber        Es1000PortNumber,
+      es1000PortBportPhyState      Es1000PortPhyState,
+      es1000PortBportOpStatus      Es1000PortStatus,
+      es1000PortBportAdmStatus     Es1000PortAdmStatus,
+      es1000PortBportName          DisplayString,
+      es1000PortBportBlockedState  TruthValue
+   }
+
+   es1000PortBportIndex   OBJECT-TYPE
+      SYNTAX               Es1000PortIndex
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the B_Port."
+   ::= { es1000PortBportEntry 1 }
+
+   es1000PortBportNumber  OBJECT-TYPE
+      SYNTAX               Es1000PortNumber
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the B_Port number."
+   ::= { es1000PortBportEntry 2 }
+
+   es1000PortBportPhyState OBJECT-TYPE
+      SYNTAX               Es1000PortPhyState
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the physical state of the B_Port."
+   ::= { es1000PortBportEntry 3 }
+
+   es1000PortBportOpStatus OBJECT-TYPE
+      SYNTAX               Es1000PortStatus
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the operational
+    status of the B_Port. The online(1) state indicates that user frames
+    can be passed."
+   ::= { es1000PortBportEntry 4 }
+
+   es1000PortBportAdmStatus OBJECT-TYPE
+      SYNTAX               Es1000PortAdmStatus
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired state of the B_Port.
+    A management station may place the B_Port in a desired
+    state by setting this object accordingly. The testing(3)
+    state indicates that no user frames can be passed. As
+    the result of either explicit management action or per
+    configuration information accessible by the B_Port, the
+    es1000PortBportAdmStatus is changed to either the online(1)
+    or testing(3) states, or remains in the offline(2) state."
+   ::= { es1000PortBportEntry 5 }
+
+   es1000PortBportName    OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..24))
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired name of the B_Port."
+   ::= { es1000PortBportEntry 6 }
+
+   es1000PortBportBlockedState OBJECT-TYPE
+      SYNTAX               TruthValue
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired blocked state of the B_Port.
+    Blocking a B_Port prevents it from communicating with its
+    attached E_Port. A blocked B_Port will continuously transmit
+    the Off-Line Sequence (OLS)."
+   ::= { es1000PortBportEntry 7 }
+
+   --
+   -- H_Port Table
+   --
+   es1000PortHportTable   OBJECT-TYPE
+      SYNTAX               SEQUENCE OF Es1000PortHportEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "A table that contains one entry
+    for each H_Port."
+   ::= { es1000Port 4 }
+
+   es1000PortHportEntry   OBJECT-TYPE
+      SYNTAX               Es1000PortHportEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "An entry containing the information for the H_Port."
+      INDEX                { es1000PortHportIndex }
+   ::= { es1000PortHportTable 1 }
+
+   Es1000PortHportEntry ::= SEQUENCE {
+      es1000PortHportIndex            Es1000PortIndex,
+      es1000PortHportNumber           Es1000PortNumber,
+      es1000PortHportPhyState         Es1000PortPhyState,
+      es1000PortHportOpStatus         Es1000PortStatus,
+      es1000PortHportAdmStatus        Es1000PortAdmStatus,
+      es1000PortHportName             DisplayString,
+      es1000PortHportBypassedState    TruthValue,
+      es1000PortHportValidation       TruthValue,
+      es1000PortHportLipOnInsertion   TruthValue
+   }
+
+   es1000PortHportIndex   OBJECT-TYPE
+      SYNTAX               Es1000PortIndex
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the H_Port."
+   ::= { es1000PortHportEntry 1 }
+
+   es1000PortHportNumber  OBJECT-TYPE
+      SYNTAX               Es1000PortNumber
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the H_Port number."
+   ::= { es1000PortHportEntry 2 }
+
+   es1000PortHportPhyState OBJECT-TYPE
+      SYNTAX               Es1000PortPhyState
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the physical state of the H_Port."
+   ::= { es1000PortHportEntry 3 }
+
+   es1000PortHportOpStatus OBJECT-TYPE
+      SYNTAX               Es1000PortStatus
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the operational
+    status of the H_Port. The online(1) state indicates that user frames
+    can be passed."
+   ::= { es1000PortHportEntry 4 }
+
+   es1000PortHportAdmStatus OBJECT-TYPE
+      SYNTAX               Es1000PortAdmStatus
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired state of the H_Port.
+    A management station may place the H_Port in a desired
+    state by setting this object accordingly. The testing(3)
+    state indicates that no user frames can be passed. As
+    the result of either explicit management action or per
+    configuration information accessible by the switch, the
+    es1000PortHportAdmStatus is changed to either the online(1)
+    or testing(3) states, or remains in the offline(2) state."
+   ::= { es1000PortHportEntry 5 }
+
+   es1000PortHportName    OBJECT-TYPE
+      SYNTAX               DisplayString (SIZE (0..24))
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired name of the H_Port."
+   ::= { es1000PortHportEntry 6 }
+
+   es1000PortHportBypassedState OBJECT-TYPE
+      SYNTAX               TruthValue
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired bypassed state of the H_Port.
+    Bypassing an H_Port prevents an attached device from communicating
+    with the switch or communicating with any other device attached to
+    the switch. Bypassing a port causes the incoming signal from an
+    attached device to not placed on the Loop."
+   ::= { es1000PortHportEntry 7 }
+
+   es1000PortHportValidation OBJECT-TYPE
+      SYNTAX               TruthValue
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired port validation state of the H_Port.
+    If enabled, then a more rigorous process of validating the attached
+    device is performed before insertion into the Loop."
+   ::= { es1000PortHportEntry 8 }
+
+   es1000PortHportLipOnInsertion OBJECT-TYPE
+      SYNTAX               TruthValue
+      ACCESS               read-write
+      STATUS               mandatory
+      DESCRIPTION          "The desired LIP on Insertion state of the H_Port.
+    If enabled, a LIP will be automatically sent after any port insertion,
+    port bypass, or manual GBIC installation or removal."
+   ::= { es1000PortHportEntry 9 }
+
+   --
+   -- End of Fibre Channel Port Group
+   --
+
+
+   --
+   -- the Loop Group
+   --
+
+   es1000LoopStatus       OBJECT-TYPE
+      SYNTAX               Es1000LoopStatus
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "The current loop status of the switch.
+    The values are defined as follows:
+    DOWN(1), LIP(2), LISM(3), LIFA(4), LIPA(5), LIHA(6),
+    LISA(7), LIRP(8), LILP(9), FAN(10), ACTIVE(11), and READY(12)."
+   ::= { es1000Loop 1 }
+
+   es1000LoopMasterWWN    OBJECT-TYPE
+      SYNTAX               Es1000LoopMasterWWN
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "The loop master worldwide name. If the
+    loop master is unknown, then the worldwide name will be all zeros."
+   ::= { es1000Loop 2 }
+
+   es1000LoopSwitched     OBJECT-TYPE
+      SYNTAX               TruthValue
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "Indicates whether switching mode is 
+    enabled. If enabled, each pair of communicating H_Ports may share
+    the 100 Mbyte bandwidth. If not enabled, all devices on the loop
+    share the 100 Mbyte bandwidth available on the loop."
+   ::= { es1000Loop 3 }
+
+   es1000LoopPrincipal    OBJECT-TYPE
+      SYNTAX               TruthValue
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "Indicates whether the switch is operating
+    as the principal ES-1000 on the loop."
+   ::= { es1000Loop 4 }
+
+   es1000LoopPortTable    OBJECT-TYPE
+      SYNTAX               SEQUENCE OF Es1000LoopPortEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "A table that contains the port-to-ALPA
+    mapping for each H_Port on the loop."
+   ::= { es1000Loop 5 }
+
+   es1000LoopPortEntry    OBJECT-TYPE
+      SYNTAX               Es1000LoopPortEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "An entry containing the ALPA information 
+    for the H_Port."
+      INDEX                { es1000LoopPortIndex }
+   ::= { es1000LoopPortTable 1 }
+
+   Es1000LoopPortEntry ::= SEQUENCE {
+      es1000LoopPortIndex    Es1000PortIndex,
+      es1000LoopPortNumber   Es1000PortNumber,
+      es1000LoopPortALPA     Es1000LoopPortALPA
+   }
+
+   es1000LoopPortIndex    OBJECT-TYPE
+      SYNTAX               Es1000PortIndex
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the Loop port entry."
+   ::= { es1000LoopPortEntry 1 }
+
+   es1000LoopPortNumber   OBJECT-TYPE
+      SYNTAX               Es1000PortNumber
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the H_Port number."
+   ::= { es1000LoopPortEntry 2 }
+
+   es1000LoopPortALPA     OBJECT-TYPE
+      SYNTAX               Es1000LoopPortALPA
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the ALPA's associated
+    with the H_Port."
+   ::= { es1000LoopPortEntry 3 }
+
+   --
+   -- End of Loop Group
+   --
+
+
+   --
+   -- the Accounting Group
+   --
+
+   --
+   -- B_Port Accounting Table
+   --
+   es1000AcctBportTable   OBJECT-TYPE
+      SYNTAX               SEQUENCE OF Es1000AcctBportEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "A table that contains B_Port accounting
+    information recorded since the switch IPL'd."
+   ::= { es1000Acct 1 }
+
+   es1000AcctBportEntry   OBJECT-TYPE
+      SYNTAX               Es1000AcctBportEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "An entry containing accounting information
+    for each B_Port."
+      INDEX                { es1000AcctBportIndex }
+   ::= { es1000AcctBportTable 1 }
+
+   Es1000AcctBportEntry ::= SEQUENCE {
+      es1000AcctBportIndex                  Es1000PortIndex,
+      es1000AcctBportNumber                 Es1000PortNumber,
+      es1000AcctBportLinkFailures           Counter,
+      es1000AcctBportSyncLosses             Counter,
+      es1000AcctBportSigLosses              Counter,
+      es1000AcctBportPrimSeqProtoErrors     Counter,
+      es1000AcctBportInvalidTxWords         Counter,
+      es1000AcctBportInvalidCrcs            Counter,
+      es1000AcctBportLinkResetIns           Counter,
+      es1000AcctBportLinkResetOuts          Counter,
+      es1000AcctBportOlsIns                 Counter,
+      es1000AcctBportOlsOuts                Counter,
+      es1000AcctBportC2InFrames             Counter,
+      es1000AcctBportC2OutFrames            Counter,
+      es1000AcctBportC2Discards             Counter,
+      es1000AcctBportC2InOctets             Counter,
+      es1000AcctBportC2OutOctets            Counter,
+      es1000AcctBportC3InFrames             Counter,
+      es1000AcctBportC3OutFrames            Counter,
+      es1000AcctBportC3InOctets             Counter,
+      es1000AcctBportC3OutOctets            Counter,
+      es1000AcctBportC3Discards             Counter,
+      es1000AcctBportRxWords                Counter,
+      es1000AcctBportTxWords                Counter,
+      es1000AcctBportRxFrames               Counter,
+      es1000AcctBportTxFrames               Counter,
+      es1000AcctBportInvalidOrderedSets     Counter,
+      es1000AcctBportFramesTooLong          Counter,
+      es1000AcctBportFramesTooShort         Counter,
+      es1000AcctBportTxThroughput           Counter,
+      es1000AcctBportRxThroughput           Counter,
+      es1000AcctBportAddressErrors          Counter,
+      es1000AcctBportC2FbsyFrames           Counter,
+      es1000AcctBportC2FrjtFrames           Counter,
+      es1000AcctBportCFInFrames             Counter,
+      es1000AcctBportFramesDiscarded        Counter,
+      es1000AcctBportInvalidClassofFrame    Counter,
+      es1000AcctBportC2RxWords              Counter,
+      es1000AcctBportC2TxWords              Counter,
+      es1000AcctBportC3RxWords              Counter,
+      es1000AcctBportC3TxWords              Counter,
+      es1000AcctBportTxThroughputPercent    Counter,
+      es1000AcctBportRxThroughputPercent    Counter,
+      es1000AcctBportLinkDown               Counter
+   }
+
+   es1000AcctBportIndex   OBJECT-TYPE
+      SYNTAX               Es1000PortIndex
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the B_Port."
+   ::= { es1000AcctBportEntry 1 }
+
+   es1000AcctBportNumber  OBJECT-TYPE
+      SYNTAX               Es1000PortNumber
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the B_Port number."
+   ::= { es1000AcctBportEntry 2 }
+
+   es1000AcctBportLinkFailures           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Link Failures detected by this B_Port."
+   ::= { es1000AcctBportEntry 3 }
+
+   es1000AcctBportSyncLosses             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    loss of synchronization detected by this B_Port."
+   ::= { es1000AcctBportEntry 4 }
+
+   es1000AcctBportSigLosses              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    loss of signal detected by this B_Port."
+   ::= { es1000AcctBportEntry 5 }
+
+   es1000AcctBportPrimSeqProtoErrors     OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    primitive sequence protocol errors detected by this B_Port."
+   ::= { es1000AcctBportEntry 6 }
+
+   es1000AcctBportInvalidTxWords         OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    invalid transmission words detected by this B_Port."
+   ::= { es1000AcctBportEntry 7 }
+
+   es1000AcctBportInvalidCrcs            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    invalid CRC detected by this B_Port for frames received."
+   ::= { es1000AcctBportEntry 8 }
+
+   es1000AcctBportLinkResetIns           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Link Reset Protocol received by this B_Port from the
+    attached E_Port."
+   ::= { es1000AcctBportEntry 9 }
+
+   es1000AcctBportLinkResetOuts          OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Link Reset Protocol issued by this B_Port to the
+    attached E_Port."
+   ::= { es1000AcctBportEntry 10 }
+
+   es1000AcctBportOlsIns                 OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Offline Sequence (OLS) received by this B_Port."
+   ::= { es1000AcctBportEntry 11 }
+
+   es1000AcctBportOlsOuts                OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Offline Sequence (OLS) issued by this B_Port."
+   ::= { es1000AcctBportEntry 12 }
+
+   es1000AcctBportC2InFrames             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frames received by this B_Port from its
+    attached E_Port."
+   ::= { es1000AcctBportEntry 13 }
+
+   es1000AcctBportC2OutFrames            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frames delivered through this B_Port to its
+    attached E_Port."
+   ::= { es1000AcctBportEntry 14 }
+
+   es1000AcctBportC2Discards             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frames discarded by this B_Port."
+   ::= { es1000AcctBportEntry 15 }
+
+   es1000AcctBportC2InOctets             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frame octets (bytes), including the frame delimeters,
+    received by this B_Port from its attached E_Port."
+   ::= { es1000AcctBportEntry 16 }
+
+   es1000AcctBportC2OutOctets            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frame octets (bytes), including the frame delimeters,
+    delivered through this B_Port to its attached E_Port."
+   ::= { es1000AcctBportEntry 17 }
+
+   es1000AcctBportC3InFrames             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frames received by this B_Port from its attached 
+    E_Port."
+   ::= { es1000AcctBportEntry 18 }
+
+   es1000AcctBportC3OutFrames            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frames delivered through this B_Port to its
+    attached E_Port."
+   ::= { es1000AcctBportEntry 19 }
+
+   es1000AcctBportC3InOctets             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frame octets (bytes), including the frame delimeters,
+    received by this B_Port from its attached E_Port."
+   ::= { es1000AcctBportEntry 20 }
+
+   es1000AcctBportC3OutOctets            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frame octets (bytes), including the frame delimeters,
+    delivered through this B_Port to its attached E_Port."
+   ::= { es1000AcctBportEntry 21 }
+
+   es1000AcctBportC3Discards             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frames discarded by this B_Port."
+   ::= { es1000AcctBportEntry 22 }
+
+   es1000AcctBportRxWords                OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel words, including the frame delimeters,
+    received by this B_Port from its attached E_Port."
+   ::= { es1000AcctBportEntry 23 }
+
+   es1000AcctBportTxWords                OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel words, including the frame delimeters,
+    delivered through this B_Port to its attached E_Port."
+   ::= { es1000AcctBportEntry 24 }
+
+   es1000AcctBportRxFrames               OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel frames received by this B_Port from its
+    attached E_Port."
+   ::= { es1000AcctBportEntry 25 }
+
+   es1000AcctBportTxFrames               OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel frames delivered through this B_Port to its
+    attached E_Port."
+   ::= { es1000AcctBportEntry 26 }
+
+   es1000AcctBportInvalidOrderedSets     OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    invalid Ordered Sets received by this B_Port from its
+    attached E_Port."
+   ::= { es1000AcctBportEntry 27 }
+
+   es1000AcctBportFramesTooLong          OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel over length frames received by this B_Port
+    from its attached E_Port."
+   ::= { es1000AcctBportEntry 28 }
+
+   es1000AcctBportFramesTooShort         OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel truncated frames received by this B_Port
+    from its attached E_Port."
+   ::= { es1000AcctBportEntry 29 }
+
+   es1000AcctBportTxThroughput           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object presents the Bps 
+    transmission rate for this B_Port."
+   ::= { es1000AcctBportEntry 30 }
+
+   es1000AcctBportRxThroughput           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object presents the Bps 
+    reception rate for this B_Port."
+   ::= { es1000AcctBportEntry 31 }
+
+   es1000AcctBportAddressErrors          OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Address errors detected by this B_Port."
+   ::= { es1000AcctBportEntry 32 }
+
+   es1000AcctBportC2FbsyFrames           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    F_BSY frames generated by this B_Port against Class 2 frames."
+   ::= { es1000AcctBportEntry 33 }
+
+   es1000AcctBportC2FrjtFrames           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    F_RJT frames generated by this B_Port against Class 2 frames."
+   ::= { es1000AcctBportEntry 34 }
+
+   es1000AcctBportCFInFrames             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class F frames received by this B_Port from its attached
+    E_Port."
+   ::= { es1000AcctBportEntry 35 }
+
+   es1000AcctBportFramesDiscarded        OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel frames that this B_Port has discarded."
+   ::= { es1000AcctBportEntry 36 }
+
+   es1000AcctBportInvalidClassofFrame    OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Invalid Class of frame detected by this B_Port."
+   ::= { es1000AcctBportEntry 37 }
+
+   es1000AcctBportC2RxWords              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frame words, including the frame delimeters,
+    received by this B_Port from its attached E_Port."
+   ::= { es1000AcctBportEntry 38 }
+
+   es1000AcctBportC2TxWords              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 words, including the frame delimeters, delivered
+    through this B_Port to its attached E_Port."
+   ::= { es1000AcctBportEntry 39 }
+
+   es1000AcctBportC3RxWords              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frame words, including the frame delimeters,
+    received by this B_Port from its attached E_Port."
+   ::= { es1000AcctBportEntry 40 }
+
+   es1000AcctBportC3TxWords              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 words, including the frame delimeters, delivered
+    through this B_Port to its attached E_Port."
+   ::= { es1000AcctBportEntry 41 }
+
+   es1000AcctBportTxThroughputPercent    OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object presents the percentage
+    of transmission bandwidth used by this B_Port."
+   ::= { es1000AcctBportEntry 42 }
+
+   es1000AcctBportRxThroughputPercent    OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object presents the percentage
+    of reception bandwidth used by this B_Port."
+   ::= { es1000AcctBportEntry 43 }
+
+   es1000AcctBportLinkDown               OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    times the B_Port has detected a link down condition."
+   ::= { es1000AcctBportEntry 44 }
+
+
+   --
+   -- H_Port Accounting Table
+   --
+   es1000AcctHportTable   OBJECT-TYPE
+      SYNTAX               SEQUENCE OF Es1000AcctHportEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "A table that contains H_Port accounting
+    information recorded since the switch IPL'd."
+   ::= { es1000Acct 2 }
+
+   es1000AcctHportEntry    OBJECT-TYPE
+      SYNTAX               Es1000AcctHportEntry
+      ACCESS               not-accessible
+      STATUS               mandatory
+      DESCRIPTION          "An entry containing accounting information
+    for each H_Port."
+      INDEX                { es1000AcctHportIndex }
+   ::= { es1000AcctHportTable 1 }
+
+   Es1000AcctHportEntry ::= SEQUENCE {
+      es1000AcctHportIndex               Es1000PortIndex,
+      es1000AcctHportNumber              Es1000PortNumber,
+      es1000AcctHportLinkFailures        Counter,
+      es1000AcctHportSyncLosses          Counter,
+      es1000AcctHportSigLosses           Counter,
+      es1000AcctHportInvalidTxWords      Counter,
+      es1000AcctHportInvalidCrcs         Counter,
+      es1000AcctHportC2InFrames          Counter,
+      es1000AcctHportC2OutFrames         Counter,
+      es1000AcctHportC2InOctets          Counter,
+      es1000AcctHportC2OutOctets         Counter,
+      es1000AcctHportC3InFrames          Counter,
+      es1000AcctHportC3OutFrames         Counter,
+      es1000AcctHportC3InOctets          Counter,
+      es1000AcctHportC3OutOctets         Counter,
+      es1000AcctHportRxWords             Counter,
+      es1000AcctHportTxWords             Counter,
+      es1000AcctHportRxFrames            Counter,
+      es1000AcctHportTxFrames            Counter,
+      es1000AcctHportTxThroughput        Counter,
+      es1000AcctHportRxThroughput        Counter,
+      es1000AcctHportC2RxWords           Counter,
+      es1000AcctHportC2TxWords           Counter,
+      es1000AcctHportC3RxWords           Counter,
+      es1000AcctHportC3TxWords           Counter,
+      es1000AcctHportTxThroughputPercent Counter,
+      es1000AcctHportRxThroughputPercent Counter,
+      es1000AcctHportLIPCount            Counter,
+      es1000AcctHportConnectionsMade     Counter,
+      es1000AcctHportConnectionsStalled  Counter,
+      es1000AcctHportConnectionsAborted  Counter,
+      es1000AcctHportConnectionsAccepted Counter
+   }
+
+   es1000AcctHportIndex    OBJECT-TYPE
+      SYNTAX               Es1000PortIndex
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the H_Port."
+   ::= { es1000AcctHportEntry 1 }
+
+   es1000AcctHportNumber  OBJECT-TYPE
+      SYNTAX               Es1000PortNumber
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object identifies the H_Port number."
+   ::= { es1000AcctHportEntry 2 }
+
+   es1000AcctHportLinkFailures           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Link Failures detected by this H_Port."
+   ::= { es1000AcctHportEntry 3 }
+
+   es1000AcctHportSyncLosses             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    loss of synchronization detected by this H_Port."
+   ::= { es1000AcctHportEntry 4 }
+
+   es1000AcctHportSigLosses              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    loss of signal detected by this H_Port."
+   ::= { es1000AcctHportEntry 5 }
+
+   es1000AcctHportInvalidTxWords         OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    invalid transmission words detected by this H_Port."
+   ::= { es1000AcctHportEntry 6 }
+
+   es1000AcctHportInvalidCrcs            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    invalid CRC detected by this H_Port for frames received."
+   ::= { es1000AcctHportEntry 7 }
+
+   es1000AcctHportC2InFrames             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frames received by this H_Port."
+   ::= { es1000AcctHportEntry 8 }
+
+   es1000AcctHportC2OutFrames            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frames delivered through this H_Port."
+   ::= { es1000AcctHportEntry 9 }
+
+   es1000AcctHportC2InOctets             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frame octets (bytes), including the frame delimeters,
+    received by this H_Port."
+   ::= { es1000AcctHportEntry 10 }
+
+   es1000AcctHportC2OutOctets            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frame octets (bytes), including the frame delimeters,
+    delivered through this H_Port."
+   ::= { es1000AcctHportEntry 11 }
+
+   es1000AcctHportC3InFrames             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frames received by this H_Port."
+   ::= { es1000AcctHportEntry 12 }
+
+   es1000AcctHportC3OutFrames            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frames delivered through this H_Port."
+   ::= { es1000AcctHportEntry 13 }
+
+   es1000AcctHportC3InOctets             OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frame octets (bytes), including the frame delimeters,
+    received by this H_Port."
+   ::= { es1000AcctHportEntry 14 }
+
+   es1000AcctHportC3OutOctets            OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frame octets (bytes), including the frame delimeters,
+    delivered through this H_Port."
+   ::= { es1000AcctHportEntry 15 }
+
+   es1000AcctHportRxWords                OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel words, including the frame delimeters,
+    received by this H_Port."
+   ::= { es1000AcctHportEntry 16 }
+
+   es1000AcctHportTxWords                OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel words, including the frame delimeters,
+    delivered through this H_Port."
+   ::= { es1000AcctHportEntry 17 }
+
+   es1000AcctHportRxFrames               OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel frames received by this H_Port."
+   ::= { es1000AcctHportEntry 18 }
+
+   es1000AcctHportTxFrames               OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Fibre Channel frames delivered through this H_Port."
+   ::= { es1000AcctHportEntry 19 }
+
+   es1000AcctHportTxThroughput           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object presents the Bps 
+    transmission rate for this H_Port."
+   ::= { es1000AcctHportEntry 20 }
+
+   es1000AcctHportRxThroughput           OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object presents the Bps 
+    reception rate for this H_Port."
+   ::= { es1000AcctHportEntry 21 }
+
+   es1000AcctHportC2RxWords              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 frame words, including the frame delimeters,
+    received by this H_Port."
+   ::= { es1000AcctHportEntry 22 }
+
+   es1000AcctHportC2TxWords              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 2 words, including the frame delimeters, delivered
+    through this H_Port."
+   ::= { es1000AcctHportEntry 23 }
+
+   es1000AcctHportC3RxWords              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 frame words, including the frame delimeters,
+    received by this H_Port."
+   ::= { es1000AcctHportEntry 24 }
+
+   es1000AcctHportC3TxWords              OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    Class 3 words, including the frame delimeters, delivered
+    through this H_Port."
+   ::= { es1000AcctHportEntry 25 }
+
+   es1000AcctHportTxThroughputPercent    OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object presents the percentage
+    of transmission bandwidth used by this H_Port."
+   ::= { es1000AcctHportEntry 26 }
+
+   es1000AcctHportRxThroughputPercent    OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object presents the percentage
+    of reception bandwidth used by this H_Port."
+   ::= { es1000AcctHportEntry 27 }
+
+   es1000AcctHportLIPCount               OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    LIPs detected by this H_Port."
+   ::= { es1000AcctHportEntry 28 }
+
+   es1000AcctHportConnectionsMade        OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    connections made by this H_Port."
+   ::= { es1000AcctHportEntry 29 }
+
+   es1000AcctHportConnectionsStalled     OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    connections stalled by this H_Port."
+   ::= { es1000AcctHportEntry 30 }
+
+   es1000AcctHportConnectionsAborted     OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    connections aborted by this H_Port."
+   ::= { es1000AcctHportEntry 31 }
+
+   es1000AcctHportConnectionsAccepted    OBJECT-TYPE
+      SYNTAX               Counter
+      ACCESS               read-only
+      STATUS               mandatory
+      DESCRIPTION          "This object counts the number of
+    connections accepted by this H_Port."
+   ::= { es1000AcctHportEntry 32 }
+
+   --
+   -- End of Accounting Group
+   --
+
+
+
+   --
+   -- ES-1000 Enterprise Specific Trap Definitions
+   --
+
+   es1000PortBportScn     TRAP-TYPE
+      ENTERPRISE           mcData
+      VARIABLES            { es1000PortBportOpStatus }
+      DESCRIPTION          "A es1000PortBportScn is generated
+    whenever a B_Port changes its operational state.
+    For instance, the B_Port goes from online to offline."
+   ::= 1
+
+   es1000PortHportScn     TRAP-TYPE
+      ENTERPRISE           mcData
+      VARIABLES            { es1000PortHportOpStatus }
+      DESCRIPTION          "A es1000PortHportScn is generated
+    whenever a H_Port changes its operational state.
+    For instance, the H_Port goes from online to offline."
+   ::= 2
+
+   es1000CompScn          TRAP-TYPE
+      ENTERPRISE           mcData
+      VARIABLES            { es1000CompStatus }
+      DESCRIPTION          "A es1000CompScn is generated
+    whenever a COMPONENT status changes its operational state."
+   ::= 3
+
+END   -- ES-1000-MIB

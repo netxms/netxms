@@ -52,6 +52,7 @@ static THREAD m_hWriteThreadList[MAX_DB_WRITERS];
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 {
    g_pLazyRequestQueue->Put(_tcsdup(query));
+	DbgPrintf(8, _T("SQL request queued: %s"), query);
 }
 
 

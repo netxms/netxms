@@ -59,6 +59,8 @@ public class DashboardControl extends Composite
 	public static final String DEFAULT_AVAILABILITY_CHART_CONFIG = "<element>\n\t<objectId>9</objectId>\n\t<showIn3D>true</showIn3D>\n</element>";
 	public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element>\n\t<objectId>0</objectId>\n</element>";
 	public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>"; 
+	public static final String DEFAULT_NETWORK_MAP_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<title></title>\n</element>"; 
+	public static final String DEFAULT_GEO_MAP_CONFIG = "<element>\n\t<latitude>0</latitude>\n\t<longitude>0</longitude>\n\t<zoom>8</zoom>\t<title></title>\n</element>"; 
 			
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;

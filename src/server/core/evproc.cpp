@@ -160,18 +160,22 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-         DbgPrintf(5, _T("EVENT %d (F:0x%04X S:%d%s) FROM %s: %s"), pEvent->getCode(), 
-                   pEvent->getFlags(), pEvent->getSeverity(),
+			DbgPrintf(5, _T("EVENT %d (ID:") UINT64_FMT _T(" F:0x%04X S:%d%s) FROM %s: %s"), pEvent->getCode(), 
+                   pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
                    (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
                    pObject->Name(), pEvent->getMessage());
       }
 
       // Pass event through event processing policy if it is not correlated
       if (pEvent->getRootId() == 0)
+		{
          g_pEventPolicy->ProcessEvent(pEvent);
+			DbgPrintf(7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
+		}
 
       // Destroy event
       delete pEvent;
+		DbgPrintf(7, _T("Event object destroyed"));
       
       g_totalEventsProcessed++;
    }

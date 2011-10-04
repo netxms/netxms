@@ -153,6 +153,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.NetworkMap"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.NetworkMap#0"
+            name="Network Map">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">
