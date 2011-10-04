@@ -325,9 +325,6 @@ static void LoadGlobalConfig()
 	if (ConfigReadInt(_T("CheckTrustedNodes"), 1))
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
 
-	if (ConfigReadInt(_T("EnableSlm"), 1))
-		g_dwFlags |= AF_ENABLE_SLM;
-	
 	if (g_szDataDir[0] == 0)
 	{
 		ConfigReadStr(_T("DataDirectory"), g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);

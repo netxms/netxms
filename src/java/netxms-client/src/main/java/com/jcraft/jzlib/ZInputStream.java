@@ -39,7 +39,7 @@ import java.io.*;
 public class ZInputStream extends FilterInputStream
 {
 	protected ZStream z = new ZStream();
-	protected int bufsize = 65536;	// 64K
+	protected int bufsize = 131072;	// 128K
 	protected int flush = JZlib.Z_NO_FLUSH;
 	protected byte[] buf = new byte[bufsize], buf1 = new byte[1];
 	protected boolean compress;

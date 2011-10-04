@@ -125,6 +125,11 @@ public class NXCException extends NetXMSClientException
 		"Zone ID is already in use",
 		"Invalid zone ID"
 	};
+	private static final String[] extendedErrorTexts =
+	{
+		"Bad MIB file header",
+		"Bad MIB file data"
+	};
 
 	public NXCException(int errorCode)
 	{
@@ -144,6 +149,8 @@ public class NXCException extends NetXMSClientException
 	{
 		try
 		{
+			if (code > 1000)
+				return extendedErrorTexts[code - 1001];
 			return errorTexts[code];
 		}
 		catch(ArrayIndexOutOfBoundsException e)

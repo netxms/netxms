@@ -2330,8 +2330,7 @@ DWORD Node::GetItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TC
 		pTransport = createSnmpTransport(port);
 		if (pTransport != NULL)
 		{
-			dwResult = SnmpGet(m_snmpVersion, pTransport,
-									 szParam, NULL, 0, szBuffer, dwBufSize, SG_STRING_RESULT);
+			dwResult = SnmpGet(m_snmpVersion, pTransport, szParam, NULL, 0, szBuffer, dwBufSize, SG_PSTRING_RESULT);
 			delete pTransport;
 		}
 		else

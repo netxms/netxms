@@ -107,6 +107,7 @@ public class ObjectToolDetails extends ObjectTool
 		msg.setVariable(NXCPCodes.VID_CONFIRMATION_TEXT, confirmationText);
 		msg.setVariable(NXCPCodes.VID_TOOL_DATA, data);
 		msg.setVariableInt16(NXCPCodes.VID_TOOL_TYPE, type);
+		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
 
 		msg.setVariableInt32(NXCPCodes.VID_ACL_SIZE, accessList.size());
 		msg.setVariable(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));

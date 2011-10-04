@@ -53,6 +53,7 @@ mibs_DATA = \
 	DS1-MIB.txt \
 	DS3-MIB.txt \
 	DVMRP-MIB.txt \
+	EF-6000-MIB.txt \
 	EMBEDDED-NGX-MIB.txt \
 	ENTITY-MIB.txt \
 	ES-1000-MIB.txt \

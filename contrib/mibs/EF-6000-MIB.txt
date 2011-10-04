@@ -1,0 +1,1395 @@
+--
+-- FILE NAME = EF-6000.MIB ($Revision:   1.10  $)
+-- CONTENTS  = MIB Definition for EF-6000 Fibre Channel Switch
+--
+
+EF-6000-MIB DEFINITIONS ::= BEGIN
+
+   IMPORTS
+      enterprises, Counter
+         FROM RFC1155-SMI
+      OBJECT-TYPE
+         FROM RFC-1212
+      TRAP-TYPE
+         FROM RFC-1215;
+
+   --Textual conventions for this MIB
+
+   DisplayString ::= OCTET STRING
+
+   Ef6000SysOperStatus ::= INTEGER {
+      operational       (1),
+      redundant-failure (2),
+      minor-failure     (3),
+      major-failure     (4),
+      not-operational   (5)
+   }
+
+   Ef6000FruCode ::= INTEGER {
+      fru-bkplane   (1) ,    -- Backplane
+      fru-ctp       (2) ,    -- Control Processor card
+      fru-sbar      (3) ,    -- Serial Crossbar
+      fru-fan2      (4) ,    -- Center fan module
+      fru-fan       (5) ,    -- Fan module
+      fru-power     (6) ,    -- Power supply module
+      fru-reserved  (7) ,    -- Reserved, not used
+      fru-glsl      (8) ,    -- Longwave, Single-Mode, LC connector, 1 Gig
+      fru-gsml      (9) ,    -- Shortwave, Multi-Mode, LC connector, 1 Gig
+      fru-gxxl      (10),    -- Mixed, LC connector, 1 Gig
+      fru-gsf1      (11),    -- SFO pluggable, 1 Gig
+      fru-gsf2      (12),    -- SFO pluggable, 2 Gig
+      fru-glsr      (13),    -- Longwave, Single-Mode, MT-RJ connector, 1 Gig
+      fru-gsmr      (14),    -- Shortwave, Multi-Mode, MT-RJ connector, 1 Gig
+      fru-gxxr      (15),    -- Mixed, MT-RJ connector, 1 Gig
+      fru-fint1     (16)     -- F-Port, internal, 1 Gig
+   }
+
+   Ef6000FruPosition ::= INTEGER (1..255)
+
+   Ef6000PortIndex ::= INTEGER (1..2048)
+
+   Ef6000PortPhyState   ::= INTEGER {
+      psNotInstalled  (1),
+      psAvailable     (2),
+      psBlocked       (3),
+      psUnavailable   (4),
+      psLinkFailure   (5),
+      psLinkFailLOL   (6),
+      psIntDiags      (7),
+      psExtLoop       (8),
+      psPortFail      (9),
+      psSR            (10),
+      psLR            (11),
+      psInaccessible  (12),
+      psInactive      (13)
+   }
+
+   Ef6000PortWWN ::= OCTET STRING (SIZE (8))
+   Ef6000PortList ::= OCTET STRING (SIZE (32))
+
+   --
+   -- Enterprise Specific Object Identifiers
+   --
+
+   mcData         OBJECT IDENTIFIER ::= { enterprises 289 }
+   -- Product lines or generic product information
+   -- common      OBJECT IDENTIFIER ::= { mcData 1 }
+   commDev        OBJECT IDENTIFIER ::= { mcData 2 } -- communication devices
+
+   -- Fibre Channel product lines
+   fibreChannel   OBJECT IDENTIFIER ::= { commDev 1 }
+   fcSwitch       OBJECT IDENTIFIER ::= { fibreChannel 1 }
+   ef-6000        OBJECT IDENTIFIER ::= { fcSwitch 2 }
+
+   -- Groups in EF-6000 MIB
+
+   ef6000Sys      OBJECT IDENTIFIER ::= { ef-6000 1 }
+
+   ef6000Fru      OBJECT IDENTIFIER ::= { ef-6000 2 }
+
+   ef6000Port     OBJECT IDENTIFIER ::= { ef-6000 3 }
+
+   ef6000PortBinding OBJECT IDENTIFIER ::= { ef-6000 4 }
+
+   ef6000Zoning   OBJECT IDENTIFIER ::= { ef-6000 5 }
+
+   ef6000TA  OBJECT IDENTIFIER ::= { ef-6000 6 }
+
+   -- reserved    OBJECT IDENTIFIER ::= { ef-6000 6 }
+   -- reserved    OBJECT IDENTIFIER ::= { ef-6000 7 }
+   -- reserved    OBJECT IDENTIFIER ::= { ef-6000 8 }
+   -- reserved    OBJECT IDENTIFIER ::= { ef-6000 9 }
+
+   --
+   -- the System Group
+   --
+
+   ef6000SysCurrentDate         OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The current date information."
+   ::= { ef6000Sys 1 }
+
+   ef6000SysBootDate            OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The date and time of the last IPL of the switch."
+   ::= { ef6000Sys 2 }
+
+   ef6000SysFirmwareVersion     OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..24))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The current version of the firmware."
+   ::= { ef6000Sys 3 }
+
+   ef6000SysTypeNum             OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The ASCII type number of the switch."
+   ::= { ef6000Sys 4 }
+
+   ef6000SysModelNum            OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The ASCII model number of the switch."
+   ::= { ef6000Sys 5 }
+
+   ef6000SysMfg                 OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The ASCII manufacturer of the switch."
+   ::= { ef6000Sys 6 }
+
+   ef6000SysPlantOfMfg          OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The ASCII plant of manufacturer of the switch."
+   ::= { ef6000Sys 7 }
+
+   ef6000SysEcLevel             OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The ASCII EC level ID of the switch."
+   ::= { ef6000Sys 8 }
+
+   ef6000SysSerialNum        OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The ASCII system serial number of the switch."
+   ::= { ef6000Sys 9 }
+
+   ef6000SysOperStatus          OBJECT-TYPE
+         SYNTAX      Ef6000SysOperStatus
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The current operational status of the switch."
+   ::= { ef6000Sys 10 }
+
+   ef6000SysState               OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         online(1),
+                         coming-online(2),
+                         offline(3),
+                         going-offline(4)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "If the operational status of the switch is
+         operational, the switch will be in one of the four states:
+         online(1), coming-online(2), offline(3), and going-offline(4)."
+   ::= { ef6000Sys 11 }
+
+   ef6000SysAdmStatus           OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         online  (1),
+                         offline (2)
+                     }
+         ACCESS      read-write
+         STATUS      mandatory
+         DESCRIPTION    "The desired administrative status
+         of the switch. A management station may place the switch
+         in a desired state by setting this object accordingly.
+         The desired administrative status are online(1) and offline(2).
+         The online means setting the switch to be accessible by
+         an external Fibre Channel port, and offline means setting
+         the switch to be inaccessible."
+   ::= { ef6000Sys 12 }
+
+   ef6000SysConfigSpeed           OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         one-gig  (1),
+                         two-gig  (2)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "Switch speed capability. It's a user initiated option
+         to adjust the system-wide port speed capability."
+   ::= { ef6000Sys 13 }
+
+   --
+   -- End of System Group
+   --
+
+   --
+   -- Fibre Channel FRU Group
+   -- This group contains FRU information of each Fibre Channel Module.
+   --
+
+   ef6000FruTable               OBJECT-TYPE
+         SYNTAX      SEQUENCE OF Ef6000FruEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "A table that contains one entry for each module."
+   ::= { ef6000Fru 1 }
+
+   ef6000FruEntry               OBJECT-TYPE
+         SYNTAX      Ef6000FruEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "An entry containing the service parameters of the module."
+         INDEX   { ef6000FruCode,
+                   ef6000FruPosition }
+   ::= { ef6000FruTable 1 }
+
+   Ef6000FruEntry ::= SEQUENCE {
+         ef6000FruCode         Ef6000FruCode,
+         ef6000FruPosition     Ef6000FruPosition,
+         ef6000FruStatus       INTEGER,
+         ef6000FruPartNumber   DisplayString,
+         ef6000FruSerialNumber DisplayString,
+         ef6000FruPowerOnHours Counter,
+         ef6000FruTestDate     DisplayString
+   }
+
+   ef6000FruCode                OBJECT-TYPE
+         SYNTAX      Ef6000FruCode
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "Field Replaceable Unit.
+         A hardware component of the product that is replaceable
+         as an entire unit. Each module defined in this MIB has
+         a fixed FRU code."
+   ::= { ef6000FruEntry 1 }
+
+   ef6000FruPosition            OBJECT-TYPE
+         SYNTAX      Ef6000FruPosition
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This object identifies the position
+         of the module. The value starts from 1 to the maximum number of
+         the cards that can be contained within this switch."
+   ::= { ef6000FruEntry 2 }
+
+   ef6000FruStatus              OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         active(1),
+                         backup(2),
+                         update-busy(3),
+                         failed(4)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This object identifies the operational
+         status of the module. The active(1) state indicates that
+         the current module is active; The backup(2) state indicates
+         that the back up module is used; The update-busy (3) state
+         indicates that the module is in the updating process;
+         The failed(4) state indicates that the current module is failed."
+   ::= { ef6000FruEntry 3 }
+
+   ef6000FruPartNumber          OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The part number of the module."
+   ::= { ef6000FruEntry 4 }
+
+   ef6000FruSerialNumber        OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The serial number of the module."
+   ::= { ef6000FruEntry 5 }
+
+   ef6000FruPowerOnHours        OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of the hours that the
+         FRU has been in operation."
+   ::= { ef6000FruEntry 6 }
+
+   ef6000FruTestDate            OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The final test date of the module."
+   ::= { ef6000FruEntry 7 }
+
+   --
+   -- End of Fibre Channel FRU Group
+   --
+
+   --
+   -- Fibre Channel Port Group
+   -- This group contains information about each Fibre Channel port.
+   --
+
+   ef6000PortTable              OBJECT-TYPE
+         SYNTAX      SEQUENCE OF Ef6000PortEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "A table that contains one entry
+         for each switch port."
+   ::= { ef6000Port 1 }
+
+   ef6000PortEntry              OBJECT-TYPE
+         SYNTAX      Ef6000PortEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "An entry containing the information of the switch port."
+         INDEX   { ef6000PortIndex }
+   ::= { ef6000PortTable 1 }
+
+   Ef6000PortEntry ::= SEQUENCE {
+         ef6000PortIndex          Ef6000PortIndex,
+         ef6000PortPhyState       Ef6000PortPhyState,
+         ef6000PortOpStatus       INTEGER,
+         ef6000PortAdmStatus      INTEGER,
+         ef6000PortConnector      INTEGER,
+         ef6000PortDistance       INTEGER,
+         ef6000PortType           INTEGER,
+         ef6000PortMedia          INTEGER,
+         ef6000PortSpeedCap       INTEGER,
+         ef6000PortConfigSpeed    INTEGER,
+         ef6000PortSpeed          INTEGER,
+
+         -- throughput statistics (32 bit counters)
+         ef6000PortTxWords32        Counter,
+         ef6000PortRxWords32        Counter,
+         ef6000PortTxFrames32       Counter,
+         ef6000PortRxFrames32       Counter,
+         ef6000PortTxThroughput     Counter,
+         ef6000PortRxThroughput     Counter,
+
+         -- class 2 statistics   (32 bit counters)
+         ef6000PortTxC2Words32     Counter,
+         ef6000PortRxC2Words32     Counter,
+         ef6000PortTxC2Frames32    Counter,
+         ef6000PortRxC2Frames32    Counter,
+         ef6000PortTxC2Octets32    Counter,
+         ef6000PortRxC2Octets32    Counter,
+
+         -- class 3 statistics  (32 bit counters)
+         ef6000PortTxC3Words32    Counter,
+         ef6000PortRxC3Words32    Counter,
+         ef6000PortTxC3Frames32   Counter,
+         ef6000PortRxC3Frames32   Counter,
+         ef6000PortTxC3Octets32   Counter,
+         ef6000PortRxC3Octets32   Counter,
+         ef6000PortC3Discards32   Counter,
+
+         -- operation statistics  (32 bit counters)
+         ef6000PortDiscardFrames       Counter,
+         ef6000PortTxLinkResets        Counter,
+         ef6000PortRxLinkResets        Counter,
+         ef6000PortTxOLSs              Counter,
+         ef6000PortRxOLSs              Counter,
+
+         -- error statistics  (32 bit counters)
+         ef6000PortSyncLosses       Counter,
+         ef6000PortSigLosses        Counter,
+         ef6000PortProtocolErrors   Counter,
+         ef6000PortInvalidTxWords   Counter,
+         ef6000PortLinkFailures     Counter,
+         ef6000PortCrcs             Counter,
+         ef6000PortTruncs           Counter,
+
+         -- throughput statistics (64 bit counters)
+         ef6000PortTxWords64        OCTET STRING,
+         ef6000PortRxWords64        OCTET STRING,
+         ef6000PortTxFrames64       OCTET STRING,
+         ef6000PortRxFrames64       OCTET STRING,
+
+         -- class 2 statistics  (64 bit counters)
+         ef6000PortTxC2Words64     OCTET STRING,
+         ef6000PortRxC2Words64     OCTET STRING,
+         ef6000PortTxC2Frames64    OCTET STRING,
+         ef6000PortRxC2Frames64    OCTET STRING,
+         ef6000PortTxC2Octets64    OCTET STRING,
+         ef6000PortRxC2Octets64    OCTET STRING,
+
+         -- class 3 statistics  (64 bit counters)
+         ef6000PortTxC3Words64    OCTET STRING,
+         ef6000PortRxC3Words64    OCTET STRING,
+         ef6000PortTxC3Frames64   OCTET STRING,
+         ef6000PortRxC3Frames64   OCTET STRING,
+         ef6000PortTxC3Octets64   OCTET STRING,
+         ef6000PortRxC3Octets64   OCTET STRING,
+         ef6000PortC3Discards64   OCTET STRING
+   }
+
+   ef6000PortIndex              OBJECT-TYPE
+         SYNTAX      Ef6000PortIndex
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The fixed physical port number on the switch.
+         It ranges from 1 to the number of physical ports that can be
+         supported in the switch."
+   ::= { ef6000PortEntry 1 }
+
+   ef6000PortPhyState           OBJECT-TYPE
+         SYNTAX      Ef6000PortPhyState
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The physical state of the port."
+   ::= { ef6000PortEntry 2 }
+
+   ef6000PortOpStatus           OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         online  (1),
+                         offline (2),
+                         testing (3),
+                         faulty  (4)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The operational status of the port.
+         The online(1) state indicates that user frames can be passed."
+   ::= { ef6000PortEntry 3 }
+
+   ef6000PortAdmStatus          OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         online   (1),
+                         offline  (2),
+                         testing  (3)
+                     }
+         ACCESS      read-write
+         STATUS      mandatory
+         DESCRIPTION    "The desired state of the port.
+         A management station may place the port in a desired
+         state by setting this object accordingly. The testing(3)
+         state indicates that no user frames can be passed.
+         As the result of either explicit management action
+         or per configuration information accessible by the switch,
+         ef6000PortAdmStatus is then changed to either the online(1)
+         or testing(3) states, or remains in the offline state."
+   ::= { ef6000PortEntry 4 }
+
+   ef6000PortConnector          OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         unknown       (1),
+                         lc            (2),
+                         mt-rj         (3),
+                         mu            (4),
+                         internal-port (5)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "Supported connector types of the port."
+   ::= { ef6000PortEntry 5 }
+
+   ef6000PortDistance           OBJECT-TYPE
+         SYNTAX      INTEGER (0..127)
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A bit map to represent distance types of the Port.
+                             bit 0    unknown
+                             bit 1-3  reserved
+                             bit 4    long distance (l)
+                             bit 5    intermediate distance (i)
+                             bit 6    short distance (s)
+                             bit 7    very long distance"
+   ::= { ef6000PortEntry 6 }
+
+   ef6000PortType               OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         unknown              (1),
+                         longDistance         (2),          -- (LL-V)
+                         longWaveLaser-LL     (3),          -- (LL)
+                         shortWaveLaser-OFC   (4),          -- (SL)
+                         shortWaveLaser-noOFC (5),          -- (SN)
+                         longWaveLaser-LC     (6)           -- (LC)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "Supported transceiver types of the port."
+   ::= { ef6000PortEntry 7 }
+
+   ef6000PortMedia              OBJECT-TYPE
+         SYNTAX      INTEGER (0..127)
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A bit map to represent transmission media of the port.
+                             bit 0    single mode (sm)
+                             bit 1    reserved
+                             bit 2    multi-mode, 50m (m5)
+                             bit 3    multi-mode, 62.5 (m6)
+                             bit 4-6  reserved
+                             bit 7    copper"
+   ::= { ef6000PortEntry 8 }
+
+   ef6000PortSpeedCap              OBJECT-TYPE
+         SYNTAX      INTEGER (0..127)
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A bit map to represent the speed of optical transceiver.
+                             bit 0    100 MBytes/Sec
+                             bit 1    reserved
+                             bit 2    200 MBytes/Sec
+                             bit 3    reserved
+                             bit 4    400 MBytes/Sec
+                             bit 5-7  reserved"
+   ::= { ef6000PortEntry 9 }
+
+   ef6000PortConfigSpeed              OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         one-gig     (1),
+                         two-gig     (2),
+                         negotiate   (3)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The configured port speed."
+   ::= { ef6000PortEntry 10 }
+
+   ef6000PortSpeed              OBJECT-TYPE
+      SYNTAX      INTEGER {
+                      unknown     (1),
+                      one-gig     (2),
+                      two-gig     (3),
+                      negotiate   (4)
+                  }
+      ACCESS      read-only
+      STATUS      mandatory
+      DESCRIPTION    "The current operating speed of the port."
+   ::= { ef6000PortEntry 11 }
+
+   -- throughput statistics   (32 bit counters)
+   ef6000PortTxWords32            OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of words
+         within frames that the port has transmitted. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 20 }
+
+   ef6000PortRxWords32            OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of words
+         within frames that the port has received. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 21 }
+
+   ef6000PortTxFrames32           OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of (Fibre Channel) frames
+         that the port has transmitted."
+   ::= { ef6000PortEntry 22 }
+
+   ef6000PortRxFrames32           OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of (Fibre Channel) frames
+         that the port has received."
+   ::= { ef6000PortEntry 23 }
+
+   ef6000PortTxThroughput       OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The Bps (bytes per second) transmission rate of the port."
+   ::= { ef6000PortEntry 24 }
+
+   ef6000PortRxThroughput       OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The Bps (bytes per second) reception rate of the port."
+   ::= { ef6000PortEntry 25 }
+
+   -- class 2 statistics   (32 bit counters)
+   ef6000PortTxC2Words32          OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of class 2 4-byte words
+         that the port has transmitted. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 30 }
+
+   ef6000PortRxC2Words32          OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of class 2 4-byte words
+         that the port has received. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 31 }
+
+   ef6000PortTxC2Frames32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 2 frames
+         that the port has transmitted."
+   ::= { ef6000PortEntry 32 }
+
+   ef6000PortRxC2Frames32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 2 frames
+         that the port has received."
+   ::= { ef6000PortEntry 33 }
+
+   ef6000PortTxC2Octets32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 2 Octets
+         that the port has transmitted."
+   ::= { ef6000PortEntry 34 }
+
+   ef6000PortRxC2Octets32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 2 Octets
+         that the port has received."
+   ::= { ef6000PortEntry 35 }
+
+   -- class 3 statistics    (32 bit counters)
+   ef6000PortTxC3Words32          OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of class 3 4-byte words
+         that the port has transmitted. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 40 }
+
+   ef6000PortRxC3Words32          OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of class 3 4-byte words
+         that the port has received. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 41 }
+
+   ef6000PortTxC3Frames32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 3 frames
+         that the port has transmitted."
+   ::= { ef6000PortEntry 42 }
+
+   ef6000PortRxC3Frames32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 3 frames
+         that the port has received."
+   ::= { ef6000PortEntry 43 }
+
+   ef6000PortTxC3Octets32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 3 Octets
+         that the port has transmitted."
+   ::= { ef6000PortEntry 44 }
+
+   ef6000PortRxC3Octets32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 3 Octets
+         that the port has received."
+   ::= { ef6000PortEntry 45 }
+
+   ef6000PortC3Discards32         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 32 bit counter for the number of Class 3 frames
+         that the port has discarded."
+   ::= { ef6000PortEntry 46 }
+
+   -- operation statistics     (32 bit counters)
+   ef6000PortDiscardFrames      OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of frames
+         that the port has discarded."
+   ::= { ef6000PortEntry 50 }
+
+   ef6000PortTxLinkResets       OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of link resets
+         initiated by this switch port."
+   ::= { ef6000PortEntry 51 }
+
+   ef6000PortRxLinkResets       OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of link resets
+         initiated by the attached N_port."
+   ::= { ef6000PortEntry 52 }
+
+   ef6000PortTxOLSs             OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of offline sequences
+       initiated by this switch port."
+   ::= { ef6000PortEntry 53 }
+
+   ef6000PortRxOLSs             OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of offline sequences
+         initiated by the attached N_port."
+   ::= { ef6000PortEntry 54 }
+
+   -- error statistics     (32 bit counters)
+   ef6000PortSyncLosses         OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of loss of synchronization timeout."
+   ::= { ef6000PortEntry 60 }
+
+   ef6000PortSigLosses          OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of times that a Loss of Signal is detected."
+   ::= { ef6000PortEntry 61 }
+
+   ef6000PortProtocolErrors     OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of protocol errors detected."
+   ::= { ef6000PortEntry 62 }
+
+   ef6000PortInvalidTxWords     OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of Invalid Transmission words
+         that the port has received."
+   ::= { ef6000PortEntry 63 }
+
+   ef6000PortLinkFailures       OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of transitions to an LFx state."
+   ::= { ef6000PortEntry 64 }
+
+   ef6000PortCrcs               OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of CRC errors
+         detected from frames received."
+   ::= { ef6000PortEntry 65 }
+
+   ef6000PortTruncs             OBJECT-TYPE
+         SYNTAX      Counter
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of frames shorter than the Fibre Channel minimum."
+   ::= { ef6000PortEntry 66 }
+
+   -- throughput statistics (64 bit counters)
+   ef6000PortTxWords64            OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of words
+         within frames that the port has transmitted. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 67 }
+
+   ef6000PortRxWords64            OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of words
+         within frames that the port has received. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 68 }
+
+   ef6000PortTxFrames64           OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of (Fibre Channel) frames
+         that the port has transmitted."
+   ::= { ef6000PortEntry 69 }
+
+   ef6000PortRxFrames64           OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of (Fibre Channel) frames
+         that the port has received."
+   ::= { ef6000PortEntry 70 }
+
+   -- class 2 statistics   (64 bit counters)
+   ef6000PortTxC2Words64          OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of class 2 4-byte words
+         that the port has transmitted. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 71 }
+
+   ef6000PortRxC2Words64          OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of class 2 4-byte words
+         that the port has received. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 72 }
+
+   ef6000PortTxC2Frames64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 2 frames
+         that the port has transmitted."
+   ::= { ef6000PortEntry 73 }
+
+   ef6000PortRxC2Frames64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 2 frames
+         that the port has received."
+   ::= { ef6000PortEntry 74 }
+
+   ef6000PortTxC2Octets64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 2 Octets
+         that the port has transmitted."
+   ::= { ef6000PortEntry 75 }
+
+   ef6000PortRxC2Octets64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 2 Octets
+         that the port has received."
+   ::= { ef6000PortEntry 76 }
+
+   -- class 3 statistics   (64 bit counters)
+   ef6000PortTxC3Words64          OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of class 3 4-byte words
+         that the port has transmitted. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 77 }
+
+   ef6000PortRxC3Words64          OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of class 3 4-byte words
+         that the port has received. (Primitive signals
+         and primitive sequence are not included.)"
+   ::= { ef6000PortEntry 78 }
+
+   ef6000PortTxC3Frames64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 3 frames
+         that the port has transmitted."
+   ::= { ef6000PortEntry 79 }
+
+   ef6000PortRxC3Frames64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 3 frames
+         that the port has received."
+   ::= { ef6000PortEntry 80 }
+
+   ef6000PortTxC3Octets64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 3 Octets
+         that the port has transmitted."
+   ::= { ef6000PortEntry 81 }
+
+   ef6000PortRxC3Octets64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 3 Octets
+         that the port has received."
+   ::= { ef6000PortEntry 82 }
+
+   ef6000PortC3Discards64         OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (8))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A 64 bit counter for the number of Class 3 frames
+         that the port has discarded."
+   ::= { ef6000PortEntry 83 }
+
+
+   -- Port Binding Table
+   ef6000PortBindingTable              OBJECT-TYPE
+         SYNTAX      SEQUENCE OF Ef6000PortBindingEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "A table that contains one entry
+         for each switch port."
+   ::= { ef6000PortBinding 1 }
+
+   ef6000PortBindingEntry              OBJECT-TYPE
+         SYNTAX      Ef6000PortBindingEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "An entry containing the port binding information
+         of the switch port."
+         INDEX   { ef6000PortBindingIndex }
+   ::= { ef6000PortBindingTable 1 }
+
+   Ef6000PortBindingEntry ::= SEQUENCE {
+         ef6000PortBindingIndex      Ef6000PortIndex,
+         ef6000PortBindingFlag       INTEGER,
+         ef6000PortConfiguredWWN     Ef6000PortWWN,
+         ef6000PortAttachedWWN       Ef6000PortWWN
+   }
+
+   ef6000PortBindingIndex              OBJECT-TYPE
+         SYNTAX      Ef6000PortIndex
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The fixed physical port number on the switch.
+         It ranges from 1 to the number of physical ports that can be
+         supported in the switch."
+   ::= { ef6000PortBindingEntry 1 }
+
+   ef6000PortBindingFlag               OBJECT-TYPE
+         SYNTAX      INTEGER {
+                                yes (1),
+                                no  (2)
+                     }
+
+         ACCESS      read-write
+         STATUS      mandatory
+         DESCRIPTION    "The flag indicates whether or not Port Binding
+         is in effect for an individual port."
+   ::= { ef6000PortBindingEntry 2 }
+
+   ef6000PortConfiguredWWN               OBJECT-TYPE
+         SYNTAX      Ef6000PortWWN
+         ACCESS      read-write
+         STATUS      mandatory
+         DESCRIPTION    "The authorized port WWN for attached servers and
+         storage systems (F ports), or the authorized switch WWN for
+         attached switches (E ports)."
+   ::= { ef6000PortBindingEntry 3 }
+
+   ef6000PortAttachedWWN               OBJECT-TYPE
+         SYNTAX      Ef6000PortWWN
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The WWN of the device currently attached to the port
+         whether it has successfully connected or is currently being rejected
+         due to a Port Binding violation."
+   ::= { ef6000PortBindingEntry 4 }
+
+   --
+   -- End of Fibre Channel Port Group
+   --
+   --
+   -- Fibre Channel Zoning Group
+   -- This group contains the current zoning configuration.
+   --
+   ef6000ActiveZoneSetName         OBJECT-TYPE
+         SYNTAX      DisplayString
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The active zone set name.  This value will return NULL if the
+         active zone set state is disabled"
+   ::= { ef6000Zoning 1 }
+
+   ef6000ActiveZoneCount         OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of zones in the active zone set.
+         This value will return 0 if the active zone set state is disabled"
+   ::= { ef6000Zoning 2 }
+
+   ef6000DefaultZoneSetState         OBJECT-TYPE
+         SYNTAX      INTEGER{
+                         enabled(1),
+                         disabled(2)
+                         }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The set state of the default zone set (1=Enabled,2= Disabled)."
+   ::= { ef6000Zoning 3 }
+
+   ef6000ActiveZoneSetState         OBJECT-TYPE
+         SYNTAX      INTEGER{
+                         enabled(1),
+                         disabled(2)
+                         }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The state of the active zone set.  If the active
+         zone set state is disabled, then ActiveZoneSetName and
+         ActiveZoneSetCount are invalid (1=Enabled,2= Disabled). "
+   ::= { ef6000Zoning 4 }
+
+   ef6000HardwareEnforcedZoning         OBJECT-TYPE
+         SYNTAX      INTEGER{
+                                yes (1),
+                                no  (2)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "Indicates if zoning is hardware enforced
+         (1=Yes, 2=No)."
+   ::= { ef6000Zoning 5 }
+
+
+
+   -- Begining of Active Zone Table
+   --
+   ef6000ActiveZoneTable                OBJECT-TYPE
+         SYNTAX      SEQUENCE OF Ef6000ActiveZoneEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "A table that contains one entry for each zone in the
+         active zone set."
+   ::= { ef6000Zoning 6 }
+
+   ef6000ActiveZoneEntry                OBJECT-TYPE
+         SYNTAX      Ef6000ActiveZoneEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "An entry containing the information specific to a zone."
+         INDEX   { ef6000ZoneIndex }
+   ::= { ef6000ActiveZoneTable 1 }
+
+   Ef6000ActiveZoneEntry ::= SEQUENCE {
+         ef6000ZoneIndex       INTEGER,
+         ef6000ZoneName        DisplayString,
+         ef6000ZoneMemberCount INTEGER
+         }
+
+   ef6000ZoneIndex                      OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "Zone index number.  This number will range from 1
+         to the number of zones specified by the ActiveZoneCount. "
+   ::= { ef6000ActiveZoneEntry 1 }
+
+   ef6000ZoneName                       OBJECT-TYPE
+         SYNTAX      DisplayString
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This object is the name of this zone entry."
+   ::= { ef6000ActiveZoneEntry 2 }
+
+   ef6000ZoneMemberCount                OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This object contains a count of the number of
+         members in this zone entry."
+   ::= { ef6000ActiveZoneEntry 3 }
+   --
+   -- End of Active Zone Table
+
+
+   -- Begining of Active Member Table
+   --
+   ef6000ActiveMemberTable                OBJECT-TYPE
+         SYNTAX      SEQUENCE OF Ef6000ActiveMemberEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "A table that contains one entry for each member in the
+         active zone set."
+   ::= { ef6000Zoning 7 }
+
+   ef6000ActiveMemberEntry                OBJECT-TYPE
+         SYNTAX      Ef6000ActiveMemberEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "An entry containing the information specific to a member."
+         INDEX   { ef6000MemberZoneIndex,
+                   ef6000MemberIndex }
+   ::= { ef6000ActiveMemberTable 1 }
+
+   Ef6000ActiveMemberEntry ::= SEQUENCE {
+         ef6000MemberZoneIndex  INTEGER,
+         ef6000MemberIndex      INTEGER,
+         ef6000MemberType       INTEGER,
+         ef6000MemberWWN        Ef6000PortWWN,
+         ef6000MemberDomainID   INTEGER,
+         ef6000MemberPortNumber INTEGER
+         }
+
+   ef6000MemberZoneIndex                OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The index of the zone that this member belongs to.
+         This is the same value as ef6000ZoneIndex."
+   ::= { ef6000ActiveMemberEntry 1 }
+
+   ef6000MemberIndex                    OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "Member index number. This number will range from 1
+         to the number of members specified by the corresponding ZoneMemberCount. "
+   ::= { ef6000ActiveMemberEntry 2 }
+
+   ef6000MemberType                     OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         wwn(1),
+                         portnumber(2)
+                         }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This object is the type of addressing that is associated
+         with this member."
+   ::= { ef6000ActiveMemberEntry 3 }
+
+   ef6000MemberWWN                      OBJECT-TYPE
+         SYNTAX      Ef6000PortWWN
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The WWN name as an 8-octet string. This value is only valid
+         if the member type is 1, otherwise it will return all zeros."
+   ::= { ef6000ActiveMemberEntry 4 }
+
+  ef6000MemberDomainID                  OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The domain ID.  This value is only valid if the member type is 2,
+         otherwise it will return NULL."
+   ::= { ef6000ActiveMemberEntry 5 }
+
+   ef6000MemberPortNumber               OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The port number.  This value is only valid if the member type is 2,
+         otherwise it will return NULL."
+   ::= { ef6000ActiveMemberEntry 6 }
+   --
+   -- End of Active Member Table
+
+   --
+   -- End of Fibre Channel Zoning Group
+   --
+
+   --
+   -- Fibre Channel Threshold Alert Group
+   -- This group contains the threshold alert configuration.
+   --
+
+
+   -- Threshold Alert Table
+
+   ef6000TATable              OBJECT-TYPE
+         SYNTAX      SEQUENCE OF Ef6000TAEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "A table that contains one entry
+         for each configured threshold alert."
+   ::= { ef6000TA 1 }
+
+   ef6000TAEntry              OBJECT-TYPE
+         SYNTAX      Ef6000TAEntry
+         ACCESS      not-accessible
+         STATUS      mandatory
+         DESCRIPTION    "An entry containing a threshold alert configuration."
+         INDEX   { ef6000TAIndex }
+   ::= { ef6000TATable 1 }
+
+   Ef6000TAEntry ::= SEQUENCE {
+         ef6000TAIndex            INTEGER,
+         ef6000TAName             DisplayString,
+         ef6000TAState            INTEGER,
+         ef6000TAType             INTEGER,
+         ef6000TAPortType         INTEGER,
+         ef6000TAPortList         Ef6000PortList,
+         ef6000TAInterval         INTEGER,
+         ef6000TATriggerValue     INTEGER,
+         ef6000TTADirection       INTEGER,
+         ef6000TTATriggerDuration INTEGER,
+         ef6000CTACounter         INTEGER
+   }
+
+   ef6000TAIndex                OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This object is used to identify which threshold has been triggered."
+   ::= { ef6000TAEntry 1 }
+
+
+   ef6000TAName               OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE (1..64))
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The threshold alert name."
+   ::= { ef6000TAEntry 2 }
+
+   ef6000TAState                OBJECT-TYPE
+         SYNTAX      INTEGER {
+                         enabled  (1),
+                         disabled (2)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The current state of the threshold."
+   ::= { ef6000TAEntry 3 }
+
+   ef6000TAType                OBJECT-TYPE
+         SYNTAX      INTEGER {
+                          throughput (1),
+                          counter (2)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The type of the threshold."
+   ::= { ef6000TAEntry 4 }
+
+   ef6000TAPortType            OBJECT-TYPE
+         SYNTAX      INTEGER {
+                          list (1),
+                          ePorts (2),
+                          fPorts (3),
+                          flPorts (4)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A threshold can be set on a list of physical port numbers or
+         on all the ports of the specified type (ePorts, fPorts)."
+   ::= { ef6000TAEntry 5 }
+
+   ef6000TAPortList            OBJECT-TYPE
+         SYNTAX      Ef6000PortList
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "A bit map that identifies which ports this threhold alert
+         applies to (only valid if the Threshold Alert Port Type = list). The left
+         most bit represents the port 0."
+   ::= { ef6000TAEntry 6 }
+
+   ef6000TAInterval            OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "The number of minutes in a threshold alert interval."
+   ::= { ef6000TAEntry 7 }
+
+   ef6000TATriggerValue        OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "If the alert type is a Throughput Threshold Alert, then this
+         is the percent utilization (1-100) required to trigger an alert.
+         If the alert type is a Counter Threshold Alert, then this is the counter
+         delta required to trigger an alert."
+   ::= { ef6000TAEntry 8 }
+
+   ef6000TTADirection           OBJECT-TYPE
+         SYNTAX      INTEGER {
+                          transmit (1),
+                          receive (2),
+                          either (3)  -- (Tx or Rx)
+                     }
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This only applies when the alert type is a Throughput
+         Threshold Alert. It specifies the throughput direction of the threshold."
+   ::= { ef6000TAEntry 9 }
+
+   ef6000TTATriggerDuration     OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This only applies when the alert type is a
+         Throughput Threshold Alert.  It specifies the amount of time
+         during a threshold alert interval that the trigger must be exceeded
+         before an alert is generated."
+   ::= { ef6000TAEntry 10 }
+
+   ef6000CTACounter     OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS      read-only
+         STATUS      mandatory
+         DESCRIPTION    "This only applies when the alert type is a
+         Counter Threshold Alert.  It specifies statistical counter
+         or counter set to be monitored. (This object is not supported
+         in the current release.)"
+   ::= { ef6000TAEntry 11 }
+
+   --
+   -- End of Fibre Channel Threshold Alert Group
+   --
+
+   --
+   -- EF-6000 Enterprise Specific Trap Definitions
+   --
+
+   ef6000PortScn                TRAP-TYPE
+         ENTERPRISE     mcData
+         VARIABLES      { ef6000PortOpStatus }
+         DESCRIPTION    "An ef6000PortScn(1) is generated
+         whenever a Fc_Port changes its operational state.
+         For instance, the Fc_Port goes from on-line to offline."
+   ::= 1
+
+   ef6000FruScn                 TRAP-TYPE
+         ENTERPRISE     mcData
+         VARIABLES      { ef6000FruStatus }
+         DESCRIPTION    "An ef6000FruScn(2) is generated
+         whenever a FRU status changes its operational state."
+   ::= 2
+
+   ef6000PortBindingViolation                 TRAP-TYPE
+         ENTERPRISE     mcData
+         VARIABLES      { ef6000PortAttachedWWN }
+         DESCRIPTION    "An ef6000PortBindingViolation(3) is generated
+         whenever the switch detects that a port binding violation occurs."
+   ::= 3
+
+   ef6000ThresholdAlert                 TRAP-TYPE
+         ENTERPRISE     mcData
+         VARIABLES      { ef6000PortIndex, ef6000TAIndex }
+         DESCRIPTION    "An ef6000ThresholdAlert(4) is generated
+         whenever a threshold alert occurs."
+   ::= 4
+
+
+END   -- EF-6000-MIB
+

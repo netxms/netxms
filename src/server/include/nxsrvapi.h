@@ -123,7 +123,6 @@
 #define AF_ENABLE_ZONING                  0x00000080
 #define AF_SYNC_NODE_NAMES_WITH_DNS       0x00000100
 #define AF_CHECK_TRUSTED_NODES            0x00000200
-#define AF_ENABLE_SLM					  0x00040000
 #define AF_WRITE_FULL_DUMP                0x00080000
 #define AF_RESOLVE_NODE_NAMES             0x00100000
 #define AF_CATCH_EXCEPTIONS               0x00200000
@@ -155,12 +154,8 @@
 #define SG_STRING_RESULT  0x0002
 #define SG_RAW_RESULT     0x0004
 #define SG_HSTRING_RESULT 0x0008
+#define SG_PSTRING_RESULT 0x0010
 
-//
-// SLM flags
-//
-
-#define SLM_ENABLED			(0x0001)
 
 //
 // Win32 service and syslog constants

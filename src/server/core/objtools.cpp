@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -265,6 +265,7 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
    TCHAR szBuffer[4096];
    Interface *pInterface;
    DWORD dwIndex;
+	bool convert;
 
    if (pVar != NULL)
    {
@@ -292,7 +293,8 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
             }
             break;
          default:
-            pVar->GetValueAsString(szBuffer, 4096);
+				convert = true;
+            pVar->getValueAsPrintableString(szBuffer, 4096, &convert);
             break;
       }
    }

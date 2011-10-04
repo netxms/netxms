@@ -105,6 +105,11 @@ DWORD LIBNXSRV_EXPORTABLE SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport,
                {
                   pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
                }
+               else if (dwFlags & SG_PSTRING_RESULT)
+               {
+						bool convert = true;
+                  pVar->getValueAsPrintableString((TCHAR *)pValue, dwBufferSize, &convert);
+               }
                else
                {
                   switch(pVar->GetType())
