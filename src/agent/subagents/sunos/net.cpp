@@ -399,6 +399,7 @@ LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
 					ret_int(pValue, (rq.lifr_flags & IFF_RUNNING) ? 1 : 0);
 					nRet = SYSINFO_RC_SUCCESS;
 				}
+				close(nFd);
 			}
 		}
 	}
