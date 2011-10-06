@@ -2313,7 +2313,7 @@ BOOL Node::connectToAgent(DWORD *error, DWORD *socketError)
 // Get item's value via SNMP
 //
 
-DWORD Node::GetItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer)
+DWORD Node::getItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuffer, int interpretRawValue)
 {
    DWORD dwResult;
 
@@ -2330,7 +2330,46 @@ DWORD Node::GetItemFromSNMP(WORD port, const TCHAR *szParam, DWORD dwBufSize, TC
 		pTransport = createSnmpTransport(port);
 		if (pTransport != NULL)
 		{
-			dwResult = SnmpGet(m_snmpVersion, pTransport, szParam, NULL, 0, szBuffer, dwBufSize, SG_PSTRING_RESULT);
+			if (interpretRawValue == SNMP_RAWTYPE_NONE)
+			{
+				dwResult = SnmpGet(m_snmpVersion, pTransport, szParam, NULL, 0, szBuffer, dwBufSize, SG_PSTRING_RESULT);
+			}
+			else
+			{
+				BYTE rawValue[1024];
+				memset(rawValue, 0, 1024);
+				dwResult = SnmpGet(m_snmpVersion, pTransport, szParam, NULL, 0, rawValue, 1024, SG_RAW_RESULT);
+				if (dwResult == SNMP_ERR_SUCCESS)
+				{
+					switch(interpretRawValue)
+					{
+						case SNMP_RAWTYPE_INT32:
+							_sntprintf(szBuffer, dwBufSize, _T("%d"), ntohl(*((LONG *)rawValue)));
+							break;
+						case SNMP_RAWTYPE_UINT32:
+							_sntprintf(szBuffer, dwBufSize, _T("%u"), ntohl(*((DWORD *)rawValue)));
+							break;
+						case SNMP_RAWTYPE_INT64:
+							_sntprintf(szBuffer, dwBufSize, INT64_FMT, ntohq(*((INT64 *)rawValue)));
+							break;
+						case SNMP_RAWTYPE_UINT64:
+							_sntprintf(szBuffer, dwBufSize, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
+							break;
+						case SNMP_RAWTYPE_DOUBLE:
+							_sntprintf(szBuffer, dwBufSize, _T("%f"), ntohd(*((double *)rawValue)));
+							break;
+						case SNMP_RAWTYPE_IP_ADDR:
+							IpToStr(ntohl(*((DWORD *)rawValue)), szBuffer);
+							break;
+						case SNMP_RAWTYPE_MAC_ADDR:
+							MACToStr(rawValue, szBuffer);
+							break;
+						default:
+							szBuffer[0] = 0;
+							break;
+					}
+				}
+			}
 			delete pTransport;
 		}
 		else
@@ -2667,7 +2706,7 @@ DWORD Node::getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffe
          dwRetCode = GetItemFromAgent(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_SNMP_AGENT:
-         dwRetCode = GetItemFromSNMP(0, pszParam, dwBufSize, pszBuffer);
+			dwRetCode = getItemFromSNMP(0, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
          break;
       case DS_CHECKPOINT_AGENT:
          dwRetCode = GetItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
@@ -3830,7 +3869,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 		if (!(bSuccess || useOnlyDNS))
 		{
 			DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP..."), m_dwId, m_szName);
-			if (GetItemFromSNMP(0, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer) == DCE_SUCCESS)
+			if (getItemFromSNMP(0, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
 			{
 				StrStrip(szBuffer);
 				if (szBuffer[0] != 0)

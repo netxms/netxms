@@ -523,18 +523,18 @@ CREATE TABLE items
 	template_item_id integer not null,
 	name varchar(255) null,
 	description varchar(255) null,
+	flags integer not null,
 	source integer not null,	// 0 for internal or 1 for native agent or 2 for SNMP
 	snmp_port integer not null,
 	datatype integer not null,
 	polling_interval integer not null,
 	retention_time integer not null,
-	adv_schedule integer not null,	// 1 if item has advanced schedule
 	status integer not null,			// ACTIVE, DISABLED or NOT_SUPPORTED
+	snmp_raw_value_type integer not null,
 	delta_calculation integer not null,
 	transformation SQL_TEXT,         // Transformation script
 	instance varchar(255) null,		// Free form text which can be used in events
 	system_tag varchar(255) null,     		// System tag
-	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
 	resource_id integer not null,  	// associated cluster resource ID
 	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
 	base_units integer not null,		// bytes, seconds, etc.

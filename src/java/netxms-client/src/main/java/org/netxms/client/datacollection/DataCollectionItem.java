@@ -57,6 +57,21 @@ public class DataCollectionItem
 	public static final int DELTA_AVERAGE_PER_SECOND = 2;
 	public static final int DELTA_AVERAGE_PER_MINUTE = 3;
 	
+	// SNMP raw types for input transformation
+	public static final int SNMP_RAWTYPE_NONE = 0;
+	public static final int SNMP_RAWTYPE_INT32 = 1;
+	public static final int SNMP_RAWTYPE_UINT32 = 2;
+	public static final int SNMP_RAWTYPE_INT64 = 3;
+	public static final int SNMP_RAWTYPE_UINT64 = 4;
+	public static final int SNMP_RAWTYPE_DOUBLE = 5;
+	public static final int SNMP_RAWTYPE_IP_ADDR = 6;
+	public static final int SNMP_RAWTYPE_MAC_ADDR = 7;
+	
+	// Flags
+	public static final int DCF_ADVANCED_SCHEDULE = 0x0001;
+	public static final int DCF_ALL_THRESHOLDS = 0x0002;
+	public static final int DCF_RAW_VALUE_OCTET_STRING = 0x0004;
+		
 	// DCI attributes
 	private DataCollectionConfiguration owner;
 	private long id;
@@ -69,8 +84,7 @@ public class DataCollectionItem
 	private int origin;
 	private int status;
 	private int deltaCalculation;
-	private boolean processAllThresholds;
-	private boolean useAdvancedSchedule;
+	private int flags;
 	private String name;
 	private String description;
 	private String transformationScript;
@@ -80,6 +94,7 @@ public class DataCollectionItem
 	private int baseUnits;
 	private int multiplier;
 	private String customUnitName;
+	private int snmpRawValueType;
 	private int snmpPort;
 	private ArrayList<String> schedules;
 	private ArrayList<Threshold> thresholds;
@@ -103,8 +118,7 @@ public class DataCollectionItem
 		origin = msg.getVariableAsInteger(NXCPCodes.VID_DCI_SOURCE_TYPE);
 		status = msg.getVariableAsInteger(NXCPCodes.VID_DCI_STATUS);
 		deltaCalculation = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DELTA_CALCULATION);
-		processAllThresholds = msg.getVariableAsBoolean(NXCPCodes.VID_ALL_THRESHOLDS);
-		useAdvancedSchedule = msg.getVariableAsBoolean(NXCPCodes.VID_ADV_SCHEDULE);
+		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		transformationScript = msg.getVariableAsString(NXCPCodes.VID_DCI_FORMULA);
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
@@ -114,6 +128,7 @@ public class DataCollectionItem
 		multiplier = msg.getVariableAsInteger(NXCPCodes.VID_MULTIPLIER);
 		customUnitName = msg.getVariableAsString(NXCPCodes.VID_CUSTOM_UNITS_NAME);
 		perfTabSettings = msg.getVariableAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
+		snmpRawValueType = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
 		snmpPort = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_PORT);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_SCHEDULES);
@@ -152,8 +167,7 @@ public class DataCollectionItem
 		origin = AGENT;
 		status = ACTIVE;
 		deltaCalculation = DELTA_NONE;
-		processAllThresholds = false;
-		useAdvancedSchedule = false;
+		flags = 0;
 		transformationScript = null;
 		perfTabSettings = null;
 		name = "";
@@ -163,6 +177,7 @@ public class DataCollectionItem
 		baseUnits = 0;
 		multiplier = 0;
 		customUnitName = null;
+		snmpRawValueType = SNMP_RAWTYPE_NONE;
 		snmpPort = 0;
 		schedules = new ArrayList<String>(0);
 		thresholds = new ArrayList<Threshold>(0);
@@ -187,8 +202,8 @@ public class DataCollectionItem
 		msg.setVariable(NXCPCodes.VID_INSTANCE, instance);
 		msg.setVariable(NXCPCodes.VID_SYSTEM_TAG, systemTag);
 		msg.setVariable(NXCPCodes.VID_DCI_FORMULA, transformationScript);
-		msg.setVariableInt16(NXCPCodes.VID_ALL_THRESHOLDS, processAllThresholds ? 1 : 0);
-		msg.setVariableInt16(NXCPCodes.VID_ADV_SCHEDULE, useAdvancedSchedule ? 1 : 0);
+		msg.setVariableInt16(NXCPCodes.VID_FLAGS, flags);
+		msg.setVariableInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
 		msg.setVariableInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
 		msg.setVariableInt32(NXCPCodes.VID_AGENT_PROXY, (int)proxyNode);
 		msg.setVariableInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
@@ -199,7 +214,7 @@ public class DataCollectionItem
 			msg.setVariable(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		msg.setVariableInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
 		
-		if (useAdvancedSchedule)
+		if (isUseAdvancedSchedule())
 		{
 			msg.setVariableInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
 			long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
@@ -370,7 +385,7 @@ public class DataCollectionItem
 	 */
 	public boolean isProcessAllThresholds()
 	{
-		return processAllThresholds;
+		return (flags & DCF_ALL_THRESHOLDS) != 0;
 	}
 
 	/**
@@ -378,7 +393,10 @@ public class DataCollectionItem
 	 */
 	public void setProcessAllThresholds(boolean processAllThresholds)
 	{
-		this.processAllThresholds = processAllThresholds;
+		if (processAllThresholds)
+			flags |= DCF_ALL_THRESHOLDS;
+		else
+			flags &= ~DCF_ALL_THRESHOLDS;
 	}
 
 	/**
@@ -386,7 +404,7 @@ public class DataCollectionItem
 	 */
 	public boolean isUseAdvancedSchedule()
 	{
-		return useAdvancedSchedule;
+		return (flags & DCF_ADVANCED_SCHEDULE) != 0;
 	}
 
 	/**
@@ -394,7 +412,31 @@ public class DataCollectionItem
 	 */
 	public void setUseAdvancedSchedule(boolean useAdvancedSchedule)
 	{
-		this.useAdvancedSchedule = useAdvancedSchedule;
+		if (useAdvancedSchedule)
+			flags |= DCF_ADVANCED_SCHEDULE;
+		else
+			flags &= ~DCF_ADVANCED_SCHEDULE;
+	}
+
+	/**
+	 * @return State of DCF_RAW_VALUE_OCTET_STRING flag
+	 */
+	public boolean isSnmpRawValueInOctetString()
+	{
+		return (flags & DCF_RAW_VALUE_OCTET_STRING) != 0;
+	}
+
+	/**
+	 * Set state of DCF_RAW_VALUE_OCTET_STRING flag
+	 * 
+	 * @param enable
+	 */
+	public void setSnmpRawValueInOctetString(boolean enable)
+	{
+		if (enable)
+			flags |= DCF_RAW_VALUE_OCTET_STRING;
+		else
+			flags &= ~DCF_RAW_VALUE_OCTET_STRING;
 	}
 
 	/**
@@ -617,5 +659,37 @@ public class DataCollectionItem
 	public void setSnmpPort(int snmpPort)
 	{
 		this.snmpPort = snmpPort;
+	}
+
+	/**
+	 * @return the flags
+	 */
+	public int getFlags()
+	{
+		return flags;
+	}
+
+	/**
+	 * @param flags the flags to set
+	 */
+	public void setFlags(int flags)
+	{
+		this.flags = flags;
+	}
+
+	/**
+	 * @return the snmpRawValueType
+	 */
+	public int getSnmpRawValueType()
+	{
+		return snmpRawValueType;
+	}
+
+	/**
+	 * @param snmpRawValueType the snmpRawValueType to set
+	 */
+	public void setSnmpRawValueType(int snmpRawValueType)
+	{
+		this.snmpRawValueType = snmpRawValueType;
 	}
 }

@@ -137,7 +137,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 28;
+	public static final int CLIENT_PROTOCOL_VERSION = 29;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;

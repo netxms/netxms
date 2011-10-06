@@ -657,6 +657,29 @@ enum
 
 
 //
+// DCI flags
+//
+
+#define DCF_ADVANCED_SCHEDULE       0x0001
+#define DCF_ALL_THRESHOLDS          0x0002
+#define DCF_RAW_VALUE_OCTET_STRING  0x0004
+
+
+//
+// SNMP raw types
+//
+
+#define SNMP_RAWTYPE_NONE           0
+#define SNMP_RAWTYPE_INT32          1
+#define SNMP_RAWTYPE_UINT32         2
+#define SNMP_RAWTYPE_INT64          3
+#define SNMP_RAWTYPE_UINT64         4
+#define SNMP_RAWTYPE_DOUBLE         5
+#define SNMP_RAWTYPE_IP_ADDR        6
+#define SNMP_RAWTYPE_MAC_ADDR       7
+
+
+//
 // Data sources
 //
 
@@ -1385,8 +1408,7 @@ typedef struct
    BYTE iDataType;
    BYTE iStatus;
    BYTE iDeltaCalculation;
-   BYTE iAdvSchedule;
-   BYTE iProcessAllThresholds;
+	WORD wFlags;
    DWORD dwNumThresholds;
    NXC_DCI_THRESHOLD *pThresholdList;
    TCHAR *pszFormula;
@@ -1397,7 +1419,8 @@ typedef struct
 	int nMultiplier;
 	TCHAR *pszCustomUnitName;
 	TCHAR *pszPerfTabSettings;
-	int nSnmpPort;
+	WORD nSnmpPort;
+	WORD wSnmpRawType;
 } NXC_DCI;
 
 

@@ -2875,7 +2875,6 @@ void CConsoleApp::UnbindObject(NXC_OBJECT *pObject)
 void CConsoleApp::ChangeNodeAddress(DWORD dwNodeId)
 {
    CAddrChangeDlg dlg;
-   DWORD dwResult;
 
    if (dlg.DoModal() == IDOK)
    {

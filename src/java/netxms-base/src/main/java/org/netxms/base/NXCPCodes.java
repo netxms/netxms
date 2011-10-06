@@ -465,7 +465,7 @@ public final class NXCPCodes
 	public static final long VID_VERSION                 = 178;
 	public static final long VID_NUM_NODES               = 179;
 	public static final long VID_LOG_FILE                = 180;
-	public static final long VID_ADV_SCHEDULE            = 181;
+	//public static final long VID_ADV_SCHEDULE            = 181;
 	public static final long VID_NUM_SCHEDULES           = 182;
 	public static final long VID_STATUS_PROPAGATION_ALG  = 183;
 	public static final long VID_FIXED_STATUS            = 184;
@@ -533,7 +533,7 @@ public final class NXCPCodes
 	public static final long VID_HELPDESK_STATE          = 246;
 	public static final long VID_HELPDESK_REF            = 247;
 	public static final long VID_REPEAT_COUNT            = 248;
-	public static final long VID_ALL_THRESHOLDS          = 249;
+	public static final long VID_SNMP_RAW_VALUE_TYPE     = 249;
 	public static final long VID_CONFIRMATION_TEXT       = 250;
 	public static final long VID_FAILED_DCI_INDEX        = 251;
 	public static final long VID_ADDR_LIST_TYPE          = 252;

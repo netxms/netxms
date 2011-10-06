@@ -41,12 +41,11 @@ import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * @author Victor
- *
+ * "Transformation" property page for DCI
  */
 public class Transformation extends PropertyPage
 {
-	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue" };
+	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" };
 	private static final String[] DCI_VARIABLES = { "$node" };
 	
 	private DataCollectionItem dci;

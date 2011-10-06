@@ -377,9 +377,9 @@ void Template::loadItemsFromDB()
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
               _T("status,delta_calculation,transformation,template_id,description,")
-              _T("instance,template_item_id,adv_schedule,all_thresholds,resource_id,")
+              _T("instance,template_item_id,flags,resource_id,")
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
-	           _T("perftab_settings,system_tag,snmp_port FROM items WHERE node_id=%d"), m_dwId);
+	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type FROM items WHERE node_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != 0)

@@ -438,7 +438,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_iOrigin = pItem->iSource;
    pgCollection.m_iPollingInterval = pItem->iPollingInterval;
    pgCollection.m_iRetentionTime = pItem->iRetentionTime;
-   pgCollection.m_bAdvSchedule = pItem->iAdvSchedule ? TRUE : FALSE;
+   pgCollection.m_bAdvSchedule = (pItem->wFlags & DCF_ADVANCED_SCHEDULE) ? TRUE : FALSE;
    pgCollection.m_iStatus = pItem->iStatus;
    pgCollection.m_strName = pItem->szName;
    pgCollection.m_strDescription = pItem->szDescription;
@@ -448,7 +448,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
 	pgCollection.m_snmpPort = pItem->nSnmpPort;
 
    // Setup schedule page
-   if (pItem->iAdvSchedule)
+   if (pItem->wFlags & DCF_ADVANCED_SCHEDULE)
    {
       pgSchedule.m_dwNumSchedules = pItem->dwNumSchedules;
       pgSchedule.m_ppScheduleList = CopyStringList(pItem->ppScheduleList, pItem->dwNumSchedules);
@@ -468,7 +468,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    // Setup "Thresholds" page
    pgThresholds.m_pItem = pItem;
    pgThresholds.m_strInstance = pItem->szInstance;
-   pgThresholds.m_bAllThresholds = pItem->iProcessAllThresholds ? TRUE : FALSE;
+   pgThresholds.m_bAllThresholds = (pItem->wFlags & DCF_ALL_THRESHOLDS) ? TRUE : FALSE;
 
 	// Setup "Performance Tab" page
 	pgPerfTab.m_strConfig = CHECK_NULL_EX(pItem->pszPerfTabSettings);
@@ -500,11 +500,14 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
       nx_strncpy(pItem->szInstance, (LPCTSTR)pgThresholds.m_strInstance, MAX_DB_STRING);
       StrStrip(pItem->szInstance);
       DestroyStringList(pItem->ppScheduleList, pItem->dwNumSchedules);
-      pItem->iAdvSchedule = pgCollection.m_bAdvSchedule;
+		if (pgCollection.m_bAdvSchedule)
+			pItem->wFlags |= DCF_ADVANCED_SCHEDULE;
+		else
+			pItem->wFlags &= ~DCF_ADVANCED_SCHEDULE;
 		pItem->dwResourceId = pgCollection.m_dwResourceId;
 		pItem->dwProxyNode = pgCollection.m_dwProxyNode;
 		pItem->nSnmpPort = pgCollection.m_snmpPort;
-      if (pItem->iAdvSchedule)
+      if (pItem->wFlags & DCF_ADVANCED_SCHEDULE)
       {
          pItem->dwNumSchedules = pgSchedule.m_dwNumSchedules;
          pItem->ppScheduleList = CopyStringList(pgSchedule.m_ppScheduleList, pItem->dwNumSchedules);
@@ -514,7 +517,10 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
          pItem->dwNumSchedules = 0;
          pItem->ppScheduleList = NULL;
       }
-      pItem->iProcessAllThresholds = pgThresholds.m_bAllThresholds ? 1 : 0;
+		if (pgThresholds.m_bAllThresholds)
+			pItem->wFlags |= DCF_ALL_THRESHOLDS;
+		else
+			pItem->wFlags &= ~DCF_ALL_THRESHOLDS;
 		safe_free(pItem->pszPerfTabSettings);
 		pItem->pszPerfTabSettings = _tcsdup((LPCTSTR)pgPerfTab.m_strConfig);
       bSuccess = TRUE;

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -109,10 +109,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pIt
          pItemList->pItems[pItemList->dwNumItems].iPollingInterval = 60;
          pItemList->pItems[pItemList->dwNumItems].iRetentionTime = 30;
          pItemList->pItems[pItemList->dwNumItems].iDeltaCalculation = DCM_ORIGINAL_VALUE;
-         pItemList->pItems[pItemList->dwNumItems].iAdvSchedule = 0;
+         pItemList->pItems[pItemList->dwNumItems].wFlags = 0;
          pItemList->pItems[pItemList->dwNumItems].dwNumSchedules = 0;
          pItemList->pItems[pItemList->dwNumItems].ppScheduleList = NULL;
-         pItemList->pItems[pItemList->dwNumItems].iProcessAllThresholds = 0;
 			pItemList->pItems[pItemList->dwNumItems].nBaseUnits = DCI_BASEUNITS_OTHER;
 			pItemList->pItems[pItemList->dwNumItems].nMultiplier = 1;
          pItemList->dwNumItems++;
@@ -156,8 +155,8 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_INSTANCE, pItem->szInstance);
    msg.SetVariable(VID_SYSTEM_TAG, pItem->szSystemTag);
    msg.SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(pItem->pszFormula));
-   msg.SetVariable(VID_ALL_THRESHOLDS, (WORD)pItem->iProcessAllThresholds);
-   msg.SetVariable(VID_ADV_SCHEDULE, (WORD)pItem->iAdvSchedule);
+   msg.SetVariable(VID_FLAGS, pItem->wFlags);
+	msg.SetVariable(VID_SNMP_RAW_VALUE_TYPE, pItem->wSnmpRawType);
 	msg.SetVariable(VID_RESOURCE_ID, pItem->dwResourceId);
 	msg.SetVariable(VID_AGENT_PROXY, pItem->dwProxyNode);
 	msg.SetVariable(VID_BASE_UNITS, (WORD)pItem->nBaseUnits);
@@ -167,7 +166,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
 		msg.SetVariable(VID_CUSTOM_UNITS_NAME, pItem->pszCustomUnitName);
 	if (pItem->pszPerfTabSettings)
 		msg.SetVariable(VID_PERFTAB_SETTINGS, pItem->pszPerfTabSettings);
-   if (pItem->iAdvSchedule)
+   if (pItem->wFlags & DCF_ADVANCED_SCHEDULE)
    {
       msg.SetVariable(VID_NUM_SCHEDULES, pItem->dwNumSchedules);
       for(i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < pItem->dwNumSchedules; i++, dwId++)

@@ -66,12 +66,26 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class General extends PropertyPage
 {
+	private static final String[] snmpRawTypes = 
+	{ 
+		"None", 
+		"32-bit signed integer", 
+		"32-bit unsigned integer",
+		"64-bit signed integer", 
+		"64-bit unsigned integer",
+		"Floating point number", 
+		"IP address",
+		"MAC address"
+	};
+	
 	private DataCollectionItem dci;
 	private Text description;
 	private LabeledText parameter;
 	private Button selectButton;
 	private Combo origin;
 	private Combo dataType;
+	private Button checkInterpretRawSnmpValue;
+	private Combo snmpRawType;
 	private ObjectSelector proxyNode;
 	private Combo schedulingMode;
 	private LabeledText pollingInterval;
@@ -196,12 +210,45 @@ public class General extends PropertyPage
       dataType.add("String");
       dataType.add("Floating Point Number");
       dataType.select(dci.getDataType());
+
+      checkInterpretRawSnmpValue = new Button(groupData, SWT.CHECK);
+      checkInterpretRawSnmpValue.setText("Interpret SNMP octet string raw value as");
+      checkInterpretRawSnmpValue.setSelection(dci.isSnmpRawValueInOctetString());
+      checkInterpretRawSnmpValue.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+		      snmpRawType.setEnabled(checkInterpretRawSnmpValue.getSelection());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      checkInterpretRawSnmpValue.setLayoutData(fd);
+      checkInterpretRawSnmpValue.setEnabled(dci.getOrigin() == DataCollectionItem.SNMP);
+
+      snmpRawType = new Combo(groupData, SWT.BORDER | SWT.READ_ONLY);
+      for(int i = 0; i < snmpRawTypes.length; i++)
+      	snmpRawType.add(snmpRawTypes[i]);
+      snmpRawType.select(dci.getSnmpRawValueType());
+      snmpRawType.setEnabled((dci.getOrigin() == DataCollectionItem.SNMP) && dci.isSnmpRawValueInOctetString());
+      fd = new FormData();
+      fd.left = new FormAttachment(checkInterpretRawSnmpValue, WidgetHelper.OUTER_SPACING, SWT.RIGHT);
+      fd.right = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(dataType.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      snmpRawType.setLayoutData(fd);
       
       proxyNode = new ObjectSelector(groupData, SWT.NONE);
       proxyNode.setLabel("Proxy node");
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.top = new FormAttachment(snmpRawType, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       proxyNode.setLayoutData(fd);
       proxyNode.setObjectClass(Node.class);
@@ -351,6 +398,8 @@ public class General extends PropertyPage
 		proxyNode.setEnabled(index != DataCollectionItem.PUSH);
 		schedulingMode.setEnabled(index != DataCollectionItem.PUSH);
 		pollingInterval.getTextControl().setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 0));
+		checkInterpretRawSnmpValue.setEnabled(index == DataCollectionItem.SNMP);
+		snmpRawType.setEnabled((index == DataCollectionItem.SNMP) && checkInterpretRawSnmpValue.getSelection());
 	}
 	
 	/**
@@ -368,6 +417,7 @@ public class General extends PropertyPage
 				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId());
 				break;
 			case DataCollectionItem.SNMP:
+			case DataCollectionItem.CHECKPOINT_SNMP:
 				SnmpObjectId oid;
 				try
 				{
@@ -411,6 +461,8 @@ public class General extends PropertyPage
 		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
 		dci.setPollingInterval(Integer.parseInt(pollingInterval.getText()));
 		dci.setRetentionTime(Integer.parseInt(retentionTime.getText()));
+		dci.setSnmpRawValueInOctetString(checkInterpretRawSnmpValue.getSelection());
+		dci.setSnmpRawValueType(snmpRawType.getSelectionIndex());
 		
 		if (statusActive.getSelection())
 			dci.setStatus(DataCollectionItem.ACTIVE);

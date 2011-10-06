@@ -185,8 +185,9 @@ private:
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
-   BYTE m_advSchedule;           // 1 if item has advanced schedule
-   BYTE m_processAllThresholds;  // 1 if all thresholds should be processed each time
+	WORD m_flags;
+   //BYTE m_advSchedule;           // 1 if item has advanced schedule
+   //BYTE m_processAllThresholds;  // 1 if all thresholds should be processed each time
    DWORD m_dwTemplateId;         // Related template's id
    DWORD m_dwTemplateItemId;     // Related template item's id
    DWORD m_dwNumThresholds;
@@ -210,6 +211,7 @@ private:
 	int m_nMultiplier;
 	TCHAR *m_pszCustomUnitName;
 	TCHAR *m_pszPerfTabSettings;
+	WORD m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 
    void lock() { MutexLock(m_hMutex, INFINITE); }
@@ -258,6 +260,8 @@ public:
 	time_t getLastPollTime() { return m_tLastPoll; }
 	DWORD getErrorCount() { return m_dwErrorCount; }
 	WORD getSnmpPort() { return m_snmpPort; }
+	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
+	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
 
    bool isReadyForPolling(time_t currTime);
 	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
@@ -295,8 +299,8 @@ public:
 	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
 	void setInterval(int nInt) { m_iPollingInterval = nInt; }
 	void setDeltaCalcMethod(int method) { m_deltaCalculation = method; }
-	void setAllThresholdsFlag(BOOL bFlag) { m_processAllThresholds = bFlag ? 1 : 0; }
-	void setAdvScheduleFlag(BOOL bFlag) { m_advSchedule = bFlag ? 1 : 0; }
+	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
+	void setAdvScheduleFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ADVANCED_SCHEDULE; else m_flags &= ~DCF_ADVANCED_SCHEDULE; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
 	void addSchedule(const TCHAR *pszSchedule);
