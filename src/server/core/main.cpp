@@ -734,6 +734,7 @@ retry_db_lock:
 		return FALSE;
 
 	InitLogAccess();
+	FileUploadJob::init();
 
 	// Initialize watchdog
 	WatchdogInit();

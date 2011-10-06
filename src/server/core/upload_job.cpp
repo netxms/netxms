@@ -24,6 +24,26 @@
 
 
 //
+// Static members
+//
+
+int FileUploadJob::m_activeJobs = 0;
+int FileUploadJob::m_maxActiveJobs = 10;
+MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
+
+
+//
+// Static initializer
+//
+
+void FileUploadJob::init()
+{
+	m_sharedDataMutex = MutexCreate();
+	m_maxActiveJobs = ConfigReadInt(_T("MaxActiveUploadJobs"), 10);
+}
+
+
+//
 // Constructor
 //
 
@@ -65,6 +85,19 @@ FileUploadJob::~FileUploadJob()
 bool FileUploadJob::run()
 {
 	bool success = false;
+	
+	while(true)
+	{
+		MutexLock(m_sharedDataMutex, INFINITE);
+		if (m_activeJobs < m_maxActiveJobs)
+		{
+			m_activeJobs++;
+			MutexUnlock(m_sharedDataMutex);
+			break;
+		}
+		MutexUnlock(m_sharedDataMutex);
+		ThreadSleep(5);
+	}
 
 	AgentConnectionEx *conn = m_node->createAgentConnection();
 	if (conn != NULL)
@@ -84,6 +117,11 @@ bool FileUploadJob::run()
 	{
 		setFailureMessage(_T("Agent connection not available"));
 	}
+	
+	MutexLock(m_sharedDataMutex, INFINITE);
+	m_activeJobs--;
+	MutexUnlock(m_sharedDataMutex);
+
 	return success;
 }
 

@@ -165,6 +165,10 @@ DWORD NXCORE_EXPORTABLE UnholdJob(DWORD userId, CSCPMessage *msg);
 class FileUploadJob : public ServerJob
 {
 protected:
+	static int m_activeJobs;
+	static int m_maxActiveJobs;
+	static MUTEX m_sharedDataMutex;
+
 	Node *m_node;
 	TCHAR *m_localFile;
 	TCHAR *m_remoteFile;
@@ -176,6 +180,8 @@ protected:
 	static void uploadCallback(INT64 size, void *arg);
 
 public:
+	static void init();
+
 	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, DWORD userId, bool createOnHold);
 	virtual ~FileUploadJob();
 };
