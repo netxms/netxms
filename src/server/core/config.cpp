@@ -43,7 +43,6 @@ TCHAR g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
 TCHAR g_szDbPassword[MAX_DB_PASSWORD] = _T("");
 TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
-TCHAR g_szJavaPath[MAX_DB_NAME] = _T("java");
 
 
 //
@@ -67,6 +66,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
    { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
+   { _T("JavaLibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaLibDir },
    { _T("JavaPath"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaPath },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLibDir },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },

@@ -68,6 +68,7 @@ ServerJob::~ServerJob()
 
 	safe_free(m_type);
 	safe_free(m_description);
+	safe_free(m_failureMessage);
 	MutexDestroy(m_notificationLock);
 }
 

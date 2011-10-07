@@ -124,6 +124,8 @@ DWORD g_dwAuditFlags;
 DWORD g_dwSlmPollingInterval;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
 TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
+TCHAR g_szJavaLibDir[MAX_PATH] = DEFAULT_JAVA_LIBDIR;
+TCHAR NXCORE_EXPORTABLE g_szJavaPath[MAX_DB_NAME] = _T("java");
 int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
 DWORD NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 QWORD g_qwServerId;
@@ -793,6 +795,10 @@ retry_db_lock:
 
 	// Start uptime calculator for SLM
 	ThreadCreate(UptimeCalculator, 0, NULL);
+
+	DbgPrintf(2, _T("Java VM: %s"), g_szJavaPath);
+	DbgPrintf(2, _T("Java LIBDIR: %s"), g_szJavaLibDir);
+	DbgPrintf(2, _T("LIBDIR: %s"), g_szLibDir);
 
 	g_dwFlags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));

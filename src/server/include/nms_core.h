@@ -783,6 +783,7 @@ extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
 #endif
 extern TCHAR g_szDataDir[];
 extern TCHAR g_szLibDir[];
+extern TCHAR g_szJavaLibDir[];
 extern DWORD NXCORE_EXPORTABLE g_processAffinityMask;
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
@@ -802,7 +803,7 @@ extern TCHAR g_szDbLogin[];
 extern TCHAR g_szDbPassword[];
 extern TCHAR g_szDbName[];
 extern TCHAR g_szDbSchema[];
-extern TCHAR g_szJavaPath[];
+extern TCHAR NXCORE_EXPORTABLE g_szJavaPath[];
 extern DB_DRIVER g_dbDriver;
 extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;

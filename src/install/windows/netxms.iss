@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #include "setup.iss"
-OutputBaseFilename=netxms-1.1.5
+OutputBaseFilename=netxms-1.1.6
 
 [Components]
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
@@ -139,6 +139,7 @@ Source: "..\..\..\contrib\mibs\*.txt"; DestDir: "{app}\var\mibs"; Flags: ignorev
 Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
+Source: "..\..\java\report-generator\target\report-generator.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
 ; Console files
 Source: "..\..\..\Release\scilexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\..\Release\scilexer.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb

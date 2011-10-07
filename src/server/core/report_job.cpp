@@ -135,7 +135,7 @@ bool ReportJob::run()
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("\"%s\" -cp \"%s") FS_PATH_SEPARATOR _T("report-generator.jar\" org.netxms.report.Generator \"%s\" \"%s\" \"%s\""),
 			g_szJavaPath,
-			g_szDataDir,
+			g_szJavaLibDir,
 			g_szConfigFile,
 			definitionFileName,
 			destFileName);

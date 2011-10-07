@@ -296,6 +296,7 @@ ClientSession::~ClientSession()
    delete m_pMessageQueue;
    delete m_pUpdateQueue;
    safe_free(m_pMsgBuffer);
+	safe_free(m_clientAddr);
 	MutexDestroy(m_mutexSocketWrite);
    MutexDestroy(m_mutexSendEvents);
    MutexDestroy(m_mutexSendSyslog);
@@ -11353,7 +11354,7 @@ void ClientSession::renderReport(CSCPMessage *request)
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("\"%s\" -cp \"%s") FS_PATH_SEPARATOR _T("report-generator.jar\" org.netxms.report.Exporter \"%s\" \"%s\""),
 			g_szJavaPath,
-			g_szDataDir,
+			g_szJavaLibDir,
 			reportFileName,
 			outputFileName);
 
