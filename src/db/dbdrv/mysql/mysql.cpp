@@ -299,6 +299,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery
 			UpdateErrorMessage(mysql_stmt_error(stmt), errorText);
 			mysql_stmt_close(stmt);
 		}
+		free(pszQueryUTF8);
 	}
 	else
 	{

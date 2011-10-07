@@ -218,9 +218,10 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       {
          Lock();
 
+			DbgPrintf(7, _T("AlarmManager: adding new active alarm, current alarm count %d"), (int)m_dwNumAlarms);
          m_dwNumAlarms++;
          m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * m_dwNumAlarms);
-         memcpy(&m_pAlarmList[m_dwNumAlarms - 1], &alarm, sizeof(NXC_ALARM));
+			memcpy(&m_pAlarmList[m_dwNumAlarms - 1], &alarm, sizeof(NXC_ALARM));
          dwObjectId = alarm.dwSourceObject;
 
          Unlock();
