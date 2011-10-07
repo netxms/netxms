@@ -142,12 +142,12 @@ public class ServerJobManager extends ViewPart
 			{
 				if (n.getCode() != NXCNotification.JOB_CHANGE)
 					return;
-				refreshJobList();
+				refreshJobList(false);
 			}
 		};
 		session.addListener(clientListener);
 
-		refreshJobList();
+		refreshJobList(false);
 	}
 
 	/**
@@ -234,7 +234,7 @@ public class ServerJobManager extends ViewPart
 			@Override
 			public void run()
 			{
-				refreshJobList();
+				refreshJobList(true);
 			}
 		};
 		
@@ -300,9 +300,9 @@ public class ServerJobManager extends ViewPart
 	/**
 	 * Refresh job list
 	 */
-	private void refreshJobList()
+	private void refreshJobList(boolean userInitiated)
 	{
-		new ConsoleJob("Refresh server job list", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob("Refresh server job list", this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -342,7 +342,9 @@ public class ServerJobManager extends ViewPart
 			{
 				return "Cannot get job list from server";
 			}
-		}.start();
+		};
+		job.setUser(userInitiated);
+		job.start();
 	}
 	
 	/**
@@ -421,7 +423,7 @@ public class ServerJobManager extends ViewPart
 			@Override
 			protected void jobFinalize()
 			{
-				refreshJobList();
+				refreshJobList(false);
 			}
 		}.start();
 	}

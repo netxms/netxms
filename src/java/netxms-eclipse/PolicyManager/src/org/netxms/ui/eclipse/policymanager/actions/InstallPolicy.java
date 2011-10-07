@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,12 @@
  */
 package org.netxms.ui.eclipse.policymanager.actions;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -41,7 +43,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class InstallPolicy implements IObjectActionDelegate
 {
 	private Shell shell;
-	private GenericObject currentObject;
+	private Set<AgentPolicy> currentSelection = new HashSet<AgentPolicy>();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -58,32 +60,40 @@ public class InstallPolicy implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final SelectInstallTargetDialog dlg = 
-			new SelectInstallTargetDialog(shell, (currentObject.getNumberOfChilds() == 0) ? 
-					SelectInstallTargetDialog.INSTALL_ON_SELECTED : SelectInstallTargetDialog.INSTALL_ON_CURRENT);
+		int initialMode = SelectInstallTargetDialog.INSTALL_ON_CURRENT;
+		for(AgentPolicy p : currentSelection)
+		{
+			if (p.getNumberOfChilds() == 0)
+			{
+				initialMode = SelectInstallTargetDialog.INSTALL_ON_SELECTED;
+				break;
+			}
+		}
+		final SelectInstallTargetDialog dlg = new SelectInstallTargetDialog(shell, initialMode);
 		
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Deploy agent policy", null, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					GenericObject[] nodeList;
-					if (dlg.getInstallMode() == SelectInstallTargetDialog.INSTALL_ON_SELECTED)
-						nodeList = dlg.getSelectedObjects();
-					else
-						nodeList = currentObject.getChildsAsArray();
-					for(int i = 0; i < nodeList.length; i++)
-						session.deployAgentPolicy(currentObject.getObjectId(), nodeList[i].getObjectId());
-				}
-
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot deploy agent policy";
-				}
-			}.start();
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			for(final AgentPolicy policy : currentSelection)
+			{
+				new ConsoleJob("Deploy agent policy " + policy.getObjectName(), null, Activator.PLUGIN_ID, null) {
+					@Override
+					protected void runInternal(IProgressMonitor monitor) throws Exception
+					{
+						final GenericObject[] nodeList =
+								(dlg.getInstallMode() == SelectInstallTargetDialog.INSTALL_ON_SELECTED) ?
+									dlg.getSelectedObjects() : policy.getChildsAsArray();
+						for(int i = 0; i < nodeList.length; i++)
+							session.deployAgentPolicy(policy.getObjectId(), nodeList[i].getObjectId());
+					}
+	
+					@Override
+					protected String getErrorMessage()
+					{
+						return "Cannot deploy agent policy " + policy.getObjectName();
+					}
+				}.start();
+			}
 		}
 	}
 
@@ -93,10 +103,27 @@ public class InstallPolicy implements IObjectActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if (selection instanceof TreeSelection)
+		currentSelection.clear();
+		if (selection instanceof IStructuredSelection)
 		{
-			currentObject = (GenericObject)((TreeSelection)selection).getFirstElement();
-			action.setEnabled(currentObject instanceof AgentPolicy);
+			boolean enabled = true;
+			for(Object o : ((IStructuredSelection)selection).toList())
+			{
+				if (o instanceof AgentPolicy)
+				{
+					currentSelection.add((AgentPolicy)o);
+				}
+				else
+				{
+					enabled = false;
+					break;
+				}
+			}
+			action.setEnabled(enabled);
+		}
+		else
+		{
+			action.setEnabled(false);
 		}
 	}
 }

@@ -39,7 +39,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Import configuration from XML
- *
  */
 public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 {

@@ -18,10 +18,12 @@
  */
 package org.netxms.ui.eclipse.policymanager.actions;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -41,7 +43,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class UninstallPolicy implements IObjectActionDelegate
 {
 	private Shell shell;
-	private GenericObject currentObject;
+	private Set<AgentPolicy> currentSelection = new HashSet<AgentPolicy>();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -69,22 +71,25 @@ public class UninstallPolicy implements IObjectActionDelegate
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, rootObjects, ObjectSelectionDialog.createNodeSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Uninstall agent policy", null, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-					GenericObject[] nodeList = dlg.getSelectedObjects(Node.class);
-						for(int i = 0; i < nodeList.length; i++)
-							session.uninstallAgentPolicy(currentObject.getObjectId(), nodeList[i].getObjectId());
-				}
-
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Cannot uninstall agent policy";
-				}
-			}.start();
+			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			for(final AgentPolicy policy : currentSelection)
+			{
+				new ConsoleJob("Uninstall agent policy " + policy.getObjectName(), null, Activator.PLUGIN_ID, null) {
+					@Override
+					protected void runInternal(IProgressMonitor monitor) throws Exception
+					{
+						GenericObject[] nodeList = dlg.getSelectedObjects(Node.class);
+							for(int i = 0; i < nodeList.length; i++)
+								session.uninstallAgentPolicy(policy.getObjectId(), nodeList[i].getObjectId());
+					}
+	
+					@Override
+					protected String getErrorMessage()
+					{
+						return "Cannot uninstall agent policy " + policy.getObjectName();
+					}
+				}.start();
+			}
 		}
 	}
 
@@ -94,10 +99,27 @@ public class UninstallPolicy implements IObjectActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if (selection instanceof TreeSelection)
+		currentSelection.clear();
+		if (selection instanceof IStructuredSelection)
 		{
-			currentObject = (GenericObject)((TreeSelection)selection).getFirstElement();
-			action.setEnabled(currentObject instanceof AgentPolicy);
+			boolean enabled = true;
+			for(Object o : ((IStructuredSelection)selection).toList())
+			{
+				if (o instanceof AgentPolicy)
+				{
+					currentSelection.add((AgentPolicy)o);
+				}
+				else
+				{
+					enabled = false;
+					break;
+				}
+			}
+			action.setEnabled(enabled);
+		}
+		else
+		{
+			action.setEnabled(false);
 		}
 	}
 }

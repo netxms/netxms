@@ -11,22 +11,15 @@
             class="org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor"
             id="org.netxms.ui.eclipse.serverconfig.view.server_config">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator"
+            icon="icons/network_discovery.gif"
+            id="org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator"
+            name="Network Discovery"
+            restorable="true">
+      </view>
    </extension>
-   
-   <extension
-         point="org.eclipse.ui.commands">
-      <category
-            name="Views"
-            id="org.netxms.ui.eclipse.console.category.views">
-      </category>
-      <command
-            name="Server Configuration"
-            description="Open server configuration editor"
-            categoryId="org.netxms.ui.eclipse.console.category.views"
-            id="org.netxms.ui.eclipse.serverconfig.commands.open_server_config">
-      </command>
-   </extension>
-
    <extension
          point="org.eclipse.ui.commands">
       <category
@@ -45,6 +38,22 @@
             categoryId="org.netxms.ui.eclipse.console.category.tools"
             id="org.netxms.ui.eclipse.serverconfig.commands.import_configuration">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open server configuration editor"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_server_config"
+            name="Server Configuration">
+      </command>
+      <category
+            id="org.netxms.ui.eclipse.console.category.views"
+            name="Views">
+      </category>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open network discovery configuration"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_netdisco_config"
+            name="Network Discovery">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -60,6 +69,16 @@
 			   class="org.netxms.ui.eclipse.serverconfig.actions.OpenServerConfig"
 			   definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_server_config">
 		   </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenNetworkDiscoveryConfig"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_netdisco_config"
+           icon="icons/network_discovery.gif"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_netdisco_config"
+           label="Network Discovery"
+           menubarPath="config/additions"
+           toolbarPath="config/additions"
+           tooltip="Open network discovery configuration">
+     </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
 		   label="Configuration export/import"

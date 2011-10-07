@@ -24,12 +24,12 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
+import org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator;
 
 /**
- * Open server configuration view
+ * Open network discovery configuration view
  */
-public class OpenServerConfig implements IWorkbenchWindowActionDelegate
+public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
 	
@@ -60,7 +60,7 @@ public class OpenServerConfig implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(ServerConfigurationEditor.ID);
+				window.getActivePage().showView(NetworkDiscoveryConfigurator.ID);
 			} 
 			catch (PartInitException e) 
 			{

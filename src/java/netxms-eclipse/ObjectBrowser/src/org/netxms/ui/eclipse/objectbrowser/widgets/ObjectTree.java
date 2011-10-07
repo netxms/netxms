@@ -123,8 +123,16 @@ public class ObjectTree extends Composite
 		objectTree.getControl().addListener(SWT.Selection, new Listener() {
 			void checkItems(TreeItem item, boolean isChecked)
 			{
+				if (item.getData() == null)
+					return;	// filtered out item
+				
 				item.setGrayed(false);
 				item.setChecked(isChecked);
+				Long id = ((GenericObject)item.getData()).getObjectId();
+				if (isChecked)
+					checkedObjects.add(id);
+				else
+					checkedObjects.remove(id);
 				TreeItem[] items = item.getItems();
 				for(int i = 0; i < items.length; i++)
 					checkItems(items[i], isChecked);
@@ -165,10 +173,18 @@ public class ObjectTree extends Composite
 					return;
 				
 				TreeItem item = (TreeItem)event.item;
+				final GenericObject object = (GenericObject)item.getData();
+				if (object == null)
+					return;
+				
 				boolean isChecked = item.getChecked();
+				if (isChecked)
+				{
+					objectTree.expandToLevel(object, TreeViewer.ALL_LEVELS);
+				}
 				checkItems(item, isChecked);
 				checkPath(item.getParentItem(), isChecked, false);
-				Long id = ((GenericObject)item.getData()).getObjectId();
+				final Long id = object.getObjectId();
 				if (isChecked)
 					checkedObjects.add(id);
 				else
