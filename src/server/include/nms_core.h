@@ -623,6 +623,19 @@ public:
 
 
 //
+// Delayed SQL request
+//
+
+typedef struct
+{
+	TCHAR *query;
+	int bindCount;
+	BYTE *sqlTypes;
+	TCHAR *bindings[1]; /* actual size determined by bindCount field */
+} DELAYED_SQL_REQUEST;
+
+
+//
 // Functions
 //
 
@@ -667,6 +680,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 void SaveObjects(DB_HANDLE hdb);
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
+void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
 void StartDBWriter();
 void StopDBWriter();
 

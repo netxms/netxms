@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,7 +51,51 @@ static THREAD m_hWriteThreadList[MAX_DB_WRITERS];
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 {
-   g_pLazyRequestQueue->Put(_tcsdup(query));
+	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)malloc(sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR));
+	rq->query = (TCHAR *)&rq->bindings[0];
+	_tcscpy(rq->query, query);
+	rq->bindCount = 0;
+   g_pLazyRequestQueue->Put(rq);
+	DbgPrintf(8, _T("SQL request queued: %s"), query);
+}
+
+
+//
+// Put parameterized SQL request into queue for later execution
+//
+
+void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values)
+{
+	int size = sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR) + bindCount * sizeof(TCHAR *) + bindCount;
+	for(int i = 0; i < bindCount; i++)
+		size += (_tcslen(values[i]) + 1) * sizeof(TCHAR) + sizeof(TCHAR *);
+	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)malloc(size);
+
+	BYTE *base = (BYTE *)&rq->bindings[bindCount];
+	int pos = 0;
+	int align = sizeof(TCHAR *);
+
+	rq->query = (TCHAR *)base;
+	_tcscpy(rq->query, query);
+	rq->bindCount = bindCount;
+	pos += (_tcslen(query) + 1) * sizeof(TCHAR);
+
+	rq->sqlTypes = &base[pos];
+	pos += bindCount;
+	if (pos % align != 0)
+		pos += align - pos % align;
+
+	for(int i = 0; i < bindCount; i++)
+	{
+		rq->sqlTypes[i] = (BYTE)sqlTypes[i];
+		rq->bindings[i] = (TCHAR *)&base[pos];
+		_tcscpy(rq->bindings[i], values[i]);
+		pos += (_tcslen(values[i]) + 1) * sizeof(TCHAR);
+		if (pos % align != 0)
+			pos += align - pos % align;
+	}
+
+   g_pLazyRequestQueue->Put(rq);
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
 }
 
@@ -62,7 +106,6 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 
 static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 {
-   TCHAR *query;
    DB_HANDLE hdb;
 
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
@@ -82,12 +125,28 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 
    while(1)
    {
-      query = (TCHAR *)g_pLazyRequestQueue->GetOrBlock();
-      if (query == INVALID_POINTER_VALUE)   // End-of-job indicator
+      DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)g_pLazyRequestQueue->GetOrBlock();
+      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
-      DBQuery(hdb, query);
-      free(query);
+		if (rq->bindCount == 0)
+		{
+			DBQuery(hdb, rq->query);
+		}
+		else
+		{
+			DB_STATEMENT hStmt = DBPrepare(hdb, rq->query);
+			if (hStmt != NULL)
+			{
+				for(int i = 0; i < rq->bindCount; i++)
+				{
+					DBBind(hStmt, i + 1, (int)rq->sqlTypes[i], rq->bindings[i], DB_BIND_STATIC);
+				}
+				DBExecute(hStmt);
+				DBFreeStatement(hStmt);
+			}
+		}
+      free(rq);
    }
 
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)

@@ -1073,7 +1073,9 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 
 void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 {
-   TCHAR szQuery[MAX_LINE_SIZE + 128];
+	static int updateRawValueTypes[] = { DB_SQLTYPE_VARCHAR, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
+	static int updateValueTypes[] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
+
    ItemValue rawValue, *pValue;
 
    lock();
@@ -1098,15 +1100,27 @@ void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 
 	String escValue = DBPrepareString(g_hCoreDB, pValue->String());
 
-   // Save raw value into database
-   _sntprintf(szQuery, MAX_LINE_SIZE + 128, _T("UPDATE raw_dci_values SET raw_value=%s,transformed_value=%s,last_poll_time=%ld WHERE item_id=%d"),
-              (const TCHAR *)DBPrepareString(g_hCoreDB, pszOriginalValue), (const TCHAR *)escValue, (long)tmTimeStamp, m_dwId);
-   QueueSQLRequest(szQuery);
+	// Prepare SQL statement bindings
+	TCHAR dciId[32], pollTime[32];
+	_sntprintf(dciId, 32, _T("%d"), (int)m_dwId);
+	_sntprintf(pollTime, 32, _T("%ld"), (long)tmTimeStamp);
 
-   // Save transformed value to database
-	_sntprintf(szQuery, MAX_LINE_SIZE + 128, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (%d,%ld,%s)"),
-	           m_pNode->Id(), m_dwId, (long)tmTimeStamp, (const TCHAR *)escValue);
-   QueueSQLRequest(szQuery);
+   // Save raw value into database
+	const TCHAR *values[4];
+	values[0] = pszOriginalValue;
+	values[1] = pValue->String();
+	values[2] = pollTime;
+	values[3] = dciId;
+	QueueSQLRequest(_T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"),
+	                4, updateRawValueTypes, values);
+
+	// Save transformed value to database
+	TCHAR query[128];
+	_sntprintf(query, 128, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (?,?,?)"), m_pNode->Id());
+	values[0] = dciId;
+	values[1] = pollTime;
+	values[2] = pValue->String();
+	QueueSQLRequest(query, 3, updateValueTypes, values);
 
    // Check thresholds and add value to cache
    checkThresholds(*pValue);
