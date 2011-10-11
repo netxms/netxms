@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 
 Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
                   TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
-                  Cluster *pCluster, DWORD zoneId)
+                  Cluster *pCluster, DWORD zoneId, bool doConfPoll)
 {
    Node *pNode;
    TCHAR szIpAddr1[32], szIpAddr2[32];
@@ -178,11 +178,16 @@ Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    {
       pNode->setMgmtStatus(FALSE);
    }
-   pNode->unhide();
-   PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
 
    // Add default DCIs
    pNode->addItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+
+	if (doConfPoll)
+		pNode->configurationPoll(NULL, 0, -1, dwNetMask);
+
+   pNode->unhide();
+   PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
+
    return pNode;
 }
 
@@ -421,7 +426,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 		          IpToStr(pInfo->dwIpAddr, szIpAddr), IpToStr(pInfo->dwNetMask, szNetMask), (int)pInfo->zoneId);
 		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId))
 		{
-         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL, pInfo->zoneId);
+         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL, pInfo->zoneId, true);
 			if (node != NULL)
 			{
 				// We should do configuration poll before taking new node from the queue

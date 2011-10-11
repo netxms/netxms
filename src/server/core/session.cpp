@@ -3825,7 +3825,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 															 pRequest->GetVariableLong(VID_AGENT_PROXY),
 															 pRequest->GetVariableLong(VID_SNMP_PROXY),
 															 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
-															 zoneId);
+															 zoneId, false);
 								if (pObject != NULL)
 								{
 									((Node *)pObject)->setPrimaryName(nodePrimaryName);
