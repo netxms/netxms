@@ -25,12 +25,14 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.serverconfig.widgets.ScriptSelector;
+import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -171,6 +173,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		
 		Composite clientArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 		
@@ -183,6 +186,10 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 100;
 		activeDiscoveryAddressList.getTable().setLayoutData(gd);
+		
+		ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		linkAdd.setText("Add...");
+		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
 	}
 	
 	/**
