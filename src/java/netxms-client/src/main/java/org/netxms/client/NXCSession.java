@@ -159,6 +159,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	// Configuration import options
 	public static final int CFG_IMPORT_REPLACE_EVENT_BY_CODE = 0x0001;
 	public static final int CFG_IMPORT_REPLACE_EVENT_BY_NAME = 0x0002;
+	
+	// Address list IDs
+	public static final int ADDRESS_LIST_DISCOVERY_TARGETS = 1;
+	public static final int ADDRESS_LIST_DISCOVERY_FILTER = 2;
+	
+	// Server components
+	public static final int SERVER_COMPONENT_DISCOVERY_MANAGER = 1;
 
 	// Private constants
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
@@ -3795,10 +3802,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * configured on server.
 	 * 
 	 * @return List of SNMP USM credentials
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public List<SnmpUsmCredential> getSnmpUsmCredentials() throws IOException, NXCException
 	{
@@ -5169,8 +5174,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * 
 	 * @param jobId
 	 * @return report's File object
-	 * @throws IOException
-	 * @throws NXCException
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public File renderReport(final long jobId, ReportRenderFormat format) throws IOException, NXCException
 	{
@@ -5187,5 +5192,70 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		}
 
 		return file;
+	}
+	
+	/**
+	 * Get address list.
+	 * 
+	 * @param list list identifier (defined in NXCSession as ADDRESS_LIST_xxx)
+	 * @return address list
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<IpAddressListElement> getAddressList(int listId) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ADDR_LIST);
+		msg.setVariableInt32(NXCPCodes.VID_ADDR_LIST_TYPE, listId);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_RECORDS);
+		final List<IpAddressListElement> list = new ArrayList<IpAddressListElement>(count);
+		long varId = NXCPCodes.VID_ADDR_LIST_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			list.add(new IpAddressListElement(response, varId));
+			varId += 10;
+		}
+		return list;
+	}
+	
+	/**
+	 * Set content of address list.
+	 * 
+	 * @param listId list ID
+	 * @param list new list content
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void setAddressList(int listId, List<IpAddressListElement> list) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ADDR_LIST);
+		msg.setVariableInt32(NXCPCodes.VID_ADDR_LIST_TYPE, listId);
+		msg.setVariableInt32(NXCPCodes.VID_NUM_RECORDS, list.size());
+		long varId = NXCPCodes.VID_ADDR_LIST_BASE;
+		for(IpAddressListElement e : list)
+		{
+			msg.setVariableInt32(varId++, e.getType());
+			msg.setVariable(varId++, e.getAddr1());
+			msg.setVariable(varId++, e.getAddr2());
+			varId += 7;
+		}
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Reset server's internal component (defined by SERVER_COMPONENT_xxx)
+	 * 
+	 * @param component component id
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void resetServerComponent(int component) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESET_COMPONENT);
+		msg.setVariableInt32(NXCPCodes.VID_COMPONENT_ID, component);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }

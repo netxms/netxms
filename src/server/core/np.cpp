@@ -427,12 +427,6 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 		if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->zoneId))
 		{
          Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL, pInfo->zoneId, true);
-			if (node != NULL)
-			{
-				// We should do configuration poll before taking new node from the queue
-				// to prevent possible node duplication
-				node->configurationPoll(NULL, 0, -1, pInfo->dwNetMask);
-			}
 		}
       free(pInfo);
    }

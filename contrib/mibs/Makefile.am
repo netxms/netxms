@@ -64,6 +64,9 @@ mibs_DATA = \
 	IANA-LANGUAGE-MIB.txt \
 	IANA-RTPROTO-MIB.txt \
 	IANAifType-MIB.txt \
+	IBM-6611-APPN-MIB.txt \
+	IBM-MIB.txt \
+	IBMCPU-MIB.txt \
 	IEEE8021-PAE-MIB.txt \
 	IEEE802dot11-MIB.txt \
 	IF-MIB.txt \

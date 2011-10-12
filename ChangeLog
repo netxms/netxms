@@ -2,7 +2,9 @@
 * 1.1.6
 *
 
-- New MIBs added: EF-6000-MIB, ES-1000-MIB
+- New MIBs added: EF-6000-MIB, ES-1000-MIB, IBM-6611-APPN-MIB, IBM-MIB,
+  IBMCPU-MIB
+- Fixed interoperability problems with IBM AS/400 SNMP agent
 
 
 *

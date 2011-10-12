@@ -18,13 +18,20 @@
  */
 package org.netxms.ui.eclipse.serverconfig.actions;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.progress.UIJob;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 
 /**
  * Open network discovery configuration view
@@ -56,17 +63,38 @@ public class OpenNetworkDiscoveryConfig implements IWorkbenchWindowActionDelegat
 	@Override
 	public void run(IAction action)
 	{
-		if(window != null)
-		{	
-			try 
+		if(window == null)
+			return;
+		
+		new ConsoleJob("Loading network discovery configuration", null, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				window.getActivePage().showView(NetworkDiscoveryConfigurator.ID);
-			} 
-			catch (PartInitException e) 
-			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				final DiscoveryConfig config = DiscoveryConfig.load();
+				new UIJob("Open network discovery configurator") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						try 
+						{
+							NetworkDiscoveryConfigurator view = (NetworkDiscoveryConfigurator)window.getActivePage().showView(NetworkDiscoveryConfigurator.ID);
+							view.setConfig(config);
+						} 
+						catch (PartInitException e) 
+						{
+							MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+						}
+						return Status.OK_STATUS;
+					}
+				}.schedule();
 			}
-		}
+
+			@Override
+			protected String getErrorMessage()
+			{
+				return "Cannot load network discovery configuration";
+			}
+		}.start();
 	}
 
 	/* (non-Javadoc)

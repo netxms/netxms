@@ -1,0 +1,4180 @@
+-- Note:
+-- This text file contains ASN.1 source describing MIB objects for SNMP.
+-- The enterprise MIB described is subject to change in a future
+-- release, and support for any object described in this MIB may be
+-- removed in a future release, as standard MIBs in the management domain
+-- described by this MIB become defined and published as Internet RFCs.
+
+IBM-6611-APPN-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+        enterprises, Counter, IpAddress,
+        Gauge, TimeTicks
+               FROM RFC1155-SMI
+
+        DisplayString
+               FROM RFC1213-MIB
+
+        OBJECT-TYPE
+               FROM RFC-1212;
+
+ibm                           OBJECT IDENTIFIER ::= { enterprises 2 }
+
+ibmProd                       OBJECT IDENTIFIER ::= { ibm 6 }
+  ibm6611                     OBJECT IDENTIFIER ::= { ibmProd 2 }
+
+ibmappn                       OBJECT IDENTIFIER ::= { ibm6611 13 }
+
+-- ******************** The APPN Node Group *************************
+
+ibmappnNode                    OBJECT IDENTIFIER ::= { ibmappn 1 }
+ibmappnGeneralInfoAndCaps      OBJECT IDENTIFIER ::= { ibmappnNode 1 }
+ibmappnNnUniqueInfoAndCaps     OBJECT IDENTIFIER ::= { ibmappnNode 2 }
+ibmappnEnUniqueCaps            OBJECT IDENTIFIER ::= { ibmappnNode 3 }
+ibmappnPortInformation         OBJECT IDENTIFIER ::= { ibmappnNode 4 }
+ibmappnLinkStationInformation  OBJECT IDENTIFIER ::= { ibmappnNode 5 }
+ibmappnSnmpInformation         OBJECT IDENTIFIER ::= { ibmappnNode 6 }
+--ibmappnMemoryUse               OBJECT IDENTIFIER ::= { ibmappnNode 7 }
+--ibmappnXidInformation          OBJECT IDENTIFIER ::= { ibmappnNode 8 }
+
+-- This group provides global information about the
+-- APPN node, which is either a network node or an end node.
+
+
+-- The first section applies to all APPN nodes.
+-- The second section applies only to network nodes.
+-- The third section applies only to end nodes.
+-- The fourth section applies to Port information.
+-- The fifth section applies to SNA link station Information.
+-- The sixth section applies to SNMP traffic for this APPN sub-agent
+-- The seventh section applies to APPN memory usage.
+-- The eighth section applies to XID activities.
+
+
+
+-- APPN General Information
+-- This section applies to both network and end nodes.
+
+ibmappnNodeCpName   OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned network name
+          for this node in the format NETID.CPNAME."
+
+      ::=  { ibmappnGeneralInfoAndCaps 1 }
+
+ibmappnNodeNetid    OBJECT-TYPE
+      SYNTAX DisplayString  (SIZE (1..8))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned APPN network identification,
+           which can be from one to eight characters.
+           This ID is used with the control point name
+           to create a fully-qualified control point name."
+
+      ::=  { ibmappnGeneralInfoAndCaps 2 }
+
+ibmappnNodeBlockNum OBJECT-TYPE
+      SYNTAX DisplayString   (SIZE (3))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+         "The block number is the first three digits of the node_id.
+          These 3 hexadecimal digits identify the product and are not
+          configurable."
+
+      ::=  { ibmappnGeneralInfoAndCaps 3 }
+
+ibmappnNodeIdNum OBJECT-TYPE
+      SYNTAX DisplayString  (SIZE (5))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+         "The ID number is the last 5 digits of the node_id.
+          These 5 hexadecimal digits are administratively defined and
+          combined with the 3 digit block number form the node_id.
+          This node_id is used to identify the local node and is include
+          in APPN alerts as well as being included in XIDs.  A unique
+          value is required for connections to SNA sub-area.
+          In some implementations, the value of '00000'  is returned
+          to mean IdNum is not unique on this node."
+
+
+      ::=  { ibmappnGeneralInfoAndCaps 4 }
+
+ibmappnNodeType  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     networkNode(1),
+                     endNode(2),
+                     t21len(4)
+                     }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Type of APPN node, either network, len, or end node."
+
+      ::=  { ibmappnGeneralInfoAndCaps 5 }
+
+ibmappnNodeUpTime  OBJECT-TYPE
+      SYNTAX TimeTicks
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Time (in microseconds) since this APPN node
+           was initialized."
+
+      ::=  { ibmappnGeneralInfoAndCaps 6 }
+
+ibmappnNodeNegotLs   OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node supports negotiable
+            link stations."
+      ::=  { ibmappnGeneralInfoAndCaps 7 }
+
+ibmappnNodeSegReasm OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node supports segment reassembly
+            for session traffic.  This is only supported when
+            segment generation is also supported."
+      ::=  { ibmappnGeneralInfoAndCaps 8 }
+
+ibmappnNodeBindReasm OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node supports Bind segment
+            reassembly.  This will only be supported when Bind
+            segment generation is also supported."
+
+      ::=  { ibmappnGeneralInfoAndCaps 9 }
+
+ibmappnNodeParallelTg   OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+           "Indicates whether this node supports parallel TGs."
+
+      ::=  { ibmappnGeneralInfoAndCaps 10 }
+
+ibmappnNodeService    OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node allows call-in from nodes not
+            defined locally."
+
+      ::=  { ibmappnGeneralInfoAndCaps 11 }
+
+ibmappnNodeAdaptiveBindPacing  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node supports adaptive bind pacing."
+
+      ::=  { ibmappnGeneralInfoAndCaps 12 }
+
+ibmappnNodeHprSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+          "Indicates whether this node supports high performance
+           routing (HPR)."
+
+      ::=  { ibmappnGeneralInfoAndCaps 13 }
+
+ibmappnNodeHprTrans     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node supports high performance
+           routing (HPR) transport tower."
+
+      ::=  { ibmappnGeneralInfoAndCaps 14 }
+
+ibmappnNodeMaxSessPerHprConn OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "This object represents the max number of sessions that
+           APPN would put on any HPR connection.
+           The value is zero if not applicable."
+
+      ::=  { ibmappnGeneralInfoAndCaps 15 }
+
+-- *****************************************************************
+
+
+-- APPN Network Node Information
+-- This section provides global information about the
+-- APPN network node.
+
+ibmappnNodeNnRcvRegChar OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node supports receiving registered
+            characteristics from the served ENs."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 1 }
+
+ibmappnNodeNnGateway    OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node supports gateway function."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 2 }
+
+ibmappnNodeNnCentralDirectory  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+           "Indicates whether this node supports central directory
+            cache."
+      ::=  { ibmappnNnUniqueInfoAndCaps 3 }
+
+ibmappnNodeNnTreeCache OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node supports route tree cache."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 4 }
+
+ibmappnNodeNnTreeUpdate  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node supports
+            incremental_tree_update, which is only
+            supported when tree caching is supported."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 5 }
+
+ibmappnNodeNnRouteAddResist   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+          "Route addition resistance is a value that
+          indicates the relative desirability
+          of using this node for intermediate session traffic.
+          The value, which can be any integer 0-255,
+          is used in route computation.  The lower the value,
+          the more desirable the node is for intermediate routing."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 6 }
+
+ibmappnNodeNnIsr   OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node supports intermediate
+            session routing."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 7 }
+
+ibmappnNodeNnFrsn             OBJECT-TYPE
+      SYNTAX INTEGER (0..65535)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Flow reduction sequence numbers (FRSNs) are associated
+           with Topology Database Updates (TDUs) and are unique
+           only within each APPN network node.  A TDU can be
+
+
+           associated with multiple APPN resources. This object
+           is the last FRSN sent in a topology update to
+           adjacent network nodes."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 8 }
+
+ibmappnNodeNnPeriBorderSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node has peripheral
+           border node support."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 9 }
+
+ibmappnNodeNnInterchangeSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is has interchange node support."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 10 }
+
+ibmappnNodeNnExteBorderSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+
+
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is has extended border node
+           support."
+
+      ::=  { ibmappnNnUniqueInfoAndCaps 11 }
+
+
+-- *****************************************************************
+-- APPN End Node Information
+
+ibmappnNodeEnSegGen     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this end node supports segment generation."
+
+      ::=  { ibmappnEnUniqueCaps 1 }
+
+ibmappnNodeEnModeCosMap    OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this end node supports
+            mode name to COS name mapping."
+
+
+
+      ::=  { ibmappnEnUniqueCaps 2 }
+
+ibmappnNodeEnLocateCdinit  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this end node supports Locate Cdinit."
+
+      ::=  { ibmappnEnUniqueCaps 3 }
+
+ibmappnNodeEnSendRegNames OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node will register its LUs with the
+            adjacent serving network node:
+
+              NO  - do not register names
+              YES - register names"
+
+      ::=  { ibmappnEnUniqueCaps 4 }
+
+ibmappnNodeEnSendRegChar OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+           "Indicates whether this node supports
+            send register characteristics, which is only
+            supported when send registered names is also
+            supported."
+
+      ::=  { ibmappnEnUniqueCaps 5 }
+
+ibmappnNodeEnNnServer OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (0..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "The fully-qualified name of the current NN server
+           for this end node. Format is NETID.CPNAME.
+           The value is a zero-length string when there is no
+           active NN server."
+
+      ::=  { ibmappnEnUniqueCaps 6 }
+
+
+-- *****************************************************************************
+-- APPN Port information
+--
+
+ibmappnNodePortTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnNodePortEntry
+      ACCESS not-accessible
+
+
+      STATUS mandatory
+      DESCRIPTION
+           "The Port table describes the configuration and current
+            status of the ports used by APPN.  The type of DLC is
+            included in this table as a pointer to the DLC port
+            specific tables."
+
+      ::= { ibmappnPortInformation 1 }
+
+ibmappnNodePortEntry OBJECT-TYPE
+      SYNTAX IbmappnNodePortEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "The Port Name is used as the index to this table."
+
+      INDEX
+             { ibmappnNodePortName }
+
+      ::= { ibmappnNodePortTable 1 }
+
+IbmappnNodePortEntry ::= SEQUENCE {
+      ibmappnNodePortName            DisplayString,
+      ibmappnNodePortState           INTEGER,
+
+      ibmappnNodePortDlcType         INTEGER,
+      ibmappnNodePortPortType        INTEGER,
+      ibmappnNodePortSIMRIM          INTEGER,
+
+
+      ibmappnNodePortLsRole          INTEGER,
+      ibmappnNodePortMaxRcvBtuSize   INTEGER,
+      ibmappnNodePortMaxIframeWindow INTEGER,
+      ibmappnNodePortDefLsGoodXids   Counter,
+      ibmappnNodePortDefLsBadXids    Counter,
+      ibmappnNodePortDynLsGoodXids   Counter,
+      ibmappnNodePortDynLsBadXids    Counter,
+      ibmappnNodePortSpecific        OBJECT IDENTIFIER,
+      ibmappnNodePortDlcLocalAddr    DisplayString
+                                   }
+
+ibmappnNodePortName OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (1..10))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned name for this APPN port."
+
+      ::=  { ibmappnNodePortEntry 1 }
+
+ibmappnNodePortState        OBJECT-TYPE
+      SYNTAX INTEGER    {
+                         inactive(1),
+                         pendactive(2),
+                         active(3),
+                         pendinact(4)
+                         }
+      ACCESS read-write
+
+
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates the current state of this port."
+
+      ::=  { ibmappnNodePortEntry 2 }
+
+ibmappnNodePortDlcType OBJECT-TYPE
+      SYNTAX INTEGER {
+                      other(1),          -- none of the following
+                      sdlc(2),
+                      dlsw(3),
+                      socket(4),
+                      ethernet(5),
+                      tokenRing(6),
+                      fddi(7),
+                      fr(8),
+                      ppp(9),
+                      x25(10),
+                      isdn(11),
+                      twinaxial(12),
+                      wireless(13)
+                     }
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+                  "The type of DLC interface, distinguished according to
+                  the protocol immediately 'below' this layer."
+
+
+
+      ::=  { ibmappnNodePortEntry 3 }
+
+ibmappnNodePortPortType  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     leased(1),
+                     switched(2),
+                     sharedAccessFacilities(3)
+              }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Identifies the type of line used by this port."
+
+      ::=  { ibmappnNodePortEntry 4 }
+
+ibmappnNodePortSIMRIM  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether Set Initialization Mode (SIM) and
+            Receive Initialization Mode (RIM) are supported."
+
+      ::=  { ibmappnNodePortEntry 5 }
+
+ibmappnNodePortLsRole OBJECT-TYPE
+      SYNTAX INTEGER {
+                     primary(1),
+
+
+                     secondary(2),
+                     negotiable(3),
+                     abm(4)
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Initial role for LSs activated through this port,
+           where 'abm' indicates asynchronous balance mode."
+
+      ::=  { ibmappnNodePortEntry 6 }
+
+ibmappnNodePortMaxRcvBtuSize OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Maximum Basic Transmission Size (BTU) that a
+           link station on this port can receive."
+
+      ::=  { ibmappnNodePortEntry 7 }
+
+ibmappnNodePortMaxIframeWindow OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Maximum number of I-frames that can be received
+
+
+           by the XID sender before an acknowledgement is received."
+
+      ::=  { ibmappnNodePortEntry 8 }
+
+ibmappnNodePortDefLsGoodXids    OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The total number of successful XIDs that have occurred
+             on all defined link stations on this port since the last
+             time this port was started."
+
+      ::=  { ibmappnNodePortEntry 9 }
+
+ibmappnNodePortDefLsBadXids    OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The total number of unsuccessful XIDs that have occurred
+             on all defined link stations on this port since the last
+             time this port was started."
+
+      ::=  { ibmappnNodePortEntry 10 }
+
+ibmappnNodePortDynLsGoodXids    OBJECT-TYPE
+    SYNTAX  Counter
+
+
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The total number of successful XIDs that have occurred
+             on all dynamic link stations on this port since the last
+             time this port was started."
+
+      ::=  { ibmappnNodePortEntry 11 }
+
+ibmappnNodePortDynLsBadXids    OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The total number of unsuccessful XIDs that have occurred
+             on all dynamic link stations on this port since the last
+             time this port was started."
+
+      ::=  { ibmappnNodePortEntry 12 }
+
+ibmappnNodePortSpecific OBJECT-TYPE
+      SYNTAX OBJECT IDENTIFIER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Identifies the port specific OBJECT IDENTIFIER
+            that can provide additional information."
+
+
+
+      ::=  { ibmappnNodePortEntry 13 }
+
+-- LocalAddr can be any OCTET STRING, but since
+-- the textual description of this must be accesible to users,
+-- the agent should convert it into a displayable ASCII string.
+-- For example, a 7-byte data may be transmitted as
+-- an ASCII character string of length 20, "10:00:2A:3B:44:55.01".
+ibmappnNodePortDlcLocalAddr OBJECT-TYPE
+      SYNTAX DisplayString
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Local address in format described below
+            depending on the value of ibmappnNodePortDlcType:
+
+           other    = free form DisplayString
+           ip       = ld. ld. ld. ld / 2d -- port number
+           tr       = lx: lx: lx: lx: lx: lx . lx
+           dlsw     = lx: lx: lx: lx: lx: lx . lx
+           ethernet = lx: lx: lx: lx: lx: lx . lx
+           fddi     = lx: lx: lx: lx: lx: lx . lx
+           fr       = ld. lx
+           x25      = (1 to 15 decimal numbers)
+           wireless = 1x: 1x: 1x: 1x: 1x: 1x . 1x
+           "
+
+      ::=  { ibmappnNodePortEntry 14 }
+
+
+
+-- *****************************************************************************
+-- APPN Link Station Information
+--
+
+ibmappnNodeLsTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnNodeLsEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "This table contains detail information about the
+            link station configuration and current status."
+
+      ::= { ibmappnLinkStationInformation 1 }
+
+ibmappnNodeLsEntry OBJECT-TYPE
+      SYNTAX IbmappnNodeLsEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "This table is indexed by the link station name."
+
+      INDEX
+             { ibmappnNodeLsName }
+
+      ::= { ibmappnNodeLsTable 1 }
+
+IbmappnNodeLsEntry ::= SEQUENCE {
+      ibmappnNodeLsName             DisplayString,
+
+
+      ibmappnNodeLsPortName         DisplayString,
+      ibmappnNodeLsDlcType          INTEGER,
+      ibmappnNodeLsDynamic          INTEGER,
+      ibmappnNodeLsState            INTEGER,
+-- ls_defined_data_t / xid_info_t
+      ibmappnNodeLsCpName           DisplayString,
+      ibmappnNodeLsTgNum            INTEGER,
+      ibmappnNodeLsLimResource      INTEGER,
+      ibmappnNodeLsMigration        INTEGER,
+      ibmappnNodeLsBlockNum         DisplayString,
+      ibmappnNodeLsIdNum            DisplayString,
+      ibmappnNodeLsCpCpSession      INTEGER,
+-- ls_parms_t (common) / xid_info_t
+      ibmappnNodeLsTargetPacingCount INTEGER,
+      ibmappnNodeLsMaxSendBtuSize    INTEGER,
+-- tg_characteristics_t
+      ibmappnNodeLsEffCap           INTEGER,
+      ibmappnNodeLsConnCost         INTEGER,
+      ibmappnNodeLsByteCost         INTEGER,
+      ibmappnNodeLsSecurity         INTEGER,
+      ibmappnNodeLsDelay            INTEGER,
+      ibmappnNodeLsUsr1             INTEGER,
+      ibmappnNodeLsUsr2             INTEGER,
+      ibmappnNodeLsUsr3             INTEGER,
+-- ls_cb_t (performance data)
+      ibmappnNodeLsInXidBytes       Counter,
+      ibmappnNodeLsInMsgBytes       Counter,
+      ibmappnNodeLsInXidFrames      Counter,
+
+
+      ibmappnNodeLsInMsgFrames      Counter,
+      ibmappnNodeLsOutXidBytes      Counter,
+      ibmappnNodeLsOutMsgBytes      Counter,
+      ibmappnNodeLsOutXidFrames     Counter,
+      ibmappnNodeLsOutMsgFrames     Counter,
+-- ls_cb_xx (propgation delay)
+      ibmappnNodeLsEchoRsps         Counter,
+      ibmappnNodeLsCurrentDelay     INTEGER,
+      ibmappnNodeLsMaxDelay         INTEGER,
+      ibmappnNodeLsMinDelay         INTEGER,
+      ibmappnNodeLsMaxDelayTime     TimeTicks,
+-- ls_cb_t (Xid Statistics)
+      ibmappnNodeLsGoodXids         Counter,
+      ibmappnNodeLsBadXids          Counter,
+-- Dlc specific
+      ibmappnNodeLsSpecific         OBJECT IDENTIFIER,
+      ibmappnNodeLsSubState         INTEGER,
+      ibmappnNodeLsStartTime        TimeTicks,
+      ibmappnNodeLsActiveTime       TimeTicks,
+      ibmappnNodeLsCurrentStateTime TimeTicks,
+-- hpr specific
+      ibmappnNodeLsHprSup           INTEGER,
+      ibmappnNodeLsDestHprTrans     INTEGER,
+      ibmappnNodeLsErrRecoSup       INTEGER,
+      ibmappnNodeLsForAnrLabel      OCTET STRING,
+      ibmappnNodeLsRevAnrLabel      OCTET STRING,
+      ibmappnNodeLsCpCpNceId        OCTET STRING,
+      ibmappnNodeLsRouteNceId       OCTET STRING,
+
+
+--
+      ibmappnNodeLsLocalAddr        DisplayString,
+      ibmappnNodeLsRemoteAddr       DisplayString
+                                   }
+
+
+ibmappnNodeLsName OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (1..10))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned name for the link station.
+           The name can be from one to ten characters."
+
+      ::=  { ibmappnNodeLsEntry 1 }
+
+ibmappnNodeLsPortName OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (1..10))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned name for the port.
+           The name can be from one to ten characters."
+
+      ::=  { ibmappnNodeLsEntry 2 }
+
+
+ibmappnNodeLsDlcType OBJECT-TYPE
+
+
+      SYNTAX INTEGER {
+                      other(1),          -- none of the following
+                      sdlc(2),
+                      dlsw(3),
+                      socket(4),
+                      ethernet(5),
+                      tokenRing(6),
+                      fddi(7),
+                      fr(8),
+                      ppp(9),
+                      x25(10),
+                      isdn(11),
+                      twinaxial(12),
+                      wireless(13)
+                     }
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+                  "The type of DLC interface, distinguished according to
+                  the protocol immediately 'below' this layer."
+
+      ::=  { ibmappnNodeLsEntry 3 }
+
+ibmappnNodeLsDynamic  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+          "Identifies whether this resource is a dynamic link station.
+          Dynamic link stations are created when adjacent nodes
+          that have not been locally defined establish a connection
+          with this node."
+
+      ::=  { ibmappnNodeLsEntry 4 }
+
+
+ibmappnNodeLsState        OBJECT-TYPE
+      SYNTAX INTEGER    {
+                         inactive(1),
+                         pendactive(2),
+                         active(3),
+                         pendinact(4)
+                         }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+           "State of this link station."
+
+      ::=  { ibmappnNodeLsEntry 5 }
+
+ibmappnNodeLsCpName       OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Fully-qualified name of the adjacent node for this link
+
+
+           station.  The name can be from three to seventeen characters.
+           Format is netid.cpname."
+
+      ::=  { ibmappnNodeLsEntry 6 }
+
+ibmappnNodeLsTgNum OBJECT-TYPE
+      SYNTAX INTEGER (0..256)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Number associated with the TG to this link station
+           with a range from 0 to 256.  A value of 256 indicates
+           the tg number has not been negotiated and is unknown at
+           this time."
+
+      ::=  { ibmappnNodeLsEntry 7 }
+
+ibmappnNodeLsLimResource  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the link station is
+           a limited resource.  If it is, the TG
+           is deactivated when there are no sessions."
+
+      ::=  { ibmappnNodeLsEntry 8 }
+
+
+
+ibmappnNodeLsMigration  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this link station will be used
+            for connections to down-level or migration partners."
+
+      ::=  { ibmappnNodeLsEntry 9 }
+
+ibmappnNodeLsBlockNum OBJECT-TYPE
+      SYNTAX DisplayString   (SIZE (3))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+         "Block number of the partner node.
+          The block number is the first three digits of the node_id.
+          These 3 hexideimal digits identify the product and are not
+          configurable.
+          The value is '000' when the partner node_id is not defined."
+
+      ::=  { ibmappnNodeLsEntry 10 }
+
+ibmappnNodeLsIdNum OBJECT-TYPE
+      SYNTAX DisplayString  (SIZE (5))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+         "ID number of the partner node.
+          The ID number is the last 5 digits of the node_id.
+          These 5 hexadecimal digits are administratively defined and
+          combined with the 3 digit block number form the node_id.
+          This node_id is used to identify the node and is included
+          in APPN alerts as well as being included in XIDs.  A unique
+          value is required for connections to SNA sub-area.
+          The value is '00000' when the partner node_id is not defined."
+
+      ::=  { ibmappnNodeLsEntry 11 }
+
+ibmappnNodeLsCpCpSession  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether CP-CP sessions are
+          supported by this link station."
+
+      ::=  { ibmappnNodeLsEntry 12 }
+
+ibmappnNodeLsTargetPacingCount  OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Numeric value between 0 and 32767 inclusive indicating
+            the desired pacing window size for BINDs on this TG.
+
+
+            The number is significant only when fixed bind pacing
+            is being performed."
+
+      ::=  { ibmappnNodeLsEntry 13 }
+
+ibmappnNodeLsMaxSendBtuSize  OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Numeric value between 0 and 32767 inclusive indicating
+            the desired number of bytes in a Basic Transmission Unit
+            (BTU) that can be sent on this TG.
+            This is an administratively assigned value."
+
+      ::=  { ibmappnNodeLsEntry 14 }
+
+ibmappnNodeLsEffCap   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "The effective capacity is an integer value that indicates
+           the kilo bits per second.
+           It is derived from the link bandwidth and maximum load
+           factor with the range of 0 thru 603,979,776.
+           This is an administratively assigned value associated
+           with the TG using this link station."
+
+
+
+      ::=  { ibmappnNodeLsEntry 15 }
+
+ibmappnNodeLsConnCost OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Cost per connect time: a value representing
+           the relative cost per unit of time to use
+           the TG. Range is from 0, which means no cost,
+           to 255, which indicates maximum cost.
+           This is an administratively assigned value associated
+           with the TG using this link station."
+
+      ::=  { ibmappnNodeLsEntry 16 }
+
+ibmappnNodeLsByteCost  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Relative cost of transmitting a byte over this link.
+           Range is from 0 (lowest cost) to 255.
+           This is an administratively assigned value associated
+           with the TG using this link station."
+
+      ::=  { ibmappnNodeLsEntry 17 }
+
+
+
+ibmappnNodeLsSecurity  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     nonsecure(1),                --X'01'
+                     publicSwitchedNetwork(32),   --X'20'
+                     undergroundCable(64),        --X'40'
+                     secureConduit(96),           --X'60'
+                     guardedConduit(128),         --X'80'
+                     encrypted(160),              --X'A0'
+                     guardedRadiation(192)        --X'C0'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "The security is represented as an integer with a range of
+           1 thru 255 with the most common values enumerated as
+           defined above.
+           This is an administratively assigned value associated
+           with the TG using this link station."
+
+      ::=  { ibmappnNodeLsEntry 18 }
+
+ibmappnNodeLsDelay  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     minimum(0),                 --X'00'
+                     negligible(384),            --X'4C'
+                     terrestrial(9216),          --X'71'
+                     packet(147456),             --X'91'
+
+
+                     long(294912),               --X'99'
+                     maximum(2013265920)         --X'FF'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Relative amount of time that it takes for a signal to
+            travel the length of the logical link.  This time is
+            represented in micro seconds, with some of the more
+            common values enumerated.
+            This is an administratively assigned value associated
+            with the TG using this link station."
+
+      ::=  { ibmappnNodeLsEntry 19 }
+
+ibmappnNodeLsUsr1  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "First user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with the TG using this link station."
+
+      ::=  { ibmappnNodeLsEntry 20 }
+
+ibmappnNodeLsUsr2  OBJECT-TYPE
+
+
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Second user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with the TG using this link station."
+
+      ::=  { ibmappnNodeLsEntry 21 }
+
+ibmappnNodeLsUsr3  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Third user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with the TG using this link station."
+
+      ::=  { ibmappnNodeLsEntry 22 }
+
+ibmappnNodeLsInXidBytes OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+           "Number of XID bytes received."
+
+      ::=  { ibmappnNodeLsEntry 23 }
+
+ibmappnNodeLsInMsgBytes OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of message (I-frame) bytes received."
+
+      ::=  { ibmappnNodeLsEntry 24 }
+
+ibmappnNodeLsInXidFrames OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of XID frames received."
+
+      ::=  { ibmappnNodeLsEntry 25 }
+
+ibmappnNodeLsInMsgFrames OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of message (I-frame) frames received."
+
+
+
+      ::=  { ibmappnNodeLsEntry 26 }
+
+ibmappnNodeLsOutXidBytes OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of XID bytes sent."
+
+      ::=  { ibmappnNodeLsEntry 27 }
+
+ibmappnNodeLsOutMsgBytes OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of message (I-frame) bytes sent."
+
+      ::=  { ibmappnNodeLsEntry 28 }
+
+ibmappnNodeLsOutXidFrames OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of XID frames sent."
+
+
+
+      ::=  { ibmappnNodeLsEntry 29 }
+
+ibmappnNodeLsOutMsgFrames OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of message (I-frame) frames sent."
+
+      ::=  { ibmappnNodeLsEntry 30 }
+
+ibmappnNodeLsEchoRsps     OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of responses returned from adjacent link station.
+            A response should be returned for each test frame sent by
+            this node.
+            Test frames are sent to adjacent nodes periodically to
+            verify connectivity and to measure that actual round trip
+            time, that is the time the test frame is sent until the
+            response is received."
+
+
+      ::=  { ibmappnNodeLsEntry 31 }
+
+ibmappnNodeLsCurrentDelay  OBJECT-TYPE
+
+
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "The time that it took for the last test signal to be
+            sent and returned from this link station to the
+            adjacent links station.
+            This time is represented in milliseconds."
+
+      ::=  { ibmappnNodeLsEntry 32 }
+
+ibmappnNodeLsMaxDelay      OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "The longest time it took for a test signal
+            to be sent and returned from this link station to the
+            adjacent links station.
+            This time is represented in milliseconds."
+
+      ::=  { ibmappnNodeLsEntry 33 }
+
+ibmappnNodeLsMinDelay      OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+           "The shortest time it took for a test signal
+            to be sent and returned from this link station to the
+            adjacent links station.
+            This time is represented in milliseconds."
+
+      ::=  { ibmappnNodeLsEntry 34 }
+
+ibmappnNodeLsMaxDelayTime  OBJECT-TYPE
+      SYNTAX TimeTicks
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "The time (since system up in milliseconds)
+            when the longest delay occurred.
+            This time can be used to identify when this high
+            water mark occurred in relation to the last initialization
+            of the APPN node."
+
+      ::=  { ibmappnNodeLsEntry 35 }
+
+ibmappnNodeLsGoodXids    OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The total number of successful XIDs that have occurred
+             on this link station since the time it was started."
+
+
+
+      ::=  { ibmappnNodeLsEntry 36 }
+
+ibmappnNodeLsBadXids    OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The total number of unsuccessful XIDs that have occurred
+             on this link station since the time it was started."
+
+      ::=  { ibmappnNodeLsEntry 37 }
+
+ibmappnNodeLsSpecific  OBJECT-TYPE
+      SYNTAX OBJECT IDENTIFIER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Identifies the DLC specific OBJECT IDENTIFIER
+            that can provide additional information."
+
+      ::=  { ibmappnNodeLsEntry 38 }
+
+ibmappnNodeLsSubState     OBJECT-TYPE
+      SYNTAX INTEGER    {
+                         inactive(1),
+                         sentReqOpnstn(2),
+                         pendXidExch(3),
+                         sentActAs(4),
+
+
+                         sentSetMode(5),
+                         active(6),
+                         sentDeactAsOrd(7),
+                         sentDiscOrd(8),
+                         sentDestroyTg(9),
+                         sentCreateTg(10),
+                         sentConnReq(11),
+                         pendRcvConnInd(12),
+                         pendSendConnRsp(13),
+                         sentConnRsp(14),
+                         pendDeact(15)
+                         }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "State of this link station."
+
+      ::=  { ibmappnNodeLsEntry 39 }
+
+ibmappnNodeLsStartTime     OBJECT-TYPE
+      SYNTAX TimeTicks
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "The time (in milliseconds) this link station
+            has been active the last time since the time APPN was
+            initialized."
+
+
+
+      ::=  { ibmappnNodeLsEntry 40 }
+
+ibmappnNodeLsActiveTime    OBJECT-TYPE
+      SYNTAX TimeTicks
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "The time (in milliseconds) this link station
+            has been in the active state.
+            A zero value indicates the link station has never been
+            active."
+
+      ::=  { ibmappnNodeLsEntry 41 }
+
+ibmappnNodeLsCurrentStateTime  OBJECT-TYPE
+      SYNTAX TimeTicks
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "The time (in milliseconds) the link station is
+            in the current state."
+
+      ::=  { ibmappnNodeLsEntry 42 }
+
+ibmappnNodeLsHprSup        OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+           "Indicates whether or not high performance routing (HPR)
+            is supported over this link.  If the link is not active,
+            the defined value will be returned."
+
+      ::=  { ibmappnNodeLsEntry 43 }
+
+ibmappnNodeLsDestHprTrans OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the destination node supports
+           high performance routing (HPR) transport tower.
+           If the link is not active, a value of NO will be returned."
+
+      ::=  { ibmappnNodeLsEntry 44 }
+
+ibmappnNodeLsErrRecoSup  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the link station is supporting
+           HPR link-level error recovery or not."
+
+      ::=  { ibmappnNodeLsEntry 45 }
+
+
+
+ibmappnNodeLsForAnrLabel  OBJECT-TYPE
+      SYNTAX OCTET STRING
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "the forward ANR label for this link station.
+           if the link does not support HPR or the value
+           is unknown, a zero length string will be returned."
+
+      ::=  { ibmappnNodeLsEntry 46 }
+
+ibmappnNodeLsRevAnrLabel  OBJECT-TYPE
+      SYNTAX OCTET STRING
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "the reverse ANR label for this link station.
+           if the link does not support HPR or the value
+           is unknown, a zero length string will be returned."
+
+      ::=  { ibmappnNodeLsEntry 47 }
+
+ibmappnNodeLsCpCpNceId OBJECT-TYPE
+      SYNTAX OCTET STRING
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "the NCE ID for CP-CP sessions if this node supports
+
+
+           HPR transport tower, a zero length string if the value
+           is unknown or not meaningful for this node."
+
+      ::=  { ibmappnNodeLsEntry 48 }
+
+ibmappnNodeLsRouteNceId OBJECT-TYPE
+      SYNTAX OCTET STRING
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "the NCE ID for Route Setup if this node supports
+           HPR transport tower, a zero length string if the value
+           is unknown or not meaningful for this node."
+
+      ::=  { ibmappnNodeLsEntry 49 }
+
+-- LocalAddr can be any OCTET STRING, but since
+-- the textual description of this must be accesible to users,
+-- the agent should convert it into a displayable ASCII string.
+-- For example, a 7-byte data may be transmitted as
+-- an ASCII character string of length 20, "10:00:2A:3B:44:55.01".
+ibmappnNodeLsLocalAddr   OBJECT-TYPE
+      SYNTAX DisplayString
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Local address in format described below
+            depending on the value of ibmappnNodeLsDlcType:
+
+
+
+           other    = free form DisplayString
+           ip       = ld. ld. ld. ld / 2d
+           tr       = lx: lx: lx: lx: lx: lx . lx
+           dlsw     = lx: lx: lx: lx: lx: lx . lx
+           ethernet = lx: lx: lx: lx: lx: lx . lx
+           fddi     = lx: lx: lx: lx: lx: lx . lx
+           fr       = ld. lx
+           x25      = (1 to 15 decimal numbers)
+           wireless = 1x: 1x: 1x: 1x: 1x: 1x . 1x
+           "
+
+      ::=  { ibmappnNodeLsEntry 50 }
+
+
+ibmappnNodeLsRemoteAddr  OBJECT-TYPE
+      SYNTAX DisplayString
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Remote address in format described below
+            depending on the value of ibmappnNodeLsDlcType:
+
+           other    = free form DisplayString
+           ip       = ld. ld. ld. ld / 2d
+           tr       = lx: lx: lx: lx: lx: lx . lx
+           dlsw     = lx: lx: lx: lx: lx: lx . lx
+           ethernet = lx: lx: lx: lx: lx: lx . lx
+
+
+           fddi     = lx: lx: lx: lx: lx: lx . lx
+           fr       = ld. lx
+           x25      = (1 to 15 decimal numbers)
+           wireless = 1x: 1x: 1x: 1x: 1x: 1x . 1x
+           "
+
+      ::= { ibmappnNodeLsEntry 51 }
+
+
+-- *****************************************************************************
+-- APPN SNMP Performance Information
+--
+
+ibmappnSnmpInPkts OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "Total number of messages delivered to the APPN SNMP sub-agent."
+
+      ::=  { ibmappnSnmpInformation 1 }
+
+ibmappnSnmpInGetRequests OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Total number of GET requests delivered to the APPN SNMP
+
+
+           sub-agent."
+
+      ::=  { ibmappnSnmpInformation 2 }
+
+ibmappnSnmpInGetNexts OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Total number of GETNEXT requests delivered to the APPN SNMP
+           sub-agent."
+
+      ::=  { ibmappnSnmpInformation 3 }
+
+ibmappnSnmpInSetRequests OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Total number of SET requests delivered to the APPN SNMP
+           sub-agent."
+
+      ::=  { ibmappnSnmpInformation 4 }
+
+ibmappnSnmpInTotalVars OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+          "Total number of VARIABLES included in both
+           GET and GETNEXT requests to the APPN SNMP sub-agent."
+
+      ::=  { ibmappnSnmpInformation 5 }
+
+ibmappnSnmpInGetVars OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Total number of VARIBLES included in all
+           GET requests to the APPN SNMP sub-agent."
+
+      ::=  { ibmappnSnmpInformation 6 }
+
+ibmappnSnmpInGetNextVars OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Total number of VARIABLES included in all
+           GETNEXT requests to the APPN SNMP sub-agent."
+
+      ::=  { ibmappnSnmpInformation 7 }
+
+ibmappnSnmpInSetVars OBJECT-TYPE
+      SYNTAX Counter
+
+
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of VARIBLES included in all
+            SET requests to the APPN SNMP sub-agent."
+
+      ::=  { ibmappnSnmpInformation 8 }
+
+ibmappnSnmpOutNoSuchNames OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of VARIABLES that could not
+            be found by the APPN SNMP sub-agent."
+
+      ::=  { ibmappnSnmpInformation 9 }
+
+ibmappnSnmpOutGenErrs OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of undefined errors that
+            occurred processing SNMP request to the
+            APPN SNMP sub-agent."
+
+      ::=  { ibmappnSnmpInformation 10 }
+
+
+
+
+-- ************** The APPN Topology Group ************
+
+ibmappnNn             OBJECT IDENTIFIER ::= { ibmappn 2  }
+ibmappnNnTopo         OBJECT IDENTIFIER ::= { ibmappnNn 1  }
+ibmappnNnTopology     OBJECT IDENTIFIER ::= { ibmappnNn 3  }
+
+
+-- This group will be used to represent the entire APPN network
+-- topology, including Network nodes, virtual nodes and
+-- all TGs associated with these nodes.
+--
+
+-- Network nodes
+-- The APPN topology database consists of information about every
+-- APPN network node.  This information is learned over time
+-- as each network node exchanges topology information with
+-- each of its adjacent network nodes.  The database consists
+-- of information about each node and all of the transmissions
+-- groups used by each node.
+
+-- Virtual nodes
+-- Information about virtual nodes (connection networks) is treated
+-- the same as information about network node
+-- and is replicated at each network node.
+-- The node name is the only meaningful information. The other
+-- node objects use default values.  Each node that has defined
+
+
+-- a TG with this virtual node as the destination also defines a
+-- TG on this virtual node.  There is a TG record for each node
+-- that uses this virtual node.
+--
+--
+-- The APPN node table represents the APPN topology
+-- database with the APPN CP fully-qualified name
+-- being used as the index to this table.
+-- This entire table could be retrieved using the GET NEXT command,
+-- however, due to the dynamics of APPN, nodes could come and
+-- go and status could change as the table is being
+-- retrieved.  Although in most cases the data retrieved will be valid,
+-- missing and invalid status could cause problems for
+-- a management application that was graphically displaying
+-- this data.
+-- This potential problem can be eliminated by
+-- retrieving the FRSN before and after completion
+-- of retrieval of the APPN topology table.
+-- If the FRSN has changed, then repeat the
+-- retrieval of the entire topology table
+-- until the FRSN remains unchanged.
+-- Object 'appnNnFrsn' represents the last
+-- change or update to this node's topology
+-- database.
+--
+--
+-- The format of the actual database is as follows:
+--
+
+
+-- Node table (entry for each node in network)
+--  TG table (entry for each TG owned by node)
+--
+-- Due to SNMP ASN.1 limitations, we cannot represent
+-- the TG table within the node table.  We define
+-- separate tables for nodes and TGs, adding the node
+-- name to each TG entry to provide a means of
+-- correlating each TG with its originating node.
+
+
+ibmappnNnTopoMaxNodes   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Maximum number of nodes allowed in the APPN topology database
+          This administratively assigned value must be equal to or
+          greater than the maximum total number of end nodes and
+          network nodes.
+          If the number of nodes exceeds this value, APPN will issue
+          an Alert and the node can no longer participate as a network
+          node."
+
+      ::=  { ibmappnNnTopo 1 }
+
+ibmappnNnTopoCurNumNodes OBJECT-TYPE
+      SYNTAX Gauge
+      ACCESS read-only
+
+
+      STATUS mandatory
+      DESCRIPTION
+          "Current number of nodes in this node's topology database.
+           If this value exceeds the maximum number of nodes allowed
+           (NnTopoMaxNodes), APPN alert CPDB002 is issued."
+
+      ::=  { ibmappnNnTopo 2 }
+
+ibmappnNnTopoInTdus OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of TDUs received from
+           all adjacent NN since last initialization."
+
+      ::=  { ibmappnNnTopo 3 }
+
+ibmappnNnTopoOutTdus OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of TDUs built by this node to be sent to
+           all adjacent NN since last initialization."
+
+      ::=  { ibmappnNnTopo 4 }
+
+
+
+ibmappnNnTopoNodeLowRsns         OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology node updates received by this
+           node with a RSN less than the current RSN.  Both even and
+           odd RSN are included in this count.
+           These TDUs are not errors, but result when TDUs are
+           broadcast to all adjacent network nodes.  No update to
+           this node's topology database occurs, but this node will
+           send a TDU with it's higher RSN to the adjacent node that
+           sent this low RSN."
+
+      ::=  { ibmappnNnTopo 5 }
+
+ibmappnNnTopoNodeEqualRsns      OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology node updates received by this
+           node with a RSN equal to the current RSN.  Both even and
+           odd RSN are included in this count.
+           These TDUs are not errors, but result when TDUs are
+           broadcast to all adjacent network nodes.  No update to
+           this node's topology database occurs."
+
+
+
+      ::=  { ibmappnNnTopo 6 }
+
+ibmappnNnTopoNodeGoodHighRsns      OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology node updates received by this
+           node with a RSN greater than the current RSN.
+           This results in updating this nodes topology and broadcasting
+           a TDU to all adjacent network nodes.  It is not required to
+           send a TDU to the sender of this update because that node
+           already has the update."
+
+      ::=  { ibmappnNnTopo 7 }
+
+
+
+ibmappnNnTopoNodeBadHighRsns       OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology node updates received by this
+           node with an odd RSN greater than the current RSN.
+           These updates represent a topology inconsistency detected
+           by one of the APPN network nodes.
+           This results in updating this nodes topology and broadcasting
+
+
+           a TDU to all adjacent network nodes."
+
+      ::=  { ibmappnNnTopo 8 }
+
+
+ibmappnNnTopoNodeStateUpdates  OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology Node records built as a result
+            of internally detected node state changes that affect APPN
+            topology and routing.  Updates are sent via TDUs to all
+            adjacent network nodes."
+
+      ::=  { ibmappnNnTopo 9 }
+
+ibmappnNnTopoNodeErrors     OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology node records inconsistencies
+            detected by this node.  This occurs when this node attempts
+            to update its topology database and detects a data
+            inconsistency.  This node will create a TDU with the
+            current RSN incremented to the next odd number and
+            broadcast it to all adjacent NNs."
+
+
+
+      ::=  { ibmappnNnTopo 10 }
+
+ibmappnNnTopoNodeTimerUpdates OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology node records built for this
+            node's resource due to timer updates. Updates are sent via
+            TDUs to all adjacent network nodes. These updates insure
+            other network nodes do not delete this node's resources
+            from their topology database."
+
+      ::=  { ibmappnNnTopo 11 }
+
+ibmappnNnTopoNodePurges     OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology node records purged from this
+            node's topology database.  This occurs when a node has not
+            been updated in a specified amount of time.  The owning
+            node is responsible for broadcasting updates for its resource
+            that it wants kept in the network topology.
+            This counter is reset to zero at node initialization."
+
+
+
+      ::=  { ibmappnNnTopo 12 }
+
+
+ibmappnNnTopoTgLowRsns         OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology TG updates received by this
+           node with a RSN less than the current RSN.  Both even and
+           odd RSN are included in this count.
+           These TDUs are not errors, but result when TDUs are
+           broadcast to all adjacent network nodes.  No update to
+           this node's topology database occurs, but this node will
+           send a TDU with it's higher RSN to the sender of the low
+           RSN."
+
+      ::=  { ibmappnNnTopo 13 }
+
+ibmappnNnTopoTgEqualRsns       OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology TG updates received by this
+           node with a RSN equal to the current RSN.  Both even and
+           odd RSN are included in this count.
+           These TDUs are not errors, but result when TDUs are
+
+
+           broadcast to all adjacent network nodes.  No update to
+           this node's topology database occurs."
+
+      ::=  { ibmappnNnTopo 14 }
+
+ibmappnNnTopoTgGoodHighRsns       OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology TG updates received by this
+           node with a RSN greater than the current RSN.
+           This results in updating this nodes topology and broadcasting
+           the update to all adjacent network nodes."
+
+      ::=  { ibmappnNnTopo 15 }
+
+
+
+ibmappnNnTopoTgBadHighRsns      OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology TG updates received by this
+           node with an odd RSN greater than the current RSN.
+           These updates represent a topology inconsistency detected
+           by one of the APPN network nodes.
+
+
+           This results in updating this nodes topology and broadcasting
+           a TDU to all adjacent network nodes."
+
+      ::=  { ibmappnNnTopo 16 }
+
+
+ibmappnNnTopoTgStateUpdates  OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology TG records built as a result
+            of internally detected node state changes that affect APPN
+            topology and routing.  Updates are sent via TDUs to all
+            adjacent network nodes."
+
+      ::=  { ibmappnNnTopo 17 }
+
+ibmappnNnTopoTgErrors     OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology TG records inconsistencies
+            detected by this node.  This occurs when this node attempts
+            to update its topology database and detects a data
+            inconsistency.  This node will create a TDU with the
+            current RSN incremented to the next odd number and
+
+
+            broadcast it to all adjacent NNs."
+
+      ::=  { ibmappnNnTopo 18 }
+
+ibmappnNnTopoTgTimerUpdates OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology TG records built for this
+            node's resource due to timer updates. Updates are sent via
+            TDUs to all adjacent network nodes. These updates insure
+            other network nodes do not delete this node's resources
+            from their topology database."
+
+      ::=  { ibmappnNnTopo 19 }
+
+
+ibmappnNnTopoTgPurges     OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Total number of topology TG records purged from this
+            node's topology database.  This occurs when a TG has not
+            been updated in a specified amount of time.  The owning
+            node is responsible for broadcasting updates for its resource
+            that it wants to keep in the network topology."
+
+
+
+      ::=  { ibmappnNnTopo 20 }
+
+
+ibmappnNnTopoTotalRouteCalcs OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of routes calculated  for all class of services
+            since the last initialization."
+
+      ::=  { ibmappnNnTopo 21 }
+
+ibmappnNnTopoTotalRouteRejs OBJECT-TYPE
+      SYNTAX Counter
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of route requests for all class of services that
+            could not be calculated since last initialization."
+
+      ::=  { ibmappnNnTopo 22 }
+
+
+--APPN Node Topology table
+
+-- This table describes every known APPN Network node
+
+
+-- and Virtual node.
+
+
+ibmappnNnTopologyTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnNnTopologyEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "Portion of the APPN routing table
+            that describes all of the APPN network nodes
+            and virtual nodes known to this node."
+
+      ::= { ibmappnNnTopology 1 }
+
+ibmappnNnTopologyEntry OBJECT-TYPE
+      SYNTAX IbmappnNnTopologyEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "The fully-qualified node name is used to
+            index this table."
+
+      INDEX
+             {ibmappnNnNodeName}
+
+      ::= { ibmappnNnTopologyTable 1 }
+
+IbmappnNnTopologyEntry  ::= SEQUENCE {
+
+
+
+      ibmappnNnNodeName                     DisplayString,
+      ibmappnNnNodeFrsn                     INTEGER,
+      ibmappnNnNodeEntryTimeLeft            INTEGER,
+      ibmappnNnNodeType                     INTEGER,
+
+      ibmappnNnNodeRsn                      INTEGER,
+      ibmappnNnNodeRouteAddResist           INTEGER,
+      ibmappnNnNodeCongested                INTEGER,
+      ibmappnNnNodeIsrDepleted              INTEGER,
+      ibmappnNnNodeEndptDepleted            INTEGER,
+      ibmappnNnNodeQuiescing                INTEGER,
+      ibmappnNnNodeGateway                  INTEGER,
+      ibmappnNnNodeCentralDirectory         INTEGER,
+      ibmappnNnNodeIsr                      INTEGER,
+      ibmappnNnNodeChainSupport             INTEGER,
+
+      ibmappnNnNodeHprSup                   INTEGER,
+      ibmappnNnNodeHprTrans                 INTEGER,
+      ibmappnNnNodePeriBorderSup            INTEGER,
+      ibmappnNnNodeInterchangeSup           INTEGER,
+      ibmappnNnNodeExteBorderSup            INTEGER
+}
+
+ibmappnNnNodeName    OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+          "Administratively-assigned network name that is locally
+          defined at each network node in the format NETID.CPNAME."
+
+      ::=  { ibmappnNnTopologyEntry 1 }
+
+ibmappnNnNodeFrsn             OBJECT-TYPE
+      SYNTAX INTEGER (0..65535)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Flow reduction sequence numbers (FRSNs) are associated
+           with Topology Database Updates (TDUs) and are unique
+           only within each APPN network node.  A TDU can be
+           associated with multiple APPN resources. This FRSN
+           indicates the last time this resource was updated at
+           this node."
+
+      ::=  { ibmappnNnTopologyEntry 2 }
+
+ibmappnNnNodeEntryTimeLeft    OBJECT-TYPE
+      SYNTAX INTEGER (0..31)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of days before deletion of this
+            network node entry. Range is 0-31."
+
+
+
+      ::=  { ibmappnNnTopologyEntry 3 }
+
+ibmappnNnNodeType    OBJECT-TYPE
+      SYNTAX INTEGER {
+                     networknode(1),
+                     virtualnode(3)
+                     }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Type of APPN node."
+
+      ::=  { ibmappnNnTopologyEntry 4 }
+
+ibmappnNnNodeRsn       OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Resource sequence number that is assigned and
+            controlled by the network node that owns this
+            resource. This is always an even 32-bit number
+            unless an error has occurred."
+
+      ::=  { ibmappnNnTopologyEntry 5 }
+
+ibmappnNnNodeRouteAddResist   OBJECT-TYPE
+      SYNTAX INTEGER
+
+
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Route addition resistance
+          indicates the relative desirability
+          of using this node for intermediate session traffic.
+          The value, which can be any integer 0-255,
+          is used in route computation.  The lower the value,
+          the more desirable the node is for intermediate routing."
+
+      ::=  { ibmappnNnTopologyEntry 6 }
+
+ibmappnNnNodeCongested        OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is congested.
+           This node is not be included in route selection
+           by other nodes when this congestion exists."
+
+       ::= { ibmappnNnTopologyEntry 7 }
+
+ibmappnNnNodeIsrDepleted OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+          "Indicates whether intermediate session
+           routing resources are depleted.  This node is
+           not included in intermediate route selection
+           by other nodes when resources are depleted."
+
+      ::=  { ibmappnNnTopologyEntry 8 }
+
+ibmappnNnNodeEndptDepleted OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether session endpoint resources are depleted."
+
+      ::=  { ibmappnNnTopologyEntry 9 }
+
+ibmappnNnNodeQuiescing     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the node is quiescing.
+           This node is not included in route selection
+           by other nodes when the node is quiescing."
+
+      ::=  { ibmappnNnTopologyEntry 10 }
+
+ibmappnNnNodeGateway       OBJECT-TYPE
+
+
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node provide gateway functions."
+
+      ::=  { ibmappnNnTopologyEntry 11 }
+
+ibmappnNnNodeCentralDirectory OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node is central directory."
+
+      ::=  { ibmappnNnTopologyEntry 12 }
+
+ibmappnNnNodeIsr   OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node supports intermediate session
+            routing (ISR)."
+
+      ::=  { ibmappnNnTopologyEntry 13 }
+
+ibmappnNnNodeChainSupport OBJECT-TYPE
+
+
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node supports chaining."
+
+      ::=  { ibmappnNnTopologyEntry 14 }
+
+ibmappnNnNodeHprSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is supporting high performance
+           routing (HPR)."
+
+      ::= { ibmappnNnTopologyEntry 15 }
+
+ibmappnNnNodeHprTrans     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node supports high performance
+           routing (HPR) transport tower."
+
+      ::= { ibmappnNnTopologyEntry 16 }
+
+
+
+ibmappnNnNodePeriBorderSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node has peripheral
+           border node support."
+
+      ::= { ibmappnNnTopologyEntry 17 }
+
+ibmappnNnNodeInterchangeSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is has interchange node support."
+
+      ::=  { ibmappnNnTopologyEntry 18 }
+
+ibmappnNnNodeExteBorderSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is has extended border node
+           support."
+
+      ::=  { ibmappnNnTopologyEntry 19 }
+
+
+
+--APPN transmission group (TG) table
+
+-- This table describes the TGs associated with
+-- the APPN network nodes.
+-- The originating node is repeated here to provide a
+-- means of correlating the TGs with the nodes.
+
+
+ibmappnNnTgTopologyTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnNnTgTopologyEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "Portion of the APPN topology database
+           that describes all of the APPN transmissions groups
+           used by the APPN network nodes."
+
+      ::= { ibmappnNnTopology 2 }
+
+ibmappnNnTgTopologyEntry OBJECT-TYPE
+      SYNTAX IbmappnNnTgTopologyEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "This table requires three indexes to provide a
+            unique index.  The indexes are the owning or originating
+            CPname, the destination CPname, and the TG number."
+
+
+
+      INDEX
+             {ibmappnNnTgOwner,
+              ibmappnNnTgDest,
+              ibmappnNnTgNum}
+
+      ::= { ibmappnNnTgTopologyTable 1 }
+
+IbmappnNnTgTopologyEntry ::= SEQUENCE {
+
+      ibmappnNnTgOwner      DisplayString,
+      ibmappnNnTgDest       DisplayString,
+      ibmappnNnTgNum        INTEGER,
+      ibmappnNnTgFrsn       INTEGER,
+      ibmappnNnTgEntryTimeLeft INTEGER,
+
+      ibmappnNnTgDestVirtual INTEGER,
+      ibmappnNnTgDlcData    OCTET STRING,
+
+      ibmappnNnTgRsn        INTEGER,
+      ibmappnNnTgOperational INTEGER,
+      ibmappnNnTgQuiescing   INTEGER,
+      ibmappnNnTgCpCpSession INTEGER,
+      ibmappnNnTgEffCap     INTEGER,
+      ibmappnNnTgConnCost   INTEGER,
+      ibmappnNnTgByteCost   INTEGER,
+      ibmappnNnTgSecurity   INTEGER,
+      ibmappnNnTgDelay      INTEGER,
+
+
+      ibmappnNnTgModemClass INTEGER,
+      ibmappnNnTgUsr1       INTEGER,
+      ibmappnNnTgUsr2       INTEGER,
+      ibmappnNnTgUsr3       INTEGER,
+      ibmappnNnTgHprSup       INTEGER,
+      ibmappnNnTgDestHprTrans INTEGER,
+      ibmappnNnTgIntersubnet  INTEGER
+}
+
+
+ibmappnNnTgOwner  OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned name for the
+          originating node for this TG. The format
+          is NETID.CPNAME and is the same name
+          specified in the node table."
+
+      ::=  { ibmappnNnTgTopologyEntry 1 }
+
+ibmappnNnTgDest  OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned fully-qualified
+
+
+          network name for the destination node for this TG."
+
+      ::=  { ibmappnNnTgTopologyEntry 2 }
+
+ibmappnNnTgNum  OBJECT-TYPE
+      SYNTAX INTEGER  (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Number associated with this
+          transmission group. Range is 0-255."
+
+      ::=  { ibmappnNnTgTopologyEntry 3 }
+
+ibmappnNnTgFrsn             OBJECT-TYPE
+      SYNTAX INTEGER (0..65535)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Flow reduction sequence numbers (FRSNs) are associated
+            with Topology Database Updates (TDUs) and are unique
+            only within each APPN network node.  A TDU can be
+            associated with multiple APPN resources.  This FRSN
+            indicates the last time this resource was updated at
+            this node."
+
+      ::=  { ibmappnNnTgTopologyEntry 4 }
+
+
+
+ibmappnNnTgEntryTimeLeft    OBJECT-TYPE
+      SYNTAX INTEGER (0..31)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of days before deletion of this
+            network node TG entry. Range is 0-31."
+
+      ::=  { ibmappnNnTgTopologyEntry 5 }
+
+ibmappnNnTgDestVirtual  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the destination node is
+           a virtual node."
+
+      ::=  { ibmappnNnTgTopologyEntry 6 }
+
+ibmappnNnTgDlcData  OBJECT-TYPE
+      SYNTAX OCTET STRING  (SIZE (0..9))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "DLC specific data related to the link connection
+           network.
+           Token-Ring    - MAC/SAP
+
+
+           X.25 Switched - dial digits
+           X.21 Switched - dial digits
+           Circuit Swtch - dial digits"
+
+      ::=  { ibmappnNnTgTopologyEntry 7 }
+
+ibmappnNnTgRsn      OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Current owning node's resource sequence number
+            for this resource."
+
+      ::=  { ibmappnNnTgTopologyEntry 8 }
+
+ibmappnNnTgOperational OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the transmission group
+           is operational."
+
+      ::=  { ibmappnNnTgTopologyEntry 9 }
+
+ibmappnNnTgQuiescing OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+
+
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the transmission group
+           is quiescing."
+
+      ::=  { ibmappnNnTgTopologyEntry 10 }
+
+ibmappnNnTgCpCpSession OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether CP-CP sessions are supported on this TG."
+
+      ::=  { ibmappnNnTgTopologyEntry 11 }
+
+
+ibmappnNnTgEffCap   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "The effective capacity is an integer value that indicates
+           the kilo bits per second.
+           It is derived from the link bandwidth and maximum load
+           factor with the range of 0 thru 603,979,776.
+           This is an administratively assigned value associated
+
+
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyEntry 12 }
+
+ibmappnNnTgConnCost OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Cost per connect time: a value representing
+           the relative cost per unit of time to use
+           the TG. Range is from 0, which means no cost,
+           to 255, which indicates maximum cost.
+           This is an administratively assigned value associated
+           with this TG."
+
+
+      ::=  { ibmappnNnTgTopologyEntry 13 }
+
+ibmappnNnTgByteCost  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Relative cost of transmitting a byte over this link.
+           Range is from 0 (lowest cost) to 255.
+           This is an administratively assigned value associated
+           with this TG."
+
+
+
+      ::=  { ibmappnNnTgTopologyEntry 14 }
+
+ibmappnNnTgSecurity  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     nonsecure(1),                --X'01'
+                     publicSwitchedNetwork(32),   --X'20'
+                     undergroundCable(64),        --X'40'
+                     secureConduit(96),           --X'60'
+                     guardedConduit(128),         --X'80'
+                     encrypted(160),              --X'A0'
+                     guardedRadiation(192)        --X'C0'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "The security is represented as an integer with a range of
+           1 thru 255 with the most common values enumerated as
+           defined above.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyEntry 15 }
+
+ibmappnNnTgDelay  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     minimum(0),                 --X'00'
+                     negligible(384),            --X'4C'
+
+
+                     terrestrial(9216),          --X'71'
+                     packet(147456),             --X'91'
+                     long(294912),               --X'99'
+                     maximum(2013265920)         --X'FF'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Relative amount of time that it takes for a signal to
+            travel the length of the logical link.  This time is
+            represented in micro seconds, with some of the more
+            common values enumerated.
+            This is an administratively assigned value associated
+            with this TG."
+
+
+      ::=  { ibmappnNnTgTopologyEntry 16 }
+
+ibmappnNnTgModemClass        OBJECT-TYPE
+      SYNTAX INTEGER (0..65535)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "This is used to have multiple images for a
+            connection network.  For a connection network
+           it is the same as in the TG vector; for
+           a non-connection network it is X'00'."
+
+
+
+      ::=  { ibmappnNnTgTopologyEntry 17 }
+
+ibmappnNnTgUsr1  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "First user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyEntry 18 }
+
+ibmappnNnTgUsr2  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Second user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyEntry 19 }
+
+ibmappnNnTgUsr3  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+
+
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Third user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyEntry 20 }
+
+ibmappnNnTgHprSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "Indicates whether or not high performance routing (HPR)
+         is supported over this TG ."
+
+      ::= { ibmappnNnTgTopologyEntry 21 }
+
+ibmappnNnTgDestHprTrans     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the destination node supports
+          high performance routing (HPR) transport tower."
+
+
+
+      ::= { ibmappnNnTgTopologyEntry 22 }
+
+ibmappnNnTgIntersubnet OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the transmission group is an
+           intersubnet link (defines a border between subnetworks)."
+
+      ::= { ibmappnNnTgTopologyEntry 23 }
+
+--APPN Node Topology table (using FRSN as index)
+
+-- This table describes every known APPN Network node
+-- and Virtual node.
+
+
+ibmappnNnTopologyFRTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnNnTopologyFREntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "Portion of the APPN routing table
+            that describes all of the APPN network nodes
+            and virtual nodes known to this node."
+
+      ::= { ibmappnNnTopology 3 }
+
+
+
+ibmappnNnTopologyFREntry OBJECT-TYPE
+      SYNTAX IbmappnNnTopologyFREntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "The fully-qualified node name is used to
+            index this table."
+
+      INDEX
+             {ibmappnNnNodeFRFrsn,
+              ibmappnNnNodeFRName}
+
+      ::= { ibmappnNnTopologyFRTable 1 }
+
+IbmappnNnTopologyFREntry ::= SEQUENCE {
+      ibmappnNnNodeFRName                     DisplayString,
+      ibmappnNnNodeFRFrsn                     INTEGER,
+      ibmappnNnNodeFREntryTimeLeft            INTEGER,
+      ibmappnNnNodeFRType                     INTEGER,
+
+      ibmappnNnNodeFRRsn                      INTEGER,
+      ibmappnNnNodeFRRouteAddResist           INTEGER,
+      ibmappnNnNodeFRCongested                INTEGER,
+      ibmappnNnNodeFRIsrDepleted              INTEGER,
+      ibmappnNnNodeFREndptDepleted            INTEGER,
+      ibmappnNnNodeFRQuiescing                INTEGER,
+      ibmappnNnNodeFRGateway                  INTEGER,
+
+
+      ibmappnNnNodeFRCentralDirectory         INTEGER,
+      ibmappnNnNodeFRIsr                      INTEGER,
+      ibmappnNnNodeFRChainSupport             INTEGER,
+
+      ibmappnNnNodeFRHprSup                   INTEGER,
+      ibmappnNnNodeFRHprTrans                 INTEGER,
+      ibmappnNnNodeFRPeriBorderSup            INTEGER,
+      ibmappnNnNodeFRInterchangeSup           INTEGER,
+      ibmappnNnNodeFRExteBorderSup            INTEGER
+}
+
+ibmappnNnNodeFRName    OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned network name that is locally
+          defined at each network node in the format NETID.CPNAME."
+
+      ::=  { ibmappnNnTopologyFREntry 1 }
+
+ibmappnNnNodeFRFrsn             OBJECT-TYPE
+      SYNTAX INTEGER (0..65535)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Flow reduction sequence numbers (FRSNs) are associated
+           with Topology Database Updates (TDUs) and are unique
+
+
+           only within each APPN network node.  A TDU can be
+           associated with multiple APPN resources. This FRSN
+           indicates the last time this resource was updated at
+           this node."
+
+      ::=  { ibmappnNnTopologyFREntry 2 }
+
+ibmappnNnNodeFREntryTimeLeft    OBJECT-TYPE
+      SYNTAX INTEGER (0..31)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of days before deletion of this
+            network node entry. Range is 0-31."
+
+      ::=  { ibmappnNnTopologyFREntry 3 }
+
+ibmappnNnNodeFRType    OBJECT-TYPE
+      SYNTAX INTEGER {
+                     networknode(1),
+                     virtualnode(3)
+                     }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Type of APPN node."
+
+      ::=  { ibmappnNnTopologyFREntry 4 }
+
+
+
+ibmappnNnNodeFRRsn       OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Resource sequence number that is assigned and
+            controlled by the network node that owns this
+            resource. This is always an even 32-bit number
+            unless an error has occurred."
+
+      ::=  { ibmappnNnTopologyFREntry 5 }
+
+ibmappnNnNodeFRRouteAddResist   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Route addition resistance
+          indicates the relative desirability
+          of using this node for intermediate session traffic.
+          The value, which can be any integer 0-255,
+          is used in route computation.  The lower the value,
+          the more desirable the node is for intermediate routing."
+
+      ::=  { ibmappnNnTopologyFREntry 6 }
+
+ibmappnNnNodeFRCongested        OBJECT-TYPE
+
+
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is congested.
+           This node is not be included in route selection
+           by other nodes when this congestion exists."
+
+       ::= { ibmappnNnTopologyFREntry 7 }
+
+ibmappnNnNodeFRIsrDepleted OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether intermediate session
+           routing resources are depleted.  This node is
+           not included in intermediate route selection
+           by other nodes when resources are depleted."
+
+      ::=  { ibmappnNnTopologyFREntry 8 }
+
+ibmappnNnNodeFREndptDepleted OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether session endpoint resources are depleted."
+
+
+
+      ::=  { ibmappnNnTopologyFREntry 9 }
+
+ibmappnNnNodeFRQuiescing     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the node is quiescing.
+           This node is not included in route selection
+           by other nodes when the node is quiescing."
+
+      ::=  { ibmappnNnTopologyFREntry 10 }
+
+ibmappnNnNodeFRGateway       OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node provide gateway functions."
+
+      ::=  { ibmappnNnTopologyFREntry 11 }
+
+ibmappnNnNodeFRCentralDirectory OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+           "Indicates whether the node is central directory."
+
+      ::=  { ibmappnNnTopologyFREntry 12 }
+
+ibmappnNnNodeFRIsr   OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node supports intermediate session
+            routing (ISR)."
+
+      ::=  { ibmappnNnTopologyFREntry 13 }
+
+ibmappnNnNodeFRChainSupport OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether chain function is supported on this node."
+
+      ::=  { ibmappnNnTopologyFREntry 14 }
+
+ibmappnNnNodeFRHprSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+          "Indicates whether this node is supporting high performance
+           routing (HPR)."
+
+      ::= { ibmappnNnTopologyFREntry 15 }
+
+ibmappnNnNodeFRHprTrans     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node supports high performance
+           routing (HPR) transport tower."
+
+      ::= { ibmappnNnTopologyFREntry 16 }
+
+ibmappnNnNodeFRPeriBorderSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node has peripheral
+           border node support."
+
+      ::= { ibmappnNnTopologyFREntry 17 }
+
+ibmappnNnNodeFRInterchangeSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+
+
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is has interchange node support."
+
+      ::=  { ibmappnNnTopologyFREntry 18 }
+
+ibmappnNnNodeFRExteBorderSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is has extended border node
+           support."
+
+      ::=  { ibmappnNnTopologyFREntry 19 }
+
+
+--APPN transmission group (TG) table
+
+-- This table describes the TGs associated with
+-- the APPN network nodes.
+-- The originating node is repeated here to provide a
+-- means of correlating the TGs with the nodes.
+
+
+ibmappnNnTgTopologyFRTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnNnTgTopologyFREntry
+      ACCESS not-accessible
+
+
+      STATUS mandatory
+      DESCRIPTION
+           "Portion of the APPN topology database
+           that describes all of the APPN transmissions groups
+           used by the APPN network nodes."
+
+      ::= { ibmappnNnTopology 4 }
+
+ibmappnNnTgTopologyFREntry OBJECT-TYPE
+      SYNTAX IbmappnNnTgTopologyFREntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "This table is indexed by four columns:
+            FRSN, TG owner fully-qualified node name,
+            TG destination fully-qualified node name, TG number."
+
+      INDEX
+             {ibmappnNnTgFRFrsn,
+              ibmappnNnTgFROwner,
+              ibmappnNnTgFRDest,
+              ibmappnNnTgFRNum}
+
+      ::= { ibmappnNnTgTopologyFRTable 1 }
+
+IbmappnNnTgTopologyFREntry ::= SEQUENCE {
+
+      ibmappnNnTgFROwner      DisplayString,
+
+
+      ibmappnNnTgFRDest       DisplayString,
+      ibmappnNnTgFRNum        INTEGER,
+      ibmappnNnTgFRFrsn       INTEGER,
+      ibmappnNnTgFREntryTimeLeft INTEGER,
+
+      ibmappnNnTgFRDestVirtual INTEGER,
+      ibmappnNnTgFRDlcData    OCTET STRING,
+
+      ibmappnNnTgFRRsn        INTEGER,
+      ibmappnNnTgFROperational INTEGER,
+      ibmappnNnTgFRQuiescing   INTEGER,
+      ibmappnNnTgFRCpCpSession INTEGER,
+      ibmappnNnTgFREffCap     INTEGER,
+      ibmappnNnTgFRConnCost   INTEGER,
+      ibmappnNnTgFRByteCost   INTEGER,
+      ibmappnNnTgFRSecurity   INTEGER,
+      ibmappnNnTgFRDelay      INTEGER,
+      ibmappnNnTgFRModemClass INTEGER,
+      ibmappnNnTgFRUsr1       INTEGER,
+      ibmappnNnTgFRUsr2       INTEGER,
+      ibmappnNnTgFRUsr3       INTEGER,
+
+      ibmappnNnTgFRHprSup       INTEGER,
+      ibmappnNnTgFRDestHprTrans INTEGER,
+      ibmappnNnTgFRIntersubnet  INTEGER
+}
+
+
+
+
+ibmappnNnTgFROwner  OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned name for the
+          originating node for this TG. The format
+          is NETID.CPNAME and is the same name
+          specified in the node table."
+
+      ::=  { ibmappnNnTgTopologyFREntry 1 }
+
+ibmappnNnTgFRDest  OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned fully-qualified
+          network name for the destination node for this TG."
+
+      ::=  { ibmappnNnTgTopologyFREntry 2 }
+
+ibmappnNnTgFRNum  OBJECT-TYPE
+      SYNTAX INTEGER  (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Number associated with this
+
+
+          transmission group. Range is 0-255."
+
+      ::=  { ibmappnNnTgTopologyFREntry 3 }
+
+ibmappnNnTgFRFrsn             OBJECT-TYPE
+      SYNTAX INTEGER (0..65535)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Flow reduction sequence numbers (FRSNs) are associated
+            with Topology Database Updates (TDUs) and are unique
+            only within each APPN network node.  A TDU can be
+            associated with multiple APPN resources.  This FRSN
+            indicates the last time this resource was updated at
+            this node."
+
+      ::=  { ibmappnNnTgTopologyFREntry 4 }
+
+ibmappnNnTgFREntryTimeLeft    OBJECT-TYPE
+      SYNTAX INTEGER (0..31)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number of days before deletion of this
+            network node TG entry. Range is 0-31."
+
+      ::=  { ibmappnNnTgTopologyFREntry 5 }
+
+
+
+ibmappnNnTgFRDestVirtual  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the destination node is
+           a virtual node."
+
+      ::=  { ibmappnNnTgTopologyFREntry 6 }
+
+ibmappnNnTgFRDlcData  OBJECT-TYPE
+      SYNTAX OCTET STRING  (SIZE (0..9))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "DLC specific data related to the link connection
+           network.
+           Token-Ring    - MAC/SAP
+           X.25 Switched - dial digits
+           X.21 Switched - dial digits
+           Circuit Swtch - dial digits"
+
+      ::=  { ibmappnNnTgTopologyFREntry 7 }
+
+ibmappnNnTgFRRsn      OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+           "Current owning node's resource sequence number
+            for this resource."
+
+      ::=  { ibmappnNnTgTopologyFREntry 8 }
+
+ibmappnNnTgFROperational OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the transmission group
+           is operational."
+
+      ::=  { ibmappnNnTgTopologyFREntry 9 }
+
+ibmappnNnTgFRQuiescing OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the transmission group
+           is quiescing."
+
+      ::=  { ibmappnNnTgTopologyFREntry 10 }
+
+ibmappnNnTgFRCpCpSession OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+
+
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether CP-CP sessions are supported on this TG."
+
+      ::=  { ibmappnNnTgTopologyFREntry 11 }
+
+
+ibmappnNnTgFREffCap   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "The effective capacity is an integer value that indicates
+           the kilo bits per second.
+           It is derived from the link bandwidth and maximum load
+           factor with the range of 0 thru 603,979,776.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyFREntry 12 }
+
+ibmappnNnTgFRConnCost OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Cost per connect time: a value representing
+
+
+           the relative cost per unit of time to use
+           the TG. Range is from 0, which means no cost,
+           to 255, which indicates maximum cost.
+           This is an administratively assigned value associated
+           with this TG."
+
+
+      ::=  { ibmappnNnTgTopologyFREntry 13 }
+
+ibmappnNnTgFRByteCost  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Relative cost of transmitting a byte over this link.
+           Range is from 0 (lowest cost) to 255.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyFREntry 14 }
+
+ibmappnNnTgFRSecurity  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     nonsecure(1),                --X'01'
+                     publicSwitchedNetwork(32),   --X'20'
+                     undergroundCable(64),        --X'40'
+                     secureConduit(96),           --X'60'
+                     guardedConduit(128),         --X'80'
+
+
+                     encrypted(160),              --X'A0'
+                     guardedRadiation(192)        --X'C0'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "The security is represented as an integer with a range of
+           1 thru 255 with the most common values enumerated as
+           defined above.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyFREntry 15 }
+
+ibmappnNnTgFRDelay  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     minimum(0),                 --X'00'
+                     negligible(384),            --X'4C'
+                     terrestrial(9216),          --X'71'
+                     packet(147456),             --X'91'
+                     long(294912),               --X'99'
+                     maximum(2013265920)         --X'FF'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Relative amount of time that it takes for a signal to
+            travel the length of the logical link.  This time is
+
+
+            represented in micro seconds, with some of the more
+            common values enumerated.
+            This is an administratively assigned value associated
+            with this TG."
+
+      ::=  { ibmappnNnTgTopologyFREntry 16 }
+
+ibmappnNnTgFRModemClass        OBJECT-TYPE
+      SYNTAX INTEGER (0..65535)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "This is used to have multiple images for a
+            connection network.  For a connection network
+           it is the same as in the TG vector; for
+           a non-connection network it is X'00'."
+
+      ::=  { ibmappnNnTgTopologyFREntry 17 }
+
+ibmappnNnTgFRUsr1  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "First user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with this TG."
+
+
+
+      ::=  { ibmappnNnTgTopologyFREntry 18 }
+
+ibmappnNnTgFRUsr2  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Second user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyFREntry 19 }
+
+ibmappnNnTgFRUsr3  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Third user-defined TG characteristic for this TG with
+           a range of 0-255.
+           This is an administratively assigned value associated
+           with this TG."
+
+      ::=  { ibmappnNnTgTopologyFREntry 20 }
+
+ibmappnNnTgFRHprSup     OBJECT-TYPE
+
+
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "Indicates whether or not high performance routing (HPR)
+         is supported over this TG ."
+
+      ::= { ibmappnNnTgTopologyFREntry 21 }
+
+ibmappnNnTgFRDestHprTrans     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the destination node supports
+          high performance routing (HPR) transport tower."
+
+      ::= { ibmappnNnTgTopologyFREntry 22 }
+
+ibmappnNnTgFRIntersubnet OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the transmission group is an
+           intersubnet link (defines a border between subnetworks)."
+
+      ::= { ibmappnNnTgTopologyFREntry 23 }
+
+
+
+
+-- ************** The APPN Local Topology Group ************
+
+ibmappnLocalTopology   OBJECT IDENTIFIER ::= { ibmappn 3 }
+ibmappnLocalThisNode   OBJECT IDENTIFIER ::= { ibmappnLocalTopology 1 }
+ibmappnLocalGeneral    OBJECT IDENTIFIER ::= { ibmappnLocalThisNode   1}
+ibmappnLocalNnSpecific OBJECT IDENTIFIER ::= { ibmappnLocalThisNode   2}
+ibmappnLocalTg         OBJECT IDENTIFIER ::= { ibmappnLocalThisNode   3}
+ibmappnLocalEnTopology OBJECT IDENTIFIER ::= { ibmappnLocalTopology 2 }
+
+--This MIB Group represents the local topology
+--maintained in both APPN end nodes and network nodes.
+--Although the same control vectors are used for both network
+--and local topology, many of the attributes only apply to network
+--nodes.  This MIB group defines the required objects for retrieval
+--of information about this node and the objects that represent
+--the local topology about end nodes.
+--
+--This node could be either an network node or an end node. The
+--definition must address both cases.
+--
+--1  Information about this node
+--   a  General information about this node, both NN and ENs.
+--   b  Information about this node that applies only to NNs.
+--   c  TG table      (repeated for each TG this node owns)
+--
+--2  Information about the end nodes known to this network node
+
+
+--   (THIS SECTION ONLY APPLIES TO NETWORK NODES)
+--   a  End node table (entry for each end node )
+--   b  TG table      (repeated for each TG owned by the end nodes)
+--
+--
+----
+-- General information section
+
+ibmappnLocalNodeName    OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned fully-qualified name
+          for this node. Format is NETID.CPNAME."
+
+      ::=  { ibmappnLocalGeneral 1 }
+
+ibmappnLocalNodeType    OBJECT-TYPE
+      SYNTAX INTEGER {
+                     networkNode(1),
+                     endNode(2),
+                     t21len(4)
+                     }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Type of APPN node."
+
+
+
+      ::=  { ibmappnLocalGeneral 2 }
+
+-- Network node unique information
+ibmappnLocalNnRsn       OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Resource sequence number is assigned and
+            controlled by the network node that owns this
+            resource.  This is always an even unsigned
+            number unless an error has occurred."
+
+      ::=  { ibmappnLocalNnSpecific  1 }
+
+ibmappnLocalNnRouteAddResist   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Route addition resistance
+          indicates the relative desirability
+          of using this node for intermediate session traffic.
+          The value, which can be any integer 0-255,
+          is used in route computation.  The lower the value,
+          the more desirable the node is for intermediate routing."
+
+
+
+      ::=  { ibmappnLocalNnSpecific 2 }
+
+ibmappnLocalNnCongested        OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether this node is congested.
+            Other network nodes stop routing traffic to
+            this node while this flag is on."
+
+       ::= { ibmappnLocalNnSpecific 3 }
+
+ibmappnLocalNnIsrDepleted OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicate whether intermediated session
+            routing resources are depleted.
+            Other network nodes stop routing traffic through
+            this node while this flag is on."
+
+      ::=  { ibmappnLocalNnSpecific 4 }
+
+ibmappnLocalNnEndptDepleted OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+
+
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether session endpoint resources
+            are depleted."
+
+      ::=  { ibmappnLocalNnSpecific 5 }
+
+ibmappnLocalNnQuiescing     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node is quiescing."
+
+      ::=  { ibmappnLocalNnSpecific 6 }
+
+ibmappnLocalNnGateway       OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node has gateway services support."
+
+      ::=  { ibmappnLocalNnSpecific 7 }
+
+ibmappnLocalNnCentralDirectory OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+
+
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node is a central directory."
+
+      ::=  { ibmappnLocalNnSpecific 8 }
+
+ibmappnLocalNnIsr   OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the node supports intermediate session routing."
+
+      ::=  { ibmappnLocalNnSpecific 9 }
+
+ibmappnLocalNnChainSupport OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether chain function is supported on this node."
+
+      ::=  { ibmappnLocalNnSpecific 10 }
+
+ibmappnLocalNnFrsn     OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+
+
+      DESCRIPTION
+          "Flow reduction sequence numbers (FRSNs) are associated
+           with Topology Database Updates (TDUs) and are unique
+           only within each APPN network node.  A TDU can be
+           associated with multiple APPN resources. This object
+           is the last FRSN sent in a topology update to
+           adjacent network nodes."
+
+      ::=  { ibmappnLocalNnSpecific 11 }
+
+ibmappnLocalNnHprSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node supports high performance
+           routing (HPR)."
+
+      ::= { ibmappnLocalNnSpecific 12 }
+
+ibmappnLocalNnHprTrans     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node supports
+          high performance routing (HPR) transport tower."
+
+
+
+      ::= { ibmappnLocalNnSpecific 13 }
+
+ibmappnLocalNnPeriBorderSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node has peripheral
+           border node support."
+
+      ::= { ibmappnLocalNnSpecific 14 }
+
+ibmappnLocalNnInterchangeSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is has interchange node support."
+
+      ::= { ibmappnLocalNnSpecific 15 }
+
+ibmappnLocalNnExteBorderSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether this node is has extended border node
+           support."
+
+
+
+      ::= { ibmappnLocalNnSpecific 16 }
+
+
+-- Local TG information
+-- APPN Transmission Group (TG) Table
+
+-- This table describes the TGs associated with
+-- this node only.
+
+ibmappnLocalTgTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnLocalTgEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "TG Table describes all of the TGs owned by this
+            node.  The TG destination can be a virtual
+            node, network node, len, or end node."
+
+      ::= { ibmappnLocalTg 1 }
+
+ibmappnLocalTgEntry OBJECT-TYPE
+      SYNTAX IbmappnLocalTgEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "This table is indexed by the destination CPname
+            and the TG number."
+
+
+
+      INDEX
+             {ibmappnLocalTgDest,
+              ibmappnLocalTgNum}
+
+      ::= { ibmappnLocalTgTable 1 }
+
+IbmappnLocalTgEntry ::= SEQUENCE {
+
+      ibmappnLocalTgDest       DisplayString,
+      ibmappnLocalTgNum        INTEGER,
+      ibmappnLocalTgDestVirtual INTEGER,
+      ibmappnLocalTgDlcData    OCTET STRING,
+
+      ibmappnLocalTgRsn        INTEGER,
+      ibmappnLocalTgQuiescing  INTEGER,
+      ibmappnLocalTgOperational INTEGER,
+      ibmappnLocalTgCpCpSession INTEGER,
+      ibmappnLocalTgEffCap     INTEGER,
+      ibmappnLocalTgConnCost   INTEGER,
+      ibmappnLocalTgByteCost   INTEGER,
+      ibmappnLocalTgSecurity   INTEGER,
+      ibmappnLocalTgDelay      INTEGER,
+      ibmappnLocalTgModemClass INTEGER,
+      ibmappnLocalTgUsr1       INTEGER,
+      ibmappnLocalTgUsr2       INTEGER,
+      ibmappnLocalTgUsr3       INTEGER,
+
+
+
+      ibmappnLocalTgHprSup       INTEGER,
+      ibmappnLocalTgDestHprTrans INTEGER,
+      ibmappnLocalTgIntersubnet  INTEGER
+                                   }
+
+ibmappnLocalTgDest  OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Administratively-assigned name for the
+           destination node for this TG.
+           This is the fully-qualified network node
+           name."
+
+      ::=  { ibmappnLocalTgEntry 1 }
+
+ibmappnLocalTgNum  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number associated with this transmission group."
+
+      ::=  { ibmappnLocalTgEntry 2 }
+
+ibmappnLocalTgDestVirtual  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+
+
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the destination node is
+           a Virtual node."
+      ::=  { ibmappnLocalTgEntry 3 }
+
+ibmappnLocalTgDlcData  OBJECT-TYPE
+      SYNTAX OCTET STRING  (SIZE (0..9))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "DLC specific data related to the link connection
+           network.
+           Token-Ring    - MAC/SAP
+           X.25 Switched - dial digits
+           X.21 Switched - dial digits
+           Circuit Swtch - dial digits"
+
+      ::=  { ibmappnLocalTgEntry 4 }
+
+ibmappnLocalTgRsn       OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "The resource sequence number is assigned and
+            controlled by the network node that owns this
+
+
+            resource.  This is always an even unsigned
+            number unless an error has occurred."
+
+      ::=  { ibmappnLocalTgEntry 5 }
+
+ibmappnLocalTgQuiescing OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the Transmission Group
+           is quiescing."
+
+      ::=  { ibmappnLocalTgEntry 6 }
+
+ibmappnLocalTgOperational OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the Transmission Group
+           is operational."
+
+      ::=  { ibmappnLocalTgEntry 7 }
+
+ibmappnLocalTgCpCpSession OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+
+
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the CP-CP Sessions are
+           supported on this TG."
+
+      ::=  { ibmappnLocalTgEntry 8 }
+
+ibmappnLocalTgEffCap   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "The effective capacity is an integer value that indicates
+           the actual kilo bits per second.
+           It is derived from the link bandwidth and maximum load
+           factor with the range of 0 thru 603,979,776."
+
+      ::=  { ibmappnLocalTgEntry 9 }
+
+ibmappnLocalTgConnCost OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Cost per connect time: a value representing
+           the relative cost per unit of time to use
+           the TG. Range is from 0, which means no cost,
+           to 255."
+
+
+
+      ::=  { ibmappnLocalTgEntry 10 }
+
+ibmappnLocalTgByteCost  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Relative cost of transmitting a byte over this link.
+          Range is from 0 (lowest cost) to 255."
+
+      ::=  { ibmappnLocalTgEntry 11 }
+
+ibmappnLocalTgSecurity  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     nonsecure(1),                --X'01'
+                     publicSwitchedNetwork(32),   --X'20'
+                     undergroundCable(64),        --X'40'
+                     secureConduit(96),           --X'60'
+                     guardedConduit(128),         --X'80'
+                     encrypted(160),              --X'A0'
+                     guardedRadiation(192)        --X'C0'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Security level for this TG."
+
+
+
+      ::=  { ibmappnLocalTgEntry 12 }
+
+ibmappnLocalTgDelay  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     minimum(0),                 --X'00'
+                     negligible(384),            --X'4C'
+                     terrestrial(9216),          --X'71'
+                     packet(147456),             --X'91'
+                     long(294912),               --X'99'
+                     maximum(2013265920)         --X'FF'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Relative amount of time that it takes for a signal to
+            travel the length of the logical link.  This time is
+            represented in micro seconds, with some of the more
+            common values enumerated."
+
+      ::=  { ibmappnLocalTgEntry 13 }
+
+ibmappnLocalTgModemClass  OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "This is used to have multiple images for a
+            connection network.  For a connection network
+
+
+            it is the same as in the TG vector and for
+            a non-connection network it is zero."
+
+      ::=  { ibmappnLocalTgEntry 14 }
+
+ibmappnLocalTgUsr1  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Value of the first user-defined TG
+          characteristic for this TG.
+          Range is 0-255."
+
+      ::=  { ibmappnLocalTgEntry 15 }
+
+ibmappnLocalTgUsr2  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Value of the second user-defined TG
+          characteristic for this TG.
+          Range is 0-255."
+
+      ::=  { ibmappnLocalTgEntry 16 }
+
+ibmappnLocalTgUsr3  OBJECT-TYPE
+
+
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Value of the third user-defined TG
+          characteristic for this TG.
+          Range is 0-255."
+
+      ::=  { ibmappnLocalTgEntry 17 }
+
+ibmappnLocalTgHprSup     OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "Indicates whether or not high performance routing (HPR)
+         is supported over this TG ."
+
+    ::= { ibmappnLocalTgEntry 18 }
+
+ibmappnLocalTgDestHprTrans     OBJECT-TYPE
+      SYNTAX INTEGER { yes(1), no(2) }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the destination node supports
+           high performance routing (HPR) transport tower."
+
+
+
+      ::= { ibmappnLocalTgEntry 19 }
+
+ibmappnLocalTgIntersubnet OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether the transmission group is an
+           intersubnet link (defines a border between subnetworks)."
+
+      ::= { ibmappnLocalTgEntry 20 }
+
+
+-- This section applies only to network nodes
+-- End node topology known to serving network node
+--  The first table contains information about all end nodes
+--  known to this node.
+--
+--  The TG  table contains information about all of the TGs owned
+--  by these end nodes.
+
+ibmappnLocalEnTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnLocalEnEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "Portion of the APPN topology
+            database that describes the end
+
+
+            nodes known to this node."
+
+      ::= { ibmappnLocalEnTopology 1 }
+
+ibmappnLocalEnEntry OBJECT-TYPE
+      SYNTAX IbmappnLocalEnEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "This table is indexed by the end node CPname."
+
+      INDEX
+             {ibmappnLocalEnName}
+
+      ::= { ibmappnLocalEnTable 1 }
+
+IbmappnLocalEnEntry ::= SEQUENCE {
+
+      ibmappnLocalEnName                     DisplayString,
+      ibmappnLocalEnEntryTimeLeft            INTEGER,
+      ibmappnLocalEnType                     INTEGER
+                          }
+
+ibmappnLocalEnName    OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+
+
+          "Administratively-assigned fully-qualified
+          name of end node in the format NETID.CPNAME."
+
+      ::=  { ibmappnLocalEnEntry 1 }
+
+ibmappnLocalEnEntryTimeLeft   OBJECT-TYPE
+      SYNTAX INTEGER (0..31)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Number of days before deletion of this
+           end node entry. Range is 0-31."
+
+      ::=  { ibmappnLocalEnEntry 2 }
+
+ibmappnLocalEnType    OBJECT-TYPE
+      SYNTAX INTEGER {
+                     endNode(2),
+                     t21len(4)
+                     }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Type of APPN node (must always be a len or end node)."
+
+      ::=  { ibmappnLocalEnEntry 3 }
+
+--APPN Local End node Transmission Group (TG) table
+
+
+
+-- This table describes the TGs associated with
+-- all of the end nodes known to this node.
+
+ibmappnLocalEnTgTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IbmappnLocalEnTgEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "Table describing all of the TGs owned by the
+            end nodes known to this node.
+            The TG destination can be a virtual
+            node, network node, or end node."
+
+      ::= { ibmappnLocalEnTopology 2 }
+
+ibmappnLocalEnTgEntry OBJECT-TYPE
+      SYNTAX IbmappnLocalEnTgEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+           "This table requires multiple indexes to uniquely
+            identify each TG. They are originating CPname,
+            destination CPname, and the TG number."
+
+      INDEX
+             {ibmappnLocalEnTgOrigin,
+              ibmappnLocalEnTgDest,
+
+
+              ibmappnLocalEnTgNum}
+
+      ::= { ibmappnLocalEnTgTable 1 }
+
+IbmappnLocalEnTgEntry ::= SEQUENCE {
+      ibmappnLocalEnTgOrigin     DisplayString,
+      ibmappnLocalEnTgDest       DisplayString,
+      ibmappnLocalEnTgNum        INTEGER,
+      ibmappnLocalEnTgEntryTimeLeft INTEGER,
+
+      ibmappnLocalEnTgDestVirtual INTEGER,
+      ibmappnLocalEnTgDlcData    OCTET STRING,
+
+      ibmappnLocalEnTgOperational INTEGER,
+      ibmappnLocalEnTgCpCpSession INTEGER,
+      ibmappnLocalEnTgEffCap     INTEGER,
+      ibmappnLocalEnTgConnCost   INTEGER,
+      ibmappnLocalEnTgByteCost   INTEGER,
+      ibmappnLocalEnTgSecurity   INTEGER,
+      ibmappnLocalEnTgDelay      INTEGER,
+      ibmappnLocalEnTgModemClass INTEGER,
+      ibmappnLocalEnTgUsr1       INTEGER,
+      ibmappnLocalEnTgUsr2       INTEGER,
+      ibmappnLocalEnTgUsr3       INTEGER
+                                    }
+
+ibmappnLocalEnTgOrigin      OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+
+
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned name for the
+           origination node for this TG.
+           This is the fully-qualified network name."
+
+      ::=  { ibmappnLocalEnTgEntry 1 }
+
+ibmappnLocalEnTgDest        OBJECT-TYPE
+      SYNTAX DisplayString (SIZE (3..17))
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Administratively-assigned name for the
+           destination node for this TG.
+           This is the fully-qualified network name."
+
+      ::=  { ibmappnLocalEnTgEntry 2 }
+
+ibmappnLocalEnTgNum  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Number associated with this transmission group."
+
+      ::=  { ibmappnLocalEnTgEntry 3 }
+
+
+
+ibmappnLocalEnTgEntryTimeLeft   OBJECT-TYPE
+      SYNTAX INTEGER (0..31)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Number of days before deletion of this
+           end node TG entry. Range is 0-31."
+
+      ::=  { ibmappnLocalEnTgEntry 4 }
+
+ibmappnLocalEnTgDestVirtual  OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the destination node is
+           a virtual node."
+
+      ::=  { ibmappnLocalEnTgEntry 5 }
+
+ibmappnLocalEnTgDlcData  OBJECT-TYPE
+      SYNTAX OCTET STRING
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "DLC specific data related to the link connection
+           network.
+
+
+           Token-Ring    - MAC/SAP
+           X.25 Switched - dial digits
+           X.21 Switched - dial digits
+           Circuit Swtch - dial digits"
+
+      ::=  { ibmappnLocalEnTgEntry 6 }
+
+ibmappnLocalEnTgOperational OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Indicates whether the Transmission Group is operational."
+
+      ::=  { ibmappnLocalEnTgEntry 7 }
+
+ibmappnLocalEnTgCpCpSession OBJECT-TYPE
+      SYNTAX INTEGER {yes(1), no(2)}
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Indicates whether CP-CP sessions are supported on this TG."
+
+      ::=  { ibmappnLocalEnTgEntry 8 }
+
+ibmappnLocalEnTgEffCap   OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+
+
+      STATUS mandatory
+      DESCRIPTION
+          "The effective capacity is an integer value that indicates
+           the actual kilo bits per second.
+           It is derived from the link bandwidth and maximum load
+           factor with the range of 0 thru 603,979,776."
+
+      ::=  { ibmappnLocalEnTgEntry 9 }
+
+ibmappnLocalEnTgConnCost OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Cost per connect time: a value representing
+           the relative cost per unit of time to use
+           the TG. Range is from 0, which means no cost,
+           to 255."
+
+      ::=  { ibmappnLocalEnTgEntry 10 }
+
+ibmappnLocalEnTgByteCost  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Relative cost of transmitting a byte over this link.
+          Range is from 0, which means no cost, to 255."
+
+
+
+      ::=  { ibmappnLocalEnTgEntry 11 }
+
+ibmappnLocalEnTgSecurity  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     nonsecure(1),                --X'01'
+                     publicSwitchedNetwork(32),   --X'20'
+                     undergroundCable(64),        --X'40'
+                     secureConduit(96),           --X'60'
+                     guardedConduit(128),         --X'80'
+                     encrypted(160),              --X'A0'
+                     guardedRadiation(192)        --X'C0'
+                     }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Security level for this TG."
+
+      ::=  { ibmappnLocalEnTgEntry 12 }
+
+ibmappnLocalEnTgDelay  OBJECT-TYPE
+      SYNTAX INTEGER {
+                     minimum(0),                 --X'00'
+                     negligible(384),            --X'4C'
+                     terrestrial(9216),          --X'71'
+                     packet(147456),             --X'91'
+                     long(294912),               --X'99'
+                     maximum(2013265920)         --X'FF'
+             }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Relative amount of time that it takes for a signal to
+            travel the length of the logical link.  This time is
+            represented in micro seconds, with some of the more
+            common values enumerated."
+
+      ::=  { ibmappnLocalEnTgEntry 13 }
+
+ibmappnLocalEnTgModemClass  OBJECT-TYPE
+      SYNTAX INTEGER (0..65535)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "This is used to have multiple images for a
+            connection network.  For a connection network
+            it is the same as in the TG vector and for
+             a non connection network it is zero."
+
+      ::=  { ibmappnLocalEnTgEntry 14 }
+
+ibmappnLocalEnTgUsr1  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "First user-defined TG characteristic
+          for this TG. Range of values is 0-255."
+
+      ::=  { ibmappnLocalEnTgEntry 15 }
+
+ibmappnLocalEnTgUsr2  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Second user-defined TG characteristic
+           for this TG. Range of values is 0-255."
+
+      ::=  { ibmappnLocalEnTgEntry 16 }
+
+ibmappnLocalEnTgUsr3  OBJECT-TYPE
+      SYNTAX INTEGER (0..255)
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+          "Third user-defined TG characteristic
+           for this TG. Range of values is 0-255."
+
+      ::=  { ibmappnLocalEnTgEntry 17 }
+
+-- ************** The APPN Directory group ************
+ibmappnDir      OBJECT IDENTIFIER ::= { ibmappn 5  }
+ibmappnDirPerf  OBJECT IDENTIFIER ::= { ibmappnDir 1 }
+
+ibmappnDirMaxCaches OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+           "Maximum number of cache entries allowed. This
+           is an administratively assigned value."
+
+      ::=  { ibmappnDirPerf 1 }
+
+--APPN Directory table
+
+-- This table contains information about all known
+-- LUs and TPs.
+
+--ibmappnDirTable OBJECT-TYPE
+--      SYNTAX SEQUENCE OF IbmappnDirEntry
+--      ACCESS not-accessible
+--      STATUS mandatory
+--      DESCRIPTION
+--           "Table containing information about
+--           all known LUs and TPs."
+
+--      ::= { ibmappnDir 2 }
+
+-- ************** The APPN Class of Service group ************
+--ibmappnCos  OBJECT IDENTIFIER ::= { ibmappn 6  }
+
+END

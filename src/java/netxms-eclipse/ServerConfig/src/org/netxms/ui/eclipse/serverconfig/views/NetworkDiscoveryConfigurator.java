@@ -24,6 +24,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.forms.events.HyperlinkAdapter;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
@@ -31,6 +33,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.serverconfig.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -41,7 +44,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class NetworkDiscoveryConfigurator extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator";
-	
+
+	private DiscoveryConfig config;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private Button radioDiscoveryOff;
@@ -184,12 +188,35 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
+		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		activeDiscoveryAddressList.getTable().setLayoutData(gd);
 		
-		ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText("Add...");
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		linkAdd.setLayoutData(gd);
+		linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
+		
+		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		linkRemove.setText("Remove");
+		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		linkRemove.setLayoutData(gd);
+		linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
 	}
 	
 	/**
@@ -207,6 +234,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		
 		Composite clientArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 		
@@ -217,8 +245,36 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
+		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		filterAddressList.getTable().setLayoutData(gd);
+		
+		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		linkAdd.setText("Add...");
+		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		linkAdd.setLayoutData(gd);
+		linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
+		
+		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		linkRemove.setText("Remove");
+		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		linkRemove.setLayoutData(gd);
+		linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
+
 	}
 	
 	/**
@@ -236,6 +292,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		
 		Composite clientArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 		
@@ -246,8 +303,35 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
+		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		snmpCommunityList.getTable().setLayoutData(gd);
+		
+		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		linkAdd.setText("Add...");
+		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		linkAdd.setLayoutData(gd);
+		linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
+		
+		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		linkRemove.setText("Remove");
+		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		linkRemove.setLayoutData(gd);
+		linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
 	}
 	
 	/**
@@ -265,6 +349,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		
 		Composite clientArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 		
@@ -275,8 +360,35 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
+		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		snmpUsmCredList.getTable().setLayoutData(gd);
+
+		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		linkAdd.setText("Add...");
+		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		linkAdd.setLayoutData(gd);
+		linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
+		
+		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		linkRemove.setText("Remove");
+		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+		gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		linkRemove.setLayoutData(gd);
+		linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e)
+			{
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -286,5 +398,13 @@ public class NetworkDiscoveryConfigurator extends ViewPart
 	public void setFocus()
 	{
 		form.setFocus();
+	}
+	
+	/**
+	 * @param config
+	 */
+	public void setConfig(DiscoveryConfig config)
+	{
+		this.config = config;
 	}
 }

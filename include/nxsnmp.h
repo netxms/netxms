@@ -640,6 +640,8 @@ class LIBNXSNMP_EXPORTABLE SNMP_UDPTransport : public SNMP_Transport
 {
 private:
    SOCKET m_hSocket;
+   struct sockaddr_in m_peerAddr;
+	bool m_connected;
    DWORD m_dwBufferSize;
    DWORD m_dwBytesInBuffer;
    DWORD m_dwBufferPos;
@@ -660,6 +662,7 @@ public:
    virtual int sendMessage(SNMP_PDU *pPDU);
 
    DWORD createUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
+	bool isConnected() { return m_connected; }
 };
 
 

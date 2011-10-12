@@ -1,0 +1,75 @@
+/**
+ * 
+ */
+package org.netxms.client;
+
+import java.net.InetAddress;
+import org.netxms.base.NXCPMessage;
+
+/**
+ * Element of IP address list. Can represent either subnet or address range.
+ */
+public class IpAddressListElement
+{
+	public static final int SUBNET = 0;
+	public static final int RANGE = 1;
+	
+	private int type;
+	private InetAddress addr1;
+	private InetAddress addr2;
+	
+	/**
+	 * Create new element
+	 * 
+	 * @param type
+	 * @param addr1
+	 * @param addr2
+	 */
+	public IpAddressListElement(int type, InetAddress addr1, InetAddress addr2)
+	{
+		this.type = type;
+		this.addr1 = addr1;
+		this.addr2 = addr2;
+	}
+
+	/**
+	 * Create element from NXCP message
+	 * 
+	 * @param msg NXCP message
+	 * @param baseId base variable ID
+	 */
+	protected IpAddressListElement(NXCPMessage msg, long baseId)
+	{
+		type = msg.getVariableAsInteger(baseId);
+		addr1 = msg.getVariableAsInetAddress(baseId + 1);
+		addr2 = msg.getVariableAsInetAddress(baseId + 2);
+	}
+
+	/**
+	 * @return the type
+	 */
+	public int getType()
+	{
+		return type;
+	}
+
+	/**
+	 * Get first address (subnet base address or range start)
+	 * 
+	 * @return the addr1
+	 */
+	public InetAddress getAddr1()
+	{
+		return addr1;
+	}
+
+	/**
+	 * Get second address (subnet mask or range last address)
+	 * 
+	 * @return the addr2
+	 */
+	public InetAddress getAddr2()
+	{
+		return addr2;
+	}
+}

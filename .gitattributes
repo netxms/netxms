@@ -467,6 +467,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/AccessListElement.java -t
 src/java/netxms-client/src/main/java/org/netxms/client/AgentParameter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocation.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/GeoLocationFormatException.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/IpAddressListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddress.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/MacAddressFormatException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
@@ -1319,6 +1320,7 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dial
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/dialogs/VariableEditDialog.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/NetworkDiscoveryConfigurator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/ServerConfigurationEditor.java -text
+src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/DiscoveryConfig.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/ServerVariableComparator.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/views/helpers/ViewLabelProvider.java -text
 src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/widgets/ScriptSelector.java -text
