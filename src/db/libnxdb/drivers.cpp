@@ -290,3 +290,13 @@ void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 
 	MutexUnlock(s_driverListLock);
 }
+
+
+//
+// Get name of loaded driver
+//
+
+const char LIBNXDB_EXPORTABLE *DBGetDriverName(DB_DRIVER driver)
+{
+	return driver->m_name;
+}

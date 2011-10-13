@@ -98,6 +98,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, void *),
 														void *userArg);
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver);
+const char LIBNXDB_EXPORTABLE *DBGetDriverName(DB_DRIVER driver);
 
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
                                        const TCHAR *login, const TCHAR *password, const TCHAR *schema, TCHAR *errorText);
