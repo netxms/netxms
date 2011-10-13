@@ -787,6 +787,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\ieee8021x.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\local_admin.h"
 				>
 			</File>
