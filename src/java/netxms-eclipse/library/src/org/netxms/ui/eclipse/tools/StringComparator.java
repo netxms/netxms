@@ -25,9 +25,6 @@ import org.eclipse.swt.SWT;
 
 /**
  * Viewer comparator for case when model elements are just strings.
- * 
- * @author Victor Kirhenshtein
- *
  */
 public class StringComparator extends ViewerComparator
 {

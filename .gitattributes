@@ -483,6 +483,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/ServerAction.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/ServerConsoleListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/ServerFile.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/Table.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/constants/NetworkDiscovery.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/NodePoller.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/RCC.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/constants/Severity.java -text

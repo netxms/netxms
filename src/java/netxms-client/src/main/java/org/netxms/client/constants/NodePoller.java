@@ -20,7 +20,6 @@ package org.netxms.client.constants;
 
 /**
  * Constants for node poller
- *
  */
 public final class NodePoller
 {

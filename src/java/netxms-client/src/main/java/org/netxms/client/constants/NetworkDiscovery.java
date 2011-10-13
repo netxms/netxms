@@ -19,17 +19,14 @@
 package org.netxms.client.constants;
 
 /**
- * This class holds severity constants.
+ * This class holds constants related to network discovery
  */
-public final class Severity
+public final class NetworkDiscovery
 {
-	public static final int NORMAL = 0;
-	public static final int WARNING = 1;
-	public static final int MINOR = 2;
-	public static final int MAJOR = 3;
-	public static final int CRITICAL = 4;
-	public static final int UNKNOWN = 5;
-	public static final int UNMANAGED = 6;
-	public static final int DISABLED = 7;
-	public static final int TESTING = 8;
+	public static final String FILTER_NONE = "none";
+	public static final String FILTER_AUTO = "auto";
+	
+	public static final int FILTER_ALLOW_AGENT = 0x0001;
+	public static final int FILTER_ALLOW_SNMP = 0x0002;
+	public static final int FILTER_LIMIT_BY_RANGE = 0x0004;
 }

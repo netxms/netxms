@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.serverconfig.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -36,6 +37,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class ScriptSelector extends Composite
 {
 	private Text text;
+	private ImageHyperlink selectionLink;
 	
 	/**
 	 * @param toolkit
@@ -61,7 +63,7 @@ public class ScriptSelector extends Composite
 		text.setLayoutData(gd);
 		text.setText(initialValue);
 		
-		final ImageHyperlink selectionLink = toolkit.createImageHyperlink(this, SWT.NONE);
+		selectionLink = toolkit.createImageHyperlink(this, SWT.NONE);
 		selectionLink.setImage(SharedIcons.IMG_FIND);
 		selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
 			/* (non-Javadoc)
@@ -81,6 +83,16 @@ public class ScriptSelector extends Composite
 	private void selectScript()
 	{
 	}
+	
+	/**
+	 * Set currently selected script name
+	 * 
+	 * @param name
+	 */
+	public void setScriptName(String name)
+	{
+		text.setText(name);
+	}
 
 	/**
 	 * @return
@@ -88,5 +100,26 @@ public class ScriptSelector extends Composite
 	public String getScriptName()
 	{
 		return text.getText();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+	 */
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		super.setEnabled(enabled);
+		text.setEnabled(enabled);
+		selectionLink.setEnabled(enabled);
+	}
+	
+	/**
+	 * Add modify listener
+	 * 
+	 * @param listener
+	 */
+	public void addModifyListener(ModifyListener listener)
+	{
+		text.addModifyListener(listener);
 	}
 }
