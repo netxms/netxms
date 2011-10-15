@@ -116,6 +116,7 @@ src/agent/core/epp.cpp -text
 src/agent/core/nxagentd-unicode.vcproj -text
 src/agent/core/nxagentd.vcproj -text
 src/agent/core/push.cpp -text
+src/agent/subagents/aix/cpu.cpp -text
 src/agent/subagents/ecs/ecs.vcproj -text
 src/agent/subagents/hpux/iostat.cpp -text
 src/agent/subagents/informix/Makefile.am -text

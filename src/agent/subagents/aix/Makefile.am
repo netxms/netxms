@@ -3,9 +3,9 @@ INCLUDES=-I@top_srcdir@/include
 SUBAGENT = aix
 
 pkglib_LTLIBRARIES = aix.la
-aix_la_SOURCES = disk.cpp main.cpp net.cpp proc.cpp system.cpp
+aix_la_SOURCES = cpu.cpp disk.cpp main.cpp net.cpp proc.cpp system.cpp
 aix_la_LDFLAGS = -module -avoid-version
-aix_la_LIBADD = ../../../libnetxms/libnetxms.la
+aix_la_LIBADD = -lperfstat ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = aix_subagent.h
 

@@ -30,6 +30,31 @@
 
 
 //
+// CPU stats
+//
+
+enum 
+{
+	CPU_USAGE_OVERAL,
+	CPU_USAGE_USER,
+	CPU_USAGE_SYSTEM,
+	CPU_USAGE_IDLE,
+	CPU_USAGE_IOWAIT
+};
+
+enum
+{
+	INTERVAL_1MIN,
+	INTERVAL_5MIN,
+	INTERVAL_15MIN,
+};
+
+#define MAKE_CPU_USAGE_PARAM(interval, source) (const char *)((((DWORD)(interval)) << 16) | ((DWORD)(source)))
+#define CPU_USAGE_PARAM_INTERVAL(p) ((CAST_FROM_POINTER((p), DWORD)) >> 16)
+#define CPU_USAGE_PARAM_SOURCE(p) ((CAST_FROM_POINTER((p), DWORD)) & 0x0000FFFF)
+
+
+//
 // Disk info types
 //
 
@@ -82,6 +107,14 @@ typedef struct t_ProcEnt
 	unsigned int nPid;
 	char szProcName[128];
 } PROC_ENT;
+
+
+//
+// Functions
+//
+
+void StartCpuUsageCollector();
+void ShutdownCpuUsageCollector();
 
 
 //

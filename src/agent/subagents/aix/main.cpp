@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2009 Victor Kirhenshtein
+** Copyright (C) 2005-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,8 +27,9 @@
 // Hanlder functions
 //
 
-LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue);
-LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue);
+LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue);
+LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue);
+LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue);
 LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue);
 LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
@@ -77,8 +78,7 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 
 static BOOL SubAgentInit(Config *config)
 {
-  // m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
-
+	StartCpuUsageCollector();
 	return TRUE;
 }
 
@@ -90,7 +90,7 @@ static BOOL SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
 	g_bShutdown = TRUE;
-	//ThreadJoin(m_hCPUStatThread);
+	ShutdownCpuUsageCollector();
 }
 
 
@@ -139,19 +139,45 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Process.Threads(*)", H_ProcessInfo, (char *)PROCINFO_THREADS, DCI_DT_UINT64, DCIDESC_PROCESS_THREADS },
    { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
    { "Process.VMSize(*)", H_ProcessInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
-   { "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+   { "System.CPU.Count", H_CpuCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { "System.CPU.LoadAvg", H_LoadAvg, "0", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
    { "System.CPU.LoadAvg5", H_LoadAvg, "1", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
    { "System.CPU.LoadAvg15", H_LoadAvg, "2", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
    
-/*
-   { "System.CPU.Usage", H_CPUUsage, "T0", DCI_DT_FLOAT, "Average CPU(s) utilization for last minute" },
-   { "System.CPU.Usage5", H_CPUUsage, "T1", DCI_DT_FLOAT, "Average CPU(s) utilization for last 5 minutes" },
-   { "System.CPU.Usage15", H_CPUUsage, "T2", DCI_DT_FLOAT, "Average CPU(s) utilization for last 15 minutes" },
-   { "System.CPU.Usage(*)", H_CPUUsage, "C0", DCI_DT_FLOAT, "Average CPU {instance} utilization for last minute" },
-   { "System.CPU.Usage5(*)", H_CPUUsage, "C1", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 5 minutes" },
-   { "System.CPU.Usage15(*)", H_CPUUsage, "C2", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 15 minutes" },
-*/
+	{ "System.CPU.Usage", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERAL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
+	{ "System.CPU.Usage5", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_OVERAL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
+	{ "System.CPU.Usage15", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_OVERAL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
+	{ "System.CPU.Usage(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERAL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
+	{ "System.CPU.Usage5(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_OVERAL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
+	{ "System.CPU.Usage15(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_OVERAL), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
+
+	{ "System.CPU.Usage.Idle", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE },
+	{ "System.CPU.Usage5.Idle", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE },
+	{ "System.CPU.Usage15.Idle", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE },
+	{ "System.CPU.Usage.Idle(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE_EX },
+	{ "System.CPU.Usage5.Idle5(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
+	{ "System.CPU.Usage15.Idle(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX },
+
+	{ "System.CPU.Usage.IoWait", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_IOWAIT), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IOWAIT },
+	{ "System.CPU.Usage5.IoWait", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_IOWAIT), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IOWAIT },
+	{ "System.CPU.Usage15.IoWait", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_IOWAIT), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IOWAIT },
+	{ "System.CPU.Usage.IoWait(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_IOWAIT), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IOWAIT_EX },
+	{ "System.CPU.Usage5.IoWait(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_IOWAIT), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IOWAIT_EX },
+	{ "System.CPU.Usage15.IoWait(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_IOWAIT), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IOWAIT_EX },
+
+	{ "System.CPU.Usage.System", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_SYSTEM), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_SYSTEM },
+	{ "System.CPU.Usage5.System", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_SYSTEM), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM },
+	{ "System.CPU.Usage15.System", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_SYSTEM), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM },
+	{ "System.CPU.Usage.System(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_SYSTEM), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_SYSTEM_EX },
+	{ "System.CPU.Usage5.System(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_SYSTEM), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM_EX },
+	{ "System.CPU.Usage15.System(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_SYSTEM), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM_EX },
+
+	{ "System.CPU.Usage.User", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_USER), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_USER },
+	{ "System.CPU.Usage5.User", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_USER), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER },
+	{ "System.CPU.Usage15.User", H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_USER), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER },
+	{ "System.CPU.Usage.User(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_USER), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_USER_EX },
+	{ "System.CPU.Usage5.User(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_USER), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER_EX },
+	{ "System.CPU.Usage15.User(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_USER), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER_EX },
 
    { "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
