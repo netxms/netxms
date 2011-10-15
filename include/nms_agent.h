@@ -149,6 +149,8 @@
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT   _T("Percentage of used physical memory")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE  _T("Available physical memory")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT _T("Percentage of available physical memory")
+#define DCIDESC_SYSTEM_MEMORY_VIRTUAL_ACTIVE      _T("Active virtual memory")
+#define DCIDESC_SYSTEM_MEMORY_VIRTUAL_ACTIVE_PCT  _T("Percentage of active virtual memory")
 #define DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE        _T("Free virtual memory")
 #define DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT    _T("Percentage of free virtual memory")
 #define DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL       _T("Total amount of virtual memory")

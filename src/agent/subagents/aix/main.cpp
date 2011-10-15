@@ -34,6 +34,7 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue);
 LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue);
+LONG H_VirtualMemoryInfo(const char *pszParam, const char *pArg, char *pValue);
 LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue);
 LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue);
 LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue);
@@ -180,14 +181,25 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.CPU.Usage15.User(*)", H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_USER), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER_EX },
 
    { "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
+
    { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+   { "System.Memory.Physical.FreePerc", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE_PERC, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
    { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
    { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
-/*
-   { "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, "Free swap space" },
-   { "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, "Total amount of swap space" },
-   { "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, "Used swap space" },
-*/
+   { "System.Memory.Physical.UsedPerc", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED_PERC, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
+   { "System.Memory.Swap.Free", H_VirtualMemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
+   { "System.Memory.Swap.FreePerc", H_VirtualMemoryInfo, (char *)MEMINFO_SWAP_FREE_PERC, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_SWAP_FREE_PCT },
+   { "System.Memory.Swap.Total", H_VirtualMemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
+   { "System.Memory.Swap.Used", H_VirtualMemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_USED },
+   { "System.Memory.Swap.UsedPerc", H_VirtualMemoryInfo, (char *)MEMINFO_SWAP_USED_PERC, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_SWAP_USED_PCT },
+   { "System.Memory.Virtual.Active", H_VirtualMemoryInfo, (char *)MEMINFO_VIRTUAL_ACTIVE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_ACTIVE },
+   { "System.Memory.Virtual.ActivePerc", H_VirtualMemoryInfo, (char *)MEMINFO_VIRTUAL_ACTIVE_PERC, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_ACTIVE_PCT },
+   { "System.Memory.Virtual.Free", H_VirtualMemoryInfo, (char *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
+   { "System.Memory.Virtual.FreePerc", H_VirtualMemoryInfo, (char *)MEMINFO_VIRTUAL_FREE_PERC, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
+   { "System.Memory.Virtual.Total", H_VirtualMemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
+   { "System.Memory.Virtual.Used", H_VirtualMemoryInfo, (char *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+   { "System.Memory.Virtual.UsedPerc", H_VirtualMemoryInfo, (char *)MEMINFO_VIRTUAL_USED_PERC, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
+
    { "System.ProcessCount", H_SysProcessCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
    { "System.ThreadCount", H_SysThreadCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_THREADCOUNT },
    { "System.Uname", H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
