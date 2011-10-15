@@ -97,16 +97,20 @@ enum
 // Types for Process.XXX() parameters
 //
 
-#define PROCINFO_IO_READ_B       1
-#define PROCINFO_IO_READ_OP      2
-#define PROCINFO_IO_WRITE_B      3
-#define PROCINFO_IO_WRITE_OP     4
-#define PROCINFO_KTIME           5
-#define PROCINFO_PF              6
-#define PROCINFO_UTIME           7
-#define PROCINFO_VMSIZE          8
-#define PROCINFO_WKSET           9
-#define PROCINFO_THREADS         10
+enum
+{
+	PROCINFO_CPUTIME,
+	PROCINFO_IO_READ_B,
+	PROCINFO_IO_READ_OP,
+	PROCINFO_IO_WRITE_B,
+	PROCINFO_IO_WRITE_OP,
+	PROCINFO_KTIME,
+	PROCINFO_PF,
+	PROCINFO_UTIME,
+	PROCINFO_VMSIZE,
+	PROCINFO_WKSET,
+	PROCINFO_THREADS
+};
 
 
 //

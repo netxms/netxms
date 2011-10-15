@@ -238,6 +238,12 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 			{
 				switch(CAST_FROM_POINTER(pArg, int))
 				{
+					case PROCINFO_CPUTIME:
+						qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + 
+						            pList[i].pi_ru.ru_stime.tv_usec / 1000 +
+						            pList[i].pi_ru.ru_utime.tv_sec * 1000 +
+						            pList[i].pi_ru.ru_utime.tv_usec / 1000;
+						break;
 //					case PROCINFO_IO_READ_B:
 					case PROCINFO_IO_READ_OP:
 						qwCurrVal = pList[i].pi_ru.ru_inblock;
