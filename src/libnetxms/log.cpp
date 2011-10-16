@@ -27,6 +27,8 @@
 #include <syslog.h>
 #endif
 
+#define MAX_LOG_HISTORY_SIZE	16
+
 
 //
 // Static data
@@ -55,14 +57,30 @@ static void (*m_consoleWriter)(const TCHAR *, ...) = (void (*)(const TCHAR *, ..
 
 BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int maxLogSize, int historySize)
 {
-	// Validate parameters
-	if (((maxLogSize != 0) && (maxLogSize < 1024)) || (historySize < 0) || (historySize > 9))
-		return FALSE;
+	BOOL isValid = TRUE;
 
-	m_maxLogSize = maxLogSize;
-	m_logHistorySize = historySize;
+	if ((maxLogSize == 0) || (maxLogSize >= 1024))
+	{
+		m_maxLogSize = maxLogSize;
+	}
+	else
+	{
+		m_maxLogSize = 1024;
+		isValid = FALSE;
+	}
 
-	return TRUE;
+	if ((historySize >= 0) && (historySize <= MAX_LOG_HISTORY_SIZE))
+	{
+		m_logHistorySize = historySize;
+	}
+	else
+	{
+		if (historySize > MAX_LOG_HISTORY_SIZE)
+			m_logHistorySize = MAX_LOG_HISTORY_SIZE;
+		isValid = FALSE;
+	}
+
+	return isValid;
 }
 
 
@@ -98,7 +116,7 @@ static BOOL RotateLog(BOOL needLock)
 	}
 
 	// Delete old files
-	for(i = 9; i >= m_logHistorySize; i--)
+	for(i = MAX_LOG_HISTORY_SIZE; i >= m_logHistorySize; i--)
 	{
 		_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
 		_tunlink(oldName);
