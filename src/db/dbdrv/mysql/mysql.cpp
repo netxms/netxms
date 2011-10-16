@@ -672,19 +672,20 @@ extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColum
 
 		memset(&b, 0, sizeof(MYSQL_BIND));
 #if HAVE_ALLOCA || defined(_WIN32)
-		b.buffer = alloca(hResult->lengthFields[iColumn]);
+		b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
 #else
-		b.buffer = malloc(hResult->lengthFields[iColumn]);
+		b.buffer = malloc(hResult->lengthFields[iColumn] + 1);
 #endif
-		b.buffer_length = hResult->lengthFields[iColumn];
+		b.buffer_length = hResult->lengthFields[iColumn] + 1;
 		b.buffer_type = MYSQL_TYPE_STRING;
 		b.length = &l;
 		b.is_null = &isNull;
 int rc;
 		if ((rc=mysql_stmt_fetch_column(hResult->statement, &b, iColumn, 0)) == 0)
 		{
-			MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, l, pBuffer, nBufSize);
-			pBuffer[min((int)l, nBufSize - 1)] = 0;
+			((char *)b.buffer)[l] = 0;
+			MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, pBuffer, nBufSize);
+			pBuffer[nBufSize - 1] = 0;
 			pRet = pBuffer;
 		}
 #if !HAVE_ALLOCA && !defined(_WIN32)
