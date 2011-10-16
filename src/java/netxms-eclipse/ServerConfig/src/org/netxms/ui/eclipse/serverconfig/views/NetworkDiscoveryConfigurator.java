@@ -53,6 +53,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.constants.NetworkDiscovery;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.serverconfig.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.shared.SharedIcons;
@@ -365,6 +366,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		activeDiscoveryAddressList.getTable().setLayoutData(gd);
+		activeDiscoveryAddressList.setContentProvider(new ArrayContentProvider());
+		activeDiscoveryAddressList.setComparator(new AddressListElementComparator());
 		
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText("Add...");
@@ -422,6 +425,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		filterAddressList.getTable().setLayoutData(gd);
+		filterAddressList.setContentProvider(new ArrayContentProvider());
+		filterAddressList.setComparator(new AddressListElementComparator());
 		
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText("Add...");
@@ -611,6 +616,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		checkRangeOnly.setSelection((config.getFilterFlags() & NetworkDiscovery.FILTER_LIMIT_BY_RANGE) != 0);
 		
 		snmpCommunityList.setInput(config.getCommunities().toArray());
+		activeDiscoveryAddressList.setInput(config.getTargets().toArray());
+		filterAddressList.setInput(config.getAddressFilter().toArray());
 
 		updateElementEnablement();
 		modified = false;

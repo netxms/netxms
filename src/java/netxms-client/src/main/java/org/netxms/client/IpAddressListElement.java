@@ -72,4 +72,17 @@ public class IpAddressListElement
 	{
 		return addr2;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append(addr1.getHostAddress());
+		sb.append((type == SUBNET) ? '/' : '-');
+		sb.append(addr2.getHostAddress());
+		return sb.toString();
+	}
 }
