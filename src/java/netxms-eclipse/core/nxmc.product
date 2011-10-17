@@ -17,7 +17,7 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
 
    <launcherArgs>
       <programArgs>-data @user.home/.nxvs-console/data</programArgs>
-      <vmArgs>-Xms128m -Xmx1024m -Dorg.netxms.ui.eclipse.usermanager.showSystemRightsPage=true</vmArgs>
+      <vmArgs>-Xms128m -Xmx1024m</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 

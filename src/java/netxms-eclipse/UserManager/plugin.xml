@@ -104,15 +104,9 @@
               id="org.netxms.ui.eclipse.usermanager.propertypages.SystemRights#3"
               name="System Rights">
            <enabledWhen>
-              <and>
-                 <instanceof
-                       value="org.netxms.api.client.users.AbstractUserObject">
-                 </instanceof>
-                 <systemTest
-                       property="org.netxms.ui.eclipse.usermanager.showSystemRightsPage"
-                       value="true">
-                 </systemTest>
-              </and>
+              <instanceof
+                    value="org.netxms.api.client.users.AbstractUserObject">
+              </instanceof>
            </enabledWhen>
         </page>
   </extension>
