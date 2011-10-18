@@ -230,15 +230,37 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
 
 //
 // Format text from alarm data
+// Valid format specifiers are following:
+//		%a Primary IP address of source object
+//		%A Primary host name of source object
+//    %c Repeat count
+//    %e Event code
+//    %E Event name
+//    %h Helpdesk state as number
+//    %H Helpdesk state as text
+//    %i Source object identifier
+//    %I Alarm identifier
+//    %m Message text
+//    %n Source object name
+//    %s Severity as number
+//    %S Severity as text
+//    %% Percent sign
 //
 
 TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format)
 {
-	String out;
-	TCHAR *prev, *curr;
 	static const TCHAR *helpdeskState[] = { _T("IGNORED"), _T("OPEN"), _T("CLOSED") };
 	static const TCHAR *severityText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL") };
 
+	NXC_OBJECT *object = NXCFindObjectById(session, alarm->dwSourceObject);
+	if (object == NULL)
+	{
+		NXCSyncSingleObject(session, alarm->dwSourceObject);
+		object = NXCFindObjectById(session, alarm->dwSourceObject);
+	}
+
+	String out;
+	TCHAR *prev, *curr, ipAddr[32];
 	for(prev = format; *prev != 0; prev = curr)
 	{
 		curr = _tcschr(prev, _T('%'));
@@ -254,26 +276,41 @@ TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *ala
 			case '%':
 				out += _T("%");
 				break;
+			case 'a':
+				out += (object != NULL) ? IpToStr(object->dwIpAddr, ipAddr) : _T("<unknown>");
+				break;
+			case 'A':
+				out += (object != NULL) ? object->node.szPrimaryName : _T("<unknown>");
+				break;
+			case 'c':
+				out.addFormattedString(_T("%u"), (unsigned int)alarm->dwRepeatCount);
+				break;
 			case 'e':
-				out.addFormattedString(_T("%u"), alarm->dwSourceEventCode);
+				out.addFormattedString(_T("%u"), (unsigned int)alarm->dwSourceEventCode);
 				break;
 			case 'E':
 				out += NXCGetEventName(session, alarm->dwSourceEventCode);
 				break;
 			case 'h':
-				out.addFormattedString(_T("%d"), alarm->nHelpDeskState);
+				out.addFormattedString(_T("%d"), (int)alarm->nHelpDeskState);
 				break;
 			case 'H':
 				out += helpdeskState[alarm->nHelpDeskState];
 				break;
+			case 'i':
+				out.addFormattedString(_T("%u"), (unsigned int)alarm->dwSourceObject);
+				break;
 			case 'I':
-				out.addFormattedString(_T("%u"), alarm->dwAlarmId);
+				out.addFormattedString(_T("%u"), (unsigned int)alarm->dwAlarmId);
 				break;
 			case 'm':
 				out += alarm->szMessage;
 				break;
+			case 'n':
+				out += (object != NULL) ? object->szName : _T("<unknown>");
+				break;
 			case 's':
-				out.addFormattedString(_T("%d"), alarm->nCurrentSeverity);
+				out.addFormattedString(_T("%d"), (int)alarm->nCurrentSeverity);
 				break;
 			case 'S':
 				out += severityText[alarm->nCurrentSeverity];

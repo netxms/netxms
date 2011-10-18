@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxalarm - manage alarms from command line
-** Copyright (C) 2003, 2004, 2005, 206, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -110,7 +110,9 @@ int main(int argc, char *argv[])
                    "   -v             : Display version and exit.\n"
                    "   -w <seconds>   : Specify command timeout (default is 3 seconds).\n"
 						 "Output format string syntax:\n"
-						 "   %%a Primary IP of source object\n"
+						 "   %%a Primary IP address of source object\n"
+						 "   %%A Primary host name of source object\n"
+						 "   %%c Repeat count\n"
 						 "   %%e Event code\n"
 						 "   %%E Event name\n"
 						 "   %%h Helpdesk state as number\n"

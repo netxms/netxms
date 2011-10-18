@@ -404,7 +404,6 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 void NXCL_Session::processObjectUpdate(CSCPMessage *pMsg)
 {
    NXC_OBJECT *pObject, *pNewObject;
-	TCHAR *pTmp;
 
    switch(pMsg->GetCode())
    {
@@ -418,11 +417,6 @@ void NXCL_Session::processObjectUpdate(CSCPMessage *pMsg)
          CompleteSync(SYNC_OBJECTS, RCC_SUCCESS);
          break;
       case CMD_OBJECT:
-			pTmp = pMsg->GetVariableStr(VID_OBJECT_NAME);
-         DebugPrintf(_T("RECV_OBJECT: ID=%d Name=\"%s\" Class=%d"), pMsg->GetVariableLong(VID_OBJECT_ID),
-                     pTmp, pMsg->GetVariableShort(VID_OBJECT_CLASS));
-			free(pTmp);
-      
          // Create new object from message and add it to list
          pNewObject = NewObjectFromMsg(pMsg);
          if (m_dwFlags & NXC_SF_HAS_OBJECT_CACHE)
@@ -514,6 +508,47 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, const TCHAR *psz
                                           BOOL bSyncComments)
 {
    return ((NXCL_Session *)hSession)->syncObjects(pszCacheFile, bSyncComments);
+}
+
+
+//
+// Synchronize object set
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjectSet(NXC_SESSION hSession, DWORD *idList, DWORD length, bool syncComments, WORD flags)
+{
+   DWORD dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   // Build request message
+   CSCPMessage msg;
+   msg.SetCode(CMD_GET_SELECTED_OBJECTS);
+   msg.SetId(dwRqId);
+	msg.SetVariable(VID_SYNC_COMMENTS, (WORD)(syncComments ? 1 : 0));
+	msg.SetVariable(VID_FLAGS, (WORD)(flags | OBJECT_SYNC_SEND_UPDATES));	// C library requres objects to go in update messages
+   msg.SetVariable(VID_NUM_OBJECTS, length);
+	msg.SetVariableToInt32Array(VID_OBJECT_LIST, length, idList);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   // Wait for reply
+   DWORD rcc = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+	if ((rcc == RCC_SUCCESS) && (flags & OBJECT_SYNC_DUAL_CONFIRM))
+	{
+		rcc = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+	}
+	return rcc;
+}
+
+
+//
+// Synchronize single object
+// Simple wrapper for NXCSyncObjectSet which syncs comments and waits for sync completion
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSyncSingleObject(NXC_SESSION hSession, DWORD objectId)
+{
+	return NXCSyncObjectSet(hSession, &objectId, 1, true, OBJECT_SYNC_DUAL_CONFIRM);
 }
 
 

@@ -90,7 +90,7 @@ typedef struct
 
 
 //
-// Additional processing thread strt data
+// Additional processing thread start data
 //
 
 typedef struct

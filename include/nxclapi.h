@@ -1983,8 +1983,9 @@ void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData);
 
 /** Objects **/
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession);
-DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, const TCHAR *pszCacheFile,
-                                          BOOL bSyncComments);
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, const TCHAR *pszCacheFile, BOOL bSyncComments);
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjectSet(NXC_SESSION hSession, DWORD *idList, DWORD length, bool syncComments, WORD flags);
+DWORD LIBNXCL_EXPORTABLE NXCSyncSingleObject(NXC_SESSION hSession, DWORD objectId);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(NXC_SESSION hSession, DWORD dwId);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIdNoLock(NXC_SESSION hSession, DWORD dwId);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, const TCHAR *pszName, DWORD dwCurrObject);
