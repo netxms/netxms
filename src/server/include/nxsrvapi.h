@@ -409,7 +409,7 @@ private:
 	bool m_deleteFileOnDownloadFailure;
 	bool m_fileUploadInProgress;
 
-   void ReceiverThread(void);
+   void ReceiverThread();
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
 
 protected:
@@ -429,8 +429,8 @@ protected:
 	virtual bool processCustomMessage(CSCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
 
-   void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_mutexDataLock); }
+   void Lock() { MutexLock(m_mutexDataLock, INFINITE); }
+   void Unlock() { MutexUnlock(m_mutexDataLock); }
 
 public:
    AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,

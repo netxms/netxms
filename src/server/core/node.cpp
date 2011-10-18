@@ -53,6 +53,7 @@ Node::Node() : Template()
    m_mutexRTAccess = MutexCreate();
 	m_mutexTopoAccess = MutexCreate();
    m_pAgentConnection = NULL;
+	m_lastAgentTrapId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
 	m_sysDescription = NULL;
@@ -116,6 +117,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_mutexRTAccess = MutexCreate();
 	m_mutexTopoAccess = MutexCreate();
    m_pAgentConnection = NULL;
+	m_lastAgentTrapId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
 	m_sysDescription = NULL;
@@ -2850,7 +2852,7 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		}
    }
 
-   // Change primary IP address
+   // Change primary host name
    if (pRequest->IsVariableExist(VID_PRIMARY_NAME))
    {
 		pRequest->GetVariableStr(VID_PRIMARY_NAME, m_primaryName, MAX_DNS_NAME);
@@ -4580,4 +4582,19 @@ TCHAR *Node::expandText(const TCHAR *pszTemplate)
    }
    pText[dwPos] = 0;
    return pText;
+}
+
+
+//
+// Check and update last agent trap ID
+//
+
+bool Node::checkAgentTrapId(QWORD trapId)
+{
+	LockData();
+	bool valid = (trapId > m_lastAgentTrapId);
+	if (valid)
+		m_lastAgentTrapId = trapId;
+	UnlockData();
+	return valid;
 }

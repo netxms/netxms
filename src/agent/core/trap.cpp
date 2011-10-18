@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 static Queue *s_trapQueue = NULL;
 static QWORD s_genTrapCount = 0;	// Number of generated traps
 static QWORD s_sentTrapCount = 0;	// Number of sent traps
+static QWORD s_trapId = 0;
 static time_t s_lastTrapTime = 0;
 
 
@@ -45,6 +46,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
    BOOL bTrapSent;
 
    s_trapQueue = new Queue;
+	s_trapId = (QWORD)time(NULL) << 32;
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)s_trapQueue->GetOrBlock();
@@ -108,6 +110,7 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
 
    msg.SetCode(CMD_TRAP);
    msg.SetId(0);
+	msg.SetVariable(VID_TRAP_ID, s_trapId++);
    msg.SetVariable(VID_EVENT_CODE, dwEventCode);
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)

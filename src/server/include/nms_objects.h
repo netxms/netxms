@@ -728,6 +728,7 @@ protected:
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
    AgentConnectionEx *m_pAgentConnection;
+	QWORD m_lastAgentTrapId;	// ID of last received agent trap
    DWORD m_dwPollerNode;      // Node used for network service polling
    DWORD m_dwProxyNode;       // Node used as proxy for agent connection
 	DWORD m_dwSNMPProxy;			// Node used as proxy for SNMP requests
@@ -879,6 +880,8 @@ public:
    void updateDciCache();
 	DWORD getPerfTabDCIList(CSCPMessage *pMsg);
 	NXSL_Array *getParentsForNXSL();
+
+	bool checkAgentTrapId(QWORD id);
 
    void openParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    void closeParamList() { UnlockData(); }

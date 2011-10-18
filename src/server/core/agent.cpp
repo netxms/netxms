@@ -44,34 +44,54 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
    TCHAR *pszArgList[32], szBuffer[32];
    char szFormat[] = "ssssssssssssssssssssssssssssssss";
 
-   DbgPrintf(3, _T("Received trap message from agent at %s"), IpToStr(getIpAddr(), szBuffer));
+	DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s"), IpToStr(getIpAddr(), szBuffer));
    pNode = FindNodeByIP(0, getIpAddr());	/* FIXME: is it possible to receive traps from other zones? */
    if (pNode != NULL)
    {
-      dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
-      iNumArgs = (int)pMsg->GetVariableShort(VID_NUM_ARGS);
-      if (iNumArgs > 32)
-         iNumArgs = 32;
-      for(i = 0; i < iNumArgs; i++)
-         pszArgList[i] = pMsg->GetVariableStr(VID_EVENT_ARG_BASE + i);
-      DbgPrintf(3, _T("Event from trap: %d"), dwEventCode);
+		// Check for duplicate traps - only accept traps with ID
+		// higher than last received
+		// agents prior to 1.1.6 will not send trap id
+		// we should accept trap in that case to maintain compatibility
+		bool acceptTrap;
+		QWORD trapId = pMsg->GetVariableInt64(VID_TRAP_ID);
+		if (trapId != 0)
+		{
+			acceptTrap = pNode->checkAgentTrapId(trapId);
+			DbgPrintf(5, _T("AgentConnectionEx::onTrap(): trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
+		}
+		else
+		{
+			acceptTrap = true;
+			DbgPrintf(5, _T("AgentConnectionEx::onTrap(): trap ID not provided"));
+		}
 
-      // Following call is not very good, but I'm too lazy now
-      // to change PostEvent()
-      szFormat[iNumArgs] = 0;
-      PostEvent(dwEventCode, pNode->Id(), (iNumArgs > 0) ? szFormat : NULL,
-                pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
-                pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
-                pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
-                pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
-                pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
-                pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
-                pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
-                pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
-      
-      // Cleanup
-      for(i = 0; i < iNumArgs; i++)
-         free(pszArgList[i]);
+		if (acceptTrap)
+		{
+			dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+			iNumArgs = (int)pMsg->GetVariableShort(VID_NUM_ARGS);
+			if (iNumArgs > 32)
+				iNumArgs = 32;
+			for(i = 0; i < iNumArgs; i++)
+				pszArgList[i] = pMsg->GetVariableStr(VID_EVENT_ARG_BASE + i);
+			DbgPrintf(3, _T("Event from trap: %d"), dwEventCode);
+
+			// Following call is not very good, but I'm too lazy now
+			// to change PostEvent()
+			szFormat[iNumArgs] = 0;
+			PostEvent(dwEventCode, pNode->Id(), (iNumArgs > 0) ? szFormat : NULL,
+						 pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
+						 pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
+						 pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
+						 pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
+						 pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
+						 pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
+						 pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
+						 pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
+	      
+			// Cleanup
+			for(i = 0; i < iNumArgs; i++)
+				free(pszArgList[i]);
+		}
    }
    else
    {
