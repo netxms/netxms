@@ -37,12 +37,15 @@ IMPORTS
 -- Chassis Groups
 
 
-s5ChasGen	OBJECT IDENTIFIER ::= { s5Chassis 1 }
-s5ChasGrp	OBJECT IDENTIFIER ::= { s5Chassis 2 }
-s5ChasCom	OBJECT IDENTIFIER ::= { s5Chassis 3 }
-s5ChasBrd	OBJECT IDENTIFIER ::= { s5Chassis 4 }
-s5ChasStore	OBJECT IDENTIFIER ::= { s5Chassis 5 }
-s5ChasSm	OBJECT IDENTIFIER ::= { s5Chassis 6 }
+s5ChasGen       OBJECT IDENTIFIER ::= { s5Chassis 1 }
+s5ChasGrp       OBJECT IDENTIFIER ::= { s5Chassis 2 }
+s5ChasCom       OBJECT IDENTIFIER ::= { s5Chassis 3 }
+s5ChasBrd       OBJECT IDENTIFIER ::= { s5Chassis 4 }
+s5ChasStore     OBJECT IDENTIFIER ::= { s5Chassis 5 }
+s5ChasSm        OBJECT IDENTIFIER ::= { s5Chassis 6 }
+s5ChasTmpSnr    OBJECT IDENTIFIER ::= { s5Chassis 7 }
+s5ChasUtil      OBJECT IDENTIFIER ::= { s5Chassis 8 }
+s5ChasPs        OBJECT IDENTIFIER ::= { s5Chassis 9 }
 
 -- SECTION 2: MIB Objects
 
@@ -366,25 +369,30 @@ s5ChasComEntry OBJECT-TYPE
 	::= { s5ChasComTable 1 }
 
 S5ChasComEntry ::= SEQUENCE {
-	s5ChasComGrpIndx INTEGER,
-	s5ChasComIndx INTEGER,
-	s5ChasComSubIndx INTEGER,
+	s5ChasComGrpIndx         INTEGER,
+	s5ChasComIndx            INTEGER,
+	s5ChasComSubIndx         INTEGER,
 
-	s5ChasComType OBJECT IDENTIFIER,
-	s5ChasComDescr DisplayString,
-	s5ChasComVer DisplayString,
-	s5ChasComSerNum DisplayString,
-	s5ChasComLstChng TimeTicks,
+	s5ChasComType            OBJECT IDENTIFIER,
+	s5ChasComDescr           DisplayString,
+	s5ChasComVer             DisplayString,
+	s5ChasComSerNum          DisplayString,
+	s5ChasComLstChng         TimeTicks,
 
-	s5ChasComAdminState INTEGER,
-	s5ChasComOperState INTEGER,
+	s5ChasComAdminState      INTEGER,
+	s5ChasComOperState       INTEGER,
 
-	s5ChasComMaxSubs INTEGER,
-	s5ChasComNumSubs INTEGER,
+	s5ChasComMaxSubs         INTEGER,
+	s5ChasComNumSubs         INTEGER,
 
-	s5ChasComRelPos INTEGER,
-	s5ChasComLocation DisplayString,
-	s5ChasComGroupMap INTEGER
+	s5ChasComRelPos          INTEGER,
+	s5ChasComLocation        DisplayString,
+	s5ChasComGroupMap        INTEGER,
+
+      s5ChasComBaseNumPorts    INTEGER,
+      s5ChasComTotalNumPorts   INTEGER,
+
+      s5ChasComIpAddress       IpAddress
 	}
 
 s5ChasComGrpIndx OBJECT-TYPE
@@ -512,7 +520,9 @@ s5ChasComOperState OBJECT-TYPE
 		testing(7),
 		warning(8),
 		nonFatalErr(9),
-		fatalErr(10)
+                fatalErr(10),
+		notConfig(11),
+		obsoleted(12)
 		}
 	ACCESS	read-only
 	STATUS	mandatory
@@ -529,6 +539,8 @@ s5ChasComOperState OBJECT-TYPE
 		  warning(8).......operating at warning level
 		  nonFatalErr(9)...operating at error level
 		  fatalErr(10).....error stopped operation
+                  notConfig(11)....module needs to be configured
+		  obsoleted(12)...module is obsoleted but in the chassis
 		The allowable (and meaningful) values
 		are determined by the component type."
 	::= { s5ChasComEntry 10 }
@@ -624,8 +636,40 @@ s5ChasComGroupMap OBJECT-TYPE
 		If not available, a value of zero should be returned."
 	::= { s5ChasComEntry 15 }
 
--- Board Table
+s5ChasComBaseNumPorts OBJECT-TYPE
+	SYNTAX	INTEGER (0..32767)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"This object indicates the number of ports (of any type)
+             contained in a component, not including any sub-components
+             contained within the component."
+	::= { s5ChasComEntry 16 }
 
+s5ChasComTotalNumPorts OBJECT-TYPE
+	SYNTAX	INTEGER (0..32767)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"This object indicates the total number of ports (of
+             any type) contained in a component, including any ports
+             contained in sub-components contained within the component."
+	::= { s5ChasComEntry 17 }
+
+s5ChasComIpAddress OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The IP address of a component.  For components that do not
+             have an IP address/stack, this value should always be 0.0.0.0.
+             Note that for a stackable system in stack mode, this will be
+             the standalone IP address for individual units in the stack."
+	::= { s5ChasComEntry 18 }
+
+
+
+-- Board Table
 
 s5ChasBrdTable OBJECT-TYPE
 	SYNTAX	SEQUENCE OF S5ChasBrdEntry
@@ -1053,7 +1097,8 @@ S5ChasStoreEntry ::= SEQUENCE {
 
 	s5ChasStoreType OBJECT IDENTIFIER,
 	s5ChasStoreCurSize INTEGER,
-	s5ChasStoreCntntVer DisplayString
+	s5ChasStoreCntntVer DisplayString,
+	s5ChasStoreFilename DisplayString
 	}
 
 s5ChasStoreGrpIndx OBJECT-TYPE
@@ -1138,6 +1183,18 @@ s5ChasStoreCntntVer OBJECT-TYPE
 		each separated by a semicolon (;)."
 	::= { s5ChasStoreEntry 7 }
 
+s5ChasStoreFilename OBJECT-TYPE
+	SYNTAX	DisplayString (SIZE (0..128))
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Name of the image file to be downloaded or
+             uploaded when the s5AgInfoFileAction object
+             is set to dnldImg(3) or upldImg(5).  When the
+             object is not used, the value is a zero-length
+             string."
+	::= { s5ChasStoreEntry 8 }
+
 -- Supervisor Information
 
 
@@ -1164,5 +1221,329 @@ s5ChasSmDateCode OBJECT-TYPE
 		is 19930413. If not available, a zero
 		length string is returned"
 	::= { s5ChasSm 2 }
+
+-- Temperature Sensor Table
+
+
+s5ChasTmpSnrTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF S5ChasTmpSnrEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "A table that contains temperature
+                sensor values."
+        ::= { s5ChasTmpSnr 1 }
+
+s5ChasTmpSnrEntry OBJECT-TYPE
+        SYNTAX  S5ChasTmpSnrEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "A row in the s5ChasTmpSnrTable.  Rows
+                in this table will exist for each existing
+                row in the s5ChasComTable which represents
+                a temperature sensor.  The values of the
+                indices of the row in this table will be
+                equal to those of the corresponding row in
+                the s5ChasComTable."
+        INDEX   { s5ChasTmpSnrGrpIndx,
+                  s5ChasTmpSnrIndx,
+                  s5ChasTmpSnrSubIndx }
+        ::= { s5ChasTmpSnrTable 1 }
+
+S5ChasTmpSnrEntry ::= SEQUENCE {
+        s5ChasTmpSnrGrpIndx INTEGER,
+        s5ChasTmpSnrIndx INTEGER,
+        s5ChasTmpSnrSubIndx INTEGER,
+        s5ChasTmpSnrValue Gauge,
+        s5ChasTmpSnrTmpValue INTEGER
+        }
+
+s5ChasTmpSnrGrpIndx OBJECT-TYPE
+        SYNTAX  INTEGER (1..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The index of the chassis level group which
+                contains this component, corresponds to
+                s5ChasComGrpIndx."
+        ::= { s5ChasTmpSnrEntry 1 }
+
+s5ChasTmpSnrIndx OBJECT-TYPE
+        SYNTAX  INTEGER (1..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The index of the component in the group.
+                Corresponds to s5ChasComIndx."
+        ::= { s5ChasTmpSnrEntry 2 }
+
+s5ChasTmpSnrSubIndx OBJECT-TYPE
+        SYNTAX  INTEGER (0..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "Sub-component index.  Corresponds to
+                s5ChasComSubIndx."
+        ::= { s5ChasTmpSnrEntry 3 }
+
+s5ChasTmpSnrValue OBJECT-TYPE
+        SYNTAX  Gauge
+        ACCESS  read-only
+        STATUS  deprecated
+        DESCRIPTION
+                "The current temperature value of the temperature
+                sensor.  This is measured in units of a half degree
+                centigrade, e.g. a value of 121 indicates a temperature
+                of 60.5 degrees C.
+
+                This object is deprecated because it cannot represent
+                temperature values below 0, as Gauge is an unsigned type."
+        ::= { s5ChasTmpSnrEntry 4 }
+
+s5ChasTmpSnrTmpValue OBJECT-TYPE
+        SYNTAX  INTEGER (-32768..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The current temperature value of the temperature
+                sensor.  This is measured in units of a half degree
+                centigrade, e.g. a value of 121 indicates a temperature
+                of 60.5 degrees C."
+        ::= { s5ChasTmpSnrEntry 5 }
+
+
+
+
+-- Chassis Utilization Table, includes CPU and Memory Utilization information
+
+
+s5ChasUtilTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF S5ChasUtilEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "A table that contains CPU and memory utilization
+                information."
+        ::= { s5ChasUtil 1 }
+
+s5ChasUtilEntry OBJECT-TYPE
+        SYNTAX  S5ChasUtilEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "A row in the s5ChasUtilTable.  Rows
+                in this table will exist for each existing
+                row in the s5ChasComTable which represents
+                any chassis component for which CPU and/or
+                memory utilization values are available.
+                The values of the indices of a row in this
+                table will be equal to those of the
+                corresponding row in the s5ChasComTable."
+        INDEX   { s5ChasUtilGrpIndx,
+                  s5ChasUtilIndx,
+                  s5ChasUtilSubIndx }
+        ::= { s5ChasUtilTable 1 }
+
+S5ChasUtilEntry ::= SEQUENCE {
+        s5ChasUtilGrpIndx               INTEGER,
+        s5ChasUtilIndx                  INTEGER,
+        s5ChasUtilSubIndx               INTEGER,
+        s5ChasUtilTotalCPUUsage         Gauge32,
+        s5ChasUtilCPUUsageLast1Minute   Gauge32,
+        s5ChasUtilCPUUsageLast10Minutes Gauge32,
+        s5ChasUtilCPUUsageLast1Hour     Gauge32,
+        s5ChasUtilCPUUsageLast24Hours   Gauge32,
+        s5ChasUtilMemoryAvailable       Gauge32,
+        s5ChasUtilMemoryMinAvailable    Gauge32,
+        s5ChasUtilCPUUsageLast10Seconds Gauge32
+        }
+
+s5ChasUtilGrpIndx OBJECT-TYPE
+        SYNTAX  INTEGER (1..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The index of the chassis level group which
+                contains this component, corresponds to
+                s5ChasComGrpIndx."
+        ::= { s5ChasUtilEntry 1 }
+
+s5ChasUtilIndx OBJECT-TYPE
+        SYNTAX  INTEGER (1..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The index of the component in the group.
+                Corresponds to s5ChasComIndx."
+        ::= { s5ChasUtilEntry 2 }
+
+s5ChasUtilSubIndx OBJECT-TYPE
+        SYNTAX  INTEGER (0..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "Sub-component index.  Corresponds to
+                s5ChasComSubIndx."
+        ::= { s5ChasUtilEntry 3 }
+
+s5ChasUtilTotalCPUUsage OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object returns the percentage of time the CPU has been
+         busy since system initialization."
+    ::= {s5ChasUtilEntry 4}
+
+s5ChasUtilCPUUsageLast1Minute OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object returns the percentage of time the CPU has been
+         busy over the last 1 minute."
+    ::= {s5ChasUtilEntry 5}
+
+s5ChasUtilCPUUsageLast10Minutes OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object returns the percentage of time the CPU has been
+         busy over the last 10 minutes."
+    ::= {s5ChasUtilEntry 6}
+
+s5ChasUtilCPUUsageLast1Hour OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object returns the percentage of time the CPU has been
+         busy over the last 1 hour."
+    ::= {s5ChasUtilEntry 7}
+
+s5ChasUtilCPUUsageLast24Hours OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object returns the percentage of time the CPU has been
+         busy over the last 24 hours."
+    ::= {s5ChasUtilEntry 8}
+
+s5ChasUtilMemoryAvailable OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object returns the percentage of dynamic memory that
+         is currently free.  This is measured as a percentage of
+         the memory the was available immediately after system
+         initialization."
+    ::= {s5ChasUtilEntry 9}
+
+s5ChasUtilMemoryMinAvailable OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object returns the lowest percentage of dynamic
+         memory that has been free since system initialization.
+         This is a 'low-water mark' for memory utilization, and is
+         essentially the lowest value of s5ChasUtilMemoryUsage
+         since system initialization."
+    ::= {s5ChasUtilEntry 10}
+
+s5ChasUtilCPUUsageLast10Seconds OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This object returns the percentage of time the CPU has been
+         busy over the last 10 seconds."
+    ::= {s5ChasUtilEntry 11}
+
+
+
+
+
+-- Chassis Power Supply Table
+
+
+s5ChasPsRpsuTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF S5ChasPsRpsuEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "A table that contains extended information on
+                 RPSU power supply components."
+        ::= { s5ChasPs 1 }
+
+s5ChasPsRpsuEntry OBJECT-TYPE
+        SYNTAX  S5ChasPsRpsuEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "A row in the s5ChasPsRpsuTable.  Rows
+                in this table will exist for each existing
+                row in the s5ChasComTable which represents
+                any RPSU power supply.  The values of the
+                indices of a row in this table will be equal
+                to those of the corresponding row in the
+                s5ChasComTable."
+        INDEX   { s5ChasPsRpsuGrpIndx,
+                  s5ChasPsRpsuIndx,
+                  s5ChasPsRpsuSubIndx }
+        ::= { s5ChasPsRpsuTable 1 }
+
+S5ChasPsRpsuEntry ::= SEQUENCE {
+        s5ChasPsRpsuGrpIndx               INTEGER,
+        s5ChasPsRpsuIndx                  INTEGER,
+        s5ChasPsRpsuSubIndx               INTEGER,
+        s5ChasPsRpsuType                  INTEGER
+        }
+
+s5ChasPsRpsuGrpIndx OBJECT-TYPE
+        SYNTAX  INTEGER (1..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The index of the chassis level group which
+                contains this component, corresponds to
+                s5ChasComGrpIndx."
+        ::= { s5ChasPsRpsuEntry 1 }
+
+s5ChasPsRpsuIndx OBJECT-TYPE
+        SYNTAX  INTEGER (1..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The index of the component in the group.
+                Corresponds to s5ChasComIndx."
+        ::= { s5ChasPsRpsuEntry 2 }
+
+s5ChasPsRpsuSubIndx OBJECT-TYPE
+        SYNTAX  INTEGER (0..32767)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "Sub-component index.  Corresponds to
+                s5ChasComSubIndx."
+        ::= { s5ChasPsRpsuEntry 3 }
+
+s5ChasPsRpsuType OBJECT-TYPE
+        SYNTAX  INTEGER {
+                            bayStack10(1),
+                            nes(2)
+                        }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "This object returns the specific type of RPSU.
+                 It can be set to indicate to the system the type
+                 of installed RPSU in cases where the RPSU type
+                 cannot be automatically detected."
+    ::= {s5ChasPsRpsuEntry 4}
 
 END
