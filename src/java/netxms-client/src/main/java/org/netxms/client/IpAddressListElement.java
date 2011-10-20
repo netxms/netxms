@@ -85,4 +85,50 @@ public class IpAddressListElement
 		sb.append(addr2.getHostAddress());
 		return sb.toString();
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((addr1 == null) ? 0 : addr1.hashCode());
+		result = prime * result + ((addr2 == null) ? 0 : addr2.hashCode());
+		result = prime * result + type;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		IpAddressListElement other = (IpAddressListElement)obj;
+		if (addr1 == null)
+		{
+			if (other.addr1 != null)
+				return false;
+		}
+		else if (!addr1.equals(other.addr1))
+			return false;
+		if (addr2 == null)
+		{
+			if (other.addr2 != null)
+				return false;
+		}
+		else if (!addr2.equals(other.addr2))
+			return false;
+		if (type != other.type)
+			return false;
+		return true;
+	}
 }

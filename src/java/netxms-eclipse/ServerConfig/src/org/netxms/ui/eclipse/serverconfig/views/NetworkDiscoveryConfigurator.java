@@ -38,8 +38,12 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISaveablePart;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -49,9 +53,11 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.IpAddressListElement;
 import org.netxms.client.constants.NetworkDiscovery;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.dialogs.AddAddressListElementDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.serverconfig.widgets.ScriptSelector;
@@ -86,6 +92,39 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 	private TableViewer snmpCommunityList;
 	private TableViewer snmpUsmCredList;
 	private Action actionSave;
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+	 */
+	@Override
+	public void init(IViewSite site, IMemento memento) throws PartInitException
+	{
+		super.init(site, memento);
+		if (memento != null)
+		{
+			// Restoring, load config
+			new ConsoleJob("Loading network discovery configuration", this, Activator.PLUGIN_ID, null) {
+				@Override
+				protected void runInternal(IProgressMonitor monitor) throws Exception
+				{
+					final DiscoveryConfig loadedConfig = DiscoveryConfig.load();
+					Display.getDefault().asyncExec(new Runnable() {
+						@Override
+						public void run()
+						{
+							setConfig(loadedConfig);
+						}
+					});
+				}
+
+				@Override
+				protected String getErrorMessage()
+				{
+					return "Cannot load network discovery configuration";
+				}
+			}.start();
+		}
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -365,6 +404,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		activeDiscoveryAddressList.getTable().setLayoutData(gd);
+		activeDiscoveryAddressList.getTable().setSortDirection(SWT.UP);
 		activeDiscoveryAddressList.setContentProvider(new ArrayContentProvider());
 		activeDiscoveryAddressList.setComparator(new AddressListElementComparator());
 		
@@ -378,6 +418,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				addTargetAddressListElement();
 			}
 		});
 		
@@ -391,6 +432,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				removeTargetAddressListElements();
 			}
 		});
 	}
@@ -424,6 +466,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 		gd.verticalSpan = 2;
 		gd.heightHint = 100;
 		filterAddressList.getTable().setLayoutData(gd);
+		filterAddressList.getTable().setSortDirection(SWT.UP);
 		filterAddressList.setContentProvider(new ArrayContentProvider());
 		filterAddressList.setComparator(new AddressListElementComparator());
 		
@@ -437,6 +480,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				addAddressFilterElement();
 			}
 		});
 		
@@ -450,6 +494,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
+				removeAddressFilterElements();
 			}
 		});
 
@@ -777,6 +822,80 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 				list.remove(o);
 			}
 			snmpCommunityList.setInput(list.toArray());
+			setModified();
+		}
+	}
+	
+	/**
+	 * Add element to address filter
+	 */
+	private void addTargetAddressListElement()
+	{
+		AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell());
+		if (dlg.open() == Window.OK)
+		{
+			final List<IpAddressListElement> list = config.getTargets();
+			IpAddressListElement element = new IpAddressListElement(dlg.getType(), dlg.getAddress1(), dlg.getAddress2());
+			if (!list.contains(element))
+			{
+				list.add(element);
+				activeDiscoveryAddressList.setInput(list.toArray());
+				setModified();
+			}
+		}
+	}
+	
+	/**
+	 * Remove element(s) from address filter
+	 */
+	private void removeTargetAddressListElements()
+	{
+		final List<IpAddressListElement> list = config.getTargets();
+		IStructuredSelection selection = (IStructuredSelection)activeDiscoveryAddressList.getSelection();
+		if (selection.size() > 0)
+		{
+			for(Object o : selection.toList())
+			{
+				list.remove(o);
+			}
+			activeDiscoveryAddressList.setInput(list.toArray());
+			setModified();
+		}
+	}
+	
+	/**
+	 * Add element to address filter
+	 */
+	private void addAddressFilterElement()
+	{
+		AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell());
+		if (dlg.open() == Window.OK)
+		{
+			final List<IpAddressListElement> list = config.getAddressFilter();
+			IpAddressListElement element = new IpAddressListElement(dlg.getType(), dlg.getAddress1(), dlg.getAddress2());
+			if (!list.contains(element))
+			{
+				list.add(element);
+				filterAddressList.setInput(list.toArray());
+				setModified();
+			}
+		}
+	}
+	
+	/**
+	 * Remove element(s) from address filter
+	 */
+	private void removeAddressFilterElements()
+	{
+		final List<IpAddressListElement> list = config.getAddressFilter();
+		IStructuredSelection selection = (IStructuredSelection)filterAddressList.getSelection();
+		if (selection.size() > 0)
+		{
+			for(Object o : selection.toList())
+			{
+				list.remove(o);
+			}
+			filterAddressList.setInput(list.toArray());
 			setModified();
 		}
 	}
