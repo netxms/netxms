@@ -242,6 +242,23 @@ static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
 // Handler for System.LoadAvg parameters
 //
 
+static LONG LoadAvgFromPerflib(const char *arg, char *value)
+{
+	LONG rc;
+	perfstat_cpu_total_t info;
+
+	if (perfstat_cpu_total(NULL, &info, sizeof(perfstat_cpu_total_t), 1) == 1)
+	{
+		ret_double(value, (double)info.loadavg[*arg - '0'] / (double)(1 << SBITS));
+		rc = SYSINFO_RC_SUCCESS;
+	}
+	else
+	{
+		rc = SYSINFO_RC_ERROR;
+	}
+	return rc;
+}
+
 LONG H_LoadAvg(const char *param, const char *arg, char *value)
 {
 	int kmem;
@@ -251,7 +268,9 @@ LONG H_LoadAvg(const char *param, const char *arg, char *value)
 
 	kmem = open("/dev/kmem", O_RDONLY);
 	if (kmem == -1)
-		return SYSINFO_RC_ERROR;
+	{
+		return LoadAvgFromPerflib(arg, value);
+	}
 
 	if (knlist(nl, 1, sizeof(struct nlist)) == 0)
 	{

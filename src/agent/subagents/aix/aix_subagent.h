@@ -114,6 +114,23 @@ enum
 
 
 //
+// I/O stats request types
+//
+
+enum
+{
+	IOSTAT_NUM_READS,
+	IOSTAT_NUM_WRITES,
+	IOSTAT_NUM_RBYTES,
+	IOSTAT_NUM_WBYTES,
+	IOSTAT_IO_TIME,
+	IOSTAT_QUEUE,
+	IOSTAT_NUM_XFERS,
+	IOSTAT_WAIT_TIME
+};
+
+
+//
 // Process list entry structure
 //
 
@@ -130,6 +147,9 @@ typedef struct t_ProcEnt
 
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();
+
+void StartIOStatCollector();
+void ShutdownIOStatCollector();
 
 
 //
