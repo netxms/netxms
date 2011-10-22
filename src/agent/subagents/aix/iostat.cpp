@@ -20,7 +20,6 @@
 */
 
 #include "aix_subagent.h"
-#include <libperfstat.h>
 
 #define MAX_DEVICES		256
 #define SAMPLE_COUNT    60
@@ -35,6 +34,8 @@ struct DISK_INFO
 	char name[IDENTIFIER_LENGTH];
 	int queueLen[SAMPLE_COUNT];
 	QWORD transfers[SAMPLE_COUNT];
+	QWORD reads[SAMPLE_COUNT];
+	QWORD writes[SAMPLE_COUNT];
 	QWORD bytesRead[SAMPLE_COUNT];
 	QWORD bytesWritten[SAMPLE_COUNT];
 	QWORD waitTime[SAMPLE_COUNT];
@@ -62,6 +63,8 @@ static void CalculateTotals()
 {
 	s_total.queueLen[s_currSlot] = 0;
 	s_total.transfers[s_currSlot] = 0;
+	s_total.reads[s_currSlot] = 0;
+	s_total.writes[s_currSlot] = 0;
 	s_total.bytesRead[s_currSlot] = 0;
 	s_total.bytesWritten[s_currSlot] = 0;
 	s_total.waitTime[s_currSlot] = 0;
@@ -73,6 +76,8 @@ static void CalculateTotals()
 
 		s_total.queueLen[s_currSlot] += s_devices[i].queueLen[s_currSlot];
 		s_total.transfers[s_currSlot] += s_devices[i].transfers[s_currSlot];
+		s_total.reads[s_currSlot] += s_devices[i].reads[s_currSlot];
+		s_total.writes[s_currSlot] += s_devices[i].writes[s_currSlot];
 		s_total.bytesRead[s_currSlot] += s_devices[i].bytesRead[s_currSlot];
 		s_total.bytesWritten[s_currSlot] += s_devices[i].bytesWritten[s_currSlot];
 		s_total.waitTime[s_currSlot] += s_devices[i].waitTime[s_currSlot];
@@ -112,6 +117,8 @@ static void ProcessDiskStats(perfstat_disk_t *di)
 
 	dev->queueLen[s_currSlot] = di->qdepth;
 	dev->transfers[s_currSlot] = di->xfers - dev->last.xfers;
+	dev->reads[s_currSlot] = di->__rxfers - dev->last.__rxfers;
+	dev->writes[s_currSlot] = (di->xfers - di->__rxfers) - (dev->last.xfers - dev->last.__rxfers);
 	dev->bytesRead[s_currSlot] = (di->rblks - dev->last.rblks) * di->bsize;
 	dev->bytesWritten[s_currSlot] = (di->wblks - dev->last.wblks) * di->bsize;
 	dev->waitTime[s_currSlot] = (di->wq_time - dev->last.wq_time) / 1000;
@@ -242,6 +249,12 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
 	MutexLock(s_dataLock, INFINITE);
 	switch(CAST_FROM_POINTER(arg, int))
 	{
+		case IOSTAT_NUM_READS:
+			ret_double(value, CalculateAverage64(s_total.reads));
+			break;
+		case IOSTAT_NUM_WRITES:
+			ret_double(value, CalculateAverage64(s_total.writes));
+			break;
 		case IOSTAT_NUM_XFERS:
 			ret_double(value, CalculateAverage64(s_total.transfers));
 			break;
@@ -290,6 +303,12 @@ LONG H_IOStats(const char *cmd, const char *arg, char *value)
 	MutexLock(s_dataLock, INFINITE);
 	switch(CAST_FROM_POINTER(arg, int))
 	{
+		case IOSTAT_NUM_READS:
+			ret_double(value, CalculateAverage64(s_devices[i].reads));
+			break;
+		case IOSTAT_NUM_WRITES:
+			ret_double(value, CalculateAverage64(s_devices[i].writes));
+			break;
 		case IOSTAT_NUM_XFERS:
 			ret_double(value, CalculateAverage64(s_devices[i].transfers));
 			break;

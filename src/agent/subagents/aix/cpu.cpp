@@ -21,7 +21,6 @@
 **/
 
 #include "aix_subagent.h"
-#include <libperfstat.h>
 
 
 //

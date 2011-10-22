@@ -36,11 +36,9 @@ LONG H_IOStats(const char *cmd, const char *arg, char *value);
 LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value);
 LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue);
-LONG H_VirtualMemoryInfo(const char *pszParam, const char *pArg, char *pValue);
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue);
-LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue);
-LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue);
-LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue);
+LONG H_NetIfAdminStatus(const char *param, const char *arg, char *value);
+LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value);
+LONG H_NetInterfaceList(const char *pszParam, const char *pArg, StringList *pValue);
 LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue);
 LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue);
@@ -48,6 +46,7 @@ LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Uname(const char *pszParam, const char *pArg, char *pValue);
 LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue);
+LONG H_VirtualMemoryInfo(const char *pszParam, const char *pArg, char *pValue);
 
 
 //
@@ -123,18 +122,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "FileSystem.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
    { "FileSystem.UsedPerc(*)", H_DiskInfo, (char *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
-/*
-   { "Net.Interface.AdminStatus(*)", H_NetIfAdminStatus, NULL, DCI_DT_INT, "Administrative status of interface {instance}" },
-   { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, "rbytes", DCI_DT_UINT, "Number of input bytes on interface {instance}" },
-   { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, "obytes", DCI_DT_UINT, "Number of output bytes on interface {instance}" },
-   { "Net.Interface.Description(*)", H_NetIfDescription, NULL, DCI_DT_STRING, "" },
-   { "Net.Interface.InErrors(*)", H_NetInterfaceStats, "ierrors", DCI_DT_UINT, "Number of input errors on interface {instance}" },
-   { "Net.Interface.Link(*)", H_NetInterfaceStats, "link_up", DCI_DT_INT, "Link status for interface {instance}" },
-   { "Net.Interface.OutErrors(*)", H_NetInterfaceStats, "oerrors", DCI_DT_UINT, "Number of output errors on interface {instance}" },
-   { "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, "ipackets", DCI_DT_UINT, "Number of input packets on interface {instance}" },
-   { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, "opackets", DCI_DT_UINT, "Number of output packets on interface {instance}" },
-   { "Net.Interface.Speed(*)", H_NetInterfaceStats, "ifspeed", DCI_DT_UINT, "Speed of interface {instance}" },
-*/
+	{ "Net.Interface.AdminStatus(*)", H_NetIfAdminStatus, (char *)IF_INFO_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
+	{ "Net.Interface.BytesIn(*)", H_NetInterfaceInfo, (char *)IF_INFO_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
+	{ "Net.Interface.BytesOut(*)", H_NetInterfaceInfo, (char *)IF_INFO_BYTES_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
+	{ "Net.Interface.Description(*)", H_NetInterfaceInfo, (char *)IF_INFO_DESCRIPTION, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
+	{ "Net.Interface.InErrors(*)", H_NetInterfaceInfo, (char *)IF_INFO_IN_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
+//	{ "Net.Interface.Link(*)", H_NetIfInfo, (char *)IF_INFO_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+	{ "Net.Interface.MTU(*)", H_NetInterfaceInfo, (char *)IF_INFO_MTU, DCI_DT_INT, DCIDESC_NET_INTERFACE_MTU },
+//	{ "Net.Interface.OperStatus(*)", H_NetIfInfo, (char *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
+	{ "Net.Interface.OutErrors(*)", H_NetInterfaceInfo, (char *)IF_INFO_OUT_ERRORS, DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
+	{ "Net.Interface.PacketsIn(*)", H_NetInterfaceInfo, (char *)IF_INFO_PACKETS_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
+	{ "Net.Interface.PacketsOut(*)", H_NetInterfaceInfo, (char *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
+	{ "Net.Interface.Speed(*)", H_NetInterfaceInfo, (char *)IF_INFO_SPEED, DCI_DT_INT, DCIDESC_NET_INTERFACE_SPEED },
 
    { "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
    { "Process.CPUTime(*)", H_ProcessInfo, (char *)PROCINFO_CPUTIME, DCI_DT_UINT64, DCIDESC_PROCESS_CPUTIME },
@@ -193,10 +192,14 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.IO.BytesWriteRate(*)", H_IOStats, (const char *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
 	{ "System.IO.DiskQueue", H_IOStatsTotal, (const char *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
 	{ "System.IO.DiskQueue(*)", H_IOStats, (const char *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
+	{ "System.IO.ReadRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
+	{ "System.IO.ReadRate(*)", H_IOStats, (const char *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
 	{ "System.IO.TransferRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_XFERS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_XFERS },
 	{ "System.IO.TransferRate(*)", H_IOStats, (const char *)IOSTAT_NUM_XFERS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_XFERS_EX },
 	{ "System.IO.WaitTime", H_IOStatsTotal, (const char *)IOSTAT_WAIT_TIME, DCI_DT_INT, DCIDESC_SYSTEM_IO_WAITTIME },
 	{ "System.IO.WaitTime(*)", H_IOStats, (const char *)IOSTAT_WAIT_TIME, DCI_DT_INT, DCIDESC_SYSTEM_IO_WAITTIME_EX },
+	{ "System.IO.WriteRate", H_IOStatsTotal, (const char *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
+	{ "System.IO.WriteRate(*)", H_IOStats, (const char *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
 
    { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
    { "System.Memory.Physical.FreePerc", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE_PERC, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
@@ -223,7 +226,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-   { "Net.InterfaceList", H_NetIfList, NULL },
+   { "Net.InterfaceList", H_NetInterfaceList, NULL },
    { "System.ProcessList", H_ProcessList, NULL }
 };
 
@@ -259,7 +262,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(AIX)
 
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
-   return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+   return H_NetInterfaceList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }  
 
 /*

@@ -1,7 +1,6 @@
-/* $Id$ */
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,6 +53,140 @@ typedef struct
 
 
 //
+// Static data
+//
+
+static perfstat_netinterface_t *s_ifaceData = NULL;
+static int s_ifaceDataSize = 0;
+static time_t s_ifaceDataTimestamp = 0;
+static MUTEX s_ifaceDataLock = INVALID_MUTEX_HANDLE;
+
+
+//
+// Initialize network stuff
+//
+
+void InitNetworkDataCollection()
+{
+	s_ifaceDataLock = MutexCreate();
+}
+
+
+//
+// Get data for all interfaces via libperfstat
+//
+
+static bool GetInterfaceData()
+{
+	int ifCount = perfstat_netinterface(NULL, NULL, sizeof(perfstat_netinterface_t), 0);
+	if (ifCount < 1)
+		return false;
+
+	if (ifCount != s_ifaceDataSize)
+	{
+		s_ifaceDataSize = ifCount;
+		s_ifaceData = (perfstat_netinterface_t *)realloc(s_ifaceData, sizeof(perfstat_netinterface_t) * ifCount);
+	}
+
+	perfstat_id_t firstIface;
+	strcpy(firstIface.name, FIRST_NETINTERFACE);
+	bool success = perfstat_netinterface(&firstIface, s_ifaceData, sizeof(perfstat_netinterface_t), ifCount) > 0;
+	if (success)
+		s_ifaceDataTimestamp = time(NULL);
+	return success;
+}
+
+
+//
+// Get interface data
+//
+
+LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value)
+{
+	char ifName[IF_NAMESIZE], *eptr;
+
+	if (!AgentGetParameterArg(param, 1, ifName, IF_NAMESIZE))
+	{
+		return SYSINFO_RC_ERROR;
+	}
+
+	// Check if we have interface name or index
+	unsigned int ifIndex = (unsigned int)strtoul(ifName, &eptr, 10);
+	if (*eptr == 0)
+	{
+		// Index passed as argument, convert to name
+		if (if_indextoname(ifIndex, ifName) == NULL)
+		{
+			AgentWriteDebugLog(7, "AIX: unable to resolve interface index %u", ifIndex);
+			return SYSINFO_RC_ERROR;
+		}
+	}
+
+	MutexLock(s_ifaceDataLock, INFINITE);
+
+	LONG nRet = SYSINFO_RC_SUCCESS;
+	if (time(NULL) - s_ifaceDataTimestamp > 5)
+	{
+		if (!GetInterfaceData())
+			nRet = SYSINFO_RC_ERROR;
+	}
+
+	if (nRet == SYSINFO_RC_SUCCESS)
+	{
+		int i;
+		for(i = 0; i < s_ifaceDataSize; i++)
+		{
+			if (!strcmp(s_ifaceData[i].name, ifName))
+				break;
+		}
+		if (i < s_ifaceDataSize)
+		{
+			switch((long)arg)
+			{
+				case IF_INFO_DESCRIPTION:
+					ret_string(value, s_ifaceData[i].description);
+					break;
+				case IF_INFO_MTU:
+					ret_int(value, s_ifaceData[i].mtu);
+					break;
+				case IF_INFO_SPEED:
+					ret_uint(value, s_ifaceData[i].bitrate);
+					break;
+				case IF_INFO_BYTES_IN:
+					ret_uint(value, s_ifaceData[i].ibytes);
+					break;
+				case IF_INFO_BYTES_OUT:
+					ret_uint(value, s_ifaceData[i].obytes);
+					break;
+				case IF_INFO_PACKETS_IN:
+					ret_uint(value, s_ifaceData[i].ipackets);
+					break;
+				case IF_INFO_PACKETS_OUT:
+					ret_uint(value, s_ifaceData[i].opackets);
+					break;
+				case IF_INFO_IN_ERRORS:
+					ret_uint(value, s_ifaceData[i].ierrors);
+					break;
+				case IF_INFO_OUT_ERRORS:
+					ret_uint(value, s_ifaceData[i].oerrors);
+					break;
+				default:
+					nRet = SYSINFO_RC_UNSUPPORTED;
+					break;
+			}
+		}
+		else
+		{
+			nRet = SYSINFO_RC_UNSUPPORTED;
+		}
+	}
+
+	MutexUnlock(s_ifaceDataLock);
+	return nRet;
+}
+
+
+//
 // Get MAC address and type for interface via getkerninfo()
 //
 
@@ -89,7 +222,7 @@ static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
 // Handler for Net.InterfaceList enum
 //
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetInterfaceList(const char *pszParam, const char *pArg, StringList *value)
 {
 	LONG nRet;
 	struct ifconf ifc;
@@ -156,7 +289,7 @@ retry_ifconf:
 			        IpToStr(ntohl(ifl[i].ip), szIpAddr),
 			        BitsInMask(ifl[i].netmask), ifl[i].iftype,
 				BinToStr(ifl[i].mac, 6, szMacAddr), ifl[i].name);
-			pValue->add(szBuffer);
+			value->add(szBuffer);
 		}
 		free(ifl);
 		nRet = SYSINFO_RC_SUCCESS;
@@ -168,5 +301,57 @@ retry_ifconf:
 
 	free(ifc.ifc_buf);
 	close(sock);
+	return nRet;
+}
+
+
+//
+// Handler for Net.Interface.AdminStatus parameter
+//
+
+LONG H_NetIfAdminStatus(const char *param, const char *arg, char *value)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	char ifName[IF_NAMESIZE], *eptr;
+
+	AgentGetParameterArg(param, 1, ifName, IF_NAMESIZE);
+
+	// Check if we have interface name or index
+	unsigned int ifIndex = (unsigned int)strtoul(ifName, &eptr, 10);
+	if (*eptr == 0)
+	{
+		// Index passed as argument, convert to name
+		if (if_indextoname(ifIndex, ifName) == NULL)
+		{
+			AgentWriteDebugLog(7, "AIX: unable to resolve interface index %u", ifIndex);
+			return SYSINFO_RC_ERROR;
+		}
+	}
+
+	int nSocket = socket(AF_INET, SOCK_DGRAM, 0);
+	if (nSocket > 0)
+	{
+		struct ifreq ifr;
+		int flags;
+
+		memset(&ifr, 0, sizeof(ifr));
+		nx_strncpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
+		if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
+		{
+			if ((ifr.ifr_flags & IFF_UP) == IFF_UP)
+			{
+				// enabled
+				ret_int(value, 1);
+				nRet = SYSINFO_RC_SUCCESS;
+			}
+			else
+			{
+				ret_int(value, 2);
+				nRet = SYSINFO_RC_SUCCESS;
+			}
+		}
+		close(nSocket);
+	}
+
 	return nRet;
 }

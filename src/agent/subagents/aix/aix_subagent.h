@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2009 Victor Kirhenshtein
+** Copyright (C) 2005-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <nms_agent.h>
 #include <nms_threads.h>
 #include <sys/var.h>
+#include <libperfstat.h>
 
 
 //
@@ -58,13 +59,16 @@ enum
 // Disk info types
 //
 
-#define DISK_AVAIL		0
-#define DISK_AVAIL_PERC		1
-#define DISK_FREE		2
-#define DISK_FREE_PERC		3
-#define DISK_USED		4
-#define DISK_USED_PERC		5
-#define DISK_TOTAL		6
+enum
+{
+	DISK_AVAIL,
+	DISK_AVAIL_PERC,
+	DISK_FREE,
+	DISK_FREE_PERC,
+	DISK_USED,
+	DISK_USED_PERC,
+	DISK_TOTAL
+};
 
 
 //
@@ -127,6 +131,26 @@ enum
 	IOSTAT_QUEUE,
 	IOSTAT_NUM_XFERS,
 	IOSTAT_WAIT_TIME
+};
+
+
+//
+// Network interface request types
+//
+
+enum
+{
+	IF_INFO_ADMIN_STATUS,
+	IF_INFO_OPER_STATUS,
+	IF_INFO_BYTES_IN,
+	IF_INFO_BYTES_OUT,
+	IF_INFO_DESCRIPTION,
+	IF_INFO_IN_ERRORS,
+	IF_INFO_OUT_ERRORS,
+	IF_INFO_PACKETS_IN,
+	IF_INFO_PACKETS_OUT,
+	IF_INFO_SPEED,
+	IF_INFO_MTU
 };
 
 
