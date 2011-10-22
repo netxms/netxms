@@ -366,7 +366,7 @@ LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue)
 
 	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 	{
-		return nRet;
+		return SYSINFO_RC_ERROR;
 	}
 
 	// Check if we have interface name or index
