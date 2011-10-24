@@ -302,4 +302,10 @@ Language=English
 Unable to add external parameters provider "%1"
 .
 
+MessageId=
+SymbolicName=MSG_ADD_EXTERNAL_SUBAGENT_FAILED
+Language=English
+Unable to add external subagent "%1"
+.
+
 ;#endif

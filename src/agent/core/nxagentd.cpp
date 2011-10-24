@@ -169,6 +169,7 @@ static TCHAR *m_pszSubagentList = NULL;
 static TCHAR *m_pszExtParamList = NULL;
 static TCHAR *m_pszShExtParamList = NULL;
 static TCHAR *m_pszParamProviderList = NULL;
+static TCHAR *m_pszExtSubagentList = NULL;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
@@ -212,6 +213,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "ExternalParameterShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
    { "ExternalParametersProvider", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList },
+   { "ExternalSubagent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
    { "FullCrashDumps", CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags },
    { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
@@ -977,6 +979,21 @@ BOOL Initialize()
             nxlog_write(MSG_ADD_PARAM_PROVIDER_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszParamProviderList);
+   }
+
+   // Parse external subagents list
+   if (m_pszExtSubagentList != NULL)
+   {
+      for(pItem = pEnd = m_pszExtSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, '\n');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddExternalSubagent(pItem))
+            nxlog_write(MSG_ADD_EXTERNAL_SUBAGENT_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(m_pszExtSubagentList);
    }
 
    ThreadSleep(1);

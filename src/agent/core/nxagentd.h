@@ -238,6 +238,28 @@ struct SUBAGENT
 
 
 //
+// External subagent information
+//
+
+class ExternalSubagent
+{
+private:
+	TCHAR m_name[MAX_SUBAGENT_NAME];
+	HANDLE m_pipe;
+	bool m_connected;
+
+public:
+	ExternalSubagent(const TCHAR *name);
+	~ExternalSubagent();
+
+	void connect(HANDLE hPipe);
+
+	bool isConnected() { return m_connected; }
+	const TCHAR *getName() { return m_name; }
+};
+
+
+//
 // Server information
 //
 
@@ -369,6 +391,8 @@ bool AddParametersProvider(const TCHAR *line);
 LONG GetParametersValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
 void ListParametersFromExtProviders(CSCPMessage *msg, DWORD *baseId, DWORD *count);
 void ListParametersFromExtProviders(StringList *list);
+
+bool AddExternalSubagent(const TCHAR *config);
 
 BOOL WaitForProcess(const TCHAR *name);
 

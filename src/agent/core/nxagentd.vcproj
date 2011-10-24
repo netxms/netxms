@@ -373,6 +373,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\extagent.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\getparam.cpp"
 				>
 			</File>
