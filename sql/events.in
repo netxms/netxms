@@ -619,6 +619,64 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   2) Old IP address#0D#0A' CONCAT
 		'   3) Primary host name'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_8021X_PAE_STATE_CHANGED, 'SYS_8021X_PAE_STATE_CHANGED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Port %6 PAE state changed from %4 to %2',
+		'Generated when switch port PAE state changed.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) New PAE state code#0D#0A' CONCAT
+		'   2) New PAE state as text#0D#0A' CONCAT
+		'   3) Old PAE state code#0D#0A' CONCAT
+		'   4) Old PAE state as text#0D#0A' CONCAT
+		'   5) Interface index#0D#0A' CONCAT
+		'   6) Interface name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_8021X_BACKEND_STATE_CHANGED, 'SYS_8021X_BACKEND_STATE_CHANGED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Port %6 backend authentication state changed from %4 to %2',
+		'Generated when switch port backend authentication state changed.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) New backend state code#0D#0A' CONCAT
+		'   2) New backend state as text#0D#0A' CONCAT
+		'   3) Old backend state code#0D#0A' CONCAT
+		'   4) Old backend state as text#0D#0A' CONCAT
+		'   5) Interface index#0D#0A' CONCAT
+		'   6) Interface name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_8021X_PAE_FORCE_UNAUTH, 'SYS_8021X_PAE_FORCE_UNAUTH',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Port %2 switched to force unauthorize state',
+		'Generated when switch port PAE state changed to FORCE UNAUTHORIZE.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface index#0D#0A' CONCAT
+		'   2) Interface name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_8021X_AUTH_FAILED, 'SYS_8021X_AUTH_FAILED',
+		EVENT_SEVERITY_MAJOR, 1,
+		'802.1x authentication failed on port %2',
+		'Generated when switch port backend authentication state changed to FAIL.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface index#0D#0A' CONCAT
+		'   2) Interface name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_8021X_AUTH_TIMEOUT, 'SYS_8021X_AUTH_TIMEOUT',
+		EVENT_SEVERITY_MAJOR, 1,
+		'802.1x authentication time out on port %2',
+		'Generated when switch port backend authentication state changed to TIMEOUT.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface index#0D#0A' CONCAT
+		'   2) Interface name'
+	);
 
 
 /*

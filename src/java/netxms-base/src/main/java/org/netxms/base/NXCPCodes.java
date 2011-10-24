@@ -687,6 +687,8 @@ public final class NXCPCodes
 	public static final long VID_RENDER_FORMAT           = 400;
 	public static final long VID_FILE_OFFSET             = 401;
 	public static final long VID_IS_TEMPLATE             = 402;
+	public static final long VID_DOT1X_PAE_STATE         = 403;
+	public static final long VID_DOT1X_BACKEND_STATE     = 404;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;

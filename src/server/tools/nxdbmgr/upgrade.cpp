@@ -253,6 +253,81 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column, const TCH
 
 
 //
+// Create new event template
+//
+
+static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *message, const TCHAR *description)
+{
+	TCHAR query[4096], *escMessage, *escDescription;
+
+	escMessage = EncodeSQLString(message);
+	escDescription = EncodeSQLString(description);
+	_sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (%d,'%s',%d,%d,'%s','%s')"),
+	           code, name, severity, flags, escMessage, escDescription);
+	free(escMessage);
+	free(escDescription);
+	return SQLQuery(query);
+}
+
+
+//
+// Upgrade from V243 to V244
+//
+
+static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("ALTER TABLE interfaces ADD dot1x_pae_state integer\n")
+		_T("ALTER TABLE interfaces ADD dot1x_backend_state integer\n")
+		_T("UPDATE interfaces SET dot1x_pae_state=0,dot1x_backend_state=0\n")
+		_T("<END>");
+
+	CHK_EXEC(SQLBatch(batch));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_8021X_PAE_STATE_CHANGED, _T("SYS_8021X_PAE_STATE_CHANGED"),
+		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 PAE state changed from %4 to %2"), 
+		_T("Generated when switch port PAE state changed.\r\nParameters:\r\n")
+		_T("   1) New PAE state code\r\n")
+		_T("   2) New PAE state as text\r\n")
+		_T("   3) Old PAE state code\r\n")
+		_T("   4) Old PAE state as text\r\n")
+		_T("   5) Interface index\r\n")
+		_T("   6) Interface name")));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_8021X_BACKEND_STATE_CHANGED, _T("SYS_8021X_BACKEND_STATE_CHANGED"),
+		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 backend authentication state changed from %4 to %2"), 
+		_T("Generated when switch port backend authentication state changed.\r\nParameters:\r\n")
+		_T("   1) New backend state code\r\n")
+		_T("   2) New backend state as text\r\n")
+		_T("   3) Old backend state code\r\n")
+		_T("   4) Old backend state as text\r\n")
+		_T("   5) Interface index\r\n")
+		_T("   6) Interface name")));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_8021X_PAE_FORCE_UNAUTH, _T("SYS_8021X_PAE_FORCE_UNAUTH"),
+		EVENT_SEVERITY_MAJOR, 1, _T("Port %2 switched to force unauthorize state"), 
+		_T("Generated when switch port PAE state changed to FORCE UNAUTHORIZE.\r\nParameters:\r\n")
+		_T("   1) Interface index\r\n")
+		_T("   2) Interface name")));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_8021X_AUTH_FAILED, _T("SYS_8021X_AUTH_FAILED"),
+		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication failed on port %2"), 
+		_T("Generated when switch port backend authentication state changed to FAIL.\r\nParameters:\r\n")
+		_T("   1) Interface index\r\n")
+		_T("   2) Interface name")));
+
+	CHK_EXEC(CreateEventTemplate(EVENT_8021X_AUTH_TIMEOUT, _T("SYS_8021X_AUTH_TIMEOUT"),
+		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication time out on port %2"), 
+		_T("Generated when switch port backend authentication state changed to TIMEOUT.\r\nParameters:\r\n")
+		_T("   1) Interface index\r\n")
+		_T("   2) Interface name")));
+
+	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='244' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+
+//
 // Upgrade from V242 to V243
 //
 
@@ -5778,6 +5853,7 @@ static struct
 	{ 240, 241, H_UpgradeFromV240 },
 	{ 241, 242, H_UpgradeFromV241 },
 	{ 242, 243, H_UpgradeFromV242 },
+	{ 243, 244, H_UpgradeFromV243 },
    { 0, NULL }
 };
 

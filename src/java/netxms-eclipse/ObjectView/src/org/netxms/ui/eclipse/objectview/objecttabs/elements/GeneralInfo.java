@@ -68,7 +68,15 @@ public class GeneralInfo extends TableElement
 				addPair("Description", iface.getDescription());
 				addPair("MAC Address", iface.getMacAddress().toString());
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
+				{
 					addPair("Slot/Port", Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort()));
+					Node node = iface.getParentNode();
+					if ((node != null) && node.is8021xSupported())
+					{
+						addPair("802.1x PAE State", iface.getDot1xPaeStateAsText());
+						addPair("802.1x Backend State", iface.getDot1xBackendStateAsText());
+					}
+				}
 				if (!iface.getPrimaryIP().isAnyLocalAddress())
 				{
 					if (session.isZoningEnabled())

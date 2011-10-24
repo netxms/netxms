@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <ieee8021x.h>
 
 
 //
@@ -40,8 +41,8 @@ Interface::Interface()
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
-	m_dot1xPaeAuthState = 0;
-	m_dot1xBackendAuthState = 0;
+	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
+	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    m_qwLastDownEventId = 0;
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
@@ -69,8 +70,8 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheti
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
-	m_dot1xPaeAuthState = 0;
-	m_dot1xBackendAuthState = 0;
+	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
+	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_iPendingStatus = -1;
@@ -100,8 +101,8 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD i
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
-	m_dot1xPaeAuthState = 0;
-	m_dot1xBackendAuthState = 0;
+	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
+	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_iPendingStatus = -1;
@@ -140,7 +141,8 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 
    _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,")
                             _T("mac_addr,flags,required_polls,bridge_port,phy_slot,")
-									 _T("phy_port,peer_node_id,peer_if_id,description FROM interfaces WHERE id=%d"), dwId);
+									 _T("phy_port,peer_node_id,peer_if_id,description,")
+									 _T("dot1x_pae_state,dot1x_backend_state FROM interfaces WHERE id=%d"), (int)dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -161,6 +163,8 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 		m_peerNodeId = DBGetFieldULong(hResult, 0, 11);
 		m_peerInterfaceId = DBGetFieldULong(hResult, 0, 12);
 		DBGetField(hResult, 0, 13, m_description, MAX_DB_STRING);
+		m_dot1xPaeAuthState = (WORD)DBGetFieldLong(hResult, 0, 14);
+		m_dot1xBackendAuthState = (WORD)DBGetFieldLong(hResult, 0, 15);
 
       // Link interface to node
       if (!m_bIsDeleted)
@@ -236,26 +240,29 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    if (bNewObject)
       _sntprintf(szQuery, 2048, _T("INSERT INTO interfaces (id,ip_addr,")
                        _T("ip_netmask,node_id,if_type,if_index,mac_addr,flags,required_polls,")
-							  _T("bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description) ")
-                       _T("VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d,%d,%d,%d,%d,%d,%d,%s)"),
+							  _T("bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
+                       _T("dot1x_pae_state,dot1x_backend_state) ")
+							  _T("VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d,%d,%d,%d,%d,%d,%d,%s,%d,%d)"),
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
 				  m_dwIfType, m_dwIfIndex, szMacStr, (int)m_flags,
 				  m_iRequiredPollCount, (int)m_bridgePortNumber, (int)m_slotNumber,
 				  (int)m_portNumber, (int)m_peerNodeId, (int)m_peerInterfaceId,
-				  (const TCHAR *)DBPrepareString(hdb, m_description));
+				  (const TCHAR *)DBPrepareString(hdb, m_description),
+				  (int)m_dot1xPaeAuthState, (int)m_dot1xBackendAuthState);
    else
       _sntprintf(szQuery, 2048, _T("UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',")
-                       _T("node_id=%d,if_type=%d,if_index=%d,")
-                       _T("mac_addr='%s',flags=%d,")
+                       _T("node_id=%d,if_type=%d,if_index=%d,mac_addr='%s',flags=%d,")
 							  _T("required_polls=%d,bridge_port=%d,phy_slot=%d,phy_port=%d,")
-							  _T("peer_node_id=%d,peer_if_id=%d,description=%s WHERE id=%d"),
+							  _T("peer_node_id=%d,peer_if_id=%d,description=%s,")
+							  _T("dot1x_pae_state=%d,dot1x_backend_state=%d WHERE id=%d"),
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
 				  m_dwIfType, m_dwIfIndex, szMacStr, (int)m_flags,
 				  m_iRequiredPollCount, (int)m_bridgePortNumber, (int)m_slotNumber,
 				  (int)m_portNumber, (int)m_peerNodeId, (int)m_peerInterfaceId,
-				  (const TCHAR *)DBPrepareString(hdb, m_description), m_dwId);
+				  (const TCHAR *)DBPrepareString(hdb, m_description), 
+				  (int)m_dot1xPaeAuthState, (int)m_dot1xBackendAuthState, (int)m_dwId);
    DBQuery(hdb, szQuery);
 
    // Save access list
@@ -466,7 +473,104 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		UnlockData();
    }
    SendPollerMsg(dwRqId, _T("      Interface status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
-   SendPollerMsg(dwRqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
+
+	if ((pNode->getFlags() & NF_IS_8021X) && isPhysicalPort())
+	{
+		DbgPrintf(5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->Name(), m_szName);
+		paeStatusPoll(pSession, dwRqId, pTransport, pNode);
+	}
+   
+	SendPollerMsg(dwRqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
+}
+
+
+//
+// PAE (802.1x) status poll
+//
+
+void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transport *pTransport, Node *node)
+{
+	static TCHAR *paeStateText[] = 
+	{
+		_T("UNKNOWN"),
+		_T("INITIALIZE"),
+		_T("DISCONNECTED"),
+		_T("CONNECTING"),
+		_T("AUTHENTICATING"),
+		_T("AUTHENTICATED"),
+		_T("ABORTING"),
+		_T("HELD"),
+		_T("FORCE AUTH"),
+		_T("FORCE UNAUTH"),
+		_T("RESTART")
+	};
+	static TCHAR *backendStateText[] = 
+	{
+		_T("UNKNOWN"),
+		_T("REQUEST"),
+		_T("RESPONSE"),
+		_T("SUCCESS"),
+		_T("FAIL"),
+		_T("TIMEOUT"),
+		_T("IDLE"),
+		_T("INITIALIZE"),
+		_T("IGNORE")
+	};
+#define PAE_STATE_TEXT(x) ((((x) <= PAE_STATE_RESTART) && ((x) >= 0)) ? paeStateText[x] : paeStateText[0])
+#define BACKEND_STATE_TEXT(x) ((((x) <= BACKEND_STATE_IGNORE) && ((x) >= 0)) ? backendStateText[x] : backendStateText[0])
+
+   SendPollerMsg(dwRqId, _T("      Checking port 802.1x status...\r\n"));
+
+	TCHAR oid[256];
+	LONG paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
+	bool modified = false;
+
+	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.1.%d"), m_dwIfIndex);
+	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &paeState, sizeof(LONG), 0);
+
+	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.2.%d"), m_dwIfIndex);
+	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &backendState, sizeof(LONG), 0);
+
+	if (m_dot1xPaeAuthState != (WORD)paeState)
+	{
+	   SendPollerMsg(dwRqId, _T("      Port PAE state changed to %s...\r\n"), PAE_STATE_TEXT(paeState));
+		modified = true;
+
+		PostEvent(EVENT_8021X_PAE_STATE_CHANGED, node->Id(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
+		          (DWORD)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_dwId, m_szName);
+
+		if (paeState == PAE_STATE_FORCE_UNAUTH)
+		{
+			PostEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->Id(), "ds", m_dwId, m_szName);
+		}
+	}
+
+	if (m_dot1xBackendAuthState != (WORD)backendState)
+	{
+	   SendPollerMsg(dwRqId, _T("      Port backend state changed to %s...\r\n"), BACKEND_STATE_TEXT(backendState));
+		modified = true;
+
+		PostEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->Id(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
+		          (DWORD)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_dwId, m_szName);
+
+		if (backendState == BACKEND_STATE_FAIL)
+		{
+			PostEvent(EVENT_8021X_AUTH_FAILED, node->Id(), "ds", m_dwId, m_szName);
+		}
+		else if (backendState == BACKEND_STATE_TIMEOUT)
+		{
+			PostEvent(EVENT_8021X_AUTH_TIMEOUT, node->Id(), "ds", m_dwId, m_szName);
+		}
+	}
+
+	if (modified)
+	{
+		LockData();
+		m_dot1xPaeAuthState = (WORD)paeState;
+		m_dot1xBackendAuthState = (WORD)backendState;
+		Modify();
+		UnlockData();
+	}
 }
 
 
@@ -488,6 +592,8 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_PEER_NODE_ID, m_peerNodeId);
 	pMsg->SetVariable(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
 	pMsg->SetVariable(VID_DESCRIPTION, m_description);
+	pMsg->SetVariable(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
+	pMsg->SetVariable(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
 }
 
 

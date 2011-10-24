@@ -50,8 +50,9 @@ public class Node extends GenericObject
 	public static final int NF_IS_SONMP             = 0x00000400;
 	public static final int NF_IS_LLDP              = 0x00000800;
 	public static final int NF_IS_VRRP              = 0x00001000;
-	public static final int NF_IS_8021X             = 0x00002000;
-	public static final int NF_IS_STP               = 0x00004000;
+	public static final int NF_HAS_VLANS            = 0x00002000;
+	public static final int NF_IS_8021X             = 0x00004000;
+	public static final int NF_IS_STP               = 0x00008000;
 
 	// Node flags (user)
 	public static final int NF_DISABLE_SNMP         = 0x01000000;

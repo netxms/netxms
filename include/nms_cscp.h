@@ -883,6 +883,8 @@ typedef struct
 #define VID_RENDER_FORMAT           ((DWORD)400)
 #define VID_FILE_OFFSET             ((DWORD)401)
 #define VID_IS_TEMPLATE             ((DWORD)402)
+#define VID_DOT1X_PAE_STATE         ((DWORD)403)
+#define VID_DOT1X_BACKEND_STATE     ((DWORD)404)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)

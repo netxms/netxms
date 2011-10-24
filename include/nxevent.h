@@ -111,6 +111,11 @@
 #define EVENT_DCI_DISABLED                54
 #define EVENT_DCI_ACTIVE                  55
 #define EVENT_IP_ADDRESS_CHANGED          56
+#define EVENT_8021X_PAE_STATE_CHANGED     57
+#define EVENT_8021X_BACKEND_STATE_CHANGED 58
+#define EVENT_8021X_PAE_FORCE_UNAUTH      59
+#define EVENT_8021X_AUTH_FAILED           60
+#define EVENT_8021X_AUTH_TIMEOUT          61
 
 #define EVENT_SNMP_UNMATCHED_TRAP         500
 #define EVENT_SNMP_COLD_START             501

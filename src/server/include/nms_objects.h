@@ -553,6 +553,8 @@ protected:
 	int m_iRequiredPollCount;
    DWORD m_zoneId;
 
+	void paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transport *pTransport, Node *node);
+
 public:
    Interface();
    Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheticMask);

@@ -32,6 +32,55 @@ public class Interface extends GenericObject
 	public static final int IF_SYNTHETIC_MASK = 0x00000001;
 	public static final int IF_PHYSICAL_PORT  = 0x00000002;
 	
+	public static final int PAE_STATE_UNKNOWN        = 0;
+	public static final int PAE_STATE_INITIALIZE     = 1;
+	public static final int PAE_STATE_DISCONNECTED   = 2;
+	public static final int PAE_STATE_CONNECTING     = 3;
+	public static final int PAE_STATE_AUTHENTICATING = 4;
+	public static final int PAE_STATE_AUTHENTICATED  = 5;
+	public static final int PAE_STATE_ABORTING       = 6;
+	public static final int PAE_STATE_HELD           = 7;
+	public static final int PAE_STATE_FORCE_AUTH     = 8;
+	public static final int PAE_STATE_FORCE_UNAUTH   = 9;
+	public static final int PAE_STATE_RESTART        = 10;
+
+	public static final int BACKEND_STATE_UNKNOWN    = 0;
+	public static final int BACKEND_STATE_REQUEST    = 1;
+	public static final int BACKEND_STATE_RESPONSE   = 2;
+	public static final int BACKEND_STATE_SUCCESS    = 3;
+	public static final int BACKEND_STATE_FAIL       = 4;
+	public static final int BACKEND_STATE_TIMEOUT    = 5;
+	public static final int BACKEND_STATE_IDLE       = 6;
+	public static final int BACKEND_STATE_INITIALIZE = 7;
+	public static final int BACKEND_STATE_IGNORE     = 8;
+	
+	private static final String[] paeStateText =
+		{
+			"UNKNOWN",
+			"INITIALIZE",
+			"DISCONNECTED",
+			"CONNECTING",
+			"AUTHENTICATING",
+			"AUTHENTICATED",
+			"ABORTING",
+			"HELD",
+			"FORCE AUTH",
+			"FORCE UNAUTH",
+			"RESTART"
+		};
+	private static final String[] backendStateText =
+		{
+			"UNKNOWN",
+			"REQUEST",
+			"RESPONSE",
+			"SUCCESS",
+			"FAIL",
+			"TIMEOUT",
+			"IDLE",
+			"INITIALIZE",
+			"IGNORE"
+		};
+	
 	private int flags;
 	private InetAddress subnetMask;
 	private int ifIndex;
@@ -44,6 +93,8 @@ public class Interface extends GenericObject
 	private long peerInterfaceId;
 	private long zoneId;
 	private String description;
+	private int dot1xPaeState;
+	private int dot1xBackendState;
 	
 	/**
 	 * @param msg
@@ -64,6 +115,8 @@ public class Interface extends GenericObject
 		peerInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
+		dot1xPaeState = msg.getVariableAsInteger(NXCPCodes.VID_DOT1X_PAE_STATE);
+		dot1xBackendState = msg.getVariableAsInteger(NXCPCodes.VID_DOT1X_BACKEND_STATE);
 	}
 	
 	/**
@@ -192,5 +245,55 @@ public class Interface extends GenericObject
 	public int getFlags()
 	{
 		return flags;
+	}
+
+	/**
+	 * @return the dot1xPaeState
+	 */
+	public int getDot1xPaeState()
+	{
+		return dot1xPaeState;
+	}
+	
+	/**
+	 * Get 802.1x PAE state as text
+	 * 
+	 * @return
+	 */
+	public String getDot1xPaeStateAsText()
+	{
+		try
+		{
+			return paeStateText[dot1xPaeState];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return paeStateText[PAE_STATE_UNKNOWN];
+		}
+	}
+
+	/**
+	 * @return the dot1xBackendState
+	 */
+	public int getDot1xBackendState()
+	{
+		return dot1xBackendState;
+	}
+
+	/**
+	 * Get 802.1x backend state as text
+	 * 
+	 * @return
+	 */
+	public String getDot1xBackendStateAsText()
+	{
+		try
+		{
+			return backendStateText[dot1xBackendState];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			return backendStateText[BACKEND_STATE_UNKNOWN];
+		}
 	}
 }

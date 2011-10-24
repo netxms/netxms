@@ -313,6 +313,8 @@ CREATE TABLE interfaces
 	peer_if_id integer not null,
 	mac_addr varchar(15) not null,
 	required_polls integer not null,
+	dot1x_pae_state integer not null,
+	dot1x_backend_state integer not null,
 	description varchar(255),
 	PRIMARY KEY(id)
 ) TABLE_TYPE;

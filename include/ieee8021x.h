@@ -27,6 +27,7 @@
 /**
  * States of PAE state machine
  */
+#define PAE_STATE_UNKNOWN        0
 #define PAE_STATE_INITIALIZE     1
 #define PAE_STATE_DISCONNECTED   2
 #define PAE_STATE_CONNECTING     3
@@ -41,6 +42,7 @@
 /**
  * States of backend authentication state machine
  */
+#define BACKEND_STATE_UNKNOWN    0
 #define BACKEND_STATE_REQUEST    1
 #define BACKEND_STATE_RESPONSE   2
 #define BACKEND_STATE_SUCCESS    3
