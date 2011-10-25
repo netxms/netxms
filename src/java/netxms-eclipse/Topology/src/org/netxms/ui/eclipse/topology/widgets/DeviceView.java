@@ -22,13 +22,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
@@ -36,6 +39,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
@@ -49,6 +53,8 @@ public class DeviceView extends DashboardComposite
 	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();
 	private Map<Integer, SlotView> slots = new HashMap<Integer, SlotView>();
 	private boolean portStatusVisible = true;
+	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
+	private PortSelectionListener listener;
 	
 	/**
 	 * @param parent
@@ -67,6 +73,15 @@ public class DeviceView extends DashboardComposite
 		setLayout(layout);
 		
 		setBackground(new Color(getDisplay(), 255, 255, 255));
+		
+		listener = new PortSelectionListener() {
+			@Override
+			public void portSelected(PortInfo port)
+			{
+				for(PortSelectionListener l : selectionListeners)
+					l.portSelected(port);
+			}
+		};
 	}
 	
 	/**
@@ -79,7 +94,10 @@ public class DeviceView extends DashboardComposite
 			return;
 		
 		for(SlotView s : slots.values())
+		{
+			s.setMenu(null);
 			s.dispose();
+		}
 		slots.clear();
 		ports.clear();
 		
@@ -116,6 +134,12 @@ public class DeviceView extends DashboardComposite
 		}
 		
 		layout();
+		
+		for(SlotView sv : slots.values())
+		{
+			sv.setMenu(getMenu());
+			sv.addSelectionListener(listener);
+		}
 	}
 
 	/**
@@ -186,5 +210,36 @@ public class DeviceView extends DashboardComposite
 			if (doRedraw)
 				sv.redraw();
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Control#setMenu(org.eclipse.swt.widgets.Menu)
+	 */
+	@Override
+	public void setMenu(Menu menu)
+	{
+		super.setMenu(menu);
+		for(SlotView sv : slots.values())
+			sv.setMenu(getMenu());
+	}
+
+	/**
+	 * Add selection listener
+	 * 
+	 * @param listener
+	 */
+	public void addSelectionListener(PortSelectionListener listener)
+	{
+		selectionListeners.add(listener);
+	}
+	
+	/**
+	 * Remove selection listener
+	 * 
+	 * @param listener
+	 */
+	public void removeSelectionListener(PortSelectionListener listener)
+	{
+		selectionListeners.remove(listener);
 	}
 }

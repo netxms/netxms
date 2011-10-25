@@ -18,24 +18,48 @@
  */
 package org.netxms.ui.eclipse.topology.objecttabs;
 
+import java.util.HashSet;
+import java.util.Set;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 
 /**
- * @author Victor
- *
+ * "Ports" object tab
  */
-public class Ports extends ObjectTab
+public class Ports extends ObjectTab implements ISelectionProvider
 {
 	private ScrolledComposite scroller;
 	private DeviceView deviceView;
+	private ISelection selection = new StructuredSelection();
+	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
+	private NXCSession session;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -43,8 +67,35 @@ public class Ports extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
+		session = (NXCSession)ConsoleSharedData.getSession();
+		
 		scroller = new ScrolledComposite(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 		deviceView = new DeviceView(scroller, SWT.NONE);
+		deviceView.addSelectionListener(new PortSelectionListener() {
+			@Override
+			public void portSelected(PortInfo port)
+			{
+				if (port != null)
+				{
+					Interface iface = (Interface)session.findObjectById(port.getInterfaceObjectId(), Interface.class);
+					if (iface != null)
+					{
+						selection = new StructuredSelection(iface);
+					}
+					else
+					{
+						selection = new StructuredSelection();
+					}
+				}
+				else
+				{
+					selection = new StructuredSelection();
+				}
+				
+				for(ISelectionChangedListener listener : selectionListeners)
+					listener.selectionChanged(new SelectionChangedEvent(Ports.this, selection));
+			}
+		});
 
 		scroller.setContent(deviceView);
 		scroller.setExpandVertical(true);
@@ -56,6 +107,8 @@ public class Ports extends ObjectTab
 				scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 			}
 		});
+		
+		createPopupMenu();
 	}
 
 	/* (non-Javadoc)
@@ -82,4 +135,89 @@ public class Ports extends ObjectTab
 		return false;
 	}
 
+	/**
+	 * Create pop-up menu
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(deviceView);
+		deviceView.setMenu(menu);
+
+		// Register menu for extension.
+		getViewPart().getSite().registerContextMenu(menuMgr, this);
+	}
+	
+	/**
+	 * Fill port context menu
+	 * 
+	 * @param manager
+	 */
+	private void fillContextMenu(IMenuManager manager)
+	{
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_CREATION));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_OBJECT_BINDING));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_TOPOLOGY));
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
+		{
+			manager.add(new Separator());
+			manager.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+			manager.add(new PropertyDialogAction(getViewPart().getSite(), this));
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+	 */
+	@Override
+	public void addSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		selectionListeners.add(listener);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+	 */
+	@Override
+	public ISelection getSelection()
+	{
+		return selection;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+	 */
+	@Override
+	public void removeSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		selectionListeners.remove(listener);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+	 */
+	@Override
+	public void setSelection(ISelection selection)
+	{
+		this.selection = selection;
+	}
 }

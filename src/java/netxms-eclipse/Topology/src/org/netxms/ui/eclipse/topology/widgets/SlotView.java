@@ -19,8 +19,12 @@
 package org.netxms.ui.eclipse.topology.widgets;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -33,11 +37,12 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 
 /**
  * Single slot view
  */
-public class SlotView extends Canvas implements PaintListener
+public class SlotView extends Canvas implements PaintListener, MouseListener
 {
 	private static final int HORIZONTAL_MARGIN = 20;
 	private static final int VERTICAL_MARGIN = 10;
@@ -54,6 +59,8 @@ public class SlotView extends Canvas implements PaintListener
 	private String slotName;
 	private Point nameSize;
 	private boolean portStatusVisible = true;
+	private PortInfo selection = null;
+	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	
 	/**
 	 * @param parent
@@ -69,6 +76,7 @@ public class SlotView extends Canvas implements PaintListener
 		gc.dispose();
 		
 		addPaintListener(this);
+		addMouseListener(this);
 	}
 	
 	/**
@@ -77,6 +85,37 @@ public class SlotView extends Canvas implements PaintListener
 	public void addPort(PortInfo p)
 	{
 		ports.add(p);
+	}
+	
+	/**
+	 * Get port info object from given point
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	private PortInfo getPortFromPoint(int x, int y)
+	{
+		final int xOffset = HORIZONTAL_MARGIN + nameSize.x + HORIZONTAL_SPACING;
+		
+		if ((x < xOffset) || (y < VERTICAL_MARGIN))
+			return null;	// x before first column
+		
+		int column = (x - xOffset) / (PORT_WIDTH + HORIZONTAL_SPACING);
+		if (column >= (ports.size() + rowCount - 1) / rowCount)
+			return null;	// x after last column
+		
+		if (x > xOffset + (column * (PORT_WIDTH + HORIZONTAL_SPACING)) + PORT_WIDTH)
+			return null;	// x inside spacing after column
+		
+		int row = (y - VERTICAL_MARGIN) / (PORT_HEIGHT + VERTICAL_SPACING);
+		if (row >= rowCount)
+			return null;	// y after last row
+		
+		if (y > VERTICAL_MARGIN + (row * (PORT_HEIGHT + VERTICAL_SPACING)) + PORT_HEIGHT)
+			return null;	// y inside spacing after row
+		
+		return ports.get(column * rowCount + row);
 	}
 
 	/* (non-Javadoc)
@@ -98,11 +137,11 @@ public class SlotView extends Canvas implements PaintListener
 			{
 				row = 0;
 				y = VERTICAL_MARGIN;
-				x += HORIZONTAL_SPACING + 40;
+				x += HORIZONTAL_SPACING + PORT_WIDTH;
 			}
 			else
 			{
-				y += VERTICAL_SPACING + 30;
+				y += VERTICAL_SPACING + PORT_HEIGHT;
 			}
 		}
 	}
@@ -149,7 +188,7 @@ public class SlotView extends Canvas implements PaintListener
 		return new Point(((ports.size() + rowCount - 1) / rowCount) * (40 + HORIZONTAL_SPACING) + HORIZONTAL_MARGIN * 2 + nameSize.x,
 				rowCount * 30 + (rowCount - 1) * VERTICAL_SPACING + VERTICAL_MARGIN * 2);
 	}
-
+	
 	/**
 	 * @return the portStatusVisible
 	 */
@@ -185,5 +224,64 @@ public class SlotView extends Canvas implements PaintListener
 		for(PortInfo pi : ports)
 			if (pi.getPort() == p.getPort())
 				pi.setHighlighted(true);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
+	 */
+	@Override
+	public void mouseDoubleClick(MouseEvent e)
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
+	 */
+	@Override
+	public void mouseDown(MouseEvent e)
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
+	 */
+	@Override
+	public void mouseUp(MouseEvent e)
+	{
+		PortInfo p = getPortFromPoint(e.x, e.y);
+		if (p != selection)
+		{
+			selection = p;
+			for(PortSelectionListener listener : selectionListeners)
+				listener.portSelected(p);
+		}
+	}
+
+	/**
+	 * @return the selection
+	 */
+	public PortInfo getSelection()
+	{
+		return selection;
+	}
+	
+	/**
+	 * Add selection listener
+	 * 
+	 * @param listener
+	 */
+	public void addSelectionListener(PortSelectionListener listener)
+	{
+		selectionListeners.add(listener);
+	}
+	
+	/**
+	 * Remove selection listener
+	 * 
+	 * @param listener
+	 */
+	public void removeSelectionListener(PortSelectionListener listener)
+	{
+		selectionListeners.remove(listener);
 	}
 }

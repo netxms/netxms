@@ -428,6 +428,14 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       }
    }
 
+	if ((pNode->getFlags() & NF_IS_8021X) && isPhysicalPort())
+	{
+		DbgPrintf(5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->Name(), m_szName);
+		paeStatusPoll(pSession, dwRqId, pTransport, pNode);
+		if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
+			newStatus = STATUS_MAJOR;
+	}
+   
 	if (newStatus == m_iPendingStatus)
 	{
 		m_iPollCount++;
@@ -452,7 +460,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			EVENT_INTERFACE_UP,       // Normal
 			EVENT_INTERFACE_UP,       // Warning
 			EVENT_INTERFACE_UP,       // Minor
-			EVENT_INTERFACE_UP,       // Major
+			EVENT_INTERFACE_DOWN,     // Major
 			EVENT_INTERFACE_DOWN,     // Critical
 			EVENT_INTERFACE_UNKNOWN,  // Unknown
 			EVENT_INTERFACE_UNKNOWN,  // Unmanaged
@@ -473,13 +481,6 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		UnlockData();
    }
    SendPollerMsg(dwRqId, _T("      Interface status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
-
-	if ((pNode->getFlags() & NF_IS_8021X) && isPhysicalPort())
-	{
-		DbgPrintf(5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->Name(), m_szName);
-		paeStatusPoll(pSession, dwRqId, pTransport, pNode);
-	}
-   
 	SendPollerMsg(dwRqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
 }
 

@@ -1362,6 +1362,10 @@ src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widget
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeElement.java -text
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeLabelProvider.java -text
 src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widgets/helpers/ServiceTreeModel.java -text
+src/java/netxms-eclipse/SwitchManager/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/SwitchManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/SwitchManager/build.properties -text
+src/java/netxms-eclipse/SwitchManager/src/nxmc_switchmanager/Activator.java -text
 src/java/netxms-eclipse/Topology/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Topology/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/Topology/build.properties -text
@@ -1383,6 +1387,7 @@ src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/views/helper
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/DeviceView.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/SlotView.java -text
 src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/helpers/PortInfo.java -text
+src/java/netxms-eclipse/Topology/src/org/netxms/ui/eclipse/topology/widgets/helpers/PortSelectionListener.java -text
 src/java/netxms-eclipse/UserManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/UserManager/build.properties -text
 src/java/netxms-eclipse/UserManager/icons/change_password.png -text
