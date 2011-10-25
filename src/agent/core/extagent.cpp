@@ -64,8 +64,11 @@ static CSCPMessage *ReadMessageFromPipe(HANDLE hPipe)
 	BYTE buffer[8192];
 	DWORD bytes;
 
+#ifdef _WIN32
 	if (!ReadFile(hPipe, buffer, 8192, &bytes, NULL))
 		return NULL;
+#else
+#endif
 
 	if (bytes < CSCP_HEADER_SIZE)
 		return NULL;
@@ -107,6 +110,8 @@ void ExternalSubagent::connect(HANDLE hPipe)
 //
 // Listener for external subagents
 //
+
+#ifdef _WIN32
 
 static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 {
@@ -209,6 +214,14 @@ cleanup:
 
 	return THREAD_OK;
 }
+
+#else
+
+static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
+{
+}
+
+#endif
 
 
 //
