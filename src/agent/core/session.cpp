@@ -645,7 +645,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 void CommSession::getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   TCHAR szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];   //
+   TCHAR szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
    DWORD dwErrorCode;
 
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);

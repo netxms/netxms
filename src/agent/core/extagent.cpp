@@ -33,40 +33,87 @@
 
 static ObjectArray<ExternalSubagent> s_subagents;
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 ExternalSubagent::ExternalSubagent(const TCHAR *name)
 {
 	nx_strncpy(m_name, name, MAX_SUBAGENT_NAME);
 	m_connected = false;
 	m_pipe = NULL;
+	m_msgQueue = new MsgWaitQueue();
+	m_requestId = 1;
+	m_mutexPipeWrite = MutexCreate();
+	m_readEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 ExternalSubagent::~ExternalSubagent()
 {
+	delete m_msgQueue;
+	MutexDestroy(m_mutexPipeWrite);
+	CloseHandle(m_readEvent);
 }
 
+/*
+ * Send message to external subagent
+ */
+void ExternalSubagent::sendMessage(CSCPMessage *msg)
+{
+	TCHAR buffer[256];
+	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
 
-//
-// Read NXCP message from pipe
-//
+	CSCP_MESSAGE *rawMsg = msg->CreateMessage();
+	MutexLock(m_mutexPipeWrite, INFINITE);
+#ifdef _WIN32
+	DWORD bytes = 0;
+	WriteFile(m_pipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL);
+#else
+#endif
+	MutexUnlock(m_mutexPipeWrite);
+	free(rawMsg);
+}
 
-static CSCPMessage *ReadMessageFromPipe(HANDLE hPipe)
+/**
+ * Wait for specific message to arrive
+ */
+CSCPMessage *ExternalSubagent::waitForMessage(WORD code, DWORD id)
+{
+	return m_msgQueue->WaitForMessage(code, id, 5000);	// 5 sec timeout
+}
+
+/**
+ * Read NXCP message from pipe
+ */
+CSCPMessage *ReadMessageFromPipe(HANDLE hPipe, HANDLE hEvent)
 {
 	BYTE buffer[8192];
 	DWORD bytes;
 
 #ifdef _WIN32
-	if (!ReadFile(hPipe, buffer, 8192, &bytes, NULL))
-		return NULL;
+	if (hEvent != NULL)
+	{
+		OVERLAPPED ov;
+
+		memset(&ov, 0, sizeof(OVERLAPPED));
+		ov.hEvent = hEvent;
+		if (!ReadFile(hPipe, buffer, 8192, NULL, &ov))
+		{
+			if (GetLastError() != ERROR_IO_PENDING)
+				return NULL;
+		}
+		if (!GetOverlappedResult(hPipe, &ov, &bytes, TRUE))
+		{
+			return NULL;
+		}
+	}
+	else
+	{
+		if (!ReadFile(hPipe, buffer, 8192, &bytes, NULL))
+			return NULL;
+	}
 #else
 #endif
 
@@ -79,11 +126,9 @@ static CSCPMessage *ReadMessageFromPipe(HANDLE hPipe)
 	return new CSCPMessage((CSCP_MESSAGE *)buffer);
 }
 
-
-//
-// Main connection thread
-//
-
+/**
+ * Main connection thread
+ */
 void ExternalSubagent::connect(HANDLE hPipe)
 {
 	TCHAR buffer[256];
@@ -94,23 +139,118 @@ void ExternalSubagent::connect(HANDLE hPipe)
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection established"), m_name);
 	while(true)
 	{
-		CSCPMessage *msg = ReadMessageFromPipe(hPipe);
+		CSCPMessage *msg = ReadMessageFromPipe(hPipe, m_readEvent);
 		if (msg == NULL)
 			break;
 		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
-
-		delete msg;
+		m_msgQueue->Put(msg);
 	}
 
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection closed"), m_name);
 	m_connected = false;
+	m_msgQueue->Clear();
 }
 
+/**
+ * Get list of supported parameters
+ */
+NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(DWORD *count)
+{
+	CSCPMessage msg;
+	NETXMS_SUBAGENT_PARAM *result = NULL;
 
-//
-// Listener for external subagents
-//
+	msg.SetCode(CMD_GET_PARAMETER_LIST);
+	msg.SetId(m_requestId++);
+	sendMessage(&msg);
+	CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+	if (response != NULL)
+	{
+		if (response->GetVariableLong(VID_RCC) == ERR_SUCCESS)
+		{
+			*count = response->GetVariableLong(VID_NUM_PARAMETERS);
+			result = (NETXMS_SUBAGENT_PARAM *)malloc(*count * sizeof(NETXMS_SUBAGENT_PARAM));
+			DWORD varId = VID_PARAM_LIST_BASE;
+			for(DWORD i = 0; i < *count; i++)
+			{
+				response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
+				response->GetVariableStr(varId++, result[i].description, MAX_DB_STRING);
+				result[i].dataType = (int)response->GetVariableShort(varId++);
+			}
+		}
+		delete response;
+	}
+	return result;
+}
 
+/**
+ * List supported parameters
+ */
+void ExternalSubagent::listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+{
+	DWORD paramCount = 0;
+	NETXMS_SUBAGENT_PARAM *list = getSupportedParameters(&paramCount);
+	if (list != NULL)
+	{
+		DWORD id = *baseId;
+
+		for(DWORD i = 0; i < paramCount; i++)
+		{
+			msg->SetVariable(id++, list[i].name);
+			msg->SetVariable(id++, list[i].description);
+			msg->SetVariable(id++, (WORD)list[i].dataType);
+		}
+		*baseId = id;
+		*count += paramCount;
+		free(list);
+	}
+}
+
+/**
+ * List supported parameters
+ */
+void ExternalSubagent::listParameters(StringList *list)
+{
+	DWORD paramCount = 0;
+	NETXMS_SUBAGENT_PARAM *plist = getSupportedParameters(&paramCount);
+	if (plist != NULL)
+	{
+		for(DWORD i = 0; i < paramCount; i++)
+			list->add(plist[i].name);
+		free(plist);
+	}
+}
+
+/**
+ * Get parameter value from external subagent
+ */
+DWORD ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
+{
+	CSCPMessage msg;
+	DWORD rcc;
+
+	msg.SetCode(CMD_GET_PARAMETER);
+	msg.SetId(m_requestId++);
+	msg.SetVariable(VID_PARAMETER, name);
+	sendMessage(&msg);
+
+	CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+	if (response != NULL)
+	{
+		rcc = response->GetVariableLong(VID_RCC);
+		if (rcc == ERR_SUCCESS)
+			response->GetVariableStr(VID_VALUE, buffer, MAX_RESULT_LENGTH);
+		delete response;
+	}
+	else
+	{
+		rcc = ERR_INTERNAL_ERROR;
+	}
+	return rcc;
+}
+
+/**
+ * Listener for external subagents
+ */
 #ifdef _WIN32
 
 static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
@@ -172,7 +312,7 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 	sa.bInheritHandle = FALSE;
 	sa.lpSecurityDescriptor = sd;
 	_sntprintf(pipeName, MAX_PATH, _T("\\\\.\\pipe\\nxagentd.subagent.%s"), subagent->getName());
-	HANDLE hPipe = CreateNamedPipe(pipeName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
+	HANDLE hPipe = CreateNamedPipe(pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
 	if (hPipe == INVALID_HANDLE_VALUE)
 	{
 		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: CreateNamedPipe failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
@@ -223,15 +363,52 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 
 #endif
 
-
-//
-// Add external subagent from config
-//
-
+/**
+ * Add external subagent from config
+ */
 bool AddExternalSubagent(const TCHAR *config)
 {
 	ExternalSubagent *subagent = new ExternalSubagent(config);
 	s_subagents.add(subagent);
 	ThreadCreate(ExternalSubagentConnector, 0, subagent);
 	return true;
+}
+
+/**
+ * Add parameters from external providers to NXCP message
+ */
+void ListParametersFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count)
+{
+	for(int i = 0; i < s_subagents.size(); i++)
+	{
+		s_subagents.get(i)->listParameters(msg, baseId, count);
+	}
+}
+
+/**
+ * Add parameters from external providers to string list
+ */
+void ListParametersFromExtSubagents(StringList *list)
+{
+	for(int i = 0; i < s_subagents.size(); i++)
+	{
+		s_subagents.get(i)->listParameters(list);
+	}
+}
+
+/**
+ * Get value from provider
+ *
+ * @return agent error code
+ */
+DWORD GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
+{
+	DWORD rc = ERR_UNKNOWN_PARAMETER;
+	for(int i = 0; i < s_subagents.size(); i++)
+	{
+		rc = s_subagents.get(i)->getParameter(name, buffer);
+		if (rc == SYSINFO_RC_SUCCESS)
+			break;
+	}
+	return rc;
 }

@@ -104,7 +104,7 @@
 
 #define AF_DAEMON                   0x00000001
 #define AF_USE_SYSLOG               0x00000002
-//obsolete: #define AF_DEBUG                    0x00000004
+#define AF_SUBAGENT_LOADER          0x00000004
 #define AF_REQUIRE_AUTH             0x00000008
 #define AF_LOG_UNRESOLVED_SYMBOLS   0x00000010
 #define AF_ENABLE_ACTIONS           0x00000020
@@ -246,7 +246,16 @@ class ExternalSubagent
 private:
 	TCHAR m_name[MAX_SUBAGENT_NAME];
 	HANDLE m_pipe;
+	HANDLE m_readEvent;
 	bool m_connected;
+	MsgWaitQueue *m_msgQueue;
+	DWORD m_requestId;
+	MUTEX m_mutexPipeWrite;
+
+	void sendMessage(CSCPMessage *msg);
+	CSCPMessage *waitForMessage(WORD code, DWORD id);
+	DWORD waitForRCC(DWORD id);
+	NETXMS_SUBAGENT_PARAM *getSupportedParameters(DWORD *count);
 
 public:
 	ExternalSubagent(const TCHAR *name);
@@ -256,6 +265,10 @@ public:
 
 	bool isConnected() { return m_connected; }
 	const TCHAR *getName() { return m_name; }
+
+	DWORD getParameter(const TCHAR *name, TCHAR *buffer);
+	void listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+	void listParameters(StringList *list);
 };
 
 
@@ -388,11 +401,15 @@ DWORD ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);
 
 void StartParamProvidersPoller();
 bool AddParametersProvider(const TCHAR *line);
-LONG GetParametersValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
+LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
 void ListParametersFromExtProviders(CSCPMessage *msg, DWORD *baseId, DWORD *count);
 void ListParametersFromExtProviders(StringList *list);
 
 bool AddExternalSubagent(const TCHAR *config);
+DWORD GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
+void ListParametersFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *count);
+void ListParametersFromExtSubagents(StringList *list);
+CSCPMessage *ReadMessageFromPipe(HANDLE hPipe, HANDLE hEvent);
 
 BOOL WaitForProcess(const TCHAR *name);
 
@@ -434,6 +451,7 @@ extern TCHAR g_szConfigServer[];
 extern TCHAR g_szRegistrar[];  
 extern TCHAR g_szListenAddress[]; 
 extern TCHAR g_szConfigIncludeDir[];
+extern TCHAR g_masterAgent[];
 extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];
 extern DWORD g_dwServerCount;

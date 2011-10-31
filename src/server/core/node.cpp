@@ -1762,8 +1762,7 @@ void Node::configurationPoll(ClientSession *pSession, DWORD dwRqId,
          {
             // Check for CheckPoint SNMP agent on port 161
             DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_szName);
-            if (SnmpGet(m_snmpVersion, pTransport,
-                        _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
+				if (SnmpGet(SNMP_VERSION_1, pTransport, _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, 4096, 0) == SNMP_ERR_SUCCESS)
             {
                LockData();
                if (_tcscmp(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1")))

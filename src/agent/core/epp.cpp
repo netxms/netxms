@@ -249,7 +249,7 @@ bool AddParametersProvider(const TCHAR *line)
  *
  * @return SYSINFO_RC_SUCCESS or SYSINFO_RC_UNSUPPORTED
  */
-LONG GetParametersValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
+LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
 {
 	LONG rc = SYSINFO_RC_UNSUPPORTED;
 	for(int i = 0; i < s_providers.size(); i++)

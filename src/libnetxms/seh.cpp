@@ -233,6 +233,7 @@ THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *pArg)
 	__try
 	{
 		((THREAD_START_DATA *)pArg)->start_address(((THREAD_START_DATA *)pArg)->args);
+		free(pArg);
 	}
 	__except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
 	{

@@ -86,6 +86,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
 		safe_free(mbDatabase);
 		safe_free(mbLogin);
 		safe_free(mbPassword);
+		safe_free(mbSchema);
 	}
 #endif
    return hConn;

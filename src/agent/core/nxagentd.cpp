@@ -50,6 +50,7 @@
 THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
 THREAD_RESULT THREAD_CALL TrapSender(void *);
+THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg);
 
 void ShutdownTrapSender();
 
@@ -127,6 +128,7 @@ TCHAR g_szConfigServer[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szRegistrar[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
+TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
@@ -174,6 +176,7 @@ static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
+static THREAD m_thMasterAgentListener = INVALID_THREAD_HANDLE;
 static TCHAR m_szProcessToWait[MAX_PATH] = _T("");
 static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
 static DWORD m_dwMaxLogSize = 16384 * 1024;
@@ -210,6 +213,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "EnableSubagentAutoload", CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
    { "EnableWatchdog", CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags },
    { "ExecTimeout", CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
+	{ "ExternalMasterAgent", CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "ExternalParameterShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
    { "ExternalParametersProvider", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList },
@@ -691,6 +695,12 @@ BOOL Initialize()
 	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
 	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", g_debugLevel);
 
+	if (_tcscmp(g_masterAgent, _T("not_set")))
+	{
+		g_dwFlags |= AF_SUBAGENT_LOADER;
+		DebugPrintf(INVALID_INDEX, 1, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
+	}
+
 	// Initialize persistent storage
 	s_registry = new Config;
 	s_registry->setTopLevelTag(_T("registry"));
@@ -737,8 +747,6 @@ BOOL Initialize()
    }
 #endif
 
-   InitSessionList();
-
    // Initialize API for subagents
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer, PushData);
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
@@ -750,139 +758,144 @@ BOOL Initialize()
       return FALSE;
    }
 
-   // Initialize built-in parameters
-   if (!InitParameterList())
-      return FALSE;
+	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
+	{
+	   InitSessionList();
+
+		// Initialize built-in parameters
+		if (!InitParameterList())
+			return FALSE;
 
 #ifdef _WIN32
-   // Dynamically import functions that may not be presented in all Windows versions
-   ImportSymbols();
+		// Dynamically import functions that may not be presented in all Windows versions
+		ImportSymbols();
 #endif
 
-   // Parse server list
-   if (m_pszServerList != NULL)
-   {
-      for(pItem = pEnd = m_pszServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
-      {
-         pEnd = strchr(pItem, ',');
-         if (pEnd != NULL)
-            *pEnd = 0;
-         StrStrip(pItem);
-         g_pServerList[g_dwServerCount].dwIpAddr = ResolveHostName(pItem);
-         if ((g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE) ||
-             (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_ANY))
-         {
-            if (!(g_dwFlags & AF_DAEMON))
-               printf("Invalid server address '%s'\n", pItem);
-         }
-         else
-         {
-            g_pServerList[g_dwServerCount].bMasterServer = FALSE;
-            g_pServerList[g_dwServerCount].bControlServer = FALSE;
-            g_dwServerCount++;
-         }
-      }
-      free(m_pszServerList);
-   }
+		// Parse server list
+		if (m_pszServerList != NULL)
+		{
+			for(pItem = pEnd = m_pszServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+			{
+				pEnd = strchr(pItem, ',');
+				if (pEnd != NULL)
+					*pEnd = 0;
+				StrStrip(pItem);
+				g_pServerList[g_dwServerCount].dwIpAddr = ResolveHostName(pItem);
+				if ((g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE) ||
+					 (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_ANY))
+				{
+					if (!(g_dwFlags & AF_DAEMON))
+						printf("Invalid server address '%s'\n", pItem);
+				}
+				else
+				{
+					g_pServerList[g_dwServerCount].bMasterServer = FALSE;
+					g_pServerList[g_dwServerCount].bControlServer = FALSE;
+					g_dwServerCount++;
+				}
+			}
+			free(m_pszServerList);
+		}
 
-   // Parse master server list
-   if (m_pszMasterServerList != NULL)
-   {
-      DWORD i, dwAddr;
+		// Parse master server list
+		if (m_pszMasterServerList != NULL)
+		{
+			DWORD i, dwAddr;
 
-      for(pItem = pEnd = m_pszMasterServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
-      {
-         pEnd = strchr(pItem, ',');
-         if (pEnd != NULL)
-            *pEnd = 0;
-         StrStrip(pItem);
+			for(pItem = pEnd = m_pszMasterServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+			{
+				pEnd = strchr(pItem, ',');
+				if (pEnd != NULL)
+					*pEnd = 0;
+				StrStrip(pItem);
 
-         dwAddr = ResolveHostName(pItem);
-         if ((dwAddr == INADDR_NONE) ||
-             (dwAddr == INADDR_ANY))
-         {
-            if (!(g_dwFlags & AF_DAEMON))
-               _tprintf(_T("Invalid server address '%s'\n"), pItem);
-         }
-         else
-         {
-            for(i = 0; i < g_dwServerCount; i++)
-               if (g_pServerList[i].dwIpAddr == dwAddr)
-                  break;
+				dwAddr = ResolveHostName(pItem);
+				if ((dwAddr == INADDR_NONE) ||
+					 (dwAddr == INADDR_ANY))
+				{
+					if (!(g_dwFlags & AF_DAEMON))
+						_tprintf(_T("Invalid server address '%s'\n"), pItem);
+				}
+				else
+				{
+					for(i = 0; i < g_dwServerCount; i++)
+						if (g_pServerList[i].dwIpAddr == dwAddr)
+							break;
 
-            if (i == g_dwServerCount)
-            {
-               g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
-               g_pServerList[g_dwServerCount].bMasterServer = TRUE;
-               g_pServerList[g_dwServerCount].bControlServer = TRUE;
-               g_dwServerCount++;
-            }
-            else
-            {
-               g_pServerList[i].bMasterServer = TRUE;
-               g_pServerList[i].bControlServer = TRUE;
-            }
-         }
-      }
-      free(m_pszMasterServerList);
-   }
+					if (i == g_dwServerCount)
+					{
+						g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
+						g_pServerList[g_dwServerCount].bMasterServer = TRUE;
+						g_pServerList[g_dwServerCount].bControlServer = TRUE;
+						g_dwServerCount++;
+					}
+					else
+					{
+						g_pServerList[i].bMasterServer = TRUE;
+						g_pServerList[i].bControlServer = TRUE;
+					}
+				}
+			}
+			free(m_pszMasterServerList);
+		}
 
-   // Parse control server list
-   if (m_pszControlServerList != NULL)
-   {
-      DWORD i, dwAddr;
+		// Parse control server list
+		if (m_pszControlServerList != NULL)
+		{
+			DWORD i, dwAddr;
 
-      for(pItem = pEnd = m_pszControlServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
-      {
-         pEnd = strchr(pItem, ',');
-         if (pEnd != NULL)
-            *pEnd = 0;
-         StrStrip(pItem);
+			for(pItem = pEnd = m_pszControlServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+			{
+				pEnd = strchr(pItem, ',');
+				if (pEnd != NULL)
+					*pEnd = 0;
+				StrStrip(pItem);
 
-         dwAddr = ResolveHostName(pItem);
-         if ((dwAddr == INADDR_NONE) ||
-             (dwAddr == INADDR_ANY))
-         {
-            if (!(g_dwFlags & AF_DAEMON))
-               _tprintf(_T("Invalid server address '%s'\n"), pItem);
-         }
-         else
-         {
-            for(i = 0; i < g_dwServerCount; i++)
-               if (g_pServerList[i].dwIpAddr == dwAddr)
-                  break;
+				dwAddr = ResolveHostName(pItem);
+				if ((dwAddr == INADDR_NONE) ||
+					 (dwAddr == INADDR_ANY))
+				{
+					if (!(g_dwFlags & AF_DAEMON))
+						_tprintf(_T("Invalid server address '%s'\n"), pItem);
+				}
+				else
+				{
+					for(i = 0; i < g_dwServerCount; i++)
+						if (g_pServerList[i].dwIpAddr == dwAddr)
+							break;
 
-            if (i == g_dwServerCount)
-            {
-               g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
-               g_pServerList[g_dwServerCount].bMasterServer = FALSE;
-               g_pServerList[g_dwServerCount].bControlServer = TRUE;
-               g_dwServerCount++;
-            }
-            else
-            {
-               g_pServerList[i].bControlServer = TRUE;
-            }
-         }
-      }
-      free(m_pszControlServerList);
-   }
+					if (i == g_dwServerCount)
+					{
+						g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
+						g_pServerList[g_dwServerCount].bMasterServer = FALSE;
+						g_pServerList[g_dwServerCount].bControlServer = TRUE;
+						g_dwServerCount++;
+					}
+					else
+					{
+						g_pServerList[i].bControlServer = TRUE;
+					}
+				}
+			}
+			free(m_pszControlServerList);
+		}
 
-   // Add built-in actions
-   AddAction("Agent.Restart", AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, "CORE", "Restart agent");
+		// Add built-in actions
+		AddAction("Agent.Restart", AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, "CORE", "Restart agent");
 
-   // Load platform subagents
+	   // Load platform subagents
 #if !defined(_WIN32) && !defined(_NETWARE)
-   InitStaticSubagents();
+		InitStaticSubagents();
 #endif
-   if (g_dwFlags & AF_ENABLE_AUTOLOAD)
-   {
+		if (g_dwFlags & AF_ENABLE_AUTOLOAD)
+		{
 #ifdef _WIN32
-      LoadWindowsSubagent();
+	      LoadWindowsSubagent();
 #else
-      LoadPlatformSubagent();
+		   LoadPlatformSubagent();
 #endif
-   }
+		}
+	}
 
 	// Wait for external process if requested
 	if (m_szProcessToWait[0] != 0)
@@ -982,7 +995,7 @@ BOOL Initialize()
    }
 
    // Parse external subagents list
-   if (m_pszExtSubagentList != NULL)
+	if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszExtSubagentList != NULL))
    {
       for(pItem = pEnd = m_pszExtSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
@@ -1026,10 +1039,17 @@ BOOL Initialize()
    // Agent start time
    g_tmAgentStartTime = time(NULL);
 
-   // Start network listener and session watchdog
-   m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
-   m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
-   m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
+	if (g_dwFlags & AF_SUBAGENT_LOADER)
+	{
+		m_thMasterAgentListener = ThreadCreateEx(MasterAgentListener, 0, NULL);
+	}
+	else
+	{
+		// Start network listener and session watchdog
+		m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
+		m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
+		m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
+	}
 
 #if defined(_WIN32) || defined(_NETWARE)
    m_hCondShutdown = ConditionCreate(TRUE);
@@ -1037,8 +1057,11 @@ BOOL Initialize()
    ThreadSleep(1);
 
 	// Start watchdog process
-	if (g_dwFlags & AF_ENABLE_WATCHDOG)
-		StartWatchdog();
+	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
+	{
+		if (g_dwFlags & AF_ENABLE_WATCHDOG)
+			StartWatchdog();
+	}
 
 	delete g_config;
 
@@ -1050,18 +1073,25 @@ BOOL Initialize()
 // Shutdown routine
 //
 
-void Shutdown(void)
+void Shutdown()
 {
 	DebugPrintf(INVALID_INDEX, 2, _T("Shutdown() called"));
 	if (g_dwFlags & AF_ENABLE_WATCHDOG)
 		StopWatchdog();
 
-   // Set shutdowm flag
    g_dwFlags |= AF_SHUTDOWN;
-	ShutdownTrapSender();
-   ThreadJoin(m_thSessionWatchdog);
-   ThreadJoin(m_thListener);
-	ThreadJoin(m_thTrapSender);
+
+	if (g_dwFlags & AF_SUBAGENT_LOADER)
+	{
+		ThreadJoin(m_thMasterAgentListener);
+	}
+	else
+	{
+		ShutdownTrapSender();
+		ThreadJoin(m_thSessionWatchdog);
+		ThreadJoin(m_thListener);
+		ThreadJoin(m_thTrapSender);
+	}
 
    UnloadAllSubAgents();
    nxlog_write(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);

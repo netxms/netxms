@@ -140,6 +140,7 @@ static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 		if (m_pParamList[i].dataType != DCI_DT_DEPRECATED)
 			value->add(m_pParamList[i].name);
 	ListParametersFromExtProviders(value);
+	ListParametersFromExtSubagents(value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -515,7 +516,7 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 
    if (i == m_iNumParams)
    {
-		rc = GetParametersValueFromExtProvider(pszParam, pszValue);
+		rc = GetParameterValueFromExtProvider(pszParam, pszValue);
 		if (rc == SYSINFO_RC_SUCCESS)
 		{
          dwErrorCode = ERR_SUCCESS;
@@ -525,6 +526,23 @@ DWORD GetParameterValue(DWORD dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 		{
 			dwErrorCode = ERR_UNKNOWN_PARAMETER;
 			m_dwUnsupportedRequests++;
+		}
+   }
+
+   if (i == m_iNumParams)
+   {
+		dwErrorCode = GetParameterValueFromExtSubagent(pszParam, pszValue);
+		if (dwErrorCode == ERR_SUCCESS)
+		{
+         m_dwProcessedRequests++;
+		}
+		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
+		{
+			m_dwUnsupportedRequests++;
+		}
+		else
+		{
+         m_dwFailedRequests++;
 		}
    }
    return dwErrorCode;
@@ -642,6 +660,7 @@ void GetParameterList(CSCPMessage *pMsg)
 		}
    }
 	ListParametersFromExtProviders(pMsg, &dwId, &count);
+	ListParametersFromExtSubagents(pMsg, &dwId, &count);
    pMsg->SetVariable(VID_NUM_PARAMETERS, count);
 
 	// Push parameters

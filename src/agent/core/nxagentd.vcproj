@@ -385,6 +385,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\master.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\netinfo.cpp"
 				>
 			</File>
@@ -463,35 +467,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\nms_agent.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\nms_common.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\nms_cscp.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\nms_threads.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\nms_util.h"
-				>
-			</File>
-			<File
 				RelativePath=".\nxagentd.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\nxcpapi.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\nxlog.h"
 				>
 			</File>
 			<File
