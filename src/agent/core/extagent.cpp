@@ -44,7 +44,9 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name)
 	m_msgQueue = new MsgWaitQueue();
 	m_requestId = 1;
 	m_mutexPipeWrite = MutexCreate();
+#ifdef _WIN32
 	m_readEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+#endif
 }
 
 /**
@@ -54,7 +56,9 @@ ExternalSubagent::~ExternalSubagent()
 {
 	delete m_msgQueue;
 	MutexDestroy(m_mutexPipeWrite);
+#ifdef _WIN32
 	CloseHandle(m_readEvent);
+#endif
 }
 
 /*
@@ -139,7 +143,11 @@ void ExternalSubagent::connect(HANDLE hPipe)
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection established"), m_name);
 	while(true)
 	{
+#ifdef _WIN32
 		CSCPMessage *msg = ReadMessageFromPipe(hPipe, m_readEvent);
+#else
+		CSCPMessage *msg = ReadMessageFromPipe(hPipe, NULL);
+#endif
 		if (msg == NULL)
 			break;
 		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));

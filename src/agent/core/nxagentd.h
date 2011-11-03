@@ -246,7 +246,9 @@ class ExternalSubagent
 private:
 	TCHAR m_name[MAX_SUBAGENT_NAME];
 	HANDLE m_pipe;
+#ifdef _WIN32
 	HANDLE m_readEvent;
+#endif
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
 	DWORD m_requestId;
