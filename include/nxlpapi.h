@@ -38,6 +38,18 @@
 
 
 //
+// Parser status
+//
+
+#define MAX_PARSER_STATUS_LEN	64
+
+#define LPS_INIT              _T("INIT")
+#define LPS_RUNNING           _T("RUNNING")
+#define LPS_NO_FILE           _T("FILE MISSING")
+#define LPS_OPEN_ERROR        _T("FILE OPEN ERROR")
+
+
+//
 // Context actions
 //
 
@@ -144,6 +156,7 @@ private:
 	LogParserCallback m_cb;
 	void *m_userArg;
 	char *m_fileName;
+	char *m_name;
 	CODE_TO_TEXT *m_eventNameList;
 	bool (*m_eventResolver)(const char *, DWORD *);
 	THREAD m_thread;	// Associated thread
@@ -152,6 +165,7 @@ private:
 	bool m_processAllRules;
 	int m_traceLevel;
 	void (*m_traceCallback)(const char *, va_list);
+	TCHAR m_status[MAX_PARSER_STATUS_LEN];
 	
 	const char *checkContext(LogParserRule *rule);
 	void trace(int level, const char *format, ...);
@@ -165,6 +179,12 @@ public:
 
 	void setFileName(const char *name);
 	const char *getFileName() { return m_fileName; }
+
+	void setName(const char *name);
+	const char *getName() { return m_name; }
+
+	void setStatus(const TCHAR *status) { nx_strncpy(m_status, status, MAX_PARSER_STATUS_LEN); }
+	const TCHAR *getStatus() { return m_status; }
 
 	void setThread(THREAD th) { m_thread = th; }
 	THREAD getThread() { return m_thread; }

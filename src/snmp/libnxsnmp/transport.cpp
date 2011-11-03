@@ -122,6 +122,8 @@ retry:
          break;
       }
 
+		delete *response;
+		*response = NULL;
       bytes = readMessage(response, timeout);
       if (bytes > 0)
       {

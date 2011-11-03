@@ -36,9 +36,10 @@ static ObjectArray<ExternalSubagent> s_subagents;
 /**
  * Constructor
  */
-ExternalSubagent::ExternalSubagent(const TCHAR *name)
+ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 {
 	nx_strncpy(m_name, name, MAX_SUBAGENT_NAME);
+	nx_strncpy(m_user, user, MAX_ESA_USER_NAME);
 	m_connected = false;
 	m_pipe = NULL;
 	m_msgQueue = new MsgWaitQueue();
@@ -280,14 +281,24 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 	}
 
 	// Initialize an EXPLICIT_ACCESS structure for an ACE.
-	// The ACE will allow Everyone write access to the key.
+	// The ACE will allow either Everyone or given user to access pipe
 	ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
 	ea.grfAccessPermissions = (FILE_GENERIC_READ | FILE_GENERIC_WRITE) & ~FILE_CREATE_PIPE_INSTANCE;
 	ea.grfAccessMode = SET_ACCESS;
 	ea.grfInheritance = NO_INHERITANCE;
-	ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-	ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-	ea.Trustee.ptstrName  = (LPTSTR)sidEveryone;
+	const TCHAR *user = subagent->getUserName();
+	if ((user[0] == 0) || !_tcscmp(user, _T("*")))
+	{
+		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+		ea.Trustee.ptstrName  = (LPTSTR)sidEveryone;
+	}
+	else
+	{
+		ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+		ea.Trustee.TrusteeType = TRUSTEE_IS_USER;
+		ea.Trustee.ptstrName  = (LPTSTR)user;
+	}
 
 	// Create a new ACL that contains the new ACEs.
 	if (SetEntriesInAcl(1, &ea, NULL, &acl) != ERROR_SUCCESS)
@@ -372,11 +383,26 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 #endif
 
 /**
- * Add external subagent from config
+ * Add external subagent from config.
+ * Each line in config should be in form 
+ * name:user
+ * If user part is omited or set to *, connection from any account will be accepted
  */
 bool AddExternalSubagent(const TCHAR *config)
 {
-	ExternalSubagent *subagent = new ExternalSubagent(config);
+	TCHAR buffer[1024], user[256] = _T("*");
+
+	nx_strncpy(buffer, config, 1024);
+	TCHAR *ptr = _tcschr(buffer, _T(':'));
+	if (ptr != NULL)
+	{
+		*ptr = 0;
+		ptr++;
+		_tcsncpy(user, ptr, 256);
+		Trim(user);
+	}
+
+	ExternalSubagent *subagent = new ExternalSubagent(buffer, user);
 	s_subagents.add(subagent);
 	ThreadCreate(ExternalSubagentConnector, 0, subagent);
 	return true;

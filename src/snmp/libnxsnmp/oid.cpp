@@ -64,7 +64,7 @@ SNMP_ObjectId::~SNMP_ObjectId()
 // Convert binary representation to text
 //
 
-void SNMP_ObjectId::ConvertToText(void)
+void SNMP_ObjectId::ConvertToText()
 {
    m_pszTextValue = (TCHAR *)realloc(m_pszTextValue, sizeof(TCHAR) * (m_dwLength * 6 + 1));
    SNMPConvertOIDToText(m_dwLength, m_pdwValue, m_pszTextValue, m_dwLength * 6 + 1);

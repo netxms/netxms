@@ -330,6 +330,7 @@ reopen_log:
 #ifdef _WIN32
 			AgentWriteDebugLog(7, _T("LogWatch: Process RSS is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 #endif
+			parser->setStatus(LPS_RUNNING);
 
          while(1)
          {
@@ -365,8 +366,11 @@ retry_read:
 				}
 
             if (error != ERROR_HANDLE_EOF)
+				{
 					AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
 										 &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
+					parser->setStatus(_T("EVENT LOG READ ERROR"));
+				}
          }
 
 			SetEvent(nd.hStopEvent);
@@ -396,6 +400,7 @@ retry_read:
    {
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\": %s"),
 		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
+		parser->setStatus(_T("EVENT LOG OPEN ERROR"));
    }
 
 	free(buffer);

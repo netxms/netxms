@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2010 Victor Kirhenshtein
+** Copyright (C) 2008-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -178,6 +178,7 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *arg)
 	{
 		AgentWriteDebugLog(1, _T("LogWatch: Start watching event log \"%s\" (using EvtSubscribe)"),
 		                   &(parser->getFileName()[1]));
+		parser->setStatus(LPS_RUNNING);
 		WaitForSingleObject(g_hCondShutdown, INFINITE);
 		AgentWriteDebugLog(1, _T("LogWatch: Stop watching event log \"%s\" (using EvtSubscribe)"),
 		                   &(parser->getFileName()[1]));
@@ -188,6 +189,7 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *arg)
 		TCHAR buffer[1024];
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\" with EvtSubscribe(): %s"),
 		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), buffer, 1024));
+		parser->setStatus(_T("EVENT LOG SUBSCRIBE FAILED"));
 	}
 
 	return THREAD_OK;
@@ -204,8 +206,7 @@ bool InitEventLogParsersV6()
 	if (module == NULL)
 	{
 		TCHAR buffer[1024];
-		AgentWriteDebugLog(1, _T("LogWatch: cannot load wevtapi.dll: %s"),
-		                   GetSystemErrorText(GetLastError(), buffer, 1024));
+		AgentWriteDebugLog(1, _T("LogWatch: cannot load wevtapi.dll: %s"), GetSystemErrorText(GetLastError(), buffer, 1024));
 		return false;
 	}
 
@@ -216,5 +217,6 @@ bool InitEventLogParsersV6()
 	_EvtRender = (BOOL (WINAPI *)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD, PDWORD))GetProcAddress(module, "EvtRender");
 	_EvtSubscribe = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR, EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK, DWORD))GetProcAddress(module, "EvtSubscribe");
 
-	return (_EvtClose != NULL) && (_EvtFormatMessage != NULL) && (_EvtSubscribe != NULL);
+	return (_EvtClose != NULL) && (_EvtCreateRenderContext != NULL) && (_EvtFormatMessage != NULL) && 
+	       (_EvtOpenPublisherMetadata != NULL) && (_EvtRender != NULL) && (_EvtSubscribe != NULL);
 }

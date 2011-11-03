@@ -112,6 +112,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 #endif
 			if (fh != -1)
 			{
+				setStatus(LPS_RUNNING);
 				if (logger != NULL)
 					logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
 
@@ -195,9 +196,14 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 				}
 				close(fh);
 			}
+			else
+			{
+				setStatus(LPS_OPEN_ERROR);
+			}
 		}
 		else
 		{
+			setStatus(LPS_NO_FILE);
 			if (ConditionWait(stopCondition, 10000))
 				break;
 		}

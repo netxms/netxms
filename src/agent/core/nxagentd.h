@@ -101,6 +101,7 @@
 
 #define MAX_PSUFFIX_LENGTH 32
 #define MAX_SERVERS        32
+#define MAX_ESA_USER_NAME  64
 
 #define AF_DAEMON                   0x00000001
 #define AF_USE_SYSLOG               0x00000002
@@ -245,6 +246,7 @@ class ExternalSubagent
 {
 private:
 	TCHAR m_name[MAX_SUBAGENT_NAME];
+	TCHAR m_user[MAX_ESA_USER_NAME];
 	HANDLE m_pipe;
 #ifdef _WIN32
 	HANDLE m_readEvent;
@@ -260,13 +262,14 @@ private:
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(DWORD *count);
 
 public:
-	ExternalSubagent(const TCHAR *name);
+	ExternalSubagent(const TCHAR *name, const TCHAR *user);
 	~ExternalSubagent();
 
 	void connect(HANDLE hPipe);
 
 	bool isConnected() { return m_connected; }
 	const TCHAR *getName() { return m_name; }
+	const TCHAR *getUserName() { return m_user; }
 
 	DWORD getParameter(const TCHAR *name, TCHAR *buffer);
 	void listParameters(CSCPMessage *msg, DWORD *baseId, DWORD *count);

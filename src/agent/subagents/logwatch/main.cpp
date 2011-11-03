@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008, 2009 Victor Kirhenshtein
+** Copyright (C) 2008-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,7 +69,40 @@ THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 
 static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-	return SYSINFO_RC_UNSUPPORTED;
+	TCHAR name[256];
+
+	if (!AgentGetParameterArg(cmd, 1, name, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	LogParser *parser = NULL;
+	for(DWORD i = 0; i < m_numParsers; i++)
+		if (!_tcsicmp(m_parserList[i]->getName(), name))
+		{
+			parser = m_parserList[i];
+			break;
+		}
+
+	if (parser == NULL)
+	{
+		AgentWriteDebugLog(8, _T("LogWatch: H_ParserStats: parser with name \"%s\" cannot be found"), name);
+		return SYSINFO_RC_UNSUPPORTED;
+	}
+
+	switch(*arg)
+	{
+		case 'S':	// Status
+			ret_string(value, parser->getStatus());
+			break;
+		case 'M':	// Matched records
+			ret_int(value, parser->getMatchedRecordsCount());
+			break;
+		case 'P':	// Processed records
+			ret_int(value, parser->getProcessedRecordsCount());
+			break;
+		default:
+			return SYSINFO_RC_UNSUPPORTED;
+	}
+	return SYSINFO_RC_SUCCESS;
 }
 
 
@@ -79,7 +112,9 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
-	return SYSINFO_RC_UNSUPPORTED;
+	for(DWORD i = 0; i < m_numParsers; i++)
+		value->add(m_parserList[i]->getName());
+	return SYSINFO_RC_SUCCESS;
 }
 
 
@@ -87,7 +122,7 @@ static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 // Called by master agent at unload
 //
 
-static void SubagentShutdown(void)
+static void SubagentShutdown()
 {
 	DWORD i;
 

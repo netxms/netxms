@@ -87,6 +87,7 @@ LogParser::LogParser()
 	m_rules = NULL;
 	m_cb = NULL;
 	m_userArg = NULL;
+	m_name = NULL;
 	m_fileName = NULL;
 	m_eventNameList = NULL;
 	m_eventResolver = NULL;
@@ -96,6 +97,7 @@ LogParser::LogParser()
 	m_processAllRules = FALSE;
 	m_traceLevel = 0;
 	m_traceCallback = NULL;
+	_tcscpy(m_status, LPS_INIT);
 }
 
 
@@ -110,6 +112,7 @@ LogParser::~LogParser()
 	for(i = 0; i < m_numRules; i++)
 		delete m_rules[i];
 	safe_free(m_rules);
+	safe_free(m_name);
 	safe_free(m_fileName);
 }
 
@@ -280,6 +283,19 @@ void LogParser::setFileName(const char *name)
 {
 	safe_free(m_fileName);
 	m_fileName = (name != NULL) ? _tcsdup(name) : NULL;
+	if (m_name == NULL)
+		m_name = _tcsdup(name);	// Set parser name to file name
+}
+
+
+//
+// Set parser name
+//
+
+void LogParser::setName(const char *name)
+{
+	safe_free(m_name);
+	m_name = _tcsdup((name != NULL) ? name : CHECK_NULL(m_fileName));
 }
 
 
@@ -319,6 +335,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->state = XML_STATE_PARSER;
 		ps->parser->setProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", false));
 		ps->parser->setTraceLevel(XMLGetAttrInt(attrs, "trace", 0));
+		const char *name = XMLGetAttr(attrs, "name");
+		if (name != NULL)
+			ps->parser->setName(name);
 	}
 	else if (!strcmp(name, "file"))
 	{
