@@ -491,7 +491,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 
 void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transport *pTransport, Node *node)
 {
-	static TCHAR *paeStateText[] = 
+	static const TCHAR *paeStateText[] = 
 	{
 		_T("UNKNOWN"),
 		_T("INITIALIZE"),
@@ -505,7 +505,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, DWORD dwRqId, SNMP_Transp
 		_T("FORCE UNAUTH"),
 		_T("RESTART")
 	};
-	static TCHAR *backendStateText[] = 
+	static const TCHAR *backendStateText[] = 
 	{
 		_T("UNKNOWN"),
 		_T("REQUEST"),

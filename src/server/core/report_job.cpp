@@ -22,6 +22,10 @@
 
 #include "nxcore.h"
 
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
 #ifdef _WIN32
 #define write _write
 #define close _close
