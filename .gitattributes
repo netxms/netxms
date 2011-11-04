@@ -1573,6 +1573,7 @@ src/libtre/win32/tre-config.h -text
 src/libtre/windll.cpp -text
 src/libtre/xmalloc.c -text
 src/libtre/xmalloc.h -text
+src/nxinstall/nxinstall.vcproj -text
 src/nxlptest/nxlptest.vcproj -text
 src/nxscript/nxscript.vcproj -text
 src/server/core/cdp.cpp -text

@@ -191,8 +191,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 // Implementation of "NetXMS event" class
 //
 
-NXSL_EventClass::NXSL_EventClass()
-                :NXSL_Class()
+NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("Event"));
 }

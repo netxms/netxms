@@ -93,7 +93,7 @@ public:
 // Functions
 //
 
-void LoadScripts(void);
+void LoadScripts();
 void ReloadScript(DWORD dwScriptId);
 BOOL IsValidScriptId(DWORD dwId);
 

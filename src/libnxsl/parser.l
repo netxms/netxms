@@ -14,7 +14,7 @@ uint32		{integer}U
 int64		{integer}L
 uint64		{integer}(UL|LU)
 real		\-?[0-9]+\.[0-9]+
-escape		\\[bnrt0\"]
+escape		\\[bnrt0\"\\]
 
 %{
 
