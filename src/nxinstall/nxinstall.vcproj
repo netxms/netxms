@@ -183,11 +183,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\file.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\io.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\nxinstall.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\system.cpp"
 				>
 			</File>
 		</Filter>

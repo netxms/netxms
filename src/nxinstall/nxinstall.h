@@ -58,11 +58,18 @@ public:
  * NXSL external functions
  */
 int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_chdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_fopen(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_fclose(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_feof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_fgets(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 int F_fputs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_mkdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_rmdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_system(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
 
 /**
  * Global variables

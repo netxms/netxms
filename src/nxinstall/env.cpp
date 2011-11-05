@@ -30,11 +30,18 @@
 static NXSL_ExtFunction s_nxslInstallerFunctions[] =
 {
    { _T("access"), F_access, 2 },
+   { _T("chdir"), F_chdir, 1 },
+	{ _T("CopyFile"), F_CopyFile, 2 },
+	{ _T("DeleteFile"), F_DeleteFile, 1 },
    { _T("fclose"), F_fclose, 1 },
    { _T("feof"), F_feof, 1 },
    { _T("fgets"), F_fgets, 1 },
    { _T("fopen"), F_fopen, -1 },
-   { _T("fputs"), F_fputs, 2 }
+   { _T("fputs"), F_fputs, 2 },
+   { _T("mkdir"), F_mkdir, 1 },
+	{ _T("RenameFile"), F_RenameFile, 2 },
+   { _T("rmdir"), F_rmdir, 1 },
+   { _T("system"), F_system, 1 }
 };
 
 /**

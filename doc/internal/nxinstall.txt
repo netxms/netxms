@@ -1,0 +1,102 @@
+************
+* Tracing
+
+"trace" function can be used in nxinstall scripts, output will be sent to stdout.
+Trace level can be set by -t command line option. Default is 0.
+
+
+*****************************
+* Additional NXSL functions
+
+1. access(file, mode)
+
+Returns 1 (true) if file is accessible
+
+
+2. chdir(path)
+
+Change current directory.
+
+
+3. CopyFile(src,dst)
+
+Copy file. Currently available only on Windows.
+
+
+4. DeleteFile(name)
+
+Delete file (calls remove(name))
+
+
+5. fclose(handle)
+
+Close file.
+
+
+6. feof(handle)
+
+Returns 1 (true) if eof reached.
+
+
+7. fgets(handle)
+
+Read next line from file. String returned with new line character removed.
+Returns null if EOF reached and no characters was read.
+
+
+8. fopen(name, mode)
+
+Open file. Returns file handle (object of class FILE). Handle has one attribute
+"eof", which can be used for end of file checking. Mode is the same as for
+libc call.
+
+
+9. fputs(handle, string)
+
+Writes line to file. New line character appended automatically.
+
+
+10. mkdir(name)
+
+Create directory (calls libc mkdir).
+
+
+11. RenameFile(oldName, newName)
+
+Rename file or directory (calls libc rename).
+
+
+12. rmdir(name)
+
+Remove directory (calls libc rmdir).
+
+
+13. system(command)
+
+Executes external command by calling libc system.
+
+
+
+******************
+* Script example
+
+mkdir("inst");
+chdir("inst");
+
+f = fopen("test","w");
+fputs(f, "line 1");
+fputs(f, "line 2");
+fclose(f);
+
+f = fopen("test");
+while(!f->eof)
+{
+   s = fgets(f);
+   if (s != null)
+      trace(0, ">>> " . s);
+}
+fclose(f);
+
+chdir("..");
+
+system("pwd");

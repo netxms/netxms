@@ -42,24 +42,6 @@ NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 }
 
 /**
- * Check file access.
- * Parameters:
- *   1) file name
- *   2) desired access
- */
-int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
-{
-	if (!argv[0]->isString())
-		return NXSL_ERR_NOT_STRING;
-
-	if (!argv[1]->isInteger())
-		return NXSL_ERR_NOT_INTEGER;
-
-	*ppResult = new NXSL_Value((LONG)((_taccess(argv[0]->getValueAsCString(), argv[1]->getValueAsInt32()) == 0) ? 1 : 0));
-	return 0;
-}
-
-/**
  * Open file. Returns FILE object or null.
  * Parameters:
  *   1) file name
