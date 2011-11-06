@@ -8,6 +8,7 @@
   IBMCPU-MIB
 - Fixed interoperability problems with IBM AS/400 SNMP agent
 - AIX support improved
+- Fixed serious memory leaks in server
 - Many small improvements in management console
 
 
