@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for OpenBSD
 ** Copyright (C) 2006 C.T.Co 
