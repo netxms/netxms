@@ -753,7 +753,6 @@ if test "x$LTINIT_CXX" != "x"; then
 	CXX="$LTINIT_CXX"
 fi
 
-AC_PROG_LIBTOOL
 LT_PREREQ([2.2])
 LT_INIT([dlopen])
 
