@@ -1365,8 +1365,14 @@ src/java/netxms-eclipse/ServiceView/src/org/netxms/ui/eclipse/serviceview/widget
 src/java/netxms-eclipse/SwitchManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/SwitchManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/SwitchManager/build.properties -text
-src/java/netxms-eclipse/SwitchManager/src/nxmc_switchmanager/Activator.java -text
+src/java/netxms-eclipse/SwitchManager/icons/pae.png -text
+src/java/netxms-eclipse/SwitchManager/plugin.xml -text
 src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/Activator.java -text
+src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/actions/OpenDot1xStateView.java -text
+src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/Dot1xStatusView.java -text
+src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortComparator.java -text
+src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortListLabelProvider.java -text
+src/java/netxms-eclipse/SwitchManager/src/org/netxms/ui/eclipse/switchmanager/views/helpers/Dot1xPortSummary.java -text
 src/java/netxms-eclipse/Topology/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/Topology/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/Topology/build.properties -text
