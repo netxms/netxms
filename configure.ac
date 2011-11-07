@@ -753,6 +753,7 @@ if test "x$LTINIT_CXX" != "x"; then
 	CXX="$LTINIT_CXX"
 fi
 
+AC_PROG_LIBTOOL
 LT_PREREQ([2.2])
 LT_INIT([dlopen])
 
@@ -1321,7 +1322,6 @@ AC_CHECK_TYPES([struct kinfo_proc2],,,[
 ])
 
 
-
 #--------------------------------------------------------------------
 # FreeBSD specific checks
 #--------------------------------------------------------------------
@@ -1336,6 +1336,50 @@ if test "x$PLATFORM" = "xFreeBSD"; then
 #endif
 #include <net/route.h>
 	])
+fi
+
+
+#--------------------------------------------------------------------
+# OpenBSD specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xOpenBSD"; then
+	AC_MSG_CHECKING(if kvm_getprocs requires sizeof kinfo_proc argument)
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/param.h>
+#include <sys/proc.h>
+#include <kvm.h>
+#include <sys/user.h>
+        ]],[[
+		int count;
+		kvm_getprocs(NULL, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
+		return 0;
+        ]])
+        ],[
+                AC_MSG_RESULT(yes)
+                AC_DEFINE(KVM_GETPROCS_REQUIRES_SIZEOF,1,Define to 1 if kvm_getprocs requires sizeof kinfo_proc)
+        ],[
+                AC_MSG_RESULT(no)
+                AC_DEFINE(KVM_GETPROCS_REQUIRES_SIZEOF,0,Define to 1 if kvm_getprocs requires sizeof kinfo_proc)
+        ])
+
+	AC_MSG_CHECKING(if struct kinfo_proc has member kp_proc)
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/param.h>
+#include <sys/proc.h>
+#include <kvm.h>
+#include <sys/user.h>
+        ]],[[
+		struct kinfo_proc p;
+		return p.kp_proc.p_pid;
+        ]])
+        ],[
+                AC_MSG_RESULT(yes)
+                AC_DEFINE(KINFO_PROC_HAS_KP_PROC,1,Define to 1 if struct kinfo_proc has member kp_proc)
+        ],[
+                AC_MSG_RESULT(no)
+                AC_DEFINE(KINFO_PROC_HAS_KP_PROC,0,Define to 1 if struct kinfo_proc has member kp_proc)
+        ])
 fi
 
 

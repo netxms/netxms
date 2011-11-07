@@ -62,7 +62,7 @@ typedef struct t_IfList
 
 struct nlist nl[] = {
 #define N_IFNET 0
-	{ "_ifnet" },
+	{ (char *)"_ifnet" },
 	{ NULL },
 };
 

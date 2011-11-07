@@ -167,7 +167,11 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != 0)
 	{
+#if KVM_GETPROCS_REQUIRES_SIZEOF
+		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &nCount);
+#else
 		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
+#endif
 
 		if (kp != NULL)
 		{
@@ -175,7 +179,11 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 			{
 				for (nResult = 0, i = 0; i < nCount; i++)
 				{
+#if KINFO_PROC_HAS_KP_PROC
 						if (strcasecmp(kp[i].kp_proc.p_comm, szArg) == 0)
+#else
+						if (strcasecmp(kp[i].p_comm, szArg) == 0)
+#endif
 						{
 							nResult++;
 						}
@@ -311,7 +319,11 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != 0)
 	{
+#if KVM_GETPROCS_REQUIRES_SIZEOF
+		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &nCount);
+#else
 		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
+#endif
 
 		if (kp != NULL)
 		{
@@ -320,7 +332,11 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
 				char szBuff[128];
 
 				snprintf(szBuff, sizeof(szBuff), "%d %s",
+#if KINFO_PROC_HAS_KP_PROC
 						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
+#else
+						kp[i].p_pid, kp[i].p_comm
+#endif
 						);
 				pValue->add(szBuff);
 			}
