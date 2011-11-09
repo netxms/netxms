@@ -44,7 +44,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
    CSCPMessage *pRequest, response;
    TCHAR szCmd[256];
    struct __console_ctx ctx;
-   static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
+	static NXCPEncryptionContext *pDummyCtx = NULL;
 
    pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));

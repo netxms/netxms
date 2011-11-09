@@ -124,7 +124,7 @@ void SendMsg(CSCPMessage *pMsg)
 CSCPMessage *RecvMsg()
 {
    int iError;
-   static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
+	static NXCPEncryptionContext *pDummyCtx = NULL;
 
    do
    {

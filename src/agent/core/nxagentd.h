@@ -312,12 +312,12 @@ private:
    BOOL m_bAcceptTraps;
    int m_hCurrFile;
    DWORD m_dwFileRqId;
-   CSCP_ENCRYPTION_CONTEXT *m_pCtx;
+	NXCPEncryptionContext *m_pCtx;
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
 	MUTEX m_socketWriteMutex;
 
-   BOOL sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx);
+	BOOL sendRawMessage(CSCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx);
    void authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void getConfig(CSCPMessage *pMsg);
    void updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg);

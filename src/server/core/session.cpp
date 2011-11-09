@@ -317,7 +317,8 @@ ClientSession::~ClientSession()
             delete m_ppEPPRuleList[i];
       free(m_ppEPPRuleList);
    }
-   DestroyEncryptionContext(m_pCtx);
+	if (m_pCtx != NULL)
+		m_pCtx->decRefCount();
    if (m_condEncryptionSetup != INVALID_CONDITION_HANDLE)
       ConditionDestroy(m_condEncryptionSetup);
 	

@@ -70,7 +70,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 	void *serviceData = NULL;
 	TCHAR buffer[256], dbgPrefix[128];
 	WORD wFlags;
-   static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
+	static NXCPEncryptionContext *pDummyCtx = NULL;
 
 	_sntprintf(dbgPrefix, 128, _T("ISC<%s>:"), IpToStr(session->GetPeerAddress(), buffer));
 

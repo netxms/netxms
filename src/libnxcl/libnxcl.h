@@ -116,7 +116,7 @@ private:
    INDEX *m_pIndexById;
    MUTEX m_mutexIndexAccess;
    SOCKET m_hSocket;
-   CSCP_ENCRYPTION_CONTEXT *m_pCtx;
+	NXCPEncryptionContext *m_pCtx;
    MsgWaitQueue m_msgWaitQueue;
    DWORD m_dwReceiverBufferSize;
    NXC_DCI_LIST *m_pItemList;

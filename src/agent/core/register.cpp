@@ -51,7 +51,7 @@ BOOL RegisterOnServer(TCHAR *pszServer)
    CSCPMessage msg, *pResponse;
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pBuffer;
-   CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
+   NXCPEncryptionContext *pDummyCtx = NULL;
    int nLen;
 
 #ifdef _WIN32

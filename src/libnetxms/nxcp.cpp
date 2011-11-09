@@ -324,7 +324,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 
 int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuffer,
                                            CSCP_BUFFER *nxcpBuffer, DWORD *bufferSize,
-                                           CSCP_ENCRYPTION_CONTEXT **ppCtx, 
+                                           NXCPEncryptionContext **ppCtx, 
                                            BYTE **decryptionBuffer, DWORD dwTimeout,
 														 DWORD maxMsgSize)
 {
@@ -469,7 +469,7 @@ decrypt_message:
 
 int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *msgBuffer,
                                          CSCP_BUFFER *nxcpBuffer, DWORD bufferSize,
-                                         CSCP_ENCRYPTION_CONTEXT **ppCtx, 
+                                         NXCPEncryptionContext **ppCtx, 
                                          BYTE *decryptionBuffer, DWORD dwTimeout)
 {
 	CSCP_MESSAGE *mb = msgBuffer;
@@ -517,7 +517,7 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, 
 //
 
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCHAR *pszFile,
-                                           CSCP_ENCRYPTION_CONTEXT *pCtx, long offset,
+                                           NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex)
 {
@@ -645,7 +645,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex)
 {
    CSCP_MESSAGE msg;
-   CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
+   NXCPEncryptionContext *pDummyCtx = NULL;
    CSCP_BUFFER *pBuffer;
    BOOL bRet = FALSE;
    int nSize;

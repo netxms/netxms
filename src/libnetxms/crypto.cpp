@@ -160,8 +160,7 @@ DWORD LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers(void)
 // Encrypt message
 //
 
-CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE 
-   *CSCPEncryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx, CSCP_MESSAGE *pMsg)
+CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg)
 {
 #ifdef _WITH_ENCRYPTION
    CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -173,11 +172,11 @@ CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE
    if (pMsg->wFlags & m_wNoEncryptionFlag)
       return (CSCP_ENCRYPTED_MESSAGE *)nx_memdup(pMsg, ntohl(pMsg->dwSize));
 
-   if (m_pfCipherList[pCtx->nCipher] == NULL)
+   if (m_pfCipherList[pCtx->getCipher()] == NULL)
       return NULL;   // Unsupported cipher
 
-   EVP_EncryptInit(&cipher, m_pfCipherList[pCtx->nCipher](), pCtx->pSessionKey, pCtx->iv);
-   EVP_CIPHER_CTX_set_key_length(&cipher, pCtx->nKeyLen);
+   EVP_EncryptInit(&cipher, m_pfCipherList[pCtx->getCipher()](), pCtx->getSessionKey(), pCtx->getIV());
+   EVP_CIPHER_CTX_set_key_length(&cipher, pCtx->getKeyLength());
 
    dwMsgSize = ntohl(pMsg->dwSize);
    pEnMsg = (CSCP_ENCRYPTED_MESSAGE *)malloc(dwMsgSize + CSCP_ENCRYPTION_HEADER_SIZE + 
@@ -217,7 +216,7 @@ CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE
 // Decrypt message
 //
 
-BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx,
+BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
                                              CSCP_ENCRYPTED_MESSAGE *pMsg,
                                              BYTE *pDecryptionBuffer)
 {
@@ -227,12 +226,12 @@ BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx,
    DWORD dwChecksum, dwMsgSize;
    CSCP_MESSAGE *pClearMsg;
 
-   if (m_pfCipherList[pCtx->nCipher] == NULL)
+   if (m_pfCipherList[pCtx->getCipher()] == NULL)
       return FALSE;   // Unsupported cipher
 
    pMsg->dwSize = ntohl(pMsg->dwSize);
-   EVP_DecryptInit(&cipher, m_pfCipherList[pCtx->nCipher](), pCtx->pSessionKey, pCtx->iv);
-   EVP_CIPHER_CTX_set_key_length(&cipher, pCtx->nKeyLen);
+   EVP_DecryptInit(&cipher, m_pfCipherList[pCtx->getCipher()](), pCtx->getSessionKey(), pCtx->getIV());
+   EVP_CIPHER_CTX_set_key_length(&cipher, pCtx->getKeyLength());
    EVP_DecryptUpdate(&cipher, pDecryptionBuffer, &nSize, pMsg->data,
                      pMsg->dwSize - CSCP_EH_UNENCRYPTED_BYTES - pMsg->nPadding);
    EVP_DecryptFinal(&cipher, pDecryptionBuffer + nSize, &nSize);
@@ -255,20 +254,6 @@ BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx,
 
 
 //
-// Destroy encryption context
-//
-
-void LIBNETXMS_EXPORTABLE DestroyEncryptionContext(CSCP_ENCRYPTION_CONTEXT *pCtx)
-{
-   if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
-   {
-      safe_free(pCtx->pSessionKey);
-      free(pCtx);
-   }
-}
-
-
-//
 // Setup encryption context
 // Function will determine is it called on initiator or responder side
 // by message code. Initiator should provide it's private key,
@@ -276,12 +261,13 @@ void LIBNETXMS_EXPORTABLE DestroyEncryptionContext(CSCP_ENCRYPTION_CONTEXT *pCtx
 //
 
 DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
-                                                  CSCP_ENCRYPTION_CONTEXT **ppCtx,
+                                                  NXCPEncryptionContext **ppCtx,
                                                   CSCPMessage **ppResponse,
                                                   RSA *pPrivateKey, int nNXCPVersion)
 {
    DWORD dwResult = RCC_NOT_IMPLEMENTED;
 
+	*ppCtx = NULL;
 #ifdef _WITH_ENCRYPTION
    if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
    {
@@ -300,39 +286,11 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
       }
       else
       {
-         BYTE *pBufPos, ucKeyBuffer[KEY_BUFFER_SIZE];
-         RSA *pServerKey;
-         DWORD dwKeySize;
+			BYTE *pBufPos, ucKeyBuffer[KEY_BUFFER_SIZE];
+			RSA *pServerKey;
+			DWORD dwKeySize;
 
-         // Create new context
-         *ppCtx = (CSCP_ENCRYPTION_CONTEXT *)malloc(sizeof(CSCP_ENCRYPTION_CONTEXT));
-
-         // Select cipher
-         if (dwCiphers & CSCP_SUPPORT_AES_256)
-         {
-            (*ppCtx)->nCipher = CSCP_CIPHER_AES_256;
-            (*ppCtx)->nKeyLen = 32;
-         }
-         else if (dwCiphers & CSCP_SUPPORT_BLOWFISH)
-         {
-            (*ppCtx)->nCipher = CSCP_CIPHER_BLOWFISH;
-            (*ppCtx)->nKeyLen = 32;
-         }
-         else if (dwCiphers & CSCP_SUPPORT_IDEA)
-         {
-            (*ppCtx)->nCipher = CSCP_CIPHER_IDEA;
-            (*ppCtx)->nKeyLen = 16;
-         }
-         else if (dwCiphers & CSCP_SUPPORT_3DES)
-         {
-            (*ppCtx)->nCipher = CSCP_CIPHER_3DES;
-            (*ppCtx)->nKeyLen = 24;
-         }
-
-         // Generate key
-         (*ppCtx)->pSessionKey = (BYTE *)malloc((*ppCtx)->nKeyLen);
-         RAND_bytes((*ppCtx)->pSessionKey, (*ppCtx)->nKeyLen);
-         RAND_bytes((*ppCtx)->iv, EVP_MAX_IV_LENGTH);
+			*ppCtx = NXCPEncryptionContext::create(dwCiphers);
 
          // Encrypt key
          dwKeySize = pMsg->GetVariableBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
@@ -341,14 +299,14 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
          if (pServerKey != NULL)
          {
             (*ppResponse)->SetVariable(VID_RCC, RCC_SUCCESS);
-            dwKeySize = RSA_public_encrypt((*ppCtx)->nKeyLen, (*ppCtx)->pSessionKey,
+            dwKeySize = RSA_public_encrypt((*ppCtx)->getKeyLength(), (*ppCtx)->getSessionKey(),
                                            ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
             (*ppResponse)->SetVariable(VID_SESSION_KEY, ucKeyBuffer, dwKeySize);
-            dwKeySize = RSA_public_encrypt(EVP_MAX_IV_LENGTH, (*ppCtx)->iv,
+            dwKeySize = RSA_public_encrypt(EVP_MAX_IV_LENGTH, (*ppCtx)->getIV(),
                                            ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
             (*ppResponse)->SetVariable(VID_SESSION_IV, ucKeyBuffer, dwKeySize);
-            (*ppResponse)->SetVariable(VID_CIPHER, (WORD)(*ppCtx)->nCipher);
-            (*ppResponse)->SetVariable(VID_KEY_LENGTH, (WORD)(*ppCtx)->nKeyLen);
+            (*ppResponse)->SetVariable(VID_CIPHER, (WORD)(*ppCtx)->getCipher());
+            (*ppResponse)->SetVariable(VID_KEY_LENGTH, (WORD)(*ppCtx)->getKeyLength());
             (*ppResponse)->SetVariable(VID_IV_LENGTH, (WORD)EVP_MAX_IV_LENGTH);
             RSA_free(pServerKey);
             dwResult = RCC_SUCCESS;
@@ -365,51 +323,17 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
       dwResult = pMsg->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
-         BYTE ucKeyBuffer[KEY_BUFFER_SIZE], ucSessionKey[KEY_BUFFER_SIZE];
-         DWORD dwKeySize;
-         int nSize, nIVLen;
-
-         // Create new context
-         *ppCtx = (CSCP_ENCRYPTION_CONTEXT *)malloc(sizeof(CSCP_ENCRYPTION_CONTEXT));
-         (*ppCtx)->nCipher = pMsg->GetVariableShort(VID_CIPHER);
-         (*ppCtx)->nKeyLen = pMsg->GetVariableShort(VID_KEY_LENGTH);
-         (*ppCtx)->pSessionKey = (BYTE *)malloc((*ppCtx)->nKeyLen);
-
-         // Decrypt session key
-         dwKeySize = pMsg->GetVariableBinary(VID_SESSION_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
-         nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey,
-                                     pPrivateKey, RSA_PKCS1_OAEP_PADDING);
-         if (nSize == (*ppCtx)->nKeyLen)
-         {
-            memcpy((*ppCtx)->pSessionKey, ucSessionKey, nSize);
-
-            // Decrypt session IV
-            nIVLen = pMsg->GetVariableShort(VID_IV_LENGTH);
-            if (nIVLen == 0)  // Versions prior to 0.2.13 don't send IV length, assume 16
-               nIVLen = 16;
-            dwKeySize = pMsg->GetVariableBinary(VID_SESSION_IV, ucKeyBuffer, KEY_BUFFER_SIZE);
-            nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey,
-                                        pPrivateKey, RSA_PKCS1_OAEP_PADDING);
-            if ((nSize == nIVLen) &&
-                (nIVLen <= EVP_CIPHER_iv_length(m_pfCipherList[(*ppCtx)->nCipher]())))
-            {
-               memcpy((*ppCtx)->iv, ucSessionKey, min(EVP_MAX_IV_LENGTH, nIVLen));
-            }
-            else
-            {
-               dwResult = RCC_INVALID_SESSION_KEY;
-            }
-         }
-         else
-         {
-            dwResult = RCC_INVALID_SESSION_KEY;
-         }
+			*ppCtx = NXCPEncryptionContext::create(pMsg, pPrivateKey);
+			if (*ppCtx == NULL)
+			{
+				dwResult = RCC_INVALID_SESSION_KEY;
+			}
       }
    }
 
    if ((dwResult != RCC_SUCCESS) && (*ppCtx != NULL))
    {
-      DestroyEncryptionContext(*ppCtx);
+      delete *ppCtx;
       *ppCtx = NULL;
    }
 #else
@@ -600,4 +524,109 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, c
 	}
 
 	ice_key_destroy(ice);
+}
+
+
+//
+// Encryption context constructor
+//
+
+NXCPEncryptionContext::NXCPEncryptionContext()
+{
+	m_sessionKey = NULL;
+}
+
+
+//
+// Encryption context destructor
+//
+
+NXCPEncryptionContext::~NXCPEncryptionContext()
+{
+	safe_free(m_sessionKey);
+}
+
+
+//
+// Create encryption context from CMD_SESSION_KEY NXCP message
+//
+
+NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *privateKey)
+{
+   BYTE ucKeyBuffer[KEY_BUFFER_SIZE], ucSessionKey[KEY_BUFFER_SIZE];
+   DWORD dwKeySize;
+   int nSize, nIVLen;
+	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
+
+   ctx->m_cipher = msg->GetVariableShort(VID_CIPHER);
+   ctx->m_keyLength = msg->GetVariableShort(VID_KEY_LENGTH);
+   ctx->m_sessionKey = (BYTE *)malloc(ctx->m_keyLength);
+
+   // Decrypt session key
+   dwKeySize = msg->GetVariableBinary(VID_SESSION_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
+   nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
+   if (nSize == ctx->m_keyLength)
+   {
+      memcpy(ctx->m_sessionKey, ucSessionKey, nSize);
+
+      // Decrypt session IV
+      nIVLen = msg->GetVariableShort(VID_IV_LENGTH);
+      if (nIVLen == 0)  // Versions prior to 0.2.13 don't send IV length, assume 16
+         nIVLen = 16;
+      dwKeySize = msg->GetVariableBinary(VID_SESSION_IV, ucKeyBuffer, KEY_BUFFER_SIZE);
+      nSize = RSA_private_decrypt(dwKeySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
+      if ((nSize == nIVLen) &&
+          (nIVLen <= EVP_CIPHER_iv_length(m_pfCipherList[ctx->m_cipher]())))
+      {
+         memcpy(ctx->m_iv, ucSessionKey, min(EVP_MAX_IV_LENGTH, nIVLen));
+      }
+      else
+      {
+         delete_and_null(ctx);
+      }
+   }
+   else
+   {
+      delete_and_null(ctx);
+   }
+	return ctx;
+}
+
+
+//
+// Create encryption context from CMD_REQUEST_SESSION_KEY NXCP message
+//
+
+NXCPEncryptionContext *NXCPEncryptionContext::create(DWORD ciphers)
+{
+	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
+
+   // Select cipher
+   if (ciphers & CSCP_SUPPORT_AES_256)
+   {
+      ctx->m_cipher = CSCP_CIPHER_AES_256;
+      ctx->m_keyLength = 32;
+   }
+   else if (ciphers & CSCP_SUPPORT_BLOWFISH)
+   {
+      ctx->m_cipher = CSCP_CIPHER_BLOWFISH;
+      ctx->m_keyLength = 32;
+   }
+   else if (ciphers & CSCP_SUPPORT_IDEA)
+   {
+      ctx->m_cipher = CSCP_CIPHER_IDEA;
+      ctx->m_keyLength = 16;
+   }
+   else if (ciphers & CSCP_SUPPORT_3DES)
+   {
+      ctx->m_cipher = CSCP_CIPHER_3DES;
+      ctx->m_keyLength = 24;
+   }
+
+   // Generate key
+   ctx->m_sessionKey = (BYTE *)malloc(ctx->m_keyLength);
+   RAND_bytes(ctx->m_sessionKey, ctx->m_keyLength);
+   RAND_bytes(ctx->m_iv, EVP_MAX_IV_LENGTH);
+
+	return ctx;
 }

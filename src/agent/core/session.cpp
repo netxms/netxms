@@ -139,7 +139,8 @@ CommSession::~CommSession()
    safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
-   DestroyEncryptionContext(m_pCtx);
+	if (m_pCtx != NULL)
+		m_pCtx->decRefCount();
 	MutexDestroy(m_socketWriteMutex);
 }
 
@@ -341,7 +342,7 @@ void CommSession::readThread()
 // Send prepared raw message over the network and destroy it
 //
 
-BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx)
+BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx)
 {
    BOOL bResult = TRUE;
    TCHAR szBuffer[128];
@@ -950,7 +951,7 @@ DWORD CommSession::setupProxyConnection(CSCPMessage *pRequest)
    DWORD dwResult, dwAddr;
    WORD wPort;
    struct sockaddr_in sa;
-   CSCP_ENCRYPTION_CONTEXT *pSavedCtx;
+   NXCPEncryptionContext *pSavedCtx;
    TCHAR szBuffer[32];
 
    if (m_bMasterServer && (g_dwFlags & AF_ENABLE_PROXY))
@@ -993,7 +994,8 @@ DWORD CommSession::setupProxyConnection(CSCPMessage *pRequest)
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             pRawMsg = msg.CreateMessage();
             sendRawMessage(pRawMsg, pSavedCtx);
-            DestroyEncryptionContext(pSavedCtx);
+				if (pSavedCtx != NULL)
+					pSavedCtx->decRefCount();
 
             DebugPrintf(m_dwIndex, 5, _T("Established proxy connection to %s:%d"), IpToStr(dwAddr, szBuffer), wPort);
          }

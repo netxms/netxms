@@ -335,7 +335,7 @@ private:
    DWORD m_dwSystemAccess;    // User's system access rights
    DWORD m_dwFlags;           // Session flags
    CSCP_BUFFER *m_pMsgBuffer;
-   CSCP_ENCRYPTION_CONTEXT *m_pCtx;
+   NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
@@ -599,7 +599,7 @@ public:
    bool isConsoleOpen() { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
    bool isSubscribed(DWORD dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
    WORD getCurrentCmd() { return m_wCurrentCmd; }
-   int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->nCipher; }
+   int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
 
 	bool checkSysAccessRights(DWORD requiredAccess) 
    { 

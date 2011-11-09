@@ -127,7 +127,8 @@ NXCL_Session::~NXCL_Session()
 
 	MutexDestroy(m_mutexSendMsg);
 
-   DestroyEncryptionContext(m_pCtx);
+	if (m_pCtx != NULL)
+		m_pCtx->decRefCount();
 }
 
 
@@ -159,8 +160,11 @@ void NXCL_Session::disconnect()
    destroyEventDB();
    destroyUserDB();
 
-   DestroyEncryptionContext(m_pCtx);
-   m_pCtx = NULL;
+	if (m_pCtx != NULL)
+	{
+		m_pCtx->decRefCount();
+		m_pCtx = NULL;
+	}
 }
 
 

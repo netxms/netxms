@@ -147,7 +147,8 @@ AgentConnection::~AgentConnection()
    Unlock();
 
    delete m_pMsgWaitQueue;
-   DestroyEncryptionContext(m_pCtx);
+	if (m_pCtx != NULL)
+		m_pCtx->decRefCount();
 
 	if (m_hCurrFile != -1)
 	{
@@ -327,8 +328,11 @@ void AgentConnection::ReceiverThread()
       shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
    m_hSocket = -1;
-   DestroyEncryptionContext(m_pCtx);
-   m_pCtx = NULL;
+	if (m_pCtx != NULL)
+	{
+		m_pCtx->decRefCount();
+		m_pCtx = NULL;
+	}
    m_bIsConnected = FALSE;
    Unlock();
 
@@ -466,8 +470,13 @@ setup_encryption:
       dwError = setupProxyConnection();
       if (dwError != ERR_SUCCESS)
          goto connect_cleanup;
-      DestroyEncryptionContext(m_pCtx);
-      m_pCtx = NULL;
+		Lock();
+		if (m_pCtx != NULL)
+		{
+			m_pCtx->decRefCount();
+	      m_pCtx = NULL;
+		}
+		Unlock();
       bSecondPass = TRUE;
       bForceEncryption = FALSE;
       goto setup_encryption;
@@ -496,8 +505,11 @@ connect_cleanup:
          m_hSocket = -1;
       }
 
-      DestroyEncryptionContext(m_pCtx);
-      m_pCtx = NULL;
+		if (m_pCtx != NULL)
+		{
+			m_pCtx->decRefCount();
+	      m_pCtx = NULL;
+		}
 
       Unlock();
    }
@@ -793,14 +805,13 @@ DWORD AgentConnection::waitForRCC(DWORD dwRqId, DWORD dwTimeOut)
 
 BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
 {
-   CSCP_MESSAGE *pRawMsg;
-   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
    BOOL bResult;
 
-   pRawMsg = pMsg->CreateMessage();
-   if (m_pCtx != NULL)
+   CSCP_MESSAGE *pRawMsg = pMsg->CreateMessage();
+	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
+   if (pCtx != NULL)
    {
-      pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(pCtx, pRawMsg);
       if (pEnMsg != NULL)
       {
          bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
@@ -810,6 +821,7 @@ BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
       {
          bResult = FALSE;
       }
+		pCtx->decRefCount();
    }
    else
    {
@@ -1063,7 +1075,8 @@ DWORD AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinati
    if (dwResult == ERR_SUCCESS)
    {
 		m_fileUploadInProgress = true;
-      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, m_pCtx, 0, progressCallback, cbArg, m_mutexSocketWrite))
+		NXCPEncryptionContext *ctx = acquireEncryptionContext();
+      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
@@ -1691,4 +1704,19 @@ DWORD AgentConnection::uninstallPolicy(uuid_t guid)
 		rcc = ERR_CONNECTION_BROKEN;
 	}
    return rcc;
+}
+
+
+//
+// Acquire encryption context
+//
+
+NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
+{
+	Lock();
+	NXCPEncryptionContext *ctx = m_pCtx;
+	if (ctx != NULL)
+		ctx->incRefCount();
+	Unlock();
+	return ctx;
 }

@@ -95,7 +95,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo);
 // Inline functions
 //
 
-inline void InitThreadLibrary(void)
+inline void InitThreadLibrary()
 {
 }
 
@@ -151,7 +151,7 @@ inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address)(void *),
 	return thread;
 }
 
-inline void ThreadExit(void)
+inline void ThreadExit()
 {
 #ifdef UNDER_CE
    ExitThread(0);
@@ -175,12 +175,12 @@ inline THREAD_ID ThreadId(THREAD thread)
    return (thread != INVALID_THREAD_HANDLE) ? thread->id : 0;
 }
 
-inline MUTEX MutexCreate(void)
+inline MUTEX MutexCreate()
 {
    return CreateMutex(NULL, FALSE, NULL);
 }
 
-inline MUTEX MutexCreateRecursive(void)
+inline MUTEX MutexCreateRecursive()
 {
    return CreateMutex(NULL, FALSE, NULL);
 }
@@ -344,7 +344,7 @@ inline MUTEX MutexCreate(void)
    return mutex;
 }
 
-inline MUTEX MutexCreateRecursive(void)
+inline MUTEX MutexCreateRecursive()
 {
    MUTEX mutex;
 
@@ -501,12 +501,12 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 	return ret;
 }
 
-inline DWORD GetCurrentProcessId(void)
+inline DWORD GetCurrentProcessId()
 {
    return getpid();
 }
 
-inline THREAD GetCurrentThreadId(void)
+inline THREAD GetCurrentThreadId()
 {
    return pth_self();
 }
@@ -594,7 +594,7 @@ typedef void *THREAD_RESULT;
 // Inline functions
 //
 
-inline void InitThreadLibrary(void)
+inline void InitThreadLibrary()
 {
 }
 
@@ -663,7 +663,7 @@ inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), in
 	return FALSE;
 }
 
-inline void ThreadExit(void)
+inline void ThreadExit()
 {
    pthread_exit(NULL);
 }
@@ -689,7 +689,7 @@ inline MUTEX MutexCreate(void)
    return mutex;
 }
 
-inline MUTEX MutexCreateRecursive(void)
+inline MUTEX MutexCreateRecursive()
 {
    MUTEX mutex;
 

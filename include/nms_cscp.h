@@ -38,9 +38,9 @@
 #define CSCP_EH_UNENCRYPTED_BYTES      8
 #define CSCP_EH_ENCRYPTED_BYTES        (CSCP_ENCRYPTION_HEADER_SIZE - CSCP_EH_UNENCRYPTED_BYTES)
 #ifdef __64BIT__
-#define PROXY_ENCRYPTION_CTX           ((CSCP_ENCRYPTION_CONTEXT *)_ULL(0xFFFFFFFFFFFFFFFF))
+#define PROXY_ENCRYPTION_CTX           ((NXCPEncryptionContext *)_ULL(0xFFFFFFFFFFFFFFFF))
 #else
-#define PROXY_ENCRYPTION_CTX           ((CSCP_ENCRYPTION_CONTEXT *)0xFFFFFFFF)
+#define PROXY_ENCRYPTION_CTX           ((NXCPEncryptionContext *)0xFFFFFFFF)
 #endif
 
 #ifndef EVP_MAX_IV_LENGTH
@@ -177,19 +177,6 @@ typedef struct
 #else
 #pragma pack()
 #endif
-
-
-//
-// CSCP encryption context
-//
-
-typedef struct
-{
-   int nCipher;            // Encryption algorithm
-   BYTE *pSessionKey;      // Current session key
-   int nKeyLen;            // Session key length in bytes
-   BYTE iv[EVP_MAX_IV_LENGTH];   // Current IV
-} CSCP_ENCRYPTION_CONTEXT;
 
 
 //

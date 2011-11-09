@@ -391,7 +391,7 @@ private:
    MUTEX m_mutexDataLock;
 	MUTEX m_mutexSocketWrite;
    THREAD m_hReceiverThread;
-   CSCP_ENCRYPTION_CONTEXT *m_pCtx;
+   NXCPEncryptionContext *m_pCtx;
    int m_iEncryptionPolicy;
    BOOL m_bUseProxy;
    DWORD m_dwProxyAddr;
@@ -431,6 +431,7 @@ protected:
 
    void Lock() { MutexLock(m_mutexDataLock, INFINITE); }
    void Unlock() { MutexUnlock(m_mutexDataLock); }
+	NXCPEncryptionContext *acquireEncryptionContext();
 
 public:
    AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
@@ -533,7 +534,7 @@ private:
    MUTEX m_mutexDataLock;
 	MUTEX m_socketLock;
    THREAD m_hReceiverThread;
-   CSCP_ENCRYPTION_CONTEXT *m_ctx;
+   NXCPEncryptionContext *m_ctx;
 	DWORD m_commandTimeout;
 
    void ReceiverThread(void);

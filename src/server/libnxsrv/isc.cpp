@@ -140,7 +140,8 @@ ISC::~ISC()
 	Unlock();
 
    delete m_msgWaitQueue;
-   DestroyEncryptionContext(m_ctx);
+	if (m_ctx != NULL)
+		m_ctx->decRefCount();
 
    MutexDestroy(m_mutexDataLock);
 	MutexDestroy(m_socketLock);
@@ -254,8 +255,11 @@ void ISC::ReceiverThread()
       shutdown(m_socket, SHUT_RDWR);
    closesocket(m_socket);
    m_socket = -1;
-   DestroyEncryptionContext(m_ctx);
-   m_ctx = NULL;
+	if (m_ctx != NULL)
+	{
+		m_ctx->decRefCount();;
+		m_ctx = NULL;
+	}
    m_flags &= ~ISCF_IS_CONNECTED;;
    Unlock();
 
@@ -399,8 +403,11 @@ connect_cleanup:
          m_socket = -1;
       }
 
-      DestroyEncryptionContext(m_ctx);
-      m_ctx = NULL;
+		if (m_ctx != NULL)
+		{
+			m_ctx->decRefCount();
+			m_ctx = NULL;
+		}
 
       Unlock();
    }
@@ -545,7 +552,7 @@ DWORD ISC::SetupEncryption(RSA *pServerKey)
 // Send dummy command to peer (can be used for keepalive)
 //
 
-DWORD ISC::Nop(void)
+DWORD ISC::Nop()
 {
    CSCPMessage msg(m_protocolVersion);
    DWORD dwRqId;
