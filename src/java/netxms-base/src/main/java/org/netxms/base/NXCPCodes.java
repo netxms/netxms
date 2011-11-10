@@ -156,7 +156,7 @@ public final class NXCPCodes
 	public static final int CMD_DELETE_USER_VARIABLE     = 0x007E;
 	public static final int CMD_ADM_MESSAGE              = 0x007F;
 	public static final int CMD_ADM_REQUEST              = 0x0080;
-	//public static final int CMD_CHANGE_IP_ADDR           = 0x0081;
+	public static final int CMD_GET_NETWORK_PATH         = 0x0081;
 	public static final int CMD_REQUEST_SESSION_KEY      = 0x0082;
 	public static final int CMD_ENCRYPTED_MESSAGE        = 0x0083;
 	public static final int CMD_SESSION_KEY              = 0x0084;
@@ -465,7 +465,7 @@ public final class NXCPCodes
 	public static final long VID_VERSION                 = 178;
 	public static final long VID_NUM_NODES               = 179;
 	public static final long VID_LOG_FILE                = 180;
-	//public static final long VID_ADV_SCHEDULE            = 181;
+	public static final long VID_HOP_COUNT               = 181;
 	public static final long VID_NUM_SCHEDULES           = 182;
 	public static final long VID_STATUS_PROPAGATION_ALG  = 183;
 	public static final long VID_FIXED_STATUS            = 184;
@@ -689,6 +689,7 @@ public final class NXCPCodes
 	public static final long VID_IS_TEMPLATE             = 402;
 	public static final long VID_DOT1X_PAE_STATE         = 403;
 	public static final long VID_DOT1X_BACKEND_STATE     = 404;
+	public static final long VID_IS_COMPLETE             = 405;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -764,4 +765,5 @@ public final class NXCPCodes
 	public static final long VID_ELEMENT_LIST_BASE        = 0x10000000L;
 	public static final long VID_LINK_LIST_BASE           = 0x40000000L;
 	public static final long VID_VLAN_LIST_BASE           = 0x10000000L;
+	public static final long VID_NETWORK_PATH_BASE        = 0x40000000L;
 }

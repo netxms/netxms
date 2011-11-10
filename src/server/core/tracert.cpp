@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,38 +16,97 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: tracert.cpp
-**
+** File: tracert.cpp
 **/
 
 #include "nxcore.h"
 
 
 //
+// Network path constructor
+//
+
+NetworkPath::NetworkPath()
+{
+	m_hopCount = 0;
+	m_allocated = 0;
+	m_path = NULL;
+	m_complete = false;
+}
+
+
+//
+// Network path destructor
+//
+
+NetworkPath::~NetworkPath()
+{
+	for(int i = 0; i < m_hopCount; i++)
+		if (m_path[i].object != NULL)
+			m_path[i].object->DecRefCount();
+	safe_free(m_path);
+}
+
+
+//
+// Add hop to path
+//
+
+void NetworkPath::addHop(DWORD nextHop, NetObj *currentObject, DWORD ifIndex, bool isVpn)
+{
+	if (m_hopCount == m_allocated)
+	{
+		m_allocated += 16;
+		m_path = (HOP_INFO *)realloc(m_path, sizeof(HOP_INFO) * m_allocated);
+	}
+	m_path[m_hopCount].nextHop = nextHop;
+	m_path[m_hopCount].object = currentObject;
+	m_path[m_hopCount].ifIndex = ifIndex;
+	m_path[m_hopCount].isVpn = isVpn;
+	m_hopCount++;
+	if (currentObject != NULL)
+		currentObject->IncRefCount();
+}
+
+
+//
+// Fill NXCP message with trace data
+//
+
+void NetworkPath::fillMessage(CSCPMessage *msg)
+{
+	msg->SetVariable(VID_HOP_COUNT, (WORD)m_hopCount);
+	msg->SetVariable(VID_IS_COMPLETE, (WORD)(m_complete ? 1 : 0));
+	DWORD varId = VID_NETWORK_PATH_BASE;
+	for(int i = 0; i < m_hopCount; i++, varId += 6)
+	{
+		msg->SetVariable(varId++, m_path[i].object->Id());
+		msg->SetVariable(varId++, m_path[i].nextHop);
+		msg->SetVariable(varId++, m_path[i].ifIndex);
+		msg->SetVariable(varId++, (WORD)(m_path[i].isVpn ? 1 : 0));
+	}
+}
+
+
+//
 // Trace route between two nodes
 //
 
-NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest)
+NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
 {
    DWORD dwNextHop, dwIfIndex, dwHopCount;
    Node *pCurr, *pNext;
-   NETWORK_PATH_TRACE *pTrace;
+   NetworkPath *pTrace;
    BOOL bIsVPN;
 
-   pTrace = (NETWORK_PATH_TRACE *)malloc(sizeof(NETWORK_PATH_TRACE));
-   memset(pTrace, 0, sizeof(NETWORK_PATH_TRACE));
+   pTrace = new NetworkPath;
    
    for(pCurr = pSrc, dwHopCount = 0; (pCurr != pDest) && (pCurr != NULL) && (dwHopCount < 30); pCurr = pNext, dwHopCount++)
    {
       if (pCurr->getNextHop(pSrc->IpAddr(), pDest->IpAddr(), &dwNextHop, &dwIfIndex, &bIsVPN))
       {
 			pNext = FindNodeByIP(pSrc->getZoneId(), dwNextHop);
-         pTrace->pHopList = (HOP_INFO *)realloc(pTrace->pHopList, sizeof(HOP_INFO) * (pTrace->iNumHops + 1));
-         pTrace->pHopList[pTrace->iNumHops].dwNextHop = dwNextHop;
-         pTrace->pHopList[pTrace->iNumHops].dwIfIndex = dwIfIndex;
-         pTrace->pHopList[pTrace->iNumHops].bIsVPN = bIsVPN;
-         pTrace->pHopList[pTrace->iNumHops].pObject = pCurr;
-         pTrace->iNumHops++;
+			pTrace->addHop(dwNextHop, pCurr, dwIfIndex, bIsVPN ? true : false);
          if ((pNext == pCurr) || (dwNextHop == 0))
             pNext = NULL;     // Directly connected subnet or too many hops, stop trace
       }
@@ -56,20 +115,8 @@ NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest)
          pNext = NULL;
       }
    }
+	if (pCurr == pDest)
+		pTrace->setComplete();
 
    return pTrace;
-}
-
-
-//
-// Destroy trace information
-//
-
-void DestroyTraceData(NETWORK_PATH_TRACE *pTrace)
-{
-   if (pTrace != NULL)
-   {
-      safe_free(pTrace->pHopList);
-      free(pTrace);
-   }
 }

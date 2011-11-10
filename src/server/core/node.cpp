@@ -3518,9 +3518,10 @@ BOOL Node::getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
    DWORD i;
    BOOL bResult = FALSE;
 
-   // Check VPN connectors
+	// Check directly connected networks and VPN connectors
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
+	{
       if (m_pChildList[i]->Type() == OBJECT_VPNCONNECTOR)
       {
          if (((VPNConnector *)m_pChildList[i])->IsRemoteAddr(dwDestAddr) &&
@@ -3533,6 +3534,21 @@ BOOL Node::getNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
             break;
          }
       }
+      else if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) && 
+		         (m_pChildList[i]->IpAddr() != 0) &&
+					(m_pChildList[i]->Status() == SEVERITY_NORMAL))
+      {
+			DWORD mask = ((Interface *)m_pChildList[i])->getIpNetMask();
+			if ((dwDestAddr & mask) == (m_pChildList[i]->IpAddr() & mask))
+			{
+            *pdwNextHop = dwDestAddr;
+				*pdwIfIndex = ((Interface *)m_pChildList[i])->getIfIndex();
+            *pbIsVPN = FALSE;
+            bResult = TRUE;
+            break;
+			}
+		}
+	}
    UnlockChildList();
 
    // Check routing table

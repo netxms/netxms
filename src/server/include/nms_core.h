@@ -397,6 +397,7 @@ private:
 	DECLARE_THREAD_STARTER(getReportResults)
 	DECLARE_THREAD_STARTER(deleteReportResults)
 	DECLARE_THREAD_STARTER(renderReport)
+	DECLARE_THREAD_STARTER(getNetworkPath)
 
    void readThread();
    void writeThread();
@@ -572,6 +573,7 @@ private:
 	void getReportResults(CSCPMessage *msg);
 	void deleteReportResults(CSCPMessage *msg);
 	void renderReport(CSCPMessage *request);
+	void getNetworkPath(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

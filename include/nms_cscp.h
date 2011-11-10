@@ -335,7 +335,7 @@ typedef struct
 #define CMD_DELETE_USER_VARIABLE       0x007E
 #define CMD_ADM_MESSAGE                0x007F
 #define CMD_ADM_REQUEST                0x0080
-//#define CMD_CHANGE_IP_ADDR             0x0081
+#define CMD_GET_NETWORK_PATH           0x0081
 #define CMD_REQUEST_SESSION_KEY        0x0082
 #define CMD_ENCRYPTED_MESSAGE          0x0083
 #define CMD_SESSION_KEY                0x0084
@@ -648,7 +648,7 @@ typedef struct
 #define VID_VERSION                 ((DWORD)178)
 #define VID_NUM_NODES               ((DWORD)179)
 #define VID_LOG_FILE                ((DWORD)180)
-//#define VID_ADV_SCHEDULE            ((DWORD)181)
+#define VID_HOP_COUNT               ((DWORD)181)
 #define VID_NUM_SCHEDULES           ((DWORD)182)
 #define VID_STATUS_PROPAGATION_ALG  ((DWORD)183)
 #define VID_FIXED_STATUS            ((DWORD)184)
@@ -872,6 +872,7 @@ typedef struct
 #define VID_IS_TEMPLATE             ((DWORD)402)
 #define VID_DOT1X_PAE_STATE         ((DWORD)403)
 #define VID_DOT1X_BACKEND_STATE     ((DWORD)404)
+#define VID_IS_COMPLETE             ((DWORD)405)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((DWORD)0x00800000)
@@ -1026,6 +1027,8 @@ typedef struct
 #define VID_IMAGE_LIST_BASE         ((DWORD)0x10000000)
 
 #define VID_VLAN_LIST_BASE          ((DWORD)0x10000000)
+
+#define VID_NETWORK_PATH_BASE       ((DWORD)0x40000000)
 
 
 //

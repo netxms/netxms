@@ -165,6 +165,7 @@ DEFINE_THREAD_STARTER(sendMib)
 DEFINE_THREAD_STARTER(getReportResults)
 DEFINE_THREAD_STARTER(deleteReportResults)
 DEFINE_THREAD_STARTER(renderReport)
+DEFINE_THREAD_STARTER(getNetworkPath)
 
 
 //
@@ -1248,6 +1249,9 @@ void ClientSession::processingThread()
 				break;
 			case CMD_RENDER_REPORT:
 				CALL_IN_NEW_THREAD(renderReport, pMsg);
+				break;
+			case CMD_GET_NETWORK_PATH:
+				CALL_IN_NEW_THREAD(getNetworkPath, pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -11395,4 +11399,56 @@ void ClientSession::renderReport(CSCPMessage *request)
 	{
 		sendFile(outputFileName, request->GetId());
 	}
+}
+
+
+//
+// Get network path between two nodes
+//
+
+void ClientSession::getNetworkPath(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	NetObj *node1 = FindObjectById(request->GetVariableLong(VID_SOURCE_OBJECT_ID));
+	NetObj *node2 = FindObjectById(request->GetVariableLong(VID_DESTINATION_OBJECT_ID));
+
+	if ((node1 != NULL) && (node2 != NULL))
+	{
+		if (node1->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
+		    node2->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if ((node1->Type() == OBJECT_NODE) && (node2->Type() == OBJECT_NODE))
+			{
+				NetworkPath *path = TraceRoute((Node *)node1, (Node *)node2);
+				if (path != NULL)
+				{
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					path->fillMessage(&msg);
+					delete path;
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+				}
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+	sendMessage(&msg);
 }

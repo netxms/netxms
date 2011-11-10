@@ -36,7 +36,7 @@ static QWORD m_networkLostEventId = 0;
 
 static void C_SysNodeDown(Node *pNode, Event *pEvent)
 {
-   NETWORK_PATH_TRACE *pTrace;
+   NetworkPath *pTrace;
    Node *pMgmtNode;
    Interface *pInterface;
    NetObj *pObject;
@@ -57,23 +57,23 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
       pTrace = TraceRoute(pMgmtNode, pNode);
       if (pTrace != NULL)
       {
-         for(i = 0; i < pTrace->iNumHops; i++)
+         for(i = 0; i < pTrace->getHopCount(); i++)
          {
-            if ((pTrace->pHopList[i].pObject != NULL) &&
-                (pTrace->pHopList[i].pObject != pNode))
+				HOP_INFO *hop = pTrace->getHopInfo(i);
+            if ((hop->object != NULL) && (hop->object != pNode))
             {
-               if (pTrace->pHopList[i].pObject->Type() == OBJECT_NODE)
+               if (hop->object->Type() == OBJECT_NODE)
                {
-                  if (((Node *)pTrace->pHopList[i].pObject)->isDown())
+                  if (((Node *)hop->object)->isDown())
                   {
-                     pEvent->setRootId(((Node *)pTrace->pHopList[i].pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
+                     pEvent->setRootId(((Node *)hop->object)->GetLastEventId(LAST_EVENT_NODE_DOWN));
                   }
                   else
                   {
-                     if (pTrace->pHopList[i].bIsVPN)
+                     if (hop->isVpn)
                      {
                         // Next hop is behind VPN tunnel
-                        pObject = FindObjectById(pTrace->pHopList[i].dwIfIndex);
+                        pObject = FindObjectById(hop->ifIndex);
                         if (pObject != NULL)
                         {
                            if ((pObject->Type() == OBJECT_VPNCONNECTOR) &&
@@ -85,7 +85,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                      }
                      else
                      {
-                        pInterface = ((Node *)pTrace->pHopList[i].pObject)->findInterface(pTrace->pHopList[i].dwIfIndex, INADDR_ANY);
+                        pInterface = ((Node *)hop->object)->findInterface(hop->ifIndex, INADDR_ANY);
                         if (pInterface != NULL)
                         {
                            if (pInterface->Status() == STATUS_CRITICAL)
@@ -98,7 +98,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                }
             }
          }
-         DestroyTraceData(pTrace);
+         delete pTrace;
       }
    }
 }

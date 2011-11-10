@@ -1283,7 +1283,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	{
 		DWORD dwNode1, dwNode2;
 		NetObj *pObject1, *pObject2;
-		NETWORK_PATH_TRACE *pTrace;
+		NetworkPath *pTrace;
 		TCHAR szNextHop[16];
 		int i;
 
@@ -1310,22 +1310,25 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				}
 				else
 				{
-					if ((pObject1->Type() == OBJECT_NODE) &&
-							(pObject2->Type() == OBJECT_NODE))
+					if ((pObject1->Type() == OBJECT_NODE) && (pObject2->Type() == OBJECT_NODE))
 					{
 						pTrace = TraceRoute((Node *)pObject1, (Node *)pObject2);
 						if (pTrace != NULL)
 						{
-							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops):\n"),
-									pObject1->Name(), pObject2->Name(), pTrace->iNumHops);
-							for(i = 0; i < pTrace->iNumHops; i++)
+							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s):\n"),
+									pObject1->Name(), pObject2->Name(), pTrace->getHopCount(),
+									pTrace->isComplete() ? _T("complete") : _T("incomplete"));
+							for(i = 0; i < pTrace->getHopCount(); i++)
+							{
+								HOP_INFO *hop = pTrace->getHopInfo(i);
 								ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),
-										pTrace->pHopList[i].pObject->Id(),
-										pTrace->pHopList[i].pObject->Name(),
-										IpToStr(pTrace->pHopList[i].dwNextHop, szNextHop),
-										pTrace->pHopList[i].bIsVPN ? _T("VPN Connector ID:") : _T("Interface Index: "),
-										pTrace->pHopList[i].dwIfIndex);
-							DestroyTraceData(pTrace);
+										hop->object->Id(),
+										hop->object->Name(),
+										IpToStr(hop->nextHop, szNextHop),
+										hop->isVpn ? _T("VPN Connector ID:") : _T("Interface Index: "),
+										hop->ifIndex);
+							}
+							delete pTrace;
 							ConsolePrintf(pCtx, _T("\n"));
 						}
 						else

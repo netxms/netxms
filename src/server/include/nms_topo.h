@@ -35,10 +35,10 @@ class Interface;
 
 struct HOP_INFO
 {
-   DWORD dwNextHop;     // Next hop address
-   NetObj *pObject;     // Current hop object
-   DWORD dwIfIndex;     // Interface index or VPN connector object ID
-   BOOL bIsVPN;         // TRUE if next hop is behind VPN tunnel
+   DWORD nextHop;     // Next hop address
+   NetObj *object;    // Current hop object
+   DWORD ifIndex;     // Interface index or VPN connector object ID
+   bool isVpn;        // TRUE if next hop is behind VPN tunnel
 };
 
 
@@ -46,10 +46,26 @@ struct HOP_INFO
 // Network path trace
 //
 
-struct NETWORK_PATH_TRACE
+class NetworkPath
 {
-   int iNumHops;
-   HOP_INFO *pHopList;
+private:
+	int m_hopCount;
+	int m_allocated;
+	HOP_INFO *m_path;
+	bool m_complete;
+
+public:
+	NetworkPath();
+	~NetworkPath();
+
+	void addHop(DWORD nextHop, NetObj *currentObject, DWORD ifIndex, bool isVpn);
+	void setComplete() { m_complete = true; }
+
+	bool isComplete() { return m_complete; }
+	int getHopCount() { return m_hopCount; }
+	HOP_INFO *getHopInfo(int index) { return ((index >= 0) && (index < m_hopCount)) ? &m_path[index] : NULL; }
+
+	void fillMessage(CSCPMessage *msg);
 };
 
 
@@ -209,8 +225,7 @@ public:
 // Topology functions
 //
 
-NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest);
-void DestroyTraceData(NETWORK_PATH_TRACE *pTrace);
+NetworkPath *TraceRoute(Node *pSrc, Node *pDest);
 void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
 Interface *FindInterfaceConnectionPoint(const BYTE *macAddr);
