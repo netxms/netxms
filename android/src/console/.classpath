@@ -3,8 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="lib" path="jar/netxms-base-1.1.4.jar"/>
-	<classpathentry kind="lib" path="jar/netxms-client-1.1.4.jar" sourcepath="/netxms-client"/>
-	<classpathentry kind="lib" path="jar/netxms-client-api-1.1.4.jar"/>
+	<classpathentry kind="lib" path="jar/netxms-base-1.1.6.jar"/>
+	<classpathentry kind="lib" path="jar/netxms-client-1.1.6.jar"/>
+	<classpathentry kind="lib" path="jar/netxms-client-api-1.1.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

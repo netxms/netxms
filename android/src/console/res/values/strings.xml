@@ -47,4 +47,6 @@
 <string name="status_disabled">Disabled</string>
 <string name="status_testing">Testing</string>
 <string name="alarm_acknowledge">Acknowledge Alarm</string>
+<string name="pref_alarm_notification">Alarm Notification</string>
+<string name="pref_alarm_sound">Alarm sound</string>
 </resources>

@@ -6,4 +6,7 @@
 <EditTextPreference android:enabled="true" android:key="connection.password" android:title="@string/pref_password" android:summary="@string/pref_password_summary" android:password="true"></EditTextPreference>
 <CheckBoxPreference android:title="@string/pref_encrypt" android:key="connection.encrypt" android:enabled="true" android:summaryOn="@string/pref_encrypt_summary_enabled" android:summaryOff="@string/pref_encrypt_summary_disabled" android:defaultValue="false"></CheckBoxPreference>
 </PreferenceCategory>
+<PreferenceCategory android:title="@string/pref_alarm_notification">
+    <RingtonePreference android:title="@string/pref_alarm_sound" android:ringtoneType="all" android:showDefault="true" android:showSilent="true" android:key="alarm.sound"></RingtonePreference>
+</PreferenceCategory>
 </PreferenceScreen>

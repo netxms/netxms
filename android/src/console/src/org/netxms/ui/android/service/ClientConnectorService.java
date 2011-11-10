@@ -29,10 +29,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -146,12 +148,17 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void showNotification(int id, String text)
 	{
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+		final String sound = sp.getString("alarm.sound", "");
+		
 		Notification n = new Notification(android.R.drawable.stat_notify_sdcard, text, System.currentTimeMillis());
-		n.defaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_LIGHTS;
+		n.defaults = Notification.DEFAULT_LIGHTS;
 
 		Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
 		PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
 		n.setLatestEventInfo(getApplicationContext(), getString(R.string.notification_title), text, intent);
+		if ((sound != null) && (sound.length() > 0))
+			n.sound = Uri.parse(sound);
 
 		notificationManager.notify(id, n);
 	}

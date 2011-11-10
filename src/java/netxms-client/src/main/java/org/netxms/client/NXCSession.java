@@ -128,6 +128,7 @@ import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.client.topology.ConnectionPoint;
+import org.netxms.client.topology.NetworkPath;
 import org.netxms.client.topology.VlanInfo;
 
 /**
@@ -5257,5 +5258,28 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 		msg.setVariableInt32(NXCPCodes.VID_COMPONENT_ID, component);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get IPv4 network path between two nodes. Server will return path based
+	 * on cached routing table information. Network path object may be incomplete
+	 * if server does not have enough information to build full path. In this case,
+	 * no exception thrown, and completness of path can be checked by calling
+	 * NetworkPath.isComplete().
+	 *  
+	 * @param node1 source node
+	 * @param node2 destination node
+	 * @return network path object
+	 * @throws IOException if socket or file I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public NetworkPath getNetworkPath(long node1, long node2) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NETWORK_PATH);
+		msg.setVariableInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)node1);
+		msg.setVariableInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)node2);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return new NetworkPath(response);
 	}
 }
