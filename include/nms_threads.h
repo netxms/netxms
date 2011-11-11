@@ -37,7 +37,7 @@
 // Related datatypes and constants
 //
 
-#define INVALID_MUTEX_HANDLE        INVALID_HANDLE_VALUE
+#define INVALID_MUTEX_HANDLE        (NULL)
 #define INVALID_CONDITION_HANDLE    INVALID_HANDLE_VALUE
 #define INVALID_THREAD_HANDLE       (NULL)
 
@@ -56,7 +56,7 @@ typedef unsigned int THREAD_ID;
 #else
 #define THREAD_CALL     __stdcall
 
-typedef HANDLE MUTEX;
+typedef CRITICAL_SECTION *MUTEX;
 typedef HANDLE CONDITION;
 struct netxms_thread_t
 {
@@ -177,29 +177,33 @@ inline THREAD_ID ThreadId(THREAD thread)
 
 inline MUTEX MutexCreate()
 {
-   return CreateMutex(NULL, FALSE, NULL);
+	MUTEX mutex = (MUTEX)malloc(sizeof(CRITICAL_SECTION));
+	InitializeCriticalSectionAndSpinCount(mutex, 4000);
+   return mutex;
 }
 
 inline MUTEX MutexCreateRecursive()
 {
-   return CreateMutex(NULL, FALSE, NULL);
+   return MutexCreate();
 }
 
 inline void MutexDestroy(MUTEX mutex)
 {
-   CloseHandle(mutex);
+	DeleteCriticalSection(mutex);
+   free(mutex);
 }
 
 inline BOOL MutexLock(MUTEX mutex)
 {
 	if (mutex == INVALID_MUTEX_HANDLE)
 		return FALSE;
-   return WaitForSingleObject(mutex, INFINITE) == WAIT_OBJECT_0;
+	EnterCriticalSection(mutex);
+   return TRUE;
 }
 
 inline void MutexUnlock(MUTEX mutex)
 {
-   ReleaseMutex(mutex);
+   LeaveCriticalSection(mutex);
 }
 
 inline CONDITION ConditionCreate(BOOL bBroadcast)
