@@ -43,7 +43,7 @@ static struct
    BOOL bNotResponding;
 } m_threadInfo[MAX_THREADS];
 static DWORD m_dwNumThreads = 0;
-static MUTEX m_mutexWatchdogAccess;
+static MUTEX m_mutexWatchdogAccess = INVALID_MUTEX_HANDLE;
 
 
 //
@@ -70,7 +70,7 @@ DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval)
 // Initialize watchdog
 //
 
-void WatchdogInit(void)
+void WatchdogInit()
 {
    m_mutexWatchdogAccess = MutexCreate();
 }

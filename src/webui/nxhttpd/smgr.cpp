@@ -46,7 +46,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    while(!(g_dwFlags & AF_SHUTDOWN))
 	{
 		ThreadSleep(5);
-		MutexLock(m_mutexSessionAccess, INFINITE);
+		MutexLock(m_mutexSessionAccess);
 		now = time(NULL);
 		for(i = 0; i < MAX_SESSIONS; i++)
 			if (m_sessionList[i] != NULL)
@@ -85,7 +85,7 @@ static BOOL RegisterNewSession(ClientSession *pSession)
    DWORD i;
    BOOL bResult = FALSE;
 
-   MutexLock(m_mutexSessionAccess, INFINITE);
+   MutexLock(m_mutexSessionAccess);
    for(i = 0; i < MAX_SESSIONS; i++)
       if (m_sessionList[i] == NULL)
       {
@@ -107,7 +107,7 @@ static void DeleteSession(ClientSession *pSession)
 {
 	DWORD dwIndex;
 
-	MutexLock(m_mutexSessionAccess, INFINITE);
+	MutexLock(m_mutexSessionAccess);
 	dwIndex = pSession->GetIndex();
 	m_sessionList[dwIndex] = NULL;
 	delete pSession;
@@ -124,7 +124,7 @@ static ClientSession *FindSessionBySID(const TCHAR *pszSID)
    DWORD i;
 	ClientSession *pSession = NULL;
 
-   MutexLock(m_mutexSessionAccess, INFINITE);
+   MutexLock(m_mutexSessionAccess);
    for(i = 0; i < MAX_SESSIONS; i++)
       if (m_sessionList[i] != NULL)
       {

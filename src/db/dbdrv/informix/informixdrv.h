@@ -25,6 +25,10 @@
 
 #ifdef _WIN32
 
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0502
+#endif
+
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <winsock2.h>

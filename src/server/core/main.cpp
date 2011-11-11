@@ -688,6 +688,9 @@ retry_db_lock:
 	// Load and compile scripts
 	LoadScripts();
 
+	// Initialize watchdog
+	WatchdogInit();
+
 	// Initialize mailer and SMS sender
 	InitMailer();
 	InitSMSSender();
@@ -737,9 +740,6 @@ retry_db_lock:
 
 	InitLogAccess();
 	FileUploadJob::init();
-
-	// Initialize watchdog
-	WatchdogInit();
 
 	// Check if management node object presented in database
 	CheckForMgmtNode();
