@@ -55,7 +55,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 
       bTrapSent = FALSE;
 
-      MutexLock(g_hSessionListAccess, INFINITE);
+      MutexLock(g_hSessionListAccess);
       for(i = 0; i < g_dwMaxSessions; i++)
          if (g_pSessionList[i] != NULL)
             if (g_pSessionList[i]->canAcceptTraps())

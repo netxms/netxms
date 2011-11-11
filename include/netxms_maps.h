@@ -321,7 +321,7 @@ protected:
    MUTEX m_mutex;
    SUBMAP_CREATION_CALLBACK m_pfCreateSubmap;
 
-   void CommonInit(void);
+   void CommonInit();
 
 public:
    nxMap();
@@ -329,14 +329,14 @@ public:
    nxMap(CSCPMessage *pMsg);
    virtual ~nxMap();
 
-   void Lock(void) { MutexLock(m_mutex, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_mutex); }
+   void Lock() { MutexLock(m_mutex); }
+   void Unlock() { MutexUnlock(m_mutex); }
 
 	void SetName(const TCHAR *name) { safe_free(m_pszName); m_pszName = _tcsdup(name); }
 
-   DWORD MapId(void) { return m_dwMapId; }
-   DWORD ObjectId(void) { return m_dwObjectId; }
-   TCHAR *Name(void) { return CHECK_NULL(m_pszName); }
+   DWORD MapId() { return m_dwMapId; }
+   DWORD ObjectId() { return m_dwObjectId; }
+   TCHAR *Name() { return CHECK_NULL(m_pszName); }
 
    void AddSubmap(nxSubmap *pSubmap);
    DWORD GetSubmapCount(void) { return m_dwNumSubmaps; }

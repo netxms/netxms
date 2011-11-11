@@ -116,7 +116,10 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
       }
    }
 	if (pCurr == pDest)
+	{
+		pTrace->addHop(0, pCurr, 0, false);
 		pTrace->setComplete();
+	}
 
    return pTrace;
 }

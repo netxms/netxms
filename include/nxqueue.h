@@ -45,8 +45,8 @@ private:
    DWORD m_dwBufferIncrement;
 	BOOL m_bShutdownFlag;
 
-	void CommonInit(void);
-   void Lock() { MutexLock(m_mutexQueueAccess, INFINITE); }
+	void CommonInit();
+   void Lock() { MutexLock(m_mutexQueueAccess); }
    void Unlock() { MutexUnlock(m_mutexQueueAccess); }
 
 public:

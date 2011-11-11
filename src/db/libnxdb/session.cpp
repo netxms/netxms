@@ -133,7 +133,7 @@ static void DBReconnect(DB_HANDLE hConn)
          break;
       if (nCount == 0)
       {
-			MutexLock(hConn->m_driver->m_mutexReconnect, INFINITE);
+			MutexLock(hConn->m_driver->m_mutexReconnect);
          if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
 				hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL, hConn->m_driver->m_userArg);
          hConn->m_driver->m_reconnect++;
@@ -143,7 +143,7 @@ static void DBReconnect(DB_HANDLE hConn)
    }
    if (nCount > 0)
    {
-      MutexLock(hConn->m_driver->m_mutexReconnect, INFINITE);
+      MutexLock(hConn->m_driver->m_mutexReconnect);
       hConn->m_driver->m_reconnect--;
       if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
 			hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL, hConn->m_driver->m_userArg);
@@ -168,7 +168,7 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
-   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
 
@@ -235,7 +235,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
    
-   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
    hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
@@ -638,7 +638,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
    
-   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   MutexLock(hConn->m_mutexTransLock);
 	if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
    hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
@@ -1027,7 +1027,7 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 	QWORD ms;
 
 	DB_HANDLE hConn = hStmt->m_connection;
-	MutexLock(hConn->m_mutexTransLock, INFINITE);
+	MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
 
@@ -1095,7 +1095,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 #endif
 
 	DB_HANDLE hConn = hStmt->m_connection;
-   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_driver->m_dumpSql)
       ms = GetCurrentTimeMs();
 	hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
@@ -1162,7 +1162,7 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
    DWORD dwResult;
    BOOL bRet = FALSE;
 
-   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel == 0)
    {
       dwResult = hConn->m_driver->m_fpDrvBegin(hConn->m_connection);
@@ -1201,7 +1201,7 @@ BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 {
    BOOL bRet = FALSE;
 
-   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel > 0)
    {
       hConn->m_transactionLevel--;
@@ -1225,7 +1225,7 @@ BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 {
    BOOL bRet = FALSE;
 
-   MutexLock(hConn->m_mutexTransLock, INFINITE);
+   MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel > 0)
    {
       hConn->m_transactionLevel--;

@@ -543,7 +543,7 @@ public:
    NXSL_Library();
    ~NXSL_Library();
 
-   void lock() { MutexLock(m_mutex, INFINITE); }
+   void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
 
    BOOL addScript(DWORD dwId, const TCHAR *pszName, NXSL_Program *pScript);

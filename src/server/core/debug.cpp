@@ -28,25 +28,6 @@
 
 
 //
-// Test mutex state and print to stdout
-//
-
-void DbgTestMutex(MUTEX hMutex, const TCHAR *szName, CONSOLE_CTX pCtx)
-{
-   ConsolePrintf(pCtx, _T("  %s: "), szName);
-   if (MutexLock(hMutex, 100))
-   {
-      ConsolePrintf(pCtx, _T("unlocked\n"));
-      MutexUnlock(hMutex);
-   }
-   else
-   {
-      ConsolePrintf(pCtx, _T("locked\n"));
-   }
-}
-
-
-//
 // Test read/write lock state and print to stdout
 //
 

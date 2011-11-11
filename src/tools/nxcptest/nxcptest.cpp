@@ -57,7 +57,7 @@ static THREAD_RESULT THREAD_CALL RecvThread(void *arg)
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
 	CSCP_BUFFER *pMsgBuffer;
-	CSCP_ENCRYPTION_CONTEXT *pCtx = NULL;
+	NXCPEncryptionContext *pCtx = NULL;
    BYTE *pDecryptionBuffer = NULL;
    int iErr;
    char *xml;

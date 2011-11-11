@@ -39,7 +39,7 @@ private:
 	CONDITION m_condShutdown;
 	THREAD m_hWatchdogThread;
 
-   void Lock() { MutexLock(m_mutex, INFINITE); }
+   void Lock() { MutexLock(m_mutex); }
    void Unlock() { MutexUnlock(m_mutex); }
 
    static void SendAlarmNotification(ClientSession *pSession, void *pArg);

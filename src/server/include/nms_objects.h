@@ -257,9 +257,9 @@ protected:
 	
 	StringMap m_customAttributes;
 
-   void LockData() { MutexLock(m_mutexData, INFINITE); }
+   void LockData() { MutexLock(m_mutexData); }
    void UnlockData() { MutexUnlock(m_mutexData); }
-   void LockACL() { MutexLock(m_mutexACL, INFINITE); }
+   void LockACL() { MutexLock(m_mutexACL); }
    void UnlockACL() { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite) 
    { 
@@ -378,7 +378,7 @@ inline DWORD NetObj::RefCount()
 { 
    DWORD dwRefCount;
 
-   MutexLock(m_mutexRefCount, INFINITE);
+   MutexLock(m_mutexRefCount);
    dwRefCount = m_dwRefCount;
    MutexUnlock(m_mutexRefCount);
    return dwRefCount; 
@@ -386,14 +386,14 @@ inline DWORD NetObj::RefCount()
 
 inline void NetObj::IncRefCount()
 { 
-   MutexLock(m_mutexRefCount, INFINITE);
+   MutexLock(m_mutexRefCount);
    m_dwRefCount++;
    MutexUnlock(m_mutexRefCount);
 }
 
 inline void NetObj::DecRefCount()
 { 
-   MutexLock(m_mutexRefCount, INFINITE);
+   MutexLock(m_mutexRefCount);
    if (m_dwRefCount > 0) 
       m_dwRefCount--; 
    MutexUnlock(m_mutexRefCount);
@@ -422,7 +422,7 @@ protected:
    void loadItemsFromDB();
    void destroyItems();
 
-	void lockDciAccess() { MutexLock(m_mutexDciAccess, INFINITE); }
+	void lockDciAccess() { MutexLock(m_mutexDciAccess); }
 	void unlockDciAccess() { MutexUnlock(m_mutexDciAccess); }
 
 public:
@@ -745,13 +745,13 @@ protected:
 	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;
 
-   void pollerLock() { MutexLock(m_hPollerMutex, INFINITE); }
+   void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
-   void agentLock() { MutexLock(m_hAgentAccessMutex, INFINITE); }
+   void agentLock() { MutexLock(m_hAgentAccessMutex); }
    void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }
 
-   void routingTableLock() { MutexLock(m_mutexRTAccess, INFINITE); }
+   void routingTableLock() { MutexLock(m_mutexRTAccess); }
    void routingTableUnlock() { MutexUnlock(m_mutexRTAccess); }
 
    BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue);

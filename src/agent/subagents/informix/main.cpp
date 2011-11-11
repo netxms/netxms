@@ -64,7 +64,7 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 			{
 				if (!_tcsnicmp(g_paramGroup[k].prefix, parameter, _tcslen(g_paramGroup[k].prefix))) // found prefix
 				{
-					MutexLock(g_dbInfo[i].accessMutex, INFINITE);
+					MutexLock(g_dbInfo[i].accessMutex);
 					// Loop through the values
 					AgentWriteDebugLog(7, _T("%s: valuecount %d"), MYNAMESTR, g_paramGroup[k].valueCount[i]);
 					for (int j = 0; j < g_paramGroup[k].valueCount[i]; j++)
@@ -285,7 +285,7 @@ bool getParametersFromDB( int dbIndex )
 		return false;
 	}
 
-	MutexLock(info.accessMutex, INFINITE);
+	MutexLock(info.accessMutex);
 
 	for (int i = 0; g_paramGroup[i].prefix; i++)
 	{

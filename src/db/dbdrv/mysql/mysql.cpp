@@ -276,7 +276,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery
 {
 	MYSQL_STATEMENT *result = NULL;
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	MYSQL_STMT *stmt = mysql_stmt_init(pConn->pMySQL);
 	if (stmt != NULL)
 	{
@@ -380,7 +380,7 @@ extern "C" DWORD EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, WC
 {
 	DWORD dwResult;
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 
 	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
@@ -422,7 +422,7 @@ extern "C" void EXPORT DrvFreeStatement(MYSQL_STATEMENT *hStmt)
 	if (hStmt == NULL)
 		return;
 
-	MutexLock(hStmt->connection->mutexQueryLock, INFINITE);
+	MutexLock(hStmt->connection->mutexQueryLock);
 	mysql_stmt_close(hStmt->statement);
 	MutexUnlock(hStmt->connection->mutexQueryLock);
 	delete hStmt->buffers;
@@ -440,7 +440,7 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, WCHAR *er
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	if (mysql_query(pConn->pMySQL, pszQuery) == 0)
 	{
 		dwRet = DBERR_SUCCESS;
@@ -498,7 +498,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DW
 	}
 
 	pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
 		result = (MYSQL_RESULT *)malloc(sizeof(MYSQL_RESULT));
@@ -542,7 +542,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STATEM
 		return NULL;
 	}
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 
 	if (mysql_stmt_bind_param(hStmt->statement, hStmt->bindings) == 0)
 	{
@@ -783,7 +783,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pw
 	}
 
 	pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
 		pResult = (MYSQL_ASYNC_RESULT *)malloc(sizeof(MYSQL_ASYNC_RESULT));

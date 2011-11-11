@@ -314,7 +314,7 @@ connect_failure_0:
 
 extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
 {
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 	MutexUnlock(pConn->mutexQuery);
 	SQLDisconnect(pConn->sqlConn);
 	SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
@@ -333,7 +333,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(DB2DRV_CONN *pConn, NETXMS_WCHAR *p
 	SQLHSTMT statement;
 	DB2DRV_STATEMENT *result;
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 
 	// Allocate statement handle
 	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &statement);
@@ -452,7 +452,7 @@ extern "C" DWORD EXPORT DrvExecute(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *stateme
 {
 	DWORD dwResult;
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 	long rc = SQLExecute(statement->handle);
 	if (
 		(rc == SQL_SUCCESS) ||
@@ -482,7 +482,7 @@ extern "C" void EXPORT DrvFreeStatement(DB2DRV_STATEMENT *statement)
 		return;
 	}
 
-	MutexLock(statement->connection->mutexQuery, INFINITE);
+	MutexLock(statement->connection->mutexQuery);
 	SQLFreeHandle(SQL_HANDLE_STMT, statement->handle);
 	MutexUnlock(statement->connection->mutexQuery);
 	delete statement->buffers;
@@ -499,7 +499,7 @@ extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NE
 	long iResult;
 	DWORD dwResult;
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 
 	// Allocate statement handle
 	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
@@ -614,7 +614,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQ
 {
 	DB2DRV_QUERY_RESULT *pResult = NULL;
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 
 	// Allocate statement handle
 	long iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
@@ -659,7 +659,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(DB2DRV_CONN *pConn, DB2DRV_STAT
 {
 	DB2DRV_QUERY_RESULT *pResult = NULL;
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 	long rc = SQLExecute(statement->handle);
 	if (
 		(rc == SQL_SUCCESS) ||
@@ -794,7 +794,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_W
 	short wNumCols;
 	int i;
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 
 	// Allocate statement handle
 	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
@@ -1006,7 +1006,7 @@ extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
 		return DBERR_INVALID_HANDLE;
 	}
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 	nRet = SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
 	if ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO))
 	{
@@ -1034,7 +1034,7 @@ extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
 		return DBERR_INVALID_HANDLE;
 	}
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 	nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_COMMIT);
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 	MutexUnlock(pConn->mutexQuery);
@@ -1055,7 +1055,7 @@ extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
 		return DBERR_INVALID_HANDLE;
 	}
 
-	MutexLock(pConn->mutexQuery, INFINITE);
+	MutexLock(pConn->mutexQuery);
 	nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_ROLLBACK);
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 	MutexUnlock(pConn->mutexQuery);

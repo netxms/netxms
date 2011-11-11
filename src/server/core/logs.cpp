@@ -86,7 +86,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 {
 	int i;
 
-	MutexLock(s_regListMutex, INFINITE);
+	MutexLock(s_regListMutex);
 
 	for(i = 0; i < s_regListSize; i++)
 		if (s_regList[i].handle == NULL)
@@ -141,7 +141,7 @@ DWORD CloseLog(ClientSession *session, int logHandle)
 {
 	DWORD rcc = RCC_INVALID_LOG_HANDLE;
 
-	MutexLock(s_regListMutex, INFINITE);
+	MutexLock(s_regListMutex);
 
 	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
 	    (s_regList[logHandle].sessionId == session->getIndex()) &&
@@ -168,7 +168,7 @@ LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
 {
 	LogHandle *object = NULL;
 
-	MutexLock(s_regListMutex, INFINITE);
+	MutexLock(s_regListMutex);
 
 	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
 	    (s_regList[logHandle].sessionId == session->getIndex()) &&

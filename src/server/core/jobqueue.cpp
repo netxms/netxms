@@ -60,7 +60,7 @@ ServerJobQueue::~ServerJobQueue()
 
 void ServerJobQueue::add(ServerJob *job)
 {
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	m_jobList = (ServerJob **)realloc(m_jobList, sizeof(ServerJob *) * (m_jobCount + 1));
 	m_jobList[m_jobCount] = job;
 	m_jobCount++;
@@ -82,7 +82,7 @@ void ServerJobQueue::runNext()
 {
 	int i;
 
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	for(i = 0; i < m_jobCount; i++)
 		if ((m_jobList[i]->getStatus() != JOB_ON_HOLD) &&
 			 ((m_jobList[i]->getStatus() != JOB_FAILED) || m_jobList[i]->isBlockNextJobsOnFailure()))
@@ -101,7 +101,7 @@ void ServerJobQueue::jobCompleted(ServerJob *job)
 {
 	int i;
 
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i] == job)
 		{
@@ -130,7 +130,7 @@ bool ServerJobQueue::cancel(DWORD jobId)
 	int i;
 	bool success = false;
 
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
@@ -166,7 +166,7 @@ bool ServerJobQueue::hold(DWORD jobId)
 	int i;
 	bool success = false;
 
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
@@ -195,7 +195,7 @@ bool ServerJobQueue::unhold(DWORD jobId)
 	int i;
 	bool success = false;
 
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
@@ -224,7 +224,7 @@ void ServerJobQueue::cleanup()
 	int i;
 	time_t now;
 
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	now = time(NULL);
 	for(i = 0; i < m_jobCount; i++)
 	{
@@ -259,7 +259,7 @@ ServerJob *ServerJobQueue::findJob(DWORD jobId)
 	int i;
 	ServerJob *job = NULL;
 
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	for(i = 0; i < m_jobCount; i++)
 		if (m_jobList[i]->getId()  == jobId)
 		{
@@ -282,7 +282,7 @@ DWORD ServerJobQueue::fillMessage(CSCPMessage *msg, DWORD *varIdBase)
 	DWORD id = *varIdBase;
 	int i;
 
-	MutexLock(m_accessMutex, INFINITE);
+	MutexLock(m_accessMutex);
 	for(i = 0; i < m_jobCount; i++, id += 2)
 	{
 		msg->SetVariable(id++, m_jobList[i]->getId());

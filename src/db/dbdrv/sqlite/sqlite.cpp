@@ -188,7 +188,7 @@ extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   MutexLock(hConn->mutexQueryLock, INFINITE);
+   MutexLock(hConn->mutexQueryLock);
 	sqlite3_stmt *stmt;
 	if (sqlite3_prepare_v2(hConn->pdb, pszQueryUTF8, -1, &stmt, NULL) != SQLITE_OK)
    {
@@ -255,7 +255,7 @@ extern "C" DWORD EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR
 {
 	DWORD result;
 
-	MutexLock(hConn->mutexQueryLock, INFINITE);
+	MutexLock(hConn->mutexQueryLock);
 	if (sqlite3_reset(stmt) == SQLITE_OK)
 	{
 		int rc = sqlite3_step(stmt);
@@ -297,7 +297,7 @@ static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, WCHAR *e
 {
    DWORD result;
 
-   MutexLock(pConn->mutexQueryLock, INFINITE);
+   MutexLock(pConn->mutexQueryLock);
    if (sqlite3_exec(pConn->pdb, pszQuery, NULL, NULL, NULL) == SQLITE_OK)
 	{
 		result = DBERR_SUCCESS;
@@ -404,7 +404,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, D
 	SQLITE_RESULT *result = (SQLITE_RESULT *)malloc(sizeof(SQLITE_RESULT));
    memset(result, 0, sizeof(SQLITE_RESULT));
 
-	MutexLock(hConn->mutexQueryLock, INFINITE);
+	MutexLock(hConn->mutexQueryLock);
    if (sqlite3_exec(hConn->pdb, pszQueryUTF8, SelectCallback, result, NULL) != SQLITE_OK)
    {
 		GetErrorMessage(hConn->pdb, errorText);
@@ -428,7 +428,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stm
    SQLITE_RESULT *result = (SQLITE_RESULT *)malloc(sizeof(SQLITE_RESULT));
    memset(result, 0, sizeof(SQLITE_RESULT));
 
-   MutexLock(hConn->mutexQueryLock, INFINITE);
+   MutexLock(hConn->mutexQueryLock);
 	if (sqlite3_reset(stmt) == SQLITE_OK)
 	{
 		int nCols = sqlite3_column_count(stmt);
@@ -561,7 +561,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *p
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   MutexLock(hConn->mutexQueryLock, INFINITE);
+   MutexLock(hConn->mutexQueryLock);
 	if (sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &hConn->pvm, NULL) == SQLITE_OK)
    {
       hResult = hConn;

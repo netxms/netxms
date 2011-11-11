@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -43,7 +43,7 @@ MsgWaitQueue::MsgWaitQueue()
    m_mutexDataAccess = MutexCreate();
    m_condStop = ConditionCreate(FALSE);
    m_condNewMsg = ConditionCreate(TRUE);
-   m_hHkThread = ThreadCreateEx(MWQThreadStarter, 0, this);
+   m_hHkThread = ThreadCreateEx(mwqThreadStarter, 0, this);
 }
 
 
@@ -59,7 +59,7 @@ MsgWaitQueue::~MsgWaitQueue()
    ThreadJoin(m_hHkThread);
 
    // Housekeeper thread stopped, proceed with object destruction
-   Clear();
+   clear();
    safe_free(m_pElements);
    MutexDestroy(m_mutexDataAccess);
    ConditionDestroy(m_condStop);
@@ -71,11 +71,11 @@ MsgWaitQueue::~MsgWaitQueue()
 // Clear queue
 //
 
-void MsgWaitQueue::Clear(void)
+void MsgWaitQueue::clear()
 {
    DWORD i;
 
-   Lock();
+   lock();
 
    for(i = 0; i < m_dwNumElements; i++)
       if (m_pElements[i].wIsBinary)
@@ -87,7 +87,7 @@ void MsgWaitQueue::Clear(void)
          delete (CSCPMessage *)(m_pElements[i].pMsg);
       }
    m_dwNumElements = 0;
-   Unlock();
+   unlock();
 }
 
 
@@ -95,9 +95,9 @@ void MsgWaitQueue::Clear(void)
 // Put message into queue
 //
 
-void MsgWaitQueue::Put(CSCPMessage *pMsg)
+void MsgWaitQueue::put(CSCPMessage *pMsg)
 {
-   Lock();
+   lock();
 
 	// FIXME possible memory leak/fault
    m_pElements = (WAIT_QUEUE_ELEMENT *)realloc(m_pElements,
@@ -110,7 +110,7 @@ void MsgWaitQueue::Put(CSCPMessage *pMsg)
    m_pElements[m_dwNumElements].pMsg = pMsg;
    m_dwNumElements++;
 
-   Unlock();
+   unlock();
 
    ConditionPulse(m_condNewMsg);
 }
@@ -120,9 +120,9 @@ void MsgWaitQueue::Put(CSCPMessage *pMsg)
 // Put raw message into queue
 //
 
-void MsgWaitQueue::Put(CSCP_MESSAGE *pMsg)
+void MsgWaitQueue::put(CSCP_MESSAGE *pMsg)
 {
-   Lock();
+   lock();
 
    m_pElements = (WAIT_QUEUE_ELEMENT *)realloc(m_pElements, 
                               sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements + 1));
@@ -132,7 +132,7 @@ void MsgWaitQueue::Put(CSCP_MESSAGE *pMsg)
    m_pElements[m_dwNumElements].dwTTL = m_dwMsgHoldTime;
    m_pElements[m_dwNumElements].pMsg = pMsg;
    m_dwNumElements++;
-   Unlock();
+   unlock();
 
    ConditionPulse(m_condNewMsg);
 }
@@ -144,14 +144,14 @@ void MsgWaitQueue::Put(CSCP_MESSAGE *pMsg)
 // NULL on timeout or error
 //
 
-void *MsgWaitQueue::WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut)
+void *MsgWaitQueue::waitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut)
 {
    DWORD i, dwSleepTime;
    QWORD qwStartTime;
 
    do
    {
-      Lock();
+      lock();
       for(i = 0; i < m_dwNumElements; i++)
 		{
          if ((m_pElements[i].dwId == dwId) &&
@@ -164,11 +164,11 @@ void *MsgWaitQueue::WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwI
             m_dwNumElements--;
             memmove(&m_pElements[i], &m_pElements[i + 1],
 						sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements - i));
-            Unlock();
+            unlock();
             return pMsg;
          }
 		}
-      Unlock();
+      unlock();
 
       qwStartTime = GetCurrentTimeMs();
       ConditionWait(m_condNewMsg, min(dwTimeOut, 100));
@@ -184,7 +184,7 @@ void *MsgWaitQueue::WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwI
 // Housekeeping thread
 //
 
-void MsgWaitQueue::HousekeeperThread(void)
+void MsgWaitQueue::housekeeperThread()
 {
    DWORD i;
 
@@ -193,7 +193,7 @@ void MsgWaitQueue::HousekeeperThread(void)
       if (ConditionWait(m_condStop, TTL_CHECK_INTERVAL))
          break;
 
-      Lock();
+      lock();
       for(i = 0; i < m_dwNumElements; i++)
 		{
          if (m_pElements[i].dwTTL <= TTL_CHECK_INTERVAL)
@@ -215,7 +215,7 @@ void MsgWaitQueue::HousekeeperThread(void)
             m_pElements[i].dwTTL -= TTL_CHECK_INTERVAL;
          }
 		}
-      Unlock();
+      unlock();
    }
 }
 
@@ -224,8 +224,8 @@ void MsgWaitQueue::HousekeeperThread(void)
 // Housekeeper thread starter
 //
 
-THREAD_RESULT THREAD_CALL MsgWaitQueue::MWQThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL MsgWaitQueue::mwqThreadStarter(void *pArg)
 {
-   ((MsgWaitQueue *)pArg)->HousekeeperThread();
+   ((MsgWaitQueue *)pArg)->housekeeperThread();
    return THREAD_OK;
 }

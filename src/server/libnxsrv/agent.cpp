@@ -303,13 +303,13 @@ void AgentConnection::ReceiverThread()
 					delete pMsg;
 					break;
 				case CMD_REQUEST_COMPLETED:
-					m_pMsgWaitQueue->Put(pMsg);
+					m_pMsgWaitQueue->put(pMsg);
 					break;
 				default:
 					if (processCustomMessage(pMsg))
 						delete pMsg;
 					else
-						m_pMsgWaitQueue->Put(pMsg);
+						m_pMsgWaitQueue->put(pMsg);
 					break;
 			}
 		}
@@ -785,7 +785,7 @@ DWORD AgentConnection::waitForRCC(DWORD dwRqId, DWORD dwTimeOut)
    CSCPMessage *pMsg;
    DWORD dwRetCode;
 
-   pMsg = m_pMsgWaitQueue->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
+   pMsg = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
    if (pMsg != NULL)
    {
       dwRetCode = pMsg->GetVariableLong(VID_RCC);

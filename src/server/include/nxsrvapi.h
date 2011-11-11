@@ -415,7 +415,7 @@ private:
 protected:
    void destroyResultData();
    BOOL sendMessage(CSCPMessage *pMsg);
-   CSCPMessage *waitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut) { return m_pMsgWaitQueue->WaitForMessage(wCode, dwId, dwTimeOut); }
+   CSCPMessage *waitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
    DWORD waitForRCC(DWORD dwRqId, DWORD dwTimeOut);
    DWORD setupEncryption(RSA *pServerKey);
    DWORD authenticate(BOOL bProxyData);
@@ -429,7 +429,7 @@ protected:
 	virtual bool processCustomMessage(CSCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
 
-   void Lock() { MutexLock(m_mutexDataLock, INFINITE); }
+   void Lock() { MutexLock(m_mutexDataLock); }
    void Unlock() { MutexUnlock(m_mutexDataLock); }
 	NXCPEncryptionContext *acquireEncryptionContext();
 
@@ -537,7 +537,7 @@ private:
    NXCPEncryptionContext *m_ctx;
 	DWORD m_commandTimeout;
 
-   void ReceiverThread(void);
+   void ReceiverThread();
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
 
 protected:
@@ -545,8 +545,8 @@ protected:
    DWORD SetupEncryption(RSA *pServerKey);
 	DWORD ConnectToService(DWORD service);
 
-   void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_mutexDataLock); }
+   void Lock() { MutexLock(m_mutexDataLock); }
+   void Unlock() { MutexUnlock(m_mutexDataLock); }
 
    virtual void PrintMsg(const TCHAR *format, ...);
 
@@ -559,7 +559,7 @@ public:
 	void Disconnect();
 
    BOOL SendMessage(CSCPMessage *msg);
-   CSCPMessage *WaitForMessage(WORD code, DWORD id, DWORD timeOut) { return m_msgWaitQueue->WaitForMessage(code, id, timeOut); }
+   CSCPMessage *WaitForMessage(WORD code, DWORD id, DWORD timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
    DWORD WaitForRCC(DWORD rqId, DWORD timeOut);
 
    DWORD Nop(void);

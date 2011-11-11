@@ -214,7 +214,7 @@ private:
 	WORD m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 
-   void lock() { MutexLock(m_hMutex, INFINITE); }
+   void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
 
    void transform(ItemValue &value, time_t nElapsedTime);

@@ -139,7 +139,7 @@ public:
 	Config();
 	~Config();
 
-	void lock() { MutexLock(m_mutex, INFINITE); }
+	void lock() { MutexLock(m_mutex); }
 	void unlock() { MutexUnlock(m_mutex); }
 
 	void setTopLevelTag(const TCHAR *topLevelTag) { m_root->setName(topLevelTag); }

@@ -88,7 +88,7 @@ bool FileUploadJob::run()
 	
 	while(true)
 	{
-		MutexLock(m_sharedDataMutex, INFINITE);
+		MutexLock(m_sharedDataMutex);
 		if (m_activeJobs < m_maxActiveJobs)
 		{
 			m_activeJobs++;
@@ -118,7 +118,7 @@ bool FileUploadJob::run()
 		setFailureMessage(_T("Agent connection not available"));
 	}
 	
-	MutexLock(m_sharedDataMutex, INFINITE);
+	MutexLock(m_sharedDataMutex);
 	m_activeJobs--;
 	MutexUnlock(m_sharedDataMutex);
 

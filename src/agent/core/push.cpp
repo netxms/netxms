@@ -36,7 +36,7 @@ BOOL PushData(const TCHAR *parameter, const TCHAR *value)
 	msg.SetVariable(VID_NAME, parameter);
 	msg.SetVariable(VID_VALUE, value);
 
-   MutexLock(g_hSessionListAccess, INFINITE);
+   MutexLock(g_hSessionListAccess);
    for(DWORD i = 0; i < g_dwMaxSessions; i++)
       if (g_pSessionList[i] != NULL)
          if (g_pSessionList[i]->canAcceptTraps())

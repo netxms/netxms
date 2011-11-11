@@ -1134,7 +1134,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          ((CMainFrame *)m_pMainWnd)->PostMessage(NXCM_DEPLOYMENT_INFO, dwCode, (LPARAM)pStatus);
          break;
 		case NXC_EVENT_SITUATION_UPDATE:
-			MutexLock(m_mutexSituationList, INFINITE);
+			MutexLock(m_mutexSituationList);
 			if (m_pSituationList != NULL)
 			{
 				NXCUpdateSituationList(m_pSituationList, dwCode, (NXC_SITUATION *)pArg);
@@ -3462,7 +3462,7 @@ void CConsoleApp::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    NXC_ALARM *pListItem;
 
-   MutexLock(m_mutexAlarmList, INFINITE);
+   MutexLock(m_mutexAlarmList);
    switch(dwCode)
    {
       case NX_NOTIFY_NEW_ALARM:
@@ -3499,7 +3499,7 @@ void CConsoleApp::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 
 DWORD CConsoleApp::OpenAlarmList(NXC_ALARM **ppList)
 {
-   MutexLock(m_mutexAlarmList, INFINITE);
+   MutexLock(m_mutexAlarmList);
    *ppList = m_pAlarmList;
    return m_dwNumAlarms;
 }
@@ -4485,7 +4485,7 @@ DWORD CConsoleApp::LoadSituations()
 NXC_SITUATION_LIST *CConsoleApp::GetSituationList()
 {
 	if (m_pSituationList != NULL)
-		MutexLock(m_mutexSituationList, INFINITE);
+		MutexLock(m_mutexSituationList);
 	return m_pSituationList;
 }
 
@@ -4514,7 +4514,7 @@ TCHAR *CConsoleApp::GetSituationName(DWORD id, TCHAR *buffer)
 	}
 	else
 	{
-		MutexLock(m_mutexSituationList, INFINITE);
+		MutexLock(m_mutexSituationList);
 		if (m_pSituationList != NULL)
 		{
 			for(i = 0; i < m_pSituationList->m_count; i++)

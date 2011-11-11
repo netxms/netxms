@@ -709,7 +709,7 @@ int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff, size_t nSize,
 	int nRet;
 
 	if (mutex != NULL)
-		MutexLock(mutex, INFINITE);
+		MutexLock(mutex);
 
 	do
 	{
@@ -1798,14 +1798,14 @@ RefCountObject::~RefCountObject()
 
 void RefCountObject::incRefCount()
 {
-	MutexLock(m_mutex, INFINITE);
+	MutexLock(m_mutex);
 	m_refCount++;
 	MutexUnlock(m_mutex);
 }
 
 void RefCountObject::decRefCount()
 {
-	MutexLock(m_mutex, INFINITE);
+	MutexLock(m_mutex);
 	m_refCount--;
 	if (m_refCount == 0)
 	{

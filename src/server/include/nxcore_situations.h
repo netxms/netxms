@@ -65,7 +65,7 @@ private:
 	SituationInstance **m_instanceList;
 	MUTEX m_accessMutex;
 	
-	void Lock() { MutexLock(m_accessMutex, INFINITE); }
+	void Lock() { MutexLock(m_accessMutex); }
 	void Unlock() { MutexUnlock(m_accessMutex); }
 
 public:

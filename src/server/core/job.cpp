@@ -99,7 +99,7 @@ void ServerJob::notifyClients(bool isStatusChange)
 		return;	// Don't send progress notifications often then every 3 seconds
 	m_lastNotification = t;
 
-	MutexLock(m_notificationLock, INFINITE);
+	MutexLock(m_notificationLock);
 	m_notificationMessage.SetCode(CMD_JOB_CHANGE_NOTIFICATION);
 	fillMessage(&m_notificationMessage);
 	EnumerateClientSessions(ServerJob::sendNotification, this);

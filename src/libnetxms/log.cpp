@@ -107,7 +107,7 @@ static BOOL RotateLog(BOOL needLock)
 		return FALSE;	// Cannot rotate system logs
 
 	if (needLock)
-		MutexLock(m_mutexLogAccess, INFINITE);
+		MutexLock(m_mutexLogAccess);
 
 	if ((m_logFileHandle != NULL) && (m_flags & NXLOG_IS_OPEN))
 	{
@@ -279,7 +279,7 @@ static void WriteLogToFile(TCHAR *message)
 #endif
 
    // Prevent simultaneous write to log file
-   MutexLock(m_mutexLogAccess, INFINITE);
+   MutexLock(m_mutexLogAccess);
 
    t = time(NULL);
 #if HAVE_LOCALTIME_R

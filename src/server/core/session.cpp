@@ -631,13 +631,13 @@ void ClientSession::updateThread()
       switch(pUpdate->dwCategory)
       {
          case INFO_CAT_EVENT:
-            MutexLock(m_mutexSendEvents, INFINITE);
+            MutexLock(m_mutexSendEvents);
             sendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendEvents);
             delete (CSCPMessage *)pUpdate->pData;
             break;
          case INFO_CAT_SYSLOG_MSG:
-            MutexLock(m_mutexSendSyslog, INFINITE);
+            MutexLock(m_mutexSendSyslog);
             msg.SetCode(CMD_SYSLOG_RECORDS);
             CreateMessageFromSyslogMsg(&msg, (NX_SYSLOG_RECORD *)pUpdate->pData);
             sendMessage(&msg);
@@ -645,19 +645,19 @@ void ClientSession::updateThread()
             free(pUpdate->pData);
             break;
          case INFO_CAT_SNMP_TRAP:
-            MutexLock(m_mutexSendTrapLog, INFINITE);
+            MutexLock(m_mutexSendTrapLog);
             sendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendTrapLog);
             delete (CSCPMessage *)pUpdate->pData;
             break;
          case INFO_CAT_AUDIT_RECORD:
-            MutexLock(m_mutexSendAuditLog, INFINITE);
+            MutexLock(m_mutexSendAuditLog);
             sendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendAuditLog);
             delete (CSCPMessage *)pUpdate->pData;
             break;
          case INFO_CAT_OBJECT_CHANGE:
-            MutexLock(m_mutexSendObjects, INFINITE);
+            MutexLock(m_mutexSendObjects);
             msg.SetCode(CMD_OBJECT_UPDATE);
             ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
             if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
@@ -668,7 +668,7 @@ void ClientSession::updateThread()
             ((NetObj *)pUpdate->pData)->DecRefCount();
             break;
          case INFO_CAT_ALARM:
-            MutexLock(m_mutexSendAlarms, INFINITE);
+            MutexLock(m_mutexSendAlarms);
             msg.SetCode(CMD_ALARM_UPDATE);
             msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
             FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
@@ -678,7 +678,7 @@ void ClientSession::updateThread()
             free(pUpdate->pData);
             break;
          case INFO_CAT_ACTION:
-            MutexLock(m_mutexSendActions, INFINITE);
+            MutexLock(m_mutexSendActions);
             msg.SetCode(CMD_ACTION_DB_UPDATE);
             msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
             msg.SetVariable(VID_ACTION_ID, ((NXC_ACTION *)pUpdate->pData)->dwId);
@@ -690,7 +690,7 @@ void ClientSession::updateThread()
             free(pUpdate->pData);
             break;
          case INFO_CAT_SITUATION:
-            MutexLock(m_mutexSendSituations, INFINITE);
+            MutexLock(m_mutexSendSituations);
             sendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendSituations);
             delete (CSCPMessage *)pUpdate->pData;
@@ -1872,7 +1872,7 @@ void ClientSession::sendAllObjects(CSCPMessage *pRequest)
 
    // Send objects, one per message
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
-   MutexLock(m_mutexSendObjects, INFINITE);
+   MutexLock(m_mutexSendObjects);
 	for(int i = 0; i < objects->size(); i++)
 	{
 		NetObj *object = objects->get(i);
@@ -1924,7 +1924,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
 	pRequest->GetVariableInt32Array(VID_OBJECT_LIST, numObjects, objects);
 	DWORD options = pRequest->GetVariableShort(VID_FLAGS);
 
-   MutexLock(m_mutexSendObjects, INFINITE);
+   MutexLock(m_mutexSendObjects);
 
    // Prepare message
 	msg.SetCode((options & OBJECT_SYNC_SEND_UPDATES) ? CMD_OBJECT_UPDATE : CMD_OBJECT);
@@ -1979,7 +1979,7 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   MutexLock(m_mutexSendEvents, INFINITE);
+   MutexLock(m_mutexSendEvents);
 
    // Retrieve events from database
    switch(g_nDBSyntax)
@@ -4266,7 +4266,7 @@ void ClientSession::onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 
 void ClientSession::SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck)
 {
-   MutexLock(m_mutexSendAlarms, INFINITE);
+   MutexLock(m_mutexSendAlarms);
    g_alarmMgr.SendAlarmsToClient(dwRqId, bIncludeAck, this);
    MutexUnlock(m_mutexSendAlarms);
 }
@@ -4544,7 +4544,7 @@ void ClientSession::SendAllActions(DWORD dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       sendMessage(&msg);
-      MutexLock(m_mutexSendActions, INFINITE);
+      MutexLock(m_mutexSendActions);
       SendActionsToClient(this, dwRqId);
       MutexUnlock(m_mutexSendActions);
    }
@@ -4597,7 +4597,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
 
    pData = (POLLER_START_DATA *)malloc(sizeof(POLLER_START_DATA));
    pData->pSession = this;
-   MutexLock(m_mutexPollerInit, INFINITE);
+   MutexLock(m_mutexPollerInit);
 
    // Prepare response message
    pData->dwRqId = pRequest->GetId();
@@ -4677,7 +4677,7 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, DWORD dwRqId)
    CSCPMessage msg;
 
    // Wait while parent thread finishes initialization
-   MutexLock(m_mutexPollerInit, INFINITE);
+   MutexLock(m_mutexPollerInit);
    MutexUnlock(m_mutexPollerInit);
 
    switch(iPollType)
@@ -5464,7 +5464,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          DT_STARTUP_INFO *pInfo;
 
          hMutex = MutexCreate();
-         MutexLock(hMutex, INFINITE);
+         MutexLock(hMutex);
 
          pInfo = (DT_STARTUP_INFO *)malloc(sizeof(DT_STARTUP_INFO));
          pInfo->dwNumNodes = dwNumNodes;
@@ -7044,7 +7044,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   MutexLock(m_mutexSendSyslog, INFINITE);
+   MutexLock(m_mutexSendSyslog);
 
    // Retrieve events from database
    switch(g_nDBSyntax)
@@ -7178,7 +7178,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
       msg.DeleteAllVariables();
       msg.SetCode(CMD_TRAP_LOG_RECORDS);
 
-      MutexLock(m_mutexSendTrapLog, INFINITE);
+      MutexLock(m_mutexSendTrapLog);
 
       // Retrieve trap log records from database
       switch(g_nDBSyntax)
@@ -9428,7 +9428,7 @@ void ClientSession::SendSituationList(DWORD dwRqId)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
 	{
-		MutexLock(m_mutexSendSituations, INFINITE);
+		MutexLock(m_mutexSendSituations);
 		SendSituationListToClient(this, &msg);
 		MutexUnlock(m_mutexSendSituations);
 	}

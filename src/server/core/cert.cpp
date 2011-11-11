@@ -113,7 +113,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 #endif
 
 	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), certSubject, pszLogin);
-	MutexLock(m_mutexStoreAccess, INFINITE);
+	MutexLock(m_mutexStoreAccess);
 
 	if (m_pTrustedCertStore == NULL)
 	{
@@ -207,7 +207,7 @@ void ReloadCertificates()
 	X509 *pCert;
 	TCHAR szBuffer[256], szSubject[256], *pszCertData;
 
-	MutexLock(m_mutexStoreAccess, INFINITE);
+	MutexLock(m_mutexStoreAccess);
 
 	if (m_pTrustedCertStore != NULL)
 		X509_STORE_free(m_pTrustedCertStore);

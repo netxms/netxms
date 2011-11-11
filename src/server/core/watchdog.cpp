@@ -54,7 +54,7 @@ DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval)
 {
    DWORD dwId;
 
-   MutexLock(m_mutexWatchdogAccess, INFINITE);
+   MutexLock(m_mutexWatchdogAccess);
    _tcscpy(m_threadInfo[m_dwNumThreads].szName, szName);
    m_threadInfo[m_dwNumThreads].tNotifyInterval = tNotifyInterval;
    m_threadInfo[m_dwNumThreads].tLastCheck = time(NULL);
@@ -85,7 +85,7 @@ void WatchdogNotify(DWORD dwId)
    if (IsShutdownInProgress())
       return;
 
-   MutexLock(m_mutexWatchdogAccess, INFINITE);
+   MutexLock(m_mutexWatchdogAccess);
    if (dwId < m_dwNumThreads)
    {
       if (m_threadInfo[dwId].bNotResponding)
@@ -106,7 +106,7 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx)
    DWORD i;
 
    ConsolePrintf(pCtx, _T("\x1b[1m%-48s Interval Status\x1b[0m\n----------------------------------------------------------------------------\n"), _T("Thread"));
-   MutexLock(m_mutexWatchdogAccess, INFINITE);
+   MutexLock(m_mutexWatchdogAccess);
    for(i = 0; i < m_dwNumThreads; i++)
       ConsolePrintf(pCtx, _T("%-48s %-8ld \x1b[%s;1m%s\x1b[0m\n"), m_threadInfo[i].szName, (long)m_threadInfo[i].tNotifyInterval,
 		              (m_threadInfo[i].bNotResponding ? _T("31") : _T("32")),
@@ -130,7 +130,7 @@ THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
          break;      // Shutdown has arrived
 
       // Walk through threads and check if they are alive
-      MutexLock(m_mutexWatchdogAccess, INFINITE);
+      MutexLock(m_mutexWatchdogAccess);
       currTime = time(NULL);
       for(i = 0; i < m_dwNumThreads; i++)
          if ((currTime - m_threadInfo[i].tLastCheck > m_threadInfo[i].tNotifyInterval) &&

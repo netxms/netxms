@@ -120,7 +120,7 @@ LONG UPSInterface::GetParameter(int nParam, TCHAR *pszValue)
    if ((nParam < 0) || (nParam >= UPS_PARAM_COUNT))
       return SYSINFO_RC_UNSUPPORTED;
 
-   MutexLock(m_mutex, INFINITE);
+   MutexLock(m_mutex);
 
    if (m_paramList[nParam].dwFlags & UPF_NOT_SUPPORTED)
    {
@@ -251,7 +251,7 @@ void UPSInterface::CommThread(void)
       AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
 
       // Open successfully, query all parameters
-      MutexLock(m_mutex, INFINITE);
+      MutexLock(m_mutex);
       QueryModel();
       QueryFirmwareVersion();
       QueryMfgDate();
@@ -307,7 +307,7 @@ void UPSInterface::CommThread(void)
       // Query parameters if we are connected
       if (m_bIsConnected)
       {
-         MutexLock(m_mutex, INFINITE);
+         MutexLock(m_mutex);
 
          // Check rarely changing parameters only every 100th poll
          if (nIteration == 100)

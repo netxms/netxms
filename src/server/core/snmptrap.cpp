@@ -312,7 +312,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 				}
 
       // Find if we have this trap in our list
-      MutexLock(m_mutexTrapCfgAccess, INFINITE);
+      MutexLock(m_mutexTrapCfgAccess);
 
       // Try to find closest match
       for(i = 0, dwMatchLen = 0; i < m_dwNumTraps; i++)
@@ -492,7 +492,7 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
    msg.SetCode(CMD_TRAP_CFG_RECORD);
    msg.SetId(dwRqId);
 
-   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   MutexLock(m_mutexTrapCfgAccess);
    for(i = 0; i < m_dwNumTraps; i++)
    {
 		FillTrapConfigDataMsg(msg, &m_pTrapCfg[i]);
@@ -514,7 +514,7 @@ void CreateTrapCfgMessage(CSCPMessage &msg)
 {
    DWORD i, dwId;
 
-   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   MutexLock(m_mutexTrapCfgAccess);
 	msg.SetVariable(VID_NUM_TRAPS, m_dwNumTraps);
    for(i = 0, dwId = VID_TRAP_INFO_BASE; i < m_dwNumTraps; i++, dwId += 5)
    {
@@ -568,7 +568,7 @@ DWORD DeleteTrap(DWORD dwId)
    DWORD i, j, dwResult = RCC_INVALID_TRAP_ID;
    TCHAR szQuery[256];
 
-   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   MutexLock(m_mutexTrapCfgAccess);
    
    for(i = 0; i < m_dwNumTraps; i++)
    {
@@ -650,7 +650,7 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
    DWORD dwResult = RCC_SUCCESS;
    TCHAR szQuery[256];
 
-   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   MutexLock(m_mutexTrapCfgAccess);
    
    *pdwTrapId = CreateUniqueId(IDG_SNMP_TRAP);
    m_pTrapCfg = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapCfg, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
@@ -682,7 +682,7 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
    TCHAR szQuery[4096], szOID[1024];
 	BOOL bSuccess;
 
-   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   MutexLock(m_mutexTrapCfgAccess);
    
    m_pTrapCfg = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapCfg, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
    memcpy(&m_pTrapCfg[m_dwNumTraps], pTrap, sizeof(NXC_TRAP_CFG_ENTRY));
@@ -743,7 +743,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
 
    dwTrapId = pMsg->GetVariableLong(VID_TRAP_ID);
 
-   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   MutexLock(m_mutexTrapCfgAccess);
    for(i = 0; i < m_dwNumTraps; i++)
    {
       if (m_pTrapCfg[i].dwId == dwTrapId)
@@ -827,7 +827,7 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
 	DWORD i, j;
 	TCHAR szBuffer[1024];
 
-   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   MutexLock(m_mutexTrapCfgAccess);
    for(i = 0; i < m_dwNumTraps; i++)
    {
       if (m_pTrapCfg[i].dwId == dwId)

@@ -3954,7 +3954,7 @@ nxmap_ObjList *Node::GetL2Topology()
 	DWORD dwExpTime;
 
 	dwExpTime = ConfigReadULong(_T("TopologyExpirationTime"), 900);
-	MutexLock(m_mutexTopoAccess, INFINITE);
+	MutexLock(m_mutexTopoAccess);
 	if ((m_pTopology == NULL) || (m_topologyRebuildTimestamp + (time_t)dwExpTime < time(NULL)))
 	{
 		pResult = NULL;
@@ -3977,7 +3977,7 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 	nxmap_ObjList *pResult;
 	int nDepth = ConfigReadInt(_T("TopologyDiscoveryRadius"), 5);
 
-	MutexLock(m_mutexTopoAccess, INFINITE);
+	MutexLock(m_mutexTopoAccess);
 	if ((m_linkLayerNeighbors != NULL) && (m_linkLayerNeighbors->getSize() > 0))
 	{
 		MutexUnlock(m_mutexTopoAccess);
@@ -3985,7 +3985,7 @@ nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 		pResult = new nxmap_ObjList;
 		::BuildL2Topology(*pResult, this, nDepth);
 
-		MutexLock(m_mutexTopoAccess, INFINITE);
+		MutexLock(m_mutexTopoAccess);
 		delete m_pTopology;
 		m_pTopology = new nxmap_ObjList(pResult);
 		m_topologyRebuildTimestamp = time(NULL);
@@ -4019,7 +4019,7 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		SendPollerMsg(dwRqId, POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->getSize());
 		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_szName, (int)m_dwId, nbs->getSize());
 
-		MutexLock(m_mutexTopoAccess, INFINITE);
+		MutexLock(m_mutexTopoAccess);
 		if (m_linkLayerNeighbors != NULL)
 			m_linkLayerNeighbors->decRefCount();
 		m_linkLayerNeighbors = nbs;
@@ -4060,7 +4060,7 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	}
 
 	ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
-	MutexLock(m_mutexTopoAccess, INFINITE);
+	MutexLock(m_mutexTopoAccess);
 	if (m_fdb != NULL)
 		m_fdb->decRefCount();
 	m_fdb = fdb;
@@ -4084,7 +4084,7 @@ void Node::topologyPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 			VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes);
 			delete snmp;
 
-			MutexLock(m_mutexTopoAccess, INFINITE);
+			MutexLock(m_mutexTopoAccess);
 			if (vlanList != NULL)
 			{
 				resolveVlanPorts(vlanList);
@@ -4391,7 +4391,7 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
 {
 	ForwardingDatabase *fdb;
 
-	MutexLock(m_mutexTopoAccess, INFINITE);
+	MutexLock(m_mutexTopoAccess);
 	if (m_fdb != NULL)
 		m_fdb->incRefCount();
 	fdb = m_fdb;
@@ -4408,7 +4408,7 @@ LinkLayerNeighbors *Node::getLinkLayerNeighbors()
 {
 	LinkLayerNeighbors *nbs;
 
-	MutexLock(m_mutexTopoAccess, INFINITE);
+	MutexLock(m_mutexTopoAccess);
 	if (m_linkLayerNeighbors != NULL)
 		m_linkLayerNeighbors->incRefCount();
 	nbs = m_linkLayerNeighbors;
@@ -4425,7 +4425,7 @@ VlanList *Node::getVlans()
 {
 	VlanList *vlans;
 
-	MutexLock(m_mutexTopoAccess, INFINITE);
+	MutexLock(m_mutexTopoAccess);
 	if (m_vlans != NULL)
 		m_vlans->incRefCount();
 	vlans = m_vlans;

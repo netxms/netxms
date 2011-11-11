@@ -148,30 +148,30 @@ private:
    WAIT_QUEUE_ELEMENT *m_pElements;
    THREAD m_hHkThread;
 
-   void Lock(void) { MutexLock(m_mutexDataAccess, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_mutexDataAccess); }
-   void HousekeeperThread(void);
-   void *WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut);
+   void lock() { MutexLock(m_mutexDataAccess); }
+   void unlock() { MutexUnlock(m_mutexDataAccess); }
+   void housekeeperThread();
+   void *waitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut);
    
-   static THREAD_RESULT THREAD_CALL MWQThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL mwqThreadStarter(void *);
 
 public:
    MsgWaitQueue();
    ~MsgWaitQueue();
 
-   void Put(CSCPMessage *pMsg);
-   void Put(CSCP_MESSAGE *pMsg);
-   CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+   void put(CSCPMessage *pMsg);
+   void put(CSCP_MESSAGE *pMsg);
+   CSCPMessage *waitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
    {
-      return (CSCPMessage *)WaitForMessageInternal(0, wCode, dwId, dwTimeOut);
+      return (CSCPMessage *)waitForMessageInternal(0, wCode, dwId, dwTimeOut);
    }
-   CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+   CSCP_MESSAGE *waitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
    {
-      return (CSCP_MESSAGE *)WaitForMessageInternal(1, wCode, dwId, dwTimeOut);
+      return (CSCP_MESSAGE *)waitForMessageInternal(1, wCode, dwId, dwTimeOut);
    }
    
-   void Clear(void);
-   void SetHoldTime(DWORD dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
+   void clear();
+   void setHoldTime(DWORD dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
 };
 
 

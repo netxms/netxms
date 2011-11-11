@@ -777,7 +777,6 @@ void ReloadCertificates();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 #endif   /* not _WIN32 */
 
-void DbgTestMutex(MUTEX hMutex, const TCHAR *szName, CONSOLE_CTX pCtx);
 void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx);
 void DumpSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);

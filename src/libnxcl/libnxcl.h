@@ -216,7 +216,7 @@ public:
    NXC_USER *FindUserById(DWORD dwId);
 
    DWORD syncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments);
-   void lockObjectIndex() { MutexLock(m_mutexIndexAccess, INFINITE); }
+   void lockObjectIndex() { MutexLock(m_mutexIndexAccess); }
    void unlockObjectIndex() { MutexUnlock(m_mutexIndexAccess); }
    NXC_OBJECT *findObjectById(DWORD id, BOOL lock);
    NXC_OBJECT *findObjectByName(const TCHAR *name, DWORD currObject);

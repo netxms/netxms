@@ -412,7 +412,7 @@ DWORD CreateUniqueId(int iGroup)
 {
    DWORD dwId;
 
-   MutexLock(m_mutexTableAccess, INFINITE);
+   MutexLock(m_mutexTableAccess);
    if (m_dwFreeIdTable[iGroup] == m_dwIdLimits[iGroup])
    {
       dwId = 0;   // ID zero means _T("no unique ID available")
@@ -436,7 +436,7 @@ QWORD CreateUniqueEventId()
 {
    QWORD qwId;
 
-   MutexLock(m_mutexTableAccess, INFINITE);
+   MutexLock(m_mutexTableAccess);
    qwId = m_qwFreeEventId++;
    MutexUnlock(m_mutexTableAccess);
    return qwId;

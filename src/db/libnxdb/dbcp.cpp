@@ -50,7 +50,7 @@ static void DBConnectionPoolPopulate()
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
-	MutexLock(m_poolAccessMutex, INFINITE);
+	MutexLock(m_poolAccessMutex);
 	for (int i = 0; i < m_basePoolSize; i++)
 	{
 		m_dbHandles[i] = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
@@ -63,7 +63,7 @@ static void DBConnectionPoolPopulate()
  */
 static void DBConnectionPoolShrink()
 {
-	MutexLock(m_poolAccessMutex, INFINITE);
+	MutexLock(m_poolAccessMutex);
 
 	for (int i = 0; i < m_maxPoolSize; i++)
 	{
@@ -156,7 +156,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
  */
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnectionPoolAcquireConnection()
 {
-	MutexLock(m_poolAccessMutex, INFINITE);
+	MutexLock(m_poolAccessMutex);
 
 	DB_HANDLE handle = NULL;
 	for (int i = 0; i < m_maxPoolSize; i++)
@@ -204,7 +204,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection)
 	if (connection == m_hFallback)
 		return;
 
-	MutexLock(m_poolAccessMutex, INFINITE);
+	MutexLock(m_poolAccessMutex);
 
 	DB_HANDLE handle = NULL;
 	for (int i = 0; i < m_maxPoolSize; i++)

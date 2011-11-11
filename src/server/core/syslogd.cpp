@@ -325,7 +325,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
 
-		MutexLock(m_mutexParserAccess, INFINITE);
+		MutexLock(m_mutexParserAccess);
 		if ((record.dwSourceObject != 0) && (m_parser != NULL))
 		{
 			m_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity,
@@ -444,7 +444,7 @@ static void CreateParserFromConfig()
 {
 	char *xml;
 
-	MutexLock(m_mutexParserAccess, INFINITE);
+	MutexLock(m_mutexParserAccess);
 	delete_and_null(m_parser);
 #ifdef UNICODE
 	WCHAR *wxml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));

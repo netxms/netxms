@@ -95,7 +95,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	bool alreadyLoaded = false;
 	int position = -1;
 
-	MutexLock(s_driverListLock, INFINITE);
+	MutexLock(s_driverListLock);
 
 	driver = (DB_DRIVER)malloc(sizeof(db_driver_t));
 	memset(driver, 0, sizeof(db_driver_t));
@@ -269,7 +269,7 @@ reuse_driver:
 
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 {
-	MutexLock(s_driverListLock, INFINITE);
+	MutexLock(s_driverListLock);
 
 	for(int i = 0; i < MAX_DB_DRIVERS; i++)
 	{

@@ -96,7 +96,7 @@ static MUTEX *m_pCryptoMutexList = NULL;
 static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int nLine)
 {
    if (nMode & CRYPTO_LOCK)
-      MutexLock(m_pCryptoMutexList[nLock], INFINITE);
+      MutexLock(m_pCryptoMutexList[nLock]);
    else
       MutexUnlock(m_pCryptoMutexList[nLock]);
 }

@@ -102,12 +102,12 @@ NXCL_Session::~NXCL_Session()
 
    MutexDestroy(m_mutexIndexAccess);
 
-   MutexLock(m_mutexEventAccess, INFINITE);
+   MutexLock(m_mutexEventAccess);
    MutexUnlock(m_mutexEventAccess);
    MutexDestroy(m_mutexEventAccess);
 
    ConditionSet(m_condFileRq);
-   MutexLock(m_mutexFileRq, INFINITE);
+   MutexLock(m_mutexFileRq);
    MutexUnlock(m_mutexFileRq);
    MutexDestroy(m_mutexFileRq);
    ConditionDestroy(m_condFileRq);
@@ -153,7 +153,7 @@ void NXCL_Session::disconnect()
    m_hSocket = -1;
 
    // Clear message wait queue
-   m_msgWaitQueue.Clear();
+   m_msgWaitQueue.clear();
 
    // Cleanup
    destroyAllObjects();
@@ -176,7 +176,7 @@ void NXCL_Session::destroyAllObjects()
 {
    DWORD i;
 
-   MutexLock(m_mutexIndexAccess, INFINITE);
+   MutexLock(m_mutexIndexAccess);
    for(i = 0; i < m_dwNumObjects; i++)
       DestroyObject(m_pIndexById[i].pObject);
    m_dwNumObjects = 0;
@@ -194,7 +194,7 @@ CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOu
 {
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return NULL;
-   return m_msgWaitQueue.WaitForMessage(wCode, dwId, 
+   return m_msgWaitQueue.waitForMessage(wCode, dwId, 
       dwTimeOut == 0 ? m_dwCommandTimeout : dwTimeOut);
 }
 
@@ -207,7 +207,7 @@ CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTi
 {
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return NULL;
-   return m_msgWaitQueue.WaitForRawMessage(wCode, dwId, 
+   return m_msgWaitQueue.waitForRawMessage(wCode, dwId, 
       dwTimeOut == 0 ? m_dwCommandTimeout : dwTimeOut);
 }
 
@@ -267,7 +267,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
 
    DebugPrintf(_T("SendMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
-	MutexLock(m_mutexSendMsg, INFINITE);
+	MutexLock(m_mutexSendMsg);
    if (m_pCtx != NULL)
    {
       pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -351,7 +351,7 @@ DWORD NXCL_Session::WaitForSync(int nSyncOp, DWORD dwTimeOut)
 
 void NXCL_Session::PrepareForSync(int nSyncOp)
 {
-   MutexLock(m_mutexSyncOpAccess[nSyncOp], INFINITE);
+   MutexLock(m_mutexSyncOpAccess[nSyncOp]);
    m_dwSyncExitCode[nSyncOp] = RCC_SYSTEM_FAILURE;
 #ifdef _WIN32
    ResetEvent(m_condSyncOp[nSyncOp]);
@@ -505,7 +505,7 @@ DWORD NXCL_Session::LoadEventDB()
    PrepareForSync(SYNC_EVENT_DB);
 
    destroyEventDB();
-   MutexLock(m_mutexEventAccess, INFINITE);
+   MutexLock(m_mutexEventAccess);
 
    msg.SetCode(CMD_LOAD_EVENT_DB);
    msg.SetId(dwRqId);
@@ -552,7 +552,7 @@ void NXCL_Session::DeleteEDBRecord(DWORD dwEventCode)
 {
    DWORD i;
 
-   MutexLock(m_mutexEventAccess, INFINITE);
+   MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
       if (m_ppEventTemplates[i]->dwCode == dwEventCode)
       {
@@ -575,7 +575,7 @@ void NXCL_Session::DeleteEDBRecord(DWORD dwEventCode)
 void NXCL_Session::AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate, BOOL bLock)
 {
    if (bLock)
-      MutexLock(m_mutexEventAccess, INFINITE);
+      MutexLock(m_mutexEventAccess);
    m_ppEventTemplates = (NXC_EVENT_TEMPLATE **)realloc(m_ppEventTemplates, 
       sizeof(NXC_EVENT_TEMPLATE *) * (m_dwNumTemplates + 1));
    m_ppEventTemplates[m_dwNumTemplates] = pEventTemplate;
@@ -605,7 +605,7 @@ const TCHAR *NXCL_Session::GetEventName(DWORD dwId)
 {
    DWORD i;
 
-   MutexLock(m_mutexEventAccess, INFINITE);
+   MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
       if (m_ppEventTemplates[i]->dwCode == dwId)
       {
@@ -625,7 +625,7 @@ BOOL NXCL_Session::GetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
 {
    DWORD i;
 
-   MutexLock(m_mutexEventAccess, INFINITE);
+   MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
       if (m_ppEventTemplates[i]->dwCode == dwId)
       {
@@ -647,7 +647,7 @@ int NXCL_Session::GetEventSeverity(DWORD dwId)
 {
    DWORD i;
 
-   MutexLock(m_mutexEventAccess, INFINITE);
+   MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
       if (m_ppEventTemplates[i]->dwCode == dwId)
       {
@@ -668,7 +668,7 @@ BOOL NXCL_Session::GetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
 {
    DWORD i;
 
-   MutexLock(m_mutexEventAccess, INFINITE);
+   MutexLock(m_mutexEventAccess);
    for(i = 0; i < m_dwNumTemplates; i++)
       if (m_ppEventTemplates[i]->dwCode == dwId)
       {
@@ -889,7 +889,7 @@ DWORD NXCL_Session::PrepareFileTransfer(const TCHAR *pszFile, DWORD dwRqId)
 {
    DWORD dwResult;
 
-   MutexLock(m_mutexFileRq, INFINITE);
+   MutexLock(m_mutexFileRq);
    if (m_hCurrFile == -1)
    {
       m_hCurrFile = _topen(pszFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
@@ -916,12 +916,12 @@ DWORD NXCL_Session::WaitForFileTransfer(DWORD dwTimeout)
    DWORD dwResult;
    BOOL bSuccess;
 
-   MutexLock(m_mutexFileRq, INFINITE);
+   MutexLock(m_mutexFileRq);
    if (m_hCurrFile != -1)
    {
       MutexUnlock(m_mutexFileRq);
       bSuccess = ConditionWait(m_condFileRq, dwTimeout);
-      MutexLock(m_mutexFileRq, INFINITE);
+      MutexLock(m_mutexFileRq);
       if (bSuccess)
       {
          dwResult = m_dwFileRqCompletion;
@@ -949,7 +949,7 @@ DWORD NXCL_Session::WaitForFileTransfer(DWORD dwTimeout)
 
 void NXCL_Session::AbortFileTransfer(void)
 {
-   MutexLock(m_mutexFileRq, INFINITE);
+   MutexLock(m_mutexFileRq);
    if (m_hCurrFile != -1)
    {
       close(m_hCurrFile);

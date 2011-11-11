@@ -35,7 +35,7 @@ private:
 	MUTEX m_mutex;
 	StringMap *m_parameters;
 
-	void lock() { MutexLock(m_mutex, INFINITE); }
+	void lock() { MutexLock(m_mutex); }
 	void unlock() { MutexUnlock(m_mutex); }
 
 public:

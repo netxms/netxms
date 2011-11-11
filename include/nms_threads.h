@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -190,11 +190,11 @@ inline void MutexDestroy(MUTEX mutex)
    CloseHandle(mutex);
 }
 
-inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
+inline BOOL MutexLock(MUTEX mutex)
 {
 	if (mutex == INVALID_MUTEX_HANDLE)
 		return FALSE;
-   return WaitForSingleObject(mutex, dwTimeOut) == WAIT_OBJECT_0;
+   return WaitForSingleObject(mutex, INFINITE) == WAIT_OBJECT_0;
 }
 
 inline void MutexUnlock(MUTEX mutex)
@@ -364,30 +364,16 @@ inline void MutexDestroy(MUTEX mutex)
       free(mutex);
 }
 
-inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
+inline BOOL MutexLock(MUTEX mutex)
 {
 	int i;
 	int ret = FALSE;
 
    if (mutex != NULL)
    {
-		if (dwTimeOut == INFINITE)
-		{
-			if (pth_mutex_acquire(mutex, FALSE, NULL))
-         {
-				ret = TRUE;
-			}
-		}
-		else
-		{
-         pth_event_t ev;
-
-         ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
-			if (pth_mutex_acquire(mutex, FALSE, ev))
-         {
-            ret = TRUE;
-         }
-         pth_event_free(ev, PTH_FREE_ALL);
+		if (pth_mutex_acquire(mutex, FALSE, NULL))
+      {
+			ret = TRUE;
 		}
 	}
    return ret;
@@ -720,31 +706,16 @@ inline void MutexDestroy(MUTEX mutex)
    }
 }
 
-inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
+inline BOOL MutexLock(MUTEX mutex)
 {
 	int i;
 	int ret = FALSE;
 
    if (mutex != NULL)
    {
-		if (dwTimeOut == INFINITE)
-		{
-			if (pthread_mutex_lock(&mutex->mutex) == 0)
-         {
-				ret = TRUE;
-			}
-		}
-		else
-		{
-			for (i = (dwTimeOut / 50) + 1; i > 0; i--)
-         {
-				if (pthread_mutex_trylock(&mutex->mutex) == 0) 
-            {
-					ret = TRUE;
-					break;
-				}
-				ThreadSleepMs(50);
-			}
+		if (pthread_mutex_lock(&mutex->mutex) == 0)
+      {
+			ret = TRUE;
 		}
 	}
    return ret;
@@ -898,12 +869,12 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 	return ret;
 }
 
-inline DWORD GetCurrentProcessId(void)
+inline DWORD GetCurrentProcessId()
 {
    return getpid();
 }
 
-inline THREAD GetCurrentThreadId(void)
+inline THREAD GetCurrentThreadId()
 {
    return pthread_self();
 }

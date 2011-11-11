@@ -139,7 +139,7 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const TCHAR *pszOwnerInfo,
 
    DbgPrintf(5, _T("*Locks* Attempting to lock component \"%s\" by %d (%s)"),
              m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : _T("NULL"));
-   MutexLock(m_hMutexLockerAccess, INFINITE);
+   MutexLock(m_hMutexLockerAccess);
    if (m_locks[dwId].dwLockStatus == UNLOCKED)
    {
       m_locks[dwId].dwLockStatus = dwLockBy;
@@ -167,7 +167,7 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const TCHAR *pszOwnerInfo,
 
 void UnlockComponent(DWORD dwId)
 {
-   MutexLock(m_hMutexLockerAccess, INFINITE);
+   MutexLock(m_hMutexLockerAccess);
    m_locks[dwId].dwLockStatus = UNLOCKED;
    m_locks[dwId].szOwnerInfo[0] = 0;
    MutexUnlock(m_hMutexLockerAccess);
@@ -183,7 +183,7 @@ void RemoveAllSessionLocks(DWORD dwSessionId)
 {
    DWORD i;
 
-   MutexLock(m_hMutexLockerAccess, INFINITE);
+   MutexLock(m_hMutexLockerAccess);
    for(i = 0; i < NUMBER_OF_LOCKS; i++)
       if (m_locks[i].dwLockStatus == dwSessionId)
       {

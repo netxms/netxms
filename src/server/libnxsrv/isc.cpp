@@ -245,7 +245,7 @@ void ISC::ReceiverThread()
 		{
 			// Create message object from raw message
 			pMsg = new CSCPMessage(pRawMsg, m_protocolVersion);
-			m_msgWaitQueue->Put(pMsg);
+			m_msgWaitQueue->put(pMsg);
 		}
    }
 
@@ -477,7 +477,7 @@ DWORD ISC::WaitForRCC(DWORD rqId, DWORD timeOut)
    CSCPMessage *pMsg;
    DWORD dwRetCode;
 
-   pMsg = m_msgWaitQueue->WaitForMessage(CMD_REQUEST_COMPLETED, rqId, timeOut);
+   pMsg = m_msgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, rqId, timeOut);
    if (pMsg != NULL)
    {
       dwRetCode = pMsg->GetVariableLong(VID_RCC);

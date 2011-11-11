@@ -171,7 +171,7 @@ public:
 	LogHandle(NXCORE_LOG *log);
 	~LogHandle();
 
-	void lock() { MutexLock(m_lock, INFINITE); }
+	void lock() { MutexLock(m_lock); }
 	void unlock() { MutexUnlock(m_lock); }
 
 	bool query(LogFilter *filter, INT64 *rowCount);

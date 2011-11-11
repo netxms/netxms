@@ -197,7 +197,7 @@ private:
    ACL_ELEMENT *m_pElements;
    MUTEX m_hMutex;
 
-   void Lock(void) { MutexLock(m_hMutex, INFINITE); }
+   void Lock(void) { MutexLock(m_hMutex); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
 
 public:

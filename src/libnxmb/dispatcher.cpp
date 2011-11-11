@@ -95,7 +95,7 @@ void NXMBDispatcher::workerThread()
 		if (msg == INVALID_POINTER_VALUE)
 			break;
 
-		MutexLock(m_subscriberListAccess, INFINITE);
+		MutexLock(m_subscriberListAccess);
 		for(i = 0; i < m_numSubscribers; i++)
 		{
 			if (m_filters[i]->isAllowed(*msg))
@@ -127,7 +127,7 @@ void NXMBDispatcher::addSubscriber(NXMBSubscriber *subscriber, NXMBFilter *filte
 {
 	int i;
 
-	MutexLock(m_subscriberListAccess, INFINITE);
+	MutexLock(m_subscriberListAccess);
 
 	for(i = 0; i < m_numSubscribers; i++)
 	{
@@ -174,7 +174,7 @@ void NXMBDispatcher::removeSubscriber(const TCHAR *id)
 {
 	int i;
 
-	MutexLock(m_subscriberListAccess, INFINITE);
+	MutexLock(m_subscriberListAccess);
 
 	for(i = 0; i < m_numSubscribers; i++)
 	{

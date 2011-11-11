@@ -323,7 +323,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, W
 	hStmt->connection = pConn;
 	snprintf(hStmt->name, 64, "netxms_stmt_%p", hStmt);
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	PGresult	*pResult = PQprepare(pConn->pHandle, hStmt->name, pszQueryUTF8, 0, NULL);
 	if ((pResult == NULL) || (PQresultStatus(pResult) != PGRES_COMMAND_OK))
 	{
@@ -416,7 +416,7 @@ extern "C" DWORD EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR *e
 {
 	DWORD rc;
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	PGresult	*pResult = PQexecPrepared(pConn->pHandle, hStmt->name, hStmt->pcount, hStmt->buffers, NULL, NULL, 0);
 	if (pResult != NULL)
 	{
@@ -462,7 +462,7 @@ extern "C" void EXPORT DrvFreeStatement(PG_STATEMENT *hStmt)
 	char query[256];
 	snprintf(query, 256, "DEALLOCATE \"%s\"", hStmt->name);
 
-	MutexLock(hStmt->connection->mutexQueryLock, INFINITE);
+	MutexLock(hStmt->connection->mutexQueryLock);
 	UnsafeDrvQuery(hStmt->connection, query, NULL);
 	MutexUnlock(hStmt->connection->mutexQueryLock);
 
@@ -512,7 +512,7 @@ extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorT
 	DWORD dwRet;
 
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	if (UnsafeDrvQuery(pConn, pszQueryUTF8, errorText))
    {
       dwRet = DBERR_SUCCESS;
@@ -568,7 +568,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	pResult = UnsafeDrvSelect(pConn, pszQueryUTF8, errorText);
    if (pResult != NULL)
    {
@@ -591,7 +591,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD
 
 extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(PG_CONN *pConn, PG_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	PGresult	*pResult = PQexecPrepared(pConn->pHandle, hStmt->name, hStmt->pcount, hStmt->buffers, NULL, NULL, 0);
 
 	if (pResult != NULL)
@@ -717,7 +717,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQ
 	if (pConn == NULL)
 		return NULL;
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 
 	if (UnsafeDrvQuery(pConn, "BEGIN", errorText))
    {
@@ -919,7 +919,7 @@ extern "C" DWORD EXPORT DrvBegin(PG_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	if (UnsafeDrvQuery(pConn, "BEGIN", NULL))
    {
       dwResult = DBERR_SUCCESS;
@@ -944,7 +944,7 @@ extern "C" DWORD EXPORT DrvCommit(PG_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	bRet = UnsafeDrvQuery(pConn, "COMMIT", NULL);
 	MutexUnlock(pConn->mutexQueryLock);
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
@@ -962,7 +962,7 @@ extern "C" DWORD EXPORT DrvRollback(PG_CONN *pConn)
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
 
-	MutexLock(pConn->mutexQueryLock, INFINITE);
+	MutexLock(pConn->mutexQueryLock);
 	bRet = UnsafeDrvQuery(pConn, "ROLLBACK", NULL);
 	MutexUnlock(pConn->mutexQueryLock);
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;

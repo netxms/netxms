@@ -71,7 +71,7 @@ void ExternalSubagent::sendMessage(CSCPMessage *msg)
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
 
 	CSCP_MESSAGE *rawMsg = msg->CreateMessage();
-	MutexLock(m_mutexPipeWrite, INFINITE);
+	MutexLock(m_mutexPipeWrite);
 #ifdef _WIN32
 	DWORD bytes = 0;
 	WriteFile(m_pipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL);
@@ -86,7 +86,7 @@ void ExternalSubagent::sendMessage(CSCPMessage *msg)
  */
 CSCPMessage *ExternalSubagent::waitForMessage(WORD code, DWORD id)
 {
-	return m_msgQueue->WaitForMessage(code, id, 5000);	// 5 sec timeout
+	return m_msgQueue->waitForMessage(code, id, 5000);	// 5 sec timeout
 }
 
 /**
@@ -152,12 +152,12 @@ void ExternalSubagent::connect(HANDLE hPipe)
 		if (msg == NULL)
 			break;
 		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
-		m_msgQueue->Put(msg);
+		m_msgQueue->put(msg);
 	}
 
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection closed"), m_name);
 	m_connected = false;
-	m_msgQueue->Clear();
+	m_msgQueue->clear();
 }
 
 /**

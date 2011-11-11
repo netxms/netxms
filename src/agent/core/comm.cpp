@@ -82,7 +82,7 @@ static BOOL RegisterSession(CommSession *pSession)
 {
    DWORD i;
 
-   MutexLock(g_hSessionListAccess, INFINITE);
+   MutexLock(g_hSessionListAccess);
    for(i = 0; i < g_dwMaxSessions; i++)
       if (g_pSessionList[i] == NULL)
       {
@@ -104,7 +104,7 @@ static BOOL RegisterSession(CommSession *pSession)
 
 void UnregisterSession(DWORD dwIndex)
 {
-   MutexLock(g_hSessionListAccess, INFINITE);
+   MutexLock(g_hSessionListAccess);
    g_pSessionList[dwIndex] = NULL;
    MutexUnlock(g_hSessionListAccess);
 }
@@ -246,7 +246,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    }
 
    // Wait for watchdog thread
-   MutexLock(m_mutexWatchdogActive, INFINITE);
+   MutexLock(m_mutexWatchdogActive);
    MutexUnlock(m_mutexWatchdogActive);
    MutexDestroy(m_mutexWatchdogActive);
 
@@ -268,14 +268,14 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    time_t now;
 
    m_mutexWatchdogActive = MutexCreate();
-   MutexLock(m_mutexWatchdogActive, INFINITE);
+   MutexLock(m_mutexWatchdogActive);
 
    ThreadSleep(5);
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
       ThreadSleep(1);
 
-      MutexLock(g_hSessionListAccess, INFINITE);
+      MutexLock(g_hSessionListAccess);
       now = time(NULL);
       for(i = 0; i < g_dwMaxSessions; i++)
          if (g_pSessionList[i] != NULL)
@@ -290,7 +290,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    }
 
    // Disconnect all sessions
-   MutexLock(g_hSessionListAccess, INFINITE);
+   MutexLock(g_hSessionListAccess);
    for(i = 0; i < g_dwMaxSessions; i++)
       if (g_pSessionList[i] != NULL)
          g_pSessionList[i]->disconnect();
@@ -313,7 +313,7 @@ LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
    int nCounter;
    DWORD i;
 
-   MutexLock(g_hSessionListAccess, INFINITE);
+   MutexLock(g_hSessionListAccess);
    for(i = 0, nCounter = 0; i < g_dwMaxSessions; i++)
       if (g_pSessionList[i] != NULL)
          nCounter++;

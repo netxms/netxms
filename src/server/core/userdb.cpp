@@ -65,7 +65,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 
 		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
 
-		MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+		MutexLock(m_mutexUserDatabaseAccess);
 		time_t now = time(NULL);
 		for(int i = 0; i < m_userCount; i++)
 		{
@@ -198,7 +198,7 @@ void SaveUsers(DB_HANDLE hdb)
    int i;
 
    // Save users
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
    for(i = 0; i < m_userCount; i++)
    {
       if (m_users[i]->isDeleted())
@@ -235,7 +235,7 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
    DWORD dwResult = RCC_ACCESS_DENIED;
    BOOL bPasswordValid;
 
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
    for(i = 0; i < m_userCount; i++)
    {
 		if ((!(m_users[i]->getId() & GROUP_FLAG)) &&
@@ -396,7 +396,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
    if (dwGroupId == GROUP_EVERYONE)
 		return true;
 
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
    for(int i = 0; i < m_userCount; i++)
 		if (m_users[i]->getId() == dwGroupId)
 		{
@@ -416,7 +416,7 @@ bool NXCORE_EXPORTABLE ResolveUserId(DWORD id, TCHAR *buffer, int bufSize)
 {
 	bool found = false;
 
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
    for(int i = 0; i < m_userCount; i++)
 		if (m_users[i]->getId() == id)
 		{
@@ -441,7 +441,7 @@ void DumpUsers(CONSOLE_CTX pCtx)
 
    ConsolePrintf(pCtx, _T("Login name           GUID                                 System rights\n")
                        _T("-----------------------------------------------------------------------\n"));
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
    for(i = 0; i < m_userCount; i++)
 		if (!(m_users[i]->getId() & GROUP_FLAG))
 			ConsolePrintf(pCtx, _T("%-20s %-36s 0x%08X\n"), m_users[i]->getName(),
@@ -462,7 +462,7 @@ DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id)
 
    DeleteUserFromAllObjects(id);
 
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
 
    for(i = 0; i < m_userCount; i++)
 	{
@@ -501,7 +501,7 @@ DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwI
 	UserDatabaseObject *object;
 	int i;
 
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
 
    // Check for duplicate name
    for(i = 0; i < m_userCount; i++)
@@ -549,7 +549,7 @@ DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
 
 	id = msg->GetVariableLong(VID_USER_ID);
 
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
 
    // Find object to be modified in list
    for(i = 0; i < m_userCount; i++)
@@ -666,7 +666,7 @@ DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, cons
 	if (id & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
 
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
 
    // Find user
    for(i = 0; i < m_userCount; i++)
@@ -785,7 +785,7 @@ DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, const TCHAR *newPassword, cons
 
 UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count)
 {
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
 	*count = m_userCount;
 	return m_users;
 }
@@ -809,7 +809,7 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(DWORD id, const TCHAR *name)
 {
 	const TCHAR *value = NULL;
 
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
 
    for(int i = 0; i < m_userCount; i++)
 		if (m_users[i]->getId() == id)
@@ -835,7 +835,7 @@ DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name)
 
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value)
 {
-   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+   MutexLock(m_mutexUserDatabaseAccess);
 
    for(int i = 0; i < m_userCount; i++)
 		if (m_users[i]->getId() == id)

@@ -101,7 +101,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
          switch(pRawMsg->wCode)
          {
             case CMD_FILE_DATA:
-               MutexLock(pSession->m_mutexFileRq, INFINITE);
+               MutexLock(pSession->m_mutexFileRq);
                if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->dwId))
                {
                   if (write(pSession->m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
@@ -124,7 +124,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                MutexUnlock(pSession->m_mutexFileRq);
                break;
             case CMD_ABORT_FILE_TRANSFER:
-               MutexLock(pSession->m_mutexFileRq, INFINITE);
+               MutexLock(pSession->m_mutexFileRq);
                if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->dwId))
                {
                   // I/O error
@@ -135,7 +135,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                MutexUnlock(pSession->m_mutexFileRq);
                break;
             default:    // Put unknown raw messages into the wait queue
-               pSession->m_msgWaitQueue.Put((CSCP_MESSAGE *)nx_memdup(pRawMsg, pRawMsg->dwSize));
+               pSession->m_msgWaitQueue.put((CSCP_MESSAGE *)nx_memdup(pRawMsg, pRawMsg->dwSize));
                break;
          }
       }
@@ -207,7 +207,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 					ProcessSituationChange(pSession, pMsg);
 					break;
             default:
-               pSession->m_msgWaitQueue.Put(pMsg);
+               pSession->m_msgWaitQueue.put(pMsg);
                bMsgNotNeeded = FALSE;
                break;
          }

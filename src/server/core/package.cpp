@@ -320,7 +320,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    THREAD *pThreadList;
 
    // Wait for parent initialization completion
-   MutexLock(pStartup->mutex, INFINITE);
+   MutexLock(pStartup->mutex);
    MutexUnlock(pStartup->mutex);
 
    // Sanity check
