@@ -131,7 +131,7 @@ static void ParseIoStat(char *line)
 
 static void Collect()
 {
-	MutexLock(m_dataAccess, INFINITE);
+	MutexLock(m_dataAccess);
 
 	FILE *f = fopen(m_statFile, "r");
 	if (f != NULL)
@@ -165,7 +165,7 @@ static THREAD_RESULT THREAD_CALL IoCollectionThread(void *arg)
 	// Get first sample for each device and fill all samples
 	// with same data
 	Collect();
-	MutexLock(m_dataAccess, INFINITE);
+	MutexLock(m_dataAccess);
 	for(int i = 0; i < m_deviceCount; i++)
 	{
 		for(int j = 1; j < SAMPLES_PER_MINUTE; j++)
@@ -262,7 +262,7 @@ LONG H_IoStats(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
 
-	MutexLock(m_dataAccess, INFINITE);
+	MutexLock(m_dataAccess);
 
 	IOSTAT_SAMPLE *s = GetSamples(pszParam);
 	if (s != NULL)
@@ -295,7 +295,7 @@ LONG H_IoStatsTotal(const char *pszParam, const char *pArg, char *pValue)
 {
 	int metric = CAST_FROM_POINTER(pArg, int);
 
-	MutexLock(m_dataAccess, INFINITE);
+	MutexLock(m_dataAccess);
 
 	double dsum = 0;
 	QWORD qsum = 0;
@@ -339,7 +339,7 @@ LONG H_DiskQueue(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
 
-	MutexLock(m_dataAccess, INFINITE);
+	MutexLock(m_dataAccess);
 
 	IOSTAT_SAMPLE *s = GetSamples(pszParam);
 	if (s != NULL)
@@ -358,7 +358,7 @@ LONG H_DiskQueue(const char *pszParam, const char *pArg, char *pValue)
 
 LONG H_DiskQueueTotal(const char *pszParam, const char *pArg, char *pValue)
 {
-	MutexLock(m_dataAccess, INFINITE);
+	MutexLock(m_dataAccess);
 
 	DWORD sum = 0;
 	for(int i = 0; i < m_deviceCount; i++)

@@ -15,6 +15,7 @@ EXTRA_DIST = \
 	config-netware.h \
 	dbdrv.h \
 	geolocation.h \
+	ieee8021x.h \
 	netxmsdb.h \
 	netxms_getopt.h \
 	netxms_isc.h \

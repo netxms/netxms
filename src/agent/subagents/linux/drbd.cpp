@@ -84,7 +84,7 @@ static bool ParseDrbdStatus()
 	fp = fopen("/proc/drbd", "r");
 	if (fp != NULL)
 	{
-		MutexLock(s_deviceAccess, INFINITE);
+		MutexLock(s_deviceAccess);
 		for(int i = 0; i < MAX_DEVICE_COUNT; i++)
 			s_devices[i].id = -1;
 
@@ -116,7 +116,7 @@ static bool ParseDrbdStatus()
 				for(int i = 1; i < 4; i++)
 					line[pmatch[i].rm_eo] = 0;
 
-				MutexLock(s_versionAccess, INFINITE);
+				MutexLock(s_versionAccess);
 				nx_strncpy(s_drbdVersion, &line[pmatch[1].rm_so], 64);
 				s_apiVersion = strtol(&line[pmatch[2].rm_so], NULL, 10);
 				s_protocolVersion = strtol(&line[pmatch[3].rm_so], NULL, 10);
@@ -129,7 +129,7 @@ static bool ParseDrbdStatus()
 	}
 	else
 	{
-		MutexLock(s_deviceAccess, INFINITE);
+		MutexLock(s_deviceAccess);
 		for(int i = 0; i < MAX_DEVICE_COUNT; i++)
 			s_devices[i].id = -1;
 		MutexUnlock(s_deviceAccess);
@@ -194,7 +194,7 @@ LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue
 {
 	char szBuffer[1024];
 
-	MutexLock(s_deviceAccess, INFINITE);
+	MutexLock(s_deviceAccess);
 	for(int i = 0; i < MAX_DEVICE_COUNT; i++)
 	{
 		if (s_devices[i].id != -1)
@@ -254,7 +254,7 @@ LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 	if ((nDev < 0) || (nDev > MAX_DEVICE_COUNT) || (*eptr != 0))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	MutexLock(s_deviceAccess, INFINITE);
+	MutexLock(s_deviceAccess);
 	if (s_devices[nDev].id != -1)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
