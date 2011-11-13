@@ -32,10 +32,25 @@
 
 static BOOL (WINAPI *_EvtClose)(EVT_HANDLE);
 static EVT_HANDLE (WINAPI *_EvtCreateRenderContext)(DWORD, LPCWSTR *, DWORD);
+static BOOL (WINAPI *_EvtGetPublisherMetadataProperty)(EVT_HANDLE, EVT_PUBLISHER_METADATA_PROPERTY_ID, DWORD, DWORD, PEVT_VARIANT, PDWORD);
 static BOOL (WINAPI *_EvtFormatMessage)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PEVT_VARIANT, DWORD, DWORD, LPWSTR, PDWORD);
 static EVT_HANDLE (WINAPI *_EvtOpenPublisherMetadata)(EVT_HANDLE, LPCWSTR, LPCWSTR, LCID, DWORD);
 static BOOL (WINAPI *_EvtRender)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD, PDWORD);
 static EVT_HANDLE (WINAPI *_EvtSubscribe)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR, EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK, DWORD);
+
+
+//
+// Log metadata property
+//
+
+static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_PROPERTY_ID id, const TCHAR *name)
+{
+	WCHAR buffer[4096];
+	PEVT_VARIANT p = PEVT_VARIANT(buffer);
+	DWORD size;
+	_EvtGetPublisherMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, 0, 4096, p, &size);
+	AgentWriteDebugLog(5, _T("LogWatch: publisher %s: %S"), name, p->StringVal);
+}
 
 
 //
@@ -114,7 +129,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	}
 
 	// Open publisher metadata
-	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, LOCALE_USER_DEFAULT, 0);
+	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
 	if (pubMetadata == NULL)
 	{
 		AgentWriteDebugLog(5, _T("LogWatch: Call to EvtOpenPublisherMetadata failed: %s"),
@@ -130,6 +145,9 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		{
 			AgentWriteDebugLog(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
 								    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+			LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
+			LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
+			LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
 			goto cleanup;
 		}
 		msg = (WCHAR *)malloc(sizeof(WCHAR) * reqSize);
@@ -138,6 +156,9 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		{
 			AgentWriteDebugLog(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
 								    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+			LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
+			LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
+			LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
 			goto cleanup;
 		}
 	}
@@ -212,11 +233,13 @@ bool InitEventLogParsersV6()
 
 	_EvtClose = (BOOL (WINAPI *)(EVT_HANDLE))GetProcAddress(module, "EvtClose");
 	_EvtCreateRenderContext = (EVT_HANDLE (WINAPI *)(DWORD, LPCWSTR *, DWORD))GetProcAddress(module, "EvtCreateRenderContext");
+	_EvtGetPublisherMetadataProperty = (BOOL (WINAPI *)(EVT_HANDLE, EVT_PUBLISHER_METADATA_PROPERTY_ID, DWORD, DWORD, PEVT_VARIANT, PDWORD))GetProcAddress(module, "EvtGetPublisherMetadataProperty");
 	_EvtFormatMessage = (BOOL (WINAPI *)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PEVT_VARIANT, DWORD, DWORD, LPWSTR, PDWORD))GetProcAddress(module, "EvtFormatMessage");
 	_EvtOpenPublisherMetadata = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, LPCWSTR, LPCWSTR, LCID, DWORD))GetProcAddress(module, "EvtOpenPublisherMetadata");
 	_EvtRender = (BOOL (WINAPI *)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD, PDWORD))GetProcAddress(module, "EvtRender");
 	_EvtSubscribe = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR, EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK, DWORD))GetProcAddress(module, "EvtSubscribe");
 
-	return (_EvtClose != NULL) && (_EvtCreateRenderContext != NULL) && (_EvtFormatMessage != NULL) && 
+	return (_EvtClose != NULL) && (_EvtCreateRenderContext != NULL) && 
+	       (_EvtGetPublisherMetadataProperty != NULL) && (_EvtFormatMessage != NULL) && 
 	       (_EvtOpenPublisherMetadata != NULL) && (_EvtRender != NULL) && (_EvtSubscribe != NULL);
 }

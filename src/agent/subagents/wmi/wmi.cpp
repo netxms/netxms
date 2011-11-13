@@ -151,10 +151,10 @@ IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx
 			                             NULL, 0, NULL, NULL, &pWbemServices) == S_OK)
 		{
 			ctx->m_services = pWbemServices;
-			if (pWbemServices->ExecQuery(L"WQL", query, WBEM_FLAG_RETURN_IMMEDIATELY,
+			if (pWbemServices->ExecQuery(L"WQL", query, WBEM_FLAG_RETURN_IMMEDIATELY | WBEM_FLAG_FORWARD_ONLY,
 					                       NULL, &pEnumObject) == S_OK)
 			{
-				pEnumObject->Reset();
+				//pEnumObject->Reset();
 			}
 		}
 	}
@@ -195,7 +195,8 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 	LONG rc = SYSINFO_RC_ERROR;
 
 	if (!AgentGetParameterArg(cmd, 1, ns, 256) ||
-	    !AgentGetParameterArg(cmd, 2, query, 256))
+	    !AgentGetParameterArg(cmd, 2, query, 256) ||
+	    !AgentGetParameterArg(cmd, 3, prop, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	pwszNamespace = WideStringFromMBString(ns);
@@ -203,9 +204,17 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 	pEnumObject = DoWMIQuery(pwszNamespace, pwszQuery, &ctx);
 	if (pEnumObject != NULL)
 	{
-		if (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
+		if (!_tcsicmp(prop, _T("%%count%%")))
 		{
-			if (AgentGetParameterArg(cmd, 3, prop, 256))
+			LONG count = 0;
+			while(pEnumObject->Skip(WBEM_INFINITE, 1) == S_OK)
+				count++;
+			ret_int(value, count);
+			rc = SYSINFO_RC_SUCCESS;
+		}
+		else
+		{
+			if (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
 			{
 				VARIANT v;
 				WCHAR *pwstrProperty;
@@ -234,16 +243,12 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 					AgentWriteDebugLog(5, _T("WMI: cannot get property \"%s\" from query \"%s\" in namespace \"%s\""), prop, query, ns);
 				}
 				free(pwstrProperty);
+				pClassObject->Release();
 			}
 			else
 			{
-				rc = SYSINFO_RC_UNSUPPORTED;
+				AgentWriteDebugLog(5, _T("WMI: no objects returned from query \"%s\" in namespace \"%s\""), query, ns);
 			}
-			pClassObject->Release();
-		}
-		else
-		{
-			AgentWriteDebugLog(5, _T("WMI: no objects returned from query \"%s\" in namespace \"%s\""), query, ns);
 		}
 		pEnumObject->Release();
 		CloseWMIQuery(&ctx);
