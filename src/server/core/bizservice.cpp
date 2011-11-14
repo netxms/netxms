@@ -161,7 +161,7 @@ BOOL BusinessService::DeleteFromDB()
    bSuccess = ServiceContainer::DeleteFromDB();
    if (bSuccess)
    {
-      _sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM business_services WHERE id=%d"), m_dwId);
+      _sntprintf(szQuery, QUERY_LENGTH, _T("DELETE FROM business_services WHERE service_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
 
