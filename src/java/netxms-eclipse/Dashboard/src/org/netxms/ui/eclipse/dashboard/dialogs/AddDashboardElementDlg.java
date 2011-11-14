@@ -12,8 +12,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 /**
- * @author victor
- *
+ * Dialog for adding new dashboard element
  */
 public class AddDashboardElementDlg extends Dialog
 {
@@ -50,6 +49,7 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add("Geo Map");
 		elementTypeSelector.add("Alarm Viewer");
 		elementTypeSelector.add("Availability Chart");
+		elementTypeSelector.add("Dial Chart");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

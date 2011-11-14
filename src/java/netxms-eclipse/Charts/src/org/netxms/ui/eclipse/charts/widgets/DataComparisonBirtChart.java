@@ -81,6 +81,9 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	private boolean transposed = false;
 	private boolean labelsVisible = false;
 	private double rotation = 0.0;
+	private double dialYellowZone = 70.0;
+	private double dialRedZone = 90.0;
+	private double dialMaxValue = 100.0;
 	
 	/**
 	 * @param parent
@@ -90,7 +93,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		super(parent, style);
 		this.chartType = chartType;
-		if (chartType == PIE_CHART)
+		if ((chartType == PIE_CHART) || (chartType == DIAL_CHART))
 			labelsVisible = true;
 	}
 
@@ -251,8 +254,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.getBlock().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		// For chart without axes, we wish to paint plot area with same background color as other chart parts
-		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
-		//chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.Background"));
+		//chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
+		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.Background"));
 		chart.setSeriesThickness(25);
 		chart.setDialSuperimposition(false);
 		
@@ -275,7 +278,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
       SeriesDefinition sdCategory = SeriesDefinitionImpl.create();
       sdCategory.setSeriesPalette(getBirtPalette());
       Series seCategory = SeriesImpl.create();
-      seCategory.setDataSet(TextDataSetImpl.create(new String[] { "test" }));
+      //seCategory.setDataSet(TextDataSetImpl.create(getElementNames()));
+      seCategory.setDataSet(TextDataSetImpl.create(new String[] { "category" }));
       sdCategory.getSeries().add(seCategory);
       chart.getSeriesDefinitions().add(sdCategory);
       
@@ -339,7 +343,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 			case DIAL_CHART:
 				DialSeries ds = (DialSeries)DialSeriesImpl.create();
 				ds.getDial().getScale().setMin(NumberDataElementImpl.create(0));
-				ds.getDial().getScale().setMax(NumberDataElementImpl.create(100));
+				ds.getDial().getScale().setMax(NumberDataElementImpl.create(dialMaxValue));
 				//ds.getDial().getScale().setStep(10);
 				ds.getNeedle().setDecorator(LineDecorator.ARROW_LITERAL);
 				ds.getNeedle().getLineAttributes().setColor(ColorDefinitionImpl.BLACK());
@@ -347,8 +351,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 				ds.getDial().getMinorGrid().getTickAttributes().setVisible(true);
 				ds.getDial().getMinorGrid().getTickAttributes().setColor(ColorDefinitionImpl.BLACK());
 				ds.getDial().getMajorGrid().getTickAttributes().setColor(ColorDefinitionImpl.BLACK());
-				//ds.getDial().setStartAngle(-90);
-				//ds.getDial().setStopAngle(270);
+				ds.getDial().setStartAngle(-45);
+				ds.getDial().setStopAngle(225);
 				ds.getLabel().setVisible(true);
 				ds.getLabel().getCaption().setValue("aasaca");
 				
@@ -433,7 +437,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		{
 		}
 
-		if (updateChart)
+ 		if (updateChart)
 			refresh();
 	}
 
@@ -459,28 +463,31 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		DialSeries s = (DialSeries)e.getSeries();
 		
-		double max = e.getMaxThresholdValue(100);
-		double min = e.getMinThresholdValue(max);
-		
 		DialRegion r = DialRegionImpl.create();
 		r.setStartValue(NumberDataElementImpl.create(0));
-		r.setEndValue(NumberDataElementImpl.create(min));
+		r.setEndValue(NumberDataElementImpl.create(dialYellowZone));
 		r.setFill(ColorDefinitionImpl.GREEN());
 		r.getOutline().setColor(ColorDefinitionImpl.BLACK());
+		r.getOutline().setVisible(true);
+		r.setInnerRadius(20);
 		s.getDial().getDialRegions().add(r);
 		
 		r = DialRegionImpl.create();
-		r.setStartValue(NumberDataElementImpl.create(min));
-		r.setEndValue(NumberDataElementImpl.create(max));
+		r.setStartValue(NumberDataElementImpl.create(dialYellowZone));
+		r.setEndValue(NumberDataElementImpl.create(dialRedZone));
 		r.setFill(ColorDefinitionImpl.YELLOW());
 		r.getOutline().setColor(ColorDefinitionImpl.BLACK());
+		r.getOutline().setVisible(true);
+		r.setInnerRadius(20);
 		s.getDial().getDialRegions().add(r);
 
 		r = DialRegionImpl.create();
-		r.setStartValue(NumberDataElementImpl.create(max));
-		r.setEndValue(NumberDataElementImpl.create(100));
+		r.setStartValue(NumberDataElementImpl.create(dialRedZone));
+		r.setEndValue(NumberDataElementImpl.create(dialMaxValue));
 		r.setFill(ColorDefinitionImpl.RED());
 		r.getOutline().setColor(ColorDefinitionImpl.BLACK());
+		r.getOutline().setVisible(true);
+		r.setInnerRadius(20);
 		s.getDial().getDialRegions().add(r);
 	}
 
@@ -490,9 +497,6 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	@Override
 	public void refresh()
 	{
-		if (valueSeries == null)
-			return;
-
 		if (chartType == DIAL_CHART)
 		{
 			for(DataComparisonElement e : parameters)
@@ -504,6 +508,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		}
 		else
 		{
+			if (valueSeries == null)
+				return;
 			valueSeries.setDataSet(NumberDataSetImpl.create(getElementValues()));
 		}
 		super.refresh();
@@ -576,5 +582,53 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	public double getRotation()
 	{
 		return rotation;
+	}
+
+	/**
+	 * @return the dialYellowZone
+	 */
+	public double getDialYellowZone()
+	{
+		return dialYellowZone;
+	}
+
+	/**
+	 * @param dialYellowZone the dialYellowZone to set
+	 */
+	public void setDialYellowZone(double dialYellowZone)
+	{
+		this.dialYellowZone = dialYellowZone;
+	}
+
+	/**
+	 * @return the dialRedZone
+	 */
+	public double getDialRedZone()
+	{
+		return dialRedZone;
+	}
+
+	/**
+	 * @param dialRedZone the dialRedZone to set
+	 */
+	public void setDialRedZone(double dialRedZone)
+	{
+		this.dialRedZone = dialRedZone;
+	}
+
+	/**
+	 * @return the dialMaxValue
+	 */
+	public double getDialMaxValue()
+	{
+		return dialMaxValue;
+	}
+
+	/**
+	 * @param dialMaxValue the dialMaxValue to set
+	 */
+	public void setDialMaxValue(double dialMaxValue)
+	{
+		this.dialMaxValue = dialMaxValue;
 	}
 }

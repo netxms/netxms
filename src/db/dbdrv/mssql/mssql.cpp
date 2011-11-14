@@ -340,7 +340,7 @@ extern "C" void EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int 
 	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
 	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
 
-	int length = (int)wcslen((WCHAR *)buffer) + 1;
+	int length = (cType == DB_CTYPE_STRING) ? ((int)wcslen((WCHAR *)buffer) + 1) : 0;
 
 	SQLPOINTER sqlBuffer;
 	switch(allocType)

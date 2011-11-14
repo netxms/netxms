@@ -38,6 +38,7 @@ public class DashboardElement
 	public static final int GEO_MAP = 10;
 	public static final int ALARM_VIEWER = 11;
 	public static final int AVAILABLITY_CHART = 12;
+	public static final int DIAL_CHART = 13;
 	
 	public static final int FILL = 0;
 	public static final int CENTER = 1;

@@ -401,6 +401,9 @@ public class DashboardElements extends PropertyPage
 				case DashboardElement.LINE_CHART:
 					config = DashboardControl.DEFAULT_LINE_CHART_CONFIG;
 					break;
+				case DashboardElement.DIAL_CHART:
+					config = DashboardControl.DEFAULT_DIAL_CHART_CONFIG;
+					break;
 				case DashboardElement.AVAILABLITY_CHART:
 					config = DashboardControl.DEFAULT_AVAILABILITY_CHART_CONFIG;
 					break;

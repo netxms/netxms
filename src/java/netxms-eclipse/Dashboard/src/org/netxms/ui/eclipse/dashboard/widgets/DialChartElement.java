@@ -24,41 +24,41 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.DialChartConfig;
 
 /**
- * Bar chart element
+ * Dial chart element
  */
-public class BarChartElement extends ComparisonChartElement
+public class DialChartElement extends ComparisonChartElement
 {
-	private BarChartConfig config;
+	private DialChartConfig config;
+	
 	/**
 	 * @param parent
 	 * @param data
 	 */
-	public BarChartElement(DashboardControl parent, DashboardElement element)
+	public DialChartElement(DashboardControl parent, DashboardElement element)
 	{
 		super(parent, element);
 		
 		try
 		{
-			config = BarChartConfig.createFromXml(element.getData());
+			config = DialChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			config = new BarChartConfig();
+			config = new DialChartConfig();
 		}
 
-		chart = new DataComparisonBirtChart(this, SWT.NONE, DataComparisonChart.BAR_CHART);
+		chart = new DataComparisonBirtChart(this, SWT.NONE, DataComparisonChart.DIAL_CHART);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(config.getTitle());
-		chart.setLegendPosition(config.getLegendPosition());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.set3DModeEnabled(config.isShowIn3D());
-		chart.setTransposed(config.isTransposed());
-		chart.setTranslucent(config.isTranslucent());
+		chart.setLegendVisible(false);
+		chart.setDialMaxValue(config.getMaxValue());
+		chart.setDialRedZone(config.getRedZone());
+		chart.setDialYellowZone(config.getYellowZone());
 		
 		int index = 0;
 		for(DashboardDciInfo dci : config.getDciList())

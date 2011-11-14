@@ -31,7 +31,7 @@ public class BarChartConfig extends ComparisonChartConfig
 	private boolean transposed = false;
 	
 	/**
-	 * Create line chart settings object from XML document
+	 * Create bar chart settings object from XML document
 	 * 
 	 * @param xml XML document
 	 * @return deserialized object

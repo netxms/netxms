@@ -56,6 +56,7 @@ public class DashboardControl extends Composite
 {
 	public static final String DEFAULT_CHART_CONFIG = "<element>\n\t<showIn3D>true</showIn3D>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>"; 
 	public static final String DEFAULT_LINE_CHART_CONFIG = "<element>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>";
+	public static final String DEFAULT_DIAL_CHART_CONFIG = "<element>\n\t<maxValue>100</maxValue>\n\t<yellowZone>70</yellowZone>\n\t<redZone>90</redZone>\n\t<dciList length=\"0\">\n\t</dciList>\n</element>"; 
 	public static final String DEFAULT_AVAILABILITY_CHART_CONFIG = "<element>\n\t<objectId>9</objectId>\n\t<showIn3D>true</showIn3D>\n</element>";
 	public static final String DEFAULT_OBJECT_REFERENCE_CONFIG = "<element>\n\t<objectId>0</objectId>\n</element>";
 	public static final String DEFAULT_LABEL_CONFIG = "<element>\n\t<title>Label</title>\n</element>"; 
@@ -184,6 +185,9 @@ public class DashboardControl extends Composite
 				break;
 			case DashboardElement.PIE_CHART:
 				w = new PieChartElement(this, e);
+				break;
+			case DashboardElement.DIAL_CHART:
+				w = new DialChartElement(this, e);
 				break;
 			case DashboardElement.STATUS_CHART:
 				w = new ObjectStatusChartElement(this, e);

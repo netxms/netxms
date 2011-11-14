@@ -698,6 +698,7 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/Ba
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/ComparisonChartElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/CustomWidgetElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/DashboardControl.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/DialChartElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/ElementWidget.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/EmbeddedDashboardElement.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/GeoMapElement.java -text
@@ -713,6 +714,7 @@ src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/in
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/CustomWidgetConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DashboardDciInfo.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DashboardElementLayout.java -text
+src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/DialChartConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/EmbeddedDashboardConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/GeoMapConfig.java -text
 src/java/netxms-eclipse/Dashboard/src/org/netxms/ui/eclipse/dashboard/widgets/internal/LabelConfig.java -text
