@@ -553,6 +553,7 @@ NXCPEncryptionContext::~NXCPEncryptionContext()
 
 NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *privateKey)
 {
+#ifdef _WITH_ENCRYPTION
    BYTE ucKeyBuffer[KEY_BUFFER_SIZE], ucSessionKey[KEY_BUFFER_SIZE];
    DWORD dwKeySize;
    int nSize, nIVLen;
@@ -590,6 +591,9 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(CSCPMessage *msg, RSA *priv
       delete_and_null(ctx);
    }
 	return ctx;
+#else
+	return new NXCPEncryptionContext;
+#endif
 }
 
 
@@ -601,6 +605,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(DWORD ciphers)
 {
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
+#ifdef _WITH_ENCRYPTION
    // Select cipher
    if (ciphers & CSCP_SUPPORT_AES_256)
    {
@@ -627,6 +632,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(DWORD ciphers)
    ctx->m_sessionKey = (BYTE *)malloc(ctx->m_keyLength);
    RAND_bytes(ctx->m_sessionKey, ctx->m_keyLength);
    RAND_bytes(ctx->m_iv, EVP_MAX_IV_LENGTH);
+#endif
 
 	return ctx;
 }
