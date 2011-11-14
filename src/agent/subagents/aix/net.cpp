@@ -122,7 +122,7 @@ LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value)
 		}
 	}
 
-	MutexLock(s_ifaceDataLock, INFINITE);
+	MutexLock(s_ifaceDataLock);
 
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	if (time(NULL) - s_ifaceDataTimestamp > 5)

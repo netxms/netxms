@@ -356,7 +356,7 @@ static void CpuUsageCollector()
 			total += psd.psd_cpu_time[i];
 		delta = total - m_total;
 
-		MutexLock(m_cpuUsageMutex, INFINITE);
+		MutexLock(m_cpuUsageMutex);
 
 		if (m_currentSlot == CPU_USAGE_SLOTS)
 		{
@@ -450,7 +450,7 @@ LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 			break;
 	}
 
-	MutexLock(m_cpuUsageMutex, INFINITE);
+	MutexLock(m_cpuUsageMutex);
 
 	for (i = 0; i < count; i++)
 	{

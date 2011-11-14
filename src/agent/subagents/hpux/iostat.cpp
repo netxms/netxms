@@ -156,7 +156,7 @@ static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 
 	while(!ConditionWait(s_condShutdown, 1000))
 	{
-		MutexLock(s_dataLock, INFINITE);
+		MutexLock(s_dataLock);
 		for(index = 0, count = 64; count == 64; index += 64)
 		{
 			count = pstat_getdisk(di, sizeof(struct pst_diskinfo), 64, index);
@@ -256,7 +256,7 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
-	MutexLock(s_dataLock, INFINITE);
+	MutexLock(s_dataLock);
 	switch(CAST_FROM_POINTER(arg, int))
 	{
 		case IOSTAT_NUM_READS:
@@ -317,7 +317,7 @@ LONG H_IOStats(const char *cmd, const char *arg, char *value)
 	if ((i == MAX_DEVICES) || ((s_devices[i].devMajor == 0) && (s_devices[i].devMinor == 0)))
 		return SYSINFO_RC_UNSUPPORTED;	// unknown device
 
-	MutexLock(s_dataLock, INFINITE);
+	MutexLock(s_dataLock);
 	switch(CAST_FROM_POINTER(arg, int))
 	{
 		case IOSTAT_NUM_READS:

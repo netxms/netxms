@@ -71,7 +71,7 @@ static MUTEX s_kstatLock = INVALID_MUTEX_HANDLE;
 
 void kstat_lock()
 {
-	MutexLock(s_kstatLock, INFINITE);
+	MutexLock(s_kstatLock);
 }
 
 void kstat_unlock()

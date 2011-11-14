@@ -55,7 +55,7 @@ static void CpuUsageCollector()
 	uint64_t user = 0, system = 0, idle = 0, iowait = 0;
 	unsigned int cpu = 0;
 
-	MutexLock(m_cpuUsageMutex, INFINITE);
+	MutexLock(m_cpuUsageMutex);
 	if (m_currentSlot == CPU_USAGE_SLOTS)
 	{
 		m_currentSlot = 0;
@@ -272,7 +272,7 @@ static void GetUsage(int source, int cpu, int count, char *value)
 	float usage = 0;
 	float *p = table + m_currentSlot - 1;
 
-	MutexLock(m_cpuUsageMutex, INFINITE);
+	MutexLock(m_cpuUsageMutex);
 	for (int i = 0; i < count; i++)
 	{
 		usage += *p;
