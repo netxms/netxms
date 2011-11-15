@@ -876,6 +876,10 @@ src/java/netxms-eclipse/LanguagePacks/ru/console/OSGI-INF/l10n/bundle_ru.propert
 src/java/netxms-eclipse/LanguagePacks/ru/console/build.properties -text
 src/java/netxms-eclipse/LanguagePacks/ru/console/icons/login_ru.png -text
 src/java/netxms-eclipse/LanguagePacks/ru/console/src/org/netxms/ui/eclipse/console/messages_ru.properties -text
+src/java/netxms-eclipse/LanguagePacks/ru/library/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/LanguagePacks/ru/library/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/LanguagePacks/ru/library/build.properties -text
+src/java/netxms-eclipse/LanguagePacks/ru/library/src/org/netxms/ui/eclipse/library/messages_ru.properties -text
 src/java/netxms-eclipse/LanguagePacks/ru/objectbrowser/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/LanguagePacks/ru/objectbrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/LanguagePacks/ru/objectbrowser/build.properties -text

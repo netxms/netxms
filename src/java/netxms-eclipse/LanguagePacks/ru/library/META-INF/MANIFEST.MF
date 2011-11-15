@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Russian Language Pack - Library
+Bundle-SymbolicName: org.netxms.ui.eclipse.library.ru
+Bundle-Version: 1.1.7
+Bundle-Vendor: netxms.org
+Fragment-Host: org.netxms.ui.eclipse.library;bundle-version="1.1.7"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
