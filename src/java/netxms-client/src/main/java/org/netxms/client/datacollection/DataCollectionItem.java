@@ -214,22 +214,15 @@ public class DataCollectionItem
 			msg.setVariable(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		msg.setVariableInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
 		
-		if (isUseAdvancedSchedule())
+		msg.setVariableInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
+		long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
+		for(int i = 0; i < schedules.size(); i++)
 		{
-			msg.setVariableInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
-			long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
-			for(int i = 0; i < schedules.size(); i++)
-			{
-				msg.setVariable(varId++, schedules.get(i));
-			}
-		}
-		else
-		{
-			msg.setVariableInt32(NXCPCodes.VID_NUM_SCHEDULES, 0);
+			msg.setVariable(varId++, schedules.get(i));
 		}
 
 		msg.setVariableInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
-		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+		varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < thresholds.size(); i++, varId +=10)
 		{
 			thresholds.get(i).fillMessage(msg, varId);

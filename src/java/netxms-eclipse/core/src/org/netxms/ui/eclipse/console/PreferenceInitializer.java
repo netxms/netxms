@@ -23,7 +23,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * Preference initializer for console
- *
  */
 public class PreferenceInitializer extends AbstractPreferenceInitializer
 {
@@ -34,18 +33,18 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	public void initializeDefaultPreferences()
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setDefault("INITIAL_PERSPECTIVE", "org.netxms.ui.eclipse.console.DefaultPerspective");
-		ps.setDefault("SHOW_COOLBAR", true);
-		ps.setDefault("SHOW_TRAY_ICON", true);
-		ps.setDefault("HIDE_WHEN_MINIMIZED", false);
-		ps.setDefault("SAVE_AND_RESTORE", true);
+		ps.setDefault("INITIAL_PERSPECTIVE", "org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$ //$NON-NLS-2$
+		ps.setDefault("SHOW_COOLBAR", true); //$NON-NLS-1$
+		ps.setDefault("SHOW_TRAY_ICON", true); //$NON-NLS-1$
+		ps.setDefault("HIDE_WHEN_MINIMIZED", false); //$NON-NLS-1$
+		ps.setDefault("SAVE_AND_RESTORE", true); //$NON-NLS-1$
 		
-		ps.setDefault("HTTP_PROXY_ENABLED", false);
-		ps.setDefault("HTTP_PROXY_SERVER", "");
-		ps.setDefault("HTTP_PROXY_PORT", "8000");
-		ps.setDefault("HTTP_PROXY_EXCLUSIONS", "localhost|127.0.0.1|10.*|192.168.*");
-		ps.setDefault("HTTP_PROXY_AUTH", false);
-		ps.setDefault("HTTP_PROXY_LOGIN", "");
-		ps.setDefault("HTTP_PROXY_PASSWORD", "");
+		ps.setDefault("HTTP_PROXY_ENABLED", false); //$NON-NLS-1$
+		ps.setDefault("HTTP_PROXY_SERVER", ""); //$NON-NLS-1$ //$NON-NLS-2$
+		ps.setDefault("HTTP_PROXY_PORT", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
+		ps.setDefault("HTTP_PROXY_EXCLUSIONS", "localhost|127.0.0.1|10.*|192.168.*"); //$NON-NLS-1$ //$NON-NLS-2$
+		ps.setDefault("HTTP_PROXY_AUTH", false); //$NON-NLS-1$
+		ps.setDefault("HTTP_PROXY_LOGIN", ""); //$NON-NLS-1$ //$NON-NLS-2$
+		ps.setDefault("HTTP_PROXY_PASSWORD", ""); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

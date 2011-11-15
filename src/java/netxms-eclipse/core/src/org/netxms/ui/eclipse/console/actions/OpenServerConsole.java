@@ -30,6 +30,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.views.ServerConsole;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -70,13 +71,13 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 			{
 				if (window.getActivePage().findView(ServerConsole.ID) == null)
 				{
-					new ConsoleJob("Open server console", null, Activator.PLUGIN_ID, null) {
+					new ConsoleJob(Messages.getString("OpenServerConsole.JobTitle"), null, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
 							final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 							session.openConsole();
-							new UIJob("Open server console") {
+							new UIJob(Messages.getString("OpenServerConsole.JobTitle")) { //$NON-NLS-1$
 								@Override
 								public IStatus runInUIThread(IProgressMonitor monitor)
 								{
@@ -86,7 +87,7 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 									}
 									catch(PartInitException e)
 									{
-										MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+										MessageDialog.openError(window.getShell(), Messages.getString("OpenServerConsole.Error"), Messages.getString("OpenServerConsole.ViewErrorMessage") + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
 									}
 									return Status.OK_STATUS;
 								}
@@ -96,7 +97,7 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 						@Override
 						protected String getErrorMessage()
 						{
-							return "Cannot open server console";
+							return Messages.getString("OpenServerConsole.OpenErrorMessage"); //$NON-NLS-1$
 						}
 					}.start();
 				}
@@ -107,7 +108,7 @@ public class OpenServerConsole implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.getString("OpenServerConsole.Error"), Messages.getString("OpenServerConsole.ViewErrorMessage") + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 	}

@@ -144,4 +144,29 @@ public class ObjectTest extends SessionTest
 		
 		session.disconnect();
 	}
+	
+	private void printObject(GenericObject object, int level)
+	{
+		for(int i = 0; i < level; i++)
+			System.out.print(' ');
+		System.out.println(object.getObjectName());
+		
+		for(GenericObject o : object.getChildsAsArray())
+			printObject(o, level + 2);
+	}
+	
+	public void testObjectTree() throws Exception
+	{
+		final NXCSession session = connect();
+		
+		session.syncObjects();
+
+		GenericObject object = session.findObjectById(1, EntireNetwork.class);
+		assertNotNull(object);
+		assertEquals(1, object.getObjectId());
+
+		printObject(object, 0);
+		
+		session.disconnect();
+	}
 }

@@ -6,7 +6,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser;
 
 public class OpenObjectBrowser implements IWorkbenchWindowActionDelegate
@@ -46,7 +45,7 @@ public class OpenObjectBrowser implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), Messages.getString("OpenObjectBrowser.error"), Messages.getString("OpenObjectBrowser.error_opening_view") + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 			}
 		}
 	}

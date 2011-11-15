@@ -44,6 +44,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerConsoleListener;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.views.helpers.ServerConsoleTerminalConnector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -55,7 +56,7 @@ import org.netxms.ui.eclipse.shared.SharedIcons;
 @SuppressWarnings("restriction")
 public class ServerConsole extends ViewPart implements ITerminalListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.console.views.ServerConsole";
+	public static final String ID = "org.netxms.ui.eclipse.console.views.ServerConsole"; //$NON-NLS-1$
 	
 	private ITerminalViewControl terminal;
 	private ServerConsoleTerminalConnector connector;
@@ -103,7 +104,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	 */
 	private void connectToServer()
 	{
-		new ConsoleJob("Open server console", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.getString("ServerConsole.OpenServerConsole"), null, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -115,13 +116,13 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot open server console";
+				return Messages.getString("ServerConsole.CannotOpen"); //$NON-NLS-1$
 			}
 
 			@Override
 			protected void jobFailureHandler()
 			{
-				writeToTerminal("\r\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m");
+				writeToTerminal("\r\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m"); //$NON-NLS-1$
 				terminal.disconnectTerminal();
 			}
 		}.start();
@@ -132,13 +133,13 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	 */
 	private void setConnected()
 	{
-		writeToTerminal("\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m");
+		writeToTerminal("\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		session.addConsoleListener(new ServerConsoleListener() {
 			@Override
 			public void onConsoleOutput(String text)
 			{
-				writeToTerminal(text.replaceAll("\n", "\r\n"));
+				writeToTerminal(text.replaceAll("\n", "\r\n")); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
 
@@ -152,7 +153,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 					final BufferedReader in = new BufferedReader(new InputStreamReader(connector.getInputStream()));
 					while(true)
 					{
-						writeToTerminal("\u001b[33mnetxmsd:\u001b[0m ");
+						writeToTerminal("\u001b[33mnetxmsd:\u001b[0m "); //$NON-NLS-1$
 						String command = in.readLine().trim();
 						if (!command.isEmpty())
 						{
@@ -216,17 +217,17 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	 */
 	private void createActions()
 	{
-		actionClear = new Action("Clear terminal") {
+		actionClear = new Action(Messages.getString("ServerConsole.ClearTerminal")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
 				terminal.clearTerminal();
-				writeToTerminal("\u001b[33mnetxmsd:\u001b[0m ");
+				writeToTerminal("\u001b[33mnetxmsd:\u001b[0m "); //$NON-NLS-1$
 			}
 		};
 		actionClear.setImageDescriptor(SharedIcons.CLEAR_LOG);
 
-		actionScrollLock = new Action("Scroll lock", Action.AS_CHECK_BOX) {
+		actionScrollLock = new Action(Messages.getString("ServerConsole.ScrollLock"), Action.AS_CHECK_BOX) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -235,7 +236,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 				actionScrollLock.setChecked(scrollLock);
 			}
 		};
-		actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif"));
+		actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
 		actionScrollLock.setChecked(scrollLock);
 	}
 	

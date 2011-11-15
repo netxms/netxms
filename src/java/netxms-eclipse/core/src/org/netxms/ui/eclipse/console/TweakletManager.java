@@ -43,12 +43,12 @@ public class TweakletManager
 	{
 		// Read all registered extensions and create tweaklets
 		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.tweaklets");
+		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.tweaklets"); //$NON-NLS-1$
 		for(int i = 0; i < elements.length; i++)
 		{
 			try
 			{
-				final ConsoleTweaklet t = (ConsoleTweaklet)elements[i].createExecutableExtension("class");
+				final ConsoleTweaklet t = (ConsoleTweaklet)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
 				tweaklets.add(t);
 			}
 			catch(CoreException e)

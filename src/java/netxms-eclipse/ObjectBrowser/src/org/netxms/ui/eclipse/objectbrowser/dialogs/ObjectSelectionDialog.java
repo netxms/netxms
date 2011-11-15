@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -158,7 +157,7 @@ public class ObjectSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.getString("ObjectSelectionDialog.title")); //$NON-NLS-1$
+		newShell.setText("Select Object");
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -234,7 +233,7 @@ public class ObjectSelectionDialog extends Dialog
 			}
 			else
 			{
-				MessageDialog.openWarning(getShell(), Messages.getString("ObjectSelectionDialog.warning"), Messages.getString("ObjectSelectionDialog.empty_selection_warning")); //$NON-NLS-1$ //$NON-NLS-2$
+				MessageDialog.openWarning(getShell(), "Warning", "Please select object and then press OK");
 				return;
 			}
 		}

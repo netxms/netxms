@@ -1076,7 +1076,6 @@ src/java/netxms-eclipse/ObjectBrowser/icons/template_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/zone.gif -text
 src/java/netxms-eclipse/ObjectBrowser/plugin.xml -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
-src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Messages.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectAdapterFactory.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/PreferenceInitializer.java -text
@@ -1086,6 +1085,7 @@ src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/di
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/IPAddressSelectionDialog.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/ObjectSelectionDialog.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages.properties -text
+src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/messages_ru.properties -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/views/ObjectBrowser.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/IPAddressSelector.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/widgets/ObjectList.java -text
@@ -1437,6 +1437,8 @@ src/java/netxms-eclipse/core/icons/alt_launcher.ico -text
 src/java/netxms-eclipse/core/icons/alt_window_16.gif -text
 src/java/netxms-eclipse/core/icons/alt_window_32.gif -text
 src/java/netxms-eclipse/core/icons/information.png -text
+src/java/netxms-eclipse/core/icons/lang/gb.png -text
+src/java/netxms-eclipse/core/icons/lang/ru.png -text
 src/java/netxms-eclipse/core/icons/login.png -text
 src/java/netxms-eclipse/core/icons/password.png -text
 src/java/netxms-eclipse/core/icons/pview.gif -text
@@ -1470,6 +1472,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/api/ConsoleTweakl
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/LoginDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/PasswordExpiredDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages.properties -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages_ru.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/HttpProxyPrefs.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/preferencepages/WorkbenchGeneralPrefs.java -text
@@ -1508,6 +1511,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Messages.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages.properties -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages_ru.properties -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedFonts.java -text

@@ -27,6 +27,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -48,7 +49,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Login dialog
- *
  */
 public class LoginDialog extends Dialog
 {
@@ -66,7 +66,7 @@ public class LoginDialog extends Dialog
 	public LoginDialog(Shell parentShell)
 	{
 		super(parentShell);
-		loginImage = Activator.getImageDescriptor(Messages.getString("LoginDialog.image_name")); //$NON-NLS-1$
+		loginImage = Activator.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
 	}
 	
 	@Override
@@ -92,15 +92,23 @@ public class LoginDialog extends Dialog
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       Composite dialogArea = (Composite)super.createDialogArea(parent);
       
-      RowLayout rowLayout = new RowLayout();
-      rowLayout.type = SWT.VERTICAL;
-      rowLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-      rowLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      rowLayout.fill = true;
-      dialogArea.setLayout(rowLayout);
+      GridLayout dialogLayout = new GridLayout();
+      dialogLayout.numColumns = 2;
+      dialogLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      dialogLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+      dialogLayout.horizontalSpacing = 0;
+      dialogArea.setLayout(dialogLayout);
       
       // Header image
-      Label label = new Label(dialogArea, 0);
+      Label label = new Label(dialogArea, SWT.NONE);
+      label.setBackground(new Color(dialogArea.getDisplay(), 36, 66, 90));
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      label.setLayoutData(gd);
+      
+      label = new Label(dialogArea, SWT.NONE);
       label.setImage(loginImage.createImage());
       label.addDisposeListener(
       		new DisposeListener()
@@ -111,11 +119,19 @@ public class LoginDialog extends Dialog
       			}
       		}
       		);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      label.setLayoutData(gd);
       
       Composite fields = new Composite(dialogArea, SWT.NONE);
       FormLayout formLayout = new FormLayout();
       formLayout.spacing = WidgetHelper.DIALOG_SPACING;
       fields.setLayout(formLayout);
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      fields.setLayoutData(gd);
       
       // Connection
       Group groupConn = new Group(fields, SWT.SHADOW_ETCHED_IN);
@@ -161,7 +177,7 @@ public class LoginDialog extends Dialog
       // Options
       Group groupOpts = new Group(fields, SWT.SHADOW_ETCHED_IN);
       groupOpts.setText(Messages.getString("LoginDialog.options")); //$NON-NLS-1$
-      rowLayout = new RowLayout();
+      RowLayout rowLayout = new RowLayout();
       rowLayout.type = SWT.VERTICAL;
       //rowLayout.justify = true;
       rowLayout.spacing = 4;

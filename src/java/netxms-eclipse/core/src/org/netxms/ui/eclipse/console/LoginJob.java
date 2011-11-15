@@ -56,7 +56,7 @@ public class LoginJob implements IRunnableWithProgress
 		{
 			final String hostName;
 			int port = NXCSession.DEFAULT_CONN_PORT;
-			final String[] split = server.split(":");
+			final String[] split = server.split(":"); //$NON-NLS-1$
 			if (split.length == 2)
 			{
 				hostName = split[0];

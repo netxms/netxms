@@ -23,7 +23,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -36,7 +35,7 @@ public class ObjectSelector extends AbstractSelector
 {
 	private long objectId = 0;
 	private Class<? extends GenericObject> objectClass = Node.class;
-	private String emptySelectionName = Messages.getString("ObjectSelector.none"); //$NON-NLS-1$
+	private String emptySelectionName = "<none>";
 	
 	/**
 	 * @param parent
@@ -93,7 +92,7 @@ public class ObjectSelector extends AbstractSelector
 		else
 		{
 			final GenericObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
-			setText((object != null) ? object.getObjectName() : Messages.getString("ObjectSelector.unknown")); //$NON-NLS-1$
+			setText((object != null) ? object.getObjectName() : ("<" + Long.toString(objectId) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 

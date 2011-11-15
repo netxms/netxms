@@ -85,7 +85,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		Session session = ConsoleSharedData.getSession();
 		Activator.getDefault().getStatusItemConnection().setText(session.getUserName() + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON"))
+		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
 			Activator.showTrayIcon();
 		
 		TweakletManager.postWindowCreate(configurer);

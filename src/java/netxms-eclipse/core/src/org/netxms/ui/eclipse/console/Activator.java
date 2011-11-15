@@ -40,7 +40,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin
 {
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.console";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.console"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;
@@ -120,8 +120,8 @@ public class Activator extends AbstractUIPlugin
 		if (tray != null)
 		{
 			TrayItem item = new TrayItem(tray, SWT.NONE);
-			item.setToolTipText("NetXMS Management Console");
-			item.setImage(getImageDescriptor("icons/alt_window_16.gif").createImage());
+			item.setToolTipText(Messages.getString("Activator.TrayTooltip")); //$NON-NLS-1$
+			item.setImage(getImageDescriptor("icons/alt_window_16.gif").createImage()); //$NON-NLS-1$
 			item.addSelectionListener(new SelectionListener() {
 				@Override
 				public void widgetSelected(SelectionEvent e)

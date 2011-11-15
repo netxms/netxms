@@ -54,7 +54,6 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeFilter;
@@ -214,7 +213,7 @@ public class ObjectTree extends Composite
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
 					changeCount++;
-					new UIJob(Messages.getString("ObjectTree.update_object_tree")) { //$NON-NLS-1$
+					new UIJob("Update object tree") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{

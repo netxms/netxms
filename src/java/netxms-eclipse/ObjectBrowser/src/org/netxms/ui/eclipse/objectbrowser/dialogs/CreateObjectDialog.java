@@ -26,7 +26,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -58,7 +57,7 @@ public class CreateObjectDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.getString("CreateObjectDialog.title") + objectClassName); //$NON-NLS-1$
+		newShell.setText("Create " + objectClassName);
 	}
 	
 	/* (non-Javadoc)
@@ -75,7 +74,7 @@ public class CreateObjectDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-      		Messages.getString("CreateObjectDialog.object_name"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      		"Object name", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
       textName.setTextLimit(63);
       textName.setFocus();

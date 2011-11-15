@@ -12,6 +12,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -47,6 +48,8 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	private Action actionOpenConsole;
 	private Action actionOpenProgressView;
 	private Action actionFullScreen;
+	private Action actionLangEnglish;
+	private Action actionLangRussian;
 	private IContributionItem contribItemShowView;
 	private IContributionItem contribItemOpenPerspective;
 
@@ -179,7 +182,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		actionOpenProgressView.setText(Messages.getString("NXMCActionBarAdvisor.progress")); //$NON-NLS-1$
 		actionOpenProgressView.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif")); //$NON-NLS-1$
 		
-		actionFullScreen = new Action("&Full Screen", Action.AS_CHECK_BOX) {
+		actionFullScreen = new Action(Messages.getString("NXMCActionBarAdvisor.FullScreen"), Action.AS_CHECK_BOX) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -189,9 +192,24 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 			}
 		};
 		actionFullScreen.setChecked(false);
-		actionFullScreen.setId("org.netxms.ui.eclipse.console.actions.full_screen");
-		actionFullScreen.setActionDefinitionId("org.netxms.ui.eclipse.console.commands.full_screen");
+		actionFullScreen.setId("org.netxms.ui.eclipse.console.actions.full_screen"); //$NON-NLS-1$
+		actionFullScreen.setActionDefinitionId("org.netxms.ui.eclipse.console.commands.full_screen"); //$NON-NLS-1$
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
+		
+		actionLangEnglish = new Action(Messages.getString("NXMCActionBarAdvisor.LangEnglish")) { //$NON-NLS-1$
+			public void run()
+			{
+				setLanguage("en"); //$NON-NLS-1$
+			}
+		};
+		actionLangEnglish.setImageDescriptor(Activator.getImageDescriptor("icons/lang/gb.png")); //$NON-NLS-1$
+		actionLangRussian = new Action(Messages.getString("NXMCActionBarAdvisor.LangRussian")) { //$NON-NLS-1$
+			public void run()
+			{
+				setLanguage("ru"); //$NON-NLS-1$
+			}
+		};
+		actionLangRussian.setImageDescriptor(Activator.getImageDescriptor("icons/lang/ru.png")); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -205,7 +223,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		MenuManager viewMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_view"), IActionConstants.M_VIEW); //$NON-NLS-1$
 		MenuManager configMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_configuration"), IActionConstants.M_CONFIG); //$NON-NLS-1$
 		MenuManager toolsMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_tools"), IActionConstants.M_TOOLS); //$NON-NLS-1$
-		MenuManager windowMenu = new MenuManager("&Window", IWorkbenchActionConstants.M_WINDOW);
+		MenuManager windowMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.Window"), IWorkbenchActionConstants.M_WINDOW); //$NON-NLS-1$
 		MenuManager helpMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_help"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_HELP);
 
@@ -219,9 +237,15 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		
 		menuBar.add(windowMenu);
 		menuBar.add(helpMenu);
+		
+		// Language selection
+		final MenuManager langMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.Language")); //$NON-NLS-1$
+		langMenu.add(actionLangEnglish);
+		langMenu.add(actionLangRussian);
 
 		// File
 		fileMenu.add(actionShowPreferences);
+		fileMenu.add(langMenu);
 		fileMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		fileMenu.add(new Separator());
 		fileMenu.add(actionExit);
@@ -244,11 +268,11 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		windowMenu.add(actionFullScreen);
 		windowMenu.add(new Separator());
 		
-		MenuManager openPerspectiveMenuMgr = new MenuManager("Open Perspective", "openPerspective");
+		MenuManager openPerspectiveMenuMgr = new MenuManager(Messages.getString("NXMCActionBarAdvisor.OpenPerspective"), "openPerspective"); //$NON-NLS-1$ //$NON-NLS-2$
 		openPerspectiveMenuMgr.add(contribItemOpenPerspective);
 		windowMenu.add(openPerspectiveMenuMgr);
 		
-		MenuManager showViewMenuMgr = new MenuManager("Show View", "showView");
+		final MenuManager showViewMenuMgr = new MenuManager(Messages.getString("NXMCActionBarAdvisor.ShowView"), "showView"); //$NON-NLS-1$ //$NON-NLS-2$
 		showViewMenuMgr.add(contribItemShowView);
 		windowMenu.add(showViewMenuMgr);
 		
@@ -260,7 +284,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		windowMenu.add(actionCloseAllPerspectives);
 		windowMenu.add(new Separator());
 		
-		MenuManager navMenu = new MenuManager("&Navigation", IWorkbenchActionConstants.M_NAVIGATE);
+		final MenuManager navMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.Navigation"), IWorkbenchActionConstants.M_NAVIGATE); //$NON-NLS-1$
 		windowMenu.add(navMenu);
 		navMenu.add(actionQuickAccess);
 		navMenu.add(actionShowViewMenu);
@@ -316,5 +340,18 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		statusItem.setText(""); //$NON-NLS-1$
 		statusLine.add(statusItem);
 		Activator.getDefault().setStatusItemConnection(statusItem);
+	}
+	
+	/**
+	 * Set program language
+	 * 
+	 * @param locale
+	 */
+	private void setLanguage(String locale)
+	{
+		if (!MessageDialog.openConfirm(null, Messages.getString("NXMCActionBarAdvisor.ConfirmRestart"), Messages.getString("NXMCActionBarAdvisor.RestartConsoleMessage"))) //$NON-NLS-1$ //$NON-NLS-2$
+			return;
+		Activator.getDefault().getPreferenceStore().setValue("NL", locale); //$NON-NLS-1$
+		PlatformUI.getWorkbench().restart();
 	}
 }

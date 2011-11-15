@@ -62,7 +62,7 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		cbShowTrayIcon.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_TRAY_ICON")); //$NON-NLS-1$
 		
 		cbHideWhenMinimized = new Button(dialogArea, SWT.CHECK);
-		cbHideWhenMinimized.setText("Hide when minimized");
+		cbHideWhenMinimized.setText(Messages.getString("WorkbenchGeneralPrefs.HideWhenMinimized")); //$NON-NLS-1$
 		cbHideWhenMinimized.setSelection(Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED")); //$NON-NLS-1$
 		
 		return dialogArea;

@@ -48,6 +48,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		list.add(new AgentParameter("ChildStatus(*)", "Status of child object {instance}", DataCollectionItem.DT_INT));
 		list.add(new AgentParameter("ConditionStatus(*)", "Status of condition object {instance}", DataCollectionItem.DT_INT));
 		list.add(new AgentParameter("Dummy", "Dummy value", DataCollectionItem.DT_INT));
+		list.add(new AgentParameter("Net.IP.NextHop(*)", "Next routing hop for IP address {instance}", DataCollectionItem.DT_STRING));
 		list.add(new AgentParameter("Status", "Status", DataCollectionItem.DT_INT));
 		
 		if ((object instanceof Template) || ((Node)object).hasAgent())

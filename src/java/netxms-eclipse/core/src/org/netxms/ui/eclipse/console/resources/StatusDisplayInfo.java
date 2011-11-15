@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Status display information
@@ -41,25 +42,25 @@ public final class StatusDisplayInfo
 	 */
 	public static void init()
 	{
-		statusText[Severity.NORMAL] = "Normal";
-		statusText[Severity.WARNING] = "Warning";
-		statusText[Severity.MINOR] = "Minor";
-		statusText[Severity.MAJOR] = "Major";
-		statusText[Severity.CRITICAL] = "Critical";
-		statusText[Severity.UNKNOWN] = "Unknown";
-		statusText[Severity.UNMANAGED] = "Unmanaged";
-		statusText[Severity.DISABLED] = "Disabled";
-		statusText[Severity.TESTING] = "Testing";
+		statusText[Severity.NORMAL] = Messages.getString("StatusDisplayInfo.Normal"); //$NON-NLS-1$
+		statusText[Severity.WARNING] = Messages.getString("StatusDisplayInfo.Warning"); //$NON-NLS-1$
+		statusText[Severity.MINOR] = Messages.getString("StatusDisplayInfo.Minor"); //$NON-NLS-1$
+		statusText[Severity.MAJOR] = Messages.getString("StatusDisplayInfo.Major"); //$NON-NLS-1$
+		statusText[Severity.CRITICAL] = Messages.getString("StatusDisplayInfo.Critical"); //$NON-NLS-1$
+		statusText[Severity.UNKNOWN] = Messages.getString("StatusDisplayInfo.Unknown"); //$NON-NLS-1$
+		statusText[Severity.UNMANAGED] = Messages.getString("StatusDisplayInfo.Unmanaged"); //$NON-NLS-1$
+		statusText[Severity.DISABLED] = Messages.getString("StatusDisplayInfo.Disabled"); //$NON-NLS-1$
+		statusText[Severity.TESTING] = Messages.getString("StatusDisplayInfo.Testing"); //$NON-NLS-1$
 
-		statusImageDesc[Severity.NORMAL] = Activator.getImageDescriptor("icons/status/normal.png");
-		statusImageDesc[Severity.WARNING] = Activator.getImageDescriptor("icons/status/warning.png");
-		statusImageDesc[Severity.MINOR] = Activator.getImageDescriptor("icons/status/minor.png");
-		statusImageDesc[Severity.MAJOR] = Activator.getImageDescriptor("icons/status/major.png");
-		statusImageDesc[Severity.CRITICAL] = Activator.getImageDescriptor("icons/status/critical.png");
-		statusImageDesc[Severity.UNKNOWN] = Activator.getImageDescriptor("icons/status/unknown.png");
-		statusImageDesc[Severity.UNMANAGED] = Activator.getImageDescriptor("icons/status/unmanaged.png");
-		statusImageDesc[Severity.DISABLED] = Activator.getImageDescriptor("icons/status/disabled.png");
-		statusImageDesc[Severity.TESTING] = Activator.getImageDescriptor("icons/status/testing.png");
+		statusImageDesc[Severity.NORMAL] = Activator.getImageDescriptor("icons/status/normal.png"); //$NON-NLS-1$
+		statusImageDesc[Severity.WARNING] = Activator.getImageDescriptor("icons/status/warning.png"); //$NON-NLS-1$
+		statusImageDesc[Severity.MINOR] = Activator.getImageDescriptor("icons/status/minor.png"); //$NON-NLS-1$
+		statusImageDesc[Severity.MAJOR] = Activator.getImageDescriptor("icons/status/major.png"); //$NON-NLS-1$
+		statusImageDesc[Severity.CRITICAL] = Activator.getImageDescriptor("icons/status/critical.png"); //$NON-NLS-1$
+		statusImageDesc[Severity.UNKNOWN] = Activator.getImageDescriptor("icons/status/unknown.png"); //$NON-NLS-1$
+		statusImageDesc[Severity.UNMANAGED] = Activator.getImageDescriptor("icons/status/unmanaged.png"); //$NON-NLS-1$
+		statusImageDesc[Severity.DISABLED] = Activator.getImageDescriptor("icons/status/disabled.png"); //$NON-NLS-1$
+		statusImageDesc[Severity.TESTING] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
 		
 		for(int i = 0; i < statusImageDesc.length; i++)
 			statusImage[i] = statusImageDesc[i].createImage();
@@ -90,7 +91,7 @@ public final class StatusDisplayInfo
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
-			return "<unknown>";
+			return "<unknown>"; //$NON-NLS-1$
 		}
 	}
 	

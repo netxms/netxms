@@ -56,7 +56,7 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 	 */
 	public String getInitialWindowPerspectiveId()
 	{
-		return Activator.getDefault().getPreferenceStore().getString("INITIAL_PERSPECTIVE");
+		return Activator.getDefault().getPreferenceStore().getString("INITIAL_PERSPECTIVE"); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -70,29 +70,29 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 		TweakletManager.initTweaklets();
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		configurer.setSaveAndRestore(ps.getBoolean("SAVE_AND_RESTORE"));
+		configurer.setSaveAndRestore(ps.getBoolean("SAVE_AND_RESTORE")); //$NON-NLS-1$
 		
-		if (ps.getBoolean("HTTP_PROXY_ENABLED"))
+		if (ps.getBoolean("HTTP_PROXY_ENABLED")) //$NON-NLS-1$
 		{
-			System.setProperty("http.proxyHost", ps.getString("HTTP_PROXY_SERVER"));
-			System.setProperty("http.proxyPort", ps.getString("HTTP_PROXY_PORT"));
-			System.setProperty("http.noProxyHosts", ps.getString("HTTP_PROXY_EXCLUSIONS"));
-			if (ps.getBoolean("HTTP_PROXY_AUTH"))
+			System.setProperty("http.proxyHost", ps.getString("HTTP_PROXY_SERVER")); //$NON-NLS-1$ //$NON-NLS-2$
+			System.setProperty("http.proxyPort", ps.getString("HTTP_PROXY_PORT")); //$NON-NLS-1$ //$NON-NLS-2$
+			System.setProperty("http.noProxyHosts", ps.getString("HTTP_PROXY_EXCLUSIONS")); //$NON-NLS-1$ //$NON-NLS-2$
+			if (ps.getBoolean("HTTP_PROXY_AUTH")) //$NON-NLS-1$
 			{
 				Authenticator.setDefault(new Authenticator() {
 					@Override
 					protected PasswordAuthentication getPasswordAuthentication()
 					{
-						return new PasswordAuthentication(ps.getString("HTTP_PROXY_LOGIN"), ps.getString("HTTP_PROXY_PASSWORD").toCharArray());
+						return new PasswordAuthentication(ps.getString("HTTP_PROXY_LOGIN"), ps.getString("HTTP_PROXY_PASSWORD").toCharArray()); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				});
 			}
 		}
 		else
 		{
-			System.clearProperty("http.proxyHost");
-			System.clearProperty("http.proxyPort");
-			System.clearProperty("http.noProxyHosts");
+			System.clearProperty("http.proxyHost"); //$NON-NLS-1$
+			System.clearProperty("http.proxyPort"); //$NON-NLS-1$
+			System.clearProperty("http.noProxyHosts"); //$NON-NLS-1$
 		}
 	}
 
@@ -118,7 +118,7 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 		shell.addShellListener(new ShellAdapter()	{
 			public void shellIconified(ShellEvent e)
 			{
-				if (Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED"))
+				if (Activator.getDefault().getPreferenceStore().getBoolean("HIDE_WHEN_MINIMIZED")) //$NON-NLS-1$
 					shell.setVisible(false);
 			}
 		});
@@ -136,8 +136,8 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 						public void run()
 						{
 							MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
-									"Communication Error", 
-									((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? "Connection with NetXMS server was lost" : "NetXMS server was shut down") + ". Press OK to close application.");
+									Messages.getString("NXMCWorkbenchAdvisor.CommunicationError"),  //$NON-NLS-1$
+									((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? Messages.getString("NXMCWorkbenchAdvisor.ConnectionLostMessage") : Messages.getString("NXMCWorkbenchAdvisor.ServerShutdownMessage")) + Messages.getString("NXMCWorkbenchAdvisor.OKToCloseMessage")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 							PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
 						}
 					});

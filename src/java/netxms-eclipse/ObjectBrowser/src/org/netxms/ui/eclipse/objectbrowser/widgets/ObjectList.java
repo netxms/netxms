@@ -18,9 +18,6 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
@@ -37,13 +34,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -91,7 +87,7 @@ public class ObjectList extends Composite
 		filterArea = new Composite(this, SWT.NONE);
 		
 		filterLabel = new Label(filterArea, SWT.NONE);
-		filterLabel.setText(Messages.getString("ObjectList.filter")); //$NON-NLS-1$
+		filterLabel.setText("Filter: ");
 		
 		filterText = new Text(filterArea, SWT.BORDER);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -126,15 +122,13 @@ public class ObjectList extends Composite
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
-					new UIJob(Messages.getString("ObjectList.update_object_list")) { //$NON-NLS-1$
+					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
+						public void run()
 						{
 							objectList.setInput(session.getAllObjects());
-							objectList.refresh();
-							return Status.OK_STATUS;
 						}
-					}.schedule();
+					});
 				}
 			}
 		};

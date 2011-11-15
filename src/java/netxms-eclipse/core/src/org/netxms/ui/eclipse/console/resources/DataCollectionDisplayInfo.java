@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.console.resources;
 
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Data collection display information
@@ -33,13 +34,13 @@ public class DataCollectionDisplayInfo
 	 */
 	public static void init()
 	{
-		dciDataTypes[DataCollectionItem.DT_INT] = "Integer";
-		dciDataTypes[DataCollectionItem.DT_UINT] = "Unsigned Integer";
-		dciDataTypes[DataCollectionItem.DT_INT64] = "Integer 64-bit";
-		dciDataTypes[DataCollectionItem.DT_UINT64] = "Unsigned Integer 64-bit";
-		dciDataTypes[DataCollectionItem.DT_FLOAT] = "Float";
-		dciDataTypes[DataCollectionItem.DT_STRING] = "String";
-		dciDataTypes[DataCollectionItem.DT_NULL] = "Null";
+		dciDataTypes[DataCollectionItem.DT_INT] = Messages.getString("DataCollectionDisplayInfo.Integer"); //$NON-NLS-1$
+		dciDataTypes[DataCollectionItem.DT_UINT] = Messages.getString("DataCollectionDisplayInfo.UInteger"); //$NON-NLS-1$
+		dciDataTypes[DataCollectionItem.DT_INT64] = Messages.getString("DataCollectionDisplayInfo.Integer64"); //$NON-NLS-1$
+		dciDataTypes[DataCollectionItem.DT_UINT64] = Messages.getString("DataCollectionDisplayInfo.UInteger64"); //$NON-NLS-1$
+		dciDataTypes[DataCollectionItem.DT_FLOAT] = Messages.getString("DataCollectionDisplayInfo.Float"); //$NON-NLS-1$
+		dciDataTypes[DataCollectionItem.DT_STRING] = Messages.getString("DataCollectionDisplayInfo.String"); //$NON-NLS-1$
+		dciDataTypes[DataCollectionItem.DT_NULL] = Messages.getString("DataCollectionDisplayInfo.Null"); //$NON-NLS-1$
 	}
 
 	/**
@@ -55,7 +56,7 @@ public class DataCollectionDisplayInfo
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
-			return "<unknown>";
+			return Messages.getString("DataCollectionDisplayInfo.Unknown"); //$NON-NLS-1$
 		}
 	}
 }
