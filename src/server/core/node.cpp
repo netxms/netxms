@@ -2544,6 +2544,37 @@ DWORD Node::GetInternalItem(const TCHAR *szParam, DWORD dwBufSize, TCHAR *szBuff
    {
       _tcscpy(szBuffer, _T("0"));
    }
+   else if (MatchString(_T("Net.IP.NextHop(*)"), szParam, FALSE))
+   {
+      if ((m_dwFlags & NF_IS_NATIVE_AGENT) || (m_dwFlags & NF_IS_SNMP))
+		{
+			TCHAR arg[256] = _T("");
+			DWORD destAddr, nextHop, ifIndex;
+			BOOL isVpn;
+
+	      AgentGetParameterArg(szParam, 1, arg, 256);
+			destAddr = ntohl(_t_inet_addr(arg));
+			if ((destAddr > 0) && (destAddr < 0xE0000000))
+			{
+				if (getNextHop(m_dwIpAddr, destAddr, &nextHop, &ifIndex, &isVpn))
+				{
+					IpToStr(nextHop, szBuffer);
+				}
+				else
+				{
+					_tcscpy(szBuffer, _T("UNREACHABLE"));
+				}
+			}
+			else
+			{
+	         dwError = DCE_NOT_SUPPORTED;
+			}
+		}
+		else
+		{
+         dwError = DCE_NOT_SUPPORTED;
+		}
+   }
    else if (!_tcsicmp(szParam, _T("AgentStatus")))
    {
       if (m_dwFlags & NF_IS_NATIVE_AGENT)
