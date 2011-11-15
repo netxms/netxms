@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Russian Language Pack for Object Browser plug-in
-Bundle-SymbolicName: org.netxms.ui.eclipse.objectbrowser.ru
-Bundle-Version: 1.1.2
-Bundle-Vendor: netxms.org
-Fragment-Host: org.netxms.ui.eclipse.objectbrowser;bundle-version="1.1.2"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
