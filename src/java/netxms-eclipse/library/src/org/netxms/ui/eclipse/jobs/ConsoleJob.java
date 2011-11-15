@@ -32,6 +32,7 @@ import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.ui.eclipse.library.Activator;
+import org.netxms.ui.eclipse.library.Messages;
 
 /**
  * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.
@@ -78,7 +79,7 @@ public abstract class ConsoleJob extends Job
 		{
 			status = new Status(Status.ERROR, pluginId, 
                   (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
-                  getErrorMessage() + ": " + e.getMessage(), passException ? e : null);
+                  getErrorMessage() + ": " + e.getMessage(), passException ? e : null); //$NON-NLS-1$
 			jobFailureHandler();
 		}
 		finally
@@ -167,7 +168,7 @@ public abstract class ConsoleJob extends Job
 			Throwable cause = e.getCause();
 			if (cause == null)
 				cause = e;
-			MessageDialog.openError(null, "Job failed", getErrorMessage() + ": " + cause.getLocalizedMessage());
+			MessageDialog.openError(null, Messages.ConsoleJob_ErrorDialogTitle, getErrorMessage() + ": " + cause.getLocalizedMessage()); //$NON-NLS-1$
 		}
 		catch(InterruptedException e)
 		{

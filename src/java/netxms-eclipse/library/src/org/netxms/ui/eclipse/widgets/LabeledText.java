@@ -120,7 +120,7 @@ public class LabeledText extends Composite
 	 */
 	public void setText(final String newText)
 	{
-		text.setText((newText != null) ? newText : "");
+		text.setText((newText != null) ? newText : ""); //$NON-NLS-1$
 	}
 
 	/**

@@ -63,7 +63,7 @@ public class CommandBox extends Composite
 		setBackground(BACKGROUND_COLOR);
 		
 		cursor = new Cursor(getDisplay(), SWT.CURSOR_HAND);
-		font = new Font(getDisplay(), "Verdana", 9, SWT.NORMAL);
+		font = new Font(getDisplay(), "Verdana", 9, SWT.NORMAL); //$NON-NLS-1$
 		
 		RowLayout layout = new RowLayout();
 		layout.type = SWT.VERTICAL;

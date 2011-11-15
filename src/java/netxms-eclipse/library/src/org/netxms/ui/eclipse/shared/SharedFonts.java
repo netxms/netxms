@@ -37,6 +37,6 @@ public class SharedFonts
 	{
 		Display display = Display.getCurrent();
 		
-		CONSOLE = new Font(display, "Courier New", 10, SWT.NORMAL);
+		CONSOLE = new Font(display, "Courier New", 10, SWT.NORMAL); //$NON-NLS-1$
 	}
 }

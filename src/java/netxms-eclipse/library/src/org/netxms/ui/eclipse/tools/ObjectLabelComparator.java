@@ -43,7 +43,7 @@ public class ObjectLabelComparator extends ViewerComparator
 			if (sortColumn == null)
 				return 0;
 		
-			column = (Integer)sortColumn.getData("ID");
+			column = (Integer)sortColumn.getData("ID"); //$NON-NLS-1$
 		}
 		else
 		{

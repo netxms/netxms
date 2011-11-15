@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.ui.eclipse.library.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -91,7 +92,7 @@ public class AbstractSelector extends Composite
 		gd = new GridData();
 		gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 		button.setLayoutData(gd);
-		button.setText("...");
+		button.setText("..."); //$NON-NLS-1$
 		button.setToolTipText(getButtonToolTip());
 		button.addSelectionListener(new SelectionListener() {
 			@Override
@@ -138,7 +139,7 @@ public class AbstractSelector extends Composite
 				cb.setContents(new Object[] { text.getText() }, new Transfer[] { TextTransfer.getInstance() });
 			}
 		};
-		actionCopy.setText("&Copy to clipboard");
+		actionCopy.setText(Messages.AbstractSelector_CopyToClipboard);
 	}
 	
 	/**
@@ -187,7 +188,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected String getButtonToolTip()
 	{
-		return "Select...";
+		return Messages.AbstractSelector_Select;
 	}
 
 	/**

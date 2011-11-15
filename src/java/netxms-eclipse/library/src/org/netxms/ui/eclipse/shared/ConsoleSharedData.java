@@ -32,10 +32,10 @@ import org.netxms.ui.eclipse.library.Activator;
  */
 public class ConsoleSharedData
 {
-	public static final String IMAGE_ALARM = "icons/alarm.png";
-	public static final String IMAGE_REFRESH = "icons/refresh.gif";
-	public static final String IMAGE_ZOOM_IN = "icons/zoom_in.png";
-	public static final String IMAGE_ZOOM_OUT = "icons/zoom_out.png";
+	public static final String IMAGE_ALARM = "icons/alarm.png"; //$NON-NLS-1$
+	public static final String IMAGE_REFRESH = "icons/refresh.gif"; //$NON-NLS-1$
+	public static final String IMAGE_ZOOM_IN = "icons/zoom_in.png"; //$NON-NLS-1$
+	public static final String IMAGE_ZOOM_OUT = "icons/zoom_out.png"; //$NON-NLS-1$
 	
 	private static Session session = null;
 	private static TrayItem trayIcon = null;

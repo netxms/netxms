@@ -81,7 +81,7 @@ public abstract class DashboardElement extends Composite
 		
 		clientArea = createClientAreaInternal();
 		
-		font = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD);
+		font = new Font(parent.getDisplay(), "Verdana", 8, SWT.BOLD); //$NON-NLS-1$
 		setFont(font);
 		
 		addPaintListener(new PaintListener() {

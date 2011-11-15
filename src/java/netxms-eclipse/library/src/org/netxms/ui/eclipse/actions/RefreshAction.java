@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.actions;
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.SWT;
 import org.netxms.ui.eclipse.library.Activator;
+import org.netxms.ui.eclipse.library.Messages;
 
 /**
  * @author victor
@@ -33,7 +34,7 @@ public class RefreshAction extends Action
 	 */
 	public RefreshAction()
 	{
-		super("Refresh", Activator.getImageDescriptor("icons/refresh.gif"));
+		super(Messages.RefreshAction_Name, Activator.getImageDescriptor("icons/refresh.gif")); //$NON-NLS-1$
 		setAccelerator(SWT.F5);
 	}
 }

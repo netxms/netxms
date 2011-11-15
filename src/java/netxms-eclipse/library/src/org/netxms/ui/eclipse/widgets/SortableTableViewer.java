@@ -91,7 +91,7 @@ public class SortableTableViewer extends TableViewer
 			columns[i].setText(names[i]);
 			if (widths != null)
 				columns[i].setWidth(widths[i]);
-			columns[i].setData("ID", new Integer(i));
+			columns[i].setData("ID", new Integer(i)); //$NON-NLS-1$
 			columns[i].addSelectionListener(sortingListener);
 		}
 
@@ -109,7 +109,7 @@ public class SortableTableViewer extends TableViewer
 	{
 		for(int i = 0; i < columns.length; i++)
 		{
-			if ((Integer)columns[i].getData("ID") == id)
+			if ((Integer)columns[i].getData("ID") == id) //$NON-NLS-1$
 			{
 				return columns[i];
 			}

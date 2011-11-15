@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.library.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -62,14 +63,14 @@ public class FilterText extends Composite
 		setLayout(layout);
 		
 		final Label label = new Label(this, SWT.NONE);
-		label.setText("Filter:");
+		label.setText(Messages.FilterText_Filter);
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
 		label.setLayoutData(gd);
 		
 		text = new Text(this, SWT.BORDER);
 		text.setTextLimit(64);
-		text.setMessage("Filter is empty");
+		text.setMessage(Messages.FilterText_FilterIsEmpty);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -95,7 +96,7 @@ public class FilterText extends Composite
 		closeButton.setBackground(getBackground());
 		closeButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		closeButton.setImage(SharedIcons.IMG_CLOSE);
-		closeButton.setToolTipText("Close filter");
+		closeButton.setToolTipText(Messages.FilterText_CloseFilter);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
 		closeButton.setLayoutData(gd);

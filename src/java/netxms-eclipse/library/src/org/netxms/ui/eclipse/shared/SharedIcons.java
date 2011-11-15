@@ -75,26 +75,26 @@ public class SharedIcons
 	 */
 	public static void init()
 	{
-		ALARM = Activator.getImageDescriptor("icons/alarm.png");
-		ADD_OBJECT = Activator.getImageDescriptor("icons/add_obj.gif");
-		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png");
-		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png");
-		CLEAR_LOG = Activator.getImageDescriptor("icons/clear_log.gif");
-		CLOSE = Activator.getImageDescriptor("icons/close.gif");
-		COLLAPSE = Activator.getImageDescriptor("icons/collapse.png");
-		COLLAPSE_ALL = Activator.getImageDescriptor("icons/collapseall.png");
-		COPY = Activator.getImageDescriptor("icons/copy.gif");
-		CUT = Activator.getImageDescriptor("icons/cut.gif");
-		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif");
-		EDIT = Activator.getImageDescriptor("icons/edit.png");
-		EXPAND = Activator.getImageDescriptor("icons/expand.png");
-		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png");
-		FIND = Activator.getImageDescriptor("icons/find.gif");
-		PASTE = Activator.getImageDescriptor("icons/paste.gif");
-		REFRESH = Activator.getImageDescriptor("icons/refresh.gif");
-		SAVE = Activator.getImageDescriptor("icons/save.gif");
-		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png");
-		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png");
+		ALARM = Activator.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
+		ADD_OBJECT = Activator.getImageDescriptor("icons/add_obj.gif"); //$NON-NLS-1$
+		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png"); //$NON-NLS-1$
+		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
+		CLEAR_LOG = Activator.getImageDescriptor("icons/clear_log.gif"); //$NON-NLS-1$
+		CLOSE = Activator.getImageDescriptor("icons/close.gif"); //$NON-NLS-1$
+		COLLAPSE = Activator.getImageDescriptor("icons/collapse.png"); //$NON-NLS-1$
+		COLLAPSE_ALL = Activator.getImageDescriptor("icons/collapseall.png"); //$NON-NLS-1$
+		COPY = Activator.getImageDescriptor("icons/copy.gif"); //$NON-NLS-1$
+		CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
+		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif"); //$NON-NLS-1$
+		EDIT = Activator.getImageDescriptor("icons/edit.png"); //$NON-NLS-1$
+		EXPAND = Activator.getImageDescriptor("icons/expand.png"); //$NON-NLS-1$
+		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
+		FIND = Activator.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
+		PASTE = Activator.getImageDescriptor("icons/paste.gif"); //$NON-NLS-1$
+		REFRESH = Activator.getImageDescriptor("icons/refresh.gif"); //$NON-NLS-1$
+		SAVE = Activator.getImageDescriptor("icons/save.gif"); //$NON-NLS-1$
+		ZOOM_IN = Activator.getImageDescriptor("icons/zoom_in.png"); //$NON-NLS-1$
+		ZOOM_OUT = Activator.getImageDescriptor("icons/zoom_out.png"); //$NON-NLS-1$
 
 		IMG_ADD_OBJECT = ADD_OBJECT.createImage();
 		IMG_ALARM = ALARM.createImage();

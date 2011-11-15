@@ -1474,6 +1474,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/resources/StatusD
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/ServerConsole.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/helpers/ServerConsoleTerminalConnector.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/widgets/StatusSelector.java -text
+src/java/netxms-eclipse/library/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/library/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/library/build.properties -text
 src/java/netxms-eclipse/library/icons/add_obj.gif -text
@@ -1501,6 +1502,8 @@ src/java/netxms-eclipse/library/jar/simple-xml-2.4.1.jar -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Messages.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/messages.properties -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/ConsoleSharedData.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/IActionConstants.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/shared/SharedFonts.java -text

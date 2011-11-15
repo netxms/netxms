@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.library.Messages;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -54,7 +55,7 @@ public class WidgetHelper
 	public static final int DIALOG_SPACING = 5;
 	public static final int BUTTON_WIDTH_HINT = 90;
 	public static final int WIDE_BUTTON_WIDTH_HINT = 120;
-	public static final String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data";
+	public static final String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data"; //$NON-NLS-1$
 		
 	/**
     * Create pair of label and input field, with label above
@@ -303,7 +304,7 @@ public class WidgetHelper
 		TableColumn[] columns = table.getColumns();
 		for(int i = 0; i < columns.length; i++)
 		{
-			settings.put(prefix + "." + i + ".width", columns[i].getWidth()); //$NON-NLS-1$
+			settings.put(prefix + "." + i + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
@@ -321,7 +322,7 @@ public class WidgetHelper
 		{
 			try
 			{
-				int w = settings.getInt(prefix + "." + i + ".width"); //$NON-NLS-1$
+				int w = settings.getInt(prefix + "." + i + ".width"); //$NON-NLS-1$ //$NON-NLS-2$
 				columns[i].setWidth(w);
 			}
 			catch(NumberFormatException e)
@@ -341,8 +342,8 @@ public class WidgetHelper
 		final Table table = viewer.getTable();
 		saveColumnSettings(table, settings, prefix);
 		TableColumn column = table.getSortColumn();
-		settings.put(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1);
-		settings.put(prefix + ".sortDirection", table.getSortDirection());
+		settings.put(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1); //$NON-NLS-1$ //$NON-NLS-2$
+		settings.put(prefix + ".sortDirection", table.getSortDirection()); //$NON-NLS-1$
 	}
 	
 	/**
@@ -357,8 +358,8 @@ public class WidgetHelper
 		restoreColumnSettings(table, settings, prefix);
 		try
 		{
-			table.setSortDirection(settings.getInt(prefix + ".sortDirection"));
-			int column = settings.getInt(prefix + ".sortColumn");
+			table.setSortDirection(settings.getInt(prefix + ".sortDirection")); //$NON-NLS-1$
+			int column = settings.getInt(prefix + ".sortColumn"); //$NON-NLS-1$
 			if (column >= 0)
 			{
 				table.setSortColumn(viewer.getColumnById(column));
@@ -378,7 +379,7 @@ public class WidgetHelper
 	{
 		final Clipboard cb = new Clipboard(Display.getCurrent());
       Transfer transfer = TextTransfer.getInstance();
-      cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer });
+      cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer }); //$NON-NLS-1$
       cb.dispose();
    }
 	
@@ -386,7 +387,7 @@ public class WidgetHelper
 	{
 		if (!readOnly)
 		{
-			final Action cut = new Action("C&ut") {
+			final Action cut = new Action(Messages.WidgetHelper_Action_Cut) {
 				@Override
 				public void run()
 				{
@@ -397,7 +398,7 @@ public class WidgetHelper
 			manager.add(cut);
 		}
 		
-		final Action copy = new Action("&Copy") {
+		final Action copy = new Action(Messages.WidgetHelper_Action_Copy) {
 			@Override
 			public void run()
 			{
@@ -409,7 +410,7 @@ public class WidgetHelper
 
 		if (!readOnly)
 		{
-			final Action paste = new Action("&Paste") {
+			final Action paste = new Action(Messages.WidgetHelper_Action_Paste) {
 				@Override
 				public void run()
 				{
@@ -419,7 +420,7 @@ public class WidgetHelper
 			paste.setImageDescriptor(SharedIcons.PASTE);
 			manager.add(paste);
 			
-			final Action delete = new Action("&Delete") {
+			final Action delete = new Action(Messages.WidgetHelper_Action_Delete) {
 				@Override
 				public void run()
 				{
@@ -431,7 +432,7 @@ public class WidgetHelper
 			manager.add(new Separator());
 		}
 		
-		final Action selectAll = new Action("Select &all") {
+		final Action selectAll = new Action(Messages.WidgetHelper_Action_SelectAll) {
 			@Override
 			public void run()
 			{

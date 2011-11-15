@@ -24,19 +24,19 @@ package org.netxms.ui.eclipse.shared;
  */
 public interface IActionConstants
 {
-	public static final String M_VIEW = "view";
-	public static final String M_TOOLS = "tools";
-	public static final String M_CONFIG = "config";
+	public static final String M_VIEW = "view"; //$NON-NLS-1$
+	public static final String M_TOOLS = "tools"; //$NON-NLS-1$
+	public static final String M_CONFIG = "config"; //$NON-NLS-1$
 	
-	public static final String M_PRODUCT_VIEW = "product";
-	public static final String M_PRIMARY_VIEW = "primary";
-	public static final String M_TOOL_VIEW = "tools";
-	public static final String M_LOGS_VIEW = "logs";
+	public static final String M_PRODUCT_VIEW = "product"; //$NON-NLS-1$
+	public static final String M_PRIMARY_VIEW = "primary"; //$NON-NLS-1$
+	public static final String M_TOOL_VIEW = "tools"; //$NON-NLS-1$
+	public static final String M_LOGS_VIEW = "logs"; //$NON-NLS-1$
 
-	public static final String MB_OBJECT_CREATION = "objectcreation";
-	public static final String MB_OBJECT_MANAGEMENT = "objectmgmt";
-	public static final String MB_OBJECT_BINDING = "objectbinding";
-	public static final String MB_DATA_COLLECTION = "datacollection";
-	public static final String MB_TOPOLOGY = "topology";
-	public static final String MB_PROPERTIES = "properties";
+	public static final String MB_OBJECT_CREATION = "objectcreation"; //$NON-NLS-1$
+	public static final String MB_OBJECT_MANAGEMENT = "objectmgmt"; //$NON-NLS-1$
+	public static final String MB_OBJECT_BINDING = "objectbinding"; //$NON-NLS-1$
+	public static final String MB_DATA_COLLECTION = "datacollection"; //$NON-NLS-1$
+	public static final String MB_TOPOLOGY = "topology"; //$NON-NLS-1$
+	public static final String MB_PROPERTIES = "properties"; //$NON-NLS-1$
 }
