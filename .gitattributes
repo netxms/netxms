@@ -957,6 +957,7 @@ src/java/netxms-eclipse/NetworkMaps/icons/objects/unknown.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/objects/windowsserver.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/quickmap.png -text
 src/java/netxms-eclipse/NetworkMaps/icons/resources/cluster_res.png -text
+src/java/netxms-eclipse/NetworkMaps/icons/route.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_components.gif -text
 src/java/netxms-eclipse/NetworkMaps/icons/service_deps.gif -text
 src/java/netxms-eclipse/NetworkMaps/plugin.xml -text
@@ -965,6 +966,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/action
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/CreateNetworkMap.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/OpenMapObject.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowIPNeighbors.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowIPRoute.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowLayer2Topology.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowServiceComponents.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/actions/ShowServiceDependency.java -text
@@ -975,6 +977,7 @@ src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/dialog
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/preferencepages/GeneralMapPreferences.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/propertypages/MapBackground.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/IPNeighbors.java -text
+src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/IPRouteMap.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/Layer2Topology.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/NetworkMap.java -text
 src/java/netxms-eclipse/NetworkMaps/src/org/netxms/ui/eclipse/networkmaps/views/PredefinedMap.java -text

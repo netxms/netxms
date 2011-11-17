@@ -161,7 +161,19 @@ public abstract class NetworkMap extends ViewPart implements ISelectionProvider,
 		viewId = site.getId() + ".";
 		viewId += (parts.length > 0) ? parts[0] : site.getSecondaryId();
 	
+		parseSecondaryId(parts);
 		buildMapPage();
+	}
+	
+	/**
+	 * Parse secondary ID (already splitted by & characters). Intended to be
+	 * overrided in subclasses.
+	 * 
+	 * @param parts secondary ID divided at & characters
+	 * @throws PartInitException
+	 */
+	protected void parseSecondaryId(String[] parts) throws PartInitException
+	{
 	}
 	
 	/**

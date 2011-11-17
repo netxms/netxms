@@ -61,6 +61,15 @@
             name="VLAN Map"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.IPRouteMap"
+            icon="icons/route.gif"
+            id="org.netxms.ui.eclipse.networkmaps.views.IPRouteMap"
+            name="IP Route"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -91,6 +100,14 @@
                id="org.netxms.ui.eclipse.networkmaps.popupActions.ShowServiceDependency#node"
                label="Service Dependency"
                menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPRoute"
+               enablesFor="+"
+               icon="icons/route.gif"
+               id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPRoute"
+               label="IP Route"
+               menubarPath="topology">
          </action>
       </objectContribution>
       <objectContribution
