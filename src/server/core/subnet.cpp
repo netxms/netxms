@@ -201,16 +201,16 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
 
 void Subnet::setCorrectMask(DWORD dwAddr, DWORD dwMask)
 {
-	TCHAR szName[128], szBuffer[32];
+	TCHAR szName[MAX_OBJECT_NAME], szBuffer[32];
 
 	LockData();
 	
 	// Check if name is default
-	_sntprintf(szName, 128, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
+	_sntprintf(szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
 	if (!_tcsicmp(szName, m_szName))
 	{
 		// Change name
-		_sntprintf(m_szName, 128, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
+		_sntprintf(m_szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
 	}
 	
 	m_dwIpAddr = dwAddr;

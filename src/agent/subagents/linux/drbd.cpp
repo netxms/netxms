@@ -117,7 +117,7 @@ static bool ParseDrbdStatus()
 					line[pmatch[i].rm_eo] = 0;
 
 				MutexLock(s_versionAccess);
-				nx_strncpy(s_drbdVersion, &line[pmatch[1].rm_so], 64);
+				nx_strncpy(s_drbdVersion, &line[pmatch[1].rm_so], 32);
 				s_apiVersion = strtol(&line[pmatch[2].rm_so], NULL, 10);
 				s_protocolVersion = strtol(&line[pmatch[3].rm_so], NULL, 10);
 				MutexUnlock(s_versionAccess);
