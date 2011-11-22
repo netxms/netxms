@@ -1289,7 +1289,7 @@ void NXSL_Program::doBinaryOperation(int nOpCode)
                      pszText1 = pVal1->getValueAsString(&dwLen1);
                      pszText2 = pVal2->getValueAsString(&dwLen2);
                      if (dwLen1 == dwLen2)
-                        nResult = !memcmp(pszText1, pszText2, dwLen1);
+                        nResult = !memcmp(pszText1, pszText2, dwLen1 * sizeof(TCHAR));
                      else
                         nResult = 0;
                   }

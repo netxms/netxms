@@ -29,8 +29,8 @@
 // Global data
 //
 
-const TCHAR *g_szTypeNames[] = { _T("null"), _T("object"), _T("array"), _T("string"), _T("real"), _T("int32"),
-                                 _T("int64"), _T("uint32"), _T("uint64") };
+const TCHAR *g_szTypeNames[] = { _T("null"), _T("object"), _T("array"), _T("iterator"), _T("string"),
+                                 _T("real"), _T("int32"), _T("int64"), _T("uint32"), _T("uint64") };
 
 
 
