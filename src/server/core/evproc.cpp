@@ -34,7 +34,9 @@ INT64 g_totalEventsProcessed = 0;
 // Static data
 //
 
-static THREAD m_threadStormDetector = INVALID_THREAD_HANDLE;
+static THREAD s_threadStormDetector = INVALID_THREAD_HANDLE;
+static THREAD s_threadLogger = INVALID_THREAD_HANDLE;
+static Queue *s_loggerQueue = NULL;
 
 
 //
@@ -97,18 +99,64 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 
 
 //
+// Event logger
+//
+
+static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
+{
+   while(!IsShutdownInProgress())
+   {
+      Event *pEvent = (Event *)s_loggerQueue->GetOrBlock();
+      if (pEvent == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
+		                                    _T("event_source,event_severity,event_message,root_event_id,user_tag) ")
+		                                    _T("VALUES (?,?,?,?,?,?,?,?)"));
+		if (hStmt != NULL)
+		{
+			do
+			{
+				DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, pEvent->getId());
+				DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pEvent->getCode());
+				DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (DWORD)pEvent->getTimeStamp());
+				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
+				DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
+				DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC);
+				DBBind(hStmt, 7, DB_SQLTYPE_BIGINT, pEvent->getRootId());
+				DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC);
+				DBExecute(hStmt);
+				delete pEvent;
+				pEvent = (Event *)s_loggerQueue->Get();
+			} while((pEvent != NULL) && (pEvent != INVALID_POINTER_VALUE));
+			DBFreeStatement(hStmt);
+		}
+		else
+		{
+			delete pEvent;
+		}
+		DBConnectionPoolReleaseConnection(hdb);
+
+		if (pEvent == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator (need second check if got it in inner loop)
+	}
+	return THREAD_OK;
+}
+
+
+//
 // Event processing thread
 //
 
 THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 {
-   Event *pEvent;
-	DWORD i;
-
-	m_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
+	s_loggerQueue = new Queue;
+	s_threadLogger = ThreadCreateEx(EventLogger, 0, NULL);
+	s_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
    while(!IsShutdownInProgress())
    {
-      pEvent = (Event *)g_pEventQueue->GetOrBlock();
+      Event *pEvent = (Event *)g_pEventQueue->GetOrBlock();
       if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -128,28 +176,11 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       CorrelateEvent(pEvent);
 
 		// Pass event to modules
-      for(i = 0; i < g_dwNumModules; i++)
+      for(DWORD i = 0; i < g_dwNumModules; i++)
 		{
 			if (g_pModuleList[i].pfEventHandler != NULL)
 				g_pModuleList[i].pfEventHandler(pEvent);
 		}
-
-      // Write event to log if required
-		// Don't write SYS_DB_QUERY_FAILED to log to prevent
-		// possible event recursion in case of severe DB failure
-		if ((pEvent->getFlags() & EF_LOG) && (pEvent->getCode() != EVENT_DB_QUERY_FAILED))
-      {
-         TCHAR szQuery[8192];
-
-         _sntprintf(szQuery, 8192, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
-                                   _T("event_source,event_severity,event_message,root_event_id,user_tag) ")
-                                   _T("VALUES (") INT64_FMT _T(",%d,") TIME_T_FMT _T(",%d,%d,%s,") INT64_FMT _T(",%s)"), 
-                  pEvent->getId(), pEvent->getCode(), pEvent->getTimeStamp(),
-                  pEvent->getSourceId(), pEvent->getSeverity(),
-						(const TCHAR *)DBPrepareString(g_hCoreDB, pEvent->getMessage(), EVENTLOG_MAX_MESSAGE_SIZE),
-						pEvent->getRootId(), (const TCHAR *)DBPrepareString(g_hCoreDB, pEvent->getUserTag(), EVENTLOG_MAX_USERTAG_SIZE));
-         QueueSQLRequest(szQuery);
-      }
 
       // Send event to all connected clients
       EnumerateClientSessions(BroadcastEvent, pEvent);
@@ -173,14 +204,27 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 			DbgPrintf(7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
 		}
 
-      // Destroy event
-      delete pEvent;
-		DbgPrintf(7, _T("Event object destroyed"));
+      // Write event to log if required, otherwise destroy it
+		// Don't write SYS_DB_QUERY_FAILED to log to prevent
+		// possible event recursion in case of severe DB failure
+		// Logger will destroy event object after logging
+		if ((pEvent->getFlags() & EF_LOG) && (pEvent->getCode() != EVENT_DB_QUERY_FAILED))
+		{
+			s_loggerQueue->Put(pEvent);
+		}
+		else
+      {
+			delete pEvent;
+			DbgPrintf(7, _T("Event object destroyed"));
+		}
       
       g_totalEventsProcessed++;
    }
 
-	ThreadJoin(m_threadStormDetector);
+	s_loggerQueue->Put(INVALID_POINTER_VALUE);
+	ThreadJoin(s_threadStormDetector);
+	ThreadJoin(s_threadLogger);
+	delete s_loggerQueue;
    DbgPrintf(1, _T("Event processing thread stopped"));
    return THREAD_OK;
 }

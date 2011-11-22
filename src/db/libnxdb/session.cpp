@@ -984,7 +984,10 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType)
 {
-	DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, (void *)value, allocType);
+	if (value != NULL)
+		DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, (void *)value, allocType);
+	else
+		DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, (void *)_T(""), DB_BIND_STATIC);
 }
 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, LONG value)

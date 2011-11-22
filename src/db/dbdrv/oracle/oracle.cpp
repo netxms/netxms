@@ -411,53 +411,88 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 
 	OCIBind *handleBind = (OCIBind *)stmt->bindings->get(pos - 1);
 	void *sqlBuffer;
-	if (cType == DB_CTYPE_STRING)
+	switch(cType)
 	{
+		case DB_CTYPE_STRING:
 #if UNICODE_UCS4
-		sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
-		stmt->buffers->set(pos - 1, sqlBuffer);
-		if (allocType == DB_BIND_DYNAMIC)
-			free(buffer);
-#else
-		if (allocType == DB_BIND_TRANSIENT)
-		{
-			sqlBuffer = wcsdup((WCHAR *)buffer);
+			sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
 			stmt->buffers->set(pos - 1, sqlBuffer);
-		}
-		else
-		{
-			sqlBuffer = buffer;
 			if (allocType == DB_BIND_DYNAMIC)
+				free(buffer);
+#else
+			if (allocType == DB_BIND_TRANSIENT)
+			{
+				sqlBuffer = wcsdup((WCHAR *)buffer);
 				stmt->buffers->set(pos - 1, sqlBuffer);
-		}
+			}
+			else
+			{
+				sqlBuffer = buffer;
+				if (allocType == DB_BIND_DYNAMIC)
+					stmt->buffers->set(pos - 1, sqlBuffer);
+			}
 #endif
-
-		OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-		             (ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
-						 (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
-		             NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
-	}
-	else
-	{
-		switch(allocType)
-		{
-			case DB_BIND_STATIC:
-				sqlBuffer = buffer;
-				break;
-			case DB_BIND_DYNAMIC:
-				sqlBuffer = buffer;
-				stmt->buffers->set(pos - 1, buffer);
-				break;
-			case DB_BIND_TRANSIENT:
-				sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
-				stmt->buffers->set(pos - 1, sqlBuffer);
-				break;
-			default:
-				return;	// Invalid call
-		}
-
-		OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, bufferSize[cType],
-		             oracleType[cType], NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
+							 (ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+							 (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
+							 NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+			break;
+		case DB_CTYPE_INT64:	// OCI prior to 11.2 cannot bind 64 bit integers
+#ifdef UNICODE_UCS2
+			sqlBuffer = malloc(64 * sizeof(WCHAR));
+			swprintf((WCHAR *)sqlBuffer, 64, INT64_FMTW, *((INT64 *)buffer));
+#else
+			{
+				char temp[64];
+				snprintf(temp, 64, INT64_FMT, *((INT64 *)buffer));
+				sqlBuffer = UCS2StringFromMBString(temp);
+			}
+#endif
+			stmt->buffers->set(pos - 1, sqlBuffer);
+			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
+							 (ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+							 SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+			if (allocType == DB_BIND_DYNAMIC)
+				free(buffer);
+			break;
+		case DB_CTYPE_UINT64:	// OCI prior to 11.2 cannot bind 64 bit integers
+#ifdef UNICODE_UCS2
+			sqlBuffer = malloc(64 * sizeof(WCHAR));
+			swprintf((WCHAR *)sqlBuffer, 64, UINT64_FMTW, *((QWORD *)buffer));
+#else
+			{
+				char temp[64];
+				snprintf(temp, 64, UINT64_FMT, *((QWORD *)buffer));
+				sqlBuffer = UCS2StringFromMBString(temp);
+			}
+#endif
+			stmt->buffers->set(pos - 1, sqlBuffer);
+			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
+							 (ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+							 SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+			if (allocType == DB_BIND_DYNAMIC)
+				free(buffer);
+			break;
+		default:
+			switch(allocType)
+			{
+				case DB_BIND_STATIC:
+					sqlBuffer = buffer;
+					break;
+				case DB_BIND_DYNAMIC:
+					sqlBuffer = buffer;
+					stmt->buffers->set(pos - 1, buffer);
+					break;
+				case DB_BIND_TRANSIENT:
+					sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
+					stmt->buffers->set(pos - 1, sqlBuffer);
+					break;
+				default:
+					return;	// Invalid call
+			}
+			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, bufferSize[cType],
+							 oracleType[cType], NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+			break;
 	}
 	stmt->bindings->set(pos - 1, handleBind);
 }

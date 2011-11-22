@@ -230,7 +230,9 @@ typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t; 
 
 #define INT64_FMT			_T("%I64d")
+#define INT64_FMTW		L"%I64d"
 #define UINT64_FMT		_T("%I64u")
+#define UINT64_FMTW		L"%I64u"
 #define UINT64X_FMT(m)  _T("%") m _T("I64X")
 #if defined(__64BIT__) || (_MSC_VER > 1300)
 #define TIME_T_FMT      _T("%I64u")
