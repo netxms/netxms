@@ -204,6 +204,10 @@ BOOL Interface::CreateFromDB(DWORD dwId)
    // Load access list
    loadACLFromDB();
 
+	// Validate loopback flag
+	if (((m_dwIpAddr & 0xFF000000) == 0x7F000000) || (m_dwIfType == IFTYPE_SOFTWARE_LOOPBACK))
+		m_flags |= IF_LOOPBACK;
+
    return bResult;
 }
 

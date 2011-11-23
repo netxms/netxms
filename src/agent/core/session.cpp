@@ -767,6 +767,7 @@ void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
 		if (_tstat(fileName, &fs) == 0)
 		{
 			pMsg->SetVariable(VID_FILE_SIZE, (QWORD)fs.st_size);
+			pMsg->SetVariable(VID_MODIFY_TIME, (QWORD)fs.st_mtime);
 			pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
 		}
 		else

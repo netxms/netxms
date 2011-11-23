@@ -322,7 +322,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             }
             break;
          case OBJECT_INTERFACE:
-            if (pObject->IpAddr() != 0)
+            if ((pObject->IpAddr() != 0) && !((Interface *)pObject)->isExcludedFromTopology())
             {
 					if (IsZoningEnabled())
 					{

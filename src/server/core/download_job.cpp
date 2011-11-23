@@ -111,6 +111,7 @@ bool FileDownloadJob::run()
 			if (rcc == ERR_SUCCESS)
 			{
 				m_fileSize = (INT64)response->GetVariableInt64(VID_FILE_SIZE);
+				time_t modTime = (time_t)response->GetVariableInt64(VID_MODIFY_TIME);
 				delete response;
 
 				DbgPrintf(5, _T("FileDownloadJob: Sending download request for file %s@%s"), m_remoteFile, m_node->Name());
@@ -127,7 +128,7 @@ bool FileDownloadJob::run()
 				bool appendFile = false;
 				if (_tstat(m_localFile, &fs) == 0)
 				{
-					if (m_fileSize > (INT64)fs.st_size)
+					if ((m_fileSize > (INT64)fs.st_size) && (modTime <= fs.st_mtime))
 					{
 						msg.SetVariable(VID_FILE_OFFSET, (DWORD)fs.st_size);
 						appendFile = true;
