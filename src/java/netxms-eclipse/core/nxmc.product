@@ -34,6 +34,7 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       </win>
    </launcher>
 
+
    <vm>
    </vm>
 
@@ -51,10 +52,8 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.birt.chart.engine.extension"/>
       <plugin id="org.eclipse.birt.core"/>
       <plugin id="org.eclipse.compare.core"/>
-      <plugin id="org.eclipse.compare.core.nl_de" fragment="true"/>
       <plugin id="org.eclipse.compare.core.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.commands"/>
-      <plugin id="org.eclipse.core.commands.nl_de" fragment="true"/>
       <plugin id="org.eclipse.core.commands.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.contenttype"/>
       <plugin id="org.eclipse.core.contenttype.nl_de" fragment="true"/>
@@ -79,14 +78,11 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.core.filesystem.linux.x86" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86_64" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.macosx" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.nl_de" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.qnx.x86" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.solaris.sparc" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.win32.x86_64" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86_64.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.win32.x86_64.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.jobs"/>
       <plugin id="org.eclipse.core.jobs.nl_de" fragment="true"/>
       <plugin id="org.eclipse.core.jobs.nl_ru" fragment="true"/>

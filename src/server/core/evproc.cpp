@@ -123,9 +123,27 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 				DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (DWORD)pEvent->getTimeStamp());
 				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
 				DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
-				DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC);
+				if (_tcslen(pEvent->getMessage()) <= 255)
+				{
+					DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC);
+				}
+				else
+				{
+					TCHAR *temp = _tcsdup(pEvent->getMessage());
+					temp[255] = 0;
+					DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
+				}
 				DBBind(hStmt, 7, DB_SQLTYPE_BIGINT, pEvent->getRootId());
-				DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC);
+				if (_tcslen(pEvent->getMessage()) <= 63)
+				{
+					DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC);
+				}
+				else
+				{
+					TCHAR *temp = _tcsdup(pEvent->getMessage());
+					temp[63] = 0;
+					DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
+				}
 				DBExecute(hStmt);
 				delete pEvent;
 				pEvent = (Event *)s_loggerQueue->Get();
