@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2011 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.console;
 
 import org.eclipse.jface.action.Action;
@@ -29,6 +47,9 @@ import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsoleConstants;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 
+/**
+ *
+ */
 public class NXMCActionBarAdvisor extends ActionBarAdvisor
 {
 	private IWorkbenchAction actionExit;
@@ -221,6 +242,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		MenuManager fileMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_file"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_FILE);
 		MenuManager viewMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_view"), IActionConstants.M_VIEW); //$NON-NLS-1$
+		MenuManager monitorMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_monitor"), IActionConstants.M_MONITOR); //$NON-NLS-1$
 		MenuManager configMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_configuration"), IActionConstants.M_CONFIG); //$NON-NLS-1$
 		MenuManager toolsMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_tools"), IActionConstants.M_TOOLS); //$NON-NLS-1$
 		MenuManager windowMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.Window"), IWorkbenchActionConstants.M_WINDOW); //$NON-NLS-1$
@@ -229,6 +251,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
+		menuBar.add(monitorMenu);
 		menuBar.add(configMenu);
 		menuBar.add(toolsMenu);
 
@@ -260,6 +283,9 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		viewMenu.add(actionOpenConsole);
 		viewMenu.add(actionOpenProgressView);
 		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
+		
+		// Monitor
+		monitorMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		
 		// Tools
 		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

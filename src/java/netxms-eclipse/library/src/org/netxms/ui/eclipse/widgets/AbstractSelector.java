@@ -45,7 +45,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Abstract selector widget
- *
  */
 public class AbstractSelector extends Composite
 {

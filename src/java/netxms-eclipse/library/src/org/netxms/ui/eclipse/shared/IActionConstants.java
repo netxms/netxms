@@ -27,6 +27,7 @@ public interface IActionConstants
 	public static final String M_VIEW = "view"; //$NON-NLS-1$
 	public static final String M_TOOLS = "tools"; //$NON-NLS-1$
 	public static final String M_CONFIG = "config"; //$NON-NLS-1$
+	public static final String M_MONITOR = "monitor"; //$NON-NLS-1$
 	
 	public static final String M_PRODUCT_VIEW = "product"; //$NON-NLS-1$
 	public static final String M_PRIMARY_VIEW = "primary"; //$NON-NLS-1$

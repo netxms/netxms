@@ -99,9 +99,9 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			case AlarmList.COLUMN_COUNT:
 				return Integer.toString(((Alarm)element).getRepeatCount());
 			case AlarmList.COLUMN_CREATED:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((Alarm)element).getCreationTime());
+				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(((Alarm)element).getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((Alarm)element).getLastChangeTime());
+				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(((Alarm)element).getLastChangeTime());
 		}
 		return null;
 	}

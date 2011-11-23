@@ -11,6 +11,14 @@
             class="org.netxms.ui.eclipse.eventmanager.views.EventConfigurator"
             id="org.netxms.ui.eclipse.eventmanager.view.event_configurator">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.eventmanager.views.EventMonitor"
+            icon="icons/event_monitor.png"
+            id="org.netxms.ui.eclipse.eventmanager.views.EventMonitor"
+            name="Event Monitor"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -24,6 +32,12 @@
             description="Open event configuration"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open event monitor"
+            id="org.netxms.ui.eclipse.eventmanager.commands.open_event_monitor"
+            name="Event Monitor">
       </command>
    </extension>
 
@@ -40,6 +54,14 @@
 			   class="org.netxms.ui.eclipse.eventmanager.actions.OpenEventConfigurator"
 			   definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
 		   </action>
+     <action
+           class="org.netxms.ui.eclipse.eventmanager.actions.OpenEventMonitor"
+           definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_event_monitor"
+           id="org.netxms.ui.eclipse.eventmanager.actions.open_event_monitor"
+           label="Events"
+           menubarPath="monitor/additions"
+           tooltip="Open event monitor">
+     </action>
 	   </actionSet>
    </extension>
 
@@ -50,6 +72,12 @@
            adaptableType="org.netxms.client.events.EventTemplate">
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
         </factory>
+  </extension>
+  <extension
+        point="org.eclipse.core.runtime.preferences">
+     <initializer
+           class="org.netxms.ui.eclipse.eventmanager.PreferenceInitializer">
+     </initializer>
   </extension>
 
 </plugin>
