@@ -75,6 +75,7 @@ mibs_DATA = \
 	IP-MIB.txt \
 	IPMROUTE-STD-MIB.txt \
 	IPV6-TC.txt \
+	JUNIPER-IVE-MIB.txt \
 	LLDP-MIB.txt \
 	LLDP-V2-MIB.txt \
 	LLDP-V2-TC-MIB.txt \

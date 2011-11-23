@@ -96,8 +96,6 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.core.runtime.compatibility.auth.nl_de" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.compatibility.auth.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
-      <plugin id="org.eclipse.core.runtime.compatibility.registry.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.core.runtime.compatibility.registry.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.nl_de" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.core.variables"/>
@@ -168,8 +166,6 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
       <plugin id="org.eclipse.swt.photon.qnx.x86" fragment="true"/>
       <plugin id="org.eclipse.swt.win32.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.swt.win32.win32.x86_64" fragment="true"/>
-      <plugin id="org.eclipse.swt.win32.win32.x86_64.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.swt.win32.win32.x86_64.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.swt.wpf.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.text"/>
       <plugin id="org.eclipse.text.nl_de" fragment="true"/>
