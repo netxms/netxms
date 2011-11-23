@@ -4,7 +4,7 @@
 
 - New internal parameter: Net.IP.NextHop
 - Implemented IP route visualization in management console
-- Fixed issues: #335, #337
+- Fixed issues: #335, #336, #337
 
 
 *

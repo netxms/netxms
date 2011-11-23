@@ -62,23 +62,6 @@ void InterfaceList::add(NX_INTERFACE_INFO *iface)
 
 
 //
-// Remove loopback interfaces
-//
-
-void InterfaceList::removeLoopbacks()
-{
-   // Delete loopback interface(s) from list
-   for(int i = 0; i < m_size; i++)
-      if ((m_interfaces[i].dwIpAddr & 0xFF000000) == 0x7F000000)
-      {
-         m_size--;
-         memmove(&m_interfaces[i], &m_interfaces[i + 1], sizeof(NX_INTERFACE_INFO) * (m_size - i));
-         i--;
-      }
-}
-
-
-//
 // Find interface entry by ifIndex
 //
 

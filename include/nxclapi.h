@@ -254,6 +254,9 @@ typedef void * NXC_SESSION;
 
 #define IF_SYNTHETIC_MASK        0x00000001
 #define IF_PHYSICAL_PORT         0x00000002
+#define IF_EXCLUDE_FROM_TOPOLOGY 0x00000004
+#define IF_LOOPBACK              0x00000008
+#define IF_CREATED_MANUALLY      0x00000010
 
 
 //

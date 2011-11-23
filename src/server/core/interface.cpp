@@ -59,7 +59,10 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheti
           : NetObj()
 {
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
-   _tcscpy(m_szName, _T("unknown"));
+	if ((dwAddr & 0xFF000000) == 0x7F000000)
+		m_flags |= IF_LOOPBACK;
+
+	_tcscpy(m_szName, _T("unknown"));
    _tcscpy(m_description, _T("unknown"));
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
@@ -89,7 +92,11 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, DWORD zoneId, bool bSyntheti
 Interface::Interface(const TCHAR *name, const TCHAR *descr, DWORD index, DWORD ipAddr, DWORD ipNetMask, DWORD ifType, DWORD zoneId)
           : NetObj()
 {
-	m_flags = 0;
+	if (((ipAddr & 0xFF000000) == 0x7F000000) || (ifType == IFTYPE_SOFTWARE_LOOPBACK))
+		m_flags = IF_LOOPBACK;
+	else
+		m_flags = 0;
+
    nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
    nx_strncpy(m_description, descr, MAX_DB_STRING);
    m_dwIfIndex = index;
@@ -361,7 +368,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    if (bNeedPoll)
    {
 		// Pings cannot be used for cluster sync interfaces
-      if ((pNode->getFlags() & NF_DISABLE_ICMP) || bClusterSync || (m_dwIpAddr == 0))
+      if ((pNode->getFlags() & NF_DISABLE_ICMP) || bClusterSync || (m_dwIpAddr == 0) || isLoopback())
       {
          newStatus = STATUS_UNKNOWN;
       }

@@ -112,11 +112,9 @@ DWORD GetLocalIpAddr()
    pIfList = GetLocalInterfaceList();
    if (pIfList != NULL)
    {
-		pIfList->removeLoopbacks();
-      
       // Find first interface with IP address
       for(i = 0; i < pIfList->getSize(); i++)
-         if (pIfList->get(i)->dwIpAddr != 0)
+			if ((pIfList->get(i)->dwIpAddr != 0) && ((pIfList->get(i)->dwIpAddr & 0xFF000000) != 0x7F000000))
          {
             dwAddr = pIfList->get(i)->dwIpAddr;
             break;

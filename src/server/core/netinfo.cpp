@@ -447,8 +447,5 @@ InterfaceList *GetLocalInterfaceList()
          conn.disconnect();
       }
    }
-
-	if (pIfList != NULL)
-		pIfList->removeLoopbacks();
    return pIfList;
 }

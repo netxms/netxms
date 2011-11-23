@@ -524,7 +524,6 @@ InterfaceList *Node::getInterfaceList()
 
    if (pIfList != NULL)
 	{
-		pIfList->removeLoopbacks();
       checkInterfaceNames(pIfList);
 		addVrrpInterfaces(pIfList);
 	}
@@ -820,7 +819,7 @@ void Node::createNewInterface(DWORD dwIpAddr, DWORD dwNetMask, const TCHAR *name
 	          dwIpAddr, dwNetMask, CHECK_NULL(name), dwIndex, dwType, bridgePort, slot, port, m_szName, m_dwId);
 
    // Find subnet to place interface object to
-   if (dwIpAddr != 0)
+	if ((dwIpAddr != 0) && (dwType != IFTYPE_SOFTWARE_LOOPBACK) && ((dwIpAddr & 0xFF000000) != 0x7F000000))
    {
 		pCluster = getMyCluster();
 		bAddToSubnet = (pCluster != NULL) ? !pCluster->isSyncAddr(dwIpAddr) : TRUE;
@@ -930,7 +929,7 @@ void Node::deleteInterface(Interface *pInterface)
 	DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d])"), m_szName, m_dwId, pInterface->Name(), pInterface->Id());
 
    // Check if we should unlink node from interface's subnet
-   if (pInterface->IpAddr() != 0)
+   if ((pInterface->IpAddr() != 0) && !pInterface->isExcludedFromTopology())
    {
       BOOL bUnlink = TRUE;
 
@@ -4215,6 +4214,8 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 				nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
 				break;	// Something goes really wrong
 			}
+			if (pInterface->isExcludedFromTopology())
+				continue;
 
 			// Is cluster interconnect interface?
 			isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : FALSE;
@@ -4278,6 +4279,9 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			{
 				if (m_pChildList[j]->Type() == OBJECT_INTERFACE)
 				{
+					if (((Interface *)m_pChildList[j])->isExcludedFromTopology())
+						continue;
+
 					if (pSubnet->IpAddr() == (m_pChildList[j]->IpAddr() & pSubnet->getIpNetMask()))
 					{
 						if (pCluster != NULL)

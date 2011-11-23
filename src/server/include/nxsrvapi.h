@@ -238,7 +238,6 @@ public:
 
 	void add(NX_INTERFACE_INFO *iface);
 	void remove(int index);
-	void removeLoopbacks();
 
 	int getSize() { return m_size; }
 	NX_INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
