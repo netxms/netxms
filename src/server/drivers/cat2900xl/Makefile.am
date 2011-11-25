@@ -12,6 +12,6 @@ EXTRA_DIST = \
 	cat2900xl.h
 
 install-exec-hook:
-	mkdir -p $(pkglibdir)/ndd
-	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/ndd/$(DRIVER).ndd
-	rm -f $(pkglibdir)/$(DRIVER).la
+	mkdir -p $(DESTDIR)$(pkglibdir)/ndd
+	mv $(DESTDIR)$(pkglibdir)/$(DRIVER).so $(DESTDIR)$(pkglibdir)/ndd/$(DRIVER).ndd
+	rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).la

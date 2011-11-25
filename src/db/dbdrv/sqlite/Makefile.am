@@ -12,9 +12,9 @@ EXTRA_DIST = \
 	sqlitedrv.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(pkglibdir)/$(DRIVER).a $(pkglibdir)/$(DRIVER).so ; rm -f $(pkglibdir)/$(DRIVER).a ; fi
-	mkdir -p $(pkglibdir)/dbdrv
-	mv $(pkglibdir)/$(DRIVER).so $(pkglibdir)/dbdrv/$(DRIVER).ddr
-	rm -f $(pkglibdir)/$(DRIVER).la	
-	rm -f $(libdir)/libnxddr_$(DRIVER).so*
-	ln -s $(pkglibdir)/dbdrv/$(DRIVER).ddr $(libdir)/libnxddr_$(DRIVER).so
+	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(DRIVER).a $(DESTDIR)$(pkglibdir)/$(DRIVER).so ; rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).a ; fi
+	mkdir -p $(DESTDIR)$(pkglibdir)/dbdrv
+	mv $(DESTDIR)$(pkglibdir)/$(DRIVER).so $(DESTDIR)$(pkglibdir)/dbdrv/$(DRIVER).ddr
+	rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).la	
+	rm -f $(DESTDIR)$(libdir)/libnxddr_$(DRIVER).so*
+	ln -s $(pkglibdir)/dbdrv/$(DRIVER).ddr $(DESTDIR)$(libdir)/libnxddr_$(DRIVER).so

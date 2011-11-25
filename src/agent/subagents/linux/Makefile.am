@@ -10,7 +10,7 @@ linux_la_LIBADD = ../../../libnetxms/libnetxms.la
 EXTRA_DIST = linux_subagent.h
 
 install-exec-hook:
-	mv $(pkglibdir)/$(SUBAGENT).so $(pkglibdir)/$(SUBAGENT).nsm
-	rm -f $(pkglibdir)/$(SUBAGENT).la
-	rm -f $(libdir)/libnsm_$(SUBAGENT).so
-	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(libdir)/libnsm_$(SUBAGENT).so
+	mv $(DESTDIR)$(pkglibdir)/$(SUBAGENT).so $(DESTDIR)$(pkglibdir)/$(SUBAGENT).nsm
+	rm -f $(DESTDIR)$(pkglibdir)/$(SUBAGENT).la
+	rm -f $(DESTDIR)$(libdir)/libnsm_$(SUBAGENT).so
+	ln -s $(pkglibdir)/$(SUBAGENT).nsm $(DESTDIR)$(libdir)/libnsm_$(SUBAGENT).so
