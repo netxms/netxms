@@ -33,6 +33,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventLabelProvider;
+import org.netxms.ui.eclipse.eventmanager.views.helpers.EventMonitorFilter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
 
@@ -81,6 +82,8 @@ public class EventMonitor extends AbstractTraceView implements SessionListener
 		addColumn("Source", 200);
 		addColumn("Severity", 90);
 		addColumn("Message", 600);
+		
+		setFilter(new EventMonitorFilter());
 	}
 
 	/* (non-Javadoc)

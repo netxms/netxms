@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Toggle Trace Filter"
+            id="org.netxms.ui.eclipse.library.commands.show_trace_filter"
+            name="Toggle Trace Filter">
+      </command>
+      <command
+            description="Pause Trace"
+            id="org.netxms.ui.eclipse.library.commands.pause_trace"
+            name="Pause Trace">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.show_trace_filter"
+            contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.pause_trace"
+            contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="PAUSE">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.library.context.AbstractTraceView"
+            name="Abstract Trace View"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+
+</plugin>

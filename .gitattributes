@@ -834,6 +834,7 @@ src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/dial
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventConfigurator.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/EventMonitor.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventLabelProvider.java -text
+src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/views/helpers/EventMonitorFilter.java -text
 src/java/netxms-eclipse/EventManager/src/org/netxms/ui/eclipse/eventmanager/widgets/EventSelector.java -text
 src/java/netxms-eclipse/FileManager/.classpath -text
 src/java/netxms-eclipse/FileManager/.project -text
@@ -1500,6 +1501,7 @@ src/java/netxms-eclipse/library/icons/save.gif -text
 src/java/netxms-eclipse/library/icons/zoom_in.png -text
 src/java/netxms-eclipse/library/icons/zoom_out.png -text
 src/java/netxms-eclipse/library/jar/simple-xml-2.4.1.jar -text
+src/java/netxms-eclipse/library/plugin.xml -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/actions/RefreshAction.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/jobs/ConsoleJob.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/library/Activator.java -text
@@ -1516,6 +1518,7 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/StringComparator
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetFactory.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/tools/WidgetHelper.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/views/AbstractTraceView.java -text
+src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/views/helpers/AbstractTraceViewFilter.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/AbstractSelector.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/AnimatedImage.java -text
 src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/CommandBox.java -text

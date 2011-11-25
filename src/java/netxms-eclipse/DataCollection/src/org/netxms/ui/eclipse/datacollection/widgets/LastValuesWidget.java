@@ -178,7 +178,7 @@ public class LastValuesWidget extends Composite
 		fd.right = new FormAttachment(100, 0);
 		filterText.setLayoutData(fd);
 		
-		// Finalise widget creation
+		// Finalize widget creation
 		getDataFromServer();
 		
 		try

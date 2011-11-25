@@ -21,21 +21,37 @@ package org.netxms.ui.eclipse.views;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.library.Activator;
 import org.netxms.ui.eclipse.shared.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
+import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
  * Abstract trace view (like event trace)
@@ -44,11 +60,16 @@ public abstract class AbstractTraceView extends ViewPart
 {
 	private static final int MAX_ELEMENTS = 1000;
 	
+	private Composite clientArea;
+	private FilterText filterText;
 	private TableViewer viewer;
 	private List<Object> data = new ArrayList<Object>(MAX_ELEMENTS);
+	private AbstractTraceViewFilter filter = null;
 	private boolean paused = false;
+	private boolean filterEnabled = false;
 	private Action actionClear;
 	private Action actionPause;
+	private Action actionShowFilter;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -56,7 +77,27 @@ public abstract class AbstractTraceView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		viewer = new TableViewer(parent, SWT.FULL_SELECTION | SWT.SINGLE);
+		clientArea = new Composite(parent, SWT.NONE);
+		clientArea.setLayout(new FormLayout());
+
+		filterText = new FilterText(clientArea, SWT.NONE);
+		filterText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				onFilterModify();
+			}
+		});
+		filterText.setCloseAction(new Action() {
+			@Override
+			public void run()
+			{
+				enableFilter(false);
+				actionShowFilter.setChecked(false);
+			}
+		});
+		
+		viewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.SINGLE);
 		viewer.getTable().setHeaderVisible(true);
 		viewer.setContentProvider(new ArrayContentProvider());
 		setupViewer(viewer);
@@ -69,15 +110,47 @@ public abstract class AbstractTraceView extends ViewPart
 			}
 		});
 	
+		// Setup layout
+		FormData fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(filterText);
+		fd.right = new FormAttachment(100, 0);
+		fd.bottom = new FormAttachment(100, 0);
+		viewer.getTable().setLayoutData(fd);
+		
+		fd = new FormData();
+		fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(0, 0);
+		fd.right = new FormAttachment(100, 0);
+		filterText.setLayoutData(fd);
+		
 		createActions();
 		contributeToActionBars();
+		createPopupMenu();
+		
+		activateContext();
+		enableFilter(filterEnabled);
 	}
 
+	/**
+	 * Activate context
+	 */
+	protected void activateContext()
+	{
+		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+		if (contextService != null)
+		{
+			contextService.activateContext("org.netxms.ui.eclipse.library.context.AbstractTraceView");
+		}
+	}
+	
 	/**
 	 * Create actions
 	 */
 	protected void createActions()
 	{
+		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+		
 		actionClear = new Action("&Clear", SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
@@ -94,6 +167,22 @@ public abstract class AbstractTraceView extends ViewPart
 			}
 		};
 		actionPause.setImageDescriptor(Activator.getImageDescriptor("icons/pause.png"));
+      actionPause.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.pause_trace");
+		final ActionHandler pauseHandler = new ActionHandler(actionPause);
+		handlerService.activateHandler(actionPause.getActionDefinitionId(), pauseHandler);
+		
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX)
+      {
+			@Override
+			public void run()
+			{
+				enableFilter(actionShowFilter.isChecked());
+			}
+      };
+      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.show_trace_filter");
+		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
+		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 	}
 	
 	/**
@@ -114,6 +203,8 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionShowFilter);
+		manager.add(new Separator());
 		manager.add(actionPause);
 		manager.add(actionClear);
 	}
@@ -128,6 +219,40 @@ public abstract class AbstractTraceView extends ViewPart
 	{
 		manager.add(actionPause);
 		manager.add(actionClear);
+	}
+	
+	/**
+	 * Create viewer's popup menu
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+
+		// Register menu for extension.
+		getSite().registerContextMenu(menuMgr, viewer);
+	}
+
+	/**
+	 * Fill context menu
+	 * 
+	 * @param manager Menu manager
+	 */
+	protected void fillContextMenu(final IMenuManager manager)
+	{
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	/* (non-Javadoc)
@@ -222,4 +347,58 @@ public abstract class AbstractTraceView extends ViewPart
 	 * @return
 	 */
 	protected abstract String getConfigPrefix();
+
+	/**
+	 * Enable or disable filter
+	 * 
+	 * @param enable New filter state
+	 */
+	protected void enableFilter(boolean enable)
+	{
+		filterEnabled = enable;
+		filterText.setVisible(filterEnabled);
+		FormData fd = (FormData)viewer.getTable().getLayoutData();
+		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+		clientArea.layout();
+		if (enable)
+			filterText.setFocus();
+		else
+			setFilter("");
+	}
+
+	/**
+	 * Set filter text
+	 * 
+	 * @param text New filter text
+	 */
+	protected void setFilter(final String text)
+	{
+		filterText.setText(text);
+		onFilterModify();
+	}
+
+	/**
+	 * Handler for filter modification
+	 */
+	private void onFilterModify()
+	{
+		final String text = filterText.getText();
+		if (filter != null)
+		{
+			filter.setFilterString(text);
+			viewer.refresh(false);
+		}
+	}
+
+	/**
+	 * @param filter the filter to set
+	 */
+	protected void setFilter(AbstractTraceViewFilter filter)
+	{
+		if (this.filter != null)
+			viewer.removeFilter(this.filter);
+		
+		this.filter = filter;
+		viewer.addFilter(filter);
+	}
 }
