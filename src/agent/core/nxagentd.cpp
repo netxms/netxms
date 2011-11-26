@@ -181,6 +181,8 @@ static TCHAR m_szProcessToWait[MAX_PATH] = _T("");
 static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
 static DWORD m_dwMaxLogSize = 16384 * 1024;
 static DWORD m_dwLogHistorySize = 4;
+static DWORD m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
+static TCHAR m_szDailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
 
 #if defined(_WIN32) || defined(_NETWARE)
@@ -203,6 +205,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
 	{ "DataDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory },
+   { "DailyLogFileSuffix", CT_STRING, 0, 0, MAX_PATH, 0, m_szDailyLogFileSuffix },
 	{ "DebugLevel", CT_LONG, 0, 0, 0, 0, &g_debugLevel },
    { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
@@ -224,6 +227,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "LogHistorySize", CT_LONG, 0, 0, 0, 0, &m_dwLogHistorySize },
+   { "LogRotationMode", CT_LONG, 0, 0, 0, 0, &m_dwLogRotationMode },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
    { "MasterServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList },
    { "MaxLogSize", CT_LONG, 0, 0, 0, 0, &m_dwMaxLogSize },
@@ -675,7 +679,7 @@ BOOL Initialize()
    // Open log file
 	if (!(g_dwFlags & AF_USE_SYSLOG))
 	{
-		if (!nxlog_set_rotation_policy((int)m_dwMaxLogSize, (int)m_dwLogHistorySize))
+		if (!nxlog_set_rotation_policy((int)m_dwLogRotationMode, (int)m_dwMaxLogSize, (int)m_dwLogHistorySize, m_szDailyLogFileSuffix))
 			if (!(g_dwFlags & AF_DAEMON))
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}

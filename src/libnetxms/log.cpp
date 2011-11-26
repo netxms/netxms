@@ -45,38 +45,79 @@ static TCHAR m_logFileName[MAX_PATH] = _T("");
 static FILE *m_logFileHandle = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static DWORD m_flags = 0;
+static int m_rotationMode = NXLOG_ROTATION_BY_SIZE;
 static int m_maxLogSize = 4096 * 1024;	// 4 MB
 static int m_logHistorySize = 4;		// Keep up 4 previous log files
+static TCHAR m_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
+static time_t m_currentDayStart = 0;
 static void (*m_consoleWriter)(const TCHAR *, ...) = (void (*)(const TCHAR *, ...))_tprintf;
 
 
 //
-// Set log rotation policy
-// Setting log size to 0 disables log rotation
+// Set timestamp of start of the current day
 //
 
-BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int maxLogSize, int historySize)
+static void SetDayStart()
+{
+	time_t now = time(NULL);
+	struct tm dayStart;
+#if HAVE_LOCALTIME_R
+      loc = localtime_r(&now, &dayStart);
+#else
+	struct tm *ltm = localtime(&now);
+	memcpy(&dayStart, ltm, sizeof(struct tm));
+#endif
+	dayStart.tm_hour = 0;
+	dayStart.tm_min = 0;
+	dayStart.tm_sec = 0;
+	m_currentDayStart = mktime(&dayStart);
+}
+
+
+//
+// Set log rotation policy
+// Setting log size to 0 or mode to NXLOG_ROTATION_DISABLED disables log rotation
+//
+
+BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLogSize, int historySize, const TCHAR *dailySuffix)
 {
 	BOOL isValid = TRUE;
 
-	if ((maxLogSize == 0) || (maxLogSize >= 1024))
+	if ((rotationMode >= 0) || (rotationMode <= 2))
 	{
-		m_maxLogSize = maxLogSize;
-	}
-	else
-	{
-		m_maxLogSize = 1024;
-		isValid = FALSE;
-	}
+		m_rotationMode = rotationMode;
+		if (rotationMode == NXLOG_ROTATION_BY_SIZE)
+		{
+			if ((maxLogSize == 0) || (maxLogSize >= 1024))
+			{
+				m_maxLogSize = maxLogSize;
+			}
+			else
+			{
+				m_maxLogSize = 1024;
+				isValid = FALSE;
+			}
 
-	if ((historySize >= 0) && (historySize <= MAX_LOG_HISTORY_SIZE))
-	{
-		m_logHistorySize = historySize;
+			if ((historySize >= 0) && (historySize <= MAX_LOG_HISTORY_SIZE))
+			{
+				m_logHistorySize = historySize;
+			}
+			else
+			{
+				if (historySize > MAX_LOG_HISTORY_SIZE)
+					m_logHistorySize = MAX_LOG_HISTORY_SIZE;
+				isValid = FALSE;
+			}
+		}
+		else if (rotationMode == NXLOG_ROTATION_DAILY)
+		{
+			if ((dailySuffix != NULL) && (dailySuffix[0] != 0))
+				nx_strncpy(m_dailyLogSuffixTemplate, dailySuffix, sizeof(m_dailyLogSuffixTemplate) / sizeof(TCHAR));
+			SetDayStart();
+		}
 	}
 	else
 	{
-		if (historySize > MAX_LOG_HISTORY_SIZE)
-			m_logHistorySize = MAX_LOG_HISTORY_SIZE;
 		isValid = FALSE;
 	}
 
@@ -115,43 +156,58 @@ static BOOL RotateLog(BOOL needLock)
 		m_flags &= ~NXLOG_IS_OPEN;
 	}
 
-	// Delete old files
-	for(i = MAX_LOG_HISTORY_SIZE; i >= m_logHistorySize; i--)
+	if (m_rotationMode == NXLOG_ROTATION_BY_SIZE)
 	{
-		_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
-		_tunlink(oldName);
-	}
+		// Delete old files
+		for(i = MAX_LOG_HISTORY_SIZE; i >= m_logHistorySize; i--)
+		{
+			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
+			_tunlink(oldName);
+		}
 
-	// Shift file names
-	for(; i >= 0; i--)
+		// Shift file names
+		for(; i >= 0; i--)
+		{
+			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
+			_sntprintf(newName, MAX_PATH, _T("%s.%d"), m_logFileName, i + 1);
+			_trename(oldName, newName);
+		}
+
+		// Rename current log to name.0
+		_sntprintf(newName, MAX_PATH, _T("%s.0"), m_logFileName);
+		_trename(m_logFileName, newName);
+	}
+	else if (m_rotationMode == NXLOG_ROTATION_DAILY)
 	{
-		_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
-		_sntprintf(newName, MAX_PATH, _T("%s.%d"), m_logFileName, i + 1);
-		_trename(oldName, newName);
-	}
+#if HAVE_LOCALTIME_R
+      struct tm ltmBuffer;
+      struct tm *loc = localtime_r(&m_currentDayStart, &ltmBuffer);
+#else
+      struct tm *loc = localtime(&m_currentDayStart);
+#endif
+		TCHAR buffer[64];
+      _tcsftime(buffer, 64, m_dailyLogSuffixTemplate, loc);
 
-	// Rename current log to name.0
-	_sntprintf(newName, MAX_PATH, _T("%s.0"), m_logFileName);
-	_trename(m_logFileName, newName);
+		// Rename current log to name.suffix
+		_sntprintf(newName, MAX_PATH, _T("%s.%s"), m_logFileName, buffer);
+		_trename(m_logFileName, newName);
+
+		SetDayStart();
+	}
 
 	// Reopen log
    m_logFileHandle = _tfopen(m_logFileName, _T("w"));
    if (m_logFileHandle != NULL)
    {
-		time_t t;
-      struct tm *loc;
+		m_flags |= NXLOG_IS_OPEN;
+      time_t t = time(NULL);
 #if HAVE_LOCALTIME_R
       struct tm ltmBuffer;
+      struct tm *loc = localtime_r(&t, &ltmBuffer);
+#else
+      struct tm *loc = localtime(&t);
 #endif
 		TCHAR buffer[32];
-
-		m_flags |= NXLOG_IS_OPEN;
-      t = time(NULL);
-#if HAVE_LOCALTIME_R
-      loc = localtime_r(&t, &ltmBuffer);
-#else
-      loc = localtime(&t);
-#endif
       _tcsftime(buffer, 32, _T("%d-%b-%Y %H:%M:%S"), loc);
       _ftprintf(m_logFileHandle, _T("[%s] Log file truncated.\n"), buffer);
 	}
@@ -232,6 +288,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
       }
 
       m_mutexLogAccess = MutexCreate();
+		SetDayStart();
    }
 	return (m_flags & NXLOG_IS_OPEN) ? TRUE : FALSE;
 }
@@ -282,6 +339,13 @@ static void WriteLogToFile(TCHAR *message)
    MutexLock(m_mutexLogAccess);
 
    t = time(NULL);
+
+	// Check for new day start
+	if ((m_rotationMode == NXLOG_ROTATION_DAILY) && (t >= m_currentDayStart + 86400))
+	{
+		RotateLog(FALSE);
+	}
+
 #if HAVE_LOCALTIME_R
    loc = localtime_r(&t, &ltmBuffer);
 #else
@@ -297,7 +361,7 @@ static void WriteLogToFile(TCHAR *message)
       m_consoleWriter(_T("%s %s"), buffer, message);
 
 	// Check log size
-	if (m_maxLogSize != 0)
+	if ((m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
 	{
 		struct stat st;
 
