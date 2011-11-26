@@ -45,7 +45,7 @@ void ClientSession::JSON_SendAlarmList(JSONObjectBuilder &json)
 	json.AddRCC(RCC_SUCCESS);
 	json.StartArray(_T("alarmList"));
 
-	MutexLock(m_mutexAlarmList, INFINITE);
+	MutexLock(m_mutexAlarmList);
 	for(i = 0; i < m_dwNumAlarms; i++)
 	{
 		if (rootObj != NULL)

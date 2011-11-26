@@ -792,6 +792,10 @@ void DumpProcess(CONSOLE_CTX pCtx);
 
 extern TCHAR NXCORE_EXPORTABLE g_szConfigFile[];
 extern TCHAR NXCORE_EXPORTABLE g_szLogFile[];
+extern DWORD g_dwLogRotationMode;
+extern DWORD g_dwMaxLogSize;
+extern DWORD g_dwLogHistorySize;
+extern TCHAR g_szDailyLogFileSuffix[64];
 extern TCHAR NXCORE_EXPORTABLE g_szDumpDir[];
 extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
 #ifndef _WIN32

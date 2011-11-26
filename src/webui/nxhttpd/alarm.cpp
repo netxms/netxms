@@ -32,7 +32,7 @@ void ClientSession::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    NXC_ALARM *pListItem;
 
-   MutexLock(m_mutexAlarmList, INFINITE);
+   MutexLock(m_mutexAlarmList);
    switch(dwCode)
    {
       case NX_NOTIFY_NEW_ALARM:
@@ -220,7 +220,7 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj,
 
 	pdwSelList = IdListFromString(pszSelection, &dwSelCount);
 
-   MutexLock(m_mutexAlarmList, INFINITE);
+   MutexLock(m_mutexAlarmList);
 	QSortEx(m_pAlarmList, m_dwNumAlarms, sizeof(NXC_ALARM), this, CompareAlarmsCB);
 	for(i = 0; i < m_dwNumAlarms; i++)
 	{

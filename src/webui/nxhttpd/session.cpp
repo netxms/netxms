@@ -464,7 +464,7 @@ void ClientSession::ShowPieChart(HttpRequest &request, HttpResponse &response)
 	{
 		case 0:	// Alarm severity distribution
 			memset(counters, 0, sizeof(int) * 5);
-		   MutexLock(m_mutexAlarmList, INFINITE);
+		   MutexLock(m_mutexAlarmList);
 			for(i = 0; i < m_dwNumAlarms; i++)
 			{
 				counters[m_pAlarmList[i].nCurrentSeverity]++;

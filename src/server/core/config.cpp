@@ -55,6 +55,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_STRING, 0, 0, 256, 0, g_szCodePage },
    { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
+   { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDailyLogFileSuffix },
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
@@ -72,6 +73,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
+   { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &g_dwLogHistorySize },
+   { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_dwLogRotationMode },
+   { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &g_dwMaxLogSize },
    { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }

@@ -106,6 +106,10 @@ THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg);
 
 TCHAR NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 TCHAR NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
+DWORD g_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
+DWORD g_dwMaxLogSize = 16384 * 1024;
+DWORD g_dwLogHistorySize = 4;
+TCHAR g_szDailyLogFileSuffix[64] = _T("");
 TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
 TCHAR g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
 TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("0.0.0.0");
@@ -523,6 +527,13 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	g_tServerStartTime = time(NULL);
 	srand((unsigned int)g_tServerStartTime);
+
+	if (!(g_dwFlags & AF_USE_SYSLOG))
+	{
+		if (!nxlog_set_rotation_policy((int)g_dwLogRotationMode, (int)g_dwMaxLogSize, (int)g_dwLogHistorySize, g_szDailyLogFileSuffix))
+			if (!(g_dwFlags & AF_DAEMON))
+				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
+	}
    nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
 	           ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
 				  ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
