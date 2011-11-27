@@ -27,10 +27,9 @@
 #endif
 
 
-//
-// Static data
-//
-
+/**
+ *Static data
+ */
 static ObjectArray<ExternalSubagent> s_subagents;
 
 /**
@@ -65,20 +64,26 @@ ExternalSubagent::~ExternalSubagent()
 /*
  * Send message to external subagent
  */
-void ExternalSubagent::sendMessage(CSCPMessage *msg)
+bool ExternalSubagent::sendMessage(CSCPMessage *msg)
 {
 	TCHAR buffer[256];
+	bool success = false;
+
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
 
 	CSCP_MESSAGE *rawMsg = msg->CreateMessage();
 	MutexLock(m_mutexPipeWrite);
 #ifdef _WIN32
 	DWORD bytes = 0;
-	WriteFile(m_pipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL);
+	if (WriteFile(m_pipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL))
+	{
+		success = (bytes == ntohl(rawMsg->dwSize));
+	}
 #else
 #endif
 	MutexUnlock(m_mutexPipeWrite);
 	free(rawMsg);
+	return success;
 }
 
 /**
@@ -140,7 +145,6 @@ void ExternalSubagent::connect(HANDLE hPipe)
 
 	m_pipe = hPipe;
 	m_connected = true;
-
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection established"), m_name);
 	while(true)
 	{
@@ -170,23 +174,25 @@ NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(DWORD *count)
 
 	msg.SetCode(CMD_GET_PARAMETER_LIST);
 	msg.SetId(m_requestId++);
-	sendMessage(&msg);
-	CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
-	if (response != NULL)
+	if (sendMessage(&msg))
 	{
-		if (response->GetVariableLong(VID_RCC) == ERR_SUCCESS)
+		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+		if (response != NULL)
 		{
-			*count = response->GetVariableLong(VID_NUM_PARAMETERS);
-			result = (NETXMS_SUBAGENT_PARAM *)malloc(*count * sizeof(NETXMS_SUBAGENT_PARAM));
-			DWORD varId = VID_PARAM_LIST_BASE;
-			for(DWORD i = 0; i < *count; i++)
+			if (response->GetVariableLong(VID_RCC) == ERR_SUCCESS)
 			{
-				response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
-				response->GetVariableStr(varId++, result[i].description, MAX_DB_STRING);
-				result[i].dataType = (int)response->GetVariableShort(varId++);
+				*count = response->GetVariableLong(VID_NUM_PARAMETERS);
+				result = (NETXMS_SUBAGENT_PARAM *)malloc(*count * sizeof(NETXMS_SUBAGENT_PARAM));
+				DWORD varId = VID_PARAM_LIST_BASE;
+				for(DWORD i = 0; i < *count; i++)
+				{
+					response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
+					response->GetVariableStr(varId++, result[i].description, MAX_DB_STRING);
+					result[i].dataType = (int)response->GetVariableShort(varId++);
+				}
 			}
+			delete response;
 		}
-		delete response;
 	}
 	return result;
 }
@@ -240,19 +246,24 @@ DWORD ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
 	msg.SetCode(CMD_GET_PARAMETER);
 	msg.SetId(m_requestId++);
 	msg.SetVariable(VID_PARAMETER, name);
-	sendMessage(&msg);
-
-	CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
-	if (response != NULL)
+	if (sendMessage(&msg))
 	{
-		rcc = response->GetVariableLong(VID_RCC);
-		if (rcc == ERR_SUCCESS)
-			response->GetVariableStr(VID_VALUE, buffer, MAX_RESULT_LENGTH);
-		delete response;
+		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+		if (response != NULL)
+		{
+			rcc = response->GetVariableLong(VID_RCC);
+			if (rcc == ERR_SUCCESS)
+				response->GetVariableStr(VID_VALUE, buffer, MAX_RESULT_LENGTH);
+			delete response;
+		}
+		else
+		{
+			rcc = ERR_INTERNAL_ERROR;
+		}
 	}
 	else
 	{
-		rcc = ERR_INTERNAL_ERROR;
+		rcc = ERR_CONNECTION_BROKEN;
 	}
 	return rcc;
 }
@@ -415,7 +426,10 @@ void ListParametersFromExtSubagents(CSCPMessage *msg, DWORD *baseId, DWORD *coun
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
-		s_subagents.get(i)->listParameters(msg, baseId, count);
+		if (s_subagents.get(i)->isConnected())
+		{
+			s_subagents.get(i)->listParameters(msg, baseId, count);
+		}
 	}
 }
 
@@ -426,7 +440,10 @@ void ListParametersFromExtSubagents(StringList *list)
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
-		s_subagents.get(i)->listParameters(list);
+		if (s_subagents.get(i)->isConnected())
+		{
+			s_subagents.get(i)->listParameters(list);
+		}
 	}
 }
 
@@ -440,9 +457,12 @@ DWORD GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
 	DWORD rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
-		rc = s_subagents.get(i)->getParameter(name, buffer);
-		if (rc == SYSINFO_RC_SUCCESS)
-			break;
+		if (s_subagents.get(i)->isConnected())
+		{
+			rc = s_subagents.get(i)->getParameter(name, buffer);
+			if (rc == SYSINFO_RC_SUCCESS)
+				break;
+		}
 	}
 	return rc;
 }

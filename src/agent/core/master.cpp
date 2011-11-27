@@ -60,7 +60,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 			while(!(g_dwFlags & AF_SHUTDOWN))
 			{
 				CSCPMessage *msg = ReadMessageFromPipe(hPipe, NULL);
-				if (msg == NULL)
+				if ((msg == NULL) || (g_dwFlags & AF_SHUTDOWN))
 					break;
 				AgentWriteDebugLog(6, _T("Received message %s from master agent"), NXCPMessageCodeName(msg->GetCode(), buffer));
 				

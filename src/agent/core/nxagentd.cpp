@@ -1087,7 +1087,8 @@ void Shutdown()
 
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
-		ThreadJoin(m_thMasterAgentListener);
+		// TODO: shall we inform master agent listener about shutdown?
+		//ThreadJoin(m_thMasterAgentListener);
 	}
 	else
 	{

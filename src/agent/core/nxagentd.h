@@ -256,7 +256,7 @@ private:
 	DWORD m_requestId;
 	MUTEX m_mutexPipeWrite;
 
-	void sendMessage(CSCPMessage *msg);
+	bool sendMessage(CSCPMessage *msg);
 	CSCPMessage *waitForMessage(WORD code, DWORD id);
 	DWORD waitForRCC(DWORD id);
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(DWORD *count);
