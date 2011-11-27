@@ -626,6 +626,7 @@ src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widg
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/AgentConfigTextAttributeProvider.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/KeywordRule.java -text
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/SingleTokenScanner.java -text
+src/java/netxms-eclipse/AlarmViewer/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/AlarmViewer/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/AlarmViewer/build.properties -text
 src/java/netxms-eclipse/AlarmViewer/icons/acknowledged.png -text
@@ -638,10 +639,12 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmC
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmListFilter.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmListLabelProvider.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmNotifier.java -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/Messages.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/Startup.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/AcknowledgeAlarm.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/OpenAlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/TerminateAlarm.java -text
+src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/messages.properties -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/objecttabs/AlarmTab.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/views/AlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/widgets/AlarmList.java -text
@@ -873,6 +876,7 @@ src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/acti
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImagePropertiesDialog.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/dialogs/ImageSelectionDialog.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/messages.properties -text
+src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/messages_ru.properties -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/shared/ImageProvider.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/shared/ImageUpdateListener.java -text
 src/java/netxms-eclipse/ImageLibrary/src/org/netxms/ui/eclipse/imagelibrary/views/ImageLibrary.java -text
@@ -904,6 +908,7 @@ src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/he
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/OrderingColumnEditingSupport.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/dialogs/helpers/OrderingListLabelProvider.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages.properties -text
+src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/messages_ru.properties -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/LogViewer.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/views/helpers/LogLabelProvider.java -text
 src/java/netxms-eclipse/LogViewer/src/org/netxms/ui/eclipse/logviewer/widgets/FilterBuilder.java -text
@@ -1425,6 +1430,7 @@ src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/views/
 src/java/netxms-eclipse/core/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/core/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle.properties -text
+src/java/netxms-eclipse/core/OSGI-INF/l10n/bundle_ru.properties -text
 src/java/netxms-eclipse/core/build.properties -text
 src/java/netxms-eclipse/core/icons/alt_about.gif -text
 src/java/netxms-eclipse/core/icons/alt_launcher.icns -text

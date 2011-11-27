@@ -38,7 +38,7 @@ public class Startup implements IStartup
 	public void earlyStartup()
 	{
 		// wait for connect
-		Job job = new Job("Set alarm listener for tray popups") {
+		Job job = new Job(Messages.Startup_JobName) { 
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{

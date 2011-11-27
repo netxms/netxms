@@ -39,7 +39,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class AlarmListLabelProvider implements ITableLabelProvider
 {
 	// Constants
-	private static final String[] stateText = { "Outstanding", "Acknowledged", "Terminated" };
+	private static final String[] stateText = { Messages.AlarmListLabelProvider_AlarmState_Outstanding, Messages.AlarmListLabelProvider_AlarmState_Acknowledged, Messages.AlarmListLabelProvider_AlarmState_Terminated };
 	
 	// Severity images
 	private Image[] severityImages = new Image[5];
@@ -58,9 +58,9 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 		severityImages[Severity.MAJOR] = StatusDisplayInfo.getStatusImage(Severity.MAJOR);
 		severityImages[Severity.CRITICAL] = StatusDisplayInfo.getStatusImage(Severity.CRITICAL);
 
-		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
-		stateImages[1] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
-		stateImages[2] = Activator.getImageDescriptor("icons/terminated.png").createImage();
+		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
+		stateImages[1] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
+		stateImages[2] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

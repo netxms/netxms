@@ -32,6 +32,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
+import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -52,7 +53,7 @@ public class TerminateAlarm implements IObjectActionDelegate
 		 */
 		TerminateJob(Object selection[])
 		{
-			super("Terminate alarms");
+			super(Messages.TerminateAlarm_JobTitle);
 			setUser(true);
 			this.selection = selection;
 		}
@@ -62,7 +63,7 @@ public class TerminateAlarm implements IObjectActionDelegate
 		{
 			IStatus status;
 			
-			monitor.beginTask("Terminating alarms...", selection.length);
+			monitor.beginTask(Messages.TerminateAlarm_TaskName, selection.length);
 			try
 			{
 				for(int i = 0; (i < selection.length) && !monitor.isCanceled(); i++)
@@ -78,7 +79,7 @@ public class TerminateAlarm implements IObjectActionDelegate
 			{
 				status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 				                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-				                    "Cannot terminate alarm: " + e.getMessage(), e);
+				                    Messages.TerminateAlarm_ErrorMessage + e.getMessage(), e);
 			}
 			return status;
 		}

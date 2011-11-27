@@ -44,7 +44,7 @@ public class AlarmTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, "AlarmTab");
+		alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, "AlarmTab"); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

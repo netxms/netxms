@@ -86,7 +86,7 @@ public class AlarmNotifier
 		final TrayItem trayIcon = ConsoleSharedData.getTrayIcon();
 		if (trayIcon != null)
 		{
-			new UIJob("Create alarm popup") {
+			new UIJob("Create alarm popup") { //$NON-NLS-1$
 				@Override
 				public IStatus runInUIThread(IProgressMonitor monitor)
 				{
@@ -117,8 +117,8 @@ public class AlarmNotifier
 					if (window != null)
 					{
 						final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
-						tip.setText("NetXMS Alarm (" + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")");
-						tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId())) + ": " + alarm.getMessage());
+						tip.setText(Messages.AlarmNotifier_ToolTip_Header + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")"); //$NON-NLS-2$
+						tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId())) + ": " + alarm.getMessage()); //$NON-NLS-1$
 						tip.setAutoHide(true);
 						trayIcon.setToolTip(tip);
 						tip.setVisible(true);

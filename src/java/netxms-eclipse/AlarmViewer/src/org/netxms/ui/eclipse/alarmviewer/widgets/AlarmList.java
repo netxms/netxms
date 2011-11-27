@@ -45,6 +45,7 @@ import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.AlarmListLabelProvider;
+import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -55,7 +56,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class AlarmList extends Composite
 {
-	public static final String JOB_FAMILY = "AlarmViewJob";
+	public static final String JOB_FAMILY = "AlarmViewJob"; //$NON-NLS-1$
 	
 	// Columns
 	public static final int COLUMN_SEVERITY = 0;
@@ -88,7 +89,7 @@ public class AlarmList extends Composite
 		this.viewPart = viewPart;		
 		
 		// Setup table columns
-		final String[] names = { "Severity", "State", "Source", "Message", "Count", "Created", "Last Change" };
+		final String[] names = { Messages.AlarmList_ColumnSeverity, Messages.AlarmList_ColumnState, Messages.AlarmList_ColumnSource, Messages.AlarmList_ColumnMessage, Messages.AlarmList_ColumnCount, Messages.AlarmList_ColumnCreated, Messages.AlarmList_ColumnLastChange };
 		final int[] widths = { 100, 100, 150, 300, 70, 100, 100 };
 		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
@@ -116,7 +117,7 @@ public class AlarmList extends Composite
 		});
 
 		// Request alarm list from server
-		new ConsoleJob("Synchronize alarm list", viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -139,7 +140,7 @@ public class AlarmList extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot synchronize alarm list";
+				return Messages.AlarmList_SyncJobError;
 			}
 		}.start();
 		

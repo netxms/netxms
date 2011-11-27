@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
  */
 public class AlarmBrowser extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.view.alarm_browser";
+	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.view.alarm_browser"; //$NON-NLS-1$
 	
 	private AlarmList alarmView;
 
@@ -45,7 +45,7 @@ public class AlarmBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser");
+		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser"); //$NON-NLS-1$
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

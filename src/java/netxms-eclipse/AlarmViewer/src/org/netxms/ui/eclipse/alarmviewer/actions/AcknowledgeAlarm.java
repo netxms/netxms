@@ -32,6 +32,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
+import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -52,7 +53,7 @@ public class AcknowledgeAlarm implements IObjectActionDelegate
 		 */
 		AcknowledgeJob(Object selection[])
 		{
-			super("Acknowledge alarms");
+			super(Messages.AcknowledgeAlarm_JobName);
 			setUser(true);
 			this.selection = selection;
 		}
@@ -62,7 +63,7 @@ public class AcknowledgeAlarm implements IObjectActionDelegate
 		{
 			IStatus status;
 			
-			monitor.beginTask("Acknowledging alarms...", selection.length);
+			monitor.beginTask(Messages.AcknowledgeAlarm_TaskName, selection.length);
 			try
 			{
 				for(int i = 0; (i < selection.length) && !monitor.isCanceled(); i++)
@@ -78,7 +79,7 @@ public class AcknowledgeAlarm implements IObjectActionDelegate
 			{
 				status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 				                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-				                    "Cannot acknowledge alarm: " + e.getMessage(), e);
+				                    Messages.AcknowledgeAlarm_ErrorMessage + e.getMessage(), e);
 			}
 			return status;
 		}
