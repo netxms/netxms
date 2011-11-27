@@ -62,7 +62,7 @@ static void SetDayStart()
 	time_t now = time(NULL);
 	struct tm dayStart;
 #if HAVE_LOCALTIME_R
-      loc = localtime_r(&now, &dayStart);
+	localtime_r(&now, &dayStart);
 #else
 	struct tm *ltm = localtime(&now);
 	memcpy(&dayStart, ltm, sizeof(struct tm));
