@@ -41,6 +41,7 @@ import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.netxms.api.client.NetXMSClientException;
@@ -197,7 +198,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	private NXCPMsgWaitQueue msgWaitQueue = null;
 	private ReceiverThread recvThread = null;
 	private HousekeeperThread housekeeperThread = null;
-	private long requestId = 0;
+	private AtomicLong requestId = new AtomicLong(1);
 	private boolean isConnected = false;
 	private boolean serverConsoleConnected = false;
 
@@ -1092,9 +1093,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @see org.netxms.api.client.Session#newMessage(int)
 	 */
 	@Override
-	public final synchronized NXCPMessage newMessage(int code)
+	public final NXCPMessage newMessage(int code)
 	{
-		return new NXCPMessage(code, requestId++);
+		return new NXCPMessage(code, requestId.getAndIncrement());
 	}
 
 	/**
@@ -2403,7 +2404,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
 		do
 		{
-			msg.setMessageId(requestId++);
+			msg.setMessageId(requestId.getAndIncrement());
 			msg.setVariableInt32(NXCPCodes.VID_MAX_ROWS, maxRows);
 			msg.setVariableInt32(NXCPCodes.VID_TIME_FROM, timeFrom);
 			msg.setVariableInt32(NXCPCodes.VID_TIME_TO, timeTo);
