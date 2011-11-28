@@ -43,7 +43,7 @@ public class ActionComparator extends ViewerComparator
 			return 0;
 		
 		int rc;
-		switch((Integer)sortColumn.getData("ID"))
+		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case ActionManager.COLUMN_NAME:
 				rc = ((ServerAction)e1).getName().compareToIgnoreCase(((ServerAction)e2).getName());

@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.ServerAction;
+import org.netxms.ui.eclipse.actionmanager.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -90,7 +91,7 @@ public class EditActionDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(createNew ? "Create action" : "Edit action");
+		newShell.setText(createNew ? Messages.EditActionDlg_CreateAction : Messages.EditActionDlg_EditAction);
 	}
 
 	/* (non-Javadoc)
@@ -106,11 +107,11 @@ public class EditActionDlg extends Dialog
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		dialogArea.setLayout(layout);
 		
-		name = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, "Name", action.getName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+		name = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.EditActionDlg_Name, action.getName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 
 		/* type selection radio buttons */
 		Group typeGroup = new Group(dialogArea, SWT.NONE);
-		typeGroup.setText("Type");
+		typeGroup.setText(Messages.EditActionDlg_Type);
 		typeGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -118,33 +119,33 @@ public class EditActionDlg extends Dialog
 		typeGroup.setLayoutData(gd);
 		
 		typeLocalExec = new Button(typeGroup, SWT.RADIO);
-		typeLocalExec.setText("Execute command on management server");
+		typeLocalExec.setText(Messages.EditActionDlg_ExecCommandOnServer);
 		typeLocalExec.setSelection(action.getType() == ServerAction.EXEC_LOCAL);
 		typeLocalExec.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeRemoteExec = new Button(typeGroup, SWT.RADIO);
-		typeRemoteExec.setText("Execute command on remote node via agent");
+		typeRemoteExec.setText(Messages.EditActionDlg_ExecCommandOnNode);
 		typeRemoteExec.setSelection(action.getType() == ServerAction.EXEC_REMOTE);
 		typeRemoteExec.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeEMail = new Button(typeGroup, SWT.RADIO);
-		typeEMail.setText("Send E-Mail");
+		typeEMail.setText(Messages.EditActionDlg_SenMail);
 		typeEMail.setSelection(action.getType() == ServerAction.SEND_EMAIL);
 		typeEMail.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeSMS = new Button(typeGroup, SWT.RADIO);
-		typeSMS.setText("Send SMS to mobile phone");
+		typeSMS.setText(Messages.EditActionDlg_SendSMS);
 		typeSMS.setSelection(action.getType() == ServerAction.SEND_SMS);
 		typeSMS.addSelectionListener(new TypeButtonSelectionListener());
 		
 		typeForward = new Button(typeGroup, SWT.RADIO);
-		typeForward.setText("Forward event to other NetXMS server");
+		typeForward.setText(Messages.EditActionDlg_ForwardEvent);
 		typeForward.setSelection(action.getType() == ServerAction.FORWARD_EVENT);
 		typeForward.addSelectionListener(new TypeButtonSelectionListener());
 		/* type selection radio buttons - end */
 
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText("Options");
+		optionsGroup.setText(Messages.EditActionDlg_Options);
 		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -152,7 +153,7 @@ public class EditActionDlg extends Dialog
 		optionsGroup.setLayoutData(gd);
 		
 		markDisabled = new Button(optionsGroup, SWT.CHECK);
-		markDisabled.setText("Action is &disabled");
+		markDisabled.setText(Messages.EditActionDlg_ActionDisabled);
 		markDisabled.setSelection(action.isDisabled());
 		
 		recipient = new LabeledText(dialogArea, SWT.NONE);
@@ -164,7 +165,7 @@ public class EditActionDlg extends Dialog
 		recipient.setLayoutData(gd);
 
 		subject = new LabeledText(dialogArea, SWT.NONE);
-		subject.setLabel("E-Mail subject");
+		subject.setLabel(Messages.EditActionDlg_MailSubject);
 		subject.setText(action.getEmailSubject());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -195,13 +196,13 @@ public class EditActionDlg extends Dialog
 		switch(type)
 		{
 			case ServerAction.EXEC_REMOTE:
-				return "Remote host";
+				return Messages.EditActionDlg_RemoteHost;
 			case ServerAction.SEND_SMS:
-				return "Phone number";
+				return Messages.EditActionDlg_PhoneNumber;
 			case ServerAction.FORWARD_EVENT:
-				return "Remote NetXMS server";
+				return Messages.EditActionDlg_RemoteServer;
 		}
-		return "Recipient's address";
+		return Messages.EditActionDlg_Recipient;
 	}
 	
 	/**
@@ -215,11 +216,11 @@ public class EditActionDlg extends Dialog
 		switch(type)
 		{
 			case ServerAction.EXEC_LOCAL:
-				return "Command";
+				return Messages.EditActionDlg_Command;
 			case ServerAction.EXEC_REMOTE:
-				return "Agent's action";
+				return Messages.EditActionDlg_Action;
 		}
-		return "Message text";
+		return Messages.EditActionDlg_MessageText;
 	}
 
 	/* (non-Javadoc)

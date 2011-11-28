@@ -9,16 +9,16 @@
             class="org.netxms.ui.eclipse.actionmanager.views.ActionManager"
             icon="icons/actionmgr.png"
             id="org.netxms.ui.eclipse.actionmanager.views.ActionManager"
-            name="Actions Configuration"
+            name="%view.ActionsConfiguration"
             restorable="true">
       </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Open actions configuration view"
+            description="%actionDescription.OpenActionsConfiguration"
             id="org.netxms.ui.eclipse.actionmanager.commands.open_action_manager"
-            name="Actions Configuration">
+            name="%action.OpenActionsConfiguration">
       </command>
    </extension>
    <extension
@@ -32,7 +32,7 @@
                definitionId="org.netxms.ui.eclipse.actionmanager.commands.open_action_manager"
                icon="icons/actionmgr.png"
                id="org.netxms.ui.eclipse.actionmanager.actions.open"
-               label="Actions Configuration"
+               label="%action.OpenActionsConfiguration"
                menubarPath="config/additions">
          </action>
       </actionSet>
@@ -52,7 +52,7 @@
       <decorator
             class="org.netxms.ui.eclipse.actionmanager.ServerActionDecorator"
             id="org.netxms.ui.eclipse.decorators.ServerAction"
-            label="Server Actions Decorator"
+            label="%decorator.actions"
             lightweight="false"
             state="true">
          <enablement>
@@ -61,7 +61,7 @@
             </objectClass>
          </enablement>
          <description>
-            Decorates server actions labels with "disabled" icon if action is disabled
+            %decorator.actions.description
          </description>
       </decorator>
    </extension>

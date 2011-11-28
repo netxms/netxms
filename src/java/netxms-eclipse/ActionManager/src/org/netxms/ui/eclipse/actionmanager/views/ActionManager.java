@@ -56,6 +56,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.ui.eclipse.actionmanager.Activator;
+import org.netxms.ui.eclipse.actionmanager.Messages;
 import org.netxms.ui.eclipse.actionmanager.dialogs.EditActionDlg;
 import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionComparator;
 import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionLabelProvider;
@@ -72,9 +73,9 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ActionManager extends ViewPart implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.actionmanager.views.ActionManager";
+	public static final String ID = "org.netxms.ui.eclipse.actionmanager.views.ActionManager"; //$NON-NLS-1$
 	
-	private static final String TABLE_CONFIG_PREFIX = "ActionList";
+	private static final String TABLE_CONFIG_PREFIX = "ActionList"; //$NON-NLS-1$
 	
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TYPE = 1;
@@ -100,7 +101,7 @@ public class ActionManager extends ViewPart implements SessionListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { "Name", "Type", "Recipient", "Subject", "Data" };
+		final String[] columnNames = { Messages.ActionManager_ColumnName, Messages.ActionManager_ColumnType, Messages.ActionManager_ColumnRcpt, Messages.ActionManager_ColumnSubj, Messages.ActionManager_ColumnData };
 		final int[] columnWidths = { 150, 90, 100, 120, 200 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -168,11 +169,11 @@ public class ActionManager extends ViewPart implements SessionListener
 	 */
 	private void refreshActionList()
 	{
-		new ConsoleJob("Load actions configuration", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.ActionManager_LoadJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot load actions configuration from server";
+				return Messages.ActionManager_LoadJobError;
 			}
 
 			@Override
@@ -259,7 +260,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				createAction();
 			}
 		};
-		actionNew.setText("&New action...");
+		actionNew.setText(Messages.ActionManager_ActionNew);
 		actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 		
 		actionEdit = new Action() {
@@ -272,7 +273,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				editAction();
 			}
 		};
-		actionEdit.setText("&Properties...");
+		actionEdit.setText(Messages.ActionManager_ActionProperties);
 		actionEdit.setImageDescriptor(SharedIcons.EDIT);
 		
 		actionDelete = new Action() {
@@ -285,7 +286,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				deleteActions();
 			}
 		};
-		actionDelete.setText("&Delete");
+		actionDelete.setText(Messages.ActionManager_ActionDelete);
 		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 	}
 	
@@ -337,11 +338,11 @@ public class ActionManager extends ViewPart implements SessionListener
 		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, true);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Create new action", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.ActionManager_CreateJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot create action";
+					return Messages.ActionManager_CreateJobError;
 				}
 
 				@Override
@@ -368,11 +369,11 @@ public class ActionManager extends ViewPart implements SessionListener
 		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob("Update action", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.ActionManager_UpdateJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 				@Override
 				protected String getErrorMessage()
 				{
-					return "Cannot update action";
+					return Messages.ActionManager_UodateJobError;
 				}
 
 				@Override
@@ -393,15 +394,15 @@ public class ActionManager extends ViewPart implements SessionListener
 		if (selection.isEmpty())
 			return;
 		
-		if (!MessageDialog.openConfirm(getSite().getShell(), "Confirmation", "Do you really want to delete selected actions?"))
+		if (!MessageDialog.openConfirm(getSite().getShell(), Messages.ActionManager_Confirmation, Messages.ActionManager_ConfirmDelete))
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob("Delete actions", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.ActionManager_DeleteJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot delete action";
+				return Messages.ActionManager_DeleteJobError;
 			}
 
 			@Override
@@ -420,7 +421,7 @@ public class ActionManager extends ViewPart implements SessionListener
 	 */
 	private void updateActionsList()
 	{
-		new UIJob("Update actions list") {
+		new UIJob(Messages.ActionManager_UiUpdateJobName) {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{

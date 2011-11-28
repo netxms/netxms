@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="Alarm Browser"
+            name="%view.AlarmBrowser"
             allowMultiple="false"
             icon="icons/alarm_browser.png"
             class="org.netxms.ui.eclipse.alarmviewer.views.AlarmBrowser"
@@ -15,8 +15,8 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            name="Alarm Browser"
-            description="Open Alarm Browser"
+            name="%action.openAlarmBrowser"
+            description="%actionDescription.openAlarmBrowser"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser">
       </command>
@@ -29,8 +29,8 @@
 		   <action id="org.netxms.ui.eclipse.alarmviewer.actions.open"
 			   menubarPath="view/primary"
 			   toolbarPath="view/additions"
-			   label="Alarm Browser"
-			   tooltip="Open Alarm Browser"
+			   label="%action.openAlarmBrowser"
+			   tooltip="%actionDescription.openAlarmBrowser"
 			   icon="icons/alarm_browser.png"
 			   class="org.netxms.ui.eclipse.alarmviewer.actions.OpenAlarmBrowser"
 			   definitionId="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser">
@@ -55,7 +55,7 @@
          <action
                class="org.netxms.ui.eclipse.alarmviewer.actions.TerminateAlarm"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.TerminateAlarm"
-               label="Terminate"
+               label="%action.terminate"
    		       icon="icons/terminated.png"
                menubarPath="additions">
          </action>
@@ -67,7 +67,7 @@
                class="org.netxms.ui.eclipse.alarmviewer.actions.AcknowledgeAlarm"
                icon="icons/acknowledged.png"
                id="org.netxms.ui.eclipse.alarmviewer.popupActions.AcknowledgeAlarm"
-               label="Acknowledge"
+               label="%action.acknowledge"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -78,7 +78,7 @@
       <tab
             class="org.netxms.ui.eclipse.alarmviewer.objecttabs.AlarmTab"
             icon="icons/alarm_browser.png"
-            name="Alarms"
+            name="%tab.Alarms"
             order="10">
       </tab>
    </extension>

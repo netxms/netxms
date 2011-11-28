@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerAction;
+import org.netxms.ui.eclipse.actionmanager.Messages;
 import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
 
 /**
@@ -32,7 +33,7 @@ import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
  */
 public class ActionLabelProvider implements ITableLabelProvider
 {
-	private static final String[] ACTION_TYPE = { "Execute", "Remote Execute", "Send E-Mail", "Send SMS", "Forward Event" };
+	private static final String[] ACTION_TYPE = { Messages.ActionLabelProvider_ActionTypeExecute, Messages.ActionLabelProvider_ActionTypeRemoteExec, Messages.ActionLabelProvider_ActionTypeMail, Messages.ActionLabelProvider_ActionTypeSMS, Messages.ActionLabelProvider_ActionTypeForward };
 	
 	private ILabelProvider workbenchLabelProvider;
 	
@@ -73,7 +74,7 @@ public class ActionLabelProvider implements ITableLabelProvider
 				}
 				catch(IndexOutOfBoundsException e)
 				{
-					return "Unknown";
+					return Messages.ActionLabelProvider_Unknown;
 				}
 			case ActionManager.COLUMN_RCPT:
 				return action.getRecipientAddress();

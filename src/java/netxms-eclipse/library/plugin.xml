@@ -4,14 +4,14 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Toggle Trace Filter"
+            description="%command.ToggleTraceFilter"
             id="org.netxms.ui.eclipse.library.commands.show_trace_filter"
-            name="Toggle Trace Filter">
+            name="%command.ToggleTraceFilter">
       </command>
       <command
-            description="Pause Trace"
+            description="%command.PauseTrace"
             id="org.netxms.ui.eclipse.library.commands.pause_trace"
-            name="Pause Trace">
+            name="%command.PauseTrace">
       </command>
    </extension>
    <extension

@@ -59,15 +59,15 @@ public class ServerActionAdapterFactory implements IAdapterFactory
 				switch(((ServerAction)object).getType())
 				{
 					case ServerAction.EXEC_LOCAL:
-						return Activator.getImageDescriptor("icons/exec_local.png");
+						return Activator.getImageDescriptor("icons/exec_local.png"); //$NON-NLS-1$
 					case ServerAction.EXEC_REMOTE:
-						return Activator.getImageDescriptor("icons/exec_remote.png");
+						return Activator.getImageDescriptor("icons/exec_remote.png"); //$NON-NLS-1$
 					case ServerAction.SEND_EMAIL:
-						return Activator.getImageDescriptor("icons/email.png");
+						return Activator.getImageDescriptor("icons/email.png"); //$NON-NLS-1$
 					case ServerAction.SEND_SMS:
-						return Activator.getImageDescriptor("icons/sms.png");
+						return Activator.getImageDescriptor("icons/sms.png"); //$NON-NLS-1$
 					case ServerAction.FORWARD_EVENT:
-						return Activator.getImageDescriptor("icons/fwd_event.png");
+						return Activator.getImageDescriptor("icons/fwd_event.png"); //$NON-NLS-1$
 				}
 				return null;
 			}

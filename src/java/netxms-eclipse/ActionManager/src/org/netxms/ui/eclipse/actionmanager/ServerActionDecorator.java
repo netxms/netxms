@@ -39,7 +39,7 @@ public class ServerActionDecorator implements ILabelDecorator
 	 */
 	public ServerActionDecorator()
 	{
-		disabledMark = Activator.getImageDescriptor("icons/disabled_overlay.png");
+		disabledMark = Activator.getImageDescriptor("icons/disabled_overlay.png"); //$NON-NLS-1$
 	}
 
 	@Override

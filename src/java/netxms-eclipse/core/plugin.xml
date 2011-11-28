@@ -36,11 +36,11 @@
       </view>
       <category
             id="org.netxms.ui.eclipse.viewcategory.config"
-            name="Configuration">
+            name="%category.config">
       </category>
       <category
             id="org.netxms.ui.eclipse.viewcategory.tools"
-            name="Tools">
+            name="%category.tools">
       </category>
       <view
             allowMultiple="false"
@@ -48,7 +48,7 @@
             class="org.netxms.ui.eclipse.console.views.ServerConsole"
             icon="icons/server_console.png"
             id="org.netxms.ui.eclipse.console.views.ServerConsole"
-            name="Server Console"
+            name="%view.serverConsole"
             restorable="true">
       </view>
    </extension>
@@ -58,10 +58,10 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="NetXMS Management Console">
+            name="%Bundle-Name">
          <property
                name="appName"
-               value="NetXMS Management Console">
+               value="%Bundle-Name">
          </property>
          <property
                name="aboutText"
@@ -115,34 +115,34 @@
      <page
            class="org.netxms.ui.eclipse.console.preferencepages.HttpProxyPrefs"
            id="org.eclipse.ui.preferencePages.HttpProxy"
-           name="HTTP Proxy">
+           name="%page.httpProxy">
      </page>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Open server console"
+            description="%actionDescription.OpenServerConsole"
             id="org.netxms.ui.eclipse.console.commands.open_server_console"
-            name="Server Console">
+            name="%action.OpenServerConsole">
       </command>
       <command
-            description="Toggle full screen mode"
+            description="%actionDescription.FullScreen"
             id="org.netxms.ui.eclipse.console.commands.full_screen"
-            name="Full Screen">
+            name="%action.FullScreen">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.console.action_set"
-            label="Core Action Set"
+            label="%actionSet.core"
             visible="true">
          <action
                class="org.netxms.ui.eclipse.console.actions.OpenServerConsole"
                definitionId="org.netxms.ui.eclipse.console.commands.open_server_console"
                icon="icons/server_console.png"
                id="org.netxms.ui.eclipse.console.actions.open_server_console"
-               label="Server Console"
+               label="%action.OpenServerConsole"
                menubarPath="tools/additions">
          </action>
       </actionSet>

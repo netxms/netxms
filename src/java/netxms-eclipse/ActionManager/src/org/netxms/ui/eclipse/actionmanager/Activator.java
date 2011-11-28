@@ -30,7 +30,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin
 {
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.actionmanager";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.actionmanager"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;
@@ -55,7 +55,7 @@ public class Activator extends AbstractUIPlugin
 		plugin = this;
 
 		IProgressService service = PlatformUI.getWorkbench().getProgressService();
-	   service.registerIconForFamily(getImageDescriptor("icons/actionmgr.png"), PLUGIN_ID);
+	   service.registerIconForFamily(getImageDescriptor("icons/actionmgr.png"), PLUGIN_ID); //$NON-NLS-1$
 	}
 
 	/*

@@ -590,8 +590,11 @@ src/java/netxms-client/src/test/java/org/netxms/client/SnmpTest.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/UserTest.java -text
 src/java/netxms-eclipse/ActionManager/.classpath -text
 src/java/netxms-eclipse/ActionManager/.project -text
+src/java/netxms-eclipse/ActionManager/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/ActionManager/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/ActionManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/ActionManager/OSGI-INF/l10n/bundle.properties -text
+src/java/netxms-eclipse/ActionManager/OSGI-INF/l10n/bundle_ru.properties -text
 src/java/netxms-eclipse/ActionManager/build.properties -text
 src/java/netxms-eclipse/ActionManager/icons/actionmgr.png -text
 src/java/netxms-eclipse/ActionManager/icons/disabled_overlay.png -text
@@ -602,10 +605,12 @@ src/java/netxms-eclipse/ActionManager/icons/fwd_event.png -text
 src/java/netxms-eclipse/ActionManager/icons/sms.png -text
 src/java/netxms-eclipse/ActionManager/plugin.xml -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/Activator.java -text
+src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/Messages.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/ServerActionAdapterFactory.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/ServerActionDecorator.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/actions/OpenActionManager.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/dialogs/EditActionDlg.java -text
+src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/messages.properties -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/ActionManager.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionComparator.java -text
 src/java/netxms-eclipse/ActionManager/src/org/netxms/ui/eclipse/actionmanager/views/helpers/ActionLabelProvider.java -text
@@ -628,6 +633,8 @@ src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widg
 src/java/netxms-eclipse/AgentManager/src/org/netxms/ui/eclipse/agentmanager/widgets/internal/SingleTokenScanner.java -text
 src/java/netxms-eclipse/AlarmViewer/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/AlarmViewer/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle.properties -text
+src/java/netxms-eclipse/AlarmViewer/OSGI-INF/l10n/bundle_ru.properties -text
 src/java/netxms-eclipse/AlarmViewer/build.properties -text
 src/java/netxms-eclipse/AlarmViewer/icons/acknowledged.png -text
 src/java/netxms-eclipse/AlarmViewer/icons/alarm_browser.png -text
@@ -1484,6 +1491,8 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/views/helpers/Ser
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/widgets/StatusSelector.java -text
 src/java/netxms-eclipse/library/.settings/org.eclipse.core.resources.prefs -text
 src/java/netxms-eclipse/library/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/library/OSGI-INF/l10n/bundle.properties -text
+src/java/netxms-eclipse/library/OSGI-INF/l10n/bundle_ru.properties -text
 src/java/netxms-eclipse/library/build.properties -text
 src/java/netxms-eclipse/library/icons/add_obj.gif -text
 src/java/netxms-eclipse/library/icons/alarm.png -text
