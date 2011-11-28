@@ -16,7 +16,7 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
    </configIni>
 
    <launcherArgs>
-      <programArgs>-data @user.home/.nxvs-console/data</programArgs>
+      <programArgs>-data @user.home/.nxmc/data -nl en</programArgs>
       <vmArgs>-Xms128m -Xmx1024m</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
@@ -33,7 +33,6 @@ Copyright (c) 2003-2011 Victor Kirhenshtein, Alex Kirhenshtein
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>

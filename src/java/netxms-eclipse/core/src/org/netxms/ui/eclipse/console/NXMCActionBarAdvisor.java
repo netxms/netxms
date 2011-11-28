@@ -18,6 +18,15 @@
  */
 package org.netxms.ui.eclipse.console;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URL;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IContributionItem;
@@ -31,6 +40,7 @@ import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -377,7 +387,70 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	{
 		if (!MessageDialog.openConfirm(null, Messages.getString("NXMCActionBarAdvisor.ConfirmRestart"), Messages.getString("NXMCActionBarAdvisor.RestartConsoleMessage"))) //$NON-NLS-1$ //$NON-NLS-2$
 			return;
+		
 		Activator.getDefault().getPreferenceStore().setValue("NL", locale); //$NON-NLS-1$
+		
+		// Patch product's .ini file
+		final Location configArea = Platform.getInstallLocation();
+		if (configArea != null)
+		{
+			BufferedReader in = null;
+			BufferedWriter out = null;
+			
+			try
+			{
+				final URL iniFileUrl = new URL(configArea.getURL().toExternalForm() + "nxmc.ini"); //$NON-NLS-1$
+				final String iniFileName = iniFileUrl.getFile();
+				final File iniFile = new File(iniFileName);
+				
+				final File iniFileBackup = new File(iniFileName + ".bak");
+				iniFileBackup.delete();
+				iniFile.renameTo(iniFileBackup); //$NON-NLS-1$
+				
+				in = new BufferedReader(new FileReader(iniFileName + ".bak")); //$NON-NLS-1$
+				out = new BufferedWriter(new FileWriter(iniFileName));
+				
+				int state = 0;
+				while(true)
+				{
+					String line = in.readLine();
+					if (line == null)
+						break;
+					
+					switch(state)
+					{
+						case 0:
+							if (line.equals("-nl")) //$NON-NLS-1$
+								state = 1;
+							break;
+						case 1:	// -nl argument
+							line = locale;
+							state = 0;
+							break;
+					}
+					out.write(line);
+					out.newLine();
+				}
+			}
+			catch(Exception e)
+			{
+				Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, Status.OK, "Exception in setLanguage()", e));
+			}
+			finally
+			{
+				try
+				{
+					if (in != null)
+						in.close();
+					if (out != null)
+						out.close();
+				}
+				catch(IOException e)
+				{
+				}
+			}
+		}
+		System.getProperties().setProperty("eclipse.exitdata", "-nl " + locale);
 		PlatformUI.getWorkbench().restart();
 	}
 }
