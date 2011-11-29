@@ -141,6 +141,38 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 
 
 //
+// Get interface object by index
+// Parameters: node object and interface index
+//
+
+static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Node *node = (Node *)object->getData();
+	Interface *ifc = node->findInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
+	if (ifc != NULL)
+	{
+		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, ifc));
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if interface not found
+	}
+
+	return 0;
+}
+
+
+//
 // Find node object
 // First argument: current node object or null
 // Second argument: node id or name
@@ -352,6 +384,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
    { _T("GetEventParameter"), F_GetEventParameter, 2 },
    { _T("GetInterfaceName"), F_GetInterfaceName, 2 },
+   { _T("GetInterfaceObject"), F_GetInterfaceObject, 2 },
    { _T("GetNodeParents"), F_GetNodeParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
 	{ _T("PostEvent"), F_PostEvent, -1 },

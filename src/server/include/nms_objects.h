@@ -582,6 +582,7 @@ public:
 	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
 	bool isLoopback() { return (m_flags & IF_LOOPBACK) ? true : false; }
+	bool isManuallyCreated() { return (m_flags & IF_CREATED_MANUALLY) ? true : false; }
 	bool isExcludedFromTopology() { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
    bool isFake() { return (m_dwIfIndex == 1) && 
                           (m_dwIfType == IFTYPE_OTHER) &&

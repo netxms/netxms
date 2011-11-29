@@ -188,6 +188,92 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 
 
 //
+// Implementation of "NetXMS interface" class
+//
+
+NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_Class()
+{
+   _tcscpy(m_szName, _T("Interface"));
+}
+
+NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+{
+   Interface *iface;
+   NXSL_Value *pValue = NULL;
+   TCHAR szBuffer[256];
+
+   iface = (Interface *)pObject->getData();
+   if (!_tcscmp(pszAttr, _T("name")))
+   {
+      pValue = new NXSL_Value(iface->Name());
+   }
+   else if (!_tcscmp(pszAttr, _T("id")))
+   {
+      pValue = new NXSL_Value(iface->Id());
+   }
+   else if (!_tcscmp(pszAttr, _T("status")))
+   {
+      pValue = new NXSL_Value((LONG)iface->Status());
+   }
+   else if (!_tcscmp(pszAttr, _T("ipAddr")))
+   {
+      IpToStr(iface->IpAddr(), szBuffer);
+      pValue = new NXSL_Value(szBuffer);
+   }
+   else if (!_tcscmp(pszAttr, _T("ipNetMask")))
+   {
+		IpToStr(iface->getIpNetMask(), szBuffer);
+      pValue = new NXSL_Value(szBuffer);
+   }
+   else if (!_tcscmp(pszAttr, _T("isLoopback")))
+   {
+		pValue = new NXSL_Value((LONG)(iface->isLoopback() ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isPhysicalPort")))
+   {
+		pValue = new NXSL_Value((LONG)(iface->isPhysicalPort() ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isManuallyCreated")))
+   {
+		pValue = new NXSL_Value((LONG)(iface->isManuallyCreated() ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("isExcludedFromTopology")))
+   {
+      pValue = new NXSL_Value((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
+   }
+   else if (!_tcscmp(pszAttr, _T("description")))
+   {
+      pValue = new NXSL_Value(iface->getDescription());
+   }
+   else if (!_tcscmp(pszAttr, _T("comments")))
+   {
+      pValue = new NXSL_Value(iface->getComments());
+   }
+   else if (!_tcscmp(pszAttr, _T("ifIndex")))
+   {
+		pValue = new NXSL_Value(iface->getIfIndex());
+   }
+   else if (!_tcscmp(pszAttr, _T("ifType")))
+   {
+		pValue = new NXSL_Value(iface->getIfType());
+   }
+   else if (!_tcscmp(pszAttr, _T("bridgePortNumber")))
+   {
+		pValue = new NXSL_Value(iface->getBridgePortNumber());
+   }
+	else
+	{
+		const TCHAR *attrValue = iface->GetCustomAttribute(pszAttr);
+		if (attrValue != NULL)
+		{
+			pValue = new NXSL_Value(attrValue);
+		}
+	}
+   return pValue;
+}
+
+
+//
 // Implementation of "NetXMS event" class
 //
 
@@ -309,5 +395,6 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
+NXSL_InterfaceClass g_nxslInterfaceClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_DciClass g_nxslDciClass;

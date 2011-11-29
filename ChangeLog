@@ -5,6 +5,7 @@
 - New internal parameter: Net.IP.NextHop
 - Implemented IP route visualization in management console
 - New MIBs added: JUNIPER-IVE-MIB
+- New NXSL functions: GetInterfaceObject
 - Fixed issues: #335, #336, #337
 
 
