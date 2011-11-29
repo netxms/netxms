@@ -21,10 +21,13 @@ package org.netxms.ui.eclipse.alarmviewer.widgets;
 import java.util.HashMap;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -33,8 +36,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
@@ -73,6 +76,8 @@ public class AlarmList extends Composite
 	private SortableTableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
 	private HashMap<Long, Alarm> alarmList;
+	private Action actionCopy;
+	private Action actionCopyMessage;
 	
 	/**
 	 * Create alarm list widget
@@ -107,6 +112,7 @@ public class AlarmList extends Composite
 			}
 		});
 		
+		createActions();
 		createPopupMenu();
 
 		addListener(SWT.Resize, new Listener() {
@@ -122,7 +128,7 @@ public class AlarmList extends Composite
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				alarmList = session.getAlarms(false);
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -180,7 +186,7 @@ public class AlarmList extends Composite
 	 */
 	private void scheduleAlarmViewerUpdate()
 	{
-		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+		getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run()
 			{
@@ -188,6 +194,57 @@ public class AlarmList extends Composite
 					alarmViewer.refresh();
 			}
 		});
+	}
+	
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionCopy = new Action(Messages.AlarmList_CopyToClipboard) {
+			@Override
+			public void run()
+			{
+				TableItem[] selection = alarmViewer.getTable().getSelection();
+				if (selection.length > 0)
+				{
+					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+					StringBuilder sb = new StringBuilder();
+					for(int i = 0; i < selection.length; i++)
+					{
+						if (i > 0)
+							sb.append(newLine);
+						sb.append('[');
+						sb.append(selection[i].getText(COLUMN_SEVERITY));
+						sb.append("]\t"); //$NON-NLS-1$
+						sb.append(selection[i].getText(COLUMN_SOURCE));
+						sb.append('\t');
+						sb.append(selection[i].getText(COLUMN_MESSAGE));
+					}
+					WidgetHelper.copyToClipboard(sb.toString());
+				}
+			}
+		};
+
+		actionCopyMessage = new Action(Messages.AlarmList_CopyMsgToClipboard) {
+			@Override
+			public void run()
+			{
+				TableItem[] selection = alarmViewer.getTable().getSelection();
+				if (selection.length > 0)
+				{
+					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+					StringBuilder sb = new StringBuilder();
+					for(int i = 0; i < selection.length; i++)
+					{
+						if (i > 0)
+							sb.append(newLine);
+						sb.append(selection[i].getText(COLUMN_MESSAGE));
+					}
+					WidgetHelper.copyToClipboard(sb.toString());
+				}
+			}
+		};
 	}
 
 	/**
@@ -219,9 +276,12 @@ public class AlarmList extends Composite
 	 * Fill context menu
 	 * @param mgr Menu manager
 	 */
-	protected void fillContextMenu(IMenuManager mgr)
+	protected void fillContextMenu(IMenuManager manager)
 	{
-		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
+		manager.add(actionCopy);
+		manager.add(actionCopyMessage);
 	}
 
 	/**

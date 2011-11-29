@@ -16,6 +16,8 @@ public class Messages extends NLS
 	public static String AlarmList_ColumnSeverity;
 	public static String AlarmList_ColumnSource;
 	public static String AlarmList_ColumnState;
+	public static String AlarmList_CopyMsgToClipboard;
+	public static String AlarmList_CopyToClipboard;
 	public static String AlarmList_SyncJobError;
 	public static String AlarmList_SyncJobName;
 	public static String AlarmListLabelProvider_AlarmState_Acknowledged;

@@ -175,4 +175,14 @@ public abstract class ConsoleJob extends Job
 		}
 		return success;
 	}
+	
+	/**
+	 * Run code in UI thread
+	 * 
+	 * @param runnable
+	 */
+	protected void runInUIThread(final Runnable runnable)
+	{
+		PlatformUI.getWorkbench().getDisplay().asyncExec(runnable);
+	}
 }
